@@ -7,6 +7,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
+import ContextualLinkConfig from '@/dashboard/components/Wizard/components/ContextualLink/ContextualLinkConfig.vue'
+
 import WidgetVisualization from '../../../../components/WidgetVisualization/WidgetVisualization.vue'
 import { type UseInventory } from './useInventory'
 
@@ -31,14 +34,16 @@ function validate(): boolean {
       v-model:title-url="handler.titleUrl.value"
       v-model:title-url-enabled="handler.titleUrlEnabled.value"
       v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
-      v-model:link-type="handler.linkType.value"
-      v-model:link-target="handler.linkTarget.value"
-      :link-validation="handler.linkValidationError.value"
-      :link-options="[
-        { name: 'dashboards', title: _t('Dashboards') },
-        { name: 'views', title: _t('Views') }
-      ]"
       :title-macros="handler.titleMacros.value"
+    />
+  </CmkCatalogPanel>
+
+  <ContentSpacer />
+
+  <CmkCatalogPanel :title="_t('Contextual link')" variant="padded">
+    <ContextualLinkConfig
+      v-model:handler="handler.contextualLink"
+      :default-target="_t('Inventory of host')"
     />
   </CmkCatalogPanel>
 </template>

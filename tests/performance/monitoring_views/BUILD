@@ -37,7 +37,7 @@ py_library(
     deps = [
         ":livestatus_fake",
         "//tests/performance:sysmon",
-        "//tests/testlib",
+        "//tests/testlib/system",
         requirement("pytest_benchmark"),
         requirement("requests"),
     ],

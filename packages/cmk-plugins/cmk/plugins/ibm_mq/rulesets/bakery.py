@@ -29,11 +29,14 @@ def migrate(value: object) -> Mapping[str, object]:
     if value is None:
         return {"deployment": ("do_not_deploy", None)}
     if isinstance(value, dict):
-        result: dict[str, object] = {"deployment": ("sync", None)}
-        for key in ("only_qm", "skip_qm", "execute_as_another_user"):
-            if key in value:
-                result[key] = value[key]
-        return result
+        # Old rule ("first matching rule wins"): make all parameters explicit so that merging
+        # with other rules does not change the outcome.
+        return {
+            "deployment": ("sync", None),
+            "only_qm": value.get("only_qm", []),
+            "skip_qm": value.get("skip_qm", []),
+            "execute_as_another_user": value.get("execute_as_another_user", "default_user"),
+        }
     raise ValueError(f"Unexpected value: {value!r}")
 
 
@@ -88,6 +91,9 @@ def _valuespec_agent_config_ibm_mq() -> Dictionary:
                 parameter_form=SingleChoice(
                     title=Title("Execute as another user"),
                     elements=[
+                        SingleChoiceElement(
+                            name="default_user", title=Title("Execute as the agent's user")
+                        ),
                         SingleChoiceElement(name="mqm", title=Title("Execute as MQM")),
                     ],
                     prefill=DefaultValue("mqm"),

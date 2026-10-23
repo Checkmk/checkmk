@@ -11,12 +11,7 @@ from io import StringIO
 
 import pytest
 
-from cmk.automations.results import ABCAutomationResult
-from cmk.base.automations.check_mk import (
-    automation_analyze_host_rule_matches,
-    automation_analyze_service_rule_matches,
-)
-from cmk.base.community_app import make_app
+from cmk.automations.internal import AutomationResult
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
@@ -27,9 +22,14 @@ from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChan
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
 from cmk.livestatus_client import SiteConfigurations
+from cmk.plugins.checkmk.automations.checkmk import (
+    automation_analyze_host_rule_matches,
+    automation_analyze_service_rule_matches,
+)
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.utils.paths import default_config_dir
+from tests.testlib.unit.automations import make_common_state
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
@@ -53,15 +53,17 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
         r: Sequence[Sequence[RuleSpec]],
         *,
         debug: bool,  # noqa: ARG001
-    ) -> ABCAutomationResult:
+    ) -> AutomationResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
         ts.add_host(HostName("dong"))
-        ts.apply(monkeypatch)
+        loading_result = ts.apply(monkeypatch)
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return automation_analyze_host_rule_matches.handler(make_app(), [h], None, None)
+            return automation_analyze_host_rule_matches.handler(
+                make_common_state(loading_result), [h]
+            )
 
     monkeypatch.setattr(rulesets, "analyze_host_rule_matches", analyze_with_matcher)
 
@@ -102,6 +104,36 @@ def test_analyse_host_ruleset() -> None:
     assert entry[0] == folder
     assert entry[1] == 0  # index of rule in folder
     assert isinstance(entry[2], Rule)
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    ("ruleset_name", "value"),
+    [
+        pytest.param("snmp_exclude_sections", {"sections_disabled": ["if64"], "sections_enabled": []}, id="disabled or enabled sections"),
+        pytest.param("snmp_check_interval", (["if64"], ("cached", 300.0)), id="fetch intervals"),
+        pytest.param("snmpv3_contexts", ("if64", [""], "stop_on_timeout"), id="SNMPv3 contexts"),
+    ],
+)
+# fmt: on
+@pytest.mark.usefixtures(
+    "request_context", "with_admin_login", "mock_analyze_host_rule_matches_automation"
+)
+def test_every_matching_snmp_section_rule_is_effective(ruleset_name: str, value: object) -> None:
+    # The fetcher applies all matching rules of these rule sets, decided per section.
+    folder = FolderTree(config=HostsAndFoldersConfig.from_config(active_config)).root_folder()
+    _test_hosts(folder)
+    ruleset = Ruleset(ruleset_name)
+    first = Rule.from_ruleset(folder, ruleset, value)
+    second = Rule.from_ruleset(folder, ruleset, value)
+    ruleset.append_rule(folder, first)
+    ruleset.append_rule(folder, second)
+
+    _value, effective_rules = ruleset.analyse_ruleset(
+        HostName("ding"), None, None, {}, debug=False
+    )
+
+    assert [rule.id for _folder, _index, rule in effective_rules] == [first.id, second.id]
 
 
 def _test_hosts(folder: Folder) -> None:
@@ -179,15 +211,15 @@ def fixture_mock_analyze_service_rule_matches_automation(monkeypatch: pytest.Mon
         rules: Sequence[Sequence[RuleSpec]],
         *,
         debug: bool,  # noqa: ARG001
-    ) -> ABCAutomationResult:
+    ) -> AutomationResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
-        ts.apply(monkeypatch)
+        loading_result = ts.apply(monkeypatch)
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr((rules, service_labels))))
             return automation_analyze_service_rule_matches.handler(
-                make_app(), [host_name, service_or_item], None, None
+                make_common_state(loading_result), [host_name, service_or_item]
             )
 
     monkeypatch.setattr(rulesets, "analyze_service_rule_matches", analyze_with_matcher)

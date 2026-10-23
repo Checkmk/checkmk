@@ -16,19 +16,17 @@ from typing import assert_never
 
 from cmk.agent_based import v2 as agent_based_v2
 from cmk.agent_based import v3_unstable as agent_based_v3_unstable
-from cmk.base.config import (  # astrein: disable=cmk-module-layer-violation
-    load_all_plugins,
-)
 from cmk.ccc import debug
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import edition
-from cmk.checkengine.plugin_backend import (  # astrein: disable=cmk-module-layer-violation
+from cmk.checkengine.plugin_backend import (  # astrein: disable=module-layers
     ENTRY_POINT_PREFIXES,
     extract_known_discovery_rulesets,
+    load_all_plugins,
 )
 
 # TODO: Remove suppression for layer violation?
-from cmk.checkengine.plugins import (  # astrein: disable=cmk-module-layer-violation  # astrein: disable=cmk-module-layer-violation
+from cmk.checkengine.plugins import (  # astrein: disable=module-layers
     AgentBasedPlugins,
     CheckPlugin,
     InventoryPlugin,
@@ -36,24 +34,24 @@ from cmk.checkengine.plugins import (  # astrein: disable=cmk-module-layer-viola
 )
 
 # TODO: Remove suppression for layer violation?
-from cmk.checkengine.specs.checkresults import (  # astrein: disable=cmk-module-layer-violation
+from cmk.checkengine.specs.checkresults import (  # astrein: disable=module-layers
     ActiveCheckResult,
 )
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
-from cmk.gui import main_modules  # astrein: disable=cmk-module-layer-violation
-from cmk.gui.form_specs import (  # astrein: disable=cmk-module-layer-violation
+from cmk.gui import main_modules  # astrein: disable=module-layers
+from cmk.gui.form_specs import (  # astrein: disable=module-layers
     get_visitor,
     RawDiskData,
     VisitorOptions,
 )
-from cmk.gui.rule_specs.types import (  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.rule_specs.types import (  # astrein: disable=module-layers
     RuleSpec,
 )
-from cmk.gui.watolib.rulespecs import (  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.watolib.rulespecs import (  # astrein: disable=module-layers
     FormSpecNotImplementedError,
     rulespec_registry,
 )
-from cmk.gui.wsgi.app import (  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.wsgi.app import (  # astrein: disable=module-layers
     gui_context,
 )
 from cmk.ruleset_matcher.definition import RuleGroup
@@ -65,7 +63,7 @@ from cmk.rulesets.v1.rule_specs import (
     InventoryParameters,
     SpecialAgent,
 )
-from cmk.server_side_calls_backend import (  # astrein: disable=cmk-module-layer-violation
+from cmk.server_side_calls_backend import (  # astrein: disable=module-layers
     load_active_checks,
     load_special_agents,
 )
@@ -105,7 +103,7 @@ def to_result(step: ValidationStep, errors: Sequence[str]) -> ActiveCheckResult:
 
 
 def _validate_agent_based_plugin_loading() -> tuple[AgentBasedPlugins, ActiveCheckResult]:
-    plugins = load_all_plugins()
+    plugins = load_all_plugins(raise_errors=debug.enabled())
     return plugins, to_result(ValidationStep.AGENT_BASED_PLUGINS, plugins.errors)
 
 

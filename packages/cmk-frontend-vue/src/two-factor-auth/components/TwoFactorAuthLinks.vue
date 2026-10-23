@@ -61,7 +61,7 @@ const { _t } = usei18n()
 
 .two-factor-auth-links__link {
   width: 277px;
-  color: var(--color-white-100, #fff);
+  color: var(--white);
   text-align: center;
   font-size: var(--font-size-normal);
   font-style: normal;

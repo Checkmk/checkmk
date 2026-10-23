@@ -7,31 +7,11 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.citrix.agent_based.citrix_sessions import (
     check_citrix_sessions,
-    discover_citrix_sessions,
     parse_citrix_sessions,
 )
-
-
-@pytest.mark.parametrize(
-    "string_table, expected_discoveries",
-    [
-        (
-            [["sessions", "1"], ["active_sessions", "1"], ["inactive_sessions", "0"]],
-            [Service()],
-        ),
-    ],
-)
-def test_discover_citrix_sessions(
-    string_table: StringTable,
-    expected_discoveries: Sequence[Service],
-) -> None:
-    """Test discovery function for citrix_sessions check."""
-    parsed = parse_citrix_sessions(string_table)
-    result = list(discover_citrix_sessions(parsed))
-    assert result == expected_discoveries
 
 
 @pytest.mark.parametrize(

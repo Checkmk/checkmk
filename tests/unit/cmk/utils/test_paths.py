@@ -5,11 +5,12 @@
 
 import os
 from collections.abc import Mapping
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from pytest import MonkeyPatch
 
 import cmk.utils.paths
+from cmk.relay_protocols.tasks import AD_HOC_FILES_DIR
 from tests.testlib.unit.utils import import_module_hack
 
 _NON_STD_PREFIX: Mapping[str, str] = {
@@ -44,3 +45,8 @@ def test_paths_in_omd_and_opt_root(monkeypatch: MonkeyPatch) -> None:
         m.setitem(os.environ, "OMD_ROOT", omd_root)
         test_paths = import_module_hack(cmk.utils.paths.__file__)
         _check_paths(omd_root, test_paths.__dict__)
+
+
+def test_the_relays_ad_hoc_files_dir_is_the_sites_relative_tmp_dir() -> None:
+    """The relay mirrors the site's tmp directory for ad-hoc files; the protocol pins it."""
+    assert PurePosixPath(cmk.utils.paths.relative_tmp_dir) == AD_HOC_FILES_DIR

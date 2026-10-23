@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 """Tests for clearing inherited host labels via the LABEL_CLEAR_VALUE sentinel.
 
 A child folder or host can override a label set by a parent folder back to
@@ -22,8 +20,8 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.ccc.user import UserId
 from cmk.fields import String
+from cmk.gui.config import Config
 from cmk.gui.fields import Field
 from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.valuespec import TextInput
@@ -35,16 +33,16 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopic,
     LABEL_CLEAR_VALUE,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.labels import Labels
 
 
 @pytest.mark.usefixtures("clearing_attribute")
-def test_child_clears_inherited_label() -> None:
+def test_child_clears_inherited_label(tree: FolderTree) -> None:
     """A subfolder set to "off" removes the relay label inherited from its parent."""
-    root = folder_tree().root_folder()
+    root = tree.root_folder()
     parent = root.create_subfolder(
         "parent",
         "parent",
@@ -75,9 +73,9 @@ def test_child_clears_inherited_label() -> None:
 
 
 @pytest.mark.usefixtures("clearing_attribute")
-def test_grandchild_reenables_after_clear() -> None:
+def test_grandchild_reenables_after_clear(tree: FolderTree) -> None:
     """A deeper folder can re-enable the label after an intermediate folder cleared it."""
-    root = folder_tree().root_folder()
+    root = tree.root_folder()
     parent = root.create_subfolder(
         "parent",
         "parent",
@@ -116,9 +114,9 @@ def test_grandchild_reenables_after_clear() -> None:
 
 
 @pytest.mark.usefixtures("clearing_attribute")
-def test_inherited_relay_label_without_override() -> None:
+def test_inherited_relay_label_without_override(tree: FolderTree) -> None:
     """A host with no override inherits the parent folder's relay label unchanged."""
-    root = folder_tree().root_folder()
+    root = tree.root_folder()
     parent = root.create_subfolder(
         "parent",
         "parent",
@@ -170,13 +168,11 @@ class _ClearingTestAttribute(ABCHostAttributeValueSpec):
         return {"test/relay": LABEL_CLEAR_VALUE, "test/relay_monitored": LABEL_CLEAR_VALUE}
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
-def test_env(with_admin_login: UserId, load_config: None) -> Iterator[None]:
-    # Provide an application context and start from clean folder/host caches.
-    tree = folder_tree()
-    tree.invalidate_caches()
+@pytest.fixture(name="tree")
+def fixture_tree(config: Config) -> Iterator[FolderTree]:
+    tree = make_folder_tree(config)
 
-    yield
+    yield tree
 
     # Remove WATO folders created by the test.
     shutil.rmtree(tree.root_folder().filesystem_path(), ignore_errors=True)

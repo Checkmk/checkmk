@@ -8,6 +8,7 @@ Network calls are intercepted with `responses`; no real OMD site is needed.
 """
 
 from collections.abc import Iterator
+from http import HTTPStatus
 from logging import getLogger
 from pathlib import Path
 
@@ -266,7 +267,7 @@ def test_end_to_end_uploads_via_real_run_batch(tmp_path: Path) -> None:
     crash_dir = tmp_path / "var/check_mk/crashes/check/11111111-1111-1111-1111-111111111111"
     crash_dir.mkdir(parents=True)
     (crash_dir / "crash.info").write_bytes(b'{"id": "11111111-1111-1111-1111-111111111111"}')
-    responses.add(responses.POST, _CRASH_URL, body=b"OK abc123", status=200)
+    responses.add(responses.POST, _CRASH_URL, body=b"OK abc123", status=HTTPStatus.OK)
 
     assert cli.main() == 0
     assert len(responses.calls) == 1

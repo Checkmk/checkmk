@@ -35,23 +35,24 @@ from contextlib import contextmanager, ExitStack, suppress
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from html import unescape
+from http import HTTPStatus
 from itertools import filterfalse
 from multiprocessing.pool import AsyncResult, ThreadPool
 from pathlib import Path
 from typing import Any, assert_never, Final, Literal, NamedTuple, override, TypedDict
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
 from pydantic import BaseModel
 from setproctitle import setthreadtitle
 
 import cmk.bi.filesystem
-import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=module-layers
 import cmk.gui.watolib.automations
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.utils
 from cmk import mkp_tool, trace
 from cmk.ccc import store, tar_archive, version
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException, MKTerminate
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import get_omd_config, omd_site, SiteId
@@ -64,10 +65,16 @@ from cmk.gui.background_job.job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
     JobStatusSpec,
+    JobStatusStates,
     JobTarget,
 )
 from cmk.gui.config import active_config, Config
-from cmk.gui.crash_handler import crash_dump_message, handle_exception_as_gui_crash_report
+from cmk.gui.crash_handler import (
+    crash_dump_message,
+    create_gui_crash_report,
+    handle_exception_as_gui_crash_report,
+)
+from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
 from cmk.gui.http import Request
 from cmk.gui.http import request as _request
@@ -76,7 +83,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.nodevis.utils import topology_configs_dir, topology_settings_lookup
 from cmk.gui.ntop import ntop_connection
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.search import index as search_index
 from cmk.gui.site_config import (
     is_distributed_setup_remote_site,
@@ -85,7 +92,7 @@ from cmk.gui.site_config import (
 )
 from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
-from cmk.gui.type_defs import GlobalSettings, Users
+from cmk.gui.type_defs import CustomHostAttrSpec, GlobalSettings, Users
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import (
     effective_authentication_connections,
@@ -116,10 +123,14 @@ from cmk.gui.watolib.broker_certificates import (
 )
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
+    ACTIVATION_CORE_RESTART_TIMEOUT,
+    ActivationContext,
+    ActivationContextKey,
     config_domain_registry,
     ConfigDomainName,
     DomainRequest,
     DomainRequests,
+    EXPERIMENTAL_FLAGS,
     get_always_activate_domains,
     get_config_domain,
     SerializedSettings,
@@ -134,11 +145,20 @@ from cmk.gui.watolib.config_sync import (
     SnapshotSettings,
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings
+from cmk.gui.watolib.host_relations_export import (
+    add_dropped_relations,
+    export_host_relations,
+    relations_dropped_path,
+    relations_export_path,
+)
+from cmk.gui.watolib.host_relations_export import LOGGER as relations_logger
 from cmk.gui.watolib.hosts_and_folders import (
+    ACTIVATION_FOLDER_TREE,
     collect_all_hosts,
-    folder_preserving_link,
-    folder_tree,
+    collect_hosts,
     FolderTree,
+    HostsAndFoldersConfig,
+    make_folder_tree,
     validate_all_hosts,
 )
 from cmk.gui.watolib.paths import wato_var_dir
@@ -146,6 +166,7 @@ from cmk.gui.watolib.piggyback_hub import (
     has_piggyback_hub_relevant_changes,
 )
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
+from cmk.gui.watolib.snapshot_artifacts import snapshot_artifact_registry
 from cmk.gui.watolib.snapshots import SnapshotManager
 from cmk.licensing.export import LicenseUsageExtensions
 from cmk.licensing.handler import ActivationBlock
@@ -156,7 +177,8 @@ from cmk.livestatus_client import (
     SiteConfiguration,
     SiteConfigurations,
 )
-from cmk.messaging import rabbitmq
+from cmk.messaging import CMKConnectionError, rabbitmq
+from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
 from cmk.shared_typing.changes import (
     ActivationPhase,
     OnlineStatus,
@@ -403,8 +425,24 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:  # no
         replication_path_registry.register(repl_path)
 
 
+def sync_changes_from_active_config_before_remote_automation(site_id: SiteId, debug: bool) -> None:
+    """Sync for callers that hold no folder tree, such as the automation wrappers.
+
+    The sync takes the sites and the snapshot settings from the active config
+    anyway, so the tree comes from the active config as well. It is only built
+    when the site needs a sync, which most remote automation calls do not.
+    """
+    _sync_changes_before_remote_automation(lambda: make_folder_tree(active_config), site_id, debug)
+
+
 # If the site is not up-to-date, synchronize it first.
-def sync_changes_before_remote_automation(site_id: SiteId, debug: bool) -> None:
+def sync_changes_before_remote_automation(tree: FolderTree, site_id: SiteId, debug: bool) -> None:
+    _sync_changes_before_remote_automation(lambda: tree, site_id, debug)
+
+
+def _sync_changes_before_remote_automation(
+    make_tree: Callable[[], FolderTree], site_id: SiteId, debug: bool
+) -> None:
     manager = ActivateChangesManager()
     # TODO: So far we used active_config.sites. Would it be enough to use [site_id]?
     manager.changes.load(list(active_config.sites))
@@ -416,6 +454,7 @@ def sync_changes_before_remote_automation(site_id: SiteId, debug: bool) -> None:
 
     manager.start(
         sites=[site_id],
+        tree=make_tree(),
         activate_foreign=True,
         prevent_activate=True,
         source="INTERNAL",
@@ -700,9 +739,19 @@ def _set_result(
 def _handle_activation_changes_exception(
     exc_logger: logging.Logger, exception: Exception, site_activation_status: SiteActivationState
 ) -> None:
-    if isinstance(exception, MKGeneralException | MKUserError):
+    if isinstance(exception, RemoteActivationCrash):
         # NOTE: We are always called from within an exception handler (hopefully!), but ruff can't
         # determine this statically.
+        exc_logger.exception("error activating changes")  # noqa: LOG004
+        message = str(exception)
+        if user.may("general.see_crash_reports"):
+            message += "<br>\n<br>\n" + _(
+                'Open the <a href="%(url)s">crash report page</a> of the remote site for details.'
+            ) % {
+                "url": "crash.py?"
+                + urlencode([("crash_id", exception.crash_id), ("site", exception.site_id)])
+            }
+    elif isinstance(exception, MKGeneralException | MKUserError):
         exc_logger.exception("error activating changes")  # noqa: LOG004
         message = str(exception)
     else:
@@ -989,40 +1038,30 @@ def _confirm_synchronized_changes(site_id: SiteId) -> None:
 def _confirm_activated_changes(
     site_id: SiteId, site_changes_activate_until: Sequence[ChangeSpec]
 ) -> None:
+    # Drop the activated changes by id rather than as a positional prefix: the log is
+    # not necessarily ordered by time (``_store_site_changes`` appends a remote's
+    # carried-over changes, which are older than what is already queued for that site),
+    # and the activated ones are selected by time. Where the two orders agree -- the
+    # usual append-only case -- this removes exactly the same leading entries as before.
+    activated_ids = {change["id"] for change in site_changes_activate_until}
     with SiteChanges(site_id).mutable_view() as changes:
-        changes[: len(site_changes_activate_until)] = []
+        changes[:] = [change for change in changes if change["id"] not in activated_ids]
 
 
 def _get_domains_needing_activation(
     site_changes_activate_until: Sequence[ChangeSpec],
 ) -> DomainRequests:
     domain_settings: dict[ConfigDomainName, list[SerializedSettings]] = {}
-    omd_domain_setting_changes: list[SerializedSettings] = []
     for change in site_changes_activate_until:
         if _needs_restart(change):
             for domain_name in change["domains"]:
                 settings = get_config_domain(domain_name).get_domain_settings(change)
-                # ConfigDomainOMD needs a restart of the apache,
-                # make sure it's executed at the end
-                if domain_name == OMDDomainName:
-                    omd_domain_setting_changes.append(settings)
-                    continue
                 domain_settings.setdefault(domain_name, []).append(settings)
 
-    domain_requests = sorted(
-        (
-            get_config_domain(domain_name).get_domain_request(settings_list)
-            for (domain_name, settings_list) in domain_settings.items()
-        ),
-        key=lambda x: x.name,
-    )
-
-    if omd_domain_setting_changes:
-        domain_requests.append(
-            get_config_domain(OMDDomainName).get_domain_request(omd_domain_setting_changes)
-        )
-
-    return domain_requests
+    return [
+        get_config_domain(domain_name).get_domain_request(settings_list)
+        for (domain_name, settings_list) in domain_settings.items()
+    ]
 
 
 def _get_omd_domain_background_job_result(
@@ -1051,12 +1090,125 @@ def _get_omd_domain_background_job_result(
             if not omd_response.job_status.is_active:
                 return list(omd_response.job_status.loginfo["JobException"])
             time.sleep(0.5)
+        except cmk.gui.watolib.automations.MKRemoteSiteUnavailable:
+            pass  # The remote site restarts, keep polling
         except MKUserError as e:
-            if not (e.message == "Site is not running" or e.message.startswith("HTTP Error - 502")):
-                return [e.message]
+            return [e.message]
+
+
+# How long the central site accepts a remote activation job that is neither running nor finished.
+# This happens when the job scheduler of the remote site is unreachable for a moment or when it was
+# stopped while the job was running.
+_REMOTE_ACTIVATION_VANISHED_TIMEOUT = 30.0
+
+# How long the central site waits for an unreachable remote site to come back. A restart of the
+# remote site, e.g. triggered by the OMD domain, makes it unreachable for a moment.
+_REMOTE_ACTIVATION_UNREACHABLE_TIMEOUT = 300.0
+
+# How long the central site waits for the remote activation job in total. The remote site ends
+# a hanging core restart itself (_REMOTE_ACTIVATION_CORE_RESTART_TIMEOUT), which fails the job
+# and reports an error here, so this safety net only fires when the job hangs in another way.
+_REMOTE_ACTIVATION_TIMEOUT = 30 * 60.0
+
+
+class RemoteActivationCrash(Exception):
+    """The activation job on the remote site crashed and created a crash report there
+
+    Not an MKGeneralException: it is no error the user can fix, and the central site creates no
+    crash report of its own for it."""
+
+    def __init__(self, message: str, *, site_id: SiteId, crash_id: str) -> None:
+        super().__init__(message)
+        self.site_id = site_id
+        self.crash_id = crash_id
+
+
+def activate_remote_site(
+    automation_config: RemoteAutomationConfig,
+    site_id: SiteId,
+    domain_requests: DomainRequests,
+    *,
+    debug: bool,
+) -> ConfigWarnings:
+    """Activate the changes in a background job on the remote site and wait for its result"""
+    job_id = cmk.gui.watolib.automations.do_remote_automation(
+        automation_config,
+        "activate-changes-start",
+        [("domains", serialize_domain_requests(domain_requests)), ("site_id", site_id)],
+        debug=debug,
+    )
+    assert isinstance(job_id, str)
+
+    started = time.monotonic()
+    vanished_since: float | None = None
+    unreachable_since: float | None = None
+    while True:
+        if time.monotonic() - started > _REMOTE_ACTIVATION_TIMEOUT:
+            raise MKGeneralException(
+                _(
+                    "Activation on site %(site_id)s did not finish within %(minutes)d minutes. "
+                    "The job %(job_id)s may still be running on the remote site and holding its "
+                    "configuration lock."
+                )
+                % {
+                    "site_id": site_id,
+                    "minutes": _REMOTE_ACTIVATION_TIMEOUT / 60,
+                    "job_id": job_id,
+                }
+            )
+        try:
+            status = cmk.gui.watolib.automations.do_remote_automation(
+                automation_config,
+                "activate-changes-get-status",
+                [("job_id", job_id)],
+                debug=debug,
+            )
+        except cmk.gui.watolib.automations.MKRemoteSiteUnavailable:
+            now = time.monotonic()
+            if unreachable_since is None:
+                unreachable_since = now
+            elif now - unreachable_since > _REMOTE_ACTIVATION_UNREACHABLE_TIMEOUT:
+                raise
+            time.sleep(0.5)
+            continue
+        unreachable_since = None
+
+        assert isinstance(status, dict)
+        if status["is_active"]:
+            vanished_since = None
+            time.sleep(0.5)
+            continue
+
+        if status["state"] == JobStatusStates.FINISHED:
+            return status["warnings"]
+        if status["state"] in (JobStatusStates.EXCEPTION, JobStatusStates.STOPPED):
+            message = _("Activation on site %(site_id)s failed: %(error)s") % {
+                "site_id": site_id,
+                "error": "\n".join(status["exception"]),
+            }
+            if status["crash_id"]:
+                raise RemoteActivationCrash(message, site_id=site_id, crash_id=status["crash_id"])
+            # The text is escaped when it is shown, apart from simple formatting tags like <pre>.
+            raise MKGeneralException(
+                f"{message}<pre>{status['traceback']}</pre>" if status["traceback"] else message
+            )
+
+        now = time.monotonic()
+        if vanished_since is None:
+            vanished_since = now
+        elif now - vanished_since > _REMOTE_ACTIVATION_VANISHED_TIMEOUT:
+            raise MKGeneralException(
+                _(
+                    "Activation on site %(site_id)s did not finish: The job %(job_id)s on the "
+                    "remote site is no longer running."
+                )
+                % {"site_id": site_id, "job_id": job_id}
+            )
+        time.sleep(0.5)
 
 
 def _call_activate_changes_automation(
+    tree: FolderTree,
     site_id: SiteId,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     site_changes_activate_until: Sequence[ChangeSpec],
@@ -1067,25 +1219,17 @@ def _call_activate_changes_automation(
     domain_requests = _get_domains_needing_activation(site_changes_activate_until)
 
     if isinstance(automation_config, LocalAutomationConfig):
-        return execute_activate_changes(domain_requests, is_remote_site=is_remote_site)
-
-    serialized_requests = [asdict(x) for x in domain_requests]
-    try:
-        response = cmk.gui.watolib.automations.do_remote_automation(
-            automation_config,
-            "activate-changes",
-            [("domains", repr(serialized_requests)), ("site_id", site_id)],
-            debug=debug,
+        return execute_activate_changes(
+            tree,
+            domain_requests,
+            is_remote_site=is_remote_site,
+            # The activation of the local site stays unbounded, as before.
+            core_restart_timeout=None,
         )
-    except cmk.gui.watolib.automations.MKAutomationException as e:
-        if "Invalid automation command: activate-changes" in "%s" % e:
-            raise MKGeneralException(
-                "Activate changes failed (%s). The version of this site may be too old."
-            )
-        raise
+
+    response = activate_remote_site(automation_config, site_id, domain_requests, debug=debug)
 
     # If request.settings is empty no `omd-config-change` job is started
-    assert isinstance(response, dict)
     if any(request.name == OMDDomainName and request.settings for request in domain_requests):
         response.setdefault(OMDDomainName, []).extend(
             _get_omd_domain_background_job_result(automation_config, debug=debug)
@@ -1095,6 +1239,7 @@ def _call_activate_changes_automation(
 
 
 def _do_activate(
+    tree: FolderTree,
     site_id: SiteId,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     site_changes_activate_until: Sequence[ChangeSpec],
@@ -1108,12 +1253,16 @@ def _do_activate(
     start = time.time()
 
     configuration_warnings = _call_activate_changes_automation(
+        tree,
         site_id,
         automation_config,
         site_changes_activate_until,
         debug=debug,
         is_remote_site=is_remote_site,
     )
+    # Added here rather than by the site: only the central site's export knows what it dropped.
+    if not is_distributed_setup_remote_site(SiteConfigurations(tree.config.sites)):
+        add_dropped_relations(configuration_warnings, site_id, relations_dropped_path())
 
     duration = time.time() - start
     update_activation_time(site_id, ACTIVATION_TIME_RESTART, duration)
@@ -1128,6 +1277,7 @@ def activate_site_changes(
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     debug: bool,
     is_remote_site: bool,
+    tree: FolderTree,
 ) -> SiteActivationState | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
@@ -1145,6 +1295,7 @@ def activate_site_changes(
             else:
                 if activate_changes.is_activate_needed_until(site_id):
                     configuration_warnings = _do_activate(
+                        tree,
                         site_id,
                         automation_config,
                         site_changes_activate_until,
@@ -1234,17 +1385,23 @@ class ActivateChanges:
         manager = load_activate_change_manager_with_id(activation_id)
         change_id = manager.activate_until()
 
-        # Find the last activated change and return all changes till this entry
-        # (including the one we were searching for)
+        # Take every change up to and including the one we were searching for. The
+        # activation runs "until" that change, which was picked as the newest *by time*
+        # (``get_last_change_id`` reads the time-sorted pending changes), so select by
+        # time as well: a site's log is not necessarily in that order, and walking it
+        # positionally would stop short of an older entry stored behind a newer one.
         self._changes_by_site_until = {}
         for site_id in sites:
-            changes = []
-            for change in self._changes_by_site[site_id]:
-                changes.append(change)
-                if change["id"] == change_id:
-                    break
-
-            self._changes_by_site_until[site_id] = changes
+            site_changes = self._changes_by_site[site_id]
+            activate_until_time = next(
+                (change["time"] for change in site_changes if change["id"] == change_id),
+                None,
+            )
+            self._changes_by_site_until[site_id] = (
+                list(site_changes)
+                if activate_until_time is None
+                else [change for change in site_changes if change["time"] <= activate_until_time]
+            )
 
     @staticmethod
     def confirm_site_changes(site_id: SiteId) -> None:
@@ -1742,20 +1899,36 @@ def _distribute_central_piggyback_configs(
     ):
         return
 
+    _distribute_piggyback_hub_configs(activation_features, all_site_configs, sites, tree)
+
+
+def _distribute_piggyback_hub_configs(
+    activation_features: ActivationFeatures,
+    all_site_configs: SiteConfigurations,
+    sites: Sequence[SiteId],
+    tree: FolderTree,
+) -> None:
     with (
         tracer.span("distribute_piggyback_hub_configs"),
         _debug_log_message("Starting piggyback hub config distribution"),
     ):
-        activation_features.distribute_piggyback_hub_configs(
-            logger,
-            load_configuration_settings(),
-            all_site_configs,
-            sites,
-            {
-                host_name: host.site_id()
-                for host_name, host in tree.root_folder().all_hosts_recursively().items()
-            },
-        )
+        try:
+            activation_features.distribute_piggyback_hub_configs(
+                logger,
+                load_configuration_settings(),
+                all_site_configs,
+                sites,
+                {
+                    host_name: host.site_id()
+                    for host_name, host in tree.root_folder().all_hosts_recursively().items()
+                },
+            )
+        except CMKConnectionError as e:
+            logger.warning(
+                "The piggyback hub configuration was not distributed, because the connection "
+                "to the local message broker failed: %(error)s",
+                {"error": e},
+            )
 
 
 class ActivateChangesManager:
@@ -1841,6 +2014,7 @@ class ActivateChangesManager:
         sites: Sequence[SiteId],
         source: ActivationSource,
         *,
+        tree: FolderTree,
         all_site_configs: SiteConfigurations,
         user_permission_config: UserPermissionSerializableConfig,
         max_snapshots: int,
@@ -1919,15 +2093,16 @@ class ActivateChangesManager:
         self._set_persisted_changes()
 
         with _debug_log_message("Verifying host config"):
-            self._verify_valid_host_config(tree := folder_tree())
+            self._verify_valid_host_config(tree)
         self._save_activation()
 
         with _debug_log_message("Calling pre-activate changes"):
-            self._pre_activate_changes(debug=debug)
+            self._pre_activate_changes(tree, all_site_configs, debug=debug)
 
         with _debug_log_message("Creating snapshots"):
             self._create_snapshots(
                 activation_features.snapshot_manager_factory,
+                tree,
                 max_snapshots=max_snapshots,
                 debug=debug,
                 use_git=use_git,
@@ -1936,7 +2111,7 @@ class ActivateChangesManager:
 
         with _debug_log_message("Starting activation"):
             self._start_activation(
-                all_site_configs, user_permission_config, debug=debug, use_git=use_git
+                tree, all_site_configs, user_permission_config, debug=debug, use_git=use_git
             )
 
         _activate_central_steps(
@@ -1958,11 +2133,7 @@ class ActivateChangesManager:
                 _("You cannot activate changes while some hosts have an invalid configuration: ")
                 + ", ".join(
                     [
-                        '<a href="%s">%s</a>'
-                        % (
-                            folder_preserving_link(_request, [("mode", "edit_host"), ("host", hn)]),
-                            hn,
-                        )
+                        '<a href="%s">%s</a>' % (tree.load_host(hn).edit_url(), hn)
                         for hn in defective_hosts
                     ]
                 ),
@@ -2071,14 +2242,46 @@ class ActivateChangesManager:
         to_file = {key: getattr(self, key) for key in self.info_keys}
         store.save_object_to_file(Path(self._info_path(self._activation_id)), to_file)
 
-    # Give hooks chance to do some pre-activation things (and maybe stop
-    # the activation)
-    def _pre_activate_changes(self, *, debug: bool) -> None:
+    def _pre_activate_changes(
+        self, tree: FolderTree, all_site_configs: SiteConfigurations, *, debug: bool
+    ) -> None:
+        """Write the artifacts the sites need in their snapshot, then let the hooks have their say.
+
+        Anything but the host relations export aborts the activation when it fails: the relations
+        are metadata no core acts on, so the sites keep the last exported ones instead.
+
+        Like :func:`_activate_central_steps`, the central artifacts are skipped on a remote site:
+        cron-driven local activations (agent auto-registration, automatic host removal) reach this
+        too, and a remote site receives the file through config sync.
+        """
+        # Both consumers want every host of the tree, and neither is guaranteed to run, so the
+        # walk is shared but still only paid for when something asks for it.
+        all_hosts = functools.cache(tree.all_hosts)
+        is_central_site = not is_distributed_setup_remote_site(all_site_configs)
+        if is_central_site:
+            try:
+                export_host_relations(
+                    all_hosts(),
+                    relations_export_path(),
+                    relations_dropped_path(),
+                    customer_of_site=lambda site: customer_api().get_customer_id(
+                        all_site_configs.get(SiteId(site)) or {}
+                    ),
+                )
+            except Exception:
+                if debug:
+                    raise
+                relations_logger.exception(
+                    "error exporting the host relations, keeping the last ones"
+                )
         try:
+            if is_central_site:
+                for artifact in snapshot_artifact_registry.values():
+                    artifact.write(tree)
             if hooks.registered("pre-distribute-changes"):
-                hooks.call("pre-distribute-changes", collect_all_hosts(folder_tree()))
+                hooks.call("pre-distribute-changes", collect_hosts(all_hosts()))
         except Exception as e:
-            logger.exception("error calling pre-distribute-changes hook")
+            logger.exception("error during the pre-activation steps")
             if debug:
                 raise
             raise MKUserError(None, _("Can not start activation: %(e)s") % {"e": e})
@@ -2086,7 +2289,10 @@ class ActivateChangesManager:
     @tracer.instrument("create_snapshots")
     def _create_snapshots(
         self,
-        snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager],
+        snapshot_manager_factory: Callable[
+            [str, dict[SiteId, SnapshotSettings], FolderTree], SnapshotManager
+        ],
+        tree: FolderTree,
         *,
         max_snapshots: int,
         debug: bool,
@@ -2133,7 +2339,7 @@ class ActivateChangesManager:
                 with suppress(KeyError):
                     del site_snapshot_settings[omd_site()]
 
-                snapshot_manager = snapshot_manager_factory(work_dir, site_snapshot_settings)
+                snapshot_manager = snapshot_manager_factory(work_dir, site_snapshot_settings, tree)
                 snapshot_manager.generate_snapshots()
                 logger.debug(
                     "Config sync snapshot creation took %(duration).4f",
@@ -2165,7 +2371,9 @@ class ActivateChangesManager:
 
             work_dir = cmk.utils.paths.site_config_dir / activation_id / site_id
 
-            snapshot_components = _get_replication_components(site_config)
+            snapshot_components = get_replication_components(
+                site_config, replication_path_registry.values()
+            )
 
             # Generate a quick reference_by_name for each component
             component_names = {c.ident for c in snapshot_components}
@@ -2209,6 +2417,7 @@ class ActivateChangesManager:
     @tracer.instrument("start_activation")
     def _start_activation(
         self,
+        tree: FolderTree,
         all_site_configs: SiteConfigurations,
         user_permission_config: UserPermissionSerializableConfig,
         *,
@@ -2227,6 +2436,9 @@ class ActivateChangesManager:
                     prevent_activate=self._prevent_activate,
                     source=self._source,
                     all_site_configs=all_site_configs,
+                    wato_hide_folders_without_read_permissions=tree.config.wato_hide_folders_without_read_permissions,
+                    wato_host_attrs=tree.config.wato_host_attrs,
+                    tags=tree.config.tags.get_dict_format(),
                     user_permission_config=user_permission_config,
                     debug=debug,
                     use_git=use_git,
@@ -2644,6 +2856,7 @@ def _sync_and_activate(
     file_filter_func: FileFilterFunc,
     source: ActivationSource,
     all_site_configs: SiteConfigurations,
+    tree: FolderTree,
     *,
     debug: bool,
     prevent_activate: bool,
@@ -2747,6 +2960,7 @@ def _sync_and_activate(
                         automation_config,
                         debug,
                         is_distributed_setup_remote_site(all_site_configs),
+                        tree,
                     ),
                     error_callback=_error_callback,
                 )
@@ -2773,6 +2987,7 @@ def _sync_and_activate(
                 site_snapshot_settings,
                 task_pool,
                 automation_configs,
+                tree,
                 debug=debug,
             )
 
@@ -2898,6 +3113,7 @@ def _handle_active_tasks(
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
     task_pool: ThreadPool,
     automation_configs: Mapping[SiteId, LocalAutomationConfig | RemoteAutomationConfig],
+    tree: FolderTree,
     *,
     debug: bool,
 ) -> None:
@@ -2971,6 +3187,7 @@ def _handle_active_tasks(
                 automation_configs[site_id],
                 debug,
                 True,
+                tree,
             ),
             error_callback=_error_callback,
         )
@@ -2988,6 +3205,9 @@ class ActivateChangesSchedulerJobArgs(BaseModel, frozen=True):
     prevent_activate: bool
     source: ActivationSource
     all_site_configs: SiteConfigurations
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
     user_permission_config: UserPermissionSerializableConfig
     debug: bool
     use_git: bool
@@ -2996,6 +3216,8 @@ class ActivateChangesSchedulerJobArgs(BaseModel, frozen=True):
 def activate_changes_scheduler_job_entry_point(
     job_interface: BackgroundProcessInterface, args: ActivateChangesSchedulerJobArgs
 ) -> None:
+    # The job acts on the configuration of the request that started it, so the tree is built
+    # from the values that request put into the job arguments.
     ActivateChangesSchedulerBackgroundJob(args.activation_id).schedule_sites(
         job_interface,
         args.site_snapshot_settings,
@@ -3005,6 +3227,14 @@ def activate_changes_scheduler_job_entry_point(
         args.user_permission_config,
         args.debug,
         args.use_git,
+        FolderTree(
+            config=HostsAndFoldersConfig(
+                wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
+                wato_host_attrs=args.wato_host_attrs,
+                tags=TagConfig.from_config(args.tags),
+                sites=args.all_site_configs,
+            )
+        ),
     )
 
 
@@ -3032,9 +3262,13 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         user_permission_config: UserPermissionSerializableConfig,
         debug: bool,
         use_git: bool,
+        tree: FolderTree,
     ) -> None:
         with job_interface.gui_context(
-            UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+            UserPermissions.from_serialized_config(
+                user_permission_config,
+                all_permissions(),
+            )
         ):
             job_interface.send_progress_update(
                 _("Activate changes scheduler started"), with_timestamp=True
@@ -3053,6 +3287,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
                 ].sync_file_filter_func,
                 source,
                 all_site_configs,
+                tree,
                 debug=debug,
                 prevent_activate=prevent_activate,
                 use_git=use_git,
@@ -3083,10 +3318,31 @@ def _save_state(activation_id: ActivationId, site_id: SiteId, state: SiteActivat
     )
 
 
+# These domains restart the site, so they activate after all others, in this order.
+_ACTIVATE_LAST: Final[Sequence[ConfigDomainName]] = (OMDDomainName, EXPERIMENTAL_FLAGS)
+
+
+def sort_for_activation(domain_requests: DomainRequests) -> list[DomainRequest]:
+    return sorted(
+        domain_requests,
+        key=lambda x: (
+            _ACTIVATE_LAST.index(x.name) if x.name in _ACTIVATE_LAST else -1,
+            x.name,
+        ),
+    )
+
+
 @tracer.instrument("execute_activate_changes")
 def execute_activate_changes(
-    domain_requests: DomainRequests, is_remote_site: bool
+    tree: FolderTree,
+    domain_requests: DomainRequests,
+    is_remote_site: bool,
+    core_restart_timeout: int | None,
 ) -> ConfigWarnings:
+    ctx_values: dict[ActivationContextKey[object], object] = {ACTIVATION_FOLDER_TREE: tree}
+    if core_restart_timeout is not None:
+        ctx_values[ACTIVATION_CORE_RESTART_TIMEOUT] = core_restart_timeout
+    ctx = ActivationContext(ctx_values)
     # A site a major version behind still names a domain by its pre-rename ident.
     local_requests = [
         DomainRequest(
@@ -3102,7 +3358,7 @@ def execute_activate_changes(
         if domain.ident() not in domain_names
     ]
     all_domain_requests.extend(local_requests)
-    all_domain_requests.sort(key=lambda x: x.name)
+    all_domain_requests = sort_for_activation(all_domain_requests)
 
     results: ConfigWarnings = {}
     for domain_request in all_domain_requests:
@@ -3125,11 +3381,13 @@ def execute_activate_changes(
                 "cmk.activate_changes.domain.settings": repr(domain_request.settings),
             },
         ):
-            warnings = get_config_domain(domain_request.name).activate(domain_request.settings)
+            warnings = get_config_domain(domain_request.name).activate(
+                domain_request.settings, ctx=ctx
+            )
             results[domain_request.name].extend(warnings or [])
 
     _add_extensions_for_license_usage()
-    _update_links_for_agent_receiver()
+    _update_links_for_agent_receiver(tree)
     # Only the remote sites are dealt with here, since the central site is dealt with separately.
     # The rabbitmq definition of the central site has to be updated anytime the definition of a
     # remote site is activated, not only when the central site is activated.
@@ -3153,15 +3411,206 @@ def _add_extensions_for_license_usage() -> None:
     )
 
 
-def _update_links_for_agent_receiver() -> None:
+def _update_links_for_agent_receiver(tree: FolderTree) -> None:
     uuid_link_manager = agent_registration.UUIDLinkManager(
         received_outputs_dir=paths.received_outputs_dir,
         data_source_dir=paths.data_source_push_agent_dir,
         r4r_discoverable_dir=paths.r4r_discoverable_dir,
         uuid_lookup_dir=paths.uuid_lookup_dir,
+        registrations_dir=paths.registrations_dir,
     )
 
-    uuid_link_manager.update_links(collect_all_hosts(folder_tree()))
+    uuid_link_manager.update_links(collect_all_hosts(tree))
+
+
+def serialize_domain_requests(domain_requests: DomainRequests) -> str:
+    return repr([asdict(x) for x in domain_requests])
+
+
+def deserialize_domain_requests(raw: str) -> DomainRequests:
+    try:
+        return [DomainRequest(**x) for x in ast.literal_eval(raw)]
+    except SyntaxError:
+        raise MKGeneralException(_("Invalid domain requests: %(raw)r") % {"raw": raw})
+
+
+class RemoteActivationJobArgs(BaseModel, frozen=True):
+    job_id: str
+    # The settings of the domain requests contain types pydantic can not handle
+    serialized_domain_requests: str
+    site_configs: SiteConfigurations
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
+    user_permission_config: UserPermissionSerializableConfig
+
+
+def remote_activation_job_entry_point(
+    job_interface: BackgroundProcessInterface, args: RemoteActivationJobArgs
+) -> None:
+    RemoteActivationBackgroundJob(args.job_id).activate(job_interface, args)
+
+
+class RemoteActivationStatus(TypedDict):
+    state: str
+    is_active: bool
+    exception: Sequence[str]
+    # Set when the activation failed with an error meant for the user, which gets no crash report
+    traceback: str
+    # Set when the activation crashed. The crash report is stored on the remote site.
+    crash_id: str
+    warnings: ConfigWarnings
+
+
+# The remote activation job holds the configuration lock of its site. A core restart that hangs,
+# e.g. when the automation helper does not answer, would keep the lock until someone kills the
+# job scheduler. The restart automation ends itself after this timeout, which fails the job and
+# releases the lock. Generous, so that it never ends the restart of a large configuration.
+_REMOTE_ACTIVATION_CORE_RESTART_TIMEOUT = 15 * 60
+
+
+class RemoteActivationBackgroundJob(BackgroundJob):
+    """Executes the activation a central site requested on this remote site
+
+    The activation compiles the core configuration and restarts the core. This may take longer
+    than an HTTP request is allowed to take, so the central site starts this job and polls for
+    its result instead of waiting for the response of a single request."""
+
+    job_prefix = "activate-changes-remote-"
+    housekeeping_max_age_sec = 86400 * 30
+    housekeeping_max_count = 20
+
+    @classmethod
+    @override
+    def gui_title(cls) -> str:
+        return _("Activate changes requested by central site")
+
+    @classmethod
+    def from_job_id(cls, job_id: str) -> RemoteActivationBackgroundJob:
+        """Create the job object for a job ID received from the central site"""
+        if not job_id.startswith(cls.job_prefix) or not validate_uuid_str(
+            job_id.removeprefix(cls.job_prefix)
+        ):
+            raise MKUserError("job_id", _("Invalid job ID: %(job_id)s") % {"job_id": job_id})
+        return cls(job_id)
+
+    @classmethod
+    def start_activation(
+        cls,
+        tree: FolderTree,
+        domain_requests: DomainRequests,
+        user_permission_config: UserPermissionSerializableConfig,
+    ) -> RemoteActivationBackgroundJob:
+        job = cls(f"{cls.job_prefix}{gen_id()}")
+        result = job.start(
+            JobTarget(
+                callable=remote_activation_job_entry_point,
+                args=RemoteActivationJobArgs(
+                    job_id=job.get_job_id(),
+                    serialized_domain_requests=serialize_domain_requests(domain_requests),
+                    site_configs=SiteConfigurations(tree.config.sites),
+                    wato_hide_folders_without_read_permissions=tree.config.wato_hide_folders_without_read_permissions,
+                    wato_host_attrs=tree.config.wato_host_attrs,
+                    tags=tree.config.tags.get_dict_format(),
+                    user_permission_config=user_permission_config,
+                ),
+            ),
+            InitialStatusArgs(
+                title=cls.gui_title(),
+                deletable=False,
+                stoppable=False,
+                lock_wato=True,
+            ),
+        )
+        if result.is_error():
+            raise result.error
+        return job
+
+    def activate(
+        self, job_interface: BackgroundProcessInterface, args: RemoteActivationJobArgs
+    ) -> None:
+        tree = FolderTree(
+            config=HostsAndFoldersConfig(
+                wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
+                wato_host_attrs=args.wato_host_attrs,
+                tags=TagConfig.from_config(args.tags),
+                sites=args.site_configs,
+            )
+        )
+        try:
+            with job_interface.gui_context(
+                UserPermissions.from_serialized_config(
+                    args.user_permission_config,
+                    all_permissions(),
+                )
+            ):
+                warnings = execute_activate_changes(
+                    tree,
+                    deserialize_domain_requests(args.serialized_domain_requests),
+                    is_remote_site=True,
+                    core_restart_timeout=_REMOTE_ACTIVATION_CORE_RESTART_TIMEOUT,
+                )
+        except (MKGeneralException, MKUserError) as e:
+            # Report errors meant for the user as they are, without a crash report. The central
+            # site shows them with the traceback as the result of the site activation, as it did
+            # before the activation moved into this job. Other exceptions reach the generic
+            # handler of the job, which creates a crash report.
+            logger.exception("error activating changes")
+            store.save_text_to_file(self._traceback_path(), traceback.format_exc())
+            job_interface.send_exception(str(e))
+            return
+        except MKTerminate:
+            raise
+        except Exception as e:
+            # Same as the generic handler of the job, but keep the crash ID for the central site,
+            # which links to the crash report.
+            crash = create_gui_crash_report()
+            logger.exception(
+                "Exception in background function (Crash ID: %(crash_id)s)",
+                {"crash_id": crash.ident_to_text()},
+            )
+            store.save_text_to_file(self._crash_id_path(), crash.ident_to_text())
+            job_interface.send_exception(
+                _("Exception (crash ID: %(crash_id)s): %(error)s")
+                % {"crash_id": crash.ident_to_text(), "error": e}
+            )
+            return
+        store.save_object_to_file(self._result_path(), warnings)
+        job_interface.send_result_message(_("Activation finished"))
+
+    def activation_status(self) -> RemoteActivationStatus:
+        status = self.get_status()
+        return RemoteActivationStatus(
+            state=status.state,
+            # The state in the status file stays "running" when the job scheduler is stopped
+            # while the job runs. Ask the job scheduler whether the job is still running.
+            is_active=self.is_active(),
+            exception=list(status.loginfo["JobException"]),
+            traceback=(
+                self._traceback_path().read_text()
+                if status.state == JobStatusStates.EXCEPTION and self._traceback_path().exists()
+                else ""
+            ),
+            crash_id=(
+                self._crash_id_path().read_text()
+                if status.state == JobStatusStates.EXCEPTION and self._crash_id_path().exists()
+                else ""
+            ),
+            warnings=(
+                store.load_object_from_file(self._result_path(), default={})
+                if status.state == JobStatusStates.FINISHED
+                else {}
+            ),
+        )
+
+    def _result_path(self) -> Path:
+        return Path(self.get_work_dir()) / "result.mk"
+
+    def _traceback_path(self) -> Path:
+        return Path(self.get_work_dir()) / "traceback.txt"
+
+    def _crash_id_path(self) -> Path:
+        return Path(self.get_work_dir()) / "crash_id.txt"
 
 
 def get_pending_changes_tooltip(changes_info: PendingChangesInfo) -> str:
@@ -3237,7 +3686,7 @@ def _execute_update_mkps(
             ),
             ec.mkp_callbacks(paths.omd_root),
             version.__version__,
-            parse_version=version.parse_check_mk_version,
+            parse_version=version.Version.from_str,
         )
     return uninstalled, installed
 
@@ -3395,7 +3844,7 @@ def verify_remote_site_config(sites: Mapping[SiteId, SiteConfiguration], site_id
             )
         )
 
-    if our_id is not None and our_id != site_id:  # type: ignore[redundant-expr]
+    if our_id != site_id:
         raise MKGeneralException(
             _("Site ID mismatch. Our ID is '%(our_id)s', but you are saying we are '%(site_id)s'.")
             % {"our_id": our_id, "site_id": site_id}
@@ -3414,8 +3863,10 @@ def verify_remote_site_config(sites: Mapping[SiteId, SiteConfiguration], site_id
         raise MKGeneralException(message)
 
 
-def _get_replication_components(site_config: SiteConfiguration) -> list[ReplicationPath]:
-    """Gives a list of ReplicationPath instances.
+def get_replication_components(
+    site_config: SiteConfiguration, replication_paths: Iterable[ReplicationPath]
+) -> list[ReplicationPath]:
+    """Gives the subset of `replication_paths` to be sent to a site.
 
     These represent the folders which need to be sent to remote sites. Whether a specific subset
     of paths need to be sent is being determined by the site-specific `site_config`.
@@ -3430,12 +3881,15 @@ def _get_replication_components(site_config: SiteConfiguration) -> list[Replicat
                  - `replicate_ec`:
                  - `replicate_mkps`
 
+        replication_paths:
+            All replication paths known to this site.
+
     Returns:
         A list of ReplicationPath instances, specifying which paths shall be packaged for this
         particular site.
 
     """
-    repl_paths = list(replication_path_registry.values())
+    repl_paths = list(replication_paths)
 
     # Remove Event Console settings, if this site does not want it (might
     # be removed in some future day)
@@ -4147,7 +4601,7 @@ def _check_sites_that_cannot_be_activated(
                 "offline or not logged in)."
             )
             % {"err_msg": err_msg},
-            status=409,
+            status=HTTPStatus.CONFLICT,
         )
 
 
@@ -4184,19 +4638,30 @@ def _check_sites_that_can_be_activated(
             )
 
     if manager.is_running():
-        raise MKUserError(None, _("There is an activation already running."), status=423)
+        raise MKUserError(
+            None, _("There is an activation already running."), status=HTTPStatus.LOCKED
+        )
 
     if not manager.changes.has_pending_changes():
-        raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
+        raise MKUserError(
+            None,
+            _("Currently there are no changes to activate."),
+            status=HTTPStatus.UNPROCESSABLE_ENTITY,
+        )
 
     if not manager.changes.dirty_sites(activation_sites(sites_that_can_be_activated)):
-        raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
+        raise MKUserError(
+            None,
+            _("Currently there are no changes to activate."),
+            status=HTTPStatus.UNPROCESSABLE_ENTITY,
+        )
 
     return manager, sites_that_can_be_activated
 
 
 def activate_changes_start(
     *,
+    tree: FolderTree,
     sites: Sequence[SiteId],
     all_site_configs: SiteConfigurations,
     user_permission_config: UserPermissionSerializableConfig,
@@ -4234,7 +4699,7 @@ def activate_changes_start(
             raise MKUserError(
                 None,
                 _("Unknown site %(site_id)s") % {"site_id": escaping.escape_attribute(site_id)},
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
             )
 
     sites_to_activate = SiteConfigurations(
@@ -4251,6 +4716,7 @@ def activate_changes_start(
 
     manager.start(
         sites=list(sites_that_can_be_activated),
+        tree=tree,
         comment=comment,
         activate_foreign=force_foreign_changes,
         source=source,
@@ -4267,7 +4733,9 @@ def activate_changes_start(
 class ActivationFeatures:
     edition: version.Edition
     sync_file_filter_func: Callable[[str], bool] | None
-    snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager]
+    snapshot_manager_factory: Callable[
+        [str, dict[SiteId, SnapshotSettings], FolderTree], SnapshotManager
+    ]
     get_rabbitmq_definitions: Callable[
         [Mapping[SiteId, SiteConfiguration], BrokerConnections], Mapping[str, rabbitmq.Definitions]
     ]

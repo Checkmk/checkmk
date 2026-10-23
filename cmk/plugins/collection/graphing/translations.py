@@ -235,9 +235,13 @@ translation_aws_elb_http_elb_aws_elb_http_backend_aws_elbv2_application_http_elb
     name="aws_elb_http_elb_aws_elb_http_backend_aws_elbv2_application_http_elb_aws_s3_requests_http_errors",
     check_commands=[
         translations.PassiveCheck("aws_elb_http_elb"),
+        translations.PassiveCheck("aws_v2_elb_http_elb"),
         translations.PassiveCheck("aws_elb_http_backend"),
+        translations.PassiveCheck("aws_v2_elb_http_backend"),
         translations.PassiveCheck("aws_elbv2_application_http_elb"),
+        translations.PassiveCheck("aws_v2_elbv2_application_http_elb"),
         translations.PassiveCheck("aws_s3_requests_http_errors"),
+        translations.PassiveCheck("aws_v2_s3_requests_http_errors"),
     ],
     translations={
         "http_4xx_perc": translations.RenameTo("aws_http_4xx_perc"),
@@ -469,8 +473,11 @@ translation_disk_utilization_check_diskstat_dict = translations.Translation(
         translations.PassiveCheck("diskstat_io_director"),
         translations.PassiveCheck("diskstat_io_volumes"),
         translations.PassiveCheck("aws_ebs"),
+        translations.PassiveCheck("aws_v2_ebs"),
         translations.PassiveCheck("aws_ec2_disk_io"),
+        translations.PassiveCheck("aws_v2_ec2_disk_io"),
         translations.PassiveCheck("aws_rds_disk_io"),
+        translations.PassiveCheck("aws_v2_rds_disk_io"),
         translations.PassiveCheck("cadvisor_diskstat"),
         translations.PassiveCheck("scaleio_storage_pool_totalrw"),
         translations.PassiveCheck("scaleio_storage_pool_rebalancerw"),
@@ -898,7 +905,9 @@ translation_interfaces_aws_ec2_network_io_aws_rds_network_io_cadvisor_if_esx_vsp
     check_commands=[
         translations.PassiveCheck("interfaces"),
         translations.PassiveCheck("aws_ec2_network_io"),
+        translations.PassiveCheck("aws_v2_ec2_network_io"),
         translations.PassiveCheck("aws_rds_network_io"),
+        translations.PassiveCheck("aws_v2_rds_network_io"),
         translations.PassiveCheck("cadvisor_if"),
         translations.PassiveCheck("esx_vsphere_counters_if"),
         translations.PassiveCheck("esx_vsphere_counters"),
@@ -1119,7 +1128,6 @@ translation_mem_win = translations.Translation(
             "pagefile_used_avg",
             1048576,
         ),
-        "pagefile_total": translations.ScaleBy(1048576),
     },
 )
 
@@ -1211,10 +1219,8 @@ translation_netapp_ontap_volumes = translations.Translation(
     name="netapp_ontap_volumes",
     check_commands=[translations.PassiveCheck("netapp_ontap_volumes")],
     translations={
-        "cifs_other_latency": translations.ScaleBy(0.001),
         "cifs_read_latency": translations.ScaleBy(0.001),
         "cifs_write_latency": translations.ScaleBy(0.001),
-        "fcp_other_latency": translations.ScaleBy(0.001),
         # single_volume_metrics() emits the latency of the SAN protocols unconverted: in
         # milliseconds for the 7-Mode API, in microseconds for the ONTAP REST API. The
         # difference is corrected here rather than in the check plugin on purpose. A
@@ -1230,16 +1236,12 @@ translation_netapp_ontap_volumes = translations.Translation(
             "fs_growth",
             1048576,
         ),
-        "iscsi_other_latency": translations.ScaleBy(0.001),
         # microseconds, see the fcp latencies above
         "iscsi_read_latency": translations.ScaleBy(1e-06),
         "iscsi_write_latency": translations.ScaleBy(1e-06),
-        "nfs_other_latency": translations.ScaleBy(0.001),
         "nfs_read_latency": translations.ScaleBy(0.001),
         "nfs_write_latency": translations.ScaleBy(0.001),
-        "other_latency": translations.ScaleBy(0.001),
         "read_latency": translations.ScaleBy(0.001),
-        "san_other_latency": translations.ScaleBy(0.001),
         "san_read_latency": translations.ScaleBy(0.001),
         "san_write_latency": translations.ScaleBy(0.001),
         "trend": translations.RenameToAndScaleBy(
@@ -1311,6 +1313,8 @@ translation_openvpn_clients = translations.Translation(
     },
 )
 
+# Since Checkmk 3.0.0 the check plug-in emits database_apply_lag itself. This translation only
+# keeps the RRD history recorded under apply_lag in the graphs and can be removed in a few years.
 translation_oracle_dataguard_stats = translations.Translation(
     name="oracle_dataguard_stats",
     check_commands=[translations.PassiveCheck("oracle_dataguard_stats")],

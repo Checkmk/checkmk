@@ -11,7 +11,7 @@ import type { UrlStateFormat } from './types'
  *
  * The URL is a one-way seed plus mirror, never a live binding: this runs
  * exactly once, before the service exists, and from then on {@link useUrlSync}
- * only ever writes. Nothing in monitoring/ or network-flow/ listens for
+ * only ever writes. Nothing in monitoring/ listens for
  * `popstate`, so the address bar never becomes an input again for the rest of
  * the page's life. That is deliberate - a live binding would re-derive
  * `columnVisibility` from the URL on every navigation instead of writing a

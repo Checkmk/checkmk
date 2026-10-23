@@ -55,5 +55,7 @@ class CustomServices(CmkPage):
     def service_row(self, service_name: str) -> Locator:
         return self.services_table.locator("tr.data", has_text=service_name)
 
-    def disabled_action_buttons(self, service_name: str) -> Locator:
-        return self.service_row(service_name).locator("td.buttons a.disabled")
+    def edit_button(self, service_name: str) -> Locator:
+        return self.service_row(service_name).locator(
+            "td.buttons a[title='Edit this custom service']"
+        )

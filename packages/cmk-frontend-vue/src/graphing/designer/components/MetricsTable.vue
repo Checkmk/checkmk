@@ -30,7 +30,7 @@ import SwitchCell from '@/monitoring/shared/components/cell/SwitchCell.vue'
 import VisibilityCell from '@/monitoring/shared/components/cell/VisibilityCell.vue'
 
 import type { Metric } from '../../components/TimeSeriesGraph'
-import { useDeleteWithDependents } from '../composables/useDeleteWithDependents'
+import { useDeleteConfirmation } from '../composables/useDeleteConfirmation'
 import { type GraphItemsStore, retainKnownRows } from '../composables/useGraphItems'
 import { useItemValidation } from '../composables/useItemValidation'
 import { useRowLabels } from '../composables/useRowLabels'
@@ -47,7 +47,8 @@ import {
 import { customServiceModelFor } from '../telemetryMetrics'
 import { type ItemId, isFormula, isSingleLine, parseLineType } from '../types'
 import type { RowIssue } from '../validation'
-import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
+import AutomaticColorCell from './AutomaticColorCell.vue'
+import DeleteConfirmationPopup from './DeleteConfirmationPopup.vue'
 import RowEditor from './forms/RowEditor.vue'
 
 /** Shared so an unaffected row keeps the same identity across renders. */
@@ -68,7 +69,7 @@ const {
   thresholds: { warning: string; critical: string }
   telemetryMetricsAvailable: boolean
   createServicesAvailable: boolean
-  /** What the engine expands `$DEFAULT_TITLE$` to for a metric-backend row. */
+  /** What the engine expands `$DEFAULT_TITLE$` to for a telemetry metrics row. */
   telemetryMetricsDefaultTitle: string
   titleMacros: TitleMacroGroup[]
   issuesByRow: ReadonlyMap<ItemId, RowIssue[]>
@@ -109,6 +110,12 @@ watch(
 
 const table = useTemplateRef<{ scrollToRow: (key: ItemId) => void }>('table')
 const addSource = useTemplateRef<InstanceType<typeof CmkAddDropdown>>('addSource')
+const addCalculation = useTemplateRef<{ focus: () => void }>('addCalculation')
+
+function focusAddCalculation(): void {
+  addCalculation.value?.focus()
+}
+defineExpose({ focusAddCalculation })
 
 onMounted(() => {
   if (store.items.value.length === 0) {
@@ -154,13 +161,13 @@ const selectedIds = computed<ItemId[]>(() => {
 
 /**
  * The addable source types and their dropdown titles; rrd_query is reached via the in-form toggle
- * and metric_backend only appears when the feature is available in this edition.
+ * and telemetry_metrics only appears when the feature is available in this edition.
  */
 const addSourceSuggestions = computed(() => {
   const suggestions = [
     { name: 'rrd_metric', title: _t('Checkmk RRD') },
     ...(telemetryMetricsAvailable
-      ? [{ name: 'metric_backend', title: _t('Metrics backend') }]
+      ? [{ name: 'telemetry_metrics', title: _t('Metrics backend') }]
       : []),
     { name: 'scalar', title: _t('Service reference line') },
     { name: 'constant', title: _t('Constant line') }
@@ -177,7 +184,7 @@ function onAddSource(value: string): void {
         return newConstantDraft(assigned, store.nextColor.value)
       case 'scalar':
         return newScalarDraft(assigned, scalarColor('warning', store.nextColor.value, thresholds))
-      case 'metric_backend':
+      case 'telemetry_metrics':
         return newTelemetryMetricsDraft(assigned)
       default:
         throw new Error(`Unknown source type: ${value}`)
@@ -194,7 +201,7 @@ const rowActions: CellAction[] = [
 
 const editCalculation: CellAction = { id: 'edit', label: _t('Edit calculation'), icon: 'edit' }
 
-/** Calculations are edited in the slideout; a complete metric-backend row can become a service. */
+/** Calculations are edited in the slideout; a complete telemetry metrics row can become a service. */
 function rowActionsFor(row: DesignerItem): CellAction[] {
   if (isFormula(row)) {
     return [editCalculation, ...rowActions]
@@ -202,7 +209,7 @@ function rowActionsFor(row: DesignerItem): CellAction[] {
   if (
     telemetryMetricsAvailable &&
     createServicesAvailable &&
-    row.type === 'metric_backend' &&
+    row.type === 'telemetry_metrics' &&
     isValid(row)
   ) {
     return [
@@ -215,9 +222,13 @@ function rowActionsFor(row: DesignerItem): CellAction[] {
 
 const customServiceModel = ref<ServiceModel | null>(null)
 
-const rowDelete = useDeleteWithDependents(store, () => {
-  rowSelection.value = {}
-})
+const rowDelete = useDeleteConfirmation(
+  store,
+  () => resolvedTitles,
+  () => {
+    rowSelection.value = {}
+  }
+)
 
 function onRowAction(row: DesignerItem, action: CellAction): void {
   if (action.id === 'edit') {
@@ -231,7 +242,7 @@ function onRowAction(row: DesignerItem, action: CellAction): void {
     rowDelete.request([row.id])
   } else if (
     action.id === 'create-custom-service' &&
-    row.type === 'metric_backend' &&
+    row.type === 'telemetry_metrics' &&
     isValid(row)
   ) {
     customServiceModel.value = customServiceModelFor(row, telemetryMetricsDefaultTitle)
@@ -312,17 +323,16 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
           {{ _t('Clone') }}
         </CmkButton>
       </div>
-      <CmkButton class="graphing-metrics-table__add-calculation" @click="emit('add-calculation')">
+      <CmkButton
+        ref="addCalculation"
+        class="graphing-metrics-table__add-calculation"
+        @click="emit('add-calculation')"
+      >
         {{ _t('Add calculation') }}
       </CmkButton>
     </div>
 
-    <CmkScrollContainer
-      height="auto"
-      max-height="none"
-      class="graphing-metrics-table__scroll"
-      :style="{ overflow: 'var(--graphing-designer-body-table-overflow, auto)' }"
-    >
+    <CmkScrollContainer height="auto" max-height="none" class="graphing-metrics-table__scroll">
       <EditableTable
         ref="table"
         v-model:row-selection="rowSelection"
@@ -360,7 +370,7 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
             :model-value="row.color"
             @update:model-value="store.patch(row.id, { color: $event })"
           />
-          <BaseCell v-else column-id="color" vertical-align="middle" />
+          <AutomaticColorCell v-else />
           <CollapsibleCell
             column-id="title"
             vertical-align="middle"
@@ -452,11 +462,10 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
       </EditableTable>
     </CmkScrollContainer>
 
-    <DeleteWithDependentsPopup
+    <DeleteConfirmationPopup
       v-if="rowDelete.pending.value !== null"
       open
-      :ids="rowDelete.pending.value.ids"
-      :dependents="rowDelete.pending.value.dependents"
+      :pending="rowDelete.pending.value"
       @confirm="rowDelete.confirm()"
       @close="rowDelete.cancel()"
     />

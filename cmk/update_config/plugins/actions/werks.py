@@ -7,11 +7,12 @@ from logging import Logger
 from pathlib import Path
 from typing import override
 
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
+from cmk.werks.flavor.cmk.models import WerkV3
 from cmk.werks.site import load as load_werks
 from cmk.werks.site.acknowledgement import load_acknowledgements, write_unacknowledged_werks
-from cmk.werks.tool.models import Compatibility, WerkV3
+from cmk.werks.tool.models import Compatibility
 
 # we only ship the werks of the current major version with checkmk.
 # a user might have unacknowledged werks before updating

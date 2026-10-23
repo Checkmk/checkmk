@@ -11,5 +11,5 @@ const isEnabled = ref(false)
 </script>
 
 <template>
-  <CmkSwitch v-model="isEnabled" />
+  <CmkSwitch v-model="isEnabled" aria-label="Enable notifications" />
 </template>

@@ -48,6 +48,7 @@ py_cmk_test(
     srcs = glob(["tests/**/*.py"]),
     deps = [
         ":cmk-messaging",
+        requirement("cryptography"),
         requirement("pika"),
     ],
 )
@@ -88,7 +89,6 @@ package_wheel(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "run",
     ],
 )

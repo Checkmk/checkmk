@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated, assert_never
 
 from pydantic import Discriminator
@@ -76,7 +77,7 @@ def delete_downtime_v1(
             assert_never(body)
 
     downtime_commands.delete_downtime(sites.live(), query_expr, site_id)
-    return ApiResponse(body=None, status_code=204)
+    return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT)
 
 
 ENDPOINT_DELETE_DOWNTIME = VersionedEndpoint(
@@ -93,7 +94,7 @@ ENDPOINT_DELETE_DOWNTIME = VersionedEndpoint(
         APIVersion.V1: EndpointHandler(
             handler=delete_downtime_v1,
             status_descriptions={
-                204: "Delete downtimes commands have been sent to Livestatus. "
+                HTTPStatus.NO_CONTENT: "Delete downtimes commands have been sent to Livestatus. "
                 + LIVESTATUS_GENERIC_EXPLANATION
             },
         )

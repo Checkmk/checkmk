@@ -10,19 +10,14 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_rate,
     get_value_store,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.bluecat.lib import DETECT_BLUECAT
-
-
-def discover_bluecat_dns_queries(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_bluecat_dns_queries(section: StringTable) -> CheckResult:
@@ -52,6 +47,6 @@ snmp_section_bluecat_dns_queries = SimpleSNMPSection(
 check_plugin_bluecat_dns_queries = CheckPlugin(
     name="bluecat_dns_queries",
     service_name="DNS Queries",
-    discovery_function=discover_bluecat_dns_queries,
+    discovery_function=discover_one_service,
     check_function=check_bluecat_dns_queries,
 )

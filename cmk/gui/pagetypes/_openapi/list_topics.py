@@ -17,8 +17,8 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
     LinkModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.pagetypes._core import PagetypeTopics
@@ -40,7 +40,7 @@ class PagetypeTopicExtensions:
 
 
 @api_model
-class PagetypeTopicModel(DomainObjectModel):
+class PagetypeTopicModel(TitledDomainObjectModel):
     domainType: Literal["pagetype_topic"] = api_field(description="The domain type of the object.")
     id: str = api_field(
         title="ID",
@@ -68,7 +68,7 @@ class PagetypeTopicCollectionModel(DomainObjectCollectionModel):
 def list_topics_v1(api_context: ApiContext) -> PagetypeTopicCollectionModel:
     """Show all pagetype topics the user has access to."""
     user_permissions = api_context.config.user_permissions()
-    topics = PagetypeTopics.load(user_permissions)
+    topics = PagetypeTopics.load()
     return PagetypeTopicCollectionModel(
         domainType="pagetype_topic",
         id="all",

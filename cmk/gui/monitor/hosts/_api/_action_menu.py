@@ -11,6 +11,7 @@ so any registered host icon (HW/SW inventory, notes, custom actions, ...) shows 
 automatically and stays permission-gated, exactly like in the legacy view.
 """
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.site import SiteId
@@ -34,7 +35,7 @@ from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import replace_action_url_macros, transform_action_url
@@ -116,7 +117,7 @@ def get_host_action_menu(
         row = query_icon_row("host", hostname, site_id)
     except MKLivestatusNotFoundError:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="The requested host was not found",
             detail=f"The host {hostname!r} was not found on site {site_id!r}",
         ) from None
@@ -124,7 +125,7 @@ def get_host_action_menu(
     entries = get_icons(
         "host",
         row,
-        UserPermissions.from_config(active_config, permission_registry),
+        UserPermissions.from_config(active_config, all_permissions()),
         IconConfig.from_config(active_config),
         toplevel=False,
         ignore_idents=_EXCLUDED_IDENTS,
@@ -159,16 +160,13 @@ ENDPOINT_GET_HOST_ACTION_MENU = VersionedEndpoint(
         method="get",
     ),
     permissions=EndpointPermissions(
-        # Declared for the permission tracker: the livestatus row query and get_icons already scope
-        # visibility and gate each action per user, so no permission is required up front. This
-        # mirrors the legacy action menu popup, which is accessible to normal users too.
+        # Declared for the permission tracker: the livestatus row query scopes visibility and
+        # get_icons gates each action per user, so no permission is required up front. This
+        # mirrors the legacy action menu popup, which is accessible to normal users too. Which
+        # permissions are checked depends on the icons registered in the edition.
         required=permissions.Undocumented(
-            permissions.AnyPerm(
-                [
-                    permissions.OkayToIgnorePerm("general.see_all"),
-                    permissions.OkayToIgnorePerm("bi.see_all"),
-                    permissions.OkayToIgnorePerm("mkeventd.seeall"),
-                ]
+            permissions.DynamicRuntimePerm(
+                description="Visibility of each action is gated per user at runtime.",
             )
         )
     ),

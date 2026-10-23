@@ -50,7 +50,6 @@ from cmk.gui.fields.definitions import (
     FolderIDField,
     GroupField,
     HostField,
-    HostnameOrIP,
     PasswordEditableBy,
     PasswordIdent,
     PasswordShare,
@@ -60,7 +59,6 @@ from cmk.gui.fields.definitions import (
     Timestamp,
     Username,
     UserRoleID,
-    X509ReqPEMFieldUUID,
 )
 
 __all__ = [
@@ -79,7 +77,6 @@ __all__ = [
     "HostAttributeManagementBoardField",
     "HostContactGroup",
     "HostField",
-    "HostnameOrIP",
     "TagGroupIDField",
     "IPField",
     "IPMIParameters",
@@ -104,5 +101,4 @@ __all__ = [
     "Username",
     "UserRoleID",
     "RelativeUrl",
-    "X509ReqPEMFieldUUID",
 ]

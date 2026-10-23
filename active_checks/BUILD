@@ -1,5 +1,5 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:xcomp/cc.bzl", "cc_binary")
 
 cc_binary(
@@ -37,10 +37,25 @@ pkg_tar(
     visibility = ["//visibility:public"],
 )
 
+pkg_files(
+    name = "check_always_crit_bin",
+    srcs = [":check_always_crit"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "lib/nagios/plugins",
+)
+
+pkg_tar(
+    name = "check_always_crit_tar",
+    srcs = [":check_always_crit_bin"],
+    stamp = 1,
+    visibility = ["//omd/non-free/relay:__pkg__"],
+)
+
 sh_library(
     name = "active_checks_sh",
     srcs = [
-        ".f12",
         "check_always_crit",
     ],
 )

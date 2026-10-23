@@ -8,11 +8,11 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 
 import { DashboardFeatures } from '@/dashboard/types/dashboard'
 
-import type { WorkflowItem } from '../WidgetWorkflowTypes'
+import type { WorkflowCatalog } from '../WidgetWorkflowTypes'
 import WorkflowCard from './WorkflowCard.vue'
 
 export interface AddWidgetDialogProperties {
-  workflowItems: Record<string, WorkflowItem>
+  workflowItems: WorkflowCatalog
   dashboardFeatures: DashboardFeatures
 }
 
@@ -22,10 +22,10 @@ const props = defineProps<AddWidgetDialogProperties>()
 
 const emit = defineEmits(['select'])
 
-const isDisabled = (id: string): boolean => {
+const requiresHigherEdition = (workflowKey: string): boolean => {
   return (
     props.dashboardFeatures === DashboardFeatures.RESTRICTED &&
-    ['custom_graphs', 'hw_sw_inventory', 'alerts_notifications'].includes(id)
+    ['custom_graphs', 'hw_sw_inventory', 'alerts_notifications'].includes(workflowKey)
   )
 }
 </script>
@@ -41,7 +41,8 @@ const isDisabled = (id: string): boolean => {
           :icon="item.icon"
           :subtitle="item.subtitle"
           :icon_emblem="item.icon_emblem"
-          :disabled="isDisabled(id)"
+          :unavailable-reason="item.unavailableReason"
+          :requires-higher-edition="requiresHigherEdition(id)"
           @select="emit('select', id)"
         />
       </div>

@@ -7,6 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.gui import sites
 from cmk.gui.monitor.services._impl import (
     _build_primary_sort,
     _build_query_filter,
@@ -20,8 +21,8 @@ from cmk.gui.monitor.services._models import (
     ServiceSortColumn,
     ServiceSortDirection,
 )
-from cmk.livestatus_client.testing import expect_single_query
-from tests.testlib.gui.web_test_app import SetConfig
+from cmk.livestatus_client.testing import expect_single_query, MockLiveStatusConnection
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 # "foo-server-01" matches no row in the default hosts/services test-data, so queries against it
 # return an empty result. This lets us assert on the exact query text without also needing to
@@ -30,7 +31,7 @@ _UNKNOWN_HOSTNAME = "foo-server-01"
 _SERVICES_COLUMNS = (
     "description host_name state has_been_checked plugin_output acknowledged "
     "scheduled_downtime_depth notifications_enabled comments modified_attributes_list active_checks_enabled accept_passive_checks in_notification_period in_service_period in_check_period in_passive_check_period is_flapping staleness last_check "
-    "last_state_change perf_data check_command"
+    "last_state_change perf_data check_command check_type cached_at cache_interval"
 )
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"
 
@@ -136,6 +137,22 @@ def test_fetch_reads_optional_columns_only_when_asked_for() -> None:
             sorters=[],
             filters=ServiceFilter(""),
             fields=frozenset({ServiceOptionalField.LABELS, ServiceOptionalField.TAGS}),
+        )
+
+
+def test_fetch_reads_the_service_groups_when_asked_for() -> None:
+    with expect_single_query(
+        f"GET services\nColumns: {_SERVICES_COLUMNS} groups\n"
+        f"Filter: host_name = {_UNKNOWN_HOSTNAME}\n{_DEFAULT_ORDER_BY}",
+        match_type="ellipsis",
+    ) as live:
+        LiveStatusHostServicesRepository(connection=live).fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=None,
+            query="",
+            sorters=[],
+            filters=ServiceFilter(""),
+            fields=frozenset({ServiceOptionalField.GROUPS}),
         )
 
 
@@ -303,6 +320,11 @@ def test_build_query_filter_searches_the_name_and_the_summary() -> None:
             [("Filter", "contact_groups ~~ CPU")],
             id="contact groups",
         ),
+        pytest.param(
+            ServiceOptionalField.GROUPS,
+            [("Filter", "groups ~~ CPU")],
+            id="service groups",
+        ),
     ],
 )
 def test_build_query_filter_searches_a_shown_list_column(
@@ -350,6 +372,9 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
         "last_state_change": 0,
         "perf_data": "",
         "check_command": "check_cpu",
+        "check_type": 0,
+        "cached_at": 0,
+        "cache_interval": 0,
     }
     with expect_single_query("GET services", tables={"services": [row]}) as live:
         repo = LiveStatusHostServicesRepository(connection=live)
@@ -401,6 +426,9 @@ def test_fetch_counts_only_a_modified_setting_as_manually_disabled(
         "last_state_change": 0,
         "perf_data": "",
         "check_command": "check_cpu",
+        "check_type": 0,
+        "cached_at": 0,
+        "cache_interval": 0,
     }
     with expect_single_query("GET services", tables={"services": [row]}) as live:
         services = LiveStatusHostServicesRepository(connection=live).fetch(
@@ -412,7 +440,7 @@ def test_fetch_counts_only_a_modified_setting_as_manually_disabled(
             fields=frozenset(),
         )
 
-    assert [service.active_checks_disabled for service in services] == [expected]
+    assert [service.active_checks_manually_disabled for service in services] == [expected]
 
 
 @pytest.mark.parametrize(
@@ -451,6 +479,9 @@ def test_fetch_counts_a_service_as_checked_only_inside_both_check_periods(
         "last_state_change": 0,
         "perf_data": "",
         "check_command": "check_cpu",
+        "check_type": 0,
+        "cached_at": 0,
+        "cache_interval": 0,
     }
     with expect_single_query("GET services", tables={"services": [row]}) as live:
         services = LiveStatusHostServicesRepository(connection=live).fetch(
@@ -463,3 +494,108 @@ def test_fetch_counts_a_service_as_checked_only_inside_both_check_periods(
         )
 
     assert [service.in_check_period for service in services] == [expected]
+
+
+@pytest.mark.parametrize(
+    "last_state_change, expected",
+    [
+        pytest.param(0, None, id="pending, so it never changed state"),
+        pytest.param(1752405540, 1752405540, id="changed state before"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_fetch_reports_no_state_change_for_a_pending_service(
+    last_state_change: int, expected: int | None
+) -> None:
+    row = {
+        "description": "CPU load",
+        "host_name": _UNKNOWN_HOSTNAME,
+        "state": 0,
+        "has_been_checked": 0,
+        "plugin_output": "",
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "in_passive_check_period": 1,
+        "is_flapping": 0,
+        "staleness": 0.0,
+        "last_check": 0,
+        "last_state_change": last_state_change,
+        "perf_data": "",
+        "check_command": "check_cpu",
+        "check_type": 0,
+        "cached_at": 0,
+        "cache_interval": 0,
+    }
+    with expect_single_query("GET services", tables={"services": [row]}) as live:
+        services = LiveStatusHostServicesRepository(connection=live).fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=None,
+            query="",
+            sorters=[],
+            filters=ServiceFilter(""),
+            fields=frozenset(),
+        )
+
+    assert [service.last_state_change for service in services] == [expected]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_get_overview_puts_each_detail_of_the_long_output_on_its_own_line(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    row = {
+        "description": "Filesystem /",
+        "host_name": _UNKNOWN_HOSTNAME,
+        "state": 0,
+        "has_been_checked": 1,
+        "plugin_output": "Used: 29.61%",
+        "last_check": 0,
+        "last_state_change": 0,
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "in_passive_check_period": 1,
+        "is_flapping": 0,
+        "staleness": 0.0,
+        "host_alias": _UNKNOWN_HOSTNAME,
+        "host_state": 0,
+        "host_has_been_checked": 1,
+        "host_acknowledged": 0,
+        "host_scheduled_downtime_depth": 0,
+        "contact_groups": [],
+        "long_plugin_output": "Used: 29.61%\\nInodes used: 10.26%",
+        "current_attempt": 1,
+        "max_check_attempts": 1,
+        "next_check": 0,
+        "tags": {},
+        "labels": {},
+        "label_sources": {},
+        "perf_data": "",
+        "check_command": "check_mk-df",
+        "check_type": 0,
+        "cached_at": 0,
+        "cache_interval": 0,
+    }
+    mock_livestatus.add_table("services", [row])
+    mock_livestatus.expect_query("GET services", match_type="loose", sites=["NO_SITE"])
+    with mock_livestatus(expect_status_query=True):
+        overview = LiveStatusHostServicesRepository(connection=sites.live()).get_overview(
+            hostname=_UNKNOWN_HOSTNAME, service_name="Filesystem /", site_id="NO_SITE"
+        )
+
+    assert overview.long_output == "Used: 29.61%\nInodes used: 10.26%"

@@ -21,21 +21,24 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.oracle.agent_based.liboracle import Error, Ok
 
 NOW_SIMULATED = 581792400
 
 ITEM = "DISK_GROUP"
 SECTION_OLD_MOUNTED = asm.Section(
     diskgroups={
-        ITEM: asm.Diskgroup(
-            dgstate="MOUNTED",
-            dgtype="NORMAL",
-            free_mb=4610314,
-            offline_disks=0,
-            req_mir_free_mb=63320,
-            total_mb=5242880,
-            voting_files="N",
-            fail_groups=[],
+        ITEM: Ok(
+            asm.Diskgroup(
+                dgstate="MOUNTED",
+                dgtype="NORMAL",
+                free_mb=4610314,
+                offline_disks=0,
+                req_mir_free_mb=63320,
+                total_mb=5242880,
+                voting_files="N",
+                fail_groups=[],
+            )
         )
     }
 )
@@ -43,30 +46,34 @@ SECTION_UNKNOWN_ITEM = asm.Section(diskgroups={"UNKNOWN": SECTION_OLD_MOUNTED.di
 
 SECTION_OLD_DISMOUNTED = asm.Section(
     diskgroups={
-        ITEM: asm.Diskgroup(
-            dgstate="DISMOUNTED",
-            dgtype=None,
-            free_mb=0,
-            offline_disks=0,
-            req_mir_free_mb=0,
-            total_mb=0,
-            voting_files="N",
-            fail_groups=[],
+        ITEM: Ok(
+            asm.Diskgroup(
+                dgstate="DISMOUNTED",
+                dgtype=None,
+                free_mb=0,
+                offline_disks=0,
+                req_mir_free_mb=0,
+                total_mb=0,
+                voting_files="N",
+                fail_groups=[],
+            )
         )
     }
 )
 
 SECTION_DISMOUNTED = asm.Section(
     diskgroups={
-        ITEM: asm.Diskgroup(
-            dgstate="DISMOUNTED",
-            dgtype=None,
-            total_mb=None,
-            free_mb=None,
-            req_mir_free_mb=0,
-            offline_disks=0,
-            voting_files="",
-            fail_groups=[],
+        ITEM: Ok(
+            asm.Diskgroup(
+                dgstate="DISMOUNTED",
+                dgtype=None,
+                total_mb=None,
+                free_mb=None,
+                req_mir_free_mb=0,
+                offline_disks=0,
+                voting_files="",
+                fail_groups=[],
+            )
         )
     }
 )
@@ -74,40 +81,44 @@ SECTION_DISMOUNTED = asm.Section(
 SECTION_CLUTTERED_WITH_DEPREACTED_AGENT_OUTPUT = asm.Section(
     found_deprecated_agent_output=True,
     diskgroups={
-        ITEM: asm.Diskgroup(
-            dgstate="DISMOUNTED",
-            dgtype=None,
-            free_mb=0,
-            offline_disks=0,
-            req_mir_free_mb=0,
-            total_mb=0,
-            voting_files="N",
-            fail_groups=[],
+        ITEM: Ok(
+            asm.Diskgroup(
+                dgstate="DISMOUNTED",
+                dgtype=None,
+                free_mb=0,
+                offline_disks=0,
+                req_mir_free_mb=0,
+                total_mb=0,
+                voting_files="N",
+                fail_groups=[],
+            )
         )
     },
 )
 
 SECTION_WITH_FG = asm.Section(
     diskgroups={
-        ITEM: asm.Diskgroup(
-            dgstate="MOUNTED",
-            dgtype="EXTERN",
-            fail_groups=[
-                asm.Failgroup(
-                    fg_disks=1,
-                    fg_free_mb=489148,
-                    fg_min_repair_time=8640000,
-                    fg_name="DATA_0000",
-                    fg_total_mb=614400,
-                    fg_type="REGULAR",
-                    fg_voting_files="N",
-                )
-            ],
-            free_mb=489148,
-            offline_disks=0,
-            req_mir_free_mb=0,
-            total_mb=614400,
-            voting_files="N",
+        ITEM: Ok(
+            asm.Diskgroup(
+                dgstate="MOUNTED",
+                dgtype="EXTERN",
+                fail_groups=[
+                    asm.Failgroup(
+                        fg_disks=1,
+                        fg_free_mb=489148,
+                        fg_min_repair_time=8640000,
+                        fg_name="DATA_0000",
+                        fg_total_mb=614400,
+                        fg_type="REGULAR",
+                        fg_voting_files="N",
+                    )
+                ],
+                free_mb=489148,
+                offline_disks=0,
+                req_mir_free_mb=0,
+                total_mb=614400,
+                voting_files="N",
+            )
         )
     }
 )
@@ -115,25 +126,27 @@ SECTION_WITH_FG = asm.Section(
 
 SECTION_WITH_FG_FLEX = asm.Section(
     diskgroups={
-        ITEM: asm.Diskgroup(
-            dgstate="MOUNTED",
-            dgtype="FLEX",
-            fail_groups=[
-                asm.Failgroup(
-                    fg_disks=1,
-                    fg_free_mb=489148,
-                    fg_min_repair_time=8640000,
-                    fg_name="DATA_0000",
-                    fg_total_mb=614400,
-                    fg_type="REGULAR",
-                    fg_voting_files="N",
-                )
-            ],
-            free_mb=489148,
-            offline_disks=0,
-            req_mir_free_mb=0,
-            total_mb=614400,
-            voting_files="N",
+        ITEM: Ok(
+            asm.Diskgroup(
+                dgstate="MOUNTED",
+                dgtype="FLEX",
+                fail_groups=[
+                    asm.Failgroup(
+                        fg_disks=1,
+                        fg_free_mb=489148,
+                        fg_min_repair_time=8640000,
+                        fg_name="DATA_0000",
+                        fg_total_mb=614400,
+                        fg_type="REGULAR",
+                        fg_voting_files="N",
+                    )
+                ],
+                free_mb=489148,
+                offline_disks=0,
+                req_mir_free_mb=0,
+                total_mb=614400,
+                voting_files="N",
+            )
         )
     }
 )
@@ -256,15 +269,17 @@ def test_parse(string_table: StringTable, expected: asm.Section) -> None:
         (
             asm.Section(
                 {
-                    ITEM: asm.Diskgroup(
-                        dgstate="UNKNOWN-DG-STATE",
-                        dgtype=None,
-                        total_mb=0,
-                        free_mb=0,
-                        req_mir_free_mb=0,
-                        offline_disks=0,
-                        voting_files="foo",
-                        fail_groups=[],
+                    ITEM: Ok(
+                        asm.Diskgroup(
+                            dgstate="UNKNOWN-DG-STATE",
+                            dgtype=None,
+                            total_mb=0,
+                            free_mb=0,
+                            req_mir_free_mb=0,
+                            offline_disks=0,
+                            voting_files="foo",
+                            fail_groups=[],
+                        )
                     )
                 }
             ),
@@ -492,3 +507,17 @@ def test_cluster(
     with time_machine.travel(datetime.datetime.fromtimestamp(NOW_SIMULATED, tz=ZoneInfo("UTC"))):
         yielded_results = list(asm.cluster_check_oracle_asm_diskgroup(ITEM, params, section))
         assert yielded_results == expected
+
+
+def test_failure_row_is_kept_under_the_instance_name() -> None:
+    section = asm.parse_oracle_asm_diskgroup(
+        [["+ASM", "FAILURE", "ORA-00942: table or view does not exist"]]
+    )
+    assert section.diskgroups == {"+ASM": Error("ORA-00942: table or view does not exist")}
+
+
+def test_discovery_skips_failure_row() -> None:
+    section = asm.parse_oracle_asm_diskgroup(
+        [["+ASM", "FAILURE", "ORA-00942: table or view does not exist"]]
+    )
+    assert not list(asm.discovery_oracle_asm_diskgroup(section))

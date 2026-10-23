@@ -17,12 +17,15 @@ from cmk.gui.permissions import Permission, PermissionSection
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.wato._ac_tests import (
+    ACTestApacheForwardedHeaders,
     ACTestAutomationUserSecret,
     ACTestBakeryAPI,
     ACTestGenericCheckHelperUsage,
     ACTestHaSIAPI,
     ACTestPasswordStoreAPI,
+    ACTestShadowedWebFiles,
     ACTestSpecialAgentsAPI,
+    ACTestUnexpectedAllowedIPRanges,
 )
 from cmk.gui.watolib.analyze_configuration import (
     ABCACTestPluginAPIs,
@@ -39,6 +42,8 @@ from cmk.utils.paths import local_lib_dir, local_web_dir
 def test_local_connection_mocked(mock_livestatus: MockLiveStatusConnection) -> None:
     live = mock_livestatus
     live.set_sites(["NO_SITE"])
+    # The test only applies to the microcore, which it asks for first.
+    live.expect_query(["GET status", "Columns: program_version", "ColumnHeaders: off"])
     live.expect_query(
         [
             "GET status",
@@ -49,6 +54,11 @@ def test_local_connection_mocked(mock_livestatus: MockLiveStatusConnection) -> N
     with live(expect_status_query=False):
         gen = ACTestGenericCheckHelperUsage().execute(SiteId("NO_SITE"), Config())
         list(gen)
+
+
+def test_allowed_ip_ranges_test_does_not_apply_without_such_rules() -> None:
+    """A test that does not apply yields nothing, so it is not shown at all."""
+    assert not list(ACTestUnexpectedAllowedIPRanges().execute(SiteId("NO_SITE"), Config()))
 
 
 def _userpermission_mock() -> UserPermissions:
@@ -112,6 +122,70 @@ def test_automation_user_secret_flagging() -> None:
     ) == {
         UserId("automation"): ["wato.manage_mkps", "wato.users"],
     }
+
+
+def _omd_root(tmp_path: Path, forwarded_headers: str) -> Path:
+    site_conf = tmp_path / "etc" / "omd" / "site.conf"
+    site_conf.parent.mkdir(parents=True)
+    site_conf.write_text(f"CONFIG_APACHE_FORWARDED_HEADERS='{forwarded_headers}'\n")
+    return tmp_path
+
+
+def test_apache_forwarded_headers_auto_ok(tmp_path: Path) -> None:
+    """Default mode, no manual leftover config anywhere -> OK"""
+    results = list(
+        ACTestApacheForwardedHeaders(
+            omd_root=_omd_root(tmp_path, "auto"), search_dirs=[tmp_path / "apache2"]
+        ).execute(SiteId("NO_SITE"), Config())
+    )
+
+    assert [r.state for r in results] == [ACResultState.OK]
+    assert "automatically" in results[0].text
+
+
+def test_apache_forwarded_headers_auto_leftover_warns(tmp_path: Path) -> None:
+    """Default mode, but a manual RequestHeader is still configured -> WARN"""
+    apache_dir = tmp_path / "apache2" / "conf-enabled"
+    apache_dir.mkdir(parents=True)
+    leftover = apache_dir / "proxy.conf"
+    leftover.write_text('RequestHeader set X-Forwarded-Proto "https"\n')
+
+    results = list(
+        ACTestApacheForwardedHeaders(
+            omd_root=_omd_root(tmp_path, "auto"), search_dirs=[tmp_path / "apache2"]
+        ).execute(SiteId("NO_SITE"), Config())
+    )
+
+    assert [r.state for r in results] == [ACResultState.WARN]
+    assert str(leftover) in results[0].text
+
+
+def test_apache_forwarded_headers_manual_with_config_ok(tmp_path: Path) -> None:
+    """Opted out, and a manual RequestHeader is indeed configured -> OK"""
+    apache_dir = tmp_path / "apache2"
+    apache_dir.mkdir()
+    (apache_dir / "proxy.conf").write_text('RequestHeader set X-Forwarded-Proto "https"\n')
+
+    results = list(
+        ACTestApacheForwardedHeaders(
+            omd_root=_omd_root(tmp_path, "manual"), search_dirs=[apache_dir]
+        ).execute(SiteId("NO_SITE"), Config())
+    )
+
+    assert [r.state for r in results] == [ACResultState.OK]
+    assert "manually" in results[0].text
+
+
+def test_apache_forwarded_headers_manual_without_config_warns(tmp_path: Path) -> None:
+    """Opted out, but no matching manual configuration was found -> WARN"""
+    results = list(
+        ACTestApacheForwardedHeaders(
+            omd_root=_omd_root(tmp_path, "manual"), search_dirs=[tmp_path / "apache2"]
+        ).execute(SiteId("NO_SITE"), Config())
+    )
+
+    assert [r.state for r in results] == [ACResultState.WARN]
+    assert "intentional" in results[0].text
 
 
 def _write_plugin_file(plugin_root: Path, rel_path: str, content: str) -> Path:
@@ -564,3 +638,67 @@ def test_outdated_plugin_apis_reports_one_result_per_api(tmp_path: Path) -> None
     # Only the detection is under test here, the state follows the timeline.
     assert [r.path for r in results] == [path]
     assert ".bakery_api, cmk.base.plugins.bakery.bakery_api" in results[0].text
+
+
+def _touch(root: Path, rel_path: str) -> None:
+    path = root / rel_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.touch()
+
+
+def _shadowed_web_files_results(tmp_path: Path) -> Sequence[ACSingleResult]:
+    return list(
+        ACTestShadowedWebFiles(tmp_path / "local", tmp_path / "shipped").execute(
+            SiteId("NO_SITE"), Config()
+        )
+    )
+
+
+def test_shadowed_web_files_reports_local_copies_of_shipped_files(tmp_path: Path) -> None:
+    _touch(tmp_path / "shipped", "themes/facelift/theme.css")
+    _touch(tmp_path / "local", "themes/facelift/theme.css")
+
+    [result] = _shadowed_web_files_results(tmp_path)
+
+    assert result.state is ACResultState.WARN
+    assert "themes/facelift/theme.css" in result.text
+
+
+def test_shadowed_web_files_ignores_files_that_shadow_nothing(tmp_path: Path) -> None:
+    _touch(tmp_path / "shipped", "themes/facelift/theme.css")
+    _touch(tmp_path / "local", "themes/my_theme/theme.css")
+
+    [result] = _shadowed_web_files_results(tmp_path)
+
+    assert result.state is ACResultState.OK
+
+
+def test_shadowed_web_files_ignores_files_other_than_style_sheets_and_scripts(
+    tmp_path: Path,
+) -> None:
+    _touch(tmp_path / "shipped", "images/icon_checkmk_logo.svg")
+    _touch(tmp_path / "local", "images/icon_checkmk_logo.svg")
+
+    [result] = _shadowed_web_files_results(tmp_path)
+
+    assert result.state is ACResultState.OK
+
+
+def test_shadowed_web_files_without_local_dir(tmp_path: Path) -> None:
+    _touch(tmp_path / "shipped", "themes/facelift/theme.css")
+
+    [result] = _shadowed_web_files_results(tmp_path)
+
+    assert result.state is ACResultState.OK
+
+
+def test_shadowed_web_files_lists_only_the_first_files(tmp_path: Path) -> None:
+    for idx in range(12):
+        _touch(tmp_path / "shipped", f"js/script_{idx:02}.js")
+        _touch(tmp_path / "local", f"js/script_{idx:02}.js")
+
+    [result] = _shadowed_web_files_results(tmp_path)
+
+    assert "js/script_09.js" in result.text
+    assert "js/script_10.js" not in result.text
+    assert "and 2 more" in result.text

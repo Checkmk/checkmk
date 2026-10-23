@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
 import CmkTooltip, {
   CmkTooltipContent,
@@ -61,6 +61,7 @@ const triggerRescan = () => {
     <CmkTooltip :open="!tooltipHidden && !tooltipClosed" class="tooltip">
       <CmkTooltipTrigger as="span"></CmkTooltipTrigger>
       <CmkTooltipContent
+        variant="unstyled"
         align="center"
         side="right"
         :avoid-collisions="false"
@@ -72,7 +73,7 @@ const triggerRescan = () => {
           :width="6"
           :height="6"
         />
-        <CmkAlertBox
+        <CmkAlert
           :heading="dialogTitle"
           variant="info"
           :main-button="{
@@ -89,9 +90,8 @@ const triggerRescan = () => {
             }
           }"
           class="setup-agent-download-dialog__dialog"
-        >
-          {{ dialogMessage }}
-        </CmkAlertBox>
+          :text="dialogMessage"
+        />
       </CmkTooltipContent>
     </CmkTooltip>
   </CmkTooltipProvider>
@@ -111,7 +111,11 @@ const triggerRescan = () => {
       :agent-install-cmds="agentSlideout.agent_install_cmds"
       :agent-registration-cmds="agentSlideout.agent_registration_cmds"
       :agent-status-cmds="agentSlideout.agent_status_cmds"
+      :command-placeholders="agentSlideout.command_placeholders"
       :legacy-agent-url="agentSlideout.legacy_agent_url"
+      :kubernetes-helm-command="agentSlideout.kubernetes_helm_command"
+      :kubernetes-values="agentSlideout.kubernetes_values"
+      :kubernetes-doc-url="agentSlideout.kubernetes_doc_url"
       :close-button-title="closeButtonTitle"
       :save-host="agentSlideout.save_host"
       :host-exists="agentSlideout.host_exists ?? false"
@@ -119,6 +123,7 @@ const triggerRescan = () => {
       :agent-installed="isNotRegistered"
       :is-push-mode="isPushMode"
       :unbaked-fallback="agentSlideout.unbaked_fallback ?? null"
+      :bakery-url="agentSlideout.bakery_url"
       @close="((slideInOpen = false), (tooltipHidden = true), triggerRescan())"
     />
   </CmkSlideInDialog>

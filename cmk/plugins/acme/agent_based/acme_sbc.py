@@ -51,6 +51,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 Section = tuple[Mapping[str, str], Mapping[str, str]]
 
@@ -68,10 +69,6 @@ def acme_sbc_parse_function(string_table: StringTable) -> Section:
     return states, settings
 
 
-def discover_acme_sbc(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_acme_sbc(section: Section) -> CheckResult:
     health = int(section[0]["Health"])
     dev_state = section[0]["State"]
@@ -87,7 +84,7 @@ agent_section_acme_sbc = AgentSection(
 check_plugin_acme_sbc = CheckPlugin(
     name="acme_sbc",
     service_name="Status",
-    discovery_function=discover_acme_sbc,
+    discovery_function=discover_one_service,
     check_function=check_acme_sbc,
 )
 

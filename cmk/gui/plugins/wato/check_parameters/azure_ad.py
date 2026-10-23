@@ -30,8 +30,9 @@ def _parameter_form_spec_azure_ad() -> Dictionary:
 
 rule_spec_azure_ad = CheckParameters(
     name="azure_ad",
-    title=Title("Azure AD Connect (deprecated)"),
+    title=Title("Azure AD Connect"),
     topic=Topic.NETWORKING,
     parameter_form=_parameter_form_spec_azure_ad,
     condition=HostAndItemCondition(item_title=Title("Accounts display name")),
+    is_deprecated=True,
 )

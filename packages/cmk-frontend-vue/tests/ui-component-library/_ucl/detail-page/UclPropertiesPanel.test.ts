@@ -308,3 +308,58 @@ describe('prop type interactions update component', () => {
     expect(mirror).toHaveAccessibleName('renamed')
   })
 })
+
+describe('list options with hiddenWhen', () => {
+  const config = {
+    compact: { type: 'boolean', title: 'Compact', initialState: false },
+    layout: {
+      type: 'list',
+      title: 'Layout',
+      initialState: 'wide',
+      options: [
+        { name: 'wide', title: 'Wide', hiddenWhen: (state) => state.compact === true },
+        { name: 'narrow', title: 'Narrow' }
+      ]
+    }
+  } satisfies PanelConfig
+
+  function makeTestApp(initialLayout: string) {
+    return defineComponent({
+      components: { UclPropertiesPanel },
+      setup() {
+        const propState = ref({ compact: false, layout: initialLayout })
+        return { propState, config }
+      },
+      template: `
+        <UclPropertiesPanel :config="config" v-model="propState" />
+        <span data-testid="layout">{{ propState.layout }}</span>
+      `
+    })
+  }
+
+  test('a hidden option is not offered', async () => {
+    render(makeTestApp('narrow'))
+
+    await userEvent.click(screen.getByRole('switch'))
+    await userEvent.click(screen.getByRole('combobox', { name: 'Layout' }))
+
+    await screen.findByRole('option', { name: 'Narrow' })
+    expect(screen.queryByRole('option', { name: 'Wide' })).toBeNull()
+  })
+
+  test('a selected option that gets hidden falls back to the first visible one', async () => {
+    render(makeTestApp('wide'))
+
+    await userEvent.click(screen.getByRole('switch'))
+
+    expect(screen.getByTestId('layout')).toHaveTextContent('narrow')
+  })
+
+  test('a value outside the options is kept', async () => {
+    render(makeTestApp('custom'))
+
+    await userEvent.click(screen.getByRole('switch'))
+
+    expect(screen.getByTestId('layout')).toHaveTextContent('custom')
+  })
+})

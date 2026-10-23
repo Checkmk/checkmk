@@ -60,12 +60,16 @@ test('emits the typed query when the search button is clicked', async () => {
   expect(emitted('search')).toEqual([['db']])
 })
 
-test('emits an empty query when the search button is clicked on an empty field', async () => {
-  const { emitted } = renderInput()
+test('disables the search button while the field is empty', () => {
+  renderInput()
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  expect(screen.getByRole('button', { name: 'Search' })).toBeDisabled()
+})
 
-  expect(emitted('search')).toEqual([['']])
+test('enables the search button once the field has content', () => {
+  renderInput('web')
+
+  expect(screen.getByRole('button', { name: 'Search' })).toBeEnabled()
 })
 
 test('keeps the model value in sync while typing', async () => {
@@ -83,6 +87,14 @@ test('clears the field and emits an empty query when the clear button is clicked
 
   expect(screen.getByRole('searchbox')).toHaveValue('')
   expect(emitted('search')).toEqual([['']])
+})
+
+test('leaves the focus in the field when the clear button is clicked', async () => {
+  renderInput('web01')
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Clear search' }))
+
+  expect(screen.getByRole('searchbox')).toHaveFocus()
 })
 
 test('omits the submit button when it is turned off', () => {

@@ -8,6 +8,10 @@ from ._extended import (
     Autocompleter,
     AutocompleterData,
     AutocompleterParams,
+    ButtonGroupSize,
+    CascadingSingleChoiceElementExtended,
+    CascadingSingleChoiceExtended,
+    CascadingSingleChoiceLayout,
     DictGroupExtended,
     DictionaryExtended,
     DictionaryGroupLayout,
@@ -23,7 +27,13 @@ from ._extended import (
     SingleChoiceExtended,
     StringAutocompleter,
 )
-from ._migrations import migrate_to_internal_proxy
+from ._migrations import (
+    LenientProxyUrl,
+    migrate_to_internal_proxy,
+    parse_proxy_url,
+    parse_proxy_url_leniently,
+    ParsedProxyUrl,
+)
 from ._preconfigured import InternalProxy, InternalProxySchema, OAuth2Connection
 from ._user_selection import LegacyFilter, UserSelection, UserSelectionFilter
 
@@ -31,6 +41,10 @@ __all__ = [
     "Autocompleter",
     "AutocompleterData",
     "AutocompleterParams",
+    "ButtonGroupSize",
+    "CascadingSingleChoiceElementExtended",
+    "CascadingSingleChoiceExtended",
+    "CascadingSingleChoiceLayout",
     "DictGroupExtended",
     "DictionaryExtended",
     "DictionaryGroupLayout",
@@ -46,6 +60,10 @@ __all__ = [
     "MultipleChoiceExtended",
     "MultipleChoiceExtendedLayout",
     "OAuth2Connection",
+    "LenientProxyUrl",
+    "parse_proxy_url",
+    "parse_proxy_url_leniently",
+    "ParsedProxyUrl",
     "SimplePassword",
     "SingleChoiceElementExtended",
     "SingleChoiceExtended",

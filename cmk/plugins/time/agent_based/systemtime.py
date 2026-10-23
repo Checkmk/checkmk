@@ -12,11 +12,10 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 Section = Mapping[str, float]
 
@@ -46,10 +45,6 @@ agent_section_systemtime = AgentSection(
 )
 
 
-def discover_systemtime(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_systemtime(params: Params, section: Section) -> CheckResult:
     if "foreign_systemtime" not in section:
         return
@@ -72,7 +67,7 @@ def check_systemtime(params: Params, section: Section) -> CheckResult:
 check_plugin_systemtime = CheckPlugin(
     name="systemtime",
     service_name="System Time",
-    discovery_function=discover_systemtime,
+    discovery_function=discover_one_service,
     check_function=check_systemtime,
     check_ruleset_name="systemtime",
     check_default_parameters=Params(levels=(30, 60)),

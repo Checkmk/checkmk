@@ -1,11 +1,10 @@
-This directory contains a very efficient API to MK Livestatus 
+This directory contains a very efficient API to MK Livestatus
 for Python. It is directly taken from the Multisite GUI and
 has the following features:
 
 * It supports keep alive
 * It returns typed values
 * It support transparent multi-site access
-* It supports persistent connection caching
 * It supports parallelized queries (though still single-threaded)
 * It supports detection of dead sites (via "status_host")
 

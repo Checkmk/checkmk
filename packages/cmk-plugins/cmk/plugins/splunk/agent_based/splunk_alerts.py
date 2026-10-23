@@ -13,11 +13,10 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     FixedLevelsT,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 AlertCount = NewType("AlertCount", int)
 
@@ -30,11 +29,6 @@ def parse_splunk_alerts(string_table: StringTable) -> AlertCount | None:
         return None
 
     return AlertCount(count)
-
-
-def discover_splunk_alerts(section: AlertCount | None) -> DiscoveryResult:  # noqa: ARG001
-    """Runs empty discovery since there is only a single service."""
-    yield Service()
 
 
 type IntLevels = FixedLevelsT[int]
@@ -69,7 +63,7 @@ agent_section_splunk_alerts = AgentSection(
 check_plugin_splunk_alerts = CheckPlugin(
     name="splunk_alerts",
     service_name="Splunk Alerts",
-    discovery_function=discover_splunk_alerts,
+    discovery_function=discover_one_service,
     check_function=check_splunk_alerts,
     check_ruleset_name="splunk_alerts",
     check_default_parameters=CheckParams(),

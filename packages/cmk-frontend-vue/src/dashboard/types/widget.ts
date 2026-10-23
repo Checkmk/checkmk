@@ -8,16 +8,10 @@ import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 
 export type ComputedWidgetSpecResponse =
   components['schemas']['ComputedWidgetResponse_ComputedWidgetSpec_']
-export type ComputedTopListResponse = components['schemas']['ComputedWidgetResponse_TopList_']
 export type ComputedTopList = components['schemas']['TopList']
 export type TopListEntry = components['schemas']['TopListEntry']
 export type TopListError = components['schemas']['TopListError']
-export type ComputedSingleMetricResponse =
-  components['schemas']['ComputedWidgetResponse_SingleMetric_']
 export type ComputedSingleMetric = components['schemas']['SingleMetric']
-export type ComputedTimelineCountResponse =
-  components['schemas']['ComputedWidgetResponse_TimelineCount_']
-export type ComputedTimelineCount = components['schemas']['TimelineCount']
 
 export type WidgetContent = components['schemas']['WidgetContent']
 export type WidgetSizeValue = components['schemas']['WidgetSizeValue']
@@ -55,39 +49,61 @@ export interface EffectiveWidgetFilterContext extends WidgetFilterContext {
 export type FilterHTTPVars = Record<string, string>
 export type VisualContext = Record<string, FilterHTTPVars>
 
+export interface ComputedWidgetResponse<T> {
+  domainType: 'widget-compute'
+  value: T
+}
+
+export type SavedWidgetContent = components['schemas']['SavedWidgetContent']
+export type WidgetTimeRange = components['schemas']['WidgetTimeRange']
+export type ResolvedLink = components['schemas']['ResolvedLink']
+export type LinkProperties = components['schemas']['LinkProperties']
+export type FilterResult = components['schemas']['FilterResult']
+export interface ExplicitWidgetContent<C> {
+  type: 'explicit'
+  content: C
+  context: VisualContext
+}
+export type WidgetSource<C> = ExplicitWidgetContent<C> | SavedWidgetContent
+
 // Specific widget types
 export type EmbeddedViewContent = components['schemas']['EmbeddedViewContent']
 export type IFrameContent = components['schemas']['URLContent']
 export type LinkedViewContent = components['schemas']['LinkedViewContent']
 export type StaticTextContent = components['schemas']['StaticTextContent']
 export type TopListContent = components['schemas']['TopListContent']
-export type NetworkFlowTopTableContent = components['schemas']['NetworkFlowTopTableContent']
-export type ComputedNetworkFlowTopTableResponse =
-  components['schemas']['ComputedNetworkFlowTopTableResponse']
-export type NetworkFlowDonutContent = components['schemas']['NetworkFlowDonutContent']
-export type ComputedNetworkFlowDonutSlice = components['schemas']['ComputedNetworkFlowDonutSlice']
-export type ComputedNetworkFlowDonutResponse =
-  components['schemas']['ComputedNetworkFlowDonutResponse']
-export type NetworkFlowKpiStatCardContent = components['schemas']['NetworkFlowKpiStatCardContent']
-export type ComputedNetworkFlowKpiStatCardResponse =
-  components['schemas']['ComputedNetworkFlowKpiStatCardResponse']
-export type NetworkFlowTrendChartContent = components['schemas']['NetworkFlowTrendChartContent']
-export type ComputedNetworkFlowTrendChartResponse =
-  components['schemas']['ComputedNetworkFlowTrendChartResponse']
-export type ComputedNetworkFlowHostResponse =
-  components['schemas']['ComputedNetworkFlowHostResponse']
-export type ComputedNetworkFlowHost = components['schemas']['ComputedNetworkFlowHost']
-export type ComputedNetworkFlowAutonomousSystemResponse =
-  components['schemas']['ComputedNetworkFlowAutonomousSystemResponse']
-export type ComputedNetworkFlowAutonomousSystem =
-  components['schemas']['ComputedNetworkFlowAutonomousSystem']
-export type ComputedNetworkFlowHostApplication =
-  components['schemas']['ComputedNetworkFlowHostApplication']
-export type ComputedNetworkFlowHostPeer = components['schemas']['ComputedNetworkFlowHostPeer']
 export type SidebarElementContent = components['schemas']['SidebarElementContent']
 export type PerformanceGraphContent = components['schemas']['PerformanceGraphContent']
 export type SingleTimeseriesContent = components['schemas']['SingleTimeseriesContent']
 export type SingleMetricContent = components['schemas']['SingleMetricContent']
+export type StatsContent = components['schemas']['StatsContent']
+export type Stats = components['schemas']['Stats']
+export type BarplotContent = components['schemas']['BarplotContent']
+export type Barplot = components['schemas']['Barplot']
+export type BarplotBar = components['schemas']['BarplotBar']
+export type GaugeContent = components['schemas']['GaugeContent']
+export type Gauge = components['schemas']['Gauge']
+export type GaugeStatus = components['schemas']['GaugeStatus']
+export type InventoryContent = components['schemas']['InventoryContent']
+export type InventoryAttribute = components['schemas']['InventoryAttribute']
+export type AlertOverviewContent = components['schemas']['AlertOverviewContent']
+export type AlertOverview = components['schemas']['AlertOverview']
+export type TimelineCount = components['schemas']['TimelineCount']
+export type AlertOverviewElement = components['schemas']['AlertOverviewElement']
+export type SiteOverviewContent = components['schemas']['SiteOverviewContent']
+export type MonitoringTableContent = components['schemas']['MonitoringTableContent']
+export type ComputedMonitoringTable = components['schemas']['MonitoringTable']
+export type SiteOverview = components['schemas']['SiteOverview']
+export type SiteOverviewHost = components['schemas']['SiteOverviewHost']
+export type SiteOverviewHosts = components['schemas']['SiteOverviewHosts']
+export type MonitoringState = components['schemas']['MonitoringState']
+export type HostState = components['schemas']['HostState']
+export type SiteOverviewSites = components['schemas']['SiteOverviewSites']
+export type StateContent = components['schemas']['StateContent']
+export type HostOrServiceState = components['schemas']['HostOrServiceState']
+export type StateSummaryContent = components['schemas']['StateSummaryContent']
+export type StateSummary = components['schemas']['StateSummary']
+export type StatsPart = components['schemas']['StatsPart']
 export type AlertTimelineContent = components['schemas']['AlertTimelineContent']
 export type NotificationTimelineContent = components['schemas']['NotificationTimelineContent']
 /** Either timeline widget; they share their render modes and their computed count. */
@@ -96,6 +112,7 @@ export type CombinedGraphContent = components['schemas']['CombinedGraphContent']
 export type AverageScatterplotContent = components['schemas']['AverageScatterplotContent']
 export type ProblemGraphContent = components['schemas']['ProblemGraphContent']
 export type CustomGraphContent = components['schemas']['CustomGraphContent']
+export type EmbeddedCustomGraphContent = components['schemas']['EmbeddedCustomGraphContent']
 // Only picks graph_render_options, used to check legend visibility in the scrollable preview
 // as this is used by multiple widget types we extract it only once here
 export type GraphWidgetContent = Pick<
@@ -105,17 +122,9 @@ export type GraphWidgetContent = Pick<
 export type WidgetAvailableInventory =
   components['schemas']['WidgetAvailableInventoryCollectionModel']
 
-export interface WidgetRefreshSignal {
-  tick: number
-}
-
 export interface WidgetInteractionState {
   editMode: boolean
   isPreview: boolean
-}
-
-export interface WidgetTimeRange {
-  range: DateTimeRange
 }
 
 export interface WidgetEmitTimeRange {

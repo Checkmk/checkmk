@@ -22,7 +22,7 @@ import pytest
 from cmk.ccc.site import SiteId
 from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
 from cmk.gui.userdb import UserConnectionConfigFile
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ExpiryVersion
 from cmk.update_config.plugins.actions import (
     migrate_user_sync_to_auth_connections as migrate_mod,
 )

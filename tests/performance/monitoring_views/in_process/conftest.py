@@ -11,17 +11,12 @@ site. The fixture stack below is the one the REST-API suite uses, trimmed to wha
 needs, plus the fleet itself.
 """
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
-
-from __future__ import annotations
-
 import logging
 import os
 import queue
-from collections.abc import Callable, Generator, Iterator
-from typing import override
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
+from typing import override
 
 import pytest
 
@@ -32,7 +27,7 @@ import cmk.ccc.version as cmk_version
 pytest.register_assert_rewrite("tests.testlib")
 
 
-from tests.testlib import fake_site  # noqa: E402
+from tests.testlib.unit import fake_site  # noqa: E402
 
 fake_site.fake_paths()
 
@@ -49,6 +44,10 @@ from cmk.licensing.handler import (  # noqa: E402
     NotificationHandler,
     UserEffect,
 )
+from tests.performance.monitoring_views.in_process.components import (  # noqa: E402
+    ComponentProfile,
+    profile_lines,
+)
 from tests.performance.monitoring_views.in_process.fleet import (  # noqa: E402
     CENTRAL_SITE_ID,
     FleetBuilder,
@@ -59,28 +58,25 @@ from tests.performance.monitoring_views.livestatus_fake import (  # noqa: E402
     FakeVersion,
     QueryLog,
 )
-from tests.performance.monitoring_views.in_process.components import (  # noqa: E402
-    ComponentProfile,
-    profile_lines,
-)
-from tests.performance.monitoring_views.report import Report  # noqa: E402
-from tests.performance.monitoring_views.scenarios import LimitTier, TIERS  # noqa: E402
 from tests.performance.monitoring_views.remotes import (  # noqa: E402
     build_sites,
     patched_remotes,
 )
-from tests.testlib.gui.common_fixtures import (  # noqa: E402
+from tests.performance.monitoring_views.report import Report  # noqa: E402
+from tests.performance.monitoring_views.scenarios import LimitTier, TIERS  # noqa: E402
+from tests.testlib.unit.gui.common_fixtures import (  # noqa: E402
     create_flask_app,
     create_wsgi_app,
+    patch_theme_context,
     perform_gui_cleanup_after_test,
     perform_load_config,
-    patch_theme_context,
     perform_load_plugins,
+    run_background_jobs_in_threads,
     set_config_context,
     validate_background_job_annotation,
 )
-from tests.testlib.gui.users import create_and_destroy_user  # noqa: E402
-from tests.testlib.gui.web_test_app import SetConfig, WebTestAppForCMK  # noqa: E402
+from tests.testlib.unit.gui.users import create_and_destroy_user  # noqa: E402
+from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -174,12 +170,12 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 #   .--environment-----------------------------------------------------------
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def cleanup_cmk() -> Generator[None]:
     yield from fake_site.cleanup_cmk_tmp_dir()
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="session")  # ruff: ignore[pytest-fixture-autouse]
 def fixture_umask() -> Generator[None]:
     old_mask = os.umask(0o0007)
     try:
@@ -188,23 +184,23 @@ def fixture_umask() -> Generator[None]:
         os.umask(old_mask)
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="session")  # ruff: ignore[pytest-fixture-autouse]
 def fixture_omd_site() -> Generator[None]:
     os.environ["OMD_SITE"] = CENTRAL_SITE_ID
     yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def cleanup_after_test() -> Generator[None]:
     yield from fake_site.cleanup_omd_root_after_test()
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="session")  # ruff: ignore[pytest-fixture-autouse]
 def reduce_password_hashing_rounds() -> Iterator[None]:
     yield from fake_site.reduce_password_hashing_rounds()
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="session")  # ruff: ignore[pytest-fixture-autouse]
 def prevent_security_event_file_logging() -> Iterator[queue.Queue[logging.LogRecord]]:
     yield from fake_site.prevent_security_event_file_logging()
 
@@ -214,14 +210,14 @@ def test_edition() -> cmk_version.Edition:
     return fake_site.edition()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def patch_omd_version(test_edition: cmk_version.Edition) -> Iterator[None]:
     with pytest.MonkeyPatch.context() as mp:
         mp.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
         mp.setattr(
             cmk_version,
             "omd_version",
-            lambda *args, **kw: f"{cmk_version.__version__}.{test_edition.long}",
+            lambda _omd_root: f"{cmk_version.__version__}.{test_edition.long}",
         )
         cmk_version.edition.cache_clear()
         yield
@@ -237,27 +233,27 @@ def use_fakeredis_client() -> Iterator[None]:
     yield from fake_site.use_fakeredis()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def load_plugins(test_edition: cmk_version.Edition) -> None:
     perform_load_plugins(test_edition)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("_CMK_AUTOMATIONS_FORCE_CLI_INTERFACE", "1")
 
 
-@pytest.fixture(autouse=True)
-def execute_background_jobs_without_job_scheduler(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER", "1")
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+def execute_background_jobs_without_job_scheduler() -> Iterator[None]:
+    yield from run_background_jobs_in_threads()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def gui_cleanup_after_test(mocker: MockerFixture) -> Iterator[None]:
     yield from perform_gui_cleanup_after_test(mocker)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fail_on_unannotated_background_job_start(
     request: pytest.FixtureRequest, mocker: MockerFixture
 ) -> None:
@@ -284,10 +280,14 @@ def fixture_quiesce_licensing(monkeypatch_module: pytest.MonkeyPatch) -> None:
     """
     monkeypatch_module.setattr(
         "cmk.licensing.registry._get_licensing_handler_factory",
-        lambda omd_root: _DummyLicensingHandler.make,
+        lambda _omd_root: _DummyLicensingHandler.make,
     )
-    monkeypatch_module.setattr("cmk.gui.top_heading.show_license_expiry", lambda x, y: None)
-    monkeypatch_module.setattr("cmk.gui.top_heading.show_license_banner", lambda x, y: None)
+    monkeypatch_module.setattr(
+        "cmk.gui.top_heading.show_license_expiry", lambda _writer, _user_role_ids: None
+    )
+    monkeypatch_module.setattr(
+        "cmk.gui.top_heading.show_license_banner", lambda _writer, _user_role_ids: None
+    )
 
 
 @pytest.fixture(name="patch_theme")
@@ -297,21 +297,21 @@ def fixture_patch_theme() -> Iterator[None]:
 
 @pytest.fixture()
 def flask_app(
-    patch_omd_site: None,
-    use_fakeredis_client: None,
-    load_plugins: None,
+    patch_omd_site: None,  # noqa: ARG001
+    use_fakeredis_client: None,  # noqa: ARG001
+    load_plugins: None,  # noqa: ARG001
 ) -> Iterator[Flask]:
     yield from create_flask_app()
 
 
 @pytest.fixture()
-def request_context(flask_app: Flask) -> Iterator[None]:
+def request_context(flask_app: Flask) -> Iterator[None]:  # noqa: ARG001
     """Empty fixture. Invokes usage of the `flask_app` fixture."""
     yield
 
 
 @pytest.fixture()
-def load_config(request_context: None) -> Iterator[Config]:
+def load_config(request_context: None) -> Iterator[Config]:  # noqa: ARG001
     yield from perform_load_config()
 
 
@@ -433,8 +433,8 @@ def fixture_fake_fleet(
     query_log: QueryLog,
     set_config: SetConfig,
     logged_in_admin_wsgi_app: WebTestAppForCMK,
-    quiesce_licensing: None,
-    patch_theme: None,
+    quiesce_licensing: None,  # noqa: ARG001
+    patch_theme: None,  # noqa: ARG001
 ) -> Iterator[WebTestAppForCMK]:
     """A logged-in GUI whose configured sites are all answered by the fake fleet."""
     sites = build_sites(
@@ -457,9 +457,9 @@ def fixture_fleet_builder(
     fake_version: FakeVersion,
     remote_latency: float,
     set_config: SetConfig,
-    logged_in_admin_wsgi_app: WebTestAppForCMK,
-    quiesce_licensing: None,
-    patch_theme: None,
+    logged_in_admin_wsgi_app: WebTestAppForCMK,  # noqa: ARG001
+    quiesce_licensing: None,  # noqa: ARG001
+    patch_theme: None,  # noqa: ARG001
 ) -> FleetBuilder:
     """Hand back a way to stand up a differently shaped fleet inside a test.
 

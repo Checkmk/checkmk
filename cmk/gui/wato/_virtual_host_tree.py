@@ -88,7 +88,7 @@ class VirtualHostTree(SidebarSnapin):
     def show(self, config: Config) -> None:
         self._load(config.virtual_host_trees)
         if not config.virtual_host_trees:
-            url = "wato.py?varname=virtual_host_trees&mode=edit_configvar"
+            url = "global_settings.py?varname=virtual_host_trees"
             html.p(
                 _(
                     "You have not defined any virtual host trees. You can do this "
@@ -107,19 +107,18 @@ class VirtualHostTree(SidebarSnapin):
                 "vtree",
                 self._tree_choices(),
                 deflt="%s" % self._current_tree_id,
-                onchange="virtual_host_tree_changed(this)",
+                onchange="cmk.sidebar.virtual_host_tree_changed(this)",
                 style="width:210px" if self._current_tree_path else None,
             )
 
             # Give chance to change one level up, if we are in a subtree
             if self._current_tree_path:
-                upurl = "javascript:virtual_host_tree_enter('%s')" % "|".join(
+                upurl = "javascript:cmk.sidebar.virtual_host_tree_enter('%s')" % "|".join(
                     self._current_tree_path[:-1]
                 )
                 html.icon_button(upurl, _("Go up one tree level"), StaticIcon(IconNames.back))
 
             html.br()
-        html.final_javascript(self._javascript())
 
     def _show_tree(self, folder_tree: FolderTree, tag_groups: Sequence[TagGroup]) -> None:
         tree_spec = self._trees[self._current_tree_id]["tree_spec"]
@@ -214,7 +213,7 @@ class VirtualHostTree(SidebarSnapin):
         if not leaf:
             code = HTMLWriter.render_a(
                 code,
-                href="javascript:virtual_host_tree_enter('%s');" % "|".join(path),
+                href="javascript:cmk.sidebar.virtual_host_tree_enter('%s');" % "|".join(path),
                 title=_("Display the tree only below this node"),
             )
         return code + " "
@@ -317,28 +316,6 @@ class VirtualHostTree(SidebarSnapin):
             return tree["_svc_problems"]
 
         return any(self._tag_tree_has_svc_problems(x) for x in tree.get("_children", {}).values())
-
-    def _javascript(self) -> str:
-        return """
-function virtual_host_tree_changed(field)
-{
-    var tree_id = field.value;
-    cmk.ajax.call_ajax('sidebar_ajax_tag_tree.py?tree_id=' + escape(tree_id), {
-        response_handler : function(handler_data, response_body) {
-            cmk.sidebar.refresh_single_snapin("tag_tree");
-        }
-    });
-}
-
-function virtual_host_tree_enter(path)
-{
-    cmk.ajax.call_ajax('sidebar_ajax_tag_tree_enter.py?path=' + escape(path), {
-        response_handler : function(handler_data, response_body) {
-            cmk.sidebar.refresh_single_snapin("tag_tree");
-        }
-    });
-}
-"""
 
     def _compute_tag_tree(
         self, folder_tree: FolderTree, tree_spec: Sequence[str], tag_groups: Sequence[TagGroup]

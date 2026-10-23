@@ -21,11 +21,10 @@ py_library(
         requirement("pytest"),
         requirement("requests"),
         "//tests/system:pkg_marker",
-        "//tests/testlib",
-        "//tests/testlib/common:utils",
-        "//tests/testlib/pytest_helpers",
+        "//tests/testlib/system",
     ] + select({
         "//:gpl+nonfree_repo": [
+            "//cmk/gui/form_specs",
             "//non-free/tests/testlib/system/cloud",
         ],
         "//:gpl_repo": [],

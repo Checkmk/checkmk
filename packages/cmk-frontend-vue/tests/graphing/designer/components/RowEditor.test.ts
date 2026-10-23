@@ -4,8 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
-import { Response } from 'cmk-ui-library/components/CmkSuggestions'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse, http } from 'msw'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
@@ -14,33 +15,22 @@ import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import { type DesignerItem, newConstantDraft } from '@/graphing/designer/drafts'
 import { isValid } from '@/graphing/designer/validation'
 
+import { restAutocompleter } from '@tests/lib/autocompleters'
+
 import { constantItem, filterDefinitions, telemetryMetricsItem } from '../fixtures'
 
-const mocks = vi.hoisted(() => ({ fetchSuggestions: vi.fn(), fetchRestAPIDeprecated: vi.fn() }))
-
-vi.mock(
-  import('cmk-ui-library/components/FormAutocompleter/autocompleter'),
-  async (importOriginal) => {
-    const mod = await importOriginal()
-    return { ...mod, fetchSuggestions: mocks.fetchSuggestions }
-  }
+useMswServer(
+  restAutocompleter(() => []),
+  http.post('*/api/internal/domain-types/telemetry_metrics/actions/names_with_types/invoke', () =>
+    HttpResponse.json({ choices: [] })
+  )
 )
-
-vi.mock(import('cmk-ui-library/lib/cmkFetch'), async (importOriginal) => {
-  const mod = await importOriginal()
-  return { ...mod, fetchRestAPIDeprecated: mocks.fetchRestAPIDeprecated }
-})
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 const THRESHOLDS = { warning: '#ffd000', critical: '#ff3232' }
 
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true })
-  mocks.fetchSuggestions.mockResolvedValue(new Response([]))
-  mocks.fetchRestAPIDeprecated.mockResolvedValue({
-    raiseForStatus: async () => {},
-    json: async () => ({ choices: [] })
-  })
 })
 
 afterEach(() => {
@@ -85,7 +75,10 @@ function constantValue(store: ReturnType<typeof useGraphItems>): number | null {
 
 function percentile(store: ReturnType<typeof useGraphItems>): number {
   const row = store.items.value[0]
-  if (row?.type !== 'metric_backend' || row.consolidation_function.type !== 'histogram_quantile') {
+  if (
+    row?.type !== 'telemetry_metrics' ||
+    row.consolidation_function.type !== 'histogram_quantile'
+  ) {
     throw new Error(`expected a quantile-aggregated OpenTelemetry metrics source, got ${row?.type}`)
   }
   return row.consolidation_function.percentile

@@ -69,20 +69,22 @@ from ._page_edit_visual import render_context_specs as render_context_specs
 from ._page_edit_visual import single_infos_spec as single_infos_spec
 from ._page_list import page_list as page_list
 from ._permissions import declare_visual_permissions as declare_visual_permissions
+from ._search import BuiltinVisualsSearch as BuiltinVisualsSearch
+from ._search import CustomVisualsSearch as CustomVisualsSearch
 from ._site_filters import default_site_filter_heading_info as default_site_filter_heading_info
 from ._site_filters import SiteFilter as SiteFilter
 from ._store import available as available
 from ._store import available_by_owner as available_by_owner
-from ._store import declare_custom_permissions as declare_custom_permissions
-from ._store import declare_packaged_visuals_permissions as declare_packaged_visuals_permissions
 from ._store import get_permissioned_visual as get_permissioned_visual
 from ._store import invalidate_all_caches as invalidate_all_caches
 from ._store import load as load
 from ._store import load_visuals_of_a_user as load_visuals_of_a_user
 from ._store import save as save
 from ._store import TVisual as TVisual
+from ._store import visual_permissions as visual_permissions
 from ._title import view_title as view_title
 from ._title import visual_title as visual_title
+from ._title import visual_title_without_context as visual_title_without_context
 from .filter import (
     api,
     Filter,
@@ -153,8 +155,8 @@ def _register_pre_21_plugin_api() -> None:
     CMK-12228
     """
     # Needs to be a local import to not influence the regular plug-in loading order
-    import cmk.gui.plugins.visuals as api_module  # astrein: disable=cmk-module-layer-violation
-    import cmk.gui.plugins.visuals.utils as plugin_utils  # astrein: disable=cmk-module-layer-violation
+    import cmk.gui.plugins.visuals as api_module  # astrein: disable=module-layers
+    import cmk.gui.plugins.visuals.utils as plugin_utils  # astrein: disable=module-layers
 
     for name, val in (
         ("Filter", Filter),

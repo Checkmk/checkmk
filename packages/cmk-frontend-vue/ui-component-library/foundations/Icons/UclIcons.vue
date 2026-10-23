@@ -60,6 +60,12 @@ export const panelConfig = {
     })),
     initialState: 'xxlarge',
     help: 'Rendered size of the icon previews.'
+  },
+  emblem: {
+    type: 'boolean' as const,
+    title: 'Add emblem',
+    initialState: false,
+    help: 'Compose every preview with an emblem, picked from the box below these filters.'
   }
 } satisfies PanelConfig & PanelConfigFor<unknown>
 </script>
@@ -74,53 +80,39 @@ import {
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
 import CmkCopy from 'cmk-ui-library/components/CmkCopy.vue'
-import type { CmkMultitoneIconNames } from 'cmk-ui-library/components/CmkIcon'
-import CmkIcon, { type SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
-import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
+import { type SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
+import CmkIconEmblem from 'cmk-ui-library/components/CmkIcon/CmkIconEmblem.vue'
 import {
+  emblems,
   iconSizes,
   oneColorIcons,
   themedIcons,
   twoColorIcons,
   unthemedIcons
 } from 'cmk-ui-library/components/CmkIcon/icons.constants'
+import type { IconEmblems } from 'cmk-ui-library/components/CmkIcon/types'
 import { getIconPath } from 'cmk-ui-library/components/CmkIcon/utils'
 import { useTheme } from 'cmk-ui-library/lib/useTheme'
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
 import { computed, ref } from 'vue'
 
+import UclIconPreview, {
+  type IconEntry,
+  type IconType,
+  MULTITONE_PRIMARY,
+  MULTITONE_SECONDARY
+} from './UclIconPreview.vue'
 import { iconSearchLabels } from './iconSearchLabels'
 
 defineProps<{ screenshotMode: boolean }>()
 
 const { theme } = useTheme()
 
-// Fixed demo colors for the multitone previews. The color prop takes semantic
-// keys (mapped to palette colors inside the component), not raw color names.
-const MULTITONE_PRIMARY = 'success'
-const MULTITONE_SECONDARY = 'info'
-
-type IconKind = 'CmkIcon' | 'CmkMultitoneIcon'
-type IconType = 'svg' | 'png'
-
 // The resolved asset URL can carry a query suffix (e.g. ?url&no-inline) and a
 // content hash, so match the extension rather than the whole string.
 function imageType(path: string): IconType {
   return /\.png(\?|$)/i.test(path) ? 'png' : 'svg'
 }
-type IconEntry = {
-  name: string
-  kind: IconKind
-  type: IconType
-  themed: boolean
-  twoColor: boolean
-  // Stable v-for key, baked in so the template does not recompute it per render.
-  key: string
-  // Lowercased name plus curated synonym keywords, baked in once so filtering is
-  // a single substring test instead of re-deriving the keyword list per keystroke.
-  search: string
-}
-
 // Completes an entry's derived fields (key, search) from its core properties.
 function buildEntry(core: Omit<IconEntry, 'key' | 'search'>): IconEntry {
   return {
@@ -174,8 +166,15 @@ const propState = ref<PanelState>({
   cmkIcon: panelConfig.cmkIcon.initialState,
   cmkMultitoneIcon: panelConfig.cmkMultitoneIcon.initialState,
   type: panelConfig.type.initialState,
-  size: panelConfig.size.initialState
+  size: panelConfig.size.initialState,
+  emblem: panelConfig.emblem.initialState
 })
+
+const pickedEmblem = ref<IconEmblems>('rulesets')
+
+const activeEmblem = computed<IconEmblems | undefined>(() =>
+  propState.value['emblem'] ? pickedEmblem.value : undefined
+)
 
 const previewSize = computed(() => propState.value['size'] as IconSizeNames)
 
@@ -206,13 +205,21 @@ const filtered = computed(() => {
   })
 })
 
-function htmlSnippet(icon: IconEntry): string {
+function iconSnippet(icon: IconEntry): string {
   if (icon.kind === 'CmkMultitoneIcon') {
     return icon.twoColor
       ? `<CmkMultitoneIcon name="${icon.name}" primary-color="${MULTITONE_PRIMARY}" secondary-color="${MULTITONE_SECONDARY}" />`
       : `<CmkMultitoneIcon name="${icon.name}" primary-color="${MULTITONE_PRIMARY}" />`
   }
   return `<CmkIcon name="${icon.name}" />`
+}
+
+function htmlSnippet(icon: IconEntry): string {
+  const inner = iconSnippet(icon)
+  if (activeEmblem.value === undefined) {
+    return inner
+  }
+  return `<CmkIconEmblem emblem="${activeEmblem.value}">${inner}</CmkIconEmblem>`
 }
 
 const externalReferences: ExternalReferenceItem[] = [
@@ -246,7 +253,9 @@ const externalReferences: ExternalReferenceItem[] = [
           <code>&lt;CmkMultitoneIcon&gt;</code>, read live from the icon registry so this view
           always reflects the currently loaded theme. Each card shows the icon and its underlying
           image type (<code>SVG</code> or <code>PNG</code>). Click a card to copy its name or
-          ready-to-paste markup.
+          ready-to-paste markup. Turn on <em>Add emblem</em> to compose every icon with one of the
+          <code>&lt;CmkIconEmblem&gt;</code> badges offered beneath the filters; the copied markup
+          then carries the wrapper too.
         </p>
 
         <div class="ucl-icons__count">{{ filtered.length }} of {{ allIcons.length }} icons</div>
@@ -255,19 +264,14 @@ const externalReferences: ExternalReferenceItem[] = [
           <PopoverRoot v-for="icon in filtered" :key="icon.key">
             <PopoverTrigger as-child>
               <button type="button" class="ucl-icons__card" :title="icon.name">
-                <span class="ucl-icons__preview">
-                  <CmkIcon
-                    v-if="icon.kind === 'CmkIcon'"
-                    :name="icon.name as SimpleIcons"
-                    :size="previewSize"
-                  />
-                  <CmkMultitoneIcon
-                    v-else
-                    :name="icon.name as CmkMultitoneIconNames"
-                    :primary-color="MULTITONE_PRIMARY"
-                    :secondary-color="icon.twoColor ? MULTITONE_SECONDARY : undefined"
-                    :size="previewSize"
-                  />
+                <span
+                  class="ucl-icons__preview"
+                  :class="{ 'ucl-icons__preview--emblem': activeEmblem !== undefined }"
+                >
+                  <CmkIconEmblem v-if="activeEmblem" :emblem="activeEmblem"
+                    ><UclIconPreview :icon="icon" :size="previewSize"
+                  /></CmkIconEmblem>
+                  <UclIconPreview v-else :icon="icon" :size="previewSize" />
                 </span>
                 <span class="ucl-icons__name">{{ icon.name }}</span>
                 <span class="ucl-icons__meta">
@@ -290,18 +294,10 @@ const externalReferences: ExternalReferenceItem[] = [
               <PopoverContent side="top" align="center" :side-offset="6" as-child>
                 <div class="ucl-icons__popover">
                   <div class="ucl-icons__popover-head">
-                    <CmkIcon
-                      v-if="icon.kind === 'CmkIcon'"
-                      :name="icon.name as SimpleIcons"
-                      size="large"
-                    />
-                    <CmkMultitoneIcon
-                      v-else
-                      :name="icon.name as CmkMultitoneIconNames"
-                      :primary-color="MULTITONE_PRIMARY"
-                      :secondary-color="icon.twoColor ? MULTITONE_SECONDARY : undefined"
-                      size="large"
-                    />
+                    <CmkIconEmblem v-if="activeEmblem" :emblem="activeEmblem"
+                      ><UclIconPreview :icon="icon" size="large"
+                    /></CmkIconEmblem>
+                    <UclIconPreview v-else :icon="icon" size="large" />
                     <span class="ucl-icons__popover-name">{{ icon.name }}</span>
                   </div>
                   <CmkCopy :text="icon.name">
@@ -329,6 +325,26 @@ const externalReferences: ExternalReferenceItem[] = [
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" title="Filters" />
+
+        <div v-if="propState['emblem']" class="ucl-icons__emblems">
+          <div class="ucl-icons__emblems-title">Emblem</div>
+          <div class="ucl-icons__emblems-grid">
+            <button
+              v-for="emblem in emblems"
+              :key="emblem"
+              type="button"
+              class="ucl-icons__emblem-card"
+              :class="{ 'ucl-icons__emblem-card--picked': emblem === pickedEmblem }"
+              :aria-pressed="emblem === pickedEmblem"
+              @click="pickedEmblem = emblem"
+            >
+              <CmkIconEmblem :emblem="emblem">
+                <span class="ucl-icons__emblem-base" />
+              </CmkIconEmblem>
+              <span class="ucl-icons__name">{{ emblem }}</span>
+            </button>
+          </div>
+        </div>
       </template>
     </UclDetailPageComponent>
 
@@ -353,6 +369,58 @@ const externalReferences: ExternalReferenceItem[] = [
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
+}
+
+.ucl-icons__emblems {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
+  padding: var(--dimension-5);
+  border: 1px solid var(--default-border-color);
+  border-radius: var(--dimension-3);
+}
+
+.ucl-icons__emblems-title {
+  font-weight: var(--font-weight-bold);
+}
+
+.ucl-icons__emblems-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: var(--dimension-3);
+}
+
+.ucl-icons__emblem-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--dimension-4);
+  padding: var(--dimension-4) var(--dimension-3) var(--dimension-6);
+  border: 1px solid var(--default-border-color);
+  border-radius: var(--dimension-3);
+  background: var(--default-form-element-bg-color);
+  color: var(--font-color);
+  cursor: pointer;
+  outline: 2px solid transparent;
+  outline-offset: 1px;
+  transition: outline-color 120ms ease;
+}
+
+.ucl-icons__emblem-card:hover,
+.ucl-icons__emblem-card:focus-visible {
+  outline-color: var(--success);
+}
+
+.ucl-icons__emblem-card--picked {
+  border-color: var(--success);
+}
+
+.ucl-icons__emblem-base {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border: 1px dashed var(--default-border-color);
+  border-radius: var(--dimension-2);
 }
 
 .ucl-icons__grid {
@@ -390,6 +458,10 @@ const externalReferences: ExternalReferenceItem[] = [
   align-items: center;
   justify-content: center;
   height: max(40px, var(--ucl-icons-preview-size, 40px));
+}
+
+.ucl-icons__preview--emblem {
+  padding-bottom: calc(0.2 * var(--ucl-icons-preview-size, 40px));
 }
 
 .ucl-icons__name {

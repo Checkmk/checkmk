@@ -5,10 +5,9 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.fireeye.agent_based.fireeye_mailq import (
     check_fireeye_mailq,
-    dicsover_fireeye_mailq,
     parse_fireeye_mailq,
     Section,
 )
@@ -19,10 +18,6 @@ def _get_section() -> Section:
     section = parse_fireeye_mailq([["0", "0", "0", "3", "5"]])
     assert section is not None
     return section
-
-
-def test_discover_somehting(section: Section) -> None:
-    assert list(dicsover_fireeye_mailq(section)) == [Service()]
 
 
 def test_check(section: Section) -> None:

@@ -10,9 +10,10 @@ import enum
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Protocol
+from typing import Protocol, Self
 
 from cmk.ccc.site import SiteId
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ActionId,
     GeneralStageErrors,
@@ -22,6 +23,11 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     StageIndex,
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, Widget
+from cmk.gui.watolib.hosts_and_folders import (
+    FolderTree,
+    FolderTreeConfigSource,
+    make_folder_tree,
+)
 from cmk.livestatus_client import SiteConfiguration
 from cmk.rulesets.v1.form_specs import FormSpec
 
@@ -45,18 +51,53 @@ class ProgressLogger(Protocol):
     def update_progress_step_status(self, step_name: str, status: StepStatus) -> None: ...
 
 
+class QuickSetupConfigSource(FolderTreeConfigSource, Protocol):
+    """Satisfied by the GUI's Config and the REST API's ApiConfig"""
+
+    @property
+    def debug(self) -> bool: ...
+
+    @property
+    def wato_use_git(self) -> bool: ...
+
+    @property
+    def wato_pprint_config(self) -> bool: ...
+
+
+@dataclass(frozen=True, kw_only=True)
+class QuickSetupContext:
+    tree: FolderTree
+    user: LoggedInUser
+    site_configs: Mapping[SiteId, SiteConfiguration]
+    debug: bool
+    use_git: bool
+    pprint_value: bool
+
+    @classmethod
+    def from_config(cls, config: QuickSetupConfigSource, user: LoggedInUser) -> Self:
+        return cls(
+            tree=make_folder_tree(config),
+            user=user,
+            site_configs=config.sites,
+            debug=config.debug,
+            use_git=config.wato_use_git,
+            pprint_value=config.wato_pprint_config,
+        )
+
+
 FormspecMap = Mapping[FormSpecId, FormSpec]
 # TODO: Validator should be refactored so during complete action, overlapping validations can be
 #  skipped
-CallableValidator = Callable[[QuickSetupId, ParsedFormData, ProgressLogger], GeneralStageErrors]
+CallableValidator = Callable[
+    [QuickSetupId, ParsedFormData, ProgressLogger, QuickSetupContext], GeneralStageErrors
+]
 CallableRecap = Callable[
     [
         QuickSetupId,
         StageIndex,
         ParsedFormData,
         ProgressLogger,
-        Mapping[SiteId, SiteConfiguration],
-        bool,
+        QuickSetupContext,
     ],
     Sequence[Widget],
 ]
@@ -66,12 +107,12 @@ CallableAction = Callable[
         QuickSetupActionMode,
         ProgressLogger,
         str | None,
-        bool,
-        bool,
+        QuickSetupContext,
     ],
     str,
 ]
-WidgetConfigurator = Callable[[], Sequence[Widget]]
+CallableStageApplicability = Callable[[ParsedFormData], bool]
+WidgetConfigurator = Callable[[QuickSetupContext], Sequence[Widget]]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -146,8 +187,8 @@ class QuickSetupStage:
             The title of the stage
 
         configure_components:
-            A callable that returns a sequence of widgets that are displayed in the stage body
-            (only visible if the stage is on focus)
+            The widgets that are displayed in the stage body (only visible if the stage is on
+            focus), or a callable that builds them from the context of the current request
 
         actions:
             A sequence of mutually exclusive stage actions that can be triggered in the stage
@@ -164,6 +205,48 @@ class QuickSetupStage:
     actions: Sequence[QuickSetupStageAction]
     sub_title: str | None = None
     prev_button_label: str | None = None
+
+
+StageFactory = Callable[[], QuickSetupStage]
+
+
+@dataclass(frozen=True)
+class ConditionalStage:
+    """A stage factory that carries the condition deciding if its stage is shown.
+
+    The condition sits next to the factory, so the framework reads it without building the stage.
+    """
+
+    factory: StageFactory
+    applicable_if: CallableStageApplicability
+
+    def __call__(self) -> QuickSetupStage:
+        return self.factory()
+
+    @property
+    def __name__(self) -> str:
+        return getattr(self.factory, "__name__", "<stage>")
+
+    @staticmethod
+    def condition_of(factory: StageFactory) -> CallableStageApplicability | None:
+        """The condition of a stage factory, or None if the stage is always shown."""
+        return factory.applicable_if if isinstance(factory, ConditionalStage) else None
+
+
+def applicable_if(
+    condition: CallableStageApplicability,
+) -> Callable[[StageFactory], ConditionalStage]:
+    """Declare when a stage is shown.
+
+    The condition is called with the parsed form data of the visible stages above the stage. It
+    returns True to show the stage and False to hide it. A stage without the decorator is always
+    shown, and so is the first stage, which has no data above it to read.
+    """
+
+    def decorate(factory: StageFactory) -> ConditionalStage:
+        return ConditionalStage(factory=factory, applicable_if=condition)
+
+    return decorate
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -235,9 +318,19 @@ class QuickSetupBackgroundAction(QuickSetupAction):
 class QuickSetup:
     title: str
     id: QuickSetupId
-    stages: Sequence[Callable[[], QuickSetupStage]]
+    stages: Sequence[StageFactory]
     actions: Sequence[QuickSetupAction]
     load_data: Callable[[str], ParsedFormData | None] = lambda _: None
+    # A push-agent source host does not need a special-agent rule in its bundle.
+    allow_push_agent: bool = False
+
+    @property
+    def has_conditional_stages(self) -> bool:
+        """Whether a stage is shown only under a condition.
+
+        The first stage is always shown, so a condition on it is never read.
+        """
+        return any(ConditionalStage.condition_of(stage) is not None for stage in self.stages[1:])
 
 
 def get_all_permissions(quick_setup: QuickSetup) -> list[str] | None:

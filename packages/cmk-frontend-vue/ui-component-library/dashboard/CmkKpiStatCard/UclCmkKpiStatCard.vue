@@ -162,7 +162,7 @@ export const panelConfig = {
   containerWidth: {
     type: 'number' as const,
     title: 'Card width (px)',
-    help: 'The card scales its text to its box, so its size is what the preview varies.',
+    help: 'The card scales its text to its box, so its size is what the preview varies. Drag the corner of the preview to change it.',
     initialState: 560
   },
   containerHeight: {
@@ -200,7 +200,8 @@ import {
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel
+  UclPropertiesPanel,
+  UclResizablePreview
 } from '@ucl/_ucl/components/detail-page'
 import { computed } from 'vue'
 
@@ -280,12 +281,9 @@ function formatValue(value: number): string {
     <UclDetailPageHeader>CmkKpiStatCard</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <div
-        class="ucl-cmk-kpi-stat-card__container"
-        :style="{
-          width: `${Math.max(0, propState.containerWidth)}px`,
-          height: `${Math.max(0, propState.containerHeight)}px`
-        }"
+      <UclResizablePreview
+        v-model:width="propState.containerWidth"
+        v-model:height="propState.containerHeight"
       >
         <CmkKpiStatCard
           :title="propState.title"
@@ -301,7 +299,7 @@ function formatValue(value: number): string {
           :spark-height-mode="propState.sparkHeightMode"
           :href="propState.linked ? '#' : undefined"
         />
-      </div>
+      </UclResizablePreview>
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />
@@ -313,13 +311,3 @@ function formatValue(value: number): string {
     <UclDetailPageAccessibility :data="[]" />
   </UclDetailPageLayout>
 </template>
-
-<style scoped>
-/* The card fills whatever box it is given and scales its text to it, so the
-   preview provides an explicitly sized one. */
-.ucl-cmk-kpi-stat-card__container {
-  resize: both;
-  overflow: hidden;
-  border: 1px solid var(--ucl-elements-border-color);
-}
-</style>

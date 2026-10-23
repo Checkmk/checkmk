@@ -15,18 +15,11 @@ endpoint.
 from collections.abc import Collection, Mapping
 from typing import Literal, override
 
+from cmk.shared_typing.legacy_frontend_hooks import DynamicParamsCallbackName
+
 AutocompleterParams = Mapping[str, str | int | float | bool | Collection[str]]
 AutocompleterConfigJson = Mapping[
     str, str | int | float | bool | Collection[str] | AutocompleterParams
-]
-DynamicParamsCallbackName = Literal[
-    # see dynamicParamsCallbacks object in packages/frontend-vue/js/modules/valuespecs.js
-    "nop",
-    "tag_group_options_autocompleter",
-    "host_and_service_hinted_autocompleter",
-    "host_hinted_autocompleter",
-    "label_autocompleter",
-    "check_types_autocompleter",
 ]
 
 

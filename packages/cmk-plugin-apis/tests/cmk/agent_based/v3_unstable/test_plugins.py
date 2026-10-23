@@ -8,7 +8,7 @@ from typing import Never
 
 import pytest
 
-from cmk.agent_based.v3_unstable import CheckPlugin
+from cmk.agent_based.v3_unstable import CheckPlugin, discover_one_service, Service
 
 INVALID_NAMES = ["", *"\"'^°!²³§$½¬%&/{([])}=?ß\\'`*+~#-.:,;ÜÖÄüöä<>|"]
 
@@ -26,3 +26,7 @@ def test_invalid_check_plugin_name(str_name: str) -> None:
             discovery_function=_noop,
             check_function=_noop,
         )
+
+
+def test_discover_one_service() -> None:
+    assert list(discover_one_service("irrelevant")) == [Service()]

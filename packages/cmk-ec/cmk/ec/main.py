@@ -44,7 +44,6 @@ from cmk.ccc.exceptions import MKException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.translations import translate
 from cmk.ccc.version_info import get_general_version_infos
 from cmk.crash import ABCCrashReport, CrashReportStore, make_crash_report_base_path
 from cmk.livestatus_client import LocalConnection
@@ -61,7 +60,7 @@ from .config import (
     Rule,
 )
 from .core_queries import Connection, HostInfo, query_hosts_scheduled_downtime_depth
-from .event import create_events_from_syslog_messages, Event, scrub_string
+from .event import create_events_from_syslog_messages, Event, scrub_string, translate_event_host
 from .helpers import ECLock, parse_bytes_into_syslog_messages
 from .history import ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab, TimedHistory
 from .history_file import FileHistory
@@ -80,7 +79,16 @@ from .query import (
     QueryREPLICATE,
     StatusTable,
 )
-from .rule_matcher import compile_rule, match, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
+from .rule_matcher import (
+    compile_active_rule,
+    match,
+    match_outcome,
+    MatchFailure,
+    MatchOutcome,
+    MatchResult,
+    MatchSuccess,
+    RuleMatcher,
+)
 from .rule_packs import load_active_config
 from .settings import create_settings, FileDescriptor, PortNumber, Settings
 from .snmp import SNMPTrapParser
@@ -1175,43 +1183,34 @@ class EventServer(ECServerThread):
 
         # Loop through all rule packs and with through their rules
         for rule_pack in rule_packs:
-            if rule_pack["disabled"]:
-                count_disabled += len(rule_pack["rules"])
-                continue
-
             for rule in rule_pack["rules"]:
-                if rule.get("disabled"):
+                try:
+                    active_rule = compile_active_rule(rule_pack, rule)
+                except Exception:
+                    if self.settings.options.debug:
+                        raise
                     count_disabled += 1
-                else:
-                    count_rules += 1
-                    rule = rule.copy()  # keep original intact because of slave replication
+                    self._logger.exception(
+                        "Ignoring rule '%(pack)s/%(rule_id)s' because of an invalid regex.",
+                        {"pack": rule_pack["id"], "rule_id": rule["id"]},
+                    )
+                    continue
+                if isinstance(active_rule, str):
+                    count_disabled += 1
+                    continue
 
-                    # Store information about rule pack right within the rule. This is needed
-                    # for debug output and also for skipping rule packs
-                    rule["pack"] = rule_pack["id"]
-                    self._rules.append(rule)
-                    self._rule_by_id[rule["id"]] = rule
-                    try:
-                        compile_rule(rule)
-                    except Exception:
-                        if self.settings.options.debug:
-                            raise
-                        rule["disabled"] = True
-                        count_disabled += 1
-                        self._logger.exception(
-                            "Ignoring rule '%(pack)s/%(rule_id)s' because of an invalid regex.",
-                            {"pack": rule["pack"], "rule_id": rule["id"]},
-                        )
-
-                    if self._config["rule_optimizer"]:
-                        self.hash_rule(rule)
-                        if (
-                            "match_facility" not in rule
-                            and "match_priority" not in rule
-                            and "cancel_priority" not in rule
-                            and "cancel_application" not in rule
-                        ):
-                            count_unspecific += 1
+                count_rules += 1
+                self._rules.append(active_rule)
+                self._rule_by_id[active_rule["id"]] = active_rule
+                if self._config["rule_optimizer"]:
+                    self.hash_rule(active_rule)
+                    if (
+                        "match_facility" not in active_rule
+                        and "match_priority" not in active_rule
+                        and "cancel_priority" not in active_rule
+                        and "cancel_application" not in active_rule
+                    ):
+                        count_unspecific += 1
 
         self._logger.info(
             "Compiled %(count_rules)d active rules (ignoring %(count_disabled)d disabled rules)",
@@ -1343,19 +1342,19 @@ class EventServer(ECServerThread):
                         },
                     )
 
-                if rule.get("drop"):
-                    if rule["drop"] == "skip_pack":
-                        skip_pack = rule["pack"]
-                        if self._config["debug_rules"]:
-                            self._logger.info(
-                                "  skipping this rule pack (%(skip_pack)s)",
-                                {"skip_pack": skip_pack},
-                            )
-                        continue
+                outcome = match_outcome(rule, result)
+                if outcome is MatchOutcome.SKIP_PACK:
+                    skip_pack = rule["pack"]
+                    if self._config["debug_rules"]:
+                        self._logger.info(
+                            "  skipping this rule pack (%(skip_pack)s)",
+                            {"skip_pack": skip_pack},
+                        )
+                    continue
+                if outcome is MatchOutcome.DROP_MESSAGE:
                     self._perfcounters.count("drops")
                     return
-
-                if result.cancelling:
+                if outcome is MatchOutcome.CANCEL_EVENTS:
                     self._event_status.cancel_events(
                         self, self._event_columns, event, result.match_groups, rule
                     )
@@ -1562,14 +1561,11 @@ class EventServer(ECServerThread):
             )
 
     def do_translate_hostname(self, event: Event) -> None:
-        try:
-            event["host"] = HostName(translate(self._config["hostname_translation"], event["host"]))
-        except Exception:
-            if self._config["debug_rules"]:
-                self._logger.exception(
-                    'Unable to parse host "%(host)s"', {"host": event.get("host")}
-                )
-            event["host"] = HostName("")
+        event["host"] = translate_event_host(
+            self._config["hostname_translation"],
+            event["host"],
+            self._logger if self._config["debug_rules"] else None,
+        )
 
     def log_message(self, event: Event) -> None:
         try:

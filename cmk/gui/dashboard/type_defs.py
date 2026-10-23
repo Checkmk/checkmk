@@ -8,8 +8,11 @@ from typing import Literal, NewType, NotRequired, TypedDict
 
 from cmk.gui.type_defs import (
     ColumnSpec,
+    ContextualLinkEntryConfig,
+    ContextualLinkLocationConfig,
     DashboardEmbeddedViewSpec,
     FilterName,
+    GraphLegendStyle,
     GraphPresentation,
     GraphRenderOptionsVS,
     InventoryJoinMacrosSpec,
@@ -17,9 +20,9 @@ from cmk.gui.type_defs import (
     SorterSpec,
     Visual,
     VisualContext,
-    VisualName,
-    VisualTypeName,
 )
+from cmk.gui.type_defs import ContextFilterConfig as ContextFilterConfig
+from cmk.gui.type_defs import ContextualLinkTargetType as ContextualLinkTargetType
 from cmk.gui.valuespec import HostStateValue, MonitoringStateValue, TimerangeValue
 
 DashboardName = str
@@ -39,6 +42,29 @@ type ResponsiveGridBreakpoint = Literal["XS", "S", "M", "L", "XL"]
 class DashletSizeAndPosition(TypedDict):
     size: DashletSize
     position: DashletPosition
+
+
+class ContextualLinkNoneConfig(TypedDict):
+    type: Literal["none"]
+
+
+class ContextualLinkInheritedConfig(TypedDict):
+    type: Literal["inherited"]
+    location: ContextualLinkLocationConfig
+    include_context: bool
+    include_time_range: bool
+    show_filter_form: bool
+
+
+class ContextualLinkCustomConfig(TypedDict):
+    type: Literal["custom"]
+    links: list[ContextualLinkEntryConfig]
+
+
+# A widget in `default` mode stores no link key, so `default` has no persisted form.
+type ContextualLinkConfig = (
+    ContextualLinkNoneConfig | ContextualLinkInheritedConfig | ContextualLinkCustomConfig
+)
 
 
 class _DashletConfigMandatory(TypedDict):
@@ -87,12 +113,35 @@ class CustomGraphDashletConfig(ABCGraphDashletConfig):
     show_legend: NotRequired[bool]
 
 
-class MetricTimeRangeParameters(TypedDict):
+class EmbeddedCustomGraphDashletConfig(ABCGraphDashletConfig):
+    # Stored config of the embedded_custom_graph widget. `definition` is the dumped
+    # CustomGraphContentV2 (nonfree/pro), including "version"; community code only passes it
+    # through, the registered pro widget parses and validates it.
+    definition: dict[str, object]
+
+
+class MetricCurrentValue(TypedDict):
+    type: Literal["current"]
+
+
+class FixedWindow(TypedDict):
+    type: Literal["range"]
     window: TimerangeValue
+
+
+class DashboardWindow(TypedDict):
+    type: Literal["dashboard"]
+
+
+class MetricFixedWindow(FixedWindow):
     rrd_consolidation: Literal["average", "min", "max"]
 
 
-type MetricTimeRange = Literal["current"] | tuple[Literal["range"], MetricTimeRangeParameters]
+class MetricDashboardWindow(DashboardWindow):
+    rrd_consolidation: Literal["average", "min", "max"]
+
+
+type MetricTimeRange = MetricCurrentValue | MetricFixedWindow | MetricDashboardWindow
 type MetricDisplayRangeFixed = tuple[Literal["fixed"], tuple[str, tuple[float, float]]]
 type MetricDisplayRangeWithAutomatic = MetricDisplayRangeFixed | Literal["automatic"]
 type StatusDisplay = None | tuple[Literal["background"], Literal["all", "not_ok"]]
@@ -105,6 +154,7 @@ class SingleMetricDashletConfig(DashletConfig):
 
 class BarplotDashletConfig(SingleMetricDashletConfig):
     display_range: MetricDisplayRangeWithAutomatic
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class GaugeDashletConfig(SingleMetricDashletConfig):
@@ -131,6 +181,8 @@ class AverageScatterplotDashletConfig(DashletConfig):
     metric_color: str | None
     avg_color: str | None
     median_color: str | None
+    show_legend: NotRequired[bool]
+    legend_style: NotRequired[GraphLegendStyle]
 
 
 class TopListColumnConfig(TypedDict):
@@ -144,70 +196,17 @@ class TopListDashletConfig(DashletConfig):
     display_range: MetricDisplayRangeWithAutomatic
     ranking_order: Literal["high", "low"]
     limit_to: int
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
-NetworkFlowTopTableDimension = Literal[
-    "local_hosts", "remote_hosts", "applications", "autonomous_systems"
-]
-NetworkFlowAccent = Literal["blue", "magenta", "green", "yellow", "orange", "purple", "red"]
-
-
-class NetworkFlowTopTableDashletConfig(DashletConfig):
-    dimension: NetworkFlowTopTableDimension
-    accent: NetworkFlowAccent
-    limit_to: int
-
-
-NetworkFlowDonutDimension = Literal["applications", "protocols"]
-NetworkFlowDonutLegendMode = Literal["table", "compact"]
-
-
-class NetworkFlowDonutDashletConfig(DashletConfig):
-    dimension: NetworkFlowDonutDimension
-    limit_to: int
-    # Absent from every donut stored before the legend became configurable.
-    legend_mode: NotRequired[NetworkFlowDonutLegendMode]
-    # Absent from every donut stored before the comparison existed.
-    show_delta: NotRequired[bool]
-
-
-NetworkFlowKpiStatCardMetric = Literal[
-    "total_bytes",
-    "ingress_bytes",
-    "egress_bytes",
-    "active_hosts",
-    "total_flows",
-    "active_asn",
-    "peak_throughput",
-    "avg_throughput",
-    "tracked_hosts",
-]
-
-
-NetworkFlowKpiStatCardSparkHeightMode = Literal["band", "full"]
-
-
-class NetworkFlowKpiStatCardDashletConfig(DashletConfig):
-    metric: NetworkFlowKpiStatCardMetric
-    accent: NetworkFlowAccent
-    show_delta: bool
-    spark_height_mode: NotRequired[NetworkFlowKpiStatCardSparkHeightMode]
-
-
-NetworkFlowTrendChartDimension = Literal["applications", "autonomous_systems", "total_bandwidth"]
-NetworkFlowTrendChartDisplayMode = Literal["lines", "stacked_area"]
-
-
-class NetworkFlowTrendChartDashletConfig(DashletConfig):
-    dimension: NetworkFlowTrendChartDimension
-    display_mode: NetworkFlowTrendChartDisplayMode
-    limit_to: int
-    show_legend: bool
+class StatsDashletConfig(DashletConfig):
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class StateDashletConfig(DashletConfig):
     status_display: StatusDisplay
     show_summary: Literal["not_ok"] | None
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class HostStateSummaryDashletConfig(DashletConfig):
@@ -220,26 +219,37 @@ class ServiceStateSummaryDashletConfig(DashletConfig):
 
 class InventoryDashletConfig(DashletConfig):
     inventory_path: str
-    link_spec: NotRequired[tuple[VisualTypeName, VisualName]]
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class AlertOverviewDashletConfig(DashletConfig):
-    time_range: TimerangeValue
+    time_range: DashboardWindow | FixedWindow
     limit_objects: NotRequired[int]
+
+
+type MonitoringTableName = Literal["hosts"]
+
+
+class MonitoringTableDashletConfig(DashletConfig):
+    table: MonitoringTableName
+    columns: Sequence[str]
+    sort: Sequence[str]
+    limit: int
 
 
 class SiteOverviewDashletConfig(DashletConfig):
     dataset: NotRequired[Literal["hosts", "sites"]]
     box_scale: NotRequired[Literal["default", "large"]]
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class EventBarChartRenderBarChart(TypedDict):
-    time_range: TimerangeValue
+    time_range: DashboardWindow | FixedWindow
     time_resolution: Literal["h", "d"]
 
 
 class EventBarChartRenderSimpleNumber(TypedDict):
-    time_range: TimerangeValue
+    time_range: DashboardWindow | FixedWindow
 
 
 type EventBarChartRenderMode = (

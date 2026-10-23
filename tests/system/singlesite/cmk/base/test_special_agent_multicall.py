@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from contextlib import AbstractContextManager, ExitStack
 from pathlib import Path
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 # A throw-away special agent plugin whose ``commands_function`` yields *three*
 # ``SpecialAgentCommand``s.  Its files live next to this test (see

@@ -15,7 +15,7 @@ from collections.abc import Callable, Container, Iterable, Iterator, Sequence
 from functools import partial
 from typing import Any, cast, Literal, override, TypedDict
 
-import cmk.werks.tool.utils as werks_utils
+import cmk.werks.flavor.cmk.translator as werks_utils
 from cmk.ccc.version import Edition, edition
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.gui.breadcrumb import (
@@ -63,11 +63,12 @@ from cmk.web.utils.flashed_messages import get_flashed_messages
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
+from cmk.werks.flavor.cmk.models import WerkV3
 from cmk.werks.site import load_werk_entries
 from cmk.werks.site.acknowledgement import is_acknowledged
 from cmk.werks.site.acknowledgement import load_acknowledgements as werks_load_acknowledgements
 from cmk.werks.site.acknowledgement import save_acknowledgements as werks_save_acknowledgements
-from cmk.werks.tool.models import Compatibility, WerkV3
+from cmk.werks.tool.models import Compatibility
 from cmk.werks.web import WerkDetailPage
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"

@@ -10,7 +10,7 @@ import pytest
 
 from cmk.ccc.version import Edition
 from cmk.gui.valuespec import Dictionary, Float, Integer, Tuple
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
 from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec
@@ -31,12 +31,13 @@ _ARTIFICIAL_RULESPECS: Mapping[RulesetName, Rulespec] = {
 
 
 def _instantiate_ruleset(
+    tree: FolderTree,
     ruleset_name: str,
     param_value: object,
     rulespec: Rulespec | None = None,
 ) -> Ruleset:
     ruleset = Ruleset(ruleset_name, rulespec=rulespec)
-    folder = folder_tree().root_folder()
+    folder = tree.root_folder()
     rule = Rule.from_ruleset(folder, ruleset, ruleset.rulespec.valuespec.default_value())
     rule.value = param_value
     ruleset.append_rule(folder, rule)
@@ -83,9 +84,9 @@ def _instantiate_ruleset(
         ),
     ],
 )
-@pytest.mark.usefixtures("request_context")
 def test_validate_rule_values(
     caplog: pytest.LogCaptureFixture,
+    tree: FolderTree,
     test_edition: Edition,
     rulesets: Callable[[Edition], Mapping[RulesetName, object]],
     n_expected_warnings: int,
@@ -93,6 +94,7 @@ def test_validate_rule_values(
     all_rulesets = RulesetCollection(
         {
             ruleset_name: _instantiate_ruleset(
+                tree,
                 ruleset_name,
                 rule_value,
                 _ARTIFICIAL_RULESPECS.get(ruleset_name),

@@ -21,6 +21,7 @@ from pydantic import (
     model_validator,
     PlainSerializer,
     PlainValidator,
+    ValidationInfo,
 )
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import core_schema, CoreSchema
@@ -33,10 +34,10 @@ from cmk.gui.fields.fields_filter import FieldsFilter, parse_fields_filter
 from cmk.gui.fields.utils import tree_to_expr
 from cmk.gui.openapi.framework import QueryParam
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.openapi.framework.model.converter import TypedPlainValidator
+from cmk.gui.openapi.framework.model.converter import folder_tree_of, TypedPlainValidator
 from cmk.gui.openapi.framework.model.omitted import ApiOmitted
 from cmk.gui.valuespec import TimerangeValue
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, FolderTree
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
 from cmk.livestatus_client.expressions import NothingExpression, QueryExpression
 from cmk.livestatus_client.types import Column, Table
 
@@ -241,12 +242,8 @@ class _FolderValidation:
             return False
 
     @classmethod
-    def validate(cls, value: str) -> Folder:
-        # Framework validator entry point: it has no access to the request
-        # config, so it resolves against the global folder tree. Explicit callers
-        # that do have a config should use validate_in_tree() instead (CMK-35767
-        # follow-up: hand the request config to the framework validators too).
-        return cls.validate_in_tree(value, folder_tree())
+    def validate(cls, value: str, info: ValidationInfo[object]) -> Folder:
+        return cls.validate_in_tree(value, folder_tree_of(info))
 
     @classmethod
     def validate_in_tree(cls, value: str, tree: FolderTree) -> Folder:

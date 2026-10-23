@@ -9,11 +9,10 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.mobileiron.lib import Section
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
@@ -45,15 +44,11 @@ def check_mobileiron_compliance(params: Params, section: Section) -> CheckResult
         )
 
 
-def discover_single(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 check_plugin_mobileiron_compliance = CheckPlugin(
     name="mobileiron_compliance",
     sections=["mobileiron_section"],
     service_name="Mobileiron compliance",
-    discovery_function=discover_single,
+    discovery_function=discover_one_service,
     check_function=check_mobileiron_compliance,
     check_ruleset_name="mobileiron_compliance",
     check_default_parameters=Params(

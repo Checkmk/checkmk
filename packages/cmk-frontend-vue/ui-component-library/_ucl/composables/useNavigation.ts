@@ -6,13 +6,15 @@
 import { roots } from '@ucl/components/'
 import { type Component, type Ref, ref } from 'vue'
 
-import { type Folder, Page, toSlug } from '../types/page'
+import { type Folder, Page, type PageStatus, toSlug } from '../types/page'
 
 export interface NavPage {
   type: 'page'
   name: string
   path: string
   component: Component<{ screenshotMode: boolean }>
+  status?: PageStatus | undefined
+  statusSince?: string | undefined
 }
 
 export interface NavFolder {
@@ -32,7 +34,9 @@ function toNavItem(item: Page | Folder, parentPath: string): NavItem {
       type: 'page' as const,
       name: item.name,
       path: itemPath,
-      component: item.component
+      component: item.component,
+      status: item.status,
+      statusSince: item.statusSince
     }
   }
   return {
@@ -49,6 +53,12 @@ function toNavItem(item: Page | Folder, parentPath: string): NavItem {
 // Top-level roots keep their authored order (so Foundations lands above
 // Components regardless of name); nested folders sort alphabetically.
 const navTrees = roots.map((root) => toNavItem(root, '')) as NavFolder[]
+
+function collectPages(items: NavItem[]): NavPage[] {
+  return items.flatMap((item) => (item.type === 'page' ? [item] : collectPages(item.children)))
+}
+
+const allPages = navTrees.flatMap((tree) => collectPages(tree.children))
 
 export function useNavigation() {
   function openPathToRoute(routePath: string) {
@@ -70,6 +80,7 @@ export function useNavigation() {
 
   return {
     navTrees,
+    allPages,
     openPathToRoute
   }
 }

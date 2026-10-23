@@ -52,6 +52,7 @@ from cmk.checkengine.specs.parameters import (
     TimespecificParametersPreview,
 )
 from cmk.checkengine.summarize import SummarizerFunction
+from cmk.inventory.label_picker import InventorizedHostLabelsStore
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.servicename import Item
 
@@ -115,6 +116,7 @@ def get_check_preview(
     timeperiods_active: Mapping[str, bool],
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
+    inventorized_host_labels_dir: Path,
 ) -> CheckPreview:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible. Those are for example (only?) displayed in the UI discovery page
@@ -144,6 +146,9 @@ def get_check_preview(
                     host_label_plugins,
                     providers=providers,
                     on_error=on_error,
+                    inventorized_host_labels=InventorizedHostLabelsStore(
+                        node_name, inventorized_host_labels_dir
+                    ).load(),
                 )
                 for node_name in cluster_nodes
             },
@@ -160,6 +165,9 @@ def get_check_preview(
                 host_label_plugins,
                 providers=providers,
                 on_error=on_error,
+                inventorized_host_labels=InventorizedHostLabelsStore(
+                    host_name, inventorized_host_labels_dir
+                ).load(),
             ),
         )
         kept_labels = {host_name: host_labels.present}

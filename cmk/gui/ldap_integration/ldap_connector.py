@@ -1409,13 +1409,9 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             if not is_member:
                 return None
 
-        user_id = self._sanitize_user_id(raw_user_id)
-        if user_id is None:
-            return None  # type: ignore[unreachable]
-
         fetched_ldap_user = FetchedLDAPUser(
             dn=dn if no_escape else dn.replace("\\", "\\\\"),
-            ldap_user_name=LdapUsername(user_id),
+            ldap_user_name=LdapUsername(self._sanitize_user_id(raw_user_id)),
             ldap_user_spec={**result[0][1], "dn": [dn]},
         )
 
@@ -3073,7 +3069,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPAttributePlugin):
                 "Configures the roles of the user depending on its group memberships "
                 "in LDAP.<br><br>"
                 "Please note: Additionally the user is assigned to the "
-                '<a href="wato.py?mode=edit_configvar&varname=default_user_profile&site=&folder=">Default Roles</a>. '
+                '<a href="global_settings.py?varname=default_user_profile">Default Roles</a>. '
                 "Deactivate them if unwanted."
             ),
         )

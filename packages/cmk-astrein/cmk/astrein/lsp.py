@@ -9,17 +9,22 @@ import argparse
 import logging
 import signal
 import sys
-import tempfile
 from functools import partial
 from pathlib import Path
 
 from lsprotocol import types as lsp
 from pygls.lsp.server import LanguageServer
 
-from cmk.astrein.checker_module_layers import ModuleLayersChecker
-from cmk.astrein.checkers import all_checkers
-from cmk.astrein.framework import ASTVisitorChecker, CheckerError, CheckerFactory, run_checkers
-from cmk.astrein.module_layers_config import CONFIG_FILENAME, load_config
+from cmk.astrein.checkers.http_status_literal import (
+    HTTPStatusLiteralChecker,
+    LEGACY_PYTHON_SOURCES,
+    load_legacy_python_files,
+)
+from cmk.astrein.checkers.module_layers.checker import ModuleLayersChecker
+from cmk.astrein.checkers.module_layers.config import CONFIG_FILENAME, load_config
+from cmk.astrein.engine import run_checkers
+from cmk.astrein.framework import ASTVisitorChecker, CheckerError, CheckerFactory
+from cmk.astrein.registry import all_checkers
 
 logger = logging.getLogger(__name__)
 
@@ -161,22 +166,36 @@ def _bind_configs(
 ) -> list[CheckerFactory]:
     """Pre-load configs and bind them to checker factories that need them.
 
-    In the LSP context the workspace may not contain a module_layers.toml,
-    so we skip the module-layers checker when the file is missing.
+    In the LSP context the workspace may not contain a checker's config file,
+    so we skip that checker when the file is missing.
     """
-    config_path = repo_root / CONFIG_FILENAME
-    if not config_path.exists():
-        logger.warning(
-            "module_layers.toml not found at %(repo_root)s, skipping module-layers checker",
-            {"repo_root": repo_root},
+    bound: dict[type[ASTVisitorChecker], CheckerFactory | None] = {
+        ModuleLayersChecker: None,
+        HTTPStatusLiteralChecker: None,
+    }
+    if (repo_root / CONFIG_FILENAME).exists():
+        bound[ModuleLayersChecker] = partial(
+            ModuleLayersChecker, config=load_config(repo_root / CONFIG_FILENAME)
         )
-        return [cls for cls in checker_classes if cls is not ModuleLayersChecker]
-
-    config = load_config(config_path)
-    return [
-        partial(ModuleLayersChecker, config=config) if cls is ModuleLayersChecker else cls
-        for cls in checker_classes
-    ]
+    else:
+        logger.warning(
+            "module_layers.toml not found at %(repo_root)s, skipping %(checker_id)s checker",
+            {"repo_root": repo_root, "checker_id": ModuleLayersChecker.checker_id},
+        )
+    if (repo_root / LEGACY_PYTHON_SOURCES).exists():
+        bound[HTTPStatusLiteralChecker] = partial(
+            HTTPStatusLiteralChecker, legacy_python_files=load_legacy_python_files(repo_root)
+        )
+    else:
+        logger.warning(
+            "%(sources)s not found at %(repo_root)s, skipping %(checker_id)s checker",
+            {
+                "sources": LEGACY_PYTHON_SOURCES,
+                "repo_root": repo_root,
+                "checker_id": HTTPStatusLiteralChecker.checker_id,
+            },
+        )
+    return [factory for cls in checker_classes if (factory := bound.get(cls, cls)) is not None]
 
 
 def get_diagnostics(
@@ -192,21 +211,21 @@ def get_diagnostics(
         logger.warning("repo_root not set, skipping validation")
         return None
 
-    factories = _bind_configs(list(all_checkers().values()), repo_root)
-    errors: list[CheckerError] = []
+    checker_classes = list(all_checkers().values())
+    factories = _bind_configs(checker_classes, repo_root)
+    report_unknown_suppressions = len(factories) == len(checker_classes)
+    if source is None and not file_path.exists():
+        logger.warning("File does not exist: %(file_path)s", {"file_path": file_path})
+        return None
+
     try:
-        if source is not None:
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as tmp:
-                tmp.write(source)
-                tmp.flush()
-                errors.extend(run_checkers(Path(tmp.name), repo_root, factories))
-        else:
-            if not file_path.exists():
-                logger.warning("File does not exist: %(file_path)s", {"file_path": file_path})
-                return None
-
-            errors.extend(run_checkers(file_path, repo_root, factories))
-
+        errors = run_checkers(
+            file_path,
+            repo_root,
+            factories,
+            source_code=source,
+            report_unknown_suppressions=report_unknown_suppressions,
+        )
         return [_checker_error_to_diagnostic(e) for e in errors]
 
     except Exception as e:

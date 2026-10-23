@@ -31,7 +31,6 @@ from cmk.checkengine.plugins import (
     AgentParseFunction,
     AgentSectionPlugin,
     HostLabelFunction,
-    LegacyPluginLocation,
     ParsedSectionName,
     SectionName,
     SimpleSNMPParseFunction,
@@ -237,7 +236,7 @@ def _create_supersedes(
 
 def create_agent_section_plugin(
     agent_section_spec: AgentSection,
-    location: PluginLocation | LegacyPluginLocation,
+    location: PluginLocation,
     *,
     validate: bool,
 ) -> AgentSectionPlugin:
@@ -279,15 +278,15 @@ def create_agent_section_plugin(
 
 def create_metrics_section_plugin(
     section_spec: MetricsSection,
-    location: PluginLocation | LegacyPluginLocation,
+    location: PluginLocation,
     *,
     validate: bool,
 ) -> AgentSectionPlugin:
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one
 
-    Metric backend sections are agent sections from the check engine's point of
+    Telemetry metrics sections are agent sections from the check engine's point of
     view: their data arrives as agent output, the additional selectors only
-    matter to the metric backend fetcher.
+    matter to the telemetry metrics fetcher.
     """
     section_name = SectionName(section_spec.name)
 
@@ -332,7 +331,7 @@ def create_metrics_section_plugin(
 
 def create_snmp_section_plugin(
     snmp_section_spec: SimpleSNMPSection | SNMPSection,
-    location: PluginLocation | LegacyPluginLocation,
+    location: PluginLocation,
     *,
     validate: bool,
 ) -> SNMPSectionPlugin:

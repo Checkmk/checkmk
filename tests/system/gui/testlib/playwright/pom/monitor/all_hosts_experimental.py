@@ -174,9 +174,25 @@ class AllHostsExperimental(CmkPage):
         """The "Return to classic view" control rendered by the app.
 
         It is a button that assigns `window.location`, not a link, and it is
-        teleported into the page title bar — outside the app root.
+        teleported into the page title bar — outside the app root, but still
+        inside the main area, which a site serving its content in the main
+        iframe keeps out of the top-level document.
         """
-        return self.page.locator("button.monitoring-legacy-view-button")
+        return self.main_area.locator("button.monitoring-legacy-view-button")
+
+    @property
+    def page_menu_shortcuts(self) -> Locator:
+        """The shortcut area of the page menu bar.
+
+        Where the cloud edition teleports the header widgets, because its licensing
+        banner covers the title bar the other editions use.
+        """
+        return self.main_area.locator("#page_menu_bar .shortcuts")
+
+    @property
+    def return_to_classic_view_in_page_menu(self) -> Locator:
+        """The "Return to classic view" button as mounted inside the shortcut area."""
+        return self.page_menu_shortcuts.locator("button.monitoring-legacy-view-button")
 
     @property
     def availability_menu_entry(self) -> Locator:
@@ -361,36 +377,20 @@ class AllHostsExperimental(CmkPage):
         return self.main_area.locator().get_by_role("button", name="Cancel", exact=True)
 
     def catalog_panel(self, title: str) -> Locator:
-        """A collapsible section of an action form, e.g. Duration or Advanced options."""
+        """A collapsible section of an action form, e.g. Advanced options."""
         return self.main_area.locator().get_by_role("button", name=title)
 
     def form_option(self, label: str) -> Locator:
         """A labelled control inside the open action form."""
         return self.main_area.locator().get_by_text(label, exact=True)
 
-    def select_duration(self, label: str) -> None:
-        """Pick one of the downtime form's duration chips by its label.
-
-        The form renders a second, ``aria-hidden`` copy of every chip to measure
-        which of them fit; that copy is out of the accessibility tree, so the
-        role lookup reaches the live chip only.
-        """
-        logger.info("Select downtime duration '%s'", label)
-        self.main_area.locator().get_by_role("button", name=label, exact=True).click()
-
-    def time_range_dialog(self, label: str) -> Locator:
-        """The start/end picker the Custom duration opens.
-
-        A flyout, so ``label`` is the dialog's ``aria-label`` rather than text on
-        the page; ``form_option`` cannot reach it.
-        """
-        return self.main_area.locator().get_by_role("dialog", name=label, exact=True)
-
     # -- Row limit ------------------------------------------------------------
 
     @property
     def row_limit(self) -> Locator:
-        return self.main_area.locator().get_by_role("combobox", name="Row limit")
+        # The visible "Show:" label (not "Row limit") is what gives the combobox its
+        # accessible name; see MonitoringLimitSelector.vue.
+        return self.main_area.locator().get_by_role("combobox", name="Show:")
 
     def set_row_limit(self, value: str) -> None:
         logger.info("Set the row limit to '%s'", value)

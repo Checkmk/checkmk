@@ -44,6 +44,16 @@ _artifact_name() {
     echo "${DIR_NAME}_${BUILD_ID}_${BRANCH_VERSION}_${DISTRO}.tar.gz"
 }
 
+# Print "user:password" for the mirror, or nothing if credentials are missing.
+# Without credentials the mirror is skipped and artifacts are fetched/built from scratch.
+_mirror_credentials() {
+    if [ -n "${NEXUS_USERNAME}" ] && [ -n "${NEXUS_PASSWORD}" ]; then
+        echo "${NEXUS_USERNAME}:${NEXUS_PASSWORD}"
+    else
+        log "NEXUS_USERNAME or NEXUS_PASSWORD not set, skipping mirror" >&2
+    fi
+}
+
 _download_from_mirror() {
     local TARGET_PATH=$1
     local MIRROR_URL=$2
@@ -51,7 +61,7 @@ _download_from_mirror() {
 
     if [ -z "${MIRROR_CREDENTIALS}" ]; then
         log "No credentials given, not downloading, continuing with build ..."
-        return
+        return 1
     fi
 
     log "Downloading ${MIRROR_URL}"
@@ -97,17 +107,10 @@ mirrored_download() {
         log "ERROR: NEXUS_ARCHIVES_URL not set"
         exit 1
     fi
-    if [ -z "${NEXUS_USERNAME}" ]; then
-        log "ERROR: NEXUS_USERNAME not set"
-        exit 1
-    fi
-    if [ -z "${NEXUS_PASSWORD}" ]; then
-        log "ERROR: NEXUS_PASSWORD not set"
-        exit 1
-    fi
     local MIRROR_BASE_URL=${NEXUS_ARCHIVES_URL}
     local MIRROR_URL=${MIRROR_BASE_URL}$FILE_NAME
-    local MIRROR_CREDENTIALS="${NEXUS_USERNAME}:${NEXUS_PASSWORD}"
+    local MIRROR_CREDENTIALS
+    MIRROR_CREDENTIALS="$(_mirror_credentials)"
 
     if ! _download_from_mirror "${TARGET_PATH}" "${MIRROR_URL}" "${MIRROR_CREDENTIALS}"; then
         log "File not available from ${MIRROR_URL}, downloading from ${UPSTREAM_URL}"
@@ -173,17 +176,10 @@ cached_build() {
         log "ERROR: NEXUS_ARCHIVES_URL not set"
         exit 1
     fi
-    if [ -z "${NEXUS_USERNAME}" ]; then
-        log "ERROR: NEXUS_USERNAME not set"
-        exit 1
-    fi
-    if [ -z "${NEXUS_PASSWORD}" ]; then
-        log "ERROR: NEXUS_PASSWORD not set"
-        exit 1
-    fi
     local MIRROR_BASE_URL=${NEXUS_ARCHIVES_URL}
     local MIRROR_URL=${MIRROR_BASE_URL}$FILE_NAME
-    local MIRROR_CREDENTIALS="${NEXUS_USERNAME}:${NEXUS_PASSWORD}"
+    local MIRROR_CREDENTIALS
+    MIRROR_CREDENTIALS="$(_mirror_credentials)"
 
     if _download_from_mirror "${ARCHIVE_PATH}" "${MIRROR_URL}" "${MIRROR_CREDENTIALS}"; then
         _unpack_package "${ARCHIVE_PATH}" "${TARGET_DIR}"

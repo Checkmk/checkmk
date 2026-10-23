@@ -16,6 +16,10 @@ from cmk.plugins.sap.rulesets.mk_saprouter import migrate
             {"deployment": ("do_not_deploy", None)},
         ),
         (
+            {"path": "/usr/sap/sapgenpse"},
+            {"deployment": ("sync", None), "user": "", "path": "/usr/sap/sapgenpse"},
+        ),
+        (
             {"user": "saprouter", "path": "/usr/sap/sapgenpse"},
             {"deployment": ("sync", None), "user": "saprouter", "path": "/usr/sap/sapgenpse"},
         ),

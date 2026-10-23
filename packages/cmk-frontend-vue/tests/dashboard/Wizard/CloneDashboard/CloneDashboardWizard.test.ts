@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
@@ -22,16 +23,6 @@ vi.mock(
 vi.mock('@/dashboard/components/Wizard/components/DashboardSettings/GeneralProperties.vue', () => ({
   default: { template: '<div data-testid="general-properties-stub" />' }
 }))
-
-vi.mock(
-  '@/dashboard/components/Wizard/components/DashboardSettings/DashboardLayoutSelector.vue',
-  () => ({
-    default: {
-      name: 'DashboardLayoutSelector',
-      template: '<div data-testid="dashboard-layout-selector-stub" />'
-    }
-  })
-)
 
 vi.mock('@/dashboard/utils', () => ({
   dashboardAPI: {
@@ -84,7 +75,6 @@ const defaultGeneralSettings = {
 
 const defaultProps = {
   referenceDashboardId: 'my_dashboard',
-  referenceDashboardGeneralSettings: { ...defaultGeneralSettings },
   referenceDashboardRestrictedToSingle: [] as string[],
   referenceDashboardLayoutType: DashboardLayout.RESPONSIVE_GRID,
   referenceDashboardType: DashboardOwnerType.BUILT_IN,
@@ -93,13 +83,23 @@ const defaultProps = {
 }
 
 async function renderWizard(
-  props: Partial<typeof defaultProps> = {},
+  props: Partial<
+    typeof defaultProps & {
+      referenceDashboardGeneralSettings: typeof defaultGeneralSettings
+      preselectedLayout: DashboardLayout
+    }
+  > = {},
   callbacks: {
     onCloneDashboard?: (...args: unknown[]) => void
     onCancelClone?: () => void
   } = {}
 ) {
-  const mergedProps = { ...defaultProps, ...props, ...callbacks }
+  const mergedProps = {
+    ...defaultProps,
+    referenceDashboardGeneralSettings: structuredClone(defaultGeneralSettings),
+    ...props,
+    ...callbacks
+  }
   render(wrapInSuspense(CloneDashboardWizard, { props: mergedProps }))
   await flushPromises()
 }
@@ -143,11 +143,6 @@ describe('CloneDashboardWizard', () => {
       expect(await screen.findByTestId('visibility-properties-stub')).toBeInTheDocument()
     })
 
-    it('should render the DashboardLayoutSelector component', async () => {
-      await renderWizard()
-      expect(await screen.findByTestId('dashboard-layout-selector-stub')).toBeInTheDocument()
-    })
-
     it('should render the Dashboard type label', async () => {
       await renderWizard()
       expect(await screen.findByText('Dashboard type')).toBeInTheDocument()
@@ -176,13 +171,6 @@ describe('CloneDashboardWizard', () => {
       const onCancelClone = vi.fn()
       await renderWizard({}, { onCancelClone })
       await fireEvent.click(screen.getByRole('button', { name: /Cancel/i }))
-      expect(onCancelClone).toHaveBeenCalledOnce()
-    })
-
-    it('should emit "cancel-clone" when the back button in the header is clicked', async () => {
-      const onCancelClone = vi.fn()
-      await renderWizard({}, { onCancelClone })
-      await fireEvent.click(screen.getByRole('button', { name: 'Back' }))
       expect(onCancelClone).toHaveBeenCalledOnce()
     })
   })
@@ -241,6 +229,70 @@ describe('CloneDashboardWizard', () => {
         'custom_dash_clone',
         true
       )
+    })
+
+    it('leaves the title of the reference dashboard untouched', async () => {
+      const referenceDashboardGeneralSettings = structuredClone(defaultGeneralSettings)
+
+      await renderWizard({
+        referenceDashboardType: DashboardOwnerType.CUSTOM,
+        referenceDashboardGeneralSettings
+      })
+
+      expect(referenceDashboardGeneralSettings.title.text).toBe('My Dashboard')
+    })
+  })
+
+  describe('Layout choice', () => {
+    const anchoredReference = {
+      referenceDashboardLayoutType: DashboardLayout.RELATIVE_GRID,
+      availableLayouts: [DashboardLayout.RESPONSIVE_GRID, DashboardLayout.RELATIVE_GRID]
+    }
+    const conversionNote = () => screen.queryByRole('status')
+
+    it('offers the responsive layout for an anchored dashboard', async () => {
+      await renderWizard(anchoredReference)
+
+      expect(screen.getByRole('radio', { name: 'Responsive' })).toBeInTheDocument()
+    })
+
+    it('offers no responsive layout in an edition without it', async () => {
+      await renderWizard({
+        ...anchoredReference,
+        availableLayouts: [DashboardLayout.RELATIVE_GRID]
+      })
+
+      expect(screen.queryByRole('radio', { name: 'Responsive' })).not.toBeInTheDocument()
+    })
+
+    it('keeps the anchored layout selected for an anchored dashboard', async () => {
+      await renderWizard(anchoredReference)
+
+      expect(screen.getByRole('radio', { name: 'Anchored' })).toBeChecked()
+    })
+
+    it('selects the responsive layout when it is preselected', async () => {
+      await renderWizard({
+        ...anchoredReference,
+        preselectedLayout: DashboardLayout.RESPONSIVE_GRID
+      })
+
+      expect(screen.getByRole('radio', { name: 'Responsive' })).toBeChecked()
+    })
+
+    it('shows no conversion note while the anchored layout stays selected', async () => {
+      await renderWizard(anchoredReference)
+
+      expect(conversionNote()).not.toBeInTheDocument()
+    })
+
+    it('shows the conversion note once the responsive layout is chosen', async () => {
+      const user = userEvent.setup()
+      await renderWizard(anchoredReference)
+
+      await user.click(screen.getByRole('radio', { name: 'Responsive' }))
+
+      expect(conversionNote()).toBeInTheDocument()
     })
   })
 

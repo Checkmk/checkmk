@@ -11,13 +11,12 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.kube import (
     condition_detailed_description,
     condition_short_description,
@@ -31,10 +30,6 @@ from cmk.plugins.kube.schemata.section import PodCondition, PodConditions
 def parse(string_table: StringTable) -> PodConditions:
     """Parses `string_table` into a PodConditions instance"""
     return PodConditions.model_validate_json(string_table[0][0])
-
-
-def discovery(section: PodConditions) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _check_condition(
@@ -59,6 +54,15 @@ def _check_condition(
         # and UNKNOWN (rare in practice; core Kubernetes only emits Unknown for node
         # conditions, but custom controllers/operators may emit it for pods).
         summary_prefix = condition_detailed_description(name, cond.status, cond.reason, cond.detail)
+        if time_diff < 0:
+            yield Result(
+                state=State.UNKNOWN,
+                summary=(
+                    f"{summary_prefix}, but the last transition is {render.timespan(-time_diff)}"
+                    " in the future (check the system time)"
+                ),
+            )
+            return
         for result in check_levels_v1(
             time_diff, levels_upper=levels_upper, render_func=render.timespan
         ):
@@ -166,7 +170,7 @@ agent_section_kube_pod_conditions_v1 = AgentSection(
 check_plugin_kube_pod_conditions = CheckPlugin(
     name="kube_pod_conditions",
     service_name="Condition",
-    discovery_function=discovery,
+    discovery_function=discover_one_service,
     check_function=check,
     check_default_parameters={
         "scheduled": "no_levels",

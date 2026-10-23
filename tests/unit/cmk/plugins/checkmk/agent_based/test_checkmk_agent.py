@@ -23,6 +23,7 @@ from cmk.plugins.checkmk.agent_based.checkmk_agent import (
     _check_version,
     _get_error_result,
     check_checkmk_agent,
+    check_plugin_checkmk_agent,
     discover_checkmk_agent,
 )
 from cmk.plugins.checkmk.agent_based.checkmk_agent import (
@@ -343,47 +344,49 @@ def test_check_no_check_yet_pydantic() -> None:
     ]
 
 
-@pytest.mark.parametrize(
-    "cmk_hostname,agent_updater_hostname,expected_result",
-    (
-        (
-            "some_hostname",
-            "some_hostname",
-            [Result(state=State.OK, notice="Hostname used by cmk-update-agent: some_hostname")],
-        ),
-        (
-            "some_other_hostname",
-            "some_hostname",
-            [
-                Result(state=State.OK, notice="Hostname used by cmk-update-agent: some_hostname"),
-                Result(
-                    state=State.CRIT,
-                    notice="Hostname defined in Checkmk (some_other_hostname) and cmk-update-agent configuration (some_hostname) do not match",
-                ),
-            ],
-        ),
-    ),
+_DEFAULT_PARAMS = check_plugin_checkmk_agent.check_default_parameters or {}
+
+_UPDATER_SECTION = CMKAgentUpdateSection(
+    aghash=None,
+    last_update=None,
+    pending_hash=None,
+    update_url=None,
+    last_check=None,
+    error=None,
+    host_name="updater-name",
 )
-def test_check_cmk_agent_update(
-    cmk_hostname: str,
-    agent_updater_hostname: str,
-    expected_result: list[Result],
-) -> None:
-    assert [
-        *_check_cmk_agent_update(
-            {"host_name": cmk_hostname},
-            None,
-            CMKAgentUpdateSection(
-                aghash=None,
-                last_update=None,
-                pending_hash=None,
-                update_url=None,
-                last_check=None,
-                error=None,
-                host_name=agent_updater_hostname,
-            ),
-        )
-    ] == [Result(state=State.WARN, summary="No successful connect to server yet"), *expected_result]
+
+
+def test_updater_host_name_match_yields_no_mismatch() -> None:
+    params = {**_DEFAULT_PARAMS, "host_name": "updater-name"}
+    assert [*check_checkmk_agent(params, None, None, None, _UPDATER_SECTION, None)] == [
+        Result(state=State.WARN, summary="No successful connect to server yet"),
+        Result(state=State.OK, notice="Hostname used by cmk-update-agent: updater-name"),
+    ]
+
+
+def test_updater_host_name_mismatch_warns_by_default() -> None:
+    params = {**_DEFAULT_PARAMS, "host_name": "checkmk-name"}
+    assert [*check_checkmk_agent(params, None, None, None, _UPDATER_SECTION, None)] == [
+        Result(state=State.WARN, summary="No successful connect to server yet"),
+        Result(state=State.OK, notice="Hostname used by cmk-update-agent: updater-name"),
+        Result(
+            state=State.WARN,
+            summary="Hostname defined in Checkmk (checkmk-name) and cmk-update-agent configuration (updater-name) do not match",
+        ),
+    ]
+
+
+def test_updater_host_name_mismatch_switched_off_is_ok_in_details() -> None:
+    params = {**_DEFAULT_PARAMS, "host_name": "checkmk-name", "updater_host_name_mismatch": 0}
+    assert [*check_checkmk_agent(params, None, None, None, _UPDATER_SECTION, None)] == [
+        Result(state=State.WARN, summary="No successful connect to server yet"),
+        Result(state=State.OK, notice="Hostname used by cmk-update-agent: updater-name"),
+        Result(
+            state=State.OK,
+            notice="Hostname defined in Checkmk (checkmk-name) and cmk-update-agent configuration (updater-name) do not match",
+        ),
+    ]
 
 
 @pytest.mark.parametrize(

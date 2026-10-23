@@ -5,6 +5,7 @@
  */
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { Ref } from 'vue'
 
 import type { DashboardKey } from '@/dashboard/types/dashboard'
@@ -33,11 +34,6 @@ export interface ActionButtonIcon extends QuickSetupStageActionIcon {
 
 export type MetricType = 'single' | 'combined'
 
-export interface HostServiceContext {
-  host?: { host: string }
-  service?: { service: string }
-}
-
 export interface UseValidate {
   validate: () => boolean
 }
@@ -59,6 +55,8 @@ export enum ElementSelection {
 }
 
 export interface BaseWidgetProp {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
 }
 
@@ -98,10 +96,6 @@ export type WidgetContentType =
   | NtopAlertsContent
   | NtopFlowsContent
   | NtopTopTalkersContent
-  | NetworkFlowTopTableContent
-  | NetworkFlowDonutContent
-  | NetworkFlowKpiStatCardContent
-  | NetworkFlowTrendChartContent
 
 export type InventoryContent = components['schemas']['InventoryContent']
 
@@ -113,10 +107,6 @@ export type GraphContent = components['schemas']['SingleTimeseriesContent']
 export type SingleMetricContent = components['schemas']['SingleMetricContent']
 export type ScatterplotContent = components['schemas']['AverageScatterplotContent']
 export type TopListContent = components['schemas']['TopListContent']
-export type NetworkFlowTopTableContent = components['schemas']['NetworkFlowTopTableContent']
-export type NetworkFlowDonutContent = components['schemas']['NetworkFlowDonutContent']
-export type NetworkFlowKpiStatCardContent = components['schemas']['NetworkFlowKpiStatCardContent']
-export type NetworkFlowTrendChartContent = components['schemas']['NetworkFlowTrendChartContent']
 export type HostStateContent = components['schemas']['HostStateContent']
 export type HostStateSummaryContent = components['schemas']['HostStateSummaryContent']
 export type HostStatisticsContent = components['schemas']['HostStatsContent']
@@ -142,10 +132,11 @@ export type NtopTopTalkersContent = components['schemas']['NtopTopTalkersContent
 export type TitleSpec = components['schemas']['WidgetTitle']
 export type DefaultOrColor = components['schemas']['DefaultOrColor']
 export type GraphRenderOptions = components['schemas']['GraphRenderOptions']
+export type GraphLegendStyle = NonNullable<
+  components['schemas']['GraphRenderOptions']['legend_style']
+>
 export type HostState = components['schemas']['HostState']
 export type CombinedGraphContentPresentation =
   components['schemas']['CombinedGraphContent']['presentation']
 export type ForStates = components['schemas']['ForStates']
 export type ShowServiceStatusType = components['schemas']['MetricStatusDisplayModel']['type']
-export type InventoryLinkType = components['schemas']['ApiVisualLink']['type']
-export type LinkContentType = components['schemas']['ApiVisualLink']

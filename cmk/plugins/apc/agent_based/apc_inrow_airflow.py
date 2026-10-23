@@ -5,38 +5,44 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     Result,
-    Service,
-    SimpleSNMPSection,
+    SNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
+from cmk.plugins.apc.lib.cooling_unit import COOLING_UNIT_STATUS_ANALOG, parse_analog_readings
 from cmk.plugins.apc.lib_ats import DETECT
 
 
-def discover_apc_inrow_airflow(section: StringTable) -> DiscoveryResult:
-    if section:
-        yield Service()
+def parse_apc_inrow_airflow(string_table: Sequence[StringTable]) -> float | None:
+    air_irrc, cooling_unit = string_table
+    if air_irrc:
+        # The MIB states that this value is given in hundredths of liters per second.
+        # However, it appears that the device actually returns l/s, as the oom should
+        # be closer to 1000 l/s. (cf. https://www.apc.com/salestools/DRON-AAAR53/DRON-AAAR53_R1_EN.pdf)
+        try:
+            return float(air_irrc[0][0])
+        except ValueError:
+            return None
+
+    for reading in parse_analog_readings(cooling_unit):
+        # The unit's airflow is published in CFM and in L/s, the group's airflow as well.
+        if reading.description == "Airflow" and reading.units == "L/s":
+            return reading.value
+    return None
 
 
-def check_apc_inrow_airflow(params: Mapping[str, Any], section: StringTable) -> CheckResult:
-    # The MIB states that this value is given in hundredths of liters per second.
-    # However, it appears that the device actually returns l/s, as the oom should
-    # be closer to 1000 l/s. (cf. https://www.apc.com/salestools/DRON-AAAR53/DRON-AAAR53_R1_EN.pdf)
-    try:
-        flow = float(section[0][0])
-    except Exception:
-        return
-
+def check_apc_inrow_airflow(params: Mapping[str, Any], section: float) -> CheckResult:
+    flow = section
     state = State.OK
     message = ""
 
@@ -60,17 +66,16 @@ def check_apc_inrow_airflow(params: Mapping[str, Any], section: StringTable) -> 
     yield Metric("airflow", flow, levels=(warn_high, crit_high))
 
 
-def parse_apc_inrow_airflow(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-snmp_section_apc_inrow_airflow = SimpleSNMPSection(
+snmp_section_apc_inrow_airflow = SNMPSection(
     name="apc_inrow_airflow",
     detect=DETECT,
-    fetch=SNMPTree(
-        base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
-        oids=["5"],
-    ),
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
+            oids=["5"],  # airIRRCUnitStatusAirFlowMetric
+        ),
+        COOLING_UNIT_STATUS_ANALOG,
+    ],
     parse_function=parse_apc_inrow_airflow,
 )
 
@@ -78,7 +83,7 @@ snmp_section_apc_inrow_airflow = SimpleSNMPSection(
 check_plugin_apc_inrow_airflow = CheckPlugin(
     name="apc_inrow_airflow",
     service_name="Airflow",
-    discovery_function=discover_apc_inrow_airflow,
+    discovery_function=discover_one_service,
     check_function=check_apc_inrow_airflow,
     check_ruleset_name="airflow",
     check_default_parameters={

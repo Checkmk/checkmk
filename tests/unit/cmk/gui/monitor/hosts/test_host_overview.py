@@ -2,24 +2,18 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Iterator
-
 import pytest
 
-from cmk.gui.monitor.hosts._api._host_overview import _handle_get_host_overview
+from cmk.gui.monitor.hosts._api._host_overview import (
+    _handle_get_host_overview,
+    HostOverviewResponse,
+)
 from cmk.gui.monitor.hosts._api._list_hosts import _handle_list_hosts
 from cmk.gui.openapi.utils import ProblemException
 
-from .testlib import get_fake_host_repository, login_with
+from .testlib import get_fake_host_repository, HostFactory
 
-
-@pytest.fixture(name="may_see_all_hosts")
-def _may_see_all_hosts() -> Iterator[None]:
-    with login_with({"view.allhosts": True}):
-        yield
-
-
-pytestmark = pytest.mark.usefixtures("request_context", "may_see_all_hosts")
+pytestmark = pytest.mark.usefixtures("request_context")
 
 
 def test_get_host_overview_success() -> None:
@@ -42,3 +36,11 @@ def test_get_host_not_found() -> None:
     host_repo = get_fake_host_repository(n_hosts=10)
     with pytest.raises(ProblemException, match="404"):
         _handle_get_host_overview(host_repo, hostname="foo", site_id="bar", site_alias="bar")
+
+
+def test_host_overview_reports_no_timestamps_for_a_pending_host() -> None:
+    host = HostFactory.build(last_check=0, last_state_change=0)
+
+    overview = HostOverviewResponse.from_domain(host, site_alias="Local site", customer=None)
+
+    assert (overview.last_check, overview.last_state_change) == (None, None)

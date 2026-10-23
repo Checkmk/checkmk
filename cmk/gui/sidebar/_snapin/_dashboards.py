@@ -9,7 +9,7 @@ from cmk.gui.config import Config
 from cmk.gui.dashboard import get_permitted_dashboards
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.main_menu import NavItemTopic
 
@@ -38,7 +38,7 @@ class Dashboards(SidebarSnapin):
         show_main_menu(
             treename="dashboards",
             menu=self._get_dashboard_menu_items(
-                UserPermissions.from_config(config, permission_registry)
+                UserPermissions.from_config(config, all_permissions())
             ),
         )
 

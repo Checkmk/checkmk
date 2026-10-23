@@ -83,6 +83,7 @@ def expected_output_engine(request, testconfig):
             r"# Environment Variables:",
             r"# MK_LOCALDIR=\.?",
             r"# MK_STATEDIR=\.?",
+            r"# MK_LIBDIR=\.?",
             r"# MK_PLUGINSDIR=\.?",
             r"# MK_TEMPDIR=\.?",
             r"# MK_LOGDIR=\.?",
@@ -142,19 +143,13 @@ def expected_output_engine(request, testconfig):
     #       params 'test' and 'debug' are tested in section check_mk tests
     params=[["version"], ["showconfig"], ["help"], ["bad"]],
     ids=["version", "showconfig", "help", "bad"],
-    autouse=True,  # ruff: ignore[pytest-fixture-autouse]
 )
 def pre_test(request):
     Globals.param = request.param
     yield
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
-def post_test():
-    yield
-
-
-@pytest.mark.usefixtures("testconfig")
+@pytest.mark.usefixtures("pre_test", "testconfig")
 def test_agent_start_parameters(request, expected_output, actual_output, testfile) -> None:  # type: ignore[misc]
     # request.node.name gives test name
     expected_work = expected_output

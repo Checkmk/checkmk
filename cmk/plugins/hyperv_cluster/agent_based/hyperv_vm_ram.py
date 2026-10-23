@@ -13,16 +13,15 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     FixedLevelsT,
     Metric,
     NoLevelsT,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.hyperv_cluster.lib import hyperv_vm_convert
 
 
@@ -39,10 +38,6 @@ class CheckParameters(TypedDict):
     max_ram: FixedLevelsT[float] | NoLevelsT
     min_ram: FixedLevelsT[float] | NoLevelsT
     check_demand: bool
-
-
-def discovery_hyperv_vm_ram(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def parse_hyperv_vm_ram(string_table: StringTable) -> Section:
@@ -137,7 +132,7 @@ check_plugin_hyperv_vm_ram = CheckPlugin(
     name="hyperv_vm_ram",
     service_name="Hyper-V RAM",
     check_ruleset_name="hyperv_vm_ram",
-    discovery_function=discovery_hyperv_vm_ram,
+    discovery_function=discover_one_service,
     check_function=check_hyperv_vm_ram,
     check_default_parameters={
         "min_ram": ("no_levels", None),

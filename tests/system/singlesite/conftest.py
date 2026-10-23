@@ -8,9 +8,10 @@ from contextlib import AbstractContextManager
 
 import pytest
 
-from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
-from tests.testlib.site import get_site_factory, Site, SiteFactory
-from tests.testlib.web_session import CMKWebSession
+from tests.testlib.pytest_helpers import flake_reporter, registration
+from tests.testlib.system.pytest_helpers.calls import exit_pytest_on_exceptions
+from tests.testlib.system.site import get_site_factory, Site, SiteFactory
+from tests.testlib.system.web_session import CMKWebSession
 
 from .event_console import CMKEventConsole
 
@@ -76,3 +77,7 @@ def fixture_fake_sendmail(site: Site) -> Iterator[None]:
         yield
     finally:
         site.delete_file("local/bin/sendmail")
+
+
+def pytest_addoption(pluginmanager: pytest.PytestPluginManager) -> None:
+    registration.register_pytest_plugins(pluginmanager, flake_reporter)

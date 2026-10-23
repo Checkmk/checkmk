@@ -16,11 +16,6 @@ import cmk.rulesets.v1 as api_v1
 from cmk.ccc.version import Edition
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.unstable import (
-    Autocompleter,
-    AutocompleterData,
-    AutocompleterParams,
-)
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.rule_specs.legacy_converter import (
@@ -39,6 +34,11 @@ from cmk.gui.watolib import timeperiods as legacy_timeperiods
 from cmk.gui.watolib.password_store import IndividualOrStoredPassword
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.internal.form_specs import (
+    Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
+    CascadingSingleChoiceElementExtended,
+    CascadingSingleChoiceExtended,
     OAuth2Connection,
     StringAutocompleter,
 )
@@ -320,7 +320,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=_("spec label"),
                 placeholder="myname",
                 help=_(
-                    "help text This field supports the use of macros. The corresponding plug-in replaces the macros with the actual values. The most common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$."
+                    "help text This field supports the use of macros. The corresponding plug-in replaces the macros with the actual values. The most common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$. To use a custom host attribute, prefix its name with 'HOST_', e.g. an attribute named 'OWNER' is referenced as $HOST_OWNER$."
                 ),
                 validate=_legacy_custom_text_validate,
                 allow_empty=False,
@@ -446,6 +446,46 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 validate=lambda x, y: None,  # noqa: ARG005
             ),
             id="CascadingDropdown",
+        ),
+        pytest.param(
+            CascadingSingleChoiceExtended(
+                elements=lambda: [
+                    CascadingSingleChoiceElementExtended(
+                        name="first",
+                        title=api_v1.Title("Spec title"),
+                        parameter_form=api_v1.form_specs.String(),
+                    )
+                ],
+                title=api_v1.Title("parent title"),
+                prefill=api_v1.form_specs.DefaultValue("first"),
+            ),
+            legacy_valuespecs.CascadingDropdown(
+                choices=[
+                    ("first", _("Spec title"), legacy_valuespecs.TextInput(placeholder="", size=35))
+                ],
+                title=_("parent title"),
+                default_value=("first", ""),
+            ),
+            id="CascadingDropdown from CascadingSingleChoiceExtended with lazy elements",
+        ),
+        pytest.param(
+            CascadingSingleChoiceExtended(
+                elements=lambda: [
+                    CascadingSingleChoiceElementExtended(
+                        name="first",
+                        title=api_v1.Title("Spec title"),
+                        parameter_form=api_v1.form_specs.String(),
+                    )
+                ],
+                prefill=api_v1.form_specs.DefaultValue("gone"),
+            ),
+            legacy_valuespecs.CascadingDropdown(
+                choices=[
+                    ("first", _("Spec title"), legacy_valuespecs.TextInput(placeholder="", size=35))
+                ],
+                no_preselect_title="Please choose",
+            ),
+            id="CascadingDropdown from lazy elements without the default",
         ),
         pytest.param(
             api_v1.form_specs.List(element_template=api_v1.form_specs.Dictionary(elements={})),
@@ -956,7 +996,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 monospaced=True,
                 title=_("my title"),
                 help=_(
-                    "help text This field supports the use of macros. The corresponding plug-in replaces the macros with the actual values."
+                    "help text This field supports the use of macros. The corresponding plug-in replaces the macros with the actual values. To use a custom host attribute, prefix its name with 'HOST_', e.g. an attribute named 'OWNER' is referenced as $HOST_OWNER$."
                 ),
                 label=_("label"),
                 default_value="default text",
@@ -1635,6 +1675,7 @@ def _compare_specs(actual: object, expected: object) -> None:
     ignored_attrs = {
         "__orig_class__",
         "_form_spec_definition",
+        "_parameter_form_spec_definition",
     }
 
     if isinstance(expected, Sequence) and not isinstance(expected, str):

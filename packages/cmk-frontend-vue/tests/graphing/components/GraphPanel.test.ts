@@ -3,50 +3,70 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { getLocalTimeZone } from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
+import { nextTick } from 'vue'
 
 import { loadMenu } from '@/graphing/api/burgerMenu.ts'
 import GraphPanel from '@/graphing/components/GraphPanel.vue'
 import type { Metric, TimeRange } from '@/graphing/components/TimeSeriesGraph'
+import { MIN_ZOOM_TIME_RANGE_SECONDS } from '@/graphing/components/constants'
 import { useGlobalPin } from '@/graphing/composables/useGlobalPin'
 import type { BurgerMenuCallable, GraphPanelProps, RequestedTimeRange } from '@/graphing/types'
+import { binStart } from '@/graphing/utils/bins'
+import { continuousTimeAxis } from '@/graphing/utils/timeRange'
 
 vi.mock('@/graphing/api/burgerMenu.ts', () => ({ loadMenu: vi.fn() }))
 
 // Mock renders received metric titles and view props as text so tests can assert on
 // visibility filtering and the interaction loop. Click targets are spans (not buttons)
 // to keep the "panel renders no button" assertions meaningful.
-vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
-  default: {
-    inheritAttrs: false,
-    props: [
-      'metrics',
-      'view_time_range',
-      'inspecting',
-      'highlightedMetricNames',
-      'pinEnabled',
-      'pinTime',
-      'atMinTimeZoom',
-      'consolidationFunction',
-      'options',
-      'showTimeAxis',
-      'showValueAxis',
-      'minValueAxisWidth'
-    ],
-    emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction'],
-    template: `<div data-testid="time-series-graph">
+vi.mock('@/graphing/components/TimeSeriesGraph', async () => {
+  const { ref } = await import('vue')
+  return {
+    default: {
+      inheritAttrs: false,
+      // The panel calls the hint on the renderer instance, so the stub exposes one that counts.
+      setup() {
+        const maxZoomHintRequests = ref(0)
+        const showMaxZoomHint = () => {
+          maxZoomHintRequests.value += 1
+        }
+        return { maxZoomHintRequests, showMaxZoomHint }
+      },
+      props: [
+        'metrics',
+        'view_time_range',
+        'inspecting',
+        'highlightedMetricNames',
+        'pinEnabled',
+        'pinTime',
+        'atMinTimeZoom',
+        'consolidationFunction',
+        'options',
+        'showTimeAxis',
+        'showValueAxis',
+        'minValueAxisWidth',
+        'binUnit',
+        'minTimeRange'
+      ],
+      emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction', 'update:valueResolution'],
+      template: `<div data-testid="time-series-graph">
       <span>{{ metrics.map((m) => m.metadata.title).join(",") }}</span>
       <span data-testid="renderer-y-axis-range">{{ options?.y_axis?.explicit_range?.max ?? 'none' }}</span>
       <span data-testid="renderer-y-axis-unit">{{ options?.y_axis?.unit?.notation ?? 'none' }}</span>
       <span data-testid="view-start">{{ view_time_range.start }}</span>
       <span data-testid="view-end">{{ view_time_range.end }}</span>
+      <span data-testid="bin-unit">{{ binUnit }}</span>
+      <span data-testid="min-time-range">{{ minTimeRange }}</span>
       <span data-testid="inspecting">{{ inspecting }}</span>
       <span data-testid="highlighted">{{ highlightedMetricNames.join(",") }}</span>
       <span data-testid="show-pin">{{ pinEnabled }}</span>
       <span data-testid="pin-time">{{ pinTime }}</span>
       <span data-testid="at-min-time-zoom">{{ atMinTimeZoom }}</span>
+      <span data-testid="max-zoom-hint-requests">{{ maxZoomHintRequests }}</span>
       <span data-testid="renderer-consolidation">{{ consolidationFunction }}</span>
       <span data-testid="renderer-show-time-axis">{{ showTimeAxis }}</span>
       <span data-testid="renderer-show-value-axis">{{ showValueAxis }}</span>
@@ -70,9 +90,14 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
         @click="$emit('pan', { timeRange: { start: 342, end: 4002, step: 10 } })"
       />
       <span data-testid="emit-reset" @click="$emit('reset')" />
+      <span
+        data-testid="emit-value-resolution"
+        @click="$emit('update:valueResolution', 0.005)"
+      />
     </div>`
+    }
   }
-}))
+})
 
 vi.mock('@/graphing/components/GraphBrush/GraphBrush.vue', () => ({
   default: {
@@ -91,6 +116,7 @@ vi.mock('@/graphing/components/GraphBrush/GraphBrush.vue', () => ({
     template: `<div class="graphing-graph-brush">
       <span data-testid="brush-window">{{ window.start }}-{{ window.end }}</span>
       <span data-testid="brush-domain">{{ domain.start }}-{{ domain.end }}</span>
+      <span data-testid="brush-min-span">{{ minSpan }}</span>
       <span
         data-testid="emit-brush-move"
         @click="$emit('update:requestedTimeRange', { start: 300, end: 400 }, 'translated_timerange')"
@@ -145,7 +171,7 @@ const INTERACTION_NONE: GraphPanelProps['interaction'] = {
 function makeMetric(name: string, title: string): Metric {
   return {
     metadata: { name, title, unit: UNIT, color: '#ff0000', attributes: [] },
-    render: { stack: 'area', inverse: false, hidden: false },
+    render: { shape: 'area', stack: 'area', inverse: false, hidden: false },
     data_points: [1, 2, 3]
   }
 }
@@ -193,16 +219,9 @@ function plotWrapper(): HTMLElement {
 beforeEach(() => {
   vi.mocked(loadMenu).mockResolvedValue([])
   useGlobalPin().clearPin()
-  vi.clearAllMocks()
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
 })
 
 const MID_INTERVAL_REQUEST: RequestedTimeRange = { start: 1_781_524_937, end: 1_781_528_237 }
-const GRID_BOUNDARY_AT_OR_BEFORE_REQUEST_START = 1_781_524_800
-const NEWEST_GRID_BOUNDARY_THE_REQUEST_COVERS = 1_781_528_100
 const RESOLUTION_OF_THE_SERVED_STEP = /5 min/
 const ANY_RESOLUTION = /min/
 
@@ -220,20 +239,11 @@ function renderPanelForRequest(overrides: Partial<GraphPanelProps> = {}) {
   })
 }
 
-test('starts the drawn window on the sample boundary at or before the one requested', () => {
+test('draws the requested window rather than the wider range the fetch answered with', () => {
   renderPanelForRequest()
 
-  expect(screen.getByTestId('view-start')).toHaveTextContent(
-    String(GRID_BOUNDARY_AT_OR_BEFORE_REQUEST_START)
-  )
-})
-
-test('ends the drawn window on the newest sample boundary the request covers', () => {
-  renderPanelForRequest()
-
-  expect(screen.getByTestId('view-end')).toHaveTextContent(
-    String(NEWEST_GRID_BOUNDARY_THE_REQUEST_COVERS)
-  )
+  expect(screen.getByTestId('view-start')).toHaveTextContent(String(MID_INTERVAL_REQUEST.start))
+  expect(screen.getByTestId('view-end')).toHaveTextContent(String(MID_INTERVAL_REQUEST.end))
 })
 
 test('states the resolution the fetch resolved once one has landed', async () => {
@@ -275,6 +285,24 @@ test('renders the legend when showLegend is true', () => {
     }
   })
   expect(document.querySelector('.graphing-graph-panel__legend')).toBeInTheDocument()
+})
+
+test('hands the value resolution the renderer reports up to the host', async () => {
+  const { emitted } = render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      panelKey: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: INTERACTION_NONE
+    }
+  })
+  expect(emitted()['update:valueResolution']).toBeUndefined()
+
+  await fireEvent.click(screen.getByTestId('emit-value-resolution'))
+
+  expect(emitted()['update:valueResolution']).toEqual([[0.005]])
 })
 
 test('the brush bar shows the committed window, not the range the curves are drawn against', () => {
@@ -417,12 +445,18 @@ test('reports time zoom at its floor once the requested window is the narrowest 
     props: {
       metrics: [CPU],
       interaction: INTERACTION_NONE,
-      // A minute apart: exactly MIN_ZOOM_TIME_RANGE_SECONDS.
-      requestedTimeRange: { start: 1_781_524_800, end: 1_781_524_860 },
+      requestedTimeRange: {
+        start: 1_781_524_800,
+        end: 1_781_524_800 + MIN_ZOOM_TIME_RANGE_SECONDS
+      },
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       // Served a step wider, as the backend does.
-      dataTimeRange: { start: 1_781_524_800, end: 1_781_524_920, step: 60 }
+      dataTimeRange: {
+        start: 1_781_524_800,
+        end: 1_781_524_800 + MIN_ZOOM_TIME_RANGE_SECONDS + 60,
+        step: 60
+      }
     }
   })
 
@@ -442,6 +476,137 @@ test('does not report time zoom at its floor while the requested window is still
   })
 
   expect(screen.getByTestId('at-min-time-zoom')).toHaveTextContent('false')
+})
+
+const SIX_HOURS = 21_600
+// The fixtures' start doubles as a boundary of the six-hourly grid.
+const SIX_HOURLY_GRID_BOUNDARY = TIME_RANGE.start
+const SERVED_SIX_HOURLY: TimeRange = {
+  start: SIX_HOURLY_GRID_BOUNDARY - 8 * SIX_HOURS,
+  end: SIX_HOURLY_GRID_BOUNDARY + 8 * SIX_HOURS,
+  step: SIX_HOURS
+}
+// Ten minutes, mid-step: narrower than a single six-hourly step.
+const REQUEST_NARROWER_THAN_A_STEP: RequestedTimeRange = {
+  start: SIX_HOURLY_GRID_BOUNDARY + 1_000,
+  end: SIX_HOURLY_GRID_BOUNDARY + 1_600
+}
+
+function renderPanelServedSixHourly(overrides: Partial<GraphPanelProps> = {}) {
+  return render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: SERVED_SIX_HOURLY,
+      requestedTimeRange: REQUEST_NARROWER_THAN_A_STEP,
+      panelKey: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: { ...INTERACTION_NONE, zoom: 'enabled' },
+      ...overrides
+    }
+  })
+}
+
+// The resolution a window is served at is only known once a fetch has answered, so the floor
+// follows the data on screen: a coarse answer raises it above the configured minimum.
+test('reports time zoom at its floor once the requested window holds the fewest samples the served resolution fills', () => {
+  const floor = continuousTimeAxis().zoomFloor(SERVED_SIX_HOURLY)
+
+  renderPanelServedSixHourly({
+    requestedTimeRange: { start: SIX_HOURLY_GRID_BOUNDARY, end: SIX_HOURLY_GRID_BOUNDARY + floor }
+  })
+
+  expect(screen.getByTestId('at-min-time-zoom')).toHaveTextContent('true')
+})
+
+test('does not hold the requested window to the resolution of the data a fetch is replacing', () => {
+  renderPanelServedSixHourly({ awaitingData: true })
+
+  expect(screen.getByTestId('at-min-time-zoom')).toHaveTextContent('false')
+})
+
+// A window the served resolution cannot fill stays the user's: the sample covering it is what
+// there is to draw, and moving the window would be a zoom they did not make.
+test('leaves a window the served resolution cannot fill where it was asked', () => {
+  const { emitted } = renderPanelServedSixHourly()
+
+  expect(emitted()['update:requestedTimeRange']).toBeUndefined()
+  expect(screen.getByTestId('view-start')).toHaveTextContent(
+    String(REQUEST_NARROWER_THAN_A_STEP.start)
+  )
+})
+
+// A fetch, not a gesture, can be what finds the floor. The renderer states it once, on entering:
+// an answer that keeps the window there has nothing new to say.
+test('does not have the renderer state the floor while a fetch is out', () => {
+  renderPanelServedSixHourly({ awaitingData: true })
+
+  expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('0')
+})
+
+test('does not have the renderer state the floor of a graph that cannot be zoomed', async () => {
+  renderPanelServedSixHourly({ interaction: INTERACTION_NONE })
+
+  await nextTick()
+
+  expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('0')
+})
+
+test('has the renderer state the floor once a fetch lands too coarse for the request', async () => {
+  const { rerender } = renderPanelServedSixHourly({ awaitingData: true })
+
+  await rerender({ awaitingData: false })
+
+  expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('1')
+})
+
+test('has the renderer state the floor for a window mounted at it', async () => {
+  renderPanelServedSixHourly()
+
+  await waitFor(() => expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('1'))
+})
+
+test('does not have the floor restated when a refresh answers at the same resolution', async () => {
+  const { rerender } = renderPanelServedSixHourly()
+
+  await rerender({ awaitingData: true })
+  await rerender({ awaitingData: false, dataTimeRange: { ...SERVED_SIX_HOURLY } })
+
+  expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('1')
+})
+
+test('has the floor stated again once a later fetch lands the window back at it', async () => {
+  const { rerender } = renderPanelServedSixHourly()
+  const wideEnough: RequestedTimeRange = {
+    start: SIX_HOURLY_GRID_BOUNDARY,
+    end: SIX_HOURLY_GRID_BOUNDARY + 4 * SIX_HOURS
+  }
+
+  await rerender({ awaitingData: true, requestedTimeRange: wideEnough })
+  await rerender({ awaitingData: false, dataTimeRange: { ...SERVED_SIX_HOURLY } })
+  await rerender({ awaitingData: true, requestedTimeRange: REQUEST_NARROWER_THAN_A_STEP })
+  await rerender({ awaitingData: false, dataTimeRange: { ...SERVED_SIX_HOURLY } })
+
+  expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('2')
+})
+
+// The resolution of a window the brush selects is not known until it is fetched, so the brush is
+// held only to the configured minimum; a coarse answer is drawn and stated like any other.
+test('holds the brush to the configured minimum span', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      panelKey: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: { ...INTERACTION_NONE, brush: 'enabled' },
+      brushSnapshot: BRUSH_SNAPSHOT
+    }
+  })
+
+  expect(screen.getByTestId('brush-min-span')).toHaveTextContent(
+    String(MIN_ZOOM_TIME_RANGE_SECONDS)
+  )
 })
 
 test('does not render GraphBurgerMenu when showBurgerMenu is not set', () => {
@@ -511,7 +676,9 @@ test('a do-action from the header runs the callback with the graph the backends 
     }
   })
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Action menu' }))
+  const trigger = screen.getByRole('button', { name: 'Action menu' })
+  await waitFor(() => expect(trigger).toBeEnabled())
+  await fireEvent.click(trigger)
   await fireEvent.click(await screen.findByRole('menuitem', { name: 'Export as JSON' }))
 
   // Most add-to actions replay the specification, a custom graph takes the built graph itself, and
@@ -525,9 +692,34 @@ test('a do-action from the header runs the callback with the graph the backends 
   })
 })
 
+test('after a value-zoom, the burger menu action includes the shown Y-axis range', async () => {
+  const onClick: BurgerMenuCallable = vi.fn()
+  vi.mocked(loadMenu).mockResolvedValue([
+    { heading: 'Export', actions: [{ label: 'Export', ariaLabel: 'Export', onClick }] }
+  ])
+
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      panelKey: 0,
+      figureWidth: FIGURE_WIDTH,
+      addTo: { type: 'test', specification: {}, internal: '{"graphs":[]}' },
+      interaction: { ...INTERACTION_NONE, burger: 'enabled' }
+    }
+  })
+
+  await fireEvent.click(screen.getByTestId('emit-value-zoom'))
+  await fireEvent.click(screen.getByRole('button', { name: 'Action menu' }))
+  await fireEvent.click(await screen.findByRole('menuitem', { name: 'Export' }))
+
+  expect(onClick).toHaveBeenCalledWith(expect.objectContaining({ valueRange: { min: 0, max: 10 } }))
+})
+
 async function selectConsolidationFromHeaderDropdown(label: string): Promise<void> {
   const user = userEvent.setup()
-  await user.click(screen.getByRole('combobox', { name: 'Graph values' }))
+  await user.click(screen.getByRole('combobox', { name: 'Data aggregation' }))
   await user.click(await screen.findByRole('option', { name: label }))
 }
 
@@ -1098,7 +1290,7 @@ test('keeps the all-hidden message when data arrived but nothing is shown', () =
   expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
 })
 
-test('a window that returned no data reuses the all-hidden message', () => {
+test('a window that returned no metrics does not blame hiding for the empty frame', () => {
   render(GraphPanel, {
     props: {
       metrics: [],
@@ -1110,9 +1302,48 @@ test('a window that returned no data reuses the all-hidden message', () => {
     }
   })
 
-  // Pins today's wording: nothing was hidden, there was nothing to show. Change both together.
+  // Nothing was hidden; the host states why the frame is empty.
+  expect(screen.queryByText('All metrics are hidden')).not.toBeInTheDocument()
+})
+
+test('leaves an all-null panel to its host even when every metric is hidden', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [
+        { ...CPU, data_points: [null, null, null] },
+        { ...MEM, data_points: [null, null, null] }
+      ],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      panelKey: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: INTERACTION_NONE,
+      hiddenMetricNames: ['cpu', 'mem'],
+      showLegend: true
+    }
+  })
+
+  // Hiding curves that hold nothing explains nothing; the host states the emptiness instead.
+  expect(screen.queryByText('All metrics are hidden')).not.toBeInTheDocument()
+})
+
+test('keeps the all-hidden message up while a refetch is out', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU, MEM],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      awaitingData: true,
+      panelKey: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: INTERACTION_NONE,
+      hiddenMetricNames: ['cpu', 'mem'],
+      showLegend: true
+    }
+  })
+
+  // Hiding is the user's own choice about metrics still on screen, so a fetch does not unsay it.
   expect(screen.getByText('All metrics are hidden')).toBeInTheDocument()
-  expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
 })
 
 test('forwards a provided y-axis, explicit range included, into the renderer options', () => {
@@ -1163,4 +1394,68 @@ test('hands the renderer the axis options it was given', () => {
   expect(screen.getByTestId('renderer-show-time-axis')).toHaveTextContent('false')
   expect(screen.getByTestId('renderer-show-value-axis')).toHaveTextContent('false')
   expect(screen.getByTestId('renderer-value-axis-width')).toHaveTextContent('48')
+})
+
+describe('a panel of bar metrics', () => {
+  const HOUR = 3600
+  const NOW = Date.UTC(2026, 0, 1, 10, 37) / 1000
+  const LAST_FOUR_HOURS = { start: NOW - 4 * HOUR, end: NOW }
+
+  beforeEach(() => {
+    vi.useFakeTimers({ now: NOW * 1000, toFake: ['Date'] })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  const SERVED = {
+    start: Date.UTC(2026, 0, 1, 5) / 1000,
+    end: Date.UTC(2026, 0, 1, 11) / 1000,
+    step: HOUR
+  }
+
+  function renderBarPanel() {
+    return renderPanelForRequest({
+      binUnit: 'hour',
+      requestedTimeRange: LAST_FOUR_HOURS,
+      dataTimeRange: SERVED
+    })
+  }
+
+  test('draws from the bin that holds the start up to now, inside the open bin', () => {
+    renderBarPanel()
+
+    expect(screen.getByTestId('view-start')).toHaveTextContent(
+      String(binStart('hour', LAST_FOUR_HOURS.start, getLocalTimeZone()))
+    )
+    expect(screen.getByTestId('view-end')).toHaveTextContent(String(NOW))
+  })
+
+  test('bins the bars by the unit and zooms no deeper than one bin', () => {
+    renderBarPanel()
+
+    expect(screen.getByTestId('bin-unit')).toHaveTextContent('hour')
+    expect(screen.getByTestId('min-time-range')).toHaveTextContent(String(HOUR))
+  })
+
+  // prettier-ignore
+  test.each([
+    { name: 'a 3 h view on the planned grid', step: HOUR, span: 3 * HOUR, awaitingData: false, atFloor: false, floor: HOUR },
+    { name: 'a 1 h view on the planned grid', step: HOUR, span: HOUR, awaitingData: false, atFloor: true, floor: HOUR },
+    { name: 'a 1 h view on a grid finer than a bin', step: 15 * 60, span: HOUR, awaitingData: false, atFloor: true, floor: HOUR },
+    { name: 'a 6 h view on a six-hour grid', step: 6 * HOUR, span: 6 * HOUR, awaitingData: false, atFloor: true, floor: 6 * HOUR },
+    { name: 'a 2 h view on a 90 min grid', step: 90 * 60, span: 2 * HOUR, awaitingData: false, atFloor: true, floor: 2 * HOUR },
+    { name: 'a 2 h view while a fetch is out', step: 6 * HOUR, span: 2 * HOUR, awaitingData: true, atFloor: false, floor: HOUR }
+  ])('refuses a time zoom where it clamps it, for $name', ({ step, span, awaitingData, atFloor, floor }) => {
+    renderPanelForRequest({
+      binUnit: 'hour',
+      requestedTimeRange: { start: NOW - span, end: NOW },
+      dataTimeRange: { start: NOW - span - step, end: NOW + step, step },
+      awaitingData
+    })
+
+    expect(screen.getByTestId('at-min-time-zoom')).toHaveTextContent(String(atFloor))
+    expect(screen.getByTestId('min-time-range')).toHaveTextContent(String(floor))
+  })
 })

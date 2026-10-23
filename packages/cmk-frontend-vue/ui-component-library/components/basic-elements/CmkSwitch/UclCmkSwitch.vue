@@ -13,6 +13,16 @@ export const panelConfig = {
     type: 'boolean' as const,
     title: 'Checked State',
     initialState: false
+  },
+  ariaLabel: {
+    type: 'string' as const,
+    title: 'Accessible name',
+    initialState: 'Use color'
+  },
+  ariaLabelledby: {
+    type: 'string' as const,
+    title: 'Labelled by (element id)',
+    initialState: ''
   }
 } satisfies PanelConfigFor<typeof CmkSwitch>
 </script>
@@ -39,7 +49,11 @@ const propState = new PanelStateCreator<typeof CmkSwitch>().createRef(panelConfi
     <UclDetailPageHeader>CmkSwitch</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <CmkSwitch v-model="propState.modelValue" />
+      <CmkSwitch
+        v-model="propState.modelValue"
+        :aria-label="propState.ariaLabel || undefined"
+        :aria-labelledby="propState.ariaLabelledby || undefined"
+      />
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />

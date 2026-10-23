@@ -5,29 +5,33 @@
 
 # mypy: disable-error-code="comparison-overlap"
 
-from collections.abc import Sequence
+from functools import partial
 from typing import override
 
 import pytest
 from pytest import MonkeyPatch
 
 import cmk.gui.watolib.rulespecs
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
+from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
 from cmk.gui.plugins.wato.utils import TimeperiodValuespec
-from cmk.gui.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
-from cmk.gui.search.matchers import MatchItem
+from cmk.gui.rule_specs.legacy_converter import convert_to_legacy_valuespec
+from cmk.gui.search.matchers import MatchItem, MatchItemConfig
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.rule_match_item_generator import MatchItemGeneratorRules
 from cmk.gui.watolib.rulespecs import (
+    CheckParameterRulespecWithoutItem,
     FormSpecDefinition,
     get_rulegroup,
     HostRulespec,
     main_module_from_rulespec_group_name,
+    ManualCheckParameterRulespec,
     rulespec_group_registry,
     RulespecGroup,
     RulespecGroupRegistry,
@@ -35,7 +39,7 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
 )
 from cmk.rulesets.v1 import Help, Title
-from cmk.rulesets.v1.form_specs import Integer
+from cmk.rulesets.v1.form_specs import FormSpec, Integer
 
 
 def test_rulespec_sub_group() -> None:
@@ -100,115 +104,6 @@ def test_legacy_get_not_existing_rule_sub_group(monkeypatch: MonkeyPatch) -> Non
     assert group.help is None
 
 
-@pytest.mark.parametrize(
-    "term,result",
-    [
-        (
-            "host_monconf",
-            [
-                "host_monconf",
-                "host_monconf/host_checks",
-                "host_monconf/host_notifications",
-                "host_monconf/host_various",
-            ],
-        ),
-        (
-            "monconf",
-            [
-                "monconf",
-                "monconf/applications",
-                "monconf/environment",
-                "monconf/hardware",
-                "monconf/networking",
-                "monconf/notifications",
-                "monconf/os",
-                "monconf/printers",
-                "monconf/service_checks",
-                "monconf/storage",
-                "monconf/various",
-                "monconf/virtualization",
-            ],
-        ),
-        ("monconf/various", ["monconf/various"]),
-        (
-            "agent",
-            [
-                "agent",
-                "agent/check_mk_agent",
-                "agent/general_settings",
-            ],
-        ),
-    ],
-)
-def test_rulespec_get_matching_group_names(term: str, result: Sequence[str]) -> None:
-    actual_names = [
-        g
-        for g in rulespec_group_registry.get_matching_group_names(term)
-        if not _is_dynamically_generated_group(g)
-    ]
-    assert sorted(actual_names) == sorted(result)
-
-
-def test_rulespec_get_main_groups() -> None:
-    main_group_names = [g_class().name for g_class in rulespec_group_registry.get_main_groups()]
-    assert sorted(main_group_names) == sorted(
-        [
-            "activechecks",
-            "monconf",
-            "host_monconf",
-            "agent",
-            "agents",
-            "checkparams",
-            "static",
-            "datasource_programs",
-            "inventory",
-            "eventconsole",
-            "custom_checks",
-            "snmp",
-            "vm_cloud_container",
-        ]
-    )
-
-
-def _is_dynamically_generated_group(group_name: str) -> bool:
-    # generated for the RulesetAPI v1
-    return group_name.rsplit("/", maxsplit=1)[-1].startswith(GENERATED_GROUP_PREFIX)
-
-
-def test_rulespec_get_host_groups() -> None:
-    expected_rulespec_host_groups = [
-        "checkparams",
-        "checkparams/discovery",
-        "checkparams/inventory_and_check_mk_settings",
-        "host_monconf/host_checks",
-        "host_monconf/host_notifications",
-        "host_monconf/host_various",
-        "agent/general_settings",
-        "agent/check_mk_agent",
-        "agents/generic_options",
-        "datasource_programs",
-        "datasource_programs/apps",
-        "datasource_programs/cloud",
-        "datasource_programs/container",
-        "datasource_programs/custom",
-        "datasource_programs/hw",
-        "datasource_programs/os",
-        "datasource_programs/testing",
-        "inventory",
-        "eventconsole",
-        "custom_checks",
-        "snmp",
-        "vm_cloud_container",
-    ]
-
-    group_names = [
-        g
-        for g in rulespec_group_registry.get_host_rulespec_group_names(True)
-        if not _is_dynamically_generated_group(g)
-    ]
-    assert sorted(group_names) == sorted(expected_rulespec_host_groups)
-
-
 class DummyGroup(RulespecGroup):
     @property
     @override
@@ -271,6 +166,94 @@ def test_get_group_choices_no_duplicates_after_double_registration() -> None:
     assert choice_names == ["group", "group/sub"]
 
 
+@pytest.mark.parametrize(
+    "group_name, expected",
+    [
+        ("group", ["group", "group/sub"]),
+        ("group/sub", ["group/sub"]),
+        ("unknown", []),
+    ],
+)
+def test_matching_group_names_include_sub_groups_of_a_main_group(
+    group_name: str, expected: list[str]
+) -> None:
+    registry = RulespecGroupRegistry()
+    registry.register(DummyGroup)
+    registry.register(DummySubGroup)
+
+    assert registry.get_matching_group_names(group_name) == expected
+
+
+def _make_main_group(group_name: str) -> type[RulespecGroup]:
+    class _MainGroup(RulespecGroup):
+        @property
+        @override
+        def name(self) -> str:
+            return group_name
+
+        @property
+        @override
+        def title(self) -> str:
+            return group_name
+
+        @property
+        @override
+        def help(self) -> str:
+            return ""
+
+    return _MainGroup
+
+
+def _make_sub_group(main: type[RulespecGroup]) -> type[RulespecSubGroup]:
+    class _SubGroup(RulespecSubGroup):
+        @property
+        @override
+        def main_group(self) -> type[RulespecGroup]:
+            return main
+
+        @property
+        @override
+        def sub_group_name(self) -> str:
+            return "sub"
+
+        @property
+        @override
+        def title(self) -> str:
+            return "sub"
+
+    return _SubGroup
+
+
+def _host_rulespec_group_registry() -> RulespecGroupRegistry:
+    registry = RulespecGroupRegistry()
+    for group_name in ("mygroup", "monconf", "static", "agents"):
+        main = _make_main_group(group_name)
+        registry.register(main)
+        registry.register(_make_sub_group(main))
+    return registry
+
+
+def test_host_rulespec_groups_for_hosts_hide_service_monitoring_groups() -> None:
+    registry = _host_rulespec_group_registry()
+
+    assert registry.get_host_rulespec_group_names(for_host=True) == [
+        "mygroup",
+        "mygroup/sub",
+        "agents/sub",
+    ]
+
+
+def test_host_rulespec_groups_not_for_hosts_show_service_monitoring_sub_groups() -> None:
+    registry = _host_rulespec_group_registry()
+
+    assert registry.get_host_rulespec_group_names(for_host=False) == [
+        "mygroup",
+        "mygroup/sub",
+        "monconf/sub",
+        "agents/sub",
+    ]
+
+
 def test_rulespecs_get_by_group() -> None:
     group_registry = RulespecGroupRegistry()
     registry = RulespecRegistry(group_registry)
@@ -288,6 +271,19 @@ def test_rulespecs_get_by_group() -> None:
     result = registry.get_by_group("group")
     assert len(result) == 1
     assert isinstance(result[0], HostRulespec)
+
+
+def test_all_groups_are_the_groups_having_rulespecs() -> None:
+    used_group = _make_main_group("used")
+    group_registry = RulespecGroupRegistry()
+    group_registry.register(used_group)
+    group_registry.register(_make_main_group("unused"))
+    registry = RulespecRegistry(group_registry)
+    registry.register(
+        HostRulespec(name="dummy_name", group=used_group, valuespec=lambda: FixedValue(value=None))
+    )
+
+    assert registry.get_all_groups() == ["used"]
 
 
 def test_match_item_generator_rules() -> None:
@@ -334,7 +330,11 @@ def test_match_item_generator_rules() -> None:
         rulespec_group_reg,
         rulespec_reg,
     )
-    assert list(match_item_generator.generate_match_items(UserPermissions({}, {}, {}, []))) == [
+    assert list(
+        match_item_generator.generate_match_items(
+            UserPermissions({}, {}, {}, []), MatchItemConfig.from_config(Config())
+        )
+    ) == [
         MatchItem(
             title="Title",
             topic="Rulespec Group",
@@ -408,3 +408,193 @@ def test_validate_datatype_timeperiod_valuespec_inner() -> None:
     value_spec = TimeperiodValuespec(Dictionary(elements=[]))
     with pytest.raises(MKUserError):
         value_spec.validate_datatype(["not", "a", "string"], "")  # type: ignore[arg-type]
+
+
+def test_match_item_generator_rules_follows_a_language_switch(monkeypatch: MonkeyPatch) -> None:
+    language = "en"
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "get_current_language", lambda: language)
+
+    class SomeRulespecGroup(RulespecGroup):
+        @property
+        @override
+        def name(self) -> str:
+            return "rulespec_group"
+
+        @property
+        @override
+        def title(self) -> str:
+            return "Rulespec Group"
+
+        @property
+        @override
+        def help(self) -> str:
+            return ""
+
+    class SomeRulespecSubGroup(RulespecSubGroup):
+        @property
+        @override
+        def main_group(self) -> type[RulespecGroup]:
+            return SomeRulespecGroup
+
+        @property
+        @override
+        def sub_group_name(self) -> str:
+            return "sub_group"
+
+        @property
+        @override
+        def title(self) -> str:
+            return "Rulespec Sub Group"
+
+    rulespec_group_reg = RulespecGroupRegistry()
+    rulespec_group_reg.register(SomeRulespecGroup)
+    rulespec_group_reg.register(SomeRulespecSubGroup)
+
+    rulespec_reg = RulespecRegistry(rulespec_group_reg)
+    rulespec_reg.register(
+        HostRulespec(
+            name="some_nested_host_rulespec",
+            group=SomeRulespecSubGroup,
+            valuespec=TextInput,
+            title=lambda: f"Title {language}",
+        )
+    )
+
+    match_item_generator = MatchItemGeneratorRules(
+        "rules",
+        rulespec_group_reg,
+        rulespec_reg,
+    )
+
+    def titles() -> list[str]:
+        return [
+            item.title
+            for item in match_item_generator.generate_match_items(
+                UserPermissions({}, {}, {}, []), MatchItemConfig.from_config(Config())
+            )
+        ]
+
+    assert titles() == ["Title en"]
+    language = "de"
+    assert titles() == ["Title de"]
+
+
+class _CheckParametersGroup(RulespecGroup):
+    @property
+    @override
+    def name(self) -> str:
+        return "check_parameters_group"
+
+    @property
+    @override
+    def title(self) -> str:
+        return "Check parameters group"
+
+    @property
+    @override
+    def help(self) -> str:
+        return ""
+
+
+class _RecordingFormSpecFactory:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def __call__(self) -> FormSpec[int]:
+        self.calls += 1
+        return Integer(title=Title("Parameters"))
+
+
+def test_check_parameter_rulespec_does_not_build_form_spec_on_creation() -> None:
+    factory = _RecordingFormSpecFactory()
+
+    CheckParameterRulespecWithoutItem(
+        check_group_name="some_check_group",
+        group=_CheckParametersGroup,
+        parameter_valuespec=TextInput,
+        create_manual_check=False,
+        form_spec_definition=FormSpecDefinition(factory, None),
+    )
+
+    assert factory.calls == 0
+
+
+def test_check_parameter_rulespec_form_spec_is_time_specific() -> None:
+    rulespec = CheckParameterRulespecWithoutItem(
+        check_group_name="some_check_group",
+        group=_CheckParametersGroup,
+        parameter_valuespec=TextInput,
+        create_manual_check=False,
+        form_spec_definition=FormSpecDefinition(_RecordingFormSpecFactory(), None),
+    )
+
+    form_spec = rulespec.form_spec
+
+    assert isinstance(form_spec, TimeSpecific)
+    assert form_spec.parameter_form == Integer(title=Title("Parameters"))
+
+
+def test_check_parameter_rulespec_does_not_wrap_time_specific_form_spec_again() -> None:
+    time_specific = TimeSpecific(parameter_form=Integer(title=Title("Parameters")))
+    rulespec = CheckParameterRulespecWithoutItem(
+        check_group_name="some_check_group",
+        group=_CheckParametersGroup,
+        parameter_valuespec=TextInput,
+        create_manual_check=False,
+        form_spec_definition=FormSpecDefinition(lambda: time_specific, None),
+    )
+
+    assert rulespec.form_spec is time_specific
+
+
+def test_manual_check_parameter_rulespec_does_not_build_form_spec_on_creation() -> None:
+    factory = _RecordingFormSpecFactory()
+
+    ManualCheckParameterRulespec(
+        group=_CheckParametersGroup,
+        check_group_name="some_check_group",
+        form_spec_definition=FormSpecDefinition(factory, None),
+    )
+
+    assert factory.calls == 0
+
+
+def _unconvertible_form_spec() -> FormSpec[object]:
+    return TransformDataForLegacyFormatOrRecomposeFunction(
+        wrapped_form_spec=Integer(title=Title("Parameters")),
+        from_disk=lambda value: value,
+        to_disk=lambda value: value,
+    )
+
+
+def _check_parameter_rulespec[T](form_spec: FormSpec[T]) -> CheckParameterRulespecWithoutItem:
+    return CheckParameterRulespecWithoutItem(
+        check_group_name="some_check_group",
+        group=_CheckParametersGroup,
+        parameter_valuespec=partial(convert_to_legacy_valuespec, form_spec, lambda s: s),
+        create_manual_check=False,
+        form_spec_definition=FormSpecDefinition(lambda: form_spec, None),
+    )
+
+
+def test_rulespec_has_valuespec_if_its_form_spec_converts() -> None:
+    assert _check_parameter_rulespec(Integer(title=Title("Parameters"))).has_valuespec
+
+
+def test_rulespec_has_no_valuespec_if_its_form_spec_does_not_convert() -> None:
+    assert not _check_parameter_rulespec(_unconvertible_form_spec()).has_valuespec
+
+
+def test_manual_check_parameter_value_model_does_not_need_a_valuespec() -> None:
+    form_spec = _unconvertible_form_spec()
+    rulespec = ManualCheckParameterRulespec(
+        group=_CheckParametersGroup,
+        check_group_name="some_check_group",
+        parameter_valuespec=partial(convert_to_legacy_valuespec, form_spec, lambda s: s),
+        form_spec_definition=FormSpecDefinition(lambda: form_spec, None),
+    )
+
+    parameter_value_model = rulespec.parameter_value_model
+
+    assert isinstance(parameter_value_model, TimeSpecific)
+    assert parameter_value_model.parameter_form is form_spec

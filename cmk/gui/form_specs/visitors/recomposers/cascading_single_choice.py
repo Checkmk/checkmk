@@ -8,17 +8,17 @@
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
+from cmk.rulesets.internal.form_specs import (
     CascadingSingleChoiceExtended,
+    CascadingSingleChoiceLayout,
 )
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice, FormSpec
-from cmk.shared_typing.vue_formspec_components import CascadingSingleChoiceLayout
 
 
 def recompose(form_spec: FormSpec[Any]) -> CascadingSingleChoiceExtended:
     if not isinstance(form_spec, CascadingSingleChoice):
         raise MKGeneralException(
-            f"Cannot recompose form spec. Expected a SingleChoice form spec, got {type(form_spec)}"
+            f"Cannot recompose form spec. Expected a CascadingSingleChoice form spec, got {type(form_spec)}"
         )
 
     return CascadingSingleChoiceExtended(

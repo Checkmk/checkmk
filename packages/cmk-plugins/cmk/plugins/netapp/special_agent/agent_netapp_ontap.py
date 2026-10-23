@@ -18,6 +18,7 @@ import sys
 from collections import defaultdict
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from enum import Enum
+from http import HTTPStatus
 from typing import Final, override
 
 import urllib3
@@ -27,9 +28,9 @@ from netapp_ontap.host_connection import HostConnection
 from netapp_ontap.resource import Resource
 from pydantic import BaseModel
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.netapp import models
-from cmk.server_side_programs.v1_unstable import (
+from cmk.server_side_programs.v1 import (
     HostnameValidationAdapter,
     report_agent_crashes,
     vcrtrace,
@@ -119,7 +120,7 @@ def safe_write_section(
     try:
         write_section(section_name, generator, logger)
     except NetAppRestError as exc:
-        if exc.status_code == 401:
+        if exc.status_code == HTTPStatus.UNAUTHORIZED:
             raise
         logger.exception("Section '%(section_name)s' failed", {"section_name": section_name})
         _write_error(section_name, str(exc))
@@ -650,6 +651,7 @@ def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
+        metric = element_data.get("metric", {})
 
         yield models.NodeModel(
             name=element_data["name"],
@@ -662,8 +664,8 @@ def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
             serial_number=element_data["serial_number"],
             system_id=element_data["system_id"],
             cpu_processor=element_data.get("controller", {}).get("cpu", {}).get("processor"),
-            processor_utilization=element_data["metric"]["processor_utilization"],
-            processor_utilization_timestamp=element_data["metric"]["timestamp"],
+            processor_utilization=metric.get("processor_utilization"),
+            processor_utilization_timestamp=metric.get("timestamp"),
             date=element_data.get("date"),
         )
 
@@ -1113,7 +1115,7 @@ def get_nodes(
                     logger.exception("Failed to get version from cluster endpoint")
                     _write_error("node", str(cluster_exc))
         except NetAppRestError as exc:
-            if exc.status_code == 401:
+            if exc.status_code == HTTPStatus.UNAUTHORIZED:
                 raise
             logger.exception("Failed to fetch nodes")
             _write_error("node", str(exc))
@@ -1142,7 +1144,7 @@ def write_sections(
         try:
             volumes = list(fetch_volumes(connection))
         except NetAppRestError as exc:
-            if exc.status_code == 401:
+            if exc.status_code == HTTPStatus.UNAUTHORIZED:
                 raise
             logger.exception("Failed to fetch volumes")
             _write_error("volumes", str(exc))
@@ -1182,7 +1184,7 @@ def write_sections(
         try:
             interfaces = list(fetch_interfaces(connection, logger))
         except NetAppRestError as exc:
-            if exc.status_code == 401:
+            if exc.status_code == HTTPStatus.UNAUTHORIZED:
                 raise
             logger.exception("Failed to fetch interfaces")
             _write_error("if", str(exc))
@@ -1273,7 +1275,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
             "to each individual subquery. (Default is %(default)s seconds)"
         ),
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--fetched-resources",
         type=FetchedResource,
         nargs="+",
@@ -1347,7 +1349,7 @@ def agent_netapp_main(args: argparse.Namespace) -> int:
         try:
             write_sections(connection, logger, args)
         except NetAppRestError as exc:
-            if exc.status_code == 401:
+            if exc.status_code == HTTPStatus.UNAUTHORIZED:
                 sys.stderr.write("Authentication failed. Please check the credentials.\n")
                 return 1
             raise exc

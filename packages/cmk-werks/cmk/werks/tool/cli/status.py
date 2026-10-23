@@ -28,6 +28,7 @@ class Item(StrEnum):
     SECRET = "secret"
     RESERVED_IDS = "reserved_ids"
     LEGACY_STASH = "legacy_stash"
+    LOG = "log"
 
 
 class Severity(StrEnum):
@@ -90,6 +91,7 @@ class Status:
     secret: FileInfo
     reserved_ids: StashInfo
     legacy_stash: StashInfo
+    log: FileInfo
     problems: Sequence[Problem]
 
     @property
@@ -205,7 +207,7 @@ _SETUP_PROBLEMS: Mapping[SetupState, Problem | None] = {
         # Deliberately not 'werk init': it needs the ID server, so it is no help in the
         # state that made every other command bail out, and it carries over only the IDs
         # of project 'cmk' before deleting the file, losing all the others.
-        fix="look at both stash files and merge them by hand",
+        fix="merge the IDs you still need into the stash by hand, then delete it",
     ),
     SetupState.UNINITIALIZED: Problem(
         item=Item.SECRET,
@@ -305,6 +307,7 @@ def collect_status(
         secret=_file_info(paths.secret_file),
         reserved_ids=_stash_info(paths.stash_file, stash_ids),
         legacy_stash=_stash_info(paths.legacy_stash_file, legacy_ids),
+        log=_file_info(paths.log_file),
         problems=[
             # The state decides which files are expected to be there, so the existence of
             # each one is reported here and nowhere else.
@@ -355,6 +358,7 @@ _ITEM_LABELS = {
     Item.SECRET: "secret",
     Item.RESERVED_IDS: "reserved ids",
     Item.LEGACY_STASH: "legacy stash",
+    Item.LOG: "log",
 }
 
 _SEVERITY_MARKERS = {
@@ -452,6 +456,15 @@ def _werk_ids_table(home: Path, status: Status) -> Table:
             str(_replace_home(home, status.legacy_stash.path)),
             status.legacy_stash.mode or "",
         )
+    # Every werk ID that was reserved, consumed, freed or picked ends up here. Only the
+    # location: reading the log is not this command's job.
+    table.add_row(
+        _item_marker(status, Item.LOG, exists=status.log.exists),
+        _ITEM_LABELS[Item.LOG],
+        "",
+        str(_replace_home(home, status.log.path)),
+        status.log.mode or "",
+    )
     return table
 
 

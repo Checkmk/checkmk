@@ -94,6 +94,7 @@ rust_binary(
     crate_name = "mk_oracle",
     edition = "2021",
     opt = True,
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
@@ -179,14 +180,19 @@ rust_library(
     ],
 )
 
-rust_test_suite(
-    name = "mk-oracle-lib-test-external",
-    srcs = [
-        "tests/test_mk_oracle_bin.rs",
-        "tests/test_ora_discovery.rs",
-        "tests/test_ora_no_db.rs",
-        "tests/test_ora_with_db.rs",
-    ],
+# Like rust_test_suite (same target and crate names), but built for the
+# hermetic platform: the component tests copy these binaries to and run
+# them on the Oracle test host, so they must not depend on the glibc of
+# the build container.
+EXTERNAL_TESTS = [
+    "test_ora_discovery",
+    "test_ora_no_db",
+    "test_ora_with_db",
+]
+
+[rust_test(
+    name = "mk-oracle-lib-test-external_tests/%s_test" % test,
+    srcs = ["tests/%s.rs" % test],
     compile_data = [
         "tests/files/not-ora_sql.yml",
         "tests/files/tns/tnsnames.ora",
@@ -199,15 +205,11 @@ rust_test_suite(
         "tests/files/orasql_config/**/*.sql",
     ]),
     crate_features = ["build_system_bazel"],
+    crate_name = "mk_oracle_lib_test_external_tests_%s_test" % test,
+    crate_root = "tests/%s.rs" % test,
     data = [
-        "references/output-multiple.cfg",
-        "references/output-multiple.ps1",
-        "references/output-optional.cfg",
-        "references/output-optional.ps1",
-        "references/output-xe-no-tnsalias.cfg",
         "tests/files/mk_oracle_main.cfg",
     ] + glob([
-        "tests/files/migration_corpus/**",
         "tests/files/mk_oracle.d/**",
     ]),
     env_inherit = [
@@ -221,11 +223,46 @@ rust_test_suite(
         "MK_LIBDIR",
         "ORACLE_HOME",
     ],
-    tags = ["component"],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
+    tags = [
+        "component",
+        "restrict_mk-oracle-lib-test-external",
+    ],
     deps = all_crate_deps() + [
         ":mk-oracle",
         ":mk-oracle-lib",
         ":mk-oracle-tests-common",
+        "@host_crates//:assert_cmd",
+        "@host_crates//:tempfile",
+    ],
+) for test in EXTERNAL_TESTS]
+
+test_suite(
+    name = "mk-oracle-lib-test-external",
+    tags = [
+        "component",
+        "restrict_mk-oracle-lib-test-external",
+    ],
+    tests = ["mk-oracle-lib-test-external_tests/%s_test" % test for test in EXTERNAL_TESTS],
+)
+
+# Tests of the built binary (CLI, config migration): they need neither a
+# database nor an OCI client, so they are not tagged "component" and run
+# with the unit tests in CI.
+rust_test_suite(
+    name = "mk-oracle-bin-test",
+    srcs = ["tests/test_mk_oracle_bin.rs"],
+    crate_features = ["build_system_bazel"],
+    data = [
+        "references/output-multiple.cfg",
+        "references/output-multiple.ps1",
+        "references/output-optional.cfg",
+        "references/output-optional.ps1",
+        "references/output-xe-no-tnsalias.cfg",
+    ] + glob(["tests/files/migration_corpus/**"]),
+    deps = all_crate_deps() + [
+        ":mk-oracle",
+        ":mk-oracle-lib",
         "@host_crates//:assert_cmd",
         "@host_crates//:tempfile",
     ],
@@ -265,13 +302,15 @@ rust_wine_test(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
+        "build-and-upload",
         "cargo_run",
         "db-endpoint.sh",
         "permissions-check-run",
         "references/mk_oracle",
         "run",
         "run-pytests",
+        "run_compare_all.sh",
+        "run_comparison.sh",
         "ssh-run",
         "ssh-run.conf",
         "ssh-run-ci",
@@ -279,6 +318,7 @@ sh_library(
         "tests/files/docker/run-db.sh",
         "tests/test_cmd_line.sh",
         "tools/call-ora",
+        "wine-prepare.sh",
     ],
 )
 

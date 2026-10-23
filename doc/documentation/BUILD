@@ -41,13 +41,6 @@ sphinx_html(
     visibility = ["//visibility:public"],
 )
 
-sh_library(
-    name = "doc_documentation_sh",
-    srcs = [
-        ".f12",
-    ],
-)
-
 py_library(
     name = "doc_documentation_py",
     srcs = [

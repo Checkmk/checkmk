@@ -13,12 +13,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     Result,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.schemata.section import NodeCount
 
 OptionalLevels = Literal["no_levels"] | tuple[Literal["levels"], tuple[int, int]]
@@ -94,10 +93,6 @@ def parse(string_table: StringTable) -> NodeCount:
     return NodeCount.model_validate_json(string_table[0][0])
 
 
-def discovery(section: NodeCount) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def _get_levels(
     params: KubeNodeCountVSResult,
     name: NodeType,
@@ -171,7 +166,7 @@ check_default_parameters = KubeNodeCountVSResult(
 check_plugin_kube_node_count = CheckPlugin(
     name="kube_node_count",
     service_name="Nodes",
-    discovery_function=discovery,
+    discovery_function=discover_one_service,
     check_function=check,
     check_ruleset_name="kube_node_count",
     check_default_parameters=check_default_parameters,

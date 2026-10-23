@@ -83,8 +83,8 @@ def _show_popup(request: Request) -> None:
             ProductUsageAnalyticsConfigTyped(
                 global_settings_link=makeuri(
                     request,
-                    addvars=[("mode", "edit_configvar"), ("varname", "product_usage_analytics")],
-                    filename="wato.py",
+                    addvars=[("varname", "product_usage_analytics")],
+                    filename="global_settings.py",
                 ),
             )
         ),

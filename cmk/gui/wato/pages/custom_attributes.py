@@ -49,7 +49,6 @@ from cmk.gui.watolib.custom_attributes import (
 )
 from cmk.gui.watolib.host_attributes import host_attribute_topic_registry
 from cmk.gui.watolib.hosts_and_folders import (
-    folder_preserving_link,
     FolderTree,
     make_folder_tree,
 )
@@ -64,7 +63,7 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.users import remove_custom_attribute_from_all_users, user_features_registry
 from cmk.livestatus_client import SiteConfigurations
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
@@ -78,7 +77,7 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeCustomHostAttrs)
 
 
-def custom_attr_types() -> Choices:
+def custom_attr_types() -> list[Choice]:
     return [
         ("TextAscii", _("Simple Text")),
     ]
@@ -115,7 +114,7 @@ class ModeEditCustomAttr[T: CustomAttrSpec](WatoMode):
 
     @property
     @abc.abstractmethod
-    def _topics(self) -> Choices:
+    def _topics(self) -> list[Choice]:
         raise NotImplementedError
 
     @property
@@ -344,7 +343,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
 
     @property
     @override
-    def _topics(self) -> Choices:
+    def _topics(self) -> list[Choice]:
         return [
             ("ident", _("Identity")),
             ("security", _("Security")),
@@ -451,7 +450,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr[CustomHostAttrSpec]):
 
     @property
     @override
-    def _topics(self) -> Choices:
+    def _topics(self) -> list[Choice]:
         return host_attribute_topic_registry.get_choices()
 
     @property
@@ -558,9 +557,10 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
                                     title=_("Add attribute"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
                                             [("mode", "edit_%s_attr" % self._type)],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -645,9 +645,10 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
                 html.write_text_permissive(nr)
 
                 table.cell(_("Actions"), css=["buttons"])
-                edit_url = folder_preserving_link(
+                edit_url = makeuri_contextless(
                     request,
                     [("mode", "edit_%s_attr" % self._type), ("edit", custom_attr["name"])],
+                    filename="wato.py",
                 )
                 delete_url = make_confirm_delete_link(
                     i18n=_,

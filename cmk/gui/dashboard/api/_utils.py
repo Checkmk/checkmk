@@ -58,6 +58,7 @@ from .model.constants import (
     ResponsiveLayoutBreakpointConstraintsModel,
     WidgetConstraints,
 )
+from .model.contextual_link import ContextualLinkOptions
 from .model.dashboard import (
     DashboardGeneralSettings,
     DashboardIcon,
@@ -69,6 +70,7 @@ from .model.widget import (
     WidgetRelativeGridSize,
     WidgetResponsiveGridSize,
 )
+from .model.widget_content import content_type_from_internal_type
 
 
 def make_pending_changes(api_context: ApiContext) -> PendingChanges:
@@ -89,6 +91,7 @@ INTERNAL_TO_API_TYPE_NAME: Mapping[str, str] = {
     "combined_graph": "combined_graph",
     "single_timeseries": "single_timeseries",
     "custom_graph": "custom_graph",
+    "embedded_custom_graph": "embedded_custom_graph",
     "pnpgraph": "performance_graph",
     "inventory": "inventory",
     "barplot": "barplot",
@@ -99,12 +102,9 @@ INTERNAL_TO_API_TYPE_NAME: Mapping[str, str] = {
     "ntop_alerts": "ntop_alerts",
     "ntop_flows": "ntop_flows",
     "ntop_top_talkers": "ntop_top_talkers",
-    "network_flow_top_table": "network_flow_top_table",
-    "network_flow_donut": "network_flow_donut",
-    "network_flow_kpi_stat_card": "network_flow_kpi_stat_card",
-    "network_flow_trend_chart": "network_flow_trend_chart",
     "alert_overview": "alert_overview",
     "site_overview": "site_overview",
+    "monitoring_table": "monitoring_table",
     "snapin": "sidebar_element",
     "state_host": "host_state",
     "state_service": "service_state",
@@ -162,6 +162,10 @@ _PERMISSIONS_GRAPH_WIDGET = permissions.Optional(
             permissions.OkayToIgnorePerm("general.edit_custom_graph"),  # yes, even for reads
             permissions.OkayToIgnorePerm("general.see_user_custom_graph"),
             permissions.OkayToIgnorePerm("general.see_user_graph_tuning"),
+            # checked on save of an embedded custom graph with telemetry metrics data sources
+            permissions.OkayToIgnorePerm(
+                "general.query_telemetry_metrics_from_custom_graph_editor"
+            ),
             # every custom_graph and graph_tuning has their own permission,
             # all of which might be checked (and are optional)
             permissions.PrefixPerm("custom_graph"),
@@ -253,7 +257,7 @@ def get_dashboard_for_edit(owner: UserId | ApiOmitted, dashboard_id: str) -> Das
     dashboards = get_all_dashboards()
     if key not in dashboards:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Dashboard not found",
             detail=f"The dashboard with ID '{dashboard_id}' does not exist for user '{dashboard_owner}'.",
         )
@@ -274,7 +278,7 @@ def get_dashboard_for_read(owner: DashboardOwnerWithBuiltin, dashboard_id: str) 
 
     if dashboard is None:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Dashboard not found",
             detail=f"The dashboard with ID '{dashboard_id}' does not exist{owner_msg} or you do not have permission to view it.",
         )
@@ -352,7 +356,7 @@ def save_dashboard_to_file(
     if old_dashboard_id and old_dashboard_id != dashboard_id:
         if (user_id, dashboard_id) in store.all:
             raise ProblemException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Dashboard ID already in use",
                 detail=f"A dashboard with ID '{dashboard_id}' already exists for user '{user_id}'.",
             )
@@ -478,6 +482,7 @@ class DashboardConstants:
                         restricted_to_single=list(widget.single_infos()),
                     ),
                     title_macros=title_macros,
+                    contextual_link=_contextual_link_options(widget_type),
                 )
 
         return DashboardConstantsResponse(
@@ -496,6 +501,12 @@ class DashboardConstants:
         return dump_dict_without_omitted(DashboardConstantsResponse, response)
 
 
+def _contextual_link_options(widget_type: str) -> ContextualLinkOptions | ApiOmitted:
+    content_type = content_type_from_internal_type(widget_type)
+    options = None if content_type is None else content_type.contextual_link_options()
+    return ApiOmitted() if options is None else options
+
+
 def validated_dashboard_token(token: AuthToken | None) -> tuple[AuthToken, DashboardToken]:
     """The dashboard token a token-authenticated endpoint was called with.
 
@@ -504,13 +515,13 @@ def validated_dashboard_token(token: AuthToken | None) -> tuple[AuthToken, Dashb
     """
     if token is None:
         raise ProblemException(
-            status=401,
+            status=HTTPStatus.UNAUTHORIZED,
             title="Authentication required",
             detail="This endpoint requires token authentication.",
         )
     if not isinstance(token.details, DashboardToken) or token.details.disabled:
         raise ProblemException(
-            status=401,
+            status=HTTPStatus.UNAUTHORIZED,
             title="Authentication required",
             detail="The provided token is not valid for dashboard access.",
         )

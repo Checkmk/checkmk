@@ -11,6 +11,7 @@ import traceback
 from collections import deque
 from collections.abc import Generator, Iterable, MutableSequence, Sequence
 from dataclasses import dataclass, field
+from http import HTTPStatus
 from itertools import chain
 from pathlib import Path
 from types import TracebackType
@@ -24,7 +25,7 @@ from lxml import etree
 from playwright.async_api import async_playwright
 
 from scripts.html_validation.lib.tag_balance import check_html_tag_balance, TagImbalanceError
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger()
 
@@ -170,6 +171,7 @@ class Crawler:
             "application/x-mkp",
             "application/x-msdos-program",
             "application/x-msi",
+            "application/x-pem-file",
             "application/x-pkg",
             "application/x-redhat-package-manager",
             "application/x-rpm",
@@ -378,7 +380,7 @@ class Crawler:
         if content_type == "text/html" or content_type.startswith("image/"):
             try:
                 page_content = await self.get_page_content(browser_context, url)
-                if page_content.status_code == 404:
+                if page_content.status_code == HTTPStatus.NOT_FOUND:
                     self.handle_error(
                         url, error_type="NotFound", message=f"{content_type} resource not found"
                     )

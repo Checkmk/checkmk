@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
 import CmkAccordionStepPanelItem from 'cmk-ui-library/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkLinkCard from 'cmk-ui-library/components/CmkLinkCard'
 import CmkWizard, { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
@@ -56,7 +56,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
       }}
     </StepParagraph>
 
-    <CmkAlertBox :heading="_t('Before adding more users and assigning responsibilities')">
+    <CmkAlertBoxDeprecated :heading="_t('Before adding more users and assigning responsibilities')">
       {{
         _t(
           `Make sure your monitoring setup is stable and already useful. Only once hosts, services,
@@ -66,7 +66,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         )
       }}
       <a :href="cards.intro_users" target="_blank">{{ _t('documentation.') }}</a>
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
 
     <CmkWizard v-model="currentStep" mode="guided">
       <CmkWizardStep :index="0" :is-completed="() => currentStep > 0 || accomplished">

@@ -4,26 +4,34 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { getLocalTimeZone } from '@internationalized/date'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import CmkSurfaceNotice from 'cmk-ui-library/components/CmkSurfaceNotice.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import useTimer from 'cmk-ui-library/lib/useTimer.ts'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { useBurgerMenu } from '../../composables/useBurgerMenu'
 import { fetchGraphDataByDefinition, useGraphData } from '../../composables/useGraphData'
 import { useGraphInteraction } from '../../composables/useGraphInteraction'
-import { useGraphNotice } from '../../composables/useGraphNotice'
+import { hasPlottableData, useGraphNotice, useNoDataNotice } from '../../composables/useGraphNotice'
 import { useGraphVisibility } from '../../composables/useGraphVisibility'
-import type { RequestedTimeRange } from '../../types.ts'
-import { drawnTimeRange } from '../../utils/timeRange'
+import type { RequestedTimeRange, TimeRangeCommitKind } from '../../types.ts'
+import {
+  binnedTimeAxis,
+  committedTimeRange,
+  continuousTimeAxis,
+  sameRequestedTimeRange
+} from '../../utils/timeRange'
 import GraphBurgerMenu from '../GraphBurgerMenu.vue'
-import GraphNotice from '../GraphNotice.vue'
 import GraphTimestamp from '../GraphTimestamp.vue'
 import TimeSeriesGraph, { type GraphOptions, type Size, type TimeRange } from '../TimeSeriesGraph'
 import { deriveYAxis } from '../TimeSeriesGraph/yAxis'
 import { DEFAULT_CONSOLIDATION_FN } from '../consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from '../constants'
+import GraphLegend from '../legend/GraphLegend.vue'
 import GraphLegendCompact from '../legend/GraphLegendCompact.vue'
 import { computeEpochTimeRange } from './computeEpochTimeRange'
 import type { GraphFigureProps } from './types.ts'
@@ -36,15 +44,18 @@ const FONT_SIZE_PT = 8
 
 const props = withDefaults(defineProps<GraphFigureProps>(), {
   combinationMode: null,
-  showLegend: false,
+  legend: 'none',
   showTimestamp: false,
   showBurgerMenu: false,
   showPin: false,
-  burgerMenuGroups: () => [],
   showTimeAxis: true,
   showValueAxis: true,
   showMargin: false
 })
+
+const emit = defineEmits<{
+  commitTimeRange: [range: RequestedTimeRange]
+}>()
 
 const graphAreaDiv = ref<HTMLDivElement | null>(null)
 // The renderer draws into this outer figure size and insets the axis/label margins itself, so the
@@ -66,12 +77,23 @@ const plotWidth = computed(() =>
   Math.max(1, Math.round(figureSize.value.width - CANVAS_MARGIN_HORIZONTAL))
 )
 
-// The committed fetch window: the configured range resolved to epochs, or the fixed
-// window a time-zoom or pan requested.
-const requestedTimeRange = ref<RequestedTimeRange>(computeEpochTimeRange(props.timerange))
+const followsHostRange = computed(() => props.requestedTimeRange !== undefined)
+const baseTimeRange = (): RequestedTimeRange =>
+  props.requestedTimeRange === undefined
+    ? computeEpochTimeRange(props.timerange)
+    : { start: props.requestedTimeRange.start, end: props.requestedTimeRange.end }
+
+const requestedTimeRange = ref<RequestedTimeRange>(baseTimeRange())
 const zoomSessionActive = ref(false)
 
-const graphDefinitions = computed(() => [{ internal: props.internal }])
+const sourceKey = computed(() =>
+  props.source.type === 'definition' ? props.source.internal : props.source.key
+)
+const graphDefinitions = computed(() => [{ internal: sourceKey.value }])
+const binUnit = computed(() => (props.source.type === 'fetch' ? props.source.binUnit : null))
+const timeAxis = computed(() =>
+  binUnit.value === null ? continuousTimeAxis() : binnedTimeAxis(binUnit.value, getLocalTimeZone())
+)
 
 const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphData(
   () => graphDefinitions.value,
@@ -79,7 +101,13 @@ const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphDa
   () => plotWidth.value,
   () => [DEFAULT_CONSOLIDATION_FN],
   () => props.combinationMode,
-  { fetchGraph: props.fetchGraph ?? fetchGraphDataByDefinition }
+  {
+    fetchGraph: (definition, params) =>
+      props.source.type === 'definition'
+        ? fetchGraphDataByDefinition(definition, params)
+        : props.source.fetch(params),
+    planFetchWindow: (range, canvasWidth) => timeAxis.value.planFetchWindow(range, canvasWidth)
+  }
 )
 const graph = computed(() => graphs.value[0] ?? null)
 
@@ -97,21 +125,37 @@ const notice = useGraphNotice({
   warnings: () => warnings.value
 })
 
+const noDataNotice = useNoDataNotice()
+
+// A refetch keeps the previous graph, whose emptiness answered the request before it.
+const displayedNotice = computed(
+  () =>
+    notice.value ??
+    (graph.value !== null && !isLoading.value && !hasPlottableData(graph.value.metrics)
+      ? noDataNotice
+      : null)
+)
+
 const refresh = () => {
-  requestedTimeRange.value = computeEpochTimeRange(props.timerange)
+  requestedTimeRange.value = baseTimeRange()
 }
 const timer = useTimer(refresh, REFRESH_INTERVAL_MS)
+function startTimer(): void {
+  if (!followsHostRange.value) {
+    timer.start()
+  }
+}
 
 // `start` alone would leave the backoff `reportFailure` scheduled, so stop first: the retry then
 // resumes the normal cadence rather than the penalised one.
 function onRetry(): void {
   reload()
   timer.stop()
-  timer.start()
+  startTimer()
 }
 
 watch(isLoading, (loading) => {
-  if (loading || zoomSessionActive.value) {
+  if (loading || zoomSessionActive.value || followsHostRange.value) {
     return
   }
   if (error.value === null) {
@@ -123,15 +167,16 @@ watch(isLoading, (loading) => {
 
 // Both committed time-zoom and pan windows land here: fetch the window and suspend the
 // refresh timer so a tick cannot yank the inspected window away; reset resumes it.
-const onCommittedTimeRange = (range: RequestedTimeRange) => {
+const onCommittedTimeRange = (range: RequestedTimeRange, kind: TimeRangeCommitKind) => {
   zoomSessionActive.value = true
-  requestedTimeRange.value = { start: range.start, end: range.end }
+  requestedTimeRange.value = committedTimeRange(requestedTimeRange.value, range, kind)
   timer.stop()
+  emit('commitTimeRange', requestedTimeRange.value)
 }
 
 const baselineTimeRange = computed<TimeRange | undefined>(() => {
   const served = graph.value?.timeRange
-  return served && drawnTimeRange(requestedTimeRange.value, served)
+  return served && timeAxis.value.drawnTimeRange(requestedTimeRange.value, served)
 })
 
 const {
@@ -152,14 +197,43 @@ const {
   onCommittedTimeRange
 )
 
+// The widget owns its displayed window and draws at the fixed consolidation, so it builds the
+// burger menu itself rather than being handed pre-loaded groups.
+const {
+  showBurgerMenu: burgerMenuVisible,
+  burgerMenuGroups,
+  triggerBurgerMenuAction
+} = useBurgerMenu(
+  () => props.addTo,
+  () => props.showBurgerMenu,
+  () => requestedTimeRange.value,
+  () => DEFAULT_CONSOLIDATION_FN,
+  () => viewValueRange.value
+)
+
 watch(
-  () => [props.internal, props.combinationMode, JSON.stringify(props.timerange)],
+  () => [sourceKey.value, binUnit.value, props.combinationMode, JSON.stringify(props.timerange)],
   () => {
     zoomSessionActive.value = false
     abandonInspection()
     refresh()
-    timer.start()
+    startTimer()
   }
+)
+
+watch(
+  () => props.requestedTimeRange,
+  (range) => {
+    if (range === undefined || sameRequestedTimeRange(range, requestedTimeRange.value)) {
+      return
+    }
+    zoomSessionActive.value = false
+    abandonInspection()
+    refresh()
+  },
+  // Synchronous, so the new window is in place before useGraphData reacts to the same tick;
+  // a deferred copy would fetch the old window first and then the new one.
+  { flush: 'sync' }
 )
 
 const {
@@ -173,14 +247,22 @@ const {
   () => graph.value?.horizontalLines ?? []
 )
 
+const legendMetrics = computed(() => (graph.value?.metrics ?? []).filter((m) => !m.render.hidden))
+const valueResolution = ref<number | null>(null)
+
 const onResetIntent = () => {
   onReset()
   if (!zoomSessionActive.value) {
     return
   }
   zoomSessionActive.value = false
+  // Following the host, onReset has already committed the reset window, while the prop still
+  // holds the zoomed one until the host echoes it back: refreshing would refetch that first.
+  if (followsHostRange.value) {
+    return
+  }
   refresh()
-  timer.start()
+  startTimer()
 }
 
 // The host's surroundings render the title (e.g. the dashboard widget frame); the graph
@@ -199,10 +281,10 @@ const graphOptions = computed((): GraphOptions => {
 
 // The marker stands above the plot, in the gap below the header, which is widened to fit it.
 // With no header there is no gap and the frame clips it, so the figure reserves the room.
-const hasHeader = computed(() => props.showTimestamp || props.showBurgerMenu)
+const hasHeader = computed(() => props.showTimestamp || burgerMenuVisible.value)
 
 onMounted(() => {
-  timer.start()
+  startTimer()
 })
 
 onBeforeUnmount(() => {
@@ -234,10 +316,11 @@ onBeforeUnmount(() => {
       >
         <GraphTimestamp v-if="showTimestamp && baselineTimeRange" :time-range="baselineTimeRange" />
         <GraphBurgerMenu
-          v-if="showBurgerMenu"
+          v-if="burgerMenuVisible"
           :aria-label="_t('Action menu')"
           class="graphing-graph-figure__burger-menu"
           :groups="burgerMenuGroups"
+          @do-action="triggerBurgerMenuAction"
         />
       </div>
       <div
@@ -254,7 +337,8 @@ onBeforeUnmount(() => {
           :value-range="viewValueRange"
           zoom-mode="time"
           :size="figureSize"
-          :min-time-range="null"
+          :bin-unit="timeAxis.binUnit"
+          :min-time-range="timeAxis.minSpan(null, graph.timeRange)"
           :min-value-range="null"
           :inspecting="inspectionActive"
           :pan-enabled="true"
@@ -272,11 +356,18 @@ onBeforeUnmount(() => {
           @reset="onResetIntent"
           @pin-create="onPinCreate"
           @pin-action="clearPin"
+          @update:value-resolution="valueResolution = $event"
+        />
+        <CmkSurfaceNotice
+          v-if="displayedNotice"
+          v-bind="displayedNotice"
+          class="graphing-graph-figure__notice"
+          @retry="onRetry"
         />
       </div>
       <GraphLegendCompact
-        v-if="showLegend"
-        :metrics="graph.metrics"
+        v-if="legend === 'compact'"
+        :metrics="legendMetrics"
         :horizontal-lines="graph.horizontalLines"
         :shaded-regions="graph.shadedRegions"
         :hidden-metric-names="hiddenMetricNames"
@@ -285,12 +376,24 @@ onBeforeUnmount(() => {
         @update:hidden-line-names="hiddenLineNames = $event"
         @hover-metrics="highlightedMetricNames = $event"
       />
+      <GraphLegend
+        v-else-if="legend === 'extended'"
+        :metrics="legendMetrics"
+        :horizontal-lines="graph.horizontalLines"
+        :shaded-regions="graph.shadedRegions"
+        :hidden-metric-names="hiddenMetricNames"
+        :hidden-line-names="hiddenLineNames"
+        :value-resolution="valueResolution"
+        :axis-unit="graphOptions.y_axis?.unit ?? null"
+        @update:hidden-metric-names="hiddenMetricNames = $event"
+        @update:hidden-line-names="hiddenLineNames = $event"
+        @hover-metrics="highlightedMetricNames = $event"
+      />
     </template>
-    <!-- A sibling of the graph rather than a branch beside it, so a failed refetch states itself
-         over the data it was going to replace. -->
-    <GraphNotice
-      v-if="notice"
-      v-bind="notice"
+    <!-- A first load that failed has no plot to sit over, so the notice stands on its own. -->
+    <CmkSurfaceNotice
+      v-if="displayedNotice && graph === null"
+      v-bind="displayedNotice"
       class="graphing-graph-figure__notice"
       @retry="onRetry"
     />
@@ -325,7 +428,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  padding-top: var(--dimension-3);
+  padding: var(--spacing) var(--dimension-5) 0 var(--dimension-5);
   margin-bottom: var(--dimension-4);
 }
 
@@ -341,6 +444,9 @@ onBeforeUnmount(() => {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+
+  /* The box the notice centres on. */
+  position: relative;
 }
 
 .graphing-graph-figure__graph--pinnable {

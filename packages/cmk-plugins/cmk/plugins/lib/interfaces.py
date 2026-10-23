@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 
 import enum
@@ -32,7 +31,17 @@ from ipaddress import (
     IPv6Interface,
     IPv6Network,
 )
-from typing import Any, assert_never, Final, Literal, override, ParamSpec, Protocol, TypedDict
+from typing import (
+    Any,
+    assert_never,
+    Final,
+    Literal,
+    override,
+    ParamSpec,
+    Protocol,
+    Self,
+    TypedDict,
+)
 
 import pydantic
 
@@ -62,6 +71,7 @@ class ConditionsForLabels(TypedDict, total=False):
     match_index: list[str]
     match_alias: list[str]
     match_desc: list[str]
+    match_name: list[str]
 
 
 class LabelsConditions(TypedDict, total=False):
@@ -777,22 +787,15 @@ class InterfaceWithRatesAndAverages:
             )
         return RateWithAverage(
             rate=rate,
-            average=(
-                Average(
-                    value=average,
-                    backlog=averaging_params.backlog_minutes,
-                )
-                if (  # type: ignore[redundant-expr]
-                    average := get_average(
-                        value_store=averaging_params.value_store,
-                        key=averaging_params.value_store_key,
-                        time=averaging_params.timestamp,
-                        value=rate,
-                        backlog_minutes=averaging_params.backlog_minutes,
-                    )
-                )
-                is not None
-                else None
+            average=Average(
+                value=get_average(
+                    value_store=averaging_params.value_store,
+                    key=averaging_params.value_store_key,
+                    time=averaging_params.timestamp,
+                    value=rate,
+                    backlog_minutes=averaging_params.backlog_minutes,
+                ),
+                backlog=averaging_params.backlog_minutes,
             ),
         )
 
@@ -1119,16 +1122,35 @@ def _finalize_bandwidth_levels(
 
 
 @dataclass(frozen=True)
+class UsedBandwidth:
+    percentage: float | None
+    speed_known: bool
+
+    @classmethod
+    def from_traffic(
+        cls,
+        traffic: RateWithAverage | None,
+        speed: float | None,
+    ) -> Self:
+        if not speed:
+            return cls(percentage=None, speed_known=False)
+        if traffic is None:
+            return cls(percentage=None, speed_known=True)
+        filtered_traffic = traffic.average.value if traffic.average else traffic.rate
+        return cls(percentage=100.0 * filtered_traffic / speed, speed_known=True)
+
+
+@dataclass(frozen=True)
 class PercentualPacketLevels:
     levels: tuple[float, float]
     min_traffic: float | None = None
 
-    def evaluate(self, used_bandwidth_perc: float | None) -> tuple[tuple[float, float] | None, str]:
-        if (
-            self.min_traffic is None
-            or used_bandwidth_perc is None
-            or used_bandwidth_perc >= self.min_traffic
-        ):
+    def evaluate(self, used_bandwidth: UsedBandwidth) -> tuple[tuple[float, float] | None, str]:
+        if self.min_traffic is None:
+            return self.levels, ""
+        if not used_bandwidth.speed_known:
+            return None, " (levels not applied, operating speed unknown)"
+        if used_bandwidth.percentage is None or used_bandwidth.percentage >= self.min_traffic:
             return self.levels, ""
         rendered_min_traffic = _render_floating_point(self.min_traffic, precision=2, unit="%")
         return None, f" (levels not applied, used bandwidth below {rendered_min_traffic})"
@@ -1224,6 +1246,7 @@ def _check_single_matching_conditions(
     match_index = matching_conditions.get("match_index")
     match_alias = matching_conditions.get("match_alias")
     match_desc = matching_conditions.get("match_desc")
+    match_name = matching_conditions.get("match_name")
     porttypes = matching_conditions.get("porttypes")
     if porttypes is not None:
         porttypes = porttypes[:]
@@ -1235,6 +1258,7 @@ def _check_single_matching_conditions(
         check_regex_match_conditions(attributes.index, match_index)
         and check_regex_match_conditions(attributes.alias, match_alias)
         and check_regex_match_conditions(attributes.descr, match_desc)
+        and check_regex_match_conditions(attributes.name, match_name)
         and (porttypes is None or attributes.type in porttypes)
         and (portstates is None or attributes.oper_status in portstates)
         and (
@@ -1405,6 +1429,9 @@ def discover_interfaces[TInterfaceType: (InterfaceWithCounters, InterfaceWithRat
                         )
                         and check_regex_match_conditions(
                             interface.attributes.descr, conditions.get("match_desc")
+                        )
+                        and check_regex_match_conditions(
+                            interface.attributes.name, conditions.get("match_name")
                         )
                     ):
                         for k, v in labels_condition.get("labels", {}).items():
@@ -1695,6 +1722,9 @@ def _check_grouped_ifs[TInterfaceType: (InterfaceWithCounters, InterfaceWithRate
     Grouped interfaces are combined into a single interface, which is then passed to
     check_single_interface.
     """
+    if not section:
+        return
+
     matching_interfaces = [
         InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
             iface,
@@ -2409,7 +2439,7 @@ def _output_packet_rates(
             rates.out_err,
         ),
     ]:
-        used_bandwidth_perc = _used_bandwidth_perc(traffic, speed)
+        used_bandwidth = UsedBandwidth.from_traffic(traffic, speed)
         all_pacrate = _sum_optional_floats(
             urate.rate if urate else None,
             nurate.rate if nurate else None,
@@ -2487,15 +2517,8 @@ def _output_packet_rates(
                 display_name=display_name,
                 metric_name=metric_name,
                 reference_rate=reference_rate,
-                used_bandwidth_perc=used_bandwidth_perc,
+                used_bandwidth=used_bandwidth,
             )
-
-
-def _used_bandwidth_perc(traffic: RateWithAverage | None, speed: float | None) -> float | None:
-    if traffic is None or not speed:
-        return None
-    filtered_traffic = traffic.average.value if traffic.average else traffic.rate
-    return 100.0 * filtered_traffic / speed
 
 
 def _check_single_packet_rate(
@@ -2507,7 +2530,7 @@ def _check_single_packet_rate(
     display_name: str,
     metric_name: str,
     reference_rate: float | None,
-    used_bandwidth_perc: float | None,
+    used_bandwidth: UsedBandwidth,
 ) -> CheckResult:
     # Further calculation now precedes with average value,
     # if requested.
@@ -2530,7 +2553,7 @@ def _check_single_packet_rate(
     else:
         if reference_rate is None:
             return
-        active_levels, note = perc_levels.evaluate(used_bandwidth_perc)
+        active_levels, note = perc_levels.evaluate(used_bandwidth)
         # Note: A rate of 0% for a pacrate of 0 is mathematically incorrect,
         # but it yields the best information for the "no packets" case in the check output.
         perc_value = 0 if reference_rate == 0 else rate_check * 100 / reference_rate

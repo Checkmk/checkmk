@@ -71,11 +71,12 @@ export const usePercentageOfServiceProblems = async (
     timestamp,
     roundMargin,
     graphLegend,
+    graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
     dontFollowTimerange,
     graphRenderOptions
-  } = useGraphRenderOptions(currentContent?.graph_render_options)
+  } = useGraphRenderOptions(currentContent?.graph_render_options, currentContent === null)
 
   const widgetProps = ref<WidgetProps>()
 
@@ -127,6 +128,7 @@ export const usePercentageOfServiceProblems = async (
       timestamp,
       roundMargin,
       graphLegend,
+      graphLegendStyle,
       clickToPlacePin,
       showBurgerMenu,
       dontFollowTimerange
@@ -161,6 +163,7 @@ export const usePercentageOfServiceProblems = async (
     timestamp,
     roundMargin,
     graphLegend,
+    graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
     dontFollowTimerange,

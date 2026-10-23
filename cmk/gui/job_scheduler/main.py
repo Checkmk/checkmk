@@ -27,7 +27,8 @@ from cmk.ccc.site import get_omd_config, omd_site
 from cmk.ccc.version import edition
 from cmk.crash import ABCCrashReport, CrashReportStore, make_crash_report_base_path
 from cmk.gui import log, main_modules, single_global_setting
-from cmk.gui.background_job.job import job_registry, ThreadedJobExecutor
+from cmk.gui.background_job.job import job_registry
+from cmk.gui.background_job.process import ThreadedJobExecutor
 from cmk.trace.export import exporter_from_config, init_span_processor
 from cmk.trace.logs import add_span_log_handler
 from cmk.utils import paths

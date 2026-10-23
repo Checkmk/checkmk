@@ -6,8 +6,10 @@
 import { useBackgroundJobLog } from '@/quick-setup/components/BackgroundJobLog'
 import type { LogUpdate } from '@/quick-setup/components/BackgroundJobLog/useBackgroundJobLog'
 
-const DUMMY_LOG: LogUpdate = {
-  steps: [{ title: 'Parse the connection configuration data', status: 'active', index: 0 }]
+function dummyLog(): LogUpdate {
+  return {
+    steps: [{ title: 'Parse the connection configuration data', status: 'active', index: 0 }]
+  }
 }
 
 test('should be empty when created', async () => {
@@ -21,7 +23,7 @@ test('should add data', async () => {
 
   expect(count()).toBe(0)
   expect(isEmpty()).toBe(true)
-  update(DUMMY_LOG)
+  update(dummyLog())
   expect(count()).toBe(1)
   expect(isEmpty()).toBe(false)
 })
@@ -29,7 +31,7 @@ test('should add data', async () => {
 test('should clear the internal data', async () => {
   const { count, update, clear } = useBackgroundJobLog()
 
-  update(DUMMY_LOG)
+  update(dummyLog())
   expect(count()).toBe(1)
 
   clear()
@@ -39,7 +41,7 @@ test('should clear the internal data', async () => {
 test('should count the actual entries', async () => {
   const { isEmpty, count, update, clear } = useBackgroundJobLog()
 
-  update(DUMMY_LOG)
+  update(dummyLog())
   expect(isEmpty()).toBe(false)
   expect(count()).toBe(1)
 
@@ -51,7 +53,7 @@ test('should count the actual entries', async () => {
 test('should update data', async () => {
   const { update, count, entries } = useBackgroundJobLog()
 
-  const payload: LogUpdate = JSON.parse(JSON.stringify(DUMMY_LOG))
+  const payload = dummyLog()
 
   update(payload)
   expect(count()).toBe(1)
@@ -67,7 +69,7 @@ test('should update data', async () => {
 
 test('shoud check if task is active', async () => {
   const { update, isTaskActive } = useBackgroundJobLog()
-  const payload: LogUpdate = JSON.parse(JSON.stringify(DUMMY_LOG))
+  const payload = dummyLog()
   update(payload)
   expect(isTaskActive()).toBe(true)
 
@@ -79,7 +81,7 @@ test('shoud check if task is active', async () => {
 test('shoud set active taks to error', async () => {
   const { update, isTaskActive, setActiveTasksToError, entries } = useBackgroundJobLog()
 
-  update(DUMMY_LOG)
+  update(dummyLog())
   expect(isTaskActive()).toBe(true)
 
   setActiveTasksToError()
@@ -92,7 +94,7 @@ test('should stop waiting on error', async () => {
 
   expect(isRunning.value).toBe(false)
 
-  update(DUMMY_LOG)
+  update(dummyLog())
   expect(isRunning.value).toBe(true)
 
   setActiveTasksToError()
@@ -104,7 +106,7 @@ test('should never be running', async () => {
 
   expect(isRunning.value).toBe(false)
 
-  update(DUMMY_LOG)
+  update(dummyLog())
   expect(isRunning.value).toBe(false)
 
   setActiveTasksToError()

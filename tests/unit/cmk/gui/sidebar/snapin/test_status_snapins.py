@@ -18,10 +18,14 @@ from cmk.gui.config import Config
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.sidebar._snapin._performance import Performance
 from cmk.gui.sidebar._snapin._server_time import CurrentTime
 from cmk.gui.sidebar._snapin._speedometer import Speedometer
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 
 PERFORMANCE_COLUMNS = 16
 
@@ -61,7 +65,13 @@ class FakeLive:
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request)
+    return PageContext(
+        config=config,
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
+    )
 
 
 def test_server_time_metadata() -> None:
@@ -92,7 +102,7 @@ def test_speedometer_renders_a_canvas_over_the_dial(load_config: Config) -> None
 
     assert 'id="speedometerbg"' in rendered
     assert "<canvas" in rendered
-    assert "cmk.sidebar.speedometer_show_speed(0, 0, 0);" in rendered
+    assert 'data-cmk_call_ts_function="speedometer_show_speed"' in rendered
 
 
 def _ajax_speedometer(

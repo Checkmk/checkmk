@@ -16,7 +16,7 @@ import pytest
 
 from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
 from cmk.gui.userdb import UserConnectionConfigFile
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ExpiryVersion
 from cmk.update_config.plugins.actions import remove_saml_owned_by_site as mod
 from cmk.update_config.plugins.actions.remove_saml_owned_by_site import RemoveSAMLOwnedBySite
 

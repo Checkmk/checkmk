@@ -5,7 +5,7 @@
  */
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
-import { effectScope, nextTick, ref } from 'vue'
+import { type EffectScope, effectScope, nextTick, ref } from 'vue'
 
 import {
   type ApiGraphOptions,
@@ -23,11 +23,12 @@ const GRAPH_OPTIONS: ApiGraphOptions = {
   omit_zero_metrics: false
 }
 const RANGE: RequestedTimeRange = { start: 0, end: 3600 }
-const REQUEST_REACHING_PAST_THE_DRAWN_WINDOW = { start: -120, end: 3660, step: 60 }
+const REQUESTED_WINDOW = { ...RANGE, step: 60 }
 const OVERVIEW_DOMAIN: TimeInterval = { start: -10_800, end: 14_400 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
+const scopes: EffectScope[] = []
 
 beforeEach(() => {
   vi.useFakeTimers()
@@ -40,7 +41,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  vi.restoreAllMocks()
+  scopes.splice(0).forEach((scope) => scope.stop())
   vi.useRealTimers()
 })
 
@@ -64,7 +65,7 @@ function fetchResponse(
         },
         color: '#123456'
       },
-      render: { stack: null, inverse: false, hidden: false },
+      render: { shape: 'line', inverse: false, hidden: false },
       data_points: [1.0, 2.0]
     })),
     group_titles: groupTitles,
@@ -85,18 +86,22 @@ function mount(
   overviewDomain: TimeInterval | null = null,
   fetchHidden = false
 ): Harness {
+  const scope = effectScope()
+  scopes.push(scope)
   const items = ref<GraphItem[]>(initialItems)
   const overviewRange = ref<TimeInterval | null>(overviewDomain)
-  const data = useCustomGraphData({
-    getItems: () => items.value ?? [],
-    getGraphOptions: () => GRAPH_OPTIONS,
-    getRequestedTimeRange: () => RANGE,
-    getConsolidationFn: () => 'max',
-    getFigureWidth: () => 860,
-    getOverviewRange: () => overviewRange.value ?? null,
-    getFetchHidden: () => fetchHidden,
-    debounceMs: 400
-  })
+  const data = scope.run(() =>
+    useCustomGraphData({
+      getItems: () => items.value ?? [],
+      getGraphOptions: () => GRAPH_OPTIONS,
+      getRequestedTimeRange: () => RANGE,
+      getConsolidationFn: () => 'max',
+      getFigureWidth: () => 860,
+      getOverviewRange: () => overviewRange.value ?? null,
+      getFetchHidden: () => fetchHidden,
+      debounceMs: 400
+    })
+  )!
   return { items, data, overviewRange }
 }
 
@@ -113,7 +118,7 @@ test('fetches immediately on mount and exposes the mapped response', async () =>
   const [path, options] = postSpy.mock.calls[0]!
   expect(path).toBe(FETCH_PATH)
   expect(options.body.consolidation_function).toBe('max')
-  expect(options.body.requested_time_range).toEqual(REQUEST_REACHING_PAST_THE_DRAWN_WINDOW)
+  expect(options.body.requested_time_range).toEqual(REQUESTED_WINDOW)
   expect(options.body.content.data_sources.map((source: { id: string }) => source.id)).toEqual([
     'A'
   ])

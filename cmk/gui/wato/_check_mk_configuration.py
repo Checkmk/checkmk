@@ -13,7 +13,7 @@ from typing import Any, Literal, override
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition
-from cmk.checkengine.snmplib import SNMPBackendEnum  # astrein: disable=cmk-module-layer-violation
+from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.form_specs import create_validation_error_for_mk_user_error
@@ -82,6 +82,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
     ConfigVariableGroup,
     ConfigVariableGroupRegistry,
+    ConfigVariableHint,
     ConfigVariableRegistry,
     GlobalSettingsContext,
 )
@@ -104,7 +105,6 @@ from cmk.gui.watolib.groups_io import (
     load_contact_group_information,
 )
 from cmk.gui.watolib.host_rename import RenameHostInRuleValue, RenameHostInRuleValueRegistry
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.rulesets import Rule
 from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupAgent,
@@ -230,6 +230,7 @@ def register(
     config_variable_registry.register(ConfigVariableDefaultDynamicVisualsPermission)
     config_variable_registry.register(ConfigVariableLogLogonFailures)
     config_variable_registry.register(ConfigVariableLockOnLogonFailures)
+    config_variable_registry.register(ConfigVariableTimeoutOnLogonFailures)
     config_variable_registry.register(ConfigVariablePasswordPolicy)
     config_variable_registry.register(ConfigVariableSessionManagement)
     config_variable_registry.register(ConfigVariableSingleUserSession)
@@ -376,7 +377,7 @@ def _fs_single_choice_elements[T](
     return [
         SingleChoiceElementExtended(
             name=name,
-            title=Title(choice_title),  # astrein: disable=localization-checker
+            title=Title(choice_title),  # astrein: disable=localization
         )
         for name, choice_title in choices
     ]
@@ -556,6 +557,14 @@ def _web_log_level_elements(
             "cmk.web.automatic_host_removal",
             Title("Automatic host removal"),
             Help("Log the automatic host removal process."),
+        ),
+        (
+            "cmk.web.host_relations",
+            Title("Host relations"),
+            Help(
+                "Log which relations between hosts were dropped when activating changes and "
+                "why, plus a summary of what the activation exported."
+            ),
         ),
     ]
 
@@ -1123,7 +1132,7 @@ ConfigVariableVirtualHostTrees = ConfigVariable(
                             elements=lambda: [
                                 SingleChoiceElementExtended(
                                     name=name,
-                                    # astrein: disable=localization-checker
+                                    # astrein: disable=localization
                                     title=Title(choice_title),
                                 )
                                 for name, choice_title in _virtual_host_tree_choices()
@@ -1479,6 +1488,21 @@ def _fs_keyed_by_first_tuple_element(
     )
 
 
+def _user_localizations_from_disk(value: object) -> list[dict[str, object]]:
+    if not isinstance(value, dict):
+        raise ValueError(f"Expected a mapping, got {value!r}")
+    return [
+        {"original": original, "translation": translation}
+        for original, translation in sorted(value.items())
+    ]
+
+
+def _user_localizations_to_disk(value: object) -> dict[object, object]:
+    if not isinstance(value, list):
+        raise ValueError(f"Expected a list, got {value!r}")
+    return {entry["original"]: entry["translation"] for entry in value}
+
+
 def _drop_unavailable_localizations(value: object) -> Mapping[str, object]:
     # user_localizations is based on the currently installed languages.
     # if a language gets removed, an unknown dictionary key will remain
@@ -1494,27 +1518,35 @@ ConfigVariableUserLocalizations = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="user_localizations",
-    form_spec=lambda context: _fs_keyed_by_first_tuple_element(  # noqa: ARG005
-        fs.List[tuple[object, ...]](
-            element_template=FSTuple(
-                elements=[
-                    fs.String(title=Title("Original Text")),
-                    # DictionaryExtended because language codes are not
-                    # guaranteed to be valid Python identifiers.
-                    DictionaryExtended(
-                        title=Title("Translations"),
-                        elements={
-                            language: fs.DictElement(
-                                parameter_form=fs.String(
-                                    # astrein: disable=localization-checker
-                                    title=Title(alias),
-                                ),
-                            )
-                            for language, alias in get_languages()
-                        },
-                        migrate=_drop_unavailable_localizations,
+    form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(  # noqa: ARG005
+        from_disk=_user_localizations_from_disk,
+        to_disk=_user_localizations_to_disk,
+        wrapped_form_spec=fs.List[Mapping[str, object]](
+            element_template=fs.Dictionary(
+                elements={
+                    "original": fs.DictElement(
+                        required=True,
+                        parameter_form=fs.String(title=Title("Original Text")),
                     ),
-                ],
+                    "translation": fs.DictElement(
+                        required=True,
+                        # DictionaryExtended because language codes are not
+                        # guaranteed to be valid Python identifiers.
+                        parameter_form=DictionaryExtended(
+                            title=Title("Translations"),
+                            elements={
+                                language: fs.DictElement(
+                                    parameter_form=fs.String(
+                                        # astrein: disable=localization
+                                        title=Title(alias),
+                                    ),
+                                )
+                                for language, alias in get_languages()
+                            },
+                            migrate=_drop_unavailable_localizations,
+                        ),
+                    ),
+                },
             ),
             title=Title("Custom localizations"),
             editable_order=False,
@@ -1522,104 +1554,121 @@ ConfigVariableUserLocalizations = ConfigVariable(
     ),
 )
 
+
+def _user_icons_and_actions_from_disk(value: object) -> list[dict[str, object]]:
+    if not isinstance(value, dict):
+        raise ValueError(f"Expected a mapping, got {value!r}")
+    if not all(isinstance(action, dict) and "id" not in action for action in value.values()):
+        raise ValueError(f"Expected a mapping of actions without an ID key, got {value!r}")
+    return [{"id": ident, **action} for ident, action in sorted(value.items())]
+
+
+def _user_icons_and_actions_to_disk(value: object) -> dict[object, object]:
+    if not isinstance(value, list):
+        raise ValueError(f"Expected a list, got {value!r}")
+    return {entry["id"]: {key: v for key, v in entry.items() if key != "id"} for entry in value}
+
+
 ConfigVariableUserIconsAndActions = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="user_icons_and_actions",
-    form_spec=lambda context: _fs_keyed_by_first_tuple_element(  # noqa: ARG005
-        fs.List[tuple[object, ...]](
-            element_template=FSTuple(
-                elements=[
-                    fs.String(title=Title("ID"), custom_validate=id_validators()),
-                    fs.Dictionary(
-                        elements={
-                            "icon": fs.DictElement(
-                                required=True,
-                                parameter_form=LegacyValueSpec.wrap(
-                                    IconSelector(
-                                        title=_("Icon"),
-                                        allow_empty=False,
-                                        with_emblem=False,
-                                    )
+    form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(  # noqa: ARG005
+        from_disk=_user_icons_and_actions_from_disk,
+        to_disk=_user_icons_and_actions_to_disk,
+        wrapped_form_spec=fs.List[Mapping[str, object]](
+            element_template=fs.Dictionary(
+                elements={
+                    "id": fs.DictElement(
+                        required=True,
+                        parameter_form=fs.String(
+                            title=Title("ID"), custom_validate=id_validators()
+                        ),
+                    ),
+                    "icon": fs.DictElement(
+                        required=True,
+                        parameter_form=LegacyValueSpec.wrap(
+                            IconSelector(
+                                title=_("Icon"),
+                                allow_empty=False,
+                                with_emblem=False,
+                            )
+                        ),
+                    ),
+                    "title": fs.DictElement(
+                        parameter_form=fs.String(title=Title("Title")),
+                    ),
+                    "url": fs.DictElement(
+                        parameter_form=FSTuple(
+                            title=Title("Action"),
+                            elements=[
+                                fs.String(
+                                    title=Title("URL"),
+                                    help_text=Help(
+                                        "This URL is opened when clicking on the action / icon. You "
+                                        "can use some macros within the URL which are dynamically "
+                                        "replaced for each object. These are:<br>"
+                                        "<ul>"
+                                        "<li>$HOSTNAME$: Contains the name of the host</li>"
+                                        "<li>$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li>"
+                                        "<li>$SERVICEDESC$: Contains the service name "
+                                        "(in case this is a service)</li>"
+                                        "<li>$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li>"
+                                        "<li>$HOSTADDRESS$: Contains the network address of the host</li>"
+                                        "<li>$HOSTADDRESS_URL_ENCODED$: Same as above but URL encoded</li>"
+                                        "<li>$USER_ID$: The user ID of the currently active user</li>"
+                                        "</ul>"
+                                    ),
+                                    field_size=fs.FieldSize.LARGE,
                                 ),
-                            ),
-                            "title": fs.DictElement(
-                                parameter_form=fs.String(title=Title("Title")),
-                            ),
-                            "url": fs.DictElement(
-                                parameter_form=FSTuple(
-                                    title=Title("Action"),
+                                SingleChoiceExtended(
+                                    title=Title("Open in"),
                                     elements=[
-                                        fs.String(
-                                            title=Title("URL"),
-                                            help_text=Help(
-                                                "This URL is opened when clicking on the action / icon. You "
-                                                "can use some macros within the URL which are dynamically "
-                                                "replaced for each object. These are:<br>"
-                                                "<ul>"
-                                                "<li>$HOSTNAME$: Contains the name of the host</li>"
-                                                "<li>$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li>"
-                                                "<li>$SERVICEDESC$: Contains the service name "
-                                                "(in case this is a service)</li>"
-                                                "<li>$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li>"
-                                                "<li>$HOSTADDRESS$: Contains the network address of the host</li>"
-                                                "<li>$HOSTADDRESS_URL_ENCODED$: Same as above but URL encoded</li>"
-                                                "<li>$USER_ID$: The user ID of the currently active user</li>"
-                                                "</ul>"
-                                            ),
-                                            field_size=fs.FieldSize.LARGE,
+                                        SingleChoiceElementExtended(
+                                            name="_blank",
+                                            title=Title("Load in a new window / tab"),
                                         ),
-                                        SingleChoiceExtended(
-                                            title=Title("Open in"),
-                                            elements=[
-                                                SingleChoiceElementExtended(
-                                                    name="_blank",
-                                                    title=Title("Load in a new window / tab"),
-                                                ),
-                                                SingleChoiceElementExtended(
-                                                    name="_self",
-                                                    title=Title(
-                                                        "Load in current content area (keep sidebar)"
-                                                    ),
-                                                ),
-                                                SingleChoiceElementExtended(
-                                                    name="_top",
-                                                    title=Title("Load as new page (hide sidebar)"),
-                                                ),
-                                            ],
-                                            prefill=fs.DefaultValue("_blank"),
+                                        SingleChoiceElementExtended(
+                                            name="_self",
+                                            title=Title(
+                                                "Load in current content area (keep sidebar)"
+                                            ),
+                                        ),
+                                        SingleChoiceElementExtended(
+                                            name="_top",
+                                            title=Title("Load as new page (hide sidebar)"),
                                         ),
                                     ],
+                                    prefill=fs.DefaultValue("_blank"),
                                 ),
-                            ),
-                            "toplevel": fs.DictElement(
-                                parameter_form=_fs_fixed_true(
-                                    title=Title("Show in column"),
-                                    label=Label("Directly show the action icon in the column"),
-                                    help_text=Help(
-                                        "Makes the icon appear in the column instead "
-                                        "of the drop-down menu."
-                                    ),
-                                ),
-                            ),
-                            "sort_index": fs.DictElement(
-                                parameter_form=fs.Integer(
-                                    title=Title("Sort index"),
-                                    help_text=Help(
-                                        "You can use the sort index to control the order of the "
-                                        "elements in the column and the menu. The elements are sorted "
-                                        "from smaller to higher numbers. The action menu icon "
-                                        "has a sort index of <tt>10</tt>, the graph icon a sort index "
-                                        "of <tt>20</tt>. All other default icons have a sort index of "
-                                        "<tt>30</tt> configured."
-                                    ),
-                                    custom_validate=[fs.validators.NumberInRange(min_value=0)],
-                                    prefill=fs.DefaultValue(15),
-                                ),
-                            ),
-                        },
+                            ],
+                        ),
                     ),
-                ],
+                    "toplevel": fs.DictElement(
+                        parameter_form=_fs_fixed_true(
+                            title=Title("Show in column"),
+                            label=Label("Directly show the action icon in the column"),
+                            help_text=Help(
+                                "Makes the icon appear in the column instead of the drop-down menu."
+                            ),
+                        ),
+                    ),
+                    "sort_index": fs.DictElement(
+                        parameter_form=fs.Integer(
+                            title=Title("Sort index"),
+                            help_text=Help(
+                                "You can use the sort index to control the order of the "
+                                "elements in the column and the menu. The elements are sorted "
+                                "from smaller to higher numbers. The action menu icon "
+                                "has a sort index of <tt>10</tt>, the graph icon a sort index "
+                                "of <tt>20</tt>. All other default icons have a sort index of "
+                                "<tt>30</tt> configured."
+                            ),
+                            custom_validate=[fs.validators.NumberInRange(min_value=0)],
+                            prefill=fs.DefaultValue(15),
+                        ),
+                    ),
+                },
             ),
             title=Title("Custom icons and actions"),
             editable_order=False,
@@ -1878,7 +1927,7 @@ ConfigVariableBuiltinIconVisibility = ConfigVariable(
                             (
                                 SingleChoiceElementExtended(
                                     name=id_,
-                                    # astrein: disable=localization-checker
+                                    # astrein: disable=localization
                                     title=Title(class_.title),
                                 )
                                 for id_, class_ in icon_and_action_registry.items()
@@ -2053,12 +2102,16 @@ ConfigVariableDefaultTemperatureUnit = ConfigVariable(
 ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainCACertificates,
-    domain_hint=html.HTML.without_escaping(
-        _(
-            "Warning: changing these settings will affect all outgoing HTTPS requests, including "
-            "online license verification."
+    hints=lambda _context: [
+        ConfigVariableHint(
+            html.HTML.without_escaping(
+                _(
+                    "Warning: changing these settings will affect all outgoing HTTPS requests, "
+                    "including online license verification."
+                )
+            )
         )
-    ),
+    ],
     ident="trusted_certificate_authorities",
     form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
         title=Title("Trusted certificate authorities for SSL"),
@@ -2114,6 +2167,8 @@ ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
         },
     ),
 )
+
+ConfigVariableTrustedCertificateAuthorities.add_config_domain_affected_by_change(ConfigDomainCore)
 
 ConfigVariableSiteSubjectAlternativeNames = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
@@ -2466,12 +2521,39 @@ ConfigVariableLockOnLogonFailures = ConfigVariable(
         help_text=Help(
             "This options enables automatic locking of user accounts "
             "after the configured number of consecutive invalid login "
-            "attempts. These attempts include failed two factor "
-            "authentication events. Once the account is locked only an "
-            "admin user can unlock it. Beware: Also the admin users will "
+            "attempts."
+            "<ul>"
+            "<li>Admin users can unlock accounts.</li>"
+            "<li>Timeouts will always take priority but "
+            "all attempts will still be tracked.</li>"
+            "<li>These attempts include failed two factor "
+            "authentication events.</li>"
+            "</ul>"
+            "Beware: Also the admin users will "
             "be locked that way. You need to manually edit "
             "<tt>etc/htpasswd</tt> and remove the <tt>!</tt> in case "
             "you are locked out completely."
+        ),
+    ),
+)
+
+ConfigVariableTimeoutOnLogonFailures = ConfigVariable(
+    group=ConfigVariableGroupUserManagement,
+    primary_domain=ConfigDomainGUI,
+    ident="time_based_lock_out_enabled",
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
+        title=Title("Timeout user accounts and IP addresses after multiple failed logon attempts"),
+        label=Label("Enable login timeout"),
+        help_text=Help(
+            "This options enables automatic timing out of user accounts "
+            "after a number of consecutive invalid login attempts."
+            "<ul>"
+            "<li>These attempts include failed two factor "
+            "authentication events.</li>"
+            "<li> Users have 5 attempts before timeout.</li>"
+            "<li> If 2 unique users from the same IP are timed out, a 15 minute IP timeout is applied.</li>"
+            "<li> Failed attempts are tracked in 3 minute intervals</li>"
+            "</ul>"
         ),
     ),
 )
@@ -2724,7 +2806,7 @@ def _role_selection() -> MultipleChoiceExtended:
         elements=[
             MultipleChoiceElementExtended(
                 name=ident,
-                title=Title(alias),  # astrein: disable=localization-checker
+                title=Title(alias),  # astrein: disable=localization
             )
             for ident, alias in _list_roles()
         ],
@@ -2739,7 +2821,7 @@ def _contactgroup_selection() -> MultipleChoiceExtended:
         elements=[
             MultipleChoiceElementExtended(
                 name=ident,
-                title=Title(alias),  # astrein: disable=localization-checker
+                title=Title(alias),  # astrein: disable=localization
             )
             for ident, alias in _list_contactgroups()
         ],
@@ -2806,9 +2888,10 @@ def find_usages_of_contact_group_in_default_user_profile(
         used_in.append(
             (
                 "%s" % (_("Default user profile")),
-                folder_preserving_link(
+                makeuri_contextless(
                     request,
-                    [("mode", "edit_configvar"), ("varname", "default_user_profile")],
+                    [("varname", "default_user_profile")],
+                    filename="global_settings.py",
                 ),
             )
         )
@@ -3013,6 +3096,9 @@ def use_new_descriptions_for_form_spec(context: GlobalSettingsContext) -> fs.Dic
             "statgrab_mem": use_new_service_name(Title("Statgrab memory usage")),
             "tplink_mem": use_new_service_name(Title("TP Link: Used memory via SNMP")),
             "ups_bat_temp": use_new_service_name(Title("Generic UPS Device: Temperature sensor")),
+            "ups_eaton_environment": use_new_service_name(
+                Title("Eaton UPS: Temperature and humidity sensors")
+            ),
             "vms_diskstat_df": use_new_service_name(Title("Disk space on OpenVMS")),
             "wmic_process": use_new_service_name(
                 Title("Resource consumption of Windows processes")
@@ -4770,7 +4856,7 @@ def _valuespec_custom_service_attributes() -> ListOf:
         title=_("Custom service attributes"),
         help=_('Use this rule set to assign <a href="%(url)s">%(label)s</a> to services.')
         % {
-            "url": "wato.py?mode=edit_configvar&varname=custom_service_attributes",
+            "url": "global_settings.py?varname=custom_service_attributes",
             "label": _("Custom service attributes"),
         },
         allow_empty=False,
@@ -5276,7 +5362,7 @@ def UserIconOrAction(title: str, help: str) -> DropdownChoice:  # noqa: A002
     empty_text = _(
         "In order to be able to choose actions here, you need to "
         '<a href="%(url)s">define your own actions</a>.'
-    ) % {"url": "wato.py?mode=edit_configvar&varname=user_icons_and_actions"}
+    ) % {"url": "global_settings.py?varname=user_icons_and_actions"}
 
     return DropdownChoice(
         title=title,
@@ -5478,6 +5564,7 @@ ManagementBoardConfig = HostRulespec(
     group=RulespecGroupAgentSNMP,
     name="management_board_config",
     valuespec=_valuespec_management_board_config,
+    is_deprecated=True,
 )
 
 
@@ -5528,6 +5615,7 @@ ManagementBulkwalkHosts = BinaryHostRulespec(
     help_func=_help_enable_snmpv2c,
     name="management_bulkwalk_hosts",
     title=lambda: _("Enable SNMPv2c for management boards"),
+    is_deprecated=True,
 )
 
 
@@ -6003,7 +6091,7 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
                         (
                             "otel_metrics",
                             # weblate-flags: read-only, domain-specific
-                            _individual_spec(_("Metric Backend")),
+                            _individual_spec(_("Telemetry metrics")),
                         ),
                     ],
                 ),
@@ -6192,6 +6280,9 @@ def _valuespec_snmp_fetch_interval() -> Tuple:
             "This is especially important for counter-based checks such as the interface checks. A "
             "check interval which is shorter then the interval for fetching the data might result "
             "in misleading output (e.g. far too large interface throughputs) in such cases."
+            "<br><br>"
+            "All matching rules apply. If several of them list the same section, the first "
+            "one decides its fetch interval."
         ),
         elements=[
             DualListChoice(
@@ -6220,6 +6311,7 @@ def _valuespec_snmp_fetch_interval() -> Tuple:
 
 SnmpCheckInterval = HostRulespec(
     group=RulespecGroupAgentSNMP,
+    match_type="all",
     name="snmp_check_interval",  # legacy name, kept for compatibility
     valuespec=_valuespec_snmp_fetch_interval,
 )
@@ -6240,6 +6332,9 @@ def _valuespec_snmp_config_agent_sections() -> Dictionary:
             "of 32-bit network interface counters (section <tt>if</tt>, superseded by "
             "<tt>if64</tt>) in case the 64-bit counters reported by the device are useless "
             "due to broken firmware."
+            "<br><br>"
+            "All matching rules apply. If several of them list the same section, the first "
+            "one decides whether the section is disabled or enabled."
         ),
         elements=[
             (
@@ -6282,9 +6377,27 @@ def _validate_snmp_config_agent_sections(value: Mapping[str, Any], varprefix: st
 
 SnmpExcludeSections = HostRulespec(
     group=RulespecGroupAgentSNMP,
+    match_type="all",
     name="snmp_exclude_sections",
     valuespec=_valuespec_snmp_config_agent_sections,
 )
+
+
+def _snmpv3_contexts_to_valuespec(contexts: Sequence[str]) -> tuple[bool, list[str]]:
+    # The default context is the empty context name, which a ListOfStrings cannot hold
+    return "" in contexts, [c for c in contexts if c]
+
+
+def _snmpv3_contexts_from_valuespec(value: tuple[bool, Sequence[str]]) -> list[str]:
+    use_default, names = value
+    return ([""] if use_default else []) + list(names)
+
+
+def _validate_snmpv3_contexts(contexts: Sequence[str], varprefix: str) -> None:
+    if not contexts:
+        raise MKUserError(
+            varprefix, _("Please select the default context or enter at least one context name.")
+        )
 
 
 def _valuespec_snmpv3_contexts() -> Tuple:
@@ -6294,16 +6407,41 @@ def _valuespec_snmpv3_contexts() -> Tuple:
             "By default, Checkmk does not use a specific context during SNMPv3 queries, "
             "but some devices are offering their information in different SNMPv3 contexts. "
             "This rule can be used to configure, based on hosts and SNMP sections, which SNMPv3 "
-            "contexts Checkmk should ask for when getting information via SNMPv3."
+            "contexts Checkmk should ask for when getting information via SNMPv3. "
+            "The default context is only queried if it is selected here. "
+            "If several contexts return the same OIDs, only the data of the first context "
+            "is used."
+            "<br><br>"
+            "All matching rules apply. For each section, the first rule that names it or "
+            "applies to all SNMP sections is used."
         ),
         elements=[
             DropdownChoice(
                 title=_("Section name"),
                 choices=lambda: [(None, _("All SNMP sections"))] + get_snmp_section_names(),
             ),
-            ListOfStrings(
-                title=_("SNMP context names"),
-                allow_empty=False,
+            Transform(
+                Tuple(
+                    show_titles=False,
+                    elements=[
+                        Checkbox(
+                            title=_("Default context"),
+                            label=_("Query the default context (no context name)"),
+                            true_label=_("Default context"),
+                            false_label=_("No default context"),
+                            default_value=True,
+                        ),
+                        ListOfStrings(
+                            title=_("SNMP context names"),
+                            allow_empty=True,
+                            empty_text=_("No context names"),
+                        ),
+                    ],
+                ),
+                title=_("SNMP contexts"),
+                to_valuespec=_snmpv3_contexts_to_valuespec,
+                from_valuespec=_snmpv3_contexts_from_valuespec,
+                validate=_validate_snmpv3_contexts,
             ),
             DropdownChoice(
                 title=_("Error handling"),
@@ -6320,6 +6458,7 @@ def _valuespec_snmpv3_contexts() -> Tuple:
 
 Snmpv3Contexts = HostRulespec(
     group=RulespecGroupAgentSNMP,
+    match_type="all",
     name="snmpv3_contexts",
     valuespec=_valuespec_snmpv3_contexts,
 )
@@ -6351,8 +6490,8 @@ def _validate_max_cache_age_and_validity_period(
 def _valuespec_piggybacked_host_files() -> Migrate:
     global_max_cache_age_uri = makeuri_contextless(
         request,
-        [("mode", "edit_configvar"), ("varname", "piggyback_max_cachefile_age")],
-        filename="wato.py",
+        [("varname", "piggyback_max_cachefile_age")],
+        filename="global_settings.py",
     )
 
     global_max_cache_age_title = _(

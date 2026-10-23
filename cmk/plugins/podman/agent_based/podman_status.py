@@ -14,12 +14,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 type Section = Sequence[Error]
 
@@ -44,10 +43,6 @@ agent_section_podman_status: AgentSection = AgentSection(
 )
 
 
-def discover_podman_status(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_podman_status(section: Section) -> CheckResult:
     if not section:
         yield Result(state=State.OK, summary="No errors")
@@ -63,6 +58,6 @@ def check_podman_status(section: Section) -> CheckResult:
 check_plugin_podman_status = CheckPlugin(
     name="podman_status",
     service_name="Podman status",
-    discovery_function=discover_podman_status,
+    discovery_function=discover_one_service,
     check_function=check_podman_status,
 )

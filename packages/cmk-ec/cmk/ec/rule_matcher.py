@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import enum
 import ipaddress
 import re
 from collections.abc import Callable
@@ -13,7 +14,15 @@ from typing import Literal
 
 from cmk.ccc.site import SiteId
 
-from .config import MatchGroups, Rule, StatePatterns, TextMatchResult, TextPattern, TimeperiodName
+from .config import (
+    ECRulePack,
+    MatchGroups,
+    Rule,
+    StatePatterns,
+    TextMatchResult,
+    TextPattern,
+    TimeperiodName,
+)
 from .event import Event
 
 
@@ -32,6 +41,22 @@ class MatchFailure:
 class MatchSuccess:
     cancelling: bool
     match_groups: MatchGroups
+
+
+class MatchOutcome(enum.Enum):
+    """What the Event Console does with a message when a rule matches it"""
+
+    NEW_EVENT = enum.auto()
+    CANCEL_EVENTS = enum.auto()
+    DROP_MESSAGE = enum.auto()
+    SKIP_PACK = enum.auto()
+
+
+def match_outcome(rule: Rule, result: MatchSuccess) -> MatchOutcome:
+    # Look at the rule type first, even for cancelling matches.
+    if drop := rule.get("drop"):
+        return MatchOutcome.SKIP_PACK if drop == "skip_pack" else MatchOutcome.DROP_MESSAGE
+    return MatchOutcome.CANCEL_EVENTS if result.cancelling else MatchOutcome.NEW_EVENT
 
 
 MatchResult = MatchFailure | MatchSuccess
@@ -108,17 +133,39 @@ def compile_state_pattern(state_patterns: StatePatterns, key: Literal["0", "1", 
 
 
 def compile_rule(rule: Rule) -> None:
-    """Tries to convert strings to compiled regex patterns."""
+    """Tries to convert strings to compiled regex patterns.
+
+    Only top-level values of the rule are replaced, so compiling a shallow copy of a rule keeps
+    the original rule intact.
+    """
     compile_rule_attribute(rule, "match")
     compile_rule_attribute(rule, "match_ok")
     compile_rule_attribute(rule, "match_host")
     compile_rule_attribute(rule, "match_application")
     compile_rule_attribute(rule, "cancel_application")
     if "state" in rule and isinstance(rule["state"], tuple) and rule["state"][0] == "text_pattern":
-        state_patterns: StatePatterns = rule["state"][1]
+        state_patterns = rule["state"][1].copy()
         compile_state_pattern(state_patterns, "2")
         compile_state_pattern(state_patterns, "1")
         compile_state_pattern(state_patterns, "0")
+        rule["state"] = ("text_pattern", state_patterns)
+
+
+def compile_active_rule(rule_pack: ECRulePack, rule: Rule) -> Rule | str:
+    """Returns a compiled copy of the rule like the Event Console applies it, or why it ignores the
+    rule. The Event Console ignores rules which can't be compiled, e.g. because of an invalid regular
+    expression, too: Compiling them raises an exception.
+    """
+    if rule_pack["disabled"]:
+        return "The rule pack is disabled."
+    if rule.get("disabled"):
+        return "The rule is disabled."
+    rule = rule.copy()  # keep original intact because of slave replication
+    # Store information about rule pack right within the rule. This is needed
+    # for debug output and also for skipping rule packs
+    rule["pack"] = rule_pack["id"]
+    compile_rule(rule)
+    return rule
 
 
 def match(pattern: TextPattern | None, text: str, complete: bool) -> TextMatchResult:
@@ -366,7 +413,7 @@ class RuleMatcher:
     def event_rule_matches_timeperiod(self, rule: Rule, event: Event) -> MatchResult:  # noqa: ARG002
         if "match_timeperiod" in rule and not self._is_active_time_period(rule["match_timeperiod"]):
             return MatchFailure(
-                reason=f"The time period {rule['match_timeperiod']} is not is not known or is currently not active"
+                reason=f"The time period {rule['match_timeperiod']} is currently not active"
             )
         return MatchSuccess(cancelling=False, match_groups=MatchGroups())
 

@@ -5,14 +5,12 @@
 
 # mypy: disable-error-code="type-arg"
 
-import json
 from collections.abc import Mapping, Sequence
 from typing import cast, Literal
 
 from cmk.ccc.hostaddress import HostName
 from cmk.gui import forms
 from cmk.gui.config import Config
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -25,16 +23,11 @@ from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
     ABCHostAttributeFormSpec,
     ABCHostAttributeValueSpec,
+    may_set_deprecated_attribute,
     sorted_host_attribute_topics,
     sorted_host_attributes_by_topic,
 )
-from cmk.gui.watolib.hosts_and_folders import (
-    Folder,
-    folder_from_request,
-    folder_tree,
-    Host,
-    SearchFolder,
-)
+from cmk.gui.watolib.hosts_and_folders import Folder, Host, SearchFolder
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.tags import TagID
 from cmk.web.utils.html import HTML as HTML
@@ -103,18 +96,27 @@ def configure_attributes(
 
         forms.header(
             topic_title,
-            isopen=topic_id in ["basic", "address", "monitoring_agents"],
+            isopen=topic_id in ["basic", "address", "monitoring_agents", "relations"],
             table_id=topic_id,
             show_more_toggle=any(attribute.is_show_more(config) for attribute in topic_attributes),
             show_more_mode=show_more_mode,
         )
 
         if topic_id == "management_board":
+            relations_werk_id = 20059
             message = _(
-                "<b>This feature will be deprecated in a future version of Checkmk.</b>"
-                "<br>Please do not configure management boards in here anymore. "
-                "Monitor the management boards via a dedicated host using <a href='%(ipmi_url)s'>IPMI</a>"
-                " or SNMP.<br><a href='%(read_more_url)s' target='_blank'>Read more about management boards.</a>"
+                "<b>This feature is deprecated and will be removed in version 3.1 of Checkmk.</b>"
+                "<br>You can no longer add management boards here. Existing settings can still "
+                "be changed or removed."
+                "<br><br><b>How to monitor management boards going forward:</b>"
+                "<br>Create a dedicated host for the management board (e.g. myhost-mgmt) and "
+                "configure it with the board's IP address using <a href='%(ipmi_url)s'>IPMI</a> "
+                "or SNMP. Use the host relations in the host properties to link it to the "
+                "original host, or use the "
+                "<a href='%(relation_detection_url)s'>relation detection</a> functionality."
+                "<br><br><a href='%(werk_url)s' target='_blank'>Werk #%(werk_id)d</a> · "
+                "<a href='%(read_more_url)s' target='_blank'>"
+                "Read more about management boards &amp; relations.</a>"
             ) % {
                 "ipmi_url": makeuri_contextless(
                     request,
@@ -123,6 +125,13 @@ def configure_attributes(
                         ("varname", RuleGroup.SpecialAgents("ipmi_sensors")),
                     ],
                     filename="wato.py",
+                ),
+                "relation_detection_url": makeuri_contextless(
+                    request, [("mode", "host_relation_detection")], filename="wato.py"
+                ),
+                "werk_id": relations_werk_id,
+                "werk_url": makeuri_contextless(
+                    request, [("werk", relations_werk_id)], filename="werk.py"
                 ),
                 "read_more_url": "https://checkmk.com/blog/monitoring-management-boards",
             }
@@ -179,15 +188,6 @@ def configure_attributes(
             container = None
 
             if attr.show_inherited_value():
-                if for_what in ["host", "cluster"]:
-                    try:
-                        host_name = request.get_ascii_input("host")
-                    except MKUserError:
-                        host_name = None
-                    url = folder_from_request(
-                        folder_tree(), request.var("folder"), host_name
-                    ).edit_url()
-
                 container = parent  # container is of type Folder
                 while container:
                     if attrname in container.attributes:
@@ -233,9 +233,14 @@ def configure_attributes(
             cb = html.get_checkbox(checkbox_name)
             force_entry = False
             disabled = False
+            # The checkbox means "set explicitly" only where a single object is edited; in a bulk
+            # edit it means "change this on all of them", which every attribute needs.
+            always_active = attr.is_always_active() and for_what in ["host", "cluster"]
 
             # first handle mandatory cases
-            if (
+            if always_active:
+                active = True
+            elif (
                 (
                     for_what == "folder"
                     and attr.is_mandatory()
@@ -263,6 +268,10 @@ def configure_attributes(
             is_editable = attr.editable() and attr.may_edit() and num_have_locked_it == 0
             if for_what == "host_search":
                 is_editable = True
+            elif attr.is_deprecated() and not _may_set_deprecated(attrname, new, hosts):
+                # Shown read-only where stored, e.g. an explicit "No management board"
+                active = active and not new
+                is_editable = False
 
             if not is_editable:
                 if active:
@@ -274,6 +283,10 @@ def configure_attributes(
                 for_what == "folder" and myself and myself.locked()
             ):
                 checkbox_code = None
+            elif always_active:
+                # Nothing to switch off, so no box at all - but collect_attributes() only reads
+                # attributes whose checkbox was submitted.
+                checkbox_code = html.render_hidden_field(checkbox_name, "on", add_var=True)
             elif force_entry:
                 checkbox_code = html.render_checkbox(
                     "ignored_" + checkbox_name, disabled="disabled"
@@ -323,6 +336,9 @@ def configure_attributes(
                 )
                 attr.render_input(varprefix, defvalue)
                 html.close_div()
+
+                if always_active:
+                    continue
 
                 html.open_div(
                     class_="inherited",
@@ -414,9 +430,8 @@ def configure_attributes(
         "user_roles": user.role_ids,
         "hide_attributes": hide_attributes,
     }
-    html.javascript(
-        "cmk.wato.prepare_edit_dialog(%s);"
-        "cmk.wato.fix_visibility();" % json.dumps(dialog_properties)
+    html.call_ts_function(
+        function_name="prepare_edit_dialog", arguments={"dialog_properties": dialog_properties}
     )
 
 
@@ -440,6 +455,14 @@ def _determine_attribute_settings(
             if host.attributes.get(attrname) not in values:
                 values.append(host.attributes.get(attrname))
     return values, num_have_locked_it, num_haveit
+
+
+def _may_set_deprecated(
+    attrname: str, new: bool, hosts: Mapping[str, Host | Folder | None]
+) -> bool:
+    """Whether every edited object already has this deprecated attribute's feature configured."""
+    edited = [{}] if new else [obj.attributes if obj else {} for obj in hosts.values()]
+    return bool(edited) and all(may_set_deprecated_attribute(stored, attrname) for stored in edited)
 
 
 def _some_host_hasnt_set(folder: Folder, attrname: str) -> bool:

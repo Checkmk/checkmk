@@ -19,15 +19,15 @@ from cmk.automations.results import Gateway, GatewayResult, ScanParentsResult
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.logged_in import user
 from cmk.gui.parentscan.background_job import (
     ParentScanBackgroundJob,
     ParentScanSettings,
     start_parent_scan,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import FolderTree, Host, make_folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
-from cmk.gui.wsgi.app import application_and_request_context
 
 
 def _noop_pending_changes() -> PendingChanges:
@@ -41,13 +41,9 @@ def _noop_pending_changes() -> PendingChanges:
 
 
 @pytest.fixture(name="host")
-def _host(with_admin_login: UserId, load_config: None) -> Iterator[Host]:
-    # Ensure we have clean folder/host caches
-    tree = folder_tree()
-    tree.invalidate_caches()
-
+def _host(with_admin_login: UserId, load_config: None, tree: FolderTree) -> Iterator[Host]:
     hostname = HostName("host1")
-    root = folder_tree().root_folder()
+    root = tree.root_folder()
     root.create_hosts(
         [(hostname, {"site": SiteId("NO_SITE")}, None)],
         pprint_value=False,
@@ -67,7 +63,10 @@ def _host(with_admin_login: UserId, load_config: None) -> Iterator[Host]:
 
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_scan_parents_job(
-    suppress_bake_agents_in_background: MagicMock, mocker: MockerFixture, host: Host
+    suppress_bake_agents_in_background: MagicMock,
+    mocker: MockerFixture,
+    host: Host,
+    config: Config,
 ) -> None:
     # GIVEN
     scan_parents_mock = mocker.patch("cmk.gui.parentscan.background_job.scan_parents")
@@ -114,15 +113,17 @@ def test_scan_parents_job(
                 is_trusted=False,
             )
         },
+        wato_hide_folders_without_read_permissions=False,
+        wato_host_attrs=[],
+        tags=config.tags.get_dict_format(),
         pprint_value=False,
         debug=False,
         use_git=False,
     )
 
     # THEN
-    with application_and_request_context():
-        updated_host = folder_tree().root_folder().host(host.name())
-        assert updated_host is not None and updated_host.parents() == ["gw-NO_SITE-123-0-0-1"]
+    updated_host = make_folder_tree(config).root_folder().host(host.name())
+    assert updated_host is not None and updated_host.parents() == ["gw-NO_SITE-123-0-0-1"]
 
     suppress_bake_agents_in_background.assert_called_once_with(
         ["gw-NO_SITE-123-0-0-1"], debug=False

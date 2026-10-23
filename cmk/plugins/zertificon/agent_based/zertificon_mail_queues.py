@@ -11,14 +11,13 @@ from cmk.agent_based.v2 import (
     all_of,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     exists,
     not_exists,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 class Section(NamedTuple):
@@ -71,10 +70,6 @@ snmp_section_zertificon_mail_queues = SimpleSNMPSection(
     ),
     parse_function=parse_zertificon_mail_queues,
 )
-
-
-def discover_zertificon_mail_queues(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_zertificon_mail_queues(
@@ -149,7 +144,7 @@ def check_zertificon_mail_queues(
 check_plugin_zertificon_mail_queues = CheckPlugin(
     name="zertificon_mail_queues",
     service_name="Zertificon Mail Queues",
-    discovery_function=discover_zertificon_mail_queues,
+    discovery_function=discover_one_service,
     check_function=check_zertificon_mail_queues,
     check_default_parameters={},
     check_ruleset_name="zertificon_mail_queues",

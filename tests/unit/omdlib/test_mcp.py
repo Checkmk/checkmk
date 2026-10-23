@@ -52,17 +52,6 @@ def test_mcp_conf_exempts_the_options_preflight_when_enabled(tmp_path: Path) -> 
     assert "RewriteRule .* - [L]" in conf
 
 
-def test_mcp_conf_sets_cors_headers_for_the_oauth_endpoints_when_enabled(tmp_path: Path) -> None:
-    site_home = tmp_path
-    (site_home / "etc" / "apache" / "conf.d").mkdir(parents=True)
-
-    MCP_SERVER.activation("unit", site_home, {"MCP_SERVER": "on"})
-
-    conf = (site_home / "etc" / "apache" / "conf.d" / "mcp.conf").read_text()
-    assert 'Header always set Access-Control-Allow-Origin "*"' in conf
-    assert "oauth_(authorization_server|token|client_registration)" in conf
-
-
 def test_mcp_conf_is_removed_when_disabled(tmp_path: Path) -> None:
     site_home = tmp_path
     conf_dir = site_home / "etc" / "apache" / "conf.d"

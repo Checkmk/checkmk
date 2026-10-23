@@ -76,6 +76,7 @@ py_library(
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//packages/cmk-backup:__pkg__",
+        "//packages/cmk-maps:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -177,6 +178,7 @@ py_library(
     ],
     deps = [
         ":config_infra",
+        "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//cmk/gui/valuespec",
         "//cmk/utils",
@@ -221,7 +223,6 @@ py_library(
     ),
     imports = ["../../.."],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//omd/packages/check_mk:__pkg__",
@@ -285,9 +286,11 @@ py_library(
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
+        "//packages/cmk-diagnostics:automation_types",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-messaging",
         "//packages/cmk-plugin-apis:discover_plugins",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web/cmk/web/utils",
         requirement("cryptography"),
         requirement("flask"),

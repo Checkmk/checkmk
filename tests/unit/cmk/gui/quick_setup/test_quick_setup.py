@@ -2,14 +2,21 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from cmk.gui.config import Config
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.quick_setup.handlers.stage import recap_stage
 from cmk.gui.quick_setup.handlers.utils import InfoLogger
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
 from cmk.gui.quick_setup.v0_unstable.predefined._recaps import recaps_form_spec
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage, QuickSetupStageAction
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetupContext,
+    QuickSetupStage,
+    QuickSetupStageAction,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import ActionId, RawFormData, StageIndex
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecRecap, FormSpecWrapper
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, String, validators
 from tests.unit.cmk.gui.quick_setup.factories import QuickSetupFactory
@@ -51,7 +58,15 @@ def test_form_spec_recap() -> None:
     stage_index = StageIndex(0)
 
     built_stages = [stage() for stage in quick_setup.stages[: stage_index + 1]]
-    form_spec_map = build_formspec_map_from_stages(built_stages)
+    ctx = QuickSetupContext(
+        tree=make_folder_tree(Config()),
+        site_configs={},
+        debug=False,
+        use_git=False,
+        pprint_value=False,
+        user=LoggedInSuperUser(),
+    )
+    form_spec_map = build_formspec_map_from_stages(built_stages, ctx)
 
     stage_recap = recap_stage(
         quick_setup_id=quick_setup.id,
@@ -62,9 +77,8 @@ def test_form_spec_recap() -> None:
             RawFormData({FormSpecId("wrapper"): {"test_dict_element": "I am a test string"}})
         ],
         quick_setup_formspec_map=form_spec_map,
-        site_configs={},
         progress_logger=InfoLogger(),
-        debug=False,
+        ctx=ctx,
     )
 
     assert len(stage_recap) == 1

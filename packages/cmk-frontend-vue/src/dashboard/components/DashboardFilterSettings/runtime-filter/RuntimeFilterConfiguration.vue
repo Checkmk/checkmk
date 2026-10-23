@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import {
@@ -165,12 +165,12 @@ const handleRemoveFilter = (filterId: string) => {
   />
 
   <div>
-    <CmkAlertBox v-if="misconfiguredFilters.length > 0" variant="error">
+    <CmkAlertBoxDeprecated v-if="misconfiguredFilters.length > 0" variant="error">
       <CmkLabel>
         {{ _t('Please configure the following filters: ') }}
         {{ misconfiguredFilters.join(', ') }}
       </CmkLabel>
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
   </div>
 
   <RuntimeFilterCollection

@@ -20,15 +20,17 @@ py_library(
     deps = [
         requirement("pytest"),
         "//tests/system:pkg_marker",
-        "//tests/testlib",
-        "//tests/testlib/common:utils",
+        "//tests/testlib/common",
+        "//tests/testlib/system",
     ] + select({
         "//:gpl+nonfree_repo": [
             "//non-free/packages/cmk-otel-collector:testlib",
-            "//non-free/tests/testlib/system:metric_backend",
+            "//non-free/tests/testlib/system:clickhouse_version",
+            "//non-free/tests/testlib/system:data_backend",
             "//non-free/tests/testlib/system:opentelemetry",
             "//non-free/tests/testlib/system/cloud",
             "//non-free/tests/testlib/system/licensing",
+            "//tests/testlib/pytest_helpers",
         ],
         "//:gpl_repo": [],
     }),

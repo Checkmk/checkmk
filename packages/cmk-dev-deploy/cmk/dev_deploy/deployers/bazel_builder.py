@@ -412,6 +412,12 @@ def build_and_install(
 
         # Install: copytree for directories, copy+chmod for binaries
         if spec.use_copytree:
+            if not any(source.iterdir()):
+                raise BazelBuildError(
+                    f"Artifact directory is empty: {source}",
+                    recovery="Bazel did not materialize the build output; check "
+                    "--remote_download_outputs in your bazelrc.",
+                )
             # cmk-frontend uses delete with protect for cmk-frontend-vue
             is_legacy_frontend = spec.install_dest == "share/check_mk/web/htdocs"
             _copy_directory(

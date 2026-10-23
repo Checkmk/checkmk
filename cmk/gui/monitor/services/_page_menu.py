@@ -105,11 +105,15 @@ def build_page_menu(
     hostname: str,
     site_id: str,
     breadcrumb: Breadcrumb,
+    export_dropdowns: Sequence[PageMenuDropdown] = (),
 ) -> PageMenu:
     menu = PageMenu(
         dropdowns=[
-            _as_dropdown(host_menu)
-            for host_menu in host_menus.offered(hostname=hostname, site_id=site_id)
+            *(
+                _as_dropdown(host_menu)
+                for host_menu in host_menus.offered(hostname=hostname, site_id=site_id)
+            ),
+            *export_dropdowns,
         ],
         breadcrumb=breadcrumb,
         show_up_link=False,

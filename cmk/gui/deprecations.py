@@ -14,7 +14,7 @@ from enum import auto, Enum
 from pathlib import Path
 from typing import override
 
-import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=module-layers
 from cmk.ccc import store
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
@@ -28,7 +28,7 @@ from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import JobSchedulerClient
 from cmk.gui.log import logger
 from cmk.gui.message import create_message, get_gui_messages, MessageText, send_message
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.sites import states
 from cmk.gui.type_defs import Users
@@ -401,8 +401,6 @@ def _filter_notifiable_users(
     users: Users, user_permissions: UserPermissions
 ) -> Iterator[_NotifiableUser]:
     for user_id, user_spec in users.items():
-        if user_id is None:
-            continue  # type: ignore[unreachable]
         notification_categories = []
         if user_permissions.user_may(user_id, "wato.manage_mkps"):
             notification_categories.append(_NotificationCategory.manage_mkps)
@@ -497,7 +495,7 @@ def execute_deprecation_tests_and_notify_users(config: Config) -> None:
         list(
             _filter_notifiable_users(
                 load_users(),
-                UserPermissions.from_config(config, permission_registry),
+                UserPermissions.from_config(config, all_permissions()),
             )
         ),
     ):

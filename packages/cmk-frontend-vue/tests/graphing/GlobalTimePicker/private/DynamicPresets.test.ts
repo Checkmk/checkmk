@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { describe, expect, test } from 'vitest'
@@ -15,15 +16,21 @@ const PRESETS: CustomPreset[] = [
   { id: 'p2', label: untranslated('Last 25 hours'), totalSeconds: 25 * 3600 }
 ]
 
-/** In render order, skipping the `aria-hidden` measurement replica. */
-function chipNames(container: Element): string[] {
-  return Array.from(container.querySelectorAll<HTMLElement>('.graphing-dynamic-presets > button'))
+/** In render order. Role queries skip the `aria-hidden` measure row, and `aria-pressed` separates
+ * chips from the overflow trigger. */
+function chipNames(): string[] {
+  return screen
+    .queryAllByRole('button')
     .filter((button) => button.hasAttribute('aria-pressed'))
     .map((button) => button.textContent!.trim())
 }
 
 function renderPresets(
-  props: { activePresetId?: string | null; includeCustomEntry?: boolean } = {}
+  props: {
+    activePresetId?: string | null
+    includeCustomEntry?: boolean
+    variant?: 'extended' | 'condensed'
+  } = {}
 ) {
   const emitted: CustomPreset[] = []
   const view = render(DynamicPresets, {
@@ -31,6 +38,7 @@ function renderPresets(
       presets: PRESETS,
       activePresetId: props.activePresetId ?? null,
       includeCustomEntry: props.includeCustomEntry ?? false,
+      ...(props.variant ? { variant: props.variant } : {}),
       onApply: (preset: CustomPreset) => emitted.push(preset)
     }
   })
@@ -39,18 +47,18 @@ function renderPresets(
 
 describe('DynamicPresets includeCustomEntry', () => {
   test('defaults to false: no "Custom range" entry is added', () => {
-    const { container } = renderPresets()
-    expect(chipNames(container)).toEqual(['Last 4 hours', 'Last 25 hours'])
+    renderPresets()
+    expect(chipNames()).toEqual(['Last 4 hours', 'Last 25 hours'])
   })
 
   test('false explicitly: still no "Custom range" entry', () => {
-    const { container } = renderPresets({ includeCustomEntry: false })
-    expect(chipNames(container)).toEqual(['Last 4 hours', 'Last 25 hours'])
+    renderPresets({ includeCustomEntry: false })
+    expect(chipNames()).toEqual(['Last 4 hours', 'Last 25 hours'])
   })
 
   test('true: appends a trailing "Custom range" entry', () => {
-    const { container } = renderPresets({ includeCustomEntry: true })
-    expect(chipNames(container)).toEqual(['Last 4 hours', 'Last 25 hours', 'Custom range'])
+    renderPresets({ includeCustomEntry: true })
+    expect(chipNames()).toEqual(['Last 4 hours', 'Last 25 hours', 'Custom range'])
   })
 
   test('true and activePresetId null: the Custom chip shows pressed, the others do not', () => {
@@ -77,5 +85,42 @@ describe('DynamicPresets includeCustomEntry', () => {
     const { emitted } = renderPresets({ includeCustomEntry: true })
     await fireEvent.click(screen.getByRole('button', { name: 'Custom range' }))
     expect(emitted).toEqual([{ id: null, label: untranslated('Custom range'), totalSeconds: 0 }])
+  })
+})
+
+describe('DynamicPresets variant', () => {
+  test('condensed: the dropdown offers every preset, including the Custom entry', async () => {
+    const user = userEvent.setup()
+    renderPresets({ variant: 'condensed', includeCustomEntry: true })
+    await user.click(screen.getByRole('combobox', { name: 'Time ranges' }))
+    await screen.findByRole('option', { name: 'Last 4 hours' })
+    await screen.findByRole('option', { name: 'Last 25 hours' })
+    await screen.findByRole('option', { name: 'Custom range' })
+  })
+
+  test('condensed: picking an option emits apply with that preset', async () => {
+    const user = userEvent.setup()
+    const { emitted } = renderPresets({ variant: 'condensed' })
+    await user.click(screen.getByRole('combobox', { name: 'Time ranges' }))
+    await user.click(await screen.findByRole('option', { name: 'Last 25 hours' }))
+    expect(emitted).toEqual([PRESETS[1]])
+  })
+})
+
+describe('DynamicPresets tooltips', () => {
+  test('a dropdown option tooltip does not reopen with the dropdown after a pick', async () => {
+    const user = userEvent.setup()
+    renderPresets({ variant: 'condensed' })
+    const combobox = screen.getByRole('combobox', { name: 'Time ranges' })
+    await user.click(combobox)
+    await user.hover(await screen.findByText('Last 4 hours'))
+    await screen.findByRole('tooltip', { hidden: true })
+    await user.keyboard('{Enter}')
+
+    await user.unhover(combobox)
+    await user.click(combobox)
+    await screen.findByRole('option', { name: 'Last 4 hours' })
+
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull()
   })
 })

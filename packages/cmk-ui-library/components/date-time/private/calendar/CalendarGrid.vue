@@ -8,6 +8,7 @@ import type { CalendarDate } from '@internationalized/date'
 import { isSameDay, startOfMonth, today } from '@internationalized/date'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { computed, useTemplateRef, watch } from 'vue'
 
 import type { ResolvedDateTimeSettings, Weekday } from '../../types'
@@ -57,6 +58,20 @@ const emit = defineEmits<{
 }>()
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Calendar'), [
+  { combo: ['Enter'], description: _t('Select day') },
+  { combo: [' '], description: _t('Select day') },
+  { combo: ['ArrowLeft'], description: _t('Go to previous day') },
+  { combo: ['ArrowRight'], description: _t('Go to next day') },
+  { combo: ['ArrowUp'], description: _t('Go to previous week') },
+  { combo: ['ArrowDown'], description: _t('Go to next week') },
+  { combo: ['Home'], description: _t('Go to start of week') },
+  { combo: ['End'], description: _t('Go to end of week') },
+  { combo: ['PageUp'], description: _t('Go to previous month') },
+  { combo: ['PageDown'], description: _t('Go to next month') },
+  { combo: ['Shift', 'PageUp'], description: _t('Go to previous year') },
+  { combo: ['Shift', 'PageDown'], description: _t('Go to next year') }
+])
 
 const gridElement = useTemplateRef('grid')
 

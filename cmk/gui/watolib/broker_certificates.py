@@ -43,6 +43,7 @@ from cmk.livestatus_client import SiteConfiguration
 from cmk.utils import paths
 from cmk.utils.automation_config import RemoteAutomationConfig
 from cmk.utils.certs import (
+    issued_certificates_path,
     LocalBrokerCertificate,
     MessagingTrustedCAs,
     SiteBrokerCA,
@@ -135,6 +136,7 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
             csr,
             relativedelta(years=2),
             SubjectAlternativeNames([SAN.dns_name(csr.subject.common_name)]),
+            cert_log=issued_certificates_path(paths.omd_root, "messaging"),
         )
 
         remote_broker_certs = messaging.BrokerCertificates(
@@ -209,7 +211,9 @@ def create_remote_broker_certs(
     site_broker_certificate = SiteBrokerCertificate(
         messaging.site_cert_file(paths.omd_root), messaging.site_key_file(paths.omd_root)
     )
-    site_certificate_bundle = site_broker_certificate.create_bundle(site_id, signing_ca_bundle)
+    site_certificate_bundle = site_broker_certificate.create_bundle(
+        site_id, signing_ca_bundle, cert_log=issued_certificates_path(paths.omd_root, "messaging")
+    )
 
     return messaging.BrokerCertificates(
         cert=site_certificate_bundle.certificate.dump_pem().bytes,
@@ -286,7 +290,11 @@ def _create_message_broker_certs() -> CertificateWithPrivateKey:
         messaging.site_cert_file(paths.omd_root), messaging.site_key_file(paths.omd_root)
     )
     site_broker_certificate.persist(
-        bundle := site_broker_certificate.create_bundle(omd_site(), issuer=ca_bundle)
+        bundle := site_broker_certificate.create_bundle(
+            omd_site(),
+            issuer=ca_bundle,
+            cert_log=issued_certificates_path(paths.omd_root, "messaging"),
+        )
     )
 
     return bundle

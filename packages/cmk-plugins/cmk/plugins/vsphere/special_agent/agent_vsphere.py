@@ -21,6 +21,7 @@ import sys
 import time
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
+from http import HTTPStatus
 from typing import Any
 from xml.dom import minicompat, minidom
 
@@ -29,12 +30,12 @@ import requests
 import urllib3
 from defusedxml.minidom import parseString
 
-from cmk.password_store.v1_unstable import (
+from cmk.password_store.v1 import (
     parser_add_secret_option,
     resolve_secret_option,
     Secret,
 )
-from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, Storage, vcrtrace
+from cmk.server_side_programs.v1 import HostnameValidationAdapter, Storage, vcrtrace
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |
@@ -1233,7 +1234,7 @@ class ESXConnection:
         finally:
             auth["password"] = "*****"
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise SystemExit(
                 f"Cannot login to vSphere Server (reason: [{response.status_code}] {response.reason}). "
                 "Please check the credentials."

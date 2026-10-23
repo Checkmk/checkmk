@@ -10,6 +10,7 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import CatalogPanelHeader from '@/dashboard/components/Wizard/components/CatalogPanelHeader.vue'
 import type { FilterConfigState } from '@/dashboard/components/Wizard/components/filter/utils.ts'
+import { MAX_WIZARD_FORM_WIDTH } from '@/dashboard/components/Wizard/constants'
 import { ElementSelection } from '@/dashboard/components/Wizard/types.ts'
 import type { ObjectType } from '@/dashboard/types/shared.ts'
 
@@ -48,21 +49,23 @@ const onUpdateFilterValues = (filterId: string, values: ConfiguredValues | null)
     <template #header>
       <CatalogPanelHeader :title="filterLabels.title" :help-text="filterLabels.tooltip" />
     </template>
-    <MultiFilter
-      v-if="objectSelectionMode === ElementSelection.MULTIPLE"
-      :object-type="objectType"
-      :object-configured-filters="objectConfiguredFilters"
-      :in-focus="inFocus"
-      @set-focus="emit('set-focus', $event)"
-      @update-filter-values="onUpdateFilterValues"
-      @remove-filter="(filterId) => emit('remove-filter', filterId)"
-    />
-    <RestrictedToSingleFilter
-      v-else
-      :configured-filter-values="objectConfiguredFilters[objectType] || {}"
-      :object-type="objectType"
-      @update-filter-values="onUpdateFilterValues"
-      @remove-filter="(filterId) => emit('remove-filter', filterId)"
-    />
+    <div :style="`max-width: ${MAX_WIZARD_FORM_WIDTH}px`">
+      <MultiFilter
+        v-if="objectSelectionMode === ElementSelection.MULTIPLE"
+        :object-type="objectType"
+        :object-configured-filters="objectConfiguredFilters"
+        :in-focus="inFocus"
+        @set-focus="emit('set-focus', $event)"
+        @update-filter-values="onUpdateFilterValues"
+        @remove-filter="(filterId) => emit('remove-filter', filterId)"
+      />
+      <RestrictedToSingleFilter
+        v-else
+        :configured-filter-values="objectConfiguredFilters[objectType] || {}"
+        :object-type="objectType"
+        @update-filter-values="onUpdateFilterValues"
+        @remove-filter="(filterId) => emit('remove-filter', filterId)"
+      />
+    </div>
   </CmkCatalogPanel>
 </template>

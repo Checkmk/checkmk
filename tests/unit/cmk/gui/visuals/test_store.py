@@ -9,7 +9,7 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import Visual
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals import available_by_owner
@@ -60,7 +60,7 @@ def test_available_by_owner_is_independent_of_owner_order(
         all_visuals,
         UserPermissions(
             load_config.roles,
-            permission_registry,
+            all_permissions(),
             {owner: ["admin"] for owner in owners},
             [],
         ),

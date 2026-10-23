@@ -7,12 +7,11 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     contains,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.cpu import Load, Section
 from cmk.plugins.lib.cpu_load import check_cpu_load
 
@@ -51,14 +50,10 @@ snmp_section_blade_bx_load = SimpleSNMPSection(
 )
 
 
-def discover_blade_bx_load(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 check_plugin_blade_bx_load = CheckPlugin(
     name="blade_bx_load",
     service_name="CPU load",
-    discovery_function=discover_blade_bx_load,
+    discovery_function=discover_one_service,
     check_function=check_cpu_load,
     check_default_parameters={
         "levels1": None,

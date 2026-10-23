@@ -40,7 +40,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/bi",
         "//cmk/utils",
         "//packages/cmk-ccc:regex",
         "//packages/cmk-ccc:site",
@@ -104,7 +103,12 @@ filegroup(
             "oracle/agents/.gitignore",
             "oracle/agents/README.md",
         ],
-    ),
+    ) + [
+        # A glob stops at a package boundary. Agent directories with their
+        # own BUILD file contribute their files through ":files".
+        "//cmk/plugins/%s:files" % package
+        for package in subpackages(include = ["*/agents"])
+    ],
 )
 
 filegroup(
@@ -145,41 +149,55 @@ sh_library(
         "checkmk/libexec/check_notify_count",
         "cisco_meraki/libexec/agent_cisco_meraki",
         "couchbase/libexec/agent_couchbase",
+        "cups/agents/mk_cups_queues",
         "datadog/libexec/agent_datadog",
+        "db2/agents/db2_mem",
         "ddn_s2a/libexec/agent_ddn_s2a",
         "emailchecks/libexec/check_mail",
         "emailchecks/libexec/check_mail_loop",
         "emailchecks/libexec/check_mailboxes",
-        "form_submit/libexec/check_form_submit",
+        "extremecloud_iq/libexec/agent_extremecloud_iq",
+        "filehandler/agents/mk_filehandler",
         "fritzbox/libexec/agent_fritzbox",
         "hivemanager/libexec/agent_hivemanager",
         "hivemanager_ng/libexec/agent_hivemanager_ng",
         "hp_msa/libexec/agent_hp_msa",
         "hpe_3par/libexec/agent_three_par",
-        "ibmsvc/libexec/agent_ibmsvc",
         "innovaphone/libexec/agent_innovaphone",
         "jira/libexec/agent_jira",
         "jolokia/libexec/agent_jolokia",
+        "logins/agents/mk_logins",
+        "lvm/agents/lvm",
+        "mailman_lists/agents/mailman3_lists",
         "mobileiron/libexec/agent_mobileiron",
         "mqtt/libexec/agent_mqtt",
-        "oracle/.f12",
+        "network/agents/mk_iptables",
+        "nfsexports/agents/nfsexports",
+        "nfsexports/agents/nfsexports.solaris",
         "oracle/agents/oracle_unified_async",
+        "oracle/agents/oracle_unified_async.solaris",
         "oracle/agents/oracle_unified_async_custom_metrics",
+        "oracle/agents/oracle_unified_async_custom_metrics.solaris",
         "oracle/agents/oracle_unified_sync",
+        "oracle/agents/oracle_unified_sync.solaris",
         "prometheus/libexec/agent_prometheus",
         "ruckus_spot/libexec/agent_ruckus_spot",
         "salesforce/libexec/agent_salesforce",
         "sftp/libexec/check_sftp",
         "siemens_plc/libexec/agent_siemens_plc",
+        "smart/agents/smart",
+        "smart/agents/smart_posix",
         "smb/libexec/agent_smb_share",
         "smb/libexec/check_disk_smb",
         "sql/libexec/check_sql",
         "storeonce/libexec/agent_storeonce",
         "storeonce/libexec/agent_storeonce4x",
+        "suseconnect/agents/mk_suseconnect",
+        "symantec/agents/symantec_av",
         "tinkerforge/libexec/agent_tinkerforge",
-        "traceroute/libexec/check_traceroute",
         "uniserv/libexec/check_uniserv",
         "vnx_quotas/libexec/agent_vnx_quotas",
+        "vxvm/agents/vxvm",
         "zerto/libexec/agent_zerto",
     ],
 )
@@ -188,4 +206,15 @@ py_doc_test(
     name = "doctest",
     size = "small",
     srcs = [":plugins"],
+)
+
+filegroup(
+    name = "powershell_scripts",
+    srcs = [
+        "hyperv_cluster/agents/hyperv_host.ps1",
+        "oracle/agents/oracle_unified_async.ps1",
+        "oracle/agents/oracle_unified_async_custom_metrics.ps1",
+        "oracle/agents/oracle_unified_sync.ps1",
+    ],
+    tags = ["lint-with-psscriptanalyzer"],
 )

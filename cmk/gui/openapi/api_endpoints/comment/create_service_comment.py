@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated, assert_never
 
 from pydantic import Discriminator
@@ -66,14 +67,14 @@ def create_service_comment_v1(
                 )
             except CommentQueryException:
                 raise ProblemException(
-                    status=400,
+                    status=HTTPStatus.BAD_REQUEST,
                     title="The query did not match any service names",
                     detail="The provided query returned an empty list so no comment was created",
                 )
         case _:
             assert_never(body)
 
-    return ApiResponse(body=None, status_code=204)
+    return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT)
 
 
 ENDPOINT_CREATE_SERVICE_COMMENT = VersionedEndpoint(

@@ -9,38 +9,35 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, Integer, Migrate, Percentage, Tuple
+from cmk.gui.valuespec import Alternative, Dictionary, Integer, Percentage, Tuple
 
 
-def _parameter_valuespec_windows_multipath() -> Migrate[dict[str, int | tuple[int, float, float]]]:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "active_paths",
-                    Alternative(
-                        help=_(
-                            "This rules sets the expected number of active paths for a multipath LUN."
-                        ),
-                        title=_("Expected active paths"),
-                        elements=[
-                            Integer(title=_("Expected number of active paths")),
-                            Tuple(
-                                title=_("Expected percentage of active paths"),
-                                elements=[
-                                    Integer(title=_("Expected number of active paths")),
-                                    Percentage(title=_("Warning if less then")),
-                                    Percentage(title=_("Critical if less then")),
-                                ],
-                            ),
-                        ],
+def _parameter_valuespec_windows_multipath() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "active_paths",
+                Alternative(
+                    help=_(
+                        "This rules sets the expected number of active paths for a multipath LUN."
                     ),
+                    title=_("Expected active paths"),
+                    elements=[
+                        Integer(title=_("Expected number of active paths")),
+                        Tuple(
+                            title=_("Expected percentage of active paths"),
+                            elements=[
+                                Integer(title=_("Expected number of active paths")),
+                                Percentage(title=_("Warning if less then")),
+                                Percentage(title=_("Critical if less then")),
+                            ],
+                        ),
+                    ],
                 ),
-            ],
-            title=_("Windows Multipath Count"),
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"active_paths": p},
+            ),
+        ],
+        title=_("Windows Multipath Count"),
+        optional_keys=[],
     )
 
 

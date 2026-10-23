@@ -6,6 +6,7 @@
 from . import config_processing as config_processing
 from ._active_checks import ActiveCheck as ActiveCheck
 from ._active_checks import ActiveServiceData as ActiveServiceData
+from ._active_checks import SITE_SIDE_ONLY_ACTIVE_CHECKS as SITE_SIDE_ONLY_ACTIVE_CHECKS
 from ._commons import ConfigSet as ConfigSet
 from ._commons import ExecutableFinder as ExecutableFinder
 from ._commons import ExecutableFinderProtocol as ExecutableFinderProtocol
@@ -18,6 +19,9 @@ from ._relay_compatibility import NotSupportedError as NotSupportedError
 from ._relay_compatibility import PluginFamily as PluginFamily
 from ._relay_compatibility import (
     relay_compatible_plugin_families as relay_compatible_plugin_families,
+)
+from ._relay_compatibility import (
+    relay_supported_active_checks as relay_supported_active_checks,
 )
 from ._special_agents import SpecialAgent as SpecialAgent
 from ._special_agents import SpecialAgentCommandLine as SpecialAgentCommandLine

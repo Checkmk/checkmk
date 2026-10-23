@@ -5,11 +5,7 @@
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import TimeInput from 'cmk-ui-library/components/date-time/private/input/TimeInput.vue'
-import { afterEach, describe, expect, test, vi } from 'vitest'
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
+import { describe, expect, test } from 'vitest'
 
 describe('TimeInput', () => {
   test('binds model, re-emits commit', async () => {

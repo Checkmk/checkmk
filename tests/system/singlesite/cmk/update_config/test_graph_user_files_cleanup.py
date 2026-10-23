@@ -13,7 +13,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.site import ADMIN_USER, Site, SiteFactory
+from tests.testlib.system.site import ADMIN_USER, Site, SiteFactory
 
 _ADMIN_PROFILE = f"var/check_mk/web/{ADMIN_USER}"
 # Every profile has to be swept, not only the admin's.

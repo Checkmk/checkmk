@@ -5,22 +5,92 @@
 
 import contextlib
 import logging
-from collections.abc import Mapping, Sequence
+import re
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, Protocol
+from typing import Literal, Protocol, TypedDict
 
 from cmk.ccc.hostaddress import HostName
 
-from .config import (
-    InvCleanupParams,
-    InvCleanupParamsChoice,
-    InvCleanupParamsDefaultCombined,
-    InvCleanupParamsOfHosts,
-    matches,
+from .paths import (
+    collect_files,
+    InventoryPaths,
+    parse_archive_timestamp,
+    parse_delta_cache_timestamps,
+    TreePath,
 )
-from .paths import Paths as InventoryPaths
-from .paths import TreePath, TreePathGz
+
+
+class InvCleanupParamsCombined(TypedDict):
+    strategy: Literal["and", "or"]
+    file_age: int
+    number_of_history_entries: int
+
+
+type _InvCleanupParamsChoice = (
+    tuple[Literal["file_age"], int]
+    | tuple[Literal["number_of_history_entries"], int]
+    | tuple[Literal["combined"], InvCleanupParamsCombined]
+)
+
+
+class InvCleanupParamsOfHosts(TypedDict):
+    regex_or_explicit: Sequence[str]
+    parameters: _InvCleanupParamsChoice
+
+
+class InvCleanupParamsDefaultCombined(TypedDict):
+    strategy: Literal["and"]
+    file_age: int
+    number_of_history_entries: int
+
+
+class InvCleanupParams(TypedDict):
+    for_hosts: Sequence[InvCleanupParamsOfHosts]
+    default: InvCleanupParamsDefaultCombined | None
+    abandoned_file_age: int
+
+
+def matches(*, regex_or_name: str, host_name: HostName) -> bool:
+    if regex_or_name.startswith("~"):
+        return re.match(regex_or_name[1:], host_name) is not None
+    return host_name == regex_or_name
+
+
+def _filter_regex_or_explicit(
+    *, regex_or_explicit: Sequence[str], host_names: Sequence[HostName]
+) -> Iterator[str]:
+    for regex_or_name in regex_or_explicit:
+        for host_name in host_names:
+            if matches(regex_or_name=regex_or_name, host_name=host_name):
+                yield regex_or_name
+
+
+def filter_inventory_cleanup_parameters(
+    *,
+    cleanup_parameters: InvCleanupParams,
+    host_names: Sequence[HostName],
+) -> InvCleanupParams:
+    return InvCleanupParams(
+        for_hosts=[
+            InvCleanupParamsOfHosts(
+                regex_or_explicit=regex_or_explicit,
+                parameters=p["parameters"],
+            )
+            for p in cleanup_parameters["for_hosts"]
+            if (
+                regex_or_explicit := list(
+                    _filter_regex_or_explicit(
+                        regex_or_explicit=p["regex_or_explicit"],
+                        host_names=host_names,
+                    )
+                )
+            )
+        ],
+        default=cleanup_parameters["default"],
+        abandoned_file_age=cleanup_parameters["abandoned_file_age"],
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -99,7 +169,7 @@ class _ParamFileAgeNumberHistoryEntries:
 
 
 def _compute_params(
-    params: InvCleanupParamsChoice,
+    params: _InvCleanupParamsChoice,
 ) -> _CleanupParams:
     match params[0]:
         case "file_age":
@@ -142,17 +212,9 @@ def _compute_host_params(
 @dataclass(frozen=True, kw_only=True)
 class _FilePathsOfHost:
     inventory_tree: TreePath
-    inventory_tree_gz: TreePathGz
-    status_data_tree: TreePath
+    tree_file_paths: Sequence[Path]
     archive_file_paths: Sequence[Path]
     delta_cache_file_paths: Sequence[Path]
-
-
-def _collect_files_from_directory(directory: Path) -> Sequence[Path]:
-    try:
-        return list(directory.iterdir())
-    except FileNotFoundError:
-        return []
 
 
 def _compute_timestamp_from_file_path(file_path: Path) -> int | None:
@@ -164,18 +226,14 @@ def _compute_timestamp_from_file_path(file_path: Path) -> int | None:
 
 def _compute_timestamp_from_archive_file_name(file_path: Path) -> int | None:
     try:
-        return int(file_path.with_suffix("").name)
+        return parse_archive_timestamp(file_path)
     except ValueError:
         return None
 
 
 def _compute_timestamps_from_delta_cache_file_name(file_path: Path) -> tuple[int, int] | None:
     try:
-        previous_name, current_name = file_path.with_suffix("").name.split("_")
-        return (
-            -1 if previous_name == "None" else int(previous_name),
-            int(current_name),
-        )
+        return parse_delta_cache_timestamps(file_path)
     except ValueError:
         return None
 
@@ -202,27 +260,37 @@ class _ClassifiedFilePaths:
     abandoned_files: Sequence[_File]
 
 
-def _compute_classified_file_paths(
-    inventory_paths: InventoryPaths, host_names: Sequence[HostName]
-) -> _ClassifiedFilePaths:
-    if not host_names:
-        return _ClassifiedFilePaths(by_host={}, abandoned_files=[], abandoned_host_files=[])
+def _tree_file_paths(inventory_paths: InventoryPaths, host_name: HostName) -> Sequence[Path]:
+    inventory_tree = inventory_paths.inventory_tree(host_name)
+    inventory_tree_gz = inventory_paths.inventory_tree_gz(host_name)
+    status_data_tree = inventory_paths.status_data_tree(host_name)
+    return [
+        inventory_tree.path,
+        inventory_tree.legacy,
+        inventory_tree_gz.path,
+        inventory_tree_gz.legacy,
+        status_data_tree.path,
+        status_data_tree.legacy,
+    ]
 
-    # Construct all files of known hosts
-    file_paths_by_host = {
+
+def _collect_file_paths_by_host(
+    inventory_paths: InventoryPaths, host_names: Sequence[HostName]
+) -> Mapping[HostName, _FilePathsOfHost]:
+    return {
         h: _FilePathsOfHost(
             inventory_tree=inventory_paths.inventory_tree(h),
-            inventory_tree_gz=inventory_paths.inventory_tree_gz(h),
-            status_data_tree=inventory_paths.status_data_tree(h),
-            archive_file_paths=_collect_files_from_directory(inventory_paths.archive_host(h)),
-            delta_cache_file_paths=_collect_files_from_directory(
-                inventory_paths.delta_cache_host(h)
-            ),
+            tree_file_paths=_tree_file_paths(inventory_paths, h),
+            archive_file_paths=collect_files(inventory_paths.archive_host(h)),
+            delta_cache_file_paths=collect_files(inventory_paths.delta_cache_host(h)),
         )
         for h in host_names
     }
 
-    # Compute all unknown archive files
+
+def _collect_abandoned_history_files_by_host(
+    inventory_paths: InventoryPaths, file_paths_by_host: Mapping[HostName, _FilePathsOfHost]
+) -> Mapping[str, Mapping[Path, Sequence[_File]]]:
     abandoned_folders_and_files_by_host: dict[str, dict[Path, list[_File]]] = {}
     for file_path in set(inventory_paths.archive_dir.glob("*/*")).difference(
         fp for fps in file_paths_by_host.values() for fp in fps.archive_file_paths
@@ -232,7 +300,6 @@ def _compute_classified_file_paths(
                 file_path.parent, []
             ).append(_File(path=file_path, timestamp=timestamp))
 
-    # Compute all unknown delta cache files
     for file_path in set(inventory_paths.delta_cache_dir.glob("*/*")).difference(
         fp for fps in file_paths_by_host.values() for fp in fps.delta_cache_file_paths
     ):
@@ -241,27 +308,52 @@ def _compute_classified_file_paths(
                 file_path.parent, []
             ).append(_File(path=file_path, timestamp=timestamps[-1]))
 
-    # Construct inventory or status data tree files of unknown hosts
-    # (with archive or delta cache files)
+    return abandoned_folders_and_files_by_host
+
+
+def _collect_abandoned_tree_files_by_host(
+    inventory_paths: InventoryPaths, raw_host_names: Iterable[str]
+) -> Mapping[str, Sequence[_File]]:
     abandoned_tree_files_by_host: dict[str, list[_File]] = {}
-    for raw_host_name in abandoned_folders_and_files_by_host:
-        host_name = HostName(raw_host_name)
-        inventory_tree = inventory_paths.inventory_tree(host_name)
-        inventory_tree_gz = inventory_paths.inventory_tree_gz(host_name)
-        status_data_tree = inventory_paths.status_data_tree(host_name)
-        for file_path in [
-            inventory_tree.path,
-            inventory_tree.legacy,
-            inventory_tree_gz.path,
-            inventory_tree_gz.legacy,
-            status_data_tree.path,
-            status_data_tree.legacy,
-        ]:
+    for raw_host_name in raw_host_names:
+        for file_path in _tree_file_paths(inventory_paths, HostName(raw_host_name)):
             if (timestamp := _compute_timestamp_from_file_path(file_path)) is not None:
                 abandoned_tree_files_by_host.setdefault(raw_host_name, []).append(
                     _File(path=file_path, timestamp=timestamp)
                 )
+    return abandoned_tree_files_by_host
 
+
+def _collect_remaining_abandoned_files(
+    inventory_paths: InventoryPaths,
+    file_paths_by_host: Mapping[HostName, _FilePathsOfHost],
+    abandoned_tree_files_by_host: Mapping[str, Sequence[_File]],
+) -> Sequence[_File]:
+    return [
+        _File(path=file_path, timestamp=timestamp)
+        for file_path in (
+            set(inventory_paths.inventory_dir.glob("[!.]*"))
+            .union(inventory_paths.status_data_dir.glob("*"))
+            .difference(fp for fps in file_paths_by_host.values() for fp in fps.tree_file_paths)
+            .difference(f.path for fs in abandoned_tree_files_by_host.values() for f in fs)
+        )
+        if (timestamp := _compute_timestamp_from_file_path(file_path)) is not None
+    ]
+
+
+def _compute_classified_file_paths(
+    inventory_paths: InventoryPaths, host_names: Sequence[HostName]
+) -> _ClassifiedFilePaths:
+    if not host_names:
+        return _ClassifiedFilePaths(by_host={}, abandoned_files=[], abandoned_host_files=[])
+
+    file_paths_by_host = _collect_file_paths_by_host(inventory_paths, host_names)
+    abandoned_folders_and_files_by_host = _collect_abandoned_history_files_by_host(
+        inventory_paths, file_paths_by_host
+    )
+    abandoned_tree_files_by_host = _collect_abandoned_tree_files_by_host(
+        inventory_paths, abandoned_folders_and_files_by_host
+    )
     return _ClassifiedFilePaths(
         by_host=file_paths_by_host,
         abandoned_host_files=[
@@ -272,29 +364,9 @@ def _compute_classified_file_paths(
             )
             for host_name, folders_and_files in abandoned_folders_and_files_by_host.items()
         ],
-        # Construct remaining inventory or status data tree files of unknown hosts
-        # (without archive or delta cache files)
-        abandoned_files=[
-            _File(path=file_path, timestamp=timestamp)
-            for file_path in (
-                set(inventory_paths.inventory_dir.glob("[!.]*"))
-                .union(inventory_paths.status_data_dir.glob("*"))
-                .difference(
-                    fp
-                    for fps in file_paths_by_host.values()
-                    for fp in [
-                        fps.inventory_tree.path,
-                        fps.inventory_tree.legacy,
-                        fps.inventory_tree_gz.path,
-                        fps.inventory_tree_gz.legacy,
-                        fps.status_data_tree.path,
-                        fps.status_data_tree.legacy,
-                    ]
-                )
-                .difference(f.path for fs in abandoned_tree_files_by_host.values() for f in fs)
-            )
-            if (timestamp := _compute_timestamp_from_file_path(file_path)) is not None
-        ],
+        abandoned_files=_collect_remaining_abandoned_files(
+            inventory_paths, file_paths_by_host, abandoned_tree_files_by_host
+        ),
     )
 
 
@@ -319,7 +391,9 @@ def _compute_classified_history_files(
 ) -> _ClassifiedHistoryFiles:
     inventory_tree_ts = _compute_timestamp_from_tree_path(inventory_tree)
     archive_file_paths_by_ts = {
-        ts: fp for fp in archive_file_paths if (ts := _compute_timestamp_from_archive_file_name(fp))
+        ts: fp
+        for fp in archive_file_paths
+        if (ts := _compute_timestamp_from_archive_file_name(fp)) is not None
     }
 
     delta_cache_from_inventory_tree: Path | None = None
@@ -386,7 +460,6 @@ def _cleanup_abandoned_files_of_host(
             logger.warning("Remove abandoned host file %(path)r", {"path": file.path})
             file.path.unlink(missing_ok=True)
         with contextlib.suppress(OSError):
-            # Folder not empty
             folder.rmdir()
 
     for file in abandoned_files_of_host.files:

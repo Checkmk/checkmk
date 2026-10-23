@@ -15,19 +15,18 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     contains,
-    DiscoveryResult,
     get_average,
     get_rate,
     get_value_store,
     Metric,
     OIDEnd,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -55,10 +54,6 @@ def parse_pfsense_counter(string_table: StringTable) -> PacketCounters | None:
 
 def _parse_optional_raw_counter(raw_value: str | None) -> int | None:
     return int(raw_value) if raw_value is not None else None
-
-
-def discovery_pfsense_counter(section: PacketCounters) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 class CheckParameters(TypedDict):
@@ -193,7 +188,7 @@ snmp_section_pfsense_counter = SimpleSNMPSection(
 check_plugin_pfsense_counter = CheckPlugin(
     name="pfsense_counter",
     service_name="pfSense Firewall Packet Rates",
-    discovery_function=discovery_pfsense_counter,
+    discovery_function=discover_one_service,
     check_function=check_pfsense_counter,
     check_ruleset_name="pfsense_counter",
     check_default_parameters=CheckParameters(

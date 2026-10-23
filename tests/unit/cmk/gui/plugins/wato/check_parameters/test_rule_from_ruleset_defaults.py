@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_loc
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 from cmk.gui.watolib import rulesets
 from cmk.gui.watolib import rulesets as gui_rulesets_module
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.rulesets import RuleOptions, RuleValue
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.matcher import RulesetName
@@ -24,7 +24,7 @@ GEN_ID_COUNT = {"c": 0}
 
 
 @pytest.fixture
-def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> None:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+def fixture_gen_id(monkeypatch: pytest.MonkeyPatch) -> None:
     GEN_ID_COUNT["c"] = 0
 
     def _gen_id() -> str:
@@ -57,11 +57,11 @@ def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> No
 )
 @pytest.mark.usefixtures("fixture_gen_id")
 def test_rule_from_ruleset_defaults(
-    ruleset_name: str, default_value: RuleValue, is_binary: bool
+    ruleset_name: str, default_value: RuleValue, is_binary: bool, tree: FolderTree
 ) -> None:
     ruleset = _ruleset(ruleset_name)
     rule = rulesets.Rule.from_ruleset(
-        folder_tree().root_folder(), ruleset, ruleset.rulespec.valuespec.default_value()
+        tree.root_folder(), ruleset, ruleset.rulespec.valuespec.default_value()
     )
     assert isinstance(rule.conditions, rulesets.RuleConditions)
     assert rule.rule_options == RuleOptions(

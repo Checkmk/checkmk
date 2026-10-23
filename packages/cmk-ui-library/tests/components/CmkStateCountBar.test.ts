@@ -68,8 +68,8 @@ test('a non-zero count links to where its segment points', () => {
   )
 })
 
-test('the total, when given, leads the legend with the summed count', () => {
-  render(CmkStateCountBar, {
+test('the total, when given, sits above the bar with the summed count', () => {
+  const { container } = render(CmkStateCountBar, {
     props: {
       segments: MIX,
       total: {
@@ -81,7 +81,26 @@ test('the total, when given, leads the legend with the summed count', () => {
 
   const total = screen.getByRole('link', { name: 'All services: 8' })
   expect(total).toHaveAttribute('href', 'monitor_host_services.py?host=web-1')
-  expect(total.compareDocumentPosition(screen.getByText('OK: 5'))).toBe(
+  expect(total.compareDocumentPosition(screen.getByRole('img'))).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING
+  )
+  expect(container.querySelectorAll('.cmk-state-count-bar__legend-item')).toHaveLength(5)
+})
+
+test('a heading shares the row of the total, above the bar', () => {
+  render(CmkStateCountBar, {
+    props: {
+      segments: MIX,
+      total: { label: 'All services' as TranslatedString, href: 'monitor_host_services.py' }
+    },
+    slots: { heading: '<h3>Service summary</h3>' }
+  })
+
+  const heading = screen.getByRole('heading', { name: 'Service summary' })
+  expect(heading.parentElement).toBe(
+    screen.getByRole('link', { name: 'All services: 8' }).parentElement
+  )
+  expect(heading.compareDocumentPosition(screen.getByRole('img'))).toBe(
     Node.DOCUMENT_POSITION_FOLLOWING
   )
 })
@@ -116,4 +135,20 @@ test('all-zero total renders a single neutral track and an empty aria-label', ()
   expect(segments).toHaveLength(1)
   expect(segments[0]).toHaveClass('cmk-state-count-bar__segment--empty')
   expect(screen.getByRole('img')).toHaveAttribute('aria-label', 'No services')
+})
+
+test('wears the medium size unless a smaller bar is asked for', () => {
+  const { container } = render(CmkStateCountBar, { props: { segments: MIX } })
+
+  expect(container.querySelector('.cmk-state-count-bar')).toHaveClass(
+    'cmk-state-count-bar--size-medium'
+  )
+})
+
+test('thins the bar down to the small size on request', () => {
+  const { container } = render(CmkStateCountBar, { props: { segments: MIX, size: 'small' } })
+
+  expect(container.querySelector('.cmk-state-count-bar')).toHaveClass(
+    'cmk-state-count-bar--size-small'
+  )
 })

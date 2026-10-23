@@ -5,10 +5,9 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.fortinet.agent_based.fortigate_sessions_base import (
     check_fortigate_sessions_base,
-    discover_fortigate_sessions_base,
     parse_fortigate_sessions_base,
 )
 
@@ -23,10 +22,6 @@ from cmk.plugins.fortinet.agent_based.fortigate_sessions_base import (
 )
 def test_parse_fortigate_sessions_base(string_table: StringTable, expected: int | None) -> None:
     assert parse_fortigate_sessions_base(string_table) == expected
-
-
-def test_discover_fortigate_sessions_base() -> None:
-    assert list(discover_fortigate_sessions_base(1000)) == [Service()]
 
 
 def test_check_fortigate_sessions_base() -> None:

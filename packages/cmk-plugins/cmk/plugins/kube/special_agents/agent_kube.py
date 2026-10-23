@@ -28,7 +28,7 @@ import requests
 import urllib3
 from pydantic import TypeAdapter
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option, Secret
 from cmk.plugins.kube import common, performance, prometheus_section, query
 from cmk.plugins.kube.agent_handlers import (
     cluster_handler,
@@ -75,7 +75,7 @@ from cmk.plugins.kube.common import (
 )
 from cmk.plugins.kube.prometheus_api import ResponseSuccess
 from cmk.plugins.kube.schemata import api, section
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1 import configure_logging, report_agent_crashes, vcrtrace
 
 __version__ = "3.0.0b1"
 
@@ -157,7 +157,7 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
         "the host where the Kubernetes rule has been assigned to)",
     )
     parser_add_secret_option(p, long=f"--{TOKEN_OPTION}", help="Token for that user", required=True)
-    p.add_argument(
+    p.add_argument(  # astrein: disable=argparse-nargs
         "--monitored-objects",
         type=MonitoredObject,
         nargs="+",
@@ -224,7 +224,7 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
         "response from the Kubernetes API.",
     )
     group = p.add_mutually_exclusive_group()
-    group.add_argument(
+    group.add_argument(  # astrein: disable=argparse-nargs
         "--cluster-aggregation-exclude-node-roles",
         nargs="+",
         default=["control-plane", "infra"],
@@ -322,8 +322,7 @@ def setup_logging(verbosity: int) -> None:
     else:
         logging.disable(logging.CRITICAL)
         lvl = logging.CRITICAL
-    # astrein: disable=logging-formatter
-    logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
+    configure_logging(lvl)
 
 
 @dataclass(frozen=True)

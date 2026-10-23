@@ -6,7 +6,7 @@
 import { fireEvent, within } from '@testing-library/vue'
 import CmkTimePicker from 'cmk-ui-library/components/date-time/CmkTimePicker.vue'
 import type { TimeValue } from 'cmk-ui-library/components/date-time/types'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test } from 'vitest'
 
 import { lastValue, renderModelPicker } from './pickerTestHarness'
 
@@ -28,10 +28,6 @@ const selectedText = (view: PickerView, label: 'Hour' | 'Minute') =>
   column(view, label).getByRole('option', { selected: true }).textContent?.trim()
 const clickOption = (view: PickerView, label: 'Hour' | 'Minute', text: string) =>
   fireEvent.click(column(view, label).getByRole('option', { name: text }))
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 describe('CmkTimePicker', () => {
   test('the wheel shows midnight for an empty draft, but the model stays empty until a pick', async () => {

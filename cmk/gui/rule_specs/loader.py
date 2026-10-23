@@ -14,7 +14,6 @@ from cmk.discover_plugins import (
     DiscoveredPlugins,
     PluginGroup,
 )
-from cmk.gui.rule_specs.compatibility import make_rule_spec_backwards_compatible
 from cmk.rulesets.v1 import entry_point_prefixes
 from cmk.rulesets.v1.rule_specs import (
     AgentConfig,
@@ -36,7 +35,7 @@ def load_discovered_rule_specs(
 ) -> tuple[Sequence[Exception], Sequence[LoadedRuleSpec]]:
     loaded_plugins = [
         LoadedRuleSpec(
-            rule_spec=make_rule_spec_backwards_compatible(plugin),
+            rule_spec=plugin,
             edition_only=_get_edition_only(location.module),
         )
         for location, plugin in discovered_plugins.plugins.items()
@@ -110,8 +109,13 @@ def load_api_v1_rule_specs(
             raise_errors=raise_errors,
         )
         discovered_plugins = DiscoveredPlugins(
-            [*discovered_plugins.errors, *more_discovered_plugins.errors],
-            {**discovered_plugins.plugins, **more_discovered_plugins.plugins},
+            errors=[*discovered_plugins.errors, *more_discovered_plugins.errors],
+            plugins={**discovered_plugins.plugins, **more_discovered_plugins.plugins},
+            conflicts=[*discovered_plugins.conflicts, *more_discovered_plugins.conflicts],
+            errors_by_module={
+                **discovered_plugins.errors_by_module,
+                **more_discovered_plugins.errors_by_module,
+            },
         )
 
     return load_discovered_rule_specs(discovered_plugins)

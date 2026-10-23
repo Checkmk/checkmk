@@ -11,11 +11,10 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_value_store,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.cpu_util import check_cpu_util_unix, CPUInfo
 
 
@@ -31,10 +30,6 @@ def parse_statgrab_cpu(string_table: StringTable) -> CPUInfo | None:
         raw.get("idle", 0),
         raw.get("iowait", 0),
     )
-
-
-def discover_statgrab_cpu(section: CPUInfo) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_statgrab_cpu(params: Mapping[str, object], section: CPUInfo) -> CheckResult:
@@ -56,7 +51,7 @@ agent_section_statgrab_cpu = AgentSection(
 check_plugin_statgrab_cpu = CheckPlugin(
     name="statgrab_cpu",
     service_name="CPU utilization",
-    discovery_function=discover_statgrab_cpu,
+    discovery_function=discover_one_service,
     check_function=check_statgrab_cpu,
     check_ruleset_name="cpu_iowait",
     check_default_parameters={},

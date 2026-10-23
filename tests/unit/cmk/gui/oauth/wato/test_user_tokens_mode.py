@@ -17,8 +17,11 @@ from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.oauth.wato._user_tokens_mode import ModeOAuthTokens
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.scopes import DEFAULT_SCOPE
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 
 _USER = UserId("cmkadmin")
@@ -58,7 +61,16 @@ def test_page_renders_token_details(monkeypatch: pytest.MonkeyPatch, test_editio
     _issue_token(_USER, client_id)
 
     with output_funnel.plugged():
-        ModeOAuthTokens(test_edition, PageContext(config=Config(), request=request)).page(Config())
+        ModeOAuthTokens(
+            test_edition,
+            PageContext(
+                config=Config(),
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+            ),
+        ).page(Config())
         written = "".join(output_funnel.drain())
 
     assert _USER in written
@@ -68,7 +80,16 @@ def test_page_renders_token_details(monkeypatch: pytest.MonkeyPatch, test_editio
 @pytest.mark.usefixtures("request_context")
 def test_page_renders_empty_table_without_error(test_edition: Edition) -> None:
     with output_funnel.plugged():
-        ModeOAuthTokens(test_edition, PageContext(config=Config(), request=request)).page(Config())
+        ModeOAuthTokens(
+            test_edition,
+            PageContext(
+                config=Config(),
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+            ),
+        ).page(Config())
         written = "".join(output_funnel.drain())
 
     assert "No entries" in written
@@ -91,9 +112,16 @@ class TestModeOAuthTokensAction:
             transactions.ignore()
             request.set_var("_transid", "-1")
 
-            ModeOAuthTokens(test_edition, PageContext(config=Config(), request=request)).action(
-                Config()
-            )
+            ModeOAuthTokens(
+                test_edition,
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                ),
+            ).action(Config())
 
         with get_token_store() as store:
             assert store.get_by_token(token) is None
@@ -122,9 +150,16 @@ class TestModeOAuthTokensAction:
             transactions.ignore()
             request.set_var("_transid", "-1")
 
-            ModeOAuthTokens(test_edition, PageContext(config=Config(), request=request)).action(
-                Config()
-            )
+            ModeOAuthTokens(
+                test_edition,
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                ),
+            ).action(Config())
 
         with get_token_store() as store:
             assert store.get_by_token(checked) is None
@@ -145,9 +180,16 @@ class TestModeOAuthTokensAction:
         ):
             flask_app.preprocess_request()
 
-            ModeOAuthTokens(test_edition, PageContext(config=Config(), request=request)).action(
-                Config()
-            )
+            ModeOAuthTokens(
+                test_edition,
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                ),
+            ).action(Config())
 
         with get_token_store() as store:
             assert store.get_by_token(token) is not None

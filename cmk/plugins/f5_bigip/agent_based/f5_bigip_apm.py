@@ -6,15 +6,14 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.f5_bigip.lib import F5_BIGIP
 
 Section = int
@@ -24,10 +23,6 @@ def parse_f5_bigip_apm(string_table: StringTable) -> Section | None:
     if not string_table or not string_table[0][0]:
         return None
     return int(string_table[0][0])
-
-
-def discover_f5_bigip_apm(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_f5_bigip_apm(section: Section) -> CheckResult:
@@ -49,6 +44,6 @@ snmp_section_f5_bigip_apm = SimpleSNMPSection(
 check_plugin_f5_bigip_apm = CheckPlugin(
     name="f5_bigip_apm",
     service_name="SSL/VPN Connections",
-    discovery_function=discover_f5_bigip_apm,
+    discovery_function=discover_one_service,
     check_function=check_f5_bigip_apm,
 )

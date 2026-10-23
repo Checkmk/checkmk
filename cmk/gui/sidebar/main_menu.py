@@ -18,7 +18,12 @@ from cmk.gui.i18n import _, ungettext
 from cmk.gui.icon_helpers import migrate_to_dynamic_icon
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import any_show_more_items, main_menu_registry
-from cmk.gui.main_menu_types import ConfigurableMainMenuItem, MainMenuItem, MainMenuLinkItem
+from cmk.gui.main_menu_types import (
+    ConfigurableMainMenuItem,
+    MainMenuItem,
+    MainMenuLinkItem,
+    MainMenuToggleItem,
+)
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.search_menu import get_unified_search_props
 from cmk.gui.user_sites import activation_sites
@@ -35,6 +40,7 @@ from cmk.shared_typing.main_menu import (
     NavItemTopic,
     NavItemTopicEntry,
     NavLinkItem,
+    NavToggleItem,
     StartItem,
     TopicItemMode,
 )
@@ -78,13 +84,14 @@ class MainMenuConfigCreator:
             ),
             main=main_items,
             user=user_items,
+            toggles=self._get_toggle_items(),
         )
 
     def _get_menu_items(self, is_user_nav: bool) -> list[NavItem | NavLinkItem]:
         items: list[NavItem | NavLinkItem] = []
 
         for menu in sorted(main_menu_registry.values(), key=lambda g: g.sort_index):
-            if menu.is_user_nav != is_user_nav:
+            if isinstance(menu, MainMenuToggleItem) or menu.is_user_nav != is_user_nav:
                 continue
 
             if isinstance(menu, ConfigurableMainMenuItem):
@@ -113,6 +120,19 @@ class MainMenuConfigCreator:
                 )
             )
         return items
+
+    def _get_toggle_items(self) -> list[NavToggleItem]:
+        return [
+            NavToggleItem(
+                id=NavItemIdEnum(menu.id),
+                title=str(menu.title),
+                sort_index=menu.sort_index,
+                shortcut=menu.shortcut,
+                hint=str(menu.hint) if menu.hint else None,
+            )
+            for menu in sorted(main_menu_registry.values(), key=lambda g: g.sort_index)
+            if isinstance(menu, MainMenuToggleItem) and not (menu.hide and menu.hide())
+        ]
 
     def _get_nav_item_from_main_menu_item(
         self, menu: MainMenuItem | MainMenuLinkItem

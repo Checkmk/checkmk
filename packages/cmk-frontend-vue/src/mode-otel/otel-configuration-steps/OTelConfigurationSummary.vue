@@ -12,8 +12,6 @@ import {
   type AuthConfig,
   type EndpointConfig,
   type EventConsoleConfig,
-  GRPC_DEFAULT_PORT,
-  HTTP_DEFAULT_PORT,
   resolveEndpoint
 } from './otelTypes'
 
@@ -37,6 +35,8 @@ const props = defineProps<{
   endpointConfigAllowed: boolean
   encryptionAllowed: boolean
   eventConsoleAllowed: boolean
+  grpcDefaultPort: number
+  httpDefaultPort: number
 }>()
 
 function describeAuth(auth: AuthConfig, passwordName: string): string {
@@ -111,7 +111,7 @@ const entries = computed<SummaryEntry[]>(() => {
         _t('gRPC-based OTLP receiver:'),
         props.grpcAuth,
         props.grpcEndpoint,
-        GRPC_DEFAULT_PORT,
+        props.grpcDefaultPort,
         props.grpcEncryption,
         props.grpcEventConsole,
         props.grpcPasswordName
@@ -124,7 +124,7 @@ const entries = computed<SummaryEntry[]>(() => {
         _t('HTTP-based OTLP receiver:'),
         props.httpAuth,
         props.httpEndpoint,
-        HTTP_DEFAULT_PORT,
+        props.httpDefaultPort,
         props.httpEncryption,
         props.httpEventConsole,
         props.httpPasswordName

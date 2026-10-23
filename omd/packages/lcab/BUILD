@@ -1,6 +1,6 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:xcomp/transition_wrapper.bzl", "platform_transitioned_target")
 
 platform_transitioned_target(

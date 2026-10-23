@@ -5,20 +5,22 @@
 
 from collections.abc import Mapping
 
+from pydantic import BaseModel
+
 from .bakery_api.v1 import register, WindowsConfigEntry, WindowsConfigGenerator
 
 
-# will be called during generation of the final yml
-def get_agent_install_python_config(conf: object) -> WindowsConfigGenerator:
-    if not isinstance(conf, Mapping) or not conf:
-        return  # TODO: For some obscure reason, we sometimes get False for conf...
+class _Config(BaseModel):
+    installation: str = "auto"
+    usage: str = "auto"
 
-    # ...expected yml...
-    # modules:
-    #   enabled: yes
-    #   python: system # or nothing or auto
-    # ..................
-    yield WindowsConfigEntry(path=["modules", "python"], content=conf["usage"])
+
+# modules:
+#   enabled: yes
+#   python: system # or nothing or auto
+def get_agent_install_python_config(conf: Mapping[str, object]) -> WindowsConfigGenerator:
+    config = _Config.model_validate(conf)
+    yield WindowsConfigEntry(path=["modules", "python"], content=config.usage)
 
 
 register.bakery_plugin(

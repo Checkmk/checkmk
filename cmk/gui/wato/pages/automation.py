@@ -5,13 +5,12 @@
 """These functions implement a web service with that a master can call
 automation functions on slaves,"""
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
 import secrets
 import traceback
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from contextlib import nullcontext
 from datetime import datetime
 from typing import override
@@ -20,8 +19,7 @@ import cmk.ccc.version as cmk_version
 import cmk.gui.watolib.utils as watolib_utils
 import cmk.utils.paths
 from cmk import trace
-from cmk.automations.results import result_type_registry, SerializedResult
-from cmk.automations.types import AutomationID
+from cmk.automations.internal import AutomationID
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
@@ -44,13 +42,11 @@ from cmk.gui.watolib.automation_commands import automation_command_registry, Aut
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     cmk_version_of_remote_automation_source,
-    get_local_automation_failure_message,
     LastKnownCentralSiteVersion,
     LastKnownCentralSiteVersionStore,
-    MKAutomationException,
     verify_request_compatibility,
 )
-from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, folder_tree
+from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, make_folder_tree
 from cmk.utils.local_secrets import DistributedSetupSecret
 from cmk.utils.paths import configuration_lockfile
 
@@ -174,23 +170,26 @@ class PageAutomation(AjaxPage):
         # the normal Setup page processing. This might not be needed for some
         # special automation requests, like inventory e.g., but to keep it simple,
         # we request the lock in all cases.
-        lock_config = not (
-            self._command == "checkmk-automation"
-            and request.get_str_input_mandatory("automation") == "active-check"
-        )
         with (
             store.lock_checkmk_configuration(configuration_lockfile)
-            if lock_config
+            if self._needs_configuration_lock()
             else nullcontext()
         ):
             self._execute_automation(ctx.config)
         return None
 
+    def _needs_configuration_lock(self) -> bool:
+        if self._command == "checkmk-automation":
+            return request.get_str_input_mandatory("automation") != "active-check"
+        if self._command in automation_command_registry:
+            return automation_command_registry[self._command]().needs_configuration_lock()
+        return True
+
     def _execute_automation(self, config: Config) -> None:
         with tracer.span(f"_execute_automation[{self._command}]"):
             # TODO: Refactor these two calls to also use the automation_command_registry
             if self._command == "checkmk-automation":
-                self._execute_cmk_automation(debug=config.debug)
+                self._execute_cmk_automation(config, debug=config.debug)
                 return
             if self._command == "push-profile":
                 self._execute_push_profile(
@@ -208,54 +207,24 @@ class PageAutomation(AjaxPage):
                 )
             self._execute_automation_command(automation_command, config)
 
-    @staticmethod
-    def _format_cmk_automation_result(
-        *,
-        serialized_result: SerializedResult,
-        cmk_command: AutomationID,
-        cmdline_cmd: Iterable[str],
-        debug: bool,
-    ) -> SerializedResult:
-        try:
-            return (
-                result_type_registry[cmk_command]
-                .deserialize(serialized_result)
-                .serialize(cmk_version_of_remote_automation_source(request))
-            )
-        except SyntaxError as e:
-            msg = get_local_automation_failure_message(
-                command=cmk_command,
-                cmdline=cmdline_cmd,
-                out=serialized_result,
-                exc=e,
-                debug=debug,
-            )
-            raise MKAutomationException(msg)
-
-    def _execute_cmk_automation(self, *, debug: bool) -> None:
+    def _execute_cmk_automation(self, config: Config, *, debug: bool) -> None:
         cmk_command = AutomationID(request.get_str_input_mandatory("automation"))
         args = watolib_utils.mk_eval(request.get_str_input_mandatory("arguments"))
         indata = watolib_utils.mk_eval(request.get_str_input_mandatory("indata"))
         stdin_data = watolib_utils.mk_eval(request.get_str_input_mandatory("stdin_data"))
         timeout = watolib_utils.mk_eval(request.get_str_input_mandatory("timeout"))
-        cmdline_cmd, serialized_result = check_mk_local_automation_serialized(
+        _cmdline, serialized_result = check_mk_local_automation_serialized(
             command=cmk_command,
             args=args,
             indata=indata,
             stdin_data=stdin_data,
             timeout=timeout,
+            for_cmk_version=str(cmk_version_of_remote_automation_source(request)),
             debug=debug,
-            collect_all_hosts=lambda: collect_all_hosts(folder_tree()),
+            collect_all_hosts=lambda: collect_all_hosts(make_folder_tree(config)),
         )
         # Don't use write_text() here (not needed, because no HTML document is rendered)
-        response.set_data(
-            self._format_cmk_automation_result(
-                serialized_result=SerializedResult(serialized_result),
-                cmk_command=cmk_command,
-                cmdline_cmd=cmdline_cmd,
-                debug=debug,
-            )
-        )
+        response.set_data(serialized_result)
 
     def _execute_push_profile(
         self,
@@ -303,7 +272,7 @@ class PageAutomation(AjaxPage):
 
         our_id = omd_site()
 
-        if our_id is not None and our_id != site_id:  # type: ignore[redundant-expr]
+        if our_id != site_id:
             raise MKGeneralException(
                 _(
                     "Site ID mismatch. Our ID is '%(our_id)s', but you are saying we are '%(site_id)s'."

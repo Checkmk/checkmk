@@ -14,8 +14,8 @@ from cmk.plugins.hwg.agent_based.lib import parse_hwg
 from cmk.plugins.lib.temperature import TempParamType
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
-def _patch_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.fixture
+def patch_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(hwg_temp, "get_value_store", dict)
 
 
@@ -28,6 +28,7 @@ def _patch_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("patch_value_store")
 def test_discover_hwg_temp(info: StringTable, expected_discoveries: Sequence[Service]) -> None:
     """Test discovery function for hwg_temp check."""
     parsed = parse_hwg(info)
@@ -58,6 +59,7 @@ def test_discover_hwg_temp(info: StringTable, expected_discoveries: Sequence[Ser
         ),
     ],
 )
+@pytest.mark.usefixtures("patch_value_store")
 def test_check_hwg_temp(
     item: str,
     params: TempParamType,

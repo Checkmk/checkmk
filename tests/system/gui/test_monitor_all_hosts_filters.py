@@ -31,7 +31,7 @@ from tests.system.gui.testlib.playwright.pom.monitor.all_hosts_experimental impo
     AllHostsExperimental,
 )
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

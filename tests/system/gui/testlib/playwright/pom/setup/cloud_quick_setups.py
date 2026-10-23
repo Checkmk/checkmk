@@ -361,6 +361,81 @@ class AWSAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
             self.check_global_service(entry, False)
 
 
+class AWSv2ConfigurationList(BaseQuickSetupConfigurationList):
+    """Represent the page 'Amazon Web Services (AWS) v2', which lists the configuration setup.
+
+    Accessible at,
+    Setup > Quick Setup > Amazon Web Services (AWS) v2
+    """
+
+    suffix = "aws_v2"
+    page_title = "Amazon Web Services (AWS) v2"
+
+
+class AWSv2AddNewConfiguration(BaseQuickSetupAddNewConfiguration):
+    """Represent the page 'Add Amazon Web Services (AWS) v2 configuration' to add a configuration
+    of the new AWS integration.
+
+    Accessible at,
+    Setup > Quick Setup > Amazon Web Services (AWS) v2
+        > Add Amazon Web Services (AWS) v2 configuration
+    """
+
+    suffix = "aws_v2"
+    page_title = "Add Amazon Web Services (AWS) v2 configuration"
+    _go_to_next_stage_buttons_text = {
+        1: "Configure host and regions",
+        2: "Configure services to monitor",
+        3: "Review and test configuration",
+    }
+
+    @override
+    def list_configuration_page(self) -> AWSv2ConfigurationList:
+        return AWSv2ConfigurationList(self.page)
+
+    def _select_option(self, dropdown_name: str, option: str) -> None:
+        self.quick_setup_area.get_by_role("combobox", name=dropdown_name, exact=True).click()
+        self.quick_setup_area.get_by_role("option", name=option, exact=True).click()
+
+    def specify_stage_one_details(self, access_key: str, access_password: str) -> None:
+        logger.info("Initialize stage-1 details.")
+        main_area = self.main_area.locator()
+        main_area.get_by_role("textbox", name="Configuration name").fill(self.configuration_name)
+        self._get_row("The access key ID for your AWS account").get_by_role("textbox").fill(
+            access_key
+        )
+        self.fill_explicit_password(access_password)
+
+    def specify_stage_two_details(
+        self, host_name: str, regions_to_monitor: list[str], site_name: str
+    ) -> None:
+        logger.info("Initialize stage-2 details.")
+        main_area = self.main_area.locator()
+        main_area.get_by_role("textbox", name="Host name").fill(host_name)
+        self._handle_folder_selection(
+            folder_name=self.folder_details.name,
+            parent_path=self.folder_details.parent,
+            create_new=self.folder_details.create_new,
+        )
+        regions = self._get_row("Regions to monitor")
+        for region in regions_to_monitor:
+            regions.get_by_role("listbox", name="available").get_by_role(
+                "option", name=region
+            ).click()
+            regions.get_by_role("button", name="Add >").click()
+
+        main_area.get_by_role("combobox", name="Site selection").click()
+        main_area.get_by_role("option", name=f"{site_name} - Local site").click()
+
+    def specify_stage_three_details(
+        self, global_services: dict[str, str], regional_services: dict[str, str]
+    ) -> None:
+        """Select how to monitor each service, by the titles of the service and of the option."""
+        logger.info("Initialize stage-3 details.")
+        for service, option in {**global_services, **regional_services}.items():
+            self._select_option(service, option)
+
+
 class GCPConfigurationList(BaseQuickSetupConfigurationList):
     """Represent the page 'Google Cloud Platform (GCP)', which lists the configuration setup.
 

@@ -35,6 +35,8 @@ initGlobalRefresh({
     <template #aside>
       <GlobalRefreshControl
         class="graphing-global-time-picker-app__refresh"
+        last-refresh-position="top"
+        :interval-choices-seconds="props.refresh.interval_choices_seconds"
         @resume="returnToLiveMonitoring"
       />
     </template>

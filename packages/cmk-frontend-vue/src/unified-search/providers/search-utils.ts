@@ -5,6 +5,7 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ProviderName } from 'cmk-shared-typing/typescript/unified_search'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { randomId } from 'cmk-ui-library/lib/randomId'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
@@ -43,6 +44,7 @@ const query = {
   },
   sort: sort
 }
+const { _t } = usei18n()
 const shortcuts = new KeyShortcutService(window)
 const shortCutEventIds = ref<string[]>([])
 const callbacks: {
@@ -191,22 +193,6 @@ function onArrowRight(cb: typeof arrowRight): string {
   return pushCallBack('arrowRight', cb)
 }
 
-function ctrlArrowLeft() {
-  dispatchCallback('ctrlArrowLeft')
-}
-
-function onCtrlArrowLeft(cb: typeof ctrlArrowLeft): string {
-  return pushCallBack('ctrlArrowLeft', cb)
-}
-
-function ctrlArrowRight() {
-  dispatchCallback('ctrlArrowRight')
-}
-
-function onCtrlArrowRight(cb: typeof ctrlArrowRight): string {
-  return pushCallBack('ctrlArrowRight', cb)
-}
-
 function ctrlArrowUp() {
   dispatchCallback('ctrlArrowUp')
 }
@@ -239,39 +225,65 @@ function onEscape(cb: typeof escape): string {
   return pushCallBack('escape', cb)
 }
 
-function ctrlEnter() {
-  dispatchCallback('ctrlEnter')
-}
-
-function onCtrlEnter(cb: typeof ctrlEnter): string {
-  return pushCallBack('ctrlEnter', cb)
-}
-
 function enableShortCuts() {
-  shortCutEventIds.value.push(shortcuts.on({ key: ['k'], ctrl: true, preventDefault: true }, ctrlK))
-
-  shortCutEventIds.value.push(shortcuts.on({ key: ['Escape'] }, escape))
-
-  shortCutEventIds.value.push(shortcuts.on({ key: ['Enter'], ctrl: true }, ctrlEnter))
-
-  shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowDown'] }, arrowDown))
-
-  shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowUp'] }, arrowUp))
-
-  shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowLeft'] }, arrowLeft))
-
-  shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowRight'] }, arrowRight))
-
-  shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowLeft'], ctrl: true }, ctrlArrowLeft))
-
-  shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowRight'], ctrl: true }, ctrlArrowRight))
-
+  const scope = _t('Search')
   shortCutEventIds.value.push(
-    shortcuts.on({ key: ['ArrowUp'], ctrl: true, preventDefault: true }, ctrlArrowUp)
+    shortcuts.on(
+      { key: ['k'], ctrl: true, preventDefault: true, scope, description: _t('Open search') },
+      ctrlK
+    )
   )
 
   shortCutEventIds.value.push(
-    shortcuts.on({ key: ['ArrowDown'], ctrl: true, preventDefault: true }, ctrlArrowDown)
+    shortcuts.on({ key: ['Escape'], scope, description: _t('Close search') }, escape)
+  )
+
+  shortCutEventIds.value.push(
+    shortcuts.on({ key: ['ArrowDown'], scope, description: _t('Next result') }, arrowDown)
+  )
+
+  shortCutEventIds.value.push(
+    shortcuts.on({ key: ['ArrowUp'], scope, description: _t('Previous result') }, arrowUp)
+  )
+
+  shortCutEventIds.value.push(
+    shortcuts.on(
+      { key: ['ArrowLeft'], scope, description: _t('Previous action of the result') },
+      arrowLeft
+    )
+  )
+
+  shortCutEventIds.value.push(
+    shortcuts.on(
+      { key: ['ArrowRight'], scope, description: _t('Next action of the result') },
+      arrowRight
+    )
+  )
+
+  shortCutEventIds.value.push(
+    shortcuts.on(
+      {
+        key: ['ArrowUp'],
+        ctrl: true,
+        preventDefault: true,
+        scope,
+        description: _t('Previous result group')
+      },
+      ctrlArrowUp
+    )
+  )
+
+  shortCutEventIds.value.push(
+    shortcuts.on(
+      {
+        key: ['ArrowDown'],
+        ctrl: true,
+        preventDefault: true,
+        scope,
+        description: _t('Next result group')
+      },
+      ctrlArrowDown
+    )
   )
 }
 
@@ -334,13 +346,10 @@ export interface SearchShortCuts {
   onArrowUp: typeof onArrowUp
   onArrowLeft: typeof onArrowLeft
   onArrowRight: typeof onArrowRight
-  onCtrlArrowLeft: typeof onCtrlArrowLeft
-  onCtrlArrowRight: typeof onCtrlArrowRight
   onCtrlArrowUp: typeof onCtrlArrowUp
   onCtrlArrowDown: typeof onCtrlArrowDown
   onCtrlK: typeof onCtrlK
   onEscape: typeof onEscape
-  onCtrlEnter: typeof onCtrlEnter
 }
 
 export interface SearchInputUtils {
@@ -405,13 +414,10 @@ export function initSearchUtils(id: string): SearchUtils {
       onArrowUp,
       onArrowLeft,
       onArrowRight,
-      onCtrlArrowLeft,
-      onCtrlArrowRight,
       onCtrlArrowUp,
       onCtrlArrowDown,
       onCtrlK,
-      onEscape,
-      onCtrlEnter
+      onEscape
     },
     highlightQuery,
     breadcrumb,

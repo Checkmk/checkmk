@@ -3,17 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
 import pytest
 
 import cmk.gui.watolib.host_attributes as attrs
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.gui.config import active_config, Config
+from cmk.gui.http import request
 from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels
 from cmk.gui.watolib.host_attributes import all_host_attributes
 from cmk.rulesets.v1 import Help, Title
-from tests.testlib.unit.gui.host_attributes_test_helper import BASE_EXPECTED_ATTRIBUTES
+from tests.unit.cmk.gui.helpers.host_attributes_test_helper import BASE_EXPECTED_ATTRIBUTES
 
 
 @pytest.mark.usefixtures("load_config")
@@ -46,6 +48,11 @@ def test_registered_host_attributes() -> None:
         assert spec["depends_on_roles"] == attr.depends_on_roles()
         assert spec["editable"] == attr.editable()
         assert spec["from_config"] == attr.from_config()
+        # Both default to something derivable, so only an attribute that opts out has to say so.
+        assert spec.get("show_in_bulk_edit", True) == attr.show_in_bulk_edit(), attr.name()
+        assert spec.get("show_in_host_cleanup", spec["editable"]) == attr.show_in_host_cleanup(), (
+            attr.name()
+        )
 
 
 def test_legacy_register_rulegroup_with_defaults(
@@ -143,20 +150,27 @@ def test_legacy_register_rulegroup_without_defaults(
     ],
 )
 def test_host_attribute_topics(for_what: str) -> None:
-    assert attrs.sorted_host_attribute_topics(
-        all_host_attributes(
-            active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
-        ),
-        for_what=for_what,
-        new=False,
-    ) == [
+    expected = [
         ("basic", "Basic settings"),
         ("address", "Network address"),
         ("monitoring_agents", "Monitoring agents"),
         ("custom_attributes", "Custom attributes"),
         ("management_board", "Management board"),
-        ("meta_data", "Creation / Locking"),
     ]
+    if for_what in ("host", "cluster"):
+        expected.append(("relations", "Related hosts"))
+    expected.append(("meta_data", "Creation / Locking"))
+
+    assert (
+        attrs.sorted_host_attribute_topics(
+            all_host_attributes(
+                active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+            ),
+            for_what=for_what,
+            new=False,
+        )
+        == expected
+    )
 
 
 @pytest.mark.usefixtures("load_config")
@@ -228,6 +242,9 @@ def test_host_attributes(for_what: str, new: bool) -> None:
             "waiting_for_discovery",
         ],
     }
+
+    if for_what in ("host", "cluster"):
+        topics["relations"] = ["relations"]
 
     if for_what == "folder":
         topics["network_scan"] = [
@@ -312,3 +329,115 @@ def test_host_attribute_labels_filter_matches(
     crit: dict[str, str], value: dict[str, str], expected: bool
 ) -> None:
     assert HostAttributeLabels().filter_matches(crit, value, HostName("host")) is expected
+
+
+def _collect_host_attributes(stored: attrs.HostAttributes | None) -> attrs.HostAttributes:
+    return attrs.collect_attributes(
+        all_host_attributes(
+            active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+        ),
+        "host",
+        new=False,
+        validation_config=Config(),
+        stored=stored,
+    )
+
+
+@pytest.mark.usefixtures("request_context", "load_config")
+def test_collect_attributes_keeps_a_stored_attribute_the_form_does_not_offer() -> None:
+    """The dialog forces the entry of an attribute nobody may edit, so its checkbox is submitted
+    and the collected attributes - which replace the stored ones whole - have to carry it on."""
+    request.set_var("host_change_inventory_failed", "on")
+
+    collected = _collect_host_attributes(attrs.HostAttributes(inventory_failed=True))
+
+    assert collected["inventory_failed"] is True
+
+
+@pytest.mark.usefixtures("request_context", "load_config")
+def test_collect_attributes_does_not_let_the_request_set_what_the_form_does_not_offer() -> None:
+    request.set_var("host_change_inventory_failed", "on")
+    request.set_var("inventory_failed", "on")
+
+    collected = _collect_host_attributes(attrs.HostAttributes())
+
+    assert "inventory_failed" not in collected
+
+
+@pytest.mark.usefixtures("request_context", "load_config")
+def test_collect_attributes_reads_an_offered_attribute_from_the_request() -> None:
+    request.set_var("host_change_alias", "on")
+    request.set_var("attr_alias", "the new alias")
+
+    collected = _collect_host_attributes(attrs.HostAttributes(alias="the stored alias"))
+
+    assert collected["alias"] == "the new alias"
+
+
+@pytest.mark.usefixtures("request_context", "load_config")
+def test_collect_attributes_does_not_set_a_deprecated_attribute_anew() -> None:
+    request.set_var("host_change_management_address", "on")
+    request.set_var("management_address", "10.0.0.1")
+
+    collected = _collect_host_attributes(attrs.HostAttributes())
+
+    assert "management_address" not in collected
+
+
+@pytest.mark.usefixtures("request_context", "load_config")
+def test_collect_attributes_keeps_a_deprecated_attribute_editable_where_it_is_set() -> None:
+    request.set_var("host_change_management_address", "on")
+    request.set_var("management_address", "10.0.0.2")
+
+    collected = _collect_host_attributes(
+        attrs.HostAttributes(management_address=HostAddress("10.0.0.1"))
+    )
+
+    assert collected["management_address"] == "10.0.0.2"
+
+
+@pytest.mark.usefixtures("request_context", "load_config")
+def test_collect_attributes_keeps_a_stored_no_management_board() -> None:
+    request.set_var("host_change_management_protocol", "on")
+
+    collected = _collect_host_attributes(attrs.HostAttributes(management_protocol=None))
+
+    assert collected["management_protocol"] is None
+
+
+@pytest.mark.usefixtures("request_context", "load_config")
+def test_collect_attributes_lets_a_deprecated_attribute_be_removed() -> None:
+    collected = _collect_host_attributes(
+        attrs.HostAttributes(management_address=HostAddress("10.0.0.1"))
+    )
+
+    assert "management_address" not in collected
+
+
+@pytest.mark.parametrize(
+    "stored, attributes, expected",
+    [
+        pytest.param({}, {"management_protocol": "snmp"}, ["management_protocol"], id="set anew"),
+        pytest.param(
+            {"management_protocol": "snmp"}, {"management_protocol": "ipmi"}, [], id="changed"
+        ),
+        pytest.param(
+            {"management_protocol": "snmp"},
+            {"management_snmp_community": "public"},
+            [],
+            id="completes a configured board",
+        ),
+        pytest.param({}, {"alias": "new"}, [], id="not deprecated"),
+        pytest.param({}, {"management_protocol": None}, [], id="set to no board"),
+        pytest.param(
+            {"management_protocol": None},
+            {"management_protocol": "snmp"},
+            ["management_protocol"],
+            id="stored no board",
+        ),
+    ],
+)
+def test_deprecated_attributes_set_anew(
+    stored: Mapping[str, object], attributes: Mapping[str, object], expected: list[str]
+) -> None:
+    assert attrs.deprecated_attributes_set_anew(stored, attributes) == expected

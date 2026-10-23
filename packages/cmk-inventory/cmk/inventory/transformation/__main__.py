@@ -10,10 +10,9 @@ import sys
 from argparse import ArgumentParser, Namespace
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Protocol
 
-from cmk.inventory.transformation.main import (
-    transform_inventory_trees,
-)
+from .tree_files import show_transformation_results, transform_inventory_trees
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +46,7 @@ def _parse_arguments(argv: Sequence[str]) -> Namespace:
     return parser.parse_args(args=argv[1:])
 
 
-def _collect_hosts() -> Sequence[str]:
+def _collect_hosts(logger: logging.Logger) -> Sequence[str]:
     try:
         return list(
             set(
@@ -62,21 +61,39 @@ def _collect_hosts() -> Sequence[str]:
         return []
 
 
-def main() -> int:
-    omd_root = Path(os.environ.get("OMD_ROOT", ""))
-    args = _parse_arguments(sys.argv)
+class HostNamesCollector(Protocol):
+    def __call__(self, logger: logging.Logger, /) -> Sequence[str]: ...
+
+
+def run(
+    argv: Sequence[str],
+    *,
+    omd_root: Path,
+    logger: logging.Logger,
+    collect_host_names: HostNamesCollector = _collect_hosts,
+) -> int:
+    args = _parse_arguments(argv)
     try:
+        if args.show_results:
+            return show_transformation_results(
+                omd_root=omd_root,
+                filter_host_names=args.host_name,
+                all_host_names=collect_host_names(logger),
+            )
         return transform_inventory_trees(
             logger=logger,
             omd_root=omd_root,
-            show_results=args.show_results,
             bundle_length=args.bundle_length,
             filter_host_names=args.host_name,
-            all_host_names=_collect_hosts(),
+            all_host_names=collect_host_names(logger),
         )
     except Exception:
         logger.exception("Failed to transform inventory trees")
         return 1
+
+
+def main() -> int:
+    return run(sys.argv, omd_root=Path(os.environ.get("OMD_ROOT", "")), logger=logger)
 
 
 if __name__ == "__main__":

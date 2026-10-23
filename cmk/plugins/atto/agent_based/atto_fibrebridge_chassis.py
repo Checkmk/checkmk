@@ -20,6 +20,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 Section = dict[str, Any]
@@ -106,10 +107,6 @@ check_plugin_atto_fibrebridge_chassis_temp = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_atto_fibrebridge_chassis(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_atto_fibrebridge_chassis(section: Section) -> CheckResult:
     throughput_status = section["throughput_status"]
     if throughput_status == "1":
@@ -121,6 +118,6 @@ def check_atto_fibrebridge_chassis(section: Section) -> CheckResult:
 check_plugin_atto_fibrebridge_chassis = CheckPlugin(
     name="atto_fibrebridge_chassis",
     service_name="Throughput Status",
-    discovery_function=discover_atto_fibrebridge_chassis,
+    discovery_function=discover_one_service,
     check_function=check_atto_fibrebridge_chassis,
 )

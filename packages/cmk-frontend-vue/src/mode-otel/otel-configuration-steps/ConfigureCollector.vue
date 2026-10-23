@@ -10,9 +10,9 @@ import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTab
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
-import { fetchRestAPIDeprecated } from 'cmk-ui-library/lib/cmkFetch.ts'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { computed, onMounted, ref } from 'vue'
 
 import CollectorAuthConfig from './CollectorAuthConfig.vue'
@@ -74,14 +74,14 @@ function createdSuggestion(id: string, title: string): Suggestion {
 
 onMounted(async () => {
   try {
-    const response = await fetchRestAPIDeprecated(
-      'api/v1/domain-types/passwordstore_password/collections/passwordstore_password',
-      'GET'
+    const data = unwrap(
+      await client.GET('/domain-types/passwordstore_password/collections/{entity_type_specifier}', {
+        params: { path: { entity_type_specifier: 'passwordstore_password' } }
+      })
     )
-    const data = await response.json()
-    const fetched: Suggestion[] = data.value.map((p: { id: string; title: string }) => ({
-      name: p.id,
-      title: p.title
+    const fetched: Suggestion[] = (data.value ?? []).map((p) => ({
+      name: p.id!,
+      title: untranslated(p.title!)
     }))
     const pending: Suggestion[] = Array.from(pendingPasswords.value.values()).map((p) =>
       createdSuggestion(p.general_props.id, p.general_props.title)

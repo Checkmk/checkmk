@@ -1,0 +1,37 @@
+title: Kubernetes: Monitoring agent API reflector health
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ This optional cluster-host service checks the API reflector for one Kubernetes
+ resource kind. Before its first list completes it is {WARN}. An ongoing list
+ or relist is {WARN} at 120 seconds and {CRIT} at 300 seconds. Recent watch-error
+ alerts are disabled by default. States, duration thresholds and the
+ recent-error window are configurable in {Kubernetes agent reflector health}.
+
+ The summary shows initialization state, the duration of any ongoing list and
+ the time since the last resource event. The age and duration of the last
+ completed list, and recent watch errors, are available in the service details.
+ Resource-event age thresholds are disabled by default because a quiet
+ resource kind may legitimately receive no changes for a long time.
+
+ Last completed-list age and duration, and watch errors since cluster-aggregator
+ start, are diagnostic. Completed-list age is not used for alerting because a
+ healthy watch can run indefinitely. If watch-error alerts are enabled, inspect
+ the cluster-aggregator logs for the underlying Kubernetes API error. The alert
+ expires with time and does not establish recovery. The lifetime error total
+ resets when the cluster aggregator restarts and is graphed as a total, not as
+ an error rate. Other metrics are the duration of an ongoing list (while
+ present), the duration of the last completed list and the time since the last
+ resource event.
+
+ The cluster overview evaluates reflectors independently using its own rule;
+ both services can alert for the same fault. Removed reflectors use Checkmk's
+ standard vanished-service behavior.
+
+item:
+ Kubernetes resource kind, for example {Pod} or {DaemonSet}.
+discovery:
+ One service per reported reflector when reflector services are enabled in
+ {Kubernetes agent health service discovery}. Services reside on the cluster host.

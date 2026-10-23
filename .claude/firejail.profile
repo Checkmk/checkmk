@@ -17,13 +17,15 @@ caps.drop all
 nonewprivs
 noroot
 
-# Enable seccomp syscall filtering with default blocklist
-seccomp
+# Enable seccomp syscall filtering with default blocklist. chroot stays allowed
+# for Chrome's namespace sandbox: without CAP_SYS_CHROOT it only works inside an
+# unprivileged user namespace, where it can only narrow the caller's own view
+# (see firejail's chromium-common-hardened.inc.profile).
+seccomp !chroot
 
 # Disable potentially dangerous features
 nodvd
 nosound
-no3d
 notv
 nou2f
 novideo
@@ -40,6 +42,9 @@ nogroups
 noblacklist ${HOME}/.gitconfig
 noblacklist ${HOME}/.config/git
 noblacklist ${HOME}/.netrc        # needed for jira/artifacts if user allows
+# Blacklisted by disable-programs.inc; whitelist alone does not lift that
+noblacklist ${HOME}/.nvm
+noblacklist ${HOME}/.npm
 include allow-ssh.inc
 include disable-common.inc
 include disable-programs.inc
@@ -72,6 +77,11 @@ mkdir ${HOME}/.cache/bazelisk
 # Allow Bazel to utilize its build and output cache
 whitelist ${HOME}/.cache/bazel
 mkdir ${HOME}/.cache/bazel
+whitelist ${HOME}/.cache/bazel_disk_cache
+mkdir ${HOME}/.cache/bazel_disk_cache
+
+whitelist ${HOME}/.cache/pip
+mkdir ${HOME}/.cache/pip
 
 # Allow Java to run inside the sandbox
 whitelist ${HOME}/.java-caller
@@ -80,6 +90,10 @@ mkdir ${HOME}/.java-caller
 # NPM cache for package operations
 whitelist ${HOME}/.npm
 mkdir ${HOME}/.npm
+
+# NPM cache as .npmrc in check_mk expects it
+whitelist ${HOME}/.cache/npm
+mkdir ${HOME}/.cache/npm
 
 # Pre-commit hook environments cache
 whitelist ${HOME}/.cache/pre-commit
@@ -121,6 +135,10 @@ whitelist-ro ${HOME}/.local
 # pyenv - Python version manager (provides pre-commit and other Python tools)
 whitelist-ro ${HOME}/.pyenv
 
+# Werks
+whitelist-ro ${HOME}/.config/cmk-werks
+mkdir ${HOME}/.local/state/cmk-werks
+read-write ${HOME}/.local/state/cmk-werks
 
 # ============================================================================
 # CUSTOM USER CONFIGURATION

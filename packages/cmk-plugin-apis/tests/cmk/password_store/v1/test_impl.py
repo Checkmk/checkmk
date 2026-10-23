@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from cryptography.exceptions import InvalidTag
 
-from cmk.password_store.v1_unstable import (
+from cmk.password_store.v1 import (
     dereference_secret,
     PasswordStore,
     PasswordStoreError,

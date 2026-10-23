@@ -17,9 +17,9 @@ You can find an introduction to BI in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/bi.html).
 """
 
-import http.client
 from collections.abc import Mapping
 from contextlib import suppress
+from http import HTTPStatus
 from typing import Any
 
 from cmk import fields
@@ -41,12 +41,14 @@ from cmk.bi.schema import Schema
 from cmk.bi.trees import BICompiledRule
 from cmk.gui import fields as gui_fields
 from cmk.gui.bi._cron import reset_compile_bi_aggregations_scheduling
+from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
+from cmk.gui.utils.timeout_manager import timeout_manager
 from cmk.web.utils import permission_verification as permissions
 
 from .._packs import get_cached_bi_packs
@@ -72,9 +74,14 @@ BI_PACK_ID = {
     ),
 }
 
+# Bounds how long a single request may occupy an Apache worker. Stays below the
+# timeout of the proxy connection from system Apache to site Apache, see
+# `omdlib.system_apache`, so that a proxied client still receives our response.
+_AGGREGATION_STATE_TIMEOUT = 90
+
 
 def _make_error(message: str) -> ProblemException:
-    return ProblemException(404, http.client.responses[404], message)
+    return ProblemException(HTTPStatus.NOT_FOUND, HTTPStatus.NOT_FOUND.phrase, message)
 
 
 #   .--Rules---------------------------------------------------------------.
@@ -226,7 +233,7 @@ def _update_bi_rule(params: Mapping[str, Any], must_exist: bool) -> Response:
     convert_response=False,
     output_empty=True,
     permissions_required=RW_BI_RULES_WITH_OPTIONAL_ADMIN_PERMISSION,
-    additional_status_codes=[409],
+    additional_status_codes=[HTTPStatus.CONFLICT],
 )
 def delete_bi_rule(params: Mapping[str, Any]) -> Response:
     """Delete BI rule"""
@@ -254,10 +261,12 @@ def delete_bi_rule(params: Mapping[str, Any]) -> Response:
     try:
         bi_packs.delete_rule(params["rule_id"])
     except (DeleteErrorUsedByRule, DeleteErrorUsedByAggregation) as e:
-        raise ProblemException(status=409, title=http.client.responses[409], detail=e.args[0])
+        raise ProblemException(
+            status=HTTPStatus.CONFLICT, title=HTTPStatus.CONFLICT.phrase, detail=e.args[0]
+        )
     bi_packs.save_config()
     reset_compile_bi_aggregations_scheduling()
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 #   .--Aggregations--------------------------------------------------------.
@@ -311,7 +320,11 @@ class BIAggregationStateResponseSchema(Schema):
     tag_group="Monitoring",
     skip_locking=True,
     update_config_generation=False,
-    additional_status_codes=[403, 503],
+    additional_status_codes=[
+        HTTPStatus.FORBIDDEN,
+        HTTPStatus.SERVICE_UNAVAILABLE,
+        HTTPStatus.GATEWAY_TIMEOUT,
+    ],
 )
 def bi_aggregation_state_post(params: Mapping[str, Any]) -> Response:
     """Get the state of BI aggregations"""
@@ -335,7 +348,11 @@ def bi_aggregation_state_post(params: Mapping[str, Any]) -> Response:
     response_schema=BIAggregationStateResponseSchema,
     permissions_required=RO_PERMISSIONS,
     tag_group="Monitoring",
-    additional_status_codes=[403, 503],
+    additional_status_codes=[
+        HTTPStatus.FORBIDDEN,
+        HTTPStatus.SERVICE_UNAVAILABLE,
+        HTTPStatus.GATEWAY_TIMEOUT,
+    ],
 )
 def bi_aggregation_state_get(params: Mapping[str, Any]) -> Response:
     """Get the state of BI aggregations"""
@@ -348,6 +365,31 @@ def bi_aggregation_state_get(params: Mapping[str, Any]) -> Response:
 def _aggregation_state(
     filter_names: list[str] | None = None, filter_groups: list[str] | None = None
 ) -> dict[str, object]:
+    """Compute the aggregation state, bounded by a request timeout.
+
+    State fetching is an unbounded operation. Without a timeout it keeps the
+    Apache worker busy indefinitely, letting requests stack up until the site
+    stops responding.
+    """
+    timeout_manager.enable_timeout(_AGGREGATION_STATE_TIMEOUT)
+    try:
+        return _compute_aggregation_state(filter_names, filter_groups)
+    except RequestTimeout:
+        raise ProblemException(
+            status=HTTPStatus.GATEWAY_TIMEOUT,
+            title=HTTPStatus.GATEWAY_TIMEOUT.phrase,
+            detail=(
+                "Computing the aggregation state timed out "
+                f"after {_AGGREGATION_STATE_TIMEOUT} seconds."
+            ),
+        )
+    finally:
+        timeout_manager.disable_timeout()
+
+
+def _compute_aggregation_state(
+    filter_names: list[str] | None, filter_groups: list[str] | None
+) -> dict[str, object]:
     bi_manager = BIManager(run_compile_check=False)
     if (
         not bi_manager.compiler.compiled_aggregations
@@ -356,8 +398,8 @@ def _aggregation_state(
         # Not compiled yet (e.g. right after a site restart, since the compilation cache lives
         # in tmpfs). Signal "no data yet" instead of pretending no aggregations exist.
         raise ProblemException(
-            status=503,
-            title=http.client.responses[503],
+            status=HTTPStatus.SERVICE_UNAVAILABLE,
+            title=HTTPStatus.SERVICE_UNAVAILABLE.phrase,
             detail="BI aggregations have not been compiled yet. Retry later.",
         )
     bi_aggregation_filter = BIAggregationFilter(
@@ -551,7 +593,7 @@ def delete_bi_aggregation(params: Mapping[str, Any]) -> Response:
     bi_packs.delete_aggregation(bi_aggregation.id)
     bi_packs.save_config()
     reset_compile_bi_aggregations_scheduling()
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 #   .--Packs---------------------------------------------------------------.
@@ -684,7 +726,7 @@ def delete_bi_pack(params: Mapping[str, Any]) -> Response:
     bi_packs.delete_pack(pack_id)
     bi_packs.save_config()
     reset_compile_bi_aggregations_scheduling()
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 class BIPackEndpointSchema(Schema):

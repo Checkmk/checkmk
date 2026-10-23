@@ -24,7 +24,7 @@ from tests.system.gui.testlib.playwright.pom.setup.passwords import Passwords
 from tests.system.gui.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.system.gui.testlib.playwright.timeouts import ANIMATION_TIMEOUT
 from tests.testlib.common.utils2 import is_cleanup_enabled, run
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 from .get_source_file import get_source_file
 

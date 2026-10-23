@@ -13,7 +13,7 @@ import re
 import shutil
 import socket
 import time
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, fields, replace
 from pathlib import Path
 from typing import Literal, NoReturn
@@ -23,18 +23,7 @@ from pytest import MonkeyPatch
 
 import cmk.base.configlib.fetchers
 import cmk.ccc.debug
-import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.utils.paths
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import (
-    CheckPlugin,
-    exists,
-    Result,
-    Service,
-    SimpleSNMPSection,
-    SNMPTree,
-    StringTable,
-)
 from cmk.base import config, notify
 from cmk.base.config import ConfigCache, EnforcedServicesTable
 from cmk.base.configlib.checkengine import CheckingConfig
@@ -45,8 +34,8 @@ from cmk.base.configlib.servicename import (
     make_final_service_name_config,
     PassiveServiceNameConfig,
 )
-from cmk.base.default_config.base import _PeriodicDiscovery
 from cmk.base.notify import make_notification_parameters_config
+from cmk.ccc import store
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -60,31 +49,30 @@ from cmk.checkengine.discovery import (
 )
 from cmk.checkengine.fetcher_abc import Mode
 from cmk.checkengine.helper_interface import SourceType
-from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins
-from cmk.checkengine.plugin_backend.section_plugins_legacy import convert_legacy_sections
 from cmk.checkengine.plugins import (
     AutocheckEntry,
     CheckPluginName,
     InventoryPlugin,
     InventoryPluginName,
-    LegacyPluginLocation,
     SectionName,
     ServiceID,
 )
 from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
+from cmk.discover_plugins import family_libexec_dir, PluginLocation
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.piggyback import backend as piggyback_backend
+from cmk.plugins.checkmk.server_side_calls import cmk_inv as active_check_cmk_inv_module
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher, RulesetMatcher, RuleSpec
 from cmk.ruleset_matcher.ruleset_name import RuleSetName
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
-from cmk.server_side_calls.v1 import ActiveCheckConfig
-from cmk.utils.ip_lookup import IPStackConfig
-from tests.testlib.common.empty_config import EMPTY_CONFIG
+from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
+from cmk.utils import host_storage, password_store
+from cmk.utils.ip_lookup import IPStackConfig, make_lookup_ip_address
 from tests.testlib.unit.base_configuration_scenario import Scenario
+from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
 
 def _make_core_objects_config(config_cache: ConfigCache) -> config.CoreObjectsConfig:
@@ -1484,7 +1472,7 @@ def test_host_config_static_checks(
             check_default_parameters=None,
             check_ruleset_name=None,
             cluster_check_function=None,
-            location=LegacyPluginLocation(""),
+            location=PluginLocation(module="<test>", name="<test>"),
         )
 
     ts = Scenario()
@@ -1663,6 +1651,30 @@ def test_config_cache_exit_code_spec_individual(
     )
     config_cache = ts.apply(monkeypatch).config_cache
     assert config_cache.exit_code_spec(hostname, data_source_id="snmp") == result
+
+
+@pytest.mark.parametrize("data_source_id", ["special_aws", "special_aws_1"])
+def test_config_cache_exit_code_spec_special_agent_uses_special_entry(
+    monkeypatch: MonkeyPatch, data_source_id: str
+) -> None:
+    hostname = HostName("testhost")
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_ruleset(
+        "check_mk_exit_status",
+        [
+            {
+                "id": "01",
+                "condition": {},
+                "value": {
+                    "overall": {"connection": 1},
+                    "individual": {"special": {"connection": 4}},
+                },
+            },
+        ],
+    )
+    config_cache = ts.apply(monkeypatch).config_cache
+    assert config_cache.exit_code_spec(hostname, data_source_id=data_source_id) == {"connection": 4}
 
 
 @pytest.mark.parametrize(
@@ -1931,7 +1943,7 @@ def test_make_hosts_config_cluster_nodes() -> None:
     hosts_config = config.make_hosts_config(_base_config())
     assert HostName("node1") not in hosts_config.clusters
     assert HostName("host1") not in hosts_config.clusters
-    assert hosts_config.clusters[HostName("cluster1")] == ["node1"]
+    assert hosts_config.clusters[HostName("cluster1")] == ("node1",)
 
 
 def test_host_config_parents(cluster_config: ConfigCache) -> None:
@@ -2583,16 +2595,16 @@ def test_host_config_service_level(
     assert config_cache.service_level_config.of_host(hostname) == result
 
 
-def _rule_val(check_interval: int) -> _PeriodicDiscovery:
-    return _PeriodicDiscovery(
-        severity_unmonitored=0,
-        severity_vanished=0,
-        severity_changed_service_labels=0,
-        severity_changed_service_params=0,
-        severity_new_host_label=0,
-        check_interval=check_interval,
-        inventory_rediscovery=RediscoveryParameters(),
-    )
+def _rule_val(check_interval: int) -> Mapping[str, object]:
+    return {
+        "severity_unmonitored": 0,
+        "severity_vanished": 0,
+        "severity_changed_service_labels": 0,
+        "severity_changed_service_params": 0,
+        "severity_new_host_label": 0,
+        "check_interval": check_interval,
+        "inventory_rediscovery": RediscoveryParameters(),
+    }
 
 
 @pytest.mark.parametrize(
@@ -2608,7 +2620,7 @@ def _rule_val(check_interval: int) -> _PeriodicDiscovery:
 )
 def test_host_config_add_discovery_check(
     monkeypatch: MonkeyPatch,
-    rule_entries: Sequence[_PeriodicDiscovery | None],
+    rule_entries: Sequence[Mapping[str, object] | None],
     ignored: bool,
     ping: bool,
     result: bool,
@@ -2760,6 +2772,126 @@ def test_load_config_folder_paths(folder_path_test_config: BaseConfig) -> None:
     ]
 
 
+@pytest.fixture(name="main_mk")
+def main_mk_fixture() -> Iterator[Path]:
+    cmk.utils.paths.main_config_file.parent.mkdir(parents=True, exist_ok=True)
+    cmk.utils.paths.main_config_file.write_text("")
+    yield cmk.utils.paths.main_config_file
+    cmk.utils.paths.main_config_file.unlink(missing_ok=True)
+
+
+@pytest.fixture(name="wato_folder")
+def wato_folder_fixture(main_mk: Path) -> Iterator[Path]:
+    folder = cmk.utils.paths.check_mk_config_dir / "wato"
+    folder.mkdir(parents=True, exist_ok=True)
+    yield folder
+    shutil.rmtree(folder)
+
+
+def _write_hosts_mk(folder: Path, host_name: HostName) -> None:
+    host_storage.get_standard_hosts_storage().write(
+        folder / "hosts",
+        host_storage.HostsStorageData(
+            locked_hosts=False,
+            all_hosts=[host_name],
+            clusters={},
+            attributes={"ipaddresses": {host_name: "127.0.0.1"}},
+            custom_macros={},
+            host_tags={host_name: {}},
+            host_labels={},
+            contact_groups=host_storage.ContactGroupsField(
+                hosts=[], services=[], folder_hosts=[], folder_services=[]
+            ),
+            explicit_host_conf={},
+            host_attributes={host_name: {}},
+            folder_attributes={},
+        ),
+        repr,
+    )
+
+
+def test_load_raw_config_tracks_the_folder_of_a_written_hosts_mk(wato_folder: Path) -> None:
+    _write_hosts_mk(wato_folder, HostName("host1"))
+
+    raw_config = config.load_raw_config()
+
+    assert raw_config["all_hosts"] == ["host1"]
+    assert raw_config["host_paths"] == {"host1": "/wato/hosts.mk"}
+
+
+def test_load_raw_config_executes_only_the_given_files(wato_folder: Path) -> None:
+    (wato_folder / "groups.mk").write_text("define_hostgroups.update({'a': 'A'})\n")
+    (wato_folder / "other.mk").write_text("define_servicegroups.update({'b': 'B'})\n")
+
+    raw_config = config.load_raw_config(config_files=[wato_folder / "groups.mk"])
+
+    assert raw_config["define_hostgroups"] == {"a": "A"}
+    assert raw_config["define_servicegroups"] == {}
+
+
+def test_load_raw_config_raises_on_an_unreadable_config_file(main_mk: Path) -> None:
+    main_mk.write_text("raise ValueError('broken')\n")
+
+    with pytest.raises(config.ConfigFileLoadError) as excinfo:
+        config.load_raw_config(config_files=[main_mk])
+
+    assert excinfo.value.path == main_mk
+    assert isinstance(excinfo.value.__cause__, ValueError)
+    assert str(excinfo.value) == f"Cannot read in configuration file {main_mk}: broken"
+
+
+@pytest.mark.usefixtures("disable_debug")
+def test_exit_on_config_file_load_error_ends_the_process() -> None:
+    with pytest.raises(SystemExit) as excinfo, config.exit_on_config_file_load_error():
+        raise config.ConfigFileLoadError(Path("main.mk"), ValueError("broken"))
+
+    assert excinfo.value.code == 1
+
+
+@pytest.mark.usefixtures("enable_debug_fixture")
+def test_exit_on_config_file_load_error_reraises_when_debugging() -> None:
+    with pytest.raises(config.ConfigFileLoadError), config.exit_on_config_file_load_error():
+        raise config.ConfigFileLoadError(Path("main.mk"), ValueError("broken"))
+
+
+def test_load_raw_config_into_an_empty_context(wato_folder: Path) -> None:
+    """Self-bootstrapping config files load the same with and without the seed."""
+    _write_hosts_mk(wato_folder, HostName("host1"))
+    (wato_folder / "rules.mk").write_text(  # as Ruleset.format_raw_value writes it
+        "checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})\n"
+        "checkgroup_parameters.setdefault('memory', [])\n"
+        "checkgroup_parameters['memory'] = [\n"
+        "{'id': '01', 'condition': {}, 'value': {'levels': (80.0, 90.0)}},\n"
+        "] + checkgroup_parameters['memory']\n"
+    )
+    store.save_to_mk_file(wato_folder / "groups.mk", key="define_hostgroups", value={"a": "A"})
+
+    seeded = config.load_raw_config()
+    unseeded = config.load_raw_config(context_factory=dict)
+
+    assert unseeded == {k: v for k, v in seeded.items() if k in unseeded}
+    assert unseeded["host_paths"] == {"host1": "/wato/hosts.mk"}
+    assert unseeded["define_hostgroups"] == {"a": "A"}
+    assert "define_servicegroups" not in unseeded
+
+
+def test_load_raw_config_into_an_empty_context_fails_on_legacy_config_files(main_mk: Path) -> None:
+    main_mk.write_text("define_hostgroups.update({'linux': 'Linux'})\n")
+
+    with pytest.raises(config.ConfigFileLoadError) as excinfo:
+        config.load_raw_config(config_files=[main_mk], context_factory=dict)
+
+    assert isinstance(excinfo.value.__cause__, NameError)
+
+
+def test_load_raw_config_seeds_legacy_config_files_by_default(main_mk: Path) -> None:
+    main_mk.write_text("define_hostgroups.update({'linux': 'Linux'})\n")
+
+    raw_config = config.load_raw_config(config_files=[main_mk])
+
+    assert raw_config["define_hostgroups"] == {"linux": "Linux"}
+
+
 @pytest.fixture(name="folder_path_test_config")
 def folder_path_test_config_fixture(
     monkeypatch: MonkeyPatch,
@@ -2819,7 +2951,7 @@ cmc_host_rrd_config = [
     _add_host_in_folder(wato_lvl2_folder, "lvl2-host")
     _add_rule_in_folder(wato_lvl2_folder, "LVL2")
 
-    yield config.load().loaded_config
+    yield config.load(validate_hosts=True).loaded_config
 
     # Cleanup after the test. Would be better to use a dedicated test directory
     cmk.utils.paths.main_config_file.unlink()
@@ -2910,7 +3042,7 @@ def test_explicit_setting_loading() -> None:
         for foldername, setting, values in settings:
             _add_explicit_setting_in_folder(wato_main_folder / foldername, setting, values)
 
-        loading_result = config.load()
+        loading_result = config.load(validate_hosts=True)
         explicit_host_conf = loading_result.loaded_config.explicit_host_conf
         assert explicit_host_conf["parents"][HostName("hostA")] == "setting1"
         assert explicit_host_conf["parents"][HostName("hostB")] == "setting2"
@@ -2945,84 +3077,6 @@ def test_save_packed_config(monkeypatch: MonkeyPatch, config_path: Path) -> None
     )(config_path)
 
     assert precompiled_check_config.exists()
-
-
-def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
-    duplicate_legacy_plugin = LegacyCheckDefinition(
-        name="duplicate_plugin",
-        service_name="blah",
-        check_function=list,
-    )
-
-    def _noop_disco(section: None) -> Iterable[Service]:
-        yield from ()
-
-    def _noop_check(section: None) -> Iterable[Result]:
-        yield from ()
-
-    new_style_plugin = CheckPlugin(
-        name="duplicate_plugin",
-        service_name="Duplicate Plug-in new style",
-        discovery_function=_noop_disco,
-        check_function=_noop_check,
-    )
-
-    monkeypatch.setattr(
-        agent_based_register._discover,  # noqa: SLF001
-        "discover_all_plugins",
-        lambda *a, **kw: DiscoveredPlugins(  # noqa: ARG005
-            errors=(), plugins={PluginLocation(module="module", name="name"): new_style_plugin}
-        ),
-    )
-    converted_legacy_checks = convert_legacy_check_plugins(
-        (duplicate_legacy_plugin,),
-        {duplicate_legacy_plugin.name: "/path/to/duplicate_legacy_plugin.py"},
-        validate_creation_kwargs=False,
-        raise_errors=True,
-    )[1]
-    assert converted_legacy_checks
-    # new check plugins should win silently:
-    plugins = agent_based_register.load_all_plugins(
-        sections=(),
-        checks=converted_legacy_checks,
-        legacy_errors=(),
-        raise_errors=True,
-    )
-    # It's a new style plugin:
-    assert (
-        plugins.check_plugins[CheckPluginName("duplicate_plugin")].service_name
-        == "Duplicate Plug-in new style"
-    )
-
-
-def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
-    duplicate_plugin = (LegacyCheckDefinition(name="duplicate_plugin"),)
-
-    def dummy_parse_function(string_table: StringTable) -> int:
-        return 42
-
-    new_style_section = SimpleSNMPSection(
-        name="duplicate_plugin",
-        detect=exists(".1.2.3"),
-        fetch=SNMPTree(base=".1.2.3", oids=[]),
-        parse_function=dummy_parse_function,
-    )
-
-    monkeypatch.setattr(
-        agent_based_register._discover,  # noqa: SLF001
-        "discover_all_plugins",
-        lambda *a, **kw: DiscoveredPlugins(  # noqa: ARG005
-            errors=(), plugins={PluginLocation(module="module", name="name"): new_style_section}
-        ),
-    )
-
-    plugins = agent_based_register.load_all_plugins(
-        sections=convert_legacy_sections(duplicate_plugin, {}, raise_errors=True)[1],
-        checks=(),
-        legacy_errors=(),
-        raise_errors=True,  # we don't expect any errors
-    )
-    assert plugins.snmp_sections[SectionName("duplicate_plugin")].detect_spec
 
 
 @pytest.mark.parametrize(
@@ -3227,6 +3281,100 @@ def test_collect_passwords_includes_non_matching_rulesets(monkeypatch: MonkeyPat
     assert config_cache.collect_passwords() == {"uuid1234": Secret("p4ssw0rd!")}
 
 
+def test_collect_passwords_for_hosts_skips_rules_of_other_hosts(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("relay-host"))
+    ts.add_host(HostName("other-host"))
+    ts.set_ruleset_bundle(
+        "special_agents",
+        {
+            "some_special_agent": [
+                {
+                    "id": "01",
+                    "condition": {"host_name": ["relay-host"]},
+                    "value": {
+                        "secret": ("cmk_postprocessed", "explicit_password", ("uuid-mine", "mine"))
+                    },
+                },
+                {
+                    "id": "02",
+                    "condition": {"host_name": ["other-host"]},
+                    "value": {
+                        "secret": (
+                            "cmk_postprocessed",
+                            "explicit_password",
+                            ("uuid-theirs", "theirs"),
+                        )
+                    },
+                },
+            ],
+        },
+    )
+    config_cache = ts.apply(monkeypatch).config_cache
+
+    assert config_cache.collect_passwords([HostName("relay-host")]) == {"uuid-mine": Secret("mine")}
+
+
+def test_collect_passwords_for_a_cluster_includes_the_secrets_of_its_nodes(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("node"))
+    ts.add_cluster(HostName("cluster"), nodes=[HostName("node")])
+    ts.set_ruleset_bundle(
+        "special_agents",
+        {
+            "some_special_agent": [
+                {
+                    "id": "01",
+                    "condition": {"host_name": ["node"]},
+                    "value": {
+                        "secret": (
+                            "cmk_postprocessed",
+                            "explicit_password",
+                            ("uuid-of-node", "p4ssw0rd!"),
+                        )
+                    },
+                }
+            ],
+        },
+    )
+    config_cache = ts.apply(monkeypatch).config_cache
+
+    assert config_cache.collect_passwords([HostName("cluster")]) == {
+        "uuid-of-node": Secret("p4ssw0rd!")
+    }
+
+
+def test_collect_passwords_for_hosts_keeps_only_referenced_stored_passwords(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    password_store.save(
+        {"referenced": "s3cr3t", "unrelated": "other"}, password_store.password_store_path()
+    )
+    ts = Scenario()
+    ts.add_host(HostName("relay-host"))
+    ts.set_ruleset_bundle(
+        "special_agents",
+        {
+            "some_special_agent": [
+                {
+                    "id": "01",
+                    "condition": {"host_name": ["relay-host"]},
+                    "value": {
+                        "secret": ("cmk_postprocessed", "stored_password", ("referenced", ""))
+                    },
+                },
+            ],
+        },
+    )
+    config_cache = ts.apply(monkeypatch).config_cache
+
+    assert config_cache.collect_passwords([HostName("relay-host")]) == {
+        "referenced": Secret("s3cr3t")
+    }
+
+
 def test_get_active_service_data_crash(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -3286,6 +3434,158 @@ def test_get_active_service_data_crash(
         captured.err
         == "\nWARNING: Config creation for active check my_active_check failed on test_host: division by zero\n"
     )
+
+
+@pytest.mark.parametrize("debug_enabled", [False, True])
+def test_get_active_service_data_not_supported_on_relay(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    debug_enabled: bool,
+) -> None:
+    """A check a relay cannot run is a misconfiguration, and must be reported as one.
+
+    The generic wording of a config-creation failure reads like an internal error and
+    says nothing about what the user should change.
+
+    Debug mode makes no difference here. It turns a swallowed exception into a crash so
+    that a defect can be traced, and there is no defect to trace in a configuration the
+    user is free to correct.
+    """
+    monkeypatch.setattr(cmk.ccc.debug, cmk.ccc.debug.enabled.__name__, lambda: debug_enabled)
+    monkeypatch.setattr(
+        config._impl,  # noqa: SLF001
+        "load_active_checks",
+        lambda **kw: {  # noqa: ARG005
+            # the module must be importable: the executable finder loads it to look for
+            # a sibling "libexec" directory
+            PluginLocation(__name__, "active_check_my_active_check"): ActiveCheckConfig(
+                name="my_active_check",
+                parameter_parser=lambda p: p,
+                commands_function=lambda *a, **kw: [  # noqa: ARG005
+                    ActiveCheckCommand(service_description="My active check", command_arguments=())
+                ],
+            )
+        },
+    )
+    host_name = HostName("test_host")
+    ts = Scenario()
+    ts.add_host(host_name)
+    ts.set_ruleset_bundle(
+        "active_checks",
+        {
+            "my_active_check": [
+                {
+                    "condition": {},
+                    "id": "2",
+                    "value": {"description": "My active check", "param1": "param1"},
+                }
+            ]
+        },
+    )
+    config_cache = ts.apply(monkeypatch).config_cache
+
+    services = list(
+        config_cache.active_check_services(
+            host_name,
+            IPStackConfig.IPv4,
+            socket.AddressFamily.AF_INET,
+            config_cache.get_host_attributes(
+                host_name,
+                socket.AddressFamily.AF_INET,
+                lambda *a, **kw: HostAddress(""),  # noqa: ARG005
+            ),
+            FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()),
+            lambda *a, **kw: HostAddress(""),  # noqa: ARG005
+            _SecretsConfig(path=Path(), secrets={}),
+            for_relay=True,
+        )
+    )
+
+    assert not services
+    assert capsys.readouterr().err == (
+        "\nWARNING: Host 'test_host': active check 'my_active_check' is not supported "
+        "for relay-monitored hosts. Its services have not been created.\n"
+    )
+
+
+def test_cmk_inv_keeps_the_site_executable_on_a_relay_host(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The HW/SW Inventory check runs on the site even for a relay-monitored host.
+
+    Building the host's active checks for the relay must leave it usable there: its
+    executable resolves through the plugin family's libexec directory, which the relay
+    prefix map does not touch, and its command line references no stored secret.
+    """
+    location = PluginLocation(active_check_cmk_inv_module.__name__, "active_check_cmk_inv")
+    monkeypatch.setattr(
+        config._impl,  # noqa: SLF001
+        "load_active_checks",
+        lambda **kw: {location: active_check_cmk_inv_module.active_check_cmk_inv},  # noqa: ARG005
+    )
+    host_name = HostName("test_host")
+    ts = Scenario()
+    ts.add_host(host_name)
+    ts.set_ruleset_bundle("active_checks", {"cmk_inv": [{"condition": {}, "id": "2", "value": {}}]})
+    config_cache = ts.apply(monkeypatch).config_cache
+    secrets_path = Path("/site/secrets")
+
+    services = list(
+        config_cache.active_check_services(
+            host_name,
+            IPStackConfig.IPv4,
+            socket.AddressFamily.AF_INET,
+            config_cache.get_host_attributes(
+                host_name,
+                socket.AddressFamily.AF_INET,
+                lambda *a, **kw: HostAddress(""),  # noqa: ARG005
+            ),
+            FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()),
+            lambda *a, **kw: HostAddress(""),  # noqa: ARG005
+            _SecretsConfig(path=secrets_path, secrets={}),
+            for_relay=True,
+        )
+    )
+
+    assert [s.command[0] for s in services] == [
+        str(family_libexec_dir(location.module) / "check_cmk_inv")
+    ]
+    assert not [arg for s in services for arg in s.command if str(secrets_path) in arg]
+
+
+def test_relay_monitored_host_keeps_its_name_as_address_without_a_site_lookup(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The site hands a relay-monitored host's name through as its address, unresolved.
+
+    A relay's network is normally invisible to the site's resolver, so Checkmk ships a
+    dynamic-DNS rule for every host carrying the cmk/relay_monitored label (see
+    get_relay_dyndns_rule_config in the relay Setup code). This pins the base side of
+    that decision with a rule of that shape: the address every consumer receives -
+    fetcher config and active-check commands alike - is the host name, and no lookup
+    runs. The name cannot resolve (RFC 6761 ".invalid"), so a lookup would not pass
+    unnoticed.
+    """
+    host_name = HostName("relay-host.invalid")
+    ts = Scenario()
+    ts.add_host(host_name, labels={"cmk/relay": "relay-1", "cmk/relay_monitored": "yes"})
+    ts.set_ruleset(
+        "dyndns_hosts",
+        [
+            {
+                "id": "relay_dyndns_rule",
+                "value": True,
+                "condition": {"host_label_groups": [("and", [("and", "cmk/relay_monitored:yes")])]},
+                "options": {},
+            }
+        ],
+    )
+    config_cache = ts.apply(monkeypatch).config_cache
+
+    lookup = make_lookup_ip_address(config_cache.ip_lookup_config())
+    attrs = config_cache.get_host_attributes(host_name, socket.AddressFamily.AF_INET, lookup)
+
+    assert attrs["address"] == host_name
 
 
 class TestLabelsConfig:
@@ -3514,6 +3814,7 @@ _EXPECTED_OLD_DESCRIPTIONS = {
     "statgrab_mem": TestServiceDescription("test_item", "Memory used test_item"),
     "tplink_mem": TestServiceDescription("test_item", "Memory used test_item"),
     "ups_bat_temp": TestServiceDescription("test_item", "Temperature Battery test_item"),
+    "ups_eaton_environment": TestServiceDescription("test_item", "Enviroment"),
     "vms_diskstat_df": TestServiceDescription("test_item", "fs_test_item"),
     "wmic_process": TestServiceDescription("test_item", "proc_test_item"),
     "zfsget": TestServiceDescription("test_item", "fs_test_item"),

@@ -23,6 +23,7 @@ body.side {
   margin: 0;
   overflow: hidden;
   font-family: $font-family-default;
+  font-feature-settings: $font-feature-settings-default;
   font-weight: $font-weight-default;
   background: $navigation-bg-color;
 
@@ -147,13 +148,21 @@ body.side.main {
   }
 }
 
-#content_area:has(cmk-custom-graph-designer) {
+#content_area:has(cmk-custom-graph-designer),
+#content_area:has(cmk-dashboard) {
   padding-left: 0;
 }
 
+#content_area:has(cmk-global-settings) {
+  padding-left: 0;
+}
+
+// The toolbar band directly below the menu bar takes over its bottom spacing.
 #content_area:has(cmk-monitoring-all-hosts),
 #content_area:has(cmk-monitoring-host-services) {
-  padding-left: 0;
+  > #top_heading table.menubar {
+    padding-bottom: 0;
+  }
 }
 
 /* Top logo part */

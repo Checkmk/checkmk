@@ -49,7 +49,7 @@ describe('timestampAt', () => {
 // The five band cases reuse the backend's exact inputs and expected ticks
 describe('computeTimeAxis label-format bands (Europe/Berlin, matches backend)', () => {
   test('labels a within-day (4h) range as HH:MM', () => {
-    const ticks = computeTimeAxis(1668502320, 1668516720, PLOT_WIDTH_PX, 60, measureLabel, BERLIN)
+    const ticks = computeTimeAxis(1668502320, 1668516720, PLOT_WIDTH_PX, measureLabel, BERLIN)
     expect(ticks).toEqual([
       { position: 1668502800, text: '10:00', lineWidth: 2 },
       { position: 1668504000, text: '10:20', lineWidth: 2 },
@@ -67,7 +67,7 @@ describe('computeTimeAxis label-format bands (Europe/Berlin, matches backend)', 
   })
 
   test('labels a sub-week (25h) range as weekday + time', () => {
-    const ticks = computeTimeAxis(1668426600, 1668516600, PLOT_WIDTH_PX, 300, measureLabel, BERLIN)
+    const ticks = computeTimeAxis(1668426600, 1668516600, PLOT_WIDTH_PX, measureLabel, BERLIN)
     expect(ticks).toEqual([
       { position: 1668438000, text: 'Mon 16:00', lineWidth: 2 },
       { position: 1668452400, text: 'Mon 20:00', lineWidth: 2 },
@@ -79,7 +79,7 @@ describe('computeTimeAxis label-format bands (Europe/Berlin, matches backend)', 
   })
 
   test('labels a within-month (8d) range as centered day-of-month', () => {
-    const ticks = computeTimeAxis(1667826000, 1668517200, PLOT_WIDTH_PX, 1800, measureLabel, BERLIN)
+    const ticks = computeTimeAxis(1667826000, 1668517200, PLOT_WIDTH_PX, measureLabel, BERLIN)
     expect(ticks).toEqual([
       { position: 1667862000, text: null, lineWidth: 2 },
       { position: 1667905200, text: '08', lineWidth: 0 },
@@ -101,7 +101,7 @@ describe('computeTimeAxis label-format bands (Europe/Berlin, matches backend)', 
   })
 
   test('labels a within-year (35d) range as MM-DD', () => {
-    const ticks = computeTimeAxis(1665486000, 1668519000, PLOT_WIDTH_PX, 9000, measureLabel, BERLIN)
+    const ticks = computeTimeAxis(1665486000, 1668519000, PLOT_WIDTH_PX, measureLabel, BERLIN)
     expect(ticks).toEqual([
       { position: 1665698400, text: '10-14', lineWidth: 2 },
       { position: 1665957600, text: '10-17', lineWidth: 2 },
@@ -118,14 +118,7 @@ describe('computeTimeAxis label-format bands (Europe/Berlin, matches backend)', 
   })
 
   test('labels a multi-year (400d) range as YYYY-MM-DD', () => {
-    const ticks = computeTimeAxis(
-      1633910400,
-      1668470400,
-      PLOT_WIDTH_PX,
-      86400,
-      measureLabel,
-      BERLIN
-    )
+    const ticks = computeTimeAxis(1633910400, 1668470400, PLOT_WIDTH_PX, measureLabel, BERLIN)
     expect(ticks).toEqual([
       { position: 1638313200, text: '2021-12-01', lineWidth: 2 },
       { position: 1643670000, text: '2022-02-01', lineWidth: 2 },
@@ -140,8 +133,8 @@ describe('computeTimeAxis label-format bands (Europe/Berlin, matches backend)', 
 describe('label spacing at a real plot width', () => {
   const PLOT_WIDTH = 750
 
-  function labelBoxes(start: number, end: number, step: number): { left: number; right: number }[] {
-    return computeTimeAxis(start, end, PLOT_WIDTH, step, measureLabel, BERLIN)
+  function labelBoxes(start: number, end: number): { left: number; right: number }[] {
+    return computeTimeAxis(start, end, PLOT_WIDTH, measureLabel, BERLIN)
       .filter((tick) => tick.text !== null)
       .map((tick) => {
         const center = ((tick.position - start) / (end - start)) * PLOT_WIDTH
@@ -151,13 +144,13 @@ describe('label spacing at a real plot width', () => {
   }
 
   test.each([
-    { range: '400 days', days: 400, step: 21_600 },
-    { range: '35 days', days: 35, step: 1_800 },
-    { range: '8 days', days: 8, step: 300 },
-    { range: '25 hours', days: 25 / 24, step: 60 }
-  ])('labels a $range range without overlapping text', ({ days, step }) => {
+    { range: '400 days', days: 400 },
+    { range: '35 days', days: 35 },
+    { range: '8 days', days: 8 },
+    { range: '25 hours', days: 25 / 24 }
+  ])('labels a $range range without overlapping text', ({ days }) => {
     const start = 1633910400
-    const boxes = labelBoxes(start, start + days * 86_400, step)
+    const boxes = labelBoxes(start, start + days * 86_400)
 
     expect(boxes.length).toBeGreaterThan(2)
     expect(boxes[0]!.left).toBeGreaterThanOrEqual(0)
@@ -172,7 +165,7 @@ describe('computeTimeAxis calendar alignment', () => {
   test('aligns weekly-spaced ticks to Mondays', () => {
     const start = 1659312000
     const end = start + 60 * 86400
-    const ticks = computeTimeAxis(start, end, PLOT_WIDTH_PX, 3600, measureLabel, BERLIN)
+    const ticks = computeTimeAxis(start, end, PLOT_WIDTH_PX, measureLabel, BERLIN)
     expect(ticks.length).toBeGreaterThan(2)
     for (const tick of ticks) {
       expect(getDayOfWeek(fromAbsolute(tick.position * 1000, BERLIN), 'en-GB')).toBe(0)
@@ -184,8 +177,8 @@ describe('computeTimeAxis timezone handling', () => {
   test('produces different tick instants in UTC than in Europe/Berlin', () => {
     const start = 1665486000
     const end = 1668519000
-    const berlin = computeTimeAxis(start, end, PLOT_WIDTH_PX, 9000, measureLabel, BERLIN)
-    const utc = computeTimeAxis(start, end, PLOT_WIDTH_PX, 9000, measureLabel, 'UTC')
+    const berlin = computeTimeAxis(start, end, PLOT_WIDTH_PX, measureLabel, BERLIN)
+    const utc = computeTimeAxis(start, end, PLOT_WIDTH_PX, measureLabel, 'UTC')
     expect(utc.map((tick) => tick.position)).not.toEqual(berlin.map((tick) => tick.position))
   })
 
@@ -194,7 +187,6 @@ describe('computeTimeAxis timezone handling', () => {
       1665486000,
       1668519000,
       PLOT_WIDTH_PX,
-      9000,
       measureLabel,
       'Asia/Kolkata'
     )
@@ -210,7 +202,7 @@ describe('computeTimeAxis timezone handling', () => {
   test('keeps daily ticks on local midnight across a DST spring-forward (Europe/Berlin)', () => {
     const start = Date.UTC(2024, 2, 25) / 1000
     const end = Date.UTC(2024, 3, 6) / 1000
-    const ticks = computeTimeAxis(start, end, PLOT_WIDTH_PX, 3600, measureLabel, BERLIN)
+    const ticks = computeTimeAxis(start, end, PLOT_WIDTH_PX, measureLabel, BERLIN)
     const gridTicks = ticks.filter((tick) => tick.lineWidth > 0)
     expect(gridTicks.length).toBeGreaterThan(2)
     for (const tick of gridTicks) {
@@ -223,7 +215,7 @@ describe('computeTimeAxis timezone handling', () => {
 // fall-back case is the critical one — the 02:00 local hour occurs twice.
 describe('computeTimeAxis DST label uniqueness', () => {
   function labelTexts(start: number, end: number): string[] {
-    return computeTimeAxis(start, end, PLOT_WIDTH_PX, 60, measureLabel, BERLIN)
+    return computeTimeAxis(start, end, PLOT_WIDTH_PX, measureLabel, BERLIN)
       .map((tick) => tick.text)
       .filter((text): text is string => text !== null)
   }
@@ -256,7 +248,6 @@ describe('computeTimeAxis DST label uniqueness', () => {
       midnightBeforeFallBack,
       midnightBeforeFallBack + 8 * 3600,
       PLOT_WIDTH_PX,
-      60,
       measureLabel,
       BERLIN
     )
@@ -269,25 +260,56 @@ describe('computeTimeAxis DST label uniqueness', () => {
 })
 
 describe('computeTimeAxis guards', () => {
-  test('returns no ticks for an empty range (end <= start after trimming)', () => {
+  test('returns no ticks for an empty range', () => {
     const start = 1_700_000_000
-    const step = 60
-    const end = start + 2 * step
-    expect(computeTimeAxis(start, end, PLOT_WIDTH_PX, step, measureLabel, BERLIN)).toEqual([])
+    expect(computeTimeAxis(start, start, PLOT_WIDTH_PX, measureLabel, BERLIN)).toEqual([])
   })
 
   test('yields at least two ticks on a very narrow plot', () => {
-    const ticks = computeTimeAxis(1668502320, 1668516720, 4, 60, measureLabel, BERLIN)
+    const ticks = computeTimeAxis(1668502320, 1668516720, 4, measureLabel, BERLIN)
     expect(ticks.length).toBeGreaterThanOrEqual(2)
   })
 
   test('anchors sub-day ticks to the local-midnight grid', () => {
-    const ticks = computeTimeAxis(1668502320, 1668516720, PLOT_WIDTH_PX, 60, measureLabel, BERLIN)
+    const ticks = computeTimeAxis(1668502320, 1668516720, PLOT_WIDTH_PX, measureLabel, BERLIN)
     const spacing = ticks[1]!.position - ticks[0]!.position
     for (const tick of ticks) {
       const zoned = fromAbsolute(tick.position * 1000, BERLIN)
       const secondsSinceMidnight = zoned.hour * 3600 + zoned.minute * 60 + zoned.second
       expect(secondsSinceMidnight % spacing).toBe(0)
     }
+  })
+})
+
+// The drawn window carries no padding samples, so its first and last step are as much on
+// screen as any other and get their ticks; at a six-hourly step they are most of the plot.
+describe('tick coverage of the drawn window', () => {
+  const SIX_HOURS = 21_600
+  const MIDNIGHT_UTC = Date.UTC(2026, 3, 21) / 1000
+
+  test('places ticks within the first and within the last step of a coarse window', () => {
+    const start = MIDNIGHT_UTC
+    const end = start + 7 * SIX_HOURS
+
+    const positions = computeTimeAxis(start, end, PLOT_WIDTH_PX, measureLabel, BERLIN).map(
+      (tick) => tick.position
+    )
+
+    expect(positions.some((position) => position < start + SIX_HOURS)).toBe(true)
+    expect(positions.some((position) => position > end - SIX_HOURS)).toBe(true)
+  })
+
+  test('ticks a window narrower than one step', () => {
+    const tenMinutes = 600
+
+    const ticks = computeTimeAxis(
+      MIDNIGHT_UTC,
+      MIDNIGHT_UTC + tenMinutes,
+      PLOT_WIDTH_PX,
+      measureLabel,
+      BERLIN
+    )
+
+    expect(ticks.length).toBeGreaterThanOrEqual(2)
   })
 })

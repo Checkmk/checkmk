@@ -31,7 +31,7 @@ def podman_container_status() -> Dictionary:
         elements={
             status: DictElement(
                 parameter_form=ServiceState(
-                    title=Title(  # astrein: disable=localization-checker
+                    title=Title(  # astrein: disable=localization
                         status.capitalize().replace("_", " ")
                     ),
                     prefill=DefaultValue(state),

@@ -14,7 +14,7 @@
         "validators": {
           "type": "array",
           "items": {
-            "type": "object",
+            "title": "validator",
             "$ref": "validators.json#/$defs/validator"
           }
         }
@@ -421,7 +421,6 @@
       "required": ["name", "required", "parameter_form", "default_value", "render_only", "group"]
     },
     "dictionary": {
-      "id": "dictionary",
       "properties": {
         "type": {
           "const": "dictionary",
@@ -461,7 +460,6 @@
       "required": ["type"]
     },
     "two_column_dictionary": {
-      "id": "two_column_dictionary",
       "type": "object",
       "allOf": [
         {
@@ -547,6 +545,10 @@
             },
             "input_hint": {
               "type": ["string", "null"]
+            },
+            "has_default_value": {
+              "type": "boolean",
+              "default": false
             }
           },
           "required": ["type", "no_elements_text", "label", "input_hint", "frozen", "elements"]
@@ -566,7 +568,6 @@
       "required": ["name", "title"]
     },
     "dual_list_choice": {
-      "id": "dual_list_choice",
       "type": "object",
       "properties": {
         "type": {
@@ -742,9 +743,22 @@
               "title": "CascadingSingleChoiceLayout",
               "enum": ["vertical", "horizontal", "button_group"],
               "default": "vertical"
+            },
+            "button_group_size": {
+              "title": "CascadingSingleChoiceButtonGroupSize",
+              "enum": ["medium", "small"],
+              "default": "medium"
             }
           },
-          "required": ["type", "elements", "no_elements_text", "label", "input_hint", "layout"]
+          "required": [
+            "type",
+            "elements",
+            "no_elements_text",
+            "label",
+            "input_hint",
+            "layout",
+            "button_group_size"
+          ]
         }
       ]
     },
@@ -885,7 +899,6 @@
       "required": ["type"]
     },
     "comment_text_area": {
-      "id": "comment_text_area",
       "type": "object",
       "allOf": [
         {
@@ -937,7 +950,6 @@
       ]
     },
     "ca_certificate": {
-      "id": "ca_certificate",
       "type": "object",
       "allOf": [
         {
@@ -964,8 +976,54 @@
         }
       ]
     },
+    "data_backend_settings": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "data_backend_settings",
+              "default": "data_backend_settings"
+            },
+            "elements": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/dictionary_element"
+              },
+              "default": []
+            },
+            "groups": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/dictionary_group"
+              }
+            },
+            "no_elements_text": {
+              "type": "string"
+            },
+            "additional_static_elements": {
+              "type": ["object", "null"]
+            },
+            "central_location": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "elements",
+            "additional_static_elements",
+            "no_elements_text",
+            "groups",
+            "central_location"
+          ]
+        }
+      ]
+    },
     "oauth2_connection_setup": {
-      "id": "oauth2_connection_setup",
       "type": "object",
       "allOf": [
         {
@@ -1012,7 +1070,6 @@
       "required": ["authority_url", "display_name"]
     },
     "telemetry_metrics_group_by_key": {
-      "id": "telemetry_metrics_group_by_key",
       "type": "object",
       "properties": {
         "kind": {
@@ -1026,7 +1083,6 @@
       "required": ["kind", "key"]
     },
     "telemetry_metrics_custom_query": {
-      "id": "telemetry_metrics_custom_query",
       "type": "object",
       "allOf": [
         {
@@ -1108,7 +1164,7 @@
       ]
     },
     "dcd_telemetry_metrics_filter": {
-      "id": "dcd_telemetry_metrics_filter",
+      "type": "object",
       "allOf": [
         {
           "$ref": "#/$defs/form_spec"
@@ -1129,7 +1185,6 @@
       ]
     },
     "metric": {
-      "id": "metric",
       "type": "object",
       "allOf": [
         {
@@ -1543,7 +1598,7 @@
       "properties": {
         "fetch_method": {
           "enum": ["ajax_vs_autocomplete", "rest_autocomplete"],
-          "default": "ajax_vs_autocomplete"
+          "default": "rest_autocomplete"
         },
         "data": {
           "title": "AutocompleterData",
@@ -1930,6 +1985,9 @@
         },
         {
           "$ref": "#/$defs/oauth2_connection_setup"
+        },
+        {
+          "$ref": "#/$defs/data_backend_settings"
         },
         {
           "$ref": "#/$defs/metric"

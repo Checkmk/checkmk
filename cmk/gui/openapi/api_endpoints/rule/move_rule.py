@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated, assert_never
 
 from pydantic import Discriminator
@@ -18,10 +19,11 @@ from cmk.gui.openapi.framework import (
     PathParam,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.utils import ProblemException, RestAPIRequestDataValidationException
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
-from cmk.gui.watolib.hosts_and_folders import Folder, make_folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import Ruleset
 
 from ._family import RULE_FAMILY
@@ -50,12 +52,12 @@ def move_rule_v1(
     user.need_permission("wato.edit")
     user.need_permission("wato.rulesets")
 
-    tree = make_folder_tree(api_context.config)
+    tree = folder_tree_of_request(api_context)
     source_entry = get_rule_by_id(tree, rule_id)
 
     if is_locked_by_config_bundle(source_entry.rule.locked_by):
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Rule is managed by Quick setup",
             detail="Rules managed by Quick setup cannot be moved.",
         )

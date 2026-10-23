@@ -14,20 +14,21 @@ import subprocess
 import time
 import uuid
 from collections.abc import Iterator
+from http import HTTPStatus
 from pathlib import Path
 
 import pytest
 
 from cmk.ccc.user import UserId
-from cmk.ec.config import (  # astrein: disable=cmk-module-layer-violation
+from cmk.ec.config import (
     ECRulePackSpec,
     EventLimit,
     Rule,
     ServiceLevel,
     State,
 )
-from cmk.gui.watolib.site_changes import ChangeSpec  # astrein: disable=cmk-module-layer-violation
-from tests.testlib.site import Site
+from cmk.gui.watolib.site_changes import ChangeSpec
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -249,7 +250,7 @@ def _setup_ec(site: Site) -> Iterator[tuple[str, str, State]]:
             },
         )
 
-        assert resp.status_code == 204, pprint.pformat(resp.json())
+        assert resp.status_code == HTTPStatus.NO_CONTENT, pprint.pformat(resp.json())
 
 
 @pytest.fixture(name="restart_site", scope="module")

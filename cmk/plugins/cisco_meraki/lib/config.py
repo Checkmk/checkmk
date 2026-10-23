@@ -11,7 +11,7 @@ from typing import Self
 
 from meraki import DashboardAPI
 
-from cmk.server_side_programs.v1_unstable import Storage
+from cmk.server_side_programs.v1 import Storage
 
 from . import cache, constants, schema
 

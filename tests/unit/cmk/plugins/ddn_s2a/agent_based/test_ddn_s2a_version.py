@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Result, State
 from cmk.plugins.ddn_s2a.agent_based.ddn_s2a_version import (
     check_ddn_s2a_version,
-    discover_ddn_s2a_version,
     parse_ddn_s2a_version,
 )
 
@@ -15,10 +14,6 @@ _STRING_TABLE = [
         "0@8@platform@S2A9900@fw_version@6.1.1@fw_date@2013-04-15@bootrom_version@1.2.3@$",
     ],
 ]
-
-
-def test_discover_ddn_s2a_version() -> None:
-    assert list(discover_ddn_s2a_version(parse_ddn_s2a_version(_STRING_TABLE))) == [Service()]
 
 
 def test_check_ddn_s2a_version() -> None:

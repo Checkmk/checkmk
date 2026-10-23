@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from http import HTTPStatus
 from typing import Literal, override
 
 from dateutil.relativedelta import relativedelta
@@ -34,7 +35,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -49,6 +50,7 @@ from cmk.utils.certs import CertManagementEvent
 from cmk.utils.keypair_store import Key, KeyAlreadyExists, KeyId, KeypairMap, KeypairStore
 from cmk.utils.security_event import log_security_event
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
@@ -116,7 +118,7 @@ class ModeKeyManagement(WatoMode[object]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if self._may_edit_config() and request.has_var("_delete"):
             key_id = request.get_validated_type_input_mandatory(KeyId, "_delete")
@@ -223,7 +225,7 @@ class ModeEditKey(WatoMode[object]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if transactions.check_transaction(request):
             value = self._vs_key().from_html_vars("key")
@@ -330,7 +332,7 @@ class ModeUploadKey(WatoMode[object]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if transactions.check_transaction(request):
             value = self._vs_key().from_html_vars("key")
@@ -345,7 +347,7 @@ class ModeUploadKey(WatoMode[object]):
 
             return HTTPRedirect(
                 makeuri_contextless(request, [("mode", self.back_mode)], filename="wato.py"),
-                code=302,
+                code=HTTPStatus.FOUND,
             )
         return None
 
@@ -500,7 +502,7 @@ class ModeDownloadKey(WatoMode[object]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if transactions.check_transaction(request):
             keys = self.key_store.load()
@@ -522,7 +524,7 @@ class ModeDownloadKey(WatoMode[object]):
                 raise MKUserError("key_p_passphrase", _("Invalid pass phrase"))
 
             self._send_download(keys, key_id)
-            return FinalizeRequest(code=200)
+            return FinalizeRequest(code=HTTPStatus.OK)
         return None
 
     def _send_download(self, keys: KeypairMap, key_id: KeyId) -> None:

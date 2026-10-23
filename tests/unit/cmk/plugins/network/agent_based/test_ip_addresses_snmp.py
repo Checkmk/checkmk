@@ -323,3 +323,42 @@ def test_host_label_ip_addresses(section: Section, expected_result: HostLabelGen
 )
 def test_inventorize_ip_addresses_snmp(section: Section, expected_result: InventoryResult) -> None:
     assert list(inventorize_ip_addresses_snmp(section)) == expected_result
+
+
+def test_parse_ip_addresses_without_prefix() -> None:
+    # The device reported no prefix (empty ipAddressPrefix) for its '34' entries,
+    # while the '20' table still carries the address with its netmask
+    assert parse_ip_addresses(
+        [
+            [["10.1.2.3", "3", "255.255.255.0"]],
+            [
+                ["1.4.0.0.0.0", [], "20000", ""],
+                ["1.4.10.1.2.3", [], "3", ""],
+            ],
+            [["3", "eth0"]],
+        ]
+    ) == [
+        IPNetworkAdapter(
+            name="eth0",
+            inet4=[AugmentedIPv4Interface("10.1.2.3/24")],
+        )
+    ]
+
+
+def test_parse_ip_addresses_skips_invalid_address_row() -> None:
+    # Crash groups 4602/4720: one ipAddrTable row holds no valid IPv4 address/netmask
+    assert parse_ip_addresses(
+        [
+            [
+                ["10.0.0.1.91", "13", "255.255.255.0"],
+                ["10.1.2.3", "3", "255.255.255.0"],
+            ],
+            [],
+            [["3", "eth0"], ["13", "eth1"]],
+        ]
+    ) == [
+        IPNetworkAdapter(
+            name="eth0",
+            inet4=[AugmentedIPv4Interface("10.1.2.3/24")],
+        )
+    ]

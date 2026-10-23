@@ -6,12 +6,11 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.infoblox.lib import check_infoblox_statistics, DETECT_INFOBLOX
 
 # .1.3.6.1.4.1.7779.3.1.1.4.1.3.1.0 0 --> IB-DHCPONE-MIB::ibDhcpTotalNoOfDiscovers.0
@@ -40,10 +39,6 @@ snmp_section_infoblox_dhcp_stats = SimpleSNMPSection(
 )
 
 
-def discover_infoblox_dhcp_stats(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_infoblox_dhcp_stats(section: StringTable) -> CheckResult:
     discovers, requests, releases, offers, acks, nacks, declines, informs, others = map(
         int, section[0]
@@ -68,6 +63,6 @@ def check_infoblox_dhcp_stats(section: StringTable) -> CheckResult:
 check_plugin_infoblox_dhcp_stats = CheckPlugin(
     name="infoblox_dhcp_stats",
     service_name="DHCP statistics",
-    discovery_function=discover_infoblox_dhcp_stats,
+    discovery_function=discover_one_service,
     check_function=check_infoblox_dhcp_stats,
 )

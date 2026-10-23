@@ -17,7 +17,7 @@ from tests.system.gui.testlib.host_details import AddressFamily, AgentAndApiInte
 from tests.system.gui.testlib.playwright.pom.changes.activate_changes import ActivateChangesSlideout
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.system.gui.testlib.playwright.pom.setup.hosts import AddHost, HostProperties
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

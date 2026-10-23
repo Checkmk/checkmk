@@ -12,7 +12,7 @@ from typing import Literal, NamedTuple, override
 import cmk.livestatus_client as livestatus
 from cmk.ccc.site import SiteId
 from cmk.gui import notifications, sites, visuals
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -21,6 +21,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.valuespec import CascadingDropdown, Checkbox, Dictionary, ListOf, TextInput, ValueSpec
 from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri_contextless
 
 from ._base import CustomizableSidebarSnapin
@@ -112,6 +113,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
     @classmethod
     @override
     def vs_parameters(cls) -> list[tuple[str, ValueSpec]]:
+        request_cache = RequestCache(active_config)
         return [
             (
                 "rows",
@@ -136,6 +138,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                                             "hosts",
                                             _("Hosts"),
                                             visuals.VisualFilterList(
+                                                request_cache=request_cache,
                                                 info_list=["host"],
                                             ),
                                         ),
@@ -143,6 +146,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                                             "services",
                                             _("Services"),
                                             visuals.VisualFilterList(
+                                                request_cache=request_cache,
                                                 info_list=["host", "service"],
                                             ),
                                         ),
@@ -150,6 +154,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                                             "events",
                                             _("Events"),
                                             visuals.VisualFilterList(
+                                                request_cache=request_cache,
                                                 info_list=["host", "event"],
                                             ),
                                         ),

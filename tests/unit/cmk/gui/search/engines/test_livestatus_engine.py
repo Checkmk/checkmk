@@ -11,7 +11,7 @@ from werkzeug.test import create_environ
 
 from cmk.gui.config import Config
 from cmk.gui.http import Request
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.search._engines._livestatus import (
     ABCQuicksearchConductor,
     BasicPluginQuicksearchConductor,
@@ -145,6 +145,8 @@ class TestFindSearchObjectExpressions:
             pytest.param("h:myhost", [("h:", 0)], id="single filter"),
             pytest.param("h:myhost s:CPU", [("h:", 0), (" s:", 8)], id="two filters"),
             pytest.param("hg:mygroup", [("hg:", 0)], id="two letter filter"),
+            pytest.param("hf:hamburg/infra", [("hf:", 0)], id="host folder filter"),
+            pytest.param("sf:hamburg/infra", [("sf:", 0)], id="service folder filter"),
             pytest.param("myhost", [], id="plain query"),
             pytest.param("", [], id="empty query"),
             pytest.param("https://myhost", [], id="url is not read as a service filter"),
@@ -191,6 +193,11 @@ class TestDetermineLivestatusTable:
             pytest.param({"st": ["ok"]}, "services", id="service state"),
             pytest.param({"hg": ["mygroup"]}, "hostgroups", id="host group"),
             pytest.param({"sg": ["mygroup"]}, "servicegroups", id="service group"),
+            pytest.param({"hf": ["hamburg"]}, "hosts", id="host folder"),
+            pytest.param({"sf": ["hamburg"]}, "services", id="service folder"),
+            pytest.param(
+                {"hf": ["hamburg"], "s": ["CPU"]}, "services", id="host folder and service"
+            ),
             pytest.param({"h": ["myhost"], "s": ["CPU"]}, "services", id="host and service"),
             pytest.param(
                 {"sg": ["mygroup"], "h": ["myhost"]},
@@ -807,7 +814,7 @@ class TestDetermineSearchObjects:
     def test_an_explicit_expression_yields_a_single_aggregated_conductor(
         self, load_config: Config
     ) -> None:
-        user_permissions = UserPermissions.from_config(load_config, permission_registry)
+        user_permissions = UserPermissions.from_config(load_config, all_permissions())
 
         search_objects = self._manager()._determine_search_objects(  # noqa: SLF001
             "h:myhost s:CPU", user_permissions
@@ -818,7 +825,7 @@ class TestDetermineSearchObjects:
         assert search_objects[0]._used_filters == {"h": ["myhost"], "s": ["CPU"]}  # noqa: SLF001
 
     def test_a_plain_query_is_offered_to_every_configured_filter(self, load_config: Config) -> None:
-        user_permissions = UserPermissions.from_config(load_config, permission_registry)
+        user_permissions = UserPermissions.from_config(load_config, all_permissions())
 
         search_objects = self._manager()._determine_search_objects("myhost", user_permissions)  # noqa: SLF001
 
@@ -831,7 +838,7 @@ class TestDetermineSearchObjects:
         ]
 
     def test_a_glob_query_is_converted_to_a_regex(self, load_config: Config) -> None:
-        user_permissions = UserPermissions.from_config(load_config, permission_registry)
+        user_permissions = UserPermissions.from_config(load_config, all_permissions())
 
         search_objects = self._manager()._determine_search_objects("my*host", user_permissions)  # noqa: SLF001
 

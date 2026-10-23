@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.dcd_connector_parameters.internal import connector_parameter_specs, entry_point_prefixes
+from cmk.dcd_connector_parameters.internal.connector_parameter_specs import FolderChoices
 from cmk.rulesets.v1 import form_specs
 
 
-def _make_form_spec() -> form_specs.Dictionary:
+def _make_form_spec(_folder_choices: FolderChoices) -> form_specs.Dictionary:
     return form_specs.Dictionary(elements={})
 
 
@@ -30,7 +31,7 @@ def test_connector_parameters_spec_form_spec_is_callable() -> None:
         description="Test",
         form_spec=_make_form_spec,
     )
-    result = spec.form_spec()
+    result = spec.form_spec(list)
     assert isinstance(result, form_specs.Dictionary)
 
 

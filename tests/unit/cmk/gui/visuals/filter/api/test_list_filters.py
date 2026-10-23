@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import pytest
 
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 @pytest.mark.usefixtures("mock_wato_folders")
@@ -21,12 +23,12 @@ def test_list(clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
     with live:
         resp = clients.VisualFilterClient.get_all()
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert resp.json["id"] == "all"
 
 
 def test_list_filter_groups(clients: ClientRegistry) -> None:
     resp = clients.VisualFilterGroupClient.get_all()
 
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert len(resp.json["value"]) > 0

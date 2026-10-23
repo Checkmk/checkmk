@@ -84,6 +84,8 @@ def discover_hr_ps(params: Sequence[Mapping[str, Any]], section: Section) -> Dis
             service_descr = ps.replace_service_description(
                 rule["descr"], match_groups, match_name_or_path
             )
+            if not service_descr:
+                continue
 
             discovered_items.setdefault(
                 service_descr,
@@ -164,7 +166,7 @@ check_plugin_hr_ps = CheckPlugin(
     service_name="Process %s",
     discovery_function=discover_hr_ps,
     discovery_default_parameters={
-        "descr": "%s",
+        "descr": "Example service - unused",
         "default_params": {},
     },
     discovery_ruleset_name="discovery_hr_processes_rules",

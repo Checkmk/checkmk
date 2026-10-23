@@ -2,12 +2,13 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use super::environment::{PathResolver, SetupMode};
 #[cfg(windows)]
 use super::misc;
 use super::{cli, constants, types};
-#[cfg(unix)]
-use anyhow::Context;
 use anyhow::Result as AnyhowResult;
+#[cfg(unix)]
+use anyhow::{bail, Context};
 use clap::Parser;
 #[cfg(windows)]
 use flexi_logger::FileSpec;
@@ -21,7 +22,9 @@ use std::env::ArgsOs;
 use std::io::{self, Write};
 #[cfg(unix)]
 use std::os::unix::fs::MetadataExt;
-use std::path::{Path, PathBuf};
+#[cfg(unix)]
+use std::path::Path;
+use std::path::PathBuf;
 
 // TODO(sk): estimate to move in constants
 #[cfg(windows)]
@@ -47,36 +50,6 @@ fn is_os_supported() -> bool {
 
     #[cfg(unix)]
     true
-}
-
-pub struct PathResolver {
-    pub config_path: PathBuf,
-    pub pre_configured_connections_path: PathBuf,
-    pub registry_path: PathBuf,
-}
-
-impl PathResolver {
-    pub fn from_home_dir(home_dir: &Path) -> PathResolver {
-        PathResolver {
-            config_path: home_dir.join(constants::CONFIG_FILE),
-            pre_configured_connections_path: home_dir
-                .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE),
-            registry_path: home_dir.join(Path::new(constants::REGISTRY_FILE)),
-        }
-    }
-
-    #[cfg(unix)]
-    pub fn from_installdir(installdir: &Path) -> PathResolver {
-        let config_dir = installdir.join("package/config");
-        PathResolver {
-            config_path: config_dir.join(constants::CONFIG_FILE),
-            pre_configured_connections_path: config_dir
-                .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE),
-            registry_path: installdir
-                .join("runtime/controller")
-                .join(constants::REGISTRY_FILE),
-        }
-    }
 }
 
 pub fn connection_timeout() -> u64 {
@@ -208,24 +181,52 @@ fn become_user(user: UserRepr) -> AnyhowResult<unistd::User> {
     Ok(target_user)
 }
 
-#[cfg(unix)]
-fn determine_paths(user: unistd::User) -> AnyhowResult<PathResolver> {
-    Ok(PathResolver::from_home_dir(&user.dir))
+/// Determine the Windows home directory holding all files of the controller.
+///
+/// # Returns
+///
+/// `%ProgramData%\checkmk\agent`, or the value of `DEBUG_HOME_DIR` if that is set for
+/// testing/debugging
+#[cfg(windows)]
+fn detect_home_dir() -> PathBuf {
+    let home_dir = if let Ok(debug_home_dir) = std::env::var(constants::ENV_HOME_DIR) {
+        info!("Using debug HOME_DIR: {}", debug_home_dir);
+        debug_home_dir
+    } else {
+        std::env::var(constants::ENV_PROGRAM_DATA)
+            .unwrap_or_else(|_| String::from("c:\\ProgramData"))
+            + constants::WIN_AGENT_HOME_DIR
+    };
+    PathBuf::from(home_dir)
 }
 
-#[cfg(windows)]
-fn determine_paths() -> AnyhowResult<PathResolver> {
-    // Alternative home dir can be passed for testing/debug reasons
-    if let Ok(debug_home_dir) = std::env::var(constants::ENV_HOME_DIR) {
-        info!("Using debug HOME_DIR: {}", debug_home_dir);
-        return Ok(PathResolver::from_home_dir(&PathBuf::from(debug_home_dir)));
-    }
+/// Who a mode runs as.
+///
+/// Every mode of the controller works on files of the agent user and therefore
+/// drops to that user. `install-agent` is the exception: the installer unit
+/// starts it as root, and root is what the step needs.
+#[cfg(unix)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Privileges {
+    /// Become the agent user, whatever the caller was.
+    AgentUser,
+    /// Keep the privileges of the calling process.
+    Keep,
+}
 
-    // Normal/prod home dir
-    let program_data_path = std::env::var(constants::ENV_PROGRAM_DATA)
-        .unwrap_or_else(|_| String::from("c:\\ProgramData"));
-    let home = PathBuf::from(program_data_path + constants::WIN_AGENT_HOME_DIR);
-    Ok(PathResolver::from_home_dir(&home))
+/// Who the requested mode has to run as.
+///
+/// `install-agent` keeps what the installer unit gave it, because it verifies
+/// the package against the root-owned trust anchors of the update
+/// configuration and then calls the package manager. Dropping to the agent
+/// user would put both out of reach and turn the privileged step into a step
+/// the agent user could have taken itself.
+#[cfg(unix)]
+fn privileges_of(mode: &cli::Mode) -> Privileges {
+    match mode {
+        cli::Mode::InstallAgent => Privileges::Keep,
+        _ => Privileges::AgentUser,
+    }
 }
 
 #[cfg(unix)]
@@ -236,10 +237,12 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
             .unwrap_or(());
     }
 
-    if let Some(installdir) = setup_single_directory()
+    let privileges = privileges_of(&cli.mode);
+
+    if let Some(install_dir) = setup_single_directory(privileges)
         .context("Failed to initialize under single directory deployment")?
     {
-        return Ok(PathResolver::from_installdir(&installdir));
+        return Ok(PathResolver::new(SetupMode::SingleDir, &install_dir));
     }
 
     // Alternative home dir can be passed for testing/debug reasons
@@ -248,29 +251,52 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
             "Skipping to change user and using debug HOME_DIR: {}",
             debug_home_dir
         );
-        return Ok(PathResolver::from_home_dir(Path::new(&debug_home_dir)));
+        return Ok(PathResolver::new(
+            SetupMode::Classic,
+            Path::new(&debug_home_dir),
+        ));
+    }
+
+    if let Privileges::Keep = privileges {
+        // The integrated updater, and with it the installer unit, is baked for the
+        // single directory deployment only. Reaching this point means the unit runs
+        // where it was never meant to, so the mode says so instead of looking for
+        // files that the classic layout does not have.
+        bail!(
+            "The agent updater integrated into the controller requires the single directory \
+             deployment of the Checkmk agent"
+        );
     }
 
     // Normal/prod home dir
-    become_user(UserRepr::Name(constants::CMK_AGENT_USER.to_owned())).context(format!(
+    let user = become_user(UserRepr::Name(constants::CMK_AGENT_USER.to_owned())).context(format!(
                 "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
                 constants::CMK_AGENT_USER,
-            )).and_then(determine_paths)
+            ))?;
+    Ok(PathResolver::new(SetupMode::Classic, &user.dir))
 }
 
 #[cfg(unix)]
-fn setup_single_directory() -> AnyhowResult<Option<PathBuf>> {
-    let Some(installdir) = detect_installdir() else {
+fn setup_single_directory(privileges: Privileges) -> AnyhowResult<Option<PathBuf>> {
+    let Some(install_dir) = detect_install_dir() else {
         return Ok(None);
     };
 
+    if let Privileges::Keep = privileges {
+        debug!(
+            "Detected single directory deployment under {:?}. Keeping the privileges of the calling process.",
+            install_dir
+        );
+        return Ok(Some(install_dir));
+    }
+
     debug!(
         "Detected single directory deployment under {:?}. Trying to become the agent user and setting up paths accordingly, and failing otherwise.",
-        installdir
+        install_dir
     );
 
     let owning_uid = nix::unistd::Uid::from_raw(
-        std::fs::metadata(installdir.join("runtime").join("controller"))
+        std::fs::metadata(install_dir.join("runtime").join("controller"))
             .context("Could not determine agent user")?
             .uid(),
     );
@@ -280,17 +306,17 @@ fn setup_single_directory() -> AnyhowResult<Option<PathBuf>> {
         owning_uid
     ))?;
 
-    Ok(Some(installdir))
+    Ok(Some(install_dir))
 }
 
 #[cfg(unix)]
-fn detect_installdir() -> Option<PathBuf> {
+fn detect_install_dir() -> Option<PathBuf> {
     let exe = std::env::current_exe()
         .and_then(std::fs::canonicalize)
         .ok()?;
-    let installdir = exe.parent()?.parent()?.parent()?;
+    let install_dir = exe.parent()?.parent()?.parent()?;
 
-    if !installdir
+    if !install_dir
         .join("package")
         .join("config")
         .join(constants::CONFIG_FILE)
@@ -298,12 +324,11 @@ fn detect_installdir() -> Option<PathBuf> {
     {
         return None;
     };
-    Some(installdir.to_owned())
+    Some(install_dir.to_owned())
 }
 
 #[cfg(windows)]
 fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
-    let paths = determine_paths()?;
     let duplicate_level = if let cli::Mode::Daemon(_) = cli.mode {
         flexi_logger::Duplicate::None
     } else {
@@ -314,7 +339,8 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
             .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
             .unwrap_or(());
     }
-    Ok(paths)
+
+    Ok(PathResolver::new(SetupMode::Classic, &detect_home_dir()))
 }
 
 pub fn init(args: ArgsOs) -> AnyhowResult<(cli::Cli, PathResolver)> {
@@ -331,24 +357,38 @@ pub fn init(args: ArgsOs) -> AnyhowResult<(cli::Cli, PathResolver)> {
     Ok((cli, paths))
 }
 
-#[cfg(test)]
+/// Which modes keep the privileges they were started with. The switch itself
+/// cannot be tested here: becoming another user needs root.
+#[cfg(all(test, unix))]
+mod tests {
+    use super::*;
+
+    /// The installer unit runs this mode as root, and the package manager and
+    /// the root-owned trust anchors both need that root.
+    #[test]
+    fn test_install_agent_keeps_its_privileges() {
+        assert_eq!(privileges_of(&cli::Mode::InstallAgent), Privileges::Keep);
+    }
+
+    #[test]
+    fn test_every_other_mode_becomes_the_agent_user() {
+        assert_eq!(privileges_of(&cli::Mode::Dump), Privileges::AgentUser);
+        assert_eq!(
+            privileges_of(&cli::Mode::Daemon(cli::DaemonOpts::parse_from(["daemon"]))),
+            Privileges::AgentUser
+        );
+    }
+}
+
+/// Only the Windows home directory is detected here; the layouts themselves are
+/// tested with [`PathResolver`].
+#[cfg(all(test, windows))]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_paths() {
-        let home_dir = std::path::Path::new("/a/b/c");
-        let config_path = std::path::Path::new("/a/b/c/").join(crate::constants::CONFIG_FILE);
-        assert_eq!(
-            PathResolver::from_home_dir(home_dir).config_path,
-            config_path
-        );
-    }
-
-    #[cfg(windows)]
-    #[test]
     fn test_windows_paths() {
-        let p = determine_paths().unwrap();
+        let p = PathResolver::new(SetupMode::Classic, &detect_home_dir());
         let home = String::from("C:\\ProgramData") + constants::WIN_AGENT_HOME_DIR;
         assert_eq!(
             p.config_path,
@@ -359,12 +399,15 @@ mod tests {
             std::path::PathBuf::from(&home).join("pre_configured_connections.json")
         );
         assert_eq!(
+            p.trusted_cas_path,
+            std::path::PathBuf::from(&home).join("trusted_cas.json")
+        );
+        assert_eq!(
             p.registry_path,
             std::path::PathBuf::from(&home).join("registered_connections.json")
         );
     }
 
-    #[cfg(windows)]
     #[test]
     fn test_make_log_file_spec() {
         assert_eq!(

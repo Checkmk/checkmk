@@ -5,7 +5,7 @@
 import subprocess
 from pathlib import Path
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def test_perl_modules(site: Site) -> None:

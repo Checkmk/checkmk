@@ -11,6 +11,7 @@ import pytest
 from livestatus import SiteConfigurations
 
 from cmk.ccc.site import omd_site
+from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.gui.valuespec import Dictionary, Float, Migrate
 from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
@@ -101,6 +102,27 @@ def _instantiate_ruleset(
     ruleset.append_rule(folder, rule)
     assert ruleset.get_rules()
     return ruleset
+
+
+def test_failed_rule_transformation_does_not_log_the_value(
+    tree: FolderTree,
+    rulespec_with_migration: Rulespec,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Rule values may contain secrets"""
+    ruleset = _instantiate_ruleset(
+        tree,
+        rulespec_with_migration.name,
+        {"key": "s3crit"},
+        rulespec=rulespec_with_migration,
+    )
+
+    rulesets_updater.transform_wato_rulesets_params(
+        getLogger(), RulesetCollection({rulespec_with_migration.name: ruleset})
+    )
+
+    assert "Failed to transform rule" in caplog.text
+    assert "s3crit" not in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -226,3 +248,78 @@ def test_transform_remove_null_host_tag_conditions_from_rulesets(
         getLogger(), rulesets, raise_errors=False, pending_changes=pending_changes
     )
     assert ruleset.get_rules()[0][2].get_rule_conditions().host_tags.keys() == expected_keys_after
+
+
+@pytest.mark.parametrize(
+    ["ruleset_name", "value", "expected"],
+    [
+        pytest.param(
+            "static_checks:some_group",
+            ("old_plugin", "item", {"key": 1}),
+            ("new_plugin", "item", {"key": 1}),
+            id="enforced services",
+        ),
+        pytest.param(
+            "ignored_checks",
+            ["old_plugin", "other_plugin"],
+            ["new_plugin", "other_plugin"],
+            id="disabled checks",
+        ),
+        pytest.param(
+            "snmp_exclude_sections",
+            {"sections_disabled": ["old_section", "other_section"], "sections_enabled": []},
+            {"sections_disabled": ["new_section", "other_section"], "sections_enabled": []},
+            id="disabled or enabled sections",
+        ),
+        pytest.param(
+            "snmp_check_interval",
+            (["old_section"], ("cached", 300.0)),
+            (["new_section"], ("cached", 300.0)),
+            id="fetch intervals",
+        ),
+        pytest.param(
+            "snmpv3_contexts",
+            ("old_section", [""], "stop_on_timeout"),
+            ("new_section", [""], "stop_on_timeout"),
+            id="snmpv3 contexts",
+        ),
+    ],
+)
+def test_rename_replaced_plugins(ruleset_name: str, value: object, expected: object) -> None:
+    assert (
+        rulesets_updater.rename_replaced_plugins(
+            ruleset_name,
+            value,
+            {CheckPluginName("old_plugin"): CheckPluginName("new_plugin")},
+            {SectionName("old_section"): SectionName("new_section")},
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ["ruleset_name", "value"],
+    [
+        pytest.param("ignored_checks", ["other_plugin"], id="no replaced plug-in"),
+        pytest.param("static_checks:some_group", ("other_plugin", None, {}), id="other plug-in"),
+        pytest.param("static_checks:some_group", ["old_plugin", None, {}], id="list as tuple"),
+        pytest.param("snmp_exclude_sections", {"sections_disabled": "old_section"}, id="string"),
+        pytest.param(
+            "snmp_exclude_sections", {"sections_disabled": ("old_section",)}, id="tuple as list"
+        ),
+        pytest.param("snmp_check_interval", [["old_section"], ("cached", 300.0)], id="list"),
+        pytest.param("snmpv3_contexts", (None, [""], "stop_on_timeout"), id="all sections"),
+    ],
+)
+def test_rename_replaced_plugins_keeps_other_values_as_they_are(
+    ruleset_name: str, value: object
+) -> None:
+    assert (
+        rulesets_updater.rename_replaced_plugins(
+            ruleset_name,
+            value,
+            {CheckPluginName("old_plugin"): CheckPluginName("new_plugin")},
+            {SectionName("old_section"): SectionName("new_section")},
+        )
+        is value
+    )

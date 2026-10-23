@@ -4,11 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
+from cmk.gui.config import Config
 from cmk.gui.data_source import RowTableLivestatus
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.web.utils.request_cache import RequestCache
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
 @pytest.mark.usefixtures("request_context")
@@ -38,7 +41,13 @@ def test_row_table_object(mock_livestatus: MockLiveStatusConnection) -> None:
         "host": {"host": "heute"},
         "service": {},
     }
-    view = View(view_name, view_spec, view_spec["context"], UserPermissions({}, {}, {}, []))
+    view = View(
+        view_name,
+        view_spec,
+        view_spec["context"],
+        make_painter_context(UserPermissions({}, {}, {}, [])),
+        RequestCache(Config()),
+    )
     rt = RowTableLivestatus("hosts")
 
     # @Christoph: Test geht kaputt wenn headers="Filter: host_name = heute"

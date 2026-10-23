@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from ._base_core import MonitoringCore as MonitoringCore
+from cmk.core_client import CoreAction as CoreAction
+
+from ._control import (
+    build_and_activate_monitoring_config as build_and_activate_monitoring_config,
+)
+from ._control import config_builders as config_builders
 from ._control import do_create_config as do_create_config
-from ._control import do_reload as do_reload
-from ._control import do_restart as do_restart

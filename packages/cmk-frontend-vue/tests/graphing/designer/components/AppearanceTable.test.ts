@@ -30,7 +30,7 @@ function metric(name: string, points: (number | null)[], color = '#123456'): Met
       color,
       attributes: []
     },
-    render: { stack: null, inverse: false, hidden: false },
+    render: { shape: 'line', inverse: false, hidden: false },
     data_points: points
   }
 }
@@ -52,13 +52,17 @@ function backendMetric(name: string): Metric {
 function renderTable(
   seed: DesignerItem[],
   metricsBySource: Map<ItemId, Metric[]>,
-  resolvedTitles: Map<ItemId, string> = new Map()
+  resolvedTitles: Map<ItemId, string> = new Map(),
+  valueResolution: number | null = null,
+  axisUnit: Metric['metadata']['unit'] | null = null
 ) {
   const store = useGraphItems(PALETTE)
   store.replaceAll(seed)
   return {
     store,
-    ...render(AppearanceTable, { props: { store, metricsBySource, resolvedTitles } })
+    ...render(AppearanceTable, {
+      props: { store, metricsBySource, resolvedTitles, valueResolution, axisUnit }
+    })
   }
 }
 
@@ -86,6 +90,22 @@ test('shows the stats of rows that map to exactly one series', () => {
   expect(statsOf(rowOf('Single'))).toEqual(['10', '20', '30', '20'])
   // Row B fans into two series, so its own row attributes none of them.
   expect(statsOf(rowOf('Fanned'))).toEqual(['', '', '', ''])
+})
+
+test('prints stats at the value-axis resolution, telling close values apart', () => {
+  const rows = [rrdMetricItem('A', { title: 'Lower' }), rrdMetricItem('B', { title: 'Upper' })]
+  const series = new Map([
+    ['A', [metric('a', [0.196])]],
+    ['B', [metric('b', [0.198])]]
+  ])
+
+  const { unmount } = renderTable(rows, series)
+  // The unit alone prints both rows the same.
+  expect(statsOf(rowOf('Lower'))).toEqual(statsOf(rowOf('Upper')))
+  unmount()
+
+  renderTable(rows, series, new Map(), 0.005)
+  expect(statsOf(rowOf('Lower'))).not.toEqual(statsOf(rowOf('Upper')))
 })
 
 test('opens the rows that fan out into lines, leaving single-line rows without a toggle', () => {
@@ -272,6 +292,15 @@ test('per-row colour and visibility changes leave the other row untouched', asyn
   expect(store.items.value[1]).toMatchObject({ color: '#222222', visible: false })
 })
 
+test('a fanned-out row explains its automatic colors instead of offering a picker', () => {
+  renderTable([rrdQueryItem('B', { title: 'Fanned' })], new Map())
+
+  const row = rowOf('Fanned')
+
+  expect(row.querySelector('input[type=color]')).toBeNull()
+  within(row).getByRole('img', { name: /Colors are assigned automatically/ })
+})
+
 test('hovering a resolved series highlights that line alone', async () => {
   const { emitted } = renderTable(
     [rrdQueryItem('B', { title: 'Fanned' })],
@@ -332,4 +361,24 @@ test('hovering the attribute table keeps its own series highlighted', async () =
   await fireEvent.mouseEnter(attributesRow)
 
   expect(emitted()['hoverMetrics']).toEqual([[['line one']]])
+})
+
+test('stats render in the axis unit the preview labels its value axis in', () => {
+  // What "Settings > Unit > Custom > Notation: SI" enforces; the rows' own unit is decimal.
+  const siBytes: Metric['metadata']['unit'] = {
+    notation: 'si',
+    symbol: 'B',
+    precision: { type: 'auto', digits: 2 },
+    convertible: false
+  }
+
+  renderTable(
+    [rrdMetricItem('A', { title: 'Used' })],
+    new Map([['A', [metric('a', [33_554_432])]]]),
+    new Map(),
+    null,
+    siBytes
+  )
+
+  expect(statsOf(rowOf('Used'))).toEqual(['33.55 MB', '33.55 MB', '33.55 MB', '33.55 MB'])
 })

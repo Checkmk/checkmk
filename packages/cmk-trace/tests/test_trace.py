@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import subprocess
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 
@@ -115,6 +117,40 @@ def test_exporter_from_config_disabled() -> None:
     )
 
 
+def test_disabled_tracing_does_not_load_grpc() -> None:
+    # A fresh interpreter, because this test module imports the OTLP exporter itself
+    loaded = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            """
+import logging, sys
+from cmk import trace
+from cmk.trace import export
+export.exporter_from_config(
+    exporter_log_level=logging.INFO,
+    config=trace.TraceSendConfig(enabled=False, target=""),
+)
+print(sorted(m for m in sys.modules if m.split(".")[0] == "grpc"))
+""",
+        ],
+        capture_output=True,
+        check=True,
+        text=True,
+    ).stdout.strip()
+
+    assert loaded == "[]"
+
+
+def test_exporter_from_config_enabled_defaults_to_otlp_exporter() -> None:
+    exporter = export.exporter_from_config(
+        exporter_log_level=logging.INFO,
+        config=trace.TraceSendConfig(enabled=True, target=trace.LocalTarget(1234)),
+    )
+
+    assert isinstance(exporter, OTLPSpanExporter)
+
+
 class StubExporter(OTLPSpanExporter):
     def __init__(
         self,
@@ -146,6 +182,32 @@ def test_exporter_from_config_local_site() -> None:
     assert exporter.test_timeout == 3
     assert exporter.test_endpoint == "http://localhost:1234"
     assert exporter.test_insecure is True
+
+
+def test_init_tracing_survives_daemonizing_double_fork() -> None:
+    # A fresh interpreter, because this test module imports concurrent.futures.thread itself
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            """
+import os
+from cmk import trace
+trace.init_tracing(
+    service_namespace="namespace",
+    service_name="service",
+    service_instance_id="instance",
+)
+if os.fork() == 0:
+    if os.fork() == 0:
+        os._exit(0)
+    os._exit(os.waitstatus_to_exitcode(os.wait()[1]))
+os._exit(os.waitstatus_to_exitcode(os.wait()[1]))
+""",
+        ],
+        check=True,
+        timeout=30,
+    )
 
 
 @pytest.mark.usefixtures("reset_global_tracer_provider")

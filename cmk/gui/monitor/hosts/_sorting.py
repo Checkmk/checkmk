@@ -8,9 +8,28 @@
 import functools
 import re
 from collections.abc import Callable, Sequence
-from typing import Any, assert_never
+from typing import Any, assert_never, Final
 
-from ._models import Host, HostSort, HostSortColumn, HostSortDirection
+from ._models import Host, HostSort, HostSortColumn, HostSortDirection, HostState
+
+_UP_SEVERITY: Final = {(False, False): 0, (False, True): 1, (True, False): 2, (True, True): 3}
+_PENDING_SEVERITY: Final = 4
+_DOWN_SEVERITY: Final = {(False, True): 5, (True, False): 6, (True, True): 7, (False, False): 8}
+_UNREACHABLE_SEVERITY: Final = 9
+
+
+def _state_severity(host: Host) -> int:
+    match host.state:
+        case HostState.UP:
+            return _UP_SEVERITY[(host.stale, host.is_flapping)]
+        case HostState.PENDING:
+            return _PENDING_SEVERITY
+        case HostState.DOWN:
+            return _DOWN_SEVERITY[(host.stale, host.is_flapping)]
+        case HostState.UNREACHABLE:
+            return _UNREACHABLE_SEVERITY
+        case _:
+            assert_never(host.state)
 
 
 def host_sorter(sorters: Sequence[HostSort]) -> Callable[[Host], Any]:
@@ -23,19 +42,21 @@ def host_sorter(sorters: Sequence[HostSort]) -> Callable[[Host], Any]:
             case HostSortColumn.ADDRESS:
                 return host.address
             case HostSortColumn.STATE:
-                return host.state
+                return _state_severity(host)
             case HostSortColumn.NUM_SERVICES:
-                return 0 if host.service_counts is None else host.service_counts.total
+                return host.num_services or 0
             case HostSortColumn.NUM_SERVICES_OK:
-                return 0 if host.service_counts is None else host.service_counts.ok
+                return host.num_services_ok or 0
             case HostSortColumn.NUM_SERVICES_WARN:
-                return 0 if host.service_counts is None else host.service_counts.warn
+                return host.num_services_warn or 0
             case HostSortColumn.NUM_SERVICES_CRIT:
-                return 0 if host.service_counts is None else host.service_counts.crit
+                return host.num_services_crit or 0
             case HostSortColumn.NUM_SERVICES_UNKNOWN:
-                return 0 if host.service_counts is None else host.service_counts.unknown
+                return host.num_services_unknown or 0
             case HostSortColumn.NUM_SERVICES_PENDING:
-                return 0 if host.service_counts is None else host.service_counts.pending
+                return host.num_services_pending or 0
+            case HostSortColumn.NUM_RELATIONS:
+                return host.num_relations or 0
             case HostSortColumn.FOLDER:
                 return host.folder
             case HostSortColumn.SITE_ID:

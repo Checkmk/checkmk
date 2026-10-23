@@ -201,11 +201,8 @@ class ModeCheckPluginSearch(WatoMode):
         def get_matched_entry(entry: CatalogEntry) -> CatalogEntry | None:
             return (
                 entry
-                if isinstance(entry, dict)  # type: ignore[redundant-expr]
-                and (
-                    entry_part_matches(entry, entry.get("name", ""))
-                    or entry_part_matches(entry, entry.get("title", ""))
-                )
+                if entry_part_matches(entry, entry.get("name", ""))
+                or entry_part_matches(entry, entry.get("title", ""))
                 else None
             )
 

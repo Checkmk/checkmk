@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import AsyncGenerator, Generator
+from http import HTTPStatus
 from typing import Final, final, override
 
 import httpx2
@@ -38,7 +39,7 @@ class InternalAuth(httpx2.Auth):
         response = yield request
 
         # Handle credential rotation on unauthorized responses
-        if response.status_code in (401, 403):
+        if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
             self._invalidate_cache()
             request.headers["Authorization"] = self._get_auth_header_sync()
             yield request
@@ -51,7 +52,7 @@ class InternalAuth(httpx2.Auth):
         response = yield request
 
         # Handle credential rotation on unauthorized responses
-        if response.status_code in (401, 403):
+        if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
             self._invalidate_cache()
             request.headers["Authorization"] = await self._get_auth_header_async()
             yield request

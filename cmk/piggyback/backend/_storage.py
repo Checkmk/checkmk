@@ -7,6 +7,7 @@
 import contextlib
 import datetime
 import errno
+import itertools
 import json
 import logging
 import os
@@ -16,7 +17,7 @@ import time
 from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Self
+from typing import Literal, Self
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.inotify import Event, INotify, Masks
@@ -421,6 +422,8 @@ def _extract_relevant_values(rule_value: Mapping[str, object]) -> Sequence[int]:
 
 
 def cleanup_piggyback_files(
+    *,
+    now: float,
     max_cache_file_age: int,
     all_configured_rule_values: Iterable[Mapping[str, object]],
     omd_root: Path,
@@ -432,7 +435,7 @@ def cleanup_piggyback_files(
     # if and only if they have exceeded the maximum cache age configured in the
     # global settings or in the rule 'Piggybacked Host Files'."""
 
-    cut_off_timestamp = time.time() - max(
+    cut_off_timestamp = now - max(
         max_cache_file_age, _compute_largest_configured_threshold(all_configured_rule_values)
     )
     logger.debug(
@@ -443,67 +446,44 @@ def cleanup_piggyback_files(
         },
     )
 
-    piggybacked_hosts_settings = [
-        (piggybacked_host_folder, _files_in(piggybacked_host_folder))
-        for piggybacked_host_folder in _get_piggybacked_host_folders(omd_root)
-    ]
-
-    _cleanup_old_source_status_files(_get_source_state_files(omd_root), cut_off_timestamp)
-    _cleanup_old_piggybacked_files(piggybacked_hosts_settings, cut_off_timestamp)
+    _remove_files_older_than(_get_source_state_files(omd_root), cut_off_timestamp)
+    for piggybacked_host_folder in _get_piggybacked_host_folders(omd_root):
+        _remove_files_older_than(_files_in(piggybacked_host_folder), cut_off_timestamp)
+        _remove_folder_if_empty(piggybacked_host_folder)
 
 
-def _cleanup_old_source_status_files(
-    source_state_files: Sequence[Path],
-    cut_off_timestamp: float,
-) -> None:
-    """Remove source status files which exceed provided maximum age."""
-    for source_state_file in source_state_files:
-        if (mtime := _get_mtime(source_state_file)) is None:
-            continue  # File has been removed, that's OK.
+def _remove_files_older_than(files: Iterable[Path], cut_off_timestamp: float) -> None:
+    """Remove the files last modified before the cut-off.
 
-        if mtime < cut_off_timestamp:
-            logger.debug(
-                "Piggyback source status file '%(source_state_file)s' too old (%(mtime)s). "
-                "Remove it.",
-                {
-                    "source_state_file": source_state_file,
-                    "mtime": _render_datetime(mtime),
-                },
-            )
-            _remove_piggyback_file(source_state_file)
+    Other processes may remove any of these files while we're looking at them.
+    That's OK: the file is gone, which is what we want anyway."""
+    for file in files:
+        if (mtime := _get_mtime(file)) is None or mtime >= cut_off_timestamp:
+            continue
 
-
-def _cleanup_old_piggybacked_files(
-    piggybacked_hosts_settings: Iterable[tuple[Path, Iterable[Path]]], cut_off_timestamp: float
-) -> None:
-    """Remove piggybacked data files which exceed provided maximum age."""
-
-    for piggybacked_host_folder, source_hosts in piggybacked_hosts_settings:
-        for piggybacked_host_source in source_hosts:
-            if (mtime := _get_mtime(piggybacked_host_source)) is None:
-                continue
-
-            if mtime < cut_off_timestamp:
-                logger.debug(
-                    "Piggyback file '%(piggybacked_host_source)s' too old (%(mtime)s). Remove it.",
-                    {
-                        "piggybacked_host_source": piggybacked_host_source,
-                        "mtime": _render_datetime(mtime),
-                    },
-                )
-                _remove_piggyback_file(piggybacked_host_source)
-
-        # Remove empty backed host directory
-        try:
-            piggybacked_host_folder.rmdir()
-        except OSError as e:
-            if e.errno == errno.ENOTEMPTY:
-                continue
-            raise
         logger.debug(
-            "Piggyback folder '%(piggybacked_host_folder)s' was empty. Removed it.",
-            {"piggybacked_host_folder": piggybacked_host_folder},
+            "Piggyback file '%(file)s' too old (%(mtime)s). Remove it.",
+            {"file": file, "mtime": _render_datetime(mtime)},
         )
+        file.unlink(missing_ok=True)
+
+
+def _remove_folder_if_empty(folder: Path) -> None:
+    """Remove the folder unless it still contains files.
+
+    A folder that has vanished meanwhile (concurrent cleanup, host rename) is fine, too."""
+    try:
+        folder.rmdir()
+    except FileNotFoundError:
+        return
+    except OSError as e:
+        if e.errno == errno.ENOTEMPTY:
+            return
+        raise
+    logger.debug(
+        "Piggyback folder '%(folder)s' was empty. Removed it.",
+        {"folder": folder},
+    )
 
 
 def _get_mtime(path: Path) -> int | None:
@@ -521,32 +501,41 @@ def _render_datetime(timestamp: float) -> str:
     return datetime.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
-def move_for_host_rename(omd_root: Path, old_host: str, new_host: str) -> tuple[str, ...]:
+type RenameAction = Literal["piggyback-load", "piggyback-pig"]
+
+
+def move_for_host_rename(omd_root: Path, old_host: str, new_host: str) -> tuple[RenameAction, ...]:
     """Move all piggybacked and source files from old_host to new_host
 
-    Return a tuple of strings representing the actions taken.
+    Return one action per moved file.
     """
-    piggyback_dir = payload_dir(omd_root)
 
-    def _rename_piggybacked_dir(old_name: str, new_name: str) -> Iterable[str]:
-        if not (old_path := piggyback_dir / old_name).exists():
+    def _rename_piggybacked_dir(basedir: Path) -> Iterable[RenameAction]:
+        if not (old_path := basedir / old_host).exists():
             return
 
         with contextlib.suppress(FileNotFoundError):
-            shutil.rmtree(str(new_path := piggyback_dir / new_name))
+            shutil.rmtree(str(new_path := basedir / new_host))
 
-        os.rename(str(old_path), str(new_path))
+        try:
+            os.rename(str(old_path), str(new_path))
+        except FileNotFoundError:
+            return
         yield "piggyback-load"
 
-    def _rename_payload_file(basedir: Path, old_name: str, new_name: str) -> Iterable[str]:
-        if not (old_path := basedir / old_name).exists():
+    def _rename_file(basedir: Path) -> Iterable[RenameAction]:
+        try:
+            (basedir / old_host).replace(basedir / new_host)
+        except FileNotFoundError:
             return
-
-        (new_path := basedir / new_name).unlink(missing_ok=True)
-        old_path.rename(new_path)
         yield "piggyback-pig"
 
+    # the payload files of the renamed host sit in the folder of every host it is a source of,
+    # so they have to be moved before its own folder is renamed away
     return tuple(
-        *_rename_piggybacked_dir(old_host, new_host),
-        *_rename_payload_file(piggyback_dir, old_host, new_host),
+        itertools.chain(
+            *(_rename_file(folder) for folder in _get_piggybacked_host_folders(omd_root)),
+            _rename_file(source_status_dir(omd_root)),
+            _rename_piggybacked_dir(payload_dir(omd_root)),
+        )
     )

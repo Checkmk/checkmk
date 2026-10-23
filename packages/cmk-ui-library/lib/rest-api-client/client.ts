@@ -5,6 +5,7 @@
  */
 import type { paths } from 'cmk-shared-typing/typescript/openapi_internal'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
+import { networkAwareFetch } from 'cmk-ui-library/lib/networkAwareFetch'
 import type { MaybeRestApiCrashReport, MaybeRestApiError } from 'cmk-ui-library/lib/types'
 import createClientImpl from 'openapi-fetch'
 
@@ -46,7 +47,7 @@ export function unwrap<T>(result: { data?: T; error?: unknown; response: Respons
       }
     }
 
-    throw new CmkApiError(message, null, context.join('\n\n'), result.response.status)
+    throw new CmkApiError(message, null, context.join('\n\n'), result.response.status, parsedJson)
   }
 
   // Reference: https://github.com/openapi-ts/openapi-typescript/discussions/1869
@@ -71,7 +72,8 @@ export function createClient({ baseUrl }: { baseUrl: string }) {
     credentials: 'include',
     headers: {
       Accept: 'application/json'
-    }
+    },
+    fetch: networkAwareFetch
   })
 }
 

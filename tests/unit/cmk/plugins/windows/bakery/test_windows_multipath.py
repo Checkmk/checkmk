@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.bakery.v2_unstable import OS, Plugin
+from cmk.bakery.v2 import OS, Plugin
 from cmk.plugins.windows.bakery.windows_multipath import bakery_plugin_windows_multipath
 
 

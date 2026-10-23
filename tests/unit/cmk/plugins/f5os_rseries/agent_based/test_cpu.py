@@ -5,11 +5,10 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.f5os_rseries.agent_based import cpu as cpu_module
 from cmk.plugins.f5os_rseries.agent_based.cpu import (
     check_f5os_rseries_cpu,
-    discover_f5os_rseries_cpu,
     F5OSCPUSection,
     parse_f5os_rseries_cpu,
 )
@@ -30,12 +29,6 @@ _CPU_STRING_TABLE = [["cpu", "12", "13", "8", "8"]]
 )
 def test_parse_f5os_rseries_cpu(string_table: StringTable, expected: F5OSCPUSection | None) -> None:
     assert parse_f5os_rseries_cpu(string_table) == expected
-
-
-def test_discover_f5os_rseries_cpu() -> None:
-    section = parse_f5os_rseries_cpu(_CPU_STRING_TABLE)
-    assert section is not None
-    assert list(discover_f5os_rseries_cpu(section)) == [Service()]
 
 
 def test_check_f5os_rseries_cpu_ok(monkeypatch: pytest.MonkeyPatch) -> None:

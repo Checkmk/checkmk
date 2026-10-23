@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ScaleLinear, ScaleTime } from 'd3-scale'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 import type { M4Cache } from '@/graphing/components/TimeSeriesGraph/decimation/types'
 import { drawData } from '@/graphing/components/TimeSeriesGraph/render'
@@ -28,12 +28,15 @@ vi.mock('@/graphing/components/TimeSeriesGraph/render/stacked', () => ({
 const drawLineSpy = vi.mocked(drawLine)
 const drawStackedBandSpy = vi.mocked(drawStackedBand)
 
-function makeSeries(kind: StackedSeriesKind): StackedSeries {
-  return { kind, bands: [] }
+function makeSeries(kind: Exclude<StackedSeriesKind, 'bars'>): StackedSeries {
+  return kind === 'line' ? { kind } : { kind, columns: [] }
 }
 
 function makeMetric(name: string, color: string): Metric {
-  return { metadata: { name, color }, render: { stack: null, inverse: false } } as unknown as Metric
+  return {
+    metadata: { name, color },
+    render: { shape: 'line', inverse: false }
+  } as unknown as Metric
 }
 
 const xScale = (() => 0) as unknown as ScaleTime<number, number>
@@ -46,10 +49,6 @@ function makeCtx() {
 }
 
 describe('drawData', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
   test('routes each series to the renderer matching its kind, carrying the metric color', () => {
     const ctx = makeCtx()
     const metrics = [makeMetric('area', '#area00'), makeMetric('line', '#line00')]

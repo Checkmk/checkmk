@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkHtml from 'cmk-ui-library/components/CmkHtml.vue'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
+import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import useId from 'cmk-ui-library/lib/useId'
@@ -30,7 +31,11 @@ const {
   label?: TranslatedString
   /**
    * Accessible name for the checkbox to be used when no visible `label` is rendered
-   * (e.g. a row-select checkbox in a table).
+   * (e.g. a row-select checkbox in a table). Rendered as a real, visually-hidden
+   * `<label>` associated with the checkbox rather than as an `aria-label` attribute,
+   * so assistive tech that relies on content-based naming finds an actual label - and
+   * so the name isn't given twice over (once as an attribute, once as DOM text) to
+   * tooling that reads both. Ignored when `label` or the `label` slot is used.
    */
   ariaLabel?: TranslatedString
   labelPosition?: 'left' | 'right'
@@ -83,17 +88,25 @@ const hasValidationErrors = computed(() => {
         class="cmk-checkbox__button"
         :class="{ 'cmk-checkbox__button--error': hasValidationErrors }"
         :disabled="disabled"
-        :aria-label="ariaLabel"
       >
-        <CheckboxIndicator class="cmk-checkbox__indicator">
+        <CheckboxIndicator class="cmk-checkbox__indicator" aria-hidden="true">
           <span v-if="value === 'indeterminate'" class="cmk-checkbox__dash" />
-          <svg v-else version="1.1" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+          <svg
+            v-else
+            version="1.1"
+            viewBox="0 0 18 18"
+            xmlns="http://www.w3.org/2000/svg"
+            focusable="false"
+          >
             <g transform="rotate(45,9,9)">
               <path d="m18.5 6.5v5h-7v7h-5v-7h-7v-5h7v-7h5v7z" fill="currentcolor" />
             </g>
           </svg>
         </CheckboxIndicator>
       </CheckboxRoot>
+      <CmkLabel v-if="ariaLabel && !label && !$slots.label" :for="id">
+        <CmkVisuallyHidden :text="ariaLabel" />
+      </CmkLabel>
       <template v-if="label || $slots.label || $slots.default">
         <CmkSpace :size="'small'" />
         <div class="cmk-checkbox__column">
@@ -222,7 +235,7 @@ span {
   }
 
   &.cmk-checkbox__button--error {
-    border: 1px solid var(--inline-error-border-color);
+    border: 1px solid var(--status-border-color-error);
   }
 
   &:focus-visible {

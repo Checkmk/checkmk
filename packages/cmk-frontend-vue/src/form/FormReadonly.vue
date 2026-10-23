@@ -16,6 +16,7 @@ import type {
   ConditionChoices,
   ConditionChoicesValue,
   ConditionGroup,
+  DataBackendSettings,
   Dictionary,
   DictionaryElement,
   DictionaryGroup,
@@ -59,6 +60,11 @@ import {
   groupNestedValidations
 } from '@/form/private/validation'
 
+import {
+  ADDRESS_SEEN_BY_CENTRAL,
+  dictionaryOf,
+  placesAFeatureCentrally
+} from '@/data-backend/settings'
 import { attributeKindPrefix, pillLabel } from '@/telemetry-metrics/attribute-filter/pill-label'
 import { fromAttributeFilter } from '@/telemetry-metrics/attributeFilterAdapter'
 import {
@@ -96,7 +102,7 @@ function _renderForm(
   formSpec: FormSpec,
   value: unknown,
   backendValidation: ValidationMessages = []
-): VNode {
+): VNode | null {
   switch ((formSpec as Components).type) {
     case 'dictionary':
       return renderDict(
@@ -186,18 +192,25 @@ function _renderForm(
     case 'telemetry_metrics_custom_query':
       return renderTelemetryMetricsCustomQuery(value as TelemetryMetricsCustomQuery)
     case 'dcd_telemetry_metrics_filter':
-      return h('div', 'DCD Metric Backend Filter does not support readonly')
+      return h('div', 'DCD Telemetry metrics Filter does not support readonly')
     case 'oauth2_connection_setup':
       return renderOAuth2ConnectionSetup(formSpec as Oauth2ConnectionSetup, value)
+    case 'data_backend_settings':
+      return renderDataBackendSettings(
+        formSpec as DataBackendSettings,
+        value as Record<string, unknown>,
+        backendValidation
+      )
     // Do not add a default case here. This is intentional to make sure that all form types are covered.
   }
 }
 
+// Returns null if there is nothing to show, so callers can omit surrounding decoration
 function renderForm(
   formSpec: FormSpec,
   value: unknown,
   backendValidation: ValidationMessages = []
-): VNode {
+): VNode | null {
   const readOnlyValue = _renderForm(formSpec, value, backendValidation)
   const currentValidation = backendValidation
     .filter(({ location }) => location.length === 0)
@@ -216,8 +229,25 @@ function renderFileUpload(_formSpec: FileUpload, value: FileUploadData): VNode {
   return h('div', [value.file_name])
 }
 
-function renderOAuth2ConnectionSetup(formSpec: Oauth2ConnectionSetup, value: unknown): VNode {
+function renderOAuth2ConnectionSetup(
+  formSpec: Oauth2ConnectionSetup,
+  value: unknown
+): VNode | null {
   return renderForm(formSpec.form_spec, value)
+}
+
+function renderDataBackendSettings(
+  formSpec: DataBackendSettings,
+  value: Record<string, unknown>,
+  backendValidation: ValidationMessages
+): VNode {
+  const showAddress = placesAFeatureCentrally(formSpec, value)
+  return renderDict(
+    dictionaryOf(formSpec, (name) => showAddress || name !== ADDRESS_SEEN_BY_CENTRAL),
+    'one_column',
+    value,
+    backendValidation
+  )
 }
 
 function consolidationParams(
@@ -473,10 +503,10 @@ function renderBooleanChoice(formSpec: BooleanChoice, value: boolean): VNode {
   ])
 }
 
-function renderFixedValue(formSpec: FixedValue): VNode {
-  let shownValue = formSpec.value
-  if (formSpec.label !== null) {
-    shownValue = formSpec.label
+function renderFixedValue(formSpec: FixedValue): VNode | null {
+  const shownValue = formSpec.label ?? formSpec.value
+  if (shownValue === null || shownValue === '') {
+    return null
   }
   return h('div', shownValue as string)
 }
@@ -538,21 +568,18 @@ function renderDict(
   })
 
   for (const [groupKey, groupElements] of Object.entries(groups)) {
-    const elements: [string, VNode][] = []
+    const elements: [string, VNode | null][] = []
     groupElements.forEach((element) => {
       if (value[element.name] === undefined) {
         return
       }
 
+      // The row is kept even without a rendered value, since the presence of the key is information
       const elementForm = renderForm(
         element.parameter_form,
         value[element.name],
         elementValidations[element.name] || []
       )
-      if (elementForm === null) {
-        return
-      }
-
       elements.push([element.parameter_form.title, elementForm])
     })
     const group = groupByKey[groupKey]!
@@ -749,12 +776,17 @@ function renderCascadingSingleChoice(
 ): VNode {
   for (const element of formSpec.elements) {
     if (element.name === value[0]) {
+      const rendered = renderForm(element.parameter_form, value[1], backendValidation)
       return h(
         'div',
         h('div', { class: 'form-readonly__cascading-single-choice__layout-horizontal' }, [
           // notification explicitly defines empty string title:
-          h('div', { style: 'vertical-align: top;' }, element.title.concat(':')),
-          h('div', [renderForm(element.parameter_form, value[1], backendValidation)])
+          h(
+            'div',
+            { style: 'vertical-align: top;' },
+            rendered ? element.title.concat(':') : element.title
+          ),
+          ...(rendered ? [h('div', [rendered])] : [])
         ])
       )
     }

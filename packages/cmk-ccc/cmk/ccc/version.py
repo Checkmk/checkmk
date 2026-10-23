@@ -373,11 +373,22 @@ class Version:
 VERSION_PATTERN = re.compile(r"^([.\-a-z]+)?(\d+)")
 
 
-# Parses versions of Checkmk and converts them into comparable integers.
+# DO NOT USE THIS. To compare versions, use `Version.from_str`.
+#
+# It is impossible to implement `p: str -> int` in a way that
+#
+#   ∀ v₁, v₂: p(v₁) < p(v₂) ⇔  Version.from_str(v₁) < Version.from_str(v₂)
+#
+# because there are infinitely many versions between 2.5.0 and 2.6.0 (2.5.0p1, 2.5.0p2, ...),
+# but only finitely many integers between any two integers.
+# This function in particular gets it wrong for large build numbers
+# (e.g. 2.5.0b301 is considered higher than 2.5.0p1).
+# It is only kept for existing callers that depend on the integer encoding.
 def parse_check_mk_version(v: str) -> int:
-    """Figure out how to compare versions semantically.
+    """Convert Checkmk versions into integers (lossy, see comment above).
 
-    Parses versions of Checkmk and converts them into comparable integers.
+    Parses versions of Checkmk and converts them into integers that are comparable
+    for most, but not all versions.
 
     >>> p = parse_check_mk_version
 

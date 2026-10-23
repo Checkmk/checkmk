@@ -16,7 +16,7 @@ from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation
 from google.cloud.monitoring_v3.types import TimeSeries
 
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.plugins.gcp.special_agents import agent_gcp
 
 # Those are enum classes defined in the Aggregation class. Not nice but works

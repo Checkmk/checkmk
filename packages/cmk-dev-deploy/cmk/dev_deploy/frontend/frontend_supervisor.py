@@ -2,7 +2,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""iBazel frontend supervisor subprocess lifecycle management."""
+"""Vite dev server lifecycle: build, launch, readiness, and shutdown."""
 
 import contextlib
 import os
@@ -12,25 +12,30 @@ import subprocess
 import threading
 import time
 from collections import deque
+from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from bazel_devserver import process_tree
+
 from cmk.dev_deploy.core import output
-from cmk.dev_deploy.core.bazel import ensure_bazel_wrapper
+from cmk.dev_deploy.core.bazel import _cache_dir, bazel_command, command_options, startup_options
 from cmk.dev_deploy.errors import FrontendError
-from cmk.dev_deploy.frontend.ibazel_manager import ensure_ibazel
 
 if TYPE_CHECKING:
     from typing import IO
 
-    from cmk.dev_deploy.types import FrontendConfig
+    from cmk.dev_deploy.types import Edition, FrontendConfig
 
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 
-IBAZEL_TARGET = "//packages/cmk-frontend-vue:vite"
-"""The Bazel target for the frontend supervisor (runs Vite via iBazel)."""
+VITE_TARGET = "//packages/cmk-frontend-vue:vite"
+"""The js_run_devserver target that runs Vite."""
+
+RUNNER_TARGET = "//bazel/tools/devserver"
+"""The tool that runs the dev server and rebuilds it whenever its sources change."""
 
 _INOTIFY_SYSCTL_PATH = Path("/proc/sys/fs/inotify/max_user_watches")
 """Sysctl path for inotify watch limit on Linux."""
@@ -38,11 +43,22 @@ _INOTIFY_SYSCTL_PATH = Path("/proc/sys/fs/inotify/max_user_watches")
 _INOTIFY_MIN_WATCHES = 524288
 """Minimum recommended inotify watches for large repos like Checkmk."""
 
+_SHUTDOWN_GRACE = 15.0
+"""Seconds the runner gets to exit on SIGINT before its process group is killed.
+
+Longer than the runner takes to stop the dev server: 5 s for it to exit on
+SIGINT, and 3 s once it is killed.
+"""
+
 
 def _pid_file() -> Path:
-    """PID file for orphaned iBazel process detection."""
-    cache = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
-    return cache / "cmk-dev-deploy" / "ibazel-frontend.pid"
+    """PID file for orphaned runner detection."""
+    return _cache_dir() / "frontend-dev-server.pid"
+
+
+def _launcher() -> Path:
+    """Launcher script that ``bazel run --script_path`` writes for the runner."""
+    return _cache_dir() / "frontend-dev-server"
 
 
 # ---------------------------------------------------------------------------
@@ -61,84 +77,13 @@ def _check_port(host: str, port: int, timeout: float = 1.0) -> bool:
 
 
 def _kill_process_group(pid: int) -> None:
-    """Send SIGKILL to the process group immediately (no grace period)."""
+    """Send SIGKILL to the process group of *pid*."""
     try:
         pgid = os.getpgid(pid)
     except ProcessLookupError, PermissionError:
         return
 
-    with contextlib.suppress(ProcessLookupError, PermissionError):
-        os.killpg(pgid, signal.SIGKILL)
-
-
-def _find_bazel_children(pid: int) -> list[int]:
-    """Find child processes of *pid* that are Bazel or Java workers."""
-    children: set[int] = set()
-
-    # Strategy 1: Walk /proc/{pid}/task/{tid}/children
-    task_dir = Path(f"/proc/{pid}/task")
-    try:
-        for tid_entry in task_dir.iterdir():
-            try:
-                children_text = (tid_entry / "children").read_text().strip()
-                if children_text:
-                    for child_str in children_text.split():
-                        with contextlib.suppress(ValueError):
-                            children.add(int(child_str))
-            except OSError, FileNotFoundError, ValueError, PermissionError:
-                continue
-    except OSError, FileNotFoundError, PermissionError:
-        # Strategy 2: Fallback -- scan /proc/ for processes with matching PPID
-        try:
-            for entry in Path("/proc").iterdir():
-                if not entry.name.isdigit():
-                    continue
-                try:
-                    stat_text = (entry / "stat").read_text()
-                    # /proc/{pid}/stat: "pid (comm) state ppid ..."
-                    # PPID is the 4th field; comm can contain spaces/parens
-                    # so find the last ')' and parse from there
-                    close_paren = stat_text.rfind(")")
-                    if close_paren == -1:
-                        continue
-                    fields = stat_text[close_paren + 2 :].split()
-                    # fields[0] = state, fields[1] = ppid
-                    if len(fields) >= 2 and int(fields[1]) == pid:
-                        children.add(int(entry.name))
-                except OSError, FileNotFoundError, ValueError, PermissionError:
-                    continue
-        except OSError, FileNotFoundError, PermissionError:
-            pass
-
-    # Filter to Bazel/Java processes only
-    bazel_children: list[int] = []
-    for child_pid in children:
-        try:
-            cmdline = Path(f"/proc/{child_pid}/cmdline").read_text().lower()
-            if "bazel" in cmdline or "java" in cmdline:
-                bazel_children.append(child_pid)
-        except OSError, FileNotFoundError, ValueError, PermissionError:
-            continue
-
-    return bazel_children
-
-
-def _collect_descendant_pids(root_pid: int) -> list[int]:
-    """Recursively collect all Bazel/Java descendant PIDs, deepest first."""
-    result: list[int] = []
-
-    def _recurse(pid: int) -> None:
-        try:
-            children = _find_bazel_children(pid)
-        except OSError:
-            return
-        for child in children:
-            _recurse(child)  # Depth-first: children of child added before child
-            if child not in result:
-                result.append(child)
-
-    _recurse(root_pid)
-    return result
+    process_tree.signal_group(pgid, signal.SIGKILL)
 
 
 def _cleanup_orphaned_port(port: int) -> None:
@@ -209,6 +154,16 @@ def _cleanup_orphaned_port(port: int) -> None:
             continue
 
 
+def _wait_for_port_release(port: int, timeout: float = 3.0) -> bool:
+    """Return True once nothing listens on *port*; killed processes release it only on exit."""
+    deadline = time.monotonic() + timeout
+    while _check_port("127.0.0.1", port):
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(0.1)
+    return True
+
+
 def _check_inotify_watches() -> None:
     """Warn if inotify max_user_watches is below the recommended threshold."""
     try:
@@ -219,7 +174,7 @@ def _check_inotify_watches() -> None:
     if current < _INOTIFY_MIN_WATCHES:
         output.warn(
             f"inotify watches too low: {current} (need {_INOTIFY_MIN_WATCHES})\n"
-            "  iBazel may fail to watch all files in large repos.\n"
+            "  The frontend dev server may miss changes in large repos.\n"
             "\n"
             "  Immediate fix:\n"
             f"    sudo sysctl fs.inotify.max_user_watches={_INOTIFY_MIN_WATCHES}\n"
@@ -231,8 +186,15 @@ def _check_inotify_watches() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Stderr ring buffer
+# Output prefixing
 # ---------------------------------------------------------------------------
+
+
+def _print_frontend_line(line: str) -> None:
+    from cmk.dev_deploy.core.output import _print_locked, GREEN, RESET
+
+    if stripped := line.rstrip("\n"):
+        _print_locked(f"{GREEN}[frontend]{RESET} {stripped}")
 
 
 class _StderrCapture:
@@ -249,23 +211,13 @@ class _StderrCapture:
 
     def _reader(self, pipe: IO[str]) -> None:
         """Read lines from *pipe*, print with prefix, and store in ring buffer."""
-        from cmk.dev_deploy.core.output import _print_locked, GREEN, RESET
-
-        prefix = f"{GREEN}[frontend]{RESET} "
         for line in pipe:
-            stripped = line.rstrip("\n")
-            self._buffer.append(stripped)
-            if stripped:  # Skip empty lines from iBazel
-                _print_locked(f"{prefix}{stripped}")
+            self._buffer.append(line.rstrip("\n"))
+            _print_frontend_line(line)
 
     def get_lines(self) -> list[str]:
         """Return the current contents of the ring buffer as a list."""
         return list(self._buffer)
-
-
-# ---------------------------------------------------------------------------
-# Stdout line prefixer
-# ---------------------------------------------------------------------------
 
 
 class _StdoutPrefixer:
@@ -280,13 +232,8 @@ class _StdoutPrefixer:
         self._thread.start()
 
     def _reader(self, pipe: IO[str]) -> None:
-        from cmk.dev_deploy.core.output import _print_locked, GREEN, RESET
-
-        prefix = f"{GREEN}[frontend]{RESET} "
         for line in pipe:
-            stripped = line.rstrip("\n")
-            if stripped:  # Skip empty lines from iBazel
-                _print_locked(f"{prefix}{stripped}")
+            _print_frontend_line(line)
 
 
 # ---------------------------------------------------------------------------
@@ -295,19 +242,34 @@ class _StdoutPrefixer:
 
 
 class FrontendSupervisor:
-    """Manages the iBazel frontend supervisor lifecycle as a subprocess."""
+    """Runs the Vite dev server through the runner and waits until it serves.
 
-    def __init__(self, config: FrontendConfig, repo_root: Path) -> None:
+    The runner, ``//bazel/tools/devserver``, rebuilds the dev server's
+    target whenever its sources change, tells the dev server to sync, and
+    stops the dev server on SIGINT.  It runs its Bazel commands on the
+    deploy server, for the site's *edition* like the deploy builds, so that
+    the server keeps its analysis cache between the two.
+    """
+
+    def __init__(self, config: FrontendConfig, repo_root: Path, *, edition: Edition) -> None:
         self._config = config
         self._repo_root = repo_root
+        self._edition_option = f"--cmk_edition={edition}"
         self._proc: subprocess.Popen[str] | None = None
         self._stdout_prefixer: _StdoutPrefixer | None = None
         self._stderr_capture: _StderrCapture | None = None
+        self._bazel_lock = threading.Lock()
+        self._bazel: subprocess.Popen[str] | None = None
+        self._stopping = False
 
     # -- Orphan detection ----------------------------------------------------
 
-    def _cleanup_orphaned_ibazel(self) -> None:
-        """Kill orphaned iBazel processes from previous crashes."""
+    def _cleanup_orphaned_server(self) -> None:
+        """Stop an orphaned runner from a previous crash.
+
+        It gets SIGINT first, which makes it stop the dev server.  Whatever is
+        still alive after the grace period is killed.
+        """
         if not _pid_file().exists():
             _cleanup_orphaned_port(self._config.port)
             return
@@ -315,32 +277,26 @@ class FrontendSupervisor:
         try:
             old_pid = int(_pid_file().read_text().strip())
 
-            # Check if process is still alive
             try:
                 os.kill(old_pid, 0)
             except ProcessLookupError, PermissionError:
-                # Process gone -- use port cleanup fallback
                 _cleanup_orphaned_port(self._config.port)
                 return
 
-            # Verify it's actually iBazel by reading /proc/{pid}/cmdline
             try:
                 cmdline = Path(f"/proc/{old_pid}/cmdline").read_text()
-                if "ibazel" not in cmdline:
-                    return  # Not iBazel -- leave it alone
+                if VITE_TARGET not in cmdline:
+                    return  # PID reused by another process -- leave it alone
             except OSError:
                 return  # Cannot verify -- leave it alone
 
-            # Find Bazel children BEFORE killing iBazel
-            bazel_children = _find_bazel_children(old_pid)
+            # Look the group up while the PID is known to be the runner's
+            pgid = os.getpgid(old_pid)
 
-            output.warn(f"Killing orphaned iBazel process (PID {old_pid})")
-            _kill_process_group(old_pid)
-
-            # Kill each Bazel child process group
-            for child_pid in bazel_children:
-                output.warn(f"Killing orphaned Bazel child process (PID {child_pid})")
-                _kill_process_group(child_pid)
+            output.warn(f"Stopping orphaned frontend dev server (PID {old_pid})")
+            process_tree.signal_group(pgid, signal.SIGINT)
+            process_tree.wait_for_exit(old_pid, _SHUTDOWN_GRACE)
+            process_tree.signal_group(pgid, signal.SIGKILL)
 
         except ProcessLookupError, PermissionError, ValueError, OSError:
             pass  # Any error: just clean up PID file
@@ -348,8 +304,7 @@ class FrontendSupervisor:
             with contextlib.suppress(OSError):
                 _pid_file().unlink(missing_ok=True)
 
-        # Verify port is free after cleanup
-        if _check_port("127.0.0.1", self._config.port):
+        if not _wait_for_port_release(self._config.port):
             output.warn(
                 f"Port {self._config.port} still in use after orphan cleanup -- "
                 "pre-flight check will verify availability"
@@ -358,7 +313,7 @@ class FrontendSupervisor:
     # -- PID file management -------------------------------------------------
 
     def _write_pid_file(self, pid: int) -> None:
-        """Write the iBazel process PID to the PID file."""
+        """Write the runner's PID to the PID file."""
         try:
             _pid_file().parent.mkdir(parents=True, exist_ok=True)
             _pid_file().write_text(str(pid))
@@ -378,28 +333,54 @@ class FrontendSupervisor:
             raise FrontendError(
                 f"Port {self._config.port} is already in use",
                 recovery=(
-                    "This may be a stale cmk-dev-deploy iBazel instance.\n"
+                    "This may be a stale cmk-dev-deploy frontend dev server.\n"
                     f"Try: kill $(lsof -t -i :{self._config.port})"
                 ),
             )
 
+    # -- Bazel ---------------------------------------------------------------
+
+    def _run_bazel(self, args: Sequence[str]) -> bool:
+        """Run bazel on the deploy server, printing its output; True on success."""
+        with self._bazel_lock:
+            if self._stopping:
+                return False
+            proc = self._bazel = subprocess.Popen(
+                bazel_command(args, self._repo_root),
+                cwd=str(self._repo_root),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
+        for line in proc.stdout:  # type: ignore[union-attr]
+            _print_frontend_line(line)
+        return proc.wait() == 0
+
+    def _end_bazel(self) -> None:
+        with self._bazel_lock:
+            self._stopping = True
+            if self._bazel is not None:
+                self._bazel.terminate()
+
     # -- Subprocess management -----------------------------------------------
 
-    def _spawn_ibazel(self) -> None:
-        """Spawn iBazel via ``ibazel run`` in a new process group.
+    def _spawn_launcher(self) -> None:
+        """Start the runner for the dev server in a new process group.
 
-        ``-bazel_path`` points iBazel's bazel invocations at the deploy
-        server, so frontend rebuilds never contend with the developer's
-        own bazel commands (omitted in shared-server mode).
+        The runner gets SIGINT once cdd is gone, however cdd ended, so it
+        never outlives cdd with its rebuilds and dev server.
         """
-        ibazel_bin = ensure_ibazel()
-        cmd = [str(ibazel_bin)]
-        if (bazel_wrapper := ensure_bazel_wrapper(self._repo_root)) is not None:
-            cmd.append(f"-bazel_path={bazel_wrapper}")
-        cmd.extend(["run", IBAZEL_TARGET])
+        options = [
+            *(f"--bazel_startup_option={option}" for option in startup_options(self._repo_root)),
+            *(
+                f"--bazel_build_option={option}"
+                for option in [*command_options("build"), self._edition_option]
+            ),
+        ]
         self._proc = subprocess.Popen(
-            cmd,
+            ["setpriv", "--pdeathsig", "INT", str(_launcher()), *options, VITE_TARGET],
             cwd=str(self._repo_root),
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             start_new_session=True,
@@ -415,31 +396,39 @@ class FrontendSupervisor:
         )
 
     def _wait_until_ready(self) -> bool:
-        """Poll port until iBazel/Vite is reachable or timeout expires."""
-        output.info("Initial Bazel build started -- build output will appear below")
+        """Poll port until Vite is reachable, the runner exits, or the timeout expires."""
         deadline = time.monotonic() + self._config.startup_timeout
         while time.monotonic() < deadline:
+            if not self.is_running():
+                return False
             if _check_port("127.0.0.1", self._config.port):
-                # Defense: verify process is still alive
-                return self._proc is not None and self._proc.poll() is None
+                return True
             time.sleep(self._config.health_check_interval)
         return False
 
-    # -- Public API ----------------------------------------------------------
-
-    def start(self) -> None:
-        """Start iBazel and block until the port becomes reachable."""
-        self._cleanup_orphaned_ibazel()
-        _check_inotify_watches()
-        self._check_port_available()
-        self._spawn_ibazel()
-        if not self._wait_until_ready():
-            crash_lines = self.get_crash_report()
-            self.stop()
-            msg = (
-                f"iBazel frontend supervisor failed to start within {self._config.startup_timeout}s"
+    def _launch(self) -> None:
+        _launcher().parent.mkdir(parents=True, exist_ok=True)
+        # Built here, so that the startup timeout does not include building the dev server
+        if not self._run_bazel(["build", self._edition_option, VITE_TARGET, RUNNER_TARGET]):
+            raise FrontendError(
+                f"Building {VITE_TARGET} or {RUNNER_TARGET} failed",
+                recovery="Fix the build errors above and run cmk-dev-deploy --frontend again",
             )
-            if crash_lines:
+        if not self._run_bazel(
+            ["run", self._edition_option, f"--script_path={_launcher()}", RUNNER_TARGET]
+        ):
+            raise FrontendError(
+                f"Writing the launcher of {RUNNER_TARGET} failed",
+                recovery="Run cmk-dev-deploy --frontend again",
+            )
+        self._spawn_launcher()
+        if not self._wait_until_ready():
+            msg = (
+                f"Frontend dev server failed to start within {self._config.startup_timeout}s"
+                if self.is_running()
+                else "Frontend dev server exited during startup"
+            )
+            if crash_lines := self.get_crash_report():
                 stderr_tail = "\n".join(crash_lines[-10:])
                 msg += f"\n\nLast stderr output:\n{stderr_tail}"
             raise FrontendError(
@@ -447,41 +436,45 @@ class FrontendSupervisor:
                 recovery="Run cmk-dev-deploy --frontend again",
             )
 
+    # -- Public API ----------------------------------------------------------
+
+    def start(self) -> None:
+        """Build and start the dev server, and block until the port becomes reachable."""
+        self._cleanup_orphaned_server()
+        _check_inotify_watches()
+        self._check_port_available()
+        output.info("Initial Bazel build started -- build output will appear below")
+        try:
+            self._launch()
+        except BaseException:
+            self.stop()
+            raise
+
     def stop(self) -> None:
-        """SIGKILL the full process tree and verify port is freed. No-op if not started."""
+        """Stop the runner's process group and verify port is freed.
+
+        The runner gets SIGINT first, which makes it stop the dev server.
+        Whatever is still alive after the grace period is killed.
+
+        A running bazel command is ended.  No-op if not started.
+        """
+        self._end_bazel()
+
         if self._proc is None:
             self._remove_pid_file()
             return
 
-        # Even if proc has exited, we still need to clean up descendants
-        if self._proc.poll() is not None:
-            # Process dead but children may survive
-            descendants = _collect_descendant_pids(self._proc.pid)
-            for child_pid in descendants:
-                _kill_process_group(child_pid)
-            # Port cleanup fallback
-            time.sleep(0.2)
-            if _check_port("127.0.0.1", self._config.port):
-                _cleanup_orphaned_port(self._config.port)
-            self._proc = None
-            self._remove_pid_file()
-            return
-
-        # 1. Collect all descendant PIDs before killing (they may disappear during kill)
-        descendants = _collect_descendant_pids(self._proc.pid)
-
-        # 2. Kill the iBazel process group (existing behavior)
-        _kill_process_group(self._proc.pid)
-
-        # 3. Kill each descendant's process group (bottom-up order)
-        for child_pid in descendants:
-            _kill_process_group(child_pid)
-
-        # 4. Wait for iBazel to actually exit
+        # The runner leads its own session, so its PID is the group's ID,
+        # which stays valid for the group's survivors once it is reaped.
+        if self._proc.poll() is None:
+            process_tree.signal_group(self._proc.pid, signal.SIGINT)
+            with contextlib.suppress(subprocess.TimeoutExpired):
+                self._proc.wait(timeout=_SHUTDOWN_GRACE)
+        process_tree.signal_group(self._proc.pid, signal.SIGKILL)
         with contextlib.suppress(subprocess.TimeoutExpired):
             self._proc.wait(timeout=3)
 
-        # 5. Verify port is free; nuclear fallback if not
+        # Verify port is free; nuclear fallback if not
         time.sleep(0.2)  # Brief pause for OS to release port
         if _check_port("127.0.0.1", self._config.port):
             output.warn(f"Port {self._config.port} still in use after stop -- attempting cleanup")
@@ -491,7 +484,7 @@ class FrontendSupervisor:
         self._remove_pid_file()
 
     def is_running(self) -> bool:
-        """Return True if the iBazel process is still alive."""
+        """Return True if the dev server is still alive."""
         return self._proc is not None and self._proc.poll() is None
 
     def get_crash_report(self) -> list[str]:

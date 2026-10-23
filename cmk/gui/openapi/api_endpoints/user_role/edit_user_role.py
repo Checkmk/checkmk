@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.user import UserId
@@ -24,7 +25,7 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
-from cmk.gui.permissions import load_dynamic_permissions, permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.userdb import load_roles, UserRole
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.userroles import (
@@ -50,7 +51,7 @@ def _check_and_update_new_alias(
             validate_new_alias(existing_userrole_copy.alias, userrole_edits.new_alias)
         except ValueError as e:
             raise RestAPIRequestGeneralException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Invalid alias",
                 detail=str(e),
             )
@@ -66,7 +67,7 @@ def _check_and_update_new_role_id(
             validate_new_roleid(existing_userrole_copy.name, userrole_edits.new_role_id)
         except ValueError as e:
             raise RestAPIRequestGeneralException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Invalid role ID",
                 detail=str(e),
             )
@@ -82,7 +83,6 @@ def edit_user_role_v1(
     body: EditUserRoleModel,
 ) -> UserRoleModel:
     """Edit a user role"""
-    load_dynamic_permissions()
     user.need_permission("wato.edit")
     existing_userrole_copy: UserRole = get_role(role_id)
 
@@ -109,7 +109,7 @@ def edit_user_role_v1(
         existing_userrole_copy,
         UserPermissions(
             load_roles(),
-            permission_registry,
+            all_permissions(),
             user_roles={
                 UserId(user_id): user["roles"]
                 for user_id, user in api_context.config.multisite_users.items()

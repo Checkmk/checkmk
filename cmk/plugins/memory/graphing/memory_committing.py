@@ -21,17 +21,25 @@ metric_mem_lnx_committed_as = metrics.Metric(
 )
 metric_mem_lnx_total_total = metrics.Metric(
     name="mem_lnx_total_total",
-    title=Title("Total virtual memory"),
+    title=Title("Total RAM and swap"),
     unit=UNIT_BYTES,
     color=metrics.Color.PURPLE,
+)
+metric_mem_lnx_total_used = metrics.Metric(
+    name="mem_lnx_total_used",
+    title=Title("Total used memory"),
+    unit=UNIT_BYTES,
+    color=metrics.Color.ORANGE,
 )
 
 graph_memory_committing = graphs.Graph(
     name="memory_committing",
     title=Title("Memory committing"),
-    compound_lines=[
-        "mem_lnx_committed_as",
+    compound_lines=["mem_lnx_committed_as"],
+    simple_lines=[
         "mem_lnx_commit_limit",
+        "mem_lnx_total_total",
+        "mem_lnx_total_used",
     ],
-    simple_lines=["mem_lnx_total_total"],
+    optional=["mem_lnx_total_used"],
 )

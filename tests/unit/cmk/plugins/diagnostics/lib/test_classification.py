@@ -89,6 +89,7 @@ def test_diagnostics_get_checkmk_file_info_by_name(
 @pytest.mark.parametrize(
     "rel_filepath, sensitivity",
     [
+        ("ai_control_plane.d/wato/global.mk", CheckmkFileSensitivity.sensitive),
         ("apache.conf", CheckmkFileSensitivity.insensitive),
         ("apache.d/wato/global.mk", CheckmkFileSensitivity.sensitive),
         ("conf.d/microcore.mk", CheckmkFileSensitivity.insensitive),
@@ -147,9 +148,7 @@ def test_diagnostics_get_checkmk_file_info_by_name(
         ("mkeventd.log", CheckmkFileSensitivity.sensitive),
         ("mknotifyd.log", CheckmkFileSensitivity.sensitive),
         ("mknotifyd.state", CheckmkFileSensitivity.sensitive),
-        ("network_flow.d/wato/global.mk", CheckmkFileSensitivity.sensitive),
-        ("network-flow.log", CheckmkFileSensitivity.sensitive),
-        ("network-flow.log.2.gz", CheckmkFileSensitivity.sensitive),
+        ("mkeventd.log.2.gz", CheckmkFileSensitivity.sensitive),
         ("notify.log", CheckmkFileSensitivity.sensitive),
         ("rrdcached.log", CheckmkFileSensitivity.sensitive),
         ("web.log", CheckmkFileSensitivity.sensitive),
@@ -161,16 +160,22 @@ def test_diagnostics_file_info_of_comp_notifications(
     assert get_checkmk_file_info(rel_filepath, None).sensitivity.value == sensitivity.value
 
 
+def test_ai_control_plane_settings_are_named_in_the_classification() -> None:
+    info = get_checkmk_file_info("ai_control_plane.d/wato/global.mk")
+
+    assert "AI control plane" in info.description
+
+
 @pytest.mark.parametrize(
     "file_name, keep",
     [
-        ("network-flow.log", True),
-        ("network-flow.log.1", True),
-        ("network-flow.log.2.gz", True),
+        ("mkeventd.log", True),
+        ("mkeventd.log.1", True),
+        ("mkeventd.log.2.gz", True),
         ("apache/access_log.1", True),
         ("mknotifyd.state", True),
         ("update.log.2.gz", True),
-        ("network-flow.pid", False),
+        ("mkeventd.pid", False),
     ],
 )
 def test_diagnostics_log_file_map_keeps_rotations(file_name: str, keep: bool) -> None:

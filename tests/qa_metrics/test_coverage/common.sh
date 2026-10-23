@@ -39,14 +39,18 @@ section() {
 # The measured source files, as Bazel labels: what a py rule compiles, minus what
 # Bazel marks as test support. `testonly` is enforced -- a non-testonly target may
 # not depend on a testonly one -- so a target claiming it has been checked by the
-# build, unlike a naming convention. Configuration-less, `bazel query` following
+# build, unlike a naming convention. Also minus what is tagged
+# `exclude-from-test-coverage`: a deliberate opt-out for code not suited to package
+# tests, which the build does not check. Configuration-less, `bazel query` following
 # every select() branch, so one edition's run measures them all.
 #
 # Filtered to .py: a py rule's srcs also carry the data files beside the code,
 # which have no executable line and would otherwise reach the denominator.
 source_labels_query() {
     cat <<'EOF'
-filter("\.py$", labels(srcs, kind("py_.*", //...) except attr("testonly", 1, //...)))
+filter("\.py$", labels(srcs, kind("py_.*", //...)
+    except attr("testonly", 1, //...)
+    except attr("tags", "[\[ ]exclude-from-test-coverage[,\]]", //...)))
 EOF
 }
 
@@ -80,7 +84,7 @@ source_labels() {
 # Narrow on purpose. Broadening it to every target pulls some 26k external-repo
 # records into the report, and gives the tests whose manifest is empty -- the ones
 # coverage.py therefore measures unfiltered -- an include list disjoint from what
-# they execute, so they collect nothing and the runner raises NoDataError.
+# they execute, so they silently contribute an empty coverage.dat.
 #
 # A label in the root package -- //:refresh_compile_commands.py -- names no
 # directory, so the grep drops it: an empty alternative would match every label.
@@ -109,10 +113,6 @@ instrumentation_filter() {
 #     match a tag like no-requirements.
 #   * omd/dependency_management:test_licenses: its SBOM data dep builds the Rust
 #     agent controller, which fails to link under instrumentation.
-#   * omd/dependency_management:test_manual_dep_manifest: passes under `bazel
-#     test` but not under `bazel coverage`, a second coverage.py Collector being
-#     created while pytest imports the module, so the runner's cov.stop() finds
-#     the wrong one on the stack.
 #   * from tests/, only what our test classification calls "package tests":
 #     openapi, agent-plugin-unit and unit. Everything else crosses package
 #     boundaries.
@@ -123,7 +123,6 @@ let t = $all
     except attr("srcs", "-doctest-runner\.py", $all)
     except attr("tags", "[\[ ]requirements[,\]]", $all)
     except //omd/dependency_management:test_licenses
-    except //omd/dependency_management:test_manual_dep_manifest
     except (//tests/... except (//tests/openapi/... + //tests/agent-plugin-unit/... + //tests/unit/...))
 in
 EOF

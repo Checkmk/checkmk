@@ -18,6 +18,11 @@ Config = dict[str, str]
 class Error(str): ...
 
 
+def join_errors(*errors: Error) -> Error | None:
+    """Combine any number of errors into a single, multi-line one."""
+    return Error("\n".join(errors)) if errors else None
+
+
 class ConfigChoiceHasError(Protocol):
     def __call__(self, value: str) -> None | Error: ...
 

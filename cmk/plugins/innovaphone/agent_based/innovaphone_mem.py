@@ -10,11 +10,10 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 Utilization = NewType("Utilization", int)
@@ -26,10 +25,6 @@ def parse_innovaphone_mem(string_table: StringTable) -> Utilization | None:
             return Utilization(int(value))
         case _:
             return None
-
-
-def discover_innovaphone_mem(section: Utilization) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 class CheckParams(TypedDict):
@@ -55,7 +50,7 @@ agent_section_innovaphone_mem = AgentSection(
 check_plugin_innovaphone_mem = CheckPlugin(
     name="innovaphone_mem",
     service_name="Memory",
-    discovery_function=discover_innovaphone_mem,
+    discovery_function=discover_one_service,
     check_function=check_innovaphone_mem,
     check_ruleset_name="innovaphone_mem",
     check_default_parameters=CheckParams(levels=("fixed", (60.0, 70.0))),

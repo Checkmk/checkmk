@@ -1,15 +1,15 @@
 @startuml
 
-component "[[../arch-comp-metric-backend.html Metric backend]]" as metric_backend
-interface "HTTP" as http_metric_backend
+component "[[../arch-comp-data-backend.html Data backend]]" as data_backend
+interface "HTTP" as http_data_backend
 component "[[../arch-comp-dcdd.html DCD]]" as dcd
 component "hosts" as hosts
-component "Metric backend fetcher" as metric_backend_fetcher
+component "Telemetry metrics fetcher" as telemetry_metrics_fetcher
 
-metric_backend -down- http_metric_backend
-dcd -up-> http_metric_backend: query
-metric_backend_fetcher -up-> http_metric_backend: query
+data_backend -down- http_data_backend
+dcd -up-> http_data_backend: query
+telemetry_metrics_fetcher -up-> http_data_backend: query
 dcd -down-> hosts: create hosts and discover services
-metric_backend_fetcher -down-> hosts: monitoring data
+telemetry_metrics_fetcher -down-> hosts: monitoring data
 
 @enduml

@@ -7,12 +7,17 @@ import type {
   GlobalSettingsApp,
   GlobalSettingsVariable
 } from 'cmk-shared-typing/typescript/global_settings'
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { CmkSimpleError } from 'cmk-ui-library/lib/error'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import type { InjectionKey } from 'vue'
 
+import type { ValidationMessages } from '@/form'
+
 export type GlobalSettingsScope = GlobalSettingsApp['scope']
+
+export type GlobalSettingsOrigin = components['schemas']['GlobalSettingsOrigin']
 
 export type ToggleSetting = (
   variable: GlobalSettingsVariable,
@@ -23,30 +28,30 @@ export const GLOBAL_SETTINGS_TOGGLE: InjectionKey<ToggleSetting> = Symbol('Globa
 
 export interface ReceivedValue {
   value: unknown
-  isDefault: boolean
+  spec: GlobalSettingsVariable['spec']
+  origin: GlobalSettingsOrigin
   etag: string
 }
 
-export interface GlobalSettingsService {
-  load(scope: GlobalSettingsScope, varname: string): Promise<ReceivedValue>
-  save(
-    scope: GlobalSettingsScope,
-    varname: string,
-    value: unknown,
-    etag: string
-  ): Promise<ReceivedValue>
-  reset(scope: GlobalSettingsScope, varname: string, etag: string): Promise<void>
-}
+export type SaveResult =
+  | { type: 'saved'; received: ReceivedValue }
+  | { type: 'invalid'; validationMessages: ValidationMessages }
 
-export const GLOBAL_SETTINGS_SERVICE: InjectionKey<GlobalSettingsService> =
-  Symbol('GlobalSettingsService')
+export interface GlobalSettingsService {
+  load(varname: string): Promise<ReceivedValue>
+  save(varname: string, value: unknown, etag: string): Promise<SaveResult>
+  reset(varname: string, etag: string): Promise<void>
+}
 
 const CONTENT_TYPE_HEADER = { 'Content-Type': 'application/json' } as const
 
-function toReceivedValue(result: {
-  data?: { value: unknown; is_default: boolean }
+interface SettingResult {
+  data?: { value: unknown; spec: unknown; origin: GlobalSettingsOrigin }
+  error?: unknown
   response: Response
-}): ReceivedValue {
+}
+
+function toReceivedValue(result: SettingResult): ReceivedValue {
   const body = unwrap(result)
   const etag = result.response.headers.get('ETag')
   if (etag === null) {
@@ -54,55 +59,97 @@ function toReceivedValue(result: {
       'The server answered without a version identifier for this setting. Reload the page to see its current state.'
     )
   }
-  return { value: body.value, isDefault: body.is_default, etag }
+  return {
+    value: body.value,
+    // The REST API declares the form spec as an untyped object.
+    spec: body.spec as GlobalSettingsVariable['spec'],
+    origin: body.origin,
+    etag
+  }
 }
 
-export const globalSettingsService: GlobalSettingsService = {
-  async load(scope, varname) {
-    if (scope.type === 'site') {
+function isValidationRejection(
+  result: SettingResult
+): result is SettingResult & { error: components['schemas']['GlobalSettingValidation422'] } {
+  const error = result.error as { ext?: { validation_errors?: unknown } } | null | undefined
+  return result.response.status === 422 && error?.ext?.validation_errors !== undefined
+}
+
+function toSaveResult(result: SettingResult): SaveResult {
+  if (isValidationRejection(result)) {
+    // The predicate's GlobalSettingValidation422 makes sure that the frontend model
+    // (ValidationMessages) is in sync with the documented error response. Do not simplify this!
+    return { type: 'invalid', validationMessages: result.error.ext.validation_errors }
+  }
+  return { type: 'saved', received: toReceivedValue(result) }
+}
+
+function globalScopeService(): GlobalSettingsService {
+  return {
+    async load(varname) {
       return toReceivedValue(
-        await client.GET('/objects/site_connection/{site_id}/global_setting/{varname}', {
-          params: { path: { site_id: scope.site_id, varname } }
+        await client.GET('/objects/global_setting/{varname}', {
+          params: { path: { varname } }
         })
       )
-    }
-    return toReceivedValue(
-      await client.GET('/objects/global_setting/{varname}', { params: { path: { varname } } })
-    )
-  },
+    },
 
-  async save(scope, varname, value, etag) {
-    const header = { ...CONTENT_TYPE_HEADER, 'If-Match': etag }
-    if (scope.type === 'site') {
-      return toReceivedValue(
-        await client.PUT('/objects/site_connection/{site_id}/global_setting/{varname}', {
-          params: { path: { site_id: scope.site_id, varname }, header },
+    async save(varname, value, etag) {
+      return toSaveResult(
+        await client.PUT('/objects/global_setting/{varname}', {
+          params: { path: { varname }, header: { ...CONTENT_TYPE_HEADER, 'If-Match': etag } },
           body: { value }
         })
       )
-    }
-    return toReceivedValue(
-      await client.PUT('/objects/global_setting/{varname}', {
-        params: { path: { varname }, header },
-        body: { value }
-      })
-    )
-  },
+    },
 
-  async reset(scope, varname, etag) {
-    const header = { 'If-Match': etag }
-    if (scope.type === 'site') {
+    async reset(varname, etag) {
       unwrap(
-        await client.DELETE('/objects/site_connection/{site_id}/global_setting/{varname}', {
-          params: { path: { site_id: scope.site_id, varname }, header }
+        await client.DELETE('/objects/global_setting/{varname}', {
+          params: { path: { varname }, header: { 'If-Match': etag } }
         })
       )
-      return
     }
-    unwrap(
-      await client.DELETE('/objects/global_setting/{varname}', {
-        params: { path: { varname }, header }
-      })
-    )
+  }
+}
+
+function siteScopeService(siteId: string): GlobalSettingsService {
+  return {
+    async load(varname) {
+      return toReceivedValue(
+        await client.GET('/objects/site_connection/{site_id}/global_setting/{varname}', {
+          params: { path: { site_id: siteId, varname } }
+        })
+      )
+    },
+
+    async save(varname, value, etag) {
+      return toSaveResult(
+        await client.PUT('/objects/site_connection/{site_id}/global_setting/{varname}', {
+          params: {
+            path: { site_id: siteId, varname },
+            header: { ...CONTENT_TYPE_HEADER, 'If-Match': etag }
+          },
+          body: { value }
+        })
+      )
+    },
+
+    async reset(varname, etag) {
+      unwrap(
+        await client.DELETE('/objects/site_connection/{site_id}/global_setting/{varname}', {
+          params: { path: { site_id: siteId, varname }, header: { 'If-Match': etag } }
+        })
+      )
+    }
+  }
+}
+
+export function createGlobalSettingsService(scope: GlobalSettingsScope): GlobalSettingsService {
+  switch (scope.type) {
+    case 'global':
+      return globalScopeService()
+    case 'site':
+      return siteScopeService(scope.site_id)
   }
 }

@@ -26,6 +26,9 @@ class CmkInvParams(BaseModel):
     sw_changes: int = 0
     sw_missing: int = 0
     nw_changes: int = 0
+    new_labels: int = 1
+    vanished_labels: int = 0
+    changed_labels: int = 1
 
 
 def generate_cmk_inv_commands(
@@ -41,6 +44,9 @@ def generate_cmk_inv_commands(
             f"--sw-changes={params.sw_changes}",
             f"--sw-missing={params.sw_missing}",
             f"--nw-changes={params.nw_changes}",
+            f"--new-labels={params.new_labels}",
+            f"--vanished-labels={params.vanished_labels}",
+            f"--changed-labels={params.changed_labels}",
             host_config.name,
         ],
     )

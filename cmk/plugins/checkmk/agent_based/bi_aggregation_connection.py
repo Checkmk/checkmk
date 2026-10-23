@@ -12,12 +12,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def parse_bi_aggregation_connection(string_table: StringTable) -> dict[str, set[str]]:
@@ -30,10 +29,6 @@ def parse_bi_aggregation_connection(string_table: StringTable) -> dict[str, set[
                 parsed.setdefault(field, set()).update(connection_info[field])
 
     return parsed
-
-
-def discover_bi_aggregation_connection(section: Any) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_bi_aggregation_connection(section: Any) -> CheckResult:
@@ -64,6 +59,6 @@ agent_section_bi_aggregation_connection = AgentSection(
 check_plugin_bi_aggregation_connection = CheckPlugin(
     name="bi_aggregation_connection",
     service_name="BI Datasource Connection",
-    discovery_function=discover_bi_aggregation_connection,
+    discovery_function=discover_one_service,
     check_function=check_bi_aggregation_connection,
 )

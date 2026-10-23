@@ -15,6 +15,7 @@ from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
     DomainObjectModel,
     LinkModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedFolder
 from cmk.gui.openapi.framework.model.converter import HostConverter
@@ -50,7 +51,7 @@ class HostMembersModel(DomainObjectModel):
 
 
 @api_model
-class HostConfigModel(DomainObjectModel):
+class HostConfigModel(TitledDomainObjectModel):
     domainType: Literal["host_config"] = api_field(description="The domain type of the object.")
     # The list endpoint omits the links entirely when they were not requested
     # (``include_links=False``), matching the behaviour of the previous implementation.

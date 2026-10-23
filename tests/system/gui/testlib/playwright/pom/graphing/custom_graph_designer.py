@@ -21,6 +21,9 @@ from urllib.parse import urljoin
 from playwright.sync_api import expect, Locator, Page
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
+from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
+    SURFACE_NOTICE_ERROR_SELECTOR,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import TimeSeriesGraph
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
 
@@ -29,7 +32,6 @@ logger = logging.getLogger(__name__)
 _PREVIEW_SELECTOR = ".graphing-designer-body__preview"
 _LEGEND_ROW_SELECTOR = ".graphing-graph-legend__row"
 _LEGEND_STAT_SELECTOR = ".graphing-graph-legend__stat"
-_ERROR_NOTICE_SELECTOR = ".graphing-graph-notice--error"
 
 # The metrics selection tab - the designer's default tab in edit mode.
 _METRICS_TABLE_SELECTOR = ".graphing-metrics-table"
@@ -122,7 +124,7 @@ class CustomGraphDesigner(CmkPage):
     @property
     def error_notices(self) -> Locator:
         """The engine's error state, shown over the graph when it cannot be drawn."""
-        return self.main_area.locator(_ERROR_NOTICE_SELECTOR)
+        return self.main_area.locator(SURFACE_NOTICE_ERROR_SELECTOR)
 
     @property
     def source_rows(self) -> Locator:
@@ -177,14 +179,14 @@ class CustomGraphDesigner(CmkPage):
         self._fill_autocompleter(form, "Service", service_name)
         self._fill_autocompleter(form, "Service metric", metric_title)
 
-    def add_metric_backend_metric(self, metric_name: str, metric_type: str) -> Locator:
-        """Add a metric backend metric as a data source; return the row it appended.
+    def add_telemetry_metrics_metric(self, metric_name: str, metric_type: str) -> Locator:
+        """Add a telemetry metrics metric as a data source; return the row it appended.
 
         The dropdown titles a metric with the types it carries ("metric1 (gauge)"), so the
         caller states the type it ingested. The untyped entry the app echoes back while its
         own query is still in flight then cannot satisfy the selection.
         """
-        logger.info("Add metric backend metric '%s (%s)'", metric_name, metric_type)
+        logger.info("Add telemetry metrics metric '%s (%s)'", metric_name, metric_type)
         rows_before = self.source_rows.count()
         self.main_area.locator(_ADD_SOURCE_SELECTOR).click()
         # The source types are a fixed list, offered in full and without a filter box.
@@ -218,7 +220,7 @@ class CustomGraphDesigner(CmkPage):
     def open_create_custom_service(self, row: Locator) -> Locator:
         """Open the "Create custom service" slide-in of a row; return its dialog.
 
-        The action is offered on a metric backend row whose query is complete.
+        The action is offered on a telemetry metrics row whose query is complete.
         """
         logger.info("Open the '%s' slide-in", _CREATE_CUSTOM_SERVICE)
         row.get_by_role("button", name=_CREATE_CUSTOM_SERVICE, exact=True).click()

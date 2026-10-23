@@ -49,7 +49,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
@@ -62,7 +61,7 @@ from cmk.web.utils.urls import makeuri, makeuri_contextless, urlencode, urlencod
 from .helpers import local_files_involved_in_crash
 from .views import CrashReportsRowTable
 
-CrashReportRow = dict[str, str]
+CrashReportRow = dict[str, str | bytes]
 
 USER_SESSION_CRASH_TYPES: Final = frozenset({"gui", "javascript"})
 """Crash types produced while the user was browsing, so the user is the reporter."""
@@ -85,8 +84,8 @@ class ReportSubmitDetails(TypedDict):
 
 class CrashReportsRowFetcher(Protocol):
     def get_crash_report_rows(
-        self, only_sites: livestatus.OnlySites, filter_headers: str
-    ) -> Iterator[dict[str, str]]: ...
+        self, only_sites: livestatus.OnlySites, filter_headers: str, *, with_agent_output: bool
+    ) -> Iterator[CrashReportRow]: ...
 
 
 @dataclasses.dataclass(frozen=True)
@@ -114,6 +113,7 @@ class CrashReport:
                 fetcher.get_crash_report_rows(
                     only_sites=[SiteId(site_id)],
                     filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id),
+                    with_agent_output=True,
                 )
             )
         except StopIteration:
@@ -129,7 +129,11 @@ class CrashReport:
 
 
 def _get_serialized_crash_report(row: CrashReportRow) -> Mapping[str, bytes | None]:
-    return {k: v.encode() for k, v in row.items() if k not in ["site", "crash_id", "crash_type"]}
+    return {
+        k: v if isinstance(v, bytes) else v.encode()
+        for k, v in row.items()
+        if k not in ["site", "crash_id", "crash_type"]
+    }
 
 
 def show_automatic_upload_hint_on_view(view_name: str) -> None:
@@ -156,11 +160,8 @@ def _show_automatic_upload_hint(request: Request, contact_email: str | None) -> 
                     "type": "redirect",
                     "url": makeuri_contextless(
                         request,
-                        [
-                            ("mode", "edit_configvar"),
-                            ("varname", "automatic_crash_report_upload"),
-                        ],
-                        filename="wato.py",
+                        [("varname", "automatic_crash_report_upload")],
+                        filename="global_settings.py",
                     ),
                 },
             },
@@ -178,8 +179,7 @@ class PageCrash(Page):
         report = CrashReport.build(ctx.request, CrashReportsRowTable())
         title = _("Crash report: %(crash_id)s") % {"crash_id": report.crash_id}
 
-        permissions = UserPermissions.from_config(ctx.config, permission_registry)
-        breadcrumb = self._breadcrumb(ctx.request, title, permissions)
+        breadcrumb = self._breadcrumb(ctx.request, title, ctx.user_permissions)
 
         page_menu = self._page_menu(ctx.request, breadcrumb, report.info, report.site_id)
         make_header(
@@ -385,8 +385,9 @@ class PageCrash(Page):
                 % {"report_url": report_url, "crash_report_target": crash_report_target}
             )
             html.close_div()
-            html.javascript(
-                f"cmk.transfer.submit_crash_report({json.dumps(crash_report_url)}, {json.dumps(url_encoded_params)});"
+            html.call_ts_function(
+                function_name="submit_crash_report",
+                arguments={"url": crash_report_url, "post_data": url_encoded_params},
             )
         except MKUserError as e:
             user_errors.add(e)
@@ -420,7 +421,7 @@ class PageCrash(Page):
         )
 
     def _warn_about_local_files(self, crash_info: AggregatedCrashInfo) -> None:
-        files = local_files_involved_in_crash(crash_info["exc_traceback"])
+        files = local_files_involved_in_crash(crash_info.get("exc_traceback", []))
         if not files:
             return
 
@@ -442,9 +443,7 @@ class PageCrash(Page):
         html.show_warning(warn_text)
 
     def _warn_about_sensitive_information(self, crash_info: AggregatedCrashInfo) -> None:
-        if not ((vars_ := crash_info.get("details") or {}).get("vars")):
-            return
-
+        vars_ = (crash_info.get("details") or {}).get("vars") or {}
         if any(
             sensitive_keyword in key.lower()
             for sensitive_keyword in SENSITIVE_KEYWORDS
@@ -495,7 +494,7 @@ class PageCrash(Page):
             HTML.with_escaping(
                 "".join(
                     [
-                        self._format_traceback(info["exc_traceback"]),
+                        self._format_traceback(info.get("exc_traceback", [])),
                         info["exc_value"],
                     ]
                 )
@@ -665,8 +664,8 @@ class ReportRendererCheck(ABCReportRenderer):
         self, crash_info: AggregatedCrashInfo, site_id: SiteId
     ) -> Iterator[PageMenuEntry]:
         details = crash_info["details"]
-        host = details["host"]
-        service = details["description"]
+        if (host := details.get("host")) is None:
+            return
 
         host_url = makeuri(
             request,
@@ -682,6 +681,9 @@ class ReportRendererCheck(ABCReportRenderer):
             icon_name=StaticIcon(IconNames.status),
             item=make_simple_link(host_url),
         )
+
+        if (service := details.get("description")) is None:
+            return
 
         service_url = makeuri(
             request,
@@ -720,9 +722,9 @@ class ReportRendererCheck(ABCReportRenderer):
         html.h3(_("Details"), class_="table")
         html.open_table(class_="data")
 
-        _crash_row(_("Host"), details["host"], odd=False, legend=True)
+        _crash_row(_("Host"), details.get("host", _("Unknown")), odd=False, legend=True)
         _crash_row(_("Is cluster host"), format_bool(details.get("is_cluster")), odd=True)
-        _crash_row(_("Check type"), details["check_type"], odd=False)
+        _crash_row(_("Check type"), details.get("check_type", _("Unknown")), odd=False)
         _crash_row(
             _("Enforced service"),
             format_bool(details.get("enforced_service")),
@@ -736,7 +738,7 @@ class ReportRendererCheck(ABCReportRenderer):
             pre=True,
         )
         _crash_row(_("Check item"), details.get("item", "This check has no item."), odd=False)
-        _crash_row(_("Description"), details["description"], odd=True)
+        _crash_row(_("Description"), details.get("description", _("Unknown")), odd=True)
         if "params" in details:
             _crash_row(
                 _("Parameters"),
@@ -879,6 +881,8 @@ def _show_output_box(title: str, content: str) -> None:
 
 def _show_agent_output(row: CrashReportRow) -> None:
     agent_output = row.get("agent_output")
+    if isinstance(agent_output, bytes):
+        agent_output = agent_output.decode(errors="surrogateescape")
     if agent_output:
         _show_output_box(_("Agent output"), agent_output)
 

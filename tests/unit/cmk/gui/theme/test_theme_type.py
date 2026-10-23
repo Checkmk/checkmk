@@ -54,3 +54,29 @@ def test_has_custom_logo(tmp_path: Path, edition: Edition, with_logo: bool) -> N
     elif logo.exists():
         logo.unlink()
     assert theme.has_custom_logo("login_logo") is (edition is Edition.ULTIMATEMT and with_logo)
+
+
+@pytest.mark.parametrize(
+    "css_base_dir, expected_url",
+    [
+        pytest.param("local", "themes/my_theme/theme.css", id="local"),
+        pytest.param("", "themes/my_theme/theme.css", id="shipped"),
+        pytest.param(None, "themes/facelift/theme.css", id="missing"),
+    ],
+)
+def test_css_url(tmp_path: Path, css_base_dir: str | None, expected_url: str) -> None:
+    theme_dir = tmp_path / "local" / "htdocs" / "themes" / "my_theme"
+    theme_dir.mkdir(parents=True)
+    (theme_dir / "theme.json").write_text(json.dumps({"title": "My theme"}), encoding="utf-8")
+    if css_base_dir is not None:
+        css_file = tmp_path / css_base_dir / "htdocs" / "themes" / "my_theme" / "theme.css"
+        css_file.parent.mkdir(parents=True, exist_ok=True)
+        css_file.touch()
+
+    theme = Theme(
+        edition=Edition.COMMUNITY,
+        web_dir=tmp_path,
+        local_web_dir=tmp_path / "local",
+        currently_set_theme="my_theme",
+    )
+    assert theme.css() == expected_url

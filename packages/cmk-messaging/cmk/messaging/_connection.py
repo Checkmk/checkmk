@@ -340,7 +340,7 @@ class Connection:
                     vhost,
                 )
             )
-        except AMQPConnectionError as e:
+        except (AMQPConnectionError, ssl.SSLCertVerificationError) as e:
             # pika handles exceptions weirdly. We need repr, in order to see something.
             raise CMKConnectionError(repr(e)) from e
 

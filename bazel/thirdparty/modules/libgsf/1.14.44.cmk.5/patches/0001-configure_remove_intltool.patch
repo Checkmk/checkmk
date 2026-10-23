@@ -1,0 +1,40 @@
+--- a/configure
++++ b/configure
+@@ -13035,9 +13035,14 @@
+ esac
+ 
+ INTLTOOL_REQUIRED_VERSION_AS_INT=`echo 0.35.0 | awk -F. '{ print $ 1 * 1000 + $ 2 * 100 + $ 3; }'`
+-INTLTOOL_APPLIED_VERSION=`intltool-update --version | head -1 | cut -d" " -f3`
++INTLTOOL_APPLIED_VERSION=`intltool-update --version 2>/dev/null | head -1 | cut -d" " -f3`
+ INTLTOOL_APPLIED_VERSION_AS_INT=`echo $INTLTOOL_APPLIED_VERSION | awk -F. '{ print $ 1 * 1000 + $ 2 * 100 + $ 3; }'`
+-if test -n "0.35.0"; then
++# Checkmk: libgsf needs intltool only at configure time -- no Makefile.am uses
++# an INTLTOOL_* rule and po/ compiles its catalogues with msgfmt from gettext
++# -- and only our SLES build images ship it, so skip this gate and the two
++# below. The version arithmetic above is left in place: it evaluates to 0 and
++# is read again further down to pick an (inert) INTLTOOL_XML_NOMERGE_RULE.
++if false; then
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for intltool >= 0.35.0" >&5
+ $as_echo_n "checking for intltool >= 0.35.0... " >&6; }
+     { $as_echo "$as_me:${as_lineno-$LINENO}: result: $INTLTOOL_APPLIED_VERSION found" >&5
+@@ -13166,7 +13171,8 @@
+ fi
+ 
+ 
+-if test -z "$INTLTOOL_UPDATE" -o -z "$INTLTOOL_MERGE" -o -z "$INTLTOOL_EXTRACT"; then
++# Checkmk: the intltool scripts are never invoked, see above.
++if false; then
+     as_fn_error $? "The intltool scripts were not found. Please install intltool." "$LINENO" 5
+ fi
+ 
+@@ -13534,7 +13540,9 @@
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $IT_PERL_VERSION" >&5
+ $as_echo "$IT_PERL_VERSION" >&6; }
+ fi
+-if test "x" != "xno-xml"; then
++# Checkmk: as if IT_PROG_INTLTOOL had been given upstream's [no-xml] option:
++# only the intltool scripts need perl's XML::Parser.
++if test "xno-xml" != "xno-xml"; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for XML::Parser" >&5
+ $as_echo_n "checking for XML::Parser... " >&6; }
+    if `$INTLTOOL_PERL -e "require XML::Parser" 2>/dev/null`; then

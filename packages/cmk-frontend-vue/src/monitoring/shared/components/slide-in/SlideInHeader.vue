@@ -27,6 +27,7 @@ withDefaults(
 
 const emit = defineEmits<{
   (event: 'select', action: CellAction): void
+  (event: 'titleClick', mouseEvent: MouseEvent): void
 }>()
 </script>
 
@@ -39,7 +40,9 @@ const emit = defineEmits<{
       <span class="monitoring-slide-in-header__divider" aria-hidden="true" />
     </template>
     <CmkHeading type="h2" class="monitoring-slide-in-header__title">
-      <CmkLink v-if="titleUrl" :href="titleUrl">{{ title }}</CmkLink>
+      <CmkLink v-if="titleUrl" :href="titleUrl" @click="emit('titleClick', $event)">{{
+        title
+      }}</CmkLink>
       <template v-else>{{ title }}</template>
     </CmkHeading>
     <ActionButtons

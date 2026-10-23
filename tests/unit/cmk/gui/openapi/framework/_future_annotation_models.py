@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Models of a module that stringifies its annotations, like the generated shared typing code."""
 
-from __future__ import annotations
+# The alias keeps `pyupgrade --py314-plus` from removing the import, which is the point of this module.
+from __future__ import annotations as annotations
 
 from typing import Literal
 

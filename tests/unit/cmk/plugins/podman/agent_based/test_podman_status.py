@@ -4,12 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
-from cmk.plugins.podman.agent_based.podman_status import (
-    check_podman_status,
-    discover_podman_status,
-    parse_podman_status,
-)
+from cmk.agent_based.v2 import CheckResult, Result, State, StringTable
+from cmk.plugins.podman.agent_based.podman_status import check_podman_status, parse_podman_status
 
 STRING_TABLE = [
     [
@@ -30,11 +26,6 @@ STRING_TABLE = [
 ]
 
 NO_ERRORS_STRING_TABLE = [["{}"]]
-
-
-def test_discover_podman_status() -> None:
-    assert list(discover_podman_status(parse_podman_status(STRING_TABLE))) == [Service()]
-    assert list(discover_podman_status(parse_podman_status(NO_ERRORS_STRING_TABLE))) == [Service()]
 
 
 @pytest.mark.parametrize(

@@ -14,6 +14,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service, State
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
 from cmk.checkengine.plugin_backend import check_plugins
 from cmk.checkengine.plugin_backend.utils import (
@@ -340,3 +341,23 @@ def test_discovery_function_empty() -> None:
         **{**MINIMAL_CREATION_KWARGS, "discovery_function": disco_fn}
     )
     assert list(plugin.discovery_function(section=None)) == []
+
+
+def test_discover_one_service_discovers_a_single_service() -> None:
+    plugin = check_plugins.create_check_plugin(
+        **{**MINIMAL_CREATION_KWARGS, "discovery_function": discover_one_service}
+    )
+
+    assert list(plugin.discovery_function(section=None)) == [Service()]
+
+
+def test_discover_one_service_rejects_service_name_with_item() -> None:
+    with pytest.raises(TypeError, match="discover_one_service"):
+        _ = check_plugins.create_check_plugin(
+            **{
+                **MINIMAL_CREATION_KWARGS,
+                "discovery_function": discover_one_service,
+                "check_function": dummy_function_i,
+                "service_name": "Norris Device %s",
+            }
+        )

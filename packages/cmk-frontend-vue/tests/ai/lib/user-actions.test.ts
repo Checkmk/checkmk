@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 import type { AiActionButton } from '@/ai/lib/service/ai-template'
 import { loadUserActions } from '@/ai/lib/user-actions'
@@ -18,10 +18,6 @@ function makeTemplate(actions: AiActionButton[] | Error) {
     execUserActionButton: vi.fn()
   }
 }
-
-afterEach(() => {
-  vi.clearAllMocks()
-})
 
 describe('loadUserActions', () => {
   test('returns the error when getUserActionButtons resolves to an Error', async () => {

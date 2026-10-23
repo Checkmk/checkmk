@@ -63,7 +63,6 @@ export function usePanGesture(options: PanGestureOptions) {
       range.start - span,
       range.end + span,
       options.plotWidth.value * PAN_RULER_SPANS,
-      range.step,
       options.measureLabel
     )
     panAnchorX = point.x

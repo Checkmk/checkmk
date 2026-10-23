@@ -9,7 +9,6 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde_with::DisplayFromStr;
 use std::collections::HashMap;
-use std::ffi;
 use std::fmt;
 use std::fs;
 use std::io;
@@ -46,6 +45,14 @@ pub trait TOMLLoaderMissingSafe: TOMLLoader + Default {
         }
         Self::load(path)
     }
+}
+
+pub fn tmp_path_for_atomical_save(path: &Path) -> PathBuf {
+    let mut tmp_path = path.to_owned();
+    let mut extension = path.extension().unwrap_or_default().to_owned();
+    extension.push(".tmp");
+    tmp_path.set_extension(extension);
+    tmp_path
 }
 
 pub struct RegisterExistingConfig {
@@ -131,7 +138,8 @@ pub struct RegistrationConnectionConfig {
     pub username: Option<String>,
     pub password: Option<String>,
     pub one_time_token: Option<String>,
-    pub root_certificate: Option<String>,
+    /// If empty, the agent receiver's certificate is confirmed interactively or blindly trusted.
+    pub root_certificates: Vec<String>,
     pub trust_server_cert: bool,
     pub client_config: ClientConfig,
 }
@@ -193,7 +201,7 @@ impl RegistrationConnectionConfig {
             username,
             password,
             one_time_token,
-            root_certificate: None,
+            root_certificates: vec![],
             trust_server_cert: endpoint_opts.trust_server_cert,
             client_config,
         })
@@ -544,14 +552,7 @@ impl Registry {
     }
 
     fn make_tmp_path_for_save(&self) -> PathBuf {
-        let mut tmp_path = PathBuf::from(&self.path);
-        let mut ext = tmp_path
-            .extension()
-            .map(|ext| ext.to_owned())
-            .unwrap_or_else(|| ffi::OsString::from(""));
-        ext.push(".tmp");
-        tmp_path.set_extension(ext);
-        tmp_path
+        tmp_path_for_atomical_save(&self.path)
     }
 
     fn make_path_legacy_pull_marker(registry_path: impl AsRef<Path>) -> AnyhowResult<PathBuf> {
@@ -732,12 +733,45 @@ impl fmt::Display for ConnectionMode {
     }
 }
 
+/// Add the CAs that are not trusted yet, preserving the order of both inputs.
+/// Returns whether any CA was added.
+pub fn add_missing_root_certs(root_certs: &mut Vec<String>, additional: &[String]) -> bool {
+    let mut added = false;
+    for cert in additional {
+        if !root_certs.contains(cert) {
+            root_certs.push(cert.clone());
+            added = true;
+        }
+    }
+    added
+}
+
 fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
     Ok(if path.exists() {
         Some(fs::metadata(path)?.modified()?)
     } else {
         None
     })
+}
+
+#[cfg(test)]
+mod test_add_missing_root_certs {
+    use super::*;
+
+    #[test]
+    fn test_add_missing_root_certs() {
+        let mut root_certs = vec![String::from("site_ca")];
+        assert!(add_missing_root_certs(
+            &mut root_certs,
+            &[String::from("site_ca"), String::from("upcoming_site_ca")],
+        ));
+        // the already trusted CA is not stored twice
+        assert_eq!(root_certs, vec!["site_ca", "upcoming_site_ca"]);
+        assert!(!add_missing_root_certs(
+            &mut root_certs,
+            &[String::from("site_ca")]
+        ));
+    }
 }
 
 #[cfg(test)]
@@ -1528,6 +1562,11 @@ mod test_registry {
 
     #[test]
     fn test_tmp_path_for_save() {
+        assert_eq!(
+            tmp_path_for_atomical_save(Path::new("/a/b/agent-update-state.json")),
+            PathBuf::from("/a/b/agent-update-state.json.tmp")
+        );
+
         let reg = Registry::new(PathBuf::from("/a/b/c.json")).unwrap();
         assert_ne!(reg.path(), reg.make_tmp_path_for_save());
         assert_eq!(reg.path().parent(), reg.make_tmp_path_for_save().parent());

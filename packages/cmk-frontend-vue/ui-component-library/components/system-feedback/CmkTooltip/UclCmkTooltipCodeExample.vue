@@ -22,8 +22,8 @@ const isTooltipOpen = ref(false)
         <CmkButton variant="secondary">Interact with me</CmkButton>
       </CmkTooltipTrigger>
 
-      <CmkTooltipContent side="top" align="center">
-        <div class="tooltip-content">This is a tooltip on the top!</div>
+      <CmkTooltipContent side="top" align="center" variant="text">
+        This is a tooltip on the top!
       </CmkTooltipContent>
     </CmkTooltip>
   </CmkTooltipProvider>

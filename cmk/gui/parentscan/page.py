@@ -34,7 +34,7 @@ from cmk.gui.parentscan.background_job import (
     WhereChoices,
 )
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages._bulk_actions import get_hosts_from_checkboxes
 from cmk.gui.wato.pages.folders import ModeFolder
@@ -42,12 +42,13 @@ from cmk.gui.watolib.hosts_and_folders import (
     disk_or_search_base_folder_from_request,
     disk_or_search_folder_from_request,
     Folder,
-    folder_tree,
     Host,
+    make_folder_tree,
     SearchFolder,
 )
 from cmk.gui.watolib.mode import WatoMode
 from cmk.utils.paths import profile_dir
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
 
@@ -142,18 +143,18 @@ class ModeParentScan(WatoMode):
             ping_probes=request.get_integer_input_mandatory("ping_probes", 5),
             gateway_folder_path=None,
         )
-        self._job = ParentScanBackgroundJob()
         self._folder = disk_or_search_folder_from_request(
-            folder_tree(),
+            make_folder_tree(self._ctx.config),
             request.var("folder"),
             request.get_ascii_input("host"),
             acting_user=user,
             request=request,
         )
+        self._job = ParentScanBackgroundJob(back_url=self._folder.url())
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         try:
             transactions.check_transaction(request)
@@ -166,6 +167,9 @@ class ModeParentScan(WatoMode):
                     self._job,
                     self._settings,
                     site_configs=config.sites,
+                    wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
+                    wato_host_attrs=config.wato_host_attrs,
+                    tags=config.tags.get_dict_format(),
                     pprint_value=config.wato_pprint_config,
                     debug=config.debug,
                     use_git=config.wato_use_git,

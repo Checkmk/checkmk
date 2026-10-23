@@ -8,7 +8,7 @@ import datetime
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.mcafee.agent_based import mcafee_emailgateway_bridge as plugin
 
 _NOW = datetime.datetime(2026, 1, 1, 0, 0, 0, tzinfo=datetime.UTC).timestamp()
@@ -25,12 +25,6 @@ def _warm_value_store() -> dict[str, tuple[float, float]]:
 
 def test_parse_empty() -> None:
     assert plugin.parse_mcafee_emailgateway_bridge([]) is None
-
-
-def test_discover() -> None:
-    assert list(plugin.discover_mcafee_emailgateway_bridge([["0", "0", "0", "0", "0"]])) == [
-        Service()
-    ]
 
 
 def test_check_rates_with_levels(monkeypatch: pytest.MonkeyPatch) -> None:

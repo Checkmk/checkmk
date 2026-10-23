@@ -42,6 +42,20 @@ test('FormInteger renders value', () => {
   expect(element.value).toBe('42')
 })
 
+test('FormInteger renders an empty value as an empty field', () => {
+  render(FormInteger, {
+    props: {
+      spec,
+      data: '',
+      backendValidation: []
+    }
+  })
+
+  const element = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'fooLabel' })
+
+  expect(element.value).toBe('')
+})
+
 test('FormFloat renders required', () => {
   render(FormInteger, {
     props: {
@@ -111,4 +125,17 @@ test('FormInteger renders unit', () => {
     }
   })
   expect(screen.getByText('fooUnit')).toBeInTheDocument()
+})
+
+test('FormInteger sends a cleared field as an empty value', async () => {
+  const { getCurrentData } = await renderForm({
+    spec,
+    data: 42,
+    backendValidation: []
+  })
+
+  const element = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'fooLabel' })
+  await fireEvent.update(element, '')
+
+  expect(getCurrentData()).toBe('""')
 })

@@ -28,6 +28,10 @@ class InvalidToken(ValueError):
     """Raised if we cannot properly parse something"""
 
 
+class UnknownToken(InvalidToken):
+    """The token is well-formed but not in the store"""
+
+
 class TokenTypeError(ValueError):
     """Token is expired or revoked but has valid type"""
 
@@ -79,6 +83,9 @@ class AgentRegistrationToken(BaseModel):
     comment: str = ""
     host_registration_completed_at: datetime | None = None
     updater_registration_completed_at: datetime | None = None
+    # Whether the issuer may download the agent of the host, checked at the issuance. None: the
+    # issuing site offers no agent updates, or the token predates this field.
+    agent_updates_permitted: bool | None = None
 
 
 class RelayRegistrationToken(BaseModel):
@@ -168,19 +175,9 @@ class TokenStore:
             raise InvalidToken(f"Invalid token version {version!r}")
 
         if (token := self._read().get(TokenId(token_id))) is None:
-            raise InvalidToken(f"Could not find token {token_id!r}")
+            raise UnknownToken(f"Could not find token {token_id!r}")
 
-        if token.valid_until is not None and token.valid_until < now:
-            raise TokenExpired(
-                f"Token {token.token_id} expired at {token.valid_until.isoformat()}",
-                token_type=token.details.type_,
-            )
-
-        if token.revoked:
-            raise TokenRevoked(
-                f"Token {token_id} was revoked",
-                token_type=token.details.type_,
-            )
+        _raise_if_expired_or_revoked(token, now)
 
         if (
             token.last_successful_verification is None
@@ -208,9 +205,34 @@ class TokenStore:
         Raises InvalidToken, TokenTypeError or TokenUseAlreadyConsumed; in that case
         nothing is persisted.
         """
+        with self.agent_registration_use(token_id, use, now):
+            pass
+
+    @contextmanager
+    def agent_registration_use(
+        self, token_id: TokenId, use: AgentRegistrationUse, now: datetime
+    ) -> Iterator[None]:
+        """Run the block as one use of an agent registration token
+
+        The use is consumed if and only if the block exits without an exception. The block runs
+        under the lock of the token store. Concurrent uses of the same token therefore run one
+        after the other.
+
+        The block must not use the token store. A write to the store inside the block would
+        release the lock of the store before the block ends. Keep the block short, because every
+        write to the token store waits until the block ends.
+
+        A caller that needs the configuration lock of Setup must take that lock before calling
+        this method, never in the block. Otherwise two processes can take the configuration lock
+        and the lock of the token store in opposite order and block each other.
+
+        Raises UnknownToken, TokenExpired, TokenRevoked, TokenTypeError or TokenUseAlreadyConsumed
+        before the block runs.
+        """
         with self.read_locked() as data:
             if (token := data.get(token_id)) is None:
-                raise InvalidToken(f"Could not find token {token_id!r}")
+                raise UnknownToken(f"Could not find token {token_id!r}")
+            _raise_if_expired_or_revoked(token, now)
             details = token.details
             if not isinstance(details, AgentRegistrationToken):
                 raise TokenTypeError(
@@ -224,13 +246,17 @@ class TokenStore:
                             f"Token {token_id} was already used for host registration",
                             token_type=details.type_,
                         )
-                    details.host_registration_completed_at = now
                 case "updater_registration":
                     if details.updater_registration_completed_at is not None:
                         raise TokenUseAlreadyConsumed(
                             f"Token {token_id} was already used for agent updater registration",
                             token_type=details.type_,
                         )
+            yield
+            match use:
+                case "host_registration":
+                    details.host_registration_completed_at = now
+                case "updater_registration":
                     details.updater_registration_completed_at = now
             if (
                 details.host_registration_completed_at is not None
@@ -245,6 +271,19 @@ class TokenStore:
     def delete(self, token_id: TokenId) -> None:
         with self.read_locked() as data:
             data.delete(token_id)
+
+    def take(self, token_id: TokenId) -> AuthToken:
+        """Remove the token from the store and return it, so it can be restored later"""
+        with self.read_locked() as data:
+            if (token := data.get(token_id)) is None:
+                raise UnknownToken(f"Could not find token {token_id!r}")
+            data.delete(token_id)
+            return token
+
+    def restore(self, token: AuthToken) -> None:
+        """Put back a token removed by take, in the state it was taken in"""
+        with self.read_locked() as data:
+            data.add(token)
 
     def issue(
         self,
@@ -264,6 +303,20 @@ class TokenStore:
         with self.read_locked() as data:
             data.add(token)
         return token
+
+
+def _raise_if_expired_or_revoked(token: AuthToken, now: datetime) -> None:
+    if token.valid_until is not None and token.valid_until < now:
+        raise TokenExpired(
+            f"Token {token.token_id} expired at {token.valid_until.isoformat()}",
+            token_type=token.details.type_,
+        )
+
+    if token.revoked:
+        raise TokenRevoked(
+            f"Token {token.token_id} was revoked",
+            token_type=token.details.type_,
+        )
 
 
 def get_token_store() -> TokenStore:

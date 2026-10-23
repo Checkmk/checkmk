@@ -5,7 +5,10 @@
 from pydantic import TypeAdapter
 
 from cmk.ccc.hostaddress import HostName
+from cmk.gui.config import Config
+from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.openapi.api_endpoints.host_config.create_cluster_host import CreateClusterHostModel
+from tests.testlib.unit.gui.validation_context import make_validation_context
 
 
 def test_nodes_validator(sample_host: str) -> None:
@@ -16,6 +19,7 @@ def test_nodes_validator(sample_host: str) -> None:
             "host_name": "new_cluster_host",
             "folder": "",
             "nodes": [sample_host],
-        }
+        },
+        context=make_validation_context(Config(), LoggedInNobody()),
     )
     assert result.nodes == [HostName(sample_host)]

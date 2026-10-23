@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -11,34 +10,31 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Dictionary, Migrate, Percentage, Tuple
+from cmk.gui.valuespec import Dictionary, Percentage, Tuple
 
 
-def _parameter_valuespec_netscaler_mem() -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels",
-                    Tuple(
-                        title=_("Specify levels in percentage of total memory usage"),
-                        elements=[
-                            Percentage(
-                                title=_("Warning at"),
-                                default_value=80.0,
-                                maxvalue=100.0,
-                            ),
-                            Percentage(
-                                title=_("Critical at"),
-                                default_value=90.0,
-                                maxvalue=100.0,
-                            ),
-                        ],
-                    ),
+def _parameter_valuespec_netscaler_mem() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Specify levels in percentage of total memory usage"),
+                    elements=[
+                        Percentage(
+                            title=_("Warning at"),
+                            default_value=80.0,
+                            maxvalue=100.0,
+                        ),
+                        Percentage(
+                            title=_("Critical at"),
+                            default_value=90.0,
+                            maxvalue=100.0,
+                        ),
+                    ],
                 ),
-            ],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
+            ),
+        ],
     )
 
 

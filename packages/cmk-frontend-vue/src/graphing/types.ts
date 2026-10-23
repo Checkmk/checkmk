@@ -6,7 +6,14 @@
 import type { AddTo, Interaction, YAxis } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import type { IconNames } from 'cmk-shared-typing/typescript/icon'
 
-import type { HorizontalLine, Metric, ShadedRegion, TimeRange } from './components/TimeSeriesGraph'
+import type {
+  BinUnit,
+  HorizontalLine,
+  Metric,
+  ShadedRegion,
+  TimeRange,
+  ValueRange
+} from './components/TimeSeriesGraph'
 import type { ConsolidationFn } from './components/consolidation'
 
 export type { HorizontalLine, Metric, ShadedRegion, TimeRange }
@@ -62,6 +69,8 @@ export interface BurgerMenuGraph {
   timeStart: number
   timeEnd: number
   consolidationFunction: ConsolidationFn
+  // The Y axis range the user zoomed into, if any. Absent when the axis is auto-inferred.
+  valueRange?: ValueRange | undefined
 }
 
 export type BurgerMenuCallable = (graph: BurgerMenuGraph) => Promise<void>
@@ -92,6 +101,8 @@ export interface GraphDisplayOptions {
 // the hosting group owns the data fetch and range state.
 export interface GraphPanelProps {
   metrics: Metric[]
+  /** The unit the bar metrics are binned by; absent while the graph holds no bar metric. */
+  binUnit?: BinUnit | undefined
   // The range the fetched data actually covers (as opposed to requestedTimeRange).
   // Absent until the first data fetch completes. Explicit undefined is accepted
   // so that parent components can forward their own optional range prop directly.
@@ -128,5 +139,7 @@ export interface GraphPanelProps {
 // `update:consolidationFn` is absent by necessity: `defineModel` already declares it in the panel.
 export type GraphPanelEmits = {
   'update:requestedTimeRange': [value: RequestedTimeRange, kind: TimeRangeCommitKind]
+  /** The smallest gap between the value-axis labels the graph currently draws. */
+  'update:valueResolution': [value: number | null]
   inspect: []
 }

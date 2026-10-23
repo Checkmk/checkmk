@@ -16,7 +16,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.store import get_permitted_views
-from cmk.gui.visuals import view_title
+from cmk.gui.visuals import view_title, visual_title_without_context
 from cmk.utils.servicename import ServiceName
 from cmk.web.utils.urls import append_site_from_request, makeuri_contextless
 
@@ -46,11 +46,13 @@ def view_breadcrumb(view: View) -> Breadcrumb:
 
         breadcrumb = make_topic_breadcrumb(
             main_menu_registry.menu_monitoring(),
-            pagetypes.PagetypeTopics.get_topic(view.spec["topic"], view.user_permissions).title(),
+            pagetypes.PagetypeTopics.get_topic(
+                view.spec["topic"], view.painter_context.user_permissions
+            ).title(),
         )
         breadcrumb.append(
             BreadcrumbItem(
-                title=view_title(view.spec, view.context),
+                title=view_title(view.spec, view.context, request_cache=view.request_cache),
                 url=makeuri_contextless(request, request_vars),
                 id=f"view_{view.name}",
             )
@@ -78,7 +80,7 @@ def _host_hierarchy_breadcrumb(view: View) -> Breadcrumb:
         host_name = HostName(view.context["host"]["host"])
     except ValueError:
         raise MKUserError("host", _("Invalid host name"))
-    breadcrumb = make_host_breadcrumb(host_name, view.user_permissions)
+    breadcrumb = make_host_breadcrumb(host_name, view.painter_context.user_permissions)
 
     if view.name == "host":
         # In case we are on the host homepage, we have the final breadcrumb
@@ -89,7 +91,7 @@ def _host_hierarchy_breadcrumb(view: View) -> Breadcrumb:
         # All other single host pages are right below the host home page
         breadcrumb.append(
             BreadcrumbItem(
-                title=view_title(view.spec, view.context),
+                title=view_title(view.spec, view.context, request_cache=view.request_cache),
                 url=makeuri_contextless(
                     request,
                     append_site_from_request(
@@ -109,7 +111,9 @@ def _host_hierarchy_breadcrumb(view: View) -> Breadcrumb:
         return breadcrumb
 
     breadcrumb = make_service_breadcrumb(
-        host_name, ServiceName(view.context["service"]["service"]), view.user_permissions
+        host_name,
+        ServiceName(view.context["service"]["service"]),
+        view.painter_context.user_permissions,
     )
 
     if view.name == "service":
@@ -119,7 +123,7 @@ def _host_hierarchy_breadcrumb(view: View) -> Breadcrumb:
     # All other single service pages are right below the host home page
     breadcrumb.append(
         BreadcrumbItem(
-            title=view_title(view.spec, view.context),
+            title=view_title(view.spec, view.context, request_cache=view.request_cache),
             url=makeuri_contextless(
                 request,
                 append_site_from_request(
@@ -150,7 +154,7 @@ def _service_breadcrumb(host_name: HostName, service_name: ServiceName) -> Bread
     permitted_views = get_permitted_views()
     if service_view_spec := permitted_views.get("service"):
         return BreadcrumbItem(
-            title=view_title(service_view_spec, context={}),
+            title=visual_title_without_context(service_view_spec, {}),
             url=makeuri_contextless(
                 request,
                 append_site_from_request(
@@ -183,12 +187,8 @@ def make_host_breadcrumb(host_name: HostName, user_permissions: UserPermissions)
     breadcrumb.append(
         BreadcrumbItem(
             title=_u(str(allhosts_view_spec["title"])),
-            url=makeuri_contextless(
-                request,
-                [("view_name", "allhosts")],
-                filename="view.py",
-            ),
-            id=None,
+            url=makeuri_contextless(request, [], filename="monitor_all_hosts.py"),
+            id="monitor_all_hosts",
         )
     )
 
@@ -211,7 +211,7 @@ def make_host_breadcrumb(host_name: HostName, user_permissions: UserPermissions)
     if host_view_spec := permitted_views.get("host"):
         breadcrumb.append(
             BreadcrumbItem(
-                title=view_title(host_view_spec, context={}),
+                title=visual_title_without_context(host_view_spec, {}),
                 url=makeuri_contextless(
                     request,
                     append_site_from_request(request, [("view_name", "host"), ("host", host_name)]),

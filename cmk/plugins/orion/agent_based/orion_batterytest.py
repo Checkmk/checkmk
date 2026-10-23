@@ -7,15 +7,14 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def parse_orion_batterytest(string_table: StringTable) -> StringTable | None:
@@ -31,10 +30,6 @@ snmp_section_orion_batterytest = SimpleSNMPSection(
         oids=["1", "2"],
     ),
 )
-
-
-def discover_orion_batterytest(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_orion_batterytest(section: StringTable) -> CheckResult:
@@ -66,6 +61,6 @@ def check_orion_batterytest(section: StringTable) -> CheckResult:
 check_plugin_orion_batterytest = CheckPlugin(
     name="orion_batterytest",
     service_name="Battery Test",
-    discovery_function=discover_orion_batterytest,
+    discovery_function=discover_one_service,
     check_function=check_orion_batterytest,
 )

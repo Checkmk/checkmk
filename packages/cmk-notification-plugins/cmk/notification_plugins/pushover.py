@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from http import HTTPStatus
 
 import requests
 
 from cmk.notification_plugins import utils
+from cmk.utils.http_proxy_config import redact_proxy_url
 
 api_url = "https://api.pushover.net/1/messages.json"
 
@@ -124,13 +126,13 @@ def send_push_notification(
             proxies=proxies,
         )
     except requests.exceptions.ProxyError:
-        sys.stdout.write("Cannot connect to proxy: %s\n" % context["PARAMETER_PROXY_URL"])
+        sys.stdout.write("Cannot connect to proxy: %s\n" % redact_proxy_url(proxy_url or ""))
         return 1
     except requests.exceptions.RequestException:
         sys.stdout.write("POST request to server failed: %s\n" % api_url)
         return 1
 
-    if response.status_code not in [200, 204]:
+    if response.status_code not in [HTTPStatus.OK, HTTPStatus.NO_CONTENT]:
         sys.stdout.write(
             f"Failed to send notification. Status: {response.status_code}, Response: {response.text}\n"
         )

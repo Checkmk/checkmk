@@ -133,6 +133,9 @@ case "$1" in
     if ! test -e /etc/apache2/mods-enabled/rewrite.load; then
        a2enmod rewrite
     fi
+    if ! test -e /etc/apache2/mods-enabled/headers.load; then
+       a2enmod headers
+    fi
 
     echo "New default version is {CMK_VERSION}.{CMK_EDITION}."
     update-alternatives --set omd /omd/versions/{CMK_VERSION}.{CMK_EDITION}

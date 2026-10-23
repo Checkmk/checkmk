@@ -30,7 +30,7 @@ from cmk.gui.userdb import (
     resolved_authentication_connections,
 )
 from cmk.gui.utils.output_funnel import output_funnel
-from tests.testlib.gui.web_test_app import SetConfig
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 _CENTRAL_SITE = SiteId("central")
 

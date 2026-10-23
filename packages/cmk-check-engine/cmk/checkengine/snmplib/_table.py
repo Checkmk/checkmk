@@ -33,6 +33,12 @@ SNMPTable = Sequence[SNMPDecodedValues]
 SNMPRawDataElem = Sequence[SNMPTable | Sequence[SNMPTable]]
 SNMPRawData = Mapping[SNMPSectionMarker, SNMPRawDataElem]
 
+
+def serialize_snmp_raw_data(raw_data: SNMPRawData) -> bytes:
+    """Serialize the raw data in the format of the SNMP file cache"""
+    return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
+
+
 _ResultColumnsUnsanitized = list[tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
 _ResultColumnsSanitized = list[tuple[list[SNMPRawValue], SNMPValueEncoding]]
 logger = logging.getLogger(__name__)

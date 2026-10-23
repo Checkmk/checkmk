@@ -22,6 +22,8 @@
       "spacesPerIndentLevel": 4,
       "severity": "error"
     },
+    "formatting.IndentationClosingBraces": "error",
+    "formatting.IndentationComments": "error",
     "formatting.LineLength": {
       "length": 140,
       "severity": "error"

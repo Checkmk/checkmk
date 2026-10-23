@@ -3,37 +3,43 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from pathlib import Path
-from typing import NotRequired, ReadOnly, TypedDict
+from typing import Literal
 
-from .bakery_api.v1 import FileGenerator, OS, password_store, Plugin, PluginConfig, register
+from pydantic import BaseModel
 
+from cmk.utils.password_store import extract_formspec_password, FormSpecPassword
 
-class ScaleioConfig(TypedDict):
-    user: ReadOnly[str]
-    password: ReadOnly[password_store.PasswordId]
-    interval: NotRequired[ReadOnly[int]]
+from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
 
 
-def get_mk_scaleio_files(conf: ScaleioConfig) -> FileGenerator:
-    interval = conf.get("interval", 0)
-    if interval <= 60:
-        interval = 0
-    yield Plugin(base_os=OS.LINUX, source=Path("mk_scaleio"), interval=interval)
+class _Config(BaseModel):
+    deployment: tuple[Literal["do_not_deploy", "sync", "cached"], float | None]
+    user: str = ""
+    password: FormSpecPassword | None = None
+
+
+def get_mk_scaleio_files(conf: Mapping[str, object]) -> FileGenerator:
+    config = _Config.model_validate(conf)
+    if config.deployment[0] == "do_not_deploy":
+        return
+
+    yield Plugin(
+        base_os=OS.LINUX,
+        source=Path("mk_scaleio"),
+        interval=None if (v := config.deployment[1]) is None else int(v),
+    )
 
     yield PluginConfig(
         base_os=OS.LINUX,
-        lines=_get_mk_scaleio_config(conf),
+        lines=[
+            f"SIO_USER={config.user}",
+            f"SIO_PASSWORD={'' if config.password is None else extract_formspec_password(config.password)}",
+        ],
         target=Path("mk_scaleio.cfg"),
         include_header=True,
     )
-
-
-def _get_mk_scaleio_config(conf: ScaleioConfig) -> list[str]:
-    return [
-        "SIO_USER=%s" % conf["user"],
-        "SIO_PASSWORD=%s" % password_store.extract(conf["password"]),
-    ]
 
 
 register.bakery_plugin(

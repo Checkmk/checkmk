@@ -9,12 +9,11 @@ from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.fortinet.lib import DETECT_FORTIMAIL
 
 Section = Mapping[str, float]
@@ -26,10 +25,6 @@ def parse_fortimail_cpu_load(string_table: StringTable) -> Section | None:
     {'cpu_load': 5.0}
     """
     return {"cpu_load": float(string_table[0][0])} if string_table else None
-
-
-def discovery_fortimail_cpu_load(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_fortimail_cpu_load(
@@ -59,7 +54,7 @@ snmp_section_fortimail_cpu_load = SimpleSNMPSection(
 check_plugin_fortimail_cpu_load = CheckPlugin(
     name="fortimail_cpu_load",
     service_name="CPU load",
-    discovery_function=discovery_fortimail_cpu_load,
+    discovery_function=discover_one_service,
     check_function=check_fortimail_cpu_load,
     check_default_parameters={"cpu_load": None},
     check_ruleset_name="fortimail_cpu_load",

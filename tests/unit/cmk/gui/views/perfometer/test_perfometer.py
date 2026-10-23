@@ -9,19 +9,15 @@ import pytest
 
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers, Title
-from cmk.gui.config import active_config
-from cmk.gui.display_options import display_options
 from cmk.gui.graphing import perfometers_from_api
-from cmk.gui.http import request, response
-from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import Cell
-from cmk.gui.painter.v0.helpers import RenderLink
-from cmk.gui.painter_options import PainterOptions
-from cmk.gui.theme.current_theme import theme
+from cmk.gui.logged_in import LoggedInUser, UserDefaultConfig
+from cmk.gui.painter import Cell, InternalPainter
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.views.perfometer.base import Perfometer
-from cmk.gui.views.perfometer.painter import PainterPerfometer
+from cmk.gui.views.perfometer.painter import make_perfometer_painter
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 _REGISTERED_PERFOMETERS = {
     "kube_memory_usage": perfometers.Perfometer(
@@ -52,7 +48,6 @@ def _row(perf_data: str, check_command: str = "check_mk-kube_memory") -> Row:
         [1, None, 0, -1],
     ],
 )
-@pytest.mark.usefixtures("request_context")
 def test_rows_sort_by_their_perfometer_with_the_undrawn_ones_first(
     sort_values: Sequence[float | None],
 ) -> None:
@@ -66,7 +61,7 @@ def test_rows_sort_by_their_perfometer_with_the_undrawn_ones_first(
     ]
 
     def _key(row: Row) -> tuple[str, float]:
-        return Perfometer(row, {}, _REGISTERED_PERFOMETERS).sort_value()
+        return Perfometer(row, {}, _REGISTERED_PERFOMETERS, debug=False).sort_value()
 
     assert [_key(row)[1] for row in sorted(data, key=_key)] == [
         -float("inf"),
@@ -76,15 +71,15 @@ def test_rows_sort_by_their_perfometer_with_the_undrawn_ones_first(
     ]
 
 
-@pytest.mark.usefixtures("request_context")
 def test_sort_value_groups_by_the_drawing_plugin() -> None:
-    drawn = Perfometer(_row("kube_memory_usage=42;;;0;"), {}, _REGISTERED_PERFOMETERS)
-    undrawn = Perfometer(_row("kube_memory_request=42;;;0;"), {}, _REGISTERED_PERFOMETERS)
+    drawn = Perfometer(_row("kube_memory_usage=42;;;0;"), {}, _REGISTERED_PERFOMETERS, debug=False)
+    undrawn = Perfometer(
+        _row("kube_memory_request=42;;;0;"), {}, _REGISTERED_PERFOMETERS, debug=False
+    )
     assert drawn.sort_value() == ("kube_memory_usage", 42.0)
     assert undrawn.sort_value() == ("", -float("inf"))
 
 
-@pytest.mark.usefixtures("request_context")
 def test_a_segment_takes_the_attributes_of_its_registered_metric() -> None:
     metrics = {
         "kube_memory_usage": metrics_v1.Metric(
@@ -95,8 +90,8 @@ def test_a_segment_takes_the_attributes_of_its_registered_metric() -> None:
         )
     }
     title, html = Perfometer(
-        _row("kube_memory_usage=209715200;;;0;"), metrics, _REGISTERED_PERFOMETERS
-    ).render()
+        _row("kube_memory_usage=209715200;;;0;"), metrics, _REGISTERED_PERFOMETERS, debug=False
+    ).render(TemperatureUnit.CELSIUS, "#ffffff")
     assert title == "200 MiB"
     assert html is not None
     assert "background-color: #28a2f3" in str(html)
@@ -129,18 +124,11 @@ def _perfometer_row() -> Row:
     }
 
 
-def _make_painter() -> PainterPerfometer:
-    return PainterPerfometer(
-        config=active_config,
-        request=request,
-        painter_options=PainterOptions.get_instance(),
-        theme=theme,
-        url_renderer=RenderLink(request, response, display_options),
-        user_permissions=UserPermissions({}, {}, {}, []),
-    )
+def _make_painter() -> InternalPainter:
+    return make_perfometer_painter()
 
 
-@pytest.mark.usefixtures("request_context", "registered_perfometer")
+@pytest.mark.usefixtures("registered_perfometer")
 def test_perfometer_export_contains_label() -> None:
     """The Perf-O-Meter label must be present in CSV/JSON exports.
 
@@ -148,8 +136,13 @@ def test_perfometer_export_contains_label() -> None:
     link wrapper produced by render(). The export methods must therefore fall
     back to the plain label instead of returning empty content (SUP-28751)."""
     painter = _make_painter()
-    cell = Cell(None, None, None, UserPermissions({}, {}, {}, []))
+    cell = Cell(None, None, None, make_painter_context(UserPermissions({}, {}, {}, [])), None)
     row = _perfometer_row()
+    user = LoggedInUser(
+        None,
+        UserPermissions({}, {}, {}, []),
+        defaults=UserDefaultConfig(users={}, default_language="en", default_show_mode="default"),
+    )
 
-    assert painter.export_for_csv(row, cell, user) == "42"
-    assert painter.export_for_json(row, cell, user) == "42"
+    assert painter.export_for_csv(row, cell, user, cell.painter_context()) == "42"
+    assert painter.export_for_json(row, cell, user, cell.painter_context()) == "42"

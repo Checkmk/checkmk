@@ -12,27 +12,14 @@ import { ref } from 'vue'
 import FormEdit from '@/form/FormEdit.vue'
 
 async function interceptor({ request }: { request: Request }) {
-  const jsonData = (await request.formData()).get('request')
-  const query = JSON.parse(jsonData as string).value
+  const { value: query } = (await request.json()) as { value: string }
   return HttpResponse.json({
-    result: {
-      choices: [
-        [query, query],
-        ['three', 'three'],
-        ['two', 'two'],
-        ['one', 'one']
-      ]
-    },
-    result_code: 0,
-    severity: 'success'
+    choices: [query, 'three', 'two', 'one'].map((choice) => ({ id: choice, value: choice }))
   })
 }
 
 const { mockLoaded } = useMswWorker([
-  http.post(
-    new RegExp(`${location.protocol}//${location.host}/ajax_vs_autocomplete.py`),
-    interceptor
-  )
+  http.post('*/api/internal/objects/autocomplete/:ident', interceptor)
 ])
 
 defineProps<{ screenshotMode: boolean }>()
@@ -56,7 +43,7 @@ const autocompleterStringSpec: String = {
         context: {}
       }
     },
-    fetch_method: 'ajax_vs_autocomplete'
+    fetch_method: 'rest_autocomplete'
   }
 }
 

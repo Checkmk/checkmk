@@ -9,10 +9,9 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.rittal.agent_based.cmciii_lcp_waterflow import (
     check_cmciii_lcp_waterflow,
-    discover_cmciii_lcp_waterflow,
     parse_cmciii_lcp_waterflow,
     Section,
 )
@@ -57,24 +56,6 @@ def test_parse_cmciii_lcp_waterflow(string_table: StringTable, section: Section)
 
 def test_parse_cmciii_lcp_waterflow_empty_section() -> None:
     assert parse_cmciii_lcp_waterflow([]) is None
-
-
-@pytest.mark.parametrize(
-    "section, discovered_items",
-    [
-        pytest.param(
-            Section(
-                name="Waterflow", flow=0.0, unit="l/min", maxflow=130.0, minflow=0.0, status="OK"
-            ),
-            [Service()],
-            id="Waterflow sensor is discovered within OID range.",
-        ),
-    ],
-)
-def test_discover_cmciii_lcp_waterflow(
-    section: Section, discovered_items: Sequence[Service]
-) -> None:
-    assert list(discover_cmciii_lcp_waterflow(section)) == discovered_items
 
 
 @pytest.mark.parametrize(

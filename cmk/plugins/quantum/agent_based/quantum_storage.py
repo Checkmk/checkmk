@@ -12,17 +12,16 @@ from cmk.agent_based.v2 import (
     Attributes,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     exists,
     InventoryPlugin,
     InventoryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 class Section(NamedTuple):
@@ -63,10 +62,6 @@ _QUANTUM_DEVICE_STATE: Mapping[str, str] = {
 }
 
 
-def discover_quantum_storage_status(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_quantum_storage_status(params: Mapping[str, Any], section: Section) -> CheckResult:
     state_txt = _QUANTUM_DEVICE_STATE.get(section.state, f"Unknown [{section.state}]")
     yield Result(
@@ -79,7 +74,7 @@ check_plugin_quantum_storage_status = CheckPlugin(
     name="quantum_storage_status",
     sections=["snmp_quantum_storage_info"],
     service_name="Device status",
-    discovery_function=discover_quantum_storage_status,
+    discovery_function=discover_one_service,
     check_function=check_quantum_storage_status,
     check_ruleset_name="quantum_storage_status",
     check_default_parameters={

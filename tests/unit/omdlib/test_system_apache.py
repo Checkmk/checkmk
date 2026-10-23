@@ -27,7 +27,7 @@ def test_register_with_system_apache(tmp_path: Path, mocker: MockerFixture) -> N
     apache_config.parent.mkdir(parents=True)
 
     register_with_system_apache(
-        version_info, apache_config, "unit", "127.0.0.1", "5000", True, False
+        version_info, apache_config, "unit", "127.0.0.1", "5000", "auto", True, False
     )
 
     assert apache_config.exists()
@@ -38,11 +38,67 @@ def test_apache_hook_publishes_the_public_mcp_prm_route(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
 
-    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000")
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", "auto")
 
     content = apache_config.read_text()
     assert "/.well-known/oauth-protected-resource/unit/check_mk/mcp" in content
     assert "Require all granted" in content
+
+
+def _location_sections(content: str) -> list[str]:
+    sections = []
+    current: list[str] | None = None
+    for line in content.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("<Location "):
+            current = []
+        elif stripped == "</Location>" and current is not None:
+            sections.append("\n".join(current))
+            current = None
+        elif current is not None:
+            current.append(stripped)
+    return sections
+
+
+def test_create_apache_hook_forwards_scheme_headers_in_every_proxied_location(
+    tmp_path: Path,
+) -> None:
+    apache_config = tmp_path / "omd/apache/unit.conf"
+    apache_config.parent.mkdir(parents=True)
+
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", "auto")
+
+    proxied = [s for s in _location_sections(apache_config.read_text()) if "ProxyPass " in s]
+    assert proxied
+    for section in proxied:
+        assert "RequestHeader set X-Forwarded-Proto expr=%{REQUEST_SCHEME}" in section
+        assert "RequestHeader set X-Forwarded-Ssl expr=%{HTTPS}" in section
+
+
+def test_create_apache_hook_sets_scheme_headers_only_for_the_site(tmp_path: Path) -> None:
+    # All sites' hooks are loaded into the same system Apache: a server-wide RequestHeader
+    # would also apply to the other sites' requests.
+    apache_config = tmp_path / "omd/apache/unit.conf"
+    apache_config.parent.mkdir(parents=True)
+
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", "auto")
+
+    content = apache_config.read_text()
+    in_locations = sum(s.count("RequestHeader set") for s in _location_sections(content))
+    assert in_locations == content.count("RequestHeader set")
+
+
+def test_create_apache_hook_manual_forwarded_headers_skips_the_directives(
+    tmp_path: Path,
+) -> None:
+    apache_config = tmp_path / "omd/apache/unit.conf"
+    apache_config.parent.mkdir(parents=True)
+
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", "manual")
+
+    content = apache_config.read_text()
+    assert "<IfModule headers_module>" not in content
+    assert "APACHE_FORWARDED_HEADERS is set to 'manual'" in content
 
 
 def test_unregister_from_system_apache(tmp_path: Path, mocker: MockerFixture) -> None:
@@ -52,7 +108,7 @@ def test_unregister_from_system_apache(tmp_path: Path, mocker: MockerFixture) ->
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
     register_with_system_apache(
-        version_info, apache_config, "unit", "127.0.0.1", "5000", True, False
+        version_info, apache_config, "unit", "127.0.0.1", "5000", "auto", True, False
     )
     assert apache_config.exists()
     reload_apache.reset_mock()
@@ -68,7 +124,7 @@ def test_delete_apache_hook(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
     register_with_system_apache(
-        version_info, apache_config, "unit", "127.0.0.1", "5000", True, verbose=False
+        version_info, apache_config, "unit", "127.0.0.1", "5000", "auto", True, verbose=False
     )
     assert apache_config.exists()
 
@@ -87,14 +143,14 @@ def test_delete_apache_hook_not_existing(tmp_path: Path) -> None:
 def test_create_apache_hook_world_readable(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
-    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000")
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", "auto")
     assert apache_config.stat().st_mode & stat.S_IROTH
 
 
 def test_create_apache_hook_well_known_oauth_authorization_server(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
-    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000")
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", "auto")
 
     content = apache_config.read_text()
     assert "<Location /.well-known/oauth-authorization-server/oauth-unit>" in content
@@ -104,7 +160,7 @@ def test_create_apache_hook_well_known_oauth_authorization_server(tmp_path: Path
 def test_create_apache_hook_oauth_authorization_server_endpoints(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
-    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000")
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", "auto")
 
     content = apache_config.read_text()
     assert "<Location /oauth-unit/authorize>" in content
@@ -118,7 +174,7 @@ def test_create_apache_hook_oauth_authorization_server_endpoints(tmp_path: Path)
 def test_create_apache_hook_denies_the_introspection_endpoint(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
-    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000")
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", "auto")
 
     content = apache_config.read_text()
     assert "<Location /unit/check_mk/oauth_introspect.py>\n    Require all denied" in content

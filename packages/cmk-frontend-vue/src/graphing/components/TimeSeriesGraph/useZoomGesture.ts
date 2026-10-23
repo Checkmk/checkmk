@@ -27,8 +27,6 @@ export interface ZoomGestureOptions {
   minTimeRange: () => number | null
   minValueRange: () => number | null
   valueRange: () => { min: number; max: number } | null
-  // Whether time zoom has nothing left to give. Supplied rather than derived: the drawn window
-  // is snapped to the data step, so it never reaches minTimeRange however far the user zooms.
   atTimeFloor: () => boolean
   // Plot dimensions in CSS px.
   plotWidth: Ref<number>

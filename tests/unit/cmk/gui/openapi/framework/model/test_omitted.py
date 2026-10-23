@@ -13,7 +13,11 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from cmk.gui.openapi.framework.model import api_field
-from cmk.gui.openapi.framework.model.omitted import ApiOmitted, json_dump_without_omitted
+from cmk.gui.openapi.framework.model.omitted import (
+    ApiOmitted,
+    drop_omitted_union_errors,
+    json_dump_without_omitted,
+)
 
 
 @dataclass
@@ -96,3 +100,81 @@ class _DatetimeModel:
 def test_json_dump_without_omitted(model: _TestModel | _NestedModel, expected: dict) -> None:  # type: ignore[misc]
     dumped = json.loads(json_dump_without_omitted(model.__class__, model))
     assert dumped == expected
+
+
+def _error_locs(adapter: TypeAdapter, value: object) -> set[tuple[int | str, ...]]:
+    with pytest.raises(ValidationError) as exc_info:
+        adapter.validate_python(value)
+    return {error["loc"] for error in drop_omitted_union_errors(exc_info.value.errors())}
+
+
+def test_the_omitted_branch_error_and_label_are_dropped() -> None:
+    @dataclass
+    class Model:
+        field: int | ApiOmitted = api_field(description="", default_factory=ApiOmitted)
+
+    adapter = TypeAdapter(Model)  # astrein: disable=pydantic-type-adapter
+
+    assert _error_locs(adapter, {"field": "abc"}) == {("field",)}
+
+
+def test_the_label_is_stripped_from_locations_inside_the_branch() -> None:
+    @dataclass
+    class Inner:
+        sub: int = api_field(description="")
+
+    @dataclass
+    class Model:
+        field: list[Inner] | ApiOmitted = api_field(description="", default_factory=ApiOmitted)
+
+    adapter = TypeAdapter(Model)  # astrein: disable=pydantic-type-adapter
+
+    assert _error_locs(adapter, {"field": [{"sub": "abc"}]}) == {("field", 0, "sub")}
+
+
+def test_labels_of_several_failing_branches_are_kept() -> None:
+    @dataclass
+    class Model:
+        field: int | list[str] | ApiOmitted = api_field(description="", default_factory=ApiOmitted)
+
+    adapter = TypeAdapter(Model)  # astrein: disable=pydantic-type-adapter
+
+    assert _error_locs(adapter, {"field": {}}) == {("field", "int"), ("field", "list[str]")}
+
+
+def test_a_nullable_omittable_field_errors_like_a_plain_nullable_one() -> None:
+    @dataclass
+    class Model:
+        field: int | None | ApiOmitted = api_field(description="", default_factory=ApiOmitted)
+
+    adapter = TypeAdapter(Model)  # astrein: disable=pydantic-type-adapter
+
+    assert _error_locs(adapter, {"field": "abc"}) == {("field",)}
+
+
+def test_nested_omittable_fields_lose_all_labels() -> None:
+    @dataclass
+    class Inner:
+        sub: int | ApiOmitted = api_field(description="", default_factory=ApiOmitted)
+
+    @dataclass
+    class Model:
+        field: Inner | ApiOmitted = api_field(description="", default_factory=ApiOmitted)
+
+    adapter = TypeAdapter(Model)  # astrein: disable=pydantic-type-adapter
+
+    assert _error_locs(adapter, {"field": {"sub": "abc"}}) == {("field", "sub")}
+
+
+def test_errors_without_an_omittable_field_stay_unchanged() -> None:
+    @dataclass
+    class Model:
+        field: int = api_field(description="")
+
+    with pytest.raises(ValidationError) as exc_info:
+        TypeAdapter(Model).validate_python(  # astrein: disable=pydantic-type-adapter
+            {"field": "abc"}
+        )
+    errors = exc_info.value.errors()
+
+    assert drop_omitted_union_errors(errors) == errors

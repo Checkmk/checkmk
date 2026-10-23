@@ -75,7 +75,10 @@ function makeAction(id: string, perform: MonitoringAction['perform']): Monitorin
 
 let service: RowService | null = null
 
-async function mountPaneWithLoadedRows(perform: MonitoringAction['perform']) {
+async function mountPaneWithLoadedRows(
+  perform: MonitoringAction['perform'],
+  getActionTargets?: (rows: Row[], actionId: string) => HostRef[]
+) {
   service = new RowService('row-service', makeKeyShortcutService(), { columns: COLUMNS })
   const actions: MonitoringActionRegistry = {
     [RESCHEDULE_ID]: makeAction(RESCHEDULE_ID, perform),
@@ -100,6 +103,7 @@ async function mountPaneWithLoadedRows(perform: MonitoringAction['perform']) {
               columnPinning: {},
               getRowKey: (row: Row) => `${row.site_id}/${row.name}`,
               getActionTarget: (row: Row) => ({ site_id: row.site_id, name: row.name }),
+              getActionTargets,
               selectionLabel: (count: number) =>
                 `${count} hosts selected` as unknown as TranslatedString,
               actionsLabel: untranslated('Actions for selected hosts'),
@@ -116,7 +120,8 @@ async function mountPaneWithLoadedRows(perform: MonitoringAction['perform']) {
                   })
                 ]),
                 h('td', ROW.name)
-              ]
+              ],
+              'display-options': () => h('div', 'Display options marker')
             }
           )
       }
@@ -145,6 +150,32 @@ describe('MonitoringSplitPane', () => {
 
     expect(perform).toHaveBeenCalledWith([{ site_id: 'local', name: 'host-1' }], {})
     expect(screen.queryByRole('button', { name: 'Submit' })).not.toBeInTheDocument()
+  })
+
+  it('performs an immediate action on what the page maps the selection to', async () => {
+    const perform = vi
+      .fn()
+      .mockResolvedValue({ variant: 'success', message: untranslated('Rescheduled') })
+    await mountPaneWithLoadedRows(perform, () => [{ site_id: 'local', name: 'other-host' }])
+    await selectTheOnlyRow()
+
+    await userEvent.click(screen.getByRole('button', { name: RESCHEDULE_LABEL }))
+
+    expect(perform).toHaveBeenCalledWith([{ site_id: 'local', name: 'other-host' }], {})
+  })
+
+  it('refuses an action the selection maps to nothing for', async () => {
+    const perform = vi.fn()
+    await mountPaneWithLoadedRows(perform, () => [])
+    await selectTheOnlyRow()
+
+    await userEvent.click(screen.getByRole('button', { name: ACK_LABEL }))
+
+    expect(perform).not.toHaveBeenCalled()
+    expect(screen.queryByRole('button', { name: 'Submit' })).not.toBeInTheDocument()
+    expect(
+      await screen.findByText('This action cannot be performed on any of the selected rows.')
+    ).toBeInTheDocument()
   })
 
   it('opens the form instead of performing for an action that is not immediate', async () => {
@@ -204,5 +235,37 @@ describe('MonitoringSplitPane', () => {
     await userEvent.click(screen.getByRole('button', { name: RESCHEDULE_LABEL }))
 
     expect(perform).not.toHaveBeenCalled()
+  })
+
+  it('opens the display-options slot when the setup button is clicked', async () => {
+    await mountPaneWithLoadedRows(vi.fn())
+
+    await userEvent.click(screen.getByRole('button', { name: 'Modify display options' }))
+
+    expect(screen.getByText('Display options marker')).toBeInTheDocument()
+  })
+
+  it('closes the display-options pane when a bulk action is opened', async () => {
+    await mountPaneWithLoadedRows(vi.fn())
+    await selectTheOnlyRow()
+    await userEvent.click(screen.getByRole('button', { name: 'Modify display options' }))
+    expect(screen.getByText('Display options marker')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: ACK_LABEL }))
+
+    expect(screen.queryByText('Display options marker')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument()
+  })
+
+  it('closes the bulk action pane when the setup button is opened', async () => {
+    await mountPaneWithLoadedRows(vi.fn())
+    await selectTheOnlyRow()
+    await userEvent.click(screen.getByRole('button', { name: ACK_LABEL }))
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Modify display options' }))
+
+    expect(screen.queryByRole('button', { name: 'Submit' })).not.toBeInTheDocument()
+    expect(screen.getByText('Display options marker')).toBeInTheDocument()
   })
 })

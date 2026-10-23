@@ -14,11 +14,12 @@ import json
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
+from http import HTTPStatus
 
 import requests
 import urllib3
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -101,7 +102,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         handle_section(args, session, "streams", "/streams", section_streams)
         handle_section(args, session, "events", "/events/search", section_events)
         return 0
-    return 2  # type: ignore[unreachable]
 
 
 def handle_section(
@@ -212,7 +212,7 @@ def section_messages(
     args: argparse.Namespace, url: str, session: requests.Session
 ) -> JsonSerializable:
     value = _do_get(url, args, session)
-    if value.status_code != 200:
+    if value.status_code != HTTPStatus.OK:
         return value.json()
     return {"events": value.json().get("counts", {}).get("events", 0)}
 

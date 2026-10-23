@@ -7,10 +7,9 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
+from cmk.agent_based.v2 import CheckResult, Result, State, StringTable
 from cmk.plugins.cisco.agent_based.cisco_asa_failover import (
     check_cisco_asa_failover,
-    discovery_cisco_asa_failover,
     parse_cisco_asa_failover,
     Section,
 )
@@ -80,27 +79,6 @@ _CHECK_PARAMS = {
 )
 def test_cisco_asa_failover_parse(string_table: StringTable, expected: Section | None) -> None:
     assert parse_cisco_asa_failover(string_table) == expected
-
-
-@pytest.mark.parametrize(
-    "section, expected",
-    [
-        pytest.param(
-            Section(
-                local_role="primary",
-                local_status="9",
-                local_status_detail="Active unit",
-                failover_link_status="2",
-                failover_link_name="ClusterLink Port-channel4 (system)",
-                remote_status="10",
-            ),
-            [Service()],
-            id="Discovery: Primary unit == Active unit",
-        ),
-    ],
-)
-def test_cisco_asa_failover_discover(section: Section, expected: DiscoveryResult) -> None:
-    assert list(discovery_cisco_asa_failover(section)) == expected
 
 
 @pytest.mark.parametrize(

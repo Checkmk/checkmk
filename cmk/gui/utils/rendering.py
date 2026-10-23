@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from collections.abc import Iterable
 
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -34,11 +33,13 @@ def text_with_links_to_user_translated_html(
 
 
 def set_inpage_search_result_info(search_results: int) -> None:
-    html.javascript(
-        "cmk.utils.set_inpage_search_result_info(%s);"
-        % json.dumps(
-            _("Results: %(search_results)d") % {"search_results": search_results}
-            if search_results
-            else _("No results")
-        )
+    html.call_ts_function(
+        function_name="set_inpage_search_result_info",
+        arguments={
+            "text": (
+                _("Results: %(search_results)d") % {"search_results": search_results}
+                if search_results
+                else _("No results")
+            )
+        },
     )

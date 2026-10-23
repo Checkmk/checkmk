@@ -10,13 +10,19 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import ServiceSlideIn from '@/monitoring/host-services/components/ServiceSlideIn.vue'
+import ServiceSlideIn, {
+  SERVICE_GRAPHS_TAB_ID
+} from '@/monitoring/host-services/components/ServiceSlideIn.vue'
 import type { HostRef, HostServiceEntry, ServiceOverview } from '@/monitoring/shared/api/types'
 import type { ActionFeedback } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import { ACK_ACTION_ID } from '@/monitoring/shared/components/action/actions/acknowledge'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
+import type { DisplayOptions } from '@/monitoring/shared/types'
+
+const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
 const HOST: HostRef = { site_id: 'local', name: 'web-server-01' }
 
@@ -52,6 +58,12 @@ function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntr
     summary: 'OK - load average: 0.10, 0.05, 0.01',
     last_check: 1783942710,
     last_state_change: 1783942740,
+    reschedule: {
+      label: 'Reschedule check',
+      tooltip: 'Reschedule check',
+      icon_name: 'reload',
+      target: 'CPU load'
+    },
     ...overrides
   }
 }
@@ -62,6 +74,8 @@ function makeOverview(overrides: Partial<ServiceOverview> = {}): ServiceOverview
     host_name: HOST.name,
     site_id: HOST.site_id,
     state: 'OK',
+    is_flapping: false,
+    stale: false,
     modes: [],
     host_alias: 'Web Server',
     host_state: 'UP',
@@ -71,6 +85,7 @@ function makeOverview(overrides: Partial<ServiceOverview> = {}): ServiceOverview
       'view.py?view_name=service&site=local&host=web-server-01&service=CPU+load',
     legacy_service_parameters_link:
       'wato.py?mode=object_parameters&host=web-server-01&service=CPU+load',
+    legacy_service_discovery_link: null,
     legacy_service_graphs_link:
       'view.py?view_name=service_graphs&site=local&host=web-server-01&service=CPU+load',
     contact_groups: ['all'],
@@ -97,24 +112,34 @@ describe('ServiceSlideIn', () => {
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
+    vi.useRealTimers()
   })
 
   it('stays closed while no service is selected', () => {
-    render(ServiceSlideIn, { props: { service: null, host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: null, host: HOST }
+    })
 
     expect(screen.queryByText('Service details')).not.toBeInTheDocument()
   })
 
   it('shows the overview of the selected service once it is loaded', async () => {
-    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
 
     expect(await screen.findByText('Service details')).toBeInTheDocument()
     expect(await screen.findByText('CPU load')).toBeInTheDocument()
   })
 
   it('requests the overview for the selected service of this host', async () => {
-    render(ServiceSlideIn, { props: { service: makeService({ name: 'Memory' }), host: HOST } })
+    render(ServiceSlideIn, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService({ name: 'Memory' }),
+        host: HOST
+      }
+    })
 
     await screen.findByText('Service details')
 
@@ -128,7 +153,7 @@ describe('ServiceSlideIn', () => {
 
   it('reloads the overview when another service is picked while the panel is open', async () => {
     const { rerender } = render(ServiceSlideIn, {
-      props: { service: makeService(), host: HOST }
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
     })
     await screen.findByText('Service details')
 
@@ -147,6 +172,7 @@ describe('ServiceSlideIn', () => {
       data: makeOverview({
         modes: [
           {
+            id: 'acknowledged',
             icon_name: 'ack',
             link: 'view.py?view_name=service&site=local&host=web-server-01&service=CPU+load',
             title: 'Problem acknowledged'
@@ -156,7 +182,9 @@ describe('ServiceSlideIn', () => {
       error: undefined,
       response: new Response()
     } as never)
-    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
 
     expect(await screen.findByRole('link', { name: 'Problem acknowledged' })).toBeInTheDocument()
   })
@@ -169,6 +197,7 @@ describe('ServiceSlideIn', () => {
           data: makeOverview({
             modes: [
               {
+                id: 'acknowledged',
                 icon_name: 'ack',
                 link: 'view.py?view_name=service&site=local&host=web-server-01&service=CPU+load',
                 title: 'Problem acknowledged'
@@ -188,8 +217,11 @@ describe('ServiceSlideIn', () => {
       } as never)
 
     const { rerender } = render(ServiceSlideIn, {
-      props: { service: makeService(), host: HOST }
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
     })
+    // The tab body loads once it is mounted, so there is a request to go stale
+    // only after the panel is on screen.
+    await vi.waitFor(() => expect(client.GET).toHaveBeenCalledTimes(1))
     await rerender({ service: makeService({ name: 'Memory' }), host: HOST })
 
     resolveStale()
@@ -199,16 +231,122 @@ describe('ServiceSlideIn', () => {
     expect(screen.queryByRole('link', { name: 'Problem acknowledged' })).not.toBeInTheDocument()
   })
 
-  it('offers the service details and parameters as icon buttons in the header', async () => {
-    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+  it('refreshes the header mode icons a moment after an action succeeds', async () => {
+    vi.useFakeTimers()
+    const user = userEvent.setup({ advanceTimers: (ms: number) => vi.advanceTimersByTime(ms) })
+    vi.spyOn(client, 'GET')
+      .mockResolvedValueOnce({
+        data: makeOverview({ modes: [] }),
+        error: undefined,
+        response: new Response()
+      } as never)
+      .mockResolvedValue({
+        data: makeOverview({
+          modes: [
+            {
+              id: 'downtime',
+              icon_name: 'downtime',
+              link: 'view.py?view_name=downtimes_of_host&site=local&host=web-server-01',
+              title: 'In scheduled downtime'
+            }
+          ]
+        }),
+        error: undefined,
+        response: new Response()
+      } as never)
 
-    expect(
-      await screen.findByRole('link', { name: 'Show details of service CPU load' })
-    ).toHaveAttribute(
+    render(ServiceSlideIn, {
+      props: {
+        service: makeService(),
+        host: HOST,
+        actions: makeActionRegistry(),
+        permittedActions: PERMITTED_ACTIONS,
+        displayOptions: DISPLAY_OPTIONS
+      }
+    })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(screen.queryByRole('link', { name: 'In scheduled downtime' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Reschedule check' }))
+    // The core applies external commands like a scheduled downtime asynchronously, so the
+    // reload is delayed rather than immediate, giving it a moment to catch up.
+    await vi.advanceTimersByTimeAsync(0)
+    expect(client.GET).toHaveBeenCalledTimes(1)
+
+    await vi.advanceTimersByTimeAsync(ACTION_REFRESH_DELAY_MS)
+
+    expect(screen.getByRole('link', { name: 'In scheduled downtime' })).toBeInTheDocument()
+    // Exactly one more request than the initial load: the Overview tab's own reload (driven by
+    // reloadToken) already refreshes the header, so the direct call for the header must not
+    // repeat it.
+    expect(client.GET).toHaveBeenCalledTimes(2)
+  })
+
+  it('still refreshes the header when a tab other than Overview is shown', async () => {
+    vi.useFakeTimers()
+    const user = userEvent.setup({ advanceTimers: (ms: number) => vi.advanceTimersByTime(ms) })
+    vi.spyOn(client, 'GET').mockImplementation(async (path) => {
+      if (path === '/monitor/hosts/{hostname}/events') {
+        return {
+          data: {
+            events: [],
+            meta: {
+              limit: 500,
+              truncated: false,
+              since: 0,
+              time_window_days: 8,
+              legacy_events_link: 'view.py?view_name=service_events'
+            }
+          },
+          error: undefined,
+          response: new Response()
+        } as never
+      }
+      return {
+        data: makeOverview({
+          modes: [
+            {
+              id: 'downtime',
+              icon_name: 'downtime',
+              link: 'view.py?view_name=downtimes_of_host&site=local&host=web-server-01',
+              title: 'In scheduled downtime'
+            }
+          ]
+        }),
+        error: undefined,
+        response: new Response()
+      } as never
+    })
+
+    render(ServiceSlideIn, {
+      props: {
+        service: makeService(),
+        host: HOST,
+        actions: makeActionRegistry(),
+        permittedActions: PERMITTED_ACTIONS,
+        activeTabId: 'history',
+        displayOptions: DISPLAY_OPTIONS
+      }
+    })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(screen.queryByRole('link', { name: 'In scheduled downtime' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Reschedule check' }))
+    await vi.advanceTimersByTimeAsync(ACTION_REFRESH_DELAY_MS)
+
+    expect(screen.getByRole('link', { name: 'In scheduled downtime' })).toBeInTheDocument()
+  })
+
+  it('offers the service details and parameters as icon buttons in the header', async () => {
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
+
+    expect(await screen.findByRole('link', { name: 'Show service details' })).toHaveAttribute(
       'href',
       'view.py?view_name=service&site=local&host=web-server-01&service=CPU+load'
     )
-    expect(screen.getByRole('link', { name: 'Parameters of this service' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Show service parameters' })).toHaveAttribute(
       'href',
       'wato.py?mode=object_parameters&host=web-server-01&service=CPU+load'
     )
@@ -217,6 +355,7 @@ describe('ServiceSlideIn', () => {
   it('offers the actions the user may run on the service', async () => {
     render(ServiceSlideIn, {
       props: {
+        displayOptions: DISPLAY_OPTIONS,
         service: makeService(),
         host: HOST,
         actions: makeActionRegistry(),
@@ -230,7 +369,12 @@ describe('ServiceSlideIn', () => {
 
   it('shows no action buttons to a user who may run none of them', async () => {
     render(ServiceSlideIn, {
-      props: { service: makeService(), host: HOST, actions: makeActionRegistry() }
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService(),
+        host: HOST,
+        actions: makeActionRegistry()
+      }
     })
     await screen.findByText('Service details')
 
@@ -241,6 +385,7 @@ describe('ServiceSlideIn', () => {
   it('leaves out a permitted action this page cannot perform', async () => {
     render(ServiceSlideIn, {
       props: {
+        displayOptions: DISPLAY_OPTIONS,
         service: makeService(),
         host: HOST,
         actions: makeActionRegistry(),
@@ -266,6 +411,7 @@ describe('ServiceSlideIn', () => {
     const performed: string[][] = []
     render(ServiceSlideIn, {
       props: {
+        displayOptions: DISPLAY_OPTIONS,
         service: makeService(),
         host: HOST,
         actions: makeActionRegistry(async (targets) => {
@@ -286,6 +432,7 @@ describe('ServiceSlideIn', () => {
     const performed: string[][] = []
     render(ServiceSlideIn, {
       props: {
+        displayOptions: DISPLAY_OPTIONS,
         service: makeService(),
         host: HOST,
         actions: makeActionRegistry(async (targets) => {
@@ -310,17 +457,48 @@ describe('ServiceSlideIn', () => {
       error: undefined,
       response: new Response()
     } as never)
-    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
 
-    await screen.findByRole('link', { name: 'Show details of service CPU load' })
+    await screen.findByRole('link', { name: 'Show service details' })
 
-    expect(
-      screen.queryByRole('link', { name: 'Parameters of this service' })
-    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Show service parameters' })).not.toBeInTheDocument()
+  })
+
+  it('offers the service discovery as a link next to the actions', async () => {
+    vi.spyOn(client, 'GET').mockResolvedValue({
+      data: makeOverview({
+        name: 'Check_MK Discovery',
+        legacy_service_discovery_link: 'wato.py?mode=inventory&host=web-server-01'
+      }),
+      error: undefined,
+      response: new Response()
+    } as never)
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
+
+    expect(await screen.findByRole('link', { name: 'Run service discovery' })).toHaveAttribute(
+      'href',
+      'wato.py?mode=inventory&host=web-server-01'
+    )
+  })
+
+  it('offers no service discovery without a link to it', async () => {
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
+
+    await screen.findByRole('link', { name: 'Show service details' })
+
+    expect(screen.queryByRole('link', { name: 'Run service discovery' })).not.toBeInTheDocument()
   })
 
   it('offers no AI explanation outside the cloud edition', async () => {
-    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
     await screen.findByText('Service details')
 
     expect(screen.queryByTestId('service-ai-explain-button')).not.toBeInTheDocument()
@@ -333,7 +511,12 @@ describe('ServiceSlideIn', () => {
     }
     document.addEventListener('cmk-ai-explain-button', listener)
     render(ServiceSlideIn, {
-      props: { service: makeService(), host: HOST, aiExplain: true }
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService(),
+        host: HOST,
+        aiExplain: true
+      }
     })
 
     await userEvent.click(await screen.findByTestId('service-ai-explain-button'))
@@ -344,7 +527,8 @@ describe('ServiceSlideIn', () => {
         host_name: 'web-server-01',
         service_name: 'CPU load',
         service_state: 'OK',
-        host_state: 'Up'
+        host_state: 'Up',
+        is_stale: false
       }
     ])
   })
@@ -352,14 +536,21 @@ describe('ServiceSlideIn', () => {
   it('waits for the overview before offering the AI explanation', () => {
     vi.spyOn(client, 'GET').mockReturnValue(new Promise(() => {}) as never)
     render(ServiceSlideIn, {
-      props: { service: makeService(), host: HOST, aiExplain: true }
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService(),
+        host: HOST,
+        aiExplain: true
+      }
     })
 
     expect(screen.queryByTestId('service-ai-explain-button')).not.toBeInTheDocument()
   })
 
   it('offers no action menu to a page that provides no loader for it', async () => {
-    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
     await screen.findByText('Service details')
 
     expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
@@ -375,7 +566,12 @@ describe('ServiceSlideIn', () => {
       }
     ])
     render(ServiceSlideIn, {
-      props: { service: makeService({ name: 'Memory' }), host: HOST, loadActionMenu }
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService({ name: 'Memory' }),
+        host: HOST,
+        loadActionMenu
+      }
     })
     await screen.findByText('Service details')
     expect(loadActionMenu).not.toHaveBeenCalled()
@@ -389,14 +585,96 @@ describe('ServiceSlideIn', () => {
     )
   })
 
+  const LOGWATCH_MENU_ENTRY: CellAction = {
+    id: 'logwatch',
+    label: 'Open log file viewer' as TranslatedString,
+    icon: 'services',
+    url: 'view.py?view_name=logwatch&host=web-server-01',
+    ident: 'logwatch'
+  }
+
+  const DISCOVERY_MENU_ENTRY: CellAction = {
+    id: 'discovery',
+    label: 'Run service discovery' as TranslatedString,
+    icon: 'services',
+    url: 'wato.py?folder=&host=web-server-01&mode=inventory',
+    ident: 'wato'
+  }
+
+  it('leaves the discovery out of the action menu while it is offered as a button', async () => {
+    vi.spyOn(client, 'GET').mockResolvedValue({
+      data: makeOverview({
+        name: 'Check_MK Discovery',
+        legacy_service_discovery_link: 'wato.py?mode=inventory&host=web-server-01'
+      }),
+      error: undefined,
+      response: new Response()
+    } as never)
+    render(ServiceSlideIn, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService(),
+        host: HOST,
+        loadActionMenu: async () => [LOGWATCH_MENU_ENTRY, DISCOVERY_MENU_ENTRY]
+      }
+    })
+    await screen.findByRole('link', { name: 'Run service discovery' })
+
+    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+
+    expect(
+      await screen.findByRole('menuitem', { name: /Open log file viewer/ })
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('menuitem', { name: /Run service discovery/ })
+    ).not.toBeInTheDocument()
+  })
+
+  it('keeps the discovery in the action menu while no button offers it', async () => {
+    render(ServiceSlideIn, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService(),
+        host: HOST,
+        loadActionMenu: async () => [DISCOVERY_MENU_ENTRY]
+      }
+    })
+    await screen.findByRole('link', { name: 'Show service details' })
+
+    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+
+    expect(
+      await screen.findByRole('menuitem', { name: /Run service discovery/ })
+    ).toBeInTheDocument()
+  })
+
   it('offers a History tab next to Overview, with Overview still shown first', async () => {
-    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
     await screen.findByText('Service details')
 
     const tabs = screen.getAllByRole('tab').map((tab) => tab.textContent?.trim())
 
     expect(tabs).toEqual(['Overview', 'History', 'Service graphs'])
     expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('opens on the graphs, for a reader who came from the Perf-O-Meter', async () => {
+    render(ServiceSlideIn, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService(),
+        host: HOST,
+        activeTabId: SERVICE_GRAPHS_TAB_ID
+      }
+    })
+    await screen.findByText('Service details')
+
+    expect(screen.getByRole('tab', { name: 'Service graphs' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    )
   })
 
   it('loads the history of that one service when its tab is activated', async () => {
@@ -420,7 +698,9 @@ describe('ServiceSlideIn', () => {
             }
           : { data: makeOverview(), error: undefined, response: new Response() }
       )) as never)
-    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
     await screen.findByText('Service details')
 
     await userEvent.click(screen.getByRole('tab', { name: 'History' }))
@@ -435,11 +715,79 @@ describe('ServiceSlideIn', () => {
   })
 
   it('emits close when the close button is used', async () => {
-    const { emitted } = render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    const { emitted } = render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }
+    })
     await screen.findByText('Service details')
 
     await userEvent.click(screen.getByRole('button', { name: 'Close' }))
 
     expect(emitted()['close']).toHaveLength(1)
+  })
+
+  it('reschedules the Check_MK service for a service that is a byproduct of it', async () => {
+    const perform = vi.fn(async () => SUCCESS)
+    render(ServiceSlideIn, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService({
+          name: 'Check_MK Agent',
+          reschedule: {
+            label: "Reschedule 'Check_MK' service",
+            tooltip: "Reschedule 'Check_MK' service",
+            icon_name: 'reload-cmk',
+            target: 'Check_MK'
+          }
+        }),
+        host: HOST,
+        actions: makeActionRegistry(perform),
+        permittedActions: PERMITTED_ACTIONS
+      }
+    })
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: "Reschedule 'Check_MK' service" })
+    )
+
+    expect(perform).toHaveBeenCalledWith(['Check_MK'])
+  })
+
+  it('offers no reschedule button for a service that cannot be rescheduled', async () => {
+    render(ServiceSlideIn, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService({
+          reschedule: {
+            label: 'Reschedule check',
+            tooltip: 'This service is based on cached agent data and cannot be rescheduled.',
+            icon_name: 'cannot-reschedule'
+          }
+        }),
+        host: HOST,
+        actions: makeActionRegistry(),
+        permittedActions: PERMITTED_ACTIONS
+      }
+    })
+    await screen.findByText('Service details')
+
+    expect(screen.getByRole('button', { name: 'Acknowledge problem' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Reschedule/ })).not.toBeInTheDocument()
+  })
+
+  it('offers no reschedule button without a reschedule offer', async () => {
+    const unoffered = makeService()
+    delete unoffered.reschedule
+    render(ServiceSlideIn, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: unoffered,
+        host: HOST,
+        actions: makeActionRegistry(),
+        permittedActions: PERMITTED_ACTIONS
+      }
+    })
+    await screen.findByText('Service details')
+
+    expect(screen.queryByRole('button', { name: /Reschedule/ })).not.toBeInTheDocument()
   })
 })

@@ -19,10 +19,14 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.sidebar._snapin._base import SidebarSnapin
 from cmk.gui.sidebar._snapin_dashlet import SnapinDashlet, SnapinWidgetIFramePage
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
+from cmk.web.utils.request_cache import RequestCache
 
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 
@@ -79,7 +83,13 @@ def _dashlet_spec(snapin: str) -> SnapinDashletConfig:
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request)
+    return PageContext(
+        config=config,
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
+    )
 
 
 def test_dashlet_metadata() -> None:
@@ -100,7 +110,7 @@ def test_dashlet_starts_at_a_sidebar_shaped_size() -> None:
 def test_dashlet_title_is_the_title_of_the_embedded_snapin() -> None:
     dashlet = SnapinDashlet(_dashlet_spec("tactical_overview"))
 
-    assert dashlet.default_display_title() == "Overview"
+    assert dashlet.default_display_title(RequestCache(Config())) == "Overview"
 
 
 @pytest.mark.usefixtures("load_config")
@@ -108,11 +118,11 @@ def test_dashlet_title_of_an_unknown_snapin() -> None:
     dashlet = SnapinDashlet(_dashlet_spec("no_such_snapin"))
 
     with pytest.raises(KeyError):
-        dashlet.default_display_title()
+        dashlet.default_display_title(RequestCache(Config()))
 
 
 def test_snapin_instance_of_a_known_snapin() -> None:
-    instance = SnapinWidgetIFramePage._get_snapin_instance("tactical_overview", USER_PERMISSIONS)  # noqa: SLF001
+    instance = SnapinWidgetIFramePage._get_snapin_instance("tactical_overview")  # noqa: SLF001
 
     assert instance.type_name() == "tactical_overview"
 
@@ -121,7 +131,7 @@ def test_snapin_instance_of_an_unknown_snapin() -> None:
     """The widget name comes from the dashboard configuration, which may still reference a
     snap-in that was removed - that has to be a user error, not a crash."""
     with pytest.raises(MKUserError, match="does not exist"):
-        SnapinWidgetIFramePage._get_snapin_instance("no_such_snapin", USER_PERMISSIONS)  # noqa: SLF001
+        SnapinWidgetIFramePage._get_snapin_instance("no_such_snapin")  # noqa: SLF001
 
 
 def test_scrollbar_wraps_its_body() -> None:

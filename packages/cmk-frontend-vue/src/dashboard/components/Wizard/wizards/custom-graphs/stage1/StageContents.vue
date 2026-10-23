@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -26,6 +27,8 @@ import { useCustomGraph } from './composables/useCustomGraph'
 const { _t } = usei18n()
 
 interface Stage1Props {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   filters: ConfiguredFilters
   editWidgetSpec: WidgetSpec | null
@@ -76,5 +79,10 @@ const isUpdate = computed(() => props.editWidgetSpec !== null)
 
   <ContentSpacer />
 
-  <CustomGraphWidget v-model:handler="handler" :dashboard-key="dashboardKey" />
+  <CustomGraphWidget
+    v-model:handler="handler"
+    :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
+  />
 </template>

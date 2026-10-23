@@ -10,6 +10,18 @@ from typing import Literal, override, Self
 from cmk.gui.dashboard.type_defs import StateDashletConfig, StatusDisplay
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 
+from ..context_filters import (
+    OBJECT_HOST_FILTER_ADAPTER,
+    OBJECT_SERVICE_FILTER_ADAPTER,
+    ObjectHostContextFilter,
+    ObjectServiceContextFilter,
+)
+from ..contextual_link import (
+    AnyContextualLinkSpec,
+    contextual_link_from_internal,
+    contextual_link_to_internal,
+    ContextualLinkSpec,
+)
 from ._base import BaseWidgetContent
 
 
@@ -56,16 +68,22 @@ class _BaseStateContent(BaseWidgetContent, ABC):
 
     @override
     def to_internal(self) -> StateDashletConfig:
-        return StateDashletConfig(
+        config = StateDashletConfig(
             type=self.internal_type(),
             status_display=_status_display_to_internal(self.status_display),
             show_summary=ApiOmitted.to_optional(self.show_summary),
         )
+        if (link := contextual_link_to_internal(self.configured_contextual_link())) is not None:
+            config["contextual_link"] = link
+        return config
 
 
 @api_model
 class HostStateContent(_BaseStateContent):
     type: Literal["host_state"] = api_field(description="Displays the state of a host.")
+    contextual_link: ContextualLinkSpec[ObjectHostContextFilter] = api_field(
+        description="Where a click on the state leads."
+    )
 
     @classmethod
     @override
@@ -78,12 +96,22 @@ class HostStateContent(_BaseStateContent):
             type="host_state",
             status_display=_status_display_from_internal(config.get("status_display")),
             show_summary=ApiOmitted.from_optional(config.get("show_summary")),
+            contextual_link=contextual_link_from_internal(
+                config.get("contextual_link"), OBJECT_HOST_FILTER_ADAPTER
+            ),
         )
+
+    @override
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
+        return self.contextual_link
 
 
 @api_model
 class ServiceStateContent(_BaseStateContent):
     type: Literal["service_state"] = api_field(description="Displays the state of a service.")
+    contextual_link: ContextualLinkSpec[ObjectServiceContextFilter] = api_field(
+        description="Where a click on the state leads."
+    )
 
     @classmethod
     @override
@@ -96,4 +124,11 @@ class ServiceStateContent(_BaseStateContent):
             type="service_state",
             status_display=_status_display_from_internal(config.get("status_display")),
             show_summary=ApiOmitted.from_optional(config.get("show_summary")),
+            contextual_link=contextual_link_from_internal(
+                config.get("contextual_link"), OBJECT_SERVICE_FILTER_ADAPTER
+            ),
         )
+
+    @override
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
+        return self.contextual_link

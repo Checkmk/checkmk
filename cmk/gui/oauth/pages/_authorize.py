@@ -6,7 +6,6 @@
 import http.client as http_client
 import secrets
 import urllib.parse
-from collections.abc import Callable
 from typing import override
 
 from cmk.ccc.site import omd_site
@@ -28,11 +27,12 @@ from cmk.gui.scopes import (
     ScopeId,
 )
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.security_log_events import OAuthAuthorizationFailureEvent
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.utils.security_event import log_security_event
 from cmk.web.utils import escaping
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.html import HTML
 
 _SCOPE_REQUESTED_VARNAME = "scope"
@@ -54,15 +54,8 @@ class OAuthAuthorizePage(Page):
     client's raw scope string never reaches the token.
     """
 
-    def __init__(self, enabled: Callable[[], bool]) -> None:
-        self._enabled = enabled
-
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        if not self._enabled():
-            response.status_code = http_client.NOT_FOUND
-            return None
-
         redirect_uri = request.var("redirect_uri")
         if redirect_uri is None or urllib.parse.urlsplit(redirect_uri).scheme not in (
             "http",
@@ -216,7 +209,7 @@ class OAuthAuthorizePage(Page):
         client_id: str,
         code_challenge: str,
     ) -> None:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
         if not transactions.check_transaction(request):
             # In the seconds it takes to click Authorize, this transaction id
             # can only already be used -- a double submit or a replay, not

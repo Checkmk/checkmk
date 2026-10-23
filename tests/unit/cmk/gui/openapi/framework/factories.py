@@ -14,6 +14,7 @@ from werkzeug.datastructures import Headers
 from cmk.gui.openapi.framework import RawRequestData, registry, versioned_endpoint
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamily
+from cmk.gui.token_auth import TokenType
 
 
 def _empty_handler() -> None:
@@ -46,6 +47,10 @@ class VersionedEndpointFactory(DataclassFactory[versioned_endpoint.VersionedEndp
     metadata = EndpointMetadataFactory
     doc = EndpointDocFactory
     permissions = EndpointPermissionsFactory
+    # The validation rejects remote_site_only together with allowed_tokens, so neither is
+    # generated randomly. Either one can still be passed to build().
+    allowed_tokens: set[TokenType] = set()
+    remote_site_only = False
 
     @classmethod
     def versions(cls) -> Mapping[APIVersion, versioned_endpoint.EndpointHandler]:
@@ -59,7 +64,8 @@ class EndpointFamilyFactory(DataclassFactory[EndpointFamily]):
 
 
 class EndpointBehaviorFactory(DataclassFactory[versioned_endpoint.EndpointBehavior]):
-    pass
+    # Avoid randomly generating a locking combination the validation rejects.
+    skip_locking = False
 
 
 class EndpointDefinitionFactory(DataclassFactory[registry.EndpointDefinition]):

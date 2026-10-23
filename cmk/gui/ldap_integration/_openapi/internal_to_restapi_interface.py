@@ -807,7 +807,7 @@ def groups_to_attributes_internal_to_api(
                     APIVisibilityOfHostService(
                         group_cn=group["cn"],
                         attribute_to_set="visibility_of_hosts_or_services",
-                        value=("show_all" if fa[1] is None else "show_for_user_contacts_only"),  # type: ignore[redundant-expr]
+                        value=("show_for_user_contacts_only" if fa[1] else "show_all"),
                     )
                 )
 

@@ -11,7 +11,7 @@ import type {
 } from 'cmk-shared-typing/typescript/monitoring/host_services'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import HostServicesApp from '@/monitoring/host-services/HostServicesApp.vue'
 
@@ -19,6 +19,13 @@ type ApiServiceEntry = components['schemas']['HostServiceEntry']
 type ApiHostEntry = components['schemas']['HostEntry']
 
 const HOSTS_PATH = '/monitor/hosts'
+const EXPORT_EVENT = 'cmk-monitoring-export'
+
+// Several tests here drive the Mode filter panel through multiple userEvent interactions.
+// That's enough combined work to overrun the default 5s budget when the suite runs alongside
+// CI's other workers, even though each test takes well under a second on its own. Raising it
+// once for the file avoids bumping them one at a time as more filters join the funnel.
+vi.setConfig({ testTimeout: 20_000 })
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
@@ -27,14 +34,13 @@ let servicesPost: any
 let host: ApiHostEntry
 
 beforeEach(() => {
-  document.body.innerHTML = '<div class="titlebar"></div>'
+  document.body.innerHTML = '<div class="titlebar"><div class="titlebar-main"></div></div>'
   postSpy = vi.spyOn(client, 'POST')
   servicesPost = vi.fn()
   host = makeApiHost()
 })
 
 afterEach(() => {
-  vi.restoreAllMocks()
   localStorage.clear()
   window.history.replaceState(null, '', '/monitor_host_services.py')
 })
@@ -109,6 +115,8 @@ function renderApp(overrides: Partial<MonitoringHostServicesApp> = {}) {
       host_url: 'monitor_all_hosts.py#host=web-1&site=local',
       user_id: 'cmkadmin',
       edition: 'pro',
+      limit_tiers: [1000, 5000],
+      export_event: EXPORT_EVENT,
       ...overrides
     } satisfies MonitoringHostServicesApp
   })
@@ -133,6 +141,44 @@ test('shows the total service count reported by the endpoint', async () => {
   renderApp()
 
   expect(await screen.findByText('Total rows: 42')).toBeInTheDocument()
+})
+
+test('requests the row limit picked in the Show selector', async () => {
+  const user = userEvent.setup()
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await user.click(await screen.findByRole('combobox', { name: 'Show:' }))
+  await user.click(await screen.findByRole('option', { name: '5000' }))
+
+  expect(servicesPost).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({ body: expect.objectContaining({ limit: 5000 }) })
+  )
+})
+
+test('requests all services for a permitted unlimited row limit in the URL', async () => {
+  window.history.replaceState(null, '', '/monitor_host_services.py?limit=all')
+  mockServices([makeApiEntry()])
+  renderApp({ may_ignore_hard_limit: true })
+
+  await screen.findByText('Total rows: 1')
+
+  expect(servicesPost).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({ body: expect.objectContaining({ limit: null }) })
+  )
+})
+
+test('does not offer all services without the permission to ignore the hard limit', async () => {
+  const user = userEvent.setup()
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await user.click(await screen.findByRole('combobox', { name: 'Show:' }))
+
+  expect(await screen.findByRole('option', { name: '5000' })).toBeInTheDocument()
+  expect(screen.queryByRole('option', { name: 'All' })).not.toBeInTheDocument()
 })
 
 test('shows no matching count while nothing narrows the services', async () => {
@@ -305,8 +351,16 @@ test('requests services that are not acknowledged and not in downtime', async ()
 
   await userEvent.click(await screen.findByRole('button', { name: 'Filter Mode' }))
   const panel = screen.getByRole('group', { name: 'Filter Mode' })
-  await userEvent.click(within(panel).getByLabelText('NOT Acknowledged'))
-  await userEvent.click(within(panel).getByLabelText('NOT In downtime'))
+  await userEvent.click(
+    within(within(panel).getByRole('group', { name: 'Acknowledged' })).getByRole('button', {
+      name: 'Toggle No'
+    })
+  )
+  await userEvent.click(
+    within(within(panel).getByRole('group', { name: 'In downtime' })).getByRole('button', {
+      name: 'Toggle No'
+    })
+  )
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
   expect(servicesPost).toHaveBeenLastCalledWith(
@@ -327,8 +381,6 @@ test('requests services that are not acknowledged and not in downtime', async ()
   )
 })
 
-// Drives the Mode funnel twice over, which is enough work to overrun the default 5s budget
-// while the rest of the suite runs alongside it - it takes well under a second on its own.
 test('clearing the mode filter restores the full, unfiltered list', async () => {
   mockServices([makeApiEntry()])
   renderApp()
@@ -336,9 +388,9 @@ test('clearing the mode filter restores the full, unfiltered list', async () => 
   await userEvent.click(await screen.findByRole('button', { name: 'Filter Mode' }))
   let panel = screen.getByRole('group', { name: 'Filter Mode' })
   await userEvent.click(
-    within(within(panel).getByRole('radiogroup', { name: 'Acknowledged' })).getByLabelText(
-      'Acknowledged'
-    )
+    within(within(panel).getByRole('group', { name: 'Acknowledged' })).getByRole('button', {
+      name: 'Toggle Yes'
+    })
   )
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
@@ -353,9 +405,9 @@ test('clearing the mode filter restores the full, unfiltered list', async () => 
       body: { limit: 1000, fields: [] }
     })
   )
-}, 20000)
+})
 
-test('activating the unhandled-problems quick filter requests the WARN/CRIT, unacked, no-downtime preset', async () => {
+test('activating the unhandled-problems quick filter requests the WARN/CRIT/UNKNOWN, unacked, no-downtime preset', async () => {
   mockServices([makeApiEntry()])
   renderApp()
 
@@ -369,7 +421,7 @@ test('activating the unhandled-problems quick filter requests the WARN/CRIT, una
         filter: {
           type: 'and',
           children: [
-            { type: 'condition', field: 'state', op: 'one_of', value: ['WARN', 'CRIT'] },
+            { type: 'condition', field: 'state', op: 'one_of', value: ['WARN', 'CRIT', 'UNKNOWN'] },
             { type: 'condition', field: 'acknowledged', op: 'eq', value: false },
             { type: 'condition', field: 'in_downtime', op: 'eq', value: false }
           ]
@@ -401,7 +453,7 @@ test('resetting all filters also turns off the unhandled-problems chip', async (
   renderApp()
 
   await userEvent.click(await screen.findByRole('button', { name: 'Unhandled service problems' }))
-  await userEvent.click(screen.getByRole('button', { name: 'Reset all filters' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Reset search and filters' }))
 
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
@@ -417,7 +469,7 @@ test('shows a tooltip on the unhandled-problems chip', async () => {
 
   expect(await screen.findByRole('button', { name: 'Unhandled service problems' })).toHaveAttribute(
     'title',
-    'Show only services in a problem state (WARN or CRIT) that are neither acknowledged nor in a scheduled downtime'
+    'Show only services in a problem state (WARN, CRIT or UNKNOWN) that are neither acknowledged nor in a scheduled downtime'
   )
 })
 
@@ -447,7 +499,7 @@ test('resetting all filters restores the full, unfiltered list', async () => {
     })
   )
 
-  await userEvent.click(screen.getByRole('button', { name: 'Reset all filters' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Reset search and filters' }))
 
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
@@ -507,7 +559,9 @@ test('requests services in a picked state that are also flapping', async () => {
   const panel = screen.getByRole('group', { name: 'Filter State' })
   await userEvent.click(within(panel).getByLabelText('CRIT'))
   await userEvent.click(
-    within(within(panel).getByRole('radiogroup', { name: 'Flapping' })).getByLabelText('Flapping')
+    within(within(panel).getByRole('group', { name: 'Flapping' })).getByRole('button', {
+      name: 'Toggle Yes'
+    })
   )
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
@@ -536,7 +590,9 @@ test('clearing the state filter also clears its flapping/stale flags', async () 
   await userEvent.click(await screen.findByRole('button', { name: 'Filter State' }))
   let panel = screen.getByRole('group', { name: 'Filter State' })
   await userEvent.click(
-    within(within(panel).getByRole('radiogroup', { name: 'Stale' })).getByLabelText('Stale')
+    within(within(panel).getByRole('group', { name: 'Stale' })).getByRole('button', {
+      name: 'Toggle Yes'
+    })
   )
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
@@ -615,7 +671,7 @@ test('puts the columns left visible in the URL', async () => {
   await userEvent.click(within(picker).getByRole('button', { name: 'Apply' }))
 
   expect(new URLSearchParams(window.location.search).get('cols')).toBe(
-    'modes,last_check,last_state_change,perfometer'
+    'modes,last_state_change,last_check,perfometer'
   )
 })
 
@@ -628,7 +684,7 @@ test('leaves a pristine table out of the URL', async () => {
   const params = new URLSearchParams(window.location.search)
   expect(params.get('sort')).toBeNull()
   expect(params.get('cols')).toBeNull()
-  // The page offers a single row-count tier, so the limit never leaves its default.
+  // Nothing changed the row limit, so it stays at its default and out of the URL.
   expect(params.get('limit')).toBeNull()
 })
 
@@ -665,7 +721,7 @@ test('shows the columns the URL a link arrived on names, and asks for their fiel
   await screen.findByText('Total rows: 1')
 
   expect(screen.getByRole('columnheader', { name: 'Labels' })).toBeInTheDocument()
-  expect(screen.queryByRole('columnheader', { name: 'Last check' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('columnheader', { name: 'Check age' })).not.toBeInTheDocument()
   // `state` and `name` cannot be hidden, so the URL never has to name them.
   expect(screen.getByRole('columnheader', { name: 'Service' })).toBeInTheDocument()
 
@@ -675,6 +731,20 @@ test('shows the columns the URL a link arrived on names, and asks for their fiel
       body: { limit: 1000, fields: ['labels'] }
     })
   )
+})
+
+test('keeps the age names of the timestamp columns when they show a point in time', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    '/monitor_host_services.py?host=web-1&site=local&timestamp_format=abs'
+  )
+  mockServices([makeApiEntry()])
+  renderApp()
+  await screen.findByText('Total rows: 1')
+
+  expect(screen.getByRole('columnheader', { name: 'State age' })).toBeInTheDocument()
+  expect(screen.getByRole('columnheader', { name: 'Check age' })).toBeInTheDocument()
 })
 
 test('falls back to the default ordering when the URL names an unsortable column', async () => {
@@ -715,12 +785,47 @@ test('a column the URL named is not written to storage until the user changes on
   expect(localStorage.getItem('monitoring-host-services-columns-local-cmkadmin-pro')).toBeNull()
 })
 
-test('requests services whose last state change is at or after the picked instant', async () => {
+test('requests services whose last state change is younger than the entered age', async () => {
   mockServices([makeApiEntry()])
   renderApp()
 
-  await userEvent.click(await screen.findByRole('button', { name: 'Filter Last state change' }))
-  const panel = screen.getByRole('group', { name: 'Filter Last state change' })
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter State age' }))
+  const panel = screen.getByRole('group', { name: 'Filter State age' })
+  await fireEvent.update(within(panel).getByRole('spinbutton', { name: 'Age' }), '5')
+  const before = Math.floor(Date.now() / 1000)
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+  const after = Math.floor(Date.now() / 1000)
+
+  expect(servicesPost).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: {
+        limit: 1000,
+        filter: {
+          type: 'condition',
+          field: 'last_state_change',
+          op: 'gte',
+          value: expect.toSatisfy(
+            (value: number) => value >= before - 5 * 60 && value <= after - 5 * 60
+          )
+        },
+        fields: []
+      }
+    })
+  )
+})
+
+test('requests services whose last state change is at or after the picked instant', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    '/monitor_host_services.py?host=web-1&site=local&timestamp_format=abs'
+  )
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter State age' }))
+  const panel = screen.getByRole('group', { name: 'Filter State age' })
   const from = within(panel).getByRole('group', { name: 'From' })
 
   await userEvent.click(within(from).getByRole('button', { name: 'Open calendar' }))
@@ -745,6 +850,59 @@ test('requests services whose last state change is at or after the picked instan
           field: 'last_state_change',
           op: 'gte',
           value: picked
+        },
+        fields: []
+      }
+    })
+  )
+})
+
+test('a range picked as instants keeps filtering once the ages show as ages', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    '/monitor_host_services.py?host=web-1&site=local&timestamp_format=abs'
+  )
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter State age' }))
+  const from = within(screen.getByRole('group', { name: 'Filter State age' })).getByRole('group', {
+    name: 'From'
+  })
+  await userEvent.click(within(from).getByRole('button', { name: 'Open calendar' }))
+  await userEvent.click(within(from).getByRole('button', { name: /\b1,/ }))
+  await fireEvent.update(within(from).getByRole('spinbutton', { name: 'Hours' }), '00')
+  await fireEvent.update(within(from).getByRole('spinbutton', { name: 'Minutes' }), '00')
+  await userEvent.click(within(from).getByRole('button', { name: 'Apply' }))
+  await userEvent.click(
+    within(screen.getByRole('group', { name: 'Filter State age' })).getByRole('button', {
+      name: 'Apply'
+    })
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: 'Modify display options' }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Timestamp format' }))
+  await userEvent.click(screen.getByRole('option', { name: 'Relative' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+  await userEvent.click(screen.getByRole('button', { name: 'Filter State age (active)' }))
+  const panel = screen.getByRole('group', { name: 'Filter State age' })
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  const today = new Date()
+  const picked = new Date(today.getFullYear(), today.getMonth(), 1, 0, 0).getTime() / 1000
+
+  expect(servicesPost).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: {
+        limit: 1000,
+        filter: {
+          type: 'condition',
+          field: 'last_state_change',
+          op: 'gte',
+          value: expect.toSatisfy((value: number) => Math.abs(value - picked) <= 2)
         },
         fields: []
       }
@@ -829,4 +987,297 @@ test('reads the host of the page alongside its services', async () => {
       })
     })
   )
+})
+
+describe('the host slide-in', () => {
+  const originalOffsetHeight = Object.getOwnPropertyDescriptor(
+    HTMLElement.prototype,
+    'offsetHeight'
+  )
+  const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+
+  beforeEach(() => {
+    const contentArea = document.createElement('div')
+    contentArea.id = 'content_area'
+    document.body.appendChild(contentArea)
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
+    vi.spyOn(client, 'GET').mockReturnValue(new Promise(() => {}) as never)
+  })
+
+  afterEach(() => {
+    if (originalOffsetHeight) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', originalOffsetHeight)
+    }
+    if (originalOffsetWidth) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', originalOffsetWidth)
+    }
+  })
+
+  test('opens when the host name in the page header is clicked', async () => {
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    await userEvent.click(await screen.findByRole('link', { name: 'web-1' }))
+
+    expect(await screen.findByText('Host details')).toBeInTheDocument()
+  })
+
+  test('offers the host commands the page permits', async () => {
+    mockServices([makeApiEntry()])
+    renderApp({ host_actions: [ACKNOWLEDGE] })
+
+    await userEvent.click(await screen.findByRole('link', { name: 'web-1' }))
+
+    expect(await screen.findByRole('button', { name: 'Acknowledge problems' })).toBeInTheDocument()
+  })
+
+  test('closes the service slide-in it replaces', async () => {
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'CPU load' }))
+    expect(await screen.findByText('Service details')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('link', { name: 'web-1' }))
+
+    expect(await screen.findByText('Host details')).toBeInTheDocument()
+    expect(screen.queryByText('Service details')).not.toBeInTheDocument()
+  })
+
+  test('closes the host slide-in a service replaces', async () => {
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    await userEvent.click(await screen.findByRole('link', { name: 'web-1' }))
+    expect(await screen.findByText('Host details')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'CPU load' }))
+
+    expect(await screen.findByText('Service details')).toBeInTheDocument()
+    expect(screen.queryByText('Host details')).not.toBeInTheDocument()
+  })
+
+  describe('with the reload countdown running', () => {
+    const POLL_INTERVAL_MS = 1000
+
+    // The clock is faked to drive the countdown, which rules out every testing-library waiter:
+    // they advance a faked clock themselves.
+    async function renderPolling() {
+      vi.useFakeTimers()
+      const user = userEvent.setup({ advanceTimers: (ms: number) => vi.advanceTimersByTime(ms) })
+      mockServices([makeApiEntry()])
+      renderApp({ poll_interval_ms: POLL_INTERVAL_MS })
+      await vi.advanceTimersByTimeAsync(0)
+      return user
+    }
+
+    function serviceReads(): number {
+      return servicesPost.mock.calls.length
+    }
+
+    async function readsOverSomePolls(): Promise<number> {
+      const before = serviceReads()
+      await vi.advanceTimersByTimeAsync(3 * POLL_INTERVAL_MS)
+      return serviceReads() - before
+    }
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    test('holds the table still while the host slide-in is open, and reloads once it closes', async () => {
+      const user = await renderPolling()
+
+      await user.click(screen.getByRole('link', { name: 'web-1' }))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(screen.getByText('Host details')).toBeInTheDocument()
+      expect(await readsOverSomePolls()).toBe(0)
+
+      await user.click(screen.getByRole('button', { name: 'Close' }))
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(await readsOverSomePolls()).toBeGreaterThan(0)
+    })
+
+    test('keeps the table still across switching between the slide-ins, and reloads once the last closes', async () => {
+      const user = await renderPolling()
+
+      await user.click(screen.getByRole('link', { name: 'web-1' }))
+      await vi.advanceTimersByTimeAsync(0)
+      await user.click(screen.getByRole('button', { name: 'CPU load' }))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(screen.getByText('Service details')).toBeInTheDocument()
+      expect(await readsOverSomePolls()).toBe(0)
+
+      await user.click(screen.getByRole('link', { name: 'web-1' }))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(screen.getByText('Host details')).toBeInTheDocument()
+      expect(await readsOverSomePolls()).toBe(0)
+
+      await user.click(screen.getByRole('button', { name: 'Close' }))
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(await readsOverSomePolls()).toBeGreaterThan(0)
+    })
+  })
+
+  test('names the host it shows in the URL fragment', async () => {
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    await userEvent.click(await screen.findByRole('link', { name: 'web-1' }))
+    await screen.findByText('Host details')
+
+    const fragment = new URLSearchParams(window.location.hash.slice(1))
+    expect(fragment.get('host')).toBe('web-1')
+    expect(fragment.get('site')).toBe('local')
+  })
+
+  test('names a tab picked in it apart from the tab of the service slide-in', async () => {
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    await userEvent.click(await screen.findByRole('link', { name: 'web-1' }))
+    await userEvent.click(await screen.findByRole('tab', { name: 'History' }))
+
+    const fragment = new URLSearchParams(window.location.hash.slice(1))
+    expect(fragment.get('host_tab')).toBe('history')
+    expect(fragment.has('tab')).toBe(false)
+  })
+
+  test('opens from a link naming the host of the page', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/monitor_host_services.py?host=web-1&site=local#host=web-1&site=local'
+    )
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    expect(await screen.findByText('Host details')).toBeInTheDocument()
+  })
+})
+
+test('asks whether the host may be opened in Setup when the page offers host Setup links', async () => {
+  mockServices([makeApiEntry()])
+  renderApp({
+    host_row_actions: [
+      {
+        ident: 'edit',
+        title: 'Edit host',
+        icon: 'edit',
+        url: 'wato.py?mode=edit_host&host={host}'
+      }
+    ]
+  })
+
+  await screen.findByText('UP')
+
+  expect(postSpy).toHaveBeenCalledWith(
+    HOSTS_PATH,
+    expect.objectContaining({ body: expect.objectContaining({ fields: ['setup_access'] }) })
+  )
+})
+
+describe('with the rows laid out', () => {
+  const originalOffsetHeight = Object.getOwnPropertyDescriptor(
+    HTMLElement.prototype,
+    'offsetHeight'
+  )
+  const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+
+  beforeEach(() => {
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
+  })
+
+  afterEach(() => {
+    if (originalOffsetHeight) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', originalOffsetHeight)
+    }
+    if (originalOffsetWidth) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', originalOffsetWidth)
+    }
+  })
+
+  test('asks for the AI explanation of a row with its host and service state', async () => {
+    host = makeApiHost({ state: 'DOWN' })
+    mockServices([{ ...makeApiEntry(), state: 'WARN', stale: true }])
+    const onExplain = vi.fn()
+    document.addEventListener('cmk-ai-explain-button', onExplain)
+    renderApp({ ai_explain: true })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Explain with AI' }))
+    document.removeEventListener('cmk-ai-explain-button', onExplain)
+
+    expect(onExplain.mock.calls.map(([event]) => (event as CustomEvent).detail)).toEqual([
+      {
+        host_name: 'web-1',
+        service_name: 'CPU load',
+        service_state: 'Warning',
+        host_state: 'Down',
+        is_stale: true
+      }
+    ])
+  })
+
+  test('offers no AI explanation in the rows while the host is not found', async () => {
+    host = makeApiHost({ name: 'db-1' })
+    mockServices([makeApiEntry()])
+    renderApp({ ai_explain: true })
+
+    await screen.findByRole('button', { name: 'More actions' })
+
+    expect(screen.queryByRole('button', { name: 'Explain with AI' })).not.toBeInTheDocument()
+  })
+})
+
+describe('export', () => {
+  let downloads: string[]
+
+  beforeEach(() => {
+    downloads = []
+    URL.createObjectURL = vi.fn(() => 'blob:services')
+    URL.revokeObjectURL = vi.fn()
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement
+    ) {
+      downloads.push(this.download)
+    })
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  async function exportAs(format: 'csv' | 'json'): Promise<void> {
+    await screen.findByRole('columnheader', { name: 'Service' })
+    await vi.waitUntil(() => servicesPost.mock.calls.length > 0)
+    document.dispatchEvent(new CustomEvent(EXPORT_EVENT, { detail: format }))
+  }
+
+  test.each(['csv', 'json'] as const)(
+    'downloads the services as %s, named after the host',
+    async (format) => {
+      mockServices([makeApiEntry()])
+      renderApp()
+
+      await exportAs(format)
+      await vi.waitUntil(() => downloads.length > 0)
+
+      expect(downloads[0]).toMatch(new RegExp(`^web-1-services-.*\\.${format}$`))
+    }
+  )
+
+  test('says how many services were exported when the row limit left some out', async () => {
+    mockServices([makeApiEntry()], { matched: 3, total: 3 })
+    renderApp()
+
+    await exportAs('csv')
+
+    expect(
+      await screen.findByText('Exported 1 of 3 services. Show more services to export more.')
+    ).toBeInTheDocument()
+  })
 })

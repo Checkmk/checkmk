@@ -9,16 +9,15 @@ from typing import NamedTuple
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 class WaterflowReading(NamedTuple):
@@ -64,10 +63,6 @@ def parse_cmciii_lcp_waterflow(string_table: StringTable) -> Section | None:
     )
 
 
-def discover_cmciii_lcp_waterflow(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_cmciii_lcp_waterflow(section: Section) -> CheckResult:
     state = State.OK
     if section.status != "OK":
@@ -97,6 +92,6 @@ snmp_section_cmciii_lcp_waterflow = SimpleSNMPSection(
 check_plugin_cmciii_lcp_waterflow = CheckPlugin(
     name="cmciii_lcp_waterflow",
     service_name="LCP Fanunit WATER FLOW",
-    discovery_function=discover_cmciii_lcp_waterflow,
+    discovery_function=discover_one_service,
     check_function=check_cmciii_lcp_waterflow,
 )

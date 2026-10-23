@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from unittest.mock import call
 
 import pytest
@@ -10,7 +11,7 @@ from pytest_mock import MockerFixture
 
 from cmk.ccc.user import UserId
 from cmk.utils.automation_config import LocalAutomationConfig
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 @pytest.mark.usefixtures("inline_background_jobs")
@@ -114,6 +115,6 @@ def test_openapi_parent_scan_background_non_admin(
         },
     )
 
-    assert resp.status_code == 403, (
+    assert resp.status_code == HTTPStatus.FORBIDDEN, (
         f"Expected status code 403 for non-admin user, got {resp.status_code}"
     )

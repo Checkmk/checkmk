@@ -23,3 +23,11 @@ debian_files = [
     },
     visibility = ["//omd:__pkg__"],
 ) for file in debian_files]
+
+# Lets shellcheck see these scripts. Nothing depends on this target.
+sh_library(
+    name = "shell_scripts",
+    srcs = [
+        "preinst.in",
+    ],
+)

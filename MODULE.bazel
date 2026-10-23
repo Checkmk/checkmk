@@ -8,49 +8,51 @@ repo_license = use_repo_rule("//bazel/rules:repo_license.bzl", "detect_repo_lice
 
 snap7_repository = use_repo_rule("//omd/packages/snap7:snap7_repository.bzl", "snap7_repository")
 
-windows_python_wheels = use_repo_rule("//agents/modules/windows:windows_python_wheels.bzl", "windows_python_wheels")
-
 bazel_dep(name = "asio", version = "1.34.2.cmk.1")
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
-bazel_dep(name = "aspect_rules_js", version = "2.3.7")
-bazel_dep(name = "aspect_rules_lint", version = "2.9.0")
-bazel_dep(name = "aspect_rules_py", version = "1.11.5")
-bazel_dep(name = "aspect_rules_ts", version = "3.6.0")
-bazel_dep(name = "aspect_rules_webpack", version = "0.17.0")
+bazel_dep(name = "aspect_rules_js", version = "3.4.1")
+
+# Both of the next two are pinned by a single_version_override below, which wins
+# unconditionally, so these versions have to match it or they merely mislead.
+bazel_dep(name = "aspect_rules_lint", version = "2.9.1")
+bazel_dep(name = "aspect_rules_py", version = "1.5.2")
+bazel_dep(name = "aspect_rules_ts", version = "3.10.1")
+bazel_dep(name = "aspect_rules_webpack", version = "0.18.0")
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "cabextract", version = "1.11")
 bazel_dep(name = "cmk", version = "0.0.0")
 bazel_dep(name = "crypt-ssleay", version = "0.72.cmk.2", repo_name = "Crypt-SSLeay")
-bazel_dep(name = "gazelle", version = "0.51.3")
+bazel_dep(name = "gazelle", version = "0.54.0")
 bazel_dep(name = "gcc_toolchain", version = "gcc14.4.0.glibc2.28.cmk.4")
 bazel_dep(name = "googletest", version = "1.17.0", repo_name = "gtest")
 bazel_dep(name = "lcab", version = "1.0b12.cmk.1")
-bazel_dep(name = "libgsf", version = "1.14.44.cmk.4")
-bazel_dep(name = "llvm_toolchain", version = "21.1.8.cmk.1")
+bazel_dep(name = "libgsf", version = "1.14.44.cmk.5")
+bazel_dep(name = "llvm_toolchain", version = "21.1.8.cmk.3")
 bazel_dep(name = "mod_fcgid", version = "2.3.9.cmk.1")
-bazel_dep(name = "mod_wsgi", version = "5.0.2.cmk.1")
-bazel_dep(name = "msitools", version = "0.94.cmk.8")
+bazel_dep(name = "mod_wsgi", version = "6.1.0.cmk.1")
+bazel_dep(name = "msitools", version = "0.94.cmk.9")
 bazel_dep(name = "nagios", version = "3.5.1.cmk.1")
-bazel_dep(name = "openssl", version = "3.5.7.cmk.1")
+bazel_dep(name = "openssl", version = "3.5.7.cmk.2")
 bazel_dep(name = "osslsigncode", version = "2.10.cmk.1")
 bazel_dep(name = "package_metadata", version = "0.0.7")
 bazel_dep(name = "patch", version = "2.7.6.cmk.1")
 bazel_dep(name = "patchelf", version = "0.18.0.bcr.1")
-bazel_dep(name = "perl-modules", version = "0.0.1.cmk.2")
+bazel_dep(name = "perl-modules", version = "0.0.1.cmk.3")
 bazel_dep(name = "plantuml", version = "1.2026.2.cmk.1")
 bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "pnp4nagios", version = "0.6.26.cmk.2")
 bazel_dep(name = "protobuf", version = "33.4")
+bazel_dep(name = "psign", version = "0.7.0.cmk.1")
 bazel_dep(name = "redis", version = "8.4.5.cmk.1")
-bazel_dep(name = "rules_cc", version = "0.2.22")
+bazel_dep(name = "rules_cc", version = "0.2.25")
 bazel_dep(name = "rules_foreign_cc", version = "0.15.1")
-bazel_dep(name = "rules_go", version = "0.61.1")
+bazel_dep(name = "rules_go", version = "0.63.0")
 bazel_dep(name = "rules_gzip", version = "1.0.0")
-bazel_dep(name = "rules_java", version = "9.6.1")
+bazel_dep(name = "rules_java", version = "9.9.0")
 bazel_dep(name = "rules_multirun", version = "0.12.0")
 bazel_dep(name = "rules_multitool", version = "1.9.0")
 bazel_dep(name = "rules_mypy", version = "0.41.0")
-bazel_dep(name = "rules_nodejs", version = "6.5.2")
+bazel_dep(name = "rules_nodejs", version = "6.7.5")
 bazel_dep(name = "rules_oci", version = "2.2.6")
 bazel_dep(name = "rules_distroless", version = "0.6.2")
 bazel_dep(name = "rules_pkg", version = "1.1.0")
@@ -62,7 +64,7 @@ bazel_dep(name = "rules_shell", version = "0.8.0")
 bazel_dep(name = "rules_uv", version = "0.89.2")
 bazel_dep(name = "rrdtool", version = "1.7.2.cmk.3")
 bazel_dep(name = "shunit2", version = "2.1.9pre.cmk.1")
-bazel_dep(name = "tar.bzl", version = "0.6.0")
+bazel_dep(name = "tar.bzl", version = "0.10.9")
 bazel_dep(name = "toolchains_musl", version = "0.1.20")
 bazel_dep(name = "clickhouse", version = "26.3.16.10001.altinitystable.cmk.1")
 bazel_dep(name = "rules_sphinx", version = "0.2.0")
@@ -119,6 +121,11 @@ archive_override(
 # release by buildscripts/scripts/extract_llvm.sh.
 bazel_dep(name = "clang-resource-headers", version = "21.1.8.cmk.1", dev_dependency = True)
 
+# Not used directly: only here so that the ape_cosmos extension below can
+# be configured from the root module.  It comes in via rules_gzip and
+# rules_coreutils.
+bazel_dep(name = "ape", version = "1.0.1", dev_dependency = True)
+
 archive_override(
     module_name = "rules_mypy",
     integrity = "sha256-rf/7qI1Atf//4SlJfQWhsyAt+SaZjQoYDKRZ93TXQBQ=",
@@ -143,6 +150,18 @@ single_version_override(
 )
 
 single_version_override(
+    module_name = "aspect_rules_js",
+    patch_strip = 1,
+    patches = [
+        # https://github.com/aspect-build/rules_js/issues/3039
+        "//bazel/patches:rules_js-devserver_sync_by_rename.patch",
+        # Carried locally — no upstream PR yet. Without it, changes to the
+        # patches of npm packages, see js.MODULE.bazel, never take effect.
+        "//bazel/patches:rules_js-watch_npm_import_patches.patch",
+    ],
+)
+
+single_version_override(
     module_name = "aspect_rules_lint",
     patch_strip = 1,
     patches = [
@@ -151,24 +170,15 @@ single_version_override(
         # Carried locally — no upstream PR yet.
         "//bazel/patches:rules_lint-add-powershell-formatter.patch",
         "//bazel/patches:rules_lint-include-files-with-bazel-extension.patch",
-        # https://github.com/aspect-build/rules_lint/issues/690
-        "//bazel/patches:rules_lint-fix-ruff-sarif-output.patch",
-        # https://github.com/aspect-build/rules_lint/pull/734
-        "//bazel/patches:rules_lint-clang_tidy_per_file.patch",
-        # https://github.com/aspect-build/rules_lint/pull/747
-        "//bazel/patches:rules_lint-no_copy.patch",
-        # Completes the patch above, not part of that PR (yet).
-        "//bazel/patches:rules_lint-clippy_fixer_at_exec_root.patch",
-        "//bazel/patches:rules_lint-clippy_fail_on_violation.patch",
         # For astrein and other internal tooling.
         "//bazel/patches:rules_lint_export_helpers.patch",
-        "//bazel/patches:rules_lint-fix_format_args_too_long.patch",
-        # https://github.com/aspect-build/rules_lint/pull/799
-        "//bazel/patches:rules_lint-stylelint-capture-stdout.patch",
         # Carried locally — no upstream PR yet.
         "//bazel/patches:rules_lint-clang_tidy_builtin_include_dir.patch",
+        # Carried locally — no upstream PR yet. Follow-up to
+        # https://github.com/aspect-build/rules_lint/pull/622
+        "//bazel/patches:rules_lint-batch_shebang_detection.patch",
     ],
-    version = "2.0.0",
+    version = "2.9.1",
 )
 
 single_version_override(
@@ -177,6 +187,8 @@ single_version_override(
     patches = [
         # https://github.com/aspect-build/rules_py/pull/577
         "//bazel/patches:rules_py-no_mypy_for_py_pytest_main.patch",
+        # Fixed upstream in 2.x, see CMK-40567
+        "//bazel/patches:rules_py-tolerate_no_coverage_data.patch",
     ],
     version = "1.5.2",
 )
@@ -214,6 +226,10 @@ single_version_override(
     patches = [
         "//bazel/patches:rules_pkg1-pkg_deb-add-support-for-md5sums.patch",
         "//bazel/patches:rules_pkg_expand-variables-in-package-name.diff",
+        # Backport of https://github.com/bazelbuild/rules_pkg/pull/1068 and
+        # https://github.com/bazelbuild/rules_pkg/pull/1083 - drop it when
+        # bumping to a rules_pkg release containing both.
+        "//bazel/patches:rules_pkg_pkg_deb-installed-size.patch",
     ],
 )
 
@@ -222,6 +238,8 @@ single_version_override(
     patch_strip = 1,
     patches = [
         "//bazel/patches:rules_python-py_wheel-filter_out_virtual_imports.patch",
+        # TODO: Re-check if that patch is still needed with bazel 9.1.1, see CMK-39403
+        "//bazel/patches:rules_python-relative-interpreter-symlink.patch",
     ],
 )
 
@@ -243,6 +261,7 @@ single_version_override(
         "//bazel/patches:rules_uv_create_venv_whls.patch",
         "//bazel/patches:rules_uv-requirements_in_info.patch",
         "//bazel/patches:rules_uv-inject_env.patch",
+        "//bazel/patches:rules_uv-find_links.patch",
     ],
 )
 
@@ -296,15 +315,13 @@ http_file(
     url = "https://github.com/qhull/qhull/archive/v8.0.2/qhull-8.0.2.tar.gz",
 )
 
-# Artifacts built and published by our own CI jobs, laid out like so:
-# <publisher>/<name>/<version>/<platform>/<arch>/<variant>/<file>
-CI_ARTIFACTS_URL = "https://ci-binary-artifacts-710145618630-eu-central-1-an.s3.eu-central-1.amazonaws.com/dl/"
-
+# Keep the version in sync with the component versions in
+# non-free/packages/otel-collector/builder-config.yaml.
 http_file(
     name = "otel_collector_custom_builder",
     executable = True,
-    sha256 = "377152923d0ce97fd14b14f8b11b1aaa151d4e64afe8976c31329173b62840e6",
-    url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv0.150.0/ocb_0.150.0_linux_amd64",
+    sha256 = "80c4bc4fa2c8050adb5901ddca2fd4b4f5c7c4db77c15a3c6cb27d85375c1bc6",
+    url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv0.161.0/ocb_0.161.0_linux_amd64",
 )
 
 # Configure apt for relay distro packages
@@ -330,19 +347,20 @@ http_file(
     name = "claude_code_linux_x64",
     downloaded_file_path = "claude",
     executable = True,
-    integrity = "sha256-JtAgNR6BEvQAZ5Dzz85DtMnfDBux0OVCNk1kFRuB1bo=",
+    integrity = "sha256-HghQPb3zwssNcG0y80CCdziNHHbvEIZz6P5CwbMikls=",
     urls = [
-        "https://downloads.claude.ai/claude-code-releases/2.1.263/linux-x64/claude",
-        UPSTREAM_MIRROR_URL + "/claude-code-2.1.263-linux-x64",
+        "https://downloads.claude.ai/claude-code-releases/2.1.280/linux-x64/claude",
+        UPSTREAM_MIRROR_URL + "/claude-code-2.1.280-linux-x64",
     ],
 )
 
 # Java runtimes we hand to tools explicitly:
 #   remotejdk25_linux - Wiremock-based component/unit tests. Previously provided
 #                       implicitly via WORKSPACE; expose it explicitly under Bzlmod.
-#   remotejdk17_linux - CodeNarc, run by the npm-groovy-lint formatter. It insists
-#                       on exactly Java 17 and downloads a JRE from github.com at
-#                       runtime when it cannot find one, which flakes in CI.
+#   remotejdk17_linux - CodeNarc, run by the npm-groovy-lint formatter and linter.
+#                       It insists on Java 17 to 24 and downloads a JRE from
+#                       github.com at runtime when it cannot find one, which
+#                       flakes in CI.
 java_toolchains = use_extension("@rules_java//java:extensions.bzl", "toolchains")
 use_repo(
     java_toolchains,
@@ -356,19 +374,6 @@ http_file(
     urls = [
         "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-linux-x86_64.gz",
         UPSTREAM_MIRROR_URL + "/taplo-linux-x86_64-0.10.0.gz",
-    ],
-)
-
-# A portable Wine build (WoW64: 64-bit, no i386 multilib on the host).
-# The build recipe, source pin and publishing job live in third_party/wine/ and
-# buildscripts/scripts/build-wine-from-source.groovy.
-http_archive(
-    name = "wine_linux_x86_64",
-    build_file = "//third_party/wine:BUILD.wine.bazel",
-    sha256 = "2894e6624bcf8714c5b4c303ca9f125e3ebdd5275e1d62308290aa4feb278e27",
-    strip_prefix = "wine-11.0-amd64-wow64",
-    urls = [
-        CI_ARTIFACTS_URL + "wine/wine/11.0/linux/amd64/wow64/wine-11.0-amd64-wow64.tar.xz",
     ],
 )
 
@@ -451,18 +456,6 @@ http_file(
     urls = [
         "https://github.com/jaegertracing/jaeger/releases/download/v2.18.0/jaeger-2.18.0-linux-amd64.tar.gz",
         UPSTREAM_MIRROR_URL + "jaeger-2.18.0-linux-amd64.tar.gz",
-    ],
-)
-
-# cmk-network-flow payload: a prebuilt ntopng bundle (binary + private libs + share/
-# tree), snapshotted from ntop's rolling apt-stable build. Consumed by
-# omd/non-free/packages/cmk-network-flow/BUILD.
-http_file(
-    name = "cmk_network_flow_bundle",
-    downloaded_file_path = "cmk-network-flow-bundle.tar.gz",
-    sha256 = "28c31fbdf150227ca4be6bde78487daab6b6604734d8deae48ba29f8db2f1dee",
-    urls = [
-        UPSTREAM_MIRROR_URL + "flow-bundle-6.6.260622-slim.tar.gz",
     ],
 )
 
@@ -567,6 +560,7 @@ http_archive(
     patch_tool = "patch",
     patches = [
         "//omd/packages/monitoring-plugins:patches/0001-check-icmp-allows-pl-of-101.dif",
+        "//omd/packages/monitoring-plugins:patches/0002-check-icmp-validate-reply-source-address.dif",
         "//omd/packages/monitoring-plugins:patches/0003-cmk-password-store.dif",
         "//omd/packages/monitoring-plugins:patches/0006-check_mysql-define-own-mysql-port.dif",
         "//omd/packages/monitoring-plugins:patches/0009-check_dns-case-insensitive.dif",
@@ -699,6 +693,7 @@ http_archive(
         "//omd/packages/net-snmp/patches:0018-update-user-information-for-python.dif",
         "//omd/packages/net-snmp/patches:0019-Fix-NULL-varbind-in-get-getnext.dif",  # submitted as https://github.com/net-snmp/net-snmp/pull/1027
         "//omd/packages/net-snmp/patches:0020-fix-bad-mib.dif",
+        "//omd/packages/net-snmp/patches:0021-import-Counter64-in-NET-SNMP-PASS-MIB.dif",
     ],
     sha256 = "75b59d67e871aaaa31c8cef89ba7d06972782b97736b7e8c3399f36b50a8816f",
     strip_prefix = "net-snmp-5.9.1",
@@ -733,66 +728,6 @@ http_file(
     ],
 )
 
-# Per-feature python.org MSIs consumed by //agents/modules/windows:python_3_cab
-# to build python-3.cab on Linux without Wine.  Refresh via
-# agents/modules/windows/refresh_msi_pins.py <new version>.
-# cabarchive: pure-Python CAB writer used by the windows-agent python-3.cab
-# build (see //agents/modules/windows:python_3_cab) to package the produced
-# Python tree into a Microsoft Cabinet without a system gcab/makecab.exe.
-http_archive(
-    name = "cabarchive",
-    build_file = "//agents/modules/windows:cabarchive.BUILD.bazel",
-    integrity = "sha256-tQixytiQhX5V8/eiAnynvtudwF3l7/B/gon5VGIAp6o=",
-    strip_prefix = "cabarchive-0.2.5",
-    urls = [
-        "https://files.pythonhosted.org/packages/source/c/cabarchive/cabarchive-0.2.5.tar.gz",
-        UPSTREAM_MIRROR_URL + "cabarchive-0.2.5.tar.gz",
-    ],
-)
-
-http_file(
-    name = "python_msi_ucrt",
-    downloaded_file_path = "ucrt.msi",
-    sha256 = "c35e76105318b7472c6028e8d4a2f9b8ec1a3ef02897b4e49350c8adb84a2105",
-    url = "https://www.python.org/ftp/python/3.14.7/amd64/ucrt.msi",
-)
-
-http_file(
-    name = "python_msi_core",
-    downloaded_file_path = "core.msi",
-    sha256 = "3dfcfe7b42e6f2d683be427af62369761c7e6627aff6a8da2f439a9d11e62cdf",
-    url = "https://www.python.org/ftp/python/3.14.7/amd64/core.msi",
-)
-
-http_file(
-    name = "python_msi_exe",
-    downloaded_file_path = "exe.msi",
-    sha256 = "63035cb1fc01ec085c0f18e73f8c1b000ca148378f4f4b1db11f3baabcc8cf3a",
-    url = "https://www.python.org/ftp/python/3.14.7/amd64/exe.msi",
-)
-
-http_file(
-    name = "python_msi_lib",
-    downloaded_file_path = "lib.msi",
-    sha256 = "d68a92dcc61addb49e4678f60af2838d7675991341c9bf0facd2c5e7283841c3",
-    url = "https://www.python.org/ftp/python/3.14.7/amd64/lib.msi",
-)
-
-http_file(
-    name = "python_msi_pip",
-    downloaded_file_path = "pip.msi",
-    sha256 = "b9c87eee34ab2ded2702b1fb26ea031b07ffbb665617336b2a70508e660153eb",
-    url = "https://www.python.org/ftp/python/3.14.7/amd64/pip.msi",
-)
-
-# win_amd64 wheel closure for python-3.cab's .venv, fetched at the fetch phase
-# from the sha256-pinned lock.  Regenerate the lock via
-# agents/modules/windows/refresh_wheel_pins.py <new version>.
-windows_python_wheels(
-    name = "windows_python_wheels",
-    lock = "//agents/modules/windows:windows_python_wheels.lock.json",
-)
-
 http_archive(
     name = "nagvis",
     build_file = "//omd/packages/nagvis:BUILD.nagvis.bazel",
@@ -801,6 +736,7 @@ http_archive(
     patches = [
         "//omd/packages/nagvis/patches:0001-global.php.dif",
         "//omd/packages/nagvis/patches:0002-cmkadmin.dif",
+        "//omd/packages/nagvis/patches:0003-deprecation-note.dif",
     ],
     sha256 = "21218c27662442432ba0a7fc701a051025639c9b9f6682e424b548d0dbc88c55",
     strip_prefix = "nagvis-1.10.6",
@@ -813,6 +749,22 @@ http_archive(
 repo_license(name = "repo_license")
 
 openapi_spec_editions(name = "openapi_spec_editions")
+
+# rules_gzip downloads its Cosmopolitan binaries (gzip, the APE loader, ...)
+# through ape's cosmos extension, which only lists https://cosmo.zip.  That
+# host went down in October 2026 for days, so add the package registry of the
+# ape project on gitlab.arm.com, which mirrors the same files and is readable
+# without authentication.  The extension tries the URL tags of the root module
+# first and keeps cosmo.zip as the fallback; the integrity hashes from ape's
+# lock files are checked either way, so the mirror cannot change the bytes.
+cosmos = use_extension(
+    "@ape//ape/cosmos:defs.bzl",
+    "ape_cosmos",
+    dev_dependency = True,
+)
+cosmos.url(
+    template = "https://gitlab.arm.com/api/v4/projects/bazel%2Fape/packages/generic/cosmos.zip/{version}/{name}",
+)
 
 multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")
 multitool.hub(
@@ -909,3 +861,9 @@ include("//bazel/module:oci.MODULE.bazel")
 include("//bazel/module:gcc.MODULE.bazel")
 
 include("//bazel/module:xwin.MODULE.bazel")
+
+include("//bazel/module:wnx.MODULE.bazel")
+
+include("//bazel/module:qemu.MODULE.bazel")
+
+include("//bazel/module:python_cab.MODULE.bazel")

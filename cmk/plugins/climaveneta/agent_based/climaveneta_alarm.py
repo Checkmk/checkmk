@@ -7,16 +7,15 @@
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     equals,
     OIDEnd,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 climaveneta_alarms = {
     # 20  : "Global (general)",
@@ -75,10 +74,6 @@ climaveneta_alarms = {
 }
 
 
-def discover_climaveneta_alarm(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_climaveneta_alarm(section: StringTable) -> CheckResult:
     hit = False
     for oid_id, status in section:
@@ -106,6 +101,6 @@ snmp_section_climaveneta_alarm = SimpleSNMPSection(
 check_plugin_climaveneta_alarm = CheckPlugin(
     name="climaveneta_alarm",
     service_name="Alarm Status",
-    discovery_function=discover_climaveneta_alarm,
+    discovery_function=discover_one_service,
     check_function=check_climaveneta_alarm,
 )

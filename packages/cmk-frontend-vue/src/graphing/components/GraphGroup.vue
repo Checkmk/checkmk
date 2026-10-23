@@ -11,6 +11,7 @@ Registered as the cmk-graph-group custom element via defineCmkComponent in main.
 
 <script setup lang="ts">
 import type { CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
+import CmkSurfaceNotice from 'cmk-ui-library/components/CmkSurfaceNotice.vue'
 import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
@@ -20,7 +21,7 @@ import { type ComponentPublicInstance, computed, onMounted, ref, watch } from 'v
 import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
 import { useBrushSnapshot } from '../composables/useBrushSnapshot'
 import { type GraphCombinationMode, useGraphData } from '../composables/useGraphData'
-import { useGraphNotice } from '../composables/useGraphNotice'
+import { hasPlottableData, useGraphNotice, useNoDataNotice } from '../composables/useGraphNotice'
 import { useLocalTimeRange } from '../composables/useLocalTimeRange'
 import { useRequestedTimeRange } from '../composables/useRequestedTimeRange'
 import type {
@@ -31,12 +32,11 @@ import type {
   TimeRangeCommitKind
 } from '../types'
 import { drawnTimeRange } from '../utils/timeRange'
-import GraphNotice from './GraphNotice.vue'
 import GraphPanel from './GraphPanel.vue'
 import GraphSkeleton from './GraphSkeleton.vue'
 import { clippedToNavigableTime, navigableBounds } from './TimeSeriesGraph/interaction/timeBounds'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from './consolidation'
-import { CANVAS_MARGIN_HORIZONTAL } from './constants'
+import { CANVAS_MARGIN_HORIZONTAL, MAX_FIGURE_WIDTH } from './constants'
 
 const { _t } = usei18n()
 
@@ -49,8 +49,8 @@ const props = withDefaults(
     // null for graph types without a combination (e.g. template graphs).
     combination_mode?: GraphCombinationMode | null
     // Outer figure width in CSS pixels (plot area + axis margins); the RRD step resolution is
-    // derived from the resulting plot width. absent means "fill the available page width"
-    // - see effectiveWidth below.
+    // derived from the resulting plot width. if absent we fill the available page width up until a
+    // threshold of MAX_FIGURE_WIDTH - see effectiveWidth below.
     figure_width?: number
     figure_height?: number
     // Omit for the defaults below, or send the whole object.
@@ -82,7 +82,57 @@ const props = withDefaults(
 const groupEl = ref<HTMLElement | null>(null)
 const availableWidth = ref(0)
 
-// Without figure_width the graphs fill the page, so the width comes from #main_page_content.
+function pixels(length: string): number {
+  return parseFloat(length) || 0
+}
+
+function contentRightEdge(element: HTMLElement): number {
+  const style = getComputedStyle(element)
+  const borderRight = pixels(style.borderRightWidth)
+  const scrollbarWidth = Math.max(
+    0,
+    element.offsetWidth - element.clientLeft - element.clientWidth - borderRight
+  )
+  return (
+    element.getBoundingClientRect().right -
+    borderRight -
+    scrollbarWidth -
+    pixels(style.paddingRight)
+  )
+}
+
+// The panels' padding sits inside the group, out of reach of rightInsetWithin, so the figures
+// and the skeletons that stand in for them give it up themselves.
+function panelPadding(group: HTMLElement): number {
+  return pixels(getComputedStyle(group).getPropertyValue('--graphing-graph-group-panel-padding'))
+}
+
+function rightInsetWithin(descendant: HTMLElement, ancestor: HTMLElement): number {
+  let inset = 0
+  for (
+    let element = descendant.parentElement;
+    element && element !== ancestor;
+    element = element.parentElement
+  ) {
+    const style = getComputedStyle(element)
+
+    // Ignore elements that do not actually render insets
+    if (style.display === 'contents') {
+      continue
+    }
+    const collapsedTable = style.display === 'table' && style.borderCollapse === 'collapse'
+
+    inset +=
+      (collapsedTable ? 0 : pixels(style.paddingRight)) +
+      pixels(style.borderRightWidth) +
+      pixels(style.marginRight)
+  }
+  return inset
+}
+
+// Without figure_width the graphs fill the page, so the width comes from #main_page_content or
+// #dashlet_content_wrapper as a fallback for view widget rendering (iframe, no #main_page_content)
+// or the document element as last fallback.
 if (props.figure_width === undefined) {
   const containerEl = ref<HTMLElement | null>(null)
 
@@ -94,7 +144,10 @@ if (props.figure_width === undefined) {
     }
     availableWidth.value = Math.max(
       0,
-      container.getBoundingClientRect().right - group.getBoundingClientRect().left - 20
+      contentRightEdge(container) -
+        group.getBoundingClientRect().left -
+        rightInsetWithin(group, container) -
+        2 * panelPadding(group)
     )
   }
 
@@ -102,12 +155,17 @@ if (props.figure_width === undefined) {
   observe(containerEl)
 
   onMounted(() => {
-    containerEl.value = document.getElementById('main_page_content')
+    containerEl.value =
+      document.getElementById('main_page_content') ??
+      document.getElementById('dashlet_content_wrapper') ?? // within view widgets
+      document.documentElement
     recomputeAvailableWidth()
   })
 }
 
-const effectiveWidth = computed(() => props.figure_width ?? availableWidth.value)
+const effectiveWidth = computed(
+  () => props.figure_width ?? Math.min(MAX_FIGURE_WIDTH, availableWidth.value)
+)
 
 // Seeded from the backend-provided initial range, then follows the page's global time picker;
 // brush interactions, time zooms and pans on individual panels write to it directly, and that
@@ -231,9 +289,11 @@ watch(showSkeletons, (showing) => {
   if (!showing) {
     return
   }
-  panelHeights.value = slots.value.map(
-    ({ index }) => panelEls.get(index)?.getBoundingClientRect().height
-  )
+  const verticalPadding = groupEl.value ? 2 * panelPadding(groupEl.value) : 0
+  panelHeights.value = slots.value.map(({ index }) => {
+    const height = panelEls.get(index)?.getBoundingClientRect().height
+    return height === undefined ? undefined : height - verticalPadding
+  })
 })
 
 const notice = useGraphNotice({
@@ -242,6 +302,25 @@ const notice = useGraphNotice({
   partialErrors: () => partialErrors.value,
   warnings: () => warnings.value
 })
+
+const noDataNotice = useNoDataNotice()
+
+// One pill per panel: the group's own notice outranks a panel's emptiness, and a panel awaiting
+// data is still showing the answer to the request before this one.
+const panelNotices = computed(() =>
+  slots.value.map(
+    (slot) =>
+      notice.value ??
+      (slot.graph !== null && !slot.isAwaitingData && !hasPlottableData(slot.graph.metrics)
+        ? noDataNotice
+        : null)
+  )
+)
+
+// Repeated over every panel, so the group states it once instead.
+const announcedNotice = computed(
+  () => notice.value ?? panelNotices.value.find((panelNotice) => panelNotice !== null) ?? null
+)
 
 // The overview feeds the brush below the plot, so a retry has to refresh it too.
 function onRetry(): void {
@@ -261,9 +340,9 @@ function onRetry(): void {
          announces it once here. -->
     <CmkVisuallyHidden v-if="showSkeletons" :text="_t('Loading graphs…')" live="polite" />
     <CmkVisuallyHidden
-      v-else-if="notice"
-      :text="notice.message"
-      :live="notice.variant === 'error' ? 'assertive' : 'polite'"
+      v-else-if="announcedNotice"
+      :text="announcedNotice.message"
+      :live="announcedNotice.variant === 'error' ? 'assertive' : 'polite'"
     />
     <!-- A slot with neither yet is a first load still inside the delay, and stays blank. -->
     <template v-for="panelSlot in slots" :key="panelSlot.index">
@@ -311,18 +390,21 @@ function onRetry(): void {
           "
           @update:consolidation-fn="consolidationFnPerPanel[panelSlot.index] = $event"
           @inspect="pauseRefresh"
-        />
-        <GraphNotice
-          v-if="notice"
-          v-bind="notice"
-          silent
-          class="graphing-graph-group__notice"
-          @retry="onRetry"
-        />
+        >
+          <template #notice>
+            <CmkSurfaceNotice
+              v-if="panelNotices[panelSlot.index]"
+              v-bind="panelNotices[panelSlot.index]!"
+              silent
+              class="graphing-graph-group__notice"
+              @retry="onRetry"
+            />
+          </template>
+        </GraphPanel>
       </div>
     </template>
     <!-- A first load that failed has no panel to sit over, so the notice stands on its own. -->
-    <GraphNotice
+    <CmkSurfaceNotice
       v-if="notice && graphs.length === 0"
       v-bind="notice"
       silent
@@ -337,9 +419,11 @@ function onRetry(): void {
   display: flex;
 }
 
+// Panels keep their own width, not the group's, so a panel box ends where its capped graph does.
 .graphing-graph-group--column {
   flex-direction: column;
-  gap: calc(var(--spacing) * 4);
+  align-items: flex-start;
+  gap: var(--dimension-7);
 }
 
 // Fixed-width panels flow left-to-right and wrap into columns as the container width allows.
@@ -348,10 +432,18 @@ function onRetry(): void {
   flex-flow: row wrap;
   align-items: flex-start;
   gap: 2px;
+  // --cmk-graph-group-justify-content is only ever set in cmk-frontend's hover.ts code.
+  // When a hover graphs popup renders to the left of the cursor this prevents a gap between cursor
+  // and graph group.
+  justify-content: var(--cmk-graph-group-justify-content, flex-start);
 }
 
+// Unset, the panels sit bare in the group; a page that wants each graph on its own box sets these.
 .graphing-graph-group__panel {
   position: relative;
+  padding: var(--graphing-graph-group-panel-padding, 0);
+  background-color: var(--graphing-graph-group-panel-background, transparent);
+  border-radius: var(--graphing-graph-group-panel-border-radius, 0);
 }
 
 // Centred on the panel, not on its plot alone: the plot's box is GraphPanel's own business.

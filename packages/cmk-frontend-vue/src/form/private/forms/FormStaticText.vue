@@ -5,7 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { StaticText } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'
@@ -37,28 +38,18 @@ const placeholder = computed(() => (display.value === '' ? (props.spec.placehold
 </script>
 
 <template>
-  <CmkAlertBox
+  <CmkAlert
     v-if="placeholder !== null"
     size="small"
     variant="info"
-    class="form-static-text__alert"
-    >{{ placeholder }}</CmkAlertBox
-  >
-  <CmkAlertBox
+    :text="untranslated(placeholder)"
+  />
+  <CmkAlert
     v-else-if="alertVariant"
     size="small"
     :variant="alertVariant"
-    class="form-static-text__alert"
-    >{{ display }}</CmkAlertBox
-  >
+    :text="untranslated(display)"
+  />
   <pre v-else-if="spec.style === 'preformatted'" class="vs_fixed_value">{{ display }}</pre>
   <FormLabel v-else>{{ display }}</FormLabel>
 </template>
-
-<style scoped>
-.form-static-text__alert.form-static-text__alert {
-  width: fit-content;
-  max-width: 100%;
-  margin: 0;
-}
-</style>

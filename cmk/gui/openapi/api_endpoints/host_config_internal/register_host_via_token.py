@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime, UTC
+from http import HTTPStatus
 from typing import Annotated
-from uuid import UUID
 
-import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.openapi.api_endpoints.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.openapi.framework import (
@@ -23,8 +22,24 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model.converter import TypedPlainValidator
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.token_auth import AgentRegistrationToken, get_token_store, TokenUseAlreadyConsumed
-from cmk.utils.agent_registration import HostAgentConnectionMode, UUIDLinkManager
+from cmk.gui.token_auth import (
+    AgentRegistrationToken,
+    get_token_store,
+    TokenExpired,
+    TokenRevoked,
+    TokenUseAlreadyConsumed,
+    UnknownToken,
+)
+from cmk.gui.watolib.agent_registration import (
+    link_uuid_of_existing_host,
+    UUIDAlreadyLinkedError,
+    UUIDOfOpenRequestError,
+)
+from cmk.utils.agent_registration import (
+    HostAgentConnectionMode,
+    RegistrationRoute,
+    UUIDRegistration,
+)
 
 from .models.request_models import RegisterHost
 from .models.response_models import ConnectionMode
@@ -47,63 +62,64 @@ def register_host_via_token_v1(
     cluster check, user permissions, target site). This endpoint therefore
     trusts the token's payload and does not re-load the host from the local
     WATO config — that allows registration to succeed even before the host
-    config has been replicated to a remote site via Activate Changes.
+    config has been replicated to a remote site via Activate Changes. For the
+    same reason, the registration records the update permission of the issuer
+    that the token carries from its issuance.
     """
     if not api_context.token:
         raise ProblemException(
-            status=401,
+            status=HTTPStatus.UNAUTHORIZED,
             title="Authentication required",
             detail="This endpoint requires token authentication.",
         )
     if not isinstance(api_context.token.details, AgentRegistrationToken):
         raise ProblemException(
-            status=401,
+            status=HTTPStatus.UNAUTHORIZED,
             title="Authentication required",
             detail="Incorrect token provided. Please provide a token for agent registration.",
         )
     if api_context.token.details.host_name != host_name:
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Forbidden",
             detail="The token was issued for a different host.",
         )
-    if api_context.token.details.host_registration_completed_at is not None:
-        raise _token_already_used()
     connection_mode = api_context.token.details.connection_mode
-    _link_with_uuid(host_name, body.uuid, connection_mode)
     try:
-        get_token_store().consume_agent_registration_use(
+        with get_token_store().agent_registration_use(
             api_context.token.token_id, "host_registration", datetime.now(UTC)
-        )
+        ):
+            link_uuid_of_existing_host(
+                host_name,
+                body.uuid,
+                push_configured=connection_mode is HostAgentConnectionMode.PUSH,
+                registration=UUIDRegistration(
+                    agent_updates_permitted=api_context.token.details.agent_updates_permitted,
+                    subject=api_context.token.issuer,
+                    registration_route=RegistrationRoute.REGISTER_VIA_TOKEN,
+                ),
+            )
+    except (UUIDAlreadyLinkedError, UUIDOfOpenRequestError) as exc:
+        raise ProblemException(
+            status=HTTPStatus.CONFLICT, title="UUID already in use", detail=str(exc)
+        ) from exc
     except TokenUseAlreadyConsumed:
         raise _token_already_used()
+    except UnknownToken, TokenExpired, TokenRevoked:
+        raise ProblemException(
+            status=HTTPStatus.UNAUTHORIZED,
+            title="Authentication required",
+            detail="The token is no longer valid.",
+        )
     return ConnectionMode(connection_mode=connection_mode)
 
 
 def _token_already_used() -> ProblemException:
     return ProblemException(
-        status=403,
+        status=HTTPStatus.FORBIDDEN,
         title="Token already used",
         detail="This token has already been used to register this host. "
         "Please issue a new token to register again.",
-    )
-
-
-def _link_with_uuid(
-    host_name: HostName,
-    uuid: UUID,
-    connection_mode: HostAgentConnectionMode,
-) -> None:
-    uuid_link_manager = UUIDLinkManager(
-        received_outputs_dir=cmk.utils.paths.received_outputs_dir,
-        data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
-        r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
-        uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
-    )
-    uuid_link_manager.create_link(
-        host_name,
-        uuid,
-        push_configured=connection_mode is HostAgentConnectionMode.PUSH,
     )
 
 
@@ -117,6 +133,10 @@ ENDPOINT_REGISTER_HOST_VIA_TOKEN = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(),
     doc=EndpointDoc(family=HOST_CONFIG_FAMILY.name, group="Checkmk Internal"),
-    versions={APIVersion.INTERNAL: EndpointHandler(handler=register_host_via_token_v1)},
+    versions={
+        APIVersion.INTERNAL: EndpointHandler(
+            handler=register_host_via_token_v1, additional_status_codes=[HTTPStatus.CONFLICT]
+        )
+    },
     allowed_tokens={"agent_registration"},
 )

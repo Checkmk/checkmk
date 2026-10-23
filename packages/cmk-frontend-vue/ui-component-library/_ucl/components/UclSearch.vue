@@ -6,34 +6,22 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 
-import { type NavItem, type NavPage, useNavigation } from '../composables/useNavigation'
+import { useNavigation } from '../composables/useNavigation'
 import UclNavPage from './UclNavPage.vue'
 
-const { navTrees } = useNavigation()
+const { allPages } = useNavigation()
 
 const isSearching = defineModel<boolean>('isSearching', { default: false })
 
 const searchQuery = ref('')
+const searchInput = useTemplateRef('search-input')
+const resultList = useTemplateRef('result-list')
 
 function clearSearch() {
   searchQuery.value = ''
 }
-
-function collectPages(items: NavItem[]): NavPage[] {
-  const pages: NavPage[] = []
-  for (const item of items) {
-    if (item.type === 'page') {
-      pages.push(item)
-    } else {
-      pages.push(...collectPages(item.children))
-    }
-  }
-  return pages
-}
-
-const allPages = navTrees.flatMap((tree) => collectPages(tree.children))
 
 const searchResults = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
@@ -43,6 +31,16 @@ const searchResults = computed(() => {
 watch(searchResults, (results) => {
   isSearching.value = results !== null
 })
+
+function moveFocus(step: 1 | -1) {
+  const links = Array.from(resultList.value?.querySelectorAll('a') ?? [])
+  const target = links.findIndex((link) => link === document.activeElement) + step
+  if (target < 0) {
+    searchInput.value?.focus()
+  } else if (target < links.length) {
+    links[target]!.focus()
+  }
+}
 </script>
 
 <template>
@@ -50,11 +48,13 @@ watch(searchResults, (results) => {
     <div class="ucl-search__input-root">
       <CmkIcon class="ucl-search__input-icon" name="main-search" size="medium" />
       <input
+        ref="search-input"
         v-model="searchQuery"
         type="text"
         placeholder="Search..."
         aria-label="Search components"
         class="ucl-search__input-field"
+        @keydown.down.prevent="moveFocus(1)"
       />
     </div>
     <CmkIcon
@@ -67,7 +67,13 @@ watch(searchResults, (results) => {
     />
   </div>
 
-  <ul v-if="searchResults" class="ucl-search__results">
+  <ul
+    v-if="searchResults"
+    ref="result-list"
+    class="ucl-search__results"
+    @keydown.down.prevent="moveFocus(1)"
+    @keydown.up.prevent="moveFocus(-1)"
+  >
     <li v-for="page in searchResults" :key="page.path">
       <UclNavPage :page="page" />
     </li>

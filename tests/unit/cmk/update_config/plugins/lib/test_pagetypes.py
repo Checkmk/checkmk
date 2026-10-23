@@ -10,14 +10,13 @@ import pytest
 from cmk.ccc.user import UserId
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.roles import UserPermissions
+from cmk.update_config.internal import ConflictMode, PreUpdateAction, UpdateAction
 from cmk.update_config.plugins.lib import pagetypes as pagetypes_update
 from cmk.update_config.plugins.lib.pagetypes import (
     PreUpdatePagetypes,
     unconverted_file_name,
     UpdatePagetypes,
 )
-from cmk.update_config.plugins.pre_actions.utils import ConflictMode
-from cmk.update_config.registry import PreUpdateAction, UpdateAction
 
 _OWNER = UserId("harri")
 

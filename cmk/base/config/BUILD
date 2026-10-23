@@ -5,7 +5,6 @@ py_library(
     srcs = glob(["*.py"]),
     imports = ["../../.."],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//packages:__subpackages__",
@@ -14,7 +13,7 @@ py_library(
     deps = [
         "//cmk/base:parent-scan",
         "//cmk/base/configlib",
-        "//cmk/base/default_config:default-config",
+        "//cmk/config",
         "//cmk/piggyback:backend",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",
@@ -34,7 +33,6 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
-        "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-plugin-apis:server_side_calls",
         "//packages/cmk-trace",

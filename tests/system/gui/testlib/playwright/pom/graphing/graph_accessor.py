@@ -33,6 +33,7 @@ _ENGINE_GRAPH_FIGURE_SELECTOR = ".graphing-graph-figure"
 # offers, so this stays valid regardless of which actions a given graph type exposes.
 ACTION_MENU_BUTTON_NAME = "Action menu"
 ACTION_MENU_DROPDOWN_SELECTOR = ".graphing-graph-burger-menu__dropdown"
+SURFACE_NOTICE_ERROR_SELECTOR = ".cmk-surface-notice--error"
 
 
 class GraphAccessor:

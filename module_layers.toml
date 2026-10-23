@@ -1,7 +1,7 @@
 # module_layers.toml -- Checkmk module layer architecture rules
 #
 # Defines which components may import from which other components.
-# Enforced by astrein's cmk-module-layer-violation checker.
+# Enforced by astrein's module-layers checker.
 #
 # A component is a *module prefix*, not a directory: what lives below cmk.foobar
 # belongs to component cmk.foobar, wherever on disk the file happens to sit. The
@@ -50,26 +50,25 @@ data_backend = ["cmk.data_backend"]
 
 mkp_tool = ["cmk.mkp_tool"]
 
-network_flow = ["cmk.network_flow"]
-
 plugin_apis = [
   "cmk.agent_based.internal",
+  "cmk.automations.internal",
   "cmk.agent_based.legacy",
   "cmk.agent_based.v1",
   "cmk.agent_based.v2",
   "cmk.agent_based.v3_unstable",
   "cmk.bakery.internal",
   "cmk.bakery.v1",
-  "cmk.bakery.v2_unstable",
+  "cmk.bakery.v2",
   "cmk.cli.internal",
   "cmk.dcd_connector_parameters.internal",
   "cmk.dcd_connectors.internal",
   "cmk.diagnostics.internal",
   "cmk.graphing.v1",
   "cmk.graphing.v2_unstable",
-  "cmk.inventory_ui.v1_unstable",
+  "cmk.inventory_ui.v1",
   "cmk.licensing.internal",
-  "cmk.password_store.v1_unstable",
+  "cmk.password_store.v1",
   "cmk.post_rename_site.internal",
   "cmk.rulesets.internal",
   "cmk.rulesets.internal.form_specs",
@@ -77,7 +76,8 @@ plugin_apis = [
   "cmk.rulesets.v1.form_specs",
   "cmk.server_side_calls.internal",
   "cmk.server_side_calls.v1",
-  "cmk.server_side_programs.v1_unstable",
+  "cmk.server_side_programs.v1",
+  "cmk.update_config.internal",
 ]
 
 relay_protocols = ["cmk.relay_protocols"]
@@ -97,7 +97,7 @@ clean = [
   "alertmanager",
   "allnet_ip_sensoric",
   "appdynamics",
-  "aws",
+  "aws_deprecated",
   "azure",
   "azure_status",
   "bazel",
@@ -111,7 +111,7 @@ clean = [
   "hivemanager_ng",
   "hp_msa",
   "hpe_3par",
-  "ibmsvc",
+  "ibm_svc",
   "innovaphone",
   "jenkins",
   "jira",
@@ -136,6 +136,18 @@ clean = [
 
 # Plugin families that refuse to play by the rules.
 
+[plugin_families.violations.aws_v2]
+allows = [
+  # optional import of the Ultimate-only services for the special agent rule
+  "cmk.plugins.aws_v2_extended",
+]
+
+[plugin_families.violations.aws_v2_extended]
+allows = [
+  # reuse of the free aws_v2 plugin library (agent_based helpers)
+  "cmk.plugins.aws_v2",
+]
+
 [plugin_families.violations.azure_v2_extended]
 allows = [
   # reuse of the free azure_v2 plugin library (agent_based + rulesets helpers)
@@ -146,20 +158,64 @@ allows = [
 
 
 [plugin_families.violations.bakery]
-# One of the first modes to go into the expected namespace
-allows = ["@ccc", "cmk.utils.log.console", "cmk.utils.render", "cmk.bakery"]
+# The "cmk" commands of the bakery (cli) drive the bakery backend and need the
+# base configuration and the agent paths. The automations also return their
+# result types and run against the engine's common state.
+allows = [
+  "@ccc",
+  "cmk.automations.results",
+  "cmk.bakery",
+  "cmk.base.automations.states",
+  "cmk.base.config",
+  "cmk.discover_plugins",
+  "cmk.utils.log.console",
+  "cmk.utils.password_store",
+  "cmk.utils.paths",
+  "cmk.utils.render",
+]
 
 
 [plugin_families.violations.crash]
 allows = ["cmk.crash"]
 
+# The "cmk --notify" command and the automations drive the notification engine.
+# The automations also run against the engine's states and return their result
+# types.
+[plugin_families.violations.notifications]
+allows = [
+  "@ccc",
+  "@livestatus_client",
+  "cmk.automations.backends.helper",
+  "cmk.automations.results",
+  "cmk.base.automations.states",
+  "cmk.base.base_app",
+  "cmk.base.config",
+  "cmk.base.notify",
+  "cmk.utils.http_proxy_config",
+  "cmk.utils.log",
+  "cmk.utils.paths",
+  "cmk.utils.timeperiod",
+]
+
 [plugin_families.violations.diagnostics]
+# The "cmk" command and the automations drive the dump engine in
+# cmk.base.diagnostics; the automations set up the console logging it reports to.
 allows = [
   "@livestatus_client",
+  "cmk.ccc.debug",
   "cmk.ccc.hostaddress",
   "cmk.ccc.site",
   "cmk.ccc.store",
   "cmk.ccc.version_info",
+  "cmk.base.config",
+  "cmk.base.diagnostics",
+  "cmk.ccc.exceptions",
+  "cmk.ccc.i18n",
+  "cmk.cli.engine",
+  "cmk.diagnostics.automation_types",
+  "cmk.diagnostics.engine",
+  "cmk.utils.log",
+  "cmk.utils.paths",
 ]
 
 # These plugins are tightly coupled to Checkmk.
@@ -172,8 +228,28 @@ allows = [
   "cmk.ccc",
   "cmk.checkengine",
   "cmk.checkengine.fetchers",
+  # The "cmk" commands (cli) drive the whole base: automations, man pages
+  # (feature filter), plug-in discovery, profiling and tracing.
+  "cmk.automations",
+  "cmk.cli.engine",
+  "cmk.discover_plugins",
+  "cmk.inventory",
+  "cmk.licensing.basics.finder",
+  "cmk.piggyback",
+  "cmk.profiling",
+  "cmk.relay_fetcher_trigger",
+  "cmk.trace",
+  # The automations drive the whole base too: the core, the configuration
+  # builder, the licensing handler and ad hoc checks on relays.
+  "cmk.check_helper_protocol",
+  "cmk.core_client",
+  "cmk.licensing.handler",
+  "cmk.monitoring_config.internal",
+  "cmk.relay_protocols",
   # The agent_controller_connections core bakelet reads the site certificate.
   "cmk.crypto",
+  # "cmk --handle-alerts" works on the event types of the alert handling.
+  "cmk.events",
   "cmk.gui",
   "cmk.messaging",
   "cmk.ruleset_matcher",
@@ -194,6 +270,12 @@ allows = [
   "cmk.utils.paths",
   "cmk.utils.redis",
   "cmk.ruleset_matcher",
+]
+
+[plugin_families.violations.generic_agent_options]
+allows = [
+  # The Agent Controller rule validates the certificates to embed.
+  "cmk.crypto",
 ]
 
 [plugin_families.violations.dcd]
@@ -221,20 +303,15 @@ allows = [
   "cmk.otel_collector.gui",
 ]
 
-[plugin_families.violations.telemetry_metrics_custom_query]
-allows = [
-  "cmk.data_backend",
-  "cmk.shared_typing.consolidation",
-  "cmk.telemetry.custom_query_building",
-  "cmk.telemetry.custom_query_rule_value",
-  "cmk.telemetry.custom_query_section",
-  "cmk.utils.macros",
-  "cmk.utils.paths",
-]
-
 [plugin_families.violations.custom_service]
-# TelemetryMetricsCustomQuery FormSpec
-allows = ["cmk.data_backend.telemetry_metrics.gui"]
+allows = [
+  # TelemetryMetricsCustomQuery FormSpec
+  "cmk.data_backend.telemetry_metrics.gui",
+  # the payload of the section the telemetry metrics fetcher writes
+  "cmk.telemetry.custom_query_section",
+  "cmk.telemetry.host_name_template_validation",
+  "cmk.utils.macros",
+]
 
 [plugin_families.violations.datadog]
 allows = [
@@ -283,6 +360,7 @@ allows = [
   "cmk.data_backend",
   "cmk.telemetry.gui",
   "cmk.telemetry.host_name_template",
+  "cmk.telemetry.host_name_template_validation",
   "cmk.shared_typing.vue_formspec_components",
   "cmk.utils",
 ]
@@ -323,12 +401,23 @@ allows = ["cmk.utils.paths"]
 [components."cmk.agent_based"]
 allows = []
 
-# empty until code needs a first-party import
 [components."cmk.ai_control_plane"]
-allows = []
+allows = [
+  "@ccc",
+  "cmk.ai_control_plane.protocols",
+  "cmk.fastapi",
+  "cmk.password_store.v1",
+]
 
 [components."cmk.ai_control_plane.protocols"]
 allows = []
+
+[components."cmk.ai_control_plane.conversation"]
+allows = [
+  "cmk.ai_control_plane.lib.paths",
+  "cmk.ai_control_plane.protocols",
+  "cmk.password_store.v1",
+]
 
 [components."cmk.agent_receiver"]
 allows = ["@ccc", "@crypto", "@relay_protocols", "cmk.licensing.basics.options"]
@@ -340,6 +429,8 @@ allows = [
   "@trace",
   "cmk.checkengine",
   "cmk.checkengine.helper_interface",
+  "cmk.discover_plugins",
+  "cmk.diagnostics.automation_types",
   "cmk.utils.check_utils",
   "cmk.utils.config_warnings",
   "cmk.utils.http_proxy_config",
@@ -359,19 +450,12 @@ allows = []
 [components."cmk.bakery.base"]
 allows = [
   "@ccc",
-  "cmk.automations",
   "cmk.bakery",
   "cmk.bakery.base.cap",
   "cmk.bakery.shared",
   "cmk.base.api.bakery",
-  "cmk.base.automations",
-  "cmk.base.base_app",
-  "cmk.base.config",
-  "cmk.base.configlib",
-  "cmk.cli.internal",
   "cmk.base.nonfree.plugins.bakery.bakery_api",
   "cmk.base.plugins.bakery.bakery_api",
-  "cmk.checkengine",
   "cmk.crypto.certificate",
   "cmk.discover_plugins",
   "cmk.robotmk.bakery",
@@ -380,7 +464,7 @@ allows = [
 ]
 
 [components."cmk.bakery.internal"]
-allows = ["cmk.bakery.v1"]
+allows = ["cmk.bakery.v1", "cmk.bakery.v2"]
 
 [components."cmk.bakery.shared"]
 allows = ["@ccc", "@crypto", "@plugin_apis"]
@@ -388,8 +472,12 @@ allows = ["@ccc", "@crypto", "@plugin_apis"]
 [components."cmk.bakery.v1"]
 allows = []
 
-[components."cmk.bakery.v2_unstable"]
+[components."cmk.bakery.v2"]
 allows = ["cmk.bakery.v1"]
+
+# deprecated alias for cmk.bakery.v2, removed in 3.1
+[components."cmk.bakery.v2_unstable"]
+allows = ["cmk.bakery.v2"]
 
 # only allow itself, this is the future :-)
 [components."cmk.bakery"]
@@ -429,28 +517,15 @@ allows = [
 allows = ["@ccc", "cmk.bakery", "cmk.utils"]
 
 
-[components."cmk.base.nonfree.notify_automation"]
-allows = [
-  "@livestatus_client",
-  "cmk.automations",
-  "cmk.base.automations",
-  "cmk.base.base_app",
-  "cmk.base.config",
-  "cmk.base.notify",
-  "cmk.ccc.version",
-  "cmk.checkengine",
-  "cmk.utils",
-]
-
 [components."cmk.base.nonfree.cmc"]
 allows = [
   "@ccc",
   "@plugin_apis",
   "@relay_protocols",
+  "cmk.monitoring_config",
   "cmk.base.config",
   "cmk.base.configlib",
   "cmk.base.core",
-  "cmk.base.default_config.cmc",
   "cmk.base.nonfree",
   "cmk.checkengine",
   "cmk.core_client",
@@ -472,6 +547,10 @@ allows = [
 allows = [
   "@ccc",
   "@relay_protocols",
+  "cmk.base.active_check_result",
+  "cmk.check_helper_protocol",
+  "cmk.checkengine.specs",
+  "cmk.checkengine.submitters",
   "cmk.base.config",
   "cmk.base.configlib",
   "cmk.base.core",
@@ -498,6 +577,7 @@ allows = [
   "@plugin_apis",
   "cmk.bakery.base",
   "cmk.base",
+  "cmk.cli.engine",
   "cmk.check_helper_protocol",
   "cmk.checkengine",
   "cmk.events",
@@ -522,8 +602,8 @@ allows = [
   "@trace",
   "cmk.automations",
   "cmk.base.configlib",
-  "cmk.base.default_config",
   "cmk.base.parent_scan",
+  "cmk.config",
   "cmk.base.snmp_plugin_store",
   "cmk.checkengine.sources",
   "cmk.checkengine",
@@ -542,18 +622,15 @@ allows = [
   "cmk.ruleset_matcher",
 ]
 
-[components."cmk.legacy_includes"]
-allows = ["@plugin_apis", "cmk.plugins"]
-
-[components."cmk.legacy_checks"]
-allows = ["@plugin_apis", "cmk.legacy_includes", "cmk.plugins"]
-
 [components."cmk.base.plugins.bakery.bakery_api"]
 allows = ["cmk.bakery", "cmk.base.api.bakery", "cmk.utils"]
 
 [components."cmk.base"]
 allows = [
+  "cmk.cli.engine",
+  "cmk.diagnostics.automation_types",
   "cmk.diagnostics.engine",
+  "cmk.monitoring_config",
   "@ccc",
   "@livestatus_client",
   "@plugin_apis",
@@ -561,6 +638,7 @@ allows = [
   "@trace",
   "cmk.automations",
   "cmk.agent_based.prediction_backend",
+  "cmk.check_helper_protocol",
   "cmk.checkengine",
   "cmk.core_client",
   "cmk.crash",
@@ -596,6 +674,9 @@ allows = [
 [components."cmk.ccc"]
 allows = ["@trace"]
 
+[components."cmk.config"]
+allows = []
+
 [components."cmk.config_anonymizer"]
 allows = [
   "@ccc",
@@ -613,6 +694,7 @@ allows = [
   "cmk.gui.session",
   "cmk.gui.session_context",
   "cmk.gui.site_config",
+  "cmk.gui.utils.host_relations",
   "cmk.gui.watolib.attributes",
   "cmk.gui.watolib.config_sync",
   "cmk.gui.watolib.groups_io",
@@ -687,6 +769,9 @@ allows = [
   "cmk.checkengine.filecache",
   "cmk.checkengine.helper_interface",
   "cmk.checkengine.source_abc",
+  # the metrics section specs are compiled here, during config generation, where the
+  # plugins are loaded anyway; the fetcher must never discover them itself (CMK-38919)
+  "cmk.telemetry.fetcher._python_plugins",
 ]
 
 [components."cmk.core_client"]
@@ -715,6 +800,9 @@ allows = ["@ccc", "cmk.utils.paths"]
 
 [components."cmk.events"]
 allows = ["@ccc", "@livestatus_client", "cmk.ruleset_matcher"]
+
+[components."cmk.fastapi"]
+allows = []
 
 [components."cmk.fetcher_encoder"]
 allows = ["cmk.checkengine.helper_interface"]
@@ -750,11 +838,78 @@ allows = [
   "@livestatus_client",
   "@messaging",
   "cmk.gui",
+  "cmk.licensing",
   "cmk.utils",
+]
+
+[components."cmk.maps"]
+allows = []
+
+[components."cmk.maps.backend"]
+allows = [
+  "@ccc",
+  "@livestatus_client",
+  "@trace",
+  "cmk.bi",
+  "cmk.crash",
+  "cmk.fastapi",
+  "cmk.maps.shared",
+  "cmk.utils",
+]
+
+# Pure shared domain layer (state/severity maps, row extractors, geo resolver,
+# filter allow-list, perf parser, URL/colour/asset validators, map vocabulary,
+# ticket protocol, config-var names). A top-level sibling of
+# backend/gui/rest_api so none of them reach into another's package; it depends
+# on nothing but stdlib (mirrors cmk.dcd.protocols / cmk.liveproxyd.shared).
+[components."cmk.maps.shared"]
+allows = ["@ccc", "cmk.utils"]
+
+# GUI integration for Maps. Lives in the cmk-maps package but imports cmk.gui
+# internals (there is no clean cmk.gui public API).
+[components."cmk.maps.gui"]
+allows = [
+  "@ccc",
+  "@livestatus_client",
+  "@plugin_apis",
+  "cmk.bi",
+  "cmk.graphing_engine",
+  "cmk.gui",
+  "cmk.maps.shared",
+  "cmk.shared_typing",
+  "cmk.utils",
+  "cmk.web.utils",
+]
+
+# REST API endpoints for Maps. Import cmk.gui (openapi framework) plus the
+# feature's own gui/shared layers.
+[components."cmk.maps.rest_api"]
+allows = ["@ccc", "cmk.gui", "cmk.maps.shared", "cmk.maps.gui", "cmk.web.utils"]
+
+# The feature's composition root: the GuiFeaturePlugin cmk.gui.main_modules
+# discovers, so that cmk.gui does not have to import the feature. The only place
+# that sees both halves of Maps, so that neither the GUI integration nor the
+# REST endpoints have to import the other.
+[components."cmk.maps.registration"]
+allows = [
+  "@ccc",
+  "cmk.gui_plugins.internal",
+  "cmk.maps.gui",
+  "cmk.maps.rest_api",
 ]
 
 [components."cmk.mcp"]
 allows = ["@ccc", "@trace", "@crash"]
+
+[components."cmk.mcp.gui"]
+allows = [
+  "cmk.web.utils",
+  "@ccc",
+  "cmk.gui",
+  "cmk.gui_plugins.internal",
+  "cmk.rulesets",
+  "cmk.utils",
+]
 
 [components."cmk.messaging"]
 allows = ["@ccc"]
@@ -789,22 +944,6 @@ allows = [
   "cmk.shared_typing.consolidation",
 ]
 
-[components."cmk.network_flow"]
-allows = ["@ccc"]
-
-[components."cmk.network_flow.gui"]
-allows = [
-  "cmk.web.utils",
-  "@ccc",
-  "@livestatus_client",
-  "@network_flow",
-  "cmk.gui",
-  "cmk.gui_plugins.internal",
-  "cmk.rulesets",
-  "cmk.shared_typing",
-  "cmk.utils",
-]
-
 [components."cmk.telemetry"]
 allows = [
   "@ccc",
@@ -815,6 +954,16 @@ allows = [
   "cmk.data_backend",
   "cmk.shared_typing.consolidation",
   "cmk.utils.paths",
+]
+
+[components."cmk.mkp"]
+allows = [
+  "@ccc",
+  "@mkp_tool",
+  "cmk.discover_plugins",
+  "cmk.ec",
+  "cmk.gui.search.index",
+  "cmk.utils",
 ]
 
 [components."cmk.mkp_tool"]
@@ -863,6 +1012,7 @@ excludes = ["cmk.checkengine.fetchers.telemetry_metrics"]
 # renders belongs to the telemetry layer.
 [components."cmk.checkengine.fetchers.telemetry_metrics"]
 allows = [
+  "cmk.agent_based.v3_unstable",
   "cmk.checkengine.fetcher_abc",
   "cmk.checkengine.helper_interface",
   "cmk.telemetry.custom_query_rule_value",
@@ -900,6 +1050,7 @@ allows = [
   "cmk.gui.openapi",
   "cmk.gui.pages",
   "cmk.gui.pagetypes",
+  "cmk.gui.permissions",
   "cmk.gui.sidebar",
   "cmk.gui.visuals.filter",
   "cmk.gui.watolib",
@@ -926,20 +1077,23 @@ allows = [
   "cmk.gui.nonfree",
   "cmk.data_backend.gui",
   "cmk.data_backend.telemetry_metrics.gui",
-  "cmk.network_flow.gui",
+  "cmk.maps.gui",
+  "cmk.maps.rest_api",
   "cmk.otel_collector",
   "cmk.telemetry.gui",
 ]
 
-# The RFC 6749 authorization-server endpoints and WATO client management.
-# Deliberately narrower than a blanket "cmk.gui" self-allowance: cmk.gui.auth
-# (session.py, login.py) depends on this component (active_token(),
-# store/backend.py, store/token_store.py) to verify OAuth bearer tokens, so
-# this component must not depend back on cmk.gui.session/cmk.gui.auth or the
-# cycle Bazel's BUILD graph already forbids reappears here in the imports.
+# The RFC 6749 authorization-server endpoints, WATO client management, and
+# the internal REST API endpoints that turn a GUI session into a user or a
+# delegated access token. Deliberately narrower than a blanket "cmk.gui"
+# self-allowance. cmk.gui.auth depends on cmk.gui.oauth.token only (the
+# token_verification Bazel target) to verify OAuth bearer tokens, so the rest
+# of this component may import cmk.gui.auth, but cmk.gui.oauth.token must never
+# import anything that reaches back to cmk.gui.auth.
 [components."cmk.gui.oauth"]
 allows = [
   "@ccc",
+  "cmk.gui.auth",
   "cmk.gui.breadcrumb",
   "cmk.gui.config",
   "cmk.gui.exceptions",
@@ -949,8 +1103,11 @@ allows = [
   "cmk.gui.i18n",
   "cmk.gui.log",
   "cmk.gui.logged_in",
+  "cmk.gui.main_menu",
+  "cmk.gui.openapi",
   "cmk.gui.page_menu",
   "cmk.gui.pages",
+  "cmk.gui.permissions",
   "cmk.gui.scopes",
   "cmk.gui.session_context",
   "cmk.gui.table",
@@ -958,6 +1115,7 @@ allows = [
   "cmk.gui.type_defs",
   "cmk.gui.userdb",
   "cmk.gui.utils",
+  "cmk.gui.verify_requirements",
   "cmk.gui.wato",
   "cmk.gui.watolib",
   "cmk.utils.paths",
@@ -1013,6 +1171,7 @@ allows = [
   "@livestatus_client",
   "@mkp_tool",
   "@plugin_apis",
+  "cmk.ai_control_plane.protocols",
   "cmk.backup",
   "cmk.bakery.shared",
   "cmk.data_backend.gui",
@@ -1063,7 +1222,6 @@ allows = [
   "cmk.web.utils",
   "@ccc",
   "@crypto",
-  "@flags",
   "@livestatus_client",
   "@data_backend",
   "@plugin_apis",
@@ -1082,6 +1240,7 @@ allows = [
   "cmk.data_backend.gui",
   "cmk.data_backend.telemetry_metrics.gui",
   "cmk.telemetry.gui",
+  "cmk.telemetry.host_name_template_validation",
   "cmk.otel_collector",
   "cmk.robotmk.gui",
   "cmk.shared_typing",
@@ -1111,6 +1270,7 @@ allows = [
   "cmk.backup",
   "cmk.bi",
   "cmk.dcd.gui",
+  "cmk.ec.export",
   "cmk.gui",
   "cmk.gui_plugins.internal",
   "cmk.inventory",
@@ -1166,6 +1326,7 @@ excludes = ["cmk.gui.nonfree.pro.plugins", "cmk.gui.plugins"]
 
 [components."cmk.gui"]
 allows = [
+  "cmk.diagnostics.automation_types",
   "cmk.diagnostics.engine",
   "@ccc",
   "@crypto",
@@ -1204,11 +1365,9 @@ allows = [
   "cmk.utils.certs",
   "cmk.utils.check_utils",
   "cmk.utils.config_warnings",
-  "cmk.utils.datastructures",
   "cmk.utils.dateutils",
   "cmk.utils.encoding",
   "cmk.utils.encryption",
-  "cmk.utils.escaping",
   "cmk.utils.everythingtype",
   "cmk.utils.global_ident_type",
   "cmk.utils.host_storage",
@@ -1286,7 +1445,13 @@ allows = []
 allows = ["@plugin_apis"]
 
 [components."cmk.notification_plugins"]
-allows = ["@ccc", "cmk.events", "cmk.utils"]
+allows = ["@ccc", "cmk.events", "cmk.utils", "cmk.web.utils.escaping"]
+
+[components."cmk.piggyback.hub.cli"]
+allows = ["@ccc", "cmk.crash", "cmk.piggyback", "cmk.utils"]
+
+[components."cmk.piggyback.cli"]
+allows = ["@livestatus_client", "cmk.piggyback", "cmk.utils"]
 
 [components."cmk.piggyback"]
 allows = ["@ccc", "@messaging"]
@@ -1296,6 +1461,9 @@ allows = []
 
 [components."cmk.plugins"]
 allows = ["@plugin_apis"]
+
+[components."cmk.plugins.data_backend"]
+allows = ["@plugin_apis", "@data_backend"]
 
 [components."cmk.profiling.backend"]
 allows = ["cmk.ccc.store", "cmk.shared_typing.profiling_flamegraph"]
@@ -1347,8 +1515,27 @@ allows = [
   "cmk.utils.paths",
 ]
 
+[components."cmk.diagnostics.automation_types"]
+allows = ["@plugin_apis"]
+
 [components."cmk.diagnostics.engine"]
 allows = ["@plugin_apis", "cmk.discover_plugins"]
+
+[components."cmk.cli.engine"]
+# The engine assembles and runs the "cmk" command line. It hands each command the
+# site root and nothing else, so it needs nothing from cmk.base.
+allows = [
+  "@ccc",
+  "@plugin_apis",
+  "@trace",
+  "cmk.crash",
+  "cmk.discover_plugins",
+  "cmk.profiling.backend",
+  "cmk.utils",
+]
+
+[components."cmk.automations.internal"]
+allows = []
 
 [components."cmk.cli.internal"]
 allows = []
@@ -1358,6 +1545,19 @@ allows = []
 
 [components."cmk.licensing.internal"]
 allows = []
+
+[components."cmk.monitoring_config.internal"]
+allows = [
+  "@ccc",
+  "@plugin_apis",
+  "cmk.base.config",
+  "cmk.base.configlib",
+  "cmk.checkengine",
+  "cmk.checkengine.fetchers",
+  "cmk.licensing",
+  "cmk.ruleset_matcher",
+  "cmk.utils",
+]
 
 [components."cmk.checkengine.snmp_backends"]
 allows = ["@ccc", "cmk.checkengine.snmplib"]
@@ -1395,6 +1595,18 @@ allows = [
   "cmk.validate_config",
 ]
 
+[components."cmk.update_config.nonfree.pro"]
+allows = [
+  "@ccc",
+  "@data_backend",
+  "cmk.dcd.gui",
+  "cmk.graphing_engine",
+  "cmk.gui",
+  "cmk.licensing",
+  "cmk.update_config",
+  "cmk.utils",
+]
+
 [components."cmk.update_config.nonfree.ultimate"]
 allows = [
   "@ccc",
@@ -1416,6 +1628,7 @@ allows = [
   "cmk.data_backend.telemetry_metrics.gui",
   "cmk.otel_collector",
   "cmk.robotmk",
+  "cmk.ruleset_matcher",
   "cmk.telemetry.host_name_template",
   "cmk.update_config",
   "cmk.utils",
@@ -1439,6 +1652,9 @@ allows = [
   "cmk.utils.paths",
 ]
 
+[components."cmk.update_config.internal"]
+allows = []
+
 [components."cmk.update_config"]
 allows = [
   "cmk.web.utils",
@@ -1453,23 +1669,28 @@ allows = [
   "cmk.backup",
   "cmk.base",
   "cmk.checkengine",
+  "cmk.config",
+  "cmk.checkengine.fetchers",
   "cmk.crash",
   "cmk.dcd.gui",
   "cmk.dcd.protocols",
   "cmk.discover_plugins",
   "cmk.diskspace.config",
-  "cmk.checkengine.fetchers",
   "cmk.gui",
+  "cmk.inventory",
   "cmk.licensing",
+  "cmk.maps.gui",
+  "cmk.maps.rest_api",
+  "cmk.maps.shared",
   "cmk.message_broker_certs",
   "cmk.data_backend.gui",
   "cmk.data_backend.telemetry_metrics.gui",
   "cmk.otel_collector",
   "cmk.plugins",
   "cmk.robotmk",
+  "cmk.ruleset_matcher",
   "cmk.utils",
   "cmk.validate_config",
-  "cmk.ruleset_matcher",
   "cmk.werks.site",
 ]
 
@@ -1606,6 +1827,8 @@ allows = [
   "@crypto",
   "@relay_protocols",
   "cmk.check_helper_protocol",
+  "cmk.crash",
+  "cmk.password_store",
   "cmk.relay_trigger_protocol",
 ]
 
@@ -1630,7 +1853,13 @@ allows = [
 allows = []
 
 [components."cmk.testlib.ai_control_plane"]
-allows = ["cmk.ai_control_plane"]
+allows = ["@ccc", "cmk.ai_control_plane", "cmk.password_store.v1"]
+
+[components."cmk.testlib.ai_control_plane.fake_provider"]
+allows = []
+
+[components."cmk.testlib.ai_control_plane.scripted_model"]
+allows = []
 
 [components."cmk.testlib.agent_receiver"]
 allows = ["@crypto", "@relay_protocols", "cmk.agent_receiver"]
@@ -1638,11 +1867,11 @@ allows = ["@crypto", "@relay_protocols", "cmk.agent_receiver"]
 [components."cmk.testlib.mcp"]
 allows = ["cmk.mcp"]
 
-[components."cmk.testlib.data_backend"]
-allows = ["cmk.data_backend"]
+[components."cmk.testlib.notification_plugins"]
+allows = []
 
-[components."cmk.testlib.network_flow"]
-allows = ["@network_flow", "cmk.network_flow.gui"]
+[components."cmk.testlib.data_backend"]
+allows = ["@ccc", "@crypto", "cmk.data_backend"]
 
 [components."cmk.testlib.otel_collector"]
 allows = ["cmk.otel_collector"]
@@ -1653,6 +1882,7 @@ allows = [
   "@crypto",
   "@relay_protocols",
   "cmk.check_helper_protocol",
+  "cmk.crash",
   "cmk.relay",
 ]
 
@@ -1701,9 +1931,6 @@ allows = ["cmk.ccc.tty", "cmk.utils.log"]
 [components."cmk.utils.crypto"]
 allows = []
 
-[components."cmk.utils.datastructures"]
-allows = []
-
 [components."cmk.utils.dateutils"]
 allows = ["cmk.ccc.i18n"]
 
@@ -1712,9 +1939,6 @@ allows = []
 
 [components."cmk.utils.encryption"]
 allows = ["@crypto", "cmk.ccc.exceptions"]
-
-[components."cmk.utils.escaping"]
-allows = ["cmk.web.utils.escaping"]
 
 [components."cmk.utils.everythingtype"]
 allows = []
@@ -1751,6 +1975,7 @@ allows = ["@crypto", "cmk.ccc.store", "cmk.ccc.user"]
 [components."cmk.licensing.nonfree"]
 allows = [
   "@crypto",
+  "@flags",
   "@livestatus_client",
   "cmk.ccc.exceptions",
   "cmk.ccc.i18n",
@@ -1760,6 +1985,7 @@ allows = [
   # ARGL
   "cmk.cloud.config",
   "cmk.licensing",
+  "cmk.shared_typing.trial_mode_selection_request",
   "cmk.utils.mail",
   "cmk.utils.password_store",
   "cmk.utils.paths",
@@ -1914,6 +2140,7 @@ allows = [
   "@plugin_apis",
   "cmk.ccc.exceptions",
   "cmk.ccc.hostaddress",
+  "cmk.ccc.regex",
   "cmk.ccc.site",
   "cmk.ccc.version",
   "cmk.dcd.gui",
@@ -1921,7 +2148,7 @@ allows = [
   "cmk.gui",
   "cmk.gui.nonfree.pro.graphing.openapi.models.attribute_filter",
   "cmk.data_backend.gui",
-  "cmk.data_backend.telemetry_metrics.gui",
+  "cmk.data_backend.telemetry_metrics",
   "cmk.otel_collector.gui",
   "cmk.ruleset_matcher.matcher",
   "cmk.shared_typing.aggregation",
@@ -1932,12 +2159,14 @@ allows = [
   "cmk.shared_typing.vue_formspec_components",
   "cmk.telemetry.custom_query_rule_value",
   "cmk.telemetry.host_name_template",
+  "cmk.telemetry.host_name_template_resolution",
+  "cmk.telemetry.host_name_template_validation",
   "cmk.utils.global_ident_type",
   "cmk.utils.paths",
 ]
 
 [components."cmk.web"]
-allows = ["@ccc", "cmk.shared_typing"]
+allows = ["@ccc", "cmk.shared_typing", "cmk.utils.security_event"]
 
 [components."cmk.werk_ids_server"]
 allows = ["cmk.ccc.log"]
@@ -1968,8 +2197,6 @@ allows = [
 
 
 [file_components]
-"bin/cmk-migrate-extension-rulesets.py" = "cmk.update_config"
-"bin/cmk-migrate-oracle-rulesets.py" = "cmk.update_config"
 "omd/packages/appliance/webconf_snapin.py" = "cmk.gui"
 "omd/non-free/packages/cmk-dcd/cmk-dcd.py" = "cmk.dcd.daemon"
 "omd/non-free/packages/cmk-dcd/dcd.py" = "cmk.dcd.daemon"
@@ -1980,23 +2207,7 @@ allows = [
 # Files that depend on more than one component, yet we do not want to
 # add all those dependencies to one of those components.
 
-[file_dependencies."bin/cmk-piggyback-hub.py"]
-allows = ["@ccc", "cmk.crash", "cmk.piggyback", "cmk.utils"]
-
-[file_dependencies."bin/cmk-piggyback.py"]
-allows = ["@livestatus_client", "cmk.piggyback", "cmk.utils"]
-
-[file_dependencies."bin/mkp.py"]
-allows = [
-  "@ccc",
-  "@mkp_tool",
-  "cmk.discover_plugins",
-  "cmk.ec",
-  "cmk.gui.search.index",
-  "cmk.utils",
-]
-
-[file_dependencies."buildscripts/scripts/build-cmk-container.py"]
+[file_dependencies."buildscripts/scripts/build_cmk_container.py"]
 allows = ["@ccc"]
 
 [file_dependencies."buildscripts/scripts/assert_build_artifacts.py"]
@@ -2005,10 +2216,16 @@ allows = ["@ccc"]
 [file_dependencies."buildscripts/scripts/publish_cloud_images.py"]
 allows = ["@ccc"]
 
-[file_dependencies."buildscripts/scripts/unpublish-container-image.py"]
+[file_dependencies."buildscripts/scripts/unpublish_container_image.py"]
 allows = ["@ccc"]
 
 [file_dependencies."buildscripts/scripts/lib/registry.py"]
+allows = ["@ccc"]
+
+[file_dependencies."buildscripts/scripts/tests/test_assert_build_artifacts.py"]
+allows = ["@ccc"]
+
+[file_dependencies."buildscripts/scripts/tests/test_publish_cloud_images.py"]
 allows = ["@ccc"]
 
 [file_dependencies."omd/packages/check_mk/post-create/01_create-sample-config.py"]

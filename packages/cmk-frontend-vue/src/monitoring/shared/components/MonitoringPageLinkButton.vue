@@ -9,7 +9,11 @@ import { type MonitoringPageLinkButton } from 'cmk-shared-typing/typescript/moni
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 
+import { useTeleportPlacement } from '@/monitoring/shared/components/teleportPlacement'
+
 const props = defineProps<MonitoringPageLinkButton>()
+
+const { target, isDefault } = useTeleportPlacement('.page_state', () => props.teleport_target)
 
 function navigate(): void {
   window.location.href = props.url
@@ -17,8 +21,17 @@ function navigate(): void {
 </script>
 
 <template>
-  <Teleport defer to=".page_state">
-    <CmkButton class="monitoring-page-link-button" @click="navigate">
+  <Teleport defer :to="target">
+    <CmkButton
+      class="monitoring-page-link-button"
+      :class="
+        isDefault
+          ? 'monitoring-page-link-button--page-state'
+          : 'monitoring-page-link-button--inline'
+      "
+      :size="isDefault ? 'medium' : 'small'"
+      @click="navigate"
+    >
       <CmkMultitoneIcon
         name="experiment"
         primary-color="font"
@@ -33,9 +46,19 @@ function navigate(): void {
 
 <style scoped>
 .monitoring-page-link-button {
+  white-space: nowrap;
+}
+
+.monitoring-page-link-button--page-state {
   position: absolute;
   right: 50px;
-  white-space: nowrap;
+}
+
+.monitoring-page-link-button--inline {
+  margin-left: var(--dimension-4);
+  vertical-align: middle;
+  float: right;
+  margin-right: var(--dimension-3);
 }
 
 .monitoring-page-link-button__icon {

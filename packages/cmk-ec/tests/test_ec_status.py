@@ -10,6 +10,7 @@ import pytest
 import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
 from cmk.ec.main import EventStatus, StatusServer
+from cmk.ec.query import MKClientError
 
 from .helpers import FakeStatusSocket, new_event
 
@@ -127,3 +128,75 @@ def test_mkevent_query_filters(
     status_server.handle_client(status_socket, True, "127.0.0.1")
     response = status_socket.get_response()
     assert (len(response) == 2) is is_match
+
+
+def query_texts_of_events(status_server: StatusServer, filter_line: str) -> set[str]:
+    status_socket = FakeStatusSocket(f"GET events\nColumns: event_text\n{filter_line}\n".encode())
+    status_server.handle_client(status_socket, True, "127.0.0.1")
+    _header, *rows = status_socket.get_response()
+    return {text for (text,) in rows}
+
+
+@pytest.mark.parametrize(
+    "operator_name",
+    [
+        pytest.param("=", id="equal"),
+        pytest.param("=~", id="equal ignoring case"),
+        pytest.param("~", id="regex matches"),
+        pytest.param("~~", id="regex matches ignoring case"),
+    ],
+)
+def test_filter_does_not_select_events_without_a_value(
+    event_status: EventStatus, status_server: StatusServer, operator_name: str
+) -> None:
+    event_status.new_event(new_event({"text": "unknown", "core_host": None}))
+    event_status.new_event(new_event({"text": "mine", "core_host": HostName("myhost")}))
+    event_status.new_event(new_event({"text": "other", "core_host": HostName("otherhost")}))
+
+    texts = query_texts_of_events(status_server, f"Filter: event_core_host {operator_name} myhost")
+
+    assert texts == {"mine"}
+
+
+@pytest.mark.parametrize(
+    "operator_name",
+    [
+        pytest.param("!=", id="not equal"),
+        pytest.param("!=~", id="not equal ignoring case"),
+        pytest.param("!~", id="regex does not match"),
+        pytest.param("!~~", id="regex does not match ignoring case"),
+    ],
+)
+def test_negated_filter_selects_events_without_a_value(
+    event_status: EventStatus, status_server: StatusServer, operator_name: str
+) -> None:
+    event_status.new_event(new_event({"text": "unknown", "core_host": None}))
+    event_status.new_event(new_event({"text": "mine", "core_host": HostName("myhost")}))
+    event_status.new_event(new_event({"text": "other", "core_host": HostName("otherhost")}))
+
+    texts = query_texts_of_events(status_server, f"Filter: event_core_host {operator_name} myhost")
+
+    assert texts == {"unknown", "other"}
+
+
+@pytest.mark.parametrize(
+    "operator_name",
+    [
+        pytest.param("~", id="regex matches"),
+        pytest.param("!~", id="regex does not match"),
+        pytest.param("~~", id="regex matches ignoring case"),
+        pytest.param("!~~", id="regex does not match ignoring case"),
+    ],
+)
+def test_invalid_regex_fails_before_replying(
+    event_status: EventStatus, status_server: StatusServer, operator_name: str
+) -> None:
+    event_status.new_event(new_event({"text": "disk full", "core_host": None}))
+    status_socket = FakeStatusSocket(
+        f"GET events\nOutputFormat: plain\nFilter: event_text {operator_name} \\p{{Lu}}\n".encode()
+    )
+
+    with pytest.raises(MKClientError, match="Invalid header line"):
+        status_server.handle_client(status_socket, True, "127.0.0.1")
+
+    assert status_socket.get_raw_response() == b""

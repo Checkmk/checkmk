@@ -135,3 +135,50 @@ def test_check_mongodb_replica_set(
     # With an empty value store, lag values are recorded but no Result/Metric is yielded for them yet.
     # Only the long-output Result remains.
     assert result == [Result(state=State.OK, notice=expected_notice)]
+
+
+def test_empty_string_table_is_not_discovered() -> None:
+    section = mongodb_replica_set.parse_mongodb_replica_set([])
+
+    assert not list(mongodb_replica_set.discover_mongodb_replica_set(section))
+
+
+def test_replica_set_with_a_single_member_is_warn() -> None:
+    assert list(
+        mongodb_replica_set.check_mongodb_replica_set_lag(
+            {}, {"members": [{"name": "solo:27017", "state": 1}]}
+        )
+    ) == [Result(state=State.WARN, summary="Number of members is 1")]
+
+
+def test_members_without_replication_info_are_reported_with_their_state() -> None:
+    section = {
+        "members": [
+            {"name": "primary:27017", "state": 1, "optimeDate": {"$date": 1000}},
+            {"name": "arbiter:27017", "state": 7},
+            {"name": "starting:27017", "state": 5},
+        ]
+    }
+
+    assert list(mongodb_replica_set.check_mongodb_replica_set_lag({}, section)) == [
+        Result(state=State.OK, summary="starting:27017: no replication info yet, State: 5"),
+    ]
+
+
+def test_election_without_members_is_warn() -> None:
+    assert list(mongodb_replica_set.check_mongodb_primary_election({"members": []})) == [
+        Result(state=State.WARN, summary="Replica set has no members"),
+    ]
+
+
+@pytest.mark.parametrize(
+    "members",
+    [
+        pytest.param([{"name": "secondary:27017", "state": 2}], id="no primary"),
+        pytest.param([{"name": "primary:27017", "state": 1}], id="no election time"),
+    ],
+)
+def test_election_without_primary_details_is_warn(members: list[dict[str, object]]) -> None:
+    assert list(mongodb_replica_set.check_mongodb_primary_election({"members": members})) == [
+        Result(state=State.WARN, summary="Can not retrieve primary name and election date"),
+    ]

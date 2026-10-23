@@ -1,0 +1,10 @@
+type = "Component"
+members_required = 2
+tier = 1
+has_support_component = true
+product_managers = ["annika.felgentraeger@checkmk.com"]
+description = """
+- Checkmk AI control plane: the site-local daemon that hosts LLM-backed agents against monitoring data
+- Checkmk MCP server
+- Checkmk AI chat: the conversational user interface and the UI features around it
+"""

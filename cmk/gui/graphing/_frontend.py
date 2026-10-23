@@ -7,13 +7,11 @@ import json
 import traceback
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
+from typing import Final
 
 from tzlocal import get_localzone_name
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.graphing_engine import (
-    Graph,
-)
 from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui.config import active_config
@@ -21,6 +19,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GraphTimerange, PainterParameters, VerticalAxisWidth
+from cmk.gui.utils.graph_refresh import GRAPH_REFRESH_INTERVALS_SECONDS
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import (
     AddTo,
@@ -31,7 +30,6 @@ from cmk.shared_typing.cmk_time_series_graph import (
     Interaction,
     Size,
     UnitFormat,
-    XAxis,
     YAxis,
 )
 from cmk.shared_typing.global_time_picker import (
@@ -49,7 +47,7 @@ from ._graph_display_config import HTML_SIZE_PER_EX
 from ._graph_specification import GraphSpecification
 from ._graph_templates import build_template_graphs, TemplateGraphSpecification
 from ._source import RRDFetchMetricNames
-from ._unit_format import apply_temperature_unit, unit_from_curves
+from ._user_specific_unit import user_unit_format
 
 
 def stored_time_range_seconds(
@@ -114,6 +112,8 @@ def user_default_refresh_time() -> int | None:
             return None
 
 
+_FONT_SIZE_PT: Final = 8.0
+
 DEFAULT_INTERACTION = Interaction(
     burger="enabled",
     zoom="enabled",
@@ -135,37 +135,28 @@ STATIC_INTERACTION = Interaction(
 
 
 def _add_to(specification: GraphSpecification | None, internal: str) -> AddTo | None:
-    # A graph offers an add-to action exactly if its specification declares an add-to type: the type
-    # is what the context menu is assembled for, the specification is what most actions replay, and
-    # the built graph is what a custom graph stores instead of replaying anything.
-    if specification is None or (add_type := specification.add_visual_type()) is None:
+    # A graph offers an add-to action exactly if a target can keep its specification: the element
+    # type is what the context menu is assembled for, the specification is what most actions
+    # replay, and the built graph is what a custom graph stores instead of replaying anything.
+    if specification is None or (stored := specification.for_storage()) is None:
         return None
-    return AddTo(type=add_type, specification=specification.model_dump(), internal=internal)
-
-
-def derive_y_axis_unit(graph: Graph) -> UnitFormat | None:
-    """Derive the value axis unit from the graph's own curves.
-
-    Mirrors yAxis.ts:deriveYAxis - template, single-timeseries and combined graphs draw every
-    curve in one unit (enforced backend-side), so the axis unit is the unit of any curve. None
-    when the graph has no curves; the renderer then falls back to raw, unit-less ticks.
-    """
-    return unit_from_curves(
-        member.attributes.unit for stack in graph.stacks for member in stack.members
-    ) or unit_from_curves(line.curve.attributes.unit for line in graph.lines)
+    return AddTo(
+        type=stored.element_type(), specification=specification.model_dump(), internal=internal
+    )
 
 
 def _shell_y_axis(built: BuiltGraph, temperature_unit: TemperatureUnit) -> YAxis | None:
     """The axis the shell draws with: what the graph names for itself, else what its curves imply."""
-    unit = built.y_axis_unit if built.y_axis_unit is not None else derive_y_axis_unit(built.graph)
+    unit = built.resolved_y_axis_unit()
     bounds = built.y_axis_bounds()
     if unit is None and bounds is None:
         return None
+    unit_format: UnitFormat | None = None
     conversion: Callable[[float], float] = lambda value: value
     if unit is not None:
-        unit, conversion = apply_temperature_unit(unit, temperature_unit)
+        unit_format, conversion = user_unit_format(unit, temperature_unit)
     return YAxis(
-        unit=unit,
+        unit=unit_format,
         explicit_range=(
             None
             if bounds is None
@@ -179,9 +170,7 @@ def to_cmk_time_series_graph(
     *,
     size: Size,
     interaction: Interaction = DEFAULT_INTERACTION,
-    font_size_pt: float = 8.0,
     show_graph_time: bool = True,
-    x_axis: XAxis | None = None,
     temperature_unit: TemperatureUnit,
 ) -> CmkTimeSeriesGraph:
     """Translate a built graph into the shared ``CmkTimeSeriesGraph`` the Vue renderer takes."""
@@ -192,9 +181,9 @@ def to_cmk_time_series_graph(
         options=GraphOptions(
             header=GraphHeader(title=graph.title, show_graph_time=show_graph_time),
             name=graph.name,
-            x_axis=x_axis,
+            x_axis=None,
             y_axis=_shell_y_axis(built, temperature_unit),
-            font_size_pt=font_size_pt,
+            font_size_pt=_FONT_SIZE_PT,
         ),
         interaction=interaction,
         internal=internal,
@@ -210,6 +199,7 @@ def global_time_picker_refresh(
 ) -> GlobalTimePickerRefresh:
     return GlobalTimePickerRefresh(
         interval_seconds=interval_seconds or user_default_refresh_time(),
+        interval_choices_seconds=list(GRAPH_REFRESH_INTERVALS_SECONDS),
         starts_live=starts_live,
         reloads_page_content=reloads_page_content,
     )
@@ -343,8 +333,9 @@ def render_engine_graph_group(
         # Only the hover preview flows its many graphs into columns; everywhere else stacks.
         "layout": "wrap" if multi_column else "column",
     }
-    # Full-width groups omit figure_width entirely so the component measures the available width
-    # itself; only a fixed-size embed (e.g. the hover popup) sends a concrete pixel width.
+    # Full-width groups (up until a frontend-defined maximum width) omit figure_width entirely so
+    # the component measures the available width itself; only a fixed-size embed (e.g. the hover
+    # popup) sends a concrete pixel width.
     if not full_width:
         data["figure_width"] = int(size.width * HTML_SIZE_PER_EX)
     return HTMLWriter.render_vue_component("cmk-graph-group", data)

@@ -46,6 +46,27 @@ const stateLabel = computed<TranslatedString>(() => {
   }
 })
 
+const stateTitle = computed<TranslatedString | undefined>(() => {
+  if (!short.value) {
+    return undefined
+  }
+  const state = props.state
+  switch (state) {
+    case 'OK':
+      return undefined
+    case 'WARN':
+      return _t('Warning')
+    case 'CRIT':
+      return _t('Critical')
+    case 'UNKNOWN':
+      return _t('Unknown')
+    case 'PENDING':
+      return _t('Pending')
+    default:
+      return assertNever(state)
+  }
+})
+
 const stateTone = computed<StateTone>(() => {
   const state = props.state
   switch (state) {
@@ -73,5 +94,12 @@ const tagSize = computed<StateTagSize>(() => {
 </script>
 
 <template>
-  <StateTag kind="service" :label="stateLabel" :tone="stateTone" :size="tagSize" :stale="stale" />
+  <StateTag
+    kind="service"
+    :label="stateLabel"
+    :title="stateTitle"
+    :tone="stateTone"
+    :size="tagSize"
+    :stale="stale"
+  />
 </template>

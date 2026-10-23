@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from pydantic import TypeAdapter
 
+from cmk.gui.config import Config
+from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.openapi.api_endpoints.host_config.models.response_models import HostExtensionsModel
+from tests.testlib.unit.gui.validation_context import make_validation_context
 
 
 def test_cluster_nodes_validator(sample_host: str) -> None:
@@ -17,7 +20,8 @@ def test_cluster_nodes_validator(sample_host: str) -> None:
             "is_cluster": True,
             "is_offline": False,
             "cluster_nodes": [sample_host],
-        }
+        },
+        context=make_validation_context(Config(), LoggedInNobody()),
     )
     assert result.cluster_nodes is not None
     assert list(result.cluster_nodes) == [sample_host]

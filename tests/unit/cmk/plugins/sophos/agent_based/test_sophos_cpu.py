@@ -7,13 +7,8 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.sophos.agent_based.sophos_cpu import (
-    check_sophos_cpu,
-    discover_sophos_cpu,
-    Params,
-    parse_sophos_cpu,
-)
+from cmk.agent_based.v2 import Metric, Result, State
+from cmk.plugins.sophos.agent_based.sophos_cpu import check_sophos_cpu, Params, parse_sophos_cpu
 
 
 def test_parse_sophos_cpu() -> None:
@@ -22,10 +17,6 @@ def test_parse_sophos_cpu() -> None:
 
 def test_parse_sophos_cpu_invalid_returns_none() -> None:
     assert parse_sophos_cpu([["bogus"]]) is None
-
-
-def test_discover_sophos_cpu_yields_single_service() -> None:
-    assert list(discover_sophos_cpu(27)) == [Service()]
 
 
 @pytest.mark.parametrize(

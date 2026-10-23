@@ -11,8 +11,8 @@ from cmk.plugins.mongodb.rulesets.bakery import migrate, migrate_auth
 @pytest.mark.parametrize(
     ["value", "expected"],
     [
-        (None, {"deployment": ("do_not_deploy", None)}),
-        (True, {"deployment": ("sync", None)}),
+        (None, {"deployment": ("do_not_deploy", None), "auth": ("no_auth", None)}),
+        (True, {"deployment": ("sync", None), "auth": ("no_auth", None)}),
         (
             {
                 "auth_mechanism": "DEFAULT",
@@ -22,12 +22,15 @@ from cmk.plugins.mongodb.rulesets.bakery import migrate, migrate_auth
             },
             {
                 "deployment": ("sync", None),
-                "auth": {
-                    "auth_mechanism": "DEFAULT",
-                    "auth_source": "admin",
-                    "username": "user",
-                    "password": ("password", "secret"),
-                },
+                "auth": (
+                    "auth",
+                    {
+                        "auth_mechanism": "DEFAULT",
+                        "auth_source": "admin",
+                        "username": "user",
+                        "password": ("password", "secret"),
+                    },
+                ),
             },
         ),
         (
@@ -35,21 +38,16 @@ from cmk.plugins.mongodb.rulesets.bakery import migrate, migrate_auth
             {"deployment": ("sync", None)},
         ),
         (
-            {"deployment": ("do_not_deploy", None)},
-            {"deployment": ("do_not_deploy", None)},
-        ),
-        (
-            {"deployment": ("sync", None), "auth": {"auth_mechanism": "DEFAULT"}},
-            {"deployment": ("sync", None), "auth": {"auth_mechanism": "DEFAULT"}},
+            {"deployment": ("do_not_deploy", None), "auth": ("no_auth", None)},
+            {"deployment": ("do_not_deploy", None), "auth": ("no_auth", None)},
         ),
     ],
     ids=[
         "none_to_do_not_deploy",
         "true_to_sync",
         "old_auth_dict_wrapped",
-        "already_migrated_sync",
+        "already_migrated_without_auth",
         "already_migrated_do_not_deploy",
-        "already_migrated_with_auth",
     ],
 )
 def test_migrate(value: object, expected: object) -> None:

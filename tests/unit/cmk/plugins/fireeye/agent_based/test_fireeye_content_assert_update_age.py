@@ -11,10 +11,9 @@
 import time
 from unittest.mock import patch
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Result, State
 from cmk.plugins.fireeye.agent_based.fireeye_content import (
     check_fireeye_content,
-    discover_fireeye_content,
     parse_fireeye_content,
     SecurityContent,
 )
@@ -25,11 +24,6 @@ def parsed() -> SecurityContent:
     section = parse_fireeye_content([["456.180", "0", "2016/02/26 15:42:06"]])
     assert section is not None
     return section
-
-
-def test_fireeye_content_discovery() -> None:
-    """Test discovery function finds content service."""
-    assert list(discover_fireeye_content(parsed())) == [Service()]
 
 
 def test_fireeye_content_check_failed_update() -> None:

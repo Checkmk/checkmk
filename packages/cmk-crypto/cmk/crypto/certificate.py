@@ -29,10 +29,14 @@ Certificate
 PublicKey/PrivateKey
     probably don't have a direct use case on their own in our code base, at the moment.
 
+CertificateRevocationList
+    lists the serial numbers of the certificates a CA has revoked.
+
 """
 
 import re
 import warnings as warnings_module
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, UTC
 from pathlib import Path
@@ -47,6 +51,7 @@ from cmk.ccc.site import SiteId
 
 from . import MKCryptoException
 from .hash import HashAlgorithm
+from .issued_certificates import IssuedCertificateEntry
 from .keys import (
     EncryptedPrivateKeyPEM,
     InvalidSignatureError,
@@ -77,6 +82,10 @@ class NegativeSerialException(MKCryptoException):
         super().__init__(message)
         self.subject = subject
         self.fingerprint = fingerprint
+
+
+def serial_number_string(serial_number: int) -> str:
+    return serial_number.to_bytes((serial_number.bit_length() + 7) // 8).hex(":")
 
 
 class CertificateWithPrivateKey(NamedTuple):
@@ -181,6 +190,7 @@ class CertificateWithPrivateKey(NamedTuple):
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
         is_ca: bool = False,
+        cert_log: Path,
     ) -> CertificateWithPrivateKey:
         """Create a new certificate signed by this certificate's private key."""
 
@@ -205,6 +215,8 @@ class CertificateWithPrivateKey(NamedTuple):
             issuer_name=self.certificate.subject,
         )
 
+        IssuedCertificateEntry.from_certificate(issued_certificate, "issued").append_to(cert_log)
+
         return CertificateWithPrivateKey(issued_certificate, issued_key)
 
     def sign_csr(
@@ -212,6 +224,8 @@ class CertificateWithPrivateKey(NamedTuple):
         csr: CertificateSigningRequest,
         expiry: relativedelta,
         subject_alternative_names: SubjectAlternativeNames | None = None,
+        *,
+        cert_log: Path,
     ) -> Certificate:
         """
         Create a certificate by signing a certificate signing request.
@@ -232,7 +246,7 @@ class CertificateWithPrivateKey(NamedTuple):
 
         effective_sans = subject_alternative_names or csr.subject_alternative_names
 
-        return Certificate.create(
+        signed = Certificate.create(
             subject_public_key=csr.public_key,
             subject_name=csr.subject,
             subject_alternative_names=effective_sans,
@@ -242,6 +256,10 @@ class CertificateWithPrivateKey(NamedTuple):
             issuer_signing_key=self.private_key,
             issuer_name=self.certificate.subject,
         )
+
+        IssuedCertificateEntry.from_certificate(signed, "issued").append_to(cert_log)
+
+        return signed
 
 
 class PersistedCertificateWithPrivateKey(CertificateWithPrivateKey):
@@ -474,14 +492,7 @@ class Certificate:
 
     @property
     def serial_number_string(self) -> str:
-        """
-        The serial as a ':' separated hex string.
-
-        This is the same format shown by 'openssl x509' and it looks like this:
-            65:2e:18:0f:3f:a7:4b:c8:a6:fb:da:ea:bc:f8:57:f1:d0:96:5e:47
-        """
-        sn = self.serial_number
-        return sn.to_bytes((sn.bit_length() + 7) // 8).hex(":")
+        return serial_number_string(self.serial_number)
 
     @property
     def public_key(self) -> PublicKey:
@@ -496,6 +507,19 @@ class Certificate:
     @property
     def issuer(self) -> X509Name:
         return X509Name(self._cert.issuer)
+
+    @property
+    def authority_key_identifier(self) -> bytes | None:
+        """The issuing CA's key ID, taken from the authority key identifier extension.
+
+        Returns None if the extension is not present or does not contain a key identifier.
+        """
+        try:
+            return self.get_extension_for_class(
+                pyca_x509.AuthorityKeyIdentifier
+            ).value.key_identifier
+        except pyca_x509.ExtensionNotFound:
+            return None
 
     @property
     def common_name(self) -> str | None:
@@ -799,3 +823,106 @@ class CertificateSigningRequest:
             return cls(pyca_x509.load_pem_x509_csr(pem_data.bytes))
         except ValueError as exc:
             raise PEMDecodingError("Unable to load CSR.") from exc
+
+
+class CertificateRevocationListPEM(_PEMData):
+    """A certificate revocation list in pem format"""
+
+
+@dataclass(frozen=True)
+class RevokedCertificate:
+    serial_number: int
+    revocation_date: datetime
+
+
+class CertificateRevocationList:
+    """An X.509 CRL, listing the serial numbers of the certificates a CA has revoked"""
+
+    def __init__(self, crl: pyca_x509.CertificateRevocationList) -> None:
+        self._crl = crl
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        issuer: CertificateWithPrivateKey,
+        revoked_certificates: Iterable[RevokedCertificate] = (),
+        crl_number: int = 0,
+        validity: relativedelta = relativedelta(years=10),
+    ) -> CertificateRevocationList:
+        """Create a revocation list signed by the issuing CA."""
+        last_update = datetime.now(tz=UTC)
+        builder = (
+            pyca_x509.CertificateRevocationListBuilder()
+            .issuer_name(issuer.certificate.subject.name)
+            .last_update(last_update)
+            .next_update(last_update + validity)
+            # RFC 5280 5.2.3.  CRL Number
+            #     Conforming CRL issuers MUST include this extension in all CRLs
+            .add_extension(pyca_x509.CRLNumber(crl_number), critical=False)
+            # RFC 5280 5.2.1.  Authority Key Identifier
+            #     Conforming CRL issuers MUST use the key identifier method
+            .add_extension(
+                pyca_x509.AuthorityKeyIdentifier.from_issuer_public_key(
+                    issuer.private_key.public_key.key
+                ),
+                critical=False,
+            )
+        )
+        for revoked in revoked_certificates:
+            builder = builder.add_revoked_certificate(
+                pyca_x509.RevokedCertificateBuilder()
+                .serial_number(revoked.serial_number)
+                .revocation_date(revoked.revocation_date)
+                .build()
+            )
+
+        hash_algo = (
+            hash_.value
+            if (hash_ := Certificate.preferred_signing_hash_algorithm(issuer.private_key.key))
+            is not None
+            else None
+        )
+        return cls(builder.sign(private_key=issuer.private_key.key, algorithm=hash_algo))
+
+    @classmethod
+    def load_pem(cls, pem_data: CertificateRevocationListPEM) -> CertificateRevocationList:
+        try:
+            return cls(pyca_x509.load_pem_x509_crl(pem_data.bytes))
+        except ValueError as exc:
+            raise PEMDecodingError("Unable to load certificate revocation list.") from exc
+
+    def dump_pem(self) -> CertificateRevocationListPEM:
+        return CertificateRevocationListPEM(
+            self._crl.public_bytes(pyca_primitives.serialization.Encoding.PEM)
+        )
+
+    @property
+    def crl_number(self) -> int:
+        return self._crl.extensions.get_extension_for_class(pyca_x509.CRLNumber).value.crl_number
+
+    @property
+    def revoked_certificates(self) -> Sequence[RevokedCertificate]:
+        return [
+            RevokedCertificate(entry.serial_number, entry.revocation_date_utc)
+            for entry in self._crl
+        ]
+
+    def is_revoked(self, serial_number: int) -> bool:
+        return self._crl.get_revoked_certificate_by_serial_number(serial_number) is not None
+
+    def revoke(
+        self, serial_number: int, issuer: CertificateWithPrivateKey
+    ) -> CertificateRevocationList:
+        """Return a newly signed list that also lists the serial number, unless it already does."""
+        if self.is_revoked(serial_number):
+            return self
+
+        return self.create(
+            issuer=issuer,
+            revoked_certificates=[
+                *self.revoked_certificates,
+                RevokedCertificate(serial_number, datetime.now(tz=UTC)),
+            ],
+            crl_number=self.crl_number + 1,
+        )

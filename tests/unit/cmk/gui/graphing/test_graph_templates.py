@@ -8,14 +8,12 @@ from dataclasses import dataclass, field
 
 import pytest
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title
 from cmk.graphing_engine import (
-    ConsolidationFunction,
     FetchedData,
     HostName,
     MetricName,
@@ -32,13 +30,16 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.graphing import (
     build_template_graphs,
-    CommonGraphOptions,
     FetchDiagnostics,
+    parse_graph_specification,
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._built_graphs import BuiltGraph
-from cmk.gui.graphing._graph_templates import _EvaluateTemplateGraphs
-from cmk.gui.graphing._performance_data import RawPerformanceValue
+from cmk.gui.graphing._graph_templates import (
+    _EvaluateTemplateGraphs,
+    MKGraphMixedUnitsError,
+    StoredTemplateGraphSpecification,
+)
 
 _SERVICE = Service(
     host_name=HostName("h"), service_name=ServiceName("svc"), site_id=SiteID("mysite")
@@ -58,8 +59,8 @@ class _FakeRRDFetchMetricNames:
 
 @dataclass
 class _FakeRRDFetchData:
-    values: Mapping[str, RawPerformanceValue] = field(
-        default_factory=lambda: {_METRIC: RawPerformanceValue(value=1.0)}
+    values: Mapping[str, PerformanceData] = field(
+        default_factory=lambda: {_METRIC: PerformanceData(value=1.0)}
     )
     requested_ranges: list[TimeRange] = field(default_factory=list)
     diagnostics: FetchDiagnostics = field(default_factory=FetchDiagnostics)
@@ -68,7 +69,6 @@ class _FakeRRDFetchData:
         self,
         metrics: Sequence[MetricProtocol],
         *,
-        consolidation_function: ConsolidationFunction,  # noqa: ARG002
         time_range: TimeRange,
     ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
         self.requested_ranges.append(time_range)
@@ -117,10 +117,7 @@ def test_template_lifecycle_discover_and_update() -> None:
     assert fetch_data.requested_ranges == []
 
     evaluate = _EvaluateTemplateGraphs(
-        CommonGraphOptions(
-            consolidation_function=ConsolidationFunction.MAX,
-            time_range=_DISCOVERY_RANGE,
-        ),
+        _DISCOVERY_RANGE,
         fetch_data,
     )
     evaluated = [one for graph in graphs for one in evaluate(graph).graphs]
@@ -225,7 +222,7 @@ def test_template_graphs_filter_by_graph_id() -> None:
 def test_template_lifecycle_rejects_mixed_units() -> None:
     # A template graph has a single value axis, so a plugin drawing curves of different units cannot
     # share it — discovery rejects it (legacy parity).
-    with pytest.raises(MKGeneralException, match="different units"):
+    with pytest.raises(MKGraphMixedUnitsError, match="different units"):
         build_template_graphs(
             _SPEC,
             registered_graphs=[
@@ -307,3 +304,43 @@ def test_template_graphs_cannot_be_built_from_a_service_resolved_on_two_sites() 
     # this is the crash a service view hits.
     with pytest.raises(ValueError, match="too many values to unpack"):
         _build_template_graphs(["site_a", "site_b"])
+
+
+def test_a_stored_specification_parses_without_a_site() -> None:
+    specification = parse_graph_specification(
+        {"graph_type": "template", "host_name": "h", "service_description": "svc"}
+    )
+
+    assert specification == TemplateGraphSpecification(
+        host_name=HostAddress("h"), service_description="svc"
+    )
+
+
+_FULL_SPECIFICATION = TemplateGraphSpecification(
+    site=SiteId("mysite"),
+    host_name=HostAddress("h"),
+    service_description="svc",
+    graph_id="cpu_load",
+    destination="view",
+)
+
+
+def test_a_stored_specification_identifies_the_graph_without_its_site() -> None:
+    assert _FULL_SPECIFICATION.for_storage() == StoredTemplateGraphSpecification(
+        id=None,
+        host_name=HostAddress("h"),
+        service_description="svc",
+        graph_id="cpu_load",
+        destination="view",
+    )
+
+
+def test_a_new_field_has_to_decide_whether_it_is_stored() -> None:
+    assert set(TemplateGraphSpecification.model_fields) == {
+        "id",
+        "site",
+        "host_name",
+        "service_description",
+        "graph_id",
+        "destination",
+    }

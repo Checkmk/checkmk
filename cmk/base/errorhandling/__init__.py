@@ -9,4 +9,6 @@ from ._crash import create_check_crash_dump as create_check_crash_dump
 from ._crash import create_section_crash_dump as create_section_crash_dump
 from ._crash import SectionCrashReport as SectionCrashReport
 from ._crash import SectionDetails as SectionDetails
+from ._fetched import RecordingFetcher as RecordingFetcher
+from ._fetched import serialize_fetched as serialize_fetched
 from ._handler import CheckResultErrorHandler as CheckResultErrorHandler

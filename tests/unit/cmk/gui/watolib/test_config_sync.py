@@ -26,7 +26,7 @@ from cmk.gui.watolib.automations import (
 )
 from cmk.livestatus_client import SiteConfiguration
 from cmk.utils.automation_config import RemoteAutomationConfig
-from tests.testlib.unit.gui.config_sync_test_helper import (
+from tests.unit.cmk.gui.helpers.config_sync_test_helper import (
     create_sync_snapshot,
     get_activation_manager,
 )
@@ -93,7 +93,6 @@ def _get_expected_paths(user_id: UserId) -> list[str]:
         "etc/check_mk/multisite.d/wato/global.mk",
         "etc/check_mk/multisite.d/wato/site_certificate",
         "etc/check_mk/product_usage_analytics.mk",
-        "etc/check_mk/release_flag.json",
         "var/check_mk",
         "var/check_mk/web",
         "etc/htpasswd",
@@ -120,6 +119,9 @@ def _get_expected_paths(user_id: UserId) -> list[str]:
         "etc/check_mk/diskspace.d",
         "etc/check_mk/diskspace.d/wato",
         "etc/check_mk/diskspace.d/wato/sitespecific.mk",
+        "etc/check_mk/maps.d",
+        "etc/check_mk/maps.d/wato",
+        "etc/check_mk/maps.d/wato/sitespecific.mk",
         "etc/check_mk/mkeventd.d/wato/sitespecific.mk",
         "etc/check_mk/multisite.d/wato/ca-certificates_sitespecific.mk",
         "etc/check_mk/multisite.d/wato/site_certificate/sitespecific.mk",

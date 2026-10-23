@@ -75,16 +75,17 @@ from cmk.gui.quick_setup.html import (
 from cmk.gui.search.matchers import (
     ABCMatchItemGenerator,
     MatchItem,
+    MatchItemConfig,
     MatchItemGeneratorRegistry,
     MatchItems,
 )
 from cmk.gui.table import Foldable, show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult, RenderMode
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Checkbox,
@@ -121,11 +122,9 @@ from cmk.gui.watolib.host_label_sync import execute_host_label_sync
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
-    folder_preserving_link,
-    folder_tree,
     FolderTree,
     Host,
-    make_action_link,
+    make_folder_tree,
     strip_hostname_whitespace_chars,
 )
 from cmk.gui.watolib.main_menu import main_module_registry
@@ -203,13 +202,14 @@ from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.servicename import Item, ServiceName
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 from cmk.web.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import HTTPVariable, makeuri, makeuri_contextless
+from cmk.web.utils.urls import HTTPVariable, makeactionuri_contextless, makeuri, makeuri_contextless
 
 from ._rule_conditions import DictHostTagCondition
 
@@ -293,6 +293,11 @@ class ABCRulesetMode(WatoMode):
 
     @override
     def _from_vars(self) -> None:
+        self._tree = make_folder_tree(self._ctx.config)
+        self._folder = folder_from_request(
+            self._tree, request.var("folder"), request.get_ascii_input("host")
+        )
+
         #  Explicitly hide deprecated rulesets by default
         if not request.has_var("search_p_ruleset_deprecated"):
             request.set_var("search_p_ruleset_deprecated", DropdownChoice.option_id(False))
@@ -362,10 +367,10 @@ class ABCRulesetMode(WatoMode):
                         )
                     }
                 ),
-                folder_tree(),
+                self._tree,
             )
         else:
-            rulesets = AllRulesets(visible_rulesets(self._rulesets().get_rulesets()), folder_tree())
+            rulesets = AllRulesets(visible_rulesets(self._rulesets().get_rulesets()), self._tree)
 
         if self._page_type is PageType.RuleSearch and not html.form_submitted():
             return  # Do not show the result list when no query has been made
@@ -460,7 +465,7 @@ class ModeRuleSearch(ABCRulesetMode):
 
     @override
     def _rulesets(self) -> RulesetCollection:
-        all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        all_rulesets = AllRulesets.load_all_rulesets(self._tree)
         if self._group_name == "static":
             return RulesetCollection(
                 {
@@ -532,6 +537,7 @@ class ModeRuleSearch(ABCRulesetMode):
                             title=_("Predefined searches"),
                             entries=list(
                                 _page_menu_entries_predefined_searches(
+                                    self._folder,
                                     self._group_name,
                                     self._page_type,
                                 )
@@ -628,7 +634,7 @@ def _is_var_to_delete(form_prefix: str, varname: str, value: str) -> bool:
 
 
 def _page_menu_entries_predefined_searches(
-    group: str | None, page_type: PageType
+    folder: Folder, group: str | None, page_type: PageType
 ) -> Iterable[PageMenuEntry]:
     for search_title, search_emblem, search_term, search_type in [
         ("Used rulesets", "enable", "ruleset_used", PageType.UsedRulesets),
@@ -661,7 +667,7 @@ def _page_menu_entries_predefined_searches(
                 emblem=search_emblem,
             ),
             is_shortcut=search_type != page_type,
-            item=make_simple_link(folder_preserving_link(request, uri_params)),
+            item=make_simple_link(folder.url(uri_params)),
         )
 
     yield PageMenuEntry(
@@ -732,7 +738,7 @@ class ModeRulesetGroup(ABCRulesetMode):
 
     @override
     def _rulesets(self) -> RulesetCollection:
-        all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        all_rulesets = AllRulesets.load_all_rulesets(self._tree)
         if self._group_name == "static":
             return RulesetCollection(
                 {
@@ -776,13 +782,10 @@ class ModeRulesetGroup(ABCRulesetMode):
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         if user.may("wato.hosts") or user.may("wato.seeall"):
-            current_folder = folder_from_request(
-                folder_tree(), request.var("folder"), request.get_ascii_input("host")
-            )
             yield PageMenuEntry(
-                title=_("Hosts in folder: %(folder)s") % {"folder": current_folder.title()},
+                title=_("Hosts in folder: %(folder)s") % {"folder": self._folder.title()},
                 icon_name=StaticIcon(IconNames.folder),
-                item=make_simple_link(current_folder.url(request)),
+                item=make_simple_link(self._folder.url()),
             )
 
             if request.get_ascii_input("host"):
@@ -791,9 +794,7 @@ class ModeRulesetGroup(ABCRulesetMode):
                     title=_("Host properties of: %(host_name)s") % {"host_name": host_name},
                     icon_name=StaticIcon(IconNames.folder),
                     item=make_simple_link(
-                        folder_preserving_link(
-                            request, [("mode", "edit_host"), ("host", host_name)]
-                        )
+                        self._folder.url([("mode", "edit_host"), ("host", host_name)])
                     ),
                 )
 
@@ -805,7 +806,9 @@ class ModeRulesetGroup(ABCRulesetMode):
             self._page_type,
         )
 
-        yield from _page_menu_entries_predefined_searches(self._group_name, self._page_type)
+        yield from _page_menu_entries_predefined_searches(
+            self._folder, self._group_name, self._page_type
+        )
 
 
 def _page_menu_entry_predefined_conditions() -> PageMenuEntry:
@@ -813,11 +816,12 @@ def _page_menu_entry_predefined_conditions() -> PageMenuEntry:
         title=_("Predefined conditions"),
         icon_name=StaticIcon(IconNames.predefined_conditions),
         item=make_simple_link(
-            folder_preserving_link(
+            makeuri_contextless(
                 request,
                 [
                     ("mode", "predefined_conditions"),
                 ],
+                filename="wato.py",
             )
         ),
     )
@@ -889,7 +893,7 @@ class RuleMatchResult(NamedTuple):
 
 
 class ModeEditRuleset(WatoMode):
-    related_page_menu_hooks: list[Callable[[str], Iterator[PageMenuEntry]]] = []
+    related_page_menu_hooks: list[Callable[[Folder, str], Iterator[PageMenuEntry]]] = []
 
     @classmethod
     @override
@@ -942,9 +946,9 @@ class ModeEditRuleset(WatoMode):
 
     @override
     def _from_vars(self) -> None:
-        tree = folder_tree()
+        self._tree = make_folder_tree(self._ctx.config)
         self._folder = folder_from_request(
-            tree, request.var("folder"), request.get_ascii_input("host")
+            self._tree, request.var("folder"), request.get_ascii_input("host")
         )
 
         self._name = request.get_ascii_input_mandatory("varname")
@@ -1025,7 +1029,7 @@ class ModeEditRuleset(WatoMode):
                 "service", _('Unable to analyze matching, because "service" parameter is missing')
             )
 
-        self._just_edited_rule_from_vars(tree)
+        self._just_edited_rule_from_vars(self._tree)
 
     # After actions like editing or moving a rule there is a rule that the user has been
     # working before. Focus this rule row again to make multiple actions with a single
@@ -1118,9 +1122,7 @@ class ModeEditRuleset(WatoMode):
                 title=_("Services"),
                 icon_name=StaticIcon(IconNames.services),
                 item=make_simple_link(
-                    folder_preserving_link(
-                        request, [("mode", "inventory"), ("host", self._hostname)]
-                    )
+                    self._folder.url([("mode", "inventory"), ("host", self._hostname)])
                 ),
             )
 
@@ -1129,8 +1131,7 @@ class ModeEditRuleset(WatoMode):
                     title=_("Parameters"),
                     icon_name=StaticIcon(IconNames.rulesets),
                     item=make_simple_link(
-                        folder_preserving_link(
-                            request,
+                        self._folder.url(
                             [
                                 ("mode", "object_parameters"),
                                 ("host", self._hostname),
@@ -1141,15 +1142,14 @@ class ModeEditRuleset(WatoMode):
                 )
 
         for related_hook in ModeEditRuleset.related_page_menu_hooks:
-            yield from related_hook(self._name)
+            yield from related_hook(self._folder, self._name)
 
         if self._name == "logwatch_rules":
             yield PageMenuEntry(
                 title=_("Pattern analyzer"),
                 icon_name=StaticIcon(IconNames.logwatch),
                 item=make_simple_link(
-                    folder_preserving_link(
-                        request,
+                    self._folder.url(
                         [
                             ("mode", "pattern_editor"),
                             ("host", self._hostname),
@@ -1216,7 +1216,7 @@ class ModeEditRuleset(WatoMode):
 
         folder = mandatory_parameter("folder", request.var("folder"))
 
-        rule_folder = folder_tree().folder(request.get_str_input_mandatory("_folder", folder))
+        rule_folder = self._tree.folder(request.get_str_input_mandatory("_folder", folder))
         rule_folder.permissions.need_permission("write", user)
         rulesets = FolderRulesets.load_folder_rulesets(rule_folder)
         ruleset = rulesets.get(self._name)
@@ -1266,7 +1266,7 @@ class ModeEditRuleset(WatoMode):
             html.div(display_varname, class_="varname")
 
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(
-            folder_tree(), self._name
+            self._tree, self._name
         ).get(self._name)
 
         if self._rulespec.deprecation_planned:
@@ -1274,7 +1274,7 @@ class ModeEditRuleset(WatoMode):
 
         html.help(ruleset.help())
         self._explain_match_type(ruleset.match_type())
-        self._rule_listing(ruleset, folder_tree(), site_configs=config.sites, debug=config.debug)
+        self._rule_listing(ruleset, self._tree, site_configs=config.sites, debug=config.debug)
         self._create_form()
 
     def _explain_match_type(self, match_type: MatchType) -> None:
@@ -1446,17 +1446,13 @@ class ModeEditRuleset(WatoMode):
         ]
 
         table.cell(_("Actions"), css=["buttons rulebuttons"])
-        edit_url = folder_preserving_link(request, [("mode", "edit_rule"), *folder_preserving_vars])
+        edit_url = self._folder.url([("mode", "edit_rule"), *folder_preserving_vars])
         html.icon_button(edit_url, _("Edit this rule"), StaticIcon(IconNames.edit))
 
-        clone_url = folder_preserving_link(
-            request, [("mode", "clone_rule"), *folder_preserving_vars]
-        )
+        clone_url = self._folder.url([("mode", "clone_rule"), *folder_preserving_vars])
         html.icon_button(clone_url, _("Create a copy of this rule"), StaticIcon(IconNames.clone))
 
-        export_url = folder_preserving_link(
-            request, [("mode", "export_rule"), *folder_preserving_vars]
-        )
+        export_url = self._folder.url([("mode", "export_rule"), *folder_preserving_vars])
         html.icon_button(
             export_url, _("Export this rule for API"), StaticIcon(IconNames.export_rule)
         )
@@ -1660,7 +1656,12 @@ class ModeEditRuleset(WatoMode):
         if self._service:
             vars_.append(("service", mk_repr(self._service).decode()))
 
-        return make_action_link(request, vars_)
+        return makeactionuri_contextless(
+            request,
+            transactions.get(),
+            [("folder", self._folder.path()), *vars_],
+            filename="wato.py",
+        )
 
     # TODO: Refactor this whole method
     def _rule_cells(
@@ -1674,7 +1675,7 @@ class ModeEditRuleset(WatoMode):
 
         # Conditions
         table.cell(_("Conditions"), css=["condition"])
-        self._rule_conditions(rule, folder_choices=lambda: tree.folder_choices(user))
+        self._rule_conditions(rule, tree)
 
         # Value
         table.cell(_("Value"), css=["value"])
@@ -1734,12 +1735,12 @@ class ModeEditRuleset(WatoMode):
 
         quick_setup_source_cell(table, rule.locked_by)
 
-    def _rule_conditions(self, rule: Rule, folder_choices: DropdownChoices) -> None:
+    def _rule_conditions(self, rule: Rule, tree: FolderTree) -> None:
         self._predefined_condition_info(rule)
         html.write_text_permissive(
-            VSExplicitConditions(
-                rulespec=self._rulespec, folder_choices=folder_choices, render="normal"
-            ).value_to_html(rule.get_rule_conditions())
+            VSExplicitConditions(rulespec=self._rulespec, tree=tree, render="normal").value_to_html(
+                rule.get_rule_conditions()
+            )
         )
 
     def _predefined_condition_info(self, rule: Rule) -> None:
@@ -1755,12 +1756,13 @@ class ModeEditRuleset(WatoMode):
             )
             return
 
-        url = folder_preserving_link(
+        url = makeuri_contextless(
             request,
             [
                 ("mode", "edit_predefined_condition"),
                 ("ident", condition_id),
             ],
+            filename="wato.py",
         )
         html.write_text_permissive(
             _('Predefined condition: <a href="%(url)s">%(title)s</a>')
@@ -1835,20 +1837,22 @@ class ModeRuleSearchForm(WatoMode):
         with html.form_context("rule_search", method="POST"):
             html.hidden_field("mode", self.back_mode, add_var=True)
 
-            valuespec = self._valuespec(folder_tree())
+            valuespec = self._valuespec(self._tree)
             valuespec.render_input_as_form("search", self.search_options)
 
             html.hidden_fields()
 
     @override
     def _from_vars(self) -> None:
+        self._tree = make_folder_tree(self._ctx.config)
+
         if request.var("_reset_search"):
             request.del_vars("search_")
             self.search_options: SearchOptions = {}
             return
 
         forms.remove_unused_vars("search_p_rule", _is_var_to_delete)
-        value = (vs := self._valuespec(folder_tree())).from_html_vars("search")
+        value = (vs := self._valuespec(self._tree)).from_html_vars("search")
         vs.validate_value(value, "search")
 
         # In case all checkboxes are unchecked, treat this like the reset search button press
@@ -2101,7 +2105,7 @@ def _get_render_mode(rulespec: Rulespec) -> tuple[RenderMode, FormSpec | None]:
         return RenderMode.BACKEND, None
 
     # BACKEND RENDERING of legacy valuespec
-    if not rulespec.has_form_spec and rulespec.has_valuespec:
+    if not rulespec.has_form_spec:
         return RenderMode.BACKEND, None
 
     # FRONTEND rendering of form_spec
@@ -2181,7 +2185,7 @@ class ABCEditRuleMode(WatoMode):
                     ),
                     conditions_catalog=create_rule_conditions_catalog(
                         locked_conditions=self._locked_conditions,
-                        tree=folder_tree(),
+                        tree=self._tree,
                         rule_spec_name=self._rulespec.name,
                         rule_spec_item=(
                             RuleSpecItem(self._rulespec.item_name, self._rulespec.item_enum or [])
@@ -2203,7 +2207,7 @@ class ABCEditRuleMode(WatoMode):
                         locked_conditions=self._locked_conditions,
                         title=title,
                         value_parameter_form=registered_form_spec,
-                        tree=folder_tree(),
+                        tree=self._tree,
                         rule_spec_name=self._rulespec.name,
                         rule_spec_item=(
                             RuleSpecItem(self._rulespec.item_name, self._rulespec.item_enum or [])
@@ -2235,6 +2239,7 @@ class ABCEditRuleMode(WatoMode):
 
     @override
     def _from_vars(self) -> None:
+        self._tree = make_folder_tree(self._ctx.config)
         self._name = request.get_ascii_input_mandatory(self.VAR_RULE_SPEC_NAME)
 
         try:
@@ -2246,8 +2251,12 @@ class ABCEditRuleMode(WatoMode):
             )
 
         self._back_mode = request.get_ascii_input_mandatory("back_mode", "edit_ruleset")
+        # The folder the rule editor was opened from, not the folder of the rule
+        self._back_folder = folder_from_request(
+            self._tree, request.var("folder"), request.get_ascii_input("host")
+        )
 
-        self._set_folder(folder_tree())
+        self._set_folder(self._tree)
 
         self._rulesets = FolderRulesets.load_folder_rulesets(self._folder)
         self._ruleset = self._rulesets.get(self._name)
@@ -2268,9 +2277,7 @@ class ABCEditRuleMode(WatoMode):
         else:
             rule_id = request.get_ascii_input_mandatory(self.VAR_RULE_ID)
 
-            collection = SingleRulesetRecursively.load_single_ruleset_recursively(
-                folder_tree(), self._name
-            )
+            collection = SingleRulesetRecursively.load_single_ruleset_recursively(tree, self._name)
             ruleset = collection.get(self._name)
             try:
                 self._folder = ruleset.get_rule_by_id(rule_id).folder
@@ -2366,10 +2373,9 @@ class ABCEditRuleMode(WatoMode):
                 var_list.append(("item", request.get_str_input_mandatory("item")))
             if request.has_var("service"):
                 var_list.append(("service", request.get_str_input_mandatory("service")))
-            return folder_preserving_link(request, var_list)
+            return self._back_folder.url(var_list)
 
-        return folder_preserving_link(
-            request,
+        return self._back_folder.url(
             [("mode", self._back_mode), ("host", request.get_ascii_input_mandatory("host", ""))],
         )
 
@@ -2412,7 +2418,7 @@ class ABCEditRuleMode(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return redirect(self._back_url())
@@ -2441,7 +2447,7 @@ class ABCEditRuleMode(WatoMode):
         self._rule.update_conditions(rule_values.conditions)
 
         # Check permissions on folders
-        new_rule_folder = folder_tree().folder(rule_values.conditions.host_folder)
+        new_rule_folder = self._tree.folder(rule_values.conditions.host_folder)
         self._check_folder_permissions()
         new_rule_folder.permissions.need_permission("write", user)
 
@@ -2711,13 +2717,14 @@ class VSExplicitConditions(Transform):
     def __init__(
         self,
         rulespec: Rulespec,
-        folder_choices: DropdownChoices,
+        tree: FolderTree,
         render: Literal["normal", "form_part"],
     ) -> None:
         self._rulespec = rulespec
+        self._tree = tree
         super().__init__(
             valuespec=Dictionary(
-                elements=self._condition_elements(folder_choices),
+                elements=self._condition_elements(lambda: tree.folder_choices(user)),
                 headers=[
                     (_("Folder"), "condition explicit", ["folder_path"]),
                     (_("Host tags"), "condition explicit", ["host_tags"]),
@@ -3027,7 +3034,7 @@ class VSExplicitConditions(Transform):
     def value_to_html(self, value: RuleConditions) -> ValueSpecText:
         with output_funnel.plugged():
             html.open_ul(class_="conditions")
-            renderer = RuleConditionRenderer()
+            renderer = RuleConditionRenderer(self._tree)
             conditions = list(renderer.render(self._rulespec, value))
             if conditions:
                 for condition in conditions:
@@ -3039,6 +3046,9 @@ class VSExplicitConditions(Transform):
 
 
 class RuleConditionRenderer:
+    def __init__(self, tree: FolderTree) -> None:
+        self._tree = tree
+
     def render(
         self,
         rulespec: Rulespec,
@@ -3188,7 +3198,7 @@ class RuleConditionRenderer:
         )
 
         text_list: list[HTML] = []
-        tree = folder_tree()
+        tree = self._tree
         if regex_count == len(host_name_conditions) or regex_count == 0:
             # Entries are either complete regex or no regex at all
             if is_negate:
@@ -3660,7 +3670,9 @@ def _get_rule_render_mode() -> RenderMode:
 
 class MatchItemGeneratorUnknownRuleSets(ABCMatchItemGenerator):
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, _config: MatchItemConfig
+    ) -> MatchItems:
         yield MatchItem(
             title=_("Unknown rule sets"),
             topic=_("Setup"),
@@ -3684,6 +3696,10 @@ class MatchItemGeneratorUnknownRuleSets(ABCMatchItemGenerator):
 
 
 class ModeUnknownRulesets(WatoMode):
+    @override
+    def _from_vars(self) -> None:
+        self._tree = make_folder_tree(self._ctx.config)
+
     @classmethod
     @override
     def name(cls) -> str:
@@ -3742,12 +3758,13 @@ class ModeUnknownRulesets(WatoMode):
                                     title=_("Service monitoring rules"),
                                     icon_name=StaticIcon(IconNames.rulesets),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
                                             [
                                                 ("group", "monconf"),
                                                 ("mode", "rulesets"),
                                             ],
+                                            filename="wato.py",
                                         )
                                     ),
                                 )
@@ -3759,12 +3776,12 @@ class ModeUnknownRulesets(WatoMode):
         )
 
     def _unknown_rulesets(
-        self, *, debug: bool
+        self, tree: FolderTree, *, debug: bool
     ) -> tuple[
         Sequence[Ruleset],
         Mapping[RulesetName, Sequence[tuple[FolderPath, RuleSpec[object]]]],
     ]:
-        all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        all_rulesets = AllRulesets.load_all_rulesets(tree)
         rulesets = all_rulesets.get_rulesets()
 
         found_rule_sets: dict[RulesetName, Ruleset] = {}
@@ -3805,13 +3822,15 @@ class ModeUnknownRulesets(WatoMode):
         html.icon_button(
             make_confirm_delete_link(
                 i18n=_,
-                url=make_action_link(
+                url=makeactionuri_contextless(
                     request,
+                    transactions.get(),
                     [
                         ("mode", "unknown_rulesets"),
                         ("_delete_cp_ruleset_name", unknown_ruleset_name),
                         ("_delete_cp_rule_id", rule.id),
                     ],
+                    filename="wato.py",
                 ),
                 title=_("Delete unknown rule"),
                 message=_("#%(rule_nr)s of unknown rule set %(unknown_ruleset_name)r")
@@ -3862,13 +3881,15 @@ class ModeUnknownRulesets(WatoMode):
         html.icon_button(
             make_confirm_delete_link(
                 i18n=_,
-                url=make_action_link(
+                url=makeactionuri_contextless(
                     request,
+                    transactions.get(),
                     [
                         ("mode", "unknown_rulesets"),
                         ("_delete_ruleset_name", unknown_ruleset_name),
                         ("_delete_rule_id", rulespec["id"]),
                     ],
+                    filename="wato.py",
                 ),
                 title=_("Delete unknown rule"),
                 message=_("#%(rule_nr)s of unknown rule set %(unknown_ruleset_name)r")
@@ -3893,7 +3914,7 @@ class ModeUnknownRulesets(WatoMode):
     @override
     def page(self, config: Config) -> None:
         unknown_check_parameter_rulesets, unknown_rulesets = self._unknown_rulesets(
-            debug=config.debug
+            self._tree, debug=config.debug
         )
         with html.form_context("bulk_delete_selected_unknown_rulesets", method="POST"):
             html.hidden_field("mode", "unknown_rulesets", add_var=True)
@@ -3938,6 +3959,7 @@ class ModeUnknownRulesets(WatoMode):
 
     def _bulk_delete_selected_rules(
         self,
+        tree: FolderTree,
         selected_cp_rule_ids: Sequence[str],
         selected_rule_ids: Sequence[str],
         *,
@@ -3945,7 +3967,7 @@ class ModeUnknownRulesets(WatoMode):
         debug: bool,
         pending_changes: PendingChanges,
     ) -> ActionResult:
-        rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        rulesets = AllRulesets.load_all_rulesets(tree)
         do_reset = False
 
         by_folder: dict[Folder, list[tuple[Ruleset, Rule]]] = {}
@@ -3978,13 +4000,14 @@ class ModeUnknownRulesets(WatoMode):
 
     def _delete_selected_cp_rule(
         self,
+        tree: FolderTree,
         selected_ruleset_name: str,
         selected_rule_id: str,
         pprint_value: bool,
         debug: bool,
         pending_changes: PendingChanges,
     ) -> ActionResult:
-        rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        rulesets = AllRulesets.load_all_rulesets(tree)
         if not (ruleset := rulesets.get_rulesets().get(selected_ruleset_name)):
             return None
 
@@ -4004,13 +4027,14 @@ class ModeUnknownRulesets(WatoMode):
 
     def _delete_selected_rule(
         self,
+        tree: FolderTree,
         selected_ruleset_name: str,  # noqa: ARG002
         selected_rule_id: str,
         *,
         pprint_value: bool,
         debug: bool,
     ) -> ActionResult:
-        rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        rulesets = AllRulesets.load_all_rulesets(tree)
         for folder_path, rulespecs_by_name in rulesets.get_unknown_rulesets().items():
             for ruleset_name, rulespecs in rulespecs_by_name.items():
                 for rulespec in rulespecs:
@@ -4024,7 +4048,7 @@ class ModeUnknownRulesets(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         d_cp_rule_ids = [
             vn.split("_c_unknown_cp_rule_")[-1]
@@ -4037,6 +4061,7 @@ class ModeUnknownRulesets(WatoMode):
         pending_changes = _pending_changes(config, omd_site(), user.id)
         if request.var("_bulk_delete_selected_unknown_rulesets") and (d_cp_rule_ids or d_rule_ids):
             return self._bulk_delete_selected_rules(
+                self._tree,
                 d_cp_rule_ids,
                 d_rule_ids,
                 pprint_value=config.wato_pprint_config,
@@ -4048,6 +4073,7 @@ class ModeUnknownRulesets(WatoMode):
             d_rule_id := request.var("_delete_cp_rule_id")
         ):
             return self._delete_selected_cp_rule(
+                self._tree,
                 d_ruleset_name,
                 d_rule_id,
                 pprint_value=config.wato_pprint_config,
@@ -4059,6 +4085,7 @@ class ModeUnknownRulesets(WatoMode):
             d_rule_id := request.var("_delete_rule_id")
         ):
             return self._delete_selected_rule(
+                self._tree,
                 d_ruleset_name,
                 d_rule_id,
                 pprint_value=config.wato_pprint_config,

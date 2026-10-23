@@ -40,6 +40,12 @@ function boundFrom(node: ColumnFilterNode<F> | undefined, op: 'gte' | 'lte'): Zo
     if (condition.type === 'condition' && 'op' in condition && condition.op === op) {
       return toInstant(condition.value as number)
     }
+    if (
+      condition.type === 'age' &&
+      condition.op === (op === 'gte' ? 'younger_than' : 'older_than')
+    ) {
+      return toInstant(Math.floor(Date.now() / 1000) - condition.seconds)
+    }
   }
   return null
 }
@@ -60,30 +66,27 @@ function isOrdered(): boolean {
   return from.value === null || to.value === null || from.value.compare(to.value) <= 0
 }
 
-watch(
-  [from, to],
-  () => {
-    emit('update:valid', isOrdered())
-    if (!isOrdered()) {
-      return
-    }
-    const conditions: ColumnFilterNode<F>[] = []
-    if (from.value !== null) {
-      conditions.push(condition('gte', from.value))
-    }
-    if (to.value !== null) {
-      conditions.push(condition('lte', to.value))
-    }
-    if (conditions.length === 0) {
-      model.value = undefined
-    } else if (conditions.length === 1) {
-      model.value = conditions[0]
-    } else {
-      model.value = { type: 'and', children: conditions } as ColumnFilterNode<F>
-    }
-  },
-  { immediate: true }
-)
+watch([from, to], () => emit('update:valid', isOrdered()), { immediate: true })
+
+watch([from, to], () => {
+  if (!isOrdered()) {
+    return
+  }
+  const conditions: ColumnFilterNode<F>[] = []
+  if (from.value !== null) {
+    conditions.push(condition('gte', from.value))
+  }
+  if (to.value !== null) {
+    conditions.push(condition('lte', to.value))
+  }
+  if (conditions.length === 0) {
+    model.value = undefined
+  } else if (conditions.length === 1) {
+    model.value = conditions[0]
+  } else {
+    model.value = { type: 'and', children: conditions } as ColumnFilterNode<F>
+  }
+})
 </script>
 
 <template>

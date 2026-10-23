@@ -8,14 +8,13 @@ from typing import NewType
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.viprinet.lib import DETECT_VIPRINET
 
 Serial = NewType("Serial", str)
@@ -27,10 +26,6 @@ def parse_viprinet_serial(string_table: StringTable) -> Serial | None:
             return Serial(value)
         case _:
             return None
-
-
-def discover_viprinet_serial(section: Serial) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_viprinet_serial(section: Serial) -> CheckResult:
@@ -51,6 +46,6 @@ snmp_section_viprinet_serial = SimpleSNMPSection(
 check_plugin_viprinet_serial = CheckPlugin(
     name="viprinet_serial",
     service_name="Serial Number",
-    discovery_function=discover_viprinet_serial,
+    discovery_function=discover_one_service,
     check_function=check_viprinet_serial,
 )

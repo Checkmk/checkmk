@@ -37,7 +37,6 @@ from cmk.gui.http import ContentDispositionType, Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
-from cmk.gui.permissions import permission_registry
 from cmk.gui.theme import make_theme
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
@@ -49,8 +48,12 @@ from cmk.gui.watolib.automations import (
     make_automation_config,
 )
 from cmk.gui.watolib.check_mk_automations import get_agent_output
-from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_tree, Host
-from cmk.gui.watolib.mode import mode_url
+from cmk.gui.watolib.hosts_and_folders import (
+    folder_from_request,
+    FolderTree,
+    Host,
+    make_folder_tree,
+)
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri, makeuri_contextless
@@ -95,6 +98,7 @@ class FetchAgentOutputRequest:
     @classmethod
     def deserialize(
         cls,
+        tree: FolderTree,
         serialized: Mapping[str, object],
         *,
         default_debug: bool,
@@ -102,7 +106,7 @@ class FetchAgentOutputRequest:
     ) -> FetchAgentOutputRequest:
         host_name = serialized["host_name"]
         assert isinstance(host_name, str)
-        host = folder_tree().host(HostName(host_name))
+        host = tree.host(HostName(host_name))
         if host is None:
             raise MKGeneralException(
                 _(
@@ -157,7 +161,7 @@ class AgentOutputPage(Page, abc.ABC):
 
         self._back_url = request.get_url_input("back_url", deflt="") or None
 
-        host = folder_from_request(folder_tree(), request.var("folder"), host_name).host(
+        host = folder_from_request(make_folder_tree(config), request.var("folder"), host_name).host(
             HostName(host_name)
         )
         if not host:
@@ -201,7 +205,7 @@ class PageFetchAgentOutput(AgentOutputPage):
             title=title,
             breadcrumb=self._breadcrumb(
                 title,
-                user_permissions := UserPermissions.from_config(ctx.config, permission_registry),
+                ctx.user_permissions,
             ),
             debug=ctx.config.debug,
             lang=user.language,
@@ -214,7 +218,7 @@ class PageFetchAgentOutput(AgentOutputPage):
             user_role_ids=user.role_ids,
         )
 
-        self._action(user_permissions)
+        self._action(ctx.user_permissions)
 
         automation_config = make_automation_config(ctx.config.sites[self._request.host.site_id()])
         if request.has_var("_start"):
@@ -313,6 +317,7 @@ class ABCAutomationFetchAgentOutput(AutomationCommand[FetchAgentOutputRequest]):
                 "request", _('The parameter "%(parameter)s" is missing.') % {"parameter": "request"}
             )
         return FetchAgentOutputRequest.deserialize(
+            make_folder_tree(config),
             ast.literal_eval(ascii_input),
             default_debug=config.debug,
             default_snmp_walk_download_timeout=int(config.snmp_walk_download_timeout),
@@ -433,6 +438,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
             self._host_name,
             self._agent_type,
             timeout=timeout,
+            cached=False,
             debug=debug,
         )
 
@@ -448,7 +454,11 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
                     result = _("Background job timed out after 3 minutes.")
                 else:
                     global_setting_name = "snmp_walk_download_timeout"
-                    url = mode_url("edit_configvar", varname=global_setting_name)
+                    url = makeuri_contextless(
+                        request,
+                        [("varname", global_setting_name)],
+                        filename="global_settings.py",
+                    )
                     result = (
                         _("Background job timed out due to the global setting ")
                         + f"'<a href=\"{url}\">{global_setting_name}</a>'. "

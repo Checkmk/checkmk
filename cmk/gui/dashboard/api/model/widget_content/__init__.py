@@ -13,6 +13,7 @@ from ._base import BaseWidgetContent
 from .graph import (
     CombinedGraphContent,
     CustomGraphContent,
+    EmbeddedCustomGraphContent,
     PerformanceGraphContent,
     ProblemGraphContent,
     SingleTimeseriesContent,
@@ -25,12 +26,7 @@ from .metric import (
     SingleMetricContent,
     TopListContent,
 )
-from .network_flow import (
-    NetworkFlowDonutContent,
-    NetworkFlowKpiStatCardContent,
-    NetworkFlowTopTableContent,
-    NetworkFlowTrendChartContent,
-)
+from .monitoring_table import MonitoringTableContent
 from .ntop import NtopAlertsContent, NtopFlowsContent, NtopTopTalkersContent
 from .overview import AlertOverviewContent, SiteOverviewContent
 from .sidebar import SidebarElementContent
@@ -76,6 +72,7 @@ type WidgetContent = Annotated[
     | CombinedGraphContent
     | SingleTimeseriesContent
     | CustomGraphContent
+    | EmbeddedCustomGraphContent
     | PerformanceGraphContent
     | BarplotContent
     | GaugeContent
@@ -89,6 +86,7 @@ type WidgetContent = Annotated[
     | InventoryContent
     | AlertOverviewContent
     | SiteOverviewContent
+    | MonitoringTableContent
     | HostStatsContent
     | ServiceStatsContent
     | EventStatsContent
@@ -100,10 +98,6 @@ type WidgetContent = Annotated[
     | NtopAlertsContent
     | NtopFlowsContent
     | NtopTopTalkersContent
-    | NetworkFlowTopTableContent
-    | NetworkFlowDonutContent
-    | NetworkFlowKpiStatCardContent
-    | NetworkFlowTrendChartContent
     | NotSupportedContent,
     Discriminator("type"),
 ]
@@ -116,6 +110,7 @@ _CONTENT_TYPES = (
     CombinedGraphContent,
     SingleTimeseriesContent,
     CustomGraphContent,
+    EmbeddedCustomGraphContent,
     PerformanceGraphContent,
     BarplotContent,
     GaugeContent,
@@ -129,6 +124,7 @@ _CONTENT_TYPES = (
     InventoryContent,
     AlertOverviewContent,
     SiteOverviewContent,
+    MonitoringTableContent,
     HostStatsContent,
     ServiceStatsContent,
     EventStatsContent,
@@ -140,11 +136,14 @@ _CONTENT_TYPES = (
     NtopAlertsContent,
     NtopFlowsContent,
     NtopTopTalkersContent,
-    NetworkFlowTopTableContent,
-    NetworkFlowDonutContent,
-    NetworkFlowKpiStatCardContent,
-    NetworkFlowTrendChartContent,
 )
+
+
+def content_type_from_internal_type(internal_type: str) -> type[BaseWidgetContent] | None:
+    for content_type in _CONTENT_TYPES:
+        if content_type.internal_type() == internal_type:
+            return content_type
+    return None
 
 
 def content_from_internal(config: DashletConfig) -> WidgetContent:

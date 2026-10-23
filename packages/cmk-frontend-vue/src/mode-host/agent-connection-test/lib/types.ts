@@ -1,0 +1,87 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+
+import type { AgentPackageType } from './agentAvailability'
+
+/** The baked agent package a download command fetches from the Agent Bakery. */
+export interface BakedPackage {
+  osType: AgentPackageType
+  /** Where the user bakes the agents when none is available yet. */
+  bakeryUrl: string
+}
+
+/** One command block: a caption, the command, and a warning shown above it. */
+export interface CommandBlock {
+  /** Omitted for a single unlabelled command. */
+  title?: TranslatedString
+  command: string
+  warning?: TranslatedString
+  /** Set when the command downloads a package that has to be baked first. */
+  bakedPackage?: BakedPackage
+}
+
+/** One selectable set of commands: a shell, or a package format. */
+export interface CommandChoice {
+  id: string
+  label: string
+  intro?: TranslatedString
+  blocks: CommandBlock[]
+}
+
+export interface DocLink {
+  title: TranslatedString
+  url: string
+  icon?: SimpleIcons
+}
+
+/**
+ * How a flavour is installed. The variant is decided once, when the flavour is
+ * built from the payload, so the step component does not have to guess it from
+ * a set of optional fields.
+ */
+export type InstallSpec =
+  | { kind: 'commands'; intro: TranslatedString; blocks: CommandBlock[] }
+  | { kind: 'shell-variants'; intro: TranslatedString; variants: CommandChoice[] }
+  | { kind: 'package-choice'; choices: CommandChoice[] }
+  | { kind: 'unbaked-fallback'; intro: TranslatedString; blocks: CommandBlock[] }
+  | { kind: 'external-doc'; msg: TranslatedString; link: DocLink }
+
+/** Content shown before the registration command, e.g. a config file. */
+export interface RegisterConfig {
+  code: { title?: TranslatedString; text: string }
+  doc?: DocLink
+}
+
+export interface RegisterSpec {
+  /** Replaces the generic trust-relationship explanation. */
+  intro?: TranslatedString
+  /** The sentence directly above the command. */
+  msg: TranslatedString
+  config?: RegisterConfig
+  commands:
+    | { kind: 'single'; block: CommandBlock }
+    | { kind: 'shell-variants'; variants: CommandChoice[] }
+  /** Which troubleshooting hint applies; absent means none. */
+  troubleshooting?: 'registration-user' | 'kubernetes-secret'
+}
+
+export type StatusSpec =
+  | { kind: 'single'; command: string }
+  | { kind: 'shell-variants'; variants: CommandChoice[] }
+
+/** One way of getting monitoring data out of a system. */
+export interface AgentFlavour {
+  id: string
+  title: TranslatedString
+  /** Absent means this flavour has no "Download and install" step. */
+  install?: InstallSpec | undefined
+  /** Absent means this flavour has no "Register agent" step. */
+  register?: RegisterSpec
+  /** Absent means no "Test connection" step, even in push mode. */
+  status?: StatusSpec
+}

@@ -40,12 +40,6 @@ prefix = "packages/mk-sql/"
 category = "rust"
 extensions = [".rs"]
 
-# cmk-shared-typing .ts files are consumed by cmk-frontend-vue
-[[categorization]]
-prefix = "packages/cmk-shared-typing/"
-category = "vue"
-extensions = [".ts"]
-
 # Catch-all: notification scripts (no per-file spec)
 [[categorization]]
 prefix = "notifications/"
@@ -188,6 +182,22 @@ services = ["dcd:restart", "apache:reload"]
 name = "deploy_svc_cmk_agent_receiver"
 package_target = "//packages/cmk-agent-receiver:wheel"
 services = ["agent-receiver:restart"]
+
+# The maps wheel carries both the standalone daemon (cmk.maps.backend, run by
+# etc/init.d/maps) and the apache-served GUI/REST code (cmk.maps.gui,
+# cmk.maps.rest_api -- loaded via cmk.gui.main_modules in every edition), so
+# both have to be told about a new wheel.  Explicit entries replace the
+# wheel-convention default, hence apache:reload is repeated here.
+[[service]]
+name = "deploy_svc_cmk_maps"
+package_target = "//packages/cmk-maps:wheel"
+services = ["maps:restart", "apache:reload"]
+
+# The schemas are wheel inputs but categorize as Vue.
+[[service]]
+name = "deploy_svc_cmk_shared_typing"
+package_target = "//packages/cmk-shared-typing:wheel"
+services = ["apache:reload", "automation-helper:restart", "cmc:restart"]
 
 [[service]]
 name = "deploy_svc_cmk_ec"

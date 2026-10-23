@@ -13,7 +13,7 @@ import UclMonitoringActionBar from './UclMonitoringActionBar.vue'
 import UclMonitoringPagination from './UclMonitoringPagination.vue'
 import UclRefreshCountdown from './UclRefreshCountdown.vue'
 import UclTableCellBreakpoints from './UclTableCellBreakpoints.vue'
-import UclTableColumnFilters from './UclTableColumnFilters.vue'
+import UclTableColumnFiltersAndSorting from './UclTableColumnFiltersAndSorting.vue'
 import UclActionsCell from './cell/UclActionsCell.vue'
 import UclBaseCell from './cell/UclBaseCell.vue'
 import UclCheckboxCell from './cell/UclCheckboxCell.vue'
@@ -57,6 +57,6 @@ export const pages: Array<Folder | Page> = [
   new Page('Editable table', UclEditableTable),
   new Page('Table cell breakpoints', UclTableCellBreakpoints),
   new Page('Table column pinning', UclColumnPinning),
-  new Page('Table column filters', UclTableColumnFilters),
+  new Page('Table column filters and sorting', UclTableColumnFiltersAndSorting),
   new Page('Column picker', UclColumnPicker)
 ]

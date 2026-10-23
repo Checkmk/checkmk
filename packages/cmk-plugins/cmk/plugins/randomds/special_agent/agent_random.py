@@ -16,7 +16,7 @@ import sys
 import time
 from collections.abc import Sequence
 
-from cmk.server_side_programs.v1_unstable import Storage
+from cmk.server_side_programs.v1 import Storage
 
 AGENT = "agent_random"
 

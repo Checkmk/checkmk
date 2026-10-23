@@ -7,6 +7,7 @@ import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
+import { vi } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
 const helpTextComp = `<CmkHelpText :help="'some help'" />`
@@ -109,6 +110,19 @@ test('Slidein focuses scroll container on open for keyboard scroll support', asy
   await screen.findByRole('dialog')
   const scrollContainer = screen.getByRole('region', { name: 'Some Title' })
   expect(document.activeElement).toBe(scrollContainer)
+})
+
+test('Slidein focuses without scrolling to the focus target', async () => {
+  const focus = vi.spyOn(window.HTMLElement.prototype, 'focus')
+  render(createCmkSlideInDialogComp(false))
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Open' }))
+
+  await screen.findByRole('dialog')
+  const scrollContainer = screen.getByRole('region', { name: 'Some Title' })
+  const index = focus.mock.contexts.indexOf(scrollContainer)
+  expect(focus.mock.calls[index]).toEqual([expect.objectContaining({ preventScroll: true })])
+  focus.mockRestore()
 })
 
 test('Multiple slide-ins opened sequentially: stacking is managed correctly', async () => {

@@ -13,17 +13,16 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     LevelsT,
     Metric,
     render,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.f5os_rseries.lib.detect import DETECT_F5OS_RSERIES
 
 
@@ -69,10 +68,6 @@ snmp_section_f5os_rseries_memory = SimpleSNMPSection(
 )
 
 
-def discover_f5os_rseries_memory(section: F5OSMemorySection) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 class _MemoryParams(TypedDict):
     levels: LevelsT[float]
 
@@ -108,7 +103,7 @@ check_plugin_f5os_rseries_memory = CheckPlugin(
     name="f5os_rseries_memory",
     sections=["f5os_rseries_memory"],
     service_name="F5OS Platform Memory",
-    discovery_function=discover_f5os_rseries_memory,
+    discovery_function=discover_one_service,
     check_function=check_f5os_rseries_memory,
     check_default_parameters={"levels": ("fixed", (80.0, 90.0))},
     check_ruleset_name="memory_percentage_used",

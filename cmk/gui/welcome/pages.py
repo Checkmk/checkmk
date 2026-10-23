@@ -207,7 +207,7 @@ def get_welcome_data() -> WelcomePage:
             aws_quick_setup=_make_url(
                 addvars=[
                     ("mode", "new_special_agent_configuration"),
-                    ("varname", "special_agents:aws"),
+                    ("varname", "special_agents:aws_v2"),
                 ],
                 filename="wato.py",
             ),

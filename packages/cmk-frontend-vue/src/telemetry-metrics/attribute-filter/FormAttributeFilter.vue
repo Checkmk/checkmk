@@ -8,6 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import type { QuerySuggestionsFn } from 'cmk-ui-library/components/CmkSuggestions/types'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { randomId } from 'cmk-ui-library/lib/randomId'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { computed, nextTick, ref, watch } from 'vue'
@@ -24,6 +25,15 @@ import type {
 } from './types'
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Attribute filter'), [
+  { combo: ['ArrowLeft'], description: _t('Move between items') },
+  { combo: ['ArrowRight'], description: _t('Move between items') },
+  { combo: ['Backspace'], description: _t('Remove group') },
+  { combo: ['Delete'], description: _t('Remove group') },
+  { combo: [' '], description: _t('Enter group') },
+  { combo: ['Enter'], description: _t('Enter group') },
+  { combo: ['Escape'], description: _t('Leave group') }
+])
 
 const vClickOutside = useClickOutside()
 

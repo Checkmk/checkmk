@@ -80,10 +80,10 @@ py_library(
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
         "//cmk/gui/bi",
-        "//cmk/gui/utils",
         "//cmk/gui/views",
         "//cmk/gui/views:components",
         "//cmk/gui/visuals",
         "//packages/cmk-ccc:user",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )

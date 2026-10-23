@@ -62,7 +62,7 @@ const autoCompleterValue = computed<string | null>({
             v-model="autoCompleterValue"
             :autocompleter="spec.autocompleter"
             :placeholder="untranslated(spec.input_hint ?? '')"
-            :label="spec.label || ''"
+            :label="spec.label || spec.title || ''"
             :start-of-group="true"
           >
             <template #buttons-end>

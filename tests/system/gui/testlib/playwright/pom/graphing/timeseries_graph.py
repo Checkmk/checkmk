@@ -7,13 +7,14 @@
 
 import logging
 
-from playwright.sync_api import expect, FloatRect, Locator, Page
+from playwright.sync_api import expect, FloatRect, Locator, Page, Response
 
 from tests.system.gui.testlib.playwright.pom.graphing.global_time_picker import GlobalTimePicker
 from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
     ACTION_MENU_BUTTON_NAME,
     ACTION_MENU_DROPDOWN_SELECTOR,
     GraphAccessor,
+    SURFACE_NOTICE_ERROR_SELECTOR,
 )
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
 from tests.system.gui.testlib.playwright.pom.monitor.service import ServicePage
@@ -25,6 +26,14 @@ logger = logging.getLogger(__name__)
 # updates the preview. They address viewport coordinates too, so a target below the fold is
 # scrolled in before its box is read.
 _DRAG_STEPS = 12
+
+_ADD_PIN_LABEL = "Add pin"
+_REMOVE_PIN_LABEL = "Remove pin"
+
+
+def _is_pin_stored(response: Response) -> bool:
+    """Whether `response` answers the page's request to store or clear the pin."""
+    return response.request.method == "POST" and "/graph/actions/set_pin/invoke" in response.url
 
 
 def _point_in(box: FloatRect, x_fraction: float, y_fraction: float) -> tuple[float, float]:
@@ -88,12 +97,12 @@ class TimeSeriesGraph:
     @property
     def add_pin_handle(self) -> Locator:
         """The handle the hover offers above the plot for pinning the hovered point."""
-        return self.root.get_by_role("button", name="Add pin")
+        return self.root.get_by_role("button", name=_ADD_PIN_LABEL)
 
     @property
     def pin_handle(self) -> Locator:
         """The handle sitting on the pinned point; it is also the control that removes it."""
-        return self.root.get_by_role("button", name="Remove pin")
+        return self.root.get_by_role("button", name=_REMOVE_PIN_LABEL)
 
     @property
     def tooltip(self) -> Locator:
@@ -178,13 +187,18 @@ class TimeSeriesGraph:
         self.page.mouse.move(*_point_in(box, x_fraction, y_fraction))
 
     def add_pin(self, x_fraction: float = 0.5) -> None:
-        """Hover the plot and pin the point the hover resolved."""
+        """Hover the plot and pin the point the hover resolved, waiting for the site to store it.
+
+        The page posts the pin without waiting for the answer, so a navigation right after
+        the click can cut the request off before the site has the pin.
+        """
         logger.info("Pinning the point at %s of the plot width", x_fraction)
         self.hover_canvas(x_fraction)
-        self.add_pin_handle.click()
+        with self.page.expect_response(_is_pin_stored):
+            self.add_pin_handle.click()
 
     def remove_pin(self) -> None:
-        """Click the handle on the pinned point.
+        """Click the handle on the pinned point, waiting for the site to drop the pin.
 
         Pinning the hovered point leaves the hover's own handle stacked on the pin's, so the
         pointer has to leave the plot and the hover lapse before the pin's handle is the one
@@ -192,7 +206,8 @@ class TimeSeriesGraph:
         """
         self.root.hover(position={"x": 0, "y": 0})
         self.add_pin_handle.wait_for(state="detached")
-        self.pin_handle.click()
+        with self.page.expect_response(_is_pin_stored):
+            self.pin_handle.click()
 
 
 class GraphPanel:
@@ -221,27 +236,29 @@ class GraphPanel:
 
     @property
     def _values_and_time_group(self) -> Locator:
-        """The header's first group containing the consolidation function selector (the "Graph
-        values" dropdown) and the time information (date/time and resolution).
+        """The header's first group containing the consolidation function selector (the "Data
+        aggregation" dropdown) and the time information (date/time and resolution).
         """
         return self.header.get_by_role(
-            role="group", name="Graph values and time information", exact=True
+            role="group", name="Data aggregation and time information", exact=True
         )
 
     @property
     def consolidation_control(self) -> Locator:
-        """The header's consolidation function selector (the "Graph values" dropdown).
+        """The header's consolidation function selector (the "Data aggregation" dropdown).
 
         Present only when the panel was told to show it; its shown text is the currently
         selected function.
         """
-        return self._values_and_time_group.get_by_role("combobox", name="Graph values", exact=True)
+        return self._values_and_time_group.get_by_role(
+            "combobox", name="Data aggregation", exact=True
+        )
 
     def select_consolidation(self, option_label: str) -> None:
         """Open the consolidation dropdown and pick the option shown as `option_label`."""
         logger.info("Selecting the consolidation function '%s'", option_label)
         self.consolidation_control.click()
-        options = self._values_and_time_group.locator(".cmk-suggestions")
+        options = self._document.locator(".cmk-suggestions")
         expect(
             options, f"The consolidation dropdown did not open to offer {option_label!r}"
         ).to_be_visible()
@@ -257,7 +274,7 @@ class GraphPanel:
 
     @property
     def timestamp(self) -> Locator:
-        """The drawn window, e.g. ``for 2026-08-06 — 2026-08-07, resolution: 5 min``.
+        """The drawn window, e.g. ``Resolution 5 min 2026-08-06 — 2026-08-07``.
 
         Collapses to a single date whenever the window stays within one day. Not the
         ``.graphing-graph-timestamp`` of `GraphTimestamp.vue`: that one belongs to the
@@ -375,7 +392,7 @@ class ServiceGraphs:
         Scoped to the group, not to a panel: a first load that produced no panel at all
         puts its notice outside every panel.
         """
-        return self._main_area.locator(".graphing-graph-notice--error")
+        return self._main_area.locator(SURFACE_NOTICE_ERROR_SELECTOR)
 
     def panel_count(self) -> int:
         # ``.count()`` does not auto-wait, so this is only correct once
@@ -385,6 +402,33 @@ class ServiceGraphs:
 
     def all_panels(self) -> list[GraphPanel]:
         return [self.panel(index) for index in range(self.panel_count())]
+
+    @property
+    def pin_handles(self) -> Locator:
+        """The pin's handle on every panel drawing one; one locator, so a count spans the page."""
+        return self.panels.get_by_role("button", name=_REMOVE_PIN_LABEL)
+
+    def pin_positions(self) -> list[float]:
+        """Where each panel drawing a pin puts it, as a fraction of its plot width.
+
+        A fraction rather than the page x: each value axis is as wide as its own labels, so
+        the plots start at different x while marking the same instant. Read in one call, so a
+        refetch settling between two reads cannot move a panel under the ruler.
+        """
+        positions: list[float] = self.panels.evaluate_all(
+            "(panels, label) => panels.flatMap((panel) => {"
+            '  const handle = panel.querySelector(`button[aria-label="${label}"]`);'
+            "  const plot = panel.querySelector("
+            "    '.graphing-time-series-graph canvas[role=\"img\"]'"
+            "  );"
+            "  if (!handle || !plot) { return []; }"
+            "  const handleBox = handle.getBoundingClientRect();"
+            "  const plotBox = plot.getBoundingClientRect();"
+            "  return [(handleBox.x + handleBox.width / 2 - plotBox.x) / plotBox.width];"
+            "})",
+            _REMOVE_PIN_LABEL,
+        )
+        return positions
 
     @property
     def time_picker(self) -> GlobalTimePicker:

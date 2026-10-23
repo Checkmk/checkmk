@@ -9,12 +9,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.ddn_s2a.lib import parse_ddn_s2a_api_response
 
 Section = Mapping[str, str]
@@ -22,10 +21,6 @@ Section = Mapping[str, str]
 
 def parse_ddn_s2a_version(string_table: StringTable) -> Section:
     return {key: value[0] for key, value in parse_ddn_s2a_api_response(string_table).items()}
-
-
-def discover_ddn_s2a_version(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_ddn_s2a_version(section: Section) -> CheckResult:
@@ -46,6 +41,6 @@ agent_section_ddn_s2a_version = AgentSection(
 check_plugin_ddn_s2a_version = CheckPlugin(
     name="ddn_s2a_version",
     service_name="DDN S2A Version",
-    discovery_function=discover_ddn_s2a_version,
+    discovery_function=discover_one_service,
     check_function=check_ddn_s2a_version,
 )

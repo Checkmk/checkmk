@@ -10,24 +10,10 @@ from typing import NamedTuple, Protocol
 
 from pydantic import BaseModel
 
-from ._artifacts import AgentFileLocator, BaseFileContainer
 from ._constants import LogicalPath
 from ._types import AgentConfig
 
 _DEFAULT_AGENT = "default"
-
-_UNIX_FILE_PERMISSIONS: Mapping[LogicalPath, int] = {
-    LogicalPath.AGENT: 0o640,
-    LogicalPath.BIN: 0o755,
-    LogicalPath.CONFIG: 0o640,
-    LogicalPath.ETC: 0o644,
-    LogicalPath.HOME: 0o640,
-    LogicalPath.LIB: 0o640,
-    LogicalPath.LOCAL: 0o750,
-    LogicalPath.PLUGINS: 0o755,
-    LogicalPath.ROOT: 0o640,
-    LogicalPath.VAR: 0o640,
-}
 
 
 class AgentControllerTargetArch(Enum):
@@ -85,6 +71,14 @@ def get_agent_controller_arch(agconf: AgentConfig) -> AgentControllerTargetArch:
     return CustomizeAgentPackageConfig.model_validate(customize_agent_package).agent_controller_arch
 
 
+def is_agent_controller_deployed(agconf: AgentConfig) -> bool:
+    """Whether the Linux package ships the agent controller and its systemd units"""
+    choice, _runtime_opts = agconf.get("agent_controller", {}).get(
+        "agent_ctl_enabled", ("enabled", {})
+    )
+    return agconf["super_server"]["deployment_mode"] in ("auto", "systemd") and choice == "enabled"
+
+
 class AgentPathsConfig(BaseModel, frozen=True):
     bin: str
     config: str
@@ -112,13 +106,6 @@ class DirectoryConfig(Protocol):
 
 class UnixAgentPathsKeeper(Protocol):
     def make_package_structure(self, root_path: Path) -> None: ...
-
-    def process_file_container(
-        self,
-        file_container: BaseFileContainer,
-        pkg_root: Path,
-        locator: AgentFileLocator,
-    ) -> None: ...
 
     def get_base_folders(self) -> Iterable[Path]: ...
 
@@ -151,16 +138,6 @@ class UnixMultipleDirectoryKeeper:
         (root_path / relative_path(self._agent_paths.var) / "cache").mkdir(exist_ok=True)
         (root_path / relative_path(self._agent_paths.var) / "spool").mkdir(exist_ok=True)
         (root_path / relative_path(self._agent_paths.var) / "log").mkdir(exist_ok=True)
-
-    def process_file_container(
-        self, file_container: BaseFileContainer, pkg_root: Path, locator: AgentFileLocator
-    ) -> None:
-        file_container.place(
-            pkg_root,
-            locator,
-            self.get_target_path(file_container.logical_path).relative_to("/"),
-            _UNIX_FILE_PERMISSIONS[file_container.logical_path],
-        )
 
     def get_base_folders(self) -> Iterable[Path]:
         return (
@@ -227,19 +204,6 @@ class UnixSingleDirectoryKeeper:
             mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True
         )
 
-    def process_file_container(
-        self,
-        file_container: BaseFileContainer,
-        pkg_root: Path,
-        locator: AgentFileLocator,
-    ) -> None:
-        file_container.place(
-            pkg_root,
-            locator,
-            self.get_target_path(file_container.logical_path).relative_to("/"),
-            _UNIX_FILE_PERMISSIONS[file_container.logical_path],
-        )
-
     def get_target_path(self, logical_path: LogicalPath) -> Path:
         match logical_path:
             case LogicalPath.ETC:
@@ -251,28 +215,6 @@ class UnixSingleDirectoryKeeper:
 
     def get_base_folders(self) -> Iterable[Path]:
         return ("/" / self._install_dir,)
-
-
-_WINDOWS_TARGET_LOCATIONS: Mapping[LogicalPath, str] = {
-    LogicalPath.AGENT: "",
-    LogicalPath.BIN: "bin",
-    LogicalPath.CONFIG: "config",
-    LogicalPath.ETC: "",
-    LogicalPath.HOME: "",
-    LogicalPath.LIB: "",
-    LogicalPath.LOCAL: "local",
-    LogicalPath.PLUGINS: "plugins",
-    LogicalPath.ROOT: "",
-    LogicalPath.VAR: "",
-}
-
-
-def process_windows_file_container(
-    file_container: BaseFileContainer, pkg_root: Path, locator: AgentFileLocator
-) -> None:
-    file_container.place(
-        pkg_root, locator, Path(_WINDOWS_TARGET_LOCATIONS[file_container.logical_path]), 0
-    )
 
 
 class TargetPathsProvider:

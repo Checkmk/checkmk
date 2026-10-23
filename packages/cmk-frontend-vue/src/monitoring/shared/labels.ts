@@ -7,7 +7,10 @@ import type { Colors } from 'cmk-ui-library/components/CmkTag.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import type { LabelValue } from '@/monitoring/shared/api/types'
-import type { LabelCellItem } from '@/monitoring/shared/components/cell/LabelCell.vue'
+import {
+  type LabelCellItem,
+  labelItemText
+} from '@/monitoring/shared/components/cell/labelCellItem'
 
 const SOURCE_COLORS: Record<string, Colors> = {
   discovered: 'discovered',
@@ -25,7 +28,7 @@ export function labelColor(source: string): Colors {
 
 /** Order entries alphabetically, so a row reads the same on every refresh. */
 function sortedByText(items: LabelCellItem[]): LabelCellItem[] {
-  return items.sort((first, second) => first.text.localeCompare(second.text))
+  return items.sort((first, second) => labelItemText(first).localeCompare(labelItemText(second)))
 }
 
 /**
@@ -35,7 +38,7 @@ function sortedByText(items: LabelCellItem[]): LabelCellItem[] {
 export function toLabelItems(labels: Record<string, LabelValue>): LabelCellItem[] {
   return sortedByText(
     Object.entries(labels).map(([key, label]) => ({
-      text: `${key}: ${label.value}` as TranslatedString,
+      keyValue: { key, value: label.value },
       color: labelColor(label.source)
     }))
   )

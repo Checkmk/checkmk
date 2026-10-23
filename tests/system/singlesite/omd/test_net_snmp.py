@@ -6,7 +6,7 @@
 import re
 import subprocess
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def test_net_snmp_mib_search_paths(site: Site) -> None:

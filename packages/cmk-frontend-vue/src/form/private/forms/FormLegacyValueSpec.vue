@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { LegacyValuespec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, toRaw, useId, watch } from 'vue'
 
 import type { ValidationMessages } from '@/form/private/validation'
 
@@ -43,70 +43,39 @@ const legacyDOM = ref<HTMLFormElement>()
 
 const inputHtml = ref('')
 
-function executeInlineScripts() {
-  legacyDOM.value!.querySelectorAll('script').forEach((element) => {
-    // ListOf
-    const reListOf = /cmk.valuespecs.listof_update_indices\("([^"]+)"\)/
-    let match = element.innerHTML.match(reListOf)
-    if (match) {
-      // @ts-expect-error comes from different javascript file
-      window['cmk'].valuespecs.listof_update_indices(match[1])
-    }
+// Copies of the same default value (e.g. new list entries) share the varprefix the
+// HTML was rendered with. Its callable TS functions get the varprefix as argument and
+// look up elements by IDs derived from it, so every instance needs its own.
+const varprefix = `${data.value.varprefix}_${useId().replace(/\W/g, '_')}`
 
-    // ListOfStrings
-    const reListOfStrings = /cmk.valuespecs.list_of_strings_init\(([^)]+)\)/
-    match = element.innerHTML.match(reListOfStrings)
-    if (match) {
-      const argumentsArray = match[1]!.split(/\s*,\s*/).map((arg) => arg.trim())
-      // @ts-expect-error comes from different javascript file
-      window['cmk'].valuespecs.list_of_strings_init(
-        JSON.parse(argumentsArray[0]!),
-        JSON.parse(argumentsArray[1]!),
-        JSON.parse(argumentsArray[2]!)
-      )
-    }
+const observer = new MutationObserver(() => {
+  collectData()
+  updateEventListeners()
+})
 
-    // ListOfMultiple
-    const reListOfMultiple = /cmk.valuespecs.listofmultiple_init\("([^"]+)"\)/
-    match = element.innerHTML.match(reListOfMultiple)
-    if (match) {
-      // @ts-expect-error comes from different javascript file
-      window['cmk'].valuespecs.listofmultiple_init(match[1])
-    }
+function instanceInputHtml(): string {
+  return data.value.input_html.replaceAll(data.value.varprefix, varprefix)
+}
 
-    // CascadingDropdown
-    const reAddCascading = /cmk.valuespecs.add_cascading_sub_valuespec_parameters(\([^)]+\))/
-    match = element.innerHTML.match(reAddCascading)
-    if (match) {
-      const argumentsArray = JSON.parse(match[1]!.replace('(', '[').replace(')', ']'))
-      // @ts-expect-error comes from different javascript file
-      window['cmk'].valuespecs.add_cascading_sub_valuespec_parameters(
-        argumentsArray[0]!,
-        argumentsArray[1]!
-      )
-    }
+function renderInputHtml(onRendered: () => void = () => {}) {
+  inputHtml.value = instanceInputHtml()
+  nextTick(() => {
+    // @ts-expect-error comes from different javascript file
+    window['cmk'].ts_function_dispatcher.init_callable_ts_functions(legacyDOM.value!)
+    onRendered()
+  }).catch((error) => {
+    console.error('Error while rendering legacy valuespec', error)
   })
 }
 
 onMounted(() => {
-  inputHtml.value = data.value.input_html
+  renderInputHtml()
   // @ts-expect-error comes from different javascript file
   window['cmk'].forms.enable_dynamic_form_elements(legacyDOM.value!)
   // @ts-expect-error comes from different javascript file
   window['cmk'].valuespecs.initialize_autocompleters(legacyDOM.value!)
 
-  nextTick(() => {
-    executeInlineScripts()
-  }).catch((error) => {
-    console.error('Error while evaluating scripts in legacy valuespec', error)
-  })
-
   updateEventListeners()
-
-  const observer = new MutationObserver(() => {
-    collectData()
-    updateEventListeners()
-  })
 
   observer.observe(legacyDOM.value!, {
     attributes: true,
@@ -121,6 +90,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  observer.disconnect()
   legacyDOM.value!.querySelectorAll(QUERY_INPUT_OBSERVER).forEach((element) => {
     element.removeEventListener('input', collectData)
   })
@@ -139,13 +109,33 @@ function updateEventListeners() {
   })
 }
 
+let collectedData: PreRenderedHtml | null = null
+
+// The parent may replace the data, e.g. with a freshly loaded value. Without its
+// input_context, the backend could not read the value from it.
+watch(
+  () => data.value,
+  (newData) => {
+    if (toRaw(newData) === collectedData) {
+      return
+    }
+    if (instanceInputHtml() === inputHtml.value) {
+      collectData()
+    } else {
+      renderInputHtml(collectData)
+    }
+  }
+)
+
 function collectData() {
   const result = Object.fromEntries(new FormData(legacyDOM.value))
-  data.value = {
+  collectedData = {
     ...data.value,
+    input_html: inputHtml.value,
     input_context: result,
-    varprefix: props.spec.varprefix
+    varprefix
   }
+  data.value = collectedData
 }
 </script>
 

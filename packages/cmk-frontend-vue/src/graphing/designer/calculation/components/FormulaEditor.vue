@@ -7,10 +7,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useId from 'cmk-ui-library/lib/useId'
 import { ref } from 'vue'
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Formula editor'), [{ combo: ['Enter'], description: _t('Submit formula') }])
 
 const { errors } = defineProps<{ errors: string[] }>()
 
@@ -21,10 +23,10 @@ const emit = defineEmits<{ submit: [] }>()
 const labelId = useId()
 
 // CmkInput is a generic SFC, so `InstanceType<typeof CmkInput>` is not usable; we only need focus().
-const inputRef = ref<{ focus: () => void } | null>(null)
+const inputRef = ref<{ focus: (options?: FocusOptions) => void } | null>(null)
 
-function focus(): void {
-  inputRef.value?.focus()
+function focus(options?: FocusOptions): void {
+  inputRef.value?.focus(options)
 }
 
 defineExpose({ focus })

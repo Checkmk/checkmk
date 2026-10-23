@@ -71,11 +71,12 @@ export const useGraph = async (
     timestamp,
     roundMargin,
     graphLegend,
+    graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
     dontFollowTimerange,
     graphRenderOptions
-  } = useGraphRenderOptions(currentContent?.graph_render_options)
+  } = useGraphRenderOptions(currentContent?.graph_render_options, currentContent === null)
 
   const color = ref<string>(currentContent?.color ?? 'default_metric')
 
@@ -150,6 +151,7 @@ export const useGraph = async (
     timestamp,
     roundMargin,
     graphLegend,
+    graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
     dontFollowTimerange,

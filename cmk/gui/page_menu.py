@@ -160,12 +160,9 @@ def show_success_dialog(
         "iconHtml": "<span>&check;</span>",
     }
 
-    html.javascript(
-        "cmk.forms.confirm_dialog(%s, function() {location.href = %s;})"
-        % (
-            json.dumps(dialog_options),
-            json.dumps(confirm_url),
-        )
+    html.call_ts_function(
+        function_name="confirm_dialog_redirect",
+        arguments={"dialog_options": dialog_options, "confirm_url": confirm_url},
     )
 
 
@@ -190,14 +187,14 @@ def show_confirm_cancel_dialog(
         "showCancelButton": show_cancel_button,
     }
 
-    html.javascript(
-        "cmk.forms.confirm_dialog(%s, function() {location.href = %s;}, %s, null, %s)"
-        % (
-            json.dumps(dialog_options),
-            json.dumps(confirm_url),
-            f"function() {{location.href = {json.dumps(cancel_url)}}}" if cancel_url else "null",
-            json.dumps(post_confirm_waiting_text),
-        )
+    html.call_ts_function(
+        function_name="confirm_dialog_redirect",
+        arguments={
+            "dialog_options": dialog_options,
+            "confirm_url": confirm_url,
+            "cancel_url": cancel_url,
+            "post_confirm_waiting_text": post_confirm_waiting_text,
+        },
     )
 
 
@@ -805,7 +802,7 @@ class PageMenuRenderer:
         html.close_td()
 
     def _javascript(self) -> None:
-        html.javascript("cmk.page_menu.toggle_navigation_page_menu_entry();")
+        html.call_ts_function(function_name="toggle_navigation_page_menu_entry")
 
 
 class SuggestedEntryRenderer:
@@ -1042,8 +1039,13 @@ def inpage_search_form(mode: str | None = None, default_value: str = "") -> None
         html.hidden_fields()
         html.buttonlink(reset_url, "", obj_id=reset_button_id, title=_("Reset"))
         html.button("submit", "", cssclass="submit", help_=_("Apply"))
-    html.javascript(
-        f"cmk.page_menu.inpage_search_init({json.dumps(reset_button_id)}, {json.dumps(was_submitted)}, {json.dumps(reset_url)})"
+    html.call_ts_function(
+        function_name="inpage_search_init",
+        arguments={
+            "reset_button_id": reset_button_id,
+            "was_submitted": was_submitted,
+            "reset_url": reset_url,
+        },
     )
 
 

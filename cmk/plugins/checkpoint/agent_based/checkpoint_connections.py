@@ -9,12 +9,11 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.checkpoint import lib as checkpoint
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
@@ -48,10 +47,6 @@ snmp_section_checkpoint_connections = SimpleSNMPSection(
 )
 
 
-def discover_checkpoint_connections(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_checkpoint_connections(
     params: Params,
     section: Section,
@@ -68,7 +63,7 @@ def check_checkpoint_connections(
 check_plugin_checkpoint_connections = CheckPlugin(
     name="checkpoint_connections",
     service_name="Connections",
-    discovery_function=discover_checkpoint_connections,
+    discovery_function=discover_one_service,
     check_function=check_checkpoint_connections,
     check_default_parameters=Params(levels=("fixed", (40000, 50000))),
     check_ruleset_name="checkpoint_connections",

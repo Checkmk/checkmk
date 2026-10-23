@@ -4,18 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from typing import Literal
 
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.i18n import _
-from cmk.gui.permissions import declare_permission, permission_registry
+from cmk.gui.permissions import Permission
 from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.ruleset_matcher.tags import TagID
 from cmk.web.utils.icons import DynamicIcon, StaticIcon
 
 from .base import Icon, IconConfig
+from .permission_section import PERMISSION_SECTION_ICONS_AND_ACTIONS
 
 
 def update_builtin_icons_from_config(
@@ -33,8 +34,6 @@ def update_builtin_icons_from_config(
 
 
 def config_based_icons(user_icons_and_actions: dict[str, IconSpec]) -> dict[str, Icon]:
-    declare_icons_and_actions_perm(user_icons_and_actions)
-
     return {
         icon_id: Icon(
             ident=icon_id,
@@ -81,14 +80,13 @@ def _make_render_function(
     return _render
 
 
-def declare_icons_and_actions_perm(icons: dict[str, IconSpec]) -> None:
-    for ident, _icon in icons.items():
-        if (permname := f"icons_and_actions.{ident}") in permission_registry:
-            continue
-
-        declare_permission(
-            permname,
-            ident,
-            _("Allow to see the icon %(ident)s in the host and service views") % {"ident": ident},
-            default_authorized_builtin_role_ids,
+def icons_and_actions_permissions(icons: Mapping[str, IconSpec]) -> Iterator[Permission]:
+    for ident in icons:
+        yield Permission(
+            section=PERMISSION_SECTION_ICONS_AND_ACTIONS,
+            name=ident,
+            title=ident,
+            description=_("Allow to see the icon %(ident)s in the host and service views")
+            % {"ident": ident},
+            defaults=default_authorized_builtin_role_ids,
         )

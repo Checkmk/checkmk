@@ -19,11 +19,13 @@ from cmk.base.checkers import (
     CheckerPluginMapper,
     SectionPluginMapper,
 )
+from cmk.ccc import debug
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.checkengine import value_store
 from cmk.checkengine.checking import execute_checkmk_checks
 from cmk.checkengine.helper_interface import FetcherType, SourceInfo, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
+from cmk.checkengine.plugin_backend import load_all_plugins
 from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.logwatch.config import ParameterLogwatchEc, ParameterLogwatchRules, set_global_state
 from cmk.utils import paths
@@ -41,7 +43,7 @@ from tests.plugins_siteless.helpers import (
     store_services_states,
     summarizer,
 )
-from tests.testlib.common.empty_config import EMPTY_CONFIG
+from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
 os.environ["OMD_SITE"] = ""
 HOSTNAME = HostName("test_host")
@@ -107,7 +109,7 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
             "we are doing an agent rework which is affecting this."
         )
 
-    agent_based_plugins = config.load_all_plugins()
+    agent_based_plugins = load_all_plugins(raise_errors=debug.enabled())
     assert not agent_based_plugins.errors
     assert agent_based_plugins.agent_sections
 
@@ -167,7 +169,7 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
             agent_based_plugins.check_plugins,
             value_store_manager,
             clusters=(),
-            rtc_package=None,
+            get_agent_output=lambda: None,
             omd_root=Path(""),
         )
         assert check_plugins

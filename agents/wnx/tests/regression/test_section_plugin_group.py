@@ -19,6 +19,10 @@ import pytest
 
 from .local import local_test, user_dir
 
+# An IPv4 address, or an IPv6 one in brackets with an optional zone index
+# ("[::]", "[fe80::1%5]"), and the port, as `netstat -an` prints them.
+_NETSTAT_ADDRESS = r"(\d+\.\d+\.\d+\.\d+|\[[0-9a-f]{,4}(:[0-9a-f]{,4})+(%\d+)?\]):\d+"
+
 
 class Globals:
     executionmode: str | None = None
@@ -111,14 +115,11 @@ def expected_output_engine():
             r"|Active Connections"
             r"|\s+Proto\s+Lokale Adresse\s+Remoteadresse\s+Status"
             r"|\s+Proto\s+Local Address\s+Foreign Address\s+State"
-            r"|\s+TCP\s+(\d+\.\d+\.\d+\.\d+|"
-            r"\[::\d*\]|\[[0-9a-f]{,4}(:[0-9a-f]{,4})+(%\d+)?\]):\d+"
-            r"\s+(\d+\.\d+\.\d+\.\d+|\[::\d*\]|"
-            r"\[[0-9a-f]{,4}(:[0-9a-f]{,4})+(%\d+)?\]):\d+"
-            r"\s+(ABH.REN|HERGESTELLT|WARTEND|SCHLIESSEN_WARTEN|SYN_GESENDET"
+            r"|\s+TCP\s+" + _NETSTAT_ADDRESS + r"\s+" + _NETSTAT_ADDRESS + r"\s+"
+            r"(ABH.REN|HERGESTELLT|WARTEND|SCHLIESSEN_WARTEN|SYN_GESENDET"
             r"|LISTENING|ESTABLISHED|TIME_WAIT|CLOSE_WAIT|FIN_WAIT_\d|SYN_SENT|LAST_ACK"
             r"|SCHLIESSEND|SYN_RECEIVED|FIN_WARTEN_\d|ZULETZT_ACK)"
-            r"|\s+UDP\s+\d+\.\d+\.\d+\.\d+:\d+\s+\*:\*"
+            r"|\s+UDP\s+" + _NETSTAT_ADDRESS + r"\s+(\*:\*|" + _NETSTAT_ADDRESS + r")"
             r"|\-?\d+( \d+)+ [\w\(\)]+"
         )
         if Globals.plugintype == "plugins":
@@ -170,7 +171,7 @@ def plugin_dir_engine(request):
     return os.path.join(user_dir, request.param)
 
 
-@pytest.fixture(name="manage_plugins", params=["netstat_an.bat", "wmic_if.bat"], autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture(name="manage_plugins", params=["netstat_an.bat", "wmic_if.bat"])
 def manage_plugins_engine(request, plugin_dir):
     Globals.pluginname = request.param
     source_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "files\\regression")
@@ -194,7 +195,7 @@ def manage_plugins_engine(request, plugin_dir):
                     time.sleep(1)
 
 
-@pytest.mark.usefixtures("testconfig")
+@pytest.mark.usefixtures("manage_plugins", "testconfig")
 def test_section_plugin_group(request, expected_output, actual_output, testfile) -> None:  # type: ignore[misc]
     # request.node.name gives test name
     if Globals.executionmode == "async+cached" and Globals.plugintype == "local":

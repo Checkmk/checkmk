@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -12,9 +12,14 @@ from cmk.agent_based.v2 import (
     DiscoveryResult,
     get_value_store,
     Service,
-    SimpleSNMPSection,
+    SNMPSection,
     SNMPTree,
     StringTable,
+)
+from cmk.plugins.apc.lib.cooling_unit import (
+    COOLING_UNIT_EXTENDED_ANALOG,
+    COOLING_UNIT_STATUS_ANALOG,
+    parse_analog_readings,
 )
 from cmk.plugins.apc.lib_ats import DETECT
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
@@ -26,16 +31,23 @@ from cmk.plugins.lib.temperature import check_temperature, TempParamType
 # .1.3.6.1.4.1.318.1.1.13.3.2.2.2.26.0 154 --> PowerNet-MIB::airIRRCUnitStatusLeavingFluidTemperatureMetric.0
 
 
-def parse_apc_inrow_temp(string_table: StringTable) -> Mapping[str, float]:
+def parse_apc_inrow_temp(string_table: Sequence[StringTable]) -> Mapping[str, float]:
+    air_irrc, *cooling_unit_tables = string_table
     parsed = {}
-    if string_table:
+    if air_irrc:
         for what, what_item in zip(
-            string_table[0],
+            air_irrc[0],
             ["Rack Inlet", "Supply Air", "Return Air", "Entering Fluid", "Leaving Fluid"],
             strict=False,
         ):
             if what not in ["", "-1"]:
                 parsed[what_item] = float(what) / 10
+
+    for table in cooling_unit_tables:
+        for reading in parse_analog_readings(table):
+            # Every temperature is published twice, in Fahrenheit and in Celsius.
+            if reading.units == "C":
+                parsed[reading.description.replace(" Temperature", "")] = reading.value
 
     return parsed
 
@@ -56,13 +68,17 @@ def check_apc_inrow_temp(
         )
 
 
-snmp_section_apc_inrow_temp = SimpleSNMPSection(
+snmp_section_apc_inrow_temp = SNMPSection(
     name="apc_inrow_temp",
     detect=DETECT,
-    fetch=SNMPTree(
-        base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
-        oids=["7", "9", "11", "24", "26"],
-    ),
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
+            oids=["7", "9", "11", "24", "26"],
+        ),
+        COOLING_UNIT_STATUS_ANALOG,
+        COOLING_UNIT_EXTENDED_ANALOG,
+    ],
     parse_function=parse_apc_inrow_temp,
 )
 

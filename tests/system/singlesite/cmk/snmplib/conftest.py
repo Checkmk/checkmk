@@ -36,7 +36,7 @@ from cmk.utils import log
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import is_containerized
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 TIMEOUT_AFTER = 120  # seconds
 logger = logging.getLogger(__name__)

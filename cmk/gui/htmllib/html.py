@@ -20,7 +20,7 @@ from flask import current_app, session
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
-from cmk.gui import log
+from cmk.gui import hooks, log
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.dynamic_icon import resolve_icon_name
 from cmk.gui.exceptions import MKUserError
@@ -125,6 +125,7 @@ class HTMLGenerator(HTMLWriter):
         self._header_sent = False
         self._body_classes = ["main"]
         self._main_navigation_open = False
+        self._inject_profiling_code = False
         self.have_help = False
 
         # Forms
@@ -141,26 +142,26 @@ class HTMLGenerator(HTMLWriter):
         return bool(self.request.var("screenshotmode", "1" if default else ""))
 
     def set_focus(self, varname: str) -> None:
-        self.final_javascript(
-            f"cmk.utils.set_focus_by_name({json.dumps(self.form_name)}, {json.dumps(varname)})"
+        self.call_ts_function(
+            function_name="set_focus_by_name",
+            arguments={"form_name": self.form_name, "field_name": varname},
         )
 
     def set_focus_by_id(self, dom_id: str) -> None:
-        self.final_javascript("cmk.utils.set_focus_by_id(%s)" % (json.dumps(dom_id)))
+        self.call_ts_function(function_name="set_focus_by_id", arguments={"dom_id": dom_id})
 
     def immediate_browser_redirect(self, secs: float, url: str) -> None:
-        self.javascript(f"cmk.utils.set_reload({secs}, '{url}');")
+        self.call_ts_function(function_name="set_reload", arguments={"secs": secs, "url": url})
 
     def add_body_css_class(self, cls: str) -> None:
         self._body_classes.append(cls)
 
     def reload_whole_page(self, url: str | None = None) -> None:
         if not self.request.has_var("_ajaxid"):
-            return self.final_javascript("cmk.utils.reload_whole_page(%s)" % json.dumps(url))
-        return None
+            self.call_ts_function(function_name="reload_whole_page", arguments={"url": url})
 
     def show_localization_hint(self) -> None:
-        url = "wato.py?mode=edit_configvar&varname=user_localizations"
+        url = "global_settings.py?varname=user_localizations"
         self._write(
             self._render_message(
                 HTMLWriter.render_sup("*")
@@ -271,7 +272,10 @@ class HTMLGenerator(HTMLWriter):
 
         self.open_head()
         if inject_js_profiling_code or self.request.has_var("inject_js_profiling_code"):
-            self._inject_profiling_code()
+            self._inject_profiling_code = True
+            self.javascript_file(
+                HTMLGenerator._append_cache_busting_query("js/tracking_entry_min.js")
+            )
 
         self.default_html_headers()
         self.title(title)
@@ -306,7 +310,7 @@ class HTMLGenerator(HTMLWriter):
         self.set_csrf_token_meta()
 
         if self.browser_reload != 0.0:
-            self.javascript(f"cmk.utils.set_reload({self.browser_reload})")
+            self.meta(name="cmk-browser-reload", content=str(self.browser_reload))
 
         self.close_head()
 
@@ -338,24 +342,14 @@ class HTMLGenerator(HTMLWriter):
                 injected.add(stylesheet)
                 self.stylesheet(f"cmk-frontend-vue/{stylesheet}")
 
-    def _inject_profiling_code(self) -> None:
-        self.javascript("const startTime = Date.now();")
-        # A lambda, so it will get evaluated at the end of the request, not the beginning.
-        self.final_javascript(
-            lambda: (
-                f"""
-                const generationDuration = {round((time.monotonic() - self.request.started) * 1000, 0)};
-                const currentUrl = window.location.pathname + window.location.search;
-                document.addEventListener(
-                    'DOMContentLoaded',
-                    function() {{
-                        activate_tracking(currentUrl, startTime, generationDuration);
-                    }}
-                );
-            """
-            )
+    def _write_profiling_data(self) -> None:
+        self.js_entrypoint(
+            json.dumps(
+                {"generation_duration": round((time.monotonic() - self.request.started) * 1000, 0)}
+            ),
+            type_="application/json",
+            id_="cmk_tracking_data",
         )
-        self.javascript_file(HTMLGenerator._append_cache_busting_query("js/tracking_entry_min.js"))
 
     def set_csrf_token_meta(self) -> None:
         # session is LocalProxy, only on access it is None, so we cannot test on 'is None'
@@ -466,8 +460,10 @@ class HTMLGenerator(HTMLWriter):
     def body_end(self) -> None:
         if self.have_help:
             enable_page_menu_entry(self, "inline_help")
-        self.write_final_javascript()
+        if self._inject_profiling_code:
+            self._write_profiling_data()
         if self._main_navigation_open:
+            hooks.call("content-area-ended")
             self.close_div()  # #content_area
             self._main_navigation_open = False
         self.close_body()
@@ -1094,7 +1090,7 @@ class HTMLGenerator(HTMLWriter):
         if error:
             self.close_x()
 
-    # Choices is a list pairs of (key, title). They keys of the choices
+    # A choice is a pair of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
     def dropdown(
         self,

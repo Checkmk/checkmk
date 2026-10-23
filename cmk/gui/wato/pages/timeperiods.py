@@ -45,7 +45,7 @@ from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -65,7 +65,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib import groups
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
@@ -83,9 +82,11 @@ from cmk.utils.timeperiod import (
     TimeperiodSpec,
 )
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
+from cmk.web.utils.urls import makeactionuri_contextless, makeuri_contextless
 
 logger = logging.getLogger(__name__)
 
@@ -254,8 +255,10 @@ class ModeTimeperiods(WatoMode):
                                     title=_("Add time period"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
-                                        folder_preserving_link(
-                                            request, [("mode", "edit_timeperiod")]
+                                        makeuri_contextless(
+                                            request,
+                                            [("mode", "edit_timeperiod")],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -265,7 +268,9 @@ class ModeTimeperiods(WatoMode):
                                     title=_("Import iCalendar"),
                                     icon_name=StaticIcon(IconNames.ical),
                                     item=make_simple_link(
-                                        folder_preserving_link(request, [("mode", "import_ical")])
+                                        makeuri_contextless(
+                                            request, [("mode", "import_ical")], filename="wato.py"
+                                        )
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -293,6 +298,7 @@ class ModeTimeperiods(WatoMode):
         try:
             watolib.timeperiods.delete_timeperiod(
                 TimeperiodName(delname),
+                config=config,
                 pprint_value=config.wato_pprint_config,
                 pending_changes=_pending_changes(
                     config.sites,
@@ -339,28 +345,32 @@ class ModeTimeperiods(WatoMode):
                 table.cell(_("Alias"), alias)
 
     def _action_buttons(self, name: str, alias: str) -> None:
-        edit_url = folder_preserving_link(
+        edit_url = makeuri_contextless(
             request,
             [
                 ("mode", "edit_timeperiod"),
                 ("edit", name),
             ],
+            filename="wato.py",
         )
-        clone_url = folder_preserving_link(
+        clone_url = makeuri_contextless(
             request,
             [
                 ("mode", "edit_timeperiod"),
                 ("clone", name),
             ],
+            filename="wato.py",
         )
         delete_url = make_confirm_delete_link(
             i18n=_,
-            url=make_action_link(
+            url=makeactionuri_contextless(
                 request,
+                transactions.get(),
                 [
                     ("mode", "timeperiods"),
                     ("_delete", name),
                 ],
+                filename="wato.py",
             ),
             title=_("Delete time period"),
             suffix=alias,
@@ -787,7 +797,7 @@ class ModeEditTimeperiod(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return None

@@ -9,7 +9,7 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_snapshot_reserve_used_percent = metrics.Metric(
     name="snapshot_reserve_used_percent",
-    title=Title("Snapshot reserve used %"),
+    title=Title("Snapshot reserve used percentage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.PURPLE,
 )

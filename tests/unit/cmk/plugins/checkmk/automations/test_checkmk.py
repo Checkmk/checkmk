@@ -1,0 +1,907 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+# mypy: disable-error-code="type-arg"
+
+import ast
+import io
+import sys
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, replace
+from pathlib import Path
+from typing import NoReturn, override
+
+import pytest
+from pytest import MonkeyPatch
+
+import cmk.ccc.debug
+import cmk.ccc.resulttype as result
+
+# We need an active check plugin that exists.
+# The ExecutableFinder demands a location that exits :-/
+# We're importing it here, so that this fails the linters if that is removed.
+# TODO: implement a dedicated minimal plugin
+import cmk.plugins.monitoring_plugins.server_side_calls.ftp
+import cmk.utils.password_store
+import cmk.utils.paths
+from cmk.automations import results as automation_results
+from cmk.automations.internal import NoState
+from cmk.automations.results import (
+    AnalyseHostResult,
+    AnalyzeHostRuleEffectivenessResult,
+    DiagHostResult,
+    GetServicesLabelsResult,
+)
+from cmk.base import config
+from cmk.base.community_app import make_app
+from cmk.base.config import ConfigCache, LoadingResult, ObjectAttributes
+from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.discovery import CheckPreview, CheckPreviewEntry, QualifiedDiscovery
+from cmk.checkengine.fetcher_abc import Fetcher, Mode
+from cmk.checkengine.fetcher_utils.secrets import FetcherSecrets
+from cmk.checkengine.fetcher_utils.trigger import PlainFetcherTrigger
+from cmk.checkengine.fetchers.piggyback import PiggybackFetcher
+from cmk.checkengine.specs.checkresults import ServiceState
+from cmk.checkengine.submitters import ServiceDetails
+from cmk.discover_plugins import PluginLocation
+from cmk.inventory.label_picker import InventorizedHostLabelsStore
+from cmk.plugins.checkmk.automations import checkmk
+from cmk.relay_protocols.tasks import AdHocActiveCheckTask, AdHocSiteStores
+from cmk.ruleset_matcher.labels import LabelSource
+from cmk.ruleset_matcher.matcher import RuleSpec
+from cmk.ruleset_matcher.tags import TagGroupID, TagID
+from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
+from cmk.utils import config_warnings
+from cmk.utils.password_store import pending_secrets_path_site
+from tests.testlib.unit.automations import make_common_state
+from tests.testlib.unit.base_configuration_scenario import Scenario
+from tests.testlib.unit.empty_config import EMPTY_CONFIG
+
+_TEST_LOCATION = PluginLocation(
+    cmk.plugins.monitoring_plugins.server_side_calls.ftp.__name__,
+    "yolo",
+)
+
+# What the fake site holds as its pending trusted CAs (var/ssl/ca-certificates.crt).
+_PENDING_CA_BUNDLE = "-----BEGIN CERTIFICATE-----\npending CA\n"
+
+
+_HOST_ATTRS = {
+    "alias": "my_host_alias",
+    "_ADDRESS_4": "127.0.0.1",
+    "address": "127.0.0.1",
+    "_ADDRESS_FAMILY": "4",
+    "display_name": "my_host",
+}
+
+
+@dataclass(frozen=True)
+class _FakeServiceData:
+    description: str
+    command: tuple[str, ...]
+
+
+def _prepare(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    relay_id: str | None,
+    loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
+    service_attrs: ObjectAttributes | None = None,
+) -> tuple[ConfigCache, config.LoadingResult]:
+    _patch_plugin_loading(monkeypatch, loaded_active_checks)
+    monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: _HOST_ATTRS)  # noqa: ARG005
+    monkeypatch.setattr(checkmk, "get_service_attributes", lambda *a, **kw: service_attrs or {})  # noqa: ARG005
+    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})  # noqa: ARG005
+    monkeypatch.setattr(config, "get_relay_id", lambda *a, **kw: relay_id)  # noqa: ARG005
+    cmk.utils.paths.trusted_ca_file.parent.mkdir(parents=True, exist_ok=True)
+    cmk.utils.paths.trusted_ca_file.write_text(_PENDING_CA_BUNDLE)
+    config_cache = config.ConfigCache(
+        EMPTY_CONFIG,
+        config.make_hosts_config(EMPTY_CONFIG),
+        config.make_host_tags(EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)),
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+        builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+    )
+    loading_result = config.LoadingResult(
+        loaded_config=EMPTY_CONFIG,
+        hosts_config=config.make_hosts_config(EMPTY_CONFIG),
+        host_tags=config.make_host_tags(EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)),
+        config_cache=config_cache,
+    )
+    return config_cache, loading_result
+
+
+class _MockFetcherTrigger(PlainFetcherTrigger):
+    def __init__(self, payload: bytes, omd_root: Path) -> None:
+        super().__init__(omd_root)
+        self._payload = payload
+
+    @override
+    def _trigger(self, fetcher: Fetcher, mode: Mode, secret: FetcherSecrets) -> result.Result:
+        if isinstance(fetcher, PiggybackFetcher):
+            return result.OK(b"")
+        return result.OK(self._payload)
+
+
+class TestAutomationDiagHost:
+    @pytest.fixture
+    def hostname(self) -> str:
+        return "testhost"
+
+    @pytest.fixture
+    def ipaddress(self) -> str:
+        return "1.2.3.4"
+
+    @pytest.fixture
+    def raw_data(self) -> str:
+        return "<<<check_mk>>>\nraw data"
+
+    @pytest.fixture
+    def scenario(
+        self, hostname: str, ipaddress: str, monkeypatch: pytest.MonkeyPatch
+    ) -> ConfigCache:
+        ts = Scenario()
+        ts.add_host(HostName(hostname))
+        ts.set_option("ipaddresses", {hostname: ipaddress})
+        return ts.apply(monkeypatch).config_cache
+
+    @pytest.mark.usefixtures("scenario")
+    def test_execute(self, hostname: str, ipaddress: str, raw_data: str) -> None:
+        args = [hostname, "agent", ipaddress, "", "6557", "10", "5", "5", ""]
+        configured_tags = {
+            HostName("testhost"): {
+                TagGroupID("checkmk-agent"): TagID("checkmk-agent"),
+                TagGroupID("piggyback"): TagID("auto-piggyback"),
+                TagGroupID("networking"): TagID("lan"),
+                TagGroupID("agent"): TagID("cmk-agent"),
+                TagGroupID("criticality"): TagID("prod"),
+                TagGroupID("snmp_ds"): TagID("no-snmp"),
+                TagGroupID("site"): TagID("unit"),
+                TagGroupID("address_family"): TagID("ip-v4-only"),
+                TagGroupID("tcp"): TagID("tcp"),
+                TagGroupID("ip-v4"): TagID("ip-v4"),
+            }
+        }
+
+        loaded_config = replace(EMPTY_CONFIG, host_tags=configured_tags)
+        hosts_config = config.make_hosts_config(loaded_config)
+        app = replace(
+            make_app(),
+            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data.encode(), Path("/")),  # noqa: ARG005
+        )
+        assert checkmk.AutomationDiagHost().execute(
+            make_common_state(
+                config.LoadingResult(
+                    loaded_config=loaded_config,
+                    hosts_config=hosts_config,
+                    host_tags=config.make_host_tags(loaded_config, hosts_config),
+                    config_cache=ConfigCache(
+                        loaded_config,
+                        hosts_config,
+                        config.make_host_tags(loaded_config, hosts_config),
+                        autochecks_dir=cmk.utils.paths.autochecks_dir,
+                        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+                        builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+                    ),
+                ),
+                app=app,
+            ),
+            args,
+        ) == DiagHostResult(
+            0,
+            raw_data,
+        )
+
+
+MOCK_PLUGIN = ActiveCheckConfig(
+    name="my_active_check",
+    parameter_parser=lambda x: x,
+    commands_function=lambda params, host_config: (  # noqa: ARG005
+        ActiveCheckCommand(
+            service_description=f"Active check of {host_config.name}",
+            command_arguments=("--arg1", "arument1", "--host_alias", f"{host_config.alias}"),
+        ),
+    ),
+)
+
+
+def _patch_plugin_loading(
+    monkeypatch: pytest.MonkeyPatch,
+    loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
+) -> None:
+    # Patch the module that holds the binding actually being read, not the
+    # re-export in `cmk.base.config`: those are independent bindings.
+    monkeypatch.setattr(
+        config._impl,  # noqa: SLF001
+        "load_active_checks",
+        lambda *a, **kw: loaded_active_checks,  # noqa: ARG005
+    )
+
+
+class AutomationActiveCheckTestable(checkmk.AutomationActiveCheck):
+    @override
+    def _execute_check_plugin(self, commandline: Sequence[str]) -> tuple[int, str]:
+        return (0, f"Assume I ran {commandline!r}")
+
+
+@pytest.mark.parametrize(
+    "active_checks, loaded_active_checks, host_attrs, service_attrs, active_check_args, expected_result",
+    [
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {
+                _TEST_LOCATION: MOCK_PLUGIN,
+            },
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "display_name": "my_host",
+            },
+            {},
+            ["my_host", "my_active_check", "Active check of my_host"],
+            automation_results.ActiveCheckResult(
+                state=0,
+                output="Assume I ran 'check_my_active_check --arg1 arument1 --host_alias my_host'",
+            ),
+            id="active_check",
+        ),
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {
+                _TEST_LOCATION: MOCK_PLUGIN,
+            },
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "display_name": "my_host",
+            },
+            {},
+            ["my_host", "my_active_check", "Some other item"],
+            automation_results.ActiveCheckResult(
+                state=None, output="Failed to compute check result"
+            ),
+            id="no_active_check",
+        ),
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {
+                _TEST_LOCATION: ActiveCheckConfig(
+                    name="my_active_check",
+                    parameter_parser=lambda x: x,
+                    commands_function=lambda params, host_config: (  # noqa: ARG005
+                        ActiveCheckCommand(
+                            service_description=f"Active check of {host_config.name}",
+                            command_arguments=(
+                                replace_macros("$_SERVICEFOO$", host_config.macros),
+                            ),
+                        ),
+                    ),
+                ),
+            },
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "display_name": "my_host",
+            },
+            {"_FOO": "BAR"},
+            ["my_host", "my_active_check", "Active check of my_host"],
+            automation_results.ActiveCheckResult(
+                state=0, output="Assume I ran \"check_my_active_check 'BAR'\""
+            ),
+            id="custom_service_attribute",
+        ),
+    ],
+)
+def test_automation_active_check(  # type: ignore[misc]
+    active_checks: tuple[str, Sequence[Mapping[str, str]]],
+    loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
+    host_attrs: Mapping[str, str],
+    service_attrs: Mapping[str, str],
+    active_check_args: list[str],
+    expected_result: automation_results.ActiveCheckResult,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_plugin_loading(monkeypatch, loaded_active_checks)
+    monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: host_attrs)  # noqa: ARG005
+    monkeypatch.setattr(checkmk, "get_service_attributes", lambda *a, **kw: service_attrs)  # noqa: ARG005
+    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})  # noqa: ARG005
+
+    config_cache = config.ConfigCache(
+        EMPTY_CONFIG,
+        config.make_hosts_config(EMPTY_CONFIG),
+        config.make_host_tags(EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)),
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+        builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+    )
+    monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)  # noqa: ARG005
+
+    active_check = AutomationActiveCheckTestable()
+    assert (
+        active_check.execute(
+            make_common_state(
+                config.LoadingResult(
+                    loaded_config=EMPTY_CONFIG,
+                    hosts_config=config.make_hosts_config(EMPTY_CONFIG),
+                    host_tags=config.make_host_tags(
+                        EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)
+                    ),
+                    config_cache=config_cache,
+                )
+            ),
+            active_check_args,
+        )
+        == expected_result
+    )
+
+
+@pytest.mark.parametrize(
+    "active_checks, loaded_active_checks, host_attrs, active_check_args, error_message",
+    [
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {
+                PluginLocation("some_module", "some_name"): ActiveCheckConfig(
+                    name="my_active_check",
+                    parameter_parser=lambda x: x,
+                    commands_function=lambda params, host_config: (  # noqa: ARG005
+                        ActiveCheckCommand(
+                            service_description=f"Active check of {host_config.name}",
+                            command_arguments=(1, 2, 3),  # type: ignore[arg-type]  # wrong on purpose
+                        ),
+                    ),
+                ),
+            },
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "display_name": "my_host",
+            },
+            ["my_host", "my_active_check", "Active check of my_host"],
+            (
+                "\nWARNING: Config creation for active check my_active_check failed on my_host: "
+                "Got invalid argument list from SSC plugin: 1 at index 0 in (1, 2, 3). Expected either `str` or `Secret`.\n"
+            ),
+            id="invalid_args",
+        ),
+    ],
+)
+def test_automation_active_check_invalid_args(  # type: ignore[misc]
+    active_checks: tuple[str, Sequence[Mapping[str, str]]],
+    loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
+    host_attrs: Mapping[str, str],
+    active_check_args: list[str],
+    error_message: str,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _patch_plugin_loading(monkeypatch, loaded_active_checks)
+    monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: host_attrs)  # noqa: ARG005
+    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})  # noqa: ARG005
+
+    loaded_config = replace(
+        EMPTY_CONFIG, ipaddresses={HostName("my_host"): HostAddress("127.0.0.1")}
+    )
+    config_cache = config.ConfigCache(
+        loaded_config,
+        config.make_hosts_config(loaded_config),
+        config.make_host_tags(loaded_config, config.make_hosts_config(loaded_config)),
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+        builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+    )
+    monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)  # noqa: ARG005
+
+    monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
+
+    active_check = checkmk.AutomationActiveCheck()
+    active_check.execute(
+        make_common_state(
+            config.LoadingResult(
+                loaded_config=loaded_config,
+                hosts_config=config.make_hosts_config(loaded_config),
+                host_tags=config.make_host_tags(
+                    loaded_config, config.make_hosts_config(loaded_config)
+                ),
+                config_cache=config_cache,
+            )
+        ),
+        active_check_args,
+    )
+
+    assert error_message == capsys.readouterr().err
+
+
+class _RecordingAutomation(checkmk.AutomationActiveCheck):
+    def __init__(self) -> None:
+        self.calls: dict[str, str | tuple[str, str, str]] = {}
+        self.shipped_site_stores: AdHocSiteStores | None = None
+
+    @override
+    def _execute_check_plugin(self, commandline: str) -> tuple[ServiceState, ServiceDetails]:
+        self.calls["local"] = commandline
+        return (0, "local output")
+
+    @override
+    def _execute_check_plugin_on_relay(
+        self,
+        relay_id: str,
+        host: HostName,
+        command_line: str,
+        *,
+        site_stores: AdHocSiteStores | None = None,
+    ) -> tuple[ServiceState, ServiceDetails]:
+        self.calls["relay"] = (relay_id, str(host), command_line)
+        self.shipped_site_stores = site_stores
+        return (0, "relay output")
+
+
+def test_active_check_on_relay_host_routes_to_relay(monkeypatch: pytest.MonkeyPatch) -> None:
+    config_cache, lr = _prepare(monkeypatch, relay_id="relay-1", loaded_active_checks={})
+    monkeypatch.setattr(
+        config_cache,
+        "active_check_services",
+        lambda *a, **kw: iter([_FakeServiceData("My svc", ("check_httpv2", "-u", "http://x"))]),  # noqa: ARG005
+    )
+    auto = _RecordingAutomation()
+    result = auto.execute(make_common_state(lr), ["my_host", "my_active_check", "My svc"])
+    assert result == automation_results.ActiveCheckResult(state=0, output="relay output")
+    assert auto.calls["relay"] == ("relay-1", "my_host", "check_httpv2 -u http://x")
+    assert "local" not in auto.calls
+
+
+def test_active_check_on_non_relay_host_runs_locally(monkeypatch: pytest.MonkeyPatch) -> None:
+    config_cache, lr = _prepare(monkeypatch, relay_id=None, loaded_active_checks={})
+    monkeypatch.setattr(
+        config_cache,
+        "active_check_services",
+        lambda *a, **kw: iter([_FakeServiceData("My svc", ("check_httpv2", "-u", "http://x"))]),  # noqa: ARG005
+    )
+    auto = _RecordingAutomation()
+    result = auto.execute(make_common_state(lr), ["my_host", "my_active_check", "My svc"])
+    assert result == automation_results.ActiveCheckResult(state=0, output="local output")
+    assert auto.calls["local"] == "check_httpv2 -u http://x"
+    assert "relay" not in auto.calls
+
+
+def test_active_check_site_side_only_on_relay_host_runs_locally(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # cmk_inv is site-side-only: even on a relay host it must run on the site, not the relay.
+    config_cache, lr = _prepare(monkeypatch, relay_id="relay-1", loaded_active_checks={})
+    monkeypatch.setattr(
+        config_cache,
+        "active_check_services",
+        lambda *a, **kw: iter(  # noqa: ARG005
+            [_FakeServiceData("Check_MK HW/SW Inventory", ("check_cmk_inv", "--inv"))]
+        ),
+    )
+    auto = _RecordingAutomation()
+    result = auto.execute(
+        make_common_state(lr),
+        ["my_host", "cmk_inv", "Check_MK HW/SW Inventory"],
+    )
+    assert result == automation_results.ActiveCheckResult(state=0, output="local output")
+    assert auto.calls["local"] == "check_cmk_inv --inv"
+    assert "relay" not in auto.calls
+
+
+def test_active_check_unsupported_on_relay_reports_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    config_cache, lr = _prepare(
+        monkeypatch, relay_id="relay-1", loaded_active_checks={_TEST_LOCATION: MOCK_PLUGIN}
+    )
+    monkeypatch.setattr(
+        config_cache,
+        "active_checks",
+        lambda *a, **kw: [  # noqa: ARG005
+            ("my_active_check", [{"description": "My active check", "param1": "param1"}])
+        ],
+    )
+    result = AutomationActiveCheckTestable().execute(
+        make_common_state(lr),
+        ["my_host", "my_active_check", "Active check of my_host"],
+    )
+    assert result == automation_results.ActiveCheckResult(
+        state=3, output="UNKNOWN - Active check 'my_active_check' is not supported on relays"
+    )
+
+
+def _plugin_passing_a_password(name: str) -> ActiveCheckConfig:
+    return ActiveCheckConfig(
+        name=name,
+        parameter_parser=lambda params: params,
+        commands_function=lambda params, host_config: (  # noqa: ARG005
+            ActiveCheckCommand(
+                service_description="Password check",
+                command_arguments=("--password-id", params["password"]),
+            ),
+        ),
+    )
+
+
+def _password_check_on(
+    monkeypatch: pytest.MonkeyPatch, *, relay_id: str | None, plugin: str
+) -> _RecordingAutomation:
+    """Run the automation for a check whose rule holds an explicit password."""
+    _prepare(
+        monkeypatch,
+        relay_id=relay_id,
+        loaded_active_checks={_TEST_LOCATION: _plugin_passing_a_password(plugin)},
+    )
+    password = ("cmk_postprocessed", "explicit_password", ("uuid1234", "s3cret"))
+    ts = Scenario(relay_supported_active_checks=frozenset({"httpv2"}))
+    ts.add_host(HostName("my_host"))
+    ts.set_ruleset_bundle(
+        "active_checks",
+        {
+            plugin: [
+                {
+                    "id": "01",
+                    "condition": {},
+                    "value": {"description": "Password check", "password": password},
+                }
+            ]
+        },
+    )
+    lr = ts.apply(monkeypatch)
+    # Setup's merged pending store holds the passwords of every rule, other hosts' too.
+    monkeypatch.setenv(
+        "PASSWORD_STORE_SECRET_FILE", str(cmk.utils.paths.omd_root / "etc/password_store.secret")
+    )
+    cmk.utils.password_store.save(
+        {"uuid1234": "s3cret", "uuid-of-another-host": "theirs"}, pending_secrets_path_site()
+    )
+    automation = _RecordingAutomation()
+    automation.execute(make_common_state(lr), ["my_host", plugin, "Password check"])
+    return automation
+
+
+def test_discovery_page_run_on_a_relay_ships_the_pending_passwords_and_cas(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The relay gets the pending stores inline; the command refers to a per-run store.
+
+    The relay has neither the site's pending password file nor its pending CA bundle,
+    so the task carries the bundle and the passwords this host's rules refer to, no
+    others, and the password reference names the store the relay will write for this
+    run below its tmp directory, as an ad-hoc fetch does.
+    """
+    automation = _password_check_on(monkeypatch, relay_id="relay-1", plugin="httpv2")
+
+    relay_call = automation.calls["relay"]
+    assert isinstance(relay_call, tuple)
+    relay_id, _host, command = relay_call
+    assert relay_id == "relay-1"
+    assert automation.shipped_site_stores is not None
+    assert automation.shipped_site_stores.passwords is not None
+    store = automation.shipped_site_stores.passwords.path
+    assert store.startswith(str(cmk.utils.paths.relative_tmp_dir / "passwords_adhoc_")), store
+    assert command == f"check_httpv2 --password-id uuid1234:{store}"
+    assert automation.shipped_site_stores.passwords.values == {"uuid1234": "s3cret"}
+    assert automation.shipped_site_stores.ca_bundle == _PENDING_CA_BUNDLE
+
+
+def test_discovery_page_run_on_the_site_keeps_the_sites_pending_store(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A check the site runs itself refers to the site's merged store and ships nothing."""
+    automation = _password_check_on(monkeypatch, relay_id=None, plugin="httpv2")
+
+    assert "relay" not in automation.calls
+    assert automation.calls["local"] == (
+        f"check_httpv2 --password-id uuid1234:{pending_secrets_path_site()}"
+    )
+
+
+def test_discovery_page_run_of_cmk_inv_on_a_relay_host_stays_on_the_site(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """HW/SW Inventory runs on the site even for a relay host: no task, the site's store."""
+    automation = _password_check_on(monkeypatch, relay_id="relay-1", plugin="cmk_inv")
+
+    assert "relay" not in automation.calls
+    assert automation.calls["local"] == (
+        f"check_cmk_inv --password-id uuid1234:{pending_secrets_path_site()}"
+    )
+
+
+def test_execute_on_relay_import_error_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    auto = checkmk.AutomationActiveCheck()
+
+    def _raise(relay_id: str, host: HostName, command: str, **_kw: object) -> NoReturn:  # noqa: ARG001
+        raise ImportError("enterprise package missing")
+
+    monkeypatch.setattr(auto, "_submit_to_relay", _raise)
+    state, output = auto._execute_check_plugin_on_relay(  # noqa: SLF001
+        "relay-1", HostName("myhost"), "check_httpv2 -u http://x"
+    )
+    assert state == 3
+    assert "not available" in output
+
+
+def test_execute_on_relay_submit_failure_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    auto = checkmk.AutomationActiveCheck()
+    monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
+
+    def _raise(relay_id: str, host: HostName, command: str, **_kw: object) -> NoReturn:  # noqa: ARG001
+        raise TimeoutError("no result")
+
+    monkeypatch.setattr(auto, "_submit_to_relay", _raise)
+    state, output = auto._execute_check_plugin_on_relay(  # noqa: SLF001
+        "relay-1", HostName("myhost"), "check_httpv2 -u http://x"
+    )
+    assert state == 3
+    assert "relay execution failed" in output
+
+
+def test_relay_wait_timeout_outlasts_the_relays_own_timeout() -> None:
+    """The site must outlive the relay's own execution budget.
+
+    The task timeout is the relay's, and its clock only starts once the relay
+    dequeues the task; the site's wait starts at submit. Waiting exactly as long
+    means the site always gives up first, so the relay's timeout result - the one
+    naming the reason - could never be read.
+    """
+    task = AdHocActiveCheckTask(host="myhost", command="check_httpv2 -u http://x")
+    assert checkmk._relay_wait_timeout(task) > task.timeout  # noqa: SLF001
+
+
+class TestWarnServiceNameConflicts:
+    """Unit tests for _warn_service_name_conflicts."""
+
+    def _make_entry(
+        self, description: str, check_plugin_name: str, check_source: str = "unchanged"
+    ) -> CheckPreviewEntry:
+        return CheckPreviewEntry(
+            check_source=check_source,
+            check_plugin_name=check_plugin_name,
+            ruleset_name=None,
+            discovery_ruleset_name=None,
+            item=None,
+            old_discovered_parameters={},
+            new_discovered_parameters={},
+            effective_parameters={},
+            description=description,
+            state=None,
+            output="",
+            metrics=[],
+            old_labels={},
+            new_labels={},
+            found_on_nodes=[HostName("my_host")],
+        )
+
+    def _make_preview(self, entries: list) -> CheckPreview:
+        return CheckPreview(
+            table={HostName("my_host"): entries},
+            labels=QualifiedDiscovery.empty(),
+            source_results=[],
+            kept_labels={},
+        )
+
+    def test_no_conflict(self) -> None:
+        config_warnings.initialize()
+        preview = self._make_preview(
+            [
+                self._make_entry("Service A", "plugin_one", "unchanged"),
+                self._make_entry("Service B", "plugin_two", "new"),
+            ]
+        )
+        checkmk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
+        assert config_warnings.get_configuration(additional_warnings=()) == []
+
+    def test_passive_passive_conflict_emits_warning(self) -> None:
+        config_warnings.initialize()
+        preview = self._make_preview(
+            [
+                self._make_entry("Check_MK Agent", "checkmk_agent", "unchanged"),
+                self._make_entry("Check_MK Agent", "telemetry_custom_service", "new"),
+            ]
+        )
+        checkmk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
+        warnings = config_warnings.get_configuration(additional_warnings=())
+        assert len(warnings) == 1
+        assert "Check_MK Agent" in warnings[0]
+        assert "checkmk_agent" in warnings[0]
+        assert "telemetry_custom_service" in warnings[0]
+
+    def test_vanished_monitored_conflict_emits_warning(self) -> None:
+        """A vanished (but still monitored) service can conflict with a new service.
+
+        This is the real-world scenario: the existing monitored service shows as
+        "vanished" on the discovery page while the new conflicting service is "new".
+        """
+        config_warnings.initialize()
+        preview = self._make_preview(
+            [
+                self._make_entry("Check_MK Agent", "checkmk_agent", "vanished"),
+                self._make_entry("Check_MK Agent", "telemetry_custom_service", "new"),
+            ]
+        )
+        checkmk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
+        warnings = config_warnings.get_configuration(additional_warnings=())
+        assert len(warnings) == 1
+        assert "Check_MK Agent" in warnings[0]
+        assert "checkmk_agent" in warnings[0]
+        assert "telemetry_custom_service" in warnings[0]
+
+    def test_more_than_two_conflicts_emits_single_warning(self) -> None:
+        config_warnings.initialize()
+        preview = self._make_preview(
+            [
+                self._make_entry("My Service", "plugin_a", "unchanged"),
+                self._make_entry("My Service", "plugin_b", "new"),
+                self._make_entry("My Service", "plugin_c", "new"),
+            ]
+        )
+        checkmk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
+        warnings = config_warnings.get_configuration(additional_warnings=())
+        assert len(warnings) == 1
+        assert "My Service" in warnings[0]
+        assert "plugin_a" in warnings[0]
+        assert "plugin_b" in warnings[0]
+        assert "plugin_c" in warnings[0]
+
+    def test_ignored_active_does_not_trigger_warning(self) -> None:
+        config_warnings.initialize()
+        preview = self._make_preview(
+            [
+                self._make_entry("Service A", "plugin_one", "ignored_active"),
+                self._make_entry("Service A", "plugin_two", "unchanged"),
+            ]
+        )
+        checkmk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
+        assert config_warnings.get_configuration(additional_warnings=()) == []
+
+    def test_active_passive_conflict_emits_warning(self) -> None:
+        config_warnings.initialize()
+        preview = self._make_preview(
+            [
+                self._make_entry("Check_MK Agent", "checkmk_agent", "unchanged"),
+                self._make_entry("Check_MK Agent", "httpv2", "active"),
+            ]
+        )
+        checkmk._warn_service_name_conflicts(HostName("my_host"), preview)  # noqa: SLF001
+        warnings = config_warnings.get_configuration(additional_warnings=())
+        assert len(warnings) == 1
+        assert "Check_MK Agent" in warnings[0]
+
+
+def test_delete_hosts_deletes_inventorized_host_labels() -> None:
+    host_name = HostName("test-host")
+
+    InventorizedHostLabelsStore(host_name, cmk.utils.paths.inventorized_host_labels_dir).save(
+        {"cmk/inventory/product": "foo"}
+    )
+
+    checkmk.automation_delete_hosts.handler(NoState(cmk.utils.paths.omd_root, {}), [str(host_name)])
+
+    assert not (cmk.utils.paths.inventorized_host_labels_dir / f"{host_name}.json").exists()
+
+
+def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
+    additional_labels: dict[str, str] = {}
+    additional_label_sources: dict[str, LabelSource] = {}
+
+    ts = Scenario()
+    ts.add_host(HostName("test-host"))
+    ts.set_option(
+        "host_labels",
+        {
+            "test-host": {
+                "explicit": "ding",
+            },
+        },
+    )
+    loading_result = ts.apply(monkeypatch)
+
+    label_sources: dict[str, LabelSource] = {
+        "cmk/site": "discovered",
+        "explicit": "explicit",
+    }
+    assert checkmk.automation_analyse_host.handler(
+        make_common_state(
+            LoadingResult(
+                loaded_config=EMPTY_CONFIG,
+                hosts_config=loading_result.hosts_config,
+                host_tags=loading_result.host_tags,
+                config_cache=loading_result.config_cache,
+            )
+        ),
+        ["test-host"],
+    ) == AnalyseHostResult(
+        label_sources=label_sources | additional_label_sources,
+        labels={
+            "cmk/site": "unit",
+            "explicit": "ding",
+        }
+        | additional_labels,
+    )
+
+
+def test_rule_effectiveness_is_not_answered_from_an_earlier_call(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("test-host"))
+    state = make_common_state(ts.apply(monkeypatch))
+    # CPython hands the address of a freed list to the next one, so the rules of a
+    # later call may have the id of an earlier call's. Make that deterministic by
+    # handing over the very same list object, with different rules in it.
+    rules: list[list[RuleSpec[bool]]] = [
+        [{"id": "01", "value": True, "condition": {"host_name": ["test-host"]}}]
+    ]
+    monkeypatch.setattr(ast, "literal_eval", lambda _text: rules)
+    monkeypatch.setattr(sys, "stdin", io.StringIO())
+    handler = checkmk.automation_analyze_host_rule_effectiveness.handler
+
+    first = handler(state, [])
+    rules[0][0]["condition"] = {"host_name": ["other-host"]}
+    second = handler(state, [])
+
+    assert (first, second) == (
+        AnalyzeHostRuleEffectivenessResult({"01": True}),
+        AnalyzeHostRuleEffectivenessResult({"01": False}),
+    )
+
+
+def test_service_labels(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("test-host"))
+    ts.set_ruleset(
+        "service_label_rules",
+        list[RuleSpec[dict[str, str]]](
+            [
+                {
+                    "condition": {"service_description": [{"$regex": "CPU load"}]},
+                    "id": "01",
+                    "value": {"label1": "val1"},
+                },
+                {
+                    "condition": {"service_description": [{"$regex": "CPU load"}]},
+                    "id": "02",
+                    "value": {"label2": "val2"},
+                },
+                {
+                    "condition": {"service_description": [{"$regex": "CPU temp"}]},
+                    "id": "03",
+                    "value": {"label1": "val1"},
+                },
+            ]
+        ),
+    )
+    loading_result = ts.apply(monkeypatch)
+
+    assert checkmk.automation_get_services_labels.handler(
+        make_common_state(
+            LoadingResult(
+                loaded_config=EMPTY_CONFIG,
+                hosts_config=loading_result.hosts_config,
+                host_tags=loading_result.host_tags,
+                config_cache=loading_result.config_cache,
+            )
+        ),
+        ["test-host", "CPU load", "CPU temp"],
+    ) == GetServicesLabelsResult(
+        {
+            "CPU load": {"label1": "val1", "label2": "val2"},
+            "CPU temp": {"label1": "val1"},
+        }
+    )

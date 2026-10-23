@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { SidebarSnapin } from 'cmk-shared-typing/typescript/sidebar'
-import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
+import { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { afterEach, beforeEach, expect, vi } from 'vitest'
 
 import { SidebarService } from '@/sidebar/lib/sidebar'
@@ -61,7 +61,6 @@ afterEach(() => {
   vi.runOnlyPendingTimers()
   vi.useRealTimers()
   document.body.innerHTML = ''
-  vi.clearAllMocks()
 })
 
 describe('SidebarService.snapinHasFocus', () => {
@@ -122,5 +121,38 @@ describe('SidebarService.updateSnapinContent', () => {
       ['quicksearch', 'hosts'],
       expect.any(Number)
     )
+  })
+})
+
+describe('SidebarService toggle shortcut', () => {
+  function pressSlash(modifiers: KeyboardEventInit): boolean {
+    const toggle = vi.spyOn(SidebarService, 'toggle').mockImplementation(() => {})
+    const service = new SidebarService([], 30, new KeyShortcutService(window))
+    document.body.dispatchEvent(
+      new KeyboardEvent('keydown', { key: '/', bubbles: true, ...modifiers })
+    )
+    document.body.dispatchEvent(
+      new KeyboardEvent('keyup', { key: '/', bubbles: true, ...modifiers })
+    )
+    service.disableShortCuts()
+    const toggled = toggle.mock.calls.length > 0
+    toggle.mockRestore()
+    return toggled
+  }
+
+  test('Alt + / toggles the sidebar', () => {
+    expect(pressSlash({ altKey: true })).toBe(true)
+  })
+
+  test('Alt + / toggles it where "/" is typed with Shift, as on German keyboards', () => {
+    expect(pressSlash({ altKey: true, shiftKey: true })).toBe(true)
+  })
+
+  test('Ctrl + / still toggles it where Alt changes the typed character, as on macOS', () => {
+    expect(pressSlash({ ctrlKey: true })).toBe(true)
+  })
+
+  test('Ctrl + / toggles it where "/" is typed with Shift', () => {
+    expect(pressSlash({ ctrlKey: true, shiftKey: true })).toBe(true)
   })
 })

@@ -30,7 +30,7 @@ use clap::Parser;
 use flexi_logger::{self, Cleanup, Criterion, DeferredNow, FileSpec, LogSpecification, Record};
 use std::collections::HashSet;
 use std::env::ArgsOs;
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
@@ -707,6 +707,26 @@ pub struct RuntimeEnv {
     pub runtime_dir: Option<PathBuf>,
     /// effective ORACLE_HOME of the spawned process, if any
     pub oracle_home: Option<PathBuf>,
+    /// the user the monitoring process becomes before it loads the client
+    pub run_as: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RunAsUser {
+    pub uid: u32,
+    pub gid: u32,
+    pub groups: Vec<u32>,
+    pub name: String,
+    pub home: PathBuf,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RuntimeVerdict {
+    Load,
+    /// The owner of the runtime. Only a Unix process running as root gets this.
+    SwitchTo(RunAsUser),
+    /// The reason the runtime must not be loaded, worded for the user.
+    Reject(String),
 }
 
 /// Why no Oracle client runtime could be prepared.
@@ -714,7 +734,19 @@ pub struct RuntimeEnv {
 pub enum RuntimeError {
     NoConfig,
     NotFound,
-    Rejected { dir: PathBuf },
+    /// `reason` names what made the runtime unsafe - the offending path and,
+    /// on Windows, the principal that may write it. It is part of the message
+    /// because this text is all the user gets: it goes to the agent output as
+    /// an `oracle_instance` FAILURE row.
+    Rejected {
+        dir: PathBuf,
+        reason: String,
+    },
+    SwitchFailed {
+        user: String,
+        dir: PathBuf,
+        reason: String,
+    },
 }
 
 impl std::fmt::Display for RuntimeError {
@@ -722,11 +754,15 @@ impl std::fmt::Display for RuntimeError {
         match self {
             Self::NoConfig => write!(f, "No Config"),
             Self::NotFound => write!(f, "No Oracle client runtime found"),
-            Self::Rejected { dir } => write!(
+            Self::Rejected { dir, reason } => write!(
                 f,
                 "{dir:?} - Execution is blocked because you try to load an unsafe Oracle client \
-                 library as a privileged user. Please, disable write access to the files by \
-                 non-privileged users."
+                 library as a privileged user. {reason}. Please, disable write access to the \
+                 files by non-privileged users, or take ownership of them."
+            ),
+            Self::SwitchFailed { user, dir, reason } => write!(
+                f,
+                "{dir:?} belongs to {user}, but the plugin cannot run as that user: {reason}"
             ),
         }
     }
@@ -753,25 +789,99 @@ pub fn detect_runtime_env(config: &OracleConfig) -> Result<RuntimeEnv, RuntimeEr
         ora_sql.conn().grid(),
     )
     .ok_or(RuntimeError::NotFound)?;
-    if !runtime_permissions_ok(&client, ora_sql.options()) {
-        return Err(RuntimeError::Rejected { dir: client.dir });
-    }
+    let run_as = match assess_runtime(&client.dir, ora_sql.options()) {
+        RuntimeVerdict::Load => None,
+        RuntimeVerdict::SwitchTo(user) => Some(user.name),
+        RuntimeVerdict::Reject(reason) => {
+            log::error!("Runtime rejected: {reason}");
+            return Err(RuntimeError::Rejected {
+                dir: client.dir,
+                reason,
+            });
+        }
+    };
     Ok(RuntimeEnv {
         oracle_home: effective_oracle_home(Some(&client), inherited),
         runtime_dir: Some(client.dir),
+        run_as,
     })
 }
 
-fn runtime_permissions_ok(runtime: &ClientRuntime, options: &Options) -> bool {
-    if validate_permissions(
-        &runtime.dir,
+fn assess_runtime(dir: &Path, options: &Options) -> RuntimeVerdict {
+    let (check, safe_entries) = (
         options.permissions_check(),
         options.permissions_safe_entries(),
-    ) {
-        return true;
+    );
+    #[cfg(unix)]
+    {
+        crate::permissions_linux::assess(dir, check, safe_entries)
     }
-    log::error!("Runtime path {:?} has wrong permissions", runtime.dir);
-    false
+    #[cfg(windows)]
+    {
+        match crate::permissions_windows::validate(dir, check, safe_entries) {
+            Ok(()) => RuntimeVerdict::Load,
+            Err(reason) => RuntimeVerdict::Reject(reason),
+        }
+    }
+}
+
+/// Has to run right before the first connection, which is what loads the client
+/// library, and after everything that still needs root: a switch cannot be
+/// undone.
+pub fn prepare_runtime_load(config: &OracleConfig, environment: &Env) -> Result<(), RuntimeError> {
+    let ora_sql = config.ora_sql().ok_or(RuntimeError::NoConfig)?;
+    let Some(dir) = own_runtime_dir() else {
+        log::info!(
+            "{RUNTIME_PATH_ENV_VAR} names no directory: the client library comes from the \
+             system's library path"
+        );
+        return Ok(());
+    };
+    match assess_runtime(&dir, ora_sql.options()) {
+        RuntimeVerdict::Reject(reason) => Err(RuntimeError::Rejected { dir, reason }),
+        RuntimeVerdict::Load => Ok(()),
+        RuntimeVerdict::SwitchTo(user) => {
+            if let Err(e) =
+                crate::ora_sql::instance::prepare_wallet_environment(config, environment)
+            {
+                log::error!("Before running as {}: {e:#}", user.name);
+            }
+            switch_user(&user).map_err(|e| RuntimeError::SwitchFailed {
+                user: user.name.clone(),
+                dir: dir.clone(),
+                reason: e.to_string(),
+            })?;
+            log::info!(
+                "Running as {} (uid {}), the owner of {dir:?}",
+                user.name,
+                user.uid
+            );
+            Ok(())
+        }
+    }
+}
+
+/// The runtime the parent put in front of the library search path.
+fn own_runtime_dir() -> Option<PathBuf> {
+    std::env::var_os(RUNTIME_PATH_ENV_VAR).and_then(|path| first_search_dir(&path))
+}
+
+fn first_search_dir(search_path: &OsStr) -> Option<PathBuf> {
+    std::env::split_paths(search_path)
+        .next()
+        .filter(|dir| !dir.as_os_str().is_empty())
+}
+
+#[cfg(unix)]
+fn switch_user(user: &RunAsUser) -> std::io::Result<()> {
+    crate::permissions_linux::drop_privileges(user)
+}
+
+#[cfg(windows)]
+fn switch_user(_user: &RunAsUser) -> std::io::Result<()> {
+    Err(std::io::Error::other(
+        "running as another user is not supported on Windows",
+    ))
 }
 
 pub fn effective_oracle_home(
@@ -854,6 +964,9 @@ pub fn format_runtime_env(runtime_env: &RuntimeEnv, current: &str) -> String {
     if let Some(home) = &runtime_env.oracle_home {
         output.push_str(&format!("{ORACLE_HOME_ENV_VAR}={}\n", home.display()));
     }
+    if let Some(user) = &runtime_env.run_as {
+        output.push_str(&format!("RUN_AS={user}\n"));
+    }
     output
 }
 
@@ -868,18 +981,20 @@ pub fn reset_env(old_path: &Path, mut_env: Option<String>) {
 /// library from it. Dispatches to the platform-specific implementation.
 ///
 /// On Unix the path, its direct entries and its parent directories must only be
-/// writable by root, by the conventional Oracle owner `oracle:oinstall`, or by a
-/// user or group listed in `safe_entries`, whenever the plugin runs as root. On
-/// Windows the path must be owned by, and its DACL must grant write access only
+/// writable by root, or by a user or group listed in `safe_entries`,
+/// whenever the plugin runs as root.
+/// On Windows the path must be owned by, and its DACL must grant write access only
 /// to, privileged SIDs (SYSTEM, built-in Administrators, Domain Admins,
 /// Enterprise Admins) or a listed safe entry, whenever the plugin runs elevated:
 /// the owner implicitly holds `WRITE_DAC`, so validating the DACL alone would let
 /// a non-privileged owner rewrite it. In both cases a non-privileged caller
-/// always passes, and `check` turns the validation off entirely.
-pub fn validate_permissions(p: &Path, check: bool, safe_entries: &[String]) -> bool {
+/// always passes, and `check` turns the validation off entirely. The `Err`
+/// carries the reason for the refusal, so that the caller can show it to the
+/// user instead of leaving it in the log.
+pub fn validate_permissions(p: &Path, check: bool, safe_entries: &[String]) -> Result<(), String> {
     #[cfg(unix)]
     {
-        crate::permissions_linux::validate(p, check, safe_entries)
+        crate::permissions_linux::validate_file(p, check, safe_entries)
     }
     #[cfg(windows)]
     {
@@ -1407,6 +1522,7 @@ mod tests {
         let runtime_env = RuntimeEnv {
             runtime_dir: Some(PathBuf::from("/runtime/lib")),
             oracle_home: Some(PathBuf::from("/oracle/home")),
+            run_as: None,
         };
         assert_eq!(
             format_runtime_env(&runtime_env, "/existing/path"),
@@ -1421,6 +1537,7 @@ mod tests {
         let runtime_env = RuntimeEnv {
             runtime_dir: Some(PathBuf::from("/runtime/lib")),
             oracle_home: None,
+            run_as: None,
         };
         assert_eq!(
             format_runtime_env(&runtime_env, ""),
@@ -1429,10 +1546,35 @@ mod tests {
     }
 
     #[test]
+    fn test_format_runtime_env_names_the_user_to_run_as() {
+        let runtime_env = RuntimeEnv {
+            runtime_dir: Some(PathBuf::from("/u01/dbhome_1/lib")),
+            oracle_home: Some(PathBuf::from("/u01/dbhome_1")),
+            run_as: Some("oracle".to_string()),
+        };
+        assert_eq!(
+            format_runtime_env(&runtime_env, ""),
+            format!(
+                "{RUNTIME_PATH_ENV_VAR}=/u01/dbhome_1/lib\nORACLE_HOME=/u01/dbhome_1\nRUN_AS=oracle\n"
+            )
+        );
+    }
+
+    #[test]
+    fn test_first_search_dir() {
+        let runtime = PathBuf::from("/u01/dbhome_1").join(CLIENT_LIB_SUBDIR);
+        let with_old = prepend_to_search_path(runtime.clone(), Path::new("/existing/lib"));
+        assert_eq!(first_search_dir(&with_old), Some(runtime.clone()));
+        assert_eq!(first_search_dir(runtime.as_os_str()), Some(runtime));
+        assert_eq!(first_search_dir(OsStr::new("")), None);
+    }
+
+    #[test]
     fn test_format_runtime_env_inherited_home() {
         let runtime_env = RuntimeEnv {
             runtime_dir: Some(PathBuf::from("/runtime/lib")),
             oracle_home: Some(PathBuf::from("/inherited/home")),
+            run_as: None,
         };
         assert_eq!(
             format_runtime_env(&runtime_env, ""),
@@ -1443,5 +1585,20 @@ mod tests {
     #[test]
     fn test_format_runtime_env_nothing_detected() {
         assert_eq!(format_runtime_env(&RuntimeEnv::default(), "/some/path"), "");
+    }
+
+    // The refusal is the only thing the user sees - it travels to the agent
+    // output as an oracle_instance FAILURE row - so it has to carry the reason
+    // the permission check produced, not just the directory.
+    #[test]
+    fn test_rejected_runtime_states_the_reason() {
+        let reason =
+            "Path \"C:/oic\" grants write access to non-privileged BUILTIN\\Users (S-1-5-32-545)";
+        let message = RuntimeError::Rejected {
+            dir: PathBuf::from("C:/oic"),
+            reason: reason.to_string(),
+        }
+        .to_string();
+        assert!(message.contains(reason), "{message}");
     }
 }

@@ -10,6 +10,7 @@ from typing import Any
 
 from cmk.ccc.version import Edition
 from cmk.gui.http import request
+from cmk.gui.i18n import _
 from cmk.rulesets.internal.form_specs import (
     DictGroupExtended,
     DictionaryExtended,
@@ -273,7 +274,7 @@ def _content_elements() -> dict[str, DictElement[Any]]:
             parameter_form=Integer(
                 title=Title("Number of graphs per notification (default: 5)"),
                 label=Label("Show up to"),
-                unit_symbol="graphs",
+                unit_symbol=_("graphs"),
                 prefill=DefaultValue(5),
                 help_text=Help(
                     "Sets a limit for the number of graphs that are displayed in a notification."
@@ -296,7 +297,7 @@ def _bulk_elements() -> dict[str, DictElement[Any]]:
                     "Limit number of events with graphs per bulk notification (default: 5)"
                 ),
                 label=Label("Show graphs for the first"),
-                unit_symbol="notifications",
+                unit_symbol=_("notifications"),
                 prefill=DefaultValue(5),
                 help_text=Help(
                     "Sets a limit for the number of notifications in a bulk for "

@@ -5,7 +5,6 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.ccc.site import SiteId
 from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable.predefined import (
@@ -24,6 +23,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupActionMode,
     QuickSetupBackgroundAction,
     QuickSetupBackgroundStageAction,
+    QuickSetupContext,
     QuickSetupStage,
     QuickSetupStageAction,
 )
@@ -43,8 +43,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Text,
     Widget,
 )
-from cmk.livestatus_client import SiteConfiguration
-from cmk.plugins.proxmox_ve.rulesets import (  # astrein: disable=cmk-module-layer-violation
+from cmk.plugins.proxmox_ve.rulesets import (  # astrein: disable=module-layers
     proxmox_ve,
 )
 from cmk.ruleset_matcher.definition import RuleGroup
@@ -72,11 +71,13 @@ def configure_host() -> QuickSetupStage:
             "Enter a unique configuration ID and the host name of your Proxmox VE node, then "
             "define the folder path where nodes and VMs should be created."
         ),
-        configure_components=[
+        configure_components=lambda ctx: [
             widgets.unique_id_formspec_wrapper(
                 title=Title("Configuration name"), prefill_template="proxmox_ve_config"
             ),
-            widgets.host_name_and_host_path_formspec_wrapper(host_prefill_template="proxmox_ve"),
+            widgets.host_name_and_host_path_formspec_wrapper(
+                ctx.tree, ctx.user, host_prefill_template="proxmox_ve"
+            ),
             widgets.site_formspec_wrapper(),
         ],
         actions=[
@@ -196,8 +197,7 @@ def recap_found_services(
     _stage_index: StageIndex,
     parsed_data: ParsedFormData,
     progress_logger: ProgressLogger,
-    site_configs: Mapping[SiteId, SiteConfiguration],
-    debug: bool,
+    ctx: QuickSetupContext,
 ) -> Sequence[Widget]:
     service_discovery_result = utils.get_service_discovery_preview(
         rulespec_name=RuleGroup.SpecialAgents("proxmox_ve"),
@@ -205,8 +205,8 @@ def recap_found_services(
         parameter_form=proxmox_ve.form_special_agents_proxmox_ve(),
         collect_params=proxmox_ve_collect_params,
         progress_logger=progress_logger,
-        site_configs=site_configs,
-        debug=debug,
+        site_configs=ctx.site_configs,
+        debug=ctx.debug,
     )
     proxmox_ve_service_interest = ServiceInterest("proxmox_.*", "services")
     filtered_groups_of_services, _other_services = utils.group_services_by_interest(
@@ -260,8 +260,7 @@ def action(
     mode: QuickSetupActionMode,
     progress_logger: ProgressLogger,
     _object_id: str | None,
-    _use_git: bool,
-    _pprint_value: bool,
+    ctx: QuickSetupContext,
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:
@@ -271,6 +270,7 @@ def action(
                 all_stages_form_data=all_stages_form_data,
                 custom_collect_params=proxmox_ve_collect_params,
                 progress_logger=progress_logger,
+                tree=ctx.tree,
             )
         case QuickSetupActionMode.EDIT:
             raise ValueError("Edit mode not supported")

@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { TwoFactorAuth } from 'cmk-shared-typing/typescript/two_factor_auth'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, nextTick, onMounted, ref } from 'vue'
@@ -17,7 +17,7 @@ import TwoFactorAuthHeader from './components/TwoFactorAuthHeader.vue'
 import TwoFactorAuthLinks from './components/TwoFactorAuthLinks.vue'
 import TwoFactorEnabledMethods from './components/TwoFactorEnabledMethods.vue'
 import type { AuthMode } from './twoFactorAuth'
-import { completeWebAuthnLogin, verifyCode } from './twoFactorAuthService'
+import { AuthFailureError, completeWebAuthnLogin, verifyCode } from './twoFactorAuthService'
 import type { WebAuthnMessage } from './webauthn'
 
 const { _t } = usei18n()
@@ -166,14 +166,21 @@ async function handleSubmit() {
       const redirectUrl = response.redirect || originTarget.value
       window.location.href = redirectUrl
     }
-  } catch {
+  } catch (error: unknown) {
     isSubmitting.value = false
-    message.value = buildMessage()
+    message.value = buildMessage(error)
     await clearAndRefocus()
   }
 }
 
-function buildMessage(): Message {
+function buildMessage(error: unknown): Message {
+  if (error instanceof AuthFailureError && error.reason !== 'invalid_code') {
+    return {
+      title: error.message,
+      lines: [],
+      type: 'error'
+    }
+  }
   switch (currentMode.value) {
     case 'totp_credentials':
       return {
@@ -251,11 +258,11 @@ async function clearAndRefocus() {
       />
     </div>
 
-    <CmkAlertBox v-if="message" :variant="messageVariant" :heading="message.title">
+    <CmkAlertBoxDeprecated v-if="message" :variant="messageVariant" :heading="message.title">
       <p v-for="(line, index) in message.lines" :key="index">
         {{ line }}
       </p>
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
 
     <CmkButton
       v-if="currentMode !== 'webauthn_credentials' && currentMode !== 'multipleEnabled'"

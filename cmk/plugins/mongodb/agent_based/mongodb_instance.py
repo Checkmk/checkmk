@@ -13,16 +13,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
-
-
-def discover_mongodb_instance(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def check_mongodb_instance(section: StringTable) -> CheckResult:
@@ -46,6 +41,6 @@ agent_section_mongodb_instance = AgentSection(
 check_plugin_mongodb_instance = CheckPlugin(
     name="mongodb_instance",
     service_name="MongoDB Instance",
-    discovery_function=discover_mongodb_instance,
+    discovery_function=discover_one_service,
     check_function=check_mongodb_instance,
 )

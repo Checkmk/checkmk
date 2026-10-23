@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.zorp.agent_based.zorp_connections import (
     agent_section_zorp_connections,
     check_plugin_zorp_connections,
@@ -30,10 +30,6 @@ def _section() -> Section:
     )
     assert section is not None
     return section
-
-
-def test_discover_zorp_connections() -> None:
-    assert list(check_plugin_zorp_connections.discovery_function(_section())) == [Service()]
 
 
 def test_check_zorp_connections() -> None:

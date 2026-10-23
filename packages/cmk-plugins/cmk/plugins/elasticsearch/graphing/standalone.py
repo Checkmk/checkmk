@@ -36,7 +36,7 @@ metric_elasticsearch_count_avg = metrics.Metric(
 )
 metric_elasticsearch_size = metrics.Metric(
     name="elasticsearch_size",
-    title=Title("Total size"),
+    title=Title("Elasticsearch index size"),
     unit=UNIT_BYTES,
     color=metrics.Color.DARK_CYAN,
 )
@@ -105,4 +105,16 @@ metric_task_max_waiting_in_queue_millis = metrics.Metric(
     title=Title("Maximum wait time of all tasks in queue"),
     unit=UNIT_COUNTER,
     color=metrics.Color.PURPLE,
+)
+metric_mem_total_virtual_in_bytes = metrics.Metric(
+    name="mem_total_virtual_in_bytes",
+    title=Title("Total virtual memory"),
+    unit=UNIT_BYTES,
+    color=metrics.Color.DARK_BROWN,
+)
+metric_cpu_total_in_millis = metrics.Metric(
+    name="cpu_total_in_millis",
+    title=Title("CPU total in ms"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.GREEN,
 )

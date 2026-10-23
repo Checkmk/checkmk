@@ -21,6 +21,7 @@ from pathlib import Path
 
 from cmk.ccc.daemon import daemonize, pid_file_lock
 from cmk.ccc.hostaddress import HostNameValidationError
+from cmk.ccc.log import CMKFormatter
 from cmk.messaging import Channel, DeliveryTag, QueueName, set_logging_level
 
 from ._config import CONFIG_QUEUE, ConfigType, PiggybackHubConfig, save_config
@@ -114,10 +115,7 @@ def _setup_logging(args: Arguments) -> logging.Logger:
         if args.foreground
         else WatchedFileHandler(Path(args.log_file))
     )
-    handler.setFormatter(
-        # astrein: disable=logging-formatter
-        logging.Formatter("%(asctime)s [%(levelname)s] [%(process)d] %(message)s")
-    )
+    handler.setFormatter(CMKFormatter(with_process=True))
     logger.addHandler(handler)
 
     logger.setLevel(args.log_level)

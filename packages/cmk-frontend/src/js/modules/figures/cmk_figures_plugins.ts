@@ -4,5 +4,4 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 // Used to introduce cmk_figures into webpack
-import './cmk_stats'
 import './cmk_table'

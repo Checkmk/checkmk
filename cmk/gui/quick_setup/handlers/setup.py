@@ -25,7 +25,7 @@ from cmk.gui.background_job.job import (
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.quick_setup.handlers.stage import (
     NextStageStructure,
     validate_stage_formspecs,
@@ -45,6 +45,7 @@ from cmk.gui.quick_setup.handlers.utils import (
     NEXT_BUTTON_LABEL,
     PREV_BUTTON_ARIA_LABEL,
     PREV_BUTTON_LABEL,
+    stage_applicability_and_form_data,
     validate_custom_validators,
     ValidationErrors,
 )
@@ -60,6 +61,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetup,
     QuickSetupAction,
     QuickSetupActionMode,
+    QuickSetupContext,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ActionId,
@@ -68,13 +70,18 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     RawFormData,
     StageIndex,
 )
+from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
+from cmk.gui.watolib.hosts_and_folders import FolderTree, HostsAndFoldersConfig
+from cmk.livestatus_client import SiteConfigurations
+from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
 
 
 @dataclass
 class StageOverview:
     title: str
     sub_title: str | None
+    is_applicable: bool
 
 
 @dataclass
@@ -97,9 +104,17 @@ def _action_visible_for_mode(action: QuickSetupAction, is_edit_mode: bool) -> bo
 
 
 def quick_setup_guided_mode(
-    quick_setup: QuickSetup, prefill_data: ParsedFormData | None, is_edit_mode: bool = False
+    quick_setup: QuickSetup,
+    prefill_data: ParsedFormData | None,
+    ctx: QuickSetupContext,
+    is_edit_mode: bool = False,
 ) -> QuickSetupOverview:
     stages = [stage() for stage in quick_setup.stages]
+    # Nothing is submitted yet, so the conditions read the prefill data only and no formspec
+    # map has to be built.
+    stage_applicability, _visible_form_data = stage_applicability_and_form_data(
+        quick_setup.stages, [], {}, prefill_data=prefill_data
+    )
 
     return QuickSetupOverview(
         guided_mode_string=_("Guided mode"),
@@ -109,13 +124,14 @@ def quick_setup_guided_mode(
             StageOverview(
                 title=stage.title,
                 sub_title=stage.sub_title,
+                is_applicable=is_applicable,
             )
-            for stage in stages
+            for stage, is_applicable in zip(stages, stage_applicability, strict=True)
         ],
         stage=NextStageStructure(
             components=[
                 get_stage_components_from_widget(widget, prefill_data)
-                for widget in stage_components(stages[0])
+                for widget in stage_components(stages[0], ctx)
             ],
             actions=[
                 Action(
@@ -176,6 +192,7 @@ class QuickSetupAllStages:
 def quick_setup_overview_mode(
     quick_setup: QuickSetup,
     prefill_data: ParsedFormData | None,
+    ctx: QuickSetupContext,
     is_edit_mode: bool = False,
 ) -> QuickSetupAllStages:
     stages = [stage() for stage in quick_setup.stages]
@@ -189,7 +206,7 @@ def quick_setup_overview_mode(
                 sub_title=stage.sub_title,
                 components=[
                     get_stage_components_from_widget(widget, prefill_data)
-                    for widget in stage_components(stage)
+                    for widget in stage_components(stage, ctx)
                 ],
                 # TODO: the actions as well the prev_button should be removed from the overview mode
                 #  as they are not rendered. The removal must be performed alongside adjustment
@@ -256,8 +273,7 @@ def complete_quick_setup(
     quick_setup_formspec_map: FormspecMap,
     progress_logger: ProgressLogger,
     object_id: str | None,
-    use_git: bool,
-    pprint_value: bool,
+    ctx: QuickSetupContext,
 ) -> QuickSetupSaveRedirect:
     return QuickSetupSaveRedirect(
         redirect_url=action.action(
@@ -265,8 +281,7 @@ def complete_quick_setup(
             mode,
             progress_logger,
             object_id,
-            use_git,
-            pprint_value,
+            ctx,
         )
     )
 
@@ -306,10 +321,8 @@ def verify_custom_validators_and_complete_quick_setup(
     input_stages: Sequence[dict],
     form_spec_map: FormspecMap,
     object_id: str | None,
+    ctx: QuickSetupContext,
     progress_logger: ProgressLogger | None = None,
-    *,
-    use_git: bool,
-    pprint_value: bool,
 ) -> CompleteActionResult:
     if progress_logger is None:
         progress_logger = InfoLogger()
@@ -317,13 +330,18 @@ def verify_custom_validators_and_complete_quick_setup(
     action = next((action for action in quick_setup.actions if action.id == action_id), None)
     if action is None:
         raise ValueError(f"Action with id {action_id} not found")
-    stages_raw_formspecs = [RawFormData(stage["form_data"]) for stage in input_stages]
+    _stage_applicability, stages_raw_formspecs = stage_applicability_and_form_data(
+        quick_setup.stages,
+        [RawFormData(stage["form_data"]) for stage in input_stages],
+        form_spec_map,
+    )
     errors = validate_custom_validators(
         quick_setup_id=quick_setup.id,
         custom_validators=action.custom_validators,
         stages_raw_formspecs=stages_raw_formspecs,
         quick_setup_formspec_map=form_spec_map,
         progress_logger=progress_logger,
+        ctx=ctx,
     )
     if errors.exist():
         return CompleteActionResult(
@@ -339,8 +357,7 @@ def verify_custom_validators_and_complete_quick_setup(
         quick_setup_formspec_map=form_spec_map,
         progress_logger=progress_logger,
         object_id=object_id,
-        use_git=use_git,
-        pprint_value=pprint_value,
+        ctx=ctx,
     ).redirect_url
     return CompleteActionResult(
         quick_setup_id=quick_setup.id,
@@ -380,16 +397,39 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
         job_interface: BackgroundProcessInterface,
         user_permission_config: UserPermissionSerializableConfig,
         *,
+        site_configs: SiteConfigurations,
+        debug: bool,
         use_git: bool,
         pprint_value: bool,
+        wato_hide_folders_without_read_permissions: bool,
+        wato_host_attrs: Sequence[CustomHostAttrSpec],
+        tags: TagConfigSpec,
     ) -> None:
         job_interface.get_logger().debug("Running Quick setup action finally")
         with job_interface.gui_context(
-            UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+            UserPermissions.from_serialized_config(
+                user_permission_config,
+                all_permissions(),
+            )
         ):
             try:
                 self._run_quick_setup_stage(
-                    job_interface, use_git=use_git, pprint_value=pprint_value
+                    job_interface,
+                    ctx=QuickSetupContext(
+                        tree=FolderTree(
+                            config=HostsAndFoldersConfig(
+                                wato_hide_folders_without_read_permissions=wato_hide_folders_without_read_permissions,
+                                wato_host_attrs=wato_host_attrs,
+                                tags=TagConfig.from_config(tags),
+                                sites=site_configs,
+                            )
+                        ),
+                        site_configs=site_configs,
+                        debug=debug,
+                        use_git=use_git,
+                        pprint_value=pprint_value,
+                        user=user,
+                    ),
                 )
             except Exception as e:
                 job_interface.get_logger().debug(
@@ -407,7 +447,7 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
                 ).save_to_file(Path(job_interface.get_work_dir()))
 
     def _run_quick_setup_stage(
-        self, job_interface: BackgroundProcessInterface, *, use_git: bool, pprint_value: bool
+        self, job_interface: BackgroundProcessInterface, *, ctx: QuickSetupContext
     ) -> None:
         job_interface.send_progress_update(_("Starting Quick Setup action..."))
 
@@ -417,11 +457,12 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
             action_id=self._action_id,
             mode=self._mode,
             input_stages=self._user_input_stages,
-            form_spec_map=build_formspec_map_from_stages([stage() for stage in quick_setup.stages]),
+            form_spec_map=build_formspec_map_from_stages(
+                [stage() for stage in quick_setup.stages], ctx
+            ),
             object_id=self._object_id,
             progress_logger=JobBasedProgressLogger(job_interface),
-            use_git=use_git,
-            pprint_value=pprint_value,
+            ctx=ctx,
         )
 
         job_interface.send_progress_update(_("Saving the result..."))
@@ -437,8 +478,13 @@ def start_quick_setup_job(
     object_id: str | None,
     user_permission_config: UserPermissionSerializableConfig,
     *,
+    site_configs: SiteConfigurations,
+    debug: bool,
     use_git: bool,
     pprint_value: bool,
+    wato_hide_folders_without_read_permissions: bool,
+    wato_host_attrs: Sequence[CustomHostAttrSpec],
+    tags: TagConfigSpec,
 ) -> str:
     job = QuickSetupActionBackgroundJob(
         quick_setup_id=quick_setup.id,
@@ -458,8 +504,13 @@ def start_quick_setup_job(
                 mode=mode,
                 object_id=object_id,
                 user_permission_config=user_permission_config,
+                site_configs=site_configs,
+                debug=debug,
                 use_git=use_git,
                 pprint_value=pprint_value,
+                wato_hide_folders_without_read_permissions=wato_hide_folders_without_read_permissions,
+                wato_host_attrs=wato_host_attrs,
+                tags=tags,
             ),
         ),
         InitialStatusArgs(
@@ -483,8 +534,13 @@ class QuickSetupActionJobArgs(BaseModel, frozen=True):
     mode: QuickSetupActionMode
     object_id: str | None
     user_permission_config: UserPermissionSerializableConfig
+    site_configs: SiteConfigurations
+    debug: bool
     use_git: bool
     pprint_value: bool
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
 
 
 def quick_setup_action_job_entry_point(
@@ -499,6 +555,11 @@ def quick_setup_action_job_entry_point(
     ).run_quick_setup_stage(
         job_interface,
         args.user_permission_config,
+        site_configs=args.site_configs,
+        debug=args.debug,
         use_git=args.use_git,
         pprint_value=args.pprint_value,
+        wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
+        wato_host_attrs=args.wato_host_attrs,
+        tags=args.tags,
     )

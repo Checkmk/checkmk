@@ -53,7 +53,14 @@
         "source_type": {
           "title": "TitleMacroSourceType",
           "type": "string",
-          "enum": ["rrd_metric", "rrd_query", "metric_backend", "constant", "scalar", "rrd_formula"]
+          "enum": [
+            "rrd_metric",
+            "rrd_query",
+            "telemetry_metrics",
+            "constant",
+            "scalar",
+            "rrd_formula"
+          ]
         },
         "macros": {
           "type": "array",

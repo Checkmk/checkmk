@@ -482,3 +482,290 @@ def test__write_section_replica_none_primary(capsys):
 
     assert not noop
     assert not stderr
+
+
+class _FakeCursor:
+    def __init__(self, documents):
+        self._documents = list(documents)
+
+    def sort(self, spec):
+        return _FakeCursor(
+            sorted(self._documents, key=lambda d: d["ts"].time, reverse=spec[0][1] < 0)
+        )
+
+    def limit(self, number):
+        return _FakeCursor(self._documents[:number])
+
+    def next(self):
+        return self._documents[0]
+
+
+class _FakeCollection:
+    def __init__(self, options=None, index_stats=None, documents=()):
+        self._options = options or {}
+        self._index_stats = index_stats
+        self._documents = documents
+
+    def options(self):
+        return self._options
+
+    def aggregate(self, _pipeline):
+        if self._index_stats is None:
+            raise pymongo.errors.OperationFailure("$indexStats not supported")
+        return self._index_stats
+
+    def find(self):
+        return _FakeCursor(self._documents)
+
+
+class _FakeDatabase:
+    def __init__(self, collections=None, commands=None):
+        self._collections = collections or {}
+        self._commands = commands or {}
+
+    def __getitem__(self, name):
+        return self._collections[name]
+
+    def __getattr__(self, name):
+        try:
+            return self._collections[name]
+        except KeyError:
+            raise AttributeError(name) from None
+
+    def list_collection_names(self):
+        return list(self._collections)
+
+    collection_names = list_collection_names
+
+    def command(self, command, *args):
+        result = self._commands[command if isinstance(command, str) else str(command)]
+        if isinstance(result, Exception):
+            raise result
+        return result(*args) if callable(result) else result
+
+
+class _FakeClient:
+    def __init__(self, databases):
+        self._databases = databases
+
+    def __getitem__(self, name):
+        return self._databases[name]
+
+    def __getattr__(self, name):
+        try:
+            return self._databases[name]
+        except KeyError:
+            raise AttributeError(name) from None
+
+    def list_database_names(self):
+        return list(self._databases)
+
+
+def test_server_status_without_global_lock_yields_empty_locks_section(capsys):
+    mk_mongodb.section_locks({})
+
+    assert capsys.readouterr().out == "<<<mongodb_locks>>>\n"
+
+
+def test_section_by_keys_prefixes_lines_with_key_if_requested(capsys):
+    mk_mongodb.section_by_keys(
+        "mem",
+        ("mem", "extra_info"),
+        {"mem": {"resident": 80}, "extra_info": {"page_faults": 3}},
+        output_key=True,
+    )
+
+    assert capsys.readouterr().out == (
+        "<<<mongodb_mem>>>\nmem resident 80\nextra_info page_faults 3\n"
+    )
+
+
+def test_database_info_contains_stats_of_collections_but_not_views():
+    client = _FakeClient(
+        {
+            "shop": _FakeDatabase(
+                collections={
+                    "orders": _FakeCollection(),
+                    "orders_view": _FakeCollection(options={"viewOn": "orders"}),
+                },
+                commands={
+                    "dbstats": {"objects": 3},
+                    "collstats": lambda name: {"ns": "shop.%s" % name},
+                },
+            )
+        }
+    )
+
+    assert mk_mongodb.get_database_info(client) == {
+        "shop": {
+            "collections": ["orders"],
+            "stats": {"objects": 3},
+            "collstats": {"orders": {"ns": "shop.orders"}},
+        }
+    }
+
+
+def test_replica_set_status_is_written_as_json(capsys):
+    client = _FakeClient(
+        {"admin": _FakeDatabase(commands={"replSetGetStatus": {"set": "rs0", "myState": 1}})}
+    )
+
+    mk_mongodb.sections_replica_set(client)
+
+    header, body = capsys.readouterr().out.splitlines()
+    assert (header, json.loads(body)) == (
+        "<<<mongodb_replica_set:sep(9)>>>",
+        {"set": "rs0", "myState": 1},
+    )
+
+
+def test_replica_set_section_is_skipped_without_replication(capsys):
+    client = _FakeClient(
+        {
+            "admin": _FakeDatabase(
+                commands={"replSetGetStatus": pymongo.errors.OperationFailure("not running")}
+            )
+        }
+    )
+
+    mk_mongodb.sections_replica_set(client)
+
+    assert not capsys.readouterr().out
+
+
+def test_replication_info_is_skipped_without_oplog(capsys):
+    mk_mongodb.sections_replication_info(_FakeClient({}), {"local": {"collections": []}})
+
+    assert not capsys.readouterr().out
+
+
+def test_replication_info_without_oplog_size_is_empty(capsys):
+    databases = {"local": {"collections": ["oplog.rs"], "collstats": {"oplog.rs": {}}}}
+
+    mk_mongodb.sections_replication_info(_FakeClient({}), databases)
+
+    assert capsys.readouterr().out == "<<<mongodb_replication_info:sep(9)>>>\n{}\n"
+
+
+def test_replication_info_reports_oplog_size_and_time_window(capsys):
+    from bson.timestamp import Timestamp
+
+    oplog = _FakeCollection(
+        documents=[{"ts": Timestamp(1566895270, 1)}, {"ts": Timestamp(1566891670, 1)}]
+    )
+    client = _FakeClient(
+        {"local": _FakeDatabase(collections={"oplog": _FakeDatabase(collections={"rs": oplog})})}
+    )
+    databases = {
+        "local": {
+            "collections": ["oplog.rs"],
+            "collstats": {"oplog.rs": {"maxSize": 16830742272, "size": 9765922}},
+        }
+    }
+
+    mk_mongodb.sections_replication_info(client, databases)
+
+    info = json.loads(capsys.readouterr().out.splitlines()[1])
+    info.pop("now")
+    assert info == {
+        "logSizeBytes": 16830742272,
+        "usedBytes": 9765922,
+        "tFirst": 1566891670,
+        "tLast": 1566895270,
+    }
+
+
+def test_collections_section_drops_internal_stats_and_adds_index_stats(capsys):
+    client = _FakeClient(
+        {
+            "shop": _FakeDatabase(
+                collections={"orders": _FakeCollection(index_stats=[{"name": "_id_"}])}
+            )
+        }
+    )
+    databases = {
+        "shop": {
+            "collections": ["orders"],
+            "stats": {"objects": 3},
+            "collstats": {"orders": {"size": 100, "wiredTiger": {}, "shards": {}}},
+        }
+    }
+
+    mk_mongodb.section_collections(client, databases)
+
+    header, body = capsys.readouterr().out.splitlines()
+    assert (header, json.loads(body)) == (
+        "<<<mongodb_collections:sep(9)>>>",
+        {
+            "shop": {
+                "collections": ["orders"],
+                "collstats": {"orders": {"size": 100, "indexStats": [{"name": "_id_"}]}},
+            }
+        },
+    )
+
+
+def test_collections_section_omits_index_stats_if_unsupported(capsys):
+    client = _FakeClient({"shop": _FakeDatabase(collections={"orders": _FakeCollection()})})
+    databases = {"shop": {"collections": ["orders"], "collstats": {"orders": {"size": 100}}}}
+
+    mk_mongodb.section_collections(client, databases)
+
+    assert json.loads(capsys.readouterr().out.splitlines()[1]) == {
+        "shop": {"collections": ["orders"], "collstats": {"orders": {"size": 100}}}
+    }
+
+
+def test_cluster_section_is_only_written_on_router(capsys):
+    client = _FakeClient(
+        {"admin": _FakeDatabase(commands={"isMaster": {"ismaster": True, "msg": "not-a-router"}})}
+    )
+
+    mk_mongodb.section_cluster(client, {})
+
+    assert not capsys.readouterr().out
+
+
+def test_iso_timestamps_ignore_fractions_of_seconds():
+    assert (
+        mk_mongodb.get_timestamp("2015-10-17T05:35:24.234")
+        - mk_mongodb.get_timestamp("2015-10-17T05:35:20")
+        == 4
+    )
+
+
+def test_unparsable_timestamp_is_none():
+    assert mk_mongodb.get_timestamp("Nov  6 13:44:09.345") is None
+
+
+def test_missing_statefile_requests_all_log_lines(tmp_path):
+    assert mk_mongodb.read_statefile(str(tmp_path / "mongodb.state")) == (None, True)
+
+
+def test_invalid_statefile_requests_all_log_lines(tmp_path):
+    state_file = tmp_path / "mongodb.state"
+    with open(str(state_file), "w") as state_fd:
+        state_fd.write("garbage")
+
+    assert mk_mongodb.read_statefile(str(state_file)) == (None, True)
+
+
+def test_statefile_round_trip_keeps_last_log_timestamp(tmp_path):
+    state_file = str(tmp_path / "mongodb.state")
+
+    mk_mongodb.update_statefile(
+        state_file, {"log": ["2015-10-17T05:35:20.000 first", "2015-10-17T05:35:24.234 last"]}
+    )
+
+    assert mk_mongodb.read_statefile(state_file) == (
+        mk_mongodb.get_timestamp("2015-10-17T05:35:24"),
+        False,
+    )
+
+
+def test_empty_startup_warnings_leave_statefile_untouched(tmp_path):
+    state_file = tmp_path / "mongodb.state"
+
+    mk_mongodb.update_statefile(str(state_file), {"log": []})
+
+    assert not state_file.exists()

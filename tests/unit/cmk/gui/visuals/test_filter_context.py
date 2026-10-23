@@ -7,6 +7,7 @@ from typing import cast
 
 import pytest
 
+from cmk.gui.config import Config
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.visuals._filter_context import (
     configured_context_filters,
@@ -14,6 +15,7 @@ from cmk.gui.visuals._filter_context import (
     get_singlecontext_vars,
     missing_context_filters,
 )
+from cmk.web.utils.request_cache import RequestCache
 
 # A context that stores the filter value directly instead of the mapping of HTTP variables the
 # type demands, as written by older versions or by hand editing
@@ -46,14 +48,19 @@ def test_configured_context_filters_asks_the_components_of_each_filter() -> None
         {"hostregex": {"host_regex": "web"}, "serviceregex": {"service_regex": ""}},
     )
 
-    assert configured_context_filters(context) == {"hostregex"}
+    assert configured_context_filters(context, RequestCache(Config())) == {"hostregex"}
 
 
 @pytest.mark.usefixtures("request_context")
 def test_configured_context_filters_skips_a_filter_no_registry_knows() -> None:
-    assert configured_context_filters(cast(VisualContext, {"no_such_filter": {"x": "y"}})) == set()
+    assert (
+        configured_context_filters(
+            cast(VisualContext, {"no_such_filter": {"x": "y"}}), RequestCache(Config())
+        )
+        == set()
+    )
 
 
 @pytest.mark.usefixtures("request_context")
 def test_configured_context_filters_skips_scalar_filter_context() -> None:
-    assert configured_context_filters(SCALAR_CONTEXT) == set()
+    assert configured_context_filters(SCALAR_CONTEXT, RequestCache(Config())) == set()

@@ -9,7 +9,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_PATH="$(cd "$SCRIPT_DIR/.." && pwd)"
 SCRIPTS="$REPO_PATH/scripts"
 UVENV="$SCRIPTS/run-uvenv"
-EDITION="${EDITION:-pro}"
+# Exported: the tests read it, and not every suite has the --cmk-edition option to default it.
+export EDITION="${EDITION:-pro}"
 MAX_CHARS=1500000
 
 AGENT_PLUGIN_PYTHON_VERSIONS=$(grep -oP '^\s*AGENT_PLUGIN_PYTHON_VERSIONS\s*:=\s*\K.*' "${REPO_PATH}"/defines.make)
@@ -61,6 +62,7 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-system-ai-features                 Run system tests for the mcp-server and the ai-control-plane (pro edition)
   test-system-oauth                       Run system tests for the oauth authorization server (pro edition)
   test-system-multisite                   Run multisite system tests
+  test-system-agent-updates               Run system tests for agent updates (needs a running systemd)
   test-system-update-community            Run update tests for community edition
   test-system-update-pro                  Run update tests for pro edition
   test-system-update-ultimate             Run update tests for ultimate edition
@@ -72,6 +74,7 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-system-update-cross-edition-community-to-pro
   test-system-plugins                     Run plugin system tests
   test-system-plugins-piggyback           Run piggyback plugin system tests
+  test-system-maps                        Run system tests for Checkmk Maps (pro edition)
   test-system-gui-crawl                   Run GUI crawl tests
   test-system-gui-crawl-xss               Run XSS crawl tests
   test-system-gui                         Run full GUI system tests (pro edition)
@@ -254,6 +257,16 @@ test-performance-all-docker() {
     RESULT_PATH="$(realpath "$SCRIPT_DIR/..")" $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" "test-performance-all"
 }
 
+test-system-maps() {
+    prepare-playwright
+    _pytest --cmk-edition pro \
+        --screenshot=only-on-failure \
+        --output="${RESULT_PATH:-/tmp}/" \
+        --tracing=retain-on-failure \
+        "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
+        "$(realpath "$SCRIPT_DIR/system/maps")"
+}
+
 test-system-gui-crawl() {
     prepare-playwright
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
@@ -299,14 +312,14 @@ test-system-gui-cloud() { EDITION=cloud test-system-gui-non-free; }
 test-system-singlesite() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/system/singlesite")" \
-        --session-timeout 7200
+        --session-timeout 9000
 }
 
 # keep this target in sync with test-system-singlesite-single.groovy
 test-system-singlesite-k8s() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/system/singlesite")" \
-        -m "not requires_non_root_user" --session-timeout 7200
+        -m "not requires_non_root_user" --session-timeout 9000
 }
 
 test-system-singlesite-non-root() {
@@ -381,6 +394,13 @@ test-system-multisite() {
     OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \
         _pytest --export-traces "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/system/multisite")"
+}
+
+# Requires a running systemd, so use the -docker variant unless you know what you are doing.
+test-system-agent-updates() {
+    _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
+        "$(realpath "$SCRIPT_DIR/system/agent_updates")" \
+        --session-timeout 3600
 }
 
 test-extension-compatibility() {
@@ -488,6 +508,11 @@ _system-tests-docker() {
     $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" "$target"
 }
 
+_system-tests-docker-systemd() {
+    local target="$1"
+    $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" --systemd "$target"
+}
+
 _dockerable-test-docker() {
     local target="$1"
     "$REPO_PATH/scripts/run-in-docker.sh" tests/run_tests.sh $target
@@ -502,6 +527,7 @@ test-system-otel-docker() { _system-tests-docker test-system-otel; }
 test-system-azure-docker() { _system-tests-docker test-system-azure; }
 test-system-ai-features-docker() { _system-tests-docker test-system-ai-features; }
 test-system-multisite-docker() { _system-tests-docker test-system-multisite; }
+test-system-agent-updates-docker() { _system-tests-docker-systemd test-system-agent-updates; }
 test-system-update-community-docker() { _system-tests-docker test-system-update-community; }
 test-system-update-pro-docker() { _system-tests-docker test-system-update-pro; }
 test-system-update-ultimate-docker() { _system-tests-docker test-system-update-ultimate; }
@@ -526,6 +552,7 @@ test-extension-compatibility-docker() { _system-tests-docker test-extension-comp
 # Debug variants
 test-system-singlesite-docker-debug() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" debug; }
 test-system-multisite-docker-debug() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" debug; }
+test-system-agent-updates-docker-debug() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" --systemd debug; }
 container-debug-docker() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" debug; }
 
 # Siteless test -docker variants
@@ -602,8 +629,7 @@ test-mypy-not-cmk() {
 }
 
 test-mypy-gpl() {
-    ADDITIONAL_MYPY_ARGS="--config-file=$(realpath "$REPO_PATH/mypy-gpl.ini")" \
-        bazel build --config=mypy ...
+    bazel build --config=mypy-gpl ...
 }
 
 test-github-actions() {
@@ -669,11 +695,11 @@ test-unit-shell() {
 }
 
 test-unit-neb() {
-    cd "$REPO_PATH/packages/neb/test" && ./.f12
+    cd "$REPO_PATH/packages/neb/test" && ./.do-it
 }
 
 test-unit-cmc() {
-    cd "$REPO_PATH/non-free/packages/cmc/test" && ./.f12
+    cd "$REPO_PATH/non-free/packages/cmc/test" && ./.do-it
 }
 
 test-find-modified-lock-files() {
@@ -734,14 +760,12 @@ qa-metrics-change-quality-dryrun() {
 
 qa-metrics-change-quality() {
     mapfile -t args < <(_qa_metrics_args)
-    bazel build //tests/qa_metrics/change_quality:push
-    "$REPO_PATH/bazel-bin/tests/qa_metrics/change_quality/push" "${args[@]}"
+    bazel run //tests/qa_metrics/change_quality:push -- "${args[@]}"
 }
 
 qa-metrics-change-quality-full() {
     mapfile -t args < <(_qa_metrics_args)
-    bazel build //tests/qa_metrics/change_quality:push
-    "$REPO_PATH/bazel-bin/tests/qa_metrics/change_quality/push" "${args[@]}" --full
+    bazel run //tests/qa_metrics/change_quality:push -- "${args[@]}" --full
 }
 
 # ---------------------------------------------------------------------------

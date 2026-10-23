@@ -1,0 +1,335 @@
+<!--
+Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+<script setup lang="ts">
+import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
+
+const props = defineProps<{
+  modelValue: string
+  placeholder?: TranslatedString
+  excludePrefixes?: readonly string[]
+  // Embed in a normal toolbar flow instead of floating fixed top-right (used by
+  // maps whose canvas fills 100%, e.g. the folder treemap, where a floating
+  // overlay would cover data).
+  inline?: boolean
+}>()
+const emit = defineEmits<{ 'update:modelValue': [string] }>()
+
+const { _t } = usei18n()
+
+const operators = computed(() => {
+  const all = [
+    { prefix: 'h', label: _t('Host') },
+    { prefix: 's', label: _t('Service') },
+    { prefix: 'hg', label: _t('Host group') },
+    { prefix: 'sg', label: _t('Service group') },
+    { prefix: 'id', label: _t('Object ID') }
+  ]
+  return all.filter((op) => !props.excludePrefixes?.includes(op.prefix))
+})
+
+const local = computed({
+  get: () => props.modelValue,
+  set: (v: string) => emit('update:modelValue', v)
+})
+
+const rootRef = useTemplateRef<HTMLElement>('rootRef')
+const inputRef = useTemplateRef<HTMLInputElement>('inputRef')
+const dropdownOpen = ref(false)
+
+function openDropdown() {
+  dropdownOpen.value = true
+}
+function closeDropdown() {
+  dropdownOpen.value = false
+}
+function toggleDropdown() {
+  if (dropdownOpen.value) {
+    closeDropdown()
+  } else {
+    openDropdown()
+  }
+  if (dropdownOpen.value) {
+    inputRef.value?.focus()
+  }
+}
+function syncDropdownFromInput() {
+  // Read the live DOM value, not local/modelValue: on @input the v-model
+  // emit hasn't propagated back through the prop yet, so local still holds
+  // the previous keystroke and the "/" dropdown would open one char late.
+  if (inputRef.value?.value.trim().startsWith('/')) {
+    openDropdown()
+  }
+}
+
+function clearAll() {
+  local.value = ''
+  closeDropdown()
+  inputRef.value?.focus()
+}
+
+function applyOperator(prefix: string) {
+  const current = local.value
+  const trimmed = current.trimStart()
+  const leadingWs = current.slice(0, current.length - trimmed.length)
+  if (trimmed.startsWith('/')) {
+    const rest = trimmed.slice(1).trimStart()
+    local.value = `${leadingWs + prefix}:${rest}`
+  } else if (trimmed.length === 0) {
+    local.value = `${prefix}:`
+  } else {
+    local.value = `${current.replace(/\s+$/, '')} ${prefix}:`
+  }
+  closeDropdown()
+  inputRef.value?.focus()
+}
+
+function onDocumentClick(event: MouseEvent) {
+  if (!dropdownOpen.value) {
+    return
+  }
+  if (!rootRef.value) {
+    return
+  }
+  if (!rootRef.value.contains(event.target as Node)) {
+    closeDropdown()
+  }
+}
+
+onMounted(() => document.addEventListener('mousedown', onDocumentClick))
+onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick))
+</script>
+
+<template>
+  <div
+    ref="rootRef"
+    class="maps-map-search"
+    :class="{ 'maps-map-search--open': dropdownOpen, 'maps-map-search--inline': inline }"
+  >
+    <CmkIcon name="search" size="small" class="maps-map-search__search-icon" />
+    <input
+      ref="inputRef"
+      v-model="local"
+      :placeholder="placeholder ?? _t('Search — type \'/\' for operators')"
+      type="search"
+      class="maps-map-search__input"
+      :aria-label="placeholder ?? _t('Search — type \'/\' for operators')"
+      @focus="syncDropdownFromInput"
+      @input="syncDropdownFromInput"
+      @keydown.escape.stop="closeDropdown"
+    />
+    <button
+      v-if="local"
+      type="button"
+      class="maps-map-search__icon-btn"
+      :title="_t('Clear search')"
+      :aria-label="_t('Clear search')"
+      @click="clearAll"
+    >
+      {{ untranslated('×') }}
+    </button>
+    <button
+      type="button"
+      class="maps-map-search__icon-btn maps-map-search__help"
+      :class="{ 'maps-map-search__help--active': dropdownOpen }"
+      :title="_t('Show search operators')"
+      :aria-label="_t('Show search operators')"
+      :aria-expanded="dropdownOpen"
+      @click="toggleDropdown"
+    >
+      ?
+    </button>
+    <slot name="trailing" />
+
+    <div v-if="dropdownOpen" class="maps-map-search__dropdown" role="listbox" @mousedown.prevent>
+      <div class="maps-map-search__dropdown-title">
+        {{ _t('Search operators') }}
+      </div>
+      <ul class="maps-map-search__operator-list">
+        <li
+          v-for="op in operators"
+          :key="op.prefix"
+          role="option"
+          class="maps-map-search__operator"
+          @click="applyOperator(op.prefix)"
+        >
+          <span class="maps-map-search__operator-tag">{{ op.prefix }}:</span>
+          <span class="maps-map-search__operator-label">{{ op.label }}</span>
+        </li>
+      </ul>
+      <div class="maps-map-search__info">
+        <CmkIcon name="info-circle" size="small" class="maps-map-search__info-icon" />
+        <span>{{
+          _t(
+            "Pick one here, or type '/' in the search box. Without a prefix all fields are searched; multiple terms must all match."
+          )
+        }}</span>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.maps-map-search {
+  position: fixed;
+  top: calc(36px + var(--dimension-5));
+  right: var(--dimension-5);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-4);
+  padding: var(--dimension-3) var(--dimension-4);
+  border-radius: var(--border-radius);
+  background: var(--maps-map-view-overlay-bg);
+  border: 1px solid var(--default-border-color);
+  min-width: 300px;
+}
+
+/* Embedded in a toolbar: sit in the normal flow, so it never
+   covers map content. */
+.maps-map-search--inline {
+  position: relative;
+  top: auto;
+  right: auto;
+  z-index: auto;
+  min-width: 0;
+  width: 260px;
+  background: var(--ux-theme-1);
+}
+
+.maps-map-search__search-icon {
+  flex-shrink: 0;
+}
+
+.maps-map-search__input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  color: var(--font-color);
+  font-size: var(--font-size-normal);
+}
+
+.maps-map-search__input::placeholder {
+  color: var(--font-color-dimmed);
+}
+
+/* We render our own clear button — hide the native one to avoid a duplicate "×". */
+.maps-map-search__input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.maps-map-search__icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--font-color-dimmed);
+  cursor: pointer;
+  font-size: var(--font-size-large);
+  line-height: 1;
+  padding: 0 var(--dimension-3);
+  border-radius: var(--border-radius-half);
+}
+
+.maps-map-search__icon-btn:hover {
+  color: var(--font-color);
+  background: var(--input-hover-bg-color);
+}
+
+.maps-map-search__input:focus-visible,
+.maps-map-search__icon-btn:focus-visible {
+  outline: revert;
+}
+
+.maps-map-search__help {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-normal);
+}
+
+.maps-map-search__help--active {
+  color: var(--font-color);
+  background: var(--input-hover-bg-color);
+}
+
+.maps-map-search__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: var(--ux-theme-1);
+  border: 1px solid var(--default-border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--maps-shadow-canvas-overlay-high);
+  overflow: hidden;
+}
+
+.maps-map-search__dropdown-title {
+  padding: var(--dimension-4) var(--dimension-5);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+  color: var(--font-color-dimmed);
+  border-bottom: 1px solid var(--default-border-color);
+}
+
+.maps-map-search__operator-list {
+  list-style: none;
+  margin: 0;
+  padding: var(--dimension-3) 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.maps-map-search__operator {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-5);
+  padding: var(--dimension-4) var(--dimension-5);
+  cursor: pointer;
+  font-size: var(--font-size-normal);
+  color: var(--font-color);
+}
+
+.maps-map-search__operator:hover {
+  background: var(--input-hover-bg-color);
+}
+
+.maps-map-search__operator-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: var(--dimension-1) var(--dimension-4);
+  border: 1px solid var(--default-border-color);
+  border-radius: var(--border-radius);
+  font-family: var(--font-monospace, ui-monospace, monospace);
+  font-size: var(--font-size-small);
+  color: var(--font-color);
+  background: var(--background-muted);
+}
+
+.maps-map-search__operator-label {
+  color: var(--font-color);
+}
+
+.maps-map-search__info {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--dimension-4);
+  padding: var(--dimension-4) var(--dimension-5);
+  border-top: 1px solid var(--default-border-color);
+  background: var(--background-muted);
+  font-size: var(--font-size-normal);
+  line-height: 1.4;
+  color: var(--font-color-dimmed);
+}
+
+.maps-map-search__info-icon {
+  flex-shrink: 0;
+  margin-top: var(--dimension-1);
+}
+</style>

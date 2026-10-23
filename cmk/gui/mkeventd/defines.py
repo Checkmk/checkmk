@@ -5,7 +5,7 @@
 
 from collections.abc import Sequence
 
-import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=module-layers
 from cmk.gui.i18n import _, _l
 
 syslog_priorities: Sequence[tuple[int, str]] = list(ec.SyslogPriority.NAMES.items())

@@ -7,9 +7,9 @@
 import socket
 import sys
 import time
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Protocol
 
 import pytest
 from pytest import MonkeyPatch
@@ -27,7 +27,7 @@ from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc import resulttype as result
 from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.checkerplugin import ConfiguredService
+from cmk.checkengine.checkerplugin import AggregatedResult, ConfiguredService
 from cmk.checkengine.fetcher_abc import Mode
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.fetcher_utils.trigger import PlainFetcherTrigger
@@ -36,9 +36,29 @@ from cmk.checkengine.fetchers.snmp import (
     SNMPFetcherConfig,
 )
 from cmk.checkengine.filecache import FileCacheOptions
-from cmk.checkengine.helper_interface import FetcherType, HostKey, SourceInfo, SourceType
-from cmk.checkengine.parser import HostSections
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName, FinalCheckResult
+from cmk.checkengine.helper_interface import (
+    AgentRawData,
+    FetcherType,
+    HostKey,
+    SourceInfo,
+    SourceType,
+)
+from cmk.checkengine.parser import AgentRawDataSection, HostSections
+from cmk.checkengine.plugins import (
+    AgentBasedPlugins,
+    CheckPlugin,
+    CheckPluginName,
+    FinalCheckResult,
+    ParsedSectionName,
+    SectionName,
+)
+from cmk.checkengine.sectionparser import (
+    ParsedSectionsResolver,
+    Provider,
+    SectionPlugin,
+    SectionsParser,
+)
+from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.specs.checkresults import (
     MetricTuple,
     ServiceCheckResult,
@@ -47,10 +67,12 @@ from cmk.checkengine.specs.checkresults import (
 from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.summarize import SummaryConfig
+from cmk.discover_plugins import PluginLocation
 from cmk.piggyback.backend import Config as PiggybackConfig
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.servicename import ServiceName
 from tests.testlib.unit.base_configuration_scenario import Scenario
+from tests.testlib.unit.fake_site import pop_crash_report_file
 
 
 def make_timespecific_params_list(
@@ -615,3 +637,186 @@ def test_cmk_fetcher_reports_missing_ip_instead_of_the_fallback_address(
     assert source.ipaddress is None
     assert source.fetcher_type is FetcherType.NONE
     assert res.is_error()
+
+
+class _CheckFunction(Protocol):
+    def __call__(self, **kwargs: object) -> ServiceCheckResult: ...
+
+
+def _aggregated_result_of(
+    check_function: _CheckFunction,
+    get_agent_output: Callable[[], AgentRawData | None],
+) -> AggregatedResult:
+    host_name = HostName("testhost")
+    section_name = SectionName("uptime")
+    provider = ParsedSectionsResolver(
+        SectionsParser(
+            HostSections[Mapping[SectionName, Sequence[Sequence[str]]]]({section_name: [["123"]]}),
+            host_name,
+            error_handling=lambda *_args: "",
+        ),
+        section_plugins={section_name: SectionPlugin.trivial(section_name)},
+    )
+    return checkers.get_aggregated_result(
+        host_name,
+        False,
+        cluster_nodes=(),
+        providers={HostKey(host_name, SourceType.HOST): provider},
+        service=make_service("Uptime"),
+        plugin=CheckPlugin(
+            name=CheckPluginName("dummy"),
+            sections=[ParsedSectionName("uptime")],
+            service_name="Uptime",
+            discovery_function=lambda *args, **kw: iter(()),  # noqa: ARG005
+            discovery_default_parameters=None,
+            discovery_ruleset_name=None,
+            discovery_ruleset_type="merged",
+            check_function=lambda *args, **kw: iter(()),  # noqa: ARG005
+            check_default_parameters=None,
+            check_ruleset_name=None,
+            cluster_check_function=None,
+            location=PluginLocation(module="<test>", name="<test>"),
+        ),
+        check_function=check_function,
+        get_parameters=dict,
+        get_agent_output=get_agent_output,
+        get_effective_host=lambda host_name, *_args: host_name,
+        snmp_backend=SNMPBackendEnum.CLASSIC,
+    )
+
+
+def _make_check_plugin() -> CheckPlugin:
+    return CheckPlugin(
+        name=CheckPluginName("plugin"),
+        sections=[ParsedSectionName("section")],
+        service_name="Service",
+        discovery_function=lambda *_args, **_kw: iter(()),
+        discovery_default_parameters=None,
+        discovery_ruleset_name=None,
+        discovery_ruleset_type="merged",
+        check_function=lambda *_args, **_kw: iter(()),
+        check_default_parameters={},
+        check_ruleset_name=None,
+        cluster_check_function=None,
+        location=PluginLocation("not", "relevant"),
+    )
+
+
+def _make_providers(host_name: HostName) -> Mapping[HostKey, Provider]:
+    return {
+        HostKey(host_name, SourceType.HOST): ParsedSectionsResolver(
+            SectionsParser(
+                HostSections[AgentRawDataSection](sections={SectionName("section"): [["data"]]}),
+                host_name=host_name,
+                error_handling=lambda *_args, **_kw: "error",
+            ),
+            section_plugins={SectionName("section"): SectionPlugin.trivial(SectionName("section"))},
+        )
+    }
+
+
+def _get_aggregated_result(
+    host_name: HostName,
+    service: ConfiguredService,
+    check_function: _CheckFunction,
+) -> AggregatedResult:
+    return checkers.get_aggregated_result(
+        host_name,
+        False,
+        cluster_nodes=(),
+        providers=_make_providers(host_name),
+        service=service,
+        plugin=_make_check_plugin(),
+        check_function=check_function,
+        get_parameters=lambda: service.parameters.evaluate(lambda _timeperiod: True),
+        get_agent_output=lambda: None,
+        get_effective_host=lambda host_name, _service_name, _labels: host_name,
+        snmp_backend=SNMPBackendEnum.CLASSIC,
+    )
+
+
+def _raise(**_kwargs: object) -> ServiceCheckResult:
+    raise ValueError("crash")
+
+
+@pytest.mark.usefixtures("disable_debug", "patch_omd_site")
+def test_crash_report_of_a_check_function_contains_the_agent_output() -> None:
+    _aggregated_result_of(_raise, lambda: AgentRawData(b"<<<uptime>>>\n123\n"))
+
+    assert pop_crash_report_file("check", "agent_output") == b"<<<uptime>>>\n123\n"
+
+
+def test_agent_output_is_not_requested_if_the_check_function_succeeds() -> None:
+    def get_agent_output() -> AgentRawData | None:
+        raise AssertionError("agent output requested")
+
+    aggregated = _aggregated_result_of(
+        lambda **_kwargs: SubmittableServiceCheckResult(0, "OK"), get_agent_output
+    )
+
+    assert aggregated.result == SubmittableServiceCheckResult(0, "OK")
+
+
+def _make_service(raw_parameters: object) -> ConfiguredService:
+    return ConfiguredService(
+        check_plugin_name=CheckPluginName("plugin"),
+        item="item",
+        description="Service item",
+        parameters=TimespecificParameters(
+            # Invalid on purpose: rule values are not validated when loaded.
+            [TimespecificParameterSet.from_parameters(raw_parameters)]  # type: ignore[arg-type]
+        ),
+        discovered_parameters={},
+        labels={},
+        discovered_labels={},
+        is_enforced=True,
+    )
+
+
+def test_get_aggregated_result_passes_parameters() -> None:
+    host_name = HostName("host")
+    received: dict[str, object] = {}
+
+    def check_function(**kwargs: object) -> ServiceCheckResult:
+        received.update(kwargs)
+        return SubmittableServiceCheckResult(0, "OK")
+
+    result = _get_aggregated_result(host_name, _make_service({"levels": (1, 2)}), check_function)
+
+    assert result.result == SubmittableServiceCheckResult(0, "OK")
+    assert received["params"] == {"levels": (1, 2)}
+
+
+@pytest.mark.usefixtures("disable_debug")
+@pytest.mark.parametrize(
+    "raw_parameters",
+    [
+        pytest.param(
+            ("process.exe", 1500, 2000, 1000, 1500, 80.0, 90.0),
+            id="legacy tuple",
+        ),
+        pytest.param(["process.exe", 1, 1, 1, 1], id="list"),
+        pytest.param("process.exe", id="string"),
+        pytest.param(
+            {"tp_default_value": {}, "tp_values": [("always", ("process.exe", 1))]},
+            id="time specific value is not a mapping",
+        ),
+    ],
+)
+def test_get_aggregated_result_invalid_parameters_only_affect_service(
+    monkeypatch: MonkeyPatch, raw_parameters: object
+) -> None:
+    host_name = HostName("host")
+    monkeypatch.setattr(checkers, "create_check_crash_dump", lambda *_args, **_kw: "crash dump")
+
+    calls: list[Mapping[str, object]] = []
+
+    def check_function(**kwargs: object) -> ServiceCheckResult:
+        calls.append(kwargs)
+        return SubmittableServiceCheckResult(0, "OK")
+
+    result = _get_aggregated_result(host_name, _make_service(raw_parameters), check_function)
+
+    assert not calls
+    assert result.data_received
+    assert result.result == SubmittableServiceCheckResult(3, "crash dump")

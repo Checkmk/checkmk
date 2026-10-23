@@ -9,9 +9,9 @@ from pathlib import Path
 from typing import override
 
 import cmk.utils.paths
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
 from cmk.update_config.plugins.lib.user_profiles import user_directories
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.registry import update_action_registry
 
 
 class RemoveOrphanedGraphUserFiles(UpdateAction):

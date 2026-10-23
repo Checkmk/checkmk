@@ -7,9 +7,10 @@ import type { CalendarDate, ZonedDateTime } from '@internationalized/date'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 /**
- * A quick-select range offered by `CmkTimeRangePicker`. `getRange` is evaluated lazily on
- * selection, so relative ranges (e.g. "Today") reflect the current time. `id` must be stable and
- * must not be `'custom'` — that id is reserved for the auto-appended "Custom" (manual range) entry.
+ * A quick-select range offered by `CmkTimeRangePicker`. `getRange` must be pure and cheap: it runs
+ * on every staged range change, to decide which preset that range spells. A range ending "now"
+ * therefore matches only while its minute holds. `id` must be stable and must not be `'custom'` —
+ * that id is reserved for the auto-appended "Custom" (manual range) entry.
  */
 export interface RangePreset {
   id: string

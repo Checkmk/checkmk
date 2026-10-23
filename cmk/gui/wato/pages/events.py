@@ -27,7 +27,7 @@ from cmk.gui.valuespec import (
     RegExp,
     Tuple,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.mode import WatoMode
 from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
@@ -45,6 +45,7 @@ class ABCEventsMode[T_EventSpec: EventRule | dict](WatoMode, abc.ABC):
         cls,
         edition: Edition,
         sites: SiteConfigurations,
+        tree: FolderTree,
         service_levels: Sequence[tuple[int, str]],
     ) -> list[DictionaryEntry | tuple[str, ListChoice]]:
         raise NotImplementedError
@@ -125,9 +126,10 @@ class ABCEventsMode[T_EventSpec: EventRule | dict](WatoMode, abc.ABC):
         cls,
         edition: Edition,
         sites: SiteConfigurations,
+        tree: FolderTree,
         service_levels: Sequence[tuple[int, str]],
     ) -> list[DictionaryEntry]:
-        return _simple_host_rule_match_conditions(sites) + [
+        return _simple_host_rule_match_conditions(sites, tree) + [
             (
                 "match_servicelabels",
                 Labels(
@@ -384,14 +386,16 @@ class ABCEventsMode[T_EventSpec: EventRule | dict](WatoMode, abc.ABC):
                 )
 
 
-def _simple_host_rule_match_conditions(sites: SiteConfigurations) -> list[DictionaryEntry]:
+def _simple_host_rule_match_conditions(
+    sites: SiteConfigurations, tree: FolderTree
+) -> list[DictionaryEntry]:
     return [
         site_rule_match_condition(sites, only_sites_with_replication=False),
-        _single_folder_rule_match_condition(),
+        _single_folder_rule_match_condition(tree),
     ] + common_host_rule_match_conditions()
 
 
-def _single_folder_rule_match_condition() -> DictionaryEntry:
+def _single_folder_rule_match_condition(tree: FolderTree) -> DictionaryEntry:
     return (
         "match_folder",
         DropdownChoice(
@@ -401,7 +405,7 @@ def _single_folder_rule_match_condition() -> DictionaryEntry:
                 "via Setup and that are contained in this folder - either directly "
                 "or in one of its subfolders."
             ),
-            choices=lambda: folder_tree().folder_choices(user),
+            choices=lambda: tree.folder_choices(user),
         ),
     )
 

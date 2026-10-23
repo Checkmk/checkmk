@@ -7,7 +7,12 @@ from typing import override
 
 import pytest
 
-from cmk.gui.search.matchers import ABCMatchItemGenerator, MatchItemGeneratorRegistry, MatchItems
+from cmk.gui.search.matchers import (
+    ABCMatchItemGenerator,
+    MatchItemConfig,
+    MatchItemGeneratorRegistry,
+    MatchItems,
+)
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.unified_search import ProviderName
 
@@ -40,7 +45,9 @@ class TestCategoriesFor:
 
 class _FakeGenerator(ABCMatchItemGenerator):
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, _config: MatchItemConfig
+    ) -> MatchItems:
         return iter([])
 
     @staticmethod

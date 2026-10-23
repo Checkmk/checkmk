@@ -44,6 +44,14 @@ class AutomationCommand[T](ABC):
     def execute(self, api_request: T) -> object:
         raise NotImplementedError
 
+    def needs_configuration_lock(self) -> bool:
+        """Whether the configuration is locked while the command is executed
+
+        Commands which only start or observe a background job that locks the configuration on
+        its own must not hold the lock. Otherwise the job could not start working before the
+        request finishes."""
+        return True
+
 
 class AutomationCommandRegistry(cmk.ccc.plugin_registry.Registry[type[AutomationCommand]]):
     @override

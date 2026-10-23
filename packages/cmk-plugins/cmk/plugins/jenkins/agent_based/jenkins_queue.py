@@ -23,14 +23,13 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     FixedLevelsT,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 class ParamsDict(TypedDict):
@@ -71,10 +70,6 @@ def parse_jenkins_queue(string_table: StringTable) -> JenkinsQueue:
         parsed.extend(json.loads(line[0]))
 
     return parsed
-
-
-def discover_jenkins_queue(section: JenkinsQueue) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_jenkins_queue(params: ParamsDict, section: JenkinsQueue) -> CheckResult:
@@ -209,7 +204,7 @@ agent_section_jenkins_queue = AgentSection(
 check_plugin_jenkins_queue = CheckPlugin(
     name="jenkins_queue",
     service_name="Jenkins Queue",
-    discovery_function=discover_jenkins_queue,
+    discovery_function=discover_one_service,
     check_function=check_jenkins_queue,
     check_ruleset_name="jenkins_queue",
     check_default_parameters={

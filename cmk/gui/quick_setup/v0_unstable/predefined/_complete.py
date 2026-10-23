@@ -15,7 +15,7 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,
     QSHostPath,
@@ -57,7 +57,6 @@ from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
     _normalize_folder_name,
     Folder,
-    folder_tree,
     FolderTree,
     Host,
 )
@@ -79,7 +78,7 @@ from cmk.gui.watolib.services import (
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.sites import ReplicationStatusFetcher
 from cmk.livestatus_client import SiteConfiguration
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.matcher import RuleConditionsSpec, RuleOptionsSpec, RuleSpec
 from cmk.rulesets.v1.form_specs import Dictionary
@@ -101,7 +100,7 @@ def _sanitize_folder_path(
     """Attempt to get the folder from the folder path. If the folder does not exist, create it.
     Returns the folder object."""
     sanitized_folder_path = normalize_folder_path_str(folder_path)
-    if folder := existing_folder_from_path(sanitized_folder_path):
+    if folder := existing_folder_from_path(tree, sanitized_folder_path):
         return folder
 
     folder = tree.root_folder()
@@ -200,6 +199,7 @@ def create_and_save_special_agent_bundle(
     parameter_form: Dictionary,
     all_stages_form_data: ParsedFormData,
     progress_logger: ProgressLogger,
+    tree: FolderTree,
 ) -> str:
     return _create_and_save_special_agent_bundle(
         special_agent_name=special_agent_name,
@@ -207,6 +207,7 @@ def create_and_save_special_agent_bundle(
         all_stages_form_data=all_stages_form_data,
         collect_params=collect_params_with_defaults_from_form_data,
         progress_logger=progress_logger,
+        tree=tree,
     )
 
 
@@ -216,6 +217,7 @@ def create_and_save_special_agent_bundle_custom_collect_params(
     all_stages_form_data: ParsedFormData,
     custom_collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
     progress_logger: ProgressLogger,
+    tree: FolderTree,
 ) -> str:
     return _create_and_save_special_agent_bundle(
         special_agent_name=special_agent_name,
@@ -223,6 +225,7 @@ def create_and_save_special_agent_bundle_custom_collect_params(
         all_stages_form_data=all_stages_form_data,
         collect_params=custom_collect_params,
         progress_logger=progress_logger,
+        tree=tree,
     )
 
 
@@ -233,7 +236,7 @@ def _find_bundle_id(all_stages_form_data: ParsedFormData) -> BundleId:
     return BundleId(bundle_id)
 
 
-def _convert_explicit_passwords_to_stored_passwords(
+def convert_explicit_passwords_to_stored_passwords(
     rule_params: Mapping, explicit_password_ids: set[str]
 ) -> Mapping[str, object]:
     """Passwords that are explicitly set in the form data are replaced with a reference to the
@@ -241,24 +244,36 @@ def _convert_explicit_passwords_to_stored_passwords(
 
     Notes:
         * assumed that the password store entry will get the same id as the password id
-        * assumed that passwords are not part of a list and only a direct entry in a dictionary
+        * passwords can be nested in dictionaries, lists and cascading choices
     """
-    params_with_converted_passwords: dict = {}
-    for key, value in rule_params.items():
-        match value:
-            case dict():
-                params_with_converted_passwords[key] = (
-                    _convert_explicit_passwords_to_stored_passwords(value, explicit_password_ids)
-                )
-            case ("cmk_postprocessed", "explicit_password", (pw_id, _password)):
-                if pw_id in explicit_password_ids:
-                    password_store_reference = ("cmk_postprocessed", "stored_password", (pw_id, ""))
-                    params_with_converted_passwords[key] = password_store_reference
-                else:
-                    params_with_converted_passwords[key] = value
-            case _:
-                params_with_converted_passwords[key] = value
-    return params_with_converted_passwords
+    return {
+        key: _convert_explicit_password_to_stored_password(value, explicit_password_ids)
+        for key, value in rule_params.items()
+    }
+
+
+def _convert_explicit_password_to_stored_password(
+    value: object, explicit_password_ids: set[str]
+) -> object:
+    match value:
+        case ("cmk_postprocessed", "explicit_password", (pw_id, _password)) if (
+            pw_id in explicit_password_ids
+        ):
+            return ("cmk_postprocessed", "stored_password", (pw_id, ""))
+        case dict():
+            return convert_explicit_passwords_to_stored_passwords(value, explicit_password_ids)
+        case list():
+            return [
+                _convert_explicit_password_to_stored_password(element, explicit_password_ids)
+                for element in value
+            ]
+        case tuple():
+            return tuple(
+                _convert_explicit_password_to_stored_password(element, explicit_password_ids)
+                for element in value
+            )
+        case _:
+            return value
 
 
 def _extract_explicit_password_entities(
@@ -276,7 +291,7 @@ def _extract_explicit_password_entities(
     explicit_passwords = {
         pwid: pw for pwid, pw in collected_passwords.items() if pwid not in stored_passwords
     }
-    params = _convert_explicit_passwords_to_stored_passwords(params, set(explicit_passwords.keys()))
+    params = convert_explicit_passwords_to_stored_passwords(params, set(explicit_passwords.keys()))
 
     password_entities = create_passwords(
         passwords=explicit_passwords,
@@ -291,6 +306,7 @@ def _create_and_save_special_agent_bundle(
     all_stages_form_data: ParsedFormData,
     collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
     progress_logger: ProgressLogger,
+    tree: FolderTree,
 ) -> str:
     rulespec_name = RuleGroup.SpecialAgents(special_agent_name)
     bundle_id = _find_bundle_id(all_stages_form_data)
@@ -328,7 +344,7 @@ def _create_and_save_special_agent_bundle(
     )
     # TODO: The sanitize function is likely to change once we have a folder FormSpec.
     folder = _sanitize_folder_path(
-        (tree := folder_tree()),
+        tree,
         host_path,
         pprint_value=active_config.wato_pprint_config,
         pending_changes=pending_changes,
@@ -337,7 +353,7 @@ def _create_and_save_special_agent_bundle(
     progress_logger.log_new_progress_step(
         "create_config_bundle", "Create underlying configurations"
     )
-    user_permissions = UserPermissions.from_config(active_config, permission_registry)
+    user_permissions = UserPermissions.from_config(active_config, all_permissions())
     create_config_bundle(
         tree,
         acting_user=user,
@@ -537,7 +553,7 @@ def _run_service_discovery(
         ),
         host=host,
         raise_errors=False,
-        automation_config=LocalAutomationConfig(),
+        automation_config=automation_config,
         user_permission_config=user_permission_config,
         pprint_value=pprint_value,
         debug=debug,

@@ -8,19 +8,19 @@
 """Mode for activating pending changes. Does also replication with
 remote sites in distributed Setup."""
 
-import ast
 import enum
-import json
 from collections.abc import Collection, Iterator, Sequence
 from pathlib import Path
-from typing import Literal, override
+from typing import Literal, NamedTuple, override
 
 from cmk.ccc import tar_archive
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition_has_enforced_licensing
 from cmk.gui import forms
+from cmk.gui.background_job.job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
@@ -46,28 +46,32 @@ from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Foldable, init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, ReadOnlySpec
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.utils.selection_id import SelectionId
-from cmk.gui.utils.timeout_manager import timeout_manager
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
 from cmk.gui.watolib import activate_changes, backup_snapshots, read_only
 from cmk.gui.watolib.activate_changes import (
     affects_all_sites,
     ConfigWarnings,
+    deserialize_domain_requests,
     get_status_for_site,
     has_been_activated,
     is_foreign_change,
     prevent_discard_changes,
+    RemoteActivationBackgroundJob,
+    RemoteActivationStatus,
     verify_remote_site_config,
 )
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
-from cmk.gui.watolib.automations import MKAutomationException
 from cmk.gui.watolib.backup_snapshots import get_last_wato_snapshot_file
-from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, DomainRequests
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree
+from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequests
+from cmk.gui.watolib.hosts_and_folders import (
+    FolderTree,
+    make_folder_tree,
+)
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.pending_changes import (
@@ -85,6 +89,7 @@ from cmk.licensing.registry import get_licensing_user_effect
 from cmk.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.utils import paths, render
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
@@ -104,6 +109,8 @@ def register(
     mode_registry.register(ModeActivateChanges)
     mode_registry.register(ModeRevertChanges)
     automation_command_registry.register(AutomationActivateChanges)
+    automation_command_registry.register(AutomationActivateChangesStart)
+    automation_command_registry.register(AutomationActivateChangesGetStatus)
 
 
 class ActivationState(enum.Enum):
@@ -197,7 +204,9 @@ class ModeRevertChanges(WatoMode):
             yield PageMenuEntry(
                 title=_("Audit log"),
                 icon_name=StaticIcon(IconNames.auditlog),
-                item=make_simple_link(folder_preserving_link(request, [("mode", "auditlog")])),
+                item=make_simple_link(
+                    makeuri_contextless(request, [("mode", "auditlog")], filename="wato.py")
+                ),
             )
 
     def _may_discard_changes(
@@ -261,6 +270,8 @@ class ModeRevertChanges(WatoMode):
         manager.start(
             sites=[local_site],
             source="GUI",
+            # A tree of its own, read after the snapshot restored the folders
+            tree=make_folder_tree(config),
             all_site_configs=active_config.sites,
             user_permission_config=UserPermissionSerializableConfig.from_global_config(config),
             max_snapshots=config.wato_max_snapshots,
@@ -319,12 +330,18 @@ class ModeRevertChanges(WatoMode):
         )
 
         _change_table(
-            list(activation_sites(config.sites)), self._changes.changes, _("Revert changes")
+            make_folder_tree(config),
+            list(activation_sites(config.sites)),
+            self._changes.changes,
+            _("Revert changes"),
         )
 
 
 def _change_table(
-    activation_site_ids: Sequence[SiteId], changes: list[tuple[str, ChangeSpec]], title: str
+    tree: FolderTree,
+    activation_site_ids: Sequence[SiteId],
+    changes: list[tuple[str, ChangeSpec]],
+    title: str,
 ) -> None:
     with table_element(
         "changes",
@@ -346,7 +363,7 @@ def _change_table(
             table.row(css=[" ".join(css)])
 
             table.cell("", css=["buttons"])
-            rendered = render_object_ref_as_icon(change["object"])
+            rendered = render_object_ref_as_icon(tree, change["object"])
             if rendered:
                 html.write_html(rendered)
 
@@ -479,7 +496,9 @@ class ModeActivateChanges(WatoMode):
             yield PageMenuEntry(
                 title=_("Audit log"),
                 icon_name=StaticIcon(IconNames.auditlog),
-                item=make_simple_link(folder_preserving_link(request, [("mode", "auditlog")])),
+                item=make_simple_link(
+                    makeuri_contextless(request, [("mode", "auditlog")], filename="wato.py")
+                ),
             )
 
     def _page_menu_entries_all_sites(
@@ -558,7 +577,7 @@ class ModeActivateChanges(WatoMode):
             # TODO: move to CCE handler to avoid is_ultimate_edition check
             license_usage_report_valid = (
                 self._license_usage_report_validity
-                != LicenseUsageReportValidity.older_than_five_days
+                != LicenseUsageReportValidity.older_than_sixty_days
             )
             block_effect = get_licensing_user_effect(
                 paths.omd_root,
@@ -600,6 +619,7 @@ class ModeActivateChanges(WatoMode):
 
         if self._changes.has_pending_changes():
             _change_table(
+                make_folder_tree(config),
                 list(activation_site_configs),
                 self._changes.pending_changes,
                 _("Pending changes"),
@@ -713,18 +733,17 @@ class ModeActivateChanges(WatoMode):
         if edition_has_enforced_licensing(self._edition):
             if (
                 self._license_usage_report_validity
-                == LicenseUsageReportValidity.older_than_five_days
+                == LicenseUsageReportValidity.older_than_sixty_days
             ):
                 _show_activation_state_messages(
-                    "",
+                    _("Activation not possible because of the following licensing issues:"),
                     _(
-                        "The license usage history is older than five days. In order to have a"
-                        " reliable average of the number of services the license usage report must"
-                        " contain a significant number of license usage samples. Please execute"
-                        " the following command as site user 'cmk-update-license-usage --force' in"
-                        " order to solve this situation."
+                        "The license usage history is older than 60 days, so activating changes"
+                        " is blocked. Something is wrong on this site: please contact Checkmk"
+                        " support. As a temporary fix, run 'cmk-update-license-usage --force' as"
+                        " site user."
                     ),
-                    ActivationState.WARNING,
+                    ActivationState.ERROR,
                 )
             elif (
                 self._license_usage_report_validity
@@ -732,7 +751,12 @@ class ModeActivateChanges(WatoMode):
             ):
                 _show_activation_state_messages(
                     "",
-                    _("The license usage history was updated at least three days ago."),
+                    _(
+                        "The license usage history is older than three days, and activating"
+                        " changes will be blocked once it is older than 60 days. Something is"
+                        " wrong on this site: please contact Checkmk support. As a temporary fix,"
+                        " run 'cmk-update-license-usage --force' as site user."
+                    ),
                     ActivationState.WARNING,
                 )
 
@@ -782,8 +806,8 @@ class ModeActivateChanges(WatoMode):
                 table.cell(_("Actions"), css=["buttons"])
 
                 if user.may("wato.sites"):
-                    edit_url = folder_preserving_link(
-                        request, [("mode", "edit_site"), ("site", site_id)]
+                    edit_url = makeuri_contextless(
+                        request, [("mode", "edit_site"), ("site", site_id)], filename="wato.py"
                     )
                     html.icon_button(
                         edit_url, _("Edit the properties of this site"), StaticIcon(IconNames.edit)
@@ -880,8 +904,9 @@ class ModeActivateChanges(WatoMode):
         elif need_action and last_state["_state"] == activate_changes.STATE_SUCCESS:
             html.write_text_permissive(_("Activation needed"))
         else:
-            html.javascript(
-                "cmk.activation.update_site_activation_state(%s);" % json.dumps(last_state)
+            html.call_ts_function(
+                function_name="update_site_activation_state",
+                arguments={"site_state": last_state},
             )
 
     def _can_activate_all(self, site_id: SiteId) -> bool:
@@ -912,11 +937,11 @@ class ModeActivateChanges(WatoMode):
         )
 
 
-def render_object_ref_as_icon(object_ref: ObjectRef | None) -> HTML | None:
+def render_object_ref_as_icon(tree: FolderTree, object_ref: ObjectRef | None) -> HTML | None:
     if object_ref is None:
         return None
 
-    url, title = _get_object_reference(object_ref)
+    url, title = _get_object_reference(tree, object_ref)
     if not url:
         return None
 
@@ -937,8 +962,8 @@ def render_object_ref_as_icon(object_ref: ObjectRef | None) -> HTML | None:
     )
 
 
-def render_object_ref(object_ref: ObjectRef | None) -> str | HTML | None:
-    url, title = _get_object_reference(object_ref)
+def render_object_ref(tree: FolderTree, object_ref: ObjectRef | None) -> str | HTML | None:
+    url, title = _get_object_reference(tree, object_ref)
     if title and not url:
         return title
     if not title:
@@ -947,21 +972,22 @@ def render_object_ref(object_ref: ObjectRef | None) -> str | HTML | None:
 
 
 # TODO: Move this to some generic place
-def _get_object_reference(object_ref: ObjectRef | None) -> tuple[str | None, str | None]:
+def _get_object_reference(
+    tree: FolderTree, object_ref: ObjectRef | None
+) -> tuple[str | None, str | None]:
     if object_ref is None:
         return None, None
 
     if object_ref.object_type is ObjectRefType.Host:
-        host = folder_tree().host(HostName(object_ref.ident))
+        host = tree.host(HostName(object_ref.ident))
         if host:
             return host.edit_url(), host.name()
         return None, object_ref.ident
 
     if object_ref.object_type is ObjectRefType.Folder:
-        tree = folder_tree()
         if tree.folder_exists(object_ref.ident):
             folder = tree.folder(object_ref.ident)
-            return folder.url(request), folder.title()
+            return folder.url(), folder.title()
         return None, object_ref.ident
 
     if object_ref.object_type is ObjectRefType.User:
@@ -1051,7 +1077,7 @@ def _vs_activation(
 class PageAjaxStartActivation(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
         user.need_permission("wato.activate")
 
         api_request = ctx.request.get_request()
@@ -1093,6 +1119,7 @@ class PageAjaxStartActivation(AjaxPage):
 
         activation_id = manager.start(
             sites=affected_sites,
+            tree=make_folder_tree(ctx.config),
             all_site_configs=ctx.config.sites,
             activate_until=activate_until,
             comment=comment,
@@ -1130,29 +1157,87 @@ class PageAjaxActivationState(AjaxPage):
         return manager.get_state()
 
 
-class AutomationActivateChanges(AutomationCommand[DomainRequests]):
+class _ActivateChangesRequest(NamedTuple):
+    domain_requests: DomainRequests
+    tree: FolderTree
+    user_permission_config: UserPermissionSerializableConfig
+
+
+class _ABCAutomationActivateChanges(AutomationCommand[_ActivateChangesRequest]):
+    @override
+    def needs_configuration_lock(self) -> bool:
+        # The activation job holds the configuration lock while it runs.
+        return False
+
+    @override
+    def get_request(self, config: Config, request: Request) -> _ActivateChangesRequest:
+        verify_remote_site_config(
+            config.sites, SiteId(request.get_ascii_input_mandatory("site_id"))
+        )
+        return _ActivateChangesRequest(
+            deserialize_domain_requests(request.get_ascii_input_mandatory("domains")),
+            make_folder_tree(config),
+            UserPermissionSerializableConfig.from_global_config(config),
+        )
+
+    def _start(self, api_request: _ActivateChangesRequest) -> RemoteActivationBackgroundJob:
+        return RemoteActivationBackgroundJob.start_activation(
+            api_request.tree, api_request.domain_requests, api_request.user_permission_config
+        )
+
+
+class AutomationActivateChangesStart(_ABCAutomationActivateChanges):
+    """Starts the activation job and returns its ID for polling with activate-changes-get-status"""
+
+    @override
+    def command_name(self) -> str:
+        return "activate-changes-start"
+
+    @override
+    def execute(self, api_request: _ActivateChangesRequest) -> str:
+        return self._start(api_request).get_job_id()
+
+
+class AutomationActivateChanges(_ABCAutomationActivateChanges):
+    """Activates the changes and responds with the result
+
+    Central sites of the previous major version use this command. The activation runs in a job
+    which continues when this request is cancelled due to a timeout. Remove this command with
+    the next major version."""
+
     @override
     def command_name(self) -> str:
         return "activate-changes"
 
     @override
-    def get_request(self, config: Config, request: Request) -> DomainRequests:
-        verify_remote_site_config(
-            config.sites, SiteId(request.get_ascii_input_mandatory("site_id"))
-        )
-        domains = request.get_ascii_input_mandatory("domains")
-        try:
-            return [DomainRequest(**x) for x in ast.literal_eval(domains)]
-        except SyntaxError:
-            raise MKAutomationException(_("Invalid request: %(domains)r") % {"domains": domains})
+    def execute(self, api_request: _ActivateChangesRequest) -> ConfigWarnings:
+        job = self._start(api_request)
+        job.wait_for_completion()
+        status = job.activation_status()
+        if status["state"] != JobStatusStates.FINISHED:
+            raise MKGeneralException(
+                _("Activation failed: %(error)s") % {"error": "\n".join(status["exception"])}
+            )
+        return status["warnings"]
+
+
+class AutomationActivateChangesGetStatus(AutomationCommand[str]):
+    @override
+    def command_name(self) -> str:
+        return "activate-changes-get-status"
 
     @override
-    def execute(self, api_request: DomainRequests) -> ConfigWarnings:
-        timeout_manager.enable_timeout(500)
-        try:
-            return activate_changes.execute_activate_changes(api_request, is_remote_site=True)
-        finally:
-            timeout_manager.disable_timeout()
+    def needs_configuration_lock(self) -> bool:
+        # The activation job holds the configuration lock while it runs.
+        return False
+
+    @override
+    def get_request(self, config: Config, request: Request) -> str:
+        return request.get_ascii_input_mandatory("job_id")
+
+    @override
+    def execute(self, api_request: str) -> RemoteActivationStatus:
+        return RemoteActivationBackgroundJob.from_job_id(api_request).activation_status()
 
 
 def _pending_changes(config: Config, local_site: SiteId, user_id: UserId | None) -> PendingChanges:

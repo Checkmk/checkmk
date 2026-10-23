@@ -11,8 +11,8 @@ MK_SOURCE_AGENT="true" source "$AGENT_LINUX"
 # mock openssl
 openssl() {
     if [ "${1}" = "version" ]; then
-        printf "OpenSSL 1.1.1f  31 Mar 2020\n"
-    elif [[ " $* " =~ " -pbkdf2 " ]]; then
+        printf "%s\n" "${MOCK_OPENSSL_VERSION:-"OpenSSL 1.1.1f  31 Mar 2020"}"
+    elif [[ " $* " =~ " -P " ]]; then
         # This is the key derivation. We need to output some reasonable values to continue.
         # This is also openssl enc, so this has to live above the encryption case.
         printf "salt=53414C5453414C54\n"
@@ -42,9 +42,20 @@ test_unencrypted() {
 test_encrypted() {
     unset optionally_encrypt
 
-    ENCRYPTED="yes" set_up_encryption
+    MOCK_OPENSSL_VERSION="OpenSSL 1.1.1f  31 Mar 2020" ENCRYPTED="yes" set_up_encryption
 
     expected="$(printf '%s%s%s%s' "05" "SALTSALT" "HMACHMACHMACHMACHMACHMACHMACHMAC" "Hello cipher 🌍!")"
+    actual="$(printf "Hello plain 🌍!" | optionally_encrypt)"
+
+    assertEquals "${expected}" "${actual}"
+}
+
+test_encrypted_legacy_openssl() {
+    unset optionally_encrypt
+
+    MOCK_OPENSSL_VERSION="OpenSSL 1.0.2k-fips  26 Jan 2017" ENCRYPTED="yes" set_up_encryption
+
+    expected="$(printf '%s%s%s%s' "04" "SALTSALT" "HMACHMACHMACHMACHMACHMACHMACHMAC" "Hello cipher 🌍!")"
     actual="$(printf "Hello plain 🌍!" | optionally_encrypt)"
 
     assertEquals "${expected}" "${actual}"

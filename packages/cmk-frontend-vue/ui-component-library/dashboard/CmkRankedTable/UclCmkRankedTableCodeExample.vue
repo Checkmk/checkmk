@@ -11,17 +11,17 @@ import CmkRankedTable, {
 
 const columns: RankedTableColumn[] = [
   { key: 'host', title: 'Host', render: 'text', bar: false },
-  { key: 'volume', title: 'Volume', render: 'bytes', bar: true }
+  { key: 'flows', title: 'Flows', render: 'count', bar: true }
 ]
 
 const rows: RankedTableRow[] = [
   // A cell is either a bare value, or an object with display overrides.
-  { host: { value: '10.0.71.219', href: 'view.py?view_name=host' }, volume: 194_420_000_000 },
-  { host: '10.0.234.247', volume: 158_270_000_000 },
-  { host: '10.0.171.51', volume: { value: 58_270_000_000, formatted: '58.3 GB' } }
+  { host: { value: '10.0.71.219', href: 'view.py?view_name=host' }, flows: 1284 },
+  { host: '10.0.234.247', flows: 967 },
+  { host: '10.0.171.51', flows: { value: 411, formatted: '411 flows' } }
 ]
 </script>
 
 <template>
-  <CmkRankedTable :columns="columns" :rows="rows" bar-color="var(--color-corporate-green-50)" />
+  <CmkRankedTable :columns="columns" :rows="rows" />
 </template>

@@ -17,6 +17,7 @@ import sys
 import xml.etree.ElementTree as ET
 from collections.abc import Callable, Sequence
 from html.parser import HTMLParser
+from http import HTTPStatus
 from typing import override
 from urllib.parse import urljoin
 
@@ -24,7 +25,8 @@ import requests
 import urllib3
 from requests.structures import CaseInsensitiveDict
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1 import configure_logging
 
 LOGGER = logging.getLogger(__name__)
 
@@ -50,15 +52,12 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     args = parser.parse_args(argv)
 
     if args.verbose and args.verbose >= 2:
-        fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s %(message)s"
         lvl = logging.DEBUG
     elif args.verbose:
-        fmt = "%(levelname)s: %(message)s"
         lvl = logging.INFO
     else:
-        fmt = "%(levelname)s: %(message)s"
         lvl = logging.WARNING
-    logging.basicConfig(level=lvl, format=fmt)  # astrein: disable=logging-formatter
+    configure_logging(lvl)
 
     return args
 
@@ -205,7 +204,7 @@ class HPMSAConnection:
         LOGGER.debug("GET %(url)r", {"url": url})
         # we must provide the verify keyword to every individual request call!
         response = self._session.get(url, timeout=self._timeout, verify=self._verify_ssl)
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             LOGGER.warning(
                 "RESPONSE.status_code, reason: %(status_and_reason)r",
                 {"status_and_reason": (response.status_code, response.reason)},

@@ -24,6 +24,7 @@ import type {
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
 import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
+import { columnId } from '@/monitoring/shared/tableState/schema'
 
 /**
  * Columns the user may hide that also map to API-optional fields.
@@ -34,7 +35,8 @@ const OPTIONAL_FIELD_COLUMNS = [
   'labels',
   'tags',
   'contacts',
-  'contact_groups'
+  'contact_groups',
+  'groups'
 ] as const satisfies readonly ServiceOptionalField[]
 
 /**
@@ -45,12 +47,20 @@ export function visibleServiceFields(visibility: VisibilityState): ServiceOption
   return OPTIONAL_FIELD_COLUMNS.filter((field) => visibility[field] !== false)
 }
 
+const ACTION_BUTTON_WIDTH = 25
+const ACTIONS_MENU_WIDTH = 50
+
+function actionsColumnWidth(inlineActions: number): number {
+  return ACTIONS_MENU_WIDTH + inlineActions * ACTION_BUTTON_WIDTH
+}
+
 export interface HostServicesColumnOptions {
   /**
    * Whether to offer the row-selection column. Only a user who may run a command on the
    * selection gets it - without one, ticking a row would lead nowhere.
    */
   includeSelect: boolean
+  inlineActions?: number
 }
 
 /**
@@ -82,7 +92,8 @@ type ServiceModeField =
   | 'check_crashed'
 
 export function useHostServicesColumns({
-  includeSelect
+  includeSelect,
+  inlineActions = 0
 }: HostServicesColumnOptions): ColumnDef<HostServiceEntry>[] {
   const { _t } = usei18n()
 
@@ -125,6 +136,7 @@ export function useHostServicesColumns({
   const labelsFilter: AutocompleteChoiceFilter<'labels'> = {
     type: 'autocomplete-choice',
     field: 'labels',
+    op: 'all_of',
     suggest: labelAutocompleter('service'),
     keyValue: true,
     wildcardOption: true,
@@ -134,6 +146,7 @@ export function useHostServicesColumns({
   const tagsFilter: AutocompleteChoiceFilter<'tags'> = {
     type: 'autocomplete-choice',
     field: 'tags',
+    op: 'all_of',
     suggest: tagAutocompleter(),
     keyValue: true,
     wildcardOption: true,
@@ -148,7 +161,17 @@ export function useHostServicesColumns({
   const contactGroupsFilter: AutocompleteChoiceFilter<'contact_groups'> = {
     type: 'autocomplete-choice',
     field: 'contact_groups',
+    op: 'one_of',
     suggest: autocompleter('allgroups', { group_type: 'contact' }),
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
+  }
+
+  const serviceGroupsFilter: AutocompleteChoiceFilter<'groups'> = {
+    type: 'autocomplete-choice',
+    field: 'groups',
+    op: 'one_of',
+    suggest: autocompleter('allgroups', { group_type: 'service' }),
     wildcardOption: true,
     maxSelected: MAX_FILTER_CHOICES
   }
@@ -158,13 +181,17 @@ export function useHostServicesColumns({
     groups: [
       { field: 'in_downtime', title: _t('In downtime') },
       { field: 'acknowledged', title: _t('Acknowledged') },
-      { field: 'notifications_enabled', title: _t('Notifications enabled') },
+      { field: 'notifications_enabled', title: _t('Notifications disabled'), negated: true },
       { field: 'has_comments', title: _t('Has comments') },
       { field: 'active_checks_disabled', title: _t('Active checks disabled') },
       { field: 'passive_checks_disabled', title: _t('Passive checks disabled') },
-      { field: 'in_notification_period', title: _t('In notification period') },
-      { field: 'in_service_period', title: _t('In service period') },
-      { field: 'in_check_period', title: _t('In check period') },
+      {
+        field: 'in_notification_period',
+        title: _t('Out of notification period'),
+        negated: true
+      },
+      { field: 'in_service_period', title: _t('Out of service period'), negated: true },
+      { field: 'in_check_period', title: _t('Out of check period'), negated: true },
       { field: 'check_crashed', title: _t('Check crashed') }
     ]
   }
@@ -215,20 +242,28 @@ export function useHostServicesColumns({
       meta: { filter: summaryFilter }
     },
     {
-      accessorKey: 'last_check',
-      header: _t('Last check'),
+      accessorKey: 'last_state_change',
+      header: _t('State age'),
       sortDescFirst: true,
       minSize: 120,
       maxSize: 200,
-      meta: { filter: lastCheckFilter }
+      meta: {
+        headerTitle: _t('Age of the state'),
+        justify: 'right',
+        filter: lastStateChangeFilter
+      }
     },
     {
-      accessorKey: 'last_state_change',
-      header: _t('Last state change'),
+      accessorKey: 'last_check',
+      header: _t('Check age'),
       sortDescFirst: true,
       minSize: 120,
       maxSize: 200,
-      meta: { filter: lastStateChangeFilter }
+      meta: {
+        headerTitle: _t('Age of the check'),
+        justify: 'right',
+        filter: lastCheckFilter
+      }
     },
     {
       accessorKey: 'labels',
@@ -263,11 +298,19 @@ export function useHostServicesColumns({
       meta: { hidden: true, filter: contactGroupsFilter }
     },
     {
+      accessorKey: 'groups',
+      header: _t('Service groups'),
+      enableSorting: false,
+      minSize: 100,
+      maxSize: 300,
+      meta: { hidden: true, filter: serviceGroupsFilter }
+    },
+    {
       accessorKey: 'perfometer',
       header: _t('Perf-O-Meter'),
       enableSorting: false,
-      minSize: 168,
-      maxSize: 168,
+      minSize: 192,
+      maxSize: 192,
       meta: { justify: 'center' }
     },
     {
@@ -275,9 +318,25 @@ export function useHostServicesColumns({
       header: _t('Actions'),
       enableSorting: false,
       enableHiding: false,
-      minSize: 75,
-      maxSize: 75,
+      minSize: actionsColumnWidth(inlineActions),
+      maxSize: actionsColumnWidth(inlineActions),
       meta: { justify: 'right' }
     }
   ]
+}
+
+export function uncapNameWithoutSummary(
+  columns: ColumnDef<HostServiceEntry>[],
+  visibility: VisibilityState
+): ColumnDef<HostServiceEntry>[] {
+  if (visibility['summary'] !== false) {
+    return columns
+  }
+  return columns.map((column) => {
+    if (columnId(column) !== 'name') {
+      return column
+    }
+    const { maxSize: _cap, ...uncapped } = column
+    return uncapped
+  })
 }

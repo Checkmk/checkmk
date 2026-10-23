@@ -16,10 +16,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.lib.config import Config
-from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_ISSUER_HEADER, INJECTED_UUID_HEADER
+from cmk.agent_receiver.lib.mtls_auth_validator import (
+    INJECTED_ISSUER_HEADER,
+    INJECTED_SERIAL_HEADER,
+    INJECTED_UUID_HEADER,
+)
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.relay_protocols.monitoring_data import MonitoringData, PayloadType
-from cmk.testlib.agent_receiver.certs import relay_ca_common_name
+from cmk.testlib.agent_receiver.certs import relay_ca_common_name, UNREVOKED_SERIAL_NUMBER
 from cmk.testlib.agent_receiver.clients import (
     RelayClient,
     RelayRegistrationClient,
@@ -62,6 +66,7 @@ def test_forward_monitoring_data(
         f"payload_type:fetcher;"
         f"payload_size:{len(payload)};"
         f"config_serial:{relay_config.serial};"
+        f"relay_id:{relay_id};"
         f"start_timestamp:{timestamp};"
         f"host_by_name:{HOST};"
         f"service_description:{service_name};"
@@ -119,6 +124,7 @@ def test_forward_monitoring_data_huge_payload(
         assert "payload_type:fetcher;" in received_header
         assert f"payload_size:{len(payload)};" in received_header
         assert f"config_serial:{relay_config.serial};" in received_header
+        assert f"relay_id:{relay_id};" in received_header
         assert f"host_by_name:{HOST};" in received_header
         assert f"service_description:{service_name};" in received_header
 
@@ -182,8 +188,9 @@ def test_forward_active_check_data_announces_it_as_an_active_check(
 
         assert response.status_code == HTTPStatus.NO_CONTENT
         connection_data = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT)
-        header = connection_data.data.split(b"\n", 1)[0].decode()
-        assert "payload_type:active_check;" in header, header
+        header, forwarded = connection_data.data.split(b"\n", 1)
+        assert "payload_type:active_check;" in header.decode(), header
+        assert forwarded == payload
 
 
 def create_monitoring_data(
@@ -415,10 +422,12 @@ def raw_post(
     identity_cn: str,
     issuer_cn: str,
 ) -> httpx2.Response:
-    """Escape hatch for tests that must send raw JSON (bypass Pydantic client-side validation).
-    Sets INJECTED_UUID_HEADER and INJECTED_ISSUER_HEADER for you."""
     return http.post(
         path,
-        headers={INJECTED_UUID_HEADER: identity_cn, INJECTED_ISSUER_HEADER: issuer_cn},
+        headers={
+            INJECTED_UUID_HEADER: identity_cn,
+            INJECTED_ISSUER_HEADER: issuer_cn,
+            INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
+        },
         json=json,
     )

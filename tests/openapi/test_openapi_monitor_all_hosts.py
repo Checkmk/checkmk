@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import time
+from http import HTTPStatus
 
 import pytest
 import time_machine
@@ -14,10 +16,23 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.monitor.hosts._api._list_hosts import _MAX_NUMBER_OF_HOSTS
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 _SITE_ID = "NO_SITE"
+_ACTION_MENU_HOST_ROW = {
+    "host_name": "heute",
+    "host_address": "127.0.0.1",
+    "host_filename": "/wato/hosts.mk",
+    "host_check_type": 0,
+    "host_check_command": "check-mk-host-smart",
+    "host_active_checks_enabled": 1,
+    "host_pnpgraph_present": 0,
+    "host_action_url_expanded": "",
+    "host_notes_url_expanded": "",
+    "host_custom_variable_names": [],
+    "host_custom_variable_values": [],
+}
 
 # NOTE: we are a bit contrained on what we can do with the mock livestatus fixture. For instance
 # limits and the ``Stats`` meta counts are not faithfully reflected by the mock. Therefore, this
@@ -31,7 +46,7 @@ class TestMonitorHostsAuth:
 
         resp = client.list_all(limit=100, expect_ok=False)
 
-        assert resp.status_code == 401
+        assert resp.status_code == HTTPStatus.UNAUTHORIZED
         assert "credentials" in resp.json["detail"]
 
     def test_normal_user_is_permitted(
@@ -59,17 +74,17 @@ class TestMonitorHostsAuth:
         with mock_livestatus(expect_status_query=True):
             resp = client.list_all(limit=_LIMIT)
 
-        assert resp.status_code == 200
+        assert resp.status_code == HTTPStatus.OK
 
 
 class TestMonitorHostsQueryParamValidation:
     def test_limit_lower_bound(self, clients: ClientRegistry) -> None:
         resp = clients.MonitorHosts.list_all(limit=-1, expect_ok=False)
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     def test_limit_upper_bound(self, clients: ClientRegistry) -> None:
         resp = clients.MonitorHosts.list_all(limit=1_000_000, expect_ok=False)
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     @pytest.mark.parametrize(
         "sort",
@@ -81,7 +96,7 @@ class TestMonitorHostsQueryParamValidation:
     )
     def test_invalid_sort_params(self, clients: ClientRegistry, sort: list[str]) -> None:
         resp = clients.MonitorHosts.list_all(limit=100, sort=sort, expect_ok=False)
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
     @pytest.mark.parametrize(
         "filters",
@@ -112,15 +127,6 @@ class TestMonitorHostsQueryParamValidation:
                     ],
                 },
                 id="min length of 'or' condition",
-            ),
-            pytest.param(
-                {
-                    "type": "condition",
-                    "field": "site_id",
-                    "op": "one_of",
-                    "value": ["no-such-site"],
-                },
-                id="unknown site id",
             ),
             pytest.param(
                 {
@@ -178,7 +184,7 @@ class TestMonitorHostsQueryParamValidation:
                 {
                     "type": "condition",
                     "field": "labels",
-                    "op": "one_of",
+                    "op": "all_of",
                     "value": ["key:val\nue"],
                 },
                 id="newline in label choice value",
@@ -191,7 +197,48 @@ class TestMonitorHostsQueryParamValidation:
         filters: dict[str, object],
     ) -> None:
         resp = clients.MonitorHosts.list_all(limit=1000, filters=filters, expect_ok=False)
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
+
+    @pytest.mark.parametrize(
+        "filters",
+        [
+            pytest.param(
+                {
+                    "type": "condition",
+                    "field": "site_id",
+                    "op": "one_of",
+                    "value": ["no-such-site"],
+                },
+                id="unknown site id",
+            ),
+            pytest.param(
+                {
+                    "type": "and",
+                    "children": [
+                        {"type": "condition", "field": "name", "op": "contains", "value": "heute"},
+                        {
+                            "type": "not",
+                            "child": {
+                                "type": "condition",
+                                "field": "site_id",
+                                "op": "one_of",
+                                "value": ["no-such-site"],
+                            },
+                        },
+                    ],
+                },
+                id="unknown site id inside the tree",
+            ),
+        ],
+    )
+    def test_filters_with_an_unknown_site_are_rejected(
+        self,
+        clients: ClientRegistry,
+        filters: dict[str, object],
+    ) -> None:
+        resp = clients.MonitorHosts.list_all(limit=1000, filters=filters, expect_ok=False)
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
+        assert resp.json["detail"] == "Site 'no-such-site' does not exist."
 
 
 class TestMonitorHosts:
@@ -567,8 +614,8 @@ class TestMonitorHostsFilters:
         set_config: SetConfig,
     ) -> None:
         # "remote" needs to be a real configured site (not just a mock-livestatus fake site) for
-        # `SiteIdConverter.should_exist` to accept it, and for the complement (every site except
-        # "remote") to be computed against the right set of configured sites.
+        # the handler to accept it, and for the complement (every site except "remote") to be
+        # computed against the right set of configured sites.
         with set_config(sites=_site_configs([SiteId(_SITE_ID), SiteId("remote"), SiteId("local")])):
             mock_livestatus.add_table("hosts", _HOSTS)
             mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
@@ -742,7 +789,7 @@ class TestMonitorHostsFields:
         mock_livestatus.expect_query(
             [
                 "GET hosts",
-                f"Columns: {_host_columns('labels')} labels label_sources",
+                f"Columns: {_host_columns('labels')}",
                 "OrderBy: name asc natural",
                 f"Limit: {_LIMIT}",
             ]
@@ -904,6 +951,64 @@ class TestMonitorHostsFields:
 
         assert "contact_groups" not in resp.json["hosts"][0]
 
+    def test_num_relations_counts_only_the_relations_that_reach_the_reader(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", _HOSTS_WITH_RELATIONS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        # Asked once for the whole listing, before the sites are narrowed, so the count does not
+        # change with the reader's site filter.
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                "Columns: name",
+                "Filter: custom_variable_names >= CMK_RELATIONS",
+            ]
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_host_columns('num_relations')}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT, fields=["num_relations"])
+
+        # "heute" is related to "gestern" and to "gone"; only the former is a host any site knows,
+        # so the number promises exactly the cards the host details will show.
+        assert {host["name"]: host["num_relations"] for host in resp.json["hosts"]} == {
+            "heute": 1,
+            "gestern": 1,
+            "morgen": 0,
+        }
+
+    def test_num_relations_is_omitted_unless_requested(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", _HOSTS_WITH_RELATIONS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        # No pre-query either: a listing without the count needs none of the counterparts.
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT)
+
+        assert "num_relations" not in resp.json["hosts"][0]
+
 
 class TestMonitorHostOverviewAuth:
     def test_invalid_credentials(self, clients: ClientRegistry) -> None:
@@ -912,7 +1017,7 @@ class TestMonitorHostOverviewAuth:
 
         resp = client.get(hostname="heute", site_id=_SITE_ID, expect_ok=False)
 
-        assert resp.status_code == 401
+        assert resp.status_code == HTTPStatus.UNAUTHORIZED
         assert "credentials" in resp.json["detail"]
 
     def test_normal_user_is_permitted(
@@ -939,13 +1044,13 @@ class TestMonitorHostOverviewAuth:
         with mock_livestatus(expect_status_query=True):
             resp = client.get(hostname="heute", site_id=_SITE_ID, expect_ok=False)
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 class TestMonitorHostOverviewQueryParamValidation:
     def test_unknown_site_is_rejected(self, clients: ClientRegistry) -> None:
         resp = clients.MonitorHosts.get(hostname="heute", site_id="no-such-site", expect_ok=False)
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 class TestMonitorHostActionMenuAuth:
@@ -955,7 +1060,7 @@ class TestMonitorHostActionMenuAuth:
 
         resp = client.action_menu(hostname="heute", site_id=_SITE_ID, expect_ok=False)
 
-        assert resp.status_code == 401
+        assert resp.status_code == HTTPStatus.UNAUTHORIZED
         assert "credentials" in resp.json["detail"]
 
     def test_normal_user_is_permitted(
@@ -983,7 +1088,7 @@ class TestMonitorHostActionMenuAuth:
         with mock_livestatus(expect_status_query=True):
             resp = client.action_menu(hostname="heute", site_id=_SITE_ID, expect_ok=False)
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 class TestMonitorHostActionMenuQueryParamValidation:
@@ -991,7 +1096,7 @@ class TestMonitorHostActionMenuQueryParamValidation:
         resp = clients.MonitorHosts.action_menu(
             hostname="heute", site_id="no-such-site", expect_ok=False
         )
-        assert resp.status_code == 400
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 class TestMonitorHostActionMenu:
@@ -1012,7 +1117,48 @@ class TestMonitorHostActionMenu:
                 hostname="no-such-host", site_id=_SITE_ID, expect_ok=False
             )
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
+
+    def test_existing_host_lists_its_actions(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", [_ACTION_MENU_HOST_ROW])
+        mock_livestatus.expect_query(
+            ["GET hosts", "Filter: host_name = heute"],
+            match_type="loose",
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.action_menu(
+                hostname="heute", site_id=_SITE_ID, expect_ok=False
+            )
+
+        assert resp.status_code == HTTPStatus.OK
+        assert resp.json["items"]
+
+    def test_normal_user_sees_the_actions_of_an_existing_host(
+        self,
+        clients: ClientRegistry,
+        with_user: tuple[UserId, str],
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        client = clients.MonitorHosts
+        client.set_credentials(*with_user)
+        mock_livestatus.add_table("hosts", [_ACTION_MENU_HOST_ROW])
+        mock_livestatus.expect_query(
+            ["GET hosts", "Filter: host_name = heute"],
+            match_type="loose",
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = client.action_menu(hostname="heute", site_id=_SITE_ID, expect_ok=False)
+
+        assert resp.status_code == HTTPStatus.OK
+        assert resp.json["items"]
 
 
 class TestMonitorHostOverview:
@@ -1026,29 +1172,7 @@ class TestMonitorHostOverview:
             "hosts",
             [
                 {
-                    "name": "heute",
-                    "alias": "Today",
-                    "address": "127.0.0.1",
-                    "state": 0,
-                    "has_been_checked": 1,
-                    "num_services": 10,
-                    "num_services_ok": 10,
-                    "num_services_warn": 0,
-                    "num_services_crit": 0,
-                    "num_services_unknown": 0,
-                    "num_services_pending": 0,
-                    "acknowledged": 0,
-                    "scheduled_downtime_depth": 0,
-                    "notifications_enabled": 1,
-                    "comments": [],
-                    "modified_attributes_list": [],
-                    "active_checks_enabled": 1,
-                    "accept_passive_checks": 1,
-                    "in_notification_period": 1,
-                    "in_service_period": 1,
-                    "in_check_period": 1,
-                    "is_flapping": 0,
-                    "staleness": 0.0,
+                    **_OVERVIEW_HOST,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "tags": {"criticality": "prod"},
@@ -1076,6 +1200,8 @@ class TestMonitorHostOverview:
             "alias": "Today",
             "address": "127.0.0.1",
             "state": "UP",
+            "is_flapping": False,
+            "stale": False,
             "site_id": "NO_SITE",
             "site_alias": "Local site NO_SITE",
             "service_counts": {
@@ -1095,10 +1221,12 @@ class TestMonitorHostOverview:
             "tags": {"criticality": "prod"},
             "labels": {"cmk/os_family": {"value": "linux", "source": "discovered"}},
             "legacy_host_status_link": "view.py?view_name=hoststatus&site=NO_SITE&host=heute",
+            "relations": [],
+            "more_relations": False,
         }
 
     @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
-    def test_get_host_overview_without_multi_tenancy_has_no_customer(
+    def test_get_host_overview_reads_the_state_of_every_related_host(
         self,
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
@@ -1107,39 +1235,118 @@ class TestMonitorHostOverview:
             "hosts",
             [
                 {
-                    "name": "heute",
-                    "alias": "Today",
-                    "address": "127.0.0.1",
-                    "state": 0,
-                    "has_been_checked": 1,
-                    "num_services": 0,
-                    "num_services_ok": 0,
-                    "num_services_warn": 0,
-                    "num_services_crit": 0,
-                    "num_services_unknown": 0,
-                    "num_services_pending": 0,
-                    "acknowledged": 0,
-                    "scheduled_downtime_depth": 0,
-                    "notifications_enabled": 1,
-                    "comments": [],
-                    "modified_attributes_list": [],
-                    "active_checks_enabled": 1,
-                    "accept_passive_checks": 1,
-                    "in_notification_period": 1,
-                    "in_service_period": 1,
-                    "in_check_period": 1,
-                    "is_flapping": 0,
-                    "staleness": 0.0,
-                    "last_check": time.time(),
-                    "last_state_change": time.time(),
-                    "contact_groups": [],
-                    "tags": {},
-                    "labels": {},
-                    "label_sources": {},
-                    "filename": "",
-                }
+                    **_OVERVIEW_HOST,
+                    "custom_variables": {
+                        "CMK_RELATIONS": json.dumps(
+                            [
+                                # The card names the end the related host sits at in return.
+                                {
+                                    "kind": "management",
+                                    "direction": "child",
+                                    "host": "mgmt-heute",
+                                    "site": _SITE_ID,
+                                },
+                                {
+                                    "kind": "management",
+                                    "direction": "child",
+                                    "host": "gone",
+                                    "site": _SITE_ID,
+                                },
+                            ]
+                        )
+                    },
+                    "custom_variable_names": ["CMK_RELATIONS"],
+                },
+                {
+                    **_OVERVIEW_HOST,
+                    "name": "mgmt-heute",
+                    "state": 1,
+                    "num_services": 4,
+                    "num_services_ok": 3,
+                    "num_services_crit": 1,
+                    "last_check": 1783942680,
+                    "custom_variables": {
+                        "CMK_RELATIONS": json.dumps(
+                            [
+                                {
+                                    "kind": "management",
+                                    "direction": "parent",
+                                    "host": "heute",
+                                    "site": _SITE_ID,
+                                }
+                            ]
+                        )
+                    },
+                    "custom_variable_names": ["CMK_RELATIONS"],
+                },
             ],
         )
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_OVERVIEW_COLUMNS}",
+                "Filter: name = heute",
+            ],
+            sites=[_SITE_ID],
+        )
+        # The same set the relation count reads, so the hidden hosts are left out before the cut.
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                "Columns: name",
+                "Filter: custom_variable_names >= CMK_RELATIONS",
+            ]
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                (
+                    "Columns: name state has_been_checked num_services num_services_ok "
+                    "num_services_warn num_services_crit num_services_unknown "
+                    "num_services_pending"
+                ),
+                "Filter: name = mgmt-heute",
+                # Both ends carry the macro, so a host that does not is not the counterpart.
+                "Filter: custom_variable_names >= CMK_RELATIONS",
+                "And: 2",
+            ],
+            # The export resolved where the related hosts live, so only their site is asked.
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.get(hostname="heute", site_id=_SITE_ID)
+
+        # The relation to "gone" names a host no site knows, so no card is built for it.
+        assert resp.json["relations"] == [
+            {
+                "host_name": "mgmt-heute",
+                "kind": "management",
+                "direction": "parent",
+                # Worded by the server, so the frontend keeps no label map of its own.
+                "relation_type": "Management board",
+                "site_id": "NO_SITE",
+                "health": {
+                    "state": "DOWN",
+                    "service_counts": {
+                        "total": 4,
+                        "ok": 3,
+                        "warn": 0,
+                        "crit": 1,
+                        "unknown": 0,
+                        "pending": 0,
+                    },
+                },
+            }
+        ]
+
+    @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
+    def test_get_host_overview_without_multi_tenancy_has_no_customer(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", [_OVERVIEW_HOST])
         mock_livestatus.expect_query(
             [
                 "GET hosts",
@@ -1174,7 +1381,7 @@ class TestMonitorHostOverview:
                 hostname="no-such-host", site_id=_SITE_ID, expect_ok=False
             )
 
-        assert resp.status_code == 404
+        assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 class TestMonitorHostsReschedule:
@@ -1281,6 +1488,7 @@ _HOSTS = [
         "tags": {"criticality": "prod"},
         "contacts": ["hh"],
         "contact_groups": ["all"],
+        "custom_variables": {},
     },
     {
         "name": "gestern",
@@ -1314,6 +1522,7 @@ _HOSTS = [
         "tags": {"criticality": "prod"},
         "contacts": ["hh"],
         "contact_groups": ["all"],
+        "custom_variables": {},
     },
     {
         "name": "morgen",
@@ -1348,7 +1557,40 @@ _HOSTS = [
         "tags": {"criticality": "prod"},
         "contacts": ["hh"],
         "contact_groups": ["all"],
+        "custom_variables": {},
     },
+]
+# Both ends of an exported relation carry the macro, so a counterpart carries it in return. Here
+# "heute" and "gestern" are related to each other, and "heute" additionally names a host no site
+# knows.
+_HOSTS_WITH_RELATIONS = [
+    {
+        **_HOSTS[0],
+        "custom_variables": {
+            "CMK_RELATIONS": json.dumps(
+                [
+                    {
+                        "kind": "management",
+                        "direction": "child",
+                        "host": "gestern",
+                        "site": _SITE_ID,
+                    },
+                    {"kind": "management", "direction": "child", "host": "gone", "site": _SITE_ID},
+                ]
+            )
+        },
+        "custom_variable_names": ["CMK_RELATIONS"],
+    },
+    {
+        **_HOSTS[1],
+        "custom_variables": {
+            "CMK_RELATIONS": json.dumps(
+                [{"kind": "management", "direction": "parent", "host": "heute", "site": _SITE_ID}]
+            )
+        },
+        "custom_variable_names": ["CMK_RELATIONS"],
+    },
+    {**_HOSTS[2], "custom_variable_names": []},
 ]
 # Columns every host row needs, followed by the ones a request has to ask for. Both lists are in
 # the order the query names them, so the expectations below read like the real `Columns:` header.
@@ -1378,9 +1620,11 @@ _OPTIONAL_COLUMNS = {
     "num_services_crit": "num_services_crit",
     "num_services_unknown": "num_services_unknown",
     "num_services_pending": "num_services_pending",
+    "num_relations": "custom_variables",
     "folder": "filename",
     "last_check": "last_check",
     "last_state_change": "last_state_change",
+    "labels": "labels label_sources",
     "tags": "tags",
     "contacts": "contacts",
     "contact_groups": "contact_groups",
@@ -1408,4 +1652,38 @@ def _host_columns(*fields: str) -> str:
 
 
 _HOST_TABLE_COLUMNS = _host_columns()
-_HOST_OVERVIEW_COLUMNS = "name alias address state has_been_checked num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth notifications_enabled comments modified_attributes_list active_checks_enabled accept_passive_checks in_notification_period in_service_period in_check_period is_flapping staleness last_check last_state_change contact_groups tags labels label_sources filename"
+_OVERVIEW_HOST: dict[str, object] = {
+    "name": "heute",
+    "alias": "Today",
+    "address": "127.0.0.1",
+    "state": 0,
+    "has_been_checked": 1,
+    "num_services": 10,
+    "num_services_ok": 10,
+    "num_services_warn": 0,
+    "num_services_crit": 0,
+    "num_services_unknown": 0,
+    "num_services_pending": 0,
+    "acknowledged": 0,
+    "scheduled_downtime_depth": 0,
+    "notifications_enabled": 1,
+    "comments": [],
+    "modified_attributes_list": [],
+    "active_checks_enabled": 1,
+    "accept_passive_checks": 1,
+    "in_notification_period": 1,
+    "in_service_period": 1,
+    "in_check_period": 1,
+    "is_flapping": 0,
+    "staleness": 0.0,
+    "last_check": 0,
+    "last_state_change": 0,
+    "contact_groups": [],
+    "tags": {},
+    "labels": {},
+    "label_sources": {},
+    "filename": "",
+    "custom_variables": {},
+}
+
+_HOST_OVERVIEW_COLUMNS = "name alias address state has_been_checked num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth notifications_enabled comments modified_attributes_list active_checks_enabled accept_passive_checks in_notification_period in_service_period in_check_period is_flapping staleness last_check last_state_change contact_groups tags labels label_sources filename custom_variables"

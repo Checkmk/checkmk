@@ -11,7 +11,7 @@ from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashbo
 from tests.system.gui.testlib.playwright.pom.setup.analyze_configuration import (
     AnalyzeConfiguration,
 )
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 EXPECTED_CHECKS = [
     "Broken GUI extensions",

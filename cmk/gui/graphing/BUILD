@@ -10,6 +10,8 @@ py_library(
     imports = ["../../.."],
     visibility = [
         "//cmk:__subpackages__",
+        "//non-free/packages/cmk-telemetry:__pkg__",
+        "//packages/cmk-maps:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -39,7 +41,6 @@ py_library(
         "//packages/cmk-web/cmk/web/utils",
         requirement("python-dateutil"),
         requirement("tzlocal"),
-        requirement("matplotlib"),
     ],
 )
 

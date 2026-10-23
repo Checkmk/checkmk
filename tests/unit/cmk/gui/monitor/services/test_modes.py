@@ -11,30 +11,20 @@ from cmk.gui.monitor.services._api._modes import (
     build_service_modes,
     build_service_modes_by_id,
 )
-from cmk.gui.monitor.services._models import ServiceState
+from cmk.gui.monitor.services._models import CheckType, ServiceState
 
 from .testlib import login_with, ServiceFactory, ServiceOverviewFactory
-
-_ALL_HOSTS_PERMISSION = "view.allhosts"
-
-_HOST_SERVICES_PERMISSION = "view.host"
 
 _CRASH_REPORTS_PERMISSION = "general.see_crash_reports"
 
 
-@pytest.fixture(name="may_see_the_listings")
-def _may_see_the_listings() -> Iterator[None]:
-    with login_with(
-        {
-            _ALL_HOSTS_PERMISSION: True,
-            _HOST_SERVICES_PERMISSION: True,
-            _CRASH_REPORTS_PERMISSION: True,
-        }
-    ):
+@pytest.fixture(name="may_see_crash_reports")
+def _may_see_crash_reports() -> Iterator[None]:
+    with login_with({_CRASH_REPORTS_PERMISSION: True}):
         yield
 
 
-pytestmark = pytest.mark.usefixtures("request_context", "may_see_the_listings")
+pytestmark = pytest.mark.usefixtures("request_context", "may_see_crash_reports")
 
 
 _HOSTNAME = "web-server-01"
@@ -48,12 +38,13 @@ _NO_MODES = {
     "acknowledged": False,
     "notifications_enabled": True,
     "num_comments": 0,
-    "active_checks_disabled": False,
+    "active_checks_manually_disabled": False,
     "passive_checks_disabled": False,
     "in_notification_period": True,
     "in_service_period": True,
     "in_check_period": True,
     "is_flapping": False,
+    "check_type": CheckType.ACTIVE,
     # A crash is read off the state and the output, so a plain OK keeps the crash icon away.
     "state": ServiceState.OK,
     "summary": "OK - everything is fine",
@@ -99,8 +90,8 @@ def test_build_service_modes_by_id_comments() -> None:
     assert modes[0].title == "This service has 1 comment"
 
 
-def test_build_service_modes_by_id_active_checks_disabled() -> None:
-    service = ServiceFactory.build(**_NO_MODES | {"active_checks_disabled": True})
+def test_build_service_modes_by_id_active_checks_manually_disabled() -> None:
+    service = ServiceFactory.build(**_NO_MODES | {"active_checks_manually_disabled": True})
 
     assert [
         mode.icon_name
@@ -157,12 +148,13 @@ def test_build_service_modes_by_id_all_modes() -> None:
         acknowledged=True,
         notifications_enabled=False,
         num_comments=3,
-        active_checks_disabled=True,
+        active_checks_manually_disabled=True,
         passive_checks_disabled=True,
         in_notification_period=False,
         in_service_period=False,
         in_check_period=False,
         is_flapping=True,
+        check_type=CheckType.SHADOW,
     )
 
     assert [
@@ -178,6 +170,7 @@ def test_build_service_modes_by_id_all_modes() -> None:
         "outofnot",
         "outof-serviceperiod",
         "pause",
+        "shadow",
     ]
 
 
@@ -191,12 +184,13 @@ def test_build_service_modes_all_modes() -> None:
         acknowledged=True,
         notifications_enabled=False,
         num_comments=3,
-        active_checks_disabled=True,
+        active_checks_manually_disabled=True,
         passive_checks_disabled=True,
         in_notification_period=False,
         in_service_period=False,
         in_check_period=False,
         is_flapping=True,
+        check_type=CheckType.SHADOW,
     )
 
     assert [mode.icon_name for mode in build_service_modes(service)] == [
@@ -209,6 +203,39 @@ def test_build_service_modes_all_modes() -> None:
         "outofnot",
         "outof-serviceperiod",
         "pause",
+        "shadow",
+    ]
+
+
+def test_build_service_modes_by_id_names_modes_by_stable_ids() -> None:
+    service = ServiceFactory.build(
+        **_NO_MODES
+        | {
+            "in_downtime": True,
+            "acknowledged": True,
+            "notifications_enabled": False,
+            "num_comments": 3,
+            "active_checks_manually_disabled": True,
+            "passive_checks_disabled": True,
+            "in_notification_period": False,
+            "in_service_period": False,
+            "in_check_period": False,
+            "check_type": CheckType.SHADOW,
+        }
+    )
+    modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
+
+    assert [mode.id for mode in modes] == [
+        "downtime",
+        "acknowledged",
+        "notifications_off",
+        "comments",
+        "active_checks_off",
+        "passive_checks_off",
+        "out_of_notification_period",
+        "out_of_service_period",
+        "not_checked",
+        "shadow",
     ]
 
 
@@ -217,6 +244,26 @@ def test_build_service_modes_flapping_is_not_a_mode() -> None:
     service = ServiceOverviewFactory.build(**_NO_MODES | {"is_flapping": True})
 
     assert build_service_modes(service) == []
+
+
+def test_build_service_modes_by_id_marks_a_shadow_service() -> None:
+    service = ServiceFactory.build(**_NO_MODES | {"check_type": CheckType.SHADOW})
+    modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
+
+    assert [(mode.icon_name, mode.link) for mode in modes] == [("shadow", "")]
+    assert "remote site" in modes[0].title
+
+
+def test_build_service_modes_marks_a_shadow_service() -> None:
+    service = ServiceOverviewFactory.build(**_NO_MODES | {"check_type": CheckType.SHADOW})
+
+    assert [mode.icon_name for mode in build_service_modes(service)] == ["shadow"]
+
+
+def test_build_service_modes_by_id_passive_service_is_not_a_shadow() -> None:
+    service = ServiceFactory.build(**_NO_MODES | {"check_type": CheckType.PASSIVE})
+
+    assert build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID) == []
 
 
 _CRASHED_OUTPUT = "UNKNOWN - check failed - please submit a crash report! (Crash-ID: abc-123)"
@@ -269,14 +316,13 @@ def test_build_service_modes_by_id_an_unknown_service_did_not_crash() -> None:
     assert build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID) == []
 
 
-def test_build_service_modes_by_id_state_icons_open_the_service_panel() -> None:
+def test_build_service_modes_by_id_state_icons_link_nowhere() -> None:
     service = ServiceFactory.build(
         **_NO_MODES
         | {
-            "name": "CPU load",
             "acknowledged": True,
             "notifications_enabled": False,
-            "active_checks_disabled": True,
+            "active_checks_manually_disabled": True,
             "passive_checks_disabled": True,
             "in_notification_period": False,
             "in_service_period": False,
@@ -286,46 +332,10 @@ def test_build_service_modes_by_id_state_icons_open_the_service_panel() -> None:
 
     modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
 
-    assert {mode.link for mode in modes} == {
-        "monitor_host_services.py?host=web-server-01&site=local#service=CPU+load"
-    }
+    assert {mode.link for mode in modes} == {""}
 
 
-def test_build_service_modes_by_id_state_icons_fall_back_without_the_listing_permission() -> None:
-    service = ServiceFactory.build(**_NO_MODES | {"name": "CPU load", "acknowledged": True})
+def test_build_host_modes_acknowledged_links_nowhere() -> None:
+    service = ServiceOverviewFactory.build(host_in_downtime=False, host_acknowledged=True)
 
-    with login_with({_HOST_SERVICES_PERMISSION: False}):
-        modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
-
-    assert [mode.link for mode in modes] == [
-        "view.py?view_name=service&site=local&host=web-server-01&service=CPU+load"
-    ]
-
-
-def test_build_host_modes_acknowledged_opens_the_host_panel() -> None:
-    service = ServiceOverviewFactory.build(
-        host_name=_HOSTNAME,
-        site_id=_SITE_ID,
-        host_in_downtime=False,
-        host_acknowledged=True,
-    )
-
-    assert [mode.link for mode in build_host_modes(service)] == [
-        "monitor_all_hosts.py#host=web-server-01&site=local"
-    ]
-
-
-def test_build_host_modes_fall_back_without_the_all_hosts_permission() -> None:
-    service = ServiceOverviewFactory.build(
-        host_name=_HOSTNAME,
-        site_id=_SITE_ID,
-        host_in_downtime=False,
-        host_acknowledged=True,
-    )
-
-    with login_with({_ALL_HOSTS_PERMISSION: False}):
-        modes = build_host_modes(service)
-
-    assert [mode.link for mode in modes] == [
-        "view.py?view_name=hoststatus&site=local&host=web-server-01"
-    ]
+    assert [mode.link for mode in build_host_modes(service)] == [""]

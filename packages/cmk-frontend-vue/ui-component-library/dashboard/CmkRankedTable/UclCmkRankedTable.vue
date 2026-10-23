@@ -12,27 +12,35 @@ import { type RankedTableCellRender } from '@/dashboard/components/CmkRankedTabl
 import codeExample from './UclCmkRankedTableCodeExample.vue?raw'
 
 export const panelConfig = {
-  barColor: {
-    type: 'list' as const,
-    title: 'Bar color',
-    help: 'CSS color of the inline bars. A cell may override it with its own `color`.',
-    options: [
-      { title: 'Blue', name: 'var(--color-light-blue-50)' },
-      { title: 'Green', name: 'var(--color-corporate-green-50)' },
-      { title: 'Grey', name: 'var(--color-mid-grey-50)' },
-      { title: 'Magenta', name: 'var(--color-pink-50)' },
-      { title: 'Orange', name: 'var(--color-orange-50)' },
-      { title: 'Purple', name: 'var(--color-purple-50)' },
-      { title: 'Red', name: 'var(--color-light-red-50)' },
-      { title: 'Yellow', name: 'var(--color-yellow-50)' }
-    ],
-    initialState: 'var(--color-corporate-green-50)' as const
-  },
   containerHeight: {
     type: 'number' as const,
     title: 'Container height (px)',
-    help: 'Height of the scrollable box around the table. The table keeps its rows at full size and scrolls once they no longer fit.',
+    help: 'Height of the box around the table. The table keeps its rows at full size and scrolls once they no longer fit.',
     initialState: 220
+  },
+  containerWidth: {
+    type: 'number' as const,
+    title: 'Container width (px)',
+    help: 'Width of the box around the table. Text cells truncate before any figure does. Drag the corner of the preview to change it.',
+    initialState: 600
+  },
+  longHostNames: {
+    type: 'boolean' as const,
+    title: 'Long host names',
+    help: 'Uses fully qualified host names instead of IP addresses.',
+    initialState: false
+  },
+  serviceColumn: {
+    type: 'boolean' as const,
+    title: 'Service column',
+    help: 'Adds a second text column.',
+    initialState: false
+  },
+  longColumnTitles: {
+    type: 'boolean' as const,
+    title: 'Long column titles',
+    help: 'Uses column titles longer than their narrowest width, which truncate like the cells.',
+    initialState: false
   },
   rowCount: {
     type: 'number' as const,
@@ -48,19 +56,17 @@ export const panelConfig = {
   valueRender: {
     type: 'list' as const,
     title: 'Value rendering',
-    help: 'Bytes are formatted as SI values, count is right-aligned as-is, text is left-aligned, delta draws an arrow along the sign of the value.',
+    help: 'Count is right-aligned as-is, text is left-aligned.',
     options: listOptions<RankedTableCellRender>({
-      bytes: 'Bytes',
       count: 'Count',
-      text: 'Text',
-      delta: 'Delta'
+      text: 'Text'
     }),
-    initialState: 'bytes' as const
+    initialState: 'count' as const
   },
   fixedBarRange: {
     type: 'boolean' as const,
     title: 'Fixed bar range',
-    help: 'Scales the bars against a fixed 0 - 250 GB range, clamped to it, instead of against the largest value in the column.',
+    help: 'Scales the bars against a fixed 0 - 1000 range, clamped to it, instead of against the largest value in the column.',
     initialState: false
   },
   preFormatted: {
@@ -72,7 +78,7 @@ export const panelConfig = {
   perRowColor: {
     type: 'boolean' as const,
     title: 'Per-row bar colors',
-    help: 'Each cell carries its own bar `color`, overriding the palette color above.',
+    help: 'Each cell carries its own bar `color`, overriding the default bar color.',
     initialState: false
   },
   linkedHosts: {
@@ -80,15 +86,13 @@ export const panelConfig = {
     title: 'Linked host cells',
     help: 'Cells with an `href` render as links.',
     initialState: false
-  },
-  clickableHosts: {
-    type: 'boolean' as const,
-    title: 'Clickable host cells',
-    help: 'Cells of a `clickable` column render as buttons emitting `cellClick`.',
-    initialState: false
   }
 } satisfies PanelConfigFor<typeof CmkRankedTable, 'rows' | 'columns'> & {
   containerHeight: NumberPropDef
+  containerWidth: NumberPropDef
+  longHostNames: BoolPropDef
+  serviceColumn: BoolPropDef
+  longColumnTitles: BoolPropDef
   rowCount: NumberPropDef
   valueBar: BoolPropDef
   valueRender: ListPropDef<RankedTableCellRender>
@@ -96,7 +100,6 @@ export const panelConfig = {
   preFormatted: BoolPropDef
   perRowColor: BoolPropDef
   linkedHosts: BoolPropDef
-  clickableHosts: BoolPropDef
 }
 </script>
 
@@ -108,10 +111,10 @@ import {
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel
+  UclPropertiesPanel,
+  UclResizablePreview
 } from '@ucl/_ucl/components/detail-page'
-import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import CmkRankedTable, {
   type RankedTableColumn,
@@ -126,18 +129,33 @@ const propState = new PanelStateCreator<typeof CmkRankedTable, 'rows' | 'columns
 
 // Pre-ranked sample data; the panel decides how many of these rows are shown.
 const HOSTS = [
-  { host: '10.0.71.219', volume: 194_420_000_000, flows: 1284 },
-  { host: '10.0.234.247', volume: 158_270_000_000, flows: 967 },
-  { host: '10.0.171.51', volume: 58_270_000_000, flows: 411 },
-  { host: '10.0.151.254', volume: 51_670_000_000, flows: 388 },
-  { host: '10.0.198.27', volume: 27_380_000_000, flows: 154 },
-  { host: '10.0.139.151', volume: 22_260_000_000, flows: 102 },
-  { host: '10.0.104.62', volume: 18_940_000_000, flows: 97 },
-  { host: '10.0.88.13', volume: 12_510_000_000, flows: 74 },
-  { host: '10.0.57.201', volume: 9_330_000_000, flows: 61 },
-  { host: '10.0.42.98', volume: 6_120_000_000, flows: 43 },
-  { host: '10.0.31.7', volume: 3_870_000_000, flows: 28 },
-  { host: '10.0.12.44', volume: 1_240_000_000, flows: 11 }
+  { host: '10.0.71.219', flows: 1284 },
+  { host: '10.0.234.247', flows: 967 },
+  { host: '10.0.171.51', flows: 411 },
+  { host: '10.0.151.254', flows: 388 },
+  { host: '10.0.198.27', flows: 154 },
+  { host: '10.0.139.151', flows: 102 },
+  { host: '10.0.104.62', flows: 97 },
+  { host: '10.0.88.13', flows: 74 },
+  { host: '10.0.57.201', flows: 61 },
+  { host: '10.0.42.98', flows: 43 },
+  { host: '10.0.31.7', flows: 28 },
+  { host: '10.0.12.44', flows: 11 }
+]
+
+const LONG_HOST_NAMES = [
+  'node_webshop_i-020818453318b7c7.eu-central-1.compute.internal',
+  'fileserver-01.corp.meridian-retail.com',
+  'web-frontend-01.corp.meridian-retail.com',
+  'app-redis-02.corp.meridian-retail.com',
+  'db-postgres-01.corp.meridian-retail.com',
+  'node_lab_i-0179408522d484ce3.eu-central-1.compute.internal',
+  'app-worker-02.corp.meridian-retail.com',
+  'payment-api-02.corp.meridian-retail.com',
+  'backup-01.corp.meridian-retail.com',
+  'app-worker-01.corp.meridian-retail.com',
+  'db-postgres-02.corp.meridian-retail.com',
+  'localhost'
 ]
 
 const ROW_COLORS = [
@@ -150,41 +168,43 @@ const ROW_COLORS = [
 const columns = computed<RankedTableColumn[]>(() => [
   {
     key: 'host',
-    title: 'Host',
+    title: propState.value.longColumnTitles ? 'Local host name' : 'Host',
     render: 'text',
-    bar: false,
-    ...(propState.value.clickableHosts ? { clickable: true } : {})
+    bar: false
   },
+  ...(propState.value.serviceColumn
+    ? [
+        {
+          key: 'service',
+          title: propState.value.longColumnTitles ? 'Service description' : 'Service',
+          render: 'text' as const,
+          bar: false
+        }
+      ]
+    : []),
   {
-    key: 'volume',
-    title: 'Volume',
+    key: 'flows',
+    title: 'Flows',
     render: propState.value.valueRender,
     bar: propState.value.valueBar,
-    ...(propState.value.fixedBarRange ? { barRange: [0, 250_000_000_000] as [number, number] } : {})
-  },
-  { key: 'flows', title: 'Flows', render: 'count', bar: false }
+    ...(propState.value.fixedBarRange ? { barRange: [0, 1000] as [number, number] } : {})
+  }
 ])
 
 const rows = computed<RankedTableRow[]>(() =>
-  HOSTS.slice(0, Math.max(0, propState.value.rowCount)).map((entry, index) => ({
-    host: propState.value.linkedHosts ? { value: entry.host, href: '#' } : entry.host,
-    volume: {
-      value: entry.volume,
-      ...(propState.value.preFormatted
-        ? { formatted: `~${Math.round(entry.volume / 1_000_000_000)} GB` }
-        : {}),
-      ...(propState.value.perRowColor ? { color: ROW_COLORS[index % ROW_COLORS.length]! } : {})
-    },
-    flows: entry.flows
-  }))
+  HOSTS.slice(0, Math.max(0, propState.value.rowCount)).map((entry, index) => {
+    const host = propState.value.longHostNames ? LONG_HOST_NAMES[index]! : entry.host
+    return {
+      host: propState.value.linkedHosts ? { value: host, href: '#' } : host,
+      service: 'Interface 1',
+      flows: {
+        value: entry.flows,
+        ...(propState.value.preFormatted ? { formatted: `${entry.flows} flows` } : {}),
+        ...(propState.value.perRowColor ? { color: ROW_COLORS[index % ROW_COLORS.length]! } : {})
+      }
+    }
+  })
 )
-
-const lastCellClick = ref<string | null>(null)
-
-function onCellClick(column: RankedTableColumn, row: RankedTableRow): void {
-  const cell = row[column.key]
-  lastCellClick.value = `${column.key} = ${typeof cell === 'object' ? cell.value : cell}`
-}
 </script>
 
 <template>
@@ -192,18 +212,12 @@ function onCellClick(column: RankedTableColumn, row: RankedTableRow): void {
     <UclDetailPageHeader>CmkRankedTable</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <div
-        class="ucl-cmk-ranked-table__container"
-        :style="{ height: `${Math.max(0, propState.containerHeight)}px` }"
+      <UclResizablePreview
+        v-model:width="propState.containerWidth"
+        v-model:height="propState.containerHeight"
       >
-        <CmkRankedTable
-          :columns="columns"
-          :rows="rows"
-          :bar-color="propState.barColor"
-          @cell-click="onCellClick"
-        />
-      </div>
-      <CmkParagraph v-if="lastCellClick">Last cellClick: {{ lastCellClick }}</CmkParagraph>
+        <CmkRankedTable :columns="columns" :rows="rows" />
+      </UclResizablePreview>
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />
@@ -215,15 +229,3 @@ function onCellClick(column: RankedTableColumn, row: RankedTableRow): void {
     <UclDetailPageAccessibility :data="[]" />
   </UclDetailPageLayout>
 </template>
-
-<style scoped>
-/* The table sizes itself from its rows, so the box around it is what scrolls. */
-.ucl-cmk-ranked-table__container {
-  /* The preview area centers its children, so claim the full width explicitly --
-     otherwise the box shrinks to the text columns and leaves the bar no room. */
-  width: 100%;
-  overflow: auto;
-  resize: vertical;
-  border: 1px solid var(--ucl-elements-border-color);
-}
-</style>

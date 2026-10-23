@@ -4,15 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.rulesets.internal.form_specs import InternalProxy, migrate_to_internal_proxy
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     FixedValue,
     migrate_to_password,
-    migrate_to_proxy,
     Password,
-    Proxy,
     validators,
 )
 
@@ -49,8 +48,8 @@ def form_spec() -> Dictionary:
                 )
             ),
             "proxy_url": DictElement(
-                parameter_form=Proxy(
-                    migrate=migrate_to_proxy,
+                parameter_form=InternalProxy(
+                    migrate=migrate_to_internal_proxy,
                 )
             ),
             "url_prefix": _get_url_prefix_setting(),

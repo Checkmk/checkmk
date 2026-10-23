@@ -1,8 +1,9 @@
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:patchelf.bzl", "add_runpath", "set_runpath")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
 exports_files(["skel.permissions"])
 
@@ -85,7 +86,8 @@ set_runpath(
 
 py_library(
     name = "merge-nagios-config_lib",
-    srcs = ["merge-nagios-config.py"],
+    srcs = ["merge_nagios_config.py"],
+    imports = ["."],
 )
 
 pkg_files(
@@ -180,4 +182,11 @@ pkg_tar(
     stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
+)
+
+py_cmk_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/*.py"]),
+    deps = [":merge-nagios-config_lib"],
 )

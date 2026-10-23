@@ -7,6 +7,7 @@
 # mypy: disable-error-code="no-any-return"
 
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any, override
 
 from cmk.ccc.site import url_prefix
@@ -21,10 +22,13 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.sidebar import footnotelinks, PageHandlers, SidebarSnapin
+from cmk.utils import paths
 from cmk.web.utils.urls import makeuri_contextless
 
 # Relative prefix used for the "Edit" footnote link (from check_mk/ to nagvis/).
 _NAGVIS_URL_PREFIX = "../nagvis/"
+
+_NAGVIS_DEPRECATION_WERK = 22512
 
 
 def _is_nagvis_url(nagvis_url: str, site_url_prefix: str) -> bool:
@@ -35,6 +39,18 @@ def _is_nagvis_url(nagvis_url: str, site_url_prefix: str) -> bool:
     (``/<site>/nagvis/...``).
     """
     return nagvis_url.startswith((_NAGVIS_URL_PREFIX, f"{site_url_prefix}nagvis/"))
+
+
+def _is_nagvis_enabled(omd_root: Path) -> bool:
+    # The NAGVIS hook links this file only while NagVis is on
+    return (omd_root / "etc/apache/conf.d/nagvis.conf").exists()
+
+
+def _deprecation_note() -> tuple[str, str]:
+    return (
+        _("Deprecated, see Werk #%(id)d") % {"id": _NAGVIS_DEPRECATION_WERK},
+        makeuri_contextless(request, [("werk", _NAGVIS_DEPRECATION_WERK)], filename="werk.py"),
+    )
 
 
 def _nagvis_page_url(nagvis_url: str) -> str:
@@ -64,8 +80,23 @@ class NagVisMaps(SidebarSnapin):
 
     @override
     def show(self, config: Config) -> None:
+        if not _is_nagvis_enabled(paths.omd_root):
+            self._show_disabled_hint()
+            return
         html.div(_("Loading maps..."), class_="loading")
-        html.javascript("cmk.sidebar.fetch_nagvis_snapin_contents()")
+        html.call_ts_function(function_name="fetch_nagvis_snapin_contents")
+
+    def _show_disabled_hint(self) -> None:
+        html.open_div(class_=["success", "nagvis_disabled"])
+        html.p(_("NagVis is disabled"), class_="title")
+        html.p(_("To enable it, run as site user:"))
+        html.pre("omd stop\nomd config set NAGVIS on\nomd start")
+        html.p(_("Consider using Checkmk Maps instead."), class_="hint")
+        text, url = _deprecation_note()
+        html.open_p(class_="hint")
+        html.a(text, href=url)
+        html.close_p()
+        html.close_div()
 
     @override
     def page_handlers(self) -> PageHandlers:
@@ -177,7 +208,7 @@ class NagVisMaps(SidebarSnapin):
         return title
 
     def _show_footnote_links(self) -> None:
-        footnotelinks([(_("Edit"), _nagvis_page_url(_NAGVIS_URL_PREFIX))])
+        footnotelinks([(_("Edit"), _nagvis_page_url(_NAGVIS_URL_PREFIX)), _deprecation_note()])
 
     def _show_tree(self, api_request: Mapping[str, Any]) -> None:
         html.open_ul()

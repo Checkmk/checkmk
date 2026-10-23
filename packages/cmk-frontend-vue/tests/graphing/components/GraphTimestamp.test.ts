@@ -3,14 +3,17 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type * as intl from '@internationalized/date'
+import { resetLocalTimeZone, setLocalTimeZone } from '@internationalized/date'
 import { render, screen } from '@testing-library/vue'
 
 import GraphTimestamp from '@/graphing/components/GraphTimestamp.vue'
 
-vi.mock('@internationalized/date', async (importOriginal) => {
-  const actual = await importOriginal<typeof intl>()
-  return { ...actual, getLocalTimeZone: () => 'UTC' }
+beforeEach(() => {
+  setLocalTimeZone('UTC')
+})
+
+afterEach(() => {
+  resetLocalTimeZone()
 })
 
 // 2026-06-15 12:00:00 UTC (Monday)

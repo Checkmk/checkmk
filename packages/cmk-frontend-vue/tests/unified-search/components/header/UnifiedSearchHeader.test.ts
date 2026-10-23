@@ -6,13 +6,13 @@
 import { fireEvent, render } from '@testing-library/vue'
 
 import UnifiedSearchHeader from '@/unified-search/components/header/UnifiedSearchHeader.vue'
+import { SearchHistoryService } from '@/unified-search/lib/searchHistory'
 import { initSearchUtils, searchUtilsProvider } from '@/unified-search/providers/search-utils'
 import type { QueryProvider } from '@/unified-search/providers/search-utils.types'
 
 // All tests share the same module-level Vue refs via initSearchUtils, so each
 // render explicitly resets provider/input before use to keep tests independent.
-function renderHeader(provider: QueryProvider) {
-  const searchUtils = initSearchUtils('test')
+function renderHeader(provider: QueryProvider, searchUtils = initSearchUtils('test')) {
   searchUtils.query.provider.value = provider
   searchUtils.query.input.value = ''
 
@@ -21,6 +21,10 @@ function renderHeader(provider: QueryProvider) {
   })
 
   return container.querySelector('#unified-search-input') as HTMLInputElement
+}
+
+function searchQueryOf(url: string): string | null {
+  return new URL(url, 'http://localhost/').searchParams.get('q')
 }
 
 describe('UnifiedSearchHeader Enter-to-filter', () => {
@@ -55,7 +59,32 @@ describe('UnifiedSearchHeader Enter-to-filter', () => {
     await fireEvent.update(input, 'cpu load')
     await fireEvent.keyDown(input, { key: 'Enter' })
 
-    expect(assignedHref).toBe('search_open.py?q=cpu load')
+    expect(new URL(assignedHref, 'http://localhost/').pathname).toBe('/search_open.py')
+    expect(searchQueryOf(assignedHref)).toBe('cpu load')
+  })
+
+  test.each(['h:a&b', 'foo#bar', 'h:web+', 'h:%41'])(
+    'passes the query %s unaltered to search_open.py',
+    async (query) => {
+      const input = renderHeader('monitoring')
+
+      await fireEvent.update(input, query)
+      await fireEvent.keyDown(input, { key: 'Enter' })
+
+      expect(searchQueryOf(assignedHref)).toBe(query)
+    }
+  )
+
+  test('stores the query unaltered in the search history', async () => {
+    const history = new SearchHistoryService('test')
+    const searchUtils = initSearchUtils('test')
+    searchUtils.history = history
+    const input = renderHeader('monitoring', searchUtils)
+
+    await fireEvent.update(input, 'h:a&b')
+    await fireEvent.keyDown(input, { key: 'Enter' })
+
+    expect(searchQueryOf(history.getEntries()[0]!.element.target.url)).toBe('h:a&b')
   })
 
   test('navigates when Enter is pressed with the "all" provider selected', async () => {
@@ -64,7 +93,8 @@ describe('UnifiedSearchHeader Enter-to-filter', () => {
     await fireEvent.update(input, 'disk usage')
     await fireEvent.keyDown(input, { key: 'Enter' })
 
-    expect(assignedHref).toBe('search_open.py?q=disk usage')
+    expect(new URL(assignedHref, 'http://localhost/').pathname).toBe('/search_open.py')
+    expect(searchQueryOf(assignedHref)).toBe('disk usage')
   })
 
   test('does not navigate when Enter is pressed with an empty query', async () => {

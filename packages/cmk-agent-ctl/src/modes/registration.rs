@@ -2,10 +2,12 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::certs::trusted_cas;
 use crate::config::UpdaterRegistration;
 use crate::constants::CMK_UPDATE_AGENT_CMD;
 use crate::site_spec::Protocol;
 use crate::types::Credentials;
+use crate::AgentUpdater;
 use crate::{
     agent_receiver_api::{self, RegistrationStatusV2},
     certs, config, misc, site_spec, types, version,
@@ -86,32 +88,32 @@ impl TrustEstablishing for InteractiveTrust {
     }
 }
 
-fn registration_server_cert<'a>(
+fn registration_server_certs<'a>(
     config: &'a config::RegistrationConnectionConfig,
     trust_establisher: &impl TrustEstablishing,
-) -> AnyhowResult<Option<&'a str>> {
-    match &config.root_certificate {
-        Some(cert) => {
-            if config.trust_server_cert {
-                eprintln!(
-                    "Blind trust of server certificate enabled but a root certificate was \
-                     given in the configuration and will be used to verify the server certificate."
-                );
-            }
-            Ok(Some(cert))
+) -> AnyhowResult<Vec<&'a str>> {
+    if config.root_certificates.is_empty() {
+        if !config.trust_server_cert {
+            trust_establisher
+                .prompt_server_certificate(&config.site_id.server, &config.receiver_port)?;
         }
-        None => {
-            if !config.trust_server_cert {
-                trust_establisher
-                    .prompt_server_certificate(&config.site_id.server, &config.receiver_port)?;
-            }
-            Ok(None)
-        }
+        return Ok(vec![]);
     }
+    if config.trust_server_cert {
+        eprintln!(
+            "Blind trust of server certificate enabled but root certificates were \
+             given in the configuration and will be used to verify the server certificate."
+        );
+    }
+    Ok(config
+        .root_certificates
+        .iter()
+        .map(String::as_str)
+        .collect())
 }
 
 struct RegistrationInput<'a> {
-    root_cert: Option<&'a str>,
+    root_certs: Vec<&'a str>,
     credentials: types::Credentials,
     uuid: uuid::Uuid,
     private_key: String,
@@ -124,7 +126,7 @@ fn prepare_registration<'a>(
 ) -> AnyhowResult<RegistrationInput<'a>> {
     let uuid = uuid::Uuid::new_v4();
     let (csr, private_key) = certs::make_csr(&uuid.to_string()).context("Error creating CSR.")?;
-    let root_cert = registration_server_cert(config, trust_establisher)?;
+    let root_certs = registration_server_certs(config, trust_establisher)?;
     let credentials = if let Some(token) = &config.one_time_token {
         types::Credentials::one_time_token(token.clone())
     } else {
@@ -141,7 +143,7 @@ fn prepare_registration<'a>(
         types::Credentials::username_password(username, password)
     };
     Ok(RegistrationInput {
-        root_cert,
+        root_certs,
         credentials,
         uuid,
         private_key,
@@ -189,7 +191,7 @@ impl RegistrationEndpointCall for RegistrationCallExisting<'_> {
             agent_rec_api
                 .register_existing(
                     site_url,
-                    &registration_input.root_cert,
+                    &registration_input.root_certs,
                     &registration_input.credentials,
                     &registration_input.uuid,
                     &registration_input.csr,
@@ -214,7 +216,7 @@ impl RegistrationEndpointCall for RegistrationCallNew<'_> {
         let reg_new_response = agent_rec_api
             .register_new(
                 site_url,
-                &registration_input.root_cert,
+                &registration_input.root_certs,
                 &registration_input.credentials,
                 &registration_input.uuid,
                 &registration_input.csr,
@@ -277,6 +279,9 @@ fn direct_registration(
         agent_rec_api,
     )?;
 
+    let mut root_certs = vec![registration_result.root_cert];
+    config::add_missing_root_certs(&mut root_certs, &config.root_certificates);
+
     registry.register_connection(
         &registration_result.connection_mode,
         &config.site_id,
@@ -285,7 +290,7 @@ fn direct_registration(
                 uuid: registration_input.uuid,
                 private_key: registration_input.private_key.clone(),
                 certificate: registration_result.agent_cert,
-                root_certs: vec![registration_result.root_cert],
+                root_certs,
             },
             receiver_port: config.receiver_port,
         },
@@ -348,6 +353,7 @@ impl config::JSONLoader for ProxyPullData {}
 pub fn register_existing(
     config: &config::RegisterExistingConfig,
     registry: &mut config::Registry,
+    agent_updater: AgentUpdater,
 ) -> AnyhowResult<()> {
     let registration_input = prepare_registration(&config.connection_config, &InteractiveTrust {})?;
     direct_registration(
@@ -362,6 +368,10 @@ pub fn register_existing(
         },
     )?;
     println!("Registration complete.");
+    if matches!(agent_updater, AgentUpdater::Integrated) {
+        info!("Agent updates are handled by the controller, skipping updater registration.");
+        return Ok(());
+    }
 
     maybe_register_updater(
         &config.updater_registration,
@@ -376,6 +386,7 @@ pub fn register_existing(
 pub fn register_new(
     config: &config::RegisterNewConfig,
     registry: &mut config::Registry,
+    agent_updater: AgentUpdater,
 ) -> AnyhowResult<()> {
     let registration_input = prepare_registration(&config.connection_config, &InteractiveTrust {})?;
     let agent_rec_api = &agent_receiver_api::Api {
@@ -393,6 +404,10 @@ pub fn register_new(
     println!(
         "Registration complete. It may take few minutes until the newly created host and its services are visible in the site."
     );
+    if matches!(agent_updater, AgentUpdater::Integrated) {
+        info!("Agent updates are handled by the controller, skipping updater registration.");
+        return Ok(());
+    }
 
     if matches!(config.updater_registration, UpdaterRegistration::Manual) {
         return Ok(());
@@ -415,6 +430,8 @@ pub fn register_pre_configured(
     client_config: &config::ClientConfig,
     registry: &mut config::Registry,
     updater_registration: UpdaterRegistration,
+    agent_updater: AgentUpdater,
+    baked_cas: &trusted_cas::BakedCAs,
 ) -> AnyhowResult<()> {
     _register_pre_configured(
         pre_configured_connections,
@@ -422,6 +439,8 @@ pub fn register_pre_configured(
         registry,
         &RegistrationPreConfiguredImpl {},
         updater_registration,
+        agent_updater,
+        baked_cas,
     )
 }
 
@@ -431,16 +450,23 @@ fn _register_pre_configured(
     registry: &mut config::Registry,
     registration_pre_configured: &impl RegistrationPreConfigured,
     updater_registration: UpdaterRegistration,
+    agent_updater: AgentUpdater,
+    baked_cas: &trusted_cas::BakedCAs,
 ) -> AnyhowResult<()> {
+    let context = PreConfiguredContext {
+        agent_labels: &pre_configured_connections.agent_labels,
+        client_config,
+        updater_registration: &updater_registration,
+        baked_cas,
+        agent_updater,
+    };
     for (site_id, pre_configured_connection) in pre_configured_connections.connections.iter() {
         if let Err(error) = process_pre_configured_connection(
             site_id,
             pre_configured_connection,
-            &pre_configured_connections.agent_labels,
-            client_config,
+            &context,
             registry,
             registration_pre_configured,
-            &updater_registration,
         ) {
             error!(
                 "Error while processing connection {}: {}",
@@ -472,6 +498,7 @@ trait RegistrationPreConfigured {
         &self,
         config: &config::RegisterNewConfig,
         registry: &mut config::Registry,
+        agent_updater: AgentUpdater,
     ) -> AnyhowResult<()>;
 
     fn registration_status_v2(
@@ -489,8 +516,9 @@ impl RegistrationPreConfigured for RegistrationPreConfiguredImpl {
         &self,
         config: &config::RegisterNewConfig,
         registry: &mut config::Registry,
+        agent_updater: AgentUpdater,
     ) -> AnyhowResult<()> {
-        register_new(config, registry)
+        register_new(config, registry, agent_updater)
     }
 
     fn registration_status_v2(
@@ -509,15 +537,23 @@ impl RegistrationPreConfigured for RegistrationPreConfiguredImpl {
     }
 }
 
+/// The inputs of [`_register_pre_configured`] that are the same for every connection.
+struct PreConfiguredContext<'a> {
+    agent_labels: &'a types::AgentLabels,
+    client_config: &'a config::ClientConfig,
+    updater_registration: &'a UpdaterRegistration,
+    baked_cas: &'a trusted_cas::BakedCAs,
+    agent_updater: AgentUpdater,
+}
+
 fn process_pre_configured_connection(
     site_id: &site_spec::SiteID,
     pre_configured: &config::PreConfiguredConnection,
-    agent_labels: &types::AgentLabels,
-    client_config: &config::ClientConfig,
+    context: &PreConfiguredContext,
     registry: &mut config::Registry,
     registration_pre_configured: &impl RegistrationPreConfigured,
-    updater_registration: &UpdaterRegistration,
 ) -> AnyhowResult<()> {
+    let client_config = context.client_config;
     let receiver_port = match pre_configured.port {
         Some(receiver_port) => receiver_port,
         None => site_spec::discover_receiver_port(site_id, client_config)?,
@@ -548,6 +584,13 @@ fn process_pre_configured_connection(
         types::Credentials::OneTimeToken { ott } => (None, None, Some(ott.clone())),
     };
 
+    // The baked CAs are trusted for the registration handshake as well, so that a host can
+    // still register while the site is presenting a certificate of an upcoming CA.
+    let mut root_certificates = vec![pre_configured.root_cert.clone()];
+    if let Some(site_cas) = context.baked_cas.get(&site_id.site) {
+        config::add_missing_root_certs(&mut root_certificates, site_cas);
+    }
+
     let registration_config = config::RegisterNewConfig::new(
         config::RegistrationConnectionConfig {
             site_id: site_id.clone(),
@@ -555,15 +598,15 @@ fn process_pre_configured_connection(
             username: username.clone(),
             password: password.clone(),
             one_time_token,
-            root_certificate: Some(pre_configured.root_cert.clone()),
+            root_certificates,
             trust_server_cert: false,
             client_config: client_config.clone(),
         },
-        agent_labels.clone(),
-        updater_registration.clone(),
+        context.agent_labels.clone(),
+        context.updater_registration.clone(),
     )?;
 
-    registration_pre_configured.register(&registration_config, registry)?;
+    registration_pre_configured.register(&registration_config, registry, context.agent_updater)?;
     info!("Registered new connection {}", site_id);
 
     Ok(())
@@ -804,7 +847,13 @@ fn find_file_relatively(cmk_update_agent_cmd: &str) -> AnyhowResult<String> {
     Ok(cmk_update_agent_cmd.to_string())
 }
 
-fn get_agent_updater_executable() -> AnyhowResult<String> {
+/// Locate the Python agent updater executable, the one driven as a subprocess.
+///
+/// # Errors
+///
+/// Returns an error if the executable is not found, which also means that this host has
+/// no Python agent updater at all.
+pub(crate) fn get_agent_updater_executable() -> AnyhowResult<String> {
     #[cfg(unix)]
     return find_file_relatively(CMK_UPDATE_AGENT_CMD);
     #[cfg(windows)]
@@ -942,7 +991,7 @@ mod tests {
         fn register_existing(
             &self,
             base_url: &reqwest::Url,
-            root_cert: &Option<&str>,
+            root_certs: &[&str],
             _credentials: &types::Credentials,
             _uuid: &uuid::Uuid,
             _csr: &str,
@@ -953,7 +1002,7 @@ mod tests {
                 RegistrationMethod::Existing
             ));
             assert!(base_url == &expected_url());
-            assert!(root_cert.is_some() == self.expect_root_cert);
+            assert_eq!(!root_certs.is_empty(), self.expect_root_cert);
             assert!(host_name == HOST_NAME);
             Ok(agent_receiver_api::RegisterExistingResponse {
                 root_cert: String::from("root_cert"),
@@ -965,7 +1014,7 @@ mod tests {
         fn register_new(
             &self,
             base_url: &reqwest::Url,
-            root_cert: &Option<&str>,
+            root_certs: &[&str],
             _credentials: &types::Credentials,
             _uuid: &uuid::Uuid,
             _csr: &str,
@@ -976,7 +1025,7 @@ mod tests {
                 RegistrationMethod::New
             ));
             assert!(base_url == &expected_url());
-            assert!(root_cert.is_some() == self.expect_root_cert);
+            assert_eq!(!root_certs.is_empty(), self.expect_root_cert);
             assert!(ag_labels == &agent_labels());
             Ok(agent_receiver_api::RegisterNewResponse {
                 root_cert: String::from("root_cert"),
@@ -1031,7 +1080,7 @@ mod tests {
     }
 
     fn registration_connection_config(
-        root_certificate: Option<String>,
+        root_certificates: Vec<String>,
         password: Option<String>,
         trust_server_cert: bool,
     ) -> config::RegistrationConnectionConfig {
@@ -1041,7 +1090,7 @@ mod tests {
             username: Some(String::from(USERNAME)),
             password,
             one_time_token: None,
-            root_certificate,
+            root_certificates,
             trust_server_cert,
             client_config: config::ClientConfig {
                 use_proxy: false,
@@ -1056,7 +1105,7 @@ mod tests {
         #[test]
         fn test_interactive_trust() {
             assert!(prepare_registration(
-                &registration_connection_config(None, None, false),
+                &registration_connection_config(vec![], None, false),
                 &MockInteractiveTrust {
                     expect_server_cert_prompt: true,
                     expect_password_prompt: true,
@@ -1068,7 +1117,7 @@ mod tests {
         #[test]
         fn test_blind_trust() {
             assert!(prepare_registration(
-                &registration_connection_config(None, Some(String::from("password")), true),
+                &registration_connection_config(vec![], Some(String::from("password")), true),
                 &MockInteractiveTrust {
                     expect_server_cert_prompt: false,
                     expect_password_prompt: false,
@@ -1080,7 +1129,9 @@ mod tests {
         #[test]
         fn test_prepare_registration_with_token() {
             let mut config = registration_connection_config(
-                None, None, true, /* blind trust to avoid prompt */
+                vec![],
+                None,
+                true, /* blind trust to avoid prompt */
             );
             config.username = None;
             config.one_time_token = Some(String::from("ott-token"));
@@ -1106,7 +1157,7 @@ mod tests {
         fn test_root_cert_from_config() {
             assert!(prepare_registration(
                 &registration_connection_config(
-                    Some(String::from("root_certificate")),
+                    vec![String::from("root_certificate")],
                     Some(String::from("password")),
                     false
                 ),
@@ -1121,7 +1172,7 @@ mod tests {
         #[test]
         fn test_root_cert_from_config_and_blind_trust() {
             assert!(prepare_registration(
-                &registration_connection_config(Some(String::from("root_certificate")), None, true),
+                &registration_connection_config(vec![String::from("root_certificate")], None, true),
                 &MockInteractiveTrust {
                     expect_server_cert_prompt: false,
                     expect_password_prompt: true,
@@ -1138,7 +1189,7 @@ mod tests {
         fn test_existing() {
             let mut r = TestRegistry::new();
             let registry = &mut r.registry;
-            let registration_config = registration_connection_config(None, None, false);
+            let registration_config = registration_connection_config(vec![], None, false);
             let registration_input = prepare_registration(
                 &registration_config,
                 &MockInteractiveTrust {
@@ -1170,7 +1221,7 @@ mod tests {
             let mut r = TestRegistry::new();
             let registry = &mut r.registry;
             let registration_config = registration_connection_config(
-                Some(String::from("root_certificate")),
+                vec![String::from("root_certificate")],
                 Some(String::from("password")),
                 false,
             );
@@ -1204,7 +1255,7 @@ mod tests {
         fn test_proxy() {
             assert!(proxy_registration(
                 &config::RegisterExistingConfig {
-                    connection_config: registration_connection_config(None, None, true),
+                    connection_config: registration_connection_config(vec![], None, true),
                     host_name: String::from(HOST_NAME),
                     updater_registration: UpdaterRegistration::Manual,
                 },
@@ -1297,6 +1348,7 @@ mod tests {
 
         struct MockRegistrationPreConfiguredImpl {
             is_registered_at_remote: bool,
+            expected_root_certificates: Vec<String>,
         }
 
         impl RegistrationPreConfigured for MockRegistrationPreConfiguredImpl {
@@ -1304,9 +1356,13 @@ mod tests {
                 &self,
                 config: &config::RegisterNewConfig,
                 registry: &mut config::Registry,
+                _agent_updater: AgentUpdater,
             ) -> AnyhowResult<()> {
                 assert!(config.connection_config.password.is_some());
-                assert!(config.connection_config.root_certificate.is_some());
+                assert_eq!(
+                    config.connection_config.root_certificates,
+                    self.expected_root_certificates
+                );
                 assert!(!config.connection_config.trust_server_cert);
                 assert_eq!(config.agent_labels.get("key").unwrap(), "value");
                 registry.register_connection(
@@ -1432,9 +1488,12 @@ mod tests {
                 },
                 &mut r.registry,
                 &MockRegistrationPreConfiguredImpl {
-                    is_registered_at_remote: true
+                    is_registered_at_remote: true,
+                    expected_root_certificates: vec![String::from("root_cert")],
                 },
                 UpdaterRegistration::Manual,
+                AgentUpdater::Python,
+                &trusted_cas::BakedCAs::new(),
             )
             .is_ok());
             test_registry_after_registration(true, &mut r.registry)
@@ -1451,9 +1510,12 @@ mod tests {
                 },
                 &mut r.registry,
                 &MockRegistrationPreConfiguredImpl {
-                    is_registered_at_remote: true
+                    is_registered_at_remote: true,
+                    expected_root_certificates: vec![String::from("root_cert")],
                 },
                 UpdaterRegistration::Manual,
+                AgentUpdater::Python,
+                &trusted_cas::BakedCAs::new(),
             )
             .is_ok());
             test_registry_after_registration(false, &mut r.registry)
@@ -1491,9 +1553,12 @@ mod tests {
                 },
                 registry,
                 &MockRegistrationPreConfiguredImpl {
-                    is_registered_at_remote: true
+                    is_registered_at_remote: true,
+                    expected_root_certificates: vec![String::from("root_cert")],
                 },
                 UpdaterRegistration::Manual,
+                AgentUpdater::Python,
+                &trusted_cas::BakedCAs::new(),
             )
             .is_ok());
 
@@ -1511,6 +1576,43 @@ mod tests {
         }
 
         #[test]
+        fn test_baked_cas_are_trusted_for_the_registration() {
+            let mut r = registry();
+            assert!(_register_pre_configured(
+                &pre_configured_connections(true),
+                &config::ClientConfig {
+                    use_proxy: false,
+                    validate_api_cert: false,
+                },
+                &mut r.registry,
+                &MockRegistrationPreConfiguredImpl {
+                    is_registered_at_remote: false,
+                    expected_root_certificates: vec![
+                        String::from("root_cert"),
+                        String::from("upcoming_site_ca"),
+                    ],
+                },
+                UpdaterRegistration::Manual,
+                AgentUpdater::Python,
+                &trusted_cas::BakedCAs::from(
+                    [
+                        "pre-baked-pull-site",
+                        "pre-baked-pull-site-2",
+                        "pre-baked-push-site",
+                        "pre-baked-push-site-2",
+                    ]
+                    .map(|site| {
+                        (
+                            String::from(site),
+                            vec![String::from("root_cert"), String::from("upcoming_site_ca")],
+                        )
+                    }),
+                ),
+            )
+            .is_ok());
+        }
+
+        #[test]
         fn test_registered_locally_but_not_at_remote() -> AnyhowResult<()> {
             let mut r = registry();
             let registry_before_registration = r.registry.clone();
@@ -1523,9 +1625,12 @@ mod tests {
                 },
                 &mut r.registry,
                 &MockRegistrationPreConfiguredImpl {
-                    is_registered_at_remote: false
+                    is_registered_at_remote: false,
+                    expected_root_certificates: vec![String::from("root_cert")],
                 },
                 UpdaterRegistration::Manual,
+                AgentUpdater::Python,
+                &trusted_cas::BakedCAs::new(),
             )
             .is_ok());
 

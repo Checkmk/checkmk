@@ -12,6 +12,7 @@ where it will later be redeemed.
 """
 
 import datetime as dt
+from http import HTTPStatus
 from typing import Annotated, override, Self
 
 from dateutil.relativedelta import relativedelta
@@ -55,6 +56,7 @@ class AgentRegistrationTokenCreateRequest(BaseModel):
     connection_mode: HostAgentConnectionMode
     expires_at: AwareDatetime | None = None
     comment: str = ""
+    agent_updates_permitted: bool | None = None
 
 
 class TokenCreateResponse(BaseModel):
@@ -121,6 +123,7 @@ class AutomationAgentRegistrationTokenCreate(
                 comment=api_request.comment,
                 host_name=api_request.host_name,
                 connection_mode=api_request.connection_mode,
+                agent_updates_permitted=api_request.agent_updates_permitted,
             ),
             issuer=api_request.issuer,
             now=now,
@@ -155,7 +158,7 @@ def forward_token_create(
         )
     except (MKAutomationException, MKGeneralException) as exc:
         raise ProblemException(
-            status=502,
+            status=HTTPStatus.BAD_GATEWAY,
             title="Could not create token on remote site",
             detail=_(
                 'Token creation on site "%(site_id)s" failed: %(exc)s. Make sure the central site '

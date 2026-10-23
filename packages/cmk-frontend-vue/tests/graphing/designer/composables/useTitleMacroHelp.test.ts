@@ -26,7 +26,7 @@ test('labels each source group and wraps its macros', () => {
   const { renderTitleMacroHelp } = mountHelp()
   const help = renderTitleMacroHelp([
     { source_type: 'rrd_metric', macros: ['$DEFAULT_TITLE$', '$METRIC_NAME$'] },
-    { source_type: 'metric_backend', macros: ['$SERIES_ID$'] }
+    { source_type: 'telemetry_metrics', macros: ['$SERIES_ID$'] }
   ])
   expect(help).toContain('Available title macros:')
   expect(help).toContain(
@@ -49,7 +49,7 @@ test('distinguishes the single metric from the dynamic query', () => {
 test('renders in the frontend order, not the order the backend supplied', () => {
   const { renderTitleMacroHelp } = mountHelp()
   const scrambled: TitleMacroGroup[] = [
-    { source_type: 'metric_backend', macros: ['$SERIES_ID$'] },
+    { source_type: 'telemetry_metrics', macros: ['$SERIES_ID$'] },
     { source_type: 'rrd_query', macros: ['$SERIES_ID$'] },
     { source_type: 'rrd_metric', macros: ['$DEFAULT_TITLE$'] }
   ]

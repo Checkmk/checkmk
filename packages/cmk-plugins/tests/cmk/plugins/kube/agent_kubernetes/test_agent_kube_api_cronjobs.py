@@ -69,11 +69,13 @@ class TestAPICronJob:
         batch_client: client.BatchV1Api,  # type: ignore[name-defined]
     ) -> None:
         cron_job_list_with_info = {
+            # spec is mandatory for V1CronJob, it is not relevant for this test
+            "spec": {"schedule": "*/5 * * * *", "jobTemplate": {}},
             "status": {
                 "active": None,
                 "last_schedule_time": None,
                 "last_successful_time": None,
-            }
+            },
         }
         cron_job = batch_client.api_client.deserialize(
             FakeResponse(cron_job_list_with_info),

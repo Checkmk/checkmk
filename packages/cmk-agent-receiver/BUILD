@@ -2,10 +2,10 @@ load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mklink", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
@@ -76,6 +76,7 @@ py_library(
         "cmk/agent_receiver/relay/api/routers/relays/handlers/cert_retriever.py",
         "cmk/agent_receiver/relay/api/routers/relays/handlers/forward_monitoring_data.py",
         "cmk/agent_receiver/relay/api/routers/relays/handlers/register_relay.py",
+        "cmk/agent_receiver/relay/api/routers/relays/handlers/store_crash_report.py",
         "cmk/agent_receiver/relay/api/routers/tasks/__init__.py",
         "cmk/agent_receiver/relay/api/routers/tasks/dependencies.py",
         "cmk/agent_receiver/relay/api/routers/tasks/endpoints.py",
@@ -110,6 +111,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//packages/cmk-ccc:tar-archive",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
         "//packages/cmk-licensing/cmk/licensing/basics",
@@ -199,12 +201,12 @@ py_binary(
     name = "gunicorn_conf",
     srcs = ["skel/etc/agent-receiver/gunicorn.conf.py"],
     main = "skel/etc/agent-receiver/gunicorn.conf.py",
+    deps = ["//packages/cmk-ccc:log"],
 )
 
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "skel/etc/init.d/agent-receiver",
     ],
 )

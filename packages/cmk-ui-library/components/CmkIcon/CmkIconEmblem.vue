@@ -50,7 +50,7 @@ withDefaults(
   width: 68%;
   height: 68%;
   position: absolute;
-  right: 5%;
+  right: -20%;
   bottom: -20%;
 }
 
@@ -64,7 +64,7 @@ $emblems_themed:
   add, api, disable, download, enable, more, pending, refresh, rulesets, search, settings,
   statistic, time, warning;
 
-$emblems: downtime, edit, sign, trans;
+$emblems: burger, downtime, edit, sign, trans;
 
 @each $emblem in $emblems_themed {
   body[data-theme='modern-dark'] {

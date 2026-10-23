@@ -22,6 +22,7 @@ def test_user_color_theme(dashboard_page: MainDashboard, credentials: CmkCredent
     _loc.click()
     # User menu closes; theme changes
     expect(_loc).not_to_have_text(default_label)
+    dashboard_page.validate_page()
     changed_label = str(_loc.text_content())
     changed_value = str(dashboard_page.page.locator("body").get_attribute("data-theme"))
     assert default_label != changed_label, "Changed color theme is not properly displayed!"
@@ -55,6 +56,7 @@ def test_user_sidebar_position(dashboard_page: MainDashboard, credentials: CmkCr
     _loc.click()
     # User menu closes; Sidebar position changes
     expect(_loc).not_to_have_text(default_label)
+    dashboard_page.validate_page()
     changed_label = str(_loc.text_content())
     changed_value = dashboard_page.sidebar.locator().get_attribute("class")
     assert default_label != changed_label, "Changed sidebar position is not properly displayed!"

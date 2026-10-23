@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import { renderDate } from 'cmk-ui-library/lib/renderTime'
 
 import { type ValidationMessages } from '@/form/private/validation'
 
@@ -19,9 +20,7 @@ const props = defineProps<{
 const data = defineModel<string>('data', { required: true })
 
 const prependDateAndUsername = (): void => {
-  const date = new Date()
-  const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-  data.value = `${formattedDate} ${props.spec.user_name || ''}:\n${data.value}`
+  data.value = `${renderDate(new Date())} ${props.spec.user_name || ''}:\n${data.value}`
 }
 </script>
 <template>

@@ -98,15 +98,16 @@ def parse_storeonce4x_appliances(string_table: StringTable) -> Section:
     # For every member uuid, we have more metrics in the dashboard
     for hostname, prop in parsed.items():
         for dashboard_elem in dashboard_json_list:
-            if hostname == dashboard_elem["hostname"]:
-                for dashboard_property in _PROPERTIES_DASHBOARD:
-                    prop[dashboard_property] = dashboard_elem[dashboard_property]
+            if hostname != dashboard_elem.get("hostname"):
+                continue
+            for dashboard_property in _PROPERTIES_DASHBOARD:
+                prop[dashboard_property] = dashboard_elem[dashboard_property]
 
-        # Calculate missing metrics (which where previously available in REST API 3x)
-        for name in ("Free", "Capacity"):
-            prop["combined%sBytes" % name] = (
-                prop["cloud%sBytes" % name] + prop["local%sBytes" % name]
-            )
+            # Calculate missing metrics (which where previously available in REST API 3x)
+            for name in ("Free", "Capacity"):
+                prop["combined%sBytes" % name] = (
+                    prop["cloud%sBytes" % name] + prop["local%sBytes" % name]
+                )
 
     return parsed
 
@@ -117,12 +118,29 @@ agent_section_storeonce4x_appliances = AgentSection(
 )
 
 
+_NO_DASHBOARD_DATA = Result(
+    state=State.UNKNOWN, summary="No dashboard data received from the StoreOnce REST API"
+)
+
+
+def _has_dashboard_data(data: Appliance) -> bool:
+    return "softwareVersion" in data
+
+
 def discover_storeonce4x_appliances(section: Section) -> DiscoveryResult:
     yield from (Service(item=host) for host in section)
 
 
 def check_storeonce4x_appliances(item: str, section: Section) -> CheckResult:
     if (data := section.get(item)) is None:
+        return
+    if not _has_dashboard_data(data):
+        yield Result(
+            state=data["cmk_state"],
+            summary=f"State: {data['applianceStateString']}, Serial Number: {data['serialNumber']}, "
+            f"Product Name: {data['productName']}",
+        )
+        yield _NO_DASHBOARD_DATA
         return
     yield Result(
         state=data["cmk_state"],
@@ -149,6 +167,9 @@ def check_storeonce4x_appliances_storage(
 ) -> CheckResult:
     if (data := section.get(item)) is None:
         return
+    if not _has_dashboard_data(data):
+        yield _NO_DASHBOARD_DATA
+        return
     yield from storeonce.check_storeonce_space(item, params, data)
 
 
@@ -165,6 +186,9 @@ check_plugin_storeonce4x_appliances_storage = CheckPlugin(
 
 def check_storeonce4x_appliances_license(item: str, section: Section) -> CheckResult:
     if (data := section.get(item)) is None:
+        return
+    if not _has_dashboard_data(data):
+        yield _NO_DASHBOARD_DATA
         return
 
     yield Result(
@@ -184,6 +208,9 @@ check_plugin_storeonce4x_appliances_license = CheckPlugin(
 
 def check_storeonce4x_appliances_summaries(item: str, section: Section) -> CheckResult:
     if (data := section.get(item)) is None:
+        return
+    if not _has_dashboard_data(data):
+        yield _NO_DASHBOARD_DATA
         return
 
     for summary, summary_descr in (

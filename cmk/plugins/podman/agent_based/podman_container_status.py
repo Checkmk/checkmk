@@ -7,7 +7,8 @@
 from datetime import datetime, UTC
 from typing import Literal, TypedDict
 
-from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
+from cmk.agent_based.v2 import CheckPlugin, CheckResult, Result, State
+from cmk.agent_based.v3_unstable import discover_one_service
 
 from .lib import SectionPodmanContainerInspect
 
@@ -33,12 +34,6 @@ DEFAULT_CHECK_PARAMETERS = Params(
     exited_with_non_zero=2,
     dead=2,
 )
-
-
-def discover_podman_container_status(
-    section: SectionPodmanContainerInspect,  # noqa: ARG001
-) -> DiscoveryResult:
-    yield Service()
 
 
 def _format_exit_time(finished_at: str) -> str:
@@ -78,7 +73,7 @@ check_plugin_podman_container_status = CheckPlugin(
     name="podman_container_status",
     service_name="Status",
     sections=["podman_container_inspect"],
-    discovery_function=discover_podman_container_status,
+    discovery_function=discover_one_service,
     check_function=check_podman_container_status,
     check_ruleset_name="podman_container_status",
     check_default_parameters=DEFAULT_CHECK_PARAMETERS,

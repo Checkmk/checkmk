@@ -12,12 +12,11 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     State,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.mobileiron.lib import Section
 
 
@@ -127,15 +126,11 @@ def check_mobileiron_versions(params: Params, section: Section) -> CheckResult:
         )
 
 
-def discover_single(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 check_plugin_mobileiron_versions = CheckPlugin(
     name="mobileiron_versions",
     sections=["mobileiron_section"],
     service_name="Mobileiron versions",
-    discovery_function=discover_single,
+    discovery_function=discover_one_service,
     check_function=check_mobileiron_versions,
     check_ruleset_name="mobileiron_versions",
     check_default_parameters={

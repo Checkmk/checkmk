@@ -6,9 +6,11 @@
 
 import json
 import traceback
-from collections.abc import Sequence
-from typing import assert_never, get_args, Literal, NamedTuple, TypeGuard
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
+from typing import assert_never, get_args, Literal, NamedTuple, override, TypeGuard
 
+from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId, url_prefix
 from cmk.gui import pagetypes
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -22,10 +24,10 @@ from cmk.gui.sites import SiteStatus, states
 from cmk.gui.type_defs import Visual
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.visuals import visual_title
+from cmk.gui.visuals import visual_title_without_context
 from cmk.shared_typing.main_menu import LoadingTransition as SharedLoadingTransition
 from cmk.shared_typing.main_menu import NavItemTopic, NavItemTopicEntry
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 
@@ -156,7 +158,7 @@ def snapin_site_choice(ident: str, choices: list[tuple[SiteId, str]]) -> list[Si
     if len(available_site_choices) <= 1:
         return None
 
-    dropdown_choices: Choices = [
+    dropdown_choices: list[Choice] = [
         ("", _("All sites")),
     ]
     dropdown_choices += available_site_choices
@@ -180,14 +182,58 @@ def _filter_available_site_choices(choices: list[tuple[SiteId, str]]) -> list[tu
     return sites_enabled
 
 
+@dataclass(frozen=True)
+class MonitorMenuTopicContributor:
+    """Topics a feature module contributes to the Monitor main menu.
+
+    ``topics`` receives the caller's resolved permissions and returns the topics
+    to merge into the menu. Feature modules register a contributor rather than the
+    core menu builders importing them, so cmk.gui core stays free of feature
+    imports (mirroring FolderMenuEntryRegistry / HostActionMenuRegistry).
+    """
+
+    ident: str
+    topics: Callable[[UserPermissions], list[NavItemTopic]]
+
+
+class MonitorMenuTopicRegistry(Registry[MonitorMenuTopicContributor]):
+    @override
+    def plugin_name(self, instance: MonitorMenuTopicContributor) -> str:
+        return instance.ident
+
+
+monitor_menu_topic_registry = MonitorMenuTopicRegistry()
+
+
+def registered_monitor_menu_topics(user_permissions: UserPermissions) -> list[NavItemTopic]:
+    """Topics contributed to the Monitor menu by registered feature modules."""
+    topics: list[NavItemTopic] = []
+    for contributor in monitor_menu_topic_registry.values():
+        topics += contributor.topics(user_permissions)
+    return topics
+
+
+def merge_registered_monitor_topics(
+    topics: list[NavItemTopic], user_permissions: UserPermissions
+) -> list[NavItemTopic]:
+    """Append the registered feature topics to *topics* and re-sort the whole menu.
+
+    ``make_main_menu`` sorts the topics it builds, but the renderer keeps list
+    order, so the appended ones have to be merged back in by sort_index. Shared by
+    every Monitor-menu builder (the views snap-in and the reporting variant).
+    """
+    return sorted(
+        topics + registered_monitor_menu_topics(user_permissions),
+        key=lambda topic: (topic.sort_index, topic.title),
+    )
+
+
 def make_main_menu(
     visuals: Sequence[VisualMenuItem], user_permissions: UserPermissions
 ) -> list[NavItemTopic]:
     topics = {
         p.name(): p
-        for p in pagetypes.PagetypeTopics.load(user_permissions).permitted_instances_sorted(
-            user_permissions
-        )
+        for p in pagetypes.PagetypeTopics.load().permitted_instances_sorted(user_permissions)
     }
 
     by_topic: dict[pagetypes.PagetypeTopics, list[NavItemTopicEntry]] = {}
@@ -215,9 +261,7 @@ def make_main_menu(
         entries.append(
             NavItemTopicEntry(
                 id=name,
-                title=visual_title(
-                    visual_type_name, visual, visual["context"], skip_title_context=True
-                ),
+                title=visual_title_without_context(visual, visual["context"]),
                 url=url,
                 sort_index=visual["sort_index"],
                 is_show_more=visual["is_show_more"],

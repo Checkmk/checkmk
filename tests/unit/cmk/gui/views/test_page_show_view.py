@@ -4,20 +4,33 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import override
 
+import pytest
+
+from cmk.ccc.user import UserId
+from cmk.gui import visuals
+from cmk.gui.config import Config, RequestCacheConfig
+from cmk.gui.data_source import data_source_registry
+from cmk.gui.http import request
 from cmk.gui.type_defs import VisualContext
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
-from cmk.gui.views.page_show_view import _get_needed_regular_columns
+from cmk.gui.views.page_show_view import _filter_form_filters, _get_needed_regular_columns
+from cmk.gui.views.store import get_all_views
 from cmk.gui.visuals.filter import Filter
 from cmk.gui.visuals.filter.components import FilterComponent
+from cmk.web.utils.request_cache import RequestCache
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
 def test_get_needed_regular_columns(view: View) -> None:
     class SomeFilter(Filter):
         @override
-        def components(self) -> Iterable[FilterComponent]:
+        def components(
+            self, _request_cache: RequestCache[RequestCacheConfig]
+        ) -> Iterable[FilterComponent]:
             return []
 
         @override
@@ -75,3 +88,59 @@ def test_get_needed_regular_columns(view: View) -> None:
             "some_column",
         ]
     )
+
+
+def _view_opened_with(view_name: str, url_vars: Mapping[str, str]) -> View:
+    view_spec = get_all_views()[(UserId.builtin(), view_name)].copy()
+    for var, value in url_vars.items():
+        request.set_var(var, value)
+    infos = data_source_registry[view_spec["datasource"]]().infos
+    request_cache = RequestCache(Config())
+    context = visuals.active_context_from_request(infos, view_spec["context"], request_cache)
+    return View(
+        view_name,
+        view_spec,
+        context,
+        make_painter_context(UserPermissions({}, {}, {}, [])),
+        request_cache,
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_the_filter_form_lists_a_filter_carried_by_a_link() -> None:
+    view = _view_opened_with("searchhost", {"hst1": "on", "filled_in": "filter"})
+
+    listed = {filter_.ident for filter_ in _filter_form_filters(view)}
+
+    assert "hoststate" in listed
+    assert view.context["hoststate"]["hst1"] == "on"
+    assert {"hostregex", "host_labels"} <= listed
+
+
+@pytest.mark.usefixtures("request_context")
+def test_the_filter_form_round_trips_the_merged_context() -> None:
+    view = _view_opened_with("searchhost", {"hst1": "on", "filled_in": "filter"})
+    listed = _filter_form_filters(view)
+
+    submitted_vars = {
+        var: value
+        for filter_ in listed
+        for var, value in view.context.get(filter_.ident, {}).items()
+    }
+    request.del_vars("hst")
+    for var, value in submitted_vars.items():
+        request.set_var(var, value)
+    request.set_var("_active", ";".join(sorted(f.ident for f in listed)))
+
+    resubmitted = visuals.active_context_from_request(view.datasource.infos, {}, view.request_cache)
+
+    assert {ident: vars_ for ident, vars_ in resubmitted.items() if any(vars_.values())} == {
+        ident: vars_ for ident, vars_ in view.context.items() if any(vars_.values())
+    }
+
+
+@pytest.mark.usefixtures("request_context")
+def test_a_filter_carried_by_a_link_wins_over_the_view_own_value() -> None:
+    view = _view_opened_with("hostproblems", {"hst0": "on", "filled_in": "filter"})
+
+    assert (view.context["hoststate"]["hst0"], view.context["hoststate"]["hst1"]) == ("on", "")

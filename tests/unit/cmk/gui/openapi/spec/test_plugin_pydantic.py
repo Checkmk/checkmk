@@ -7,6 +7,7 @@ from typing import Literal
 
 import pytest
 from apispec import APISpec
+from pydantic import ConfigDict, with_config
 
 from cmk.gui.openapi._type_adapter import get_cached_type_adapter
 from cmk.gui.openapi.framework.model import api_field, api_model
@@ -35,6 +36,38 @@ type HostCollection = Collection[Host, Literal["host"]]
 @api_model
 class Envelope:
     inner: HostCollection = api_field(description="A nested collection.")
+
+
+@api_model
+class Address:
+    city: str = api_field(description="The city.", example="Munich")
+
+
+# Like a request body after `_configure_extra_forbid`: only the body itself has a config.
+@with_config(ConfigDict(extra="forbid"))
+@api_model
+class CreatePerson:
+    address: Address = api_field(description="The address.")
+
+
+@api_model
+class Person:
+    address: Address = api_field(description="The address.")
+
+
+def _json_content(type_: type) -> dict[str, object]:
+    return {"content": {"application/json": {"schema": get_cached_type_adapter(type_)}}}
+
+
+def _document_request_body(spec: APISpec, type_: type) -> None:
+    spec.path("/person", operations={"post": {"requestBody": _json_content(type_)}})
+
+
+def _document_response_body(spec: APISpec, type_: type) -> None:
+    spec.path(
+        "/person",
+        operations={"get": {"responses": {"200": {"description": "OK", **_json_content(type_)}}}},
+    )
 
 
 @pytest.fixture(name="spec")
@@ -96,3 +129,17 @@ def test_union_without_a_definition_is_inlined(spec: APISpec) -> None:
         ]
     }
     assert sorted(spec.components.schemas) == ["Host", "Service"]
+
+
+def test_request_and_response_body_share_a_nested_model(spec: APISpec) -> None:
+    """Models nested in a request body inherit its `extra="forbid"` only for validation."""
+    _document_request_body(spec, CreatePerson)
+    _document_response_body(spec, Person)
+
+    assert sorted(spec.components.schemas) == ["Address", "CreatePerson", "Person"]
+
+
+def test_request_body_documents_its_own_forbidden_extra_fields(spec: APISpec) -> None:
+    _document_request_body(spec, CreatePerson)
+
+    assert spec.components.schemas["CreatePerson"]["additionalProperties"] is False

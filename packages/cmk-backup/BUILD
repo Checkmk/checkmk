@@ -56,7 +56,6 @@ py_library(
         "//cmk/gui:key_mgmt",
         "//cmk/gui:page_toolkit",
         "//cmk/gui/form_specs",
-        "//cmk/gui/utils",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/gui/wato:base",
@@ -66,6 +65,7 @@ py_library(
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
         "//packages/cmk-web/cmk/web/utils",
@@ -78,7 +78,6 @@ py_library(
     data = ["cmk/backup/py.typed"],
     imports = ["."],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
     ],
     deps = [
@@ -117,9 +116,21 @@ pkg_files(
     renames = {"cmk/backup/mkbackup/__init__.py": "bin/mkbackup"},
 )
 
+pkg_files(
+    name = "monitor_mkbackup_bin",
+    srcs = ["cmk-monitor-mkbackup"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "bin",
+)
+
 package_wheel(
     name = "pkg_tar",
-    additional_files = [":mkbackup_bin"],
+    additional_files = [
+        ":mkbackup_bin",
+        ":monitor_mkbackup_bin",
+    ],
     visibility = ["//visibility:public"],
     whl = "wheel",
 )
@@ -148,6 +159,6 @@ py_requirements_test(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
+        "cmk-monitor-mkbackup",
     ],
 )

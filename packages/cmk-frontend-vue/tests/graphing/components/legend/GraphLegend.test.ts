@@ -7,7 +7,10 @@ import { fireEvent, render, screen } from '@testing-library/vue'
 
 import type { HorizontalLine, Metric } from '@/graphing/components/TimeSeriesGraph'
 import type { M4Bucket } from '@/graphing/components/TimeSeriesGraph/decimation/types'
-import { computeStackedSeries } from '@/graphing/components/TimeSeriesGraph/render/stacked'
+import {
+  type StackedSeries,
+  computeStackedSeries
+} from '@/graphing/components/TimeSeriesGraph/render/stacked'
 import GraphLegend from '@/graphing/components/legend/GraphLegend.vue'
 
 // A single-sample bucket so every consolidation (min/max/avg) resolves to the same value,
@@ -47,7 +50,7 @@ const UNIT: Metric['metadata']['unit'] = {
 function makeMetric(name: string, title: string, dataPoints: (number | null)[]): Metric {
   return {
     metadata: { name, title, unit: UNIT, color: '#ff0000', attributes: [] },
-    render: { stack: 'area', inverse: false, hidden: false },
+    render: { shape: 'area', stack: 'area', inverse: false, hidden: false },
     data_points: dataPoints
   }
 }
@@ -55,7 +58,10 @@ function makeMetric(name: string, title: string, dataPoints: (number | null)[]):
 function makeMetricWithStack(name: string, title: string, stack: string | null): Metric {
   return {
     metadata: { name, title, unit: UNIT, color: '#ff0000', attributes: [] },
-    render: { stack, inverse: false, hidden: false },
+    render:
+      stack === null
+        ? { shape: 'line', inverse: false, hidden: false }
+        : { shape: 'area', stack, inverse: false, hidden: false },
     data_points: [1]
   }
 }
@@ -63,7 +69,10 @@ function makeMetricWithStack(name: string, title: string, stack: string | null):
 function makeMirroredMetric(name: string, title: string, stack: string | null): Metric {
   return {
     metadata: { name, title, unit: UNIT, color: '#ff0000', attributes: [] },
-    render: { stack, inverse: true, hidden: false },
+    render:
+      stack === null
+        ? { shape: 'line', inverse: true, hidden: false }
+        : { shape: 'area', stack, inverse: true, hidden: false },
     data_points: [1]
   }
 }
@@ -86,7 +95,7 @@ const REQUESTS: Metric = {
       { kind: 'data_point', name: 'status', value: '304' }
     ]
   },
-  render: { stack: null, inverse: false, hidden: false },
+  render: { shape: 'line', inverse: false, hidden: false },
   data_points: [1, 2]
 }
 
@@ -307,10 +316,11 @@ test('lists a stack top-to-bottom in the same order computeStackedSeries draws i
   const metrics = [first, second, third]
   const buckets = metrics.map(() => [makeBucket(1)])
 
-  const series = computeStackedSeries(metrics, buckets, 'avg')
+  const series = computeStackedSeries(metrics, buckets)
+  const topOf = (candidate: StackedSeries): number =>
+    candidate.kind === 'area-stacked' ? candidate.columns[0]!.vertices[0]!.upper : -Infinity
   const topmostIndex = series.reduce(
-    (topIdx, current, idx) =>
-      current.bands[0]!.upper > series[topIdx]!.bands[0]!.upper ? idx : topIdx,
+    (topIdx, current, idx) => (topOf(current) > topOf(series[topIdx]!) ? idx : topIdx),
     0
   )
   const topmostTitle = metrics[topmostIndex]!.metadata.title
@@ -362,11 +372,16 @@ function legendScrollMaxHeightPx(container: Element): number {
   return Number.parseInt(scroller!.style.maxHeight, 10)
 }
 
-function legendHeightVariablesPx(container: Element): { header: number; row: number } {
+function legendHeightVariablesPx(container: Element): {
+  header: number
+  row: number
+  dividerGap: number
+} {
   const root = container.querySelector<HTMLElement>('.graphing-graph-legend')!
   return {
     header: Number.parseInt(root.style.getPropertyValue('--legend-header-height'), 10),
-    row: Number.parseInt(root.style.getPropertyValue('--legend-row-height'), 10)
+    row: Number.parseInt(root.style.getPropertyValue('--legend-row-height'), 10),
+    dividerGap: Number.parseInt(root.style.getPropertyValue('--legend-divider-gap'), 10)
   }
 }
 
@@ -378,24 +393,26 @@ test('caps the legend at its header plus seven rows by default', () => {
   expect(legendScrollMaxHeightPx(container)).toBe(header + 7 * row)
 })
 
-test('the header and row heights the cap is derived from reach the stylesheet', () => {
+test('the header, row and divider heights the cap is derived from reach the stylesheet', () => {
   const { container } = render(GraphLegend, { props: { metrics: [CPU, MEM] } })
 
   // The header and the rows take their heights from the same constants the cap sums up. Were
   // they to drift apart, the cap would stop landing on a row boundary.
   const root = container.querySelector<HTMLElement>('.graphing-graph-legend')!
   expect(root.style.getPropertyValue('--legend-row-height')).toBe('24px')
-  expect(root.style.getPropertyValue('--legend-header-height')).toBe('40px')
+  expect(root.style.getPropertyValue('--legend-header-height')).toBe('52px')
+  expect(root.style.getPropertyValue('--legend-divider-gap')).toBe('12px')
 })
 
-test('threshold lines eat into the same seven-item budget instead of adding height', () => {
+test('threshold lines eat into the same seven-item budget, adding only their divider', () => {
   const withoutLines = render(GraphLegend, { props: { metrics: [CPU, MEM] } })
   const withLines = render(GraphLegend, {
     props: { metrics: [CPU, MEM], horizontalLines: [WARN_LINE, CRIT_LINE] }
   })
 
+  const { dividerGap } = legendHeightVariablesPx(withLines.container)
   expect(legendScrollMaxHeightPx(withLines.container)).toBe(
-    legendScrollMaxHeightPx(withoutLines.container)
+    legendScrollMaxHeightPx(withoutLines.container) + 2 * dividerGap
   )
 })
 
@@ -405,8 +422,10 @@ test('the metric rows keep room for one row even when thresholds outnumber the b
     props: { metrics: [CPU, MEM], horizontalLines: manyLines }
   })
 
-  const { header, row } = legendHeightVariablesPx(container)
-  expect(legendScrollMaxHeightPx(container)).toBe(header + (manyLines.length + 1) * row)
+  const { header, row, dividerGap } = legendHeightVariablesPx(container)
+  expect(legendScrollMaxHeightPx(container)).toBe(
+    header + (manyLines.length + 1) * row + 2 * dividerGap
+  )
 })
 
 test('fillHeight applies the fill modifier and lifts the height cap', () => {
@@ -474,4 +493,33 @@ test('expanding one entry leaves the others collapsed', async () => {
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle attributes of Requests' }))
 
   expect(screen.getAllByText('host.arch')).toHaveLength(1)
+})
+
+/** What "Settings > Unit > Custom > Notation: IEC" enforces on a byte graph. */
+const IEC_BYTES: Metric['metadata']['unit'] = {
+  notation: 'iec',
+  symbol: 'B',
+  precision: { type: 'auto', digits: 2 },
+  convertible: false
+}
+
+/** Reads '32 MiB' in IEC. */
+const MEBIBYTES_32 = 33_554_432
+
+test('metric stats render in the axis unit the graph names', () => {
+  const used = makeMetric('mem_used', 'Used', [MEBIBYTES_32])
+
+  render(GraphLegend, { props: { metrics: [used], axisUnit: IEC_BYTES } })
+
+  expect(screen.getByText('Used').closest('tr')!).toHaveTextContent('32 MiB')
+})
+
+test('a horizontal line renders in the axis unit the graph names', () => {
+  const line: HorizontalLine = { ...WARN_LINE, value: MEBIBYTES_32 }
+
+  render(GraphLegend, {
+    props: { metrics: [CPU], horizontalLines: [line], axisUnit: IEC_BYTES }
+  })
+
+  expect(screen.getByText('Warning').closest('tr')!).toHaveTextContent('32 MiB')
 })

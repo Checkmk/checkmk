@@ -45,7 +45,7 @@ from cmk.gui.wato._group_selection import sorted_contact_group_choices
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.passwords import load_passwords, remove_password
 from cmk.gui.watolib.pending_changes import (
@@ -75,6 +75,7 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     InputHint,
     Password,
+    Proxy,
     String,
     validators,
 )
@@ -323,6 +324,19 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                         ),
                         uuid4_validator(error_msg=Message("Client ID must be a valid UUID.")),
                     ],
+                ),
+                group=DictGroup(title=Title("IDs")),
+            ),
+            "proxy": DictElement(
+                required=False,
+                parameter_form=Proxy(
+                    title=Title("Proxy"),
+                    help_text=Help(
+                        "Proxy used to reach Microsoft, both for the authorization performed "
+                        "here and for the recurring API calls of the services using this "
+                        "connection. Without this option the proxy settings of the process "
+                        "environment are used."
+                    ),
                 ),
                 group=DictGroup(title=Title("IDs")),
             ),
@@ -594,15 +608,14 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
             )
 
         found_rules = []
+        tree = make_folder_tree(config)
         for ruleset_name in [
             "active_checks:mail",
             "active_checks:mail_loop",
             "active_checks:mailboxes",
         ]:
             for folder, index, rule in (
-                SingleRulesetRecursively.load_single_ruleset_recursively(
-                    folder_tree(), ruleset_name
-                )
+                SingleRulesetRecursively.load_single_ruleset_recursively(tree, ruleset_name)
                 .get_rulesets()[ruleset_name]
                 .get_rules()
             ):
@@ -614,7 +627,7 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
                 html.render_li(
                     html.render_a(
                         f"{rulespec_registry[ruleset_name].title} {index}",
-                        folder_preserving_link(
+                        makeuri_contextless(
                             request,
                             [
                                 ("mode", "edit_rule"),
@@ -623,6 +636,7 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
                                 ("rule_folder", folder.path()),
                                 ("rule_id", rule.id),
                             ],
+                            filename="wato.py",
                         ),
                     )
                 )

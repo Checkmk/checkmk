@@ -8,9 +8,9 @@ from typing import override
 
 from cmk.gui.config import active_config
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
 from cmk.update_config.plugins.lib.autochecks import rewrite_yielding_errors
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.registry import update_action_registry
 
 
 class UpdateAutochecks(UpdateAction):

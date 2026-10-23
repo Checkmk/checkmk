@@ -18,12 +18,11 @@
 #    => These already bear all information about the contact, the plug-in
 #       to call and its parameters.
 
-import ast
 import contextlib
 import datetime
+import hashlib
 import io
 import itertools
-import json
 import logging
 import os
 import re
@@ -41,29 +40,15 @@ from typing import cast, Literal
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
-import cmk.livestatus_client as livestatus
 import cmk.utils.paths
-import cmk.utils.timeperiod
-from cmk.automations.backends.helper import AutomationHelperUnavailable, HelperExecutor
-from cmk.automations.results import (
-    NotificationAnalyseResult,
-    NotificationGetBulksResult,
-    NotificationReplayResult,
-    NotificationTestResult,
-)
-from cmk.automations.types import AutomationID
-from cmk.base import config, events
-from cmk.base.automations.automations import Automation, load_config, load_plugins
-from cmk.base.base_app import CheckmkBaseApp
+from cmk.base import events
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException, MKTimeout, raise_mkterminate_on_sigint
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import regex
 from cmk.ccc.timeout import Timeout
 from cmk.ccc.version import Edition
-from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.events.event_context import EnrichedEventContext, EventContext
 from cmk.events.log_to_history import (
     log_to_history,
@@ -104,12 +89,10 @@ from cmk.events.notify_types import (
 from cmk.livestatus_client import MKLivestatusException
 from cmk.ruleset_matcher.labels import LabelManager
 from cmk.ruleset_matcher.matcher import RulesetMatcher, RuleSpec
-from cmk.utils import http_proxy_config, log, timeperiod
-from cmk.utils.http_proxy_config import make_http_proxy_getter
+from cmk.utils import log
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.timeperiod import (
-    get_all_timeperiods,
     is_timeperiod_active,
     TimeperiodName,
     TimeperiodSpecs,
@@ -129,7 +112,7 @@ Event = str
 
 
 Contacts = list[Contact]
-ConfigContacts = dict[ContactName, Contact]
+ConfigContacts = Mapping[ContactName, Contact]
 ContactNames = frozenset[ContactName]  # Must be hasable
 
 
@@ -358,94 +341,6 @@ def make_ensure_nagios(monitoring_core: Literal["nagios", "cmc"]) -> Callable[[s
 #   +----------------------------------------------------------------------+
 #   |  Main code entry point.                                              |
 #   '----------------------------------------------------------------------'
-
-
-def _notify_flags(parsed: Mapping[str, object]) -> dict[str, bool]:
-    return dict.fromkeys(parsed, True)
-
-
-def _mode_notify(
-    app: CheckmkBaseApp, _global_options: GlobalOptions, parsed: Options, args: Args
-) -> int:
-    options = _notify_flags(parsed)
-    community_edition = app.edition is Edition.COMMUNITY
-    if not community_edition and "spoolfile" in args:
-        return (
-            _do_notify_via_automation(
-                options=options,
-                args=list(args),
-            )
-            or 0
-        )
-
-    if keepalive := not community_edition and "keepalive" in options:
-        raise_mkterminate_on_sigint()
-
-    with store.lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile):
-        loading_result = config.load(
-            with_conf_d=True,
-            validate_hosts=False,
-        )
-
-    exit_status = do_notify(
-        options,
-        list(args),
-        notification_config=make_notification_config(
-            app.edition,
-            loading_result.loaded_config,
-            loading_result.config_cache.ruleset_matcher,
-            loading_result.config_cache.label_manager,
-        ),
-        define_servicegroups=loading_result.loaded_config.define_servicegroups,
-        get_http_proxy=make_http_proxy_getter(loading_result.loaded_config.http_proxies),
-        ensure_nagios=make_ensure_nagios(loading_result.loaded_config.monitoring_core),
-        config_contacts=loading_result.loaded_config.contacts,
-        keepalive=keepalive,
-        all_timeperiods=timeperiod.get_all_timeperiods(loading_result.loaded_config.timeperiods),
-        timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
-            livestatus.get_optional_timeperiods_active_map, logger.warning
-        ),
-    )
-    return exit_status or 0
-
-
-def _do_notify_via_automation(options: dict, args: list[str]) -> int | None:
-    log_to_stdout = False
-    if options.get("log-to-stdout"):
-        args.insert(0, "--log-to-stdout")
-        log_to_stdout = True
-
-    try:
-        result = HelperExecutor().execute(
-            command=AutomationID("notify"),
-            args=args,
-            stdin="",
-            timeout=None,
-        )
-    except AutomationHelperUnavailable:
-        logger.exception(
-            "The automation-helper service is required for the notification spooler. "
-            "Please make sure all site services are started."
-        )
-        return 1
-    except Exception:
-        logger.exception("Error running automation call 'notify'")
-        return 1
-
-    try:
-        data = ast.literal_eval(result.output)
-    except SyntaxError, ValueError, TypeError:
-        logger.exception("Could not parse automation result %(output)r", {"output": result.output})
-        return 2
-
-    if isinstance(data, dict):
-        if log_to_stdout:
-            sys.stdout.write(data["output"])
-            sys.stdout.flush()
-        return data.get("exit_code")
-
-    logger.error("Unexpected automation result format: %(data)r", {"data": data})
-    return 2
 
 
 def notify_usage() -> None:
@@ -714,7 +609,7 @@ def _locally_deliver_raw_context(
     return None
 
 
-def _notification_replay_backlog(
+def notification_replay_backlog(
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     nr: int,
@@ -741,7 +636,7 @@ def _notification_replay_backlog(
     )
 
 
-def _notification_analyse_backlog(
+def notification_analyse_backlog(
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     nr: int,
@@ -769,7 +664,7 @@ def _notification_analyse_backlog(
     )
 
 
-def _notification_test(
+def notification_test(
     raw_context: NotificationContext,
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
@@ -848,167 +743,6 @@ def _notify_keepalive(
         ),
         loop_interval=notification_config.bulk_interval,
     )
-
-
-def _automation_notification_replay(
-    app: CheckmkBaseApp,
-    args: list[str],
-    plugins: AgentBasedPlugins | None,
-    loading_result: config.LoadingResult | None,
-) -> NotificationReplayResult:
-    plugins = plugins or load_plugins()  # do we really still need this?
-    loading_result = loading_result or load_config()
-    logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
-
-    nr = args[0]
-    _notification_replay_backlog(
-        http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
-        make_ensure_nagios(loading_result.loaded_config.monitoring_core),
-        int(nr),
-        notification_config=make_notification_config(
-            app.edition,
-            loading_result.loaded_config,
-            loading_result.config_cache.ruleset_matcher,
-            loading_result.config_cache.label_manager,
-        ),
-        define_servicegroups=loading_result.loaded_config.define_servicegroups,
-        config_contacts=loading_result.loaded_config.contacts,
-        all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
-        timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
-            livestatus.get_optional_timeperiods_active_map, log=logger.warning
-        ),
-    )
-    return NotificationReplayResult()
-
-
-def _automation_notification_analyse(
-    app: CheckmkBaseApp,
-    args: list[str],
-    plugins: AgentBasedPlugins | None,
-    loading_result: config.LoadingResult | None,
-) -> NotificationAnalyseResult:
-    plugins = plugins or load_plugins()  # do we really still need this?
-    loading_result = loading_result or load_config()
-    logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
-
-    nr = args[0]
-    return NotificationAnalyseResult(
-        _notification_analyse_backlog(
-            http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
-            make_ensure_nagios(loading_result.loaded_config.monitoring_core),
-            int(nr),
-            notification_config=make_notification_config(
-                app.edition,
-                loading_result.loaded_config,
-                loading_result.config_cache.ruleset_matcher,
-                loading_result.config_cache.label_manager,
-            ),
-            define_servicegroups=loading_result.loaded_config.define_servicegroups,
-            config_contacts=loading_result.loaded_config.contacts,
-            all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
-            timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
-                livestatus.get_optional_timeperiods_active_map, log=logger.warning
-            ),
-        )
-    )
-
-
-def _automation_notification_test(
-    app: CheckmkBaseApp,
-    args: list[str],
-    plugins: AgentBasedPlugins | None,
-    loading_result: config.LoadingResult | None,
-) -> NotificationTestResult:
-    context = json.loads(args[0])
-    dispatch = args[1]
-
-    plugins = plugins or load_plugins()  # do we really still need this?
-    loading_result = loading_result or load_config()
-    ensure_nagios = make_ensure_nagios(loading_result.loaded_config.monitoring_core)
-    logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
-
-    return NotificationTestResult(
-        _notification_test(
-            context,
-            http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
-            ensure_nagios,
-            notification_config=make_notification_config(
-                app.edition,
-                loading_result.loaded_config,
-                loading_result.config_cache.ruleset_matcher,
-                loading_result.config_cache.label_manager,
-            ),
-            define_servicegroups=loading_result.loaded_config.define_servicegroups,
-            config_contacts=loading_result.loaded_config.contacts,
-            all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
-            dispatch=dispatch,
-            timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
-                livestatus.get_optional_timeperiods_active_map, log=logger.warning
-            ),
-        )
-    )
-
-
-def _automation_get_bulks(
-    _app: object,
-    args: list[str],
-    plugins: AgentBasedPlugins | None,  # noqa: ARG001
-    loading_result: config.LoadingResult | None,
-) -> NotificationGetBulksResult:
-    only_ripe = args[0] == "1"
-    logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
-    if loading_result is None:
-        loading_result = load_config()
-    return NotificationGetBulksResult(
-        _find_bulks(
-            only_ripe,
-            bulk_interval=loading_result.loaded_config.notification_bulk_interval,
-            timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
-                livestatus.get_optional_timeperiods_active_map, log=logger.warning
-            ),
-        )
-    )
-
-
-cli_command_notify = CLICommand(
-    long_option="notify",
-    handler_function=_mode_notify,
-    argument=True,
-    argument_descr="MODE",
-    argument_optional=True,
-    sub_options=[
-        CLIOption(
-            long_option="log-to-stdout",
-            short_help="Also write log messages to console",
-        ),
-        CLIOption(
-            long_option="keepalive",
-            short_help="Execute in keepalive mode (Commercial editions only)",
-        ),
-    ],
-    short_help="Used to send notifications from core",
-)
-
-automation_notification_replay = Automation(
-    name=AutomationID("notification-replay"),
-    handler=_automation_notification_replay,
-    result=NotificationReplayResult,
-)
-automation_notification_analyse = Automation(
-    name=AutomationID("notification-analyse"),
-    handler=_automation_notification_analyse,
-    result=NotificationAnalyseResult,
-)
-automation_notification_test = Automation(
-    name=AutomationID("notification-test"),
-    handler=_automation_notification_test,
-    result=NotificationTestResult,
-)
-automation_notification_get_bulks = Automation(
-    name=AutomationID("notification-get-bulks"),
-    handler=_automation_get_bulks,
-    result=NotificationGetBulksResult,
-)
 
 
 # .
@@ -1358,7 +1092,13 @@ def _process_notifications(
                     if analyse and would_notify:
                         continue
                     if entry.bulk:
-                        do_bulk_notify(entry.plugin_name, params, context, entry.bulk)
+                        do_bulk_notify(
+                            entry.plugin_name,
+                            params,
+                            context,
+                            entry.bulk,
+                            bulk_root=Path(notification_bulkdir),
+                        )
                     elif spooling in ("local", "both"):
                         create_spool_file(
                             logger,
@@ -2363,6 +2103,8 @@ def do_bulk_notify(
     params: NotifyPluginParamsDict,
     plugin_context: NotificationContext,
     bulk: NotifyBulkParameters,
+    *,
+    bulk_root: Path,
 ) -> None:
     # First identify the bulk. The following elements identify it:
     # 1. contact
@@ -2476,7 +2218,7 @@ def do_bulk_notify(
         "    --> storing for bulk notification %(bulk_path)s",
         {"bulk_path": "|".join(bulk_path)},
     )
-    bulk_dir = _create_bulk_dir(bulk_path)
+    bulk_dir = _create_bulk_dir(bulk_root, _bulk_dirname(bulk_path), bulk_path)
     notify_uuid = str(uuid.uuid4())
     filename_new = bulk_dir / f"{notify_uuid}.new"
     filename_final = bulk_dir / notify_uuid
@@ -2484,18 +2226,55 @@ def do_bulk_notify(
     filename_new.rename(filename_final)  # We need an atomic creation!
     logger.info("        - stored in %(filename)s", {"filename": filename_final})
 
+    # Only now, so that a sender that removed it while the notification was being
+    # stored cannot leave the bulk without it
+    if bulk_dir.name != (readable := _readable_bulk_dirname(bulk_path)):
+        try:
+            _ensure_bulk_id_file(bulk_dir, readable)
+        except OSError:
+            # The notification is stored, only the GUI shows the hashed name
+            logger.exception(
+                "        - cannot write bulk ID to %(bulk_dir)s:", {"bulk_dir": bulk_dir}
+            )
 
-def _create_bulk_dir(bulk_path: Sequence[str]) -> Path:
-    bulk_dir = Path(
-        notification_bulkdir,
-        bulk_path[0],
-        bulk_path[1],
-        ",".join([b.replace("/", "\\") for b in bulk_path[2:]]),
-    )
+
+# Longest file name most file systems allow (NAME_MAX)
+_MAX_BULK_DIRNAME_BYTES = 255
+_BULK_ID_FILE = ".bulk_id"
+
+
+def _readable_bulk_dirname(bulk_path: Sequence[str]) -> str:
+    return ",".join([b.replace("/", "\\") for b in bulk_path[2:]])
+
+
+def _bulk_dirname(bulk_path: Sequence[str]) -> str:
+    # The interval or time period and the count stay readable, bulk_parts() parses them.
+    # The grouping values are replaced by a hash if they would make the name too long.
+    # A time period name long enough to exceed the limit on its own still fails, the
+    # notification is then reported as failed.
+    readable = _readable_bulk_dirname(bulk_path)
+    if len(os.fsencode(readable)) <= _MAX_BULK_DIRNAME_BYTES:
+        return readable
+    interval_and_count = ",".join([b.replace("/", "\\") for b in bulk_path[2:4]])
+    digest = hashlib.sha256(repr(tuple(bulk_path[4:])).encode("utf-8")).hexdigest()
+    return f"{interval_and_count},sha256:{digest}"
+
+
+def _create_bulk_dir(bulk_root: Path, dirname: str, bulk_path: Sequence[str]) -> Path:
+    bulk_dir = bulk_root / bulk_path[0] / bulk_path[1] / dirname
     if not bulk_dir.exists():
-        bulk_dir.mkdir(parents=True)
+        bulk_dir.mkdir(parents=True, exist_ok=True)
         logger.info("        - created bulk directory %(bulk_dir)s", {"bulk_dir": bulk_dir})
     return bulk_dir
+
+
+def _ensure_bulk_id_file(bulk_dir: Path, readable: str) -> None:
+    # Lets admins map the hashed directory back to its bulk
+    if (bulk_id_file := bulk_dir / _BULK_ID_FILE).exists():
+        return
+    tmp_file = bulk_dir / f"{_BULK_ID_FILE}.{uuid.uuid4()}.new"
+    tmp_file.write_text(readable, encoding="utf-8", errors="surrogateescape")
+    tmp_file.rename(bulk_id_file)
 
 
 def bulk_parts(method_dir: str, bulk: str) -> tuple[int | None, str | None, int] | None:
@@ -2526,7 +2305,7 @@ def bulk_parts(method_dir: str, bulk: str) -> tuple[int | None, str | None, int]
 def bulk_uuids(bulk_dir: str) -> tuple[UUIDs, float]:
     uuids, oldest = [], time.time()
     for notify_uuid in os.listdir(bulk_dir):  # 4ded0fa2-f0cd-4b6a-9812-54374a04069f
-        if notify_uuid.endswith(".new"):
+        if notify_uuid.endswith(".new") or notify_uuid.startswith("."):
             continue
         if len(notify_uuid) != 36:
             logger.info(
@@ -2553,18 +2332,48 @@ def remove_if_orphaned(bulk_dir: str, max_age: float, ref_time: float | None = N
             {"bulk_dir": bulk_dir},
         )
         try:
-            os.rmdir(bulk_dir)
+            _remove_bulk_dir(bulk_dir)
         except Exception as e:
             logger.info("    -> Error removing it: %(error)s", {"error": e})
 
 
-def _find_bulks(
+def _remove_bulk_dir(bulk_dir: str) -> None:
+    try:
+        os.rmdir(bulk_dir)
+    except OSError:
+        # Only remove the bulk ID file (and leftovers of writing it) if no
+        # notification is left or being stored
+        entries = os.listdir(bulk_dir)
+        if not entries or any(not e.startswith(".") for e in entries):
+            raise
+        for entry in entries:
+            with suppress(FileNotFoundError):
+                os.remove(os.path.join(bulk_dir, entry))
+        os.rmdir(bulk_dir)
+
+
+def _readable_bulk_id(bulk_dir: str, dirname: str) -> str:
+    # Only hashed directory names have a bulk ID file, see _bulk_dirname()
+    if ",sha256:" not in dirname:
+        return dirname
+    try:
+        return (
+            Path(bulk_dir, _BULK_ID_FILE).read_text(encoding="utf-8", errors="surrogateescape")
+            or dirname
+        )
+    except OSError:
+        # Only cosmetic, must not keep the bulk from being sent
+        return dirname
+
+
+def find_bulks(
     only_ripe: bool,
     *,
+    bulk_root: Path,
     bulk_interval: int,
     timeperiods_active: _CoreTimeperiodsActive,
 ) -> NotifyBulks:
-    if not os.path.exists(notification_bulkdir):
+    if not bulk_root.exists():
         return []
 
     def listdir_visible(path: str) -> list[str]:
@@ -2572,8 +2381,8 @@ def _find_bulks(
 
     bulks: NotifyBulks = []
     now = time.time()
-    for contact in listdir_visible(notification_bulkdir):
-        contact_dir = os.path.join(notification_bulkdir, contact)
+    for contact in listdir_visible(str(bulk_root)):
+        contact_dir = os.path.join(bulk_root, contact)
         for method in listdir_visible(contact_dir):
             method_dir = os.path.join(contact_dir, method)
             for bulk in listdir_visible(method_dir):
@@ -2610,7 +2419,17 @@ def _find_bulks(
                         if only_ripe:
                             continue
 
-                    bulks.append((bulk_dir, age, interval, "n.a.", count, uuids))
+                    bulks.append(
+                        (
+                            bulk_dir,
+                            age,
+                            interval,
+                            "n.a.",
+                            count,
+                            uuids,
+                            _readable_bulk_id(bulk_dir, bulk),
+                        )
+                    )
                 else:
                     assert timeperiod is not None  # TODO: Improve typing of bulk_parts()
                     try:
@@ -2657,7 +2476,17 @@ def _find_bulks(
                             {"bulk_dir": bulk_dir, "timeperiod": timeperiod},
                         )
 
-                    bulks.append((bulk_dir, age, "n.a.", timeperiod, count, uuids))
+                    bulks.append(
+                        (
+                            bulk_dir,
+                            age,
+                            "n.a.",
+                            timeperiod,
+                            count,
+                            uuids,
+                            _readable_bulk_id(bulk_dir, bulk),
+                        )
+                    )
     return bulks
 
 
@@ -2668,16 +2497,21 @@ def _send_ripe_bulks(
     bulk_interval: int,
     plugin_timeout: int,
 ) -> None:
-    ripe = _find_bulks(True, bulk_interval=bulk_interval, timeperiods_active=timeperiods_active)
+    ripe = find_bulks(
+        True,
+        bulk_root=Path(notification_bulkdir),
+        bulk_interval=bulk_interval,
+        timeperiods_active=timeperiods_active,
+    )
     if ripe:
         logger.info("Sending out %(num_ripe)d ripe bulk notifications", {"num_ripe": len(ripe)})
-        for bulk in ripe:
+        for bulk_dir, _age, _interval, _timeperiod, _count, uuids, _bulk_id in ripe:
             try:
-                notify_bulk(bulk[0], bulk[-1], get_http_proxy, plugin_timeout=plugin_timeout)
+                notify_bulk(bulk_dir, uuids, get_http_proxy, plugin_timeout=plugin_timeout)
             except Exception:
                 if cmk.ccc.debug.enabled():
                     raise
-                logger.exception("Error sending bulk %(bulk)s:", {"bulk": bulk[0]})
+                logger.exception("Error sending bulk %(bulk)s:", {"bulk": bulk_dir})
 
 
 def notify_bulk(
@@ -2776,7 +2610,7 @@ def notify_bulk(
 
     # Remove directory. Not necessary if emtpy
     try:
-        os.rmdir(dirname)
+        _remove_bulk_dir(dirname)
     except Exception as e:
         if not unhandled_uuids:
             logger.info(

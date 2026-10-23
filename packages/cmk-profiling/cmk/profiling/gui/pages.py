@@ -10,6 +10,7 @@ import pstats
 import tempfile
 from collections.abc import Collection
 from dataclasses import asdict
+from http import HTTPStatus
 from typing import override
 
 import cmk.utils.paths
@@ -29,8 +30,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.profiling.backend import (
     build_flamegraph_tree,
@@ -48,6 +47,7 @@ from cmk.shared_typing.profiling_flamegraph import (
 )
 from cmk.shared_typing.profiling_flamegraph import ProfilingFlamegraphData
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri_contextless, makeuri_contextless
@@ -121,7 +121,7 @@ class ModePerformanceProfiles(WatoMode[None]):
             i18n=_,
             url=makeactionuri_contextless(
                 request,
-                transactions.get(),
+                self._ctx.transactions.get(),
                 [("mode", self.name()), ("_action", "delete_all")],
                 filename="wato.py",
             ),
@@ -132,7 +132,7 @@ class ModePerformanceProfiles(WatoMode[None]):
             i18n=_,
             url=makeactionuri_contextless(
                 request,
-                transactions.get(),
+                self._ctx.transactions.get(),
                 [("mode", self.name()), ("_action", "housekeeping")],
                 filename="wato.py",
             ),
@@ -186,8 +186,8 @@ class ModePerformanceProfiles(WatoMode[None]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
-        if not transactions.check_transaction(request):
+        check_csrf_token(self._ctx.session, self._ctx.request, i18n=_)
+        if not self._ctx.transactions.check_transaction(request):
             return None
 
         _require_feature_enabled(config)
@@ -214,7 +214,7 @@ class ModePerformanceProfiles(WatoMode[None]):
                 _handle_profile_upload(store)
             except MKUserError as exc:
                 # Surface the parse error to the next page render via a query
-                # param; the Vue component turns it into a CmkAlertBox instead
+                # param; the Vue component turns it into a CmkAlert instead
                 # of the framework's default red error bar.
                 return redirect(
                     makeuri_contextless(
@@ -258,7 +258,7 @@ class ModePerformanceProfiles(WatoMode[None]):
                         i18n=_,
                         url=makeactionuri_contextless(
                             request,
-                            transactions.get(),
+                            self._ctx.transactions.get(),
                             [
                                 ("mode", self.name()),
                                 ("_action", "delete"),
@@ -401,7 +401,7 @@ class PageProfileData(Page):
         profile_path = store.get_profile(profile_id)
         response.set_content_type("application/json")
         if profile_path is None:
-            response.status_code = 404
+            response.status_code = HTTPStatus.NOT_FOUND
             response.set_data(json.dumps({"error": "Profile not found"}))
             return
 

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
+from http import HTTPStatus
 from typing import Self
 
 from httpx import Response
@@ -37,7 +38,7 @@ class ResponseInfo:
 
     @property
     def not_found(self) -> bool:
-        return self.status_code == 404
+        return self.status_code == HTTPStatus.NOT_FOUND
 
 
 def build_auth_cookies(

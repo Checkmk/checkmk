@@ -54,6 +54,7 @@ if sys.version_info < _MIN_PYTHON:
 
 os.chdir(_REPO_ROOT)
 sys.path.insert(0, str(_REPO_ROOT / "packages" / "cmk-dev-deploy"))
+sys.path.insert(0, str(_REPO_ROOT / "bazel" / "tools" / "devserver"))
 
 # Must come after the version guard: package modules use syntax that older
 # interpreters cannot even parse.

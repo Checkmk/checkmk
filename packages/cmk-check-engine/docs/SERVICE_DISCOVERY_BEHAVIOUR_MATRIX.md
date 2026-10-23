@@ -1384,8 +1384,8 @@ remote site" assertion carves it out on purpose. Recorded because an unexplained
 test is what invites the next reader to "fix" it.
 
 **What the argument rests on: the remote host is in the central site's configured hosts.**
-`set_all_processed_hosts` narrows its result with
-`intersection_update(self._all_configured_hosts)`, so a host absent from that set would land in no
+Narrowing the processed hosts (`matcher.py:RulesetOptimizer._apply_processed_hosts`) intersects the
+set with `self._all_configured_hosts`, so a host absent from that set would land in no
 candidate set at all and every rule would yield **silently zero matches** — the failure mode this
 has to rule out. It is ruled out because `_all_configured_hosts` is
 `frozenset(self._hosts_config.all_configured_hosts)`
@@ -1405,7 +1405,7 @@ them into the `Ruleset.analyse_ruleset` call that reaches this automation. One c
 beside one deliberately local is the design, not an oversight.
 
 **A scoping note, not part of the argument — `with_foreign_hosts` is a self-correcting fallback.**
-The handler also calls `set_all_processed_hosts({host_name})`
+The handler also runs inside `processed_hosts({host_name})`
 (`check_mk.py:_automation_analyze_service_rule_matches`), which makes `with_foreign_hosts` come out
 `False`. Either value is safe, and that is the point: `False` narrows the candidate scope to the
 processed set, `True` widens it to `_all_configured_hosts`, and the host under analysis is in both,
@@ -1420,13 +1420,17 @@ host assigned to another site — `_update_distributed_wato_file` (`watolib/site
 onto remotes. `matcher.py:get_host_ruleset` says as much in its own comment.
 
 Two cautions about that paragraph for anyone extending it. "Pinned to `{host_name}`" would be
-wrong: `set_all_processed_hosts` iterates the **previous** set rather than its argument
-(`matcher.py:set_all_processed_hosts`), so the result is the host plus the whole cluster topology.
-And the ruleset caches are keyed on the **boolean**, not on the scope — `__host_ruleset_cache` and
-`__service_ruleset_cache` are `dict[tuple[int, bool], …]` and `_all_matching_hosts_match_cache` is
-keyed `(condition, bool)` — while `set_all_processed_hosts` invalidates only `_folder_host_lookup`.
-Two different narrow scopes therefore share one cache key, which is safe today only because
-`_clear_caches_before_each_call` wipes both ruleset caches before every automation.
+wrong: narrowing adds the clusters of the host and the nodes of those clusters
+(`matcher.py:RulesetOptimizer._apply_processed_hosts`), so the result is the host plus its cluster
+relatives. And the ruleset caches are keyed on the **boolean**, not on the scope —
+`__host_ruleset_cache` and `__service_ruleset_cache` are `dict[tuple[int, bool], …]` and
+`_all_matching_hosts_match_cache` is keyed `(condition, bool)`. That is safe because every change
+of the scope goes through `matcher.py:RulesetOptimizer._change_scope`: whenever the new scope
+contains a host the current one does not — including when leaving `processed_hosts` restores a
+wider one — it clears these caches. When the new scope is a subset, the retained entries were
+computed over a superset of it, so they answer correctly for every host in it; they are only ever
+asked about the host in question. `_folder_host_lookup`, which holds the scope itself, is rebuilt
+on every change.
 
 **Two inputs are genuinely per-site, and only one of them is replicated.**
 
@@ -1904,7 +1908,7 @@ on the GUI path), the context manager's exit ordering (T2.13), and the endpoint 
 
 **Implemented.** 14 test functions, 59 cases, driving real requests through the Flask app with
 `ClientRegistry`. `update_service_phase` was added to `ServiceDiscoveryClient` in
-`tests/testlib/rest_api_client.py`, alongside the pre-existing `get_service_discovery_status`.
+`tests/testlib/unit/rest_api_client.py`, alongside the pre-existing `get_service_discovery_status`.
 Tier 4 needed the same helper on the other client, and now has it.
 
 **No `xfail(strict=True)` lives in this tier, and that is a decision rather than an omission.**
@@ -1959,11 +1963,11 @@ no-op passed. Harness in the session scratchpad, not committed.
 
 Uses the existing `central_site` / `remote_site` session fixtures. One identically-configured host
 per site (same agent output, so the same preview), everything driven through the REST API **on the
-central site**. `ServiceDiscoveryAPI` in `tests/testlib/openapi_session.py` carries
+central site**. `ServiceDiscoveryAPI` in `tests/testlib/system/openapi_session.py` carries
 `run_discovery`, `run_discovery_and_wait_for_completion`, `get_discovery_result`,
 `get_discovery_status`, `get_discovery_job_status` and — added with this tier —
 `update_service_phase`.
-`tests/testlib/rest_api_client.py` has its own, from Tier 3.
+`tests/testlib/unit/rest_api_client.py` has its own, from Tier 3.
 
 Two mechanics shape every row and are worth stating once. **The preview reads cached agent data**
 (`get_result` → `_get_discovery_preview(prevent_fetching=True)` → `use_only_cache=True`), so only
@@ -2135,7 +2139,7 @@ The **Status** column reflects the 2026-08-14 review; see §9 for detail.
 | B-F1  | `local_discovery{,_preview}` hard-code `LocalAutomationConfig()`                                                                                                                                                                                        | Mocking them erases the remote branch — the AC's forbidden pattern                                                                                                                                                                                                         | confirmed, drives test design                                                    |
 | B-F2  | 5 distinct remote asymmetries (pre-sync, central-only change, lossy wire format, double permission check, cross-site rule write)                                                                                                                        | R5 in the plan; must be re-verified at every phase exit                                                                                                                                                                                                                    | open                                                                             |
 | B-F3  | `update_service_phase` performs no job-active check; while a scan runs, `get_result` hands it an empty table, so the transition is `None` and the endpoint answers `204`                                                                                | A requested change is silently discarded. Low severity, but it shows _job-active_ being used as a proxy for _your table is still current_, in one entry point out of two                                                                                                   | ✅ **confirmed defect** → §10.18                                                 |
-| B-F4  | Rule matching (`analyze-service-rule-matches`) is central by design, not a missed parameter — it rests on the remote host being in the central site's `all_hosts`; the `set_all_processed_hosts` narrowing is a safe-either-way fallback, not a premise | Tier 2's dispatch assertion must carve it out; the residual discovered-label freshness gap is adjudicated                                                                                                                                                                  | ✅ **verified — not an asymmetry**; §6.1, §9.1                                   |
+| B-F4  | Rule matching (`analyze-service-rule-matches`) is central by design, not a missed parameter — it rests on the remote host being in the central site's `all_hosts`; the `processed_hosts()` scope narrowing is a safe-either-way fallback, not a premise | Tier 2's dispatch assertion must carve it out; the residual discovered-label freshness gap is adjudicated                                                                                                                                                                  | ✅ **verified — not an asymmetry**; §6.1, §9.1                                   |
 | B-F5  | Builtin host labels are per-site, never synced, and win the `labels_of_host` merge, so the central site reads `cmk/site = <central>` for a remote host                                                                                                  | Any GUI-side rule analysis for a host the site does not monitor mis-evaluates a `cmk/site` label condition — permanent, not a freshness window                                                                                                                             | ✅ **verified**; accepted risk, no ticket → §9.1                                 |
 | T3-F1 | `update_discovery_phase` never checks that the `ServiceID` it was given is in the check table, while the same request's `host_name` is validated by `HostConverter`                                                                                     | A phase change for a service that does not exist is answered `204` with nothing written — the endpoint treats "does not exist" as an error for one of its two identifiers and as success for the other                                                                     | ✅ **confirmed defect** → §10.19, low priority                                   |
 | §2.1  | `removed` is target-only (alive, required); `clustered_ignored` is unreachable; `legacy` / `legacy_ignored` aren't `DiscoveryState` members but are accepted by REST                                                                                    | `DiscoveryState` mixes one verb with 14 nouns; evidence for splitting source from target (Phase 3)                                                                                                                                                                         | `removed` **closed**; rest investigating                                         |
@@ -2922,7 +2926,7 @@ automation round trip for a host where nothing changed. Two spellings of the sam
    entry for which `effective_host != get_effective_host(owner, existing)` and appends the new
    services, and `_automation_set_autochecks_v2` calls it with
    `autochecks_owner == effective_host == the node` for any host that is not itself a cluster
-   (`cmk/base/automations/check_mk.py`). A clustered service's effective host is the _cluster_, so
+   (`cmk/plugins/checkmk/automations/checkmk.py`). A clustered service's effective host is the _cluster_, so
    its existing entry is carried over untouched — the write path's own `effective_host` filter is
    what protects it. The user asked to disable the service, was answered `204`, and the service goes
    on running on the cluster with nothing anywhere recording that the request was made.

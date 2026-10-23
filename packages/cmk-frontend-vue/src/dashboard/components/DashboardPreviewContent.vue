@@ -13,8 +13,12 @@ import { isContentWithScrollablePreview } from './DashboardContent/contentWithSc
 import type { ContentProps } from './DashboardContent/types.ts'
 
 const props = defineProps<ContentProps>()
-const effectiveContentProps = computed(() => {
-  return isContentWithScrollablePreview(props.content.type) ? { ...props, isPreview: true } : props
+const effectiveContentProps = computed((): ContentProps => {
+  const { url: _url, ...title } = props.general_settings.title
+  const withoutTitleLink = { ...props, general_settings: { ...props.general_settings, title } }
+  return isContentWithScrollablePreview(props.content.type)
+    ? { ...withoutTitleLink, isPreview: true }
+    : withoutTitleLink
 })
 </script>
 

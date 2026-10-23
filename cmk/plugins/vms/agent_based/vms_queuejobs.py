@@ -13,16 +13,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
-
-
-def discover_vms_queuejobs(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def check_vms_queuejobs(section: StringTable) -> CheckResult:
@@ -62,6 +57,6 @@ agent_section_vms_queuejobs = AgentSection(
 check_plugin_vms_queuejobs = CheckPlugin(
     name="vms_queuejobs",
     service_name="Queue Jobs",
-    discovery_function=discover_vms_queuejobs,
+    discovery_function=discover_one_service,
     check_function=check_vms_queuejobs,
 )

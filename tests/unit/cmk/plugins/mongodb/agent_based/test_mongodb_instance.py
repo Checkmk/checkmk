@@ -7,34 +7,11 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.agent_based.v2 import Result, State, StringTable
 from cmk.plugins.mongodb.agent_based.mongodb_instance import (
     check_mongodb_instance,
-    discover_mongodb_instance,
     parse_mongodb_instance,
 )
-
-
-@pytest.mark.parametrize(
-    "string_table, expected_discoveries",
-    [
-        (
-            [
-                ["mode", "Primary"],
-                ["address", "idbv0068.ww-intern.de:27017"],
-                ["version", "3.0.4"],
-                ["pid", "1999"],
-            ],
-            [Service()],
-        ),
-    ],
-)
-def test_discover_mongodb_instance(
-    string_table: StringTable, expected_discoveries: Sequence[Service]
-) -> None:
-    """Test discovery function for mongodb_instance check."""
-    parsed = parse_mongodb_instance(string_table)
-    assert list(discover_mongodb_instance(parsed)) == expected_discoveries
 
 
 @pytest.mark.parametrize(

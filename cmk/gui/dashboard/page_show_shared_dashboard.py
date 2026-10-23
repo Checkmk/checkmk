@@ -14,19 +14,21 @@ from typing import Any, override
 
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
+from cmk.gui.graphing import resolve_default_time_range_seconds
 from cmk.gui.graphing.openapi.models import ApiDiscoveredGraph
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageResult
-from cmk.gui.permissions import permission_registry
 from cmk.gui.token_auth import AuthToken, DashboardToken, TokenId
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperature_unit import TemperatureUnit
+from cmk.web.utils.request_cache import RequestCache
 
 from .api import convert_internal_relative_dashboard_to_api_model_dict, DashboardConstants
+from .api.model.widget_content.graph import EmbeddedCustomGraphContent
 from .dashlet.dashlets.status_helpers import make_mk_missing_data_error
 from .dashlet.registry import dashlet_registry
 from .exceptions import WidgetRenderError
@@ -58,6 +60,11 @@ class SharedDashboardPageComponents:
             raise ValueError("Referenced invalid dashboard token")
 
     @staticmethod
+    def default_time_range(config: Config) -> int:
+        """The site's default graph time range, the same for every viewer of a token."""
+        return resolve_default_time_range_seconds(config.graph_timeranges, None)
+
+    @staticmethod
     def html_section(title: str, page_properties: dict[str, Any], config: Config) -> None:
         html.body_start(
             title,
@@ -72,16 +79,22 @@ class SharedDashboardPageComponents:
         html.vue_component("cmk-shared-dashboard", data=page_properties)
 
 
-def _compute_widget_title(widget_config: DashletConfig) -> str:
+def _compute_widget_title(
+    widget_config: DashletConfig, request_cache: RequestCache[RequestCacheConfig]
+) -> str:
     widget_type = dashlet_registry[widget_config["type"]]
     widget = widget_type(widget_config)
-    return widget.compute_title()
+    return widget.compute_title(request_cache)
 
 
-def compute_widget_titles(board: DashboardConfig) -> dict[str, str]:
+def compute_widget_titles(
+    board: DashboardConfig, request_cache: RequestCache[RequestCacheConfig]
+) -> dict[str, str]:
     """Compute widget titles for all widgets in a dashboard."""
     return {
-        widget_id: _compute_widget_title(widget) for widget_id, widget in board["widgets"].items()
+        widget_id: _compute_widget_title(widget, request_cache)
+        for widget_id, widget in board["widgets"].items()
+        if widget["type"] in dashlet_registry
     }
 
 
@@ -105,7 +118,13 @@ def _compute_widget_graphs(
 
     return {
         "graphs": [
-            asdict(ApiDiscoveredGraph.from_built(built, temperature_unit))
+            # we empty the query-carrying fields on shared dashboards to not leak query information
+            {
+                **asdict(ApiDiscoveredGraph.from_built(built, temperature_unit)),
+                "internal": "",
+                "add_to_specification": None,
+                "add_type": None,
+            }
             for built in discovered.graphs
         ],
         "no_data_message": discovered.no_data_message,
@@ -122,8 +141,9 @@ def compute_widget_graphs(
     """Discover the graph shells of the dashboard's client-side rendered graph widgets.
 
     The browser of a shared dashboard never sees the filter values, so it cannot discover the
-    graphs itself. Errors are kept per widget so that one unresolvable graph does not take the
-    whole dashboard down.
+    graphs itself. Nor does it see the serialized graphs or their add-to specifications, which
+    carry the queries: `internal`, `add_to_specification` and `add_type` are empty. Errors are
+    kept per widget so that one unresolvable graph does not take the whole dashboard down.
     """
     dashboard_context = board.get("context")
     return {
@@ -163,22 +183,32 @@ def remove_sensitive_filter_information(board: DashboardConfig) -> None:
         widget["context"] = _remove_filter_values(widget.get("context", {}))
 
 
+def remove_embedded_graph_definitions(spec: dict[str, object]) -> None:
+    """Empties embedded custom graph definitions; the shared page renders from discovered shells."""
+    widgets = spec["widgets"]
+    assert isinstance(widgets, dict)
+    for widget in widgets.values():
+        content = widget["content"]
+        if content["type"] == EmbeddedCustomGraphContent.internal_type():
+            content["definition"] = {}
+
+
 def page_shared_dashboard(
     token_id: TokenId, token_issuer: UserId, token_details: DashboardToken, ctx: PageContext
 ) -> None:
-    user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+    request_cache = RequestCache(ctx.config)
     with impersonate_dashboard_token_issuer(
-        token_issuer, token_details, user_permissions
+        token_issuer, token_details, ctx.user_permissions
     ) as issuer:
         board = issuer.load_dashboard()
         SharedDashboardPageComponents.verify_dashboard_referenced_token(board, token_id)
 
-        widget_titles = compute_widget_titles(board)
+        widget_titles = compute_widget_titles(board, request_cache)
         # Must run before the filter values are stripped: discovery resolves the graphs from them.
         widget_graphs = compute_widget_graphs(
             board,
             debug=ctx.config.debug,
-            user_permissions=user_permissions,
+            user_permissions=ctx.user_permissions,
             temperature_unit=issuer.temperature_unit(ctx.config.default_temperature_unit),
         )
         remove_sensitive_filter_information(board)
@@ -187,7 +217,9 @@ def page_shared_dashboard(
         # so it needs the impersonation context
         internal_spec = convert_internal_relative_dashboard_to_api_model_dict(board)
 
-    title = visuals.visual_title("dashboard", board, board["context"])
+        remove_embedded_graph_definitions(internal_spec)
+
+    title = visuals.visual_title("dashboard", board, board["context"], request_cache=request_cache)
     dashboard_properties = {
         "spec": internal_spec,
         "name": token_details.dashboard_name,
@@ -202,5 +234,6 @@ def page_shared_dashboard(
         "dashboard_constants": DashboardConstants.dict_output(),
         "url_params": {"ifid": ctx.request.get_ascii_input("ifid")},
         "token_value": token_id,
+        "default_time_range": SharedDashboardPageComponents.default_time_range(ctx.config),
     }
     SharedDashboardPageComponents.html_section(title, page_properties, ctx.config)

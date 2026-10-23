@@ -13,12 +13,11 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     FixedLevelsT,
     render,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 type Section = float
 
@@ -35,10 +34,6 @@ agent_section_meraki_org_appliance_performance = AgentSection(
     name="cisco_meraki_org_appliance_performance",
     parse_function=parse_appliance_performance,
 )
-
-
-def discover_appliance_performance(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 class CheckParams(TypedDict):
@@ -60,7 +55,7 @@ check_plugin_cisco_meraki_org_appliance_performance = CheckPlugin(
     name="cisco_meraki_org_appliance_performance",
     service_name="Appliance performance",
     check_function=check_appliance_performance,
-    discovery_function=discover_appliance_performance,
+    discovery_function=discover_one_service,
     check_ruleset_name="cisco_meraki_org_appliance_performance",
     check_default_parameters={"levels_upper": ("fixed", (60, 80))},
 )

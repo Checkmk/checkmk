@@ -14,6 +14,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Container, Iterable, Mapping
 from dataclasses import dataclass
 from email.utils import formataddr
+from http import HTTPStatus
 from http.client import responses as http_responses
 from quopri import encodestring
 from typing import NamedTuple, NoReturn, override
@@ -26,11 +27,11 @@ from cmk.ccc import site
 from cmk.events.notification_result import NotificationContext
 from cmk.events.notify import find_wato_folder
 from cmk.events.notify_types import PluginNotificationContext
-from cmk.utils.escaping import escape, escape_permissive
 from cmk.utils.html import replace_state_markers
-from cmk.utils.http_proxy_config import deserialize_http_proxy_config
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config, redact_proxy_url
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.paths import omd_root
+from cmk.web.utils.escaping import escape, escape_permissive
 
 format_plugin_output = replace_state_markers
 
@@ -310,29 +311,17 @@ def get_bulk_notification_subject(contexts: list[dict[str, str]], hosts: Iterabl
 def retrieve_from_passwordstore(parameter: str | list[str]) -> str:
     if isinstance(parameter, list):
         if "explicit_password" in parameter:
-            value: str | None = parameter[-1]
-        else:
-            value = cmk.utils.password_store.extract(parameter[-2])
-            if value is None:
-                sys.stderr.write("Unable to retrieve password from passwordstore")  # type: ignore[unreachable]
-                sys.exit(2)
-    else:
-        # old valuespec style
-        values = parameter.split()
+            return parameter[-1]
+        return cmk.utils.password_store.extract(parameter[-2])
 
-        if len(values) == 2:
-            if values[0] == "store":
-                value = cmk.utils.password_store.extract(values[1])
-                if value is None:
-                    sys.stderr.write("Unable to retrieve password from passwordstore")  # type: ignore[unreachable]
-                    sys.exit(2)
-            else:
-                value = values[1]
-        else:
-            value = values[0]
+    # old valuespec style
+    values = parameter.split()
+    if len(values) == 2:
+        if values[0] == "store":
+            return cmk.utils.password_store.extract(values[1])
+        return values[1]
 
-    assert value is not None
-    return value
+    return values[0]
 
 
 def get_password_from_env_or_context(key: str, context: dict[str, str] | None = None) -> str:
@@ -354,9 +343,6 @@ def post_request(
 
     if not url:
         url = retrieve_from_passwordstore(context["PARAMETER_WEBHOOK_URL"])
-        if url is None:
-            sys.stderr.write("No URL was retrieved from passwordstore")  # type: ignore[unreachable]
-            sys.exit(2)
 
     serialized_proxy_config = context.get("PARAMETER_PROXY_URL")
 
@@ -374,7 +360,9 @@ def post_request(
             timeout=110,
         )
     except requests.exceptions.ProxyError:
-        sys.stderr.write("Cannot connect to proxy: %s\n" % serialized_proxy_config)
+        sys.stderr.write(
+            "Cannot connect to proxy: %s\n" % redact_proxy_url(serialized_proxy_config or "")
+        )
         sys.exit(2)
     except requests.exceptions.Timeout:
         # Not expose the url in the error, as it might contain sensitive information
@@ -385,7 +373,7 @@ def post_request(
 
 
 def process_by_status_code(
-    response: requests.Response, success_code: int | Container[int] = 200
+    response: requests.Response, success_code: int | Container[int] = HTTPStatus.OK
 ) -> int:
     status_code = response.status_code
     summary = f"{status_code}: {http_responses[status_code]}"

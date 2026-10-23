@@ -42,7 +42,6 @@ from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_ch
 from cmk.gui.form_specs.unstable import (
     Catalog,
     CommentTextArea,
-    id_validators,
     LegacyValueSpec,
 )
 from cmk.gui.htmllib.html import html
@@ -62,7 +61,7 @@ from cmk.gui.pages import PageContext
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, RenderMode
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Checkbox,
@@ -79,7 +78,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.valuespec import SetupSiteChoice as VSSetupSiteChoice
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
-from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
     Change,
@@ -102,9 +100,10 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.icons import IconNames, StaticIcon
-from cmk.web.utils.urls import is_allowed_url, makeuri_contextless
+from cmk.web.utils.urls import is_allowed_url, makeactionuri_contextless, makeuri_contextless
 
 DoValidate = bool
 
@@ -399,13 +398,15 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
             confirm_delete += "<br><br>" + delete_confirm_msg
         delete_url = make_confirm_delete_link(
             i18n=_,
-            url=make_action_link(
+            url=makeactionuri_contextless(
                 request,
+                transactions.get(),
                 [
                     ("mode", self._mode_type.list_mode_name()),
                     ("_action", "delete"),
                     ("_delete", ident),
                 ],
+                filename="wato.py",
             ),
             title=self._delete_confirm_title(nr),
             suffix=entry["title"],
@@ -652,7 +653,11 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
                         "The ID must be unique. It acts as internal key when objects reference it."
                     ),
                     prefill=form_specs.DefaultValue(self._default_id()),
-                    custom_validate=id_validators(Message("Unique ID should not be empty.")),
+                    custom_validate=(
+                        form_specs.validators.LengthInRange(
+                            min_value=1, error_msg=Message("Unique ID should not be empty.")
+                        ),
+                    ),
                     field_size=FieldSize.LARGE,
                 ),
             )
@@ -814,7 +819,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.transaction_valid(request):
             return redirect(mode_url(self._mode_type.list_mode_name()))

@@ -10,10 +10,9 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.bazel.agent_based.bazel_cache_metrics import (
     check_bazel_cache_impl,
-    discover_bazel_cache,
     parse_bazel_cache,
     Section,
 )
@@ -59,10 +58,6 @@ def _section() -> Section:
         "promhttp_metric_handler_requests_total_code_503": "0",
     }
     return parse_bazel_cache([[json.dumps(payload)]])
-
-
-def test_discover_bazel_cache(section: Section) -> None:
-    assert list(discover_bazel_cache(section)) == [Service()]
 
 
 def test_check_bazel_cache_status_is_ok(section: Section) -> None:

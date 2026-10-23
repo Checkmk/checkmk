@@ -5,7 +5,6 @@ py_library(
     srcs = ["index.py"],
     imports = ["../../.."],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
@@ -24,8 +23,11 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",
+        "//packages/cmk-livestatus-client",
+        "//packages/cmk-ruleset-matcher",
     ],
 )
 

@@ -28,13 +28,13 @@
 
 import dataclasses
 import json
-import typing
 from collections.abc import Mapping
 from typing import Any, assert_never, Final, final
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.utils.output_funnel import OutputFunnel
+from cmk.shared_typing.legacy_frontend_hooks import KnownClickAction, KnownTSFunction
 from cmk.web.htmllib.builder import HtmlBuilder
 from cmk.web.utils import escaping
 from cmk.web.utils.flashed_messages import MsgType
@@ -48,25 +48,7 @@ from .tag_rendering import (
     render_start_tag,
 )
 
-FinalJavaScript = typing.Callable[[], str] | str
-
-
-# See packages/cmk-frontend/src/js/index.ts:callable_functions
-KnownTSFunction = typing.Literal[
-    "render_qr_code",
-    "render_stats_table",
-    "insert_before",
-    "lock_and_redirect",
-    "confirm_on_form_leave",
-]
-
-
-# See packages/cmk-frontend/src/js/modules/click_actions.ts:click_actions
-# The values of this Literal and the available keys in the TS dictionary MUST MATCH.
-KnownClickAction = typing.Literal[
-    "add_bookmark",
-    "switch_master_state",
-]
+TSFunctionArguments = Mapping[str, object]
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -80,7 +62,8 @@ class ClickAction:
 
     To add a new click action:
 
-    1. Add its name to ``KnownClickAction`` above.
+    1. Add its name to ``known_click_action`` in
+       packages/cmk-shared-typing/source/legacy_frontend_hooks.json.
     2. Implement the action under the same name in the ``click_actions``
        dictionary in packages/cmk-frontend/src/js/modules/click_actions.ts.
     3. Pass a ``ClickAction`` to an HTML helper supporting it (e.g.
@@ -101,12 +84,6 @@ class ClickAction:
                 dict(self.arguments)
             )
         return attrs
-
-
-def maybecall(entry: FinalJavaScript) -> str:
-    if callable(entry):
-        return entry()
-    return entry
 
 
 def _dump_standard_compliant_json(data: object) -> str:
@@ -160,7 +137,6 @@ class HTMLWriter:
         self.render_headfoot = True
         self.link_target: str | None = None
         self.browser_reload = 0.0
-        self._final_javascript: list[FinalJavaScript] = []
 
     def write_text_permissive(self, text: HTMLContent) -> None:
         """Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped."""
@@ -230,18 +206,8 @@ class HTMLWriter:
     def render_javascript(code: str, **attrs: HTMLTagAttributeValue) -> HTML:
         return HtmlBuilder.render_javascript(code, **attrs)
 
-    def final_javascript(self, code: FinalJavaScript) -> None:
-        self._final_javascript.append(code)
-
-    def final_javascript_code(self) -> str:
-        return "\n".join(maybecall(entry) for entry in self._final_javascript)
-
-    def write_final_javascript(self) -> None:
-        if not self._final_javascript:
-            return
-        self.javascript(self.final_javascript_code())
-
     def javascript(self, code: str, **attrs: HTMLTagAttributeValue) -> None:
+        """Blocked by the strict CSP, use call_ts_function() instead"""
         self.write_html(HTMLWriter.render_javascript(code, **attrs))
 
     def js_entrypoint(self, data: str, *, type_: str, **attrs: HTMLTagAttributeValue) -> None:
@@ -728,10 +694,12 @@ class HTMLWriter:
     def call_ts_function(
         self,
         *,
-        container: str,
+        container: str = "div",
         function_name: KnownTSFunction,
-        arguments: dict[str, str] | None = None,
+        arguments: TSFunctionArguments | None = None,
     ) -> None:
+        """CSP-compatible replacement for an inline script, dispatched by
+        packages/cmk-frontend/src/js/modules/ts_function_dispatcher.ts"""
         self.open_ts_container(
             container=container, function_name=function_name, arguments=arguments
         )
@@ -742,11 +710,13 @@ class HTMLWriter:
         *,
         container: str,
         function_name: KnownTSFunction,
-        arguments: dict[str, str] | None = None,
+        arguments: TSFunctionArguments | None = None,
         **kwargs: Any,
     ) -> None:
         json_arguments: str
-        json_arguments = "{}" if arguments is None else _dump_standard_compliant_json(arguments)
+        json_arguments = (
+            "{}" if arguments is None else _dump_standard_compliant_json(dict(arguments))
+        )
         self.write_html(
             render_start_tag(
                 container,

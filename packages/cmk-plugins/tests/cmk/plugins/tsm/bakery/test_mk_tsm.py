@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.bakery.v2_unstable import OS, Plugin, PluginConfig, Secret
+from cmk.bakery.v2 import OS, Plugin, PluginConfig, Secret
 from cmk.plugins.tsm.bakery.mk_tsm import bakery_plugin_mk_tsm
 
 _CONFIG_LINES = ["# Credentials for dsmadmc:", "TSM_USER=admin", "TSM_PASSWORD=mysecret"]

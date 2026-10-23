@@ -142,12 +142,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def parse_solaris_fmadm(string_table: StringTable) -> Mapping[str, Any]:
@@ -183,10 +182,6 @@ agent_section_solaris_fmadm = AgentSection(
 )
 
 
-def discover_solaris_fmadm(section: Mapping[str, Any]) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_solaris_fmadm(section: Mapping[str, Any]) -> CheckResult:
     if not section:
         yield Result(state=State.OK, summary="No faults detected")
@@ -210,6 +205,6 @@ def check_solaris_fmadm(section: Mapping[str, Any]) -> CheckResult:
 check_plugin_solaris_fmadm = CheckPlugin(
     name="solaris_fmadm",
     service_name="FMD Status",
-    discovery_function=discover_solaris_fmadm,
+    discovery_function=discover_one_service,
     check_function=check_solaris_fmadm,
 )

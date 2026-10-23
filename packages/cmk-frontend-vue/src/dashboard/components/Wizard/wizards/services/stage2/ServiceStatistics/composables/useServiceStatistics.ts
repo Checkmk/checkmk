@@ -8,6 +8,10 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import {
+  type UseContextualLink,
+  useContextualLink
+} from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
+import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
@@ -23,7 +27,9 @@ import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
 const CONTENT_TYPE = 'service_stats'
 
-export interface UseServiceStatistics extends UseWidgetHandler, UseWidgetVisualizationOptions {}
+export interface UseServiceStatistics extends UseWidgetHandler, UseWidgetVisualizationOptions {
+  contextualLink: UseContextualLink<ServiceStatisticsContent>
+}
 
 export const useServiceStatistics = async (
   filters: ConfiguredFilters,
@@ -43,16 +49,29 @@ export const useServiceStatistics = async (
     titleMacros
   } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings, CONTENT_TYPE)
 
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE
+      ? (currentSpec.content as ServiceStatisticsContent)
+      : null
+  const contextualLink = useContextualLink<ServiceStatisticsContent>(
+    constants.widgets[CONTENT_TYPE]!.contextual_link!,
+    currentContent?.contextual_link
+  )
+
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
-    return validateTitle()
+    const isTitleValid = validateTitle()
+    const isLinkValid = contextualLink.validate()
+    return isTitleValid && isLinkValid
   }
 
   const _generateContent = (): ServiceStatisticsContent => {
-    return {
-      type: CONTENT_TYPE
+    const content: ServiceStatisticsContent = {
+      type: CONTENT_TYPE,
+      contextual_link: contextualLink.contextualLink.value ?? { type: 'default' }
     }
+    return content
   }
 
   const _computeWidgetProps = async (): Promise<WidgetProps> => {
@@ -79,7 +98,14 @@ export const useServiceStatistics = async (
   }
 
   watch(
-    [title, showTitle, showTitleBackground, titleUrlEnabled, titleUrl],
+    [
+      contextualLink.contextualLink,
+      title,
+      showTitle,
+      showTitleBackground,
+      titleUrlEnabled,
+      titleUrl
+    ],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -89,6 +115,8 @@ export const useServiceStatistics = async (
   await _updateWidgetProps()
 
   return {
+    contextualLink,
+
     title,
     showTitle,
     showTitleBackground,

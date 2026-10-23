@@ -4,35 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import assert_never
 
+from cmk.graphing_engine import (
+    NonConvertibleUnit,
+    TemperatureUnit,
+    Unit,
+    unit_conversion,
+)
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.unit_formatter import (
-    AutoPrecision,
-    DecimalFormatter,
-    EngineeringScientificFormatter,
-    IECFormatter,
-    NotationFormatter,
-    SIFormatter,
-    StandardScientificFormatter,
-    StrictPrecision,
-    TimeFormatter,
-)
-from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat as SharedUnitFormat
+from cmk.web.utils.unit_formatter import notation_formatter, NotationFormatter
 
-from ._unit_specification import (
-    ConvertibleUnitSpecification,
-    DecimalNotation,
-    EngineeringScientificNotation,
-    IECNotation,
-    NonConvertibleUnitSpecification,
-    SINotation,
-    StandardScientificNotation,
-    TimeNotation,
-)
+from ._unit_format import unit_to_unit_format
 
 
 @dataclass(frozen=True)
@@ -41,139 +26,36 @@ class UserSpecificUnit:
     conversion: Callable[[float], float]
 
 
-@dataclass(frozen=True)
-class _Conversion:
-    symbol: str
-    converter: Callable[[float], float]
+def user_unit_format(
+    unit: Unit | NonConvertibleUnit, temperature_unit: TemperatureUnit
+) -> tuple[SharedUnitFormat, Callable[[float], float]]:
+    unit_format = unit_to_unit_format(unit)
+    conversion = unit_conversion(unit, temperature_unit)
+    return (
+        SharedUnitFormat(
+            notation=unit_format.notation,
+            symbol=conversion.symbol,
+            precision=unit_format.precision,
+            convertible=False,
+        ),
+        conversion.converter,
+    )
 
 
 def user_specific_unit(
-    unit_specification: ConvertibleUnitSpecification | NonConvertibleUnitSpecification,
+    unit: Unit | NonConvertibleUnit,
     temperature_unit: TemperatureUnit,
 ) -> UserSpecificUnit:
-    noop_conversion = _Conversion(
-        symbol=unit_specification.notation.symbol,
-        converter=lambda v: v,
-    )
-    conversion = (
-        _temperature_conversion(
-            unit_specification.notation.symbol, temperature_unit, noop_conversion
-        )
-        if isinstance(unit_specification, ConvertibleUnitSpecification)
-        else noop_conversion
-    )
-    formatter: NotationFormatter
-    match unit_specification.notation:
-        case DecimalNotation():
-            formatter = DecimalFormatter(
-                symbol=conversion.symbol,
-                precision=unit_specification.precision,
-            )
-        case SINotation():
-            formatter = SIFormatter(
-                symbol=conversion.symbol,
-                precision=unit_specification.precision,
-            )
-        case IECNotation():
-            formatter = IECFormatter(
-                symbol=conversion.symbol,
-                precision=unit_specification.precision,
-            )
-        case StandardScientificNotation():
-            formatter = StandardScientificFormatter(
-                symbol=conversion.symbol,
-                precision=unit_specification.precision,
-            )
-        case EngineeringScientificNotation():
-            formatter = EngineeringScientificFormatter(
-                symbol=conversion.symbol,
-                precision=unit_specification.precision,
-            )
-        case TimeNotation():
-            formatter = TimeFormatter(
-                symbol=conversion.symbol,
-                precision=unit_specification.precision,
-            )
-        case _:
-            assert_never(unit_specification.notation)
-
+    unit_format, conversion = user_unit_format(unit, temperature_unit)
     return UserSpecificUnit(
-        formatter=formatter,
-        conversion=conversion.converter,
+        formatter=notation_formatter(
+            unit_format.notation,
+            unit_format.symbol,
+            unit_format.precision.type,
+            unit_format.precision.digits,
+        ),
+        conversion=conversion,
     )
-
-
-def user_specific_unit_from_unit_format(
-    unit_format: SharedUnitFormat, temperature_unit: TemperatureUnit
-) -> UserSpecificUnit:
-    """Same shape as ``user_specific_unit``, keyed off the shared ``UnitFormat`` - a notation
-    string and a ``convertible`` flag - instead of the pydantic Convertible/NonConvertible unit
-    specification. ``UnitFormat`` is what PNG and the Vue graph both already carry."""
-    noop_conversion = _Conversion(symbol=unit_format.symbol, converter=lambda v: v)
-    conversion = (
-        _temperature_conversion(unit_format.symbol, temperature_unit, noop_conversion)
-        if unit_format.convertible is not False
-        else noop_conversion
-    )
-    precision: AutoPrecision | StrictPrecision = (
-        AutoPrecision(digits=unit_format.precision.digits)
-        if unit_format.precision.type == "auto"
-        else StrictPrecision(digits=unit_format.precision.digits)
-    )
-    formatter: NotationFormatter
-    match unit_format.notation:
-        case "decimal":
-            formatter = DecimalFormatter(symbol=conversion.symbol, precision=precision)
-        case "si":
-            formatter = SIFormatter(symbol=conversion.symbol, precision=precision)
-        case "iec":
-            formatter = IECFormatter(symbol=conversion.symbol, precision=precision)
-        case "standard_scientific":
-            formatter = StandardScientificFormatter(symbol=conversion.symbol, precision=precision)
-        case "engineering_scientific":
-            formatter = EngineeringScientificFormatter(
-                symbol=conversion.symbol, precision=precision
-            )
-        case "time":
-            formatter = TimeFormatter(symbol=conversion.symbol, precision=precision)
-        case other:
-            assert_never(other)
-
-    return UserSpecificUnit(formatter=formatter, conversion=conversion.converter)
-
-
-def _degree_celsius_conversion(temperature_unit: TemperatureUnit) -> _Conversion:
-    match temperature_unit:
-        case TemperatureUnit.CELSIUS:
-            return _Conversion(symbol="°C", converter=lambda c: c)
-        case TemperatureUnit.FAHRENHEIT:
-            return _Conversion(symbol="°F", converter=lambda c: c * 1.8 + 32)
-        case other:
-            assert_never(other)
-
-
-def _degree_fahrenheit_conversion(temperature_unit: TemperatureUnit) -> _Conversion:
-    match temperature_unit:
-        case TemperatureUnit.CELSIUS:
-            return _Conversion(symbol="°C", converter=lambda f: (f - 32) / 1.8)
-        case TemperatureUnit.FAHRENHEIT:
-            return _Conversion(symbol="°F", converter=lambda f: f)
-        case other:
-            assert_never(other)
-
-
-_TEMPERATURE_CONVERSION_COMPUTER: Mapping[str, Callable[[TemperatureUnit], _Conversion]] = {
-    "°C": _degree_celsius_conversion,
-    "°F": _degree_fahrenheit_conversion,
-}
-
-
-def _temperature_conversion(
-    symbol: str, temperature_unit: TemperatureUnit, fallback: _Conversion
-) -> _Conversion:
-    if (compute_conversion := _TEMPERATURE_CONVERSION_COMPUTER.get(symbol)) is None:
-        return fallback
-    return compute_conversion(temperature_unit)
 
 
 def get_temperature_unit(user: LoggedInUser, temperature_unit: str) -> TemperatureUnit:

@@ -21,6 +21,7 @@ from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.wato._livestatus import ConfigVariableSiteLivestatusTCP
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    ActivationContext,
     ConfigDomainName,
     ConfigDomainRegistry,
     ConfigVariable,
@@ -179,7 +180,9 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         return []
 
     @override
@@ -310,7 +313,9 @@ class ConfigDomainApache(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         try:
             self._write_config_file()
 
@@ -371,9 +376,9 @@ class ConfigDomainApache(ABCConfigDomain):
                 continue  # Skip the file written by this config domain
 
             for line in config_file.open(encoding="utf-8"):
-                if line.lstrip().startswith(varname):
-                    raw_value = line.split()[1]
-                    value = conv_func(raw_value)
+                parts = line.split()
+                if len(parts) >= 2 and parts[0] == varname:
+                    value = conv_func(parts[1])
 
         return value
 
@@ -436,7 +441,9 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         try:
             self._write_config_file()
 

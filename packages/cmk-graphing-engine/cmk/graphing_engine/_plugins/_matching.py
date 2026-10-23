@@ -1,0 +1,251 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import itertools
+from collections.abc import Callable, Container, Mapping, Sequence
+from dataclasses import dataclass
+
+from cmk.graphing.v1 import graphs as graphs_v1
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
+from cmk.graphing_engine._data._fetched import ScalarKind
+from cmk.graphing_engine._data._naming import MetricName
+from cmk.graphing_engine._data._units import CurveAttributes
+from cmk.graphing_engine._graphs._drawn_curves import drawn_curves
+from cmk.graphing_engine._graphs._graph import Curve, Graph, Line, Rule, Stack
+from cmk.graphing_engine._quantities._quantity import fetch_leaves
+from cmk.graphing_engine._rrd._fetch import FetchMetricNamesProtocol
+from cmk.graphing_engine._rrd._metrics import rrd_metric_of, RRDMetric, ScalarOf
+from cmk.graphing_engine._rrd._naming import PredictPrefix, Service
+
+from ._attributes import metric_attributes, scalar_attributes
+from ._graph_parsing import build_single_quantity, parse_graph_from_api, QuantityBuilderProtocol
+from ._types import ApiGraph, drawn_metric_names_of_graph
+
+
+def _matches(
+    graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
+    names: Sequence[MetricName],
+    available: Container[MetricName],
+) -> bool:
+    if any(MetricName(name) in available for name in graph.conflicting):
+        return False
+    optional = frozenset(MetricName(name) for name in graph.optional)
+    required = [name for name in names if name not in optional]
+    if required:
+        return all(name in available for name in required)
+    return any(name in available for name in names)
+
+
+type _MatchableParts = Sequence[
+    tuple[graphs_v1.Graph | graphs_v2_unstable.Graph, Sequence[MetricName]]
+]
+
+
+def _matchable_parts(graph: ApiGraph) -> _MatchableParts:
+    match graph:
+        case graphs_v1.Graph() | graphs_v2_unstable.Graph():
+            return [(graph, drawn_metric_names_of_graph(graph))]
+        case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
+            return [
+                (graph.lower, drawn_metric_names_of_graph(graph.lower)),
+                (graph.upper, drawn_metric_names_of_graph(graph.upper)),
+            ]
+
+
+def _with_predictive_lines(
+    graph: Graph,
+    service: Service,
+    available: Container[MetricName],
+    localizer: Callable[[str], str],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+) -> Graph:
+    inverse_by_metric: dict[MetricName, bool] = {}
+    for drawn in drawn_curves(graph.stacks, graph.lines):
+        for metric in fetch_leaves(drawn.curve.quantity):
+            if isinstance(metric, RRDMetric):
+                inverse_by_metric.setdefault(metric.metric_name, drawn.inverse)
+
+    added: dict[MetricName, Line] = {}
+    for base, inverse in inverse_by_metric.items():
+        for predictive in (
+            MetricName(f"{PredictPrefix.UPPER}{base}"),
+            MetricName(f"{PredictPrefix.LOWER}{base}"),
+        ):
+            if predictive in available and predictive not in added:
+                added[predictive] = Line(
+                    curve=Curve(
+                        quantity=rrd_metric_of(service, predictive),
+                        attributes=metric_attributes(predictive, localizer, registered_metrics),
+                    ),
+                    inverse=inverse,
+                )
+    if not added:
+        return graph
+    return Graph(
+        name=graph.name,
+        title=graph.title,
+        kind=graph.kind,
+        vertical_range=graph.vertical_range,
+        omit_zero_curves=graph.omit_zero_curves,
+        stacks=graph.stacks,
+        lines=[*graph.lines, *added.values()],
+        rules=graph.rules,
+        regions=graph.regions,
+    )
+
+
+_THRESHOLD_KINDS = (
+    ScalarKind.WARNING,
+    ScalarKind.CRITICAL,
+    ScalarKind.LOWER_WARNING,
+    ScalarKind.LOWER_CRITICAL,
+)
+
+
+def threshold_rules(
+    metric: RRDMetric, attributes: CurveAttributes, localizer: Callable[[str], str]
+) -> Sequence[Rule]:
+    return [
+        Rule(
+            curve=Curve(
+                quantity=ScalarOf(metric=metric, scalar_kind=scalar_kind),
+                attributes=scalar_attributes(attributes, scalar_kind, localizer),
+            ),
+            inverse=False,
+        )
+        for scalar_kind in _THRESHOLD_KINDS
+    ]
+
+
+@dataclass(frozen=True)
+class RequestedGraph:
+    name: str
+
+
+@dataclass(frozen=True)
+class RequestedMetric:
+    metric_name: MetricName
+
+
+type GraphRequest = RequestedGraph | RequestedMetric
+
+
+def _single_metric_graph(
+    name: MetricName,
+    services: Sequence[Service],
+    *,
+    kind: str,
+    localizer: Callable[[str], str],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+    quantity_builder: QuantityBuilderProtocol,
+) -> Graph:
+    attributes = metric_attributes(name, localizer, registered_metrics)
+    return Graph(
+        name=name,
+        title=attributes.title,
+        kind=kind,
+        stacks=[
+            Stack(
+                members=[
+                    Curve(
+                        quantity=quantity_builder(
+                            [rrd_metric_of(service, name) for service in services]
+                        ),
+                        attributes=attributes,
+                    )
+                ],
+                inverse=False,
+            )
+        ],
+        rules=(
+            threshold_rules(rrd_metric_of(services[0], name), attributes, localizer)
+            if len(services) == 1
+            else ()
+        ),
+    )
+
+
+def _matches_any_service(
+    plugin: ApiGraph, names_by_service: Mapping[Service, frozenset[MetricName]]
+) -> bool:
+    return any(
+        _matches(part, names, service_names)
+        for service_names in names_by_service.values()
+        for part, names in _matchable_parts(plugin)
+    )
+
+
+def _claimed_names(plugins: Sequence[ApiGraph]) -> frozenset[MetricName]:
+    return frozenset(
+        name for plugin in plugins for _part, names in _matchable_parts(plugin) for name in names
+    )
+
+
+def _fallback_names(
+    available: frozenset[MetricName], claimed: frozenset[MetricName]
+) -> Sequence[MetricName]:
+    return [
+        name for name in sorted(available - claimed) if not name.startswith(PredictPrefix.UPPER)
+    ]
+
+
+def build_matched_graphs(
+    *,
+    localizer: Callable[[str], str],
+    fetch_metric_names: FetchMetricNamesProtocol,
+    kind: str,
+    registered_graphs: Sequence[ApiGraph],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+    quantity_builder: QuantityBuilderProtocol = build_single_quantity,
+    request: GraphRequest | None = None,
+) -> Sequence[Graph]:
+    names_by_service = fetch_metric_names()
+    services = list(names_by_service)
+    available = frozenset(itertools.chain.from_iterable(names_by_service.values()))
+
+    if isinstance(request, RequestedMetric):
+        plugins: Sequence[ApiGraph] = []
+        fallback = [request.metric_name] if request.metric_name in available else []
+    else:
+        matched = [
+            plugin for plugin in registered_graphs if _matches_any_service(plugin, names_by_service)
+        ]
+        plugins = [plugin for plugin in matched if request is None or plugin.name == request.name]
+        fallback = [
+            name
+            for name in _fallback_names(available, _claimed_names(matched))
+            if request is None or name == request.name
+        ]
+    graphs = [
+        *(
+            parse_graph_from_api(
+                plugin,
+                services,
+                localizer,
+                registered_metrics,
+                kind=kind,
+                quantity_builder=quantity_builder,
+            )
+            for plugin in plugins
+        ),
+        *(
+            _single_metric_graph(
+                name,
+                services,
+                kind=kind,
+                localizer=localizer,
+                registered_metrics=registered_metrics,
+                quantity_builder=quantity_builder,
+            )
+            for name in fallback
+        ),
+    ]
+    if len(services) != 1:
+        return graphs
+    return [
+        _with_predictive_lines(graph, services[0], available, localizer, registered_metrics)
+        for graph in graphs
+    ]

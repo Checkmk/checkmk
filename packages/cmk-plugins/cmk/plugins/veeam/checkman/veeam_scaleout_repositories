@@ -1,0 +1,31 @@
+title: Veeam: Scale-out repository
+agents: special
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors a scale-out backup repository of a Veeam Backup &
+ Replication server, collected via the Veeam special agent. It reports the
+ number of configured performance extents and their statuses, the
+ description, whether the capacity tier and archive tier are configured
+ and enabled, and the placement policy.
+
+ This check does not report capacity. A scale-out repository has no
+ capacity of its own; capacity lives on its extents, which appear as
+ separate {Backup repository} services.
+
+ Each performance extent can report zero or more statuses at the same
+ time. {Normal}, {Pending} and {Sealed} are {OK} by default. {Evacuate},
+ {Maintenance}, {ResyncRequired} and {TenantEvacuating} are {WARN} by
+ default. Every status is individually configurable. An unrecognised
+ status makes the extent {UNKNOWN}. The service state is the worst state
+ of all its extents.
+
+ A scale-out repository with no performance extents configured is {WARN}
+ by default; this is also configurable.
+
+discovery:
+ One service is created for each scale-out repository reported by the API.
+
+item:
+ The name of the scale-out repository.

@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence, Set
-from typing import Annotated, Self
+from http import HTTPStatus
+from typing import Annotated, Final, Self
 
 from annotated_types import Interval
 from pydantic import PlainValidator
@@ -45,6 +46,7 @@ from ._family import MONITOR_SERVICES_FAMILY
 from ._filters import parse_as_livestatus_filter, ServiceFilterNode
 from ._modes import build_service_modes_by_id, ServiceModeInfo
 from ._perfometer import ServicePerfometer
+from ._reschedule_offer import build_reschedule_offer, ServiceRescheduleOffer
 from ._validators import parse_service_search_query, parse_service_sort_options
 
 # View-local limits, deliberately not coupled to the global soft/hard query limit settings so they
@@ -52,6 +54,9 @@ from ._validators import parse_service_search_query, parse_service_sort_options
 _MIN_HOST_SVC_LIMIT = 0
 _MAX_HOST_SVC_LIMIT = 5_000
 _DEFAULT_LIMIT = 1_000
+
+# The row limits the services of a host page offers: the default first, the maximum last.
+LIMIT_TIERS: Final = (_DEFAULT_LIMIT, _MAX_HOST_SVC_LIMIT)
 
 # Requesting no sorter is not the same as requesting no order: the repository reads an empty list
 # as "the page default", which leads with Checkmk's own services.
@@ -88,8 +93,11 @@ class HostServiceEntry:
         ),
         example=1752405510,
     )
-    last_state_change: UnixTimestamp = api_field(
-        description="Unix timestamp of the service's last state change",
+    last_state_change: UnixTimestamp | None = api_field(
+        description=(
+            "Unix timestamp of the service's last state change. Null for services that have "
+            "never been checked, i.e. those still pending their first check."
+        ),
         example=1752405540,
     )
     modes: list[ServiceModeInfo] | ApiOmitted = api_field(
@@ -120,10 +128,21 @@ class HostServiceEntry:
         example=["all"],
         default_factory=ApiOmitted,
     )
+    groups: list[str] | ApiOmitted = api_field(
+        description="Service groups this service is in. Omitted when it is in none.",
+        example=["databases"],
+        default_factory=ApiOmitted,
+    )
     perfometer: ServicePerfometer | ApiOmitted = api_field(
         description=(
             "Perf-O-Meter of the service's performance data. Omitted when the service reports no "
             "performance data or none of it matches a Perf-O-Meter definition."
+        ),
+        default_factory=ApiOmitted,
+    )
+    reschedule: ServiceRescheduleOffer | ApiOmitted = api_field(
+        description=(
+            "What rescheduling this service does. Omitted for users who may not reschedule."
         ),
         default_factory=ApiOmitted,
     )
@@ -146,6 +165,7 @@ class HostServiceEntry:
             contact_groups=service.contact_groups
             if service.contact_groups is not None
             else ApiOmitted(),
+            groups=service.groups if service.groups is not None else ApiOmitted(),
             perfometer=ServicePerfometer.from_perf_data(
                 service.perf_data,
                 service.check_command,
@@ -153,6 +173,7 @@ class HostServiceEntry:
                 service_name=service.name,
             )
             or ApiOmitted(),
+            reschedule=build_reschedule_offer(service) or ApiOmitted(),
         )
 
 
@@ -204,8 +225,8 @@ class ServicesRequestBody:
     ] = api_field(
         description=(
             "Search text, matched against the service name, its summary, and every text field "
-            "asked for through `fields` (labels, tags, contacts, contact_groups). Omit or pass "
-            "empty string to return all services."
+            "asked for through `fields` (labels, tags, contacts, contact_groups, groups). Omit or "
+            "pass empty string to return all services."
         ),
         example="CPU",
         default_factory=ApiOmitted,
@@ -283,7 +304,7 @@ def _handle_list_services(
 ) -> HostServicesResponse:
     if not host_services_repo.host_exists(hostname):
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="The requested host was not found",
             detail=f"The host {hostname!r} was not found on site {site_id!r}",
         ) from None
@@ -333,12 +354,12 @@ ENDPOINT_LIST_HOST_SERVICES = VersionedEndpoint(
                     permissions.OkayToIgnorePerm("mkeventd.seeall"),
                     permissions.OkayToIgnorePerm("general.ignore_hard_limit"),
                     permissions.OkayToIgnorePerm("general.see_crash_reports"),
-                    permissions.OkayToIgnorePerm("view.host"),
+                    permissions.OkayToIgnorePerm("action.reschedule"),
                 ]
             )
         )
     ),
     doc=EndpointDoc(family=MONITOR_SERVICES_FAMILY.name),
-    behavior=EndpointBehavior(skip_locking=True),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_services)},
 )

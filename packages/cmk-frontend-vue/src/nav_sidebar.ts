@@ -4,10 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 // Dedicated entry point for the page chrome that is present on (nearly) every
-// page: the main navigation, the sidebar and the loading transition. Keeping
-// these in their own small bundle decouples them from the large `main.ts`
-// bundle, so they can be registered and become interactive without waiting for
-// the heavy content apps (dashboard, forms, ...) to download and execute.
+// page: the main navigation, the sidebar, the AI assistant panel and the loading
+// transition. Keeping these in their own small bundle decouples them from the
+// large `main.ts` bundle, so they can be registered and become interactive
+// without waiting for the heavy content apps (dashboard, forms, ...) to download
+// and execute.
 import initCmkUi from 'cmk-ui-library/lib/initCmkUi'
 
 import '@/assets/variables.css'
@@ -15,11 +16,14 @@ import { translationLoader } from '@/translationLoader'
 
 import LoadingTransition from './loading-transition/LoadingTransition.vue'
 import MainMenuApp from './main-menu/MainMenuApp.vue'
+import navSidebarElements from './navSidebarElements'
 import SidebarApp from './sidebar/SidebarApp.vue'
 
 // Inject monolithic translation catalog from cmk-frontend-vue.
-const { defineCmkComponent } = initCmkUi({ translationLoader })
+const { defineCmkComponent, defineCmkElements } = initCmkUi({ translationLoader })
 
 defineCmkComponent('cmk-main-menu', MainMenuApp)
 defineCmkComponent('cmk-sidebar', SidebarApp)
 defineCmkComponent('cmk-loading-transition', LoadingTransition, { appprops: { fullPage: true } })
+
+defineCmkElements(navSidebarElements)

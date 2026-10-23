@@ -2,6 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import json
 from collections.abc import Generator
 from contextlib import contextmanager
 
@@ -44,7 +45,5 @@ def loading_transition_onclick(
     title: str | None = None,
 ) -> str:
     template_value = "null" if template is None else f"'{template.value}'"
-    if title:
-        return f"cmk.utils.makeLoadingTransition({template_value}, {delay_ms}, '{title}');"
-
-    return f"cmk.utils.makeLoadingTransition({template_value}, {delay_ms});"
+    title_value = json.dumps(title) if title else "undefined"
+    return f"cmk.utils.makeLoadingTransition({template_value}, {delay_ms}, {title_value}, event);"

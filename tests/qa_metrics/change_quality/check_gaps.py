@@ -10,7 +10,7 @@ Intended as a cheap daily cron on a *full* clone. It answers one question:
 ``cmk_change_tested`` for this branch?" -- i.e. did the incremental nightly (or
 a too-shallow CI checkout) silently fall behind?
 
-Unlike ``push.py`` this does **no** component / gerrit / cmk-components work: it
+Unlike ``push.py`` this does **no** component ownership work: it
 only compares the *set of werk_ids* the pusher would derive against the set
 already stored. That keeps it fast and dependency-light (one git walk + one DB
 query), and -- because it reuses ``walk_werk_adds`` and the same ``.werks`` +
@@ -37,8 +37,8 @@ from typing import Final
 
 import psycopg
 
-from cmk.werks.tool.models import Class
-from cmk.werks.tool.utils import load_raw_files
+from cmk.werks.flavor.cmk.models import Class
+from cmk.werks.flavor.cmk.precompile import load_raw_files
 from tests.qa_metrics.change_quality import walk
 from tests.qa_metrics.change_quality.repo import read_branch_version
 from tests.qa_metrics.change_quality.rows import CHANGE_TESTED

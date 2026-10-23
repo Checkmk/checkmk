@@ -1,0 +1,13 @@
+diff --git a/mibs/NET-SNMP-PASS-MIB.txt b/mibs/NET-SNMP-PASS-MIB.txt
+index ee0d55e..7f256a7 100644
+--- a/mibs/NET-SNMP-PASS-MIB.txt
++++ b/mibs/NET-SNMP-PASS-MIB.txt
+@@ -5,7 +5,7 @@ NET-SNMP-PASS-MIB DEFINITIONS ::= BEGIN
+ --
+
+ IMPORTS
+-    MODULE-IDENTITY, OBJECT-TYPE, TimeTicks, IpAddress, Opaque,
++    MODULE-IDENTITY, OBJECT-TYPE, TimeTicks, IpAddress, Opaque, Counter64,
+           Counter32, Gauge32, Integer32     FROM SNMPv2-SMI
+     SnmpAdminString                         FROM SNMP-FRAMEWORK-MIB
+     netSnmpExamples                         FROM NET-SNMP-EXAMPLES-MIB

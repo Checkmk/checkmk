@@ -6,12 +6,8 @@
 from collections.abc import Sequence
 
 from cmk.agent_based.v2 import CheckPlugin, SNMPSection, SNMPTree, StringTable
-from cmk.plugins.printer.lib import (
-    check_printer_pages_types,
-    DETECT_PRINTER_PAGES,
-    discovery_printer_pages,
-    Section,
-)
+from cmk.agent_based.v3_unstable import discover_one_service
+from cmk.plugins.printer.lib import check_printer_pages_types, DETECT_PRINTER_PAGES, Section
 
 
 def parse_printer_pages(string_table: Sequence[StringTable]) -> Section | None:
@@ -39,6 +35,6 @@ snmp_section_printer_pages = SNMPSection(
 check_plugin_printer_pages = CheckPlugin(
     name="printer_pages",
     service_name="Pages",
-    discovery_function=discovery_printer_pages,
+    discovery_function=discover_one_service,
     check_function=check_printer_pages_types,
 )

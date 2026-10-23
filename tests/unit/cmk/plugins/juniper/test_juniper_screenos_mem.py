@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.juniper.agent_based import juniper_mem_screenos_trpz as juniper_screenos_mem
 from cmk.plugins.juniper.agent_based.juniper_mem_screenos_trpz import Section
 
@@ -13,15 +13,6 @@ def test_parse_section_parses_data_and_calculates_total_correctly() -> None:
     assert juniper_screenos_mem.parse_juniper_screenos_mem([["157756272", "541531248"]]) == Section(
         used=157756272, total=699287520
     )
-
-
-def test_discover_juniper_screenos_mem() -> None:
-    """Test discovery for juniper_screenos_mem"""
-    assert list(
-        juniper_screenos_mem.discover_juniper_mem_generic(Section(used=157756272, total=699287520))
-    ) == [
-        Service(),
-    ]
 
 
 def test_check_juniper_screenos_mem_ok() -> None:

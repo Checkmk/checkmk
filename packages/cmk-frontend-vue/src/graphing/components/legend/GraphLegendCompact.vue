@@ -9,7 +9,7 @@ import CmkTooltip, {
   CmkTooltipProvider,
   CmkTooltipTrigger
 } from 'cmk-ui-library/components/CmkTooltip'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
 import MetricAttributeGroups from '../MetricAttributeGroups.vue'
@@ -215,8 +215,12 @@ function onNameClick(item: CompactLegendItem): void {
               </component>
             </span>
           </CmkTooltipTrigger>
-          <CmkTooltipContent v-if="item.attributes.length > 0" use-portal>
-            <!-- Styled here, not on CmkTooltipContent: its portalled root loses our scope. -->
+          <CmkTooltipContent
+            v-if="item.attributes.length > 0"
+            variant="content"
+            :title="untranslated(item.title)"
+            use-portal
+          >
             <MetricAttributeGroups
               class="graphing-graph-legend-compact__attributes"
               :attributes="item.attributes"
@@ -324,10 +328,5 @@ function onNameClick(item: CompactLegendItem): void {
   max-width: 420px;
   max-height: 50vh;
   overflow-y: auto;
-  padding: var(--dimension-5);
-  background: var(--ux-theme-2);
-  border: 1px solid var(--font-color);
-  border-radius: var(--border-radius);
-  color: var(--font-color);
 }
 </style>

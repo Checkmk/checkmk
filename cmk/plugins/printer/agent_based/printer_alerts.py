@@ -9,14 +9,13 @@ from typing import Final, NamedTuple
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.printer.lib import DETECT_PRINTER
 
 
@@ -190,10 +189,6 @@ snmp_section_printer_alerts = SNMPSection(
 )
 
 
-def discovery_printer_alerts(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_printer_alerts(section: Section) -> CheckResult:
     if not section:
         yield Result(state=State.OK, summary="No alerts present")
@@ -248,6 +243,6 @@ def check_printer_alerts(section: Section) -> CheckResult:
 check_plugin_printer_alerts = CheckPlugin(
     name="printer_alerts",
     service_name="Alerts",
-    discovery_function=discovery_printer_alerts,
+    discovery_function=discover_one_service,
     check_function=check_printer_alerts,
 )

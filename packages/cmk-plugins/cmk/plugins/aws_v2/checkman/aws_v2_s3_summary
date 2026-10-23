@@ -1,0 +1,17 @@
+title: AWS v2 S3: Summary
+agents: aws_v2
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the combined size of all AWS S3 buckets
+ and the size of the largest bucket.
+
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS) v2}.
+
+ There are no default levels. Upper levels for the combined
+ bucket size are configurable via the rule "AWS v2/S3 Buckets".
+
+discovery:
+ One service is created.

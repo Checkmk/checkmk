@@ -10,6 +10,7 @@ import pytest
 import cmk.utils.paths
 from cmk.ccc.version import Edition
 from cmk.plugins.checkmk.rulesets import cmk_update_agent
+from cmk.rulesets.v1.form_specs import Dictionary, SingleChoice
 
 
 @pytest.fixture(name="config_dir")
@@ -103,3 +104,43 @@ def test_returns_false_when_remote_site_flags_are_false(
 )
 def test_migrate_edition(value: object, expected: str) -> None:
     assert cmk_update_agent._migrate_edition(value) == expected  # noqa: SLF001
+
+
+@pytest.fixture(name="activation")
+def _activation(monkeypatch: pytest.MonkeyPatch) -> SingleChoice:
+    # The rule prefills the site of the update server with the name of this site.
+    monkeypatch.setenv("OMD_SITE", "NO_SITE")
+    rule_form = cmk_update_agent.rule_spec_cmk_update_agent.parameter_form()
+    assert isinstance(rule_form, Dictionary)
+    activation = rule_form.elements["activated"].parameter_form
+    assert isinstance(activation, SingleChoice)
+    return activation
+
+
+def _migrate(activation: SingleChoice, value: object) -> object:
+    assert activation.migrate is not None
+    return activation.migrate(value)
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        pytest.param("enabled", "compatible", id="enabled"),
+        pytest.param("disabled", "disabled", id="disabled"),
+    ],
+)
+def test_migration_maps_the_activation_of_checkmk_2_5(
+    activation: SingleChoice, value: object, expected: str
+) -> None:
+    assert _migrate(activation, value) == expected
+
+
+def test_every_activation_entry_survives_the_migration(activation: SingleChoice) -> None:
+    names = [element.name for element in activation.elements]
+
+    assert [_migrate(activation, name) for name in names] == names
+
+
+def test_migration_rejects_an_unknown_activation(activation: SingleChoice) -> None:
+    with pytest.raises(ValueError):
+        _migrate(activation, "unknown")

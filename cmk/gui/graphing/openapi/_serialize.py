@@ -2,13 +2,16 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Callable
 from typing import assert_never
 
 from cmk.graphing_engine import (
     ConsolidationFunction,
+    converted_graph,
+    drawn_curves,
+    DrawnCurve,
     EvaluatedCurve,
     EvaluatedGraph,
+    NonConvertibleUnit,
     SeriesAttributes,
     TimeSeries,
     Unit,
@@ -17,12 +20,13 @@ from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.i18n import _
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
-from .._drawn_curves import DrawnCurve, serialize_drawn_curves
 from .._source import FetchDiagnostics
-from .._unit_format import apply_temperature_unit, unit_to_unit_format
+from .._unit_format import unit_to_unit_format
 from .models import (
+    ApiAreaRender,
     ApiConsolidation,
     ApiHorizontalLine,
+    ApiLineRender,
     ApiMetric,
     ApiMetricAttribute,
     ApiMetricMetadata,
@@ -54,57 +58,46 @@ def api_time_range_from_engine(time_range: EngineTimeRange) -> ApiTimeRange:
     return ApiTimeRange(start=time_range.start, end=time_range.end, step=time_range.step)
 
 
-def _api_unit_and_conversion(
-    unit: Unit, temperature_unit: TemperatureUnit
-) -> tuple[ApiUnitFormat, Callable[[float], float]]:
-    """The unit to label the response with, and the converter its values must go through."""
-    unit_format, conversion = apply_temperature_unit(unit_to_unit_format(unit), temperature_unit)
-    return ApiUnitFormat.from_shared(unit_format), conversion
+def _api_unit(converted: Unit) -> ApiUnitFormat:
+    return ApiUnitFormat.from_shared(
+        unit_to_unit_format(
+            NonConvertibleUnit(notation=converted.notation, precision=converted.precision)
+        )
+    )
 
 
 def horizontal_lines_to_api(
-    evaluated: EvaluatedGraph, temperature_unit: TemperatureUnit
+    converted: EvaluatedGraph,
 ) -> list[ApiHorizontalLine]:
     lines: list[ApiHorizontalLine] = []
-    for rule in evaluated.rules:
-        unit, conversion = _api_unit_and_conversion(rule.attributes.unit, temperature_unit)
-        # Converted before mirroring: conversion belongs to the value, the sign to the drawing.
-        value = conversion(rule.value)
+    for rule in converted.rules:
         lines.append(
             ApiHorizontalLine(
                 name=rule.id,
                 title=rule.attributes.title,
-                value=-value if rule.inverse else value,
-                unit=unit,
+                value=-rule.value if rule.inverse else rule.value,
+                unit=_api_unit(rule.attributes.unit),
                 color=rule.attributes.color,
             )
         )
     return lines
 
 
-def _converted_bound(
-    bound: TimeSeries | None, conversion: Callable[[float], float]
-) -> list[float | None] | None:
-    if bound is None:
-        return None
-    return [None if value is None else conversion(value) for value in bound.values]
+def _bound_values(bound: TimeSeries | None) -> list[float | None] | None:
+    return None if bound is None else list(bound.values)
 
 
-def shaded_regions_to_api(
-    evaluated: EvaluatedGraph, temperature_unit: TemperatureUnit
-) -> list[ApiShadedRegion]:
+def shaded_regions_to_api(converted: EvaluatedGraph) -> list[ApiShadedRegion]:
     regions = []
-    for region in evaluated.regions:
-        # A region is drawn against the same axis as the curves, so it converts with them.
-        _unit, conversion = _api_unit_and_conversion(region.attributes.unit, temperature_unit)
+    for region in converted.regions:
         regions.append(
             ApiShadedRegion(
                 name=region.id,
                 title=region.attributes.title,
                 color=region.attributes.color,
                 data_points=ApiRegionBounds(
-                    lower=_converted_bound(region.lower, conversion),
-                    upper=_converted_bound(region.upper, conversion),
+                    lower=_bound_values(region.lower),
+                    upper=_bound_values(region.upper),
                 ),
             )
         )
@@ -121,23 +114,26 @@ def _series_attributes_to_api(attributes: SeriesAttributes) -> list[ApiMetricAtt
     ]
 
 
+def _render_to_api(drawn: DrawnCurve[EvaluatedCurve]) -> ApiMetricRender:
+    if drawn.stack is None:
+        return ApiLineRender(shape="line", inverse=drawn.inverse, hidden=False)
+    return ApiAreaRender(shape="area", stack=drawn.stack, inverse=drawn.inverse, hidden=False)
+
+
 def curve_to_api_metric(
-    drawn: DrawnCurve[EvaluatedCurve], temperature_unit: TemperatureUnit
+    drawn: DrawnCurve[EvaluatedCurve],
 ) -> ApiMetric:
     curve = drawn.curve
-    unit, conversion = _api_unit_and_conversion(curve.attributes.unit, temperature_unit)
     return ApiMetric(
         metadata=ApiMetricMetadata(
             name=curve.id,
             title=curve.attributes.title,
-            unit=unit,
+            unit=_api_unit(curve.attributes.unit),
             color=curve.attributes.color,
             attributes=_series_attributes_to_api(curve.series_attributes),
         ),
-        render=ApiMetricRender(stack=drawn.stack, inverse=drawn.mirrored, hidden=drawn.hidden),
-        data_points=[
-            None if value is None else conversion(value) for value in curve.time_series.values
-        ],
+        render=_render_to_api(drawn),
+        data_points=list(curve.time_series.values),
     )
 
 
@@ -155,22 +151,18 @@ def diagnostics_to_warnings(diagnostics: FetchDiagnostics) -> list[str]:
 def evaluated_to_response(
     evaluated: EvaluatedGraph,
     *,
-    fallback_time_range: EngineTimeRange,
     diagnostics: FetchDiagnostics,
     temperature_unit: TemperatureUnit,
 ) -> GraphFetchResponse:
-    time_range, metrics = serialize_drawn_curves(
-        evaluated,
-        lambda drawn: curve_to_api_metric(drawn, temperature_unit),
-        fallback_time_range=fallback_time_range,
-        include_reference=True,
-    )
+    converted = converted_graph(evaluated, temperature_unit, None)
     return GraphFetchResponse(
-        title=evaluated.title,
-        time_range=api_time_range_from_engine(time_range),
-        metrics=metrics,
-        horizontal_lines=horizontal_lines_to_api(evaluated, temperature_unit),
-        shaded_regions=shaded_regions_to_api(evaluated, temperature_unit),
+        title=converted.title,
+        time_range=api_time_range_from_engine(converted.time_range),
+        metrics=[
+            curve_to_api_metric(drawn) for drawn in drawn_curves(converted.stacks, converted.lines)
+        ],
+        horizontal_lines=horizontal_lines_to_api(converted),
+        shaded_regions=shaded_regions_to_api(converted),
         warnings=diagnostics_to_warnings(diagnostics),
         errors=list(diagnostics.errors),
     )

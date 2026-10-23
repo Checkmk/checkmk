@@ -6,14 +6,14 @@
 from collections.abc import Callable, Sequence
 from typing import TypeVar
 
-from cmk.rulesets.internal.form_specs import StringAutocompleter
-from cmk.rulesets.v1 import Help, Title
-from cmk.rulesets.v1.form_specs import DefaultValue, InputHint
-from cmk.shared_typing.vue_formspec_components import (
+from cmk.rulesets.internal.form_specs import (
     Autocompleter,
     AutocompleterData,
     AutocompleterParams,
+    StringAutocompleter,
 )
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import InputHint, Prefill
 
 T = TypeVar("T")
 
@@ -23,7 +23,7 @@ def create_config_host_name(
     help_text: Help | None = None,
     custom_validate: Sequence[Callable[[str], object]] | None = None,
     migrate: Callable[[object], str] | None = None,
-    prefill: DefaultValue[str] | None = None,
+    prefill: Prefill[str] | None = None,
 ) -> StringAutocompleter:
     return StringAutocompleter(
         title=title,

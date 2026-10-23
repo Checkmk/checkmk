@@ -5,26 +5,21 @@
  */
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/vue'
-import { Response } from 'cmk-ui-library/components/CmkSuggestions'
 import FormAutocompleter from 'cmk-ui-library/components/FormAutocompleter/FormAutocompleter.vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse, delay, http } from 'msw'
 
-vi.mock(
-  import('cmk-ui-library/components/FormAutocompleter/autocompleter'),
-  async (importOriginal) => {
-    const mod = await importOriginal() // type is inferred
-    return {
-      ...mod,
-      fetchSuggestions: vi.fn(async (_config: unknown, value: string) => {
-        await new Promise((resolve) => setTimeout(resolve, 100))
-        return new Response(
-          [
-            { name: 'os:windows', title: 'OS Windows' },
-            { name: 'os:linux', title: 'OS Linux' }
-          ].filter((item) => item.name.includes(value))
-        )
-      })
-    }
-  }
+const CHOICES = [
+  { id: 'os:windows', value: 'OS Windows' },
+  { id: 'os:linux', value: 'OS Linux' }
+]
+
+useMswServer(
+  http.post('*/api/internal/objects/autocomplete/*', async ({ request }) => {
+    const { value } = (await request.json()) as { value: string }
+    await delay(100)
+    return HttpResponse.json({ choices: CHOICES.filter(({ id }) => id.includes(value)) })
+  })
 )
 
 describe('FormAutocompleter', () => {
@@ -47,7 +42,7 @@ describe('FormAutocompleter', () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Search...',
-        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'rest_autocomplete' },
         size: 7,
         id: 'test',
         'onUpdate:modelValue': (option: string | null) => {
@@ -76,7 +71,7 @@ describe('FormAutocompleter', () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
-        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'rest_autocomplete' },
         size: 7,
         id: 'test'
       }
@@ -97,7 +92,7 @@ describe('FormAutocompleter', () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
-        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'rest_autocomplete' },
         size: 7,
         id: 'test'
       }
@@ -118,7 +113,7 @@ describe('FormAutocompleter', () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
-        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'rest_autocomplete' },
         size: 7,
         id: 'test'
       }
@@ -140,7 +135,7 @@ describe('FormAutocompleter', () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
-        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'rest_autocomplete' },
         size: 7,
         id: 'test',
         'onUpdate:modelValue': (option: string | null) => {
@@ -167,7 +162,7 @@ describe('FormAutocompleter', () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
-        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'rest_autocomplete' },
         size: 7,
         id: 'test',
         'onUpdate:modelValue': (option: string | null) => {

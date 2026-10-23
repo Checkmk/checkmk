@@ -18,7 +18,20 @@ void main() {
                 // against its local DB, covering host-local paths. The
                 // remote dir is unique per build so overlapping runs on
                 // the shared host cannot clobber each other's staging.
-                bat("set \"CI_ORA_WIN_REMOTE_DIR=C:\\ci\\%BUILD_TAG%\" && call run.cmd --remote-host");
+                try {
+                    // Capture the output into an artifact so the CV result
+                    // table can link it (RESULT_CHECK_FILE_PATTERN in
+                    // stages.yml); cmd redirection has no tee, so type the
+                    // file afterwards to keep it in the build log too.
+                    bat("set \"CI_ORA_WIN_REMOTE_DIR=C:\\ci\\%BUILD_TAG%\" && call run.cmd --remote-host > mk-oracle-win.txt 2>&1");
+                } finally {
+                    bat("if exist mk-oracle-win.txt type mk-oracle-win.txt");
+                    archiveArtifacts(
+                        allowEmptyArchive: true,
+                        artifacts: "mk-oracle-win.txt",
+                        fingerprint: true,  // mandatory to work with ci-artifacts
+                    );
+                }
             }
         }
     }

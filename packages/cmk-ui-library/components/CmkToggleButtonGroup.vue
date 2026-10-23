@@ -13,6 +13,7 @@ export type ToggleButtonOption = {
   label: string
   value: string
   icon?: OneColorIcons | undefined
+  rotateIcon?: number | undefined
   tooltip?: TranslatedString | undefined
   disabled?: boolean | string | undefined
   disabledTooltip?: TranslatedString | undefined
@@ -62,6 +63,7 @@ function setSelectedOption(value: string) {
       }"
       :aria-label="`Toggle ${option.label}`"
       :aria-pressed="isSelected(option.value)"
+      :data-label="option.icon === undefined ? option.label : undefined"
       :disabled="isDisabled(option.disabled)"
       :title="isDisabled(option.disabled) ? option.disabledTooltip : option.tooltip"
       @click.prevent="setSelectedOption(option.value)"
@@ -69,6 +71,7 @@ function setSelectedOption(value: string) {
       <CmkMultitoneIcon
         v-if="option.icon"
         :name="option.icon"
+        :rotate="option.rotateIcon"
         primary-color="font"
         size="small"
         aria-hidden="true"
@@ -102,13 +105,28 @@ function setSelectedOption(value: string) {
   align-items: center;
   justify-content: center;
   height: var(--dimension-9);
+  margin: 0;
   padding: 0 var(--dimension-4);
-  border: 1px solid var(--toggle-button-group-inactive-border-color);
+  border: 1px solid var(--border-color-subtle);
   border-radius: 0;
-  background-color: var(--toggle-button-group-inactive-bg-color);
-  color: var(--toggle-button-group-inactive-text-color);
+  background-color: var(--background-base);
+  color: var(--font-color);
   font-size: var(--font-size-normal);
   font-weight: var(--font-weight-default);
+  letter-spacing: unset;
+}
+
+/* Reserves the bold width, so that selecting an option does not resize the group. */
+.cmk-toggle-button-group__toggle-option[data-label] {
+  flex-direction: column;
+
+  &::after {
+    content: attr(data-label);
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    font-weight: var(--font-weight-bold);
+  }
 }
 
 .cmk-toggle-button-group__toggle-option:first-child {
@@ -141,9 +159,9 @@ function setSelectedOption(value: string) {
 .cmk-toggle-button-group__selected {
   height: var(--dimension-10);
   border-radius: var(--toggle-button-group-radius);
-  border-color: var(--toggle-button-group-border-color);
-  background-color: var(--toggle-button-group-active-bg-color);
-  color: var(--toggle-button-group-active-text-color);
+  border-color: var(--border-color-default);
+  background-color: var(--background-subtle);
+  color: var(--font-color);
   font-weight: var(--font-weight-bold);
 }
 
@@ -161,26 +179,26 @@ function setSelectedOption(value: string) {
 }
 
 .cmk-toggle-button-group__toggle-option:is(.cmk-toggle-button-group__disabled) {
-  color: var(--toggle-button-group-disabled-text-color);
+  color: var(--font-color-disabled);
   cursor: not-allowed;
-  background-color: var(--toggle-button-group-inactive-bg-color);
+  background-color: var(--background-base);
 }
 
 .cmk-toggle-button-group__toggle-option:is(.cmk-toggle-button-group__disabled:hover) {
-  background-color: var(--toggle-button-group-inactive-bg-color);
+  background-color: var(--background-base);
 }
 
 /* stylelint-disable selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
 .cmk-toggle-button-group__toggle-option:is(.cmk-toggle-button-group__disabled)
   :deep(.cmk-multitone-icon) {
-  --icon-primary-color: var(--toggle-button-group-disabled-text-color);
+  --icon-primary-color: var(--font-color-disabled);
 }
 /* stylelint-enable selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
 
 .cmk-toggle-button-group__toggle-option:hover:not(
     :is(.cmk-toggle-button-group__selected, .cmk-toggle-button-group__disabled)
   ) {
-  background-color: rgb(from var(--toggle-button-group-hover-bg-color) r g b / 60%);
+  background-color: rgb(from var(--background-hover) r g b / 60%);
 }
 
 .cmk-toggle-button-group__toggle-option:not(.cmk-toggle-button-group__selected)

@@ -9,25 +9,25 @@ UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 
 metric_kube_memory_allocatable = metrics.Metric(
     name="kube_memory_allocatable",
-    title=Title("Allocatable"),
+    title=Title("Allocatable memory"),
     unit=UNIT_BYTES,
     color=metrics.Color.PURPLE,
 )
 metric_kube_memory_limit = metrics.Metric(
     name="kube_memory_limit",
-    title=Title("Limits"),
+    title=Title("Memory limits"),
     unit=UNIT_BYTES,
     color=metrics.Color.GREEN,
 )
 metric_kube_memory_request = metrics.Metric(
     name="kube_memory_request",
-    title=Title("Requests"),
+    title=Title("Memory requests"),
     unit=UNIT_BYTES,
     color=metrics.Color.BLUE,
 )
 metric_kube_memory_usage = metrics.Metric(
     name="kube_memory_usage",
-    title=Title("Usage"),
+    title=Title("Memory usage"),
     unit=UNIT_BYTES,
     color=metrics.Color.CYAN,
 )

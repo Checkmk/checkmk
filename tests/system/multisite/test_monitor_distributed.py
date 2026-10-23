@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Distributed behaviour of the All hosts feed and the host overview.
+"""Distributed behaviour of the All hosts list and the host overview.
 
-The feed asks every connected monitoring site for its own capped slice, then
+The list asks every connected monitoring site for its own capped slice, then
 merges the slices and re-applies both the cap and the counts centrally. Only a
 real central/remote pair exercises the fan-out, the cut and the merge together:
 the request-level doubles synthesise merged rows rather than receiving them, so
@@ -15,19 +15,20 @@ invisible below this tier.
 
 import logging
 from collections.abc import Iterator, Mapping
+from http import HTTPStatus
 from typing import cast, TypedDict
 
 import pytest
 import requests
 
 from tests.testlib.common.utils import wait_until
-from tests.testlib.openapi_session import APIVersion
-from tests.testlib.site import Site
+from tests.testlib.system.openapi_session import APIVersion
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
 # The names interleave across the two sites on purpose: sorted ascending they
-# alternate central, remote, central, ..., so a feed that returned one site's
+# alternate central, remote, central, ..., so a list that returned one site's
 # rows and then the other's is visibly wrong rather than accidentally right.
 # They differ by a trailing letter rather than a number, so the endpoint's
 # natural ordering and a plain lexicographic one agree and the expected order
@@ -40,6 +41,17 @@ _ALL_HOSTS = sorted(_CENTRAL_HOSTS + _REMOTE_HOSTS)
 # Larger than the fixture's host count, so a query carrying it is never the one
 # doing the cutting when a test is about something else.
 _NO_CUT = len(_ALL_HOSTS) * 10
+
+# A check against an address with no agent fails fast, and the forced check is
+# waited for on the owning site's own livestatus rather than across the central's
+# proxy. The allowance is for a loaded CI machine, not for the check itself.
+_CHECK_TIMEOUT = 60
+
+# How often a host is asked again for services still reporting no check result.
+# One round settles them; the retries are for a service the core had not listed
+# yet when the round was assembled, which nothing else would force before its own
+# interval -- two hours, for the discovery service.
+_FORCE_ROUNDS = 3
 
 
 @pytest.fixture(name="hosts_per_site", scope="module")
@@ -60,22 +72,29 @@ def _hosts_per_site(central_site: Site, remote_site: Site) -> Iterator[Mapping[s
                 hostname=name,
                 attributes={"ipaddress": "127.0.0.1", "site": site_id},
             )
-        central_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
-        # Activating the configuration is not the same as every site's core having
-        # reloaded, so the hosts reach the merged feed a moment later. Every test
-        # below depends on all six being there, so wait for that, not for the
-        # activation alone.
+        central_site.activate_changes_and_wait_for_core_reload(
+            allow_foreign_changes=True, reload_core_on_sites=(central_site, remote_site)
+        )
+        # Both cores hold the hosts now, but the merged host list is read through the
+        # central's livestatus proxy, which reaches the remote a moment later. Every
+        # test below depends on all six being there, so wait for that too.
         wait_until(
-            lambda: (
-                {
-                    host["name"]
-                    for host in _list_hosts(central_site, limit=_NO_CUT, q=_PREFIX)["hosts"]
-                }
-                == set(_ALL_HOSTS)
-            ),
+            lambda: set(_listed_hosts(central_site)) == set(_ALL_HOSTS),
             timeout=120,
             interval=2,
-            condition_name="all six test hosts visible in the merged feed",
+            condition_name="all six test hosts visible in the merged host list",
+        )
+        # Visible is not the same as checked. The hosts have no agent, so their
+        # services start PENDING and turn CRIT the moment the first check lands.
+        # A test that reads the same counts twice would otherwise straddle that
+        # transition and see the two reads disagree (CMK-39284), so settle the
+        # counts here, once, before any test reads them.
+        _check_pending_services_now(central_site, remote_site, owner)
+        wait_until(
+            lambda: _all_services_have_been_checked(central_site),
+            timeout=120,
+            interval=2,
+            condition_name="no test host still reporting pending services in the merged host list",
         )
         yield owner
     finally:
@@ -121,7 +140,7 @@ def _list_hosts(
     sort: list[str] | None = None,
     filters: Mapping[str, object] | None = None,
 ) -> _HostsPage:
-    """Ask ``site`` for the merged host feed, scoped to this module's hosts.
+    """Ask ``site`` for the merged host list, scoped to this module's hosts.
 
     ``q`` scopes the query so the counts are independent of whatever else the
     session-scoped sites happen to be monitoring.
@@ -134,12 +153,65 @@ def _list_hosts(
     if filters is not None:
         body["filter"] = filters
     response = site.openapi.post("monitor/hosts", api_version=APIVersion.INTERNAL, json=body)
-    assert response.status_code == 200, f"{response.status_code}: {response.text}"
+    assert response.status_code == HTTPStatus.OK, f"{response.status_code}: {response.text}"
     return cast(_HostsPage, response.json())
 
 
 def _names(page: _HostsPage) -> list[str]:
     return [host["name"] for host in page["hosts"]]
+
+
+def _listed_hosts(central_site: Site) -> dict[str, _HostRow]:
+    """This module's hosts as the merged host list currently reports them, keyed by name."""
+    return {
+        host["name"]: host for host in _list_hosts(central_site, limit=_NO_CUT, q=_PREFIX)["hosts"]
+    }
+
+
+def _check_pending_services_now(
+    central_site: Site, remote_site: Site, owner: Mapping[str, str]
+) -> None:
+    """Check every not-yet-checked service now, on the site that monitors it.
+
+    Asked of the central, whose livestatus reaches every connected site: a
+    remote's own REST API rejects us, because the central's users replace its
+    own on activation. The forced check goes to the core actually holding the
+    service. Leaving it to that core's schedule is no option -- the discovery
+    service the sample configuration adds is checked every two hours. No
+    expected state is passed, because with no agent these services settle on
+    CRIT, and all this waits for is that they were checked at all.
+
+    Asked again after each round rather than forcing the first answer and
+    trusting it: a service the core had not listed yet would otherwise never be
+    forced by anyone, and the wait behind this one can only observe.
+    """
+    sites = {central_site.id: central_site, remote_site.id: remote_site}
+    for host_name, site_id in owner.items():
+        for _round in range(_FORCE_ROUNDS):
+            if not (pending := sorted(central_site.get_host_services(host_name, pending=True))):
+                break
+            # The difference between "the counts were settled already" and "this
+            # is what settled them" is the first thing worth knowing if they ever
+            # disagree again, so it is logged before the checks, which may raise.
+            logger.info(
+                "Forcing a first check of %(host_name)s: %(pending)r",
+                {"host_name": host_name, "pending": pending},
+            )
+            for service_name in pending:
+                sites[site_id].schedule_check(host_name, service_name, wait_timeout=_CHECK_TIMEOUT)
+
+
+def _all_services_have_been_checked(central_site: Site) -> bool:
+    """Whether all six hosts are in the host list and none still counts an unchecked service.
+
+    Read through the merged host list rather than off each site, because the list is
+    what the tests read: a result already checked on the remote still has to
+    cross the central's livestatus proxy before it shows up here.
+    """
+    rows = _listed_hosts(central_site)
+    return set(rows) == set(_ALL_HOSTS) and not any(
+        row["num_services_pending"] for row in rows.values()
+    )
 
 
 def _only_site(site_id: str) -> Mapping[str, object]:
@@ -269,7 +341,7 @@ def test_the_overview_reaches_the_site_that_owns_the_host(
 
     response = _host_overview(central_site, host_name, remote_site.id)
 
-    assert response.status_code == 200, f"{response.status_code}: {response.text}"
+    assert response.status_code == HTTPStatus.OK, f"{response.status_code}: {response.text}"
     overview = response.json()
     assert overview["name"] == host_name
     assert overview["site_id"] == remote_site.id
@@ -290,7 +362,7 @@ def test_the_overview_and_the_feed_agree_on_a_remote_host_service_counts(
     host_name = _REMOTE_HOSTS[0]
 
     response = _host_overview(central_site, host_name, remote_site.id)
-    assert response.status_code == 200, f"{response.status_code}: {response.text}"
+    assert response.status_code == HTTPStatus.OK, f"{response.status_code}: {response.text}"
     overview = response.json()
     row = next(
         host
@@ -306,7 +378,7 @@ def test_the_overview_and_the_feed_agree_on_a_remote_host_service_counts(
         "crit": row["num_services_crit"],
         "unknown": row["num_services_unknown"],
         "pending": row["num_services_pending"],
-    }, "The overview and the merged feed disagree about the remote host's services"
+    }, "The overview and the merged host list disagree about the remote host's services"
     assert counts["total"] == (
         counts["ok"] + counts["warn"] + counts["crit"] + counts["unknown"] + counts["pending"]
     ), "The overview's service total does not add up from its per-state counts"
@@ -323,7 +395,7 @@ def test_the_overview_is_not_found_when_the_named_site_does_not_monitor_the_host
     """
     response = _host_overview(central_site, _REMOTE_HOSTS[0], central_site.id)
 
-    assert response.status_code == 404, f"{response.status_code}: {response.text}"
+    assert response.status_code == HTTPStatus.NOT_FOUND, f"{response.status_code}: {response.text}"
 
 
 @pytest.mark.usefixtures("hosts_per_site")

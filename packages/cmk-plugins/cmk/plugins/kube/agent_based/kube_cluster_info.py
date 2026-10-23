@@ -8,14 +8,13 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     HostLabel,
     HostLabelGenerator,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.schemata.section import ClusterInfo
 
 
@@ -55,10 +54,6 @@ agent_section_kube_cluster_info_v1 = AgentSection(
 )
 
 
-def discovery_kube_cluster_info(section: ClusterInfo) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_kube_cluster_info(section: ClusterInfo) -> CheckResult:
     yield Result(state=State.OK, summary=f"Name: {section.name}")
 
@@ -66,6 +61,6 @@ def check_kube_cluster_info(section: ClusterInfo) -> CheckResult:
 check_plugin_kube_cluster_info = CheckPlugin(
     name="kube_cluster_info",
     service_name="Info",
-    discovery_function=discovery_kube_cluster_info,
+    discovery_function=discover_one_service,
     check_function=check_kube_cluster_info,
 )

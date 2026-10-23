@@ -37,14 +37,15 @@ SOURCES_COMMON = [
     "global_time_picker.json",
     "loading_transition.json",
     "main_menu.json",
+    "maps.json",
     "mode_create_otel_conf.json",
     "mode_custom_services.json",
     "mode_host.json",
+    "mode_host_relation_detection.json",
     "mode_oauth2_connection.json",
     "monitoring/all_hosts.json",
     "monitoring/host_services.json",
     "monitoring/page_link_button.json",
-    "network_flow/flow_explorer.json",
     "notifications.json",
     "setup.json",
     "icon.json",
@@ -57,6 +58,8 @@ SOURCES_COMMON = [
     "product_usage_analytics.json",
     "trial_mode_selection_props.json",
     "trial_mode_selection_request.json",
+    "trial_mode_verification_request.json",
+    "trial_mode_verification_response.json",
     "two_factor_auth.json",
 ]
 
@@ -65,6 +68,8 @@ SOURCES_SPECIAL_DATACLASSES = [
     "attribute_filter.json",
     "consolidation.json",
     "cmk_time_series_graph.json",
+    "legacy_frontend_hooks.json",
+    "maps_states.json",
     "profiling_flamegraph.json",
     "service_graphs.json",
     "unit_format.json",
@@ -153,6 +158,26 @@ openapi_typescript.openapi_typescript(
         "$(rootpath :openapi_spec_internal)",
         "-o",
         "$(rootpath typescript/openapi_internal.d.ts)",
+        # A request field that carries a default is optional by definition: the
+        # default exists so the client may leave it out. Without this, every such
+        # field is generated as required and callers have to send values the
+        # server would have supplied itself.
+        "--default-non-nullable",
+        "false",
+    ],
+)
+
+# The Maps daemon is a FastAPI app of its own, so its schema comes ready-made
+# from //packages/cmk-maps instead of the GUI spec generator; from here on it
+# takes the same route as the REST API's types.
+openapi_typescript.openapi_typescript(
+    name = "maps_openapi_ts_file",
+    srcs = ["//packages/cmk-maps:openapi_spec"],
+    outs = ["typescript/maps_openapi.d.ts"],
+    args = [
+        "$(rootpath //packages/cmk-maps:openapi_spec)",
+        "-o",
+        "$(rootpath typescript/maps_openapi.d.ts)",
     ],
 )
 
@@ -164,6 +189,7 @@ js_library(
         ":cmk_shared_typing_ts_lib",
         ":empty_index_ts",
         ":generated_ts_files",
+        ":maps_openapi_ts_file",
         ":openapi_internal_ts_file",
     ],
     visibility = ["//packages:__subpackages__"],
@@ -204,7 +230,10 @@ py_cmk_test(
     name = "unit",
     size = "small",
     srcs = glob(["tests/**/*.py"]),
-    deps = [":cmk_shared_typing_formatter"],
+    deps = [
+        ":cmk_shared_typing_formatter",
+        requirement("datamodel_code_generator"),
+    ],
 )
 
 json2python(
@@ -224,6 +253,12 @@ json2python(
         "--frozen-dataclasses",
         "--keyword-only",
         "--use-union-operator",
+        # Append an underscore to enum members clashing with a str method, e.g.
+        # "count_". Despite its name, this is needed for StrEnum, too.
+        "--use-subclass-enum",
+        # Fields with a default never become None. Despite its help text, this
+        # works for JSON Schema, too.
+        "--strict-nullable",
     ],
     formatter = ":cmk_shared_typing_formatter",
     source_dir = "source",
@@ -246,6 +281,13 @@ json2python(
         "--use-generic-container-types",
         "--frozen-dataclasses",
         "--keyword-only",
+        "--use-union-operator",
+        # Append an underscore to enum members clashing with a str method, e.g.
+        # "count_". Despite its name, this is needed for StrEnum, too.
+        "--use-subclass-enum",
+        # Fields with a default never become None. Despite its help text, this
+        # works for JSON Schema, too.
+        "--strict-nullable",
     ],
     formatter = ":cmk_shared_typing_formatter",
     source_dir = "source",
@@ -271,9 +313,10 @@ py_library(
         "//cmk:__subpackages__",
         "//cmk/nonfree:__subpackages__",
         "//non-free/packages/cmk-data-backend:__pkg__",
-        "//non-free/packages/cmk-network-flow:__pkg__",
+        "//non-free/packages/cmk-licensing-nonfree:__pkg__",
         "//non-free/packages/cmk-robotmk:__pkg__",
         "//non-free/packages/cmk-telemetry:__pkg__",
+        "//packages/cmk-maps:__pkg__",
         "//packages/cmk-profiling:__pkg__",
         "//packages/cmk-web/cmk/web/utils:__pkg__",
         "//tests:__subpackages__",
@@ -339,7 +382,6 @@ alias(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "run",
     ],
 )

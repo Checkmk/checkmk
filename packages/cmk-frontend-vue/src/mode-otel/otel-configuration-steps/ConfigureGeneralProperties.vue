@@ -5,49 +5,50 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script lang="ts">
-export type RawSite = { id: string; title: string; extensions?: { logged_in?: boolean } }
+export type RawSite = components['schemas']['SiteConnectionModel']
 
+/**
+ * Which OTel configuration collection the step validates against. The two
+ * wizards share this step but list different configurations.
+ */
+export type ConfigKind = 'receivers' | 'prom_scrape'
+
+/** The fields both OTel configuration collections share. */
 type OTelConfigEntry = {
   id?: string
-  extensions?: { site?: string[] }
+  extensions: { site: string[] }
 }
 
-let cachedSites: RawSite[] | null = null
-let cachedConfigs: { endpoint: string; entries: OTelConfigEntry[] } | null = null
+// The requests are cached rather than their results, so that a response arriving after a reset
+// cannot fill the cache again.
+let cachedSites: Promise<RawSite[]> | null = null
+let cachedConfigs: { kind: ConfigKind; entries: Promise<OTelConfigEntry[]> } | null = null
 
 /** Exposed for testing only — resets the module-level caches. */
 export function _resetCaches(): void {
   cachedSites = null
   cachedConfigs = null
 }
-
-export function nextAvailableConfigName(existingIds: string[], prefix: string): string {
-  const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const pattern = new RegExp(`^${escapedPrefix}(\\d+)$`)
-  let max = 0
-  for (const id of existingIds) {
-    const match = pattern.exec(id)
-    if (match) {
-      max = Math.max(max, Number(match[1]))
-    }
-  }
-  return `${prefix}${max + 1}`
-}
 </script>
 
 <script setup lang="ts">
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import type { Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
-import { fetchRestAPIDeprecated } from 'cmk-ui-library/lib/cmkFetch.ts'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, onMounted, ref } from 'vue'
 
-const API_ROOT = 'api/v1'
+import {
+  configNameFormatErrors,
+  configNameTakenErrors,
+  nextAvailableConfigName
+} from '@/lib/configuration-name'
 
 const { _t } = usei18n()
 
@@ -56,7 +57,7 @@ const siteDropdownId = useId()
 
 const props = defineProps<{
   configNamePrefix: string
-  configListEndpoint: string
+  configKind: ConfigKind
   alreadyConfiguredError: string
 }>()
 
@@ -71,50 +72,57 @@ const isLoading = ref(false)
 
 function applySites(rawSites: RawSite[]) {
   siteOptions.value = rawSites.map((s) => ({
-    name: s.id,
+    name: s.id!,
     title: untranslated(`${s.id} - ${s.title}`)
   }))
-  // Pre-select the local site (no `logged_in` key in extensions) or first entry.
+  // Pre-select the local site (no `logged_in` in extensions) or first entry.
   // Only set when siteId has not been set yet so navigating back preserves the value.
   if (siteId.value === null) {
-    const localSite = rawSites.find((s) => !('logged_in' in (s.extensions ?? {})))
+    const localSite = rawSites.find((s) => s.extensions.logged_in === undefined)
     siteId.value = localSite?.id ?? rawSites[0]?.id ?? null
   }
 }
 
-async function loadSites(): Promise<void> {
-  if (cachedSites !== null) {
-    applySites(cachedSites)
-    return
-  }
+async function fetchSites(): Promise<RawSite[]> {
+  return unwrap(await client.GET('/domain-types/site_connection/collections/all')).value
+}
 
+async function loadSites(): Promise<void> {
   isLoading.value = true
+  const sites = (cachedSites ??= fetchSites())
   try {
-    const response = await fetchRestAPIDeprecated(
-      `${API_ROOT}/domain-types/site_connection/collections/all`,
-      'GET'
-    )
-    await response.raiseForStatus()
-    const data = await response.json()
-    cachedSites = data.value as RawSite[]
-    applySites(cachedSites)
+    applySites(await sites)
   } catch {
+    if (cachedSites === sites) {
+      cachedSites = null
+    }
     loadError.value = _t('Failed to load sites. Please try again.')
   } finally {
     isLoading.value = false
   }
 }
 
-async function fetchConfigList(skipCache = false): Promise<OTelConfigEntry[]> {
-  if (!skipCache && cachedConfigs?.endpoint === props.configListEndpoint) {
+async function loadConfigList(kind: ConfigKind): Promise<OTelConfigEntry[]> {
+  if (kind === 'receivers') {
+    return unwrap(await client.GET('/domain-types/otel_collector_config_receivers/collections/all'))
+      .value
+  }
+  return unwrap(await client.GET('/domain-types/otel_collector_config_prom_scrape/collections/all'))
+    .value
+}
+
+function fetchConfigList(skipCache = false): Promise<OTelConfigEntry[]> {
+  if (!skipCache && cachedConfigs?.kind === props.configKind) {
     return cachedConfigs.entries
   }
-  const response = await fetchRestAPIDeprecated(props.configListEndpoint, 'GET')
-  await response.raiseForStatus()
-  const data = await response.json()
-  const entries = data.value as OTelConfigEntry[]
-  cachedConfigs = { endpoint: props.configListEndpoint, entries }
-  return entries
+  const cache = { kind: props.configKind, entries: loadConfigList(props.configKind) }
+  cachedConfigs = cache
+  cache.entries.catch(() => {
+    if (cachedConfigs === cache) {
+      cachedConfigs = null
+    }
+  })
+  return cache.entries
 }
 
 async function initConfigName(): Promise<void> {
@@ -138,30 +146,15 @@ onMounted(async () => {
 
 const displayErrors = ref(false)
 
-const NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_-]*$/
+const configNameErrors = computed<string[]>(() =>
+  displayErrors.value ? configNameFormatErrors(configName.value) : []
+)
 
-const configNameErrors = computed<string[]>(() => {
-  if (!displayErrors.value) {
-    return []
-  }
-  if (!configName.value.trim()) {
-    return [_t('Configuration name is required but not specified.')]
-  }
-  if (!NAME_PATTERN.test(configName.value)) {
-    return [
-      _t(
-        'The name must only consist of letters, digits, dash and underscore and it must start with a letter or underscore.'
-      )
-    ]
-  }
-  return []
-})
-
-const configNameTakenErrors = ref<string[]>([])
+const configNameTaken = ref<string[]>([])
 
 const allConfigNameErrors = computed<string[]>(() => [
   ...configNameErrors.value,
-  ...configNameTakenErrors.value
+  ...configNameTaken.value
 ])
 
 const siteErrors = ref<string[]>([])
@@ -173,18 +166,11 @@ function validateSiteRequired(): string[] {
   return []
 }
 
-function checkConfigNameAvailable(configs: OTelConfigEntry[]): string[] {
-  if (configs.some((config) => config.id === configName.value)) {
-    return [_t('A configuration with this name already exists. Choose a different name.')]
-  }
-  return []
-}
-
 function checkSiteAlreadyConfigured(configs: OTelConfigEntry[]): string[] {
   if (!siteId.value) {
     return []
   }
-  if (configs.some((config) => config.extensions?.site?.includes(siteId.value!))) {
+  if (configs.some((config) => config.extensions.site.includes(siteId.value!))) {
     return [props.alreadyConfiguredError]
   }
   return []
@@ -206,7 +192,7 @@ async function validate(): Promise<boolean> {
   try {
     configs = await fetchConfigList(true)
   } catch {
-    configNameTakenErrors.value = []
+    configNameTaken.value = []
     siteErrors.value = [
       ...requiredErrors,
       _t('Failed to validate site configuration. Please try again.')
@@ -214,7 +200,10 @@ async function validate(): Promise<boolean> {
     return false
   }
 
-  configNameTakenErrors.value = checkConfigNameAvailable(configs)
+  configNameTaken.value = configNameTakenErrors(
+    configName.value,
+    configs.map((config) => config.id).filter((id): id is string => typeof id === 'string')
+  )
   siteErrors.value = [...requiredErrors, ...checkSiteAlreadyConfigured(configs)]
 
   return allConfigNameErrors.value.length === 0 && siteErrors.value.length === 0

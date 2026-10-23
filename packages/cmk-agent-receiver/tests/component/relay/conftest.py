@@ -7,7 +7,9 @@ import pathlib
 from collections.abc import Iterator
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from starlette.routing import Mount
 
 from cmk.agent_receiver.lib.config import Config, get_config
 from cmk.agent_receiver.main import main_app
@@ -47,6 +49,17 @@ def test_client(site_context: Config) -> Iterator[TestClient]:
     yield client
 
     print(site_context.log_path.read_text())  # noqa: T201  # It's OK for test/script helpers to print()
+
+
+@pytest.fixture()
+def relay_app(test_client: TestClient) -> FastAPI:
+    """dependency_overrides resolve on the app owning the route, which is the mounted
+    sub-app -- an override put on the main app is silently never consulted."""
+    main = test_client.app
+    assert isinstance(main, FastAPI)
+    mount = next(r for r in main.routes if isinstance(r, Mount) and r.path.endswith("/relays"))
+    assert isinstance(mount.app, FastAPI)
+    return mount.app
 
 
 @pytest.fixture(scope="session")

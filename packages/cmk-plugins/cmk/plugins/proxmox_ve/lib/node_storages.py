@@ -52,8 +52,9 @@ class Storage(BaseModel, frozen=True, validate_by_name=True):
     node: str
     disk: float | None = None
     maxdisk: float | None = None
-    storage_type: StorageType = Field(
+    storage_type: StorageType | str = Field(
         validation_alias=AliasChoices("plugintype", "storage_type"),
+        union_mode="left_to_right",
     )
     status: StorageStatus | None = None
     name: str = Field(validation_alias=AliasChoices("storage", "name"))
@@ -91,7 +92,8 @@ class SectionNodeStorages(BaseModel, frozen=True):
         return {
             storage.name: storage
             for storage in self.storages
-            if storage.storage_type
+            if not isinstance(storage.storage_type, StorageType)
+            or storage.storage_type
             in (
                 StorageType.DIR,
                 StorageType.PBS,
@@ -142,7 +144,12 @@ def check_proxmox_ve_node_storage(
         inodes_total=None,
         params=params,
     )
-    yield Result(state=State.OK, summary=f"Type: {storage.storage_type}")
+    yield Result(
+        state=State.OK,
+        summary=f"Type: {storage.storage_type}"
+        if isinstance(storage.storage_type, StorageType)
+        else f"Type: {storage.storage_type} (unknown storage type)",
+    )
     yield from _check_proxmox_ve_node_storage_provision(
         item=item,
         storage_max_disk=_transform_storage_size_bytes_to_mb(storage.maxdisk)

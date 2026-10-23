@@ -24,8 +24,13 @@ const TAB_KEY = 'tab'
  * how to fetch one by identity.
  */
 export interface SlideInUrlDescriptor<TRow, TIdentity> {
-  /** Params identifying the row on show, `tab` excluded - that one is shared. */
+  /** Params identifying the row on show, the tab excluded. */
   readonly keys: readonly string[]
+  /**
+   * The param naming the tab on show, `tab` unless a page shows a second panel,
+   * which has to name its tab apart from the first one's.
+   */
+  readonly tabKey?: string
   /** The tab an opening starts on; omitted from the URL as it says nothing. */
   readonly defaultTabId?: string
   encode(row: TRow): Record<string, string>
@@ -86,13 +91,23 @@ export function readSlideInFromHash<TRow, TIdentity>(
   if (identity === null) {
     return null
   }
-  return { identity, tabId: params[TAB_KEY], params }
+  return { identity, tabId: params[tabKeyOf(descriptor)], params }
 }
+
+function tabKeyOf<TRow, TIdentity>(descriptor: SlideInUrlDescriptor<TRow, TIdentity>): string {
+  return descriptor.tabKey ?? TAB_KEY
+}
+
+/** Where a panel looks for its row, the listing itself unless the row lives elsewhere. */
+export type SlideInListing<TRow> = Pick<
+  MonitoringService<TRow>,
+  'hasLoaded' | 'items' | 'revealRow'
+>
 
 export interface SlideInWriterOptions<TRow, TIdentity> {
   descriptor: SlideInUrlDescriptor<TRow, TIdentity>
   /** The listing to look for the row in before falling back to a fetch. */
-  service: MonitoringService<TRow>
+  service: SlideInListing<TRow>
   /** The row the panel shows, as the page holds it. */
   current: Ref<TRow | null>
   /** The tab on show; bind the same ref into the panel as `v-model:activeTabId`. */
@@ -106,11 +121,10 @@ export interface SlideInWriterOptions<TRow, TIdentity> {
 /**
  * The open detail panel as a slice of the URL fragment.
  *
- * The fragment rather than the query string because opening a panel is a
- * navigation: it gets its own history entry, so Back closes the panel and
- * returns to the listing instead of leaving the page. The query string keeps
- * carrying what the listing shows, and Back over a filter change would be a
- * different feature.
+ * The fragment rather than the query string, which keeps carrying what the
+ * listing shows. Like every other slice it rewrites the current history entry
+ * instead of adding one: Back leaves the page rather than closing the panel,
+ * and opening and closing panels leaves no entries behind for Back to reopen.
  *
  * A fragment is honoured exactly once per navigation, and only after the
  * listing has answered: a row it has is opened from the row it loaded and
@@ -149,11 +163,11 @@ class SlideInUrlSlice<TRow, TIdentity> {
 
   toWriter(): UrlStateWriter {
     const { descriptor } = this.options
+    const tabKey = tabKeyOf(descriptor)
     return {
-      name: 'slide-in',
-      keys: [...descriptor.keys, TAB_KEY],
+      name: tabKey === TAB_KEY ? 'slide-in' : `slide-in:${tabKey}`,
+      keys: [...descriptor.keys, tabKey],
       target: 'hash',
-      history: 'push',
       params: this.params(),
       apply: (params) => this.applyUrl(params)
     }
@@ -161,32 +175,34 @@ class SlideInUrlSlice<TRow, TIdentity> {
 
   private params(): ComputedRef<Record<string, string | null>> {
     const { descriptor, current, tabId } = this.options
+    const tabKey = tabKeyOf(descriptor)
     return computed(() => {
       const row = current.value
       if (row !== null) {
         const tab = tabId.value
         return {
           ...descriptor.encode(row),
-          [TAB_KEY]: tab === undefined || tab === descriptor.defaultTabId ? null : tab
+          [tabKey]: tab === undefined || tab === descriptor.defaultTabId ? null : tab
         }
       }
       const unopened = this.requested.value
       if (unopened !== null) {
         return unopened.params
       }
-      return Object.fromEntries([...descriptor.keys, TAB_KEY].map((key) => [key, null]))
+      return Object.fromEntries([...descriptor.keys, tabKey].map((key) => [key, null]))
     })
   }
 
   private applyUrl(params: Record<string, string>): void {
-    const identity = this.options.descriptor.decode(params)
+    const { descriptor } = this.options
+    const identity = descriptor.decode(params)
     if (identity === null) {
       this.requested.value = null
       this.settled = true
       this.options.close()
       return
     }
-    this.requested.value = { identity, tabId: params[TAB_KEY], params }
+    this.requested.value = { identity, tabId: params[tabKeyOf(descriptor)], params }
     this.settled = false
     void this.settleRequest()
   }

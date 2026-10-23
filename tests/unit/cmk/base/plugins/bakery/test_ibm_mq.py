@@ -63,6 +63,11 @@ def test_ibm_mq_files_with_mqm_user() -> None:
     assert result == expected
 
 
+def test_ibm_mq_files_default_user_is_not_written() -> None:
+    conf = {"deployment": ("sync", None), "execute_as_another_user": "default_user"}
+    assert list(get_ibm_mq_files(conf)) == [Plugin(base_os=OS.LINUX, source=Path("ibm_mq"))]
+
+
 def test_ibm_mq_files_no_config() -> None:
     """When conf has no queue config, only the plugin is yielded (no config file)."""
     conf = {"deployment": ("sync", None)}

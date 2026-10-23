@@ -7,14 +7,21 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Final
 
 from cmk.ccc.site import SiteId
-from cmk.gui.config import active_config
+from cmk.gui.config import RequestCacheConfig
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import default_time_range_seconds, stored_time_range_seconds
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import all_painters, Cell, JoinCell, Painter
+from cmk.gui.painter import (
+    all_painters,
+    Cell,
+    CellDrilldown,
+    InternalPainter,
+    JoinCell,
+    PainterContext,
+)
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
@@ -23,11 +30,11 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualContext,
 )
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.layout import Layout, layout_registry
 from cmk.gui.views.sort_url import compute_sort_url_parameter
 from cmk.gui.views.sorter import all_sorters, Sorter, SorterEntry
 from cmk.gui.visuals import get_missing_single_infos_group_aware
+from cmk.web.utils.request_cache import RequestCache
 
 # A view carrying one of these is driven by the global time picker rather than the
 # pnp_timerange painter option, and must not auto-reload.
@@ -44,19 +51,26 @@ class View:
         view_name: str,
         view_spec: ViewSpec,
         context: VisualContext,
-        user_permissions: UserPermissions,
+        painter_context: PainterContext,
+        request_cache: RequestCache[RequestCacheConfig],
+        *,
+        column_drilldowns: Mapping[int, CellDrilldown] | None = None,
     ) -> None:
         super().__init__()
         self.name = view_name
         self.spec = view_spec
         self.context: VisualContext = context
+        # Keyed by the index into the spec's painters, which row_cells may skip some of.
+        self._column_drilldowns = column_drilldowns or {}
         self._row_limit: int | None = None
         self._only_sites: list[SiteId] | None = None
         self._user_sorters: list[SorterSpec] | None = None
         self._want_checkboxes: bool = False
         self._warning_messages: list[str] = []
+        self.allow_browser_reload = True
         self.process_tracking = ViewProcessTracking()
-        self.user_permissions = user_permissions
+        self.painter_context = painter_context
+        self.request_cache = request_cache
 
     @property
     def datasource(self) -> ABCDataSource:
@@ -85,9 +99,10 @@ class View:
     def row_cells(self) -> list[Cell]:
         """Regular cells are displaying information about the rows of the type the view is about"""
         cells: list[Cell] = []
-        registered_sorters = all_sorters(active_config)
-        registered_painters = all_painters(active_config.tags.tag_groups)
-        for e in self.spec["painters"]:
+        tag_groups = self.painter_context.config.tags.tag_groups
+        registered_sorters = all_sorters(tag_groups)
+        registered_painters = all_painters(tag_groups)
+        for index, e in enumerate(self.spec["painters"]):
             if e.name not in registered_painters:
                 continue
 
@@ -99,7 +114,9 @@ class View:
                             e, registered_sorters, registered_painters
                         ),
                         registered_painters,
-                        self.user_permissions,
+                        self.painter_context,
+                        self.request_cache,
+                        drilldown=self._column_drilldowns.get(index),
                     )
                 )
             elif col_type == "column":
@@ -110,7 +127,9 @@ class View:
                             e, registered_sorters, registered_painters
                         ),
                         registered_painters,
-                        self.user_permissions,
+                        self.painter_context,
+                        self.request_cache,
+                        drilldown=self._column_drilldowns.get(index),
                     )
                 )
             else:
@@ -121,14 +140,16 @@ class View:
     @property
     def group_cells(self) -> list[Cell]:
         """Group cells are displayed as titles of grouped rows"""
-        registered_sorters = all_sorters(active_config)
-        registered_painters = all_painters(active_config.tags.tag_groups)
+        tag_groups = self.painter_context.config.tags.tag_groups
+        registered_sorters = all_sorters(tag_groups)
+        registered_painters = all_painters(tag_groups)
         return [
             Cell(
                 e,
                 self._compute_sort_url_parameter(e, registered_sorters, registered_painters),
                 registered_painters,
-                self.user_permissions,
+                self.painter_context,
+                self.request_cache,
             )
             for e in self.spec["group_painters"]
             if e.name in registered_painters
@@ -142,7 +163,8 @@ class View:
     @property
     def sorters(self) -> list[SorterEntry]:
         """Returns the list of effective sorters to be used to sort the rows of this view"""
-        registered_sorters = all_sorters(active_config)
+        tag_groups = self.painter_context.config.tags.tag_groups
+        registered_sorters = all_sorters(tag_groups)
         return self._get_sorter_entries(
             self.user_sorters if self.user_sorters else self.spec["sorters"],
             registered_sorters,
@@ -152,7 +174,7 @@ class View:
         self,
         painter: ColumnSpec,
         registered_sorters: Mapping[str, Sorter],
-        registered_painters: Mapping[str, type[Painter]],
+        registered_painters: Mapping[str, InternalPainter],
     ) -> str | None:
         if not self.spec.get("user_sortable", False):
             return None
@@ -166,7 +188,6 @@ class View:
             self._user_sorters or [],
             registered_sorters,
             registered_painters,
-            self.user_permissions,
         )
 
     def _get_sorter_entries(
@@ -276,19 +297,25 @@ class View:
 
         # Mandatory options for all views (if permitted)
         if display_options.enabled(display_options.O):
-            if (
-                display_options.enabled(display_options.R)
-                and user.may("general.view_option_refresh")
-                # The global time picker's refresh control offers the interval on such a view; a
-                # second control for the same setting would only disagree with it.
-                and not self.renders_engine_graphs
-            ):
+            if self.reloads_itself and user.may("general.view_option_refresh"):
                 options.add("refresh")
 
             if user.may("general.view_option_columns") and not self.layout.hide_entries_per_row:
                 options.add("num_columns")
 
         return sorted(options)
+
+    @property
+    def reloads_itself(self) -> bool:
+        """Whether the page reloads this view on its own interval."""
+        return (
+            self.allow_browser_reload
+            and display_options.enabled(display_options.R)
+            # Such a view refreshes through the global time picker's control: a reload would
+            # re-mount the Vue apps and discard the picker state, and a second control for the
+            # same setting would only disagree with it.
+            and not self.renders_engine_graphs
+        )
 
     @property
     def renders_engine_graphs(self) -> bool:

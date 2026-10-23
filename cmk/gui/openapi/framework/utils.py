@@ -5,10 +5,14 @@
 
 import json
 
+from typing_extensions import TypeForm
+
 from cmk.gui.openapi.framework.model import json_dump_without_omitted
 
 
-def dump_dict_without_omitted[T](instance_type: type[T], instance: T) -> dict[str, object]:
+def dump_dict_without_omitted(
+    instance_type: TypeForm[object], instance: object
+) -> dict[str, object]:
     """Serialize the given API instance to a dict, removing omitted fields.
 
     Notes:

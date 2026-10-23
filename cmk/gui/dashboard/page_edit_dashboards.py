@@ -13,7 +13,6 @@ from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
 from cmk.gui.table import Table
 from cmk.gui.token_auth import (
     DashboardToken,
@@ -21,7 +20,6 @@ from cmk.gui.token_auth import (
     TokenId,
 )
 from cmk.gui.type_defs import VisualName
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals._store import TVisual
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
@@ -39,7 +37,7 @@ def page_edit_dashboards(ctx: PageContext) -> None:
         what="dashboards",
         title=_("Edit dashboards"),
         visuals=get_all_dashboards(),
-        user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
+        user_permissions=ctx.user_permissions,
         config=ctx.config,
         render_custom_buttons=_render_dashboard_buttons(ctx.request),
         render_custom_columns=_render_dashboard_columns(),

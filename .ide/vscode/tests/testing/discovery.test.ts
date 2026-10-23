@@ -78,4 +78,28 @@ py_library(
 
     expect(targets).toEqual([])
   })
+
+  it('discovers vitest_test targets from both the macro and the npm binary rule', async () => {
+    writeBuild(
+      'packages/app',
+      `load("//bazel/rules:vitest_test.bzl", "vitest_test")
+
+vitest_test(
+    name = "unit-test",
+    workers = 3,
+)
+
+vitest_bin.vitest_test(
+    name = "legacy",
+)
+`
+    )
+
+    const targets = await discoverTargetsFromFilesystem(wsPath)
+
+    expect(targets.sort((a, b) => a.label.localeCompare(b.label))).toEqual([
+      { label: '//packages/app:legacy', kind: 'vitest_test' },
+      { label: '//packages/app:unit-test', kind: 'vitest_test' }
+    ])
+  })
 })

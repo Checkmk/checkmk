@@ -3,77 +3,59 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from typing import Literal
+from cmk.graphing_engine import (
+    NonConvertibleUnit,
+    Notation,
+    notation_from_name,
+    notation_name,
+    Precision,
+    precision_from_kind,
+    precision_kind,
+    Unit,
+)
 
-from pydantic import BaseModel, Field
-
-from cmk.gui.unit_formatter import AutoPrecision, StrictPrecision
-
-
-class DecimalNotation(BaseModel, frozen=True):
-    type: Literal["decimal"] = "decimal"
-    symbol: str
-
-
-class SINotation(BaseModel, frozen=True):
-    type: Literal["si"] = "si"
-    symbol: str
+from ._decoding import ensure_type
 
 
-class IECNotation(BaseModel, frozen=True):
-    type: Literal["iec"] = "iec"
-    symbol: str
+def unit_to_specification(unit: Unit | NonConvertibleUnit) -> Mapping[str, object]:
+    return {
+        "type": "convertible" if isinstance(unit, Unit) else "non_convertible",
+        "notation": {"type": notation_name(unit.notation), "symbol": unit.notation.symbol},
+        "precision": {"type": precision_kind(unit.precision), "digits": unit.precision.digits},
+    }
 
 
-class StandardScientificNotation(BaseModel, frozen=True):
-    type: Literal["standard_scientific"] = "standard_scientific"
-    symbol: str
-
-
-class EngineeringScientificNotation(BaseModel, frozen=True):
-    type: Literal["engineering_scientific"] = "engineering_scientific"
-    symbol: str
-
-
-class TimeNotation(BaseModel, frozen=True):
-    type: Literal["time"] = "time"
-    symbol: str
-
-
-class ConvertibleUnitSpecification(BaseModel, frozen=True):
-    type: Literal["convertible"] = "convertible"
-    notation: (
-        DecimalNotation
-        | SINotation
-        | IECNotation
-        | StandardScientificNotation
-        | EngineeringScientificNotation
-        | TimeNotation
-    ) = Field(
-        ...,
-        discriminator="type",
-    )
-    precision: AutoPrecision | StrictPrecision = Field(
-        ...,
-        discriminator="type",
+def _notation_from_specification(raw: object) -> Notation:
+    specification = ensure_type(raw, dict)
+    return notation_from_name(
+        ensure_type(specification["type"], str), ensure_type(specification["symbol"], str)
     )
 
 
-class NonConvertibleUnitSpecification(BaseModel, frozen=True):
-    type: Literal["non_convertible"] = "non_convertible"
-    notation: (
-        DecimalNotation
-        | SINotation
-        | IECNotation
-        | StandardScientificNotation
-        | EngineeringScientificNotation
-        | TimeNotation
-    ) = Field(
-        ...,
-        discriminator="type",
+def _precision_from_specification(raw: object) -> Precision:
+    specification = ensure_type(raw, dict)
+    return precision_from_kind(
+        ensure_type(specification["type"], str), ensure_type(specification["digits"], int)
     )
-    precision: AutoPrecision | StrictPrecision = Field(
-        ...,
-        discriminator="type",
-    )
+
+
+def _unit_from_specification(raw: object) -> Unit | NonConvertibleUnit:
+    specification = ensure_type(raw, dict)
+    notation = _notation_from_specification(specification["notation"])
+    precision = _precision_from_specification(specification["precision"])
+    match specification["type"]:
+        case "convertible":
+            return Unit(notation=notation, precision=precision)
+        case "non_convertible":
+            return NonConvertibleUnit(notation=notation, precision=precision)
+        case other:
+            raise ValueError(f"unknown unit: {other!r}")
+
+
+def unit_from_specification(raw: object) -> Unit | NonConvertibleUnit:
+    try:
+        return _unit_from_specification(raw)
+    except (KeyError, TypeError) as e:
+        raise ValueError(f"malformed unit: {raw!r}") from e

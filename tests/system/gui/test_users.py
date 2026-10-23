@@ -20,7 +20,7 @@ from tests.system.gui.testlib.playwright.pom.setup.roles_and_permissions import 
 from tests.system.gui.testlib.playwright.pom.setup.user import AddUser, EditUser, UserData
 from tests.system.gui.testlib.playwright.pom.setup.users import Users
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

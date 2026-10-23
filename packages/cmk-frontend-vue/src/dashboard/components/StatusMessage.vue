@@ -39,7 +39,13 @@ const bullet: string = '●'
     <span>{{ text }}</span>
     <template v-if="linkedText">
       <CmkSpace size="small" />
-      <a href="#" @click.prevent="$emit('click')">{{ linkedText }}</a>
+      <a
+        href="#"
+        class="db-status-message__linked-text"
+        role="button"
+        @click.prevent="$emit('click')"
+        >{{ linkedText }}</a
+      >
     </template>
   </div>
 </template>
@@ -49,29 +55,40 @@ const bullet: string = '●'
   display: flex;
   align-items: center;
   padding: var(--dimension-4) var(--dimension-6);
-  border-radius: var(--dimension-3);
-  background-color: var(--shared-dashboard-indicator-background);
   white-space: nowrap;
+  color: var(--font-color-strong);
   font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-default);
+}
+
+.db-status-message__linked-text {
+  color: var(--font-color) !important;
+  font-size: var(--font-size-normal);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .db-status-message__bullet-ok {
   color: var(--popup-dialog-success);
-  -webkit-text-stroke: 1px var(--color-corporate-green-70);
+  -webkit-text-stroke: 1px var(--status-outline-color-success);
 }
 
 .db-status-message__bullet-warning {
   color: var(--popup-dialog-warning);
-  -webkit-text-stroke: 1px var(--color-yellow-70);
+  -webkit-text-stroke: 1px var(--status-outline-color-warning);
 }
 
 .db-status-message__bullet-danger {
   color: var(--popup-dialog-danger);
-  -webkit-text-stroke: 1px var(--color-dark-red-40);
+  -webkit-text-stroke: 1px var(--status-outline-color-error);
 }
 
 .db-status-message__bullet-info {
   color: var(--popup-dialog-info);
-  -webkit-text-stroke: 1px var(--color-light-blue-50);
+  -webkit-text-stroke: 1px var(--popup-dialog-info);
 }
 </style>

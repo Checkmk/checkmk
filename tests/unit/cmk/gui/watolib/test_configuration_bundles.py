@@ -17,7 +17,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import login
 from cmk.gui.config import Config, get_default_config, make_config_object
 from cmk.gui.logged_in import LoggedInSuperUser, user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle
 from cmk.gui.watolib.configuration_bundles import (
@@ -29,7 +29,7 @@ from cmk.gui.watolib.configuration_bundles import (
     delete_config_bundle,
     identify_single_bundle_references,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree, make_folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.pending_changes import (
@@ -43,7 +43,7 @@ from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.ruleset_matcher.tags import get_effective_tag_config
 from cmk.utils.global_ident_type import PROGRAM_ID_CUSTOM_SERVICE, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.password_store import PasswordConfig
-from tests.testlib.gui.users import create_and_destroy_user
+from tests.testlib.unit.gui.users import create_and_destroy_user
 from tests.unit.cmk.gui.watolib.test_automatic_host_removal import default_site_config
 from tests.unit.cmk.gui.watolib.test_watolib_password_store import (  # noqa: F401
     mock_update_passwords_merged_file,
@@ -343,9 +343,9 @@ def test_create_and_delete_config_bundle_passwords(tree: FolderTree) -> None:
     )
 
 
-@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+@pytest.mark.usefixtures("mock_update_passwords_merged_file", "request_context")
 def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
-    load_config: Config,
+    config: Config, tree: FolderTree
 ) -> None:
     """Regression test: deleting a bundle's passwords must not delete unrelated passwords.
 
@@ -390,11 +390,11 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
         role="user",
         username=non_admin_username,
         custom_attrs={"contactgroups": [non_admin_username]},
-        config=load_config,
+        config=config,
     ) as (user_id, _password):
         user_permissions = UserPermissions(
-            load_config.roles,
-            permission_registry,
+            config.roles,
+            all_permissions(),
             {user_id: ["user"]},
             [],
         )
@@ -405,7 +405,7 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
         with login.TransactionIdContext(user_id, user_permissions):
             # Create the bundle – bundle password gets owned_by = user.id = "bundleuser".
             create_config_bundle(
-                folder_tree(),
+                tree,
                 bundle_id,
                 bundle,
                 CreateBundleEntities(
@@ -441,7 +441,7 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
             # Before the fix, remove_password() saved only the filtered (editable) subset
             # back to disk, wiping the standalone admin password.
             delete_config_bundle(
-                folder_tree(),
+                tree,
                 bundle_id,
                 acting_user=user,
                 user_permissions=user_permissions,
@@ -588,3 +588,122 @@ def test_create_and_delete_config_bundle_of_another_program(tree: FolderTree) ->
         pending_changes=_pending_changes(UserId("cmkadmin")),
     )
     assert _len_rules() == before_create_rules_count, "Expected the created rule to be deleted"
+
+
+def test_create_and_delete_config_bundle_grouped_by_a_plain_ruleset(tree: FolderTree) -> None:
+    """A bundle may be grouped by a ruleset that carries no rule group prefix.
+
+    A custom service does exactly this: its group is the host ruleset its rule lives in, not a
+    "special_agents:" name.
+    """
+    ruleset_name = "host_contactgroups"
+    bundle_id, bundle = _make_bundle(group=ruleset_name, program_id=PROGRAM_ID_CUSTOM_SERVICE)
+    rules = [
+        CreateRule(
+            folder="",
+            ruleset=ruleset_name,
+            spec=RuleSpec[object](id="rule-1", value="VAL1", condition={}),
+        ),
+    ]
+
+    def _len_rules() -> int:
+        return len(
+            SingleRulesetRecursively.load_single_ruleset_recursively(tree, ruleset_name)
+            .get(ruleset_name)
+            .get_rules()
+        )
+
+    before_create_rules_count = _len_rules()
+    create_config_bundle(
+        tree,
+        bundle_id,
+        bundle,
+        CreateBundleEntities(rules=rules),
+        acting_user=LoggedInSuperUser(),
+        user_permissions=UserPermissions({}, {}, {}, []),
+        pprint_value=False,
+        debug=False,
+        pending_changes=_pending_changes(UserId("cmkadmin")),
+    )
+
+    references = identify_single_bundle_references(
+        tree,
+        bundle_id,
+        bundle["group"],
+        acting_user=LoggedInSuperUser(),
+        program_id=PROGRAM_ID_CUSTOM_SERVICE,
+    )
+    assert references.rules is not None
+    assert len(references.rules) == 1
+
+    delete_config_bundle(
+        tree,
+        bundle_id,
+        acting_user=LoggedInSuperUser(),
+        user_permissions=UserPermissions({}, {}, {}, []),
+        pprint_value=False,
+        debug=False,
+        pending_changes=_pending_changes(UserId("cmkadmin")),
+    )
+    assert _len_rules() == before_create_rules_count, "Expected the created rule to be deleted"
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file", "request_context")
+def test_create_config_bundle_does_not_replace_a_password_the_user_cannot_see(
+    config: Config, tree: FolderTree
+) -> None:
+    PasswordStore().save(
+        {
+            "admin-pw": PasswordConfig(
+                title="Admin Password",
+                comment="",
+                docu_url="",
+                password="admin_secret",
+                owned_by="admin",
+                shared_with=[],
+            )
+        },
+        pprint_value=False,
+    )
+
+    with create_and_destroy_user(
+        automation=False, role="user", username="bundleuser", config=config
+    ) as (user_id, _password):
+        user_permissions = UserPermissions(
+            config.roles,
+            all_permissions(),
+            {user_id: ["user"]},
+            [],
+        )
+        bundle_id, bundle = _make_bundle(owned_by="bundleuser")
+        with (
+            login.TransactionIdContext(user_id, user_permissions),
+            pytest.raises(MKGeneralException, match="already exists"),
+        ):
+            create_config_bundle(
+                tree,
+                bundle_id,
+                bundle,
+                CreateBundleEntities(
+                    passwords=[
+                        CreatePassword(
+                            id="admin-pw",
+                            spec=PasswordConfig(
+                                title="Bundle Password",
+                                comment="",
+                                docu_url="",
+                                password="bundle_secret",
+                                owned_by=None,
+                                shared_with=[],
+                            ),
+                        )
+                    ]
+                ),
+                acting_user=user,
+                user_permissions=user_permissions,
+                pprint_value=False,
+                debug=False,
+                pending_changes=_pending_changes(user_id),
+            )
+
+    assert PasswordStore().load_for_reading()["admin-pw"]["password"] == "admin_secret"

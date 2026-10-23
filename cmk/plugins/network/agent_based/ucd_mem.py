@@ -161,14 +161,19 @@ def check_ucd_mem(params: Mapping[str, Any], section: Section) -> CheckResult:
     # map legacy levels
     levels_ram = params.get("levels_ram") or params.get("levels")
 
-    yield from check_element(
-        "RAM",
-        section["MemUsed"],
-        section["MemTotal"],
-        levels_ram,
-        metric_name="mem_used",
-        create_percent_metric=True,
-    )
+    if section["MemTotal"]:
+        yield from check_element(
+            "RAM",
+            section["MemUsed"],
+            section["MemTotal"],
+            levels_ram,
+            metric_name="mem_used",
+            create_percent_metric=True,
+        )
+    else:
+        yield Result(
+            state=State.UNKNOWN, summary="Cannot evaluate RAM: device reports a total of 0 B"
+        )
 
     swap_total = section.get("SwapTotal")
     swap_used = section.get("SwapUsed")
@@ -183,7 +188,7 @@ def check_ucd_mem(params: Mapping[str, Any], section: Section) -> CheckResult:
 
     total_total = section.get("TotalTotal")
     total_used = section.get("TotalUsed")
-    if total_total is not None and total_used is not None:
+    if total_total and total_used is not None:
         yield from check_element(
             "Total virtual memory",
             total_used,

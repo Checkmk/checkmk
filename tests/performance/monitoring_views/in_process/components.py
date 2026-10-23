@@ -18,8 +18,6 @@ care about. It also says how much of the measurement is the harness itself, whic
 that decides whether any of the rest can be believed.
 """
 
-from __future__ import annotations
-
 import cProfile
 import pstats
 from collections.abc import Mapping, Sequence

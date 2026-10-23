@@ -35,8 +35,12 @@ export class FilterStore {
   readonly filterNode: Ref<FilterNode | undefined>
   readonly quickFilters: readonly QuickFilter[]
 
-  constructor(quickFilterConfigs: QuickFilterConfig[], searchQuery: Ref<string> = ref('')) {
-    this.filterNode = shallowRef(undefined)
+  constructor(
+    quickFilterConfigs: QuickFilterConfig[],
+    searchQuery: Ref<string> = ref(''),
+    initialFilter: FilterNode | undefined = undefined
+  ) {
+    this.filterNode = shallowRef(initialFilter)
     const filterNode = this.filterNode
     this.quickFilters = quickFilterConfigs.map((c) => ({
       label: c.label,

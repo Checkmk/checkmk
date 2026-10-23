@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.gui.background_job.job import InitialStatusArgs, JobTarget
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.api_endpoints.background_job import BACKGROUND_JOB_FAMILY
@@ -54,11 +56,13 @@ def trigger_user_sync_v1(api_context: ApiContext) -> ApiResponse[None]:
             ),
         )
     ).is_error():
-        raise ProblemException(409, f"Could not start the user synchronization: {result.error}")
+        raise ProblemException(
+            HTTPStatus.CONFLICT, f"Could not start the user synchronization: {result.error}"
+        )
 
     return ApiResponse(
         body=None,
-        status_code=303,
+        status_code=HTTPStatus.SEE_OTHER,
         headers={
             "Location": path_to_endpoint(
                 family=BACKGROUND_JOB_FAMILY.name,
@@ -82,13 +86,13 @@ ENDPOINT_TRIGGER_USER_SYNC = VersionedEndpoint(
     versions={
         APIVersion.UNSTABLE: EndpointHandler(
             handler=trigger_user_sync_v1,
-            additional_status_codes=[303, 409],
+            additional_status_codes=[HTTPStatus.SEE_OTHER, HTTPStatus.CONFLICT],
             status_descriptions={
-                303: (
+                HTTPStatus.SEE_OTHER: (
                     "The user synchronization job has been started in the background. "
                     "Redirecting to the 'Get background job status snapshot' endpoint."
                 ),
-                409: "A user synchronization job is already running.",
+                HTTPStatus.CONFLICT: "A user synchronization job is already running.",
             },
         )
     },

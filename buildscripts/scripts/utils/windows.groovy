@@ -25,6 +25,32 @@ String azure_signing_correlation_id(String branch_name) {
     ).replaceAll("['\"\\s]", "");
 }
 
+/// Authenticode-sign files in place on a Linux node via Azure Artifact Signing.
+///
+/// Runs //agents/wnx/scripts:sign_azure, which also verifies each signature and its timestamp.
+/// Call it inside the checkout, in a container with bazel. bazel_args should match the build's
+/// (e.g. --cmk_version) to keep the analysis cache. No catchError around it on purpose: a failed
+/// signing must fail the job before anything unsigned or partially signed gets archived.
+void sign_with_azure(String branch_name, String bazel_args, List<String> files) {
+    withCredentials([
+        string(credentialsId: "azure_artifact_signing_client_secret", variable: "AZURE_ARTIFACT_SIGNING_CLIENT_SECRET"),
+        string(credentialsId: "azure_artifact_signing_correlation_suffix", variable: "AZURE_ARTIFACT_SIGNING_CORRELATION_SUFFIX"),
+    ]) {
+        // Assembled inside the binding block: the suffix is only available there.
+        def correlation_id = azure_signing_correlation_id(branch_name);
+        withEnv([
+            "AZURE_ARTIFACT_SIGNING_ENDPOINT=${env.AZURE_ARTIFACT_SIGNING_ENDPOINT}",
+            "AZURE_ARTIFACT_SIGNING_ACCOUNT=${env.AZURE_ARTIFACT_SIGNING_ACCOUNT}",
+            "AZURE_ARTIFACT_SIGNING_PROFILE=${env.AZURE_ARTIFACT_SIGNING_PROFILE}",
+            "AZURE_ARTIFACT_SIGNING_TENANT_ID=${env.AZURE_ARTIFACT_SIGNING_TENANT_ID}",
+            "AZURE_ARTIFACT_SIGNING_CLIENT_ID=${env.AZURE_ARTIFACT_SIGNING_CLIENT_ID}",
+            "AZURE_ARTIFACT_SIGNING_CORRELATION_ID=${correlation_id}",
+        ]) {
+            sh("bazel run ${bazel_args} //agents/wnx/scripts:sign_azure -- ${files.join(' ')}");
+        }
+    }
+}
+
 void build(Map args) {
     def jenkins_base_folder = new File(currentBuild.fullProjectName).parent;    // groovylint-disable JavaIoPackageAccess
     def artifacts_dir = 'artefacts';
@@ -45,8 +71,8 @@ void build(Map args) {
     }
 
     stage("Windows ${args.TARGET} build") {
-        // Windows integration test is the longest running test with just under 3 min
-        // No job should exceed 3*5 = 15 minutes
+        // test_integration is the longest running target: about 16 min on a CV
+        // node, half of it the regression suite. The job times out after 30 min.
 
         def (subdir, command, artifacts) = (
             (args.TARGET == "agent_with_sign") || (args.TARGET == "agent_with_sign_azure") ? [
@@ -117,8 +143,8 @@ void build(Map args) {
 
             (args.TARGET == "test_integration") ? [
                 "agents/wnx",
-                "call run_tests.cmd --component --integration",
-                "integration_tests_results.zip"] :
+                "call run_tests.cmd --component --regression --integration",
+                "regression_tests_results.zip,integration_tests_results.zip"] :
             raise("${args.TARGET} is not known!")
         )
 

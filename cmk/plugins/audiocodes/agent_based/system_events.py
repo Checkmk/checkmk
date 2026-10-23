@@ -11,6 +11,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    OIDEnd,
     render,
     Result,
     Service,
@@ -35,12 +36,39 @@ _READABLE_SEVERITY = {
 @dataclass(frozen=True)
 class ActiveAlarm:
     sequence_number: int
-    sysuptime: int
+    sysuptime: int | None
     date_and_time: datetime.datetime | None
     name: str
     description: str
     source: str
     severity_readable: str
+
+    @classmethod
+    def parse(cls, row: Sequence[str]) -> ActiveAlarm | None:
+        if not row[6]:
+            return None
+        return cls(
+            sequence_number=int(row[0]),
+            sysuptime=int(row[1]) if row[1] else None,
+            date_and_time=_parse_date_and_time(row[2]),
+            name=row[3],
+            description=row[4],
+            source=row[5],
+            severity_readable=_READABLE_SEVERITY[row[6]],
+        )
+
+    def notice(self) -> str:
+        details = [
+            ("Name", self.name),
+            ("Severity", self.severity_readable),
+            ("Sysuptime", None if self.sysuptime is None else render.timespan(self.sysuptime)),
+            ("Description", self.description),
+            ("Source", self.source),
+            ("Date and Time", None if self.date_and_time is None else str(self.date_and_time)),
+        ]
+        return f"Alarm #{self.sequence_number}: " + ", ".join(
+            f"{label}: {value}" for label, value in details if value
+        )
 
 
 @dataclass(frozen=True)
@@ -81,16 +109,7 @@ def parse_audiocodes_system_events(string_table: Sequence[StringTable]) -> Secti
     return (
         Section(
             alarms=[
-                ActiveAlarm(
-                    sequence_number=int(alarm[0]),
-                    sysuptime=int(alarm[1]),
-                    date_and_time=_parse_date_and_time(alarm[2]),
-                    name=alarm[3],
-                    description=alarm[4],
-                    source=alarm[5],
-                    severity_readable=_READABLE_SEVERITY[alarm[6]],
-                )
-                for alarm in string_table[0]
+                alarm for row in string_table[0] if (alarm := ActiveAlarm.parse(row)) is not None
             ],
             archived_alarm_history_sequence_number=int(len(string_table[1])),
         )
@@ -106,7 +125,7 @@ snmp_section_audiocodes_system_events = SNMPSection(
         SNMPTree(
             base=".1.3.6.1.4.1.5003.11.1.1.1.1",
             oids=[
-                "1",  # AcAlarm::acActiveAlarmSequenceNumber
+                OIDEnd(),
                 "2",  # AcAlarm::acActiveAlarmSysuptime
                 "4",  # AcAlarm::acActiveAlarmDateAndTime
                 "5",  # AcAlarm::acActiveAlarmName
@@ -153,19 +172,7 @@ def check_audiocodes_system_events(
         results.append(
             Result(
                 state=alarm_state,
-                notice=(
-                    f"Alarm #{alarm.sequence_number}: "
-                    f"Name: {alarm.name}, "
-                    f"Severity: {alarm.severity_readable}, "
-                    f"Sysuptime: {render.timespan(alarm.sysuptime)}, "
-                    f"Description: {alarm.description}, "
-                    f"Source: {alarm.source}"
-                    + (
-                        f", Date and Time: {alarm.date_and_time}"
-                        if alarm.date_and_time is not None
-                        else ""
-                    )
-                ),
+                notice=alarm.notice(),
             )
         )
 

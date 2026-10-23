@@ -4,17 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pathlib
+import threading
+from collections.abc import Iterable
+from wsgiref.types import StartResponse, WSGIEnvironment
 
 import pytest
 import werkzeug.test
 
 from cmk.gui.config import active_config
 from cmk.gui.wsgi.applications.profile_switcher import (
+    DirectWrappingProfilingMiddleware,
     LazyImportProfilingMiddleware,
     ProfileConfigLoader,
     ProfileSetting,
 )
-from tests.testlib.gui.web_test_app import SetConfig
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
 @pytest.mark.parametrize(
@@ -56,7 +60,6 @@ def test_profile_switcher_under_various_settings(
             cachegrind_file=pathlib.Path(".") / "multisite.cachegrind",
             profile_file=pathlib.Path(".") / "multisite.profile",
             accumulate=False,
-            discard_first_request=False,
         )
         middleware = LazyImportProfilingMiddleware(
             app_factory_module="cmk.gui.wsgi.app",
@@ -68,5 +71,51 @@ def test_profile_switcher_under_various_settings(
                 fetch_default_config=lambda: profile_setting,
             ),
         )
-        should_profile = middleware.should_profile(environ)
+        should_profile = middleware.should_profile(profile_setting, environ)
         assert profiling_enabled_expected == should_profile
+
+
+def test_a_profiled_request_waits_for_the_running_requests(tmp_path: pathlib.Path) -> None:
+    request_running = threading.Event()
+    end_request = threading.Event()
+    events: list[str] = []
+
+    def app(environ: WSGIEnvironment, _start_response: StartResponse) -> Iterable[bytes]:
+        if "_profile" in environ["QUERY_STRING"]:
+            events.append("profiled request")
+        else:
+            events.append("request started")
+            request_running.set()
+            end_request.wait(timeout=10)
+            events.append("request ended")
+        return []
+
+    setting = ProfileSetting(
+        mode="enable_by_var",
+        cachegrind_file=tmp_path / "multisite.cachegrind",
+        profile_file=tmp_path / "multisite.profile",
+    )
+    middleware = DirectWrappingProfilingMiddleware(
+        app,
+        ProfileConfigLoader(
+            fetch_actual_config=lambda: setting, fetch_default_config=lambda: setting
+        ),
+    )
+
+    def call(url: str) -> None:
+        middleware(werkzeug.test.create_environ(url), lambda *_args: lambda _data: None)
+
+    request = threading.Thread(target=call, args=("/NO_SITE/check_mk/index.py",))
+    profiled_request = threading.Thread(
+        target=call, args=("/NO_SITE/check_mk/index.py?_profile=1",)
+    )
+    request.start()
+    request_running.wait(timeout=10)
+    profiled_request.start()
+    # Give the profiled request the chance to start while the other request is running
+    profiled_request.join(timeout=0.2)
+    end_request.set()
+    request.join()
+    profiled_request.join()
+
+    assert events == ["request started", "request ended", "profiled request"]

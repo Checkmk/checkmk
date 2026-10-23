@@ -6,6 +6,20 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
+
+const { _t } = usei18n()
+useWidgetKeys(_t('Switch'), [
+  { combo: [' '], description: _t('Toggle') },
+  { combo: ['Enter'], description: _t('Toggle') }
+])
+
+const { ariaLabel, ariaLabelledby } = defineProps<{
+  /** Accessible name; a label around the switch does not name it. */
+  ariaLabel?: string | undefined
+  ariaLabelledby?: string | undefined
+}>()
 
 const modelValue = defineModel({ type: Boolean, default: false })
 
@@ -25,6 +39,8 @@ function toggle() {
       role="switch"
       tabindex="0"
       :aria-checked="modelValue"
+      :aria-label="ariaLabel"
+      :aria-labelledby="ariaLabelledby"
       @click="toggle"
       @keydown.space.prevent="toggle"
       @keydown.enter.prevent="toggle"

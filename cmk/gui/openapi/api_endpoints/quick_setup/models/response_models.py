@@ -9,6 +9,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import Discriminator
 
+from cmk.gui.openapi.api_endpoints.models.form_spec import FormSpecValidationMessageModel
 from cmk.gui.openapi.framework.model import api_field, api_model
 
 
@@ -45,6 +46,9 @@ class StageActionModel:
 class StageOverviewModel:
     title: str = api_field(description="The title of a stage", example="Prepare AWS for Checkmk")
     sub_title: str | None = api_field(description="The sub-title of a stage", example="aws")
+    is_applicable: bool = api_field(
+        description="Whether the stage is shown for the current form data.", example=True
+    )
 
 
 @api_model
@@ -66,7 +70,7 @@ class ValidationErrorsModel:
     stage_index: int | None = api_field(
         description="Index of the stage containing errors.", example=0
     )
-    formspec_errors: dict[str, Any] = api_field(
+    formspec_errors: dict[str, list[FormSpecValidationMessageModel]] = api_field(
         description="A mapping of formspec ids to formspec validation errors",
         example={},
     )
@@ -91,6 +95,10 @@ class QuickSetupStageActionResponseModel:
     )
     validation_errors: ValidationErrorsModel | None = api_field(
         description="All formspec errors and general stage errors", example={}
+    )
+    stage_applicability: list[bool] = api_field(
+        description="Whether each stage is shown for the current form data.",
+        example=[True, False],
     )
     background_job_exception: BackgroundJobExceptionModel | None = api_field(
         description=(

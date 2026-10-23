@@ -20,7 +20,7 @@ type _HostLabelFunction = Callable[..., HostLabelGenerator]
 
 # NOTE: The dataclasses below duplicate quite a few things from
 # cmk.data_backend.telemetry_metrics.query.models.attribute_filter. Is there a
-# reason for not simply using the metric backend data types?
+# reason for not simply using the data backend data types?
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -123,14 +123,14 @@ class MetricSelector:
 class MetricsSection[Section]:
     """
     An agent section that pre-filters raw agent data
-    from the metric backend as a data source.
+    from the telemetry metrics as a data source.
 
     Instances will only be picked up by Checkmk if their names start
     with ``metrics_section_``.
 
     Args:
         name:                 The unique name of the section to be registered.
-        selectors:            A list of selectors to apply to the metric backend
+        selectors:            A list of selectors to apply to the telemetry metrics
                               to filter for data.
         parse_function:       The function turning the deserialized
                               :class:`MetricsRecord` instances into the

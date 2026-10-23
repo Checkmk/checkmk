@@ -43,6 +43,52 @@ test('Perfometer renders correct percentage, color, and text', async () => {
   expect(progressbar).toHaveTextContent(formatted)
 })
 
+test('Perfometer draws the bars it is given, the upper one first', () => {
+  const { container } = render(CmkPerfometer, {
+    props: {
+      bars: [
+        [
+          { share: 70, color: 'rgb(0, 128, 0)' },
+          { share: 30, color: null }
+        ],
+        [
+          { share: 35, color: 'rgb(255, 165, 0)' },
+          { share: 65, color: null }
+        ]
+      ],
+      formatted: '70 / 35'
+    }
+  })
+
+  expect(container.querySelectorAll('.cmk-perfometer__row')).toHaveLength(2)
+  const bars = Array.from(container.querySelectorAll<HTMLElement>('.cmk-perfometer__bar'))
+  expect(bars.map((bar) => bar.style.width)).toEqual(['70%', '30%', '35%', '65%'])
+  expect(bars.map((bar) => bar.style.backgroundColor)).toEqual([
+    'rgb(0, 128, 0)',
+    'transparent',
+    'rgb(255, 165, 0)',
+    'transparent'
+  ])
+})
+
+test('Perfometer reports the fill level of its first bar', () => {
+  render(CmkPerfometer, {
+    props: {
+      bars: [
+        [
+          { share: 30, color: 'rgb(0, 128, 0)' },
+          { share: 12, color: 'rgb(0, 0, 255)' },
+          { share: 58, color: null }
+        ]
+      ],
+      formatted: '42'
+    }
+  })
+
+  const progressbar = screen.getByRole('progressbar', { name: 'Perf-O-Meter' })
+  expect(progressbar).toHaveAttribute('aria-valuenow', '42')
+})
+
 test.each([
   { value: 10, range: [40, 100] as [number, number], expected: 0, desc: 'below minimum' },
   { value: 150, range: [0, 100] as [number, number], expected: 100, desc: 'above maximum' },

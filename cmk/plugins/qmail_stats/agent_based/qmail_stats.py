@@ -14,10 +14,9 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 @dataclass(frozen=True)
@@ -31,10 +30,6 @@ def parse_qmail_stats(string_table: StringTable) -> Queue | None:
     if not (raw_length := string_table[0][-1]).isdigit():
         return None
     return Queue(int(raw_length))
-
-
-def discover_qmail_stats(section: Queue) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_qmail_stats(params: Mapping[str, Any], section: Queue) -> CheckResult:
@@ -56,7 +51,7 @@ agent_section_qmail_stats = AgentSection(
 check_plugin_qmail_stats = CheckPlugin(
     name="qmail_stats",
     service_name="Qmail Queue",
-    discovery_function=discover_qmail_stats,
+    discovery_function=discover_one_service,
     check_function=check_qmail_stats,
     check_ruleset_name="mail_queue_length_single",
     check_default_parameters={

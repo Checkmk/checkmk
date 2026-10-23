@@ -11,12 +11,12 @@
 import copy
 import os
 import sys
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field, fields, make_dataclass
 from functools import partial
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Final
+from typing import Any, Final, Protocol
 
 import cmk.ruleset_matcher.tags
 from cmk import trace
@@ -27,7 +27,9 @@ from cmk.gui.exceptions import MKConfigError
 from cmk.gui.general_config import GeneralConfig
 from cmk.gui.i18n import _
 from cmk.gui.legacy_plugins import load_web_plugins
-from cmk.gui.type_defs import RoleName
+from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
+from cmk.gui.type_defs import CustomHostAttrSpec, RoleName, UserSpec
+from cmk.livestatus_client import SiteConfigurations
 from cmk.utils.keypair_store import KeypairStore
 
 tracer = trace.get_tracer()
@@ -53,6 +55,35 @@ builtin_role_ids: Final[list[RoleName]] = [
     *default_authorized_builtin_role_ids,
     *default_unauthorized_builtin_role_ids,
 ]
+
+
+class RequestCacheConfig(Protocol):
+    """The config a request cache is built from
+
+    Config and the ApiConfig of the REST API satisfy it, so pages and endpoints build the caches
+    the plugins read. It names what the values of the caches are built from.
+    """
+
+    @property
+    def wato_hide_folders_without_read_permissions(self) -> bool: ...
+
+    @property
+    def wato_host_attrs(self) -> Sequence[CustomHostAttrSpec]: ...
+
+    @property
+    def tags(self) -> cmk.ruleset_matcher.tags.TagConfig: ...
+
+    @property
+    def sites(self) -> SiteConfigurations: ...
+
+    @property
+    def roles(self) -> Mapping[str, BuiltInUserRole | CustomUserRole]: ...
+
+    @property
+    def multisite_users(self) -> Mapping[str, UserSpec]: ...
+
+    @property
+    def default_user_profile(self) -> UserSpec: ...
 
 
 @dataclass
@@ -132,7 +163,6 @@ def initialize() -> Config:
         **_determine_pysaml2_log_level(config.log_levels),
     }
     log.set_log_levels(log_levels)
-    cmk.gui.i18n.set_user_localizations(config.user_localizations)
 
     return config
 

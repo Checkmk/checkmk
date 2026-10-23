@@ -5,6 +5,7 @@
 
 import json
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from pathlib import Path
 from typing import override
 
@@ -26,6 +27,10 @@ from cmk.werks.tool.cli.id_pool import (
 )
 from cmk.werks.tool.cli.stash import Stash
 from cmk.werks.tool.cli.werk import WerkId
+
+from ._logger import null_logger
+
+_LAUNCHED_FROM = "venv"
 
 
 def _write_secret(paths: Paths) -> None:
@@ -72,7 +77,7 @@ def test_stash_free_id_removes_it() -> None:
 
 def test_stash_free_id_unknown_raises() -> None:
     stash = Stash(ids=[1, 2])
-    with pytest.raises(RuntimeError, match="Could not find werk_id"):
+    with pytest.raises(RuntimeError, match="Could not find werk_id 00099 in the stash"):
         stash.free_id(WerkId(99))
 
 
@@ -138,6 +143,7 @@ def test_paths_object(tmp_path: Path) -> None:
     paths = make_paths_object(tmp_path)
     assert paths.legacy_stash_file == tmp_path / ".cmk-werk-ids"
     assert paths.stash_file == tmp_path / ".local/state/cmk-werks/reserved-ids"
+    assert paths.log_file == tmp_path / ".local/state/cmk-werks/werk-ids.log"
     assert paths.secret_file == tmp_path / ".config/cmk-werks/secret"
 
 
@@ -224,13 +230,23 @@ def test_load_or_update_stash_no_secret_skips_server(tmp_path: Path) -> None:
     )
 
     with pytest.raises(SystemExit):
-        load_or_update_stash(paths, FakeWerkIDsClient("http://werk-ids.test"))
+        load_or_update_stash(
+            paths,
+            FakeWerkIDsClient("http://werk-ids.test"),
+            null_logger(),
+            _LAUNCHED_FROM,
+        )
 
 
 def test_load_or_update_stash_reserves_ids_from_server(tmp_path: Path) -> None:
     paths = _prepare_stash(tmp_path, Stash(ids=[10, 20]))
 
-    stash = load_or_update_stash(paths, FakeWerkIDsClient("http://werk-ids.test"))
+    stash = load_or_update_stash(
+        paths,
+        FakeWerkIDsClient("http://werk-ids.test"),
+        null_logger(),
+        _LAUNCHED_FROM,
+    )
 
     assert isinstance(stash, Stash)
     assert stash.ids == [10, 20, 30, 40]
@@ -239,7 +255,12 @@ def test_load_or_update_stash_reserves_ids_from_server(tmp_path: Path) -> None:
 def test_load_or_update_stash_uses_local_ids_when_server_empty(tmp_path: Path) -> None:
     paths = _prepare_stash(tmp_path, Stash(ids=[10, 20]))
 
-    stash = load_or_update_stash(paths, FakeEmptyServerClient("http://werk-ids.test"))
+    stash = load_or_update_stash(
+        paths,
+        FakeEmptyServerClient("http://werk-ids.test"),
+        null_logger(),
+        _LAUNCHED_FROM,
+    )
 
     assert isinstance(stash, Stash)
     assert stash.ids == [10, 20]
@@ -249,7 +270,12 @@ def test_load_or_update_stash_no_ids_anywhere_bails_out(tmp_path: Path) -> None:
     paths = _prepare_stash(tmp_path, Stash(ids=[]))
 
     with pytest.raises(SystemExit):
-        load_or_update_stash(paths, FakeEmptyServerClient("http://werk-ids.test"))
+        load_or_update_stash(
+            paths,
+            FakeEmptyServerClient("http://werk-ids.test"),
+            null_logger(),
+            _LAUNCHED_FROM,
+        )
 
 
 def test_load_or_update_stash_unwritable_stash_location_skips_server(
@@ -262,7 +288,12 @@ def test_load_or_update_stash_unwritable_stash_location_skips_server(
     _make_stash_location_unwritable(paths)
 
     with pytest.raises(SystemExit):
-        load_or_update_stash(paths, FakeForbiddenServerClient("http://werk-ids.test"))
+        load_or_update_stash(
+            paths,
+            FakeForbiddenServerClient("http://werk-ids.test"),
+            null_logger(),
+            _LAUNCHED_FROM,
+        )
 
     assert str(paths.stash_file) in capsys.readouterr().err
 
@@ -320,6 +351,20 @@ def test_load_stash_from_file_bails_when_both_files_exist(tmp_path: Path) -> Non
         load_stash_from_file(paths)
 
 
+def test_load_stash_from_file_asks_to_delete_the_legacy_file_after_merging(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    paths = make_paths_object(tmp_path)
+    _write_secret(paths)
+    dump_stash_to_file(paths, Stash(ids=[5]))
+    paths.legacy_stash_file.write_text('{"ids_by_project": {"cmk": [99]}}', encoding="utf-8")
+
+    with pytest.raises(SystemExit):
+        load_stash_from_file(paths)
+
+    assert "then delete the legacy file" in capsys.readouterr().err
+
+
 # ---------------------------------------------------------------------------
 # Migration tests
 # ---------------------------------------------------------------------------
@@ -328,7 +373,7 @@ def test_load_stash_from_file_bails_when_both_files_exist(tmp_path: Path) -> Non
 def test_migrate_no_legacy_file_writes_empty_stash(tmp_path: Path) -> None:
     paths = make_paths_object(tmp_path)
     _write_secret(paths)
-    migrate_werk_ids_file(paths)
+    migrate_werk_ids_file(paths, null_logger(), _LAUNCHED_FROM)
     assert paths.stash_file.exists()
     assert Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8")).ids == []
 
@@ -337,7 +382,7 @@ def test_migrate_empty_legacy_file_writes_empty_stash(tmp_path: Path) -> None:
     paths = make_paths_object(tmp_path)
     _write_secret(paths)
     paths.legacy_stash_file.write_text("", encoding="utf-8")
-    migrate_werk_ids_file(paths)
+    migrate_werk_ids_file(paths, null_logger(), _LAUNCHED_FROM)
     assert paths.stash_file.exists()
     assert Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8")).ids == []
     assert not paths.legacy_stash_file.exists()
@@ -351,7 +396,7 @@ def test_migrate_json_legacy_file(tmp_path: Path) -> None:
     legacy_json = '{"__version__": "2", "ids_by_project": {"cmk": [10, 11], "cloudmk": [1000]}}'
     paths.legacy_stash_file.write_text(legacy_json, encoding="utf-8")
 
-    migrate_werk_ids_file(paths)
+    migrate_werk_ids_file(paths, null_logger(), _LAUNCHED_FROM)
 
     assert paths.stash_file.exists()
     new_stash = Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
@@ -364,7 +409,7 @@ def test_migrate_list_legacy_file(tmp_path: Path) -> None:
     _write_secret(paths)
     paths.legacy_stash_file.write_text("[42, 43]", encoding="utf-8")
 
-    migrate_werk_ids_file(paths)
+    migrate_werk_ids_file(paths, null_logger(), _LAUNCHED_FROM)
 
     new_stash = Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
     assert sorted(new_stash.ids) == [42, 43]
@@ -381,7 +426,7 @@ def test_migrate_werk_ids_file_merges_both_files(tmp_path: Path) -> None:
         '{"__version__": "2", "ids_by_project": {"cmk": [2]}}', encoding="utf-8"
     )
 
-    migrate_werk_ids_file(paths)
+    migrate_werk_ids_file(paths, null_logger(), _LAUNCHED_FROM)
 
     new_stash = Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
     assert sorted(new_stash.ids) == [1, 2]
@@ -399,7 +444,7 @@ def test_migrate_werk_ids_file_deduplicates_overlapping_ids(tmp_path: Path) -> N
         encoding="utf-8",
     )
 
-    migrate_werk_ids_file(paths)
+    migrate_werk_ids_file(paths, null_logger(), _LAUNCHED_FROM)
 
     new_stash = Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
     assert sorted(new_stash.ids) == [1, 2, 3]
@@ -417,10 +462,10 @@ def test_migrate_werk_ids_file_is_idempotent(tmp_path: Path) -> None:
         '{"__version__": "2", "ids_by_project": {"cmk": [2]}}', encoding="utf-8"
     )
 
-    migrate_werk_ids_file(paths)
+    migrate_werk_ids_file(paths, null_logger(), _LAUNCHED_FROM)
     after_first = paths.stash_file.read_text(encoding="utf-8")
 
-    migrate_werk_ids_file(paths)
+    migrate_werk_ids_file(paths, null_logger(), _LAUNCHED_FROM)
     after_second = paths.stash_file.read_text(encoding="utf-8")
 
     assert after_first == after_second
@@ -442,17 +487,21 @@ def _make_response(status_code: int, content: bytes) -> requests.Response:
 
 
 def test_server_error_message_from_json_error() -> None:
-    response = _make_response(400, json.dumps({"error": "Bad input."}).encode("utf-8"))
+    response = _make_response(
+        HTTPStatus.BAD_REQUEST, json.dumps({"error": "Bad input."}).encode("utf-8")
+    )
     assert _server_error_message(response) == "Bad input."
 
 
 def test_server_error_message_json_without_error_key() -> None:
-    response = _make_response(500, json.dumps({"status": "boom"}).encode("utf-8"))
+    response = _make_response(
+        HTTPStatus.INTERNAL_SERVER_ERROR, json.dumps({"status": "boom"}).encode("utf-8")
+    )
     assert _server_error_message(response) == '{"status": "boom"}'
 
 
 def test_server_error_message_non_json_body() -> None:
-    response = _make_response(502, b"  Bad Gateway  ")
+    response = _make_response(HTTPStatus.BAD_GATEWAY, b"  Bad Gateway  ")
     assert _server_error_message(response) == "Bad Gateway"
 
 
@@ -465,7 +514,7 @@ def test_server_error_message_non_json_body() -> None:
 # to fail loudly rather than fall through to the real one and reach the network.
 class _FakeHttpSession:
     def __init__(
-        self, status_code: int = 200, *, unreachable: bool = False, body: bytes = b"{}"
+        self, status_code: int = HTTPStatus.OK, *, unreachable: bool = False, body: bytes = b"{}"
     ) -> None:
         self.status_code = status_code
         self.unreachable = unreachable
@@ -502,14 +551,16 @@ def _secret_file(tmp_path: Path) -> Path:
 
 
 def test_ensure_connection_against_a_healthy_server() -> None:
-    server = _FakeHttpSession(200)
+    server = _FakeHttpSession(HTTPStatus.OK)
 
     assert WerkIDsClient("http://werk-ids.test", session=server).ensure_connection() is True
     assert server.calls[0][0] == "http://werk-ids.test"
 
 
 def test_ensure_connection_against_a_failing_server(capsys: pytest.CaptureFixture[str]) -> None:
-    client = WerkIDsClient("http://werk-ids.test", session=_FakeHttpSession(500))
+    client = WerkIDsClient(
+        "http://werk-ids.test", session=_FakeHttpSession(HTTPStatus.INTERNAL_SERVER_ERROR)
+    )
 
     assert client.ensure_connection() is False
     assert "could not connect" in capsys.readouterr().err
@@ -522,7 +573,7 @@ def test_ensure_connection_against_an_unreachable_server() -> None:
 
 
 def test_test_connection_sends_the_secret_as_a_bearer_token(tmp_path: Path) -> None:
-    server = _FakeHttpSession(200)
+    server = _FakeHttpSession(HTTPStatus.OK)
 
     result = WerkIDsClient("http://werk-ids.test", session=server).test_connection(
         _secret_file(tmp_path)
@@ -537,7 +588,9 @@ def test_test_connection_sends_the_secret_as_a_bearer_token(tmp_path: Path) -> N
 def test_test_connection_with_a_rejected_secret(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    client = WerkIDsClient("http://werk-ids.test", session=_FakeHttpSession(401))
+    client = WerkIDsClient(
+        "http://werk-ids.test", session=_FakeHttpSession(HTTPStatus.UNAUTHORIZED)
+    )
 
     assert client.test_connection(_secret_file(tmp_path)) is False
     assert "rejected the secret" in capsys.readouterr().err
@@ -545,7 +598,7 @@ def test_test_connection_with_a_rejected_secret(
 
 def test_reserve_werk_ids_against_an_injected_server(tmp_path: Path) -> None:
     # the POST goes through the same session, so the whole client is injectable
-    server = _FakeHttpSession(200, body=b'{"reserved_werk_ids": [30, 31]}')
+    server = _FakeHttpSession(HTTPStatus.OK, body=b'{"reserved_werk_ids": [30, 31]}')
 
     reserved = WerkIDsClient("http://werk-ids.test", session=server).reserve_werk_ids(
         _secret_file(tmp_path), 8
@@ -560,11 +613,11 @@ def test_reserve_werk_ids_against_an_injected_server(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     ("status_code", "expected"),
     [
-        pytest.param(200, ServerStatus.OK, id="200 -> ok"),
-        pytest.param(401, ServerStatus.UNAUTHORIZED, id="401 -> unauthorized"),
-        pytest.param(403, ServerStatus.UNAUTHORIZED, id="403 -> unauthorized"),
-        pytest.param(500, ServerStatus.ERROR, id="500 -> error"),
-        pytest.param(502, ServerStatus.ERROR, id="502 -> error"),
+        pytest.param(HTTPStatus.OK, ServerStatus.OK, id="200 -> ok"),
+        pytest.param(HTTPStatus.UNAUTHORIZED, ServerStatus.UNAUTHORIZED, id="401 -> unauthorized"),
+        pytest.param(HTTPStatus.FORBIDDEN, ServerStatus.UNAUTHORIZED, id="403 -> unauthorized"),
+        pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, ServerStatus.ERROR, id="500 -> error"),
+        pytest.param(HTTPStatus.BAD_GATEWAY, ServerStatus.ERROR, id="502 -> error"),
     ],
 )
 def test_check_maps_status_code(tmp_path: Path, status_code: int, expected: ServerStatus) -> None:
@@ -580,7 +633,7 @@ def test_check_unreachable(tmp_path: Path) -> None:
 
 
 def test_check_sends_stripped_secret_as_bearer_token(tmp_path: Path) -> None:
-    server = _FakeHttpSession(200)
+    server = _FakeHttpSession(HTTPStatus.OK)
 
     WerkIDsClient("http://werk-ids.test", session=server).check(_secret_file(tmp_path))
 

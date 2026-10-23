@@ -50,8 +50,9 @@ def _make_form() -> Dictionary:
 
 rule_spec_azure_usagedetails = CheckParameters(
     name="azure_usagedetails",
-    title=Title("Azure usage details (costs) (deprecated)"),
+    title=Title("Azure usage details (costs)"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_form,
     condition=HostAndItemCondition(item_title=Title("Service Type")),
+    is_deprecated=True,
 )

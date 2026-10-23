@@ -660,7 +660,9 @@ def print_verbose_changes(
             label = _CATEGORY_LABELS[category]
             _print_locked(f"  {label}:")
             for filepath in files:
-                if _fs_prefixes and any(filepath.startswith(p) for p in _fs_prefixes):
+                if category == ChangeCategory.VUE and any(
+                    filepath.startswith(p) for p in _fs_prefixes
+                ):
                     _print_locked(f"    {filepath} {DIM}(Vite HMR){RESET}")
                 else:
                     _print_locked(f"    {filepath}")

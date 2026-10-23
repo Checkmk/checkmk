@@ -1,0 +1,34 @@
+# --- Known environment variables defined in legacy config ---
+# ASMUSER ***
+# ASYNC_ASM_SECTIONS asm_diskgroup
+# DBUSER ***
+# SYNC_ASM_SECTIONS instance processes
+# SYNC_SECTIONS instance sessions
+# --- Unified Config ---
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+      port: 1521
+    authentication:
+      username: "user"
+      password: "pass"
+      type: standard
+      asm_username: "asmsnmp"
+      asm_password: "asmpass"
+      asm_role: sysasm
+    sections:
+      - asm_diskgroup:
+          is_async: true
+          affinity: "asm"
+      - asm_instance:
+          is_async: false
+          affinity: "asm"
+      - instance:
+          is_async: false
+      - processes:
+          is_async: false
+          affinity: "asm"
+      - sessions:
+          is_async: false

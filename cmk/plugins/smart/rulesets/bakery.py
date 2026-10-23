@@ -26,13 +26,15 @@ def migrate(value: object) -> Mapping[str, object]:
         if isinstance(dep, (tuple, list)) and dep[0] in ("sync", "cached", "do_not_deploy"):
             return value
         if isinstance(dep, (tuple, list)) and dep[0] == "smart_posix":
-            return {"deployment": ("sync", None)}
+            return {"deployment": ("sync", None), "use_legacy_plugin": False}
         if isinstance(dep, (tuple, list)) and dep[0] == "smart":
             return {"deployment": ("sync", None), "use_legacy_plugin": True}
     if value is None:
         return {"deployment": ("do_not_deploy", None)}
     if value == "smart_posix":
-        return {"deployment": ("sync", None)}
+        # Old rule ("first matching rule wins"): make the plug-in choice explicit so that merging
+        # with other rules does not change the outcome.
+        return {"deployment": ("sync", None), "use_legacy_plugin": False}
     if value == "smart":
         return {"deployment": ("sync", None), "use_legacy_plugin": True}
     raise ValueError(f"Unexpected value: {value!r}")

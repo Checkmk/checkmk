@@ -9,7 +9,7 @@ UNIT_TIME = metrics.Unit(metrics.TimeNotation())
 
 metric_kube_info_age = metrics.Metric(
     name="kube_info_age",
-    title=Title("Age"),
+    title=Title("Kubernetes object age"),
     unit=UNIT_TIME,
     color=metrics.Color.CYAN,
 )

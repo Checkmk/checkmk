@@ -211,9 +211,9 @@ def check_apache_status(item: str, params: Mapping[str, Any], section: Section) 
         renderer: Callable[[float], str] | None = None
         if key == "Uptime":
             renderer = render.timespan
-        elif not isinstance(value, float):
+        elif isinstance(value, int):
 
-            def renderer(i: float) -> str:  # type: ignore[unreachable]
+            def renderer(i: float) -> str:
                 return "%d" % int(i)
 
         yield from check_levels_v1(

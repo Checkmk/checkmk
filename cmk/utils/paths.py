@@ -79,6 +79,7 @@ base_discovered_host_labels_dir = _omd_path("var/check_mk/discovered_host_labels
 discovered_host_labels_dir = base_discovered_host_labels_dir
 base_builtin_host_labels_file = _omd_path("var/check_mk/builtin_host_labels.json")
 builtin_host_labels_file = base_builtin_host_labels_file
+inventorized_host_labels_dir = _omd_path("var/check_mk/inventorized_host_labels")
 autodiscovery_dir = _omd_path("var/check_mk/autodiscovery")
 profile_dir = var_dir / "web"
 diagnostics_dir = var_dir / "diagnostics"
@@ -157,6 +158,7 @@ local_reports_dir = local_gui_plugins_dir / "reports"
 # Agent registration paths
 received_outputs_dir = omd_root / "var/agent-receiver/received-outputs"
 uuid_lookup_dir = omd_root / "var/agent-receiver/uuid-lookup"
+registrations_dir = omd_root / "var/agent-receiver/registrations"
 data_source_push_agent_dir = data_source_cache_dir / "push-agent"
 _r4r_base_dir = var_dir / "wato/requests-for-registration"
 r4r_new_dir = _r4r_base_dir.joinpath("NEW")

@@ -34,13 +34,13 @@ function renderFilter(initial: ColumnFilterNode<'num_services'> | undefined = un
 test('the option group is reachable by name', () => {
   renderFilter()
 
-  expect(screen.getByRole('radiogroup', { name: 'Value range' })).toBeInTheDocument()
+  expect(screen.getByRole('group', { name: 'Value range' })).toBeInTheDocument()
 })
 
-test('selecting "Any (>0)" applies a lone lower bound of 1', async () => {
+test('selecting "At least one" applies a lone lower bound of 1', async () => {
   const { model } = renderFilter()
 
-  await userEvent.click(screen.getByRole('radio', { name: 'Any (>0)' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Toggle At least one' }))
 
   expect(model.value).toEqual({
     type: 'condition',
@@ -50,10 +50,10 @@ test('selecting "Any (>0)" applies a lone lower bound of 1', async () => {
   })
 })
 
-test('selecting "None (=0)" applies a 0-to-0 range', async () => {
+test('selecting "None" applies a 0-to-0 range', async () => {
   const { model } = renderFilter()
 
-  await userEvent.click(screen.getByRole('radio', { name: 'None (=0)' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Toggle None' }))
 
   expect(model.value).toEqual({
     type: 'and',
@@ -64,20 +64,41 @@ test('selecting "None (=0)" applies a 0-to-0 range', async () => {
   })
 })
 
-test('the range inputs are disabled until the "Range" radio is selected', async () => {
+test('a column says in its own words what a preset matches', async () => {
+  const model = ref<ColumnFilterNode<'num_services'> | undefined>(undefined)
+  const described: NumericFilter<'num_services'> = {
+    ...definition,
+    anyInfo: 'Shows hosts with at least one service.'
+  }
+  render(
+    defineComponent({
+      components: { FilterNumeric },
+      setup() {
+        return { model, definition: described }
+      },
+      template: '<FilterNumeric v-model="model" :definition="definition" />'
+    })
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: 'Toggle At least one' }))
+
+  expect(screen.getByText('Shows hosts with at least one service.')).toBeInTheDocument()
+})
+
+test('a preset replaces the range inputs with what it matches', async () => {
   renderFilter()
 
-  expect(screen.getByRole('spinbutton', { name: 'From' })).toBeDisabled()
+  expect(screen.getByRole('spinbutton', { name: 'From' })).toBeInTheDocument()
 
-  await userEvent.click(screen.getByRole('radio', { name: 'Range' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Toggle None' }))
 
-  expect(screen.getByRole('spinbutton', { name: 'From' })).toBeEnabled()
+  expect(screen.queryByRole('spinbutton', { name: 'From' })).not.toBeInTheDocument()
+  expect(screen.getByText('Shows rows with a value of 0.')).toBeInTheDocument()
 })
 
 test('both bounds produce an "and" of gte and lte conditions', async () => {
   const { model } = renderFilter()
 
-  await userEvent.click(screen.getByRole('radio', { name: 'Range' }))
   await userEvent.type(screen.getByRole('spinbutton', { name: 'From' }), '3')
   await userEvent.type(screen.getByRole('spinbutton', { name: 'To' }), '10')
 
@@ -93,7 +114,6 @@ test('both bounds produce an "and" of gte and lte conditions', async () => {
 test('a lone lower bound produces a single gte condition', async () => {
   const { model } = renderFilter()
 
-  await userEvent.click(screen.getByRole('radio', { name: 'Range' }))
   await userEvent.type(screen.getByRole('spinbutton', { name: 'From' }), '1')
 
   expect(model.value).toEqual({
@@ -107,7 +127,6 @@ test('a lone lower bound produces a single gte condition', async () => {
 test('a lone upper bound produces a single lte condition', async () => {
   const { model } = renderFilter()
 
-  await userEvent.click(screen.getByRole('radio', { name: 'Range' }))
   await userEvent.type(screen.getByRole('spinbutton', { name: 'To' }), '5')
 
   expect(model.value).toEqual({
@@ -140,12 +159,15 @@ test('an existing custom range pre-selects "Range" and reflects the bounds', () 
     ]
   })
 
-  expect(screen.getByRole('radio', { name: 'Range' })).toBeChecked()
+  expect(screen.getByRole('button', { name: 'Toggle Range' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
   expect(screen.getByRole('spinbutton', { name: 'From' })).toHaveValue(2)
   expect(screen.getByRole('spinbutton', { name: 'To' })).toHaveValue(8)
 })
 
-test('an existing lone gte of 1 pre-selects "Any (>0)"', () => {
+test('an existing lone gte of 1 pre-selects "At least one"', () => {
   renderFilter({
     type: 'condition',
     field: 'num_services',
@@ -153,11 +175,14 @@ test('an existing lone gte of 1 pre-selects "Any (>0)"', () => {
     value: 1
   })
 
-  expect(screen.getByRole('radio', { name: 'Any (>0)' })).toBeChecked()
-  expect(screen.getByRole('spinbutton', { name: 'From' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Toggle At least one' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+  expect(screen.queryByRole('spinbutton', { name: 'From' })).not.toBeInTheDocument()
 })
 
-test('an existing 0-to-0 range pre-selects "None (=0)"', () => {
+test('an existing 0-to-0 range pre-selects "None"', () => {
   renderFilter({
     type: 'and',
     children: [
@@ -166,5 +191,8 @@ test('an existing 0-to-0 range pre-selects "None (=0)"', () => {
     ]
   })
 
-  expect(screen.getByRole('radio', { name: 'None (=0)' })).toBeChecked()
+  expect(screen.getByRole('button', { name: 'Toggle None' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
 })

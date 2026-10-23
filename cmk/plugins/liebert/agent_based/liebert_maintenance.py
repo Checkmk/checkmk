@@ -15,14 +15,13 @@ from cmk.agent_based.v1 import (
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.liebert.agent_based.lib import (
     DETECT_LIEBERT,
     parse_liebert_without_unit,
@@ -40,10 +39,6 @@ Section = SectionWithoutUnit[int]
 
 def parse_liebert_maintenence(string_table: StringTable) -> Section | None:
     return parse_liebert_without_unit([string_table], int) or None
-
-
-def discover_liebert_maintenance(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_liebert_maintenance(params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -88,7 +83,7 @@ snmp_section_liebert_maintenance = SimpleSNMPSection(
 check_plugin_liebert_maintenance = CheckPlugin(
     name="liebert_maintenance",
     service_name="Maintenance",
-    discovery_function=discover_liebert_maintenance,
+    discovery_function=discover_one_service,
     check_function=check_liebert_maintenance,
     check_default_parameters={"levels": (10, 5)},
 )

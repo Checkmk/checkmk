@@ -43,6 +43,20 @@ test('FormFloat renders value', () => {
   expect(element.value).toBe('42.5')
 })
 
+test('FormFloat renders an empty value as an empty field', () => {
+  render(FormFloat, {
+    props: {
+      spec,
+      data: '',
+      backendValidation: []
+    }
+  })
+
+  const element = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'fooLabel' })
+
+  expect(element.value).toBe('')
+})
+
 test('FormFloat renders required', () => {
   render(FormFloat, {
     props: {
@@ -108,4 +122,17 @@ test('FormFloat renders unit', () => {
     }
   })
   expect(screen.getByText('fooUnit')).toBeInTheDocument()
+})
+
+test('FormFloat sends a cleared field as an empty value', async () => {
+  const { getCurrentData } = await renderForm({
+    spec,
+    data: 42,
+    backendValidation: []
+  })
+
+  const element = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'fooLabel' })
+  await fireEvent.update(element, '')
+
+  expect(getCurrentData()).toBe('""')
 })

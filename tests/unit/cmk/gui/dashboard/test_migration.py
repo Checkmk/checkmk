@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.gui import visuals
 from cmk.gui.dashboard.dashlet import StatsDashletConfig
 from cmk.gui.dashboard.store import (
     _internal_dashboard_to_runtime_dashboard,
@@ -16,7 +17,8 @@ from cmk.gui.dashboard.store import (
     migrate_dashboard_config,
 )
 from cmk.gui.dashboard.type_defs import ViewDashletConfig
-from cmk.gui.type_defs import DashboardEmbeddedViewSpec
+from cmk.gui.type_defs import DashboardEmbeddedViewSpec, ViewSpec
+from cmk.gui.views.store import ViewStore
 
 
 def _make_dashboard(**overrides: object) -> MaybeOldDashboardConfig:
@@ -483,3 +485,330 @@ class TestInternalDashboardToRuntimeDashboard:
         result = _internal_dashboard_to_runtime_dashboard(raw)
 
         assert "dashlets" not in result
+
+
+def _responsive_dashboard(widget: dict[str, object]) -> MaybeOldDashboardConfig:
+    return _make_dashboard(
+        layout={"type": "responsive_grid", "layouts": {}}, widgets={"w1": widget}
+    )
+
+
+class TestMigrateMetricTimeRange:
+    def test_a_stored_current_value_becomes_a_typed_dict(self) -> None:
+        dashboard = _responsive_dashboard(
+            {"type": "single_metric", "metric": "load1", "time_range": "current"}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == {"type": "current"}  # type: ignore[typeddict-item]
+
+    def test_a_stored_fixed_window_becomes_a_typed_dict(self) -> None:
+        dashboard = _responsive_dashboard(
+            {
+                "type": "gauge",
+                "metric": "load1",
+                "time_range": ("range", {"window": 14400, "rrd_consolidation": "max"}),
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == {  # type: ignore[typeddict-item]
+            "type": "range",
+            "window": 14400,
+            "rrd_consolidation": "max",
+        }
+
+    def test_a_migrated_time_range_stays_unchanged(self) -> None:
+        time_range = {"type": "range", "window": 14400, "rrd_consolidation": "max"}
+        dashboard = _responsive_dashboard(
+            {"type": "single_metric", "metric": "load1", "time_range": time_range}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == time_range  # type: ignore[typeddict-item]
+
+    def test_another_widget_type_keeps_its_time_range(self) -> None:
+        dashboard = _responsive_dashboard({"type": "hoststats", "time_range": ("age", 3600)})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == ("age", 3600)  # type: ignore[typeddict-item]
+
+
+class TestMigrateAlertOverviewTimeRange:
+    def test_a_stored_timerange_becomes_a_fixed_window(self) -> None:
+        dashboard = _responsive_dashboard({"type": "alert_overview", "time_range": ("age", 3600)})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == {  # type: ignore[typeddict-item]
+            "type": "range",
+            "window": ("age", 3600),
+        }
+
+    def test_a_migrated_time_range_stays_unchanged(self) -> None:
+        time_range = {"type": "range", "window": "d0"}
+        dashboard = _responsive_dashboard({"type": "alert_overview", "time_range": time_range})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == time_range  # type: ignore[typeddict-item]
+
+
+class TestMigrateTimelineTimeRange:
+    @pytest.mark.parametrize(
+        "render_mode",
+        [
+            ("bar_chart", {"time_range": 90000, "time_resolution": "h"}),
+            ("simple_number", {"time_range": ("age", 3600)}),
+        ],
+    )
+    def test_a_stored_timerange_becomes_a_fixed_window(
+        self, render_mode: tuple[str, dict[str, object]]
+    ) -> None:
+        mode, parameters = render_mode
+        dashboard = _responsive_dashboard(
+            {"type": "alerts_bar_chart", "render_mode": render_mode, "log_target": "both"}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["render_mode"] == (  # type: ignore[typeddict-item]
+            mode,
+            {**parameters, "time_range": {"type": "range", "window": parameters["time_range"]}},
+        )
+
+    def test_a_migrated_time_range_stays_unchanged(self) -> None:
+        render_mode = ("simple_number", {"time_range": {"type": "dashboard"}})
+        dashboard = _responsive_dashboard(
+            {"type": "notifications_bar_chart", "render_mode": render_mode, "log_target": "both"}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["render_mode"] == render_mode  # type: ignore[typeddict-item]
+
+    def test_another_widget_with_a_render_mode_stays_unchanged(self) -> None:
+        widget = {"type": "hoststats", "render_mode": ("bar_chart", {"time_range": 90000})}
+        dashboard = _responsive_dashboard(dict(widget))
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"] == widget
+
+
+class TestClampTimelineWindow:
+    @pytest.mark.parametrize("widget_type", ["alerts_bar_chart", "notifications_bar_chart"])
+    def test_a_stored_window_over_two_years_is_cut(self, widget_type: str) -> None:
+        dashboard = _responsive_dashboard(
+            {
+                "type": widget_type,
+                "render_mode": (
+                    "bar_chart",
+                    {"time_range": ("age", 800 * 86400), "time_resolution": "d"},
+                ),
+                "log_target": "both",
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["render_mode"] == (  # type: ignore[typeddict-item]
+            "bar_chart",
+            {
+                "time_range": {"type": "range", "window": ("age", 730 * 86400)},
+                "time_resolution": "d",
+            },
+        )
+
+    def test_a_window_that_follows_the_dashboard_stays_unchanged(self) -> None:
+        render_mode = ("simple_number", {"time_range": {"type": "dashboard"}})
+        dashboard = _responsive_dashboard(
+            {"type": "alerts_bar_chart", "render_mode": render_mode, "log_target": "both"}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["render_mode"] == render_mode  # type: ignore[typeddict-item]
+
+    def test_another_widget_keeps_a_window_over_two_years(self) -> None:
+        time_range = {"type": "range", "window": ("age", 800 * 86400)}
+        dashboard = _responsive_dashboard({"type": "alert_overview", "time_range": time_range})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == time_range  # type: ignore[typeddict-item]
+
+
+def _legacy_view_link(title: str, view_name: str, filter_ids: list[str]) -> dict[str, object]:
+    return {
+        "type": "custom",
+        "links": [
+            {
+                "title": title,
+                "location": ("views", view_name),
+                "filters": [{"filter_id": filter_id} for filter_id in filter_ids],
+                "include_context": False,
+                "include_time_range": False,
+                "show_filter_form": False,
+            }
+        ],
+    }
+
+
+def _save_host_view_copy(owner: UserId, name: str, title: str) -> None:
+    host_view = ViewStore.load_all_views()[(UserId.builtin(), "host")]
+    copy: ViewSpec = {**host_view, "owner": owner, "name": name, "title": title, "packaged": False}
+    visuals.save("views", {(owner, name): copy}, owner)
+
+
+@pytest.mark.usefixtures("load_config", "request_context")
+class TestMigrateInventoryLink:
+    @pytest.mark.parametrize(
+        "view_name, link",
+        [
+            pytest.param(
+                "host",
+                _legacy_view_link("Services of host", "host", ["siteopt", "host"]),
+                id="a view of single hosts carries the site and the host",
+            ),
+            pytest.param(
+                "allhosts",
+                _legacy_view_link("All hosts", "allhosts", ["siteopt"]),
+                id="a view of all hosts carries the site only",
+            ),
+            pytest.param(
+                "servicedesc",
+                _legacy_view_link("All services with this description", "servicedesc", []),
+                id="a view without a site hint carries nothing from the host",
+            ),
+        ],
+    )
+    def test_a_stored_link_to_a_view_carries_what_the_legacy_link_did(
+        self, view_name: str, link: dict[str, object]
+    ) -> None:
+        dashboard = _responsive_dashboard(
+            {
+                "type": "inventory",
+                "inventory_path": ".hardware.cpu.cores",
+                "link_spec": ("views", view_name),
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"] == {
+            "type": "inventory",
+            "inventory_path": ".hardware.cpu.cores",
+            "contextual_link": link,
+        }
+
+    @pytest.mark.parametrize(
+        "view_name",
+        [
+            pytest.param("mine", id="a view only the owner has"),
+            pytest.param("host", id="a copy that shadows the built-in view"),
+        ],
+    )
+    def test_a_stored_link_to_the_dashboard_owners_view_reads_that_copy(
+        self, with_user_login: UserId, view_name: str
+    ) -> None:
+        _save_host_view_copy(with_user_login, view_name, "Mine")
+        dashboard = _responsive_dashboard(
+            {
+                "type": "inventory",
+                "inventory_path": ".hardware.cpu.cores",
+                "link_spec": ("views", view_name),
+            }
+        )
+        dashboard["owner"] = with_user_login
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"] == {
+            "type": "inventory",
+            "inventory_path": ".hardware.cpu.cores",
+            "contextual_link": _legacy_view_link("Mine", view_name, ["siteopt", "host"]),
+        }
+
+    def test_a_stored_link_to_another_users_view_becomes_an_inherited_link(
+        self, with_user_login: UserId
+    ) -> None:
+        _save_host_view_copy(with_user_login, "theirs", "Private title")
+        dashboard = _responsive_dashboard(
+            {
+                "type": "inventory",
+                "inventory_path": ".hardware.cpu.cores",
+                "link_spec": ("views", "theirs"),
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"] == {
+            "type": "inventory",
+            "inventory_path": ".hardware.cpu.cores",
+            "contextual_link": {
+                "type": "inherited",
+                "location": ("views", "theirs"),
+                "include_context": False,
+                "include_time_range": False,
+                "show_filter_form": False,
+            },
+        }
+
+    @pytest.mark.parametrize(
+        "target",
+        [
+            pytest.param(("dashboards", "main"), id="a dashboard"),
+            pytest.param(("views", "no_such_view"), id="a deleted view"),
+        ],
+    )
+    def test_a_stored_link_to_an_unread_target_becomes_an_inherited_link(
+        self, target: tuple[str, str]
+    ) -> None:
+        dashboard = _responsive_dashboard(
+            {"type": "inventory", "inventory_path": ".hardware.cpu.cores", "link_spec": target}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"] == {
+            "type": "inventory",
+            "inventory_path": ".hardware.cpu.cores",
+            "contextual_link": {
+                "type": "inherited",
+                "location": target,
+                "include_context": False,
+                "include_time_range": False,
+                "show_filter_form": False,
+            },
+        }
+
+    def test_a_migrated_link_stays_unchanged(self) -> None:
+        widget = {
+            "type": "inventory",
+            "inventory_path": ".hardware.cpu.cores",
+            "contextual_link": {
+                "type": "inherited",
+                "location": ("dashboards", "main"),
+                "include_context": True,
+                "include_time_range": False,
+                "show_filter_form": True,
+            },
+        }
+        dashboard = _responsive_dashboard(dict(widget))
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"] == widget
+
+    def test_another_widget_type_keeps_its_link_spec(self) -> None:
+        dashboard = _responsive_dashboard({"type": "hoststats", "link_spec": ("views", "host")})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["link_spec"] == ("views", "host")  # type: ignore[typeddict-item]

@@ -31,9 +31,9 @@ from cmk.graphing_engine import (
     Stack,
     Unit,
 )
-from cmk.gui.graphing._graph_codec import community_graph_codec
-from tests.testlib.graphing import discovered_graphs
-from tests.testlib.site import Site
+from cmk.gui.graphing._graph_codec import COMMUNITY_GRAPH_CODEC
+from tests.testlib.system.graphing import discovered_graphs
+from tests.testlib.system.site import Site
 
 pytestmark = pytest.mark.skip_if_edition("cloud")
 
@@ -139,7 +139,7 @@ def test_graph_data_for_missing_rrd_returns_empty_not_error(site: Site) -> None:
 
     The graph is built here rather than discovered: discovery matches against the perf data
     this service does not have, so it is the one definition no discovery can hand out. It goes
-    over the wire through the codec, not `_engine_dispatch.serialize_graphs`, whose per-kind
+    over the wire through the codec, not `_graph_dispatch.serialize_graphs`, whose per-kind
     registry is filled by the GUI at startup and so is empty in this process.
     """
     graph = Graph(
@@ -170,7 +170,7 @@ def test_graph_data_for_missing_rrd_returns_empty_not_error(site: Site) -> None:
 
     # The client raises on any non-2xx, so reaching the assertions at all is the "not a 500" half.
     response = site.openapi.graph.fetch_data(
-        internal=community_graph_codec().serialize_graphs([graph]),
+        internal={"graphs": [COMMUNITY_GRAPH_CODEC.serialize_graph(graph)]},
         requested_time_range={"start": end - 3600, "end": end, "step": 60},
         consolidation_function="avg",
     )

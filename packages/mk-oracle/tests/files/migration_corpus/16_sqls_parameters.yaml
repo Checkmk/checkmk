@@ -1,0 +1,23 @@
+# WARNING: param_check: SQLS_PARAMETERS is not supported and is not migrated; the SQL*Plus commands it prepends to the query are lost, so convert the substitution variables the SQL file uses into 'sql_params:' manually
+# WARNING: param_check: cannot read SQL file 'param_check.sql': No such file or directory (os error 2)
+# --- Known environment variables defined in legacy config ---
+# DBUSER ***
+# SQLS.param_check.SQLS_PARAMETERS DEFINE warn_level = 10
+# SQLS.param_check.SQLS_SIDS PROD1
+# SQLS.param_check.SQLS_SQL param_check.sql
+# SQLS_SECTIONS param_check
+# WARNING: param_check: SQLS_PARAMETERS is not supported and is not migrated; the SQL*Plus commands it prepends to the query are lost, so convert the substitution variables the SQL file uses into 'sql_params:' manually
+# WARNING: param_check: cannot read SQL file 'param_check.sql': No such file or directory (os error 2)
+# --- Unified Config ---
+---
+oracle:
+  main:
+    authentication:
+      username: "user"
+      password: "pass"
+      type: standard
+    instances:
+      - sid: PROD1
+        custom_metrics:
+          - param_check:
+              path: param_check.sql

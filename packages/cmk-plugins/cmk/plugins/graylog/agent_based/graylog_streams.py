@@ -12,13 +12,12 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     LevelsT,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 # <<<graylog_streams:sep(0)>>>
 # {"total": 5, "streams": [{"remove_matches_from_default_stream": false,
@@ -95,10 +94,6 @@ def parse_graylog_streams(string_table: StringTable) -> Section:
     return section
 
 
-def discovery_graylog_streams(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_graylog_streams(params: StreamsParams, section: Section) -> CheckResult:
     if not section:
         yield Result(state=State.WARN, summary="Number of streams: 0")
@@ -134,7 +129,7 @@ agent_section_graylog_streams = AgentSection(
 check_plugin_graylog_streams = CheckPlugin(
     name="graylog_streams",
     service_name="Graylog Streams",
-    discovery_function=discovery_graylog_streams,
+    discovery_function=discover_one_service,
     check_function=check_graylog_streams,
     check_default_parameters={
         "stream_count_lower": ("no_levels", None),

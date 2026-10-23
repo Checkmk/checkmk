@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.livestatus_client import (
-    Command,
-)
+from cmk.livestatus_client import Command
 
 
 def _all_command_names() -> list[str]:
@@ -16,8 +14,7 @@ def _all_command_names() -> list[str]:
         cls = stack.pop()
         stack.extend(cls.__subclasses__())
         if not cls.__abstractmethods__:
-            # cls is known concrete here, but mypy can't see that from __abstractmethods__.
-            names.append(object.__new__(cls).name())  # type: ignore[type-abstract]
+            names.append(object.__new__(cls).name())
     return names
 
 

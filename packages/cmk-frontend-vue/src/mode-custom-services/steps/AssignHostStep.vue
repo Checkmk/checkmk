@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
+import type { ConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import FormAutocompleter from 'cmk-ui-library/components/FormAutocompleter/FormAutocompleter.vue'
@@ -11,11 +13,28 @@ import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
+import { computed } from 'vue'
+
+import { appendedAttributeNames } from '../definition'
 
 const { _t } = usei18n()
 
+const { consolidation, aggregator, appendSeriesAttributes } = defineProps<{
+  consolidation: ConsolidationFunction
+  aggregator: Aggregator | undefined
+  appendSeriesAttributes: boolean
+}>()
+
 const serviceName = defineModel<string>('serviceName', { required: true })
 const hostName = defineModel<string | null>('hostName', { required: true })
+
+const appendedAttributes = computed<string>(() => {
+  if (!appendSeriesAttributes) {
+    return ''
+  }
+  const names = appendedAttributeNames(consolidation, aggregator)
+  return names === null ? _t('+ all attributes') : names.map((name) => `+ ${name}`).join(' ')
+})
 
 // Dedicated custom-service host autocompleter: searches configured hosts by
 // name and IP, permission-filtered, and returns only existing hosts (no free
@@ -26,6 +45,7 @@ const hostAutocompleter: Autocompleter = {
 }
 
 const hostFieldId = useId()
+const serviceNameHelpId = useId()
 </script>
 
 <template>
@@ -34,8 +54,23 @@ const hostFieldId = useId()
 
     <label class="mode-custom-services-assign-host-step__field">
       <span class="mode-custom-services-assign-host-step__label">{{ _t('Service name') }}</span>
-      <CmkInput v-model="serviceName" field-size="large" />
+      <CmkInput
+        v-model="serviceName"
+        field-size="large"
+        :unit="appendedAttributes"
+        :described-by="appendSeriesAttributes ? serviceNameHelpId : undefined"
+      />
     </label>
+    <CmkParagraph
+      v-if="appendSeriesAttributes"
+      :id="serviceNameHelpId"
+      class="mode-custom-services-assign-host-step__help"
+      >{{
+        _t(
+          'The attribute values of each series are appended to this name, so that every series gets its own service, e.g. "http.server.duration GET - 200". Very long names are shortened and end in a short hash. Use "Group by" to append only the grouped attributes: this keeps the names short and stable, as every new attribute value creates a new service.'
+        )
+      }}</CmkParagraph
+    >
 
     <div class="mode-custom-services-assign-host-step__field">
       <CmkLabel variant="subtitle" :for="hostFieldId">{{ _t('Select host') }}</CmkLabel>
@@ -57,7 +92,8 @@ const hostFieldId = useId()
       </span>
       <div v-if="hostName" class="mode-custom-services-assign-host-step__summary">
         <span
-          >{{ _t('Service:') }} <strong>{{ serviceName }}</strong></span
+          >{{ _t('Service:') }} <strong>{{ serviceName }}</strong>
+          <template v-if="appendedAttributes">{{ appendedAttributes }}</template></span
         >
         <span
           >{{ _t('Target host:') }} <strong>{{ hostName }}</strong></span
@@ -83,6 +119,11 @@ const hostFieldId = useId()
 
 .mode-custom-services-assign-host-step__label {
   font-weight: bold;
+  font-size: var(--font-size-small);
+}
+
+.mode-custom-services-assign-host-step__help {
+  margin-top: calc(-1 * var(--dimension-3));
   font-size: var(--font-size-small);
 }
 

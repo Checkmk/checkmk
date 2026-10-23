@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
 from collections.abc import (
     Callable,
     Iterable,
@@ -12,7 +11,7 @@ from collections.abc import (
     Sequence,
 )
 from dataclasses import dataclass, field
-from typing import assert_never, Literal, override
+from typing import assert_never, Literal, overload
 
 import cmk.ccc.debug
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
@@ -40,65 +39,55 @@ from cmk.gui.inventory.filters import (
     FilterInvTextWithSortKey,
 )
 from cmk.gui.log import logger
-from cmk.gui.unit_formatter import AutoPrecision as AutoPrecisionFormatter
-from cmk.gui.unit_formatter import (
+from cmk.inventory.raw_paths import InventoryPath, parse_internal_raw_path, TreeSource
+from cmk.inventory.trees import SDKey, SDNodeName, SDPath, SDValue
+from cmk.inventory_ui.v1 import AgeNotation as AgeNotationFromAPI
+from cmk.inventory_ui.v1 import Alignment as AlignmentFromAPI
+from cmk.inventory_ui.v1 import AutoPrecision as AutoPrecisionFromAPI
+from cmk.inventory_ui.v1 import BackgroundColor as BackgroundColorFromAPI
+from cmk.inventory_ui.v1 import BoolField as BoolFieldFromAPI
+from cmk.inventory_ui.v1 import ChoiceField as ChoiceFieldFromAPI
+from cmk.inventory_ui.v1 import DecimalNotation as DecimalNotationFromAPI
+from cmk.inventory_ui.v1 import (
+    EngineeringScientificNotation as EngineeringScientificNotationFromAPI,
+)
+from cmk.inventory_ui.v1 import entry_point_prefixes
+from cmk.inventory_ui.v1 import IECNotation as IECNotationFromAPI
+from cmk.inventory_ui.v1 import Label as LabelFromAPI
+from cmk.inventory_ui.v1 import LabelColor as LabelColorFromAPI
+from cmk.inventory_ui.v1 import Node as NodeFromAPI
+from cmk.inventory_ui.v1 import NumberField as NumberFieldFromAPI
+from cmk.inventory_ui.v1 import SINotation as SINotationFromAPI
+from cmk.inventory_ui.v1 import (
+    StandardScientificNotation as StandardScientificNotationFromAPI,
+)
+from cmk.inventory_ui.v1 import StrictPrecision as StrictPrecisionFromAPI
+from cmk.inventory_ui.v1 import TextField as TextFieldFromAPI
+from cmk.inventory_ui.v1 import TimeNotation as TimeNotationFromAPI
+from cmk.inventory_ui.v1 import Title as TitleFromAPI
+from cmk.inventory_ui.v1 import Unit as UnitFromAPI
+from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName
+from cmk.web.utils.unit_formatter import (
     DecimalFormatter,
     EngineeringScientificFormatter,
     IECFormatter,
+    PrecisionKind,
     SIFormatter,
     StandardScientificFormatter,
     TimeFormatter,
 )
-from cmk.gui.unit_formatter import StrictPrecision as StrictPrecisionFormatter
-from cmk.inventory.structured_data import (
-    InventoryPath,
-    parse_internal_raw_path,
-    SDKey,
-    SDNodeName,
-    SDPath,
-    SDValue,
-    TreeSource,
-)
-from cmk.inventory_ui.v1_unstable import AgeNotation as AgeNotationFromAPI
-from cmk.inventory_ui.v1_unstable import Alignment as AlignmentFromAPI
-from cmk.inventory_ui.v1_unstable import AutoPrecision as AutoPrecisionFromAPI
-from cmk.inventory_ui.v1_unstable import BackgroundColor as BackgroundColorFromAPI
-from cmk.inventory_ui.v1_unstable import BoolField as BoolFieldFromAPI
-from cmk.inventory_ui.v1_unstable import ChoiceField as ChoiceFieldFromAPI
-from cmk.inventory_ui.v1_unstable import DecimalNotation as DecimalNotationFromAPI
-from cmk.inventory_ui.v1_unstable import (
-    EngineeringScientificNotation as EngineeringScientificNotationFromAPI,
-)
-from cmk.inventory_ui.v1_unstable import entry_point_prefixes
-from cmk.inventory_ui.v1_unstable import IECNotation as IECNotationFromAPI
-from cmk.inventory_ui.v1_unstable import Label as LabelFromAPI
-from cmk.inventory_ui.v1_unstable import LabelColor as LabelColorFromAPI
-from cmk.inventory_ui.v1_unstable import Node as NodeFromAPI
-from cmk.inventory_ui.v1_unstable import NumberField as NumberFieldFromAPI
-from cmk.inventory_ui.v1_unstable import SINotation as SINotationFromAPI
-from cmk.inventory_ui.v1_unstable import (
-    StandardScientificNotation as StandardScientificNotationFromAPI,
-)
-from cmk.inventory_ui.v1_unstable import StrictPrecision as StrictPrecisionFromAPI
-from cmk.inventory_ui.v1_unstable import TextField as TextFieldFromAPI
-from cmk.inventory_ui.v1_unstable import TimeNotation as TimeNotationFromAPI
-from cmk.inventory_ui.v1_unstable import Title as TitleFromAPI
-from cmk.inventory_ui.v1_unstable import Unit as UnitFromAPI
-from cmk.web.utils.html import HTML
-from cmk.web.utils.icons import DynamicIconName
-
-__all__ = ["SDPath"]
 
 from ._paint_functions import inv_paint_generic
 from .registry import (
-    inv_paint_funtions,
+    inv_paint_functions,
     InventoryHintSpec,
     PaintFunction,
     SortFunction,
 )
 
 # The value type of a choice field is constrained to these three, so this is the whole set.
-# Keep it in step with OrderedAttributes and OrderedColumns in cmk.inventory_ui.v1_unstable.
+# Keep it in step with OrderedAttributes and OrderedColumns in cmk.inventory_ui.v1.
 type _AnyChoiceField = ChoiceFieldFromAPI[int] | ChoiceFieldFromAPI[float] | ChoiceFieldFromAPI[str]
 type _AnyField = BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | _AnyChoiceField
 
@@ -245,36 +234,45 @@ class _PaintBool:
 
 
 def _render_unit(unit: UnitFromAPI, value: int | float, now: float) -> str:
-    precision: AutoPrecisionFormatter | StrictPrecisionFormatter
+    precision_kind: PrecisionKind
     match unit.precision:
         case AutoPrecisionFromAPI():
-            precision = AutoPrecisionFormatter(digits=unit.precision.digits)
+            precision_kind = "auto"
         case StrictPrecisionFromAPI():
-            precision = StrictPrecisionFormatter(digits=unit.precision.digits)
+            precision_kind = "strict"
         case _:
             assert_never(unit.precision)
+    digits = unit.precision.digits
 
     match unit.notation:
         case DecimalNotationFromAPI():
-            return DecimalFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
+            return DecimalFormatter(
+                symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
+            ).render(value)
         case SINotationFromAPI():
-            return SIFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
+            return SIFormatter(
+                symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
+            ).render(value)
         case IECNotationFromAPI():
-            return IECFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
+            return IECFormatter(
+                symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
+            ).render(value)
         case StandardScientificNotationFromAPI():
             return StandardScientificFormatter(
-                symbol=unit.notation.symbol, precision=precision
+                symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
             ).render(value)
         case EngineeringScientificNotationFromAPI():
             return EngineeringScientificFormatter(
-                symbol=unit.notation.symbol, precision=precision
+                symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
             ).render(value)
         case TimeNotationFromAPI():
-            return TimeFormatter(symbol=unit.notation.symbol, precision=precision).render(value)
+            return TimeFormatter(
+                symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
+            ).render(value)
         case AgeNotationFromAPI():
-            return TimeFormatter(symbol=unit.notation.symbol, precision=precision).render(
-                now - value
-            )
+            return TimeFormatter(
+                symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
+            ).render(now - value)
         case _:
             assert_never(unit.notation)
 
@@ -330,6 +328,19 @@ class _PaintText:
         )
 
 
+type _Styles = Iterable[AlignmentFromAPI | BackgroundColorFromAPI | LabelColorFromAPI]
+
+
+@overload
+def _style_of(field: ChoiceFieldFromAPI[int], value: object) -> _Styles: ...
+@overload
+def _style_of(field: ChoiceFieldFromAPI[float], value: object) -> _Styles: ...
+@overload
+def _style_of(field: ChoiceFieldFromAPI[str], value: object) -> _Styles: ...
+def _style_of[T: (int, float, str)](field: ChoiceFieldFromAPI[T], value: object) -> _Styles:
+    return next((field.style(key) for key in field.mapping if key == value), ())
+
+
 def _label_of(field: _AnyChoiceField, value: object) -> LabelFromAPI | str | None:
     return next((label for key, label in field.mapping.items() if key == value), None)
 
@@ -347,8 +358,7 @@ class _PaintChoice:
             return _wrap_paint_function(inv_paint_generic)(now, value)
         return (
             _compute_td_styles(
-                # Which of the three value types this field fixes is not knowable here.
-                self._field.style(value),  # type: ignore[arg-type]
+                _style_of(self._field, value),
                 self.default_alignment,
                 prevent_line_break=False,
             ),
@@ -771,8 +781,8 @@ def _get_paint_function(legacy_hint: InventoryHintSpec) -> tuple[str, PaintFunct
     # FIXME At the moment  we need it to get tdclass: Clean this up one day.
     if "paint" in legacy_hint:
         data_type = legacy_hint["paint"]
-        return data_type, inv_paint_funtions[PAINT_FUNCTION_NAME_PREFIX + data_type]["func"]
-    return "str", inv_paint_funtions["inv_paint_generic"]["func"]
+        return data_type, inv_paint_functions[PAINT_FUNCTION_NAME_PREFIX + data_type]["func"]
+    return "str", inv_paint_functions["inv_paint_generic"]["func"]
 
 
 def _make_sort_function_of_legacy_hint(legacy_hint: InventoryHintSpec) -> SortFunction:
@@ -1263,7 +1273,7 @@ class NodeDisplayHint:
                 short_title=title,
                 long_title=long_title,
                 paint_function=_wrap_paint_function(
-                    inv_paint_funtions["inv_paint_generic"]["func"]
+                    inv_paint_functions["inv_paint_generic"]["func"]
                 ),
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter=_make_attribute_filter_from_legacy_hint(
@@ -1286,7 +1296,7 @@ class NodeDisplayHint:
                 short_title=title,
                 long_title=_make_long_title(self.title if self.path else "", title),
                 paint_function=_wrap_paint_function(
-                    inv_paint_funtions["inv_paint_generic"]["func"]
+                    inv_paint_functions["inv_paint_generic"]["func"]
                 ),
             )
 
@@ -1439,215 +1449,6 @@ class DisplayHints:
 
 
 inv_display_hints = DisplayHints()
-
-
-@dataclass(frozen=True, kw_only=True)
-class FilterMigration(abc.ABC):
-    name: str
-
-    @abc.abstractmethod
-    def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]: ...
-
-
-@dataclass(frozen=True, kw_only=True)
-class FilterMigrationScale(FilterMigration):
-    prefix: Literal["M"]
-
-    @override
-    def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
-        migrated = {}
-        for direction in ("from", "until"):
-            if filter_value := filter_vars.get(f"{self.name}_{direction}"):
-                migrated[f"{self.name}_{direction}"] = filter_value
-                migrated[f"{self.name}_{direction}_prefix"] = self.prefix
-        return migrated
-
-
-@dataclass(frozen=True, kw_only=True)
-class FilterMigrationTime(FilterMigration):
-    prefix: Literal["d"]
-
-    @override
-    def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
-        migrated = {}
-        for direction in ("from", "until"):
-            if (filter_value := filter_vars.get(f"{self.name}_{direction}_days")) is None:
-                filter_value = filter_vars.get(f"{self.name}_{direction}")
-            if filter_value:
-                migrated[f"{self.name}_{direction}"] = filter_value
-                migrated[f"{self.name}_{direction}_prefix"] = self.prefix
-        return migrated
-
-
-@dataclass(frozen=True, kw_only=True)
-class FilterMigrationChoice(FilterMigration):
-    choices: Sequence[int | float | str]
-
-    @override
-    def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
-        # FilterInvtableAdminStatus
-        match filter_vars.get(self.name):
-            case "1":
-                migrated = {f"{self.name}_{c}": "" for c in self.choices}
-                migrated[f"{self.name}_1"] = "on"
-                return migrated
-            case "2":
-                migrated = {f"{self.name}_{c}": "" for c in self.choices}
-                migrated[f"{self.name}_2"] = "on"
-                return migrated
-            case "-1":
-                # legacy ignore
-                return {f"{self.name}_{c}": "on" for c in self.choices}
-            case _:
-                # FilterInvtableOperStatus
-                return {
-                    f"{self.name}_{c}": filter_vars.get(f"{self.name}_{c}", "")
-                    for c in self.choices
-                }
-
-
-@dataclass(frozen=True, kw_only=True)
-class FilterMigrationBool(FilterMigration):
-    @override
-    def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
-        # FilterInvtableAvailable
-        match filter_vars.get(self.name):
-            case "yes":
-                return {f"{self.name}_True": "on", f"{self.name}_False": ""}
-            case "no":
-                return {f"{self.name}_True": "", f"{self.name}_False": "on"}
-            case "":
-                # legacy ignore
-                return {f"{self.name}_{c}": "on" for c in (True, False)}
-            case _:
-                return {
-                    f"{self.name}_{c}": filter_vars.get(f"{self.name}_{c}", "")
-                    for c in (True, False)
-                }
-
-
-@dataclass(frozen=True, kw_only=True)
-class FilterMigrationBoolIs(FilterMigration):
-    @override
-    def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
-        # FilterInvBool
-        match filter_vars.get(f"is_{self.name}"):
-            case "1":
-                return {f"{self.name}_True": "on", f"{self.name}_False": ""}
-            case "0":
-                return {f"{self.name}_True": "", f"{self.name}_False": "on"}
-            case "-1":
-                # legacy ignore
-                return {f"{self.name}_{c}": "on" for c in (True, False)}
-            case _:
-                return {
-                    f"{self.name}_{c}": filter_vars.get(f"{self.name}_{c}", "")
-                    for c in (True, False)
-                }
-
-
-def find_non_canonical_filters(
-    plugins: DiscoveredPlugins[NodeFromAPI], legacy_hints: Mapping[str, InventoryHintSpec]
-) -> Mapping[str, FilterMigration]:
-    filters: dict[str, FilterMigration] = {
-        # "bytes"
-        "inv_hardware_cpu_cache_size": FilterMigrationScale(
-            name="inv_hardware_cpu_cache_size", prefix="M"
-        ),
-        # "bytes_rounded"
-        "inv_hardware_memory_total_ram_usable": FilterMigrationScale(
-            name="inv_hardware_memory_total_ram_usable", prefix="M"
-        ),
-        "inv_hardware_memory_total_swap": FilterMigrationScale(
-            name="inv_hardware_memory_total_swap", prefix="M"
-        ),
-        "inv_hardware_memory_total_vmalloc": FilterMigrationScale(
-            name="inv_hardware_memory_total_vmalloc", prefix="M"
-        ),
-        # "hz"
-        "inv_hardware_cpu_bus_speed": FilterMigrationScale(
-            name="inv_hardware_cpu_bus_speed", prefix="M"
-        ),
-        "inv_hardware_cpu_max_speed": FilterMigrationScale(
-            name="inv_hardware_cpu_max_speed", prefix="M"
-        ),
-        #
-        "invinterface_last_change": FilterMigrationTime(
-            name="invinterface_last_change", prefix="d"
-        ),
-    }
-
-    for node in sorted(plugins.plugins.values(), key=lambda n: len(n.path)):
-        if node.table.view is None:
-            continue
-        for key, field_from_api in node.table.columns.items():
-            name = f"{node.table.view.name}_{key}"
-            if (
-                isinstance(field_from_api, NumberFieldFromAPI)
-                and isinstance(field_from_api.render, UnitFromAPI)
-                and isinstance(field_from_api.render.notation, AgeNotationFromAPI)
-            ):
-                filters.setdefault(name, FilterMigrationTime(name=name, prefix="d"))
-
-            elif isinstance(field_from_api, ChoiceFieldFromAPI) and _is_choice(
-                len(field_from_api.mapping)
-            ):
-                filters.setdefault(
-                    name,
-                    FilterMigrationChoice(
-                        name=name,
-                        choices=list(field_from_api.mapping),
-                    ),
-                )
-
-            elif isinstance(field_from_api, BoolFieldFromAPI):
-                filters.setdefault(name, FilterMigrationBool(name=name))
-
-    for raw_path, legacy_hint in legacy_hints.items():
-        inv_path = parse_internal_raw_path(raw_path)
-        if not inv_path.key:
-            continue
-        if inv_path.source == TreeSource.attributes:
-            name = "_".join(["inv"] + [str(e) for e in inv_path.path] + [str(inv_path.key)])
-            match legacy_hint.get("paint"):
-                case "bytes" | "bytes_rounded":
-                    filters[name] = FilterMigrationScale(name=name, prefix="M")
-                case "hz":
-                    filters[name] = FilterMigrationScale(name=name, prefix="M")
-                case "bool":
-                    filters.setdefault(name, FilterMigrationBoolIs(name=name))
-                case _:
-                    pass
-        if (
-            inv_path.source == TreeSource.table
-            and (view_name := legacy_hint.get("view"))
-            and (legacy_filter := legacy_hint.get("filter"))
-        ):
-            name = f"{_parse_view_name(view_name)}_{inv_path.key}"
-            match legacy_filter.__class__.__name__:
-                case "FilterInvtableOperStatus":
-                    filters.setdefault(
-                        name,
-                        FilterMigrationChoice(
-                            name=name,
-                            choices=["1", "2", "3", "4", "5", "6", "7"],
-                        ),
-                    )
-                case "FilterInvtableAdminStatus":
-                    filters.setdefault(
-                        name,
-                        FilterMigrationChoice(
-                            name=name,
-                            choices=["1", "2"],
-                        ),
-                    )
-                case "FilterInvtableAvailable":
-                    filters.setdefault(name, FilterMigrationBool(name=name))
-                case "FilterInvtableTimestampAsAge":
-                    filters.setdefault(name, FilterMigrationTime(name=name, prefix="d"))
-                case _:
-                    pass
-    return filters
 
 
 def register_display_hints(

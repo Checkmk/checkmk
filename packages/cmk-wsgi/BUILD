@@ -17,7 +17,6 @@ py_library(
     ) + ["cmk/gui/wsgi/applications/index.wsgi"],
     imports = ["."],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-agent-registration-extended:__pkg__",
         "//omd/packages/check_mk:__pkg__",
@@ -96,13 +95,6 @@ package_wheel(
     name = "pkg_tar",
     visibility = ["//visibility:public"],
     whl = "wheel",
-)
-
-sh_library(
-    name = "f12",
-    srcs = [
-        "cmk/gui/wsgi/.f12",
-    ],
 )
 
 py_requirements_test(

@@ -37,7 +37,7 @@ from cmk.gui.pages import PageContext
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -54,7 +54,7 @@ from cmk.gui.watolib.groups_io import (
     load_host_group_information,
     load_service_group_information,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
@@ -64,10 +64,11 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.livestatus_client import SiteConfigurations
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import makeactionuri, makeuri
+from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -116,9 +117,10 @@ class ModeGroups(WatoMode, abc.ABC):
                                     title=_("Add group"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
-                                        folder_preserving_link(
+                                        makeuri_contextless(
                                             request,
                                             [("mode", "edit_%s_group" % self.type_name)],
+                                            filename="wato.py",
                                         )
                                     ),
                                     is_shortcut=True,
@@ -163,7 +165,8 @@ class ModeGroups(WatoMode, abc.ABC):
 
         if request.var("_delete"):
             delname = request.get_ascii_input_mandatory("_delete")
-            usages = groups.find_usages_of_group(delname, self.type_name)
+            tree = make_folder_tree(config)
+            usages = groups.find_usages_of_group(tree, delname, self.type_name)
 
             if usages:
                 message = "<b>{}</b><br>{}:<ul>".format(
@@ -179,6 +182,7 @@ class ModeGroups(WatoMode, abc.ABC):
             groups.delete_group(
                 delname,
                 self.type_name,
+                tree=tree,
                 pprint_value=config.wato_pprint_config,
                 pending_changes=_pending_changes(
                     config.sites,
@@ -213,9 +217,10 @@ class ModeGroups(WatoMode, abc.ABC):
         html.write_text_permissive(nr)
 
         table.cell(_("Actions"), css=["buttons"])
-        edit_url = folder_preserving_link(
+        edit_url = makeuri_contextless(
             request,
             [("mode", "edit_%s_group" % self.type_name), ("edit", name)],
+            filename="wato.py",
         )
         delete_url = make_confirm_delete_link(
             i18n=_,
@@ -224,9 +229,10 @@ class ModeGroups(WatoMode, abc.ABC):
             suffix=group["alias"],
             message=_("Name: %(name)s") % {"name": name},
         )
-        clone_url = folder_preserving_link(
+        clone_url = makeuri_contextless(
             request,
             [("mode", "edit_%s_group" % self.type_name), ("clone", name)],
+            filename="wato.py",
         )
         html.icon_button(edit_url, _("Properties"), StaticIcon(IconNames.edit))
         html.icon_button(clone_url, _("Create a copy of this group"), StaticIcon(IconNames.clone))
@@ -299,7 +305,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return redirect(mode_url("%s_groups" % self.type_name))
@@ -406,13 +412,15 @@ class ModeHostgroups(ModeGroups):
         yield PageMenuEntry(
             title=_("Service groups"),
             icon_name=StaticIcon(IconNames.servicegroups),
-            item=make_simple_link(folder_preserving_link(request, [("mode", "service_groups")])),
+            item=make_simple_link(
+                makeuri_contextless(request, [("mode", "service_groups")], filename="wato.py")
+            ),
         )
 
     @override
     def _rules_url(self) -> str:
-        return folder_preserving_link(
-            request, [("mode", "edit_ruleset"), ("varname", "host_groups")]
+        return makeuri_contextless(
+            request, [("mode", "edit_ruleset"), ("varname", "host_groups")], filename="wato.py"
         )
 
 
@@ -445,13 +453,15 @@ class ModeServicegroups(ModeGroups):
         yield PageMenuEntry(
             title=_("Host groups"),
             icon_name=StaticIcon(IconNames.hostgroups),
-            item=make_simple_link(folder_preserving_link(request, [("mode", "host_groups")])),
+            item=make_simple_link(
+                makeuri_contextless(request, [("mode", "host_groups")], filename="wato.py")
+            ),
         )
 
     @override
     def _rules_url(self) -> str:
-        return folder_preserving_link(
-            request, [("mode", "edit_ruleset"), ("varname", "service_groups")]
+        return makeuri_contextless(
+            request, [("mode", "edit_ruleset"), ("varname", "service_groups")], filename="wato.py"
         )
 
 
@@ -486,14 +496,17 @@ class ModeContactgroups(ModeGroups):
         yield PageMenuEntry(
             title=_("Users"),
             icon_name=StaticIcon(IconNames.users),
-            item=make_simple_link(folder_preserving_link(request, [("mode", "users")])),
+            item=make_simple_link(
+                makeuri_contextless(request, [("mode", "users")], filename="wato.py")
+            ),
         )
 
     @override
     def _rules_url(self) -> str:
-        return folder_preserving_link(
+        return makeuri_contextless(
             request,
             [("mode", "rule_search"), ("filled_in", "search"), ("search", "contactgroups")],
+            filename="wato.py",
         )
 
     @override
@@ -516,8 +529,8 @@ class ModeContactgroups(ModeGroups):
                 [
                     HTMLWriter.render_a(
                         alias,
-                        href=folder_preserving_link(
-                            request, [("mode", "edit_user"), ("edit", userid)]
+                        href=makeuri_contextless(
+                            request, [("mode", "edit_user"), ("edit", userid)], filename="wato.py"
                         ),
                     )
                     for userid, alias in self._members.get(name, [])

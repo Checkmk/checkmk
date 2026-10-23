@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 from urllib.parse import urlparse
 
@@ -45,17 +46,17 @@ def wait_for_service_discovery_completion_v1(
     snapshot = job_snapshot(host, api_context.config.sites, debug=api_context.config.debug)
     if not snapshot.exists:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="The requested service discovery job was not found",
             detail=f"Could not find a service discovery for host {host.name()}",
         )
     if snapshot.is_active:
         return ApiResponse(
             body=None,
-            status_code=302,
+            status_code=HTTPStatus.FOUND,
             headers={"Location": urlparse(request.url).path},
         )
-    return ApiResponse(body=None, status_code=204)
+    return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT)
 
 
 ENDPOINT_WAIT_FOR_SERVICE_DISCOVERY_COMPLETION = VersionedEndpoint(
@@ -70,10 +71,10 @@ ENDPOINT_WAIT_FOR_SERVICE_DISCOVERY_COMPLETION = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=wait_for_service_discovery_completion_v1,
-            additional_status_codes=[302],
+            additional_status_codes=[HTTPStatus.FOUND],
             status_descriptions={
-                204: "The service discovery has been completed.",
-                302: (
+                HTTPStatus.NO_CONTENT: "The service discovery has been completed.",
+                HTTPStatus.FOUND: (
                     "The service discovery is still running. Redirecting to the "
                     "'Wait for completion' endpoint."
                 ),

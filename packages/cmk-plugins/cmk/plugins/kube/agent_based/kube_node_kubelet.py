@@ -4,16 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from http import HTTPStatus
+
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.schemata.api import NodeConnectionError
 from cmk.plugins.kube.schemata.section import KubeletInfo
 
@@ -31,7 +32,7 @@ def check_kube_node_kubelet(section: KubeletInfo) -> CheckResult:
             state=State.OK,
             notice=f"Verbose response:\n{section.health.message}",
         )
-    elif section.health.status_code == 200:
+    elif section.health.status_code == HTTPStatus.OK:
         yield Result(state=State.OK, summary="Healthy")
     else:
         yield Result(state=State.CRIT, summary="Not healthy")
@@ -43,14 +44,10 @@ def check_kube_node_kubelet(section: KubeletInfo) -> CheckResult:
     yield Result(state=State.OK, summary=f"Version {section.version}")
 
 
-def discover_kube_node_kubelet(section: KubeletInfo) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 check_plugin_kube_node_kubelet = CheckPlugin(
     name="kube_node_kubelet",
     sections=["kube_node_kubelet"],
-    discovery_function=discover_kube_node_kubelet,
+    discovery_function=discover_one_service,
     check_function=check_kube_node_kubelet,
     service_name="Kubelet",
 )

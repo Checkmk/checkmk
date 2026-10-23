@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName, HostNameValidationError
 
 
 # TODO CMK-23408
@@ -17,18 +18,11 @@ class TreePath:
     legacy: Path
 
     def __post_init__(self) -> None:
-        if self.path == Path() or self.legacy == Path():
-            return
         if self.path.suffix != ".json":
             raise ValueError(self.path)
 
     @classmethod
     def from_archive_or_delta_cache_file_path(cls, file_path: Path) -> TreePath:
-        # 'file_path' is of the form
-        # - <OMD_ROOT>/var/check_mk/inventory_archive/<HOST>/<TS>.json
-        # - <OMD_ROOT>/var/check_mk/inventory_archive/<HOST>/<TS>
-        # - <OMD_ROOT>/var/check_mk/inventory_delta_cache/<HOST>/<TS>_<TS>.json
-        # - <OMD_ROOT>/var/check_mk/inventory_delta_cache/<HOST>/<TS>_<TS>
         return (
             cls(path=file_path, legacy=file_path.with_suffix(""))
             if file_path.suffix == ".json"
@@ -49,7 +43,13 @@ class TreePathGz:
             raise ValueError(self.legacy)
 
 
-class Paths:
+def _file_name(host_name: HostName) -> str:
+    if not host_name:
+        raise HostNameValidationError("empty host name", raw=str(host_name))
+    return str(HostName(host_name))
+
+
+class InventoryPaths:
     def __init__(self, omd_root: Path) -> None:
         self.inventory_dir = omd_root / "var/check_mk/inventory"
         self.status_data_dir = omd_root / "tmp/check_mk/status_data"
@@ -63,14 +63,14 @@ class Paths:
 
     def inventory_tree(self, host_name: HostName) -> TreePath:
         return TreePath(
-            path=self.inventory_dir / f"{host_name}.json",
-            legacy=self.inventory_dir / str(host_name),
+            path=self.inventory_dir / f"{_file_name(host_name)}.json",
+            legacy=self.inventory_dir / _file_name(host_name),
         )
 
     def inventory_tree_gz(self, host_name: HostName) -> TreePathGz:
         return TreePathGz(
-            path=self.inventory_dir / f"{host_name}.json.gz",
-            legacy=self.inventory_dir / f"{host_name}.gz",
+            path=self.inventory_dir / f"{_file_name(host_name)}.json.gz",
+            legacy=self.inventory_dir / f"{_file_name(host_name)}.gz",
         )
 
     @property
@@ -79,12 +79,12 @@ class Paths:
 
     def status_data_tree(self, host_name: HostName) -> TreePath:
         return TreePath(
-            path=self.status_data_dir / f"{host_name}.json",
-            legacy=self.status_data_dir / str(host_name),
+            path=self.status_data_dir / f"{_file_name(host_name)}.json",
+            legacy=self.status_data_dir / _file_name(host_name),
         )
 
     def archive_host(self, host_name: HostName) -> Path:
-        return self.archive_dir / str(host_name)
+        return self.archive_dir / _file_name(host_name)
 
     def archive_tree(self, host_name: HostName, timestamp: int) -> TreePath:
         return TreePath(
@@ -93,7 +93,7 @@ class Paths:
         )
 
     def delta_cache_host(self, host_name: HostName) -> Path:
-        return self.delta_cache_dir / str(host_name)
+        return self.delta_cache_dir / _file_name(host_name)
 
     def delta_cache_tree(self, host_name: HostName, previous: int, current: int) -> TreePath:
         if previous < -1 or previous >= current:
@@ -103,3 +103,19 @@ class Paths:
             path=self.delta_cache_host(host_name) / f"{previous_name}_{current}.json",
             legacy=self.delta_cache_host(host_name) / f"{previous_name}_{current}",
         )
+
+
+def collect_files(directory: Path) -> Sequence[Path]:
+    try:
+        return list(directory.iterdir())
+    except FileNotFoundError:
+        return []
+
+
+def parse_archive_timestamp(file_path: Path) -> int:
+    return int(file_path.with_suffix("").name)
+
+
+def parse_delta_cache_timestamps(file_path: Path) -> tuple[int, int]:
+    previous_name, current_name = file_path.with_suffix("").name.split("_")
+    return -1 if previous_name == "None" else int(previous_name), int(current_name)

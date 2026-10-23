@@ -57,8 +57,8 @@ from cmk.ruleset_matcher.labels import ABCLabelConfig, LabelManager, Labels
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
 from cmk.utils import ip_lookup
 from cmk.utils.servicename import ServiceName
-from tests.testlib.common.empty_config import EMPTY_CONFIG, EMPTY_NAGIOS_CORE_CONFIG
 from tests.testlib.unit.base_configuration_scenario import Scenario
+from tests.testlib.unit.empty_config import EMPTY_CONFIG, EMPTY_NAGIOS_CORE_CONFIG
 
 
 def _make_core_objects_config(config_cache: config.ConfigCache) -> config.CoreObjectsConfig:

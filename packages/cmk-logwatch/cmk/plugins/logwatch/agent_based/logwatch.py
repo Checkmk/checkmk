@@ -124,7 +124,7 @@ def _discovery_make_groups(
     not_forwarded_logs = {
         item for item in logwatch.discoverable_items(section) if not log_filter.is_forwarded(item)
     }
-    all_group_patterns = [p["grouping_patterns"] for p in params if "grouping_patterns" in p]  # type: ignore[redundant-expr]
+    all_group_patterns = [p["grouping_patterns"] for p in params]
 
     groups: dict[str, _Group] = {}
     for item in not_forwarded_logs:
@@ -617,6 +617,8 @@ def check_logwatch_generic(
 
         if "\n" in summary.strip():
             summary, details = summary.split("\n", 1)
+    elif block_collector.worst > 0:
+        summary = block_collector.get_count_info()
 
     yield Result(
         state=State(block_collector.worst),

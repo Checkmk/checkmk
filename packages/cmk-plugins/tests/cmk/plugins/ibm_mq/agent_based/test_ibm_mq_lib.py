@@ -5,13 +5,15 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from typing import Any
-
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError
 from cmk.plugins.ibm_mq.agent_based.ibm_mq_channels import parse_ibm_mq_channels
-from cmk.plugins.ibm_mq.lib import ibm_mq_check_version, is_ibm_mq_service_vanished, parse_ibm_mq
+from cmk.plugins.ibm_mq.lib import (
+    ibm_mq_check_version,
+    is_ibm_mq_service_vanished,
+    parse_ibm_mq,
+)
 
 pytestmark = pytest.mark.checks
 
@@ -332,47 +334,48 @@ class TestServiceVanished:
 
 class TestCheckVersion:
     def test_specific(self) -> None:
-        params = {"version": (("specific", "2.1.0"), 2)}
-        actual = ibm_mq_check_version("2.1.0", params, "MyLabel")
+        actual = ibm_mq_check_version(
+            "2.1.0", ("specific", {"version": "2.1.0", "state": 2}), "MyLabel"
+        )
         expected = (0, "MyLabel: 2.1.0")
         assert expected == actual
 
-        params = {"version": (("specific", "2.0"), 2)}
-        actual = ibm_mq_check_version("2.1.0", params, "MyLabel")
+        actual = ibm_mq_check_version(
+            "2.1.0", ("specific", {"version": "2.0", "state": 2}), "MyLabel"
+        )
         expected = (2, "MyLabel: 2.1.0 (should be 2.0)")
         assert expected == actual
 
     def test_at_least(self) -> None:
-        params = {"version": (("at_least", "2.0"), 2)}
-        actual = ibm_mq_check_version("2.1.0", params, "MyLabel")
+        actual = ibm_mq_check_version(
+            "2.1.0", ("at_least", {"version": "2.0", "state": 2}), "MyLabel"
+        )
         expected = (0, "MyLabel: 2.1.0")
         assert expected == actual
 
-        params = {"version": (("at_least", "2.2"), 2)}
-        actual = ibm_mq_check_version("2.1.0", params, "MyLabel")
+        actual = ibm_mq_check_version(
+            "2.1.0", ("at_least", {"version": "2.2", "state": 2}), "MyLabel"
+        )
         expected = (2, "MyLabel: 2.1.0 (should be at least 2.2)")
         assert expected == actual
 
-        params = {"version": (("at_least", "0.1.0"), 2)}
-        actual = ibm_mq_check_version("1.0.0", params, "MyLabel")
+        actual = ibm_mq_check_version(
+            "1.0.0", ("at_least", {"version": "0.1.0", "state": 2}), "MyLabel"
+        )
         expected = (0, "MyLabel: 1.0.0")
         assert expected == actual
 
-        params = {"version": (("at_least", "8.0.0.1"), 2)}
-        actual = ibm_mq_check_version("9.0.0.0", params, "MyLabel")
+        actual = ibm_mq_check_version(
+            "9.0.0.0", ("at_least", {"version": "8.0.0.1", "state": 2}), "MyLabel"
+        )
         expected = (0, "MyLabel: 9.0.0.0")
         assert expected == actual
 
     def test_wato_warning(self) -> None:
-        params = {"version": (("at_least", "2.2"), 1)}
-        actual = ibm_mq_check_version("2.1.0", params, "MyLabel")
+        actual = ibm_mq_check_version(
+            "2.1.0", ("at_least", {"version": "2.2", "state": 1}), "MyLabel"
+        )
         expected = (1, "MyLabel: 2.1.0 (should be at least 2.2)")
-        assert expected == actual
-
-    def test_old_wato_without_state(self) -> None:
-        params = {"version": (("at_least", "2.2"), 2)}
-        actual = ibm_mq_check_version("2.1.0", params, "MyLabel")
-        expected = (2, "MyLabel: 2.1.0 (should be at least 2.2)")
         assert expected == actual
 
     def test_unparseable(self) -> None:
@@ -380,24 +383,24 @@ class TestCheckVersion:
             "Only numbers separated by characters 'b', 'i', 'p', or '.' are allowed for a version."
         )
 
-        params = {"version": (("specific", "2.a"), 2)}
-        actual = ibm_mq_check_version("2.1.0", params, "MyLabel")
+        actual = ibm_mq_check_version(
+            "2.1.0", ("specific", {"version": "2.a", "state": 2}), "MyLabel"
+        )
         expected = (3, "Cannot compare 2.1.0 and 2.a. " + const_error)
         assert expected == actual
 
-        params = {"version": (("specific", "2.2"), 2)}
-        actual = ibm_mq_check_version("2.x", params, "MyLabel")
+        actual = ibm_mq_check_version(
+            "2.x", ("specific", {"version": "2.2", "state": 2}), "MyLabel"
+        )
         expected = (3, "Cannot compare 2.x and 2.2. " + const_error)
         assert expected == actual
 
     def test_unparseable_without_wato_rule(self) -> None:
-        params: dict[str, Any] = {}
-        actual = ibm_mq_check_version("2.x", params, "MyLabel")
+        actual = ibm_mq_check_version("2.x", ("any", None), "MyLabel")
         expected = (0, "MyLabel: 2.x")
         assert expected == actual
 
     def test_no_version(self) -> None:
-        params: dict[str, Any] = {}
-        actual = ibm_mq_check_version(None, params, "MyLabel")
+        actual = ibm_mq_check_version(None, ("any", None), "MyLabel")
         expected = (3, "MyLabel: None (no agent info)")
         assert expected == actual

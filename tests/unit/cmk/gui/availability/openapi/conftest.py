@@ -9,11 +9,6 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.availability.type_defs import AVEntry
 
-BASE = "/NO_SITE/check_mk/api/unstable"
-TIME_FROM = "2023-11-14T22:13:20Z"
-TIME_UNTIL = "2023-11-15T22:13:20Z"
-TIME_PARAMS = f"time_range_from={TIME_FROM}&time_range_until={TIME_UNTIL}"
-
 
 @pytest.fixture()
 def host_av_entry() -> AVEntry:

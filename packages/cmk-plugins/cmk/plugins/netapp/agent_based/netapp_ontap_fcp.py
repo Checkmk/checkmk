@@ -221,9 +221,6 @@ def _io_bytes_results(
             continue
 
         value = get_rate(value_store, f"{item}.{what}", now, counter_val, raise_overflow=True)
-        if value is None:
-            continue  # type: ignore[unreachable]
-
         if isinstance(levels, PredictiveLevels):
             yield from check_levels_predictive(
                 value=value,
@@ -258,9 +255,6 @@ def _io_ops_results(
             continue
 
         value = get_rate(value_store, f"{item}.{what}", now, counter_val, raise_overflow=True)
-        if value is None:
-            continue  # type: ignore[unreachable]
-
         yield from check_levels_v1(
             value=value, metric_name=what, render_func=str, label=descr, notice_only=True
         )

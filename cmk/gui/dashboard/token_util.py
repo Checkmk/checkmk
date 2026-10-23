@@ -2,11 +2,13 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import contextlib
 import datetime as dt
 import json
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
+from http import HTTPStatus
 from typing import cast, override
 
 from dateutil.relativedelta import relativedelta
@@ -110,7 +112,7 @@ def edit_dashboard_auth_token(
         raise DashboardTokenNotFound(
             varname=None,
             message=_("No token for this dashboard exists."),
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
         )
 
     if token_store is None:
@@ -244,15 +246,15 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
 
         return token.details
 
-    def _disable_and_redirect(self, token: AuthToken) -> PageResult:
+    def _disable_and_redirect(self, token: AuthToken, ctx: PageContext) -> PageResult:
         """Disable the token and redirect to the shared dashboard page.
 
         Redirection should then show the user a message that the token has been disabled.
         """
         disable_dashboard_token_by_id(token.token_id)
-        return self._redirect_to_shared_dashboard_page(token)
+        return self._redirect_to_shared_dashboard_page(token, ctx)
 
-    def _redirect_to_shared_dashboard_page(self, token: AuthToken) -> PageResult:
+    def _redirect_to_shared_dashboard_page(self, token: AuthToken, ctx: PageContext) -> PageResult:  # noqa: ARG002
         """Redirect to the shared dashboard page."""
         # NOTE: this must be handled by the widgets properly, otherwise they'll most likely just
         # display some error message because they can't handle the response.
@@ -276,7 +278,7 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
 
         except InvalidWidgetError as e:
             if e.disable_token:
-                self._disable_and_redirect(token)
+                return self._disable_and_redirect(token, ctx)
 
             return self._handle_exception(e, ctx)
 

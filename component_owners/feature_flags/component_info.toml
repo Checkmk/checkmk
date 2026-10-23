@@ -1,0 +1,9 @@
+type = "Component"
+display_name = "Feature Flags"
+has_support_component = true
+members_required = 1
+tier = 4
+description = """
+Mechanisms to decouple the release of a feature from its implementation,
+e.g. experimental flags.
+"""

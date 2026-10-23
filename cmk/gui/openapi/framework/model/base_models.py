@@ -132,6 +132,24 @@ class DomainObjectModel(LinkableModel):
 
 
 @api_model
+class TitledDomainObjectModel(DomainObjectModel):
+    """A domain object whose endpoints always supply a title.
+
+    Not every domain object has one: a registration token or a metadata
+    collection has nothing meaningful to show. Those keep using
+    ``DomainObjectModel``, where the title stays optional. Endpoints that do
+    always set a title use this model instead, so the generated schema marks
+    the field required and consumers need no fallback.
+    """
+
+    title: str = api_field(
+        title="Title",
+        description="A human readable title of this object. Can be used for user interfaces.",
+        example="My Host",
+    )
+
+
+@api_model
 class DomainObjectCollectionModel(LinkableModel):
     id: str = api_field(description="The name of this collection.")
     domainType: str = api_field(description="The domain type of the objects in the collection.")

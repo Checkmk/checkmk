@@ -65,6 +65,13 @@ Every test is code to maintain. More tests are not better.
   organized by feature or workflow and never tied to internal APIs.
 - Performance tests live in `tests/performance/` and need guaranteed
   resources, so CI selects them by tag.
+- Pytest setup follows the same scoping. There is no root conftest under
+  `tests/`. Setup shared by several suites (site under test, session timeout,
+  sharding, diagnostics, ...) is a plugin module in `tests/testlib/pytest_helpers/`,
+  or in `tests/testlib/system/pytest_helpers/` when it needs the site under
+  test, and each suite's conftest registers the ones it needs from its
+  `pytest_addoption`; `tests/system/conftest.py` does so for all system suites.
+  Setup used by one suite stays in that suite's conftest.
 - Exceeding a runtime budget is a design signal, not a reason to raise the
   budget.
 
@@ -259,10 +266,10 @@ implements gets a test.
   code: no `document.querySelector()` or `v-deep` to change what a child
   renders. Variants are exposed through props.
 - Visual regressions belong to screenshot tests, which do not exist yet.
-- To see a change in the browser use the demo app, F12, or the hot-reload dev
-  server; the package README lists the workflows. If a good test in this style
-  seems impossible, that is a question for Team Bug, not a reason to test
-  implementation details.
+- To see a change in the browser use the demo app, cmk-dev-deploy, or the
+  hot-reload dev server; the package README lists the workflows. If a good test
+  in this style seems impossible, that is a question for Team Bug, not a reason
+  to test implementation details.
 
 ## 12. Self-check before finishing
 

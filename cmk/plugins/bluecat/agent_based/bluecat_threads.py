@@ -11,24 +11,19 @@ from typing import Any
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def parse_bluecat_threads(string_table: StringTable) -> StringTable | None:
     return string_table or None
-
-
-def discover_bluecat_threads(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_bluecat_threads(
@@ -62,7 +57,7 @@ snmp_section_bluecat_threads = SimpleSNMPSection(
 check_plugin_bluecat_threads = CheckPlugin(
     name="bluecat_threads",
     service_name="Number of threads",
-    discovery_function=discover_bluecat_threads,
+    discovery_function=discover_one_service,
     check_function=check_bluecat_threads,
     check_ruleset_name="threads",
     check_default_parameters={"levels": ("levels", (2000, 4000))},

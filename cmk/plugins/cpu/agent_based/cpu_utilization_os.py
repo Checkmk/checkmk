@@ -12,20 +12,15 @@ from typing import Any
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_rate,
     get_value_store,
-    Service,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.cpu_util import check_cpu_util
 from cmk.plugins.lib.cpu_utilization_os import SectionCpuUtilizationOs
 
 # Bump this whenever the meaning of the `this_time` passed to check_cpu_util changes.
 _THIS_TIME_SCHEME_VERSION = 1
-
-
-def discover_cpu_utilization_os(section: SectionCpuUtilizationOs) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_cpu_utilization_os(
@@ -54,7 +49,7 @@ def check_cpu_utilization_os(
 check_plugin_cpu_utilization_os = CheckPlugin(
     name="cpu_utilization_os",
     service_name="CPU utilization",
-    discovery_function=discover_cpu_utilization_os,
+    discovery_function=discover_one_service,
     check_function=check_cpu_utilization_os,
     check_default_parameters={},
     check_ruleset_name="cpu_utilization_os",

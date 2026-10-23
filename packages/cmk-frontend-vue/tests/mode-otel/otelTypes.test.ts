@@ -7,10 +7,11 @@ import { describe, expect, it } from 'vitest'
 
 import {
   type EndpointConfig,
-  GRPC_DEFAULT_PORT,
-  HTTP_DEFAULT_PORT,
   resolveEndpoint
 } from '@/mode-otel/otel-configuration-steps/otelTypes'
+
+const GRPC_DEFAULT_PORT = 4317
+const HTTP_DEFAULT_PORT = 4318
 
 describe('resolveEndpoint', () => {
   it('returns 0.0.0.0 with the supplied default port for default_ipv4', () => {

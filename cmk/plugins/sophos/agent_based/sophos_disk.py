@@ -12,12 +12,11 @@ from cmk.agent_based.legacy.conversion import (
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.sophos.lib import DETECT_SOPHOS
 
 
@@ -30,10 +29,6 @@ def parse_sophos_disk(string_table: StringTable) -> int | None:
         return int(string_table[0][0])
     except ValueError, IndexError:
         return None
-
-
-def discover_sophos_disk(section: int) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_sophos_disk(params: Params, section: int) -> CheckResult:
@@ -60,7 +55,7 @@ snmp_section_sophos_disk = SimpleSNMPSection(
 check_plugin_sophos_disk = CheckPlugin(
     name="sophos_disk",
     service_name="Disk usage",
-    discovery_function=discover_sophos_disk,
+    discovery_function=discover_one_service,
     check_function=check_sophos_disk,
     check_ruleset_name="sophos_disk",
     check_default_parameters=Params(),

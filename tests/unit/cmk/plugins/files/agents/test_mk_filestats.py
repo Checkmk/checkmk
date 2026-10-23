@@ -9,7 +9,6 @@
 # ruff: noqa: UP045  # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import ast
 import configparser
@@ -17,6 +16,7 @@ import os
 import sys
 from collections import OrderedDict
 from typing import Mapping, Optional, Sequence, Tuple
+from unittest.mock import Mock
 
 import pytest
 
@@ -33,7 +33,6 @@ else:
 MYLAZYFILE = mk_filestats.FileStat.from_path(__file__, __file__)
 # Overwrite the path to be reproducable...
 MYLAZYFILE.file_path = mk_filestats.ensure_str("test_mk_filestats.py")
-MYLAZYFILE.regex_matchable_path = mk_filestats.ensure_str("test_mk_filestats.py")
 
 
 def test_lazy_file() -> None:
@@ -56,7 +55,8 @@ def test_lazy_file() -> None:
 )
 def test_get_file_iterator_invalid(config: Mapping[str, Optional[str]]) -> None:
     with pytest.raises(ValueError):
-        mk_filestats.get_file_iterator(config)
+        # deliberately invalid config
+        mk_filestats.get_file_iterator(config)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(
@@ -66,9 +66,7 @@ def test_get_file_iterator_invalid(config: Mapping[str, Optional[str]]) -> None:
         ({"input_patterns": '"foo bar" gee*'}, ["foo bar", "gee*"]),
     ],
 )
-def test_get_file_iterator_pattern(
-    config: Mapping[str, Optional[str]], pat_list: Sequence[str]
-) -> None:
+def test_get_file_iterator_pattern(config: Mapping[str, str], pat_list: Sequence[str]) -> None:
     iter_obj = mk_filestats.get_file_iterator(config)
     assert isinstance(iter_obj, mk_filestats.PatternIterator)
     assert iter_obj._patterns == [os.path.abspath(p) for p in pat_list]  # noqa: SLF001
@@ -124,7 +122,8 @@ def test_path_filter(reg_pat: str, paths: Sequence[str], results: Sequence[bool]
 )
 def test_get_file_filters_invalid(config: Mapping[str, Optional[str]]) -> None:
     with pytest.raises(ValueError):
-        mk_filestats.get_file_filters(config)
+        # deliberately invalid config
+        mk_filestats.get_file_filters(config)  # type: ignore[arg-type]
 
 
 def test_get_file_filters() -> None:
@@ -169,17 +168,17 @@ def test_output_aggregator_single_file_servicename(group_name: str, expected: st
 
 class MockConfigParser(configparser.RawConfigParser):
     @override
-    def read(self, cfg_file):  # type: ignore[override]
+    def read(self, cfg_file: object) -> None:  # type: ignore[override]
         pass
 
 
 class TestConfigParsing:
     @pytest.fixture
-    def config_file_name(self):
+    def config_file_name(self) -> str:
         return "filestats.cfg"
 
     @pytest.fixture
-    def config_options(self):
+    def config_options(self) -> Sequence[Tuple[str, str, str]]:
         return [
             ("banana", "input_patterns", "/home/banana/*"),
             ("banana@penguin", "grouping_regex", "/home/banana/penguin*"),
@@ -188,7 +187,9 @@ class TestConfigParsing:
         ]
 
     @pytest.fixture
-    def mocked_configparser(self, config_options):
+    def mocked_configparser(
+        self, config_options: Sequence[Tuple[str, str, str]]
+    ) -> MockConfigParser:
         # FIXME: Python 2.6 has no OrderedDict at all, it is only available in a separate ordereddict
         # package, but we simply can't assume that this is installed on the client!
         parser = MockConfigParser(mk_filestats.DEFAULT_CFG_SECTION, dict_type=OrderedDict)
@@ -199,10 +200,10 @@ class TestConfigParsing:
 
     def test_iter_config_section_dicts(
         self,
-        config_file_name,
-        mocked_configparser,
-        mocker,
-    ):
+        config_file_name: str,
+        mocked_configparser: MockConfigParser,
+        mocker: Mock,
+    ) -> None:
         mocker.patch(
             (
                 "ConfigParser.ConfigParser"
@@ -316,12 +317,12 @@ class TestConfigParsing:
         ),
     ],
 )
-def test_grouping_multiple_groups(  # type: ignore[misc]
-    section_name,
-    files_iter,
-    grouping_conditions,
-    expected_result,
-):
+def test_grouping_multiple_groups(
+    section_name: str,
+    files_iter: Sequence[mk_filestats.FileStat],
+    grouping_conditions: Sequence[Tuple[str, Mapping[str, str]]],
+    expected_result: Sequence[Tuple[str, Sequence[mk_filestats.FileStat]]],
+) -> None:
     results_list = sorted(
         mk_filestats.grouping_multiple_groups(
             section_name,
@@ -342,7 +343,7 @@ def test_grouping_multiple_groups(  # type: ignore[misc]
 
 
 @pytest.mark.parametrize("val", [None, "null"])
-def test_explicit_null_in_filestat(val):  # type: ignore[misc]
+def test_explicit_null_in_filestat(val: Optional[str]) -> None:
     filestat = mk_filestats.FileStat(
         file_path="hurz",
         stat_status="file vanished",
@@ -415,7 +416,11 @@ def test_explicit_null_in_filestat(val):  # type: ignore[misc]
         ),
     ],
 )
-def test_output_aggregator_extremes_only(files, expected_header, expected_dicts):  # type: ignore[misc]
+def test_output_aggregator_extremes_only(
+    files: Sequence[mk_filestats.FileStat],
+    expected_header: str,
+    expected_dicts: Sequence[Mapping[str, object]],
+) -> None:
     result = list(mk_filestats.output_aggregator_extremes_only("MYGROUP", files))
 
     assert result[0] == expected_header
@@ -501,7 +506,11 @@ _TEST_DIR_PATH = os.path.abspath(
         ),
     ],
 )
-def test_pattern_iterator(pattern_list, filters, expected_result):  # type: ignore[misc]
+def test_pattern_iterator(
+    pattern_list: Sequence[str],
+    filters: Sequence[object],
+    expected_result: Sequence[str],
+) -> None:
     assert sorted(
         file_stat.file_path
         for file_stat in mk_filestats.PatternIterator(

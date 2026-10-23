@@ -109,6 +109,7 @@ def parse_hp_proliant_da_phydrv(string_table: StringTable) -> Section:
             ty,
             fw,
         ) in string_table
+        if cntlr_index and index
     }
 
 

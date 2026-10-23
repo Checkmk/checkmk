@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.checkmk.agent_based.livestatus_status import LivestatusSection
+from cmk.plugins.lib.livestatus_status import LivestatusStatusSection
 
 
 @dataclass
@@ -98,7 +98,7 @@ agent_section_cmk_site_statistics = AgentSection(
 
 def discover_cmk_site_statistics(
     section_cmk_site_statistics: CMKSiteStatisticsSection | None,
-    section_livestatus_status: LivestatusSection | None,  # noqa: ARG001
+    section_livestatus_status: LivestatusStatusSection | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if section_cmk_site_statistics:
         yield from (Service(item=site_name) for site_name in section_cmk_site_statistics)
@@ -168,7 +168,7 @@ def _metrics_from_stats(
 def check_cmk_site_statistics(
     item: str,
     section_cmk_site_statistics: CMKSiteStatisticsSection | None,
-    section_livestatus_status: LivestatusSection | None,
+    section_livestatus_status: LivestatusStatusSection | None,
 ) -> Generator[Metric | Result]:
     if not section_cmk_site_statistics or item not in section_cmk_site_statistics:
         return

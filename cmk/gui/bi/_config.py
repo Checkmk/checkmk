@@ -54,9 +54,9 @@ from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, Pag
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.selection_id import SelectionId
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Alternative,
@@ -84,6 +84,7 @@ from cmk.gui.wato import ContactGroupSelection, TileMenuRenderer
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import GUI
 from cmk.gui.watolib.groups_io import load_contact_group_information
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.main_menu import (
     ABCMainModule,
     MainModuleRegistry,
@@ -104,8 +105,9 @@ from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.utils import paths
 from cmk.web.utils import escaping
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
@@ -122,6 +124,7 @@ from ._cron import reset_compile_bi_aggregations_scheduling
 from ._packs import get_cached_bi_packs
 from ._valuespecs import (
     bi_config_aggregation_function_registry,
+    FolderChoices,
     get_aggregation_function_choices,
     get_bi_aggregation_node_choices,
     get_bi_rule_node_choices_vs,
@@ -310,11 +313,8 @@ class ABCBIMode(WatoMode):
         for bi_rule in allowed_rules.values():
             lookup[DropdownChoice.option_id(bi_rule.id)] = bi_rule.params.arguments
 
-        html.javascript(
-            """var bi_rule_argument_lookup = %s;
-        cmk.bi.update_argument_hints();
-"""
-            % json.dumps(lookup)
+        html.call_ts_function(
+            function_name="bi_set_rule_argument_lookup", arguments={"lookup": lookup}
         )
 
     def _allowed_rules(self) -> dict[str, BIRule]:
@@ -353,7 +353,7 @@ class ModeBIEditPack(ABCBIMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if transactions.check_transaction(request):
             vs_config = self._vs_pack().from_html_vars("bi_pack")
@@ -926,7 +926,9 @@ class ModeBIRules(ABCBIMode):
         target_pack_id = None
         if request.has_var("bulk_moveto"):
             target_pack_id = request.get_str_input_mandatory("bulk_moveto", "")
-            html.javascript("cmk.selection.update_bulk_moveto(%s)" % json.dumps(target_pack_id))
+            html.call_ts_function(
+                function_name="update_bulk_moveto", arguments={"value": target_pack_id}
+            )
 
         if target_pack_id is None:
             raise MKUserError(None, _("This BI pack does not exist."))
@@ -1003,9 +1005,9 @@ class ModeBIRules(ABCBIMode):
                 return HTML.empty()
 
             if request.has_var("bulk_moveto"):
-                html.javascript(
-                    "cmk.selection.update_bulk_moveto(%s)"
-                    % json.dumps(request.var("bulk_moveto", ""))
+                html.call_ts_function(
+                    function_name="update_bulk_moveto",
+                    arguments={"value": request.var("bulk_moveto", "")},
                 )
 
             html.dropdown(
@@ -1227,6 +1229,8 @@ class ModeBIEditRule(ABCBIMode):
         super().__init__(edition, ctx)
         self._rule_id = request.get_str_input("id")
         self._new = self._rule_id is None
+        tree = make_folder_tree(ctx.config)
+        self._folder_choices: FolderChoices = lambda: tree.folder_choices(user)
 
         if not self._new and self._rule_id is not None and not self.bi_pack.get_rule(self._rule_id):
             raise MKUserError("id", _("This BI rule does not exist"))
@@ -1260,13 +1264,13 @@ class ModeBIEditRule(ABCBIMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
 
         self.verify_pack_permission(self.bi_pack)
-        vs_rule = self.valuespec(rule_id=self._rule_id)
+        vs_rule = self.valuespec(self._folder_choices, rule_id=self._rule_id)
         vs_rule_config = vs_rule.from_html_vars("rule")
         vs_rule.validate_value(copy.deepcopy(vs_rule_config), "rule")
         # We use the schema only for validation here. We need this schema.load(schema.dump(...))
@@ -1382,7 +1386,9 @@ class ModeBIEditRule(ABCBIMode):
             # call, because the value for label conditions as given in the schema format cannot be
             # rendered by the LabelGroups valuespec
             rule_vs_config = schema_inst.load(schema_inst.dump(bi_rule))
-            self.valuespec(rule_id=self._rule_id).render_input("rule", rule_vs_config)
+            self.valuespec(self._folder_choices, rule_id=self._rule_id).render_input(
+                "rule", rule_vs_config
+            )
             forms.end()
             html.hidden_fields()
             if self._new:
@@ -1427,7 +1433,7 @@ class ModeBIEditRule(ABCBIMode):
         return None
 
     @classmethod
-    def valuespec(cls, rule_id: str | None) -> Transform:
+    def valuespec(cls, folder_choices: FolderChoices, rule_id: str | None) -> Transform:
         if rule_id:
             id_valuespec: ValueSpec = FixedValue(
                 value=rule_id,
@@ -1527,7 +1533,7 @@ class ModeBIEditRule(ABCBIMode):
             (
                 "nodes",
                 ListOf(
-                    valuespec=get_bi_rule_node_choices_vs(),
+                    valuespec=get_bi_rule_node_choices_vs(folder_choices),
                     add_label=_("Add child node generator"),
                     title=_("Aggregated nodes"),
                     allow_empty=False,
@@ -1638,15 +1644,19 @@ class BIRuleForm(Dictionary):
     @override
     def render_input(self, varprefix: str, value: Any) -> None:
         super().render_input(varprefix, value)
-        html.javascript("new cmk.bi.BIRulePreview('#form_birule', %s)" % json.dumps(varprefix))
+        html.call_ts_function(
+            function_name="bi_rule_preview",
+            arguments={"root_node": "#form_birule", "varprefix": varprefix},
+        )
 
 
 class BIAggregationForm(Dictionary):
     @override
     def render_input(self, varprefix: str, value: Any) -> None:
         super().render_input(varprefix, value)
-        html.javascript(
-            "new cmk.bi.BIAggregationPreview('#form_biaggr', %s)" % json.dumps(varprefix)
+        html.call_ts_function(
+            function_name="bi_aggregation_preview",
+            arguments={"root_node": "#form_biaggr", "varprefix": varprefix},
         )
 
 
@@ -1657,7 +1667,8 @@ class AjaxBIRulePreview(AjaxPage):
         compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
 
         # Create preview rule
-        vs = ModeBIEditRule.valuespec(rule_id=None)
+        tree = make_folder_tree(ctx.config)
+        vs = ModeBIEditRule.valuespec(lambda: tree.folder_choices(user), rule_id=None)
         varprefix = ctx.request.get_str_input_mandatory("varprefix")
         preview_config = vs.from_html_vars(varprefix)
         preview_bi_rule = BIRule(preview_config)
@@ -1681,8 +1692,8 @@ class AjaxBIRulePreview(AjaxPage):
                     entry.update(search_result)
                     modified_search_results.append(entry)
                 response.append(_finalize_preview_response(modified_search_results))
-            except MKGeneralException:
-                response.append([{"Error": _("Can not evaluate search")}])
+            except MKGeneralException as e:
+                response.append([{_("Error"): str(e)}])
 
         return {
             "title": _("Available macros and search result(s)"),
@@ -1700,7 +1711,10 @@ class AjaxBIAggregationPreview(AjaxPage):
 
         # Create preview aggr
         varprefix = ctx.request.get_str_input_mandatory("varprefix")
-        vs = BIModeEditAggregation.get_vs_aggregation(aggregation_id=None)
+        tree = make_folder_tree(ctx.config)
+        vs = BIModeEditAggregation.get_vs_aggregation(
+            lambda: tree.folder_choices(user), aggregation_id=None
+        )
         preview_config = vs.from_html_vars(varprefix)
         preview_bi_aggr = BIAggregation(
             AggrConfigDict(
@@ -1719,8 +1733,8 @@ class AjaxBIAggregationPreview(AjaxPage):
             # Provide performance statistics/advice for bad regex and setups
             search_results = preview_bi_aggr.node.search.execute({}, compiler.bi_searcher)
             response.append(_finalize_preview_response(search_results))
-        except MKGeneralException:
-            response.append([{_("Error"): _("Can not evaluate search")}])
+        except MKGeneralException as e:
+            response.append([{_("Error"): str(e)}])
 
         return {
             "title": _("Available macros and search result(s)"),
@@ -1753,9 +1767,9 @@ class NodeVisualizationLayoutStyle(ValueSpec[dict[str, Any]]):
     @override
     def render_input(self, varprefix: str, value: dict[str, Any]) -> None:
         html.div("", id_=varprefix)
-        html.javascript(
-            "let example = new cmk.nodevis.example_generator(%s);"
-            "example.create_example(%s)" % (json.dumps(varprefix), json.dumps(value))
+        html.call_ts_function(
+            function_name="nodevis_create_example",
+            arguments={"varprefix": varprefix, "value": value},
         )
 
     @override
@@ -1829,6 +1843,8 @@ class BIModeEditAggregation(ABCBIMode):
         super().__init__(edition, ctx)
         aggr_id = request.get_str_input_mandatory("id", "")
         clone_id = request.get_str_input_mandatory("clone", "")
+        tree = make_folder_tree(ctx.config)
+        self._folder_choices: FolderChoices = lambda: tree.folder_choices(user)
         self._new = False
         self._clone = False
         if clone_id:
@@ -1886,16 +1902,17 @@ class BIModeEditAggregation(ABCBIMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         self.verify_pack_permission(self.bi_pack)
         if not transactions.check_transaction(request):
             return redirect(mode_url("bi_aggregations", pack=self.bi_pack.id))
 
         vs_aggregation = self.get_vs_aggregation(
+            self._folder_choices,
             aggregation_id=request.get_str_input_mandatory(
                 varname="aggr_p_id", deflt=self._bi_aggregation.id
-            )
+            ),
         )
         vs_aggregation_config = vs_aggregation.from_html_vars("aggr")
         vs_aggregation.validate_value(vs_aggregation_config, "aggr")
@@ -1966,6 +1983,7 @@ class BIModeEditAggregation(ABCBIMode):
             aggr_vs_config = schema_inst.load(schema_inst.dump(self._bi_aggregation))
 
             self.get_vs_aggregation(
+                self._folder_choices,
                 aggregation_id=self._bi_aggregation.id,
                 aggregation_exists=(self._bi_aggregation.id in self.bi_pack.get_aggregations()),
             ).render_input("aggr", aggr_vs_config)
@@ -1977,7 +1995,10 @@ class BIModeEditAggregation(ABCBIMode):
 
     @classmethod
     def get_vs_aggregation(
-        cls, aggregation_id: str | None, aggregation_exists: bool = True
+        cls,
+        folder_choices: FolderChoices,
+        aggregation_id: str | None,
+        aggregation_exists: bool = True,
     ) -> BIAggregationForm:
         visualization_choices = []
         visualization_choices.append((None, _("Use default layout")))
@@ -2006,7 +2027,7 @@ class BIModeEditAggregation(ABCBIMode):
                 ("id", id_valuespec),
                 ("comment", RuleComment()),
                 ("groups", cls._get_vs_aggregation_groups()),
-                ("node", get_bi_aggregation_node_choices()),
+                ("node", get_bi_aggregation_node_choices(folder_choices)),
                 ("computation_options", cls._get_vs_computation_options()),
                 ("aggregation_visualization", cls._get_vs_aggregation_visualization()),
             ],
@@ -2292,7 +2313,7 @@ class BIModeAggregations(ABCBIMode):
         target = None
         if request.has_var("bulk_moveto"):
             target = request.var("bulk_moveto", "")
-            html.javascript("cmk.selection.update_bulk_moveto(%s)" % json.dumps(target))
+            html.call_ts_function(function_name="update_bulk_moveto", arguments={"value": target})
 
         target_pack = None
         if target in self._bi_packs.get_packs():
@@ -2421,9 +2442,9 @@ class BIModeAggregations(ABCBIMode):
                 return HTML.empty()
 
             if request.has_var("bulk_moveto"):
-                html.javascript(
-                    "cmk.selection.update_bulk_moveto(%s)"
-                    % json.dumps(request.var("bulk_moveto", ""))
+                html.call_ts_function(
+                    function_name="update_bulk_moveto",
+                    arguments={"value": request.var("bulk_moveto", "")},
                 )
 
             html.dropdown(
@@ -2440,7 +2461,7 @@ class BIModeAggregations(ABCBIMode):
             )
             return HTML.without_escaping(output_funnel.drain())
 
-    def _show_bulk_move_choices(self) -> Choices:
+    def _show_bulk_move_choices(self) -> list[Choice]:
         return [
             (pack_id, bi_pack.title)
             for pack_id, bi_pack in self._bi_packs.get_packs().items()

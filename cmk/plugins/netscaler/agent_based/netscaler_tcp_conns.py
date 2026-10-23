@@ -17,12 +17,11 @@ from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 from .lib import SNMP_DETECT
 
@@ -55,10 +54,6 @@ snmp_section_netscaler_tcp_conns = SimpleSNMPSection(
 )
 
 
-def discover(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check(params: Mapping[str, Any], section: Section) -> CheckResult:
     yield from check_levels_v1(
         section.server_conns,
@@ -77,7 +72,7 @@ def check(params: Mapping[str, Any], section: Section) -> CheckResult:
 check_plugin_netscaler_tcp_conns = CheckPlugin(
     name="netscaler_tcp_conns",
     service_name="TCP Connections",
-    discovery_function=discover,
+    discovery_function=discover_one_service,
     check_function=check,
     check_ruleset_name="netscaler_tcp_conns",
     check_default_parameters={"server_conns": (25000, 30000), "client_conns": (25000, 30000)},

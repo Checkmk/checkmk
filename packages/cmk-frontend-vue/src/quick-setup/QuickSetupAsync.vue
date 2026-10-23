@@ -84,9 +84,7 @@ provide(formDataKey, readonly(formData))
 //
 const nextStage = async (actionId: string) => {
   const thisStageNumber = quickSetupHook.stage.value
-  const nextStageNumber = quickSetupHook.nextStageIndex()
   const currentStage = stages.value[thisStageNumber]!
-  const followingStage = stages.value[nextStageNumber]!
 
   loading.value = true
   clearErrors()
@@ -111,6 +109,7 @@ const nextStage = async (actionId: string) => {
       currentStage.background_job_log.setActiveTasksToError()
       handleValidationError(actionResponse, thisStageNumber)
       handleBackgroundJobError(actionResponse)
+      updateStageApplicability(actionResponse.stage_applicability)
       loading.value = false
       return
     }
@@ -118,6 +117,7 @@ const nextStage = async (actionId: string) => {
     currentStage.form_spec_errors = actionResponse.validation_errors?.formspec_errors || {}
     currentStage.errors = actionResponse.validation_errors?.stage_errors || []
     currentStage.recap = actionResponse.stage_recap
+    updateStageApplicability(actionResponse.stage_applicability)
   } catch (err: unknown) {
     currentStage.background_job_log.setActiveTasksToError()
     handleExceptionError(err)
@@ -125,6 +125,9 @@ const nextStage = async (actionId: string) => {
     return
   }
 
+  // The applicability is updated first, so that the next stage is the next applicable one.
+  const nextStageNumber = quickSetupHook.nextStageIndex()
+  const followingStage = stages.value[nextStageNumber]!
   followingStage.background_job_log.clear()
   //If we have not finished the quick setup yet, but still on the regular steps
   if (nextStageNumber < numberOfStages.value - 1) {
@@ -176,6 +179,18 @@ const nextStage = async (actionId: string) => {
   loading.value = false
 }
 
+// The user input of a stage that becomes inapplicable stays in the store. The backend drops it.
+const updateStageApplicability = (stageApplicability: boolean[]) => {
+  stageApplicability.forEach((isApplicable: boolean, index: number) => {
+    const stage = stages.value[index]
+    if (!stage) {
+      return
+    }
+    stage.is_applicable = isApplicable
+    quickSetupHook.setStageStatus(index, isApplicable)
+  })
+}
+
 const prevStage = () => {
   const prevStage = quickSetupHook.previousStageIndex()
   stages.value[prevStage]!.background_job_log.clear()
@@ -218,6 +233,8 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
     result.push({
       title: stage.title,
       sub_title: stage?.sub_title || null,
+      // The overview mode rejects quick setups with conditional stages, so all stages apply.
+      is_applicable: true,
       components: stage.components || [],
       recap: [],
       form_spec_errors: {},
@@ -232,6 +249,7 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
   result.push({
     title: '',
     sub_title: null,
+    is_applicable: true,
     components: [],
     recap: [],
     form_spec_errors: {},
@@ -271,6 +289,7 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
     result.push({
       title: overview.title,
       sub_title: overview.sub_title || null,
+      is_applicable: overview.is_applicable,
       components: isFirst ? data.stage.components : [],
       recap: [],
       form_spec_errors: {},
@@ -285,6 +304,7 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
   result.push({
     title: '',
     sub_title: null,
+    is_applicable: true,
     components: [],
     recap: [],
     form_spec_errors: {},
@@ -413,6 +433,7 @@ const regularStages = computed((): QuickSetupStageSpec[] => {
     const item: QuickSetupStageSpec = {
       title: stg.title,
       sub_title: stg.sub_title || null,
+      is_applicable: stg.is_applicable,
       recapContent: renderRecap(stg.recap || []),
       goToThisStage: () => {
         stages.value[index]!.background_job_log.clear()
@@ -547,6 +568,11 @@ const hideWaitIcon = computed(
 )
 
 const quickSetupHook = useWizard(stages.value.length, props.mode)
+
+// Teach the wizard navigation which stages the backend reported as not applicable.
+updateStageApplicability(
+  stages.value.slice(0, stages.value.length - 1).map((stage) => stage.is_applicable)
+)
 
 showQuickSetup.value = true
 </script>

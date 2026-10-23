@@ -57,7 +57,7 @@ def _tag_based_args(tag_based: list[TagBased]) -> list[str]:
     for tag_config in tag_based:
         if tag_config.condition[0] == "exists":
             args += ["--require-tag", tag_config.tag]
-        if isinstance(tag_config.condition, tuple) and tag_config.condition[0] == "equals":  # type: ignore[redundant-expr]
+        if tag_config.condition[0] == "equals":
             args += ["--require-tag-value", tag_config.tag, tag_config.condition[1]]
     return args
 

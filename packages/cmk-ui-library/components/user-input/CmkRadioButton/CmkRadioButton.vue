@@ -20,15 +20,22 @@ interface CmkRadioButtonProps {
 const { value, label, help, disabled = false } = defineProps<CmkRadioButtonProps>()
 
 const id = useId()
+const labelId = useId()
 </script>
 
 <template>
   <div class="cmk-radio-button">
-    <RadioGroupItem :id="id" :value="value" class="cmk-radio-button__button" :disabled="disabled">
+    <RadioGroupItem
+      :id="id"
+      :value="value"
+      class="cmk-radio-button__button"
+      :disabled="disabled"
+      :aria-labelledby="label ? labelId : undefined"
+    >
       <RadioGroupIndicator class="cmk-radio-button__indicator" />
     </RadioGroupItem>
     <template v-if="label">
-      <CmkLabel :for="id" :help="help" cursor="inherit">
+      <CmkLabel :id="labelId" :for="id" :help="help" cursor="inherit">
         <CmkHtml class="cmk-radio-button__label" :html="label" />
       </CmkLabel>
     </template>

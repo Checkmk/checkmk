@@ -205,12 +205,14 @@ class BaseWidgetRequest(_BaseWidget, ABC):
         context: ApiContext,
         *,
         embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
+        stored_widget: DashletConfig | None,
     ) -> Iterable[ErrorDetails]:
         """Run additional validations that depends on the config."""
         yield from self.content.iter_validation_errors(
             location + ("content", self.content.type),
             context,
             embedded_views=embedded_views,
+            stored_widget=stored_widget,
         )
 
     def _to_internal_without_layout(self) -> DashletConfig:
@@ -308,6 +310,7 @@ class RelativeGridWidgetResponse(BaseWidgetResponse):
 def determine_widget_filter_used_infos(
     widget_config: DashletConfig,
 ) -> list[AnnotatedInfoName]:
-    dashlet_type = dashlet_registry[widget_config["type"]]
+    if (dashlet_type := dashlet_registry.get(widget_config["type"])) is None:
+        return []
     dashlet = dashlet_type(widget_config)
     return list(dashlet.infos())

@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { CmkNetworkError } from 'cmk-ui-library/lib/error'
+import { StaleSessionError } from 'cmk-ui-library/lib/staleSession'
 import { type Component, type Ref, getCurrentInstance, h, onErrorCaptured, ref } from 'vue'
 
 import CmkErrorBoundary from './CmkErrorBoundary.vue'
@@ -13,6 +15,20 @@ const crashReportApi = new JavascriptCrashReportApi()
 function currentComponentName(): string {
   const type = getCurrentInstance()?.type as { name?: string; __name?: string } | undefined
   return type?.name ?? type?.__name ?? ''
+}
+
+function causedBy<T extends Error>(
+  error: Error,
+  type: abstract new (...args: never[]) => T
+): boolean {
+  let current: unknown = error
+  while (current instanceof Error) {
+    if (current instanceof type) {
+      return true
+    }
+    current = current.cause
+  }
+  return false
 }
 
 /**
@@ -35,8 +51,17 @@ export function useCmkErrorBoundary(): {
   const crashReport = ref<CrashReportState>({ status: 'none' })
   const component = currentComponentName()
   onErrorCaptured((err: Error, _instance, info: string): boolean => {
-    console.error(err)
+    // Replacing a shown error re-renders what shows it; if that fails too, it would loop forever.
+    if (error.value !== null) {
+      console.error(err)
+      return false
+    }
     error.value = err
+    if (causedBy(err, StaleSessionError) || causedBy(err, CmkNetworkError)) {
+      crashReport.value = { status: 'none' }
+      return false
+    }
+    console.error(err)
     crashReport.value = { status: 'storing' }
     void crashReportApi
       .report(err, component, info)

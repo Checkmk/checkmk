@@ -9,34 +9,45 @@ from typing import Annotated, assert_never, Literal, override, Self
 
 from pydantic import Discriminator
 
+from cmk.graphing_engine import metric_attributes
 from cmk.gui.dashboard.type_defs import (
     AverageScatterplotDashletConfig,
     BarplotDashletConfig,
     GaugeDashletConfig,
+    MetricCurrentValue,
+    MetricDashboardWindow,
     MetricDisplayRangeFixed,
     MetricDisplayRangeWithAutomatic,
+    MetricFixedWindow,
     MetricTimeRange,
-    MetricTimeRangeParameters,
     SingleGraphDashletConfig,
     SingleMetricSparkHeightMode,
     StatusDisplayWithText,
     TopListColumnConfig,
     TopListDashletConfig,
 )
-from cmk.gui.graphing import (
-    ConvertibleUnitSpecification,
-    DecimalNotation,
-    id_from_unit_spec,
-    metrics_from_api,
-)
+from cmk.gui.graphing import id_from_unit, registered_metrics
+from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import (
     ColorHex,
     timerange_from_internal,
     TimerangeModel,
 )
-from cmk.gui.unit_formatter import AutoPrecision
+from cmk.gui.type_defs import GraphLegendStyle
 
+from ..context_filters import (
+    OBJECT_HOST_FILTER_ADAPTER,
+    OBJECT_SERVICE_FILTER_ADAPTER,
+    ObjectHostContextFilter,
+    ObjectServiceContextFilter,
+)
+from ..contextual_link import (
+    AnyContextualLinkSpec,
+    contextual_link_from_internal,
+    contextual_link_to_internal,
+    ContextualLinkSpec,
+)
 from ._base import BaseWidgetContent
 
 
@@ -76,14 +87,10 @@ class MetricDisplayRangeFixedModel:
         )
 
     def to_internal(self, metric_name: str) -> MetricDisplayRangeFixed:
-        if metric := metrics_from_api.get(metric_name):
-            unit_spec = metric.unit_spec
-        else:
-            unit_spec = ConvertibleUnitSpecification(
-                notation=DecimalNotation(symbol=""),
-                precision=AutoPrecision(digits=2),
-            )
-        return "fixed", (id_from_unit_spec(unit_spec), (self.minimum, self.maximum))
+        unit = metric_attributes(
+            metric_name, translate_to_current_language, registered_metrics()
+        ).unit
+        return "fixed", (id_from_unit(unit), (self.minimum, self.maximum))
 
 
 type MetricDisplayRangeModel = Literal["automatic"] | MetricDisplayRangeFixedModel
@@ -94,7 +101,7 @@ def _metric_display_range_from_internal(
 ) -> MetricDisplayRangeModel:
     if value == "automatic":
         return "automatic"
-    if isinstance(value, tuple) and value[0] == "fixed":  # type: ignore[redundant-expr]
+    if value[0] == "fixed":
         _, (unit, (minimum, maximum)) = value
         return MetricDisplayRangeFixedModel(
             type="fixed",
@@ -117,10 +124,15 @@ def _metric_display_range_to_internal(
     assert_never(value)
 
 
+type MetricWindowModel = Literal["dashboard"] | TimerangeModel
+
+
 @api_model
 class MetricTimeRangeWindow:
     type: Literal["window"] = api_field(description="Select values over a range of time.")
-    window: TimerangeModel = api_field(description="Time range to select values from.")
+    window: MetricWindowModel = api_field(
+        description="Time range to select values from, or `dashboard` to follow the dashboard."
+    )
     consolidation: Literal["average", "minimum", "maximum"] = api_field(
         description="How to consolidate the values over the time range.",
     )
@@ -149,39 +161,41 @@ class MetricTimeRangeWindow:
         assert_never(self.consolidation)
 
     @classmethod
-    def from_internal(cls, config: MetricTimeRangeParameters) -> Self:
+    def from_internal(cls, config: MetricFixedWindow | MetricDashboardWindow) -> Self:
         return cls(
             type="window",
-            window=timerange_from_internal(config["window"]),
+            window=(
+                "dashboard"
+                if config["type"] == "dashboard"
+                else timerange_from_internal(config["window"])
+            ),
             consolidation=cls.consolidation_from_internal(config["rrd_consolidation"]),
         )
 
-    def to_internal(self) -> MetricTimeRangeParameters:
-        return {
-            "window": self.window.to_internal(),
-            "rrd_consolidation": self.consolidation_to_internal(),
-        }
+    def to_internal(self) -> MetricFixedWindow | MetricDashboardWindow:
+        consolidation = self.consolidation_to_internal()
+        if self.window == "dashboard":
+            return MetricDashboardWindow(type="dashboard", rrd_consolidation=consolidation)
+        return MetricFixedWindow(
+            type="range", window=self.window.to_internal(), rrd_consolidation=consolidation
+        )
 
 
 type MetricTimeRangeModel = Literal["current"] | MetricTimeRangeWindow
 
 
 def _metric_time_range_from_internal(value: MetricTimeRange) -> MetricTimeRangeModel:
-    match value:
-        case "current":
-            return "current"
-        case ("range", config):
-            return MetricTimeRangeWindow.from_internal(config)
-    # TODO: change to `assert_never` once mypy can handle it correctly
-    raise ValueError(f"Invalid metric time range: {value!r}")
+    if value["type"] == "current":
+        return "current"
+    return MetricTimeRangeWindow.from_internal(value)
 
 
 def _metric_time_range_to_internal(value: MetricTimeRangeModel) -> MetricTimeRange:
     match value:
         case "current":
-            return "current"
+            return MetricCurrentValue(type="current")
         case MetricTimeRangeWindow():
-            return "range", value.to_internal()
+            return value.to_internal()
     # TODO: change to `assert_never` once mypy can handle it correctly
     raise ValueError(f"Invalid metric time range: {value!r}")
 
@@ -247,6 +261,9 @@ class _BaseMetricContent(BaseWidgetContent, ABC):
 class BarplotContent(_BaseMetricContent):
     type: Literal["barplot"] = api_field(description="Display a single metric as a barplot.")
     display_range: MetricDisplayRangeModel = api_field(description="Range of values to display.")
+    contextual_link: ContextualLinkSpec[ObjectServiceContextFilter] = api_field(
+        description="Where a click on a bar leads."
+    )
 
     @classmethod
     @override
@@ -259,15 +276,25 @@ class BarplotContent(_BaseMetricContent):
             type="barplot",
             metric=config["metric"],
             display_range=_metric_display_range_from_internal(config["display_range"]),
+            contextual_link=contextual_link_from_internal(
+                config.get("contextual_link"), OBJECT_SERVICE_FILTER_ADAPTER
+            ),
         )
 
     @override
     def to_internal(self) -> BarplotDashletConfig:
-        return BarplotDashletConfig(
+        config = BarplotDashletConfig(
             type=self.internal_type(),
             metric=self.metric,
             display_range=_metric_display_range_to_internal(self.metric, self.display_range),
         )
+        if (link := contextual_link_to_internal(self.contextual_link)) is not None:
+            config["contextual_link"] = link
+        return config
+
+    @override
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
+        return self.contextual_link
 
 
 @api_model
@@ -377,6 +404,15 @@ class AverageScatterplotContent(_BaseMetricContent):
     metric_color: DefaultOrColor = api_field(description="Color of the scattered dots.")
     average_color: DefaultOrColor = api_field(description="Color of the average.")
     median_color: DefaultOrColor = api_field(description="Color of the median.")
+    show_legend: bool | ApiOmitted = api_field(
+        description="Show the graph legend. Defaults to false.",
+        default_factory=ApiOmitted,
+    )
+    legend_style: GraphLegendStyle | ApiOmitted = api_field(
+        description="How the legend is drawn when show_legend is set: compact names the series in "
+        "a single row, extended lists them in a table with their statistics. Defaults to compact.",
+        default_factory=ApiOmitted,
+    )
 
     @classmethod
     @override
@@ -392,11 +428,13 @@ class AverageScatterplotContent(_BaseMetricContent):
             metric_color=config.get("metric_color") or "default",
             average_color=config.get("avg_color") or "default",
             median_color=config.get("median_color") or "default",
+            show_legend=config.get("show_legend", ApiOmitted()),
+            legend_style=config.get("legend_style", ApiOmitted()),
         )
 
     @override
     def to_internal(self) -> AverageScatterplotDashletConfig:
-        return AverageScatterplotDashletConfig(
+        config = AverageScatterplotDashletConfig(
             type=self.internal_type(),
             metric=self.metric,
             time_range=self.time_range.to_internal(),
@@ -404,6 +442,11 @@ class AverageScatterplotContent(_BaseMetricContent):
             avg_color=self.average_color,
             median_color=self.median_color,
         )
+        if not isinstance(self.show_legend, ApiOmitted):
+            config["show_legend"] = self.show_legend
+        if not isinstance(self.legend_style, ApiOmitted):
+            config["legend_style"] = self.legend_style
+        return config
 
 
 @api_model
@@ -440,6 +483,10 @@ class TopListContent(_BaseMetricContent):
         description="Display highest or lowest values."
     )
     limit_to: int = api_field(description="Limit the number of entries in the top list.")
+    # Host filters only: both cells name the row's host, but the host cell names no service.
+    contextual_link: ContextualLinkSpec[ObjectHostContextFilter] = api_field(
+        description="Where a click on a host or service name leads."
+    )
 
     @classmethod
     @override
@@ -455,11 +502,14 @@ class TopListContent(_BaseMetricContent):
             display_range=_metric_display_range_from_internal(config["display_range"]),
             ranking_order=config["ranking_order"],
             limit_to=config["limit_to"],
+            contextual_link=contextual_link_from_internal(
+                config.get("contextual_link"), OBJECT_HOST_FILTER_ADAPTER
+            ),
         )
 
     @override
     def to_internal(self) -> TopListDashletConfig:
-        return TopListDashletConfig(
+        config = TopListDashletConfig(
             type=self.internal_type(),
             metric=self.metric,
             columns=self.columns.to_internal(),
@@ -467,3 +517,10 @@ class TopListContent(_BaseMetricContent):
             ranking_order=self.ranking_order,
             limit_to=self.limit_to,
         )
+        if (link := contextual_link_to_internal(self.contextual_link)) is not None:
+            config["contextual_link"] = link
+        return config
+
+    @override
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
+        return self.contextual_link

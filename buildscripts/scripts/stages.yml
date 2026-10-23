@@ -54,6 +54,14 @@ VARIABLES:
     - NAME: CHANGED_BAZEL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '\\.bzl$\\|BUILD\\|WORKSPACE' || true"
 
+    - NAME: CHANGED_THIRDPARTY_MODULES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^bazel/thirdparty/' || true"
+      REPLACE_NEWLINES: true
+
+    - NAME: CHANGED_THIRDPARTY_MODULE_NAMES
+      SH: "echo '${CHANGED_FILES_REL}' | sed -n 's|^bazel/thirdparty/modules/\\([^/]*\\)/.*|\\1|p' | sort -u"
+      REPLACE_NEWLINES: true
+
     - NAME: CHANGED_AGENT_PLUGINS_SRCS
       SH: "echo '${CHANGED_FILES_REL}' | grep 'tests/agent-plugin-unit/sources-list.txt' || true"
       REPLACE_NEWLINES: true
@@ -71,9 +79,6 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-werks\\|^cmk/utils/werks' || true"
       REPLACE_NEWLINES: true
 
-    - NAME: CHANGED_JS_DEPENDENCIES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^package.json\\|^pnpm-' || true"
-
     ########## packages ########################################################
 
     - NAME: CHANGED_CC_FILES
@@ -85,12 +90,6 @@ VARIABLES:
     - NAME: CHANGED_MK_ORACLE_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-oracle/\\|^packages/[^/]*$' || true"
 
-    - NAME: CHANGED_FRONTEND_VUE_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-frontend-vue/' || true"
-
-    - NAME: CHANGED_SHARED_TYPING_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-shared-typing/' || true"
-
 STAGES:
     - NAME: "Bazel sanity check (guarded)"
       ONLY_WHEN_NOT_EMPTY: CHANGED_BAZEL_FILES
@@ -99,8 +98,20 @@ STAGES:
               bazel aquery --cmk_edition=$edition ... &> ${RESULTS}/results.txt && rm ${RESULTS}/results.txt || exit 1
               bazel cquery --cmk_edition=$edition ... &> ${RESULTS}/results.txt && rm ${RESULTS}/results.txt || exit 1
           done
+          bazel run //buildscripts/scripts:check_no_remote_cache_tags &> ${RESULTS}/results.txt && rm ${RESULTS}/results.txt || exit 1
           bazel mod graph --output=json | jq -e ".. | select(.name? == \"boringssl\")" >"${RESULTS}/results.txt" && exit 1 || true
       RESULT_CHECK_FILE_PATTERN: "results/results.txt"
+
+    # check_thirdparty_modules compares all source.json hashes with the files.
+    # The repository cache would hide a stale hash (it serves the old file by
+    # hash), so the changed modules are then fetched without it; this also
+    # checks the source archive and that the patches apply. Deleted modules
+    # are skipped.
+    - NAME: "Bazel local registry modules"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_THIRDPARTY_MODULES
+      COMMAND: "bazel run //buildscripts/scripts:check_thirdparty_modules &> ${RESULTS}/thirdparty-modules.txt || exit 1; for m in ${CHANGED_THIRDPARTY_MODULE_NAMES}; do [ -d bazel/thirdparty/modules/$m ] || continue; bazel fetch --force --repo_contents_cache= --repository_cache= --repo=@@$m+ &>> ${RESULTS}/thirdparty-modules.txt || exit 1; done; : > ${RESULTS}/thirdparty-modules.txt"
+      TEXT_ON_SKIP: "No local registry modules changed"
+      RESULT_CHECK_FILE_PATTERN: "results/thirdparty-modules.txt"
 
     - NAME: "Bazel sanity check"
       # omdlib/__init__.py is checked in in the repo but then overwritten by bazel. No way to lint the checked in file.
@@ -113,11 +124,11 @@ STAGES:
       # the final `exit $make_rc`). Put explanatory comments here, above COMMAND, never
       # inside the block.
       #
-      # Every .ps1 file must be declared in a filegroup. The existing strays are
-      # accepted as --known-offender exceptions and should be drained into proper
-      # filegroups incrementally. Being in a filegroup is necessary but not sufficient
-      # for the PSScriptAnalyzer aspect to discover the script — the filegroup must
-      # also carry the lint-with-psscriptanalyzer tag (separate follow-up).
+      # The Bazel lint-coverage check requires every shell (also by shebang),
+      # PowerShell, Rust and C/C++ file to be in a rule kind its lint aspect visits,
+      # and every .js/.cjs file to be in some target. Existing offenders are listed in
+      # packages/cmk-repo-checks/bazel_lint_coverage_known_offenders.txt, which may
+      # only shrink.
       #
       # The py-extension check scans all git-tracked files (the aspect only sees
       # declared srcs) and is unguarded on purpose: adding a plain file matches
@@ -134,13 +145,11 @@ STAGES:
               --path "non-free/packages" \
               >> ${RESULTS}/results.txt || make_rc=$?
           ./scripts/check_requirements_test_coverage.sh >> ${RESULTS}/results.txt || make_rc=$?
-          ./scripts/in_bazel.sh ".ps1" "filegroup" \
+          bazel run //packages/cmk-repo-checks:bazel_lint_coverage \
               >> ${RESULTS}/results.txt || make_rc=$?
           ./tests/agent-plugin-unit/bootstrap.sh --check-sources >> ${RESULTS}/results.txt || make_rc=$?
           ./scripts/check_no_py_test.sh \
               `# permanent exceptions by design, deliberately kept on plain py_test` \
-              --known-offender bazel/rules/BUILD \
-              --known-offender non-free/packages/cmk-network-flow/BUILD \
               --known-offender packages/cmk-frontend/BUILD \
               --known-offender tests/unit/qa_metrics/test_coverage/BUILD \
               >> ${RESULTS}/results.txt || make_rc=$?
@@ -161,17 +170,22 @@ STAGES:
       DIR: "tests"
       COMMAND: |
           make_rc=0
-          VITEST_MAX_WORKERS=$(../buildscripts/scripts/vitest_max_workers.sh)
-          echo "VITEST_MAX_WORKERS=$VITEST_MAX_WORKERS"
           ../buildscripts/scripts/bazel_test_ci.sh \
               --test_verbose_timeout_warnings \
               --test_env=TZ='America/Chicago' \
-              --test_env=VITEST_MAX_WORKERS="$VITEST_MAX_WORKERS" \
               --cmk_edition=ultimate \
+              --execution_log_json_file="$PWD/../bazel_execution_log_unit_tests.json" \
               -- \
               //... || make_rc=$?
           ../buildscripts/scripts/bazel_test_post_archive_xunit.sh || :
           bazel --run_under="cd $PWD &&" run //buildscripts/scripts:collect_rust_tests -- "../results" "../results" || :
+          ../buildscripts/scripts/bazel_execution_log_parser.sh \
+              --execution_logs_root .. \
+              --bazel_log_file_pattern bazel_execution_log_unit_tests.json \
+              --summary_file ../results/bazel_log_execution_summary_unit_tests.json \
+              --cachehit_csv ../results/bazel_log_cache_hits_unit_tests.csv \
+              --distro ubuntu-24.04 || :
+          rm -f ../bazel_execution_log_unit_tests.json
           exit $make_rc
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/unit/**/test.xml"
@@ -238,13 +252,6 @@ STAGES:
 
     ########## packages ########################################################
 
-    - NAME: "Package cmk-frontend-vue"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FRONTEND_VUE_FILES,CHANGED_SHARED_TYPING_FILES,CHANGED_JS_DEPENDENCIES
-      DIR: "packages/cmk-frontend-vue"
-      COMMAND: "./run -B --build-dev --lint &> ${RESULTS}/cmk-frontend-vue.txt"
-      TEXT_ON_SKIP: "No cmk-frontend-vue files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend-vue.txt"
-
     - NAME: "Package mk-oracle"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_ORACLE_FILES,CHANGED_RUST_WORKSPACE_FILES
       SEC_VAR_LIST:
@@ -259,6 +266,26 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_MK_ORACLE_FILES
       COMMAND: echo "Just have this line here, task is handled in test-gerrit.groovy"
       TEXT_ON_SKIP: "No mk-oracle files changed"
+
+    - NAME: "System tests for mk-oracle"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_MK_ORACLE_FILES
+      COMMAND: echo "Just have this line here, task is handled in test-gerrit.groovy"
+      TEXT_ON_SKIP: "No mk-oracle files changed"
+      RESULT_CHECK_TYPE: "JUNIT"
+      RESULT_CHECK_FILE_PATTERN: "test-results/**/junit.xml"
+      JENKINS_TEST_RESULT_PATH: "testReport/"
+
+    - NAME: "Windows on-VM component tests for mk-oracle"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_MK_ORACLE_FILES
+      COMMAND: echo "Just have this line here, task is handled in test-gerrit.groovy"
+      TEXT_ON_SKIP: "No mk-oracle files changed"
+      RESULT_CHECK_FILE_PATTERN: "mk-oracle-win.txt"
+
+    - NAME: "Linux/Solaris/AIX on-VM component tests for mk-oracle"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_MK_ORACLE_FILES
+      COMMAND: echo "Just have this line here, task is handled in test-gerrit.groovy"
+      TEXT_ON_SKIP: "No mk-oracle files changed"
+      RESULT_CHECK_FILE_PATTERN: "mk-oracle-component-tests/*.txt"
 
     - NAME: "Format repository"
       COMMAND: "bazel run //:format.check &> ${RESULTS}/format.txt"

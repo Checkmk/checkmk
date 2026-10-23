@@ -8,13 +8,13 @@ from typing import Literal
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.framework.model.common_fields import LivestatusValue
 
 
 @api_model
-class HostStatusObjectModel(DomainObjectModel):
+class HostStatusObjectModel(TitledDomainObjectModel):
     domainType: Literal["host"] = api_field(description="The domain type of the object")
     extensions: dict[str, LivestatusValue] = api_field(description="The attributes of the host")
 

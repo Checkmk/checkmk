@@ -1,9 +1,9 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:replace_string_in_file.bzl", "replace_string_in_file")
 
 exports_files([
@@ -185,7 +185,6 @@ py_library(
     srcs = [
         "omdlib/admin_mail.py",
         "omdlib/agent_receiver.py",
-        "omdlib/ai_control_plane.py",
         "omdlib/args_site_user.py",
         "omdlib/automation_helper.py",
         "omdlib/autostart.py",
@@ -208,9 +207,11 @@ py_library(
         "omdlib/livestatus.py",
         "omdlib/main.py",
         "omdlib/main_site_user.py",
+        "omdlib/maps.py",
         "omdlib/mcp.py",
         "omdlib/mkeventd.py",
         "omdlib/multisite.py",
+        "omdlib/nagvis.py",
         "omdlib/opentelemetry.py",
         "omdlib/options.py",
         "omdlib/options_legacy.py",
@@ -243,14 +244,12 @@ py_library(
     deps = [
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
-        "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:tar-archive",
         "//packages/cmk-ccc:tty",
         "//packages/cmk-ccc:version",
         "//packages/cmk-ccc:version-info",
         "//packages/cmk-crash:crash",
         "//packages/cmk-crypto",
-        "//packages/cmk-flags",
         requirement("psutil"),
     ],
 )
@@ -355,4 +354,12 @@ pkg_tar(
     ],
     stamp = 1,
     visibility = ["//omd:__pkg__"],
+)
+
+# Lets shellcheck see these scripts. Nothing depends on this target.
+sh_library(
+    name = "shell_scripts",
+    srcs = [
+        "omd.init",
+    ],
 )

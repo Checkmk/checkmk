@@ -13,13 +13,14 @@ import argparse
 import logging
 import sys
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from urllib.parse import urljoin
 
 from requests import Response, Session
 from requests.auth import HTTPBasicAuth
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1 import configure_logging, HostnameValidationAdapter
 
 LOGGER = logging.getLogger(__name__)
 
@@ -57,15 +58,12 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     args = parser.parse_args(argv)
 
     if args.verbose and args.verbose >= 2:
-        fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s %(message)s"
         lvl = logging.DEBUG
     elif args.verbose:
-        fmt = "%(levelname)s: %(message)s"
         lvl = logging.INFO
     else:
-        fmt = "%(levelname)s: %(message)s"
         lvl = logging.WARNING
-    logging.basicConfig(level=lvl, format=fmt)  # astrein: disable=logging-formatter
+    configure_logging(lvl)
 
     return args
 
@@ -142,7 +140,7 @@ class ZertoRequest:
             additional_headers=self._headers,
         ).get("/vms")
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             LOGGER.debug(
                 "response status code: %(status_code)s", {"status_code": response.status_code}
             )
@@ -188,7 +186,7 @@ class ZertoConnection:
                 additional_headers={"content-type": "application/json"},
             ).request("post", "/session/add")
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             LOGGER.info(
                 "response status code: %(status_code)s", {"status_code": response.status_code}
             )

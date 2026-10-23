@@ -313,6 +313,23 @@ def test_notification_parameter_config_file_preserves_parameter_order(
     assert list(loaded["mail"].keys()) == ids
 
 
+def test_notification_parameter_config_file_loads_without_preseeding(tmp_path: Path) -> None:
+    parameters: NotificationParameterSpecs = {
+        "mail": {
+            NotificationParameterID("a1"): NotificationParameterItem(
+                general=NotificationParameterGeneralInfos(description="", comment="", docu_url=""),
+                parameter_properties=cast(NotifyPluginParamsDict, {}),
+            )
+        }
+    }
+    target_path = tmp_path / "notification_parameter.mk"
+    NotificationParameterConfigFile()._save_to_path(target_path, parameters, False)  # noqa: SLF001
+
+    loaded = store.load_mk_file(target_path, default={}, lock=False)
+
+    assert loaded == {"notification_parameter": parameters}
+
+
 def test_custom_plugin_from_api_request_normalizes_postprocessed_lists() -> None:
     # Custom plug-in parameters have no REST schema, so they arrive as an untyped dict.
     incoming = cast(

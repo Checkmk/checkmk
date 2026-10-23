@@ -1,0 +1,8 @@
+fastapi
+gunicorn
+httpx
+opentelemetry-instrumentation-fastapi
+pydantic
+starlette
+uvicorn
+uvicorn-worker

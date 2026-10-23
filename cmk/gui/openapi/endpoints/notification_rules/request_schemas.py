@@ -57,6 +57,7 @@ from cmk.gui.openapi.endpoints.notification_rules.common import (
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.tags import load_tag_group
 from cmk.gui.watolib.user_scripts import user_script_choices
+from cmk.rulesets.internal.form_specs import InternalProxySchema, parse_proxy_url
 from cmk.rulesets.v1.form_specs import Dictionary
 from cmk.rulesets.v1.rule_specs import NotificationParameters
 from cmk.utils import paths
@@ -261,16 +262,99 @@ class CheckboxWithListOfStr(Checkbox):
 
 class HttpProxy(BaseSchema):
     option = fields.String(
-        enum=["no_proxy", "environment", "url", "global"],
+        enum=["no_proxy", "environment", "url", "global", "manual"],
         required=True,
         example="",
     )
+
+
+def _validate_proxy_url(url: object) -> None:
+    # A URL that cannot be converted would be stored as it is, with its credentials in plain
+    # text, so it is rejected
+    if not isinstance(url, str) or parse_proxy_url(url) is None:
+        raise ValidationError(
+            "The proxy URL cannot be converted into a manual proxy configuration. "
+            "Please use the option 'manual'."
+        )
 
 
 class HttpProxyUrl(HttpProxy):
     url = fields.String(
         required=True,
         example="http://example_proxy",
+        validate=_validate_proxy_url,
+        description="Deprecated: use the option 'manual' instead. The URL is converted into a "
+        "manual proxy configuration. Credentials in the URL are saved as an explicit password. "
+        "A URL that cannot be converted is rejected.",
+    )
+
+
+class HttpProxyPasswordOption(BaseSchema):
+    option = fields.String(
+        enum=["store", "explicit"],
+        required=True,
+        example="store",
+    )
+
+
+class HttpProxyStoredPassword(HttpProxyPasswordOption):
+    store_id = PasswordStoreIDField(
+        presence="should_exist",
+        required=True,
+    )
+
+
+class HttpProxyExplicitPassword(HttpProxyPasswordOption):
+    password = fields.String(
+        required=True,
+        example="password",
+    )
+
+
+class HttpProxyPasswordSelector(OptionOneOfSchema):
+    type_schemas = {  # type: ignore[mutable-override]
+        "explicit": HttpProxyExplicitPassword,
+        "store": HttpProxyStoredPassword,
+    }
+
+
+class HttpProxyAuth(BaseSchema):
+    user = fields.String(
+        required=True,
+        minLength=1,
+        example="proxy_user",
+        description="The user name for the proxy authentication.",
+    )
+    password = fields.Nested(
+        HttpProxyPasswordSelector,
+        required=True,
+        description="The password for the proxy authentication, either from the password store "
+        "or explicitly configured.",
+    )
+
+
+class HttpProxyManual(HttpProxy):
+    scheme = fields.String(
+        enum=[schema.value for schema in InternalProxySchema],
+        required=True,
+        example="http",
+    )
+    proxy_server_name = fields.String(
+        required=True,
+        minLength=1,
+        example="proxy.example.com",
+        description="The name or IP address of the proxy server.",
+    )
+    port = fields.Integer(
+        required=True,
+        minimum=1,
+        maximum=65535,
+        example=3128,
+    )
+    auth = fields.Nested(
+        HttpProxyAuth,
+        required=False,
+        description="The authentication for the proxy, if required.",
     )
 
 
@@ -289,6 +373,7 @@ class HttpProxyOptions(OneOfSchema):
         "environment": HttpProxy,
         "url": HttpProxyUrl,
         "global": HttpProxyGlobal,
+        "manual": HttpProxyManual,
     }
 
 

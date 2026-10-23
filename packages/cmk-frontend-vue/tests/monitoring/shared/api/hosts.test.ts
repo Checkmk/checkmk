@@ -7,8 +7,16 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HostApi } from '@/monitoring/shared/api/hosts'
-import type { HostEntry, HostsPageMeta, HostsResponse } from '@/monitoring/shared/api/types'
+import type {
+  FilterNode,
+  HostEntry,
+  HostsPageMeta,
+  HostsRequestBody,
+  HostsResponse
+} from '@/monitoring/shared/api/types'
 import { DEFAULT_BATCH_SIZE } from '@/monitoring/shared/constants'
+
+const NOW = 1789625643
 
 function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   return {
@@ -26,6 +34,7 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
     num_services_unknown: 0,
     num_services_pending: 0,
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=host-1',
+    num_relations: 0,
     ...overrides
   }
 }
@@ -54,7 +63,7 @@ describe('HostApi.fetchHosts', () => {
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
+    vi.useRealTimers()
   })
 
   function mockSuccess(body: unknown): void {
@@ -230,6 +239,51 @@ describe('HostApi.fetchHosts', () => {
       ...CONTENT_TYPE,
       body: { limit: 50 }
     })
+  })
+
+  it('sends an age filter as the absolute bound it resolves to', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(NOW * 1000)
+    mockSuccess(makeHostsResponse([]))
+
+    await new HostApi().fetchHosts({
+      filter: { type: 'age', field: 'last_check', op: 'older_than', seconds: 300 }
+    })
+
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      ...CONTENT_TYPE,
+      body: {
+        limit: DEFAULT_BATCH_SIZE,
+        filter: { type: 'condition', field: 'last_check', op: 'lte', value: NOW - 300 }
+      }
+    })
+  })
+
+  it('resolves an age filter anew on every request', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(NOW * 1000)
+    const api = new HostApi()
+    const filter: FilterNode = {
+      type: 'age',
+      field: 'last_check',
+      op: 'younger_than',
+      seconds: 300
+    }
+
+    mockSuccess(makeHostsResponse([]))
+    await api.fetchHosts({ filter })
+    vi.setSystemTime((NOW + 60) * 1000)
+    mockSuccess(makeHostsResponse([]))
+    await api.fetchHosts({ filter })
+
+    expect(
+      postSpy.mock.calls.map(
+        (call: unknown[]) => (call[1] as { body: HostsRequestBody }).body.filter
+      )
+    ).toEqual([
+      { type: 'condition', field: 'last_check', op: 'gte', value: NOW - 300 },
+      { type: 'condition', field: 'last_check', op: 'gte', value: NOW + 60 - 300 }
+    ])
   })
 
   it('returns the response data from the API', async () => {

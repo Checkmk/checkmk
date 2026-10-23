@@ -8,13 +8,15 @@ import type {
   CustomGraphDesigner,
   CustomGraphDesignerMode
 } from 'cmk-shared-typing/typescript/custom_graph_designer'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkBreadcrumb, { type BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+
+import { PageHeader } from '@/page-header'
 
 import { GlobalRefreshControl } from '../GlobalRefreshControl'
 import { initGlobalRefresh, rollingRange, useGlobalTimeRange } from '../GlobalTimePicker'
@@ -353,41 +355,42 @@ const saveFailureButtons = computed(() => {
 
 <template>
   <div class="graphing-custom-graph-designer-app">
-    <header class="graphing-custom-graph-designer-app__header">
-      <div class="graphing-custom-graph-designer-app__topbar">
-        <CmkBreadcrumb
-          class="graphing-custom-graph-designer-app__breadcrumb"
-          :items="activeBreadcrumb"
-        />
+    <PageHeader class="graphing-custom-graph-designer-app__header">
+      <template #breadcrumb>
+        <CmkBreadcrumb :items="activeBreadcrumb" />
+      </template>
+      <template #refresh>
         <GlobalRefreshControl
-          class="graphing-custom-graph-designer-app__refresh"
+          last-refresh-position="left"
+          :interval-choices-seconds="props.time_picker.refresh.interval_choices_seconds"
           @resume="returnToLiveMonitoring"
         />
-      </div>
+      </template>
 
-      <DesignerHeader
-        :selected="selectedGraph"
-        :logged-in-user="logged_in_user"
-        :mode="mode"
-        :is-editable="isEditable"
-        :time-picker="time_picker"
-        :saving="isSaving"
-        @enter-edit="onEnterEdit"
-        @save="void save()"
-        @cancel-edit="onCancelEdit"
-        @graph-change="onGraphChange"
-        @enter-settings="() => (displaySettings = true)"
-      />
-    </header>
+      <template #menu>
+        <DesignerHeader
+          :selected="selectedGraph"
+          :logged-in-user="logged_in_user"
+          :mode="mode"
+          :is-editable="isEditable"
+          :time-picker="time_picker"
+          :saving="isSaving"
+          @enter-edit="onEnterEdit"
+          @save="void save()"
+          @cancel-edit="onCancelEdit"
+          @graph-change="onGraphChange"
+          @enter-settings="() => (displaySettings = true)"
+        />
+      </template>
+    </PageHeader>
 
     <div class="graphing-custom-graph-designer-app__content">
-      <CmkAlertBox
+      <CmkAlert
         v-if="loadError !== null || filtersError !== null"
         variant="error"
         :main-button="{ title: _t('Retry'), onclick: onRetry }"
-      >
-        {{ loadError ?? filtersError }}
-      </CmkAlertBox>
+        :text="untranslated(loadError ?? filtersError ?? '')"
+      />
       <CmkIcon
         v-else-if="isLoading || loaded === null || graphOptions === null || !filtersReady"
         name="load-graph"
@@ -400,7 +403,9 @@ const saveFailureButtons = computed(() => {
         :store="store"
         :graph-options="graphOptions"
         :title="loaded.graph.title ?? current.name"
+        :graph-name="current.name"
         :mode="mode"
+        calculation-placement="slideout"
         :thresholds="{ warning: warning_color, critical: critical_color }"
         :telemetry-metrics-available="telemetry_metrics_available"
         :create-services-available="create_services_available"
@@ -411,21 +416,19 @@ const saveFailureButtons = computed(() => {
       >
         <template #alerts>
           <div v-if="mode === 'edit' && showsAlerts" ref="issuesAlert" tabindex="-1">
-            <CmkAlertBox
+            <CmkAlert
               v-if="showsSaveIssues"
               class="graphing-custom-graph-designer-app__issues-alert"
               variant="error"
-            >
-              {{ blockedSummary }}
-            </CmkAlertBox>
-            <CmkAlertBox
+              :text="blockedSummary"
+            />
+            <CmkAlert
               v-if="saveFailure !== null"
               variant="error"
               :heading="saveFailure.detail !== null ? saveFailure.message : undefined"
               v-bind="saveFailureButtons"
-            >
-              {{ saveFailure.detail ?? saveFailure.message }}
-            </CmkAlertBox>
+              :text="saveFailure.detail ?? saveFailure.message"
+            />
           </div>
         </template>
       </DesignerBody>
@@ -440,12 +443,6 @@ const saveFailureButtons = computed(() => {
   flex-direction: column;
   overflow-y: auto;
   background: var(--ux-theme-1);
-
-  --graphing-custom-graph-designer-app-header-stroke: var(--color-mid-grey-10);
-}
-
-body[data-theme='modern-dark'] .graphing-custom-graph-designer-app {
-  --graphing-custom-graph-designer-app-header-stroke: var(--color-mid-grey-100);
 }
 
 .graphing-custom-graph-designer-app__header {
@@ -456,31 +453,6 @@ body[data-theme='modern-dark'] .graphing-custom-graph-designer-app {
      own. Kept well under the overlay scale so floating content still opens over the header. */
   z-index: 10;
   flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  padding: var(--dimension-6);
-  padding-bottom: 0;
-  background: var(--ux-theme-2);
-  border-bottom: 1px solid var(--graphing-custom-graph-designer-app-header-stroke);
-}
-
-.graphing-custom-graph-designer-app__topbar {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--dimension-6);
-}
-
-.graphing-custom-graph-designer-app__breadcrumb {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.graphing-custom-graph-designer-app__refresh {
-  flex: 0 0 auto;
-  height: 0;
-  overflow: visible;
-  position: relative;
-  z-index: 1;
 }
 
 .graphing-custom-graph-designer-app__content {

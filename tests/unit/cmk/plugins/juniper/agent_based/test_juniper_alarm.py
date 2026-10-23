@@ -7,23 +7,15 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
+from cmk.agent_based.v2 import CheckResult, Result, State, StringTable
 from cmk.plugins.juniper.agent_based.juniper_alarm import (
     CHECK_DEFAULT_PARAMS,
     check_juniper_alarm,
-    discover_juniper_alarm,
     parse_juniper_alarm,
 )
 
-STRING_TABLE_UNKNOWN = [["7"], ["2"], ["2"]]
 STRING_TABLE_OK = [["2"], ["2"], ["2"]]
 STRING_TABLE_CRIT = [["4"], ["2"], ["2"]]
-
-
-def test_discover_juniper_alarm() -> None:
-    section = parse_juniper_alarm(STRING_TABLE_UNKNOWN)
-    assert section is not None
-    assert list(discover_juniper_alarm(section)) == [Service()]
 
 
 @pytest.mark.parametrize(

@@ -9,8 +9,7 @@ push the result to the QA Metabase postgres for dashboarding.
   `upsert_record`, `apply_schema_file`, and a `Table[RowT]` binding from
   row dataclass to postgres table. Every metric depends on this.
 - `components/` — shared library: resolves repository paths to the components
-  that own them, reading the `OWNERS` files through Gerrit's code-owners API.
-  Ownership reflects the remote branch, not the local checkout, and data that
+  that own them, reading the `OWNERS` files of the local checkout. Data that
   attributes nothing is refused rather than returned.
 - `change_quality/` — first metric. Per-werk row of "did the introducing
   commit include a test?", written to `cmk_change_tested`.
@@ -57,5 +56,5 @@ bazel test //tests/unit/qa_metrics/test_coverage:tests              # code-cover
 ```
 
 The change-quality test target opts out of the bazel sandbox (`tags =
-["no-sandbox"]`) because `test_walk.py` shells out to the host `git` binary
-against a fixture repo built in `tmp_path`.
+["no-sandbox"]`) because `test_walk.py` and `test_components.py` shell out to
+the host `git` binary against fixture repos built in `tmp_path`.

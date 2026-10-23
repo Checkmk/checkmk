@@ -11,13 +11,13 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
-from cmk.gui.display_options import display_options
-from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import Cell, Painter, PainterRegistry, register_painter, registry
-from cmk.gui.painter.v0.helpers import RenderLink
-from cmk.gui.painter_options import PainterOptions
-from cmk.gui.theme.current_theme import theme
+from cmk.gui.painter import (
+    all_painters,
+    Cell,
+    PainterRegistry,
+)
+from cmk.gui.painter.registry import _make_plugin_painter
 from cmk.gui.type_defs import ColumnSpec, Row, SorterSpec, ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import replace_action_url_macros
@@ -25,6 +25,7 @@ from cmk.gui.views.layout import group_value
 from cmk.gui.views.page_show_view import _parse_url_sorters
 from cmk.gui.views.sort_url import _encode_sorter_url
 from cmk.gui.views.store import multisite_builtin_views
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
 @pytest.fixture(name="view_spec")
@@ -51,11 +52,64 @@ def view_spec_fixture(request_context: None) -> ViewSpec:
                 SorterSpec(sorter="site", negate=False),
             ],
         ),
+        (
+            "-service_specific_metric:util~CPU utilization",
+            [
+                SorterSpec(
+                    sorter=("service_specific_metric", {"metric": "util"}),
+                    negate=True,
+                    join_key="CPU utilization",
+                ),
+            ],
+        ),
     ],
 )
 def test_url_sorters_parse_encode(url: str, sorters: Sequence[SorterSpec]) -> None:
     assert _parse_url_sorters(sorters, [], url) == sorters
     assert _encode_sorter_url(sorters) == url
+
+
+def test_encode_sorter_url_rejects_empty_ident_of_first_present_key() -> None:
+    sorter = SorterSpec(sorter=("svc_metrics_hist", {"uuid": "", "metric": "util"}), negate=False)
+    with pytest.raises(ValueError):
+        _encode_sorter_url([sorter])
+
+
+@pytest.mark.usefixtures("request_context")
+def test_parse_url_sorters_resolves_parameters_from_matching_cell() -> None:
+    registered_painters = all_painters(active_config.tags.tag_groups)
+    user_permissions = UserPermissions({}, {}, {}, [])
+    cells = [
+        Cell(
+            ColumnSpec(
+                name="service_specific_metric",
+                parameters={"metric": "util"},
+                join_value="CPU utilization",
+            ),
+            None,
+            registered_painters,
+            make_painter_context(user_permissions),
+            None,
+        ),
+        Cell(
+            ColumnSpec(
+                name="service_specific_metric",
+                parameters={"metric": "mem_used"},
+                join_value="Memory",
+            ),
+            None,
+            registered_painters,
+            make_painter_context(user_permissions),
+            None,
+        ),
+    ]
+    assert _parse_url_sorters([], cells, "service_specific_metric:mem_used~Memory") == [
+        SorterSpec(
+            sorter=("service_specific_metric", {"metric": "mem_used"}),
+            negate=False,
+            join_key="Memory",
+        )
+    ]
 
 
 @pytest.mark.parametrize(
@@ -91,37 +145,33 @@ def test_replace_action_url_macros(
         assert replace_action_url_macros(url, what, row) == result
 
 
+def _paint_abc_xyz(_row: Row) -> tuple[str, str]:
+    return ("abc", "xyz")
+
+
 @pytest.mark.usefixtures("view_spec")
-def test_group_value(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(registry, "painter_registry", painter_registry := PainterRegistry())
-
-    def rendr(row: Row) -> tuple[str, str]:
-        return ("abc", "xyz")
-
-    register_painter(
-        "tag_painter",
-        {
-            "title": "Tag painter",
-            "short": "tagpaint",
-            "columns": ["x"],
-            "sorter": "aaaa",
-            "options": ["opt1"],
-            "printable": False,
-            "paint": rendr,
-            "groupby": "dmz",
-        },
+def test_group_value() -> None:
+    painter_registry = PainterRegistry()
+    painter_registry.register(
+        _make_plugin_painter(
+            "tag_painter",
+            {
+                "title": "Tag painter",
+                "short": "tagpaint",
+                "columns": ["x"],
+                "sorter": "aaaa",
+                "options": ["opt1"],
+                "printable": False,
+                "paint": _paint_abc_xyz,
+                "groupby": "dmz",
+            },
+        )
     )
-
-    painter: Painter = painter_registry["tag_painter"](
-        config=active_config,
-        request=request,
-        painter_options=PainterOptions.get_instance(),
-        theme=theme,
-        url_renderer=RenderLink(request, response, display_options),
-        user_permissions=(user_permissions := UserPermissions({}, {}, {}, [])),
+    dummy_cell = Cell(
+        ColumnSpec(name="tag_painter"),
+        None,
+        painter_registry,
+        make_painter_context(UserPermissions({}, {}, {}, [])),
+        None,
     )
-    dummy_cell: Cell = Cell(
-        ColumnSpec(name=painter.ident), None, painter_registry, user_permissions
-    )
-
     assert group_value({"host_tags": {"networking": "dmz"}}, [dummy_cell]) == ("dmz",)

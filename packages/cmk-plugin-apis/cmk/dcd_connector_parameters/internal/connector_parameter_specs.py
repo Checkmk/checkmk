@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 from cmk.rulesets.v1.form_specs import FormSpec
+
+type FolderChoices = Callable[[], Sequence[tuple[str, str]]]
 
 
 @dataclass(frozen=True)
@@ -18,9 +20,12 @@ class ConnectorParametersSpec:
 
     The ``name`` must match the corresponding :class:`ConnectorSpec` name so that the
     GUI can associate the parameters with the correct connector.
+
+    ``form_spec`` builds the parameter form. It receives the folder choices of the
+    request, so a folder choice in the form lists the folders of that request's tree.
     """
 
     name: str
     title: str
     description: str
-    form_spec: Callable[[], FormSpec]  # type: ignore[type-arg]
+    form_spec: Callable[[FolderChoices], FormSpec]  # type: ignore[type-arg]

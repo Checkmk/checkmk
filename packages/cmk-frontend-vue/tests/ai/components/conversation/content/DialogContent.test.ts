@@ -11,17 +11,7 @@ import DialogContent from '@/ai/components/conversation/content/DialogContent.vu
 function renderDialogContent(
   props: { message: string; title?: string } = { message: 'Are you sure?' }
 ) {
-  return render(DialogContent, {
-    props: { content_type: 'dialog', ...props },
-    global: {
-      stubs: {
-        CmkAlertBox: {
-          props: ['heading'],
-          template: '<div data-testid="dialog-box" :data-heading="heading"><slot /></div>'
-        }
-      }
-    }
-  })
+  return render(DialogContent, { props: { content_type: 'dialog', ...props } })
 }
 
 describe('DialogContent', () => {
@@ -37,9 +27,9 @@ describe('DialogContent', () => {
     expect(screen.getByText('Confirm your action')).toBeInTheDocument()
   })
 
-  test('passes the title as the heading to the alert box', () => {
+  test('shows the title as the heading of the alert box', () => {
     renderDialogContent({ message: 'Hello', title: 'Notice' })
 
-    expect(screen.getByTestId('dialog-box')).toHaveAttribute('data-heading', 'Notice')
+    screen.getByRole('heading', { name: 'Notice' })
   })
 })

@@ -28,15 +28,16 @@ import sys
 import time
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from http import HTTPStatus
 from multiprocessing import Lock
 from typing import Any, Literal, NamedTuple, override
 
 import msal
 import requests
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.azure_deprecated.http_proxies import deserialize_proxy_config, ProxyConfig
-from cmk.server_side_programs.v1_unstable import vcrtrace
+from cmk.server_side_programs.v1 import configure_logging, vcrtrace
 
 from ._data_cache import DataCache
 
@@ -68,10 +69,10 @@ ALL_METRICS: dict[str, list[tuple[str, str, str]]] = {
     # cmk/gui/plugins/wato/special_agents/azure.py
     "Microsoft.Network/virtualNetworkGateways": [
         ("AverageBandwidth,P2SBandwidth", "PT5M", "average"),
-        ("TunnelIngressBytes", "PT5M", "count"),
-        ("TunnelEgressBytes", "PT5M", "count"),
-        ("TunnelIngressPacketDropCount", "PT5M", "count"),
-        ("TunnelEgressPacketDropCount", "PT5M", "count"),
+        ("TunnelIngressBytes", "PT5M", "total"),
+        ("TunnelEgressBytes", "PT5M", "total"),
+        ("TunnelIngressPacketDropCount", "PT5M", "total"),
+        ("TunnelEgressPacketDropCount", "PT5M", "total"),
         ("P2SConnectionCount", "PT1M", "maximum"),
     ],
     "Microsoft.Sql/servers/databases": [
@@ -326,7 +327,7 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         help="""Only monitor resources that have the specified TAG.
               To require multiple tags, provide the option more than once.""",
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--require-tag-value",
         default=[],
         metavar=("TAG", "VALUE"),
@@ -335,7 +336,7 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         help="""Only monitor resources that have the specified TAG set to VALUE.
              To require multiple tags, provide the option more than once.""",
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--explicit-config",
         default=[],
         nargs="*",
@@ -345,7 +346,7 @@ def parse_arguments(argv: Sequence[str]) -> Args:
              If specified, every 'group=<name>' argument starts a new group configuration,
              and every 'resource=<name>' arguments specifies a resource.""",
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--services",
         default=[],
         nargs="*",
@@ -391,22 +392,18 @@ def parse_arguments(argv: Sequence[str]) -> Args:
     # LOGGING
     if args.verbose and args.verbose >= 3:
         # this will show third party log messages as well
-        fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
         lvl = logging.DEBUG
     elif args.verbose and args.verbose == 2:
         # be verbose, but silence msrest, urllib3 and requests_oauthlib
-        fmt = "%(levelname)s: %(funcName)s: %(lineno)s: %(message)s"
         lvl = logging.DEBUG
         logging.getLogger("msrest").setLevel(logging.WARNING)
         logging.getLogger("urllib3").setLevel(logging.WARNING)
         logging.getLogger("requests_oauthlib").setLevel(logging.WARNING)
     elif args.verbose:
-        fmt = "%(levelname)s: %(funcName)s: %(message)s"
         lvl = logging.INFO
     else:
-        fmt = "%(levelname)s: %(message)s"
         lvl = logging.WARNING
-    logging.basicConfig(level=lvl, format=fmt)  # astrein: disable=logging-formatter
+    configure_logging(lvl)
 
     # V-VERBOSE INFO
     for key, value in vars(args).items():
@@ -552,7 +549,7 @@ class BaseApiClient:
         self._update_ratelimit(response)
 
         for cool_off_interval in (5, 10):
-            if response.status_code != 429:
+            if response.status_code != HTTPStatus.TOO_MANY_REQUESTS:
                 break
 
             LOGGER.debug(
@@ -920,7 +917,7 @@ class ExplicitConfig:
     def __init__(self, raw_list: Sequence[str]) -> None:
         super().__init__()
         self.groups: dict = {}
-        self.current_group = None
+        self.current_group: GroupConfig | None = None
         for item in raw_list:
             if "=" not in item:
                 raise ValueError("must be in <key>=<value> format: %r" % item)
@@ -938,7 +935,7 @@ class ExplicitConfig:
             return
         if self.current_group is None:
             raise RuntimeError("missing arg: group=<name>")
-        self.current_group.add_key(key, value)  # type: ignore[unreachable]
+        self.current_group.add_key(key, value)
 
     def is_configured(self, resource: AzureResource) -> bool:
         if self.fetchall:
@@ -1067,9 +1064,11 @@ class IssueCollector:
         return len(self._list)
 
 
-def create_metric_dict(metric, aggregation, interval_id):
+def create_metric_dict(
+    metric: Mapping[str, Any], aggregation: str, interval_id: str
+) -> dict[str, Any] | None:
     name = metric["name"]["value"]
-    metric_dict = {
+    metric_dict: dict[str, Any] = {
         "name": name,
         "aggregation": aggregation,
         "value": None,

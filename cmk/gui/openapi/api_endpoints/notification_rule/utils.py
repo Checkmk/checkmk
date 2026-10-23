@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from http import HTTPStatus
 
 from cmk.ccc.site import omd_site
 from cmk.events.notify_types import EventRule, NotificationRuleID
@@ -34,7 +35,7 @@ def index_of_notification_rule(rules: Sequence[EventRule], rule_id: Notification
         if rule["rule_id"] == rule_id:
             return index
     raise ProblemException(
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
         title=_("The requested notification rule was not found"),
         detail=_("The rule_id %(rule_id)s does not exist.") % {"rule_id": rule_id},
     )

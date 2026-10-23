@@ -385,3 +385,22 @@ def test_check_hyperv_vm_integration(
 ) -> None:
     results = list(check_hyperv_vm_integration(params, section))
     assert results == expected_results
+
+
+def test_check_hyperv_vm_integration_special_case_without_state() -> None:
+    # A special case configured without the optional "State if not default"
+    # falls back to the rule's global state.
+    params: IntegrationServicesParams = {
+        "default_status": "active",
+        "state_if_not_default": State.CRIT.value,
+        "match_services": [
+            {"service_name": "Time Synchronization", "default_status": "active"},
+        ],
+    }
+    section: Section = {
+        "guest.tools.number": "6",
+        "guest.tools.service.Time_Synchronization": "inactive",
+    }
+    assert list(check_hyperv_vm_integration(params, section)) == [
+        Result(state=State.CRIT, summary="Time Synchronization: inactive"),
+    ]

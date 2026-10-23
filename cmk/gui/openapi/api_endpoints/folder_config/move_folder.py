@@ -2,6 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.openapi.api_endpoints.models.folder_models import FolderModel
 from cmk.gui.openapi.framework import (
@@ -14,10 +16,10 @@ from cmk.gui.openapi.framework import (
     EndpointPermissions,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 
 from ._family import FOLDER_CONFIG_FAMILY
 from ._utils import (
@@ -43,7 +45,7 @@ def move_folder_v1(
 
     if folder.is_root():
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Problem moving folder",
             detail="You can't move the root folder.",
         )
@@ -60,15 +62,15 @@ def move_folder_v1(
         )
     except MKUserError as exc:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Problem moving folder.",
             detail=exc.message,
         )
 
-    moved_folder = make_folder_tree(api_context.config)._by_id(folder_id)  # noqa: SLF001
+    moved_folder = folder_tree_of_request(api_context)._by_id(folder_id)  # noqa: SLF001
     return ApiResponse(
         body=serialize_folder(moved_folder, show_hosts=False, api_context=api_context),
-        status_code=200,
+        status_code=HTTPStatus.OK,
         etag=folder_etag(moved_folder),
     )
 

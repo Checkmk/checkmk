@@ -168,7 +168,7 @@ class HostAddressList:
                         CheckmkHostAddress(hostname)
                     except ValueError as e:
                         raise ValidationError(
-                            Message(str(e).title())  # astrein: disable=localization-checker
+                            Message(str(e).title())  # astrein: disable=localization
                         )
 
 

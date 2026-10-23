@@ -415,6 +415,39 @@ oracle:
     Config::from_string(config_str).unwrap().unwrap()
 }
 
+/// Only the `performance` section, which runs once per container: its PGA
+/// statement yields a container's rows only inside that container (CMK-37362).
+pub fn make_mini_config_performance(endpoint: &SqlDbEndpoint) -> Config {
+    let config_str = format!(
+        r#"
+---
+oracle:
+  main:
+    authentication:
+       username: "{user}"
+       password: "{pwd}"
+       type: standard
+       role: "{role}"
+    connection:
+       hostname: {host}
+       port: {port}
+       timeout: 15
+       service_name: {service}
+    discovery:
+       detect: no
+    sections:
+       - performance:
+"#,
+        user = endpoint.user,
+        pwd = endpoint.pwd,
+        role = role_spec(&endpoint.role),
+        host = endpoint.host,
+        port = endpoint.port,
+        service = endpoint.service_name,
+    );
+    Config::from_string(config_str).unwrap().unwrap()
+}
+
 /// Probe order: CDB-root, PDB-scoped, CDB-root (TC-ORA-144).
 pub fn make_mini_config_pdb_builtin_then_custom(endpoint: &SqlDbEndpoint, pdb: &str) -> Config {
     let config_str = format!(

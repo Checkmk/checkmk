@@ -15,6 +15,7 @@ from cmk.testlib.agent_receiver import certs as certslib
 from cmk.testlib.agent_receiver.relay import random_relay_id
 
 
+@pytest.mark.usefixtures("setup_site_context")
 def test_process_creates_valid_certificate() -> None:
     """Verify that get_certificates creates a valid certificate with correct CN and matching keys."""
     relay_id = random_relay_id()
@@ -35,6 +36,7 @@ def test_process_validates_csr() -> None:
         get_certificates(serialize_to_pem(csr), relay_id)
 
 
+@pytest.mark.usefixtures("setup_site_context")
 def test_certificate_lifetime() -> None:
     """Verify that the generated certificate has correct validity period bounds.
 

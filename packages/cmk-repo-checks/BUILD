@@ -1,10 +1,12 @@
-load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@rules_python//python:defs.bzl", "py_binary")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
 py_library(
     name = "library",
     srcs = [
         "cmk/repo_checks/__init__.py",
+        "cmk/repo_checks/bazel_lint_coverage.py",
         "cmk/repo_checks/deballast.py",
         "cmk/repo_checks/license_header_checker.py",
         "cmk/repo_checks/python_extension_checker.py",
@@ -44,6 +46,17 @@ py_binary(
     imports = ["."],
     main = "cmk/repo_checks/python_extension_checker.py",
     visibility = ["//visibility:public"],
+    deps = [":library"],
+)
+
+# Runs `bazel query` itself, so it must be started with `bazel run` from the
+# repository root. Used by the "Bazel sanity check" stage in
+# buildscripts/scripts/stages.yml.
+py_binary(
+    name = "bazel_lint_coverage",
+    srcs = ["cmk/repo_checks/bazel_lint_coverage.py"],
+    imports = ["."],
+    main = "cmk/repo_checks/bazel_lint_coverage.py",
     deps = [":library"],
 )
 

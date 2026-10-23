@@ -5,13 +5,14 @@
 
 
 import contextlib
-import http.client
 import json
 import types
 from collections.abc import Callable
+from http import HTTPStatus
 from inspect import BoundArguments
-from typing import get_origin, TypeAliasType
+from typing import get_args, get_origin
 
+from typing_extensions import TypeForm
 from werkzeug.datastructures import MIMEAccept
 from werkzeug.http import parse_accept_header
 
@@ -50,8 +51,7 @@ tracer = trace.get_tracer()
 
 def dump_body(
     body: object | None,
-    # TODO(PEP-747): replace with TypeForm | None once available
-    body_type: type | TypeAliasType | types.UnionType | None,
+    body_type: TypeForm[object] | None,
     *,
     is_testing: bool,
     body_kind: str = "Response body",
@@ -65,19 +65,27 @@ def dump_body(
     if body_type is None:
         raise ValueError(f"{body_kind} is of type: {type(body)}, but should be None")
 
-    resolved = resolve_type(body_type)
-    check_type = (
-        resolved if isinstance(resolved, types.UnionType) else (get_origin(resolved) or resolved)
-    )
-    if not isinstance(body, check_type):
+    if not isinstance(body, _instance_classes(body_type)):
         raise ValueError(f"{body_kind} is of type: {type(body)}, but should be {body_type}")
 
     return json_dump_without_omitted(body_type, body, is_testing=is_testing)
 
 
+def _instance_classes(type_: TypeForm[object]) -> tuple[type, ...]:
+    """Get the classes to check an instance of the type against, one per member of a union.
+
+    Every member is resolved on its own, because isinstance can't check a union with members like
+    Annotated forms, type aliases or parameterized generics.
+    """
+    resolved = resolve_type(type_)
+    if isinstance(resolved, types.UnionType):
+        return tuple(cls for member in get_args(resolved) for cls in _instance_classes(member))
+    return (get_origin(resolved) or resolved,)
+
+
 def _create_response(
     endpoint_response: TypedResponse[object | None],
-    response_body_type: type[object] | None,
+    response_body_type: TypeForm[object] | None,
     content_type: str | None,
     *,
     fields_filter: FieldsFilter | None,
@@ -92,7 +100,7 @@ def _create_response(
         headers = endpoint_response.headers
     else:
         json_text = dump_body(endpoint_response, response_body_type, is_testing=is_testing)
-        status_code = 204 if json_text is None else 200
+        status_code = HTTPStatus.NO_CONTENT if json_text is None else HTTPStatus.OK
         headers = {}
 
     if json_text is not None and fields_filter is not None:
@@ -200,88 +208,91 @@ def handle_endpoint_request(
     accept_mimetypes = parse_accept_header(request_data["headers"].get("Accept"), MIMEAccept)
     HeaderValidator.validate_accept_header(endpoint.content_type, accept_mimetypes)
 
-    # Step 4: Validate the request parameters and call the handler function
-    # NOTE: exceptions will be caught in the WSGI app (including the other validation exceptions)
-    # We probably don't want permission tracking for tokens, do we?
-    try:
-        with (
-            permission_validator.track_permissions(),
-            _optional_config_lock(endpoint.skip_locking, endpoint.method),
-        ):
-            bound_arguments = model.validate_request_and_identify_args(
-                request_data, content_type, api_context
-            )
-            with tracer.span("endpoint-body-call"):
-                try:
-                    raw_response = endpoint.handler(*bound_arguments.args, **bound_arguments.kwargs)
-                except RedirectException as exc:
-                    raw_response = Response(status=exc.status_code)
-                    raw_response.location = exc.location
-    except MKUnauthenticatedException:
-        raise
-    except MKAuthException as exc:
-        # At this point the request is already authenticated, so a failed permission check means
-        # the user lacks a permission -> forbidden (403), not unauthorized (401). Without this
-        # remap, `MKAuthException.status` (401) would end up in the response.
-        raise RestAPIForbiddenException(
-            title=http.client.responses[403],
-            detail=str(exc),
-        ) from exc
+    # Held through the GIT commit so no concurrent write lands in this request's commit.
+    with _optional_config_lock(endpoint.skip_locking, endpoint.method):
+        # Step 4: Validate the request parameters and call the handler function
+        # NOTE: exceptions will be caught in the WSGI app (including the other validation exceptions)
+        # We probably don't want permission tracking for tokens, do we?
+        try:
+            with permission_validator.track_permissions():
+                bound_arguments = model.validate_request_and_identify_args(
+                    request_data, content_type, api_context
+                )
+                with tracer.span("endpoint-body-call"):
+                    try:
+                        raw_response = endpoint.handler(
+                            *bound_arguments.args, **bound_arguments.kwargs
+                        )
+                    except RedirectException as exc:
+                        raw_response = Response(status=exc.status_code)
+                        raw_response.location = exc.location
+        except MKUnauthenticatedException:
+            raise
+        except MKAuthException as exc:
+            # At this point the request is already authenticated, so a failed permission check means
+            # the user lacks a permission -> forbidden (403), not unauthorized (401). Without this
+            # remap, `MKAuthException.status` (401) would end up in the response.
+            raise RestAPIForbiddenException(
+                title=HTTPStatus.FORBIDDEN.phrase,
+                detail=str(exc),
+            ) from exc
 
-    # Step 5: Create the response object
-    with tracer.span("create-response"):
-        if isinstance(raw_response, Response):
-            _validate_direct_response(raw_response)
-            response = raw_response
-        else:
-            response = _create_response(
-                raw_response,
-                model.response_body_type,
-                endpoint.content_type,
-                fields_filter=_identify_fields_filter(bound_arguments, model.has_request_schema),
+        # Step 5: Create the response object
+        with tracer.span("create-response"):
+            if isinstance(raw_response, Response):
+                _validate_direct_response(raw_response)
+                response = raw_response
+            else:
+                response = _create_response(
+                    raw_response,
+                    model.response_body_type,
+                    endpoint.content_type,
+                    fields_filter=_identify_fields_filter(
+                        bound_arguments, model.has_request_schema
+                    ),
+                    is_testing=is_testing,
+                )
+
+        # Step 6: Validate ETag
+        ResponseValidator.validate_etag_response(response.headers.get("ETag"), endpoint.etag)
+
+        # Step 7: Check permissions
+        if response.status_code < 400:
+            ResponseValidator.validate_permissions(
+                endpoint=endpoint.operation_id,
+                params=request_data,
+                permissions_required=endpoint.permissions_required,
+                used_permissions=permission_validator.used_permissions,
                 is_testing=is_testing,
             )
 
-    # Step 6: Validate ETag
-    ResponseValidator.validate_etag_response(response.headers.get("ETag"), endpoint.etag)
-
-    # Step 7: Check permissions
-    if response.status_code < 400:
-        ResponseValidator.validate_permissions(
-            endpoint=endpoint.operation_id,
-            params=request_data,
-            permissions_required=endpoint.permissions_required,
-            used_permissions=permission_validator.used_permissions,
-            is_testing=is_testing,
+        # Step 8: Validate response status code
+        allowed_status_codes = identify_expected_status_codes(
+            endpoint.method,
+            endpoint.doc_group,
+            endpoint.content_type,
+            endpoint.etag,
+            has_response=model.has_response_schema,
+            has_path_params=model.has_path_parameters,
+            has_query_params=model.has_query_parameters,
+            has_request_schema=model.has_request_schema,
+            additional_status_codes=endpoint.additional_status_codes,
+        )
+        ResponseValidator.validate_response_constraints(
+            response=response,
+            output_empty=not model.has_response_schema,
+            operation_id=endpoint.operation_id,
+            expected_status_codes=list(allowed_status_codes),
         )
 
-    # Step 8: Validate response status code
-    allowed_status_codes = identify_expected_status_codes(
-        endpoint.method,
-        endpoint.doc_group,
-        endpoint.content_type,
-        endpoint.etag,
-        has_response=model.has_response_schema,
-        has_path_params=model.has_path_parameters,
-        has_query_params=model.has_query_parameters,
-        has_request_schema=model.has_request_schema,
-        additional_status_codes=endpoint.additional_status_codes,
-    )
-    ResponseValidator.validate_response_constraints(
-        response=response,
-        output_empty=not model.has_response_schema,
-        operation_id=endpoint.operation_id,
-        expected_status_codes=list(allowed_status_codes),
-    )
-
-    # Step 9: Update config generation if needed
-    if (
-        endpoint.method != "get"
-        and response.status_code < 300
-        and endpoint.update_config_generation
-    ):
-        update_config_generation()
-        if wato_use_git:
-            do_git_commit()
+        # Step 9: Update config generation if needed
+        if (
+            endpoint.method != "get"
+            and response.status_code < 300
+            and endpoint.update_config_generation
+        ):
+            update_config_generation()
+            if wato_use_git:
+                do_git_commit()
 
     return response

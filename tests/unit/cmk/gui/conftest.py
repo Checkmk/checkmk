@@ -10,6 +10,7 @@
 
 import typing
 from collections.abc import Iterator
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -18,38 +19,45 @@ from pytest_mock import MockerFixture
 from werkzeug.test import create_environ
 
 import cmk.gui.watolib.password_store
-import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import http, login
 from cmk.gui.config import Config
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.livestatus_client.testing import mock_livestatus_communication, MockLiveStatusConnection
 from cmk.utils.redis import disable_redis
-from tests.testlib.gui.common_fixtures import (
+from tests.testlib.unit.gui.common_fixtures import (
     create_aut_user_auth_wsgi_app,
     create_flask_app,
     create_test_hosts,
     create_wsgi_app,
     inline_background_jobs_patches,
+    make_default_config,
     patch_theme_context,
     perform_gui_cleanup_after_test,
     perform_load_config,
     perform_load_plugins,
     RemoteAutomation,
+    run_background_jobs_in_threads,
     set_config_context,
     suppress_remote_automation_calls_patches,
     validate_background_job_annotation,
 )
-from tests.testlib.gui.users import create_and_destroy_user
-from tests.testlib.gui.web_test_app import (
+from tests.testlib.unit.gui.distributed_setup import running_on_a_remote_site
+from tests.testlib.unit.gui.users import create_and_destroy_user
+from tests.testlib.unit.gui.web_test_app import (
     SetConfig,
     WebTestAppForCMK,
     WebTestAppRequestHandler,
 )
-from tests.testlib.rest_api_client import ClientRegistry, get_client_registry
+from tests.testlib.unit.rest_api_client import ClientRegistry, get_client_registry
+
+# The shared test bodies assert on behalf of the tests that call them and are imported
+# by the test modules of every edition, so they need the rewrite the test modules get.
+pytest.register_assert_rewrite("tests.unit.cmk.gui.helpers")
 
 
 @pytest.fixture
@@ -92,8 +100,8 @@ def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
-def execute_background_jobs_without_job_scheduler(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER", "1")
+def execute_background_jobs_without_job_scheduler() -> Iterator[None]:
+    yield from run_background_jobs_in_threads()
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
@@ -139,18 +147,8 @@ def set_config_fixture() -> SetConfig:
 
 @pytest.fixture(name="remote_site")
 def fixture_remote_site() -> Iterator[None]:
-    """Make the code believe it runs on a distributed-setup remote site."""
-    cmk.utils.paths.check_mk_config_dir.mkdir(parents=True, exist_ok=True)
-    distr_wato_mk = cmk.utils.paths.check_mk_config_dir / "distributed_wato.mk"
-    previous = distr_wato_mk.read_bytes() if distr_wato_mk.exists() else None
-    distr_wato_mk.write_text("is_distributed_setup_remote_site = True\n")
-    try:
+    with running_on_a_remote_site():
         yield
-    finally:
-        if previous is None:
-            distr_wato_mk.unlink(missing_ok=True)
-        else:
-            distr_wato_mk.write_bytes(previous)
 
 
 @pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
@@ -174,7 +172,13 @@ def with_user(load_config: Config) -> Iterator[tuple[UserId, str]]:
 def with_user_login(load_config: Config, with_user: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = UserId(with_user[0])
     with login.TransactionIdContext(
-        user_id, UserPermissions(load_config.roles, permission_registry, {user_id: ["user"]}, [])
+        user_id,
+        UserPermissions(
+            load_config.roles,
+            all_permissions(),
+            {user_id: ["user"]},
+            [],
+        ),
     ):
         yield user_id
 
@@ -189,7 +193,13 @@ def with_admin(load_config: Config) -> Iterator[tuple[UserId, str]]:
 def with_admin_login(load_config: Config, with_admin: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = with_admin[0]
     with login.TransactionIdContext(
-        user_id, UserPermissions(load_config.roles, permission_registry, {user_id: ["admin"]}, [])
+        user_id,
+        UserPermissions(
+            load_config.roles,
+            all_permissions(),
+            {user_id: ["admin"]},
+            [],
+        ),
     ):
         yield user_id
 
@@ -280,6 +290,21 @@ def aut_user_auth_wsgi_app(
     with_automation_user: tuple[UserId, str],
 ) -> WebTestAppForCMK:
     return create_aut_user_auth_wsgi_app(wsgi_app, with_automation_user)
+
+
+@pytest.fixture(name="config")
+def fixture_config() -> Config:
+    """The default GUI config. Modules that need another config override this fixture."""
+    return make_default_config()
+
+
+@pytest.fixture(name="tree")
+def fixture_tree(config: Config) -> Iterator[FolderTree]:
+    """A folder tree built from the config fixture, with its root folder created on disk."""
+    with disable_redis():
+        tree = make_folder_tree(config)
+        Path(tree.get_root_dir()).mkdir(parents=True, exist_ok=True)
+        yield tree
 
 
 @pytest.fixture()

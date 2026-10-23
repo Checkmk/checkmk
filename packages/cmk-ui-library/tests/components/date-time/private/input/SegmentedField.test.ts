@@ -14,7 +14,7 @@ import {
 } from 'cmk-ui-library/components/date-time/private/input/useSegmentedField'
 import { useTimeField } from 'cmk-ui-library/components/date-time/private/input/useTimeField'
 import type { HourCycle } from 'cmk-ui-library/components/date-time/types'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { type ComputedRef, computed, shallowRef } from 'vue'
 
 import { DMY, MONTH_NAMES_EN } from '../../dateTimeTestFixtures'
@@ -54,10 +54,6 @@ const emptyDateApi = (): SegmentedFieldApi => {
     { commit: vi.fn() }
   )
 }
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 describe('SegmentedField', () => {
   test('one input per view', () => {

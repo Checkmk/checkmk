@@ -11,7 +11,7 @@ import pytest
 
 from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.snmplib import BackendOIDSpec, BackendSNMPTree, SNMPBackendEnum, SpecialColumn
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 from .snmp_helpers import default_config, get_single_oid, get_snmp_table
 

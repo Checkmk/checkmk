@@ -42,6 +42,20 @@ def test_cpu_threads_max_threads() -> None:
     }
 
 
+def test_cpu_threads_max_threads_zero() -> None:
+    # Crash group 4503: the agent reported 0 as the maximum number of threads.
+    # The usage cannot be computed, the thread count is still checked.
+    section = Section(
+        load=Load(1.41, 1.26, 1.26),
+        num_cpus=1,
+        threads=Threads(count=244, max=0),
+    )
+    assert set(check_cpu_threads({}, section)) == {
+        Metric("threads", 244.0),
+        Result(state=State.OK, summary="244"),
+    }
+
+
 STRING_TABLE_RELATIVE: StringTable = [
     ["0.88", "0.83", "0.87", "2/1748", "21050", "8"],
     ["124069"],

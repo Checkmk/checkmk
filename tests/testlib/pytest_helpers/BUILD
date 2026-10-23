@@ -3,14 +3,15 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "pytest_helpers",
+    testonly = True,
     srcs = glob(["**/*.py"]),
     imports = ["../../.."],
     visibility = ["//tests:__subpackages__"],
     deps = [
-        "//tests/testlib/common:utils",
-        requirement("checkmk-dev-tools"),
+        "//tests/testlib/common",
         requirement("psutil"),
+        requirement("pydantic"),
         requirement("pytest"),
-        requirement("requests"),
+        requirement("pytest-check"),
     ],
 )

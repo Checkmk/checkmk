@@ -19,7 +19,7 @@ from cmk.checkengine.snmplib import (
     SNMPTable,
     SNMPVersion,
 )
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def default_config(site: Site, backend_type: SNMPBackendEnum) -> SNMPHostConfig:

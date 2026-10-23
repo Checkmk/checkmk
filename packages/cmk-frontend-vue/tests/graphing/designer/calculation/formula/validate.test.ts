@@ -26,15 +26,15 @@ test('accepts a valid RRD formula', () => {
   expect(check('A + B')).toEqual([])
 })
 
-test('accepts a valid OpenTelemetry metrics formula in the metric_backend domain', () => {
-  expect(check('E + 1', 'metric_backend')).toEqual([])
+test('accepts a valid OpenTelemetry metrics formula in the telemetry_metrics domain', () => {
+  expect(check('E + 1', 'telemetry_metrics')).toEqual([])
 })
 
 test('flags an unknown reference (E2)', () => {
   expect(check('A + Z')).toEqual([{ code: 'unknown-ref', id: 'Z' }])
 })
 
-test('flags mixing RRD with metric backend (E3)', () => {
+test('flags mixing RRD with telemetry metrics (E3)', () => {
   expect(check('A + E')).toEqual([{ code: 'domain-mismatch', id: 'E' }])
 })
 

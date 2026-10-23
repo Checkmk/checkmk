@@ -152,7 +152,6 @@ rust_doc(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "run",
     ],
 )

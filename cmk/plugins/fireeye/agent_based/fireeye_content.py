@@ -11,15 +11,14 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.fireeye.lib import DETECT
 
 # .1.3.6.1.4.1.25597.11.5.1.5.0 456.180 --> FE-FIREEYE-MIB::feSecurityContentVersion.0
@@ -54,10 +53,6 @@ def parse_fireeye_content(string_table: StringTable) -> SecurityContent | None:
         update_time_seconds = None
 
     return SecurityContent(version, update_status, update_time_str, update_time_seconds)
-
-
-def discover_fireeye_content(section: SecurityContent) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_fireeye_content(
@@ -97,7 +92,7 @@ snmp_section_fireeye_content = SimpleSNMPSection(
 check_plugin_fireeye_content = CheckPlugin(
     name="fireeye_content",
     service_name="Security content",
-    discovery_function=discover_fireeye_content,
+    discovery_function=discover_one_service,
     check_function=check_fireeye_content,
     check_ruleset_name="fireeye_content",
     check_default_parameters={},

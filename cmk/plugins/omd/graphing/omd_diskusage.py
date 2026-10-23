@@ -94,7 +94,7 @@ metric_omd_otel_collector_size = metrics.Metric(
 metric_omd_data_backend_size = metrics.Metric(
     name="omd_data_backend_size",
     # weblate-flags: read-only, domain-specific
-    title=Title("Size of metric backend"),
+    title=Title("Size of data backend"),
     unit=UNIT_BYTES,
     color=metrics.Color.DARK_RED,
 )

@@ -10,7 +10,7 @@ import pytest
 
 from cmk.ccc.site import SiteId
 from cmk.gui.valuespec import DropdownChoice
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
 from cmk.gui.watolib.rulespecs import HostRulespec
@@ -27,7 +27,7 @@ LOGGER = logging.getLogger("test")
 _RULESET_NAME = "snmp_backend_hosts"
 
 
-def _rulesets(rule_values: Sequence[object]) -> RulesetCollection:
+def _rulesets(tree: FolderTree, rule_values: Sequence[object]) -> RulesetCollection:
     ruleset = Ruleset(
         _RULESET_NAME,
         rulespec=HostRulespec(
@@ -38,7 +38,7 @@ def _rulesets(rule_values: Sequence[object]) -> RulesetCollection:
             ),
         ),
     )
-    folder = folder_tree().root_folder()
+    folder = tree.root_folder()
     for value in rule_values:
         rule = Rule.from_ruleset(folder, ruleset, ruleset.rulespec.valuespec.default_value())
         rule.value = value
@@ -164,9 +164,10 @@ def test_migrate_site_globals_nothing_to_do(site_globals: dict[str, object] | No
     assert sites[SiteId("remote")].get("globals") == site_globals
 
 
-@pytest.mark.usefixtures("request_context")
-def test_migrate_rules() -> None:
-    all_rulesets = _rulesets([False, "inline_legacy", True, "pysnmp", "inline", "some rubbish"])
+def test_migrate_rules(tree: FolderTree) -> None:
+    all_rulesets = _rulesets(
+        tree, [False, "inline_legacy", True, "pysnmp", "inline", "some rubbish"]
+    )
 
     assert migrate_rules(all_rulesets, LOGGER) == 4
 
@@ -182,9 +183,8 @@ def test_migrate_rules() -> None:
     ]
 
 
-@pytest.mark.usefixtures("request_context")
-def test_migrate_rules_nothing_to_do() -> None:
-    assert migrate_rules(_rulesets(["inline", "classic"]), LOGGER) == 0
+def test_migrate_rules_nothing_to_do(tree: FolderTree) -> None:
+    assert migrate_rules(_rulesets(tree, ["inline", "classic"]), LOGGER) == 0
 
 
 @pytest.mark.usefixtures("request_context")

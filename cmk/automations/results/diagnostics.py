@@ -16,19 +16,13 @@ from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from typing import Literal, override, Self
 
-from cmk.automations.results._base import (
-    ABCAutomationResult,
-    result_type_registry,
-    SerializedResult,
-)
+from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.utils.http_proxy_config import HTTPProxySpec
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.oauth2_connection import OAuth2Connection
-
-from ..types import AutomationID
 
 
 @dataclass(frozen=True)
@@ -47,7 +41,7 @@ class GatewayResult:
 
 
 @dataclass
-class ScanParentsResult(ABCAutomationResult):
+class ScanParentsResult(AutomationResult):
     results: Sequence[GatewayResult]
 
     @staticmethod
@@ -57,7 +51,7 @@ class ScanParentsResult(ABCAutomationResult):
 
     @classmethod
     @override
-    def deserialize(cls, serialized_result: SerializedResult) -> ScanParentsResult:
+    def deserialize(cls, serialized_result: str) -> ScanParentsResult:
         (serialized_results,) = literal_eval(serialized_result)
         results = [
             GatewayResult(
@@ -69,9 +63,6 @@ class ScanParentsResult(ABCAutomationResult):
             for gw, state, ping_fails, message in serialized_results
         ]
         return cls(results=results)
-
-
-result_type_registry.register(ScanParentsResult)
 
 
 @dataclass
@@ -196,7 +187,7 @@ class SpecialAgentResult:
 
 
 @dataclass
-class DiagSpecialAgentResult(ABCAutomationResult):
+class DiagSpecialAgentResult(AutomationResult):
     results: Sequence[SpecialAgentResult]
 
     @staticmethod
@@ -205,27 +196,22 @@ class DiagSpecialAgentResult(ABCAutomationResult):
         return AutomationID("diag-special-agent")
 
     @override
-    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
-        return SerializedResult(
-            json.dumps(
-                {
-                    "results": [asdict(r) for r in self.results],
-                }
-            )
+    def serialize(self, for_cmk_version: str) -> str:
+        return json.dumps(
+            {
+                "results": [asdict(r) for r in self.results],
+            }
         )
 
     @classmethod
     @override
-    def deserialize(cls, serialized_result: SerializedResult) -> DiagSpecialAgentResult:
+    def deserialize(cls, serialized_result: str) -> DiagSpecialAgentResult:
         if not serialized_result:
             return cls(results=[])
         raw = json.loads(serialized_result)
         return cls(
             results=[SpecialAgentResult(**r) for r in raw["results"]],
         )
-
-
-result_type_registry.register(DiagSpecialAgentResult)
 
 
 @dataclass
@@ -261,7 +247,7 @@ class DiagCmkAgentInput:
 
 
 @dataclass
-class DiagCmkAgentResult(ABCAutomationResult):
+class DiagCmkAgentResult(AutomationResult):
     return_code: int
     response: str
 
@@ -270,8 +256,6 @@ class DiagCmkAgentResult(ABCAutomationResult):
     def automation_call() -> AutomationID:
         return AutomationID("diag-cmk-agent")
 
-
-result_type_registry.register(DiagCmkAgentResult)
 
 SnmpV3SecurityLevel = Literal["authPriv", "authNoPriv", "noAuthNoPriv"]
 SnmpV3AuthProtocol = Literal["md5", "sha", "SHA-224", "SHA-256", "SHA-384", "SHA-512"]
@@ -336,7 +320,7 @@ class DiagSnmpInput:
 
 
 @dataclass
-class DiagSnmpResult(ABCAutomationResult):
+class DiagSnmpResult(AutomationResult):
     return_code: int
     response: str
 
@@ -346,11 +330,8 @@ class DiagSnmpResult(ABCAutomationResult):
         return AutomationID("diag-snmp")
 
 
-result_type_registry.register(DiagSnmpResult)
-
-
 @dataclass
-class DiagHostResult(ABCAutomationResult):
+class DiagHostResult(AutomationResult):
     return_code: int
     response: str
 
@@ -360,11 +341,8 @@ class DiagHostResult(ABCAutomationResult):
         return AutomationID("diag-host")
 
 
-result_type_registry.register(DiagHostResult)
-
-
 @dataclass
-class PingHostResult(ABCAutomationResult):
+class PingHostResult(AutomationResult):
     return_code: int
     response: str
 
@@ -372,9 +350,6 @@ class PingHostResult(ABCAutomationResult):
     @override
     def automation_call() -> AutomationID:
         return AutomationID("ping-host")
-
-
-result_type_registry.register(PingHostResult)
 
 
 class PingHostCmd(StrEnum):
@@ -403,33 +378,3 @@ class PingHostInput:
                 "base_cmd": self.base_cmd.value,
             }
         )
-
-
-@dataclass
-class CreateDiagnosticsDumpResult(ABCAutomationResult):
-    output: str
-    tarfile_path: str
-    tarfile_created: bool
-
-    @staticmethod
-    @override
-    def automation_call() -> AutomationID:
-        return AutomationID("create-diagnostics-dump")
-
-
-result_type_registry.register(CreateDiagnosticsDumpResult)
-
-
-@dataclass
-class CreateDiagnosticsDumpV2Result(ABCAutomationResult):
-    output: str
-    tarfile_path: str
-    tarfile_created: bool
-
-    @staticmethod
-    @override
-    def automation_call() -> AutomationID:
-        return AutomationID("create-diagnostics-dump-v2")
-
-
-result_type_registry.register(CreateDiagnosticsDumpV2Result)

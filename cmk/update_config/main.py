@@ -15,7 +15,7 @@ import os
 import subprocess
 import sys
 import traceback
-from collections.abc import Callable, Generator, Iterator, Sequence
+from collections.abc import Callable, Generator, Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from itertools import chain
 from typing import Literal
@@ -49,7 +49,7 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.gui.wsgi.app import gui_context
-from cmk.update_config.plugins.pre_actions.utils import ConflictMode
+from cmk.update_config.internal import ConflictMode, PreUpdateAction, UpdateAction
 from cmk.utils import log, paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import check_mk_config_dir
@@ -93,10 +93,10 @@ def main_update_config(
     logger: logging.Logger,
     conflict: ConflictMode,  # noqa: ARG001
 ) -> Literal[0, 1]:
-    _load_plugins(edition, logger)
+    plugins = _load_plugins(edition, logger)
 
     try:
-        return update_config(edition, logger)
+        return update_config(plugins, logger)
     except Exception:
         if debug.enabled():
             raise
@@ -109,13 +109,13 @@ def main_update_config(
 def main_check_config(
     edition: Edition, logger: logging.Logger, conflict: ConflictMode
 ) -> Literal[0, 1]:
-    _load_pre_plugins(edition)
+    pre_plugins = _load_pre_plugins(edition)
     try:
         # This has to be done BEFORE initializing the GUI context on start of
         # the pre update actions
         _cleanup_precompiled_files(logger)
 
-        check_config(edition, logger, conflict)
+        check_config(pre_plugins, logger, conflict)
     except Exception as e:
         if not isinstance(e, MKUserError):
             traceback.print_exc()
@@ -201,7 +201,7 @@ def ensure_site_is_stopped(logger: logging.Logger) -> None:
         sys.exit(1)
 
 
-def _load_plugins(edition: Edition, logger: logging.Logger) -> None:
+def _load_plugins(edition: Edition, logger: logging.Logger) -> Iterable[UpdateAction]:
     for plugin, exc in chain(
         load_plugins_with_exceptions("cmk.update_config.plugins.actions"),
         (
@@ -225,9 +225,10 @@ def _load_plugins(edition: Edition, logger: logging.Logger) -> None:
         )
         if debug.enabled():
             raise exc
+    return update_action_registry.values()
 
 
-def _load_pre_plugins(edition: Edition) -> None:
+def _load_pre_plugins(edition: Edition) -> Iterable[PreUpdateAction]:
     for plugin, exc in chain(
         load_plugins_with_exceptions("cmk.update_config.plugins.pre_actions"),
         (
@@ -249,15 +250,21 @@ def _load_pre_plugins(edition: Edition) -> None:
         sys.stderr.write(f"Error in pre action plug-in {plugin}: {exc}\n")
         if debug.enabled():
             raise exc
+    return pre_update_action_registry.values()
 
 
 # TODO(sk): check_config can't raise exception(raise is an reaction on check, i.e. 2 in 1):
 # change name assert_config or ensure_valid_config for example
 # or change logic
-def check_config(edition: Edition, logger: logging.Logger, conflict_mode: ConflictMode) -> None:  # noqa: ARG001
+def check_config(
+    pre_update_actions: Iterable[PreUpdateAction],
+    logger: logging.Logger,
+    conflict_mode: ConflictMode,
+) -> None:
     """Raise exception on failure"""
-    pre_update_actions = sorted(pre_update_action_registry.values(), key=lambda a: a.sort_index)
+    pre_update_actions = sorted(pre_update_actions, key=lambda a: a.sort_index)
     total = len(pre_update_actions)
+
     logger.info("Verifying Checkmk configuration...")
 
     # Note: Redis has to be disabled first, the other contexts depend on it
@@ -279,12 +286,12 @@ def check_config(edition: Edition, logger: logging.Logger, conflict_mode: Confli
     logger.info("Done (%(green)ssuccess%(normal)s)\n", {"green": tty.green, "normal": tty.normal})
 
 
-def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:  # noqa: ARG001
+def update_config(actions: Iterable[UpdateAction], logger: logging.Logger) -> Literal[0, 1]:
     """Return exit code, 0 is ok, 1 is failure"""
     has_errors = False
     logger.log(VERBOSE, "Initializing application...")
 
-    actions = sorted(update_action_registry.values(), key=lambda a: a.sort_index)
+    actions = sorted(actions, key=lambda a: a.sort_index)
     total = len(actions)
 
     # Note: Redis has to be disabled first, the other contexts depend on it
@@ -357,7 +364,7 @@ def _check_failed_gui_plugins(logger: logging.Logger) -> None:
 
 
 def _initialize_base_environment() -> None:
-    base_config.load()
+    base_config.load(validate_hosts=True)
 
 
 @contextmanager

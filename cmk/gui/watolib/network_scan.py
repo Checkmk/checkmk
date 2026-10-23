@@ -27,7 +27,7 @@ from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.session_context import UserContext
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
 from cmk.gui.user_sites import activation_sites
@@ -52,7 +52,6 @@ from .host_attributes import (
 )
 from .hosts_and_folders import (
     Folder,
-    folder_tree,
     FolderTree,
     Host,
     make_folder_tree,
@@ -64,6 +63,7 @@ NetworkScanFoundHosts = list[tuple[HostName, HostAddress]]
 
 class NetworkScanRequest(NamedTuple):
     folder_path: str
+    tree: FolderTree
 
 
 def execute_network_scan_job(config: Config) -> None:
@@ -87,7 +87,10 @@ def execute_network_scan_job(config: Config) -> None:
             % {"run_as": run_as, "folder": folder.title()}
         )
 
-    with UserContext(run_as, UserPermissions.from_config(config, permission_registry)):
+    with UserContext(
+        run_as,
+        UserPermissions.from_config(config, all_permissions()),
+    ):
         result: NetworkScanResult = {
             "start": time.time(),
             "end": True,  # means currently running
@@ -254,12 +257,14 @@ class AutomationNetworkScan(AutomationCommand[NetworkScanRequest]):
         folder_path = request.var("folder")
         if folder_path is None:
             raise MKGeneralException(_("Folder path is missing"))
-        return NetworkScanRequest(folder_path=folder_path)
+        return NetworkScanRequest(folder_path=folder_path, tree=make_folder_tree(config))
 
     @override
     def execute(self, api_request: NetworkScanRequest) -> list[tuple[HostName, HostAddress]]:
-        folder = (tree := folder_tree()).folder(api_request.folder_path)
-        return _do_network_scan(folder, _known_ip_addresses(list(tree.all_hosts().values())))
+        folder = api_request.tree.folder(api_request.folder_path)
+        return _do_network_scan(
+            folder, _known_ip_addresses(list(api_request.tree.all_hosts().values()))
+        )
 
 
 def register(

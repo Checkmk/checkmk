@@ -9,11 +9,13 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, nextTick, ref } from 'vue'
 
 import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/globalTimeState'
+import type { UnitFormat } from '@/graphing/components/TimeSeriesGraph'
 import type { CustomGraphObject } from '@/graphing/designer/api'
+import type { CalculationPlacement } from '@/graphing/designer/calculation'
 import DesignerBody from '@/graphing/designer/components/DesignerBody.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import { fromApiDataSource } from '@/graphing/designer/drafts'
@@ -21,6 +23,9 @@ import type { ApiDataSource, ApiDataSourceInput, ItemId } from '@/graphing/desig
 import type { RowIssue } from '@/graphing/designer/validation'
 
 import { filterDefinitions } from '../fixtures'
+
+// The designer's burger menu loads its groups on mount; this component test doesn't exercise it.
+vi.mock('@/graphing/api/burgerMenu', () => ({ loadMenu: vi.fn().mockResolvedValue([]) }))
 
 const PAN_SECONDS = 1800
 const PAN_REFETCH_TIMEOUT_MS = 2000
@@ -33,7 +38,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
     inheritAttrs: false,
     props: ['metrics', 'highlightedMetricNames', 'panEnabled', 'view_time_range', 'options'],
-    emits: ['pan'],
+    emits: ['pan', 'update:valueResolution'],
     template: `<div data-testid="time-series-graph">
       <span data-testid="drawn">{{ metrics.map((m) => m.metadata.title).join(',') }}</span>
       <span data-testid="highlighted">{{ highlightedMetricNames.join(',') }}</span>
@@ -43,6 +48,10 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       <span data-testid="curve-units">{{
         metrics.map((m) => m.metadata.unit.symbol).join(',')
       }}</span>
+      <button
+        data-testid="report-value-resolution"
+        @click="$emit('update:valueResolution', 0.005)"
+      />
       <button
         data-testid="pan-back"
         @click="$emit('pan', {
@@ -111,7 +120,7 @@ function formulaSource(id: string, ast: unknown): unknown {
   }
 }
 
-// A metric_backend source in the API's nested wire shape, not the designer's flat one.
+// A telemetry_metrics source in the API's nested wire shape, not the designer's flat one.
 function telemetryMetricsSource(
   id: string,
   consolidationFunction: unknown = {
@@ -122,7 +131,7 @@ function telemetryMetricsSource(
   }
 ): unknown {
   return {
-    type: 'metric_backend',
+    type: 'telemetry_metrics',
     id,
     title: id,
     line_type: 'line',
@@ -163,31 +172,45 @@ function graphObject(dataSources: unknown[] = [rrdSource('A'), rrdSource('B')]):
   } as unknown as CustomGraphObject
 }
 
-function metric(sourceId: string, name: string, title: string): unknown {
+const siUnit = (symbol: string): UnitFormat => ({
+  notation: 'si',
+  symbol,
+  precision: { type: 'auto', digits: 2 }
+})
+
+function metric(
+  sourceId: string,
+  name: string,
+  title: string,
+  dataPoints: number[] = [1, 2],
+  unit: UnitFormat = {
+    notation: 'decimal',
+    symbol: '',
+    precision: { type: 'auto', digits: 2 },
+    convertible: false
+  }
+): unknown {
   return {
     source_id: sourceId,
     metadata: {
       name,
       title,
-      unit: {
-        notation: 'decimal',
-        symbol: '',
-        precision: { type: 'auto', digits: 2 },
-        convertible: false
-      },
+      unit,
       color: '#28a2f3'
     },
-    render: { stack: null, inverse: false, hidden: false },
-    data_points: [1, 2]
+    render: { shape: 'line', inverse: false, hidden: false },
+    data_points: dataPoints
   }
 }
 
 /** The fetch_data POST returns two series, one per (visible) data source. */
-function fetchDataResponse(): unknown {
+function fetchDataResponse(
+  metrics: unknown[] = [metric('A', 'metric-a', 'CPU'), metric('B', 'metric-b', 'Memory')]
+): unknown {
   return {
     data: {
       time_range: { start: 0, end: 3600, step: 60 },
-      metrics: [metric('A', 'metric-a', 'CPU'), metric('B', 'metric-b', 'Memory')],
+      metrics,
       group_titles: [],
       horizontal_lines: [],
       warnings: [],
@@ -201,10 +224,6 @@ function fetchDataResponse(): unknown {
 beforeEach(() => {
   useGlobalTimeRange().setActiveTimeRange(null, 'time_picker')
   vi.spyOn(client, 'POST').mockResolvedValue(fetchDataResponse())
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
 })
 
 function echoingPostSpy() {
@@ -232,7 +251,9 @@ function bodyProps(graph: CustomGraphObject = graphObject()) {
     store,
     graphOptions: graph.extensions.content.graph_options,
     title: 'My graph',
+    graphName: 'my_graph',
     mode: 'edit' as 'view' | 'edit',
+    calculationPlacement: 'slideout' as CalculationPlacement,
     thresholds: { warning: '#ffd000', critical: '#ff3232' },
     telemetryMetricsAvailable: false,
     createServicesAvailable: true,
@@ -246,6 +267,7 @@ function renderBody(
   mode: 'view' | 'edit',
   overrides: {
     displaySettings?: boolean
+    calculationPlacement?: CalculationPlacement
     graph?: CustomGraphObject
     issuesByRow?: ReadonlyMap<ItemId, RowIssue[]>
     telemetryMetricsAvailable?: boolean
@@ -274,6 +296,24 @@ function renderBody(
   }
 }
 
+test('a preview whose fetch resolved no series states that there is no data', async () => {
+  const response = fetchDataResponse() as {
+    data: { metrics: { data_points: unknown }[] } & Record<string, unknown>
+  }
+  const withoutPoints = response.data.metrics.map((series) => ({
+    ...series,
+    data_points: [null, null, null]
+  }))
+  vi.spyOn(client, 'POST').mockResolvedValue({
+    ...response,
+    data: { ...response.data, metrics: withoutPoints }
+  })
+
+  renderBody('view')
+
+  expect(await screen.findByText('No data available')).toBeInTheDocument()
+})
+
 test('hiding a metric in the detached view-mode legend removes it from the preview', async () => {
   renderBody('view')
 
@@ -284,6 +324,44 @@ test('hiding a metric in the detached view-mode legend removes it from the previ
   await fireEvent.click(screen.getByRole('button', { name: 'CPU' }))
   await waitFor(() => expect(chart).not.toHaveTextContent('CPU'))
   expect(chart).toHaveTextContent('Memory')
+})
+
+/** Two series the unit's own precision prints identically; only a finer resolution tells apart. */
+function closeValuesResponse(): unknown {
+  return fetchDataResponse([
+    metric('A', 'metric-a', 'CPU', [0.196]),
+    metric('B', 'metric-b', 'Memory', [0.198])
+  ])
+}
+
+/** The stat cells that close a legend or appearance row. */
+function statsOfRow(title: string, scope: HTMLElement = document.body): string[] {
+  const row = within(scope).getByText(title).closest('tr')!
+  return [...row.querySelectorAll('td')].slice(-4).map((cell) => cell.textContent!.trim())
+}
+
+test('the detached view-mode legend prints values at the resolution the preview reports', async () => {
+  vi.spyOn(client, 'POST').mockResolvedValue(closeValuesResponse() as never)
+  renderBody('view')
+  await waitFor(() => expect(drawnTitles()).toBe('CPU,Memory'))
+  expect(statsOfRow('CPU')).toEqual(statsOfRow('Memory'))
+
+  await fireEvent.click(screen.getByTestId('report-value-resolution'))
+
+  await waitFor(() => expect(statsOfRow('CPU')).not.toEqual(statsOfRow('Memory')))
+})
+
+test('the appearance table prints values at the resolution the preview reports', async () => {
+  vi.spyOn(client, 'POST').mockResolvedValue(closeValuesResponse() as never)
+  renderBody('edit')
+  await userEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
+  await waitFor(() => expect(drawnTitles()).toBe('CPU,Memory'))
+  const table = screen.getByRole('tabpanel')
+  expect(statsOfRow('CPU', table)).toEqual(statsOfRow('Memory', table))
+
+  await fireEvent.click(screen.getByTestId('report-value-resolution'))
+
+  await waitFor(() => expect(statsOfRow('CPU', table)).not.toEqual(statsOfRow('Memory', table)))
 })
 
 test('hovering a metric in the detached legend highlights it in the preview', async () => {
@@ -576,7 +654,7 @@ test("states the response's own warnings over the preview it drew anyway", async
   renderBody('view')
 
   const message = await screen.findByText('The query for A matched more than 100 time series.')
-  expect(message.closest('.graphing-graph-notice')).toHaveClass('graphing-graph-notice--warning')
+  expect(message.closest('.cmk-surface-notice')).toHaveClass('cmk-surface-notice--warning')
   expect(await screen.findByTestId('time-series-graph')).toBeInTheDocument()
 })
 
@@ -804,4 +882,153 @@ test('the edit action on a calculation row opens the slideout on that calculatio
 
   expect(await screen.findByRole('button', { name: 'Calculate & update' })).toBeInTheDocument()
   expect(screen.getByLabelText('Formula input')).toHaveValue('A - B')
+})
+
+function calculationGraph(): CustomGraphObject {
+  return graphObject([
+    rrdSource('A'),
+    rrdSource('B'),
+    formulaSource('C', {
+      op: 'difference',
+      operands: [
+        { op: 'ref', id: 'A' },
+        { op: 'ref', id: 'B' }
+      ]
+    })
+  ])
+}
+
+async function deleteCalculationC(user: ReturnType<typeof userEvent.setup>): Promise<void> {
+  await user.click(await screen.findByRole('button', { name: 'Delete C' }))
+  const confirmation = await screen.findByRole('dialog', { name: /Delete metric/ })
+  await user.click(within(confirmation).getByRole('button', { name: 'Delete' }))
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'Delete C' })).toBeNull())
+}
+
+test('closing the slideout after deleting the calculation focuses "Add calculation"', async () => {
+  const user = userEvent.setup()
+  renderBody('edit', { graph: calculationGraph() })
+  await screen.findByRole('tab', { name: 'Metrics selection' })
+
+  await user.click(screen.getByRole('button', { name: 'Edit calculation' }))
+  await deleteCalculationC(user)
+  await user.click(screen.getByRole('button', { name: 'Preview in graph' }))
+
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Add calculation' })).toHaveFocus())
+})
+
+describe('with the calculation inline', () => {
+  test('adding a calculation replaces the tabs until going back', async () => {
+    renderBody('edit', { calculationPlacement: 'inline', graph: calculationGraph() })
+    await screen.findByRole('tab', { name: 'Metrics selection' })
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Add calculation' }))
+
+    expect(await screen.findByRole('button', { name: 'Calculate & add' })).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: 'Metrics selection' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Back to metrics selection' }))
+
+    expect(await screen.findByRole('tab', { name: 'Metrics selection' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Calculate & add' })).not.toBeInTheDocument()
+  })
+
+  test('the edit action on a calculation row opens that calculation', async () => {
+    renderBody('edit', { calculationPlacement: 'inline', graph: calculationGraph() })
+    await screen.findByRole('tab', { name: 'Metrics selection' })
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit calculation' }))
+
+    expect(await screen.findByRole('button', { name: 'Calculate & update' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Formula input')).toHaveValue('A - B')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('a calculation added in the view shows in the table after going back', async () => {
+    renderBody('edit', { calculationPlacement: 'inline', graph: calculationGraph() })
+    await screen.findByRole('tab', { name: 'Metrics selection' })
+    await fireEvent.click(screen.getByRole('button', { name: 'Add calculation' }))
+
+    await fireEvent.update(await screen.findByLabelText('Formula input'), 'A + B')
+    await fireEvent.click(screen.getByRole('button', { name: 'Calculate & add' }))
+    await fireEvent.click(screen.getByRole('button', { name: 'Back to metrics selection' }))
+
+    expect(await screen.findByRole('cell', { name: 'D' })).toBeInTheDocument()
+  })
+
+  test('the row selection survives a visit to the calculation', async () => {
+    renderBody('edit', { calculationPlacement: 'inline', graph: calculationGraph() })
+    await screen.findByRole('tab', { name: 'Metrics selection' })
+    await fireEvent.click(screen.getAllByRole('checkbox', { name: 'Select row' })[0]!)
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Add calculation' }))
+    await fireEvent.click(await screen.findByRole('button', { name: 'Back to metrics selection' }))
+
+    expect(screen.getAllByRole('checkbox', { name: 'Select row' })[0]!).toBeChecked()
+  })
+
+  test('going back focuses the action that opened the calculation', async () => {
+    const user = userEvent.setup()
+    renderBody('edit', { calculationPlacement: 'inline', graph: calculationGraph() })
+    await screen.findByRole('tab', { name: 'Metrics selection' })
+
+    await user.click(screen.getByRole('button', { name: 'Edit calculation' }))
+    await user.click(await screen.findByRole('button', { name: 'Back to metrics selection' }))
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Edit calculation' })).toHaveFocus()
+    )
+  })
+
+  test('going back after deleting the calculation focuses "Add calculation"', async () => {
+    const user = userEvent.setup()
+    renderBody('edit', { calculationPlacement: 'inline', graph: calculationGraph() })
+    await screen.findByRole('tab', { name: 'Metrics selection' })
+
+    await user.click(screen.getByRole('button', { name: 'Edit calculation' }))
+    await deleteCalculationC(user)
+    await user.click(screen.getByRole('button', { name: 'Back to metrics selection' }))
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Add calculation' })).toHaveFocus()
+    )
+  })
+
+  test('opening a transformation focuses its metric selection', async () => {
+    renderBody('edit', {
+      calculationPlacement: 'inline',
+      graph: graphObject([
+        rrdSource('A'),
+        formulaSource('C', { op: 'percentile', percentile: 95, operand: { op: 'ref', id: 'A' } })
+      ])
+    })
+    await screen.findByRole('tab', { name: 'Metrics selection' })
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit calculation' }))
+
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Metric' })).toHaveFocus())
+  })
+})
+
+test('hiding the first source re-labels the table in the unit the preview axis moves to', async () => {
+  vi.spyOn(client, 'POST').mockResolvedValue(
+    fetchDataResponse([
+      metric('A', 'metric-a', 'CPU', [1, 2], siUnit('B')),
+      metric('B', 'metric-b', 'Memory', [1, 2], siUnit('W'))
+    ]) as never
+  )
+  renderBody('edit')
+  await userEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
+  const table = screen.getByRole('tabpanel')
+  await waitFor(() => expect(drawnTitles()).toBe('CPU,Memory'))
+  // With no unit configured the axis takes the first drawn metric's, and the table follows it.
+  expect(screen.getByTestId('axis-unit').textContent).toBe('B')
+  expect(statsOfRow('Memory', table)).toEqual(['1 B', '1.5 B', '2 B', '2 B'])
+
+  const [hideCpu] = within(table).getAllByRole('button', { name: 'Toggle visibility' })
+  await fireEvent.click(hideCpu!)
+
+  await waitFor(() => expect(screen.getByTestId('axis-unit').textContent).toBe('W'))
+  expect(statsOfRow('Memory', table)).toEqual(['1 W', '1.5 W', '2 W', '2 W'])
 })

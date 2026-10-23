@@ -8,6 +8,7 @@ import type { Float } from 'cmk-shared-typing/typescript/vue_formspec_components
 import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import useId from 'cmk-ui-library/lib/useId'
+import { computed } from 'vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
@@ -18,12 +19,18 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
-const data = defineModel<number>('data', { required: true })
-const [validation, value] = useValidation<number>(
+const data = defineModel<number | ''>('data', { required: true })
+const [validation, value] = useValidation<number | ''>(
   data,
   props.spec.validators,
   () => props.backendValidation
 )
+const inputValue = computed({
+  get: () => (value.value === '' ? undefined : value.value),
+  set: (newValue) => {
+    value.value = newValue ?? ''
+  }
+})
 
 const componentId = useId()
 </script>
@@ -38,7 +45,7 @@ const componentId = useId()
     </div>
     <CmkInput
       :id="componentId"
-      v-model="value"
+      v-model="inputValue"
       :type="'number'"
       :placeholder="props.spec.input_hint || ''"
       :aria-label="props.spec.label || props.spec.title"

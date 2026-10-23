@@ -101,7 +101,7 @@ def ip_info_34_from(
         # in case we can't parse the OID using the above pattern we assume this is not for us
         return None
 
-    if (prefix := ("64" if oid_end.startswith("4.20.254.128.") else ip_prefix)) == "0":
+    if (prefix := ("64" if oid_end.startswith("4.20.254.128.") else ip_prefix)) in ("", "0"):
         return None
 
     adr_length, raw_address = (
@@ -139,7 +139,12 @@ def ip_info_20_from(
                 return None
             if _raw_address == "0.0.0.0":  # storage-isilon-onefs
                 return None
-            interface_ip = AugmentedIPInterface.from_ip_address(f"{_raw_address}/{_raw_netmask}")
+            try:
+                interface_ip = AugmentedIPInterface.from_ip_address(
+                    f"{_raw_address}/{_raw_netmask}"
+                )
+            except ValueError:
+                return None
         case _:
             return None
 

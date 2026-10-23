@@ -33,8 +33,6 @@ skipped: an unhandled header, an unknown table, a filter operator nobody impleme
 page starts issuing something new, the tests fail loudly and this module gets extended.
 """
 
-from __future__ import annotations
-
 import json
 import re
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence

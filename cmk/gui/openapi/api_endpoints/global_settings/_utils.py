@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 import json
+from dataclasses import asdict
+from http import HTTPStatus
 from typing import Annotated
 
 from pydantic import AfterValidator
@@ -12,25 +15,29 @@ from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import edition
 from cmk.gui.form_specs import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
 from cmk.gui.global_config import get_global_config
+from cmk.gui.openapi.api_endpoints.models.form_spec import FormSpecValidationErrorsModel
 from cmk.gui.openapi.framework import ApiContext, ETag, PathParam
-from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
-from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.openapi.framework.model.converter import (
+    folder_tree_of_request,
+    SiteIdConverter,
+    TypedPlainValidator,
+)
+from cmk.gui.openapi.utils import EXT, ProblemException
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.watolib import read_only
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
-    ConfigVariable,
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.global_settings import (
+    GlobalSettingsOrigin,
     is_available_in_global_settings,
     make_global_settings_context,
 )
 from cmk.gui.watolib.global_settings import (
     make_pending_changes as make_setup_pending_changes,
 )
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.sites import (
     save_site_globals,
@@ -85,7 +92,8 @@ def _editable_global_setting(varname: str) -> str:
 
 def _site_globals_editable(value: str) -> SiteId:
     """On a non-distributed setup this only accepts sites that already carry overrides,
-    which nothing can create. Same as ModeEditSiteGlobals."""
+    which nothing can create. On a remote it accepts the local site only, the one whose
+    overrides that site runs with."""
     site_id = SiteIdConverter.should_be_configurable(value)
     all_sites = load_configured_sites()
     if site_id not in all_sites or not site_globals_editable(all_sites, all_sites[site_id]):
@@ -114,7 +122,7 @@ GlobalSettingVarName = Annotated[
 def ensure_setup_access(api_context: ApiContext) -> None:
     if not api_context.config.wato_enabled:
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Setup is disabled",
             detail="This endpoint is currently disabled via the "
             "'Disable remote configuration' option in 'Distributed Monitoring'. "
@@ -122,7 +130,7 @@ def ensure_setup_access(api_context: ApiContext) -> None:
         )
     if not api_context.config.is_provider_site:
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Not the central site of the provider",
             detail="Checkmk can only be configured on the managers central site.",
         )
@@ -131,71 +139,74 @@ def ensure_setup_access(api_context: ApiContext) -> None:
 def ensure_changes_allowed(api_context: ApiContext) -> None:
     if read_only.blocks_changes(api_context.config.wato_read_only):
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Setup is in read-only mode",
             detail=strip_tags(read_only.message(api_context.config.wato_read_only)),
         )
 
 
-def global_settings_context_of(site_id: SiteId, api_context: ApiContext) -> GlobalSettingsContext:
+def global_settings_context_of(
+    site_id: SiteId, api_context: ApiContext, *, edits_site_specific_value: bool
+) -> GlobalSettingsContext:
     return make_global_settings_context(
         edition(paths.omd_root),
         site_id,
         sites=api_context.config.sites,
         graph_timeranges=api_context.config.graph_timeranges,
+        folder_choices=lambda: folder_tree_of_request(api_context).folder_choices_fulltitle(
+            api_context.user
+        ),
+        edits_site_specific_value=edits_site_specific_value,
     )
 
 
-def form_spec_of(
-    config_variable: ConfigVariable, site_id: SiteId, api_context: ApiContext
-) -> FormSpec[object]:
-    return config_variable.value_model(global_settings_context_of(site_id, api_context))
-
-
-def value_to_json(form_spec: FormSpec[object], value: object) -> object:
-    """The frontend representation, i.e. the one the GUI exchanges with the form spec."""
+def to_json(form_spec: FormSpec[object], value: object) -> tuple[dict[str, object], object]:
+    """The frontend representation, i.e. the rendered form spec and the value the GUI
+    exchanges with it."""
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
-    _component, json_value = visitor.to_vue(RawDiskData(value))
-    return json_value
+    component, json_value = visitor.to_vue(RawDiskData(value))
+    return asdict(component), json_value
 
 
-def value_from_json(form_spec: FormSpec[object], json_value: object) -> object:
+def value_from_json(form_spec: FormSpec[object], varname: str, json_value: object) -> object:
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=False, mask_values=False))
     if problems := visitor.validate(RawFrontendData(json_value)):
+        errors = FormSpecValidationErrorsModel.from_messages(problems)
         raise ProblemException(
-            status=400,
-            title=f"Problem in field {'.'.join(problems[0].location)}",
-            detail=problems[0].message,
+            status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            title="Validation error.",
+            detail=f"The value of {varname!r} does not match the schema of this setting.",
+            ext=EXT(dataclasses.asdict(errors)),
         )
 
     return visitor.to_disk(RawFrontendData(json_value))
 
 
-def _etag_value(json_value: object) -> str:
+def _etag_value(value: object) -> str:
     """Not hash_of_dict(): that assumes string dict keys and repr()s in insertion order."""
-    return json.dumps(json_value, sort_keys=True, default=repr)
+    return json.dumps(value, sort_keys=True, default=repr)
 
 
-def global_setting_etag(varname: str, json_value: object, is_default: bool) -> ETag:
-    # Must cover is_default too, so that "unset -> explicitly set to the default" changes the tag.
+def global_setting_etag(varname: str, value: object, origin: GlobalSettingsOrigin) -> ETag:
+    # Must cover the origin too, so that "unset -> explicitly set to the default" changes the tag.
     return ETag(
         {
             "varname": varname,
-            "value": _etag_value(json_value),
-            "is_default": is_default,
+            "value": _etag_value(value),
+            "origin": origin.value,
         }
     )
 
 
 def site_global_setting_etag(
-    site_id: SiteId, varname: str, json_value: object, is_default: bool
+    site_id: SiteId, varname: str, value: object, origin: GlobalSettingsOrigin
 ) -> ETag:
     return ETag(
         {
             "site_id": site_id,
             "varname": varname,
-            "value": _etag_value(json_value),
-            "is_default": is_default,
+            "value": _etag_value(value),
+            "origin": origin.value,
         }
     )
 
@@ -214,7 +225,7 @@ def save_site_setting(
         site_id,
         configured_sites,
         site_globals,
-        tree=make_folder_tree(api_context.config),
+        tree=folder_tree_of_request(api_context),
         pprint_value=api_context.config.wato_pprint_config,
         liveproxyd_enabled=api_context.config.liveproxyd_enabled,
         use_git=api_context.config.wato_use_git,

@@ -4,8 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { type Ref, nextTick, ref } from 'vue'
+import { type Ref, effectScope, nextTick, ref } from 'vue'
 
+import type { UrlSync } from '@/monitoring/shared/browserUrlSync'
 import {
   MonitoringService,
   type MonitoringServiceOptions,
@@ -17,6 +18,7 @@ import {
   readSlideInFromHash,
   slideInWriter
 } from '@/monitoring/shared/urlState/slideInState'
+import { useUrlSync } from '@/monitoring/shared/urlState/useUrlSync'
 
 import { makeKeyShortcutService, makeResponse } from '../services/testHelpers'
 
@@ -254,6 +256,113 @@ describe('slideInWriter', () => {
     expect(tabId.value).toBe('metrics')
 
     service.stopPolling()
+  })
+})
+
+describe('a panel naming its tab apart', () => {
+  const hostDescriptor: SlideInUrlDescriptor<TestRow, TestRow> = {
+    ...descriptor,
+    tabKey: 'host_tab'
+  }
+
+  function makeHostWriter(rows: TestRow[], hash: string) {
+    const current: Ref<TestRow | null> = ref(null)
+    const tabId = ref<string | undefined>(undefined)
+    const service = new TestService(rows)
+    const writer = slideInWriter({
+      descriptor: hostDescriptor,
+      service,
+      current,
+      tabId,
+      initial: readSlideInFromHash(hostDescriptor, hash),
+      open: (row) => {
+        current.value = row
+      },
+      close: () => {
+        current.value = null
+      }
+    })
+    return { current, tabId, service, writer }
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    return () => vi.useRealTimers()
+  })
+
+  it('reads its tab from its own key, leaving the shared one to the other panel', () => {
+    expect(
+      readSlideInFromHash(hostDescriptor, '#host=web01&site=heute&tab=graphs&host_tab=metrics')
+    ).toEqual({
+      identity: WEB01,
+      tabId: 'metrics',
+      params: { host: 'web01', site: 'heute', tab: 'graphs', host_tab: 'metrics' }
+    })
+  })
+
+  it('opens on the tab its own key names', async () => {
+    const { current, tabId, service } = makeHostWriter(
+      [WEB01],
+      '#host=web01&site=heute&host_tab=metrics'
+    )
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(current.value).toEqual(WEB01)
+    expect(tabId.value).toBe('metrics')
+
+    service.stopPolling()
+  })
+
+  it('writes a tab that says something under its own key', async () => {
+    const { current, tabId, service, writer } = makeHostWriter([WEB01], '')
+
+    current.value = WEB01
+    await nextTick()
+    expect(writer.params.value).toEqual({ host: 'web01', site: 'heute', host_tab: null })
+
+    tabId.value = 'metrics'
+    await nextTick()
+    expect(writer.params.value).toEqual({ host: 'web01', site: 'heute', host_tab: 'metrics' })
+
+    service.stopPolling()
+  })
+
+  it('takes its tab from its own key on a navigation', async () => {
+    const { current, tabId, service, writer } = makeHostWriter([WEB01], '')
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    writer.apply?.({ host: 'web01', site: 'heute', tab: 'graphs', host_tab: 'metrics' })
+
+    expect(current.value).toEqual(WEB01)
+    expect(tabId.value).toBe('metrics')
+
+    service.stopPolling()
+  })
+
+  it('shares the address bar with a panel using the shared tab key', () => {
+    const urlSync: UrlSync = {
+      getCurrentUrl: () => ({ pathname: '/page.py', search: '', hash: '' }),
+      replaceUrl: vi.fn(),
+      onNavigate: () => () => {}
+    }
+    const host = makeHostWriter([WEB01], '')
+    const other = slideInWriter({
+      descriptor: { ...descriptor, keys: ['service'] },
+      service: host.service,
+      current: ref<TestRow | null>(null),
+      tabId: ref<string | undefined>(undefined),
+      initial: null,
+      open: () => {},
+      close: () => {}
+    })
+
+    const scope = effectScope()
+    expect(() => scope.run(() => useUrlSync([other, host.writer], { urlSync }))).not.toThrow()
+
+    scope.stop()
+    host.service.stopPolling()
   })
 })
 

@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
+from cmk.plugins.mtr.lib.config import section_names
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -22,6 +23,7 @@ from cmk.rulesets.v1.form_specs import (
     TimeSpan,
     validators,
 )
+from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
@@ -45,16 +47,16 @@ def _address_configuration() -> Dictionary:
                     title=Title("Destination address"),
                     help_text=Help(
                         "Host name, IPv4 address or IPv6 address that mtr will trace the"
-                        " route to. This value is also used as service name in Checkmk,"
-                        " so it must be unique per host."
+                        " route to. The service name is built from this address plus"
+                        " whatever distinguishes several entries for the same address."
                     ),
                     custom_validate=(
                         validators.LengthInRange(min_value=1),
                         validators.MatchRegex(
-                            r"^[A-Za-z0-9\-_.: ]+$",
+                            r"^[A-Za-z0-9\-_.:]+$",
                             Message(
-                                "Valid service names may only contain letters, numbers,"
-                                " dashes, underscores, spaces, dots and colons."
+                                "A destination address may only contain letters, numbers,"
+                                " dashes, underscores, dots and colons."
                             ),
                         ),
                     ),
@@ -151,6 +153,22 @@ def _address_configuration() -> Dictionary:
     )
 
 
+def _validate_unique_sections(value: Sequence[Mapping[str, object]]) -> None:
+    seen: dict[str, int] = {}
+    for nr, name in enumerate(section_names(value), start=1):
+        if (first := seen.get(name)) is not None:
+            raise ValidationError(
+                Message(
+                    'Duplicate destination "%(name)s", already configured as entry'
+                    " %(first)s. The service name is the address plus whatever differs in"
+                    " connection type, IP version, port, packet size, source address or"
+                    " maximum hops, so two entries have to differ in at least one of those."
+                )
+                % {"name": name, "first": str(first)}
+            )
+        seen[name] = nr
+
+
 def _valuespec_agent_config_mtr() -> Dictionary:
     return Dictionary(
         help_text=Help(
@@ -193,6 +211,7 @@ def _valuespec_agent_config_mtr() -> Dictionary:
                     title=Title("MTR configuration"),
                     add_element_label=Label("Add destination address"),
                     element_template=_address_configuration(),
+                    custom_validate=(_validate_unique_sections,),
                 ),
             ),
         },

@@ -12,7 +12,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import replace_action_url_macros, transform_action_url
 from cmk.web.utils.icons import StaticIcon
@@ -40,7 +40,7 @@ def ajax_popup_action_menu(ctx: PageContext) -> None:
     icons = get_icons(
         what,
         row,
-        UserPermissions.from_config(config, permission_registry),
+        UserPermissions.from_config(config, all_permissions()),
         IconConfig.from_config(config),
         toplevel=False,
     )

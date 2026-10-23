@@ -6,9 +6,9 @@
 from collections.abc import Mapping
 
 from cmk.graphing.v1 import metrics as metrics_v1
-from cmk.gui.config import Config
+from cmk.graphing_engine import ApiPerfometer
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.graphing import (
-    PerfometerFromAPI,
     perfometers_from_api,
     registered_metrics,
 )
@@ -17,23 +17,29 @@ from cmk.gui.i18n import _l
 from cmk.gui.log import logger
 from cmk.gui.type_defs import Row
 from cmk.gui.views.sorter import Sorter
+from cmk.web.utils.request_cache import RequestCache
 
 from .base import Perfometer
 
 
 def _sort_perfometer(
     registered_metrics_: Mapping[str, metrics_v1.Metric],
-    registered_perfometers: Mapping[str, PerfometerFromAPI],
+    registered_perfometers: Mapping[str, ApiPerfometer],
     r1: Row,
     r2: Row,
     *,
     parameters: Mapping[str, object] | None,  # noqa: ARG001
     config: Config,
     request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     try:
-        v1 = Perfometer(r1, registered_metrics_, registered_perfometers).sort_value()
-        v2 = Perfometer(r2, registered_metrics_, registered_perfometers).sort_value()
+        v1 = Perfometer(
+            r1, registered_metrics_, registered_perfometers, debug=config.debug
+        ).sort_value()
+        v2 = Perfometer(
+            r2, registered_metrics_, registered_perfometers, debug=config.debug
+        ).sort_value()
         return (v1 > v2) - (v1 < v2)
     except Exception:
         logger.exception("error sorting perfometer values")
@@ -46,7 +52,7 @@ class _SorterPerfometer(Sorter):
     def __init__(
         self,
         registered_metrics_: Mapping[str, metrics_v1.Metric],
-        registered_perfometers: Mapping[str, PerfometerFromAPI],
+        registered_perfometers: Mapping[str, ApiPerfometer],
     ) -> None:
         super().__init__(
             "perfometer",

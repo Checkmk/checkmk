@@ -7,12 +7,12 @@
 from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import Literal, NamedTuple
+from typing import Final, NamedTuple
 
 import yaml
 from pydantic import BaseModel, ConfigDict
 
-from cmk.bakery.v2_unstable import (
+from cmk.bakery.v2 import (
     BakeryPlugin,
     DebStep,
     FileGenerator,
@@ -22,6 +22,19 @@ from cmk.bakery.v2_unstable import (
     RpmStep,
     Scriptlet,
     Secret,
+)
+from cmk.plugins.oracle.lib.unified_config import (
+    StoredAsmAuthConf,
+    StoredAuthConf,
+    StoredAuthUserPasswordData,
+    StoredConfig,
+    StoredConnectionConf,
+    StoredDiscoveryConf,
+    StoredExcludedSectionConf,
+    StoredInstanceConf,
+    StoredOracleId,
+    StoredOracleSafeEntries,
+    StoredSectionOptions,
 )
 
 
@@ -114,148 +127,23 @@ OS_ORACLE_FILES: Sequence[tuple[OS, Sequence[OraclePluginFile]]] = (
     SOLARIS_ORACLE_FILES,
 )
 
-CUSTOM_METRICS_ASYNC_FILES: Mapping[OS, OraclePluginFile] = {
-    OS.LINUX: OraclePluginFile(
-        source=Path("oracle_unified_async_custom_metrics"),
-        target=Path("mk-oracle-v2_async_custom_metrics"),
-        cached=True,
-    ),
-    OS.WINDOWS: OraclePluginFile(
-        source=Path("oracle_unified_async_custom_metrics.ps1"),
-        target=Path("mk-oracle-v2_async_custom_metrics.ps1"),
-        cached=True,
-    ),
-    OS.AIX: OraclePluginFile(
-        source=Path("oracle_unified_async_custom_metrics.aix"),
-        target=Path("mk-oracle-v2_async_custom_metrics.aix"),
-        cached=True,
-    ),
-    OS.SOLARIS: OraclePluginFile(
-        source=Path("oracle_unified_async_custom_metrics.solaris"),
-        target=Path("mk-oracle-v2_async_custom_metrics.solaris"),
-        cached=True,
-    ),
-}
-
-GuiSectionOptions = Mapping[str, Literal["synchronous", "asynchronous", "disabled"]]
-
 
 class OracleAuthType(StrEnum):
     STANDARD = "standard"
     WALLET = "wallet"
 
 
-class GuiAuthUserPasswordData[SecretT = Secret](BaseModel):
-    username: str | None
-    password: SecretT | None
-
-
-class GuiAsmAuthConf[SecretT = Secret](BaseModel):
-    username: str
-    password: SecretT
-    role: str | None = None
-
-
-class GuiAuthConf[SecretT = Secret](BaseModel):
-    model_config = ConfigDict(use_enum_values=True)
-
-    auth_type: tuple[OracleAuthType, GuiAuthUserPasswordData[SecretT] | None] | None = None
-    role: str | None = None
-    asm_auth: GuiAsmAuthConf[SecretT] | None = None
-
-
-class GuiOracleIdentificationConf(BaseModel):
-    service_name: str | None = None
-    instance_name: str | None = None
-    sid: str | None = None
-    alias: str | None = None
-
-
-class GuiConnectionConf(BaseModel):
-    host: str | None = None
-    port: int | None = None
-    timeout: int | None = None
-    tns_admin: str | None = None
-    oracle_local_registry: str | None = None
-
-
-class GuiDiscoveryConf(BaseModel):
-    enabled: bool
-    include: list[str] | None = None
-    exclude: list[str] | None = None
-
-
-class GuiOracleClientLibOptions(BaseModel):
-    deploy_lib: bool = False
-    use_host_client: (
-        tuple[Literal["auto", "never", "always"], None] | tuple[Literal["custom"], str] | None
-    ) = None
-
-
-class GuiOracleSafeEntries(BaseModel):
-    safe_entries: list[str] | None = None
-
-
-class GuiAdditionalOptionsConf(BaseModel):
-    max_connections: int | None = None
-    max_queries: int | None = None
-    ignore_db_name: bool | None = None
-    oracle_client_library: GuiOracleClientLibOptions | None = None
-    # `validate_permissions` is a CascadingSingleChoice in the ruleset, so its value is a bare
-    # tuple, and the field name must match the ruleset key for Pydantic to bind it.
-    validate_permissions: (
-        tuple[Literal["enabled"], GuiOracleSafeEntries | None]
-        | tuple[Literal["disabled"], None]
-        | None
-    ) = None
-
-
-class GuiExcludedSectionConf(BaseModel):
-    target_id: tuple[Literal["alias", "descriptor", "sid"], GuiOracleIdentificationConf]
-    sections: list[str] | None = None
-
-
-class GuiMainConf[SecretT = Secret](BaseModel):
-    auth: GuiAuthConf[SecretT]
-    connection: GuiConnectionConf
-    cache_age: int | None = None
-    custom_metrics_cache_age: int | None = None
-    discovery: GuiDiscoveryConf | None = None
-    sections: GuiSectionOptions | None = None
-    excluded_sections: list[GuiExcludedSectionConf] | None = None
-
-    def get_active_cache_age(self) -> int:
-        """Return cache age in seconds, default is 600 seconds: must be in sync with agent plugin"""
-        return self.cache_age or 600
-
-    def get_active_custom_metrics_cache_age(self) -> int:
-        """Return metrics cache age in seconds, default is 600 seconds: must be in sync with agent plugin"""
-        return self.custom_metrics_cache_age or 600
-
-
-class GuiInstanceAdditionalOptionsConf(BaseModel):
-    ignore_db_name: bool | None = None
-    oracle_client_library: GuiOracleClientLibOptions | None = None
-
-
-class GuiInstanceConf[SecretT = Secret](BaseModel):
-    oracle_id: tuple[Literal["alias", "descriptor", "sid"], GuiOracleIdentificationConf]
-    auth: GuiAuthConf[SecretT] | None = None
-    connection: GuiConnectionConf | None = None
-    piggyback_host: str | None = None
-
-
-class GuiConfig[SecretT = Secret](BaseModel):
-    deploy: tuple[Literal["deploy"] | Literal["do_not_deploy"], None]
-    # `options` is a top-level GUI section; it is baked into `oracle.main.options`.
-    options: GuiAdditionalOptionsConf | None = None
-    main: GuiMainConf[SecretT]
-    instances: list[GuiInstanceConf[SecretT]] | None = None
+# The rule value as the bakery sees it: the backend has replaced every password
+# store reference with a Secret by now.
+BakedAuthUserPasswordData = StoredAuthUserPasswordData[Secret]
+BakedAsmAuthConf = StoredAsmAuthConf[Secret]
+BakedAuthConf = StoredAuthConf[Secret]
+BakedInstanceConf = StoredInstanceConf[Secret]
+BakedConfig = StoredConfig[Secret]
 
 
 class OracleAdditionalOptions(BaseModel):
     max_connections: int | None = None
-    max_queries: int | None = None
     ignore_db_name: int | None = None
     use_host_client: str | None = None
     permissions_check: bool | None = None
@@ -327,7 +215,6 @@ class OracleMain(BaseModel):
     connection: OracleConnection | None
     options: OracleAdditionalOptions | None = None
     cache_age: int | None = None
-    custom_metrics_cache_age: int | None = None
     discovery: OracleDiscovery | None = None
     sections: Sequence[Mapping[str, OracleSection]] | None = None
     instances: list[OracleInstance] | None = None
@@ -338,14 +225,26 @@ class OracleConfig(BaseModel):
     main: OracleMain
 
 
-def get_oracle_plugin_files(confm: GuiConfig) -> FileGenerator:
-    if confm.deploy[0] == "do_not_deploy":
+def _deploys(confm: BakedConfig) -> bool:
+    """Whether the merged rules ask for the plug-in, saying so when they do not."""
+    match confm.deploy_rev2:
+        case None:
+            raise ValueError(
+                "The rules for the unified Oracle plug-in do not say whether to deploy it. "
+                "Please enable or disable it explicitly."
+            )
+        case "do_not_deploy":
+            return False
+        case "deploy":
+            return True
+
+
+def get_oracle_plugin_files(confm: BakedConfig) -> FileGenerator:
+    if not _deploys(confm):
         return
 
     config_lines = list(_get_oracle_yaml_lines(confm))
-    cache_age = confm.main.get_active_cache_age()
-    custom_metrics_cache_age = confm.main.get_active_custom_metrics_cache_age()
-    deploy_custom_metrics = cache_age != custom_metrics_cache_age
+    cache_age = confm.get_active_cache_age()
 
     for base_os, files in OS_ORACLE_FILES:
         for file in files:
@@ -356,15 +255,6 @@ def get_oracle_plugin_files(confm: GuiConfig) -> FileGenerator:
                 interval=cache_age if file.cached else None,
             )
 
-        if deploy_custom_metrics:
-            cm_file = CUSTOM_METRICS_ASYNC_FILES[base_os]
-            yield Plugin(
-                base_os=base_os,
-                target=cm_file.target,
-                source=cm_file.source,
-                interval=custom_metrics_cache_age,
-            )
-
         yield PluginConfig(
             base_os=base_os,
             lines=config_lines,
@@ -372,33 +262,36 @@ def get_oracle_plugin_files(confm: GuiConfig) -> FileGenerator:
         )
 
 
-def _get_oracle_yaml_lines(config: GuiConfig) -> Iterable[str]:
+def _get_oracle_yaml_lines(config: BakedConfig) -> Iterable[str]:
     result = {"oracle": OracleConfig(main=_get_oracle_dict(config)).model_dump(exclude_none=True)}
     yield "---"
     yield from yaml.dump(result).splitlines()
 
 
-def _get_oracle_dict(config: GuiConfig) -> OracleMain:
-    main_config = config.main
-    instances_config = config.instances
-
-    if not (auth := _get_oracle_authentication(main_config.auth)):
-        raise ValueError("Authentication details must be provided in main configuration.")
+def _get_oracle_dict(config: BakedConfig) -> OracleMain:
+    if not (auth := _get_oracle_authentication(config.auth)):
+        raise ValueError(
+            "The rules for the unified Oracle plug-in name no credentials. "
+            "Please configure the authentication of the default connection."
+        )
 
     return OracleMain(
         authentication=auth,
-        connection=_get_oracle_connection(main_config.connection),
-        options=_get_oracle_additional_options(config.options),
-        discovery=_get_oracle_discovery(main_config.discovery),
-        sections=_get_oracle_sections(main_config.sections),
-        instances=_get_oracle_instances(instances_config),
-        cache_age=main_config.get_active_cache_age(),
-        custom_metrics_cache_age=main_config.get_active_custom_metrics_cache_age(),
-        excluded_sections=_get_oracle_excluded_sections(main_config.excluded_sections),
+        connection=_get_oracle_connection(
+            config.connection,
+            tns_admin=config.tns_admin,
+            oracle_local_registry=config.oracle_local_registry,
+        ),
+        options=_get_oracle_additional_options(config),
+        discovery=_get_oracle_discovery(config.discovery),
+        sections=_get_oracle_sections(config.sections),
+        instances=_get_oracle_instances(config.instances_rev2),
+        cache_age=config.get_active_cache_age(),
+        excluded_sections=_get_oracle_excluded_sections(config.excluded_sections),
     )
 
 
-def _get_oracle_authentication(auth_config: GuiAuthConf | None) -> OracleAuth | None:
+def _get_oracle_authentication(auth_config: BakedAuthConf | None) -> OracleAuth | None:
     if auth_config is None:
         return None
 
@@ -415,7 +308,7 @@ def _get_oracle_authentication(auth_config: GuiAuthConf | None) -> OracleAuth | 
                 return None
         case (OracleAuthType.WALLET.value, _):
             auth_type = OracleAuthType.WALLET
-        case (OracleAuthType.STANDARD.value, GuiAuthUserPasswordData() as auth_data):
+        case (OracleAuthType.STANDARD.value, StoredAuthUserPasswordData() as auth_data):
             username = auth_data.username
             password = auth_data.password.revealed if auth_data.password else None
             auth_type = OracleAuthType.STANDARD
@@ -433,19 +326,17 @@ def _get_oracle_authentication(auth_config: GuiAuthConf | None) -> OracleAuth | 
 
 
 def _get_oracle_connection(
-    conn: GuiConnectionConf | None, *, include_tns_admin: bool = True
+    conn: StoredConnectionConf | None,
+    *,
+    tns_admin: str | None = None,
+    oracle_local_registry: str | None = None,
 ) -> OracleConnection | None:
-    if conn is None:
-        return None
-
     connection = OracleConnection(
-        hostname=conn.host,
-        port=conn.port,
-        timeout=conn.timeout,
-        # tns_admin applies to the main connection only; per-instance it is
-        # reserved and ignored by the plug-in, so it is never baked.
-        tns_admin=conn.tns_admin if include_tns_admin else None,
-        oracle_local_registry=conn.oracle_local_registry,
+        hostname=conn.host if conn else None,
+        port=conn.port if conn else None,
+        timeout=conn.timeout if conn else None,
+        tns_admin=tns_admin,
+        oracle_local_registry=oracle_local_registry,
     )
     # An entirely empty block would say nothing that the plug-in does not
     # already default to.
@@ -454,36 +345,27 @@ def _get_oracle_connection(
     return connection
 
 
-def _get_oracle_additional_options(
-    options: GuiAdditionalOptionsConf | None,
-) -> OracleAdditionalOptions | None:
-    if options is None:
-        return None
+def _get_oracle_additional_options(options: BakedConfig) -> OracleAdditionalOptions | None:
     if (
-        (
-            options.oracle_client_library is None
-            or options.oracle_client_library.use_host_client is None
-        )
+        options.use_host_client is None
         and options.ignore_db_name is None
         and options.max_connections is None
-        and options.max_queries is None
         and options.validate_permissions is None
     ):
         return None
 
     use_host_client: str | None = None
-    if options.oracle_client_library is not None:
-        match options.oracle_client_library.use_host_client:
-            case (("auto" | "never" | "always") as predefined, None):  # type: ignore[unreachable]
-                use_host_client = predefined
-            case ("custom", custom_path):
-                use_host_client = str(custom_path)
-            case None:
-                pass
+    match options.use_host_client:
+        case (("auto" | "never" | "always") as predefined, _):
+            use_host_client = predefined
+        case ("custom", custom_path):
+            use_host_client = custom_path
+        case None:
+            pass
     permissions_check: bool | None = None
     permissions_safe_entries: list[str] | None = None
     match options.validate_permissions:  # type: ignore[exhaustive-match]
-        case ("enabled", GuiOracleSafeEntries(safe_entries=entries)):
+        case ("enabled", StoredOracleSafeEntries(safe_entries=entries)):
             permissions_check = True
             permissions_safe_entries = entries
         case ("disabled", None):
@@ -493,7 +375,6 @@ def _get_oracle_additional_options(
 
     return OracleAdditionalOptions(
         max_connections=options.max_connections,
-        max_queries=options.max_queries,
         ignore_db_name=int(options.ignore_db_name) if options.ignore_db_name is not None else None,
         use_host_client=use_host_client,
         permissions_check=permissions_check,
@@ -501,58 +382,73 @@ def _get_oracle_additional_options(
     )
 
 
-def _get_oracle_discovery(discovery: GuiDiscoveryConf | None) -> OracleDiscovery | None:
+def _get_oracle_discovery(discovery: StoredDiscoveryConf | None) -> OracleDiscovery | None:
     if discovery is None:
         return None
 
     return OracleDiscovery(
-        detect=discovery.enabled,
+        detect=discovery.enabled == "enabled",
         include=discovery.include or None,
         exclude=discovery.exclude or None,
     )
 
 
+# Naming any section at all replaces the plug-in's own list rather than adding
+# to it (section.rs:453), so the sections that are not configurable have to be
+# named here.
+ALWAYS_COLLECTED: Final = ("instance", "asm_instance")
+
+
 def _get_oracle_sections(
-    sections: GuiSectionOptions | None,
+    sections: StoredSectionOptions | None,
 ) -> Sequence[Mapping[str, OracleSection]] | None:
     if sections is None:
         return None
 
-    result: list[dict[str, OracleSection]] = []
-    for section_name, mode in sections.items():
-        match mode:
-            case "synchronous":
-                result.append({section_name: OracleSection(is_async=False)})
-            case "asynchronous":
-                result.append({section_name: OracleSection(is_async=True)})
-            case "disabled":
-                continue
+    result: list[dict[str, OracleSection]] = [
+        {name: OracleSection(is_async=False)} for name in ALWAYS_COLLECTED
+    ]
+    result.extend(
+        {section_name: OracleSection(is_async=cached)} for section_name, cached in sections.items()
+    )
     return result
 
 
-def _get_oracle_instances(instances: list[GuiInstanceConf] | None) -> list[OracleInstance] | None:
+class _Identification(NamedTuple):
+    service_name: str | None = None
+    instance_name: str | None = None
+    sid: str | None = None
+    alias: str | None = None
+
+
+def _identification(oracle_id: StoredOracleId) -> _Identification:
+    match oracle_id:
+        case ("alias", alias):
+            return _Identification(alias=alias)
+        case ("sid", sid):
+            return _Identification(sid=sid)
+        case ("descriptor", descriptor):
+            return _Identification(
+                service_name=descriptor.service_name,
+                instance_name=descriptor.instance_name,
+                sid=descriptor.sid,
+            )
+
+
+def _get_oracle_instances(instances: list[BakedInstanceConf] | None) -> list[OracleInstance] | None:
     if instances is None:
         return None
 
     result: list[OracleInstance] = []
     for instance in instances:
-        (_name, oracle_id) = instance.oracle_id
-        if (
-            oracle_id.service_name is None
-            and oracle_id.instance_name is None
-            and oracle_id.sid is None
-            and oracle_id.alias is None
-            and instance.auth is None
-            and instance.connection is None
-        ):
-            continue
+        identification = _identification(instance.oracle_id)
         oracle_instance = OracleInstance(
-            service_name=oracle_id.service_name,
-            instance_name=oracle_id.instance_name,
-            sid=oracle_id.sid,
-            alias=oracle_id.alias,
+            service_name=identification.service_name,
+            instance_name=identification.instance_name,
+            sid=identification.sid,
+            alias=identification.alias,
             authentication=_get_oracle_authentication(instance.auth),
-            connection=_get_oracle_connection(instance.connection, include_tns_admin=False),
+            connection=_get_oracle_connection(instance.connection),
             piggyback=OraclePiggyback(hostname=instance.piggyback_host)
             if instance.piggyback_host
             else None,
@@ -562,26 +458,19 @@ def _get_oracle_instances(instances: list[GuiInstanceConf] | None) -> list[Oracl
 
 
 def _get_oracle_excluded_sections(
-    rules: list[GuiExcludedSectionConf] | None,
+    rules: list[StoredExcludedSectionConf] | None,
 ) -> list[OracleExcludedSection] | None:
     if not rules:
         return None
 
     result: list[OracleExcludedSection] = []
     for rule in rules:
-        (_name, target_id) = rule.target_id
-        if (
-            target_id.service_name is None
-            and target_id.instance_name is None
-            and target_id.sid is None
-            and target_id.alias is None
-        ):
-            continue
+        identification = _identification(rule.target_id)
         excluded = OracleExcludedSection(
-            service_name=target_id.service_name,
-            instance_name=target_id.instance_name,
-            sid=target_id.sid,
-            alias=target_id.alias,
+            service_name=identification.service_name,
+            instance_name=identification.instance_name,
+            sid=identification.sid,
+            alias=identification.alias,
             sections=rule.sections,
         )
         result.append(excluded)
@@ -602,8 +491,8 @@ def _get_arm_warning_lines() -> list[str]:
     ]
 
 
-def get_oracle_plugin_scriplets(confm: GuiConfig) -> Iterable[Scriptlet]:
-    if confm.deploy[0] == "do_not_deploy":
+def get_oracle_plugin_scriplets(confm: BakedConfig) -> Iterable[Scriptlet]:
+    if not _deploys(confm):
         return
 
     arm_warning_lines = _get_arm_warning_lines()
@@ -614,7 +503,7 @@ def get_oracle_plugin_scriplets(confm: GuiConfig) -> Iterable[Scriptlet]:
 
 bakery_plugin_oracle = BakeryPlugin(
     name="mk_oracle_unified",
-    parameter_parser=GuiConfig.model_validate,
+    parameter_parser=BakedConfig.model_validate,
     default_parameters=None,
     files_function=get_oracle_plugin_files,
     scriptlets_function=get_oracle_plugin_scriplets,

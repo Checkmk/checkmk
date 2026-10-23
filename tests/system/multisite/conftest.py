@@ -18,14 +18,16 @@ import pytest
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 from tests.system.multisite.utils import get_cre_agent_path
-from tests.testlib.agent import (
+from tests.testlib.common.utils2 import is_containerized, run
+from tests.testlib.pytest_helpers import flake_reporter, registration
+from tests.testlib.system.agent import (
     agent_controller_daemon,
     bake_agents,
     download_and_install_agent_package,
     install_agent_package,
 )
-from tests.testlib.common.utils2 import is_containerized, run
-from tests.testlib.site import (
+from tests.testlib.system.pytest_helpers.cmk_package import add_host_diagnostics
+from tests.testlib.system.site import (
     connection,
     get_site_factory,
     GlobalSettingsUpdate,
@@ -34,6 +36,19 @@ from tests.testlib.site import (
 )
 
 site_factory = get_site_factory(prefix="comp_")
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_exception_interact(
+    node: pytest.Item | pytest.Collector,
+    call: pytest.CallInfo[object],
+    report: pytest.CollectReport | pytest.TestReport,
+) -> None:
+    """With several sites involved, show what all of them were up to when a test failed."""
+    if not (excinfo := call.excinfo):
+        return
+    add_host_diagnostics(excinfo.value, sudo=is_containerized())
+    report.longrepr = node.repr_failure(excinfo)
 
 
 def _cloud_lifecycle_wrapper_or_none() -> Callable[[Site], AbstractContextManager[None]] | None:
@@ -230,3 +245,7 @@ def _run_cron() -> None:
 
     # Start cron daemon. It forks an will keep running in the background
     run([cron_cmd], check=True, sudo=True)
+
+
+def pytest_addoption(pluginmanager: pytest.PytestPluginManager) -> None:
+    registration.register_pytest_plugins(pluginmanager, flake_reporter)

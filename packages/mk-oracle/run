@@ -471,7 +471,7 @@ run_test_unit() {
             cargo test --lib
             ;;
         *)
-            bazel test :mk-oracle-lib-test-internal
+            bazel test :mk-oracle-lib-test-internal :mk-oracle-bin-test
             ;;
     esac
 }

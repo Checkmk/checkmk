@@ -9,10 +9,12 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import override
 
+from cmk.gui.config import RequestCacheConfig
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import Row
 from cmk.gui.visuals.filter import Filter, FilterGroup
 from cmk.gui.visuals.filter.components import FilterComponent, Slider
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.speaklater import LazyString
 
 
@@ -52,7 +54,9 @@ class FilterRange(Filter):
         return {self._filter_range_config.column: row[self._filter_range_config.column]}
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield Slider(
             id=self._filter_range_config.column,
             min_value=self._filter_range_config.min,

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 r"""Check_MK Agent Plugin: mk_filestats
 
@@ -104,6 +103,14 @@ import shlex
 import sys
 import time
 
+try:
+    from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+
+    _ = Callable, Iterable, Iterator, Mapping, Sequence  # make ruff happy
+except ImportError:
+    # We need typing only for testing
+    pass
+
 if sys.version_info >= (3, 12):  # noqa: UP036
     from typing import override
 else:
@@ -113,12 +120,14 @@ else:
 
 
 def ensure_str(s):
+    # type: (str | bytes) -> str
     if isinstance(s, bytes):
         return s.decode("utf-8")
     return s
 
 
 def ensure_text(s):
+    # type: (str | bytes) -> str
     if isinstance(s, bytes):
         return s.decode("utf-8")
     return s
@@ -134,6 +143,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def parse_arguments(argv=None):
+    # type: (Sequence[str] | None) -> dict[str, str]
     if argv is None:
         argv = sys.argv[1:]
 
@@ -169,6 +179,7 @@ class FileStat:
 
     @classmethod
     def from_path(cls, raw_file_path, file_path):
+        # type: (str, str) -> FileStat
         LOGGER.debug("Creating FileStat(%(raw_file_path)r)", {"raw_file_path": raw_file_path})
         try:
             file_stat = os.stat(raw_file_path)
@@ -193,6 +204,7 @@ class FileStat:
         return cls(file_path, "ok", size, age, m_time)
 
     def __init__(self, file_path, stat_status, size=None, age=None, m_time=None):
+        # type: (str, str, int | str | None, int | str | None, int | None) -> None
         super().__init__()
         self.file_path = file_path
         self.stat_status = stat_status
@@ -201,6 +213,7 @@ class FileStat:
         self._m_time = m_time
 
     def dumps(self):
+        # type: () -> str
         data = {
             "type": "file",
             "path": self.file_path,
@@ -226,6 +239,7 @@ class FileStat:
 
 
 def _sanitize_path(raw_file_path):
+    # type: (str) -> str
     # raw_file_path is the value returned by iglob. This value cannot typed meaningfully:
     # * if the path is utf-8 decodable, python2: unicode
     # * if the path is not utf-8 decodable, python2: str
@@ -241,12 +255,14 @@ class PatternIterator:
     """Recursively iterate over all files"""
 
     def __init__(self, pattern_list, filters):
+        # type: (Sequence[str], Iterable[object]) -> None
         super().__init__()
         self._patterns = [os.path.abspath(os.path.expanduser(p)) for p in pattern_list]
         self._regex_filters = [f for f in filters if isinstance(f, RegexFilter)]
         self._numerical_filters = [f for f in filters if isinstance(f, AbstractNumericFilter)]
 
     def _file_stats(self, raw_file_paths):
+        # type: (Iterable[str]) -> Iterator[FileStat]
         for raw_file_path in raw_file_paths:
             file_path = _sanitize_path(raw_file_path)
             if not all(f.matches(file_path) for f in self._regex_filters):
@@ -271,6 +287,7 @@ class PatternIterator:
             yield file_stat
 
     def __iter__(self):
+        # type: () -> Iterator[FileStat]
         for pattern in self._patterns:
             LOGGER.info("processing pattern: %(pattern)r", {"pattern": pattern})
             # pattern needs to be a unicode/python3 str. Otherwise things might go sour, for instance:
@@ -290,6 +307,7 @@ class PatternIterator:
 
 
 def get_file_iterator(config):
+    # type: (Mapping[str, str]) -> PatternIterator
     """get a FileStat iterator"""
     input_specs = [(k[6:], v) for k, v in config.items() if k.startswith("input_")]
     if not input_specs:
@@ -322,13 +340,14 @@ COMPARATORS = {
     ">": operator.gt,
     ">=": operator.ge,
     "==": operator.eq,
-}
+}  # type: dict[str, Callable[[int, int], bool]]
 
 
 class AbstractNumericFilter:
     """Common code for filtering by comparing integers"""
 
     def __init__(self, spec_string):
+        # type: (str) -> None
         super().__init__()
         match = FILTER_SPEC_PATTERN.match(spec_string)
         if match is None:
@@ -341,12 +360,14 @@ class AbstractNumericFilter:
         self._matches_value = lambda actual: comp(int(actual), reference)
 
     def matches(self, filestat):
+        # type: (FileStat) -> bool
         raise NotImplementedError
 
 
 class SizeFilter(AbstractNumericFilter):
     @override
     def matches(self, filestat):
+        # type: (FileStat) -> bool
         """apply AbstractNumericFilter ti file size"""
         size = filestat.size
         if size is not None and size != "null":
@@ -359,6 +380,7 @@ class SizeFilter(AbstractNumericFilter):
 class AgeFilter(AbstractNumericFilter):
     @override
     def matches(self, filestat):
+        # type: (FileStat) -> bool
         """apply AbstractNumericFilter ti file age"""
         age = filestat.age
         if age is not None and age != "null":
@@ -370,6 +392,7 @@ class AgeFilter(AbstractNumericFilter):
 
 class RegexFilter:
     def __init__(self, regex_pattern):
+        # type: (str) -> None
         super().__init__()
         LOGGER.debug(
             "initializing with pattern: %(regex_pattern)r", {"regex_pattern": regex_pattern}
@@ -377,16 +400,19 @@ class RegexFilter:
         self._regex = re.compile(ensure_text(regex_pattern), re.UNICODE)
 
     def matches(self, file_path):
+        # type: (str) -> bool
         return bool(self._regex.match(file_path))
 
 
 class InverseRegexFilter(RegexFilter):
     @override
     def matches(self, file_path):
+        # type: (str) -> bool
         return not self._regex.match(file_path)
 
 
 def get_file_filters(config):
+    # type: (Mapping[str, str]) -> list[object]
     filter_specs = ((k[7:], v) for k, v in config.items() if k.startswith("filter_"))
 
     filters = []
@@ -426,6 +452,7 @@ def parse_grouping_config(
     options,
     subgroups_delimiter,
 ):
+    # type: (configparser.ConfigParser, str, Iterable[str], str) -> tuple[str, tuple[str, dict[str, str]]]
     parent_group_name, child_group_name = raw_config_section_name.split(subgroups_delimiter, 1)
 
     for option in options:
@@ -447,6 +474,7 @@ def parse_grouping_config(
 
 
 def _grouping_construct_group_name(parent_group_name, child_group_name=""):
+    # type: (str, str) -> str
     """allow the user to format the service name using '%s'.
 
     >>> _grouping_construct_group_name('aard %s vark', 'banana')
@@ -475,6 +503,7 @@ def _grouping_construct_group_name(parent_group_name, child_group_name=""):
 
 
 def _get_matching_child_group(single_file, grouping_conditions):
+    # type: (FileStat, Iterable[tuple[str, Mapping[str, str]]]) -> str
     for child_group_name, grouping_condition in grouping_conditions:
         if re.match(grouping_condition["rule"], single_file.file_path):
             return child_group_name
@@ -482,6 +511,7 @@ def _get_matching_child_group(single_file, grouping_conditions):
 
 
 def grouping_multiple_groups(config_section_name, files_iter, grouping_conditions):
+    # type: (str, Iterable[FileStat], Iterable[tuple[str, Mapping[str, str]]]) -> Iterator[tuple[str, Iterable[FileStat]]]
     """create multiple groups per section if the agent is configured
     for grouping. each group is shown as a separate service. if a file
     does not belong to a group, it is added to the section."""
@@ -501,12 +531,13 @@ def grouping_multiple_groups(config_section_name, files_iter, grouping_condition
 
 
 def grouping_single_group(config_section_name, files_iter, _grouping_conditions):
+    # type: (str, Iterable[FileStat], object) -> Iterator[tuple[str, Iterable[FileStat]]]
     """create one single group per section"""
     group_name = config_section_name
     yield group_name, files_iter
 
 
-def get_grouper(grouping_conditions):
+def get_grouper(grouping_conditions):  # type: ignore[no-untyped-def]
     if grouping_conditions:
         return grouping_multiple_groups
     return grouping_single_group
@@ -526,12 +557,14 @@ def get_grouper(grouping_conditions):
 
 
 def output_aggregator_count_only(group_name, files_iter):
+    # type: (str, Iterable[FileStat]) -> Iterator[str]
     yield "[[[count_only %s]]]" % group_name
     count = sum(1 for __ in files_iter)
     yield repr({"type": "summary", "count": count})
 
 
 def output_aggregator_file_stats(group_name, files_iter):
+    # type: (str, Iterable[FileStat]) -> Iterator[str]
     yield "[[[file_stats %s]]]" % group_name
     count = 0
     for count, filestat in enumerate(files_iter, 1):
@@ -539,7 +572,7 @@ def output_aggregator_file_stats(group_name, files_iter):
     yield repr({"type": "summary", "count": count})
 
 
-def output_aggregator_extremes_only(group_name, files_iter):
+def output_aggregator_extremes_only(group_name, files_iter):  # type: ignore[no-untyped-def]
     yield "[[[extremes_only %s]]]" % group_name
 
     files = list(files_iter)
@@ -570,6 +603,7 @@ def output_aggregator_extremes_only(group_name, files_iter):
 
 
 def output_aggregator_single_file(group_name, files_iter):
+    # type: (str, Iterable[FileStat]) -> Iterator[str]
     for lazy_file in files_iter:
         count_format_specifiers = group_name.count("%s")
 
@@ -584,6 +618,7 @@ def output_aggregator_single_file(group_name, files_iter):
 
 
 def get_output_aggregator(config):
+    # type: (Mapping[str, str]) -> Callable[[str, Iterable[FileStat]], Iterator[str]]
     output_spec = config.get("output")
     try:
         return {
@@ -591,12 +626,14 @@ def get_output_aggregator(config):
             "extremes_only": output_aggregator_extremes_only,
             "file_stats": output_aggregator_file_stats,
             "single_file": output_aggregator_single_file,
-        }[output_spec]
+            # a missing 'output' raises the KeyError handled below
+        }[output_spec]  # type: ignore[index]
     except KeyError:
         raise ValueError("unknown 'output' spec: %r" % output_spec)
 
 
 def write_output(groups, output_aggregator):
+    # type: (Iterable[tuple[str, Iterable[FileStat]]], Callable[[str, Iterable[FileStat]], Iterator[str]]) -> None
     for group_name, group_files_iter in groups:
         for line in output_aggregator(group_name, group_files_iter):
             sys.stdout.write("%s\n" % line)
@@ -615,7 +652,7 @@ def write_output(groups, output_aggregator):
 #   '----------------------------------------------------------------------'
 
 
-def iter_config_section_dicts(cfg_file=None):
+def iter_config_section_dicts(cfg_file=None):  # type: ignore[no-untyped-def]
     if cfg_file is None:
         cfg_file = DEFAULT_CFG_FILE
     # FIXME: Python 2.6 has no OrderedDict at all, it is only available in a separate ordereddict
@@ -660,6 +697,7 @@ def iter_config_section_dicts(cfg_file=None):
 
 
 def main():
+    # type: () -> None
     args = parse_arguments()
 
     sys.stdout.write("<<<filestats:sep(0)>>>\n")

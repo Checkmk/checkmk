@@ -22,8 +22,17 @@ from cmk.ccc.user import UserId
 from cmk.crypto.certificate import (
     Certificate,
     CertificatePEM,
+    CertificateRevocationList,
+    CertificateRevocationListPEM,
     CertificateWithPrivateKey,
     PersistedCertificateWithPrivateKey,
+    serial_number_string,
+)
+from cmk.crypto.issued_certificates import (
+    find_issued_certificate,
+    issued_certificates_file,
+    IssuedCertificateEntry,
+    IssuedCertificatesComponent,
 )
 from cmk.crypto.keys import is_supported_private_key_type, PrivateKey
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames
@@ -106,6 +115,45 @@ def initialize_site_certificate(
     )
 
 
+def initialize_data_backend_ca(
+    omd_root: Path,
+    site_id: SiteId,
+    key_size: int | None = None,
+) -> DataBackendCA:
+    return DataBackendCA.create(
+        cert_dir=cert_dir(omd_root),
+        site_id=site_id,
+        key_size=key_size or 4096,
+    )
+
+
+def initialize_data_backend_certificate(
+    omd_root: Path,
+    site_id: SiteId,
+    key_size: int | None = None,
+) -> None:
+    DataBackendCA.load(cert_dir(omd_root)).create_client_certificate(
+        site_id=site_id,
+        key_size=key_size or 4096,
+    )
+
+
+def initialize_relay_ca(
+    omd_root: Path,
+    site_id: SiteId,
+    key_size: int | None = None,
+) -> RelaysCA:
+    """Initial creation of the relay signing CA certificate.
+
+    This is intended to be used by omd upon site creation.
+    """
+    return RelaysCA.create(
+        cert_dir=cert_dir(omd_root),
+        site_id=site_id,
+        key_size=key_size or 4096,
+    )
+
+
 class RootCA(CertificateWithPrivateKey):
     """A generic certificate authority for all our CA needs.
 
@@ -170,6 +218,43 @@ def agent_root_ca_path(site_root_dir: Path) -> Path:
 
 def agent_ca_exists(site_root_dir: Path) -> bool:
     return agent_root_ca_path(site_root_dir).exists()
+
+
+def issued_certificates_path(site_root_dir: Path, component: IssuedCertificatesComponent) -> Path:
+    return issued_certificates_file(site_root_dir / "var" / "log", component)
+
+
+def crl_path(ca_cert_path: Path) -> Path:
+    return ca_cert_path.with_suffix(".crl")
+
+
+def revoke_certificate(
+    ca_path: Path, serial_number: int, cert_log: Path
+) -> IssuedCertificateEntry | None:
+    """Add a serial number to the revocation list of the CA that issued the certificate."""
+    issued = find_issued_certificate(cert_log, serial_number)
+
+    ca = PersistedCertificateWithPrivateKey.read_files(ca_path, ca_path)
+    path = crl_path(ca_path)
+    crl = (
+        CertificateRevocationList.load_pem(CertificateRevocationListPEM(path.read_bytes()))
+        if path.exists()
+        else CertificateRevocationList.create(issuer=ca)
+    )
+    if crl.is_revoked(serial_number):
+        raise ValueError(
+            f"The certificate with serial number {serial_number_string(serial_number)} is already "
+            f"revoked in '{path}'."
+        )
+
+    path.write_bytes(crl.revoke(serial_number, ca).dump_pem().bytes)
+    _set_certfile_permissions(path)
+    (
+        issued.revoked()
+        if issued is not None
+        else IssuedCertificateEntry.revocation_of_unrecorded_certificate(serial_number)
+    ).append_to(cert_log)
+    return issued
 
 
 def write_cert_store(source_dir: Path, store_path: Path) -> None:
@@ -331,6 +416,7 @@ class SiteCA:
             subject_alternative_names=sans,
             expiry=expiry,
             key_size=key_size,
+            cert_log=issued_certificates_path(self.cert_dir.parent.parent, "sites"),
         )
 
         self._save_combined_pem(
@@ -393,6 +479,7 @@ class CertManagementEvent(SecurityEvent):
         "broker certificate authority",
         "broker certificate",
         "relay certificate authority",
+        "data backend certificate authority",
     ]
 
     def __init__(
@@ -440,6 +527,8 @@ class SiteBrokerCertificate:
         issuer: CertificateWithPrivateKey,
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
+        *,
+        cert_log: Path,
     ) -> CertificateWithPrivateKey:
         """Have the site's certificate issued by the given CA.
 
@@ -455,6 +544,7 @@ class SiteBrokerCertificate:
             expiry=expiry,
             key_size=key_size,
             is_ca=is_ca,
+            cert_log=cert_log,
         )
 
     def persist(self, cert_bundle: CertificateWithPrivateKey) -> None:
@@ -633,8 +723,12 @@ class RelaysCA:
             return cls.create(cert_dir=cert_dir, site_id=site_id, key_size=key_size)
 
     @classmethod
+    def root_ca_path(cls, cert_dir: Path) -> Path:
+        return cert_dir / "relays" / "ca.pem"
+
+    @classmethod
     def load(cls, cert_dir: Path) -> RelaysCA:
-        cert_content = cls._ca_file(cert_dir).read_text()
+        cert_content = cls.root_ca_path(cert_dir).read_text()
         return cls(
             cert_dir,
             CertificateWithPrivateKey.load_combined_file_content(cert_content, passphrase=None),
@@ -651,7 +745,7 @@ class RelaysCA:
             is_ca=True,
         )
         cls._save_combined_pem(
-            target_file=cls._ca_file(cert_dir),
+            target_file=cls.root_ca_path(cert_dir),
             certificate=ca.certificate,
             private_key=ca.private_key,
             issuer=None,
@@ -681,9 +775,63 @@ class RelaysCA:
                 f.write(issuer.dump_pem().bytes)
         target_file.chmod(mode=0o660)
 
-    @staticmethod
-    def _ca_file(certificate_directory: Path) -> Path:
-        return certificate_directory / "relays" / "ca.pem"
+
+class DataBackendCA:
+    def __init__(self, certificate_directory: Path, root_ca: CertificateWithPrivateKey) -> None:
+        self.cert_dir: Final[Path] = certificate_directory
+        self.root_ca: Final[CertificateWithPrivateKey] = root_ca
+
+    @classmethod
+    def root_ca_path(cls, cert_dir: Path) -> Path:
+        return cert_dir / "data_backend_clients" / "ca.pem"
+
+    @classmethod
+    def client_certificate_path(cls, cert_dir: Path, site_id: SiteId) -> Path:
+        return cert_dir / "data_backend_clients" / f"{site_id}.pem"
+
+    @classmethod
+    def load(cls, cert_dir: Path) -> DataBackendCA:
+        return cls(
+            cert_dir,
+            CertificateWithPrivateKey.load_combined_file_content(
+                cls.root_ca_path(cert_dir).read_text(), passphrase=None
+            ),
+        )
+
+    @classmethod
+    def create(cls, cert_dir: Path, site_id: SiteId, key_size: int = 4096) -> DataBackendCA:
+        ca = CertificateWithPrivateKey.generate_self_signed(
+            common_name=f"Site '{site_id}' data backend CA",
+            organization=f"Checkmk Site {site_id}",
+            expiry=relativedelta(years=10),
+            key_size=key_size,
+            is_ca=True,
+        )
+        _save_cert_chain(cls.root_ca_path(cert_dir), [ca.certificate], ca.private_key)
+        log_security_event(
+            CertManagementEvent(
+                event="certificate created",
+                component="data backend certificate authority",
+                cert=ca.certificate,
+                actor=None,
+            )
+        )
+        return cls(cert_dir, ca)
+
+    def create_client_certificate(self, site_id: SiteId, key_size: int = 4096) -> None:
+        certificate, private_key = self.root_ca.issue_new_certificate(
+            common_name=str(site_id),
+            organization=f"Checkmk Site {site_id}",
+            subject_alternative_names=SubjectAlternativeNames([SAN.checkmk_site(site_id)]),
+            expiry=relativedelta(years=10),
+            key_size=key_size,
+            cert_log=issued_certificates_path(self.cert_dir.parent.parent, "data_backend"),
+        )
+        _save_cert_chain(
+            self.client_certificate_path(self.cert_dir, site_id),
+            [certificate, self.root_ca.certificate],
+            private_key,
+        )
 
 
 class MessagingTrustedCAs:

@@ -20,11 +20,6 @@ from typing import (
     TypeIs,
 )
 
-from pydantic import (
-    TypeAdapter,
-    ValidationInfo,
-)
-
 from cmk.ruleset_matcher.matcher import TagCondition
 from cmk.ruleset_matcher.tags import TagGroupID
 
@@ -435,7 +430,28 @@ EnvironmentProxy = tuple[Literal["cmk_postprocessed"], Literal["environment_prox
 WithoutProxy = tuple[Literal["cmk_postprocessed"], Literal["no_proxy"], str]
 StoredProxy = tuple[Literal["cmk_postprocessed"], Literal["stored_proxy"], str]
 ExplicitProxy = tuple[Literal["cmk_postprocessed"], Literal["explicit_proxy"], str]
-ProxyUrl = EnvironmentProxy | WithoutProxy | StoredProxy | ExplicitProxy
+
+
+class ExplicitProxyAuthSpec(TypedDict):
+    user: str
+    password: tuple[
+        Literal["cmk_postprocessed"],
+        Literal["explicit_password", "stored_password"],
+        tuple[str, str],
+    ]
+
+
+class ExplicitProxySpec(TypedDict):
+    scheme: str
+    proxy_server_name: str
+    port: int
+    auth: NotRequired[ExplicitProxyAuthSpec]
+
+
+StructuredExplicitProxy = tuple[
+    Literal["cmk_postprocessed"], Literal["explicit_proxy"], ExplicitProxySpec
+]
+ProxyUrl = EnvironmentProxy | WithoutProxy | StoredProxy | ExplicitProxy | StructuredExplicitProxy
 
 WebhookURL = tuple[Literal["webhook_url", "store"], str]
 
@@ -835,23 +851,6 @@ def is_known_plugin(notify_plugin: PluginNameWithParameters) -> TypeGuard[KnownP
     return notify_plugin[0] in get_builtin_plugin_names()
 
 
-custom_plugin_type_adapter: TypeAdapter = TypeAdapter(CustomPluginParameters)
-known_plugin_type_adapter: TypeAdapter = TypeAdapter(KnownPluginParameters)
-
-
-def validate_plugin(value: Any, _handler: ValidationInfo) -> PluginNameWithParameters:
-    assert isinstance(value, tuple)
-    assert len(value) == 2
-
-    # If it's a builtin plugin, validate against it's corresponding typeddict.
-    if value[0] in get_args(BuiltInPluginNames):
-        known_plugin_type_adapter.validate_python(value, strict=True)
-        return value
-
-    custom_plugin_type_adapter.validate_python(value)
-    return value
-
-
 class _EventRuleMandatory(TypedDict):
     rule_id: NotificationRuleID
     allow_disable: bool
@@ -918,7 +917,8 @@ NotifyPluginInfo = tuple[
 NotifyAnalysisInfo = tuple[list[NotifyRuleInfo], list[NotifyPluginInfo]]
 
 UUIDs = list[tuple[float, str]]
-NotifyBulk = tuple[str, float, None | str | int, None | str | int, int, UUIDs]
+# directory, age, interval, time period, max count, notifications, readable bulk ID
+NotifyBulk = tuple[str, float, None | str | int, None | str | int, int, UUIDs, str]
 NotifyBulks = list[NotifyBulk]
 
 

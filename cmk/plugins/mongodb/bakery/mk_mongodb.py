@@ -10,7 +10,7 @@ from typing import assert_never, Literal
 
 from pydantic import BaseModel
 
-from cmk.bakery.v2_unstable import BakeryPlugin, OS, Plugin, PluginConfig, Secret
+from cmk.bakery.v2 import BakeryPlugin, OS, Plugin, PluginConfig, Secret
 
 _CertKeyChoices = Literal["cert_filepath", "uploaded_cert_file"]
 
@@ -39,7 +39,7 @@ class _AuthConfig(BaseModel):
 
 class _Config(BaseModel):
     deployment: tuple[Literal["do_not_deploy", "sync", "cached"], float | None]
-    auth: _AuthConfig | None = None
+    auth: tuple[Literal["no_auth"], None] | tuple[Literal["auth"], _AuthConfig] = ("no_auth", None)
 
 
 class MongoDBConfigParser(configparser.ConfigParser):
@@ -77,13 +77,10 @@ def get_mk_mongodb_files(conf: _Config) -> Iterable[Plugin | PluginConfig]:
     interval = conf.deployment[1]
     yield Plugin(base_os=OS.LINUX, source=Path("mk_mongodb.py"), interval=interval)
 
-    parser = make_config_parser(conf.auth)
+    auth = conf.auth[1] if conf.auth[0] == "auth" else None
+    parser = make_config_parser(auth)
 
-    if (
-        conf.auth is not None
-        and conf.auth.tls is not None
-        and (ckf := conf.auth.tls.cert_key_file) is not None
-    ):
+    if auth is not None and auth.tls is not None and (ckf := auth.tls.cert_key_file) is not None:
         yield from _update_parser_with_cert(parser, *ckf)
 
     yield PluginConfig(

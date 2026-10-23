@@ -99,6 +99,7 @@ def save_configuration_entity(
             folder = save_folder_from_slidein_schema(
                 tree,
                 RawFrontendData(data),
+                acting_user=user,
                 pprint_value=pprint_value,
                 pending_changes=pending_changes,
             )
@@ -211,7 +212,7 @@ def _get_configuration_fs(
             connector_type = cast(OAuth2ConnectorType, entity_type_specifier)
             return OAuth2ConnectionSetup(connector_type=connector_type)
         case ConfigEntityType.folder:
-            return get_folder_slidein_schema(tree)
+            return get_folder_slidein_schema(tree, user)
         case ConfigEntityType.passwordstore_password:
             return get_password_slidein_schema(user)
         case ConfigEntityType.rule_form_spec:

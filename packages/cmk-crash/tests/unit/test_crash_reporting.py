@@ -8,7 +8,9 @@
 import base64
 import copy
 import json
+import uuid
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, override, TypedDict
@@ -17,6 +19,7 @@ import pytest
 
 from cmk.crash import (
     ABCCrashReport,
+    build_crash_info,
     cleanup_crash_reports,
     crash_fingerprint,
     CrashFingerprint,
@@ -125,6 +128,37 @@ def test_format_var_for_export(input_: object, output: object) -> None:
     assert format_var_for_export(input_, maxsize=20) == output
 
 
+_PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEG\n-----END PRIVATE KEY-----\n"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(_PRIVATE_KEY, id="str"),
+        pytest.param(_PRIVATE_KEY.encode(), id="bytes"),
+        pytest.param(_PRIVATE_KEY.replace("PRIVATE", "EC PRIVATE"), id="legacy EC"),
+        pytest.param(_PRIVATE_KEY.replace("PRIVATE", "ENCRYPTED PRIVATE"), id="encrypted"),
+    ],
+)
+def test_a_private_key_is_redacted_whatever_its_variable_is_called(value: str | bytes) -> None:
+    assert format_var_for_export({"content": value}) == {"content": REDACTED_STRING}
+
+
+def test_an_object_whose_repr_holds_a_private_key_is_redacted() -> None:
+    @dataclass(frozen=True)
+    class Csr:
+        csr: str
+        private_key: bytes
+
+    assert format_var_for_export(Csr("a request", _PRIVATE_KEY.encode())) == REDACTED_STRING
+
+
+def test_a_certificate_is_not_redacted() -> None:
+    certificate = b"-----BEGIN CERTIFICATE-----\nMIIBszCCAVmgAwIBAgIU\n-----END CERTIFICATE-----\n"
+
+    assert format_var_for_export(certificate) == certificate
+
+
 def test_format_var_for_export_broken_repr() -> None:
     """format_var_for_export must not propagate exceptions from __repr__.
 
@@ -154,35 +188,62 @@ class UnitTestCrashReport(ABCCrashReport[UnitTestDetails]):
         return "test"
 
 
+_TRACEBACK = [("mymodule.py", 42, "func", "raise ValueError()")]
+
+
+def _version_info(time: float) -> VersionInfo:
+    return VersionInfo(
+        core="test",
+        python_version="test",
+        edition="test",
+        python_paths=["foo", "bar"],
+        version="3.99",
+        time=time,
+        os="Foobuntu",
+    )
+
+
+def _make_crash(
+    tmp_path: Path,
+    *,
+    time: float = 0.0,
+    exc_type: str = "ValueError",
+    details: UnitTestDetails | None = None,
+    local_vars: Mapping[str, object] | None = None,
+) -> UnitTestCrashReport:
+    return UnitTestCrashReport(
+        crash_report_base_path=make_crash_report_base_path(tmp_path),
+        crash_info=build_crash_info(
+            type_name=UnitTestCrashReport.type(),
+            version_info=_version_info(time),
+            details=UnitTestDetails(vars={}) if details is None else details,
+            exc_type=exc_type,
+            exc_value="crash",
+            tb_list=_TRACEBACK,
+            local_vars=local_vars,
+            crash_id=str(uuid.uuid1()),
+        ),
+    )
+
+
 @pytest.fixture()
 def crash(tmp_path: Path) -> UnitTestCrashReport:
-    try:
-        # We need some var so the local_vars are part of the crash report
-        some_local_var = [{"foo": {"deep": True, "password": "verysecret", "foo": "notsecret"}}]
-        password = "verysecret"
-        raise ValueError(f"XYZ {some_local_var} {password}")  # use local vars to make ruff happy
-    except ValueError:
-        return UnitTestCrashReport(
-            crash_report_base_path=make_crash_report_base_path(tmp_path),
-            crash_info=UnitTestCrashReport.make_crash_info(
-                VersionInfo(
-                    core="test",
-                    python_version="test",
-                    edition="test",
-                    python_paths=["foo", "bar"],
-                    version="3.99",
-                    time=0.0,
-                    os="Foobuntu",
-                ),
-                UnitTestDetails(
-                    vars={
-                        "my_secret": "1234",
-                        "not_import": "1234",
-                        "auth_token": "1234",
-                    }
-                ),
-            ),
-        )
+    return _make_crash(
+        tmp_path,
+        details=UnitTestDetails(
+            vars={
+                "my_secret": "1234",
+                "not_import": "1234",
+                "auth_token": "1234",
+            }
+        ),
+        local_vars={
+            "some_local_var": [
+                {"foo": {"deep": True, "password": "verysecret", "foo": "notsecret"}}
+            ],
+            "password": "verysecret",
+        },
+    )
 
 
 def test_crash_report_type(crash: UnitTestCrashReport) -> None:
@@ -225,27 +286,44 @@ def test_crash_report_local_crash_report_url(crash: UnitTestCrashReport) -> None
     assert crash.local_crash_report_url() == url
 
 
+class _InnerError(Exception):
+    pass
+
+
+class _OuterError(Exception):
+    pass
+
+
+def _raise_inner() -> None:
+    raise _InnerError("inner")
+
+
+def _crash_info_of_chained_exception() -> CrashInfo[UnitTestDetails]:
+    try:
+        try:
+            _raise_inner()
+        except _InnerError as e:
+            password = "verysecret"
+            visible = "notsecret"
+            raise _OuterError(f"outer {password} {visible}") from e
+    except _OuterError:
+        return UnitTestCrashReport.make_crash_info(_version_info(0.0), UnitTestDetails(vars={}))
+    raise AssertionError("unreachable")
+
+
+def test_make_crash_info_captures_current_exception_chain() -> None:
+    crash_info = _crash_info_of_chained_exception()
+
+    assert crash_info["exc_type"] == "_OuterError"
+    assert "_raise_inner" in {frame[2] for frame in crash_info["exc_traceback"]}
+    local_vars = base64.b64decode(crash_info["local_vars"])
+    assert b"notsecret" in local_vars
+    assert b"verysecret" not in local_vars
+
+
 def _make_unique_crash(tmp_path: Path, num: int, timestamp: float = 0.0) -> UnitTestCrashReport:
     """Create a crash with a unique fingerprint by using a distinct exception type per num."""
-    UniqueExc: type[Exception] = type(f"UniqueError{num}", (Exception,), {})
-    try:
-        raise UniqueExc("crash")
-    except UniqueExc:
-        return UnitTestCrashReport(
-            crash_report_base_path=make_crash_report_base_path(tmp_path),
-            crash_info=UnitTestCrashReport.make_crash_info(
-                VersionInfo(
-                    core="test",
-                    python_version="test",
-                    edition="test",
-                    python_paths=["foo", "bar"],
-                    version="3.99",
-                    time=timestamp,
-                    os="Foobuntu",
-                ),
-                UnitTestDetails(vars={}),
-            ),
-        )
+    return _make_crash(tmp_path, time=timestamp, exc_type=f"UniqueError{num}")
 
 
 @pytest.mark.parametrize("n_crashes", [2, 4, 6])
@@ -341,25 +419,7 @@ def test_crash_report_store_ignores_non_directories_in_base_dir(tmp_path: Path) 
     (crashes_dir / ".crash_report_lock").touch()
     (crashes_dir / "stray_file.txt").write_text("not a crash dir")
 
-    try:
-        raise ValueError("some error")
-    except ValueError:
-        crash = UnitTestCrashReport(
-            crash_report_base_path=make_crash_report_base_path(tmp_path),
-            crash_info=UnitTestCrashReport.make_crash_info(
-                VersionInfo(
-                    core="test",
-                    python_version="test",
-                    edition="test",
-                    python_paths=["foo", "bar"],
-                    version="3.99",
-                    time=0.0,
-                    os="Foobuntu",
-                ),
-                UnitTestDetails(vars={}),
-            ),
-        )
-        crash_store.save(crash)
+    crash_store.save(_make_crash(tmp_path))
 
     crash_dirs = [p for p in crashes_dir.iterdir() if p.is_dir()]
     assert len(crash_dirs) == 1
@@ -405,26 +465,9 @@ def test_crash_report_store_deduplication(tmp_path: Path) -> None:
     timestamps = [1000.0, 2000.0, 3000.0]
     crash_ids = []
     for ts in timestamps:
-        try:
-            raise ValueError("same error")
-        except ValueError:
-            crash = UnitTestCrashReport(
-                crash_report_base_path=make_crash_report_base_path(tmp_path),
-                crash_info=UnitTestCrashReport.make_crash_info(
-                    VersionInfo(
-                        core="test",
-                        python_version="test",
-                        edition="test",
-                        python_paths=["foo", "bar"],
-                        version="3.99",
-                        time=ts,
-                        os="Foobuntu",
-                    ),
-                    UnitTestDetails(vars={}),
-                ),
-            )
-            crash_store.save(crash)
-            crash_ids.append(crash.ident_to_text())
+        crash = _make_crash(tmp_path, time=ts)
+        crash_store.save(crash)
+        crash_ids.append(crash.ident_to_text())
 
     # All three occurrences share the same fingerprint — only one directory on disk
     on_disk = [p for p in crashes_dir.glob("*") if p.is_dir()]
@@ -458,25 +501,7 @@ def test_crash_report_store_deduplication_out_of_order(tmp_path: Path) -> None:
     # Arrive in reverse chronological order: newest first, then oldest
     timestamps_arrival_order = [3000.0, 1000.0]
     for ts in timestamps_arrival_order:
-        try:
-            raise ValueError("same error")
-        except ValueError:
-            crash = UnitTestCrashReport(
-                crash_report_base_path=make_crash_report_base_path(tmp_path),
-                crash_info=UnitTestCrashReport.make_crash_info(
-                    VersionInfo(
-                        core="test",
-                        python_version="test",
-                        edition="test",
-                        python_paths=["foo", "bar"],
-                        version="3.99",
-                        time=ts,
-                        os="Foobuntu",
-                    ),
-                    UnitTestDetails(vars={}),
-                ),
-            )
-            crash_store.save(crash)
+        crash_store.save(_make_crash(tmp_path, time=ts))
 
     on_disk = [p for p in crashes_dir.glob("*") if p.is_dir()]
     assert len(on_disk) == 1
@@ -507,25 +532,7 @@ def test_crash_report_store_corrupted_crash_info_saves_new_crash(tmp_path: Path)
     bad_dir.mkdir()
     (bad_dir / "crash.info").write_text("not valid json{{{")
 
-    try:
-        raise ValueError("new error")
-    except ValueError:
-        crash = UnitTestCrashReport(
-            crash_report_base_path=make_crash_report_base_path(tmp_path),
-            crash_info=UnitTestCrashReport.make_crash_info(
-                VersionInfo(
-                    core="test",
-                    python_version="test",
-                    edition="test",
-                    python_paths=["foo", "bar"],
-                    version="3.99",
-                    time=1000.0,
-                    os="Foobuntu",
-                ),
-                UnitTestDetails(vars={}),
-            ),
-        )
-        crash_store.save(crash)  # must not raise
+    crash_store.save(_make_crash(tmp_path, time=1000.0))  # must not raise
 
     new_dirs = [p for p in crashes_dir.iterdir() if p.is_dir() and p != bad_dir]
     assert len(new_dirs) == 1
@@ -543,25 +550,7 @@ def test_crash_report_store_missing_crash_info_saves_new_crash(tmp_path: Path) -
     # Directory exists but has no crash.info
     (crashes_dir / "empty-crash-dir").mkdir()
 
-    try:
-        raise ValueError("new error")
-    except ValueError:
-        crash = UnitTestCrashReport(
-            crash_report_base_path=make_crash_report_base_path(tmp_path),
-            crash_info=UnitTestCrashReport.make_crash_info(
-                VersionInfo(
-                    core="test",
-                    python_version="test",
-                    edition="test",
-                    python_paths=["foo", "bar"],
-                    version="3.99",
-                    time=1000.0,
-                    os="Foobuntu",
-                ),
-                UnitTestDetails(vars={}),
-            ),
-        )
-        crash_store.save(crash)  # must not raise
+    crash_store.save(_make_crash(tmp_path, time=1000.0))  # must not raise
 
     new_dirs = [p for p in crashes_dir.iterdir() if p.is_dir() and p.name != "empty-crash-dir"]
     assert len(new_dirs) == 1
@@ -660,25 +649,8 @@ def test_crash_report_store_writes_fingerprint_index(tmp_path: Path) -> None:
     crash_store = CrashReportStore()
     crashes_dir = tmp_path / "var/check_mk/crashes" / UnitTestCrashReport.type()
 
-    try:
-        raise ValueError("indexing test")
-    except ValueError:
-        crash = UnitTestCrashReport(
-            crash_report_base_path=make_crash_report_base_path(tmp_path),
-            crash_info=UnitTestCrashReport.make_crash_info(
-                VersionInfo(
-                    core="test",
-                    python_version="test",
-                    edition="test",
-                    python_paths=[],
-                    version="3.99",
-                    time=0.0,
-                    os="Foobuntu",
-                ),
-                UnitTestDetails(vars={}),
-            ),
-        )
-        crash_store.save(crash)
+    crash = _make_crash(tmp_path)
+    crash_store.save(crash)
 
     index_path = crashes_dir / _FINGERPRINT_INDEX_FILE
     assert index_path.exists()

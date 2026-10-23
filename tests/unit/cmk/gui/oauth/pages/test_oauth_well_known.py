@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import pytest
 from werkzeug.test import create_environ
 
@@ -10,16 +12,26 @@ from cmk.gui.config import Config
 from cmk.gui.http import Request, response
 from cmk.gui.oauth.pages._oauth_well_known import OAuthAuthorizationServerMetadataPage
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 
 
 @pytest.mark.usefixtures("request_context")
 class TestOAuthAuthorizationServerMetadataPage:
-    def test_returns_metadata_when_enabled(self) -> None:
-        OAuthAuthorizationServerMetadataPage(lambda: True).handle_page(
-            PageContext(config=Config(), request=Request(create_environ()))
+    def test_returns_metadata(self) -> None:
+        OAuthAuthorizationServerMetadataPage().handle_page(
+            PageContext(
+                config=Config(),
+                request=Request(create_environ()),
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+            )
         )
 
-        assert response.status_code == 200
+        assert response.status_code == HTTPStatus.OK
         assert response.json == {
             "issuer": "http://localhost/oauth-NO_SITE",
             "authorization_endpoint": "http://localhost/oauth-NO_SITE/authorize",
@@ -31,10 +43,3 @@ class TestOAuthAuthorizationServerMetadataPage:
             "code_challenge_methods_supported": ["S256"],
             "scopes_supported": ["read", "write"],
         }
-
-    def test_returns_404_when_disabled(self) -> None:
-        OAuthAuthorizationServerMetadataPage(lambda: False).handle_page(
-            PageContext(config=Config(), request=Request(create_environ()))
-        )
-
-        assert response.status_code == 404

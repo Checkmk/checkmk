@@ -8,7 +8,7 @@ from typing import override
 
 import cmk.gui.view_utils
 from cmk.gui import visuals
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
@@ -23,9 +23,11 @@ from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.page_menu_utils import collect_context_links
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.painter import PainterConfig, PainterContext
+from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.permissions import permission_registry
 from cmk.gui.saml2_login import show_saml2_login
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.userdb import get_saml_connections_for_current_site
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
@@ -48,6 +50,7 @@ from cmk.gui.visuals.filter import Filter
 from cmk.web.utils import escaping
 from cmk.web.utils.escaping import escape_text
 from cmk.web.utils.html import HTML
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri, requested_file_name
 
 HeaderButton = tuple[str, str, str] | tuple[str, str, str, str]
@@ -80,7 +83,6 @@ def mobile_html_head(title: str) -> None:
 
 
 def mobile_html_foot() -> None:
-    html.write_final_javascript()
     html.close_body()
     html.close_html()
 
@@ -249,12 +251,12 @@ class MobileLoginPage(LoginPage):
 class PageMobileIndex(Page):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        _page_index(ctx.request, ctx.config)
+        _page_index(ctx.request, ctx.config, ctx.user_permissions)
         return None
 
 
-def _page_index(request: Request, config: Config) -> None:
-    user_permissions = UserPermissions.from_config(config, permission_registry)
+def _page_index(request: Request, config: Config, user_permissions: UserPermissions) -> None:
+    request_cache = RequestCache(config)
     title = _("Checkmk mobile")
     mobile_html_head(title)
     jqm_page_header(
@@ -274,9 +276,24 @@ def _page_index(request: Request, config: Config) -> None:
         )
         if view_spec.get("mobile") and not view_spec.get("hidden"):
             datasource = data_source_registry[view_spec["datasource"]]()
-            context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
+            context = visuals.active_context_from_request(
+                datasource.infos, view_spec["context"], request_cache
+            )
 
-            view = View(view_name, view_spec, context, user_permissions)
+            view = View(
+                view_name,
+                view_spec,
+                context,
+                PainterContext(
+                    config=PainterConfig.from_config(config),
+                    request=request,
+                    painter_options=PainterOptions.get_instance(),
+                    theme=theme,
+                    url_renderer=RenderLink(request, response, display_options),
+                    user_permissions=user_permissions,
+                ),
+                request_cache,
+            )
             view.row_limit = row_limit
             view.only_sites = get_only_sites_from_context(context)
             view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
@@ -319,24 +336,41 @@ def _page_index(request: Request, config: Config) -> None:
 class PageMobileView(Page):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        _page_view(ctx.request, ctx.config, debug=ctx.config.debug)
+        _page_view(ctx.request, ctx.config, ctx.user_permissions, debug=ctx.config.debug)
         return None
 
 
-def _page_view(request: Request, config: Config, *, debug: bool) -> None:
+def _page_view(
+    request: Request, config: Config, user_permissions: UserPermissions, *, debug: bool
+) -> None:
     view_name = request.var("view_name")
     if not view_name:
-        return _page_index(request, config)
+        return _page_index(request, config, user_permissions)
 
     view_spec = get_permitted_views().get(view_name)
     if not view_spec:
         raise MKUserError("view_name", "No view defined with the name '%s'." % view_name)
 
+    request_cache = RequestCache(config)
     datasource = data_source_registry[view_spec["datasource"]]()
-    context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
+    context = visuals.active_context_from_request(
+        datasource.infos, view_spec["context"], request_cache
+    )
 
-    user_permissions = UserPermissions.from_config(config, permission_registry)
-    view = View(view_name, view_spec, context, user_permissions)
+    view = View(
+        view_name,
+        view_spec,
+        context,
+        PainterContext(
+            config=PainterConfig.from_config(config),
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+            theme=theme,
+            url_renderer=RenderLink(request, response, display_options),
+            user_permissions=user_permissions,
+        ),
+        request_cache,
+    )
     view.row_limit = get_limit(
         view_spec_row_limit=view_spec.get("row_limit", 0),
         request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
@@ -349,7 +383,7 @@ def _page_view(request: Request, config: Config, *, debug: bool) -> None:
     view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
     view.want_checkboxes = get_want_checkboxes()
 
-    title = view_title(view.spec, view.context)
+    title = view_title(view.spec, view.context, request_cache=view.request_cache)
     mobile_html_head(title)
 
     # Need to be loaded before processing the painter_options below.
@@ -400,7 +434,7 @@ class MobileViewRenderer(ABCViewRenderer):
         if not page:
             page = "filter" if view_spec.get("mustsearch") else "data"
 
-        title = view_title(self.view.spec, self.view.context)
+        title = view_title(self.view.spec, self.view.context, request_cache=self.view.request_cache)
         navbar = [
             ("data", _("Results"), "grid", "results_button"),
             ("filter", _("Filter"), "search", ""),
@@ -425,7 +459,7 @@ class MobileViewRenderer(ABCViewRenderer):
 
         if page == "filter":
             jqm_page_header(_("Filter / search"), left_button=home, id_="filter")
-            _show_filter_form(show_filters, self.view.context)
+            _show_filter_form(show_filters, self.view.context, self.view.request_cache)
             jqm_page_navfooter(navbar, "filter", page_id)
 
         elif page == "commands":
@@ -483,7 +517,11 @@ class MobileViewRenderer(ABCViewRenderer):
             jqm_page_navfooter(navbar, "context", page_id)
 
 
-def _show_filter_form(show_filters: list[Filter], context: VisualContext) -> None:
+def _show_filter_form(
+    show_filters: list[Filter],
+    context: VisualContext,
+    request_cache: RequestCache[RequestCacheConfig],
+) -> None:
     # Sort filters
     s = sorted([(f.sort_index, f.title, f) for f in show_filters if f.available()])
 
@@ -492,37 +530,19 @@ def _show_filter_form(show_filters: list[Filter], context: VisualContext) -> Non
         for _sort_index, title, f in s:
             html.open_li(**{"data-role": "fieldcontain"})
             html.legend(title)
-            f.display(context.get(f.ident, {}))
+            f.display(context.get(f.ident, {}), request_cache)
             html.close_li()
         html.close_ul()
         html.hidden_fields()
         html.hidden_field("search", "Search")
         html.hidden_field("page", "data")
         html.form_has_submit_button = True  # a.results_button functions as a submit button
-    html.final_javascript(
-        """
-        const filter_form = document.getElementById("form_filter");
-        const results_button = document.getElementsByClassName("results_button")[0];
-
-        cmk.forms.enable_select2_dropdowns(filter_form);
-        results_button.onclick = function(event) {
-            event.preventDefault();
-            filter_form.submit();
-        };
-        """
-    )
+    html.call_ts_function(function_name="mobile_filter_form_init")
 
 
 def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:  # noqa: ARG001
     what = datasource.infos[0]
-    html.javascript(
-        """
-    $(document).ready(function() {
-      $('.command_group').has('x').trigger('expand');
-      $('x').children().css('background-color', '#f84');
-    });
-    """
-    )
+    html.call_ts_function(function_name="mobile_command_form_init")
 
     one_shown = False
     html.open_div(**{"data-role": "collapsible-set"})

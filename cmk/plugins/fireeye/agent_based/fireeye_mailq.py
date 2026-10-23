@@ -9,12 +9,11 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.fireeye.lib import DETECT
 
 # .1.3.6.1.4.1.25597.13.1.44.0 0
@@ -31,10 +30,6 @@ def parse_fireeye_mailq(string_table: StringTable) -> Section | None:
     if string_table:
         return dict(zip(["Deferred", "Hold", "Incoming", "Active", "Drop"], string_table[0]))
     return None
-
-
-def dicsover_fireeye_mailq(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_fireeye_mailq(
@@ -66,7 +61,7 @@ snmp_section_fireeye_mailq = SimpleSNMPSection(
 check_plugin_fireeye_mailq = CheckPlugin(
     name="fireeye_mailq",
     service_name="Mail Queues",
-    discovery_function=dicsover_fireeye_mailq,
+    discovery_function=discover_one_service,
     check_function=check_fireeye_mailq,
     check_ruleset_name="fireeye_mailq",
     check_default_parameters={

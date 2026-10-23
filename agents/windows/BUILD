@@ -7,7 +7,6 @@ filegroup(
         ["cfg_examples/**"],
         exclude = [
             "**/OWNERS",
-            "**/.f12",
         ],
     ),
     visibility = ["//visibility:public"],
@@ -55,4 +54,12 @@ filegroup(
     }) + [":python_cab"],
     tags = ["no-python-extension-checker"],
     visibility = ["//omd:__subpackages__"],
+)
+
+filegroup(
+    name = "powershell_scripts",
+    srcs = [
+        "cfg_examples/mk_oracle_cfg.ps1",
+    ],
+    tags = ["lint-with-psscriptanalyzer"],
 )

@@ -9,6 +9,7 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import { cmkAjax } from 'cmk-ui-library/lib/ajax'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { type Ref, onMounted, ref } from 'vue'
 
 import { getCsrfToken } from '@/lib/csrf'
@@ -67,27 +68,6 @@ async function postUserMessageAction(actionType: string, msg: UserMessage): Prom
     case 'delete':
       deletedMsgIds.value.push(msg.id)
   }
-}
-
-function formatTimestamp(timestamp: number): string {
-  // Return date and time in human readable format, e.g. "2025-06-17 10:38:04"
-  const dateObject = new Date(timestamp * 1000)
-  const date: number[] = [dateObject.getFullYear(), dateObject.getMonth() + 1, dateObject.getDate()]
-  const time: number[] = [dateObject.getHours(), dateObject.getMinutes(), dateObject.getSeconds()]
-
-  // Add leading zero to values < 10
-  const dateStr: string[] = []
-  date.forEach((val, i) => {
-    dateStr[i] = (val < 10 ? '0' : '') + val
-  })
-  const timeStr: string[] = []
-  time.forEach((val, i) => {
-    timeStr[i] = (val < 10 ? '0' : '') + val
-  })
-
-  const dateHumanReadable = dateStr.join('-')
-  const timeHumanReadable = timeStr.join(':')
-  return `${dateHumanReadable} ${timeHumanReadable}`
 }
 </script>
 
@@ -152,8 +132,8 @@ function formatTimestamp(timestamp: number): string {
                  was rendered before by the backend code -->
             <CmkHtml v-else :html="msg.text.content" />
           </td>
-          <td>{{ formatTimestamp(msg.time) }}</td>
-          <td>{{ msg.valid_till ? formatTimestamp(msg.valid_till) : '-' }}</td>
+          <td>{{ renderDateAndTime(msg.time) }}</td>
+          <td>{{ msg.valid_till ? renderDateAndTime(msg.valid_till) : '-' }}</td>
         </tr>
       </tbody>
     </table>

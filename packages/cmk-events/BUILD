@@ -1,6 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
@@ -33,7 +32,6 @@ py_library(
         "//packages/cmk-ccc:store",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-ruleset-matcher",
-        requirement("pydantic"),
     ],
 )
 
@@ -83,7 +81,6 @@ package_wheel(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "run",
     ],
 )

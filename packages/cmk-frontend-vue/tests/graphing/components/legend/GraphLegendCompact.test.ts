@@ -25,7 +25,7 @@ const UNIT: Metric['metadata']['unit'] = {
 function makeMetric(name: string, title: string): Metric {
   return {
     metadata: { name, title, unit: UNIT, color: '#ff0000', attributes: [] },
-    render: { stack: 'area', inverse: false, hidden: false },
+    render: { shape: 'area', stack: 'area', inverse: false, hidden: false },
     data_points: [10, 20, 30]
   }
 }
@@ -33,7 +33,10 @@ function makeMetric(name: string, title: string): Metric {
 function makeMetricWithStack(name: string, title: string, stack: string | null): Metric {
   return {
     metadata: { name, title, unit: UNIT, color: '#ff0000', attributes: [] },
-    render: { stack, inverse: false, hidden: false },
+    render:
+      stack === null
+        ? { shape: 'line', inverse: false, hidden: false }
+        : { shape: 'area', stack, inverse: false, hidden: false },
     data_points: [1]
   }
 }
@@ -50,7 +53,7 @@ function makeBackendMetric(name: string, title: string): Metric {
         { kind: 'data_point', name: 'status', value: '304' }
       ]
     },
-    render: { stack: null, inverse: false, hidden: false },
+    render: { shape: 'line', inverse: false, hidden: false },
     data_points: [1]
   }
 }
@@ -196,6 +199,16 @@ test('focusing a metrics-backend item reveals its attributes, blurring hides the
   await fireEvent.blur(trigger)
 
   await waitFor(() => expect(screen.queryByText('Resource attributes')).not.toBeInTheDocument())
+})
+
+test('the attributes popup is titled with the full metric name', async () => {
+  const title = 'Requests per second by endpoint'
+  render(GraphLegendCompact, { props: { metrics: [makeBackendMetric('requests', title)] } })
+  const trigger = document.querySelector('.graphing-graph-legend-compact__series--has-attributes')!
+
+  await fireEvent.focus(trigger)
+
+  await waitFor(() => expect(screen.getByText(title)).toBeInTheDocument())
 })
 
 test('only an item that has attributes is reachable by keyboard to reveal them', () => {

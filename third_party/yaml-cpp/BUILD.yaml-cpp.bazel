@@ -1,0 +1,16 @@
+# BUILD file for @wnx_yaml_cpp, see //bazel/rules:vendored_archive.bzl.
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+cc_library(
+    name = "yaml-cpp",
+    srcs = glob([
+        "src/*.cpp",
+        "src/*.h",
+        "src/contrib/*.cpp",
+        "src/contrib/*.h",
+    ]),
+    hdrs = glob(["include/yaml-cpp/**/*.h"]),
+    defines = ["YAML_CPP_STATIC_DEFINE"],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+)

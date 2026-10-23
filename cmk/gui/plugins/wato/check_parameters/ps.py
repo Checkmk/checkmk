@@ -34,7 +34,6 @@ from cmk.gui.valuespec import (
     Labels,
     ListChoice,
     ListOf,
-    Migrate,
     MonitoringState,
     Percentage,
     RegExp,
@@ -438,6 +437,44 @@ def validate_process_discovery_descr_option(description: str, varprefix: str) ->
         )
 
 
+def _required_groups(description: str) -> int:
+    if numbered := re.findall(r"%(\d+)", description):
+        return max(int(number) for number in numbered)
+    return description.count("%s")
+
+
+def _available_groups(pattern: object) -> int:
+    if isinstance(pattern, str) and pattern.startswith("~"):
+        return re.compile(pattern[1:]).groups
+    return 0
+
+
+def _validate_process_discovery_groups(description: str, pattern: object, varprefix: str) -> None:
+    required_groups = _required_groups(description)
+    available_groups = _available_groups(pattern)
+    if required_groups > available_groups:
+        raise MKUserError(
+            f"{varprefix}_p_descr",
+            _(
+                "The process name refers to %(required)d group(s) of the regular expression, "
+                "but the process matching provides only %(available)d. Match the command line "
+                "with a regular expression that contains enough groups, or remove the "
+                "replacements from the process name."
+            )
+            % {"required": required_groups, "available": available_groups},
+        )
+
+
+def validate_process_discovery_rule(value: Mapping[str, object], varprefix: str) -> None:
+    _validate_process_discovery_groups(str(value["descr"]), value.get("match"), varprefix)
+
+
+def validate_hr_process_discovery_rule(value: Mapping[str, object], varprefix: str) -> None:
+    match_name_or_path = value.get("match_name_or_path")
+    pattern = match_name_or_path[1] if isinstance(match_name_or_path, tuple) else None
+    _validate_process_discovery_groups(str(value["descr"]), pattern, varprefix)
+
+
 def process_discovery_descr_option() -> TextInput:
     return TextInput(
         title=_("Process name"),
@@ -600,23 +637,16 @@ def _item_spec_ps() -> TextInput:
     )
 
 
-def _drop_icon_key(p: Mapping[str, object]) -> dict[str, object]:
-    return {k: v for k, v in p.items() if k != "icon"}
-
-
-def _parameter_valuespec_ps() -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=process_level_elements(),
-            ignored_keys=[
-                "process",
-                "match_groups",
-                "user",
-                "cgroup",
-            ],
-            required_keys=["cpu_rescale_max"],
-        ),
-        migrate=_drop_icon_key,
+def _parameter_valuespec_ps() -> Dictionary:
+    return Dictionary(
+        elements=process_level_elements(),
+        ignored_keys=[
+            "process",
+            "match_groups",
+            "user",
+            "cgroup",
+        ],
+        required_keys=["cpu_rescale_max"],
     )
 
 
@@ -646,18 +676,15 @@ def _manual_item_spec_ps() -> TextInput:
     )
 
 
-def _manual_parameter_valuespec_ps() -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                ("process", process_match_options()),
-                ("user", user_match_options()),
-            ]
-            + process_level_elements(),
-            ignored_keys=["match_groups"],
-            required_keys=["cpu_rescale_max"],
-        ),
-        migrate=_drop_icon_key,
+def _manual_parameter_valuespec_ps() -> Dictionary:
+    return Dictionary(
+        elements=[
+            ("process", process_match_options()),
+            ("user", user_match_options()),
+        ]
+        + process_level_elements(),
+        ignored_keys=["match_groups"],
+        required_keys=["cpu_rescale_max"],
     )
 
 
@@ -724,25 +751,23 @@ def _valuespec_inventory_processes_rules() -> Dictionary:
             ),
             (
                 "default_params",
-                Migrate(
-                    valuespec=Dictionary(
-                        title=_("Default parameters for detected services"),
-                        help=_(
-                            "Here, you can select default parameters that are being set "
-                            "for detected services. Note: the preferred way for setting parameters is to use "
-                            'the rule set <a href="wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset"> State and count of processes</a> instead. '
-                            "A change there will immediately be active, while a change in this rule "
-                            "requires a re-discovery of the services."
-                        ),
-                        elements=process_level_elements(),
-                        ignored_keys=["match_groups"],
-                        required_keys=["cpu_rescale_max"],
+                Dictionary(
+                    title=_("Default parameters for detected services"),
+                    help=_(
+                        "Here, you can select default parameters that are being set "
+                        "for detected services. Note: the preferred way for setting parameters is to use "
+                        'the rule set <a href="wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset"> State and count of processes</a> instead. '
+                        "A change there will immediately be active, while a change in this rule "
+                        "requires a re-discovery of the services."
                     ),
-                    migrate=_drop_icon_key,
+                    elements=process_level_elements(),
+                    ignored_keys=["match_groups"],
+                    required_keys=["cpu_rescale_max"],
                 ),
             ),
         ],
         required_keys=["descr", "default_params"],
+        validate=validate_process_discovery_rule,
     )
 
 
@@ -970,6 +995,7 @@ def _valuespec_discovery_hr_processes_rules() -> Dictionary:
         ],
         required_keys=["descr", "default_params"],
         ignored_keys=["match_groups"],
+        validate=validate_hr_process_discovery_rule,
     )
 
 

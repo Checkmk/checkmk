@@ -10,6 +10,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
+from cmk.crypto.issued_certificates import issued_certificates_file
+
 CONFIG_FILE = "agent_receiver_config.json"
 
 
@@ -19,6 +21,7 @@ class Config(BaseModel):
     task_ttl: float = 120.0
     max_pending_tasks_per_relay: int = 10
     socket_timeout: float = 5.0
+    crash_extraction_timeout: float = 30.0
 
     @classmethod
     def load(cls, path: Path | None = None) -> Config:
@@ -43,6 +46,10 @@ class Config(BaseModel):
     @property
     def agent_output_dir(self) -> Path:
         return self.omd_root / "var/agent-receiver/received-outputs"
+
+    @property
+    def registrations_dir(self) -> Path:
+        return self.omd_root / "var/agent-receiver/registrations"
 
     @property
     def r4r_dir(self) -> Path:
@@ -77,8 +84,28 @@ class Config(BaseModel):
         return self.omd_root / "etc/ssl/relays/ca.pem"
 
     @property
+    def agent_crl_path(self) -> Path:
+        return self.agent_ca_path.with_suffix(".crl")
+
+    @property
+    def relay_crl_path(self) -> Path:
+        return self.relay_ca_path.with_suffix(".crl")
+
+    @property
+    def agents_issued_certificates_path(self) -> Path:
+        return issued_certificates_file(self.omd_root / "var/log", "agents")
+
+    @property
+    def relays_issued_certificates_path(self) -> Path:
+        return issued_certificates_file(self.omd_root / "var/log", "relays")
+
+    @property
     def agent_cert_store_path(self) -> Path:
         return self.omd_root / "etc/ssl/agent_cert_store.pem"
+
+    @property
+    def crashes_dir(self) -> Path:
+        return self.omd_root / "var/check_mk/crashes"
 
     @property
     def helper_config_dir(self) -> Path:

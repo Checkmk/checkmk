@@ -35,7 +35,7 @@ from tests.system.gui.testlib.playwright.pom.monitor.all_hosts_experimental impo
 )
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.testlib.common.utils import wait_until
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +54,6 @@ FLEXIBLE_OPTION = (
     "Only start downtime if host/service goes DOWN/UNREACH within the defined start "
     "and end time (flexible)."
 )
-# The range picker is a flyout: this is the dialog's accessible name, not text it renders.
-TIME_RANGE_LABEL = "Downtime time range"
 
 _HOST_DOWN = 1
 
@@ -154,7 +152,6 @@ def test_scheduling_a_downtime_offers_a_comment_a_duration_and_the_host_only_opt
 
     expect(all_hosts.action_form(SCHEDULE_DOWNTIME)).to_be_visible()
     expect(all_hosts.downtime_comment).to_be_visible()
-    expect(all_hosts.catalog_panel("Duration")).to_be_visible()
     # Rendered inside the collapsed Advanced section, so present in the DOM but
     # not on screen - counted rather than seen, which mirrors the absence check
     # the services form gets.
@@ -210,22 +207,3 @@ def test_acknowledging_from_the_slide_in_reaches_the_monitoring_core(
         interval=1,
         condition_name=f"the panel's acknowledgement of {action_host} reaches the core",
     )
-
-
-def test_a_custom_downtime_duration_offers_an_explicit_start_and_end(
-    dashboard_page: MainDashboard, form_host: str
-) -> None:
-    """The start/end range appears once the Custom duration is chosen.
-
-    The form opens on one of the site's duration presets, so the range is not
-    on screen until Custom is picked - the half of the scenario that reading the
-    freshly opened form would miss.
-    """
-    all_hosts = AllHostsExperimental(dashboard_page.page)
-    expect(all_hosts.row_by_host(form_host)).to_have_count(1)
-
-    all_hosts.tick_host_row(form_host)
-    all_hosts.trigger_action(SCHEDULE_DOWNTIME)
-    all_hosts.select_duration("Custom")
-
-    expect(all_hosts.time_range_dialog(TIME_RANGE_LABEL)).to_be_visible()

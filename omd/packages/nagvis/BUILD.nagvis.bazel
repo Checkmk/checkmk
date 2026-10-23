@@ -17,12 +17,28 @@ exports_files(["etc/geomap/demo-locations.csv"])
 
 exports_files(["etc/conf.d/demo.ini.php"])
 
+_DE_MO = "share/frontend/nagvis-js/locale/de_DE/LC_MESSAGES/nagvis.mo"
+
 filegroup(
     name = "share_fg",
-    srcs = glob([
-        "share/**/*",
-    ]),
+    srcs = glob(
+        ["share/**/*"],
+        # Leftovers of our patches, and the German catalog compiled below
+        exclude = [
+            "share/**/*.orig",
+            _DE_MO,
+        ],
+    ),
     package_metadata = [":dependency_info"],
+    visibility = ["//visibility:public"],
+)
+
+# Our patches extend the German .po, so its shipped .mo is outdated
+genrule(
+    name = "nagvis_de_DE_mo",
+    srcs = ["share/frontend/nagvis-js/locale/de_DE/LC_MESSAGES/nagvis.po"],
+    outs = ["nagvis_de_DE.mo"],
+    cmd = "msgfmt -o $@ $<",
     visibility = ["//visibility:public"],
 )
 

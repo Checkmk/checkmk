@@ -6,7 +6,7 @@
 import { JavascriptCrashReportApi } from 'cmk-ui-library/components/CmkErrorBoundary/JavascriptCrashReportApi'
 import { CmkError } from 'cmk-ui-library/lib/error'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const CRASH_REPORT_URL = '/domain-types/javascript_crash_report/collections/all'
 
@@ -29,10 +29,6 @@ describe('JavascriptCrashReportApi.report', () => {
       error: undefined,
       response: new Response(null, { status: 201 })
     } as never)
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
   })
 
   function makeError(message: string): Error {

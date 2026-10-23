@@ -19,11 +19,13 @@ py_library(
     ],
     deps = [
         "//cmk/base",
+        "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client:py_livestatus",
-        "//tests/testlib:fake_site",
-        requirement("pytest_metadata"),
+        "//tests/testlib/pytest_helpers",
+        "//tests/testlib/unit",
+        requirement("pytest"),
     ],
 )
 
@@ -48,7 +50,7 @@ py_cmk_test(
     use_project_pytest_config = True,
     deps = [
         ":conftest",
-        "//tests/testlib",
+        "//tests/testlib/system",
     ],
 )
 
@@ -62,7 +64,6 @@ py_cmk_test(
     ] + glob(
         include = [
             "cmk/*.py",
-            "cmk/automations/**/*.py",
             "cmk/bi/**/*.py",
             "cmk/diskspace/**/*.py",
             "cmk/fields/**/*.py",
@@ -95,6 +96,7 @@ py_cmk_test(
         requirement("fakeredis"),
         requirement("feedparser"),
         requirement("google-cloud-monitoring"),
+        requirement("jsonschema"),
         requirement("marshmallow"),
         requirement("polyfactory"),
         requirement("pysmb"),

@@ -92,7 +92,7 @@ perfometer_if_unicast_octets = perfometers.Bidirectional(
         ),
         segments=[
             metrics.Sum(
-                Title(""),
+                Title("Output unicast and non-unicast octets"),
                 metrics.Color.GRAY,
                 [
                     "if_out_unicast_octets",
@@ -113,10 +113,10 @@ perfometer_if_unicast_octets = perfometers.Bidirectional(
 
 graph_bandwidth_translated = graphs.Bidirectional(
     name="bandwidth_translated",
-    title=Title("Bandwidth"),
+    title=Title("Data received and sent"),
     lower=graphs.Graph(
         name="bandwidth_translated_out",
-        title=Title("Bandwidth"),
+        title=Title("Data received and sent"),
         compound_lines=[
             metrics.Product(
                 Title("Output bandwidth"),
@@ -125,7 +125,7 @@ graph_bandwidth_translated = graphs.Bidirectional(
                 [
                     "if_out_octets",
                     metrics.Constant(
-                        Title(""),
+                        Title("Bits per octet"),
                         UNIT_NUMBER,
                         metrics.Color.GRAY,
                         8.0,
@@ -141,7 +141,7 @@ graph_bandwidth_translated = graphs.Bidirectional(
                 [
                     metrics.WarningOf("if_out_octets"),
                     metrics.Constant(
-                        Title(""),
+                        Title("Bits per octet"),
                         UNIT_NUMBER,
                         metrics.Color.GRAY,
                         8.0,
@@ -155,7 +155,7 @@ graph_bandwidth_translated = graphs.Bidirectional(
                 [
                     metrics.CriticalOf("if_out_octets"),
                     metrics.Constant(
-                        Title(""),
+                        Title("Bits per octet"),
                         UNIT_NUMBER,
                         metrics.Color.GRAY,
                         8.0,
@@ -166,7 +166,7 @@ graph_bandwidth_translated = graphs.Bidirectional(
     ),
     upper=graphs.Graph(
         name="bandwidth_translated_in",
-        title=Title("Bandwidth"),
+        title=Title("Data received and sent"),
         compound_lines=[
             metrics.Product(
                 Title("Input bandwidth"),
@@ -175,7 +175,7 @@ graph_bandwidth_translated = graphs.Bidirectional(
                 [
                     "if_in_octets",
                     metrics.Constant(
-                        Title(""),
+                        Title("Bits per octet"),
                         UNIT_NUMBER,
                         metrics.Color.GRAY,
                         8.0,
@@ -191,7 +191,7 @@ graph_bandwidth_translated = graphs.Bidirectional(
                 [
                     metrics.WarningOf("if_in_octets"),
                     metrics.Constant(
-                        Title(""),
+                        Title("Bits per octet"),
                         UNIT_NUMBER,
                         metrics.Color.GRAY,
                         8.0,
@@ -205,7 +205,7 @@ graph_bandwidth_translated = graphs.Bidirectional(
                 [
                     metrics.CriticalOf("if_in_octets"),
                     metrics.Constant(
-                        Title(""),
+                        Title("Bits per octet"),
                         UNIT_NUMBER,
                         metrics.Color.GRAY,
                         8.0,

@@ -5,12 +5,14 @@
 
 import ast
 import json
+import logging
 import os
 import sys
 import traceback
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
+from http import HTTPStatus
 from pathlib import Path
 from typing import Final, Protocol
 
@@ -36,6 +38,7 @@ class Paths:
     legacy_stash_file: Path
     stash_file: Path
     secret_file: Path
+    log_file: Path
 
     @property
     def active_stash_file(self) -> Path:
@@ -43,10 +46,12 @@ class Paths:
 
 
 def make_paths_object(home: Path) -> Paths:
+    state_dir = home / ".local/state/cmk-werks"
     return Paths(
         legacy_stash_file=home / ".cmk-werk-ids",
-        stash_file=home / ".local/state/cmk-werks/reserved-ids",
+        stash_file=state_dir / "reserved-ids",
         secret_file=home / ".config/cmk-werks/secret",
+        log_file=state_dir / "werk-ids.log",
     )
 
 
@@ -66,7 +71,8 @@ def load_stash_from_file(paths: Paths) -> Stash:
             f"{TTY_RED}Found both a legacy and a new werk IDs file:\n"
             f"  {paths.legacy_stash_file}\n"
             f"  {paths.stash_file}\n"
-            f"Please run 'werk init' to merge them into a single file.{TTY_NORMAL}"
+            "Please merge the IDs you still need from the legacy file into the new one by hand, "
+            f"then delete the legacy file.{TTY_NORMAL}"
         )
     if not paths.secret_file.exists():
         bail_out(
@@ -102,7 +108,7 @@ def read_legacy_stash_file(paths: Paths) -> Sequence[int]:
     return [int(id_) for id_ in raw_cmk_werk_ids]
 
 
-def migrate_werk_ids_file(paths: Paths) -> None:
+def migrate_werk_ids_file(paths: Paths, log: logging.Logger, launcher: str) -> None:
     assert paths.secret_file.exists()
 
     stash = (
@@ -110,10 +116,19 @@ def migrate_werk_ids_file(paths: Paths) -> None:
         if paths.stash_file.exists()
         else Stash()
     )
-    stash.add_ids([WerkId(id_) for id_ in read_legacy_stash_file(paths)])
+    migrated = [WerkId(id_) for id_ in read_legacy_stash_file(paths)]
+    stash.add_ids(migrated)
 
     dump_stash_to_file(paths, stash)
     paths.legacy_stash_file.unlink(missing_ok=True)
+    if migrated:
+        log.info(
+            "launcher:%(launcher)s, action:migrate, werk IDs:%(werk_ids)s",
+            {
+                "launcher": launcher,
+                "werk_ids": " ".join(str(werk_id) for werk_id in migrated),
+            },
+        )
 
 
 def _server_error_message(response: requests.Response) -> str:
@@ -166,9 +181,9 @@ class WerkIDsClient:
             return ServerStatus.UNREACHABLE
 
         match response.status_code:
-            case 200:
+            case HTTPStatus.OK:
                 return ServerStatus.OK
-            case 401 | 403:
+            case HTTPStatus.UNAUTHORIZED | HTTPStatus.FORBIDDEN:
                 return ServerStatus.UNAUTHORIZED
             case _:
                 return ServerStatus.ERROR
@@ -210,7 +225,7 @@ class WerkIDsClient:
             # descriptive message when none are left.
             return []
 
-        if response.status_code == 200:
+        if response.status_code == HTTPStatus.OK:
             reserved_werk_ids = response.json()["reserved_werk_ids"]
             return [int(i) for i in reserved_werk_ids]
 
@@ -239,11 +254,10 @@ def _ensure_stash_file_writable(paths: Paths) -> None:
         )
 
 
-def load_or_update_stash(paths: Paths, werk_ids_client: WerkIDsClient) -> Stash:
+def load_or_update_stash(
+    paths: Paths, werk_ids_client: WerkIDsClient, log: logging.Logger, launcher: str
+) -> Stash:
     stash = load_stash_from_file(paths)
-
-    if not paths.secret_file.exists():
-        bail_out(f"No such secret file {paths.secret_file}")
 
     local_werk_ids_count = stash.count()
     _ensure_stash_file_writable(paths)
@@ -251,8 +265,16 @@ def load_or_update_stash(paths: Paths, werk_ids_client: WerkIDsClient) -> Stash:
     if reserved_werk_ids := werk_ids_client.reserve_werk_ids(
         paths.secret_file, local_werk_ids_count
     ):
-        stash.add_ids([WerkId(raw_id) for raw_id in reserved_werk_ids])
+        reserved = [WerkId(raw_id) for raw_id in reserved_werk_ids]
+        stash.add_ids(reserved)
         dump_stash_to_file(paths, stash)
+        log.info(
+            "launcher:%(launcher)s, action:reserve, werk IDs:%(werk_ids)s",
+            {
+                "launcher": launcher,
+                "werk_ids": " ".join(str(werk_id) for werk_id in reserved),
+            },
+        )
         return load_stash_from_file(paths)
 
     if not local_werk_ids_count:

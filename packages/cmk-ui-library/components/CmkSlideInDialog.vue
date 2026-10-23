@@ -91,7 +91,7 @@ const emit = defineEmits(['close'])
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 20px;
+  margin: 20px 20px 0;
 
   .cmk-slide-in-dialog__title-header {
     display: flex;
@@ -106,7 +106,7 @@ const emit = defineEmits(['close'])
 }
 
 .cmk-slide-in-dialog__title.cmk-slide-in-dialog--spacing-wide {
-  margin: var(--dimension-10) var(--dimension-10) var(--dimension-8);
+  margin: var(--dimension-10) var(--dimension-10) 0;
 }
 
 .cmk-slide-in-dialog__content {
@@ -119,11 +119,24 @@ const emit = defineEmits(['close'])
   --cmk-slide-in-dialog-inset: var(--dimension-10);
 }
 
+.cmk-slide-in-dialog__title + .cmk-slide-in-dialog__content {
+  padding-top: 20px;
+}
+
+.cmk-slide-in-dialog__title + .cmk-slide-in-dialog__content.cmk-slide-in-dialog--spacing-wide {
+  padding-top: var(--dimension-8);
+}
+
 .cmk-slide-in-dialog__close {
   background: none;
   border: none;
   margin: 0;
   padding: 0;
+  display: inline-flex;
+}
+
+.cmk-slide-in-dialog__close:focus-visible {
+  outline: revert;
 }
 
 button {

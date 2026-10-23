@@ -30,7 +30,7 @@ from cmk.gui.i18n import (
     translate_to_current_language,
 )
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.session_context import SuperUserContext
 from cmk.gui.type_defs import SearchQuery, SearchResult
 from cmk.gui.utils.loading_transition import LoadingTransition
@@ -43,6 +43,7 @@ from ..index import _read_and_remove_update_requests, _UpdateRequests, _updates_
 from ..matchers import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
+    MatchItemConfig,
     MatchItemGeneratorRegistry,
 )
 from ..permissions import SearchPermissionsHandler, VisibilityCheck
@@ -83,14 +84,16 @@ class IndexBuilder:
         self,
         match_item_generators: Iterable[ABCMatchItemGenerator],
         user_permissions: UserPermissions,
+        config: MatchItemConfig,
     ) -> None:
         with SuperUserContext():
-            self._do_build_index(match_item_generators, user_permissions)
+            self._do_build_index(match_item_generators, user_permissions, config)
 
     def _do_build_index(
         self,
         match_item_generators: Iterable[ABCMatchItemGenerator],
         user_permissions: UserPermissions,
+        config: MatchItemConfig,
     ) -> None:
         current_language = get_current_language()
 
@@ -102,6 +105,7 @@ class IndexBuilder:
                 ),
                 pipeline,
                 user_permissions,
+                config,
             )
             self._add_language_dependent_item_generators_to_redis(
                 list(
@@ -112,10 +116,11 @@ class IndexBuilder:
                 ),
                 pipeline,
                 user_permissions,
+                config,
             )
             pipeline.execute()
 
-        localize(current_language)
+        localize(current_language, config.user_localizations)
 
     @classmethod
     def _add_language_independent_item_generators_to_redis(
@@ -123,6 +128,7 @@ class IndexBuilder:
         match_item_generators: Iterable[ABCMatchItemGenerator],
         redis_pipeline: redis.client.Pipeline,
         user_permissions: UserPermissions,
+        config: MatchItemConfig,
     ) -> None:
         key_categories_li = cls.key_categories(cls.PREFIX_LOCALIZATION_INDEPENDENT)
         for match_item_generator in match_item_generators:
@@ -132,6 +138,7 @@ class IndexBuilder:
                 key_categories_li,
                 cls.PREFIX_LOCALIZATION_INDEPENDENT,
                 user_permissions,
+                config,
             )
 
     def _add_language_dependent_item_generators_to_redis(
@@ -139,10 +146,11 @@ class IndexBuilder:
         match_item_generators: Collection[ABCMatchItemGenerator],
         redis_pipeline: redis.client.Pipeline,
         user_permissions: UserPermissions,
+        config: MatchItemConfig,
     ) -> None:
         key_categories_ld = self.key_categories(self.PREFIX_LOCALIZATION_DEPENDENT)
         for language_code, _language_name in get_languages():
-            localize(language_code)
+            localize(language_code, config.user_localizations)
             for match_item_generator in match_item_generators:
                 self._add_match_item_generator_to_redis(
                     match_item_generator,
@@ -153,6 +161,7 @@ class IndexBuilder:
                         language_code,
                     ),
                     user_permissions,
+                    config,
                 )
 
     @classmethod
@@ -163,6 +172,7 @@ class IndexBuilder:
         category_key: str,
         prefix: str,
         user_permissions: UserPermissions,
+        config: MatchItemConfig,
     ) -> None:
         redis_pipeline.sadd(
             category_key,
@@ -173,6 +183,7 @@ class IndexBuilder:
             redis_pipeline,
             prefix,
             user_permissions,
+            config,
         )
 
     @classmethod
@@ -182,12 +193,13 @@ class IndexBuilder:
         redis_pipeline: redis.client.Pipeline,
         redis_prefix: str,
         user_permissions: UserPermissions,
+        config: MatchItemConfig,
     ) -> None:
         prefix = cls.add_to_prefix(redis_prefix, match_item_generator.name)
         key_match_texts = cls.key_match_texts(prefix)
         redis_pipeline.delete(key_match_texts)
         for idx, match_item in enumerate(
-            match_item_generator.generate_match_items(user_permissions)
+            match_item_generator.generate_match_items(user_permissions, config)
         ):
             redis_pipeline.hset(
                 key_match_texts,
@@ -212,12 +224,15 @@ class IndexBuilder:
             1,
         )
 
-    def build_full_index(self, user_permissions: UserPermissions) -> None:
-        self._build_index(self._registry.values(), user_permissions)
+    def build_full_index(self, user_permissions: UserPermissions, config: MatchItemConfig) -> None:
+        self._build_index(self._registry.values(), user_permissions, config)
         self._mark_index_as_built()
 
     def build_changed_sub_indices(
-        self, change_action_names: Collection[str], user_permissions: UserPermissions
+        self,
+        change_action_names: Collection[str],
+        user_permissions: UserPermissions,
+        config: MatchItemConfig,
     ) -> None:
         self._build_index(
             {
@@ -227,6 +242,7 @@ class IndexBuilder:
                 if match_item_generator.is_affected_by_change(change_action_name)
             },
             user_permissions,
+            config,
         )
 
     @classmethod
@@ -313,6 +329,7 @@ class IndexSearcher:
                     user_permission_config=UserPermissionSerializableConfig.from_global_config(
                         self._config
                     ),
+                    match_item_config=MatchItemConfig.from_config(self._config),
                 ),
             ),
             # We deliberately do not provide an estimated duration here, since that involves I/O.
@@ -447,21 +464,25 @@ def _index_building_in_background_job(
     with (
         job_interface.gui_context(
             user_permissions := UserPermissions.from_serialized_config(
-                args.user_permission_config, permission_registry
+                args.user_permission_config,
+                all_permissions(),
             )
         ),
         get_redis_client() as redis_client,
     ):
-        _build_index(job_interface, redis_client, user_permissions)
+        _build_index(job_interface, redis_client, user_permissions, args.match_item_config)
 
 
 def _build_index(
     job_interface: BackgroundProcessInterface,
     redis_client: redis.Redis,
     user_permissions: UserPermissions,
+    config: MatchItemConfig,
 ) -> None:
     job_interface.send_progress_update(_("Building of search index started"))
-    IndexBuilder(match_item_generator_registry, redis_client).build_full_index(user_permissions)
+    IndexBuilder(match_item_generator_registry, redis_client).build_full_index(
+        user_permissions, config
+    )
     job_interface.send_result_message(_("Search index successfully built"))
 
 
@@ -479,6 +500,7 @@ def launch_requests_processing_background() -> None:
                 user_permission_config=UserPermissionSerializableConfig.from_global_config(
                     active_config
                 ),
+                match_item_config=MatchItemConfig.from_config(active_config),
             ),
         ),
         # We deliberately do not provide an estimated duration here, since that involves I/O.
@@ -494,6 +516,7 @@ def launch_requests_processing_background() -> None:
 
 class SearchIndexBackgroundJobArgs(BaseModel, frozen=True):
     user_permission_config: UserPermissionSerializableConfig
+    match_item_config: MatchItemConfig
 
 
 def _process_update_requests_background(
@@ -502,7 +525,8 @@ def _process_update_requests_background(
     with (
         job_interface.gui_context(
             user_permissions := UserPermissions.from_serialized_config(
-                args.user_permission_config, permission_registry
+                args.user_permission_config,
+                all_permissions(),
             )
         ),
         get_redis_client() as redis_client,
@@ -518,6 +542,7 @@ def _process_update_requests_background(
                     job_interface,
                     redis_client,
                     user_permissions,
+                    args.match_item_config,
                 )
         except RedisConnectionError as e:
             # This can happen when Redis or the whole site is stopped while the background job is
@@ -530,19 +555,20 @@ def _process_update_requests(
     job_interface: BackgroundProcessInterface,
     redis_client: redis.Redis,
     user_permissions: UserPermissions,
+    config: MatchItemConfig,
 ) -> None:
     if requests["rebuild"]:
-        _build_index(job_interface, redis_client, user_permissions)
+        _build_index(job_interface, redis_client, user_permissions, config)
         return
 
     if not IndexBuilder.index_is_built(redis_client):
         job_interface.send_progress_update(_("Search index not found, re-building from scratch"))
-        _build_index(job_interface, redis_client, user_permissions)
+        _build_index(job_interface, redis_client, user_permissions, config)
         return
 
     job_interface.send_progress_update(_("Updating of search index started"))
     IndexBuilder(match_item_generator_registry, redis_client).build_changed_sub_indices(
-        requests["change_actions"], user_permissions
+        requests["change_actions"], user_permissions, config
     )
     job_interface.send_result_message(_("Search index successfully updated"))
 
@@ -565,13 +591,16 @@ class RedisSearchEngine:
         config: Config,
         permission_handlers: Mapping[ProviderName, SearchPermissionsHandler],
         *,
+        category_permission_handlers: Mapping[str, SearchPermissionsHandler] | None = None,
         redis_client: redis.Redis | None = None,
     ) -> None:
         self._index_searcher = IndexSearcher(
             config=config,
             redis_client=redis_client or get_redis_client(),
             permissions_handler=CompositePermissionsHandler(
-                match_item_generator_registry, permission_handlers
+                match_item_generator_registry,
+                permission_handlers,
+                category_permission_handlers,
             ),
         )
 

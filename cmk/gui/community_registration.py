@@ -47,10 +47,11 @@ from cmk.gui.openapi import (
 from cmk.gui.openapi.endpoints import metric as metric_endpoint
 from cmk.gui.pages import page_registry, PageEndpoint
 from cmk.gui.pagetypes import builtin_pagetype_topic_registry
-from cmk.gui.painter.v0 import painter_registry
+from cmk.gui.painter import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.parentscan.register import register as parentscan_register
 from cmk.gui.permissions import permission_registry, permission_section_registry
+from cmk.gui.png import registration as png_registration
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.rule_specs.legacy_converter import (
     convert_dictionary_formspec_to_valuespec,
@@ -95,6 +96,7 @@ from cmk.gui.watolib.config_domain_name import (
     config_domain_registry,
     config_variable_group_registry,
     config_variable_registry,
+    CORE,
 )
 from cmk.gui.watolib.config_sync import replication_path_registry
 from cmk.gui.watolib.groups_io import contact_group_usage_finder_registry
@@ -110,6 +112,7 @@ from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
     NotificationParameter,
 )
+from cmk.gui.watolib.passwords import password_change_effect_registry
 from cmk.gui.watolib.piggyback_hub import distribute_piggyback_hub_configs
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.sample_config import (
@@ -130,10 +133,10 @@ def register_pages() -> None:
 
 
 def register_painters() -> None:
-    painter_registry.register(graph.PainterServiceGraphs)
-    painter_registry.register(graph.PainterHostGraphs)
-    painter_registry.register(graph.PainterSvcPnpgraph)
-    painter_registry.register(graph.PainterHostPnpgraph)
+    painter_registry.register(graph.make_service_graphs_painter())
+    painter_registry.register(graph.make_host_graphs_painter())
+    painter_registry.register(graph.make_svc_pnpgraph_painter())
+    painter_registry.register(graph.make_host_pnpgraph_painter())
 
 
 def register(
@@ -321,7 +324,6 @@ def register(
         main_module_registry,
     )
     mkeventd_registration.register(
-        edition=edition,
         permission_section_registry=permission_section_registry,
         permission_registry=permission_registry,
         data_source_registry=data_source_registry,
@@ -348,6 +350,7 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
         replication_path_registry=replication_path_registry,
         builtin_pagetype_topic_registry=builtin_pagetype_topic_registry,
+        page_registry=page_registry,
         save_active_config=save_active_config,
     )
     custom_icons_register(
@@ -371,7 +374,13 @@ def register(
         autocompleter_registry,
         livestatus_query=livestatus_query_bare,
     )
+    png_registration.register(page_registry)
     plugins.register()
+    password_change_effect_registry.register(
+        affected_domains_add=[CORE],
+        affected_domains_edit=[CORE],
+        affected_domains_delete=[CORE],
+    )
 
     welcome_card_registry.register(
         WelcomeCardUrl(

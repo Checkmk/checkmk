@@ -33,7 +33,6 @@ from cmk.gui.valuespec import (
     ListChoice,
     ListOf,
     ListOfStrings,
-    Migrate,
     MonitoringState,
     Optional,
     OptionalDropdownChoice,
@@ -44,15 +43,6 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.ruleset_matcher.definition import RuleGroup
-
-
-def _transform_discards(v: tuple[float, float] | Mapping[str, object]) -> Mapping[str, object]:
-    if isinstance(v, dict):
-        return v
-
-    (warn, crit) = v
-    # old discards abs levels have been float but target is int, so cast to int
-    return {"both": ("abs", (int(warn), int(crit)))}
 
 
 def _vs_item_appearance(title: str, help_txt: str) -> DropdownChoice[str]:
@@ -100,6 +90,10 @@ def _vs_labels_conditions() -> ListOf[dict[str, Any]]:
                             (
                                 "match_desc",
                                 _vs_regex_matching("description"),
+                            ),
+                            (
+                                "match_name",
+                                _vs_regex_matching("name"),
                             ),
                         ],
                     ),
@@ -388,6 +382,10 @@ def _vs_matching_conditions() -> CascadingDropdown:
                             "match_desc",
                             _vs_regex_matching("description"),
                         ),
+                        (
+                            "match_name",
+                            _vs_regex_matching("name"),
+                        ),
                     ],
                 ),
             ),
@@ -634,10 +632,11 @@ def _vs_packet_levels(
                                 "value. On interfaces with little traffic, a few packets can "
                                 "already account for a large share of the overall traffic, which "
                                 "makes percentual levels fire even though the absolute traffic "
-                                "volume is negligible. If the used bandwidth cannot be "
-                                "determined, because the operating speed of the interface is "
-                                "unknown or no traffic counters are available, the levels are "
-                                "always applied."
+                                "volume is negligible. If the operating speed of the "
+                                "interface is unknown, the used bandwidth cannot be related "
+                                "to it at all and the levels are not applied either. If only "
+                                "the traffic counters are missing, the levels are applied as "
+                                "usual."
                             ),
                             maxvalue=100.0,
                             default_value=5.0,
@@ -1067,18 +1066,15 @@ def _parameter_valuespec_if() -> Dictionary:
             ),
             (
                 "nucasts",
-                Migrate(
-                    valuespec=_vs_alternative_levels(
-                        title=_("Non-Unicast packet rates"),
-                        help=_(
-                            "Setting levels on non-unicast packet rates is optional. This may help "
-                            "to detect broadcast storms and other unwanted traffic."
-                        ),
-                        percent_levels=PERC_PKG_LEVELS,
-                        percent_detail=_(" (in relation to all successful packets)"),
-                        abs_detail=_(" (in packets per second)"),
+                _vs_alternative_levels(
+                    title=_("Non-Unicast packet rates"),
+                    help=_(
+                        "Setting levels on non-unicast packet rates is optional. This may help "
+                        "to detect broadcast storms and other unwanted traffic."
                     ),
-                    migrate=_transform_discards,
+                    percent_levels=PERC_PKG_LEVELS,
+                    percent_detail=_(" (in relation to all successful packets)"),
+                    abs_detail=_(" (in packets per second)"),
                 ),
             ),
             (
@@ -1131,20 +1127,17 @@ def _parameter_valuespec_if() -> Dictionary:
             ),
             (
                 "discards",
-                Migrate(
-                    valuespec=_vs_alternative_levels(
-                        title=_("Levels for discards rates"),
-                        help=_(
-                            "These levels change the status of a check to WARNING or CRITICAL whenever the "
-                            "<b>percentual discards rate</b> or the <b>absolute discards rate</b> of the monitored interface reaches "
-                            "the given bounds. The percentual discards rate is computed by "
-                            "the formula <b>(discards / (unicast + non-unicast + discards))*100</b>. "
-                        ),
-                        percent_levels=PERC_DISCARD_LEVELS,
-                        percent_detail=_(" (in relation to all packets (successful + discard))"),
-                        abs_detail=_(" (in discards per second)"),
+                _vs_alternative_levels(
+                    title=_("Levels for discards rates"),
+                    help=_(
+                        "These levels change the status of a check to WARNING or CRITICAL whenever the "
+                        "<b>percentual discards rate</b> or the <b>absolute discards rate</b> of the monitored interface reaches "
+                        "the given bounds. The percentual discards rate is computed by "
+                        "the formula <b>(discards / (unicast + non-unicast + discards))*100</b>. "
                     ),
-                    migrate=_transform_discards,
+                    percent_levels=PERC_DISCARD_LEVELS,
+                    percent_detail=_(" (in relation to all packets (successful + discard))"),
+                    abs_detail=_(" (in discards per second)"),
                 ),
             ),
             (

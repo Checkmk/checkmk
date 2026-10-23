@@ -41,6 +41,43 @@ test('dropdown shows options', async () => {
   await screen.findByText('Option 1')
 })
 
+function renderSingleOption(): HTMLElement {
+  render(CmkDropdown, {
+    props: {
+      options: { type: 'fixed', suggestions: [{ title: 'Option 1', name: 'option1' }] },
+      modelValue: null,
+      inputHint: 'Select an option',
+      label: 'some aria label'
+    }
+  })
+  return screen.getByRole('combobox', { name: 'some aria label' })
+}
+
+test('Alt+ArrowDown on the button opens the options, ArrowDown alone does not', async () => {
+  const user = userEvent.setup()
+  const dropdown = renderSingleOption()
+  dropdown.focus()
+
+  await user.keyboard('{ArrowDown}')
+  expect(dropdown).toHaveAttribute('aria-expanded', 'false')
+
+  await user.keyboard('{Alt>}{ArrowDown}{/Alt}')
+  await screen.findByText('Option 1')
+})
+
+test('a second Alt+ArrowDown on the button keeps the options open', async () => {
+  const user = userEvent.setup()
+  const dropdown = renderSingleOption()
+  dropdown.focus()
+  await user.keyboard('{Alt>}{ArrowDown}{/Alt}')
+  await screen.findByText('Option 1')
+  dropdown.focus()
+
+  await user.keyboard('{Alt>}{ArrowDown}{/Alt}')
+
+  expect(dropdown).toHaveAttribute('aria-expanded', 'true')
+})
+
 test('dropdown shows no elements text without elements', async () => {
   render(CmkDropdown, {
     props: {

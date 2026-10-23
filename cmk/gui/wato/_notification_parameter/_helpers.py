@@ -68,7 +68,7 @@ def _get_url_prefix_setting(
 ) -> DictElement[Any]:
     return DictElement(
         group=DictGroupExtended(
-            title=Title(group_title)  # astrein: disable=localization-checker
+            title=Title(group_title)  # astrein: disable=localization
             if group_title
             else None,
             layout=DictionaryGroupLayout.vertical,

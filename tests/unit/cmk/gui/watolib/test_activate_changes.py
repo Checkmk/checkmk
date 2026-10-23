@@ -5,35 +5,67 @@
 
 
 import io
+import json
 import logging
 import os
 import tarfile
-from collections.abc import Mapping
+import time
+from collections.abc import Mapping, Sequence
+from dataclasses import replace
 from pathlib import Path
+from typing import override
 
 import pytest
 from werkzeug.test import create_environ
 
+import cmk.gui.watolib.automations
 import cmk.utils.paths
 from cmk.ccc import store as ccc_store
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.gui.background_job.job import JobStatusStates
 from cmk.gui.config import Config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request
 from cmk.gui.sites import SiteStatus
+from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.userdb import get_user_attributes
+from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib import activate_changes
+from cmk.gui.watolib import activate_changes as activate_changes_module
 from cmk.gui.watolib.activate_changes import (
+    _confirm_activated_changes,
+    _distribute_piggyback_hub_configs,
+    activate_remote_site,
     ActivateChanges,
     ActivateChangesManager,
     ActivationCleanupJob,
     ConfigSyncFileInfo,
+    ConfigWarnings,
     default_rabbitmq_definitions,
+    RemoteActivationBackgroundJob,
+    RemoteActivationCrash,
+    RemoteActivationStatus,
+    sort_for_activation,
+)
+from cmk.gui.watolib.automations import MKRemoteSiteUnavailable
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    ActivationContext,
+    config_domain_registry,
+    ConfigDomainName,
+    DomainRequest,
+    EXPERIMENTAL_FLAGS,
+    OMD,
+    SerializedSettings,
+    SITE_CERTIFICATE,
 )
 from cmk.gui.watolib.config_sync import (
     ReplicationPath,
     ReplicationPathType,
 )
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.livestatus_client import (
     AuthenticationConnectionEntry,
@@ -46,7 +78,10 @@ from cmk.livestatus_client import (
     SiteConfiguration,
     SiteConfigurations,
 )
-from cmk.messaging import rabbitmq
+from cmk.messaging import CMKConnectionError, rabbitmq
+from cmk.utils.automation_config import RemoteAutomationConfig
+from cmk.utils.config_warnings import ConfigurationWarnings
+from tests.testlib.unit.fake_site import pop_crash_report_file
 from tests.testlib.unit.rabbitmq import get_expected_definition
 
 logger = logging.getLogger(__name__)
@@ -1040,6 +1075,7 @@ def _make_change_spec(
     change_id: str,
     user_id: str = "cmkadmin",
     has_been_activated: bool = False,
+    change_time: float = 1720800176.0,
 ) -> ChangeSpec:
     return ChangeSpec(
         {
@@ -1049,7 +1085,7 @@ def _make_change_spec(
             "object": None,
             "user_id": UserId(user_id),
             "domains": ["check_mk"],
-            "time": 1720800176.0,
+            "time": change_time,
             "force_sync": True,
             "force_restart": not has_been_activated,
             "force_apache_reload": False,
@@ -1058,6 +1094,48 @@ def _make_change_spec(
             "diff_text": None,
         }
     )
+
+
+class _ActivateUntil:
+    """Stands in for the activation whose id the changes are looked up by."""
+
+    def __init__(self, change_id: str) -> None:
+        self._change_id = change_id
+
+    def activate_until(self) -> str:
+        return self._change_id
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_change_older_than_the_marker_is_removed_by_its_activation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A change stored behind a newer one is still activated, so it must be removed.
+
+    The remote-site sync appends a remote's changes to the central's log, and those were
+    recorded earlier than what is already queued for that site -- so the log is not in
+    time order. An activation runs up to the newest change by time and has to drop
+    everything it covered, wherever in the log those entries happen to sit.
+    """
+    site_id = SiteId("mysite")
+    site_changes = SiteChanges(site_id)
+    site_changes.append(_make_change_spec("newer", change_time=200.0))
+    site_changes.append(_make_change_spec("older", change_time=100.0))
+    try:
+        monkeypatch.setattr(
+            activate_changes_module,
+            "load_activate_change_manager_with_id",
+            lambda _activation_id: _ActivateUntil("newer"),
+        )
+        changes = ActivateChanges()
+        changes.load([site_id], SiteConfigurations({site_id: _make_local_site_config(site_id)}))
+        changes.load_changes_until("activation-id", [site_id])
+
+        _confirm_activated_changes(site_id, changes.get_changes_to_activate(site_id))
+
+        assert site_changes.read() == []
+    finally:
+        site_changes.clear()
 
 
 class _NoLicenseEffect:
@@ -1422,3 +1500,383 @@ class TestSiteHasForeignChanges:
             assert changes.site_has_foreign_changes(self.SITE_ID) is True
         finally:
             site_changes.clear()
+
+
+def test_domains_restarting_the_site_are_activated_last() -> None:
+    requests = [
+        DomainRequest(EXPERIMENTAL_FLAGS),
+        DomainRequest(OMD),
+        DomainRequest(SITE_CERTIFICATE),
+    ]
+
+    assert [request.name for request in sort_for_activation(requests)] == [
+        SITE_CERTIFICATE,
+        OMD,
+        EXPERIMENTAL_FLAGS,
+    ]
+
+
+_REMOTE_SITE_ID = SiteId("remote")
+_REMOTE_AUTOMATION_CONFIG = RemoteAutomationConfig(
+    site_id=_REMOTE_SITE_ID,
+    base_url="http://remote/remote/check_mk/",
+    secret="secret",
+    insecure=False,
+)
+
+
+def _activation_status(
+    state: str,
+    *,
+    is_active: bool,
+    exception: Sequence[str] = (),
+    traceback: str = "",
+    crash_id: str = "",
+    warnings: ConfigWarnings | None = None,
+) -> RemoteActivationStatus:
+    return RemoteActivationStatus(
+        state=state,
+        is_active=is_active,
+        exception=list(exception),
+        traceback=traceback,
+        crash_id=crash_id,
+        warnings=warnings or {},
+    )
+
+
+class _FakeRemoteSite:
+    """Answers the automation calls of the central site with the given status sequence
+
+    The last status is repeated once the sequence is exhausted. An exception in the sequence is
+    raised instead of being answered."""
+
+    def __init__(self, statuses: Sequence[RemoteActivationStatus | Exception]) -> None:
+        self._statuses = list(statuses)
+        self.started_domains: list[object] = []
+
+    def do_remote_automation(
+        self,
+        automation_config: RemoteAutomationConfig,  # noqa: ARG002
+        command: str,
+        vars_: Sequence[tuple[str, str]],
+        debug: bool = False,  # noqa: ARG002
+    ) -> object:
+        if command == "activate-changes-start":
+            self.started_domains.append(dict(vars_)["domains"])
+            return "activate-changes-remote-6ff3d0a9-4a9e-4f4b-a65d-2df7b3dbcc52"
+        assert command == "activate-changes-get-status"
+        status = self._statuses.pop(0) if len(self._statuses) > 1 else self._statuses[0]
+        if isinstance(status, Exception):
+            raise status
+        return status
+
+
+class _FakeClock:
+    def __init__(self) -> None:
+        self.now = 0.0
+
+    def monotonic(self) -> float:
+        return self.now
+
+    def sleep(self, seconds: float) -> None:
+        self.now += seconds
+
+
+@pytest.fixture(name="clock")
+def fixture_clock(monkeypatch: pytest.MonkeyPatch) -> _FakeClock:
+    clock = _FakeClock()
+    monkeypatch.setattr(time, "monotonic", clock.monotonic)
+    monkeypatch.setattr(time, "sleep", clock.sleep)
+    return clock
+
+
+def _install_remote_site(
+    monkeypatch: pytest.MonkeyPatch, statuses: Sequence[RemoteActivationStatus | Exception]
+) -> _FakeRemoteSite:
+    remote_site = _FakeRemoteSite(statuses)
+    # Legacy compromise: the HTTP transport to the remote site is not injectable.
+    monkeypatch.setattr(
+        cmk.gui.watolib.automations, "do_remote_automation", remote_site.do_remote_automation
+    )
+    return remote_site
+
+
+@pytest.mark.usefixtures("clock")
+def test_remote_activation_returns_warnings_once_the_job_finished(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_remote_site(
+        monkeypatch,
+        [
+            _activation_status(JobStatusStates.RUNNING, is_active=True),
+            _activation_status(
+                JobStatusStates.FINISHED, is_active=False, warnings={"check_mk": ["warning"]}
+            ),
+        ],
+    )
+
+    warnings = activate_remote_site(
+        _REMOTE_AUTOMATION_CONFIG, _REMOTE_SITE_ID, [DomainRequest(OMD)], debug=False
+    )
+
+    assert warnings == {"check_mk": ["warning"]}
+
+
+@pytest.mark.usefixtures("clock")
+def test_remote_activation_waits_while_the_remote_site_restarts(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_remote_site(
+        monkeypatch,
+        [
+            MKRemoteSiteUnavailable("HTTP Error - 502: Proxy Error"),
+            _activation_status(
+                JobStatusStates.FINISHED, is_active=False, warnings={"omd": ["restarted"]}
+            ),
+        ],
+    )
+
+    warnings = activate_remote_site(
+        _REMOTE_AUTOMATION_CONFIG, _REMOTE_SITE_ID, [DomainRequest(OMD)], debug=False
+    )
+
+    assert warnings == {"omd": ["restarted"]}
+
+
+@pytest.mark.usefixtures("clock")
+def test_remote_activation_failure_reports_the_job_exception(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_remote_site(
+        monkeypatch,
+        [
+            _activation_status(
+                JobStatusStates.EXCEPTION, is_active=False, exception=["core config broken"]
+            )
+        ],
+    )
+
+    with pytest.raises(MKGeneralException) as excinfo:
+        activate_remote_site(
+            _REMOTE_AUTOMATION_CONFIG, _REMOTE_SITE_ID, [DomainRequest(OMD)], debug=False
+        )
+
+    assert str(excinfo.value) == f"Activation on site {_REMOTE_SITE_ID} failed: core config broken"
+
+
+@pytest.mark.usefixtures("clock")
+def test_remote_activation_failure_reports_the_traceback_of_the_remote_site(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_remote_site(
+        monkeypatch,
+        [
+            _activation_status(
+                JobStatusStates.EXCEPTION,
+                is_active=False,
+                exception=["core config broken"],
+                traceback="Traceback (most recent call last):\n...",
+            )
+        ],
+    )
+
+    with pytest.raises(MKGeneralException) as excinfo:
+        activate_remote_site(
+            _REMOTE_AUTOMATION_CONFIG, _REMOTE_SITE_ID, [DomainRequest(OMD)], debug=False
+        )
+
+    assert (
+        str(excinfo.value) == f"Activation on site {_REMOTE_SITE_ID} failed: core config broken"
+        "<pre>Traceback (most recent call last):\n...</pre>"
+    )
+
+
+@pytest.mark.usefixtures("clock")
+def test_remote_activation_crash_refers_to_the_crash_report_of_the_remote_site(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_remote_site(
+        monkeypatch,
+        [
+            _activation_status(
+                JobStatusStates.EXCEPTION,
+                is_active=False,
+                exception=["Exception (crash ID: 894e40f4-c7dd-11f1-b42f-80e4baae41ab): bug"],
+                crash_id="894e40f4-c7dd-11f1-b42f-80e4baae41ab",
+            )
+        ],
+    )
+
+    with pytest.raises(RemoteActivationCrash) as excinfo:
+        activate_remote_site(
+            _REMOTE_AUTOMATION_CONFIG, _REMOTE_SITE_ID, [DomainRequest(OMD)], debug=False
+        )
+
+    assert (excinfo.value.site_id, excinfo.value.crash_id) == (
+        _REMOTE_SITE_ID,
+        "894e40f4-c7dd-11f1-b42f-80e4baae41ab",
+    )
+
+
+def test_remote_activation_fails_when_the_job_is_no_longer_running(
+    monkeypatch: pytest.MonkeyPatch, clock: _FakeClock
+) -> None:
+    _install_remote_site(
+        monkeypatch, [_activation_status(JobStatusStates.RUNNING, is_active=False)]
+    )
+
+    with pytest.raises(MKGeneralException, match="no longer running"):
+        activate_remote_site(
+            _REMOTE_AUTOMATION_CONFIG, _REMOTE_SITE_ID, [DomainRequest(OMD)], debug=False
+        )
+
+    assert 30 < clock.now < 32
+
+
+def test_remote_activation_fails_when_the_job_does_not_finish_in_time(
+    monkeypatch: pytest.MonkeyPatch, clock: _FakeClock
+) -> None:
+    _install_remote_site(monkeypatch, [_activation_status(JobStatusStates.RUNNING, is_active=True)])
+
+    with pytest.raises(MKGeneralException, match="did not finish within 30 minutes"):
+        activate_remote_site(
+            _REMOTE_AUTOMATION_CONFIG, _REMOTE_SITE_ID, [DomainRequest(OMD)], debug=False
+        )
+
+    assert 1800 < clock.now < 1802
+
+
+def test_remote_activation_fails_when_the_remote_site_stays_unreachable(
+    monkeypatch: pytest.MonkeyPatch, clock: _FakeClock
+) -> None:
+    _install_remote_site(monkeypatch, [MKRemoteSiteUnavailable("Site is not running")])
+
+    with pytest.raises(MKRemoteSiteUnavailable):
+        activate_remote_site(
+            _REMOTE_AUTOMATION_CONFIG, _REMOTE_SITE_ID, [DomainRequest(OMD)], debug=False
+        )
+
+    assert 300 < clock.now < 302
+
+
+def test_remote_activation_fails_on_other_errors_of_the_remote_site(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_remote_site(
+        monkeypatch, [MKUserError("_passwd", "Authentication failed. Invalid login/password.")]
+    )
+
+    with pytest.raises(MKUserError, match="Authentication failed"):
+        activate_remote_site(
+            _REMOTE_AUTOMATION_CONFIG, _REMOTE_SITE_ID, [DomainRequest(OMD)], debug=False
+        )
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "job_id",
+    [
+        pytest.param("../../../etc/passwd", id="path traversal"),
+        pytest.param("activate-changes-remote-../../../etc", id="path traversal after prefix"),
+        pytest.param("automation-6ff3d0a9-4a9e-4f4b-a65d-2df7b3dbcc52", id="job of other type"),
+    ],
+)
+# fmt: on
+def test_remote_activation_job_rejects_foreign_job_ids(job_id: str) -> None:
+    with pytest.raises(MKUserError):
+        RemoteActivationBackgroundJob.from_job_id(job_id)
+
+
+class _FailingDomain(ABCConfigDomain):
+    def __init__(self, error: Exception) -> None:
+        self._error = error
+
+    @override
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return ConfigDomainName("failing")
+
+    @override
+    def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+        raise self._error
+
+    @override
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
+        return []
+
+    @override
+    def config_dir(self) -> Path:
+        return Path("/nonexistent")
+
+    @override
+    def default_globals(self) -> GlobalSettings:
+        return {}
+
+
+def _run_remote_activation_job_failing_with(error: Exception) -> RemoteActivationStatus:
+    config_domain_registry.register(_FailingDomain(error))
+    try:
+        job = RemoteActivationBackgroundJob.start_activation(
+            make_folder_tree(Config()),
+            [DomainRequest(_FailingDomain.ident())],
+            UserPermissionSerializableConfig(
+                roles={}, user_roles={}, default_user_profile_roles=[]
+            ),
+        )
+        job.wait_for_completion(30)
+    finally:
+        config_domain_registry.unregister(_FailingDomain.ident())
+    return job.activation_status()
+
+
+@pytest.mark.usefixtures("patch_omd_site", "allow_background_jobs")
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(MKGeneralException("core config broken"), id="MKGeneralException"),
+        pytest.param(MKUserError(None, "core config broken"), id="MKUserError"),
+    ],
+)
+def test_remote_activation_job_reports_user_errors_without_crash_report(error: Exception) -> None:
+    status = _run_remote_activation_job_failing_with(error)
+
+    assert status["state"] == JobStatusStates.EXCEPTION
+    assert status["exception"] == ["core config broken"]
+    assert status["crash_id"] == ""
+    assert status["traceback"].startswith("Traceback (most recent call last):")
+    assert "core config broken" in status["traceback"]
+
+
+@pytest.mark.usefixtures("patch_omd_site", "allow_background_jobs")
+def test_remote_activation_job_reports_other_errors_with_crash_report() -> None:
+    status = _run_remote_activation_job_failing_with(KeyError("bug"))
+
+    assert status["state"] == JobStatusStates.EXCEPTION
+    crash_info = pop_crash_report_file("gui", "crash.info")
+    assert crash_info is not None
+    assert status["crash_id"] == json.loads(crash_info)["id"]
+    assert status["crash_id"] in "\n".join(status["exception"])
+    assert status["traceback"] == ""
+
+
+def _fail_to_connect_to_broker(*_args: object) -> None:
+    raise CMKConnectionError("certificate verify failed: self-signed certificate")
+
+
+@pytest.mark.usefixtures("request_context")
+def test_failing_broker_connection_during_hub_config_distribution_is_logged(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    features = replace(
+        next(iter(activate_changes.activation_features_registry.values())),
+        distribute_piggyback_hub_configs=_fail_to_connect_to_broker,
+    )
+
+    with caplog.at_level(logging.WARNING, logger="cmk.web"):
+        _distribute_piggyback_hub_configs(
+            features, SiteConfigurations({}), [], make_folder_tree(Config())
+        )
+
+    assert any("message broker" in m for m in caplog.messages)

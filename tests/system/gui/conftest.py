@@ -20,20 +20,20 @@ from playwright.sync_api import BrowserContext, Page
 
 from tests.system.gui.testlib.api_helpers import LOCALHOST_IPV4
 from tests.system.gui.testlib.host_details import HostDetails
+from tests.system.gui.testlib.playwright import plugin as playwright_plugin
 from tests.system.gui.testlib.playwright.helpers import CmkCredentials
+from tests.system.gui.testlib.playwright.navigation import navigate_to_page
 from tests.system.gui.testlib.playwright.plugin import PageGetter
 from tests.system.gui.testlib.playwright.pom.customize.edit_dashboard import EditDashboards
 from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
+    fixture_admin_graph_pin,
     fixture_combined_graphs_page,
     fixture_combined_graphs_page_all_services,
     fixture_custom_graph_for_editing,
     fixture_dashboard_action_menu_surfaces,
     fixture_dashboard_with_action_menu_widgets,
     fixture_graph_collection,
-    fixture_graph_hosts_high_density,
     fixture_graph_hosts_with_varying_data,
-    fixture_graph_rrd_dst_boundary,
-    fixture_graph_rrd_with_gaps,
     fixture_javascript_errors,
     fixture_requested_urls,
     fixture_rrd_metric_source,
@@ -41,21 +41,25 @@ from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
     fixture_scatterplot_widget,
     fixture_service_graphs,
     fixture_service_graphs_hover_popup,
+    fixture_stored_graph_pin,
 )
-from tests.system.gui.testlib.playwright.pom.login import LoginPage
 from tests.system.gui.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import DashboardMobile, MainDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.hosts_dashboard import LinuxHostsDashboard
-from tests.system.gui.testlib.playwright.pom.page import CmkPage
 from tests.system.gui.testlib.playwright.pom.setup.fixtures import notification_user
 from tests.system.gui.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
 from tests.system.gui.testlib.playwright.pom.setup.licensing import Licensing
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils2 import is_cleanup_enabled, run
-from tests.testlib.emails import EmailManager
-from tests.testlib.notifications import create_host, create_notification_host, NotificationTarget
-from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
-from tests.testlib.site import (
+from tests.testlib.pytest_helpers.registration import register_pytest_plugins
+from tests.testlib.system.emails import EmailManager
+from tests.testlib.system.notifications import (
+    create_host,
+    create_notification_host,
+    NotificationTarget,
+)
+from tests.testlib.system.pytest_helpers.calls import exit_pytest_on_exceptions
+from tests.testlib.system.site import (
     ADMIN_USER,
     get_site_factory,
     Site,
@@ -72,16 +76,14 @@ _unique_faker = Faker().unique
 # these lists only keep the imports from being flagged as unused.
 setup_fixtures = [notification_user]
 graphing_fixtures = [
+    fixture_admin_graph_pin,
     fixture_combined_graphs_page,
     fixture_combined_graphs_page_all_services,
     fixture_custom_graph_for_editing,
     fixture_dashboard_action_menu_surfaces,
     fixture_dashboard_with_action_menu_widgets,
     fixture_graph_collection,
-    fixture_graph_hosts_high_density,
     fixture_graph_hosts_with_varying_data,
-    fixture_graph_rrd_dst_boundary,
-    fixture_graph_rrd_with_gaps,
     fixture_javascript_errors,
     fixture_requested_urls,
     fixture_rrd_metric_source,
@@ -89,6 +91,7 @@ graphing_fixtures = [
     fixture_scatterplot_widget,
     fixture_service_graphs,
     fixture_service_graphs_hover_popup,
+    fixture_stored_graph_pin,
 ]
 
 
@@ -194,25 +197,6 @@ def _licensing_page(cmk_page: Page, test_site: Site, credentials: CmkCredentials
     return navigate_to_page(cmk_page, test_site.internal_url, credentials, Licensing)
 
 
-def navigate_to_page[TCmkPage: CmkPage](
-    page: Page,
-    url: str,
-    credentials: CmkCredentials,
-    page_type: type[TCmkPage],
-) -> TCmkPage:
-    """Navigate to a page.
-
-    Performs a login to Checkmk site, if necessary.
-    """
-    page.goto(url, wait_until="load")
-
-    if "login.py" in page.url:
-        # Log in to the site if not already logged in.
-        LoginPage(page, site_url=url, navigate_to_page=False).login(credentials)
-
-    return page_type(page, navigate_to_page=True)
-
-
 @pytest.fixture(name="new_browser_context_and_page")
 def fixture_new_browser_context_and_page(
     context: BrowserContext, get_new_page: PageGetter
@@ -243,7 +227,10 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     )
 
 
-def pytest_addoption(parser: pytest.Parser) -> None:
+def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:
+    # The playwright fixtures and options are only wanted for the GUI tests, so this is
+    # the only suite that registers them.
+    register_pytest_plugins(pluginmanager, playwright_plugin)
     parser.addoption(
         "--update-rules",
         action="store_true",
@@ -466,3 +453,37 @@ def fixture_bulk_create_hosts_remote_site(
         num_hosts = int(request.param)
         activate = False
     yield from _create_bulk_hosts(remote_site_wato_disabled, num_hosts, test_site, activate)
+
+
+@pytest.fixture(name="bypass_nslookup")
+def fixture_bypass_nslookup(test_site: Site) -> Iterator[None]:
+    """Fixture to bypass `nslookup` command in the checkmk site.
+
+    For any reason, `nslookup` does not work properly in CI, so this fixture creates a dummy
+    `nslookup` command that always return 0 (OK), so then checkmk will execute `ping` to validate
+    the hostname.
+    """
+    dummy_nslookup = test_site.path("local/bin/nslookup")
+
+    _input = "\n".join(  # noqa: FLY002
+        (
+            "#!/bin/bash",
+            "",
+            "sleep 1",
+            "",
+            "if [ $2 == 'localhost' ]",
+            "then",
+            "  exit 0",
+            "else",
+            "  exit 1",
+            "fi",
+            "",
+        )
+    )
+
+    run(["tee", str(dummy_nslookup)], input_=_input, sudo=True)
+    run(["chmod", "a+x", str(dummy_nslookup)], sudo=True)
+
+    yield
+
+    run(["rm", str(dummy_nslookup)], sudo=True)

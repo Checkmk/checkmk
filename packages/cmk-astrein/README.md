@@ -5,10 +5,8 @@ It was introduced as replacement for pylint. It's current core functionality is 
 
 ## What It Does
 
-Astrein enforces code quality rules through specialized checkers:
-
-- **localization**: Validates localization function calls (e.g., `_()`, `Title()`) use literal strings and allowed HTML tags
-- **module-layers**: Enforces architectural boundaries between Checkmk components (e.g., prevents GUI from importing base internals)
+Astrein enforces code quality rules through specialized checkers.
+Run `bazel run //packages/cmk-astrein:astrein -- --help` for the current list.
 
 ## Usage
 
@@ -53,6 +51,10 @@ translated = _(variable_text)
 
 result = _(dynamic_string)  # astrein: disable=localization
 ```
+
+The id is the one shown in brackets in the error message.
+A suppression that does not suppress anything is reported as `unused-suppression`, so stale suppressions get removed.
+Suppressions for checkers that did not run (`--checker <name>`) are not judged.
 
 ## LSP Server
 
@@ -121,12 +123,23 @@ If you have a better approach, please reach out!
 
 ## Architecture
 
-- **framework.py**: Core AST visitor framework and error handling
-- **cli.py**: Command-line interface and file discovery
-- **lsp.py**: LSP server for editor integration
-- **checker_localization.py**: Localization validation logic
-- **checker_module_layers.py**: Module layer architecture enforcement
-- **sarif.py**: SARIF output formatting
-- **config/**: Checker-specific configuration (layer rules, etc.)
+```
+cmk/astrein/
+  checkers/        one module or package per checker
+  framework.py     checker base class and the finding type
+  suppressions.py  parses # astrein: disable=<id> comments
+  engine.py        runs the checkers and applies suppressions
+  registry.py      discovers all checkers
+  output/          gcc and SARIF formats
+  cli.py           command line frontend, used by the Bazel aspect
+  lsp.py           LSP frontend for editors
+```
+
+Checkers import only `framework.py` and each other, and nothing imports the frontends `cli.py` and `lsp.py`.
+
+### Adding a checker
+
+1. Add `checkers/<name>.py` with a subclass of `ASTVisitorChecker` that sets `checker_id` and `summary`.
+2. Add `tests/checkers/test_<name>.py`.
 
 Astrein, every time.

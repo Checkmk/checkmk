@@ -5,6 +5,7 @@
 
 
 import json
+from http import HTTPStatus
 from typing import get_args
 
 import pytest
@@ -24,7 +25,7 @@ from cmk.gui.openapi.restful_objects.constructors import (
 from cmk.gui.openapi.restful_objects.type_defs import StatusCode, StatusCodeInt
 from cmk.gui.wsgi.app import application_and_request_context
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
@@ -256,7 +257,7 @@ def test_no_config_generation_on_certain_posts(
                 }
             ),
             headers={"Accept": "application/json"},
-            status=204,
+            status=HTTPStatus.NO_CONTENT,
         )
     # we have a post request, but explitily said so in the endpoint to not update_config,
     # so we expect update_config not to be called

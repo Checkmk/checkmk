@@ -10,14 +10,13 @@ from cmk.agent_based.v2 import (
     all_of,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.f5_bigip.lib import F5_BIGIP, VERSION_V11_2_PLUS
 
 Section = Mapping[str, str]
@@ -29,10 +28,6 @@ def parse_f5_bigip_vcmpguests(string_table: Sequence[StringTable]) -> Section | 
     {'guest1': 'active', 'guest2': 'inactive'}
     """
     return {guest: status.lower() for guest, status in string_table[0]} or None
-
-
-def discovery_f5_bigip_vcmpguests(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_f5_bigip_vcmpguests(section: Section) -> CheckResult:
@@ -58,6 +53,6 @@ snmp_section_f5_bigip_vcmpguests = SNMPSection(
 check_plugin_f5_bigip_vcmpguests = CheckPlugin(
     name="f5_bigip_vcmpguests",  # name taken from pre-1.7 plug-in
     service_name="BIG-IP vCMP Guests",
-    discovery_function=discovery_f5_bigip_vcmpguests,
+    discovery_function=discover_one_service,
     check_function=check_f5_bigip_vcmpguests,
 )

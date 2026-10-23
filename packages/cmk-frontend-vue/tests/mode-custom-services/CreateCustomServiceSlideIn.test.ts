@@ -5,36 +5,21 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, expect, test, vi } from 'vitest'
+import { afterEach, expect, test } from 'vitest'
 
 import CreateCustomServiceSlideIn from '@/mode-custom-services/CreateCustomServiceSlideIn.vue'
 import { type ServiceModel, emptyService } from '@/mode-custom-services/types'
 
-// The default client singleton captures `globalThis.fetch` at import time, before
-// server.listen() patches it. Re-create it with a lazy fetch wrapper so MSW can intercept.
-vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
-  const mod = await importOriginal<Record<string, unknown>>()
-  const createClientImpl = (await import('openapi-fetch')).default
-  return {
-    ...mod,
-    default: createClientImpl({
-      baseUrl: `${location.protocol}//${location.host}/api/internal`,
-      credentials: 'include',
-      headers: { Accept: 'application/json' },
-      fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
-    })
-  }
-})
-
 const CREATE_URL = `${location.protocol}//${location.host}/api/internal/domain-types/custom_service/collections/all`
-const AUTOCOMPLETE_URL = `${location.protocol}//${location.host}/api/1.0/objects/autocomplete/:ident`
+const AUTOCOMPLETE_URL = `${location.protocol}//${location.host}/api/internal/objects/autocomplete/:ident`
 
 let createRequests = 0
 let lastBody: unknown = null
+let existingNames: string[] = []
 
-const server = setupServer(
+const server = useMswServer(
   http.post(CREATE_URL, async ({ request }) => {
     createRequests += 1
     lastBody = await request.json()
@@ -44,19 +29,22 @@ const server = setupServer(
       title: 'HTTP duration'
     })
   }),
+  http.get(CREATE_URL, () =>
+    HttpResponse.json({
+      value: existingNames.map((id) => ({ id, domainType: 'custom_service' }))
+    })
+  ),
   http.post(AUTOCOMPLETE_URL, () =>
     HttpResponse.json({ choices: [{ id: 'web01', value: 'web01 (10.0.0.1)' }] })
   )
 )
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   cleanup()
   createRequests = 0
   lastBody = null
-  server.resetHandlers()
+  existingNames = []
 })
-afterAll(() => server.close())
 
 function initialModel(overrides: Partial<ServiceModel> = {}): ServiceModel {
   return {
@@ -71,6 +59,17 @@ function renderSlideIn(initial: ServiceModel = initialModel()) {
   return render(CreateCustomServiceSlideIn, { props: { open: true, initial } })
 }
 
+async function configurationNameInput(): Promise<HTMLElement> {
+  return await screen.findByRole('textbox', { name: /Configuration name/ })
+}
+
+async function enterConfigurationName(name: string): Promise<void> {
+  const input = await configurationNameInput()
+  await waitFor(() => expect(input).not.toHaveValue(''))
+  await userEvent.clear(input)
+  await userEvent.type(input, name)
+}
+
 async function selectHost(): Promise<void> {
   const combobox = await screen.findByRole('combobox')
   await waitFor(() => expect(combobox).toBeEnabled(), { timeout: 10000 })
@@ -79,6 +78,48 @@ async function selectHost(): Promise<void> {
     await screen.findByRole('option', { name: 'web01 (10.0.0.1)' }, { timeout: 10000 })
   )
 }
+
+test('suggests the next free configuration name', async () => {
+  existingNames = ['custom_service_config_1', 'custom_service_config_4']
+  renderSlideIn()
+  const input = await configurationNameInput()
+  await waitFor(() => expect(input).toHaveValue('custom_service_config_5'))
+})
+
+test('creates the service under the entered configuration name', async () => {
+  const { emitted } = renderSlideIn()
+  await enterConfigurationName('my_latency')
+  await selectHost()
+  await userEvent.click(await screen.findByRole('button', { name: 'Save' }))
+
+  await waitFor(() => expect(emitted('close')).toBeTruthy())
+  expect(lastBody).toMatchObject({ configuration_name: 'my_latency' })
+})
+
+test('a malformed configuration name blocks the create and shows the error at the field', async () => {
+  const { emitted } = renderSlideIn()
+  await enterConfigurationName('1 bad')
+  await selectHost()
+  await userEvent.click(await screen.findByRole('button', { name: 'Save' }))
+
+  await screen.findByText(
+    'The name must only consist of letters, digits, dash and underscore and it must start with a letter or underscore.'
+  )
+  expect(createRequests).toBe(0)
+  expect(emitted('close')).toBeUndefined()
+})
+
+test('a configuration name in use blocks the create and shows the error at the field', async () => {
+  existingNames = ['taken_name']
+  const { emitted } = renderSlideIn()
+  await enterConfigurationName('taken_name')
+  await selectHost()
+  await userEvent.click(await screen.findByRole('button', { name: 'Save' }))
+
+  await screen.findByText('A configuration with this name already exists. Choose a different name.')
+  expect(createRequests).toBe(0)
+  expect(emitted('close')).toBeUndefined()
+})
 
 test('shows the prefilled service name, editable', async () => {
   renderSlideIn()
@@ -117,16 +158,17 @@ test('saving persists the metric query from the graph and closes the dialog', as
       aggregator
     })
   )
+  await waitFor(async () => expect(await configurationNameInput()).not.toHaveValue(''))
   await selectHost()
   await userEvent.click(await screen.findByRole('button', { name: 'Save' }))
 
   await waitFor(() => expect(emitted('close')).toBeTruthy())
   expect(lastBody).toEqual({
-    configuration_name: 'http_duration_on_web01',
+    configuration_name: 'custom_service_config_1',
     host_assignment: { mode: 'explicit_host', host_name: 'web01' },
     configuration: {
       metric_name: 'otel.http.duration',
-      service_name_template: 'HTTP duration',
+      service_name_template: 'HTTP duration $SERIES_ATTRIBUTES$',
       consolidation: { type: 'sum', function: 'sum_rate', lookback_seconds: 300 },
       aggregator
     }

@@ -5,10 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { ref, watch } from 'vue'
 
-/** Digits a one-time code is made of. Both the grouping gap and the model length follow it. */
-const DIGIT_COUNT = 6
+import { DIGIT_COUNT } from './otpInput'
+
 /** Index the wider gap sits after, splitting the code into two even halves. */
 const GROUP_SPLIT_INDEX = DIGIT_COUNT / 2 - 1
 
@@ -19,6 +20,11 @@ type Props = {
 
 const { disabled = false, error = false } = defineProps<Props>()
 const { _t } = usei18n()
+useWidgetKeys(_t('One-time code'), [
+  { combo: ['Backspace'], description: _t('Clear digit') },
+  { combo: ['ArrowLeft'], description: _t('Move between digits') },
+  { combo: ['ArrowRight'], description: _t('Move between digits') }
+])
 const emit = defineEmits<{
   (e: 'submit'): void
 }>()
@@ -171,11 +177,11 @@ function handleFocus(event: FocusEvent) {
 }
 
 .otp-input__digit--error {
-  border-color: var(--inline-error-border-color);
+  border-color: var(--status-border-color-error);
 }
 
 .otp-input__digit--error:focus {
-  border-color: var(--inline-error-border-color);
+  border-color: var(--status-border-color-error);
   background-color: var(--input-hover-bg-color);
 }
 

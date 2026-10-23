@@ -6,6 +6,7 @@
 from collections.abc import Iterator, Sequence, Set
 from contextlib import contextmanager
 
+from polyfactory.decorators import post_generated
 from polyfactory.factories import DataclassFactory
 
 from cmk.ccc.user import UserId
@@ -16,13 +17,37 @@ from cmk.gui.monitor.hosts._models import (
     HostFilter,
     HostOptionalField,
     HostSort,
+    RelatedHost,
     UnixTimestamp,
 )
 from cmk.gui.monitor.hosts._repositories import EventRepository, HostRepository
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.role_types import BuiltInUserRole
 from cmk.gui.session_context import UserContext
+from cmk.gui.utils.host_relation_kinds import RELATION_KINDS
+from cmk.gui.utils.host_relations import RelationDirection
 from cmk.gui.utils.roles import UserPermissions
+
+
+class RelatedHostFactory(DataclassFactory[RelatedHost]):
+    """A relation whoever reads it can place.
+
+    ``kind`` is a plain string on the domain object - a core may report one of a later version -
+    but a host built here stands for one this version resolved, and only such a relation has an
+    end to name it by.
+    """
+
+    __check_model__ = False
+    __set_as_default_factory_for_type__ = True
+
+    @classmethod
+    def kind(cls) -> str:
+        return cls.__random__.choice(list(RELATION_KINDS))
+
+    @post_generated
+    @classmethod
+    def direction(cls, kind: str) -> RelationDirection:
+        return cls.__random__.choice(list(RELATION_KINDS[kind].directions()))
 
 
 class HostFactory(DataclassFactory[Host]):
@@ -64,8 +89,19 @@ def get_fake_host_repository(
             sorters: Sequence[HostSort],  # noqa: ARG002
             filters: HostFilter,  # noqa: ARG002
             fields: Set[HostOptionalField] = frozenset(),  # noqa: ARG002
+            visible_relations: frozenset[tuple[str, str]] | None = None,  # noqa: ARG002
         ) -> Sequence[Host]:
             return self._hosts[:limit]
+
+        def visible_relation_hosts(
+            self,
+            *,
+            fields: Set[HostOptionalField],
+            sorters: Sequence[HostSort],  # noqa: ARG002
+        ) -> frozenset[tuple[str, str]] | None:
+            if HostOptionalField.NUM_RELATIONS not in fields:
+                return None
+            return frozenset((host.site_id, host.name) for host in self._hosts)
 
         def get_overview(self, *, hostname: str, site_id: str) -> Host:
             try:
@@ -120,6 +156,12 @@ def login_with(permissions: dict[str, bool]) -> Iterator[None]:
     """A logged-in user whose role spells out exactly these permissions."""
     role: BuiltInUserRole = {"alias": "Test", "permissions": permissions, "builtin": True}
     with UserContext(
-        UserId("test"), UserPermissions({"user": role}, permission_registry, {}, ["user"])
+        UserId("test"),
+        UserPermissions(
+            {"user": role},
+            all_permissions(),
+            {},
+            ["user"],
+        ),
     ):
         yield

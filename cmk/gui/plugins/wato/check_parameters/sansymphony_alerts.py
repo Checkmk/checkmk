@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -11,35 +10,32 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Migrate, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
-def _parameter_valuespec_sansymphony_alerts() -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels",
-                    Tuple(
-                        title=_("Number of unacknowlegded alerts"),
-                        elements=[
-                            Integer(
-                                title=_("Warning at"),
-                                unit=_("alerts"),
-                                default_value=1,
-                            ),
-                            Integer(
-                                title=_("Critical at"),
-                                unit=_("alerts"),
-                                default_value=2,
-                            ),
-                        ],
-                    ),
+def _parameter_valuespec_sansymphony_alerts() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Number of unacknowlegded alerts"),
+                    elements=[
+                        Integer(
+                            title=_("Warning at"),
+                            unit=_("alerts"),
+                            default_value=1,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            unit=_("alerts"),
+                            default_value=2,
+                        ),
+                    ],
                 ),
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
+            ),
+        ],
+        optional_keys=[],
     )
 
 

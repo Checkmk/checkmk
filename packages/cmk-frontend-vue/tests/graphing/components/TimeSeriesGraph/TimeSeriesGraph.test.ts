@@ -3,10 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { getLocalTimeZone } from '@internationalized/date'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { select } from 'd3-selection'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { defineComponent, ref } from 'vue'
 
 import TimeSeriesGraph from '@/graphing/components/TimeSeriesGraph/TimeSeriesGraph.vue'
 import { measureAxisLabel } from '@/graphing/components/TimeSeriesGraph/axes/labelWidth'
@@ -17,19 +19,36 @@ import {
   PLOT_INSET_X,
   VALUE_LABEL_TICK_OFFSET
 } from '@/graphing/components/constants'
+import { binEdges } from '@/graphing/utils/bins'
 
 let drawnPoints: Array<[number, number]> = []
+let drawnStrokes: Array<Array<[number, number]>> = []
+let filledRects: Array<[number, number, number, number]> = []
 
 // jsdom implements neither a 2D canvas context nor matchMedia, both of which the graph
 // touches on mount (draw() + the devicePixelRatio watcher). Stub them so the component
 // mounts and runs its real draw path instead of throwing.
 function createCanvasContextStub(): CanvasRenderingContext2D {
   const state: Record<string | symbol, unknown> = {}
-  const recordPoint = (x: number, y: number): void => void drawnPoints.push([x, y])
+  const liftPenAndMoveTo = (x: number, y: number): void => {
+    drawnPoints.push([x, y])
+    drawnStrokes.push([[x, y]])
+  }
+  const drawLineTo = (x: number, y: number): void => {
+    drawnPoints.push([x, y])
+    drawnStrokes.at(-1)?.push([x, y])
+  }
   return new Proxy(state, {
     get: (target, prop) => {
-      if (prop === 'moveTo' || prop === 'lineTo') {
-        return recordPoint
+      if (prop === 'moveTo') {
+        return liftPenAndMoveTo
+      }
+      if (prop === 'lineTo') {
+        return drawLineTo
+      }
+      if (prop === 'fillRect') {
+        return (x: number, y: number, width: number, height: number) =>
+          filledRects.push([x, y, width, height])
       }
       return prop in target ? target[prop] : () => undefined
     },
@@ -42,6 +61,8 @@ function createCanvasContextStub(): CanvasRenderingContext2D {
 
 beforeEach(() => {
   drawnPoints = []
+  drawnStrokes = []
+  filledRects = []
   vi.stubGlobal(
     'matchMedia',
     vi.fn().mockReturnValue({
@@ -62,8 +83,6 @@ function letterSpaceEveryElement(): void {
 }
 
 afterEach(() => {
-  vi.restoreAllMocks()
-  vi.unstubAllGlobals()
   themeLetterSpacing?.remove()
   themeLetterSpacing = null
 })
@@ -75,17 +94,15 @@ const UNIT: components['schemas']['ApiUnitFormat'] = {
   convertible: true
 }
 
-// stack: null makes computeStackedSeries classify the metric as a 'line' series (rather than
-// a stacked area), so this fixture is genuinely a line graph.
 const LINE_METRIC: Metric = {
   metadata: { name: 'cpu', title: 'CPU utilization', unit: UNIT, color: '#ff0000', attributes: [] },
-  render: { stack: null, inverse: false, hidden: false },
+  render: { shape: 'line', inverse: false, hidden: false },
   data_points: [1, 2, 3, 4, 5]
 }
 
 const STACKED_METRIC: Metric = {
   metadata: { name: 'user', title: 'User', unit: UNIT, color: '#00ff00', attributes: [] },
-  render: { stack: 'area', inverse: false, hidden: false },
+  render: { shape: 'area', stack: 'area', inverse: false, hidden: false },
   data_points: [1, 2, 3, 4, 5]
 }
 
@@ -98,12 +115,13 @@ const INVERSE_METRIC: Metric = {
     color: '#0000ff',
     attributes: []
   },
-  render: { stack: null, inverse: true, hidden: false },
+  render: { shape: 'line', inverse: true, hidden: false },
   data_points: [1, 2, 3, 4, 5]
 }
 
 const DEFAULT_PROPS: TimeSeriesGraphProps = {
   size: { width: 800, height: 400, mode: 'fixed' },
+  binUnit: null,
   options: {
     header: { title: null, show_graph_time: false },
     name: 'graph',
@@ -143,7 +161,7 @@ const MEMORY_METRIC: Metric = {
     color: '#ff0000',
     attributes: []
   },
-  render: { stack: null, inverse: false, hidden: false },
+  render: { shape: 'line', inverse: false, hidden: false },
   data_points: [1.2e9, 1.4e9, 1.6e9, 1.8e9, 2.0e9]
 }
 const MEMORY_PROPS: Partial<TimeSeriesGraphProps> = {
@@ -162,6 +180,13 @@ function drawnXs(): number[] {
 
 function plotWidthPx(): number {
   return parseFloat(document.querySelector('canvas')!.style.width)
+}
+
+function someStrokeCrossesTheRightEdge(): boolean {
+  const rightEdge = plotWidthPx()
+  return drawnStrokes.some((stroke) =>
+    stroke.some(([x], index) => index > 0 && stroke[index - 1]![0] < rightEdge && x > rightEdge)
+  )
 }
 
 function valueAxisGroup(container: Element): Element {
@@ -260,6 +285,7 @@ describe('TimeSeriesGraph', () => {
   const VIEW_TIME_RANGE = { start: 1_060, end: 1_180, step: 60 }
   const DATA_TIME_RANGE_REACHING_PAST_THE_VIEW = { start: 940, end: 1_240, step: 60 }
   const SAMPLES_REACHING_PAST_THE_VIEW = [1, 2, 3, 4, 5]
+  const VIEW_ENDING_BETWEEN_TWO_SAMPLES = { ...VIEW_TIME_RANGE, end: 1_150 }
   const COLUMN_WIDTH_PX = 1
 
   test('draws the curve out past the leading edge when the data reaches beyond it', async () => {
@@ -288,6 +314,33 @@ describe('TimeSeriesGraph', () => {
     expect(Math.max(...drawnXs())).toBeGreaterThan(plotWidthPx())
   })
 
+  test('carries the curve on past a window end that falls between two samples', async () => {
+    const metrics = [{ ...LINE_METRIC, data_points: SAMPLES_REACHING_PAST_THE_VIEW }]
+
+    renderComponent({
+      view_time_range: VIEW_ENDING_BETWEEN_TWO_SAMPLES,
+      data_time_range: DATA_TIME_RANGE_REACHING_PAST_THE_VIEW,
+      metrics
+    })
+    await waitFor(() => expect(drawnPoints.length).toBeGreaterThan(0))
+
+    expect(someStrokeCrossesTheRightEdge()).toBe(true)
+  })
+
+  test('stops the curve at a window end whose following sample is missing', async () => {
+    const missingTheSampleAfterTheWindow = [1, 2, 3, null, 5]
+    const metrics = [{ ...LINE_METRIC, data_points: missingTheSampleAfterTheWindow }]
+
+    renderComponent({
+      view_time_range: VIEW_ENDING_BETWEEN_TWO_SAMPLES,
+      data_time_range: DATA_TIME_RANGE_REACHING_PAST_THE_VIEW,
+      metrics
+    })
+    await waitFor(() => expect(drawnPoints.length).toBeGreaterThan(0))
+
+    expect(someStrokeCrossesTheRightEdge()).toBe(false)
+  })
+
   test('reaches the right edge when the newest interval has not closed yet', async () => {
     const dataTimeRangeReachingPastThePresent = { start: 940, end: 1_300, step: 60 }
     const samplesWithTheTwoNewestIntervalsStillOpen = [1, 2, 3, 4, null, null]
@@ -308,7 +361,10 @@ describe('TimeSeriesGraph', () => {
     const metrics = [
       {
         ...LINE_METRIC,
-        render: { ...LINE_METRIC.render, stack },
+        render:
+          stack === null
+            ? LINE_METRIC.render
+            : { shape: 'area' as const, stack, inverse: false, hidden: false },
         data_points: SAMPLES_REACHING_PAST_THE_VIEW
       }
     ]
@@ -385,6 +441,24 @@ describe('TimeSeriesGraph', () => {
     })
     window.dispatchEvent(new MouseEvent('mousemove', { clientX: 200, clientY: 50 }))
     window.dispatchEvent(new MouseEvent('mouseup', { clientX: 200, clientY: 50 }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Maximum zoom reached')
+  })
+
+  // A fetch, not a gesture, can be what finds the floor; the host then has the renderer say so.
+  test('states the reason when the host reports that a fetch hit the time floor', async () => {
+    const host = defineComponent({
+      components: { TimeSeriesGraph },
+      setup() {
+        const renderer = ref<InstanceType<typeof TimeSeriesGraph> | null>(null)
+        return { renderer, rendererProps: { ...DEFAULT_PROPS, zoomEnabled: true } }
+      },
+      template: `<TimeSeriesGraph ref="renderer" v-bind="rendererProps" />
+        <button @click="renderer?.showMaxZoomHint()">report floor</button>`
+    })
+    render(host)
+
+    await fireEvent.click(screen.getByRole('button', { name: 'report floor' }))
 
     expect(await screen.findByRole('status')).toHaveTextContent('Maximum zoom reached')
   })
@@ -558,19 +632,19 @@ describe('TimeSeriesGraph — the pin and the plot size', () => {
   })
 })
 
-describe('TimeSeriesGraph — placing the pin by clicking the plot', () => {
-  // jsdom reports a zero-origin rect, so client coordinates are plot coordinates.
-  function pressPlot(from: { x: number; y: number }, travelPx: number): void {
-    const canvas = document.querySelector('canvas')!
-    void fireEvent.mouseDown(canvas, { button: 0, clientX: from.x, clientY: from.y })
-    if (travelPx !== 0) {
-      window.dispatchEvent(
-        new MouseEvent('mousemove', { clientX: from.x + travelPx, clientY: from.y })
-      )
-    }
-    window.dispatchEvent(new MouseEvent('mouseup', { clientX: from.x + travelPx, clientY: from.y }))
+// jsdom reports a zero-origin rect, so client coordinates are plot coordinates.
+function pressPlot(from: { x: number; y: number }, travelPx: number): void {
+  const canvas = document.querySelector('canvas')!
+  void fireEvent.mouseDown(canvas, { button: 0, clientX: from.x, clientY: from.y })
+  if (travelPx !== 0) {
+    window.dispatchEvent(
+      new MouseEvent('mousemove', { clientX: from.x + travelPx, clientY: from.y })
+    )
   }
+  window.dispatchEvent(new MouseEvent('mouseup', { clientX: from.x + travelPx, clientY: from.y }))
+}
 
+describe('TimeSeriesGraph — placing the pin by clicking the plot', () => {
   const clickPlot = (at: { x: number; y: number }): void => pressPlot(at, 0)
 
   test('a click in the plot pins the sample under the cursor', async () => {
@@ -675,5 +749,78 @@ describe('TimeSeriesGraph — placing the pin by clicking the plot', () => {
         expect(Math.max(...ticks)).toBeLessThanOrEqual(6)
       })
     })
+  })
+})
+
+describe('TimeSeriesGraph — keyboard access to the zoom reset', () => {
+  test('a drag zoom hands focus to Reset zoom', async () => {
+    const host = defineComponent({
+      components: { TimeSeriesGraph },
+      setup() {
+        const inspecting = ref(false)
+        return { inspecting, rendererProps: DEFAULT_PROPS }
+      },
+      template: `<TimeSeriesGraph
+        v-bind="rendererProps"
+        :inspecting="inspecting"
+        @zoom="inspecting = true"
+      />`
+    })
+    render(host)
+
+    pressPlot({ x: 200, y: 100 }, 80)
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Reset zoom' })).toHaveFocus())
+  })
+
+  test('Reset zoom is the tab stop right after the plot, ahead of the pan steps', () => {
+    const { container } = renderComponent({ inspecting: true, panEnabled: true })
+
+    const tabStops = Array.from(container.querySelectorAll('canvas[tabindex="0"], button'))
+    const plotIndex = tabStops.indexOf(screen.getByRole('img'))
+    expect(tabStops[plotIndex + 1]).toBe(screen.getByRole('button', { name: 'Reset zoom' }))
+    expect(
+      tabStops.indexOf(screen.getByRole('button', { name: 'Step back in time' }))
+    ).toBeGreaterThan(plotIndex + 1)
+  })
+
+  test('resetting hands focus back to the plot', async () => {
+    renderComponent({ inspecting: true })
+    const resetButton = screen.getByRole('button', { name: 'Reset zoom' })
+    resetButton.focus()
+
+    await fireEvent.click(resetButton)
+
+    expect(screen.getByRole('img')).toHaveFocus()
+  })
+})
+
+describe('TimeSeriesGraph — bars', () => {
+  const HOUR = 3600
+  const TWO_HOURS = { start: 400_000 * HOUR, end: 400_002 * HOUR, step: 60 }
+  const COUNTS: Metric = {
+    ...LINE_METRIC,
+    render: { shape: 'bar', stack: null, aggregation: 'sum', inverse: false, hidden: false }
+  }
+
+  test('draws one filled bar per local hour of the bar metric', () => {
+    const grid = binEdges('hour', TWO_HOURS, getLocalTimeZone())
+    const dataTimeRange = { start: grid[0]!, end: grid.at(-1)!, step: 900 }
+    const values = Array.from({ length: (dataTimeRange.end - dataTimeRange.start) / 900 }, () => 1)
+
+    renderComponent({
+      binUnit: 'hour',
+      view_time_range: TWO_HOURS,
+      data_time_range: dataTimeRange,
+      metrics: [{ ...COUNTS, data_points: values }]
+    })
+
+    expect(filledRects).toHaveLength(grid.length - 1)
+  })
+
+  test('draws no bar while the graph holds no bar metric', () => {
+    renderComponent()
+
+    expect(filledRects).toHaveLength(0)
   })
 })

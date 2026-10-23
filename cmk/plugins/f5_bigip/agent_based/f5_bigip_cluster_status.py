@@ -10,14 +10,13 @@ from cmk.agent_based.v2 import (
     all_of,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.f5_bigip.lib import (
     F5_BIGIP,
     F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
@@ -54,10 +53,6 @@ def parse_f5_bigip_cluster_status(
     4
     """
     return int(string_table[0][0][0]) if string_table[0] else None
-
-
-def discover_f5_bigip_cluster_status(section: NodeState) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _node_result(
@@ -165,7 +160,7 @@ snmp_section_f5_bigip_cluster_status = SNMPSection(
 check_plugin_f5_bigip_cluster_status = CheckPlugin(
     name="f5_bigip_cluster_status",  # name taken from pre-1.7 plug-in
     service_name="BIG-IP Cluster Status",
-    discovery_function=discover_f5_bigip_cluster_status,
+    discovery_function=discover_one_service,
     check_default_parameters=F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
     check_ruleset_name="cluster_status",
     check_function=check_f5_bigip_cluster_status,
@@ -200,7 +195,7 @@ snmp_section_f5_bigip_cluster_status_v11_2 = SNMPSection(
 check_plugin_f5_bigip_cluster_status_v11_2 = CheckPlugin(
     name="f5_bigip_cluster_status_v11_2",  # name taken from pre-1.7 plug-in
     service_name="BIG-IP Cluster Status",
-    discovery_function=discover_f5_bigip_cluster_status,
+    discovery_function=discover_one_service,
     check_default_parameters=F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
     check_ruleset_name="cluster_status",
     check_function=check_f5_bigip_cluster_status_v11_2,
@@ -245,7 +240,7 @@ snmp_section_f5_bigip_vcmpfailover = SNMPSection(
 check_plugin_f5_bigip_vcmpfailover = CheckPlugin(
     name="f5_bigip_vcmpfailover",  # name taken from pre-1.7 plug-in
     service_name="BIG-IP vCMP Guest Failover Status",
-    discovery_function=discover_f5_bigip_cluster_status,
+    discovery_function=discover_one_service,
     check_default_parameters=F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
     check_ruleset_name="cluster_status",
     check_function=check_f5_bigip_cluster_status_v11_2,

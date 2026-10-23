@@ -11,25 +11,26 @@ import codeExample from './UclCmkTooltipCodeExample.vue?raw'
 export const a11yData = [
   {
     keys: ['Tab'],
-    description:
-      'Moves keyboard focus to the button or link element (if not disabled). While the focus outline is hidden from view, its underlying functionality remains intact.'
+    description: 'Moves focus to the trigger, which shows the tooltip.'
   },
   {
     keys: [['Shift', 'Tab']],
-    description: 'Moves focus to the button from the next focusable element in reverse order.'
-  },
-  {
-    keys: ['Enter', 'Space'],
-    description: 'Opens the help text.'
+    description: 'Moves focus away from the trigger, which hides the tooltip.'
   },
   {
     keys: ['Escape'],
-    description: 'Closes the tooltip if it is currently open.'
+    description: 'Hides the tooltip while focus stays on the trigger.'
   }
 ]
 
 type SideOptions = 'top' | 'right' | 'bottom' | 'left'
 type AlignOptions = 'start' | 'center' | 'end'
+type VariantOptions = 'text' | 'content'
+type TitleAlignOptions = 'left' | 'center' | 'right'
+
+const isContentVariant = (state: Record<string, unknown>) => state.variant === 'content'
+const isLeftAlignedTitle = (state: Record<string, unknown>) =>
+  isContentVariant(state) && state.titleAlign === 'left'
 
 export const panelConfig = {
   open: { type: 'boolean' as const, title: 'Open', initialState: false },
@@ -58,6 +59,46 @@ export const panelConfig = {
       end: 'End'
     }),
     initialState: 'center' as AlignOptions
+  },
+  variant: {
+    type: 'list' as const,
+    title: 'Variant',
+    options: listOptions<VariantOptions>({
+      text: 'Text',
+      content: 'Content'
+    }),
+    initialState: 'text' as VariantOptions,
+    help: 'Text: a one-line label. Content: a title bar above a content area such as a graph or a legend.'
+  },
+  title: {
+    type: 'string' as const,
+    title: 'Title',
+    initialState: 'Fr, 2026-03-19',
+    hiddenWhen: (state) => !isContentVariant(state)
+  },
+  titleAside: {
+    type: 'string' as const,
+    title: 'Title aside',
+    initialState: '13:27:59',
+    help: 'Always right aligned in regular weight. Only available while the title is left aligned.',
+    hiddenWhen: (state) => !isLeftAlignedTitle(state)
+  },
+  titleBold: {
+    type: 'boolean' as const,
+    title: 'Bold title',
+    initialState: false,
+    hiddenWhen: (state) => !isContentVariant(state)
+  },
+  titleAlign: {
+    type: 'list' as const,
+    title: 'Title alignment',
+    options: listOptions<TitleAlignOptions>({
+      left: 'Left',
+      center: 'Center',
+      right: 'Right'
+    }),
+    initialState: 'left' as TitleAlignOptions,
+    hiddenWhen: (state) => !isContentVariant(state)
   }
 } satisfies PanelConfigFor<typeof CmkTooltip> &
   PanelConfigFor<
@@ -72,21 +113,52 @@ import {
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
   UclDetailPageHeader,
   UclDetailPageLayout,
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import CmkStateCountBar, { type StateSegment } from 'cmk-ui-library/components/CmkStateCountBar.vue'
 import CmkTooltip, {
   CmkTooltipContent,
   CmkTooltipProvider,
   CmkTooltipTrigger
 } from 'cmk-ui-library/components/CmkTooltip'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
+import { computed } from 'vue'
+
+import UclCmkTooltipDev from './UclCmkTooltipDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
 const propState = new PanelStateCreator<typeof CmkTooltip>().createRef(panelConfig)
+
+const variantProps = computed(() => {
+  const { variant, title, titleAside, titleBold, titleAlign } = propState.value
+  if (variant === 'text') {
+    return { variant }
+  }
+  if (titleAlign === 'left') {
+    return {
+      variant,
+      title: untranslated(title),
+      titleAside: untranslated(titleAside),
+      titleBold,
+      titleAlign
+    }
+  }
+  return { variant, title: untranslated(title), titleBold, titleAlign }
+})
+
+const segments: StateSegment[] = [
+  { label: untranslated('OK'), count: 24, color: 'success' },
+  { label: untranslated('WARN'), count: 3, color: 'warning' },
+  { label: untranslated('CRIT'), count: 1, color: 'danger' },
+  { label: untranslated('UNKNOWN'), count: 0, color: 'unknown' },
+  { label: untranslated('PENDING'), count: 2, color: 'default' }
+]
 </script>
 
 <template>
@@ -109,10 +181,11 @@ const propState = new PanelStateCreator<typeof CmkTooltip>().createRef(panelConf
           <CmkTooltipContent
             :side="propState.side"
             :align="propState.align"
+            v-bind="variantProps"
             @pointer-down-outside="propState.open = false"
           >
-            <CmkIcon name="info" variant="inline" size="small" />
-            This is a tooltip on the top
+            <CmkStateCountBar v-if="propState.variant === 'content'" :segments="segments" />
+            <template v-else>2026-03-20 - 2026-03-28</template>
           </CmkTooltipContent>
         </CmkTooltip>
       </CmkTooltipProvider>
@@ -125,5 +198,9 @@ const propState = new PanelStateCreator<typeof CmkTooltip>().createRef(panelConf
     <UclDetailPageCodeExample :code="codeExample" />
 
     <UclDetailPageAccessibility :data="a11yData" />
+
+    <UclDetailPageDeveloperPlayground>
+      <UclCmkTooltipDev :screenshot-mode="screenshotMode" />
+    </UclDetailPageDeveloperPlayground>
   </UclDetailPageLayout>
 </template>

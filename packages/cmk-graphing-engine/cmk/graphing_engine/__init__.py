@@ -3,29 +3,52 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._display import metric_display_attributes
-from ._fetch import (
-    FetchDataProtocol,
-    FetchMetricNamesProtocol,
-)
-from ._fetched import (
+from ._data._fetched import (
     FetchedData,
     MACRO_SERIES_ID,
     PerformanceData,
     ScalarKind,
     SeriesAttributes,
 )
-from ._graph import (
-    FixedRange,
-    Graph,
-    Line,
-    MinimalRange,
-    Region,
-    Rule,
-    Stack,
-    VerticalRange,
+from ._data._naming import (
+    MetricName,
 )
-from ._graph_evaluate import (
+from ._data._temperature import TemperatureUnit, unit_conversion, UnitConversion
+from ._data._timeseries import (
+    constant_time_series,
+    last_present,
+    mapped_series,
+    merge_series,
+    scaled_series,
+    TimeRange,
+    TimeSeries,
+    timestamps,
+)
+from ._data._units import (
+    AutoPrecision,
+    CurveAttributes,
+    DecimalNotation,
+    EngineeringScientificNotation,
+    IECNotation,
+    NonConvertibleUnit,
+    Notation,
+    notation_from_name,
+    notation_name,
+    Precision,
+    precision_from_kind,
+    precision_kind,
+    SINotation,
+    StandardScientificNotation,
+    StrictPrecision,
+    TimeNotation,
+    Unit,
+)
+from ._evaluation._conversion import converted_graph
+from ._evaluation._fetch import (
+    FetchDataProtocol,
+    fetched_time_range,
+)
+from ._evaluation._graph_evaluation import (
     evaluate_graphs,
     EvaluatedCurve,
     EvaluatedGraph,
@@ -36,17 +59,23 @@ from ._graph_evaluate import (
     EvaluatedVerticalRange,
     VerticalRangeKind,
 )
-from ._graph_matching import (
-    build_matched_graphs,
+from ._graphs._drawn_curves import (
+    drawn_curves,
+    DrawnCurve,
+    DrawnLineType,
 )
-from ._naming import (
-    HostName,
-    MetricName,
-    Service,
-    ServiceName,
-    SiteID,
+from ._graphs._graph import (
+    Curve,
+    FixedRange,
+    Graph,
+    Line,
+    MinimalRange,
+    Region,
+    Rule,
+    Stack,
+    VerticalRange,
 )
-from ._perfometer_evaluate import (
+from ._perfometers._evaluation import (
     evaluate_perfometer,
     EvaluatedBidirectional,
     EvaluatedFocusBound,
@@ -57,52 +86,118 @@ from ._perfometer_evaluate import (
     EvaluatedStacked,
     FocusBoundKind,
 )
-from ._quantities import (
+from ._perfometers._geometry import drawn_segments, DrawnSegment, perfometer_sort_value
+from ._plugins._attributes import (
+    FALLBACK_UNIT,
+    metric_attributes,
+    parse_color,
+    parse_unit,
+)
+from ._plugins._matching import (
+    build_matched_graphs,
+    GraphRequest,
+    RequestedGraph,
+    RequestedMetric,
+    threshold_rules,
+)
+from ._plugins._order import sort_registered_graph_plugins
+from ._plugins._prediction import (
+    build_prediction_graph,
+    Direction,
+    prediction_window_of,
+    PredictionGraphContext,
+    PredictionTexts,
+)
+from ._plugins._translations import (
+    map_metric_names,
+    mapped_performance_data,
+    reverse_translated_names,
+    rrd_originals,
+    RRDOriginal,
+    translate_metric_names,
+    translate_performance_data,
+    translated_names_and_scales,
+)
+from ._plugins._types import (
+    ApiGraph,
+    ApiPerfometer,
+)
+from ._quantities._expressions import (
     Constant,
     Difference,
     Fraction,
-    PredictionCurveKind,
-    PredictionMetric,
     Product,
-    RRDMetric,
-    ScalarOf,
     Sum,
 )
-from ._quantity import (
-    Bound,
-    Curve,
+from ._quantities._quantity import (
     EvaluatedQuantity,
     EvaluationContext,
-    FanOutQuantity,
+    fetch_leaves,
     MetricProtocol,
     QuantityProtocol,
 )
-from ._quantity_from_api import build_curve
-from ._timeseries import (
+from ._rrd._fetch import (
+    FetchMetricNamesProtocol,
+)
+from ._rrd._metrics import (
     ConsolidationFunction,
-    constant_time_series,
-    TimeRange,
-    TimeSeries,
+    PredictionCurveKind,
+    PredictionMetric,
+    RRDMetric,
+    ScalarOf,
 )
-from ._units import (
-    AutoPrecision,
-    CurveAttributes,
-    DecimalNotation,
-    EngineeringScientificNotation,
-    IECNotation,
-    Notation,
-    Precision,
-    SINotation,
-    StandardScientificNotation,
-    StrictPrecision,
-    TimeNotation,
-    Unit,
+from ._rrd._naming import (
+    HostName,
+    Service,
+    ServiceName,
+    SiteID,
+    split_predict_prefix,
 )
+from ._rrd._performance_data import (
+    parse_check_command,
+    parse_performance_data,
+    RawPerformanceData,
+)
+from ._rrd._resample import resample
 
 __all__ = [
+    "threshold_rules",
+    "build_prediction_graph",
+    "Direction",
+    "prediction_window_of",
+    "PredictionGraphContext",
+    "PredictionTexts",
+    "converted_graph",
+    "unit_conversion",
+    "TemperatureUnit",
+    "UnitConversion",
+    "sort_registered_graph_plugins",
+    "drawn_segments",
+    "DrawnSegment",
+    "perfometer_sort_value",
+    "map_metric_names",
+    "mapped_performance_data",
+    "reverse_translated_names",
+    "rrd_originals",
+    "RRDOriginal",
+    "translate_metric_names",
+    "translate_performance_data",
+    "translated_names_and_scales",
+    "parse_check_command",
+    "parse_performance_data",
+    "RawPerformanceData",
+    "mapped_series",
+    "merge_series",
+    "resample",
+    "scaled_series",
+    "GraphRequest",
+    "RequestedGraph",
+    "RequestedMetric",
+    "ApiGraph",
+    "ApiPerfometer",
+    "FALLBACK_UNIT",
     "MACRO_SERIES_ID",
     "AutoPrecision",
-    "Bound",
     "ConsolidationFunction",
     "constant_time_series",
     "Constant",
@@ -127,7 +222,9 @@ __all__ = [
     "EvaluatedStacked",
     "EvaluatedVerticalRange",
     "EvaluationContext",
-    "FanOutQuantity",
+    "fetch_leaves",
+    "fetched_time_range",
+    "last_present",
     "FetchDataProtocol",
     "FetchMetricNamesProtocol",
     "FetchedData",
@@ -141,6 +238,7 @@ __all__ = [
     "MetricName",
     "MetricProtocol",
     "MinimalRange",
+    "NonConvertibleUnit",
     "Notation",
     "PerformanceData",
     "Precision",
@@ -168,9 +266,19 @@ __all__ = [
     "Unit",
     "VerticalRange",
     "VerticalRangeKind",
-    "build_curve",
     "build_matched_graphs",
     "evaluate_graphs",
+    "drawn_curves",
+    "DrawnCurve",
+    "DrawnLineType",
     "evaluate_perfometer",
-    "metric_display_attributes",
+    "metric_attributes",
+    "parse_color",
+    "parse_unit",
+    "split_predict_prefix",
+    "timestamps",
+    "notation_from_name",
+    "notation_name",
+    "precision_from_kind",
+    "precision_kind",
 ]

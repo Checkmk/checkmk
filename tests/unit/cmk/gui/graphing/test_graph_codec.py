@@ -44,8 +44,8 @@ from cmk.graphing_engine import (
     TimeNotation,
     Unit,
 )
-from cmk.gui.graphing import COMMUNITY_QUANTITY_SPECS, graph_codec, QuantitySpec
-from cmk.gui.graphing._graph_codec import community_graph_codec
+from cmk.gui.graphing import COMMUNITY_QUANTITY_SPECS, QuantityCodec, QuantitySpec
+from cmk.gui.graphing._graph_codec import COMMUNITY_GRAPH_CODEC
 
 _METRIC = RRDMetric(
     host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("m")
@@ -94,23 +94,22 @@ def _rich_graphs() -> Sequence[Graph]:
                 Stack(
                     members=[
                         Curve(quantity=_METRIC, attributes=decimal, source_id="A"),
-                        Curve(quantity=Sum([_METRIC, _METRIC_CF], decimal), attributes=decimal),
+                        Curve(quantity=Sum((_METRIC, _METRIC_CF)), attributes=decimal),
                     ],
                     inverse=True,
-                    reference=Curve(quantity=Constant(5, scientific), attributes=scientific),
                 )
             ],
             lines=[
                 Line(
                     curve=Curve(
-                        quantity=Fraction(dividend=_METRIC, divisor=Constant(2), display=decimal),
+                        quantity=Fraction(dividend=_METRIC, divisor=Constant(2)),
                         attributes=decimal,
                     ),
                     inverse=False,
                 ),
                 Line(
                     curve=Curve(
-                        quantity=Product([_METRIC, Constant(3.5)], display=None),
+                        quantity=Product((_METRIC, Constant(3.5))),
                         attributes=scientific,
                     ),
                     inverse=True,
@@ -126,9 +125,7 @@ def _rich_graphs() -> Sequence[Graph]:
                 ),
                 Rule(
                     curve=Curve(
-                        quantity=ScalarOf(
-                            metric=_METRIC, scalar_kind=ScalarKind.MAXIMUM, color="#00ff00"
-                        ),
+                        quantity=ScalarOf(metric=_METRIC, scalar_kind=ScalarKind.MAXIMUM),
                         attributes=iec,
                     ),
                     inverse=False,
@@ -144,21 +141,21 @@ def _rich_graphs() -> Sequence[Graph]:
             lines=[
                 Line(
                     curve=Curve(
-                        quantity=Difference(minuend=_METRIC, subtrahend=_METRIC_CF, display=si),
+                        quantity=Difference(minuend=_METRIC, subtrahend=_METRIC_CF),
                         attributes=si,
                     ),
                     inverse=False,
                 ),
                 Line(
-                    curve=Curve(quantity=Sum([_METRIC], iec), attributes=iec),
+                    curve=Curve(quantity=Sum((_METRIC,)), attributes=iec),
                     inverse=False,
                 ),
                 Line(
-                    curve=Curve(quantity=Constant(1, time), attributes=time),
+                    curve=Curve(quantity=Constant(1), attributes=time),
                     inverse=False,
                 ),
                 Line(
-                    curve=Curve(quantity=Constant(2, engineering), attributes=engineering),
+                    curve=Curve(quantity=Constant(2), attributes=engineering),
                     inverse=False,
                 ),
             ],
@@ -186,8 +183,8 @@ def test_rrd_metric_site_id_round_trips() -> None:
         kind="template",
         lines=[Line(curve=Curve(quantity=metric, attributes=attributes), inverse=False)],
     )
-    codec = community_graph_codec()
-    [restored] = codec.deserialize_graphs(codec.serialize_graphs([graph]))
+    codec = COMMUNITY_GRAPH_CODEC
+    restored = codec.deserialize_graph(codec.serialize_graph(graph))
     [line] = restored.lines
     assert line.curve.quantity == metric
 
@@ -196,28 +193,35 @@ def test_omit_zero_curves_round_trips() -> None:
     # The option rides on the graph, not on the request, so losing it here would silently drop it
     # for every graph rendered from the posted wire form.
     graph = Graph(name="g", title="G", kind="custom", omit_zero_curves=True)
-    codec = community_graph_codec()
-    [restored] = codec.deserialize_graphs(codec.serialize_graphs([graph]))
+    codec = COMMUNITY_GRAPH_CODEC
+    restored = codec.deserialize_graph(codec.serialize_graph(graph))
     assert restored.omit_zero_curves is True
 
 
+def _serialized_templates() -> Sequence[Mapping[str, object]]:
+    return [COMMUNITY_GRAPH_CODEC.serialize_graph(graph) for graph in _rich_graphs()]
+
+
+def test_serialized_templates_are_plain_json() -> None:
+    serialized = _serialized_templates()
+    assert json.loads(json.dumps(serialized)) == serialized
+
+
+def test_serialized_templates_carry_their_kind() -> None:
+    assert {graph["kind"] for graph in _serialized_templates()} == {"template"}
+
+
 def test_template_round_trip_is_lossless() -> None:
-    codec = community_graph_codec()
-    graphs = _rich_graphs()
-    payload = codec.serialize_graphs(graphs)
-    # The payload is plain JSON.
-    assert json.loads(json.dumps(payload)) == payload
-    # Each graph carries its own kind; there is no separate envelope field.
-    serialized_graphs = payload["graphs"]
-    assert isinstance(serialized_graphs, list)
-    assert all(graph["kind"] == "template" for graph in serialized_graphs)
-    # The round-trip is stable: deserializing and re-serializing reproduces the same payload (compared
-    # as JSON, so the empty-sequence list/tuple distinction the dataclass defaults carry is irrelevant).
-    restored = codec.deserialize_graphs(payload)
-    assert codec.serialize_graphs(restored) == payload
-    # The source id survives the round-trip; untagged curves stay untagged.
-    assert restored[0].stacks[0].members[0].source_id == "A"
-    assert restored[0].stacks[0].members[1].source_id is None
+    serialized = _serialized_templates()
+    restored = [COMMUNITY_GRAPH_CODEC.deserialize_graph(graph) for graph in serialized]
+    assert [COMMUNITY_GRAPH_CODEC.serialize_graph(graph) for graph in restored] == serialized
+
+
+def test_source_ids_survive_the_round_trip() -> None:
+    [restored, *_rest] = [
+        COMMUNITY_GRAPH_CODEC.deserialize_graph(graph) for graph in _serialized_templates()
+    ]
+    assert [member.source_id for member in restored.stacks[0].members[:2]] == ["A", None]
 
 
 _ROUND_TRIP_METRIC = RRDMetric(
@@ -247,34 +251,28 @@ _ENGINE_QUANTITY_SAMPLES: Mapping[str, QuantityProtocol] = {
         valid_until=1700086400,
         curve_kind=PredictionCurveKind.LOWER_CRITICAL,
     ),
-    "constant": Constant(23.5, _ROUND_TRIP_DISPLAY),
-    "scalar_of": ScalarOf(
-        metric=_ROUND_TRIP_METRIC, scalar_kind=ScalarKind.LOWER_CRITICAL, color="#040506"
-    ),
-    "sum": Sum([_ROUND_TRIP_METRIC, Constant(1.0)], _ROUND_TRIP_DISPLAY),
-    "product": Product([_ROUND_TRIP_METRIC, Constant(2.0)], _ROUND_TRIP_DISPLAY),
-    "difference": Difference(
-        minuend=_ROUND_TRIP_METRIC, subtrahend=Constant(3.0), display=_ROUND_TRIP_DISPLAY
-    ),
-    "fraction": Fraction(
-        dividend=_ROUND_TRIP_METRIC, divisor=Constant(4.0), display=_ROUND_TRIP_DISPLAY
-    ),
+    "constant": Constant(23.5),
+    "scalar_of": ScalarOf(metric=_ROUND_TRIP_METRIC, scalar_kind=ScalarKind.LOWER_CRITICAL),
+    "sum": Sum((_ROUND_TRIP_METRIC, Constant(1.0))),
+    "product": Product((_ROUND_TRIP_METRIC, Constant(2.0))),
+    "difference": Difference(minuend=_ROUND_TRIP_METRIC, subtrahend=Constant(3.0)),
+    "fraction": Fraction(dividend=_ROUND_TRIP_METRIC, divisor=Constant(4.0)),
 }
 
 
 @pytest.mark.parametrize("kind", sorted(_ENGINE_QUANTITY_SAMPLES))
 def test_engine_quantity_round_trips_every_field(kind: str) -> None:
     quantity = _ENGINE_QUANTITY_SAMPLES[kind]
-    codec = community_graph_codec()
-    serialized = json.loads(json.dumps(codec.serialize_quantity(quantity)))
+    codec = QuantityCodec(COMMUNITY_QUANTITY_SPECS)
+    serialized = json.loads(json.dumps(codec.serialize(quantity)))
     assert serialized["kind"] == kind
-    assert codec.deserialize_quantity(serialized) == quantity
+    assert codec.deserialize(serialized) == quantity
 
 
 def test_every_engine_quantity_kind_is_covered() -> None:
     # The engine stays de/serialization-free, so a quantity's fields are mirrored by hand in the
     # codec. A new quantity kind must arrive with a round-trip sample above, or this fails.
-    assert set(_ENGINE_QUANTITY_SAMPLES) == set(community_graph_codec().quantity_kinds())
+    assert set(_ENGINE_QUANTITY_SAMPLES) == {spec.kind for spec in COMMUNITY_QUANTITY_SPECS}
 
 
 def test_a_codec_refuses_two_quantities_claiming_one_kind() -> None:
@@ -284,11 +282,11 @@ def test_a_codec_refuses_two_quantities_claiming_one_kind() -> None:
         lambda data, codec: Constant(0.0),  # noqa: ARG005
     )
     with pytest.raises(ValueError, match="duplicate quantity kind: constant"):
-        graph_codec((*COMMUNITY_QUANTITY_SPECS, duplicate))
+        QuantityCodec((*COMMUNITY_QUANTITY_SPECS, duplicate))
 
 
 def test_a_region_round_trips_both_of_its_bounds() -> None:
-    codec = community_graph_codec()
+    codec = COMMUNITY_GRAPH_CODEC
     region = Region(
         lower=Curve(quantity=Constant(1.0), attributes=_ROUND_TRIP_DISPLAY),
         upper=Curve(quantity=Constant(2.0), attributes=_ROUND_TRIP_DISPLAY),
@@ -302,7 +300,7 @@ def test_a_region_round_trips_both_of_its_bounds() -> None:
 
 
 def test_a_region_open_at_one_side_round_trips_as_open() -> None:
-    codec = community_graph_codec()
+    codec = COMMUNITY_GRAPH_CODEC
     region = Region(
         lower=Curve(quantity=Constant(1.0), attributes=_ROUND_TRIP_DISPLAY),
         upper=None,

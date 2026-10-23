@@ -55,19 +55,21 @@ const patternMap = {
   qs: 'src/quick-setup/',
   tmcq: 'src/telemetry-metrics-custom-query/',
   mm: 'src/main-menu/',
-  mh: 'src/mode-host/'
+  mh: 'src/mode-host/',
+  maps: 'src/maps/'
 }
 
 function normalize(relativePath) {
-  // cmk-ui-library hosts the extracted components/ and lib/ trees; for naming
-  // purposes its layout maps onto the legacy src/ layout so the established
-  // block names (.cmk-*, .lib-*) stay valid.
+  // Extracted Vue packages map onto the legacy src/ layout for naming purposes,
+  // so the established block names (.cmk-*, .lib-*, .profiling-*) stay valid.
   return relativePath
     .replace(/^\.\.\/cmk-ui-library\/tests\//, 'tests/')
     .replace(/^\.\.\/cmk-ui-library\//, 'src/')
+    .replace(/^\.\.\/cmk-profiling\/frontend\//, 'src/profiling/')
 }
 
 function getPrefix(relativePath) {
+  relativePath = relativePath.replace('src/nonfree/', 'src/')
   const folderName = relativePath.split('/')[1]
   for (let [key, value] of Object.entries(patternMap)) {
     if (relativePath.startsWith(value)) {

@@ -9,11 +9,13 @@ from cmk.base.errorhandling import CheckResultErrorHandler
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher_abc import FetcherError
+from cmk.checkengine.helper_interface import AgentRawData
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.crash import make_crash_report_base_path
 from cmk.utils import paths
+from tests.testlib.unit.fake_site import pop_crash_report_file
 
 
 def _handler() -> CheckResultErrorHandler:
@@ -25,6 +27,7 @@ def _handler() -> CheckResultErrorHandler:
         is_cluster=False,
         snmp_backend=SNMPBackendEnum.CLASSIC,
         keepalive=False,
+        get_agent_output=lambda: AgentRawData(b"<<<uptime>>>\n123\n"),
     )
 
 
@@ -93,3 +96,11 @@ def test_unhandled_exception_returns_3() -> None:
     crash_id = handler.result.as_text().rsplit(" ", maxsplit=1)[-1][:-1]
     crash_file = make_crash_report_base_path(paths.omd_root) / "check" / crash_id / "crash.info"
     crash_file.unlink()
+
+
+@pytest.mark.usefixtures("disable_debug", "patch_omd_site")
+def test_crash_report_of_an_unhandled_exception_contains_the_agent_output() -> None:
+    with _handler():
+        raise ValueError("unexpected :/")
+
+    assert pop_crash_report_file("check", "agent_output") == b"<<<uptime>>>\n123\n"

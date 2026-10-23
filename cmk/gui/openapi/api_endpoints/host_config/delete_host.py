@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.openapi.framework import (
@@ -44,7 +45,7 @@ def delete_host_v1(
         pending_changes=make_pending_changes(api_context),
         acting_user=api_context.user,
     )
-    return ApiResponse(body=None, status_code=204)
+    return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT)
 
 
 ENDPOINT_DELETE_HOST = VersionedEndpoint(

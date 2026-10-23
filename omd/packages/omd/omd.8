@@ -24,24 +24,23 @@ omd \- admin interface for OMD, the Open Monitoring Distribution
 .RI ]
 .SH DESCRIPTION
 .B OMD - the Open Monitoring Distribution
-is something really new. OMD bundles existing open source software to
-ease the installation procedure of Nagios and many important add-ons
-like NagVis, PNP4Nagios, rrdtool, nagios-plugins, Check_MK,
-MK Livestatus, Dokuwiki, check_nrpe and others.
+bundles Checkmk together with the software it depends on into a
+single package.
 
 .B OMD
 supports:
 
 - multiple versions of OMD installed in parallel
 .br
-- multiple instances of Nagios running in parallel (so called "sites")
+- multiple monitoring sites running in parallel
 
 .PP
 .\" TeX users may be more comfortable with the \fB<whatever>\fP and
 .\" \fI<whatever>\fP escape sequences to invoke bold face and italics,
 .\" respectively.
 \fBomd\fP is the administration interface for creating and maintaining
-sites within OMD - the open monitoring distribution.
+sites. Use it to start, stop and check the status of each site's
+services.
 .SH COMMANDS
 .TP
 .B omd help
@@ -168,9 +167,10 @@ needs root permissions.
 .B omd update-apache-config SITE
 The site Apache needs to be registered with the system Apache to enable access
 to the UI and REST API via HTTP. After modifying the config
-options \fBAPACHE_TCP_ADDR\fP, \fBAPACHE_TCP_PORT\fP or \fBAPACHE_MODE\fP,
-you will have to call this command to update the system apache configuration of
-your site to reflect the changes in the configuration of the system Apache.
+options \fBAPACHE_TCP_ADDR\fP, \fBAPACHE_TCP_PORT\fP, \fBAPACHE_MODE\fP or
+\fBAPACHE_FORWARDED_HEADERS\fP, you will have to call this command to update
+the system apache configuration of your site to reflect the changes in the
+configuration of the system Apache.
 
 When using the modes \fBcreate\fP, \fBrm\fP, \fBcp\fP, \fBmv\fP or \fBrestore\fP
 (as root), you don't need to call this command.
@@ -378,7 +378,8 @@ The site is restarted automatically once in case it's currently running.
 
 Please note: Since 2.1.0p4 you will have to call
 \fBomd update-apache-config SITE\fP after changing one of the options
-\fBAPACHE_TCP_ADDR\fP, \fBAPACHE_TCP_PORT\fP or \fBAPACHE_MODE\fP.
+\fBAPACHE_TCP_ADDR\fP, \fBAPACHE_TCP_PORT\fP, \fBAPACHE_MODE\fP or
+\fBAPACHE_FORWARDED_HEADERS\fP.
 
 .TP
 .B omd [-v] diff [RELBASE] [-b, --bare]

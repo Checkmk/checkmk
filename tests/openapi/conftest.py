@@ -18,12 +18,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 import cmk.ccc.version as cmk_version
+from tests.testlib.pytest_helpers import ide, registration
+from tests.testlib.unit import fake_site
 
 # NOTE: fake_paths must run BEFORE any cmk.gui/cmk.licensing imports.
 # Modules like cmk/gui/userdb/store.py capture `cmk.utils.paths.var_dir` at import time; patching
 # after those imports is too late and yields relative paths at runtime.
-from tests.testlib import fake_site
-
 fake_site.fake_paths()
 
 
@@ -35,7 +35,9 @@ from cmk.ccc.hostaddress import HostName  # noqa: E402
 from cmk.ccc.user import UserId  # noqa: E402
 from cmk.gui import login  # noqa: E402
 from cmk.gui.config import Config  # noqa: E402
-from cmk.gui.permissions import permission_registry  # noqa: E402
+from cmk.gui.permissions import (  # noqa: E402
+    all_permissions,
+)
 from cmk.gui.utils.roles import UserPermissions  # noqa: E402
 from cmk.licensing.handler import (  # noqa: E402
     LicenseState,
@@ -47,7 +49,7 @@ from cmk.livestatus_client.testing import (  # noqa: E402
     mock_livestatus_communication,
     MockLiveStatusConnection,
 )
-from tests.testlib.gui.common_fixtures import (  # noqa: E402
+from tests.testlib.unit.gui.common_fixtures import (  # noqa: E402
     create_aut_user_auth_wsgi_app,
     create_flask_app,
     create_test_hosts,
@@ -58,23 +60,24 @@ from tests.testlib.gui.common_fixtures import (  # noqa: E402
     perform_load_config,
     perform_load_plugins,
     RemoteAutomation,
+    run_background_jobs_in_threads,
     set_config_context,
     suppress_remote_automation_calls_patches,
     validate_background_job_annotation,
 )
-from tests.testlib.gui.openapi_test_helper import (  # noqa: E402
+from tests.testlib.unit.gui.openapi_test_helper import (  # noqa: E402
     clear_app_instance_caches,
     create_api_client,
     create_sample_host_context,
     create_test_groups,
 )
-from tests.testlib.gui.users import create_and_destroy_user  # noqa: E402
-from tests.testlib.gui.web_test_app import (  # noqa: E402
+from tests.testlib.unit.gui.users import create_and_destroy_user  # noqa: E402
+from tests.testlib.unit.gui.web_test_app import (  # noqa: E402
     SetConfig,
     WebTestAppForCMK,
     WebTestAppRequestHandler,
 )
-from tests.testlib.rest_api_client import (  # noqa: E402
+from tests.testlib.unit.rest_api_client import (  # noqa: E402
     ClientRegistry,
     get_client_registry,
     RestApiClient,
@@ -119,25 +122,9 @@ class DummyLicensingHandler(LicensingHandler):
 
 logger = logging.getLogger(__name__)
 
-# This allows exceptions to be handled by IDEs (rather than just printing the results)
-# when pytest based tests are being run from inside the IDE
-# To enable this, set `_PYTEST_RAISE` to some value != '0' in your IDE
-PYTEST_RAISE = os.getenv("_PYTEST_RAISE", "0") != "0"
 
-
-@pytest.hookimpl(tryfirst=True)
-def pytest_exception_interact(
-    node: pytest.Item | pytest.Collector,
-    call: pytest.CallInfo[object],
-    report: pytest.CollectReport | pytest.TestReport,
-) -> None:
-    if not (excinfo := call.excinfo):
-        return
-
-    excp_ = excinfo.value
-    report.longrepr = node.repr_failure(excinfo)
-    if PYTEST_RAISE:
-        raise excp_
+def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:
+    registration.register_pytest_plugins(pluginmanager, ide)
 
 
 @pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
@@ -263,8 +250,8 @@ def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
-def execute_background_jobs_without_job_scheduler(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER", "1")
+def execute_background_jobs_without_job_scheduler() -> Iterator[None]:
+    yield from run_background_jobs_in_threads()
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
@@ -327,7 +314,13 @@ def with_admin(load_config: Config) -> Iterator[tuple[UserId, str]]:
 def with_admin_login(load_config: Config, with_admin: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = with_admin[0]
     with login.TransactionIdContext(
-        user_id, UserPermissions(load_config.roles, permission_registry, {user_id: ["admin"]}, [])
+        user_id,
+        UserPermissions(
+            load_config.roles,
+            all_permissions(),
+            {user_id: ["admin"]},
+            [],
+        ),
     ):
         yield user_id
 

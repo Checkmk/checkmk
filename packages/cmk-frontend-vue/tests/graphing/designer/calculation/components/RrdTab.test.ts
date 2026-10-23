@@ -4,7 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { nextTick } from 'vue'
 
 import RrdTab from '@/graphing/designer/calculation/components/RrdTab.vue'
 import { DEFAULT_TITLE_MACRO, type GraphItem } from '@/graphing/designer/types'
@@ -103,14 +104,14 @@ test('clicking an item badge inserts its id into the formula', async () => {
 test('switching modes discards the formula input', async () => {
   renderTab()
   await fireEvent.update(formulaInput(), 'A + B')
-  await fireEvent.click(screen.getByRole('button', { name: 'Toggle Transformation' }))
+  await fireEvent.click(screen.getByRole('button', { name: 'Toggle Percentile' }))
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle Operations' }))
   expect(formulaInput().value).toBe('')
 })
 
 test('the calculate button stays enabled and reports an incomplete transformation', async () => {
   const { emitted } = renderTab()
-  await fireEvent.click(screen.getByRole('button', { name: 'Toggle Transformation' }))
+  await fireEvent.click(screen.getByRole('button', { name: 'Toggle Percentile' }))
   const calculate = screen.getByRole('button', { name: 'Calculate & add' })
   expect(calculate).toBeEnabled()
   await fireEvent.click(calculate)
@@ -122,9 +123,9 @@ test('the calculate button stays enabled and reports an incomplete transformatio
 test('in transformation mode a badge click selects the metric', async () => {
   const user = userEvent.setup()
   const { emitted } = renderTab()
-  await fireEvent.click(screen.getByRole('button', { name: 'Toggle Transformation' }))
+  await fireEvent.click(screen.getByRole('button', { name: 'Toggle Percentile' }))
   await fireEvent.click(screen.getByRole('button', { name: 'Select A for the transformation' }))
-  await user.click(screen.getByRole('combobox', { name: 'Transformation' }))
+  await user.click(screen.getByRole('combobox', { name: 'Percentile' }))
   await user.click(await screen.findByRole('option', { name: '95' }))
   await fireEvent.click(screen.getByRole('button', { name: 'Calculate & add' }))
   expect(emitted('add')).toEqual([
@@ -143,7 +144,7 @@ test('in transformation mode a badge click selects the metric', async () => {
 test('a query says why it cannot be transformed, in the list and in the dropdown', async () => {
   const user = userEvent.setup()
   renderTab([rrdQueryItem('A')])
-  await fireEvent.click(screen.getByRole('button', { name: 'Toggle Transformation' }))
+  await fireEvent.click(screen.getByRole('button', { name: 'Toggle Percentile' }))
 
   expect(screen.getByRole('button', { name: 'Select A for the transformation' })).toHaveAttribute(
     'title',
@@ -209,6 +210,24 @@ test('editing a percentile jumps to the transformation mode', async () => {
       { ids: ['A'], visible: true }
     ]
   ])
+})
+
+test('editing a percentile from the list focuses its metric selection', async () => {
+  const percentileItem = formulaItem('P', {
+    ast: { op: 'percentile', percentile: 90, operand: { op: 'ref', id: 'A' } }
+  })
+  renderTab([...items, percentileItem])
+  await fireEvent.click(screen.getByRole('button', { name: 'Edit P' }))
+  await waitFor(() => expect(screen.getByRole('combobox', { name: 'Metric' })).toHaveFocus())
+})
+
+test('a calculation passed in to edit loads without taking the focus', async () => {
+  render(RrdTab, {
+    props: { editing: 'D', items, nextId: NEXT_ID, nextColor: NEXT_COLOR }
+  })
+  expect(await screen.findByRole('button', { name: 'Calculate & update' })).toBeInTheDocument()
+  await nextTick()
+  expect(document.body).toHaveFocus()
 })
 
 test('previews the next id and color while adding', () => {

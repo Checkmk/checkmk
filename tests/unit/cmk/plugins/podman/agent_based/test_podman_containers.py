@@ -6,11 +6,10 @@
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
 from cmk.plugins.podman.agent_based.podman_containers import (
     check_podman_containers,
     DEFAULT_PARAMS,
-    discover_podman_containers,
     Params,
     parse_podman_containers,
 )
@@ -39,13 +38,6 @@ _STRING_TABLE_TWO_EXITED_NON_ZERO = [
         '[{"AutoRemove": false, "Command": ["sleep", "infinity"], "Created": "2025-06-30T17:22:38.117310829+02:00", "CreatedAt": "", "CIDFile": "", "Exited": false, "ExitedAt": -62135596800, "ExitCode": 1, "Id": "63f10448c71cd61479ed6edf515bf45486f2e3b0008f873920ecc2c9008e7276", "Image": "localhost/rootless-container:latest", "ImageID": "e40e7fb7eb39f4ff4f7d1e43b3a6c193426a7597c8a8c4d477a974a2804eae10", "IsInfra": false, "Labels": {"io.buildah.version": "1.33.7"}, "Mounts": [], "Names": ["nonroot-test"], "Namespaces": {}, "Networks": [], "Pid": 47643, "Pod": "", "PodName": "", "Ports": null, "Restarts": 0, "Size": null, "StartedAt": 1752407468, "State": "paused", "Status": ""}]'
     ],
 ]
-
-
-def test_discover_podman_containers() -> None:
-    assert list(discover_podman_containers(parse_podman_containers(_STRING_TABLE_ALL_RUNNING))) == [
-        Service()
-    ]
-    assert list(discover_podman_containers(parse_podman_containers([[]]))) == [Service()]
 
 
 @pytest.mark.parametrize(

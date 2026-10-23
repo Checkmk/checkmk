@@ -12,12 +12,13 @@ import json
 import sys
 from collections.abc import Sequence
 from contextlib import suppress
+from http import HTTPStatus
 from typing import NamedTuple
 
 import requests
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 __version__ = "3.0.0b1"
 
@@ -124,16 +125,10 @@ def agent_jenkins_main(args: argparse.Namespace) -> int:
         ),
     ]
 
-    try:
-        handle_request(args, sections)
-    except Exception:
-        if args.debug:
-            raise
-
-    return 0
+    return handle_request(args, sections)
 
 
-def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> object:
+def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> int:
     url_base = f"{args.proto}://{args.hostname}:{args.port}"
     if args.path:
         url_base += f"/{args.path}"
@@ -161,7 +156,7 @@ def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> obj
             return 1
 
         # Things might go wrong if authentication is missing.
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             sys.stderr.write("Could not fetch data from Jenkins. Details: %s\n" % response)
             return 2
 

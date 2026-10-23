@@ -4,31 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CmkApiError } from 'cmk-ui-library/lib/error'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, expect, test, vi } from 'vitest'
+import { afterEach, expect, test } from 'vitest'
 
 import {
   MAX_MATCHES,
   searchCustomServices,
   suggestServiceNames
 } from '@/mode-alerts/service-client'
-
-// The default client singleton captures `globalThis.fetch` at import time, before
-// server.listen() patches it. Re-create it with a lazy fetch wrapper so MSW can intercept.
-vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
-  const mod = await importOriginal<Record<string, unknown>>()
-  const createClientImpl = (await import('openapi-fetch')).default
-  return {
-    ...mod,
-    default: createClientImpl({
-      baseUrl: `${location.protocol}//${location.host}/api/internal`,
-      credentials: 'include',
-      headers: { Accept: 'application/json' },
-      fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
-    })
-  }
-})
 
 const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/service/collections/all`
 
@@ -44,6 +28,8 @@ interface RequestBody {
   query: { op: string; expr: Condition[] }
 }
 
+const ALL_HOSTS = { folder: '/', host_tags: [], host_label_groups: [] }
+
 let sentBody: RequestBody | null = null
 let matching: Array<[string, string]> = []
 
@@ -53,7 +39,7 @@ function entries(): Array<{ extensions: { host_name: string; description: string
   }))
 }
 
-const server = setupServer(
+const server = useMswServer(
   http.post(ENDPOINT, async ({ request }) => {
     sentBody = (await request.json()) as RequestBody
     return HttpResponse.json({ id: 'all', links: [], value: entries() })
@@ -64,13 +50,10 @@ function conditionOn(field: string): Condition | undefined {
   return sentBody?.query.expr.find((condition) => condition.left === field)
 }
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   sentBody = null
   matching = []
-  server.resetHandlers()
 })
-afterAll(() => server.close())
 
 test('an exact match asks livestatus for string equality on the service name', async () => {
   await searchCustomServices('exact', 'HTTP request duration')
@@ -82,14 +65,20 @@ test('an exact match asks livestatus for string equality on the service name', a
   })
 })
 
-test('a regex match asks livestatus for a regex match on the service name', async () => {
+test('a regex match asks livestatus for a regex match from the start of the service name', async () => {
   await searchCustomServices('regex', 'HTTP.*duration')
 
   expect(conditionOn('description')).toEqual({
     op: '~',
     left: 'description',
-    right: 'HTTP.*duration'
+    right: '^(?:HTTP.*duration)'
   })
+})
+
+test('an anchored regex keeps an alternation together', async () => {
+  await searchCustomServices('regex', 'CPU|Memory')
+
+  expect(conditionOn('description')?.right).toBe('^(?:CPU|Memory)')
 })
 
 test('the search is restricted to services of the custom services check plugin', async () => {
@@ -98,7 +87,7 @@ test('the search is restricted to services of the custom services check plugin',
   expect(conditionOn('check_command')).toEqual({
     op: '=',
     left: 'check_command',
-    right: 'check_mk-telemetry_metrics_custom_query'
+    right: 'check_mk-telemetry_custom_service'
   })
 })
 
@@ -182,4 +171,183 @@ test('a service name shared by several hosts is suggested once', async () => {
     names: ['HTTP request duration', 'Query duration'],
     truncated: false
   })
+})
+
+// The filters beyond the custom services check plugin and the service name.
+function hostFilters(): unknown[] {
+  return sentBody?.query.expr.slice(2) ?? []
+}
+
+test('conditions selecting all hosts add no filter', async () => {
+  await searchCustomServices('exact', 'HTTP request duration', ALL_HOSTS)
+
+  expect(hostFilters()).toEqual([])
+})
+
+test('a folder selects the hosts in it and in all folders below', async () => {
+  await searchCustomServices('exact', 'HTTP request duration', {
+    ...ALL_HOSTS,
+    folder: '/linux/web'
+  })
+
+  expect(hostFilters()).toEqual([{ op: '~', left: 'host_filename', right: '^/wato/linux/web/' }])
+})
+
+test('each host tag operator becomes a filter on the host tags', async () => {
+  await searchCustomServices('exact', 'HTTP request duration', {
+    ...ALL_HOSTS,
+    host_tags: [
+      { key: 'criticality', operator: 'is', value: 'prod' },
+      { key: 'networking', operator: 'is_not', value: 'wan' },
+      { key: 'agent', operator: 'one_of', value: ['cmk-agent', 'all-agents'] },
+      { key: 'snmp_ds', operator: 'none_of', value: ['snmp-v1'] }
+    ]
+  })
+
+  expect(hostFilters()).toEqual([
+    { op: '=', left: 'host_tags', right: "'criticality' 'prod'" },
+    { op: 'not', expr: { op: '=', left: 'host_tags', right: "'networking' 'wan'" } },
+    {
+      op: 'or',
+      expr: [
+        { op: '=', left: 'host_tags', right: "'agent' 'cmk-agent'" },
+        { op: '=', left: 'host_tags', right: "'agent' 'all-agents'" }
+      ]
+    },
+    {
+      op: 'not',
+      expr: { op: 'or', expr: [{ op: '=', left: 'host_tags', right: "'snmp_ds' 'snmp-v1'" }] }
+    }
+  ])
+})
+
+test('no host tags to match on selects no host, as in the rule matcher', async () => {
+  matching = [['web01', 'HTTP request duration']]
+
+  const result = await searchCustomServices('exact', 'HTTP request duration', {
+    ...ALL_HOSTS,
+    host_tags: [{ key: 'agent', operator: 'one_of', value: [] }]
+  })
+
+  expect(result).toEqual({ services: [], truncated: false })
+})
+
+test('no host tags to exclude selects every host, as in the rule matcher', async () => {
+  await searchCustomServices('exact', 'HTTP request duration', {
+    ...ALL_HOSTS,
+    host_tags: [{ key: 'agent', operator: 'none_of', value: [] }]
+  })
+
+  expect(hostFilters()).toEqual([])
+})
+
+test('a quote in a label is escaped for livestatus', async () => {
+  await searchCustomServices('exact', 'HTTP request duration', {
+    ...ALL_HOSTS,
+    host_label_groups: [
+      { operator: 'and', label_group: [{ operator: 'and', label: "team:o'neil" }] }
+    ]
+  })
+
+  expect(hostFilters()).toEqual([{ op: '=', left: 'host_labels', right: "'team' 'o''neil'" }])
+})
+
+test('host label groups combine like the rule matcher does', async () => {
+  await searchCustomServices('exact', 'HTTP request duration', {
+    ...ALL_HOSTS,
+    host_label_groups: [
+      {
+        operator: 'and',
+        label_group: [
+          { operator: 'and', label: 'os:linux' },
+          { operator: 'or', label: 'os:bsd' }
+        ]
+      },
+      { operator: 'not', label_group: [{ operator: 'and', label: 'env:test' }] }
+    ]
+  })
+
+  expect(hostFilters()).toEqual([
+    {
+      op: 'and',
+      expr: [
+        {
+          op: 'or',
+          expr: [
+            { op: '=', left: 'host_labels', right: "'os' 'linux'" },
+            { op: '=', left: 'host_labels', right: "'os' 'bsd'" }
+          ]
+        },
+        { op: 'not', expr: { op: '=', left: 'host_labels', right: "'env' 'test'" } }
+      ]
+    }
+  ])
+})
+
+test('a first label group combined by "or" matches every host, as in the rule matcher', async () => {
+  await searchCustomServices('exact', 'HTTP request duration', {
+    ...ALL_HOSTS,
+    host_label_groups: [{ operator: 'or', label_group: [{ operator: 'and', label: 'os:linux' }] }]
+  })
+
+  expect(hostFilters()).toEqual([])
+})
+
+test('explicit hosts match by name, or from the start of the name after a tilde', async () => {
+  await searchCustomServices('exact', 'HTTP request duration', {
+    ...ALL_HOSTS,
+    host_name: { match_on: ['web01', '~db'], operator: 'one_of' }
+  })
+
+  expect(hostFilters()).toEqual([
+    {
+      op: 'or',
+      expr: [
+        { op: '=', left: 'host_name', right: 'web01' },
+        { op: '~', left: 'host_name', right: '^(?:db)' }
+      ]
+    }
+  ])
+})
+
+test('negated explicit hosts exclude the listed hosts', async () => {
+  await searchCustomServices('exact', 'HTTP request duration', {
+    ...ALL_HOSTS,
+    host_name: { match_on: ['web01'], operator: 'none_of' }
+  })
+
+  expect(hostFilters()).toEqual([
+    { op: 'not', expr: { op: 'or', expr: [{ op: '=', left: 'host_name', right: 'web01' }] } }
+  ])
+})
+
+test('a host regex keeps an alternation together', async () => {
+  await searchCustomServices('exact', 'HTTP request duration', {
+    ...ALL_HOSTS,
+    host_name: { match_on: ['~web|db'], operator: 'one_of' }
+  })
+
+  expect(hostFilters()).toEqual([
+    { op: 'or', expr: [{ op: '~', left: 'host_name', right: '^(?:web|db)' }] }
+  ])
+})
+
+test('no explicit hosts to match on selects no host, as in the rule matcher', async () => {
+  matching = [['web01', 'HTTP request duration']]
+
+  const result = await searchCustomServices('exact', 'HTTP request duration', {
+    ...ALL_HOSTS,
+    host_name: { match_on: [], operator: 'one_of' }
+  })
+
+  expect(result).toEqual({ services: [], truncated: false })
+})
+
+test('no explicit hosts to exclude selects every host, as in the rule matcher', async () => {
+  await searchCustomServices('exact', 'HTTP request duration', {
+    ...ALL_HOSTS,
+    host_name: { match_on: [], operator: 'none_of' }
+  })
+
+  expect(hostFilters()).toEqual([])
 })

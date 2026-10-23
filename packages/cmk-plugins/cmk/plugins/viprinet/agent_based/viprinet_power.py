@@ -8,14 +8,13 @@ from typing import NewType
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.viprinet.lib import DETECT_VIPRINET
 
 PowerStatus = NewType("PowerStatus", str)
@@ -27,10 +26,6 @@ def parse_viprinet_power(string_table: StringTable) -> PowerStatus | None:
             return PowerStatus(value)
         case _:
             return None
-
-
-def discover_viprinet_power(section: PowerStatus) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_viprinet_power(section: PowerStatus) -> CheckResult:
@@ -57,6 +52,6 @@ snmp_section_viprinet_power = SimpleSNMPSection(
 check_plugin_viprinet_power = CheckPlugin(
     name="viprinet_power",
     service_name="Power-Supply",
-    discovery_function=discover_viprinet_power,
+    discovery_function=discover_one_service,
     check_function=check_viprinet_power,
 )

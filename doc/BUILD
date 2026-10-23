@@ -1,7 +1,6 @@
 sh_library(
     name = "doc_sh",
     srcs = [
-        ".f12",
         "treasures/Event_Console/nsca2mkeventd/nsca2mkeventd.init",
         "treasures/agent_legacy_encryption/common.sh",
         "treasures/agent_legacy_encryption/decrypt.sh",
@@ -10,7 +9,6 @@ sh_library(
         "treasures/check_livestatus",
         "treasures/check_nagios_states",
         "treasures/check_servicegroup",
-        "treasures/checks/.f12",
         "treasures/cmk-plugin-statistics",
         "treasures/deprecated/agents/plugins/dmi_sysinfo",
         "treasures/deprecated/agents/plugins/mrpe_include",

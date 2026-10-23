@@ -47,14 +47,21 @@ from cmk.gui.userdb.store import (
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import Dictionary
+from tests.testlib.unit.gui.common_fixtures import set_config_context
 
 if TYPE_CHECKING:
-    from tests.testlib.gui.web_test_app import SetConfig, SingleRequest, WebTestAppForCMK
+    from tests.testlib.unit.gui.web_test_app import SetConfig, SingleRequest, WebTestAppForCMK
 
 
 @pytest.fixture(name="user_id")
 def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
     return with_user[0]
+
+
+@pytest.fixture(name="lock_on_logon_failures")
+def fixture_lock_on_logon_failures(user_id: UserId) -> Generator[int]:
+    with set_config_context(lock_on_logon_failures=10):
+        yield 10
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
@@ -136,10 +143,10 @@ def test_on_succeeded_login(single_auth_request: SingleRequest) -> None:
     assert _load_failed_logins(user_id) == 0
 
 
-def test_on_failed_login_no_locking(user_id: UserId) -> None:
+def test_on_failed_login_no_locking(user_id: UserId, lock_on_logon_failures: int) -> None:
     now = datetime.now()
     user_attributes = get_user_attributes([])
-    assert active_config.lock_on_logon_failures == 10
+    assert active_config.lock_on_logon_failures == lock_on_logon_failures
     assert _load_failed_logins(user_id) == 0
     assert not userdb.user_locked(user_id, load_user(user_id))
 
@@ -148,7 +155,8 @@ def test_on_failed_login_no_locking(user_id: UserId) -> None:
         user_attributes,
         [],
         now=now,
-        lock_on_logon_failures=10,
+        lock_on_logon_failures=lock_on_logon_failures,
+        time_based_lock_out_enabled=False,
         log_logon_failures=True,
         pprint_value=False,
     )
@@ -160,7 +168,8 @@ def test_on_failed_login_no_locking(user_id: UserId) -> None:
         user_attributes,
         [],
         now=now,
-        lock_on_logon_failures=10,
+        lock_on_logon_failures=lock_on_logon_failures,
+        time_based_lock_out_enabled=False,
         log_logon_failures=True,
         pprint_value=False,
     )
@@ -172,7 +181,8 @@ def test_on_failed_login_no_locking(user_id: UserId) -> None:
         user_attributes,
         [],
         now=now,
-        lock_on_logon_failures=10,
+        lock_on_logon_failures=lock_on_logon_failures,
+        time_based_lock_out_enabled=False,
         log_logon_failures=True,
         pprint_value=False,
     )
@@ -180,10 +190,12 @@ def test_on_failed_login_no_locking(user_id: UserId) -> None:
     assert not userdb.user_locked(user_id, load_user(user_id))
 
 
-def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None:
+def test_on_failed_login_count_reset_on_succeeded_login(
+    user_id: UserId, lock_on_logon_failures: int
+) -> None:
     now = datetime.now()
     user_attributes = get_user_attributes(active_config.wato_user_attrs)
-    assert active_config.lock_on_logon_failures == 10
+    assert active_config.lock_on_logon_failures == lock_on_logon_failures
     assert _load_failed_logins(user_id) == 0
     assert not userdb.user_locked(user_id, load_user(user_id))
 
@@ -192,7 +204,8 @@ def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None
         user_attributes,
         [],
         now=now,
-        lock_on_logon_failures=10,
+        lock_on_logon_failures=lock_on_logon_failures,
+        time_based_lock_out_enabled=False,
         log_logon_failures=True,
         pprint_value=False,
     )
@@ -216,6 +229,7 @@ def test_on_failed_login_with_locking(user_id: UserId) -> None:
         [],
         now=now,
         lock_on_logon_failures=3,
+        time_based_lock_out_enabled=False,
         log_logon_failures=True,
         pprint_value=False,
     )
@@ -228,6 +242,7 @@ def test_on_failed_login_with_locking(user_id: UserId) -> None:
         [],
         now=now,
         lock_on_logon_failures=3,
+        time_based_lock_out_enabled=False,
         log_logon_failures=True,
         pprint_value=False,
     )
@@ -240,11 +255,30 @@ def test_on_failed_login_with_locking(user_id: UserId) -> None:
         [],
         now=now,
         lock_on_logon_failures=3,
+        time_based_lock_out_enabled=False,
         log_logon_failures=True,
         pprint_value=False,
     )
     assert _load_failed_logins(user_id) == 3
     assert userdb.user_locked(user_id, load_user(user_id))
+
+
+def test_on_failed_login_locking_disabled(user_id: UserId) -> None:
+    now = datetime.now()
+    user_attributes = get_user_attributes([])
+
+    userdb.on_failed_login(
+        user_id,
+        user_attributes,
+        [],
+        now=now,
+        lock_on_logon_failures=None,
+        time_based_lock_out_enabled=False,
+        log_logon_failures=True,
+        pprint_value=False,
+    )
+    assert _load_failed_logins(user_id) == 0
+    assert not userdb.user_locked(user_id, load_user(user_id))
 
 
 def test_on_logout_no_session(
@@ -663,6 +697,7 @@ def test_check_credentials_local_user(with_user: tuple[UserId, str]) -> None:
                 roles=["user"],
                 force_authuser=False,
             ),
+            time_based_lock_out_enabled=False,
             pprint_value=False,
             debug=False,
         )
@@ -696,6 +731,7 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
                 roles=["user"],
                 force_authuser=False,
             ),
+            time_based_lock_out_enabled=False,
             pprint_value=False,
             debug=False,
         )
@@ -724,6 +760,7 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
                 roles=["user"],
                 force_authuser=False,
             ),
+            time_based_lock_out_enabled=False,
             pprint_value=False,
             debug=False,
         )
@@ -755,6 +792,7 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
                 roles=["user"],
                 force_authuser=False,
             ),
+            time_based_lock_out_enabled=False,
             pprint_value=False,
             debug=False,
         )

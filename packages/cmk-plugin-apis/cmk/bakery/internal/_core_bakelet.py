@@ -9,21 +9,20 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any, Never, Protocol
 
-from ._artifacts import (
-    AgentInternalFileContainer,
-    CustomFileContainer,
-    HomeFileContainer,
-    LibFileContainer,
-    PluginConfigContainer,
-    PluginContainer,
-    RootFileContainer,
-    ScriptletHandle,
-    SystemBinaryContainer,
-    SystemConfigContainer,
-    YamlEntry,
-    YamlItems,
-    YamlPluginSettings,
+from cmk.bakery.v2 import (
+    Plugin,
+    PluginConfig,
+    Scriptlet,
+    SystemBinary,
+    SystemConfig,
+    WindowsConfigEntry,
+    WindowsConfigItems,
+    WindowsGlobalConfigEntry,
+    WindowsSystemConfigEntry,
 )
+
+from ._artifacts import ScriptletHandle, YamlEntry, YamlItems, YamlPluginSettings
+from ._recipes import BinaryFile, CustomFile, HashDependency, SiteFile, TextFile
 from ._types import AgentConfig, AgentHash
 
 
@@ -31,28 +30,36 @@ class CoreFilesFunction(Protocol):
     def __call__(
         self, *, agconf: AgentConfig, conf: Any
     ) -> Iterator[
-        PluginContainer
-        | SystemBinaryContainer
-        | PluginConfigContainer
-        | SystemConfigContainer
-        | LibFileContainer
-        | AgentInternalFileContainer
-        | RootFileContainer
-        | HomeFileContainer
-        | CustomFileContainer
+        Plugin
+        | SystemBinary
+        | PluginConfig
+        | SystemConfig
+        | SiteFile
+        | TextFile
+        | BinaryFile
+        | CustomFile
+        | HashDependency
     ]: ...
 
 
 class CoreScriptletsFunction(Protocol):
     def __call__(
         self, *, agconf: AgentConfig, conf: Any, aghash: AgentHash
-    ) -> Iterator[ScriptletHandle]: ...
+    ) -> Iterator[Scriptlet | ScriptletHandle]: ...
 
 
 class CoreYamlConfigFunction(Protocol):
     def __call__(
         self, *, agconf: AgentConfig, conf: Any, aghash: AgentHash
-    ) -> Iterator[YamlEntry | YamlItems | YamlPluginSettings]: ...
+    ) -> Iterator[
+        WindowsConfigEntry
+        | WindowsGlobalConfigEntry
+        | WindowsSystemConfigEntry
+        | WindowsConfigItems
+        | YamlEntry
+        | YamlItems
+        | YamlPluginSettings
+    ]: ...
 
 
 def _noop(*_a: object, **_kw: object) -> Iterator[Never]:
@@ -66,10 +73,17 @@ class CoreBakelet:
     Instances are picked up by Checkmk if their variable name starts with
     ``core_bakelet_`` and they live under ``cmk/plugins/<family>/bakery/``.
 
-    Unlike :class:`cmk.bakery.v2_unstable.BakeryPlugin`, the functions receive
-    keyword arguments dispatched by name (``agconf``, ``conf``, ``aghash``) and
-    yield the bakery artifact types directly. That signature is fixed, so a
-    bakelet which does not need all three suppresses ARG001 on the unused ones.
+    Unlike :class:`cmk.bakery.v2.BakeryPlugin`, the functions receive
+    keyword arguments dispatched by name (``agconf``, ``conf``, ``aghash``).
+    That signature is fixed, so a bakelet which does not need all three
+    suppresses ARG001 on the unused ones.
+
+    The functions yield recipes: the artifact types of :mod:`cmk.bakery.v2`
+    or the types of this package such as ``SiteFile`` and ``TextFile``. The
+    bakery turns them into its file containers, knows the module the bakelet was
+    discovered in, and looks sources up in the agents folder of the bakelet's
+    plug-in family first. Use the internal types only for what the versioned API
+    cannot express.
 
     ``default_parameters`` are merged underneath the user-provided configuration
     for this bakelet (the user's values win). They are applied during config

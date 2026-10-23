@@ -27,13 +27,13 @@ from cmk.gui.background_job.job import (
     InitialStatusArgs,
     JobTarget,
 )
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.form_specs import get_visitor, RawFrontendData, VisitorOptions
 from cmk.gui.http import Request
 from cmk.gui.i18n import localize
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.quick_setup.handlers.utils import (
     Action,
     BackgroundJobException,
@@ -48,6 +48,7 @@ from cmk.gui.quick_setup.handlers.utils import (
     NEXT_BUTTON_LABEL,
     PREV_BUTTON_ARIA_LABEL,
     QuickSetupValidationError,
+    stage_applicability_and_form_data,
     validate_custom_validators,
     ValidationErrorMap,
     ValidationErrors,
@@ -61,6 +62,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     FormspecMap,
     ProgressLogger,
     QuickSetup,
+    QuickSetupContext,
     QuickSetupStage,
     QuickSetupStageAction,
 )
@@ -76,13 +78,16 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     FormSpecId,
     Widget,
 )
+from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
     do_remote_automation,
     MKAutomationException,
 )
-from cmk.livestatus_client import SiteConfiguration
+from cmk.gui.watolib.hosts_and_folders import FolderTree, HostsAndFoldersConfig
+from cmk.livestatus_client import SiteConfigurations
+from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.automation_config import RemoteAutomationConfig
 
@@ -141,6 +146,7 @@ def verify_stage_custom_validators(
     stages: Sequence[QuickSetupStage],
     quick_setup_formspec_map: FormspecMap,
     progress_logger: ProgressLogger,
+    ctx: QuickSetupContext,
 ) -> ValidationErrors | None:
     """Verify that the custom validators pass of a Quick setup stage.
 
@@ -178,6 +184,7 @@ def verify_stage_custom_validators(
             stages_raw_formspecs=stages_raw_formspecs,
             quick_setup_formspec_map=quick_setup_formspec_map,
             progress_logger=progress_logger,
+            ctx=ctx,
         ).stage_errors
     )
     return errors if errors.exist() else None
@@ -212,8 +219,7 @@ def recap_stage(
     stages_raw_formspecs: Sequence[RawFormData],
     quick_setup_formspec_map: FormspecMap,
     progress_logger: ProgressLogger,
-    site_configs: Mapping[SiteId, SiteConfiguration],
-    debug: bool,
+    ctx: QuickSetupContext,
 ) -> Sequence[Widget]:
     parsed_formspec = form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map)
     recap_widgets: list[Widget] = []
@@ -224,8 +230,7 @@ def recap_stage(
                 stage_index,
                 parsed_formspec,
                 progress_logger,
-                site_configs,
-                debug,
+                ctx,
             )
         )
     return recap_widgets
@@ -239,6 +244,7 @@ class StageActionResult(BaseModel, frozen=False):
     # TODO: This should be a list of widgets using only Sequence[Widget] will remove all fields
     #  when the data is returned (this is a temporary fix)
     stage_recap: Sequence[Any] = field(default_factory=list)
+    stage_applicability: Sequence[bool] = field(default_factory=list)
     background_job_exception: BackgroundJobException | None = None
 
     @classmethod
@@ -271,26 +277,32 @@ def verify_custom_validators_and_recap_stage(
     form_spec_map: FormspecMap,
     built_stages: Sequence[QuickSetupStage],
     progress_logger: ProgressLogger | None,
-    site_configs: Mapping[SiteId, SiteConfiguration],
-    debug: bool,
+    ctx: QuickSetupContext,
 ) -> StageActionResult:
     if progress_logger is None:
         progress_logger = InfoLogger()
 
+    stage_applicability, stages_raw_formspecs = stage_applicability_and_form_data(
+        quick_setup.stages,
+        [RawFormData(stage["form_data"]) for stage in input_stages],
+        form_spec_map,
+    )
     response = StageActionResult(
         quick_setup_id=quick_setup.id,
         stage_index=stage_index,
         action_id=stage_action_id,
+        stage_applicability=stage_applicability,
     )
     if (
         errors := verify_stage_custom_validators(
             quick_setup=quick_setup,
-            stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in input_stages],
+            stages_raw_formspecs=stages_raw_formspecs,
             stage_index=stage_index,
             stage_action_id=stage_action_id,
             stages=built_stages,
             quick_setup_formspec_map=form_spec_map,
             progress_logger=progress_logger,
+            ctx=ctx,
         )
     ) is not None:
         response.validation_errors = errors
@@ -301,11 +313,10 @@ def verify_custom_validators_and_recap_stage(
         stage_index=stage_index,
         stages=built_stages,
         stage_action_id=stage_action_id,
-        stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in input_stages],
+        stages_raw_formspecs=stages_raw_formspecs,
         quick_setup_formspec_map=form_spec_map,
         progress_logger=progress_logger,
-        site_configs=site_configs,
-        debug=debug,
+        ctx=ctx,
     )
     return response
 
@@ -355,17 +366,42 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
         self,
         job_interface: BackgroundProcessInterface,
         user_permission_config: UserPermissionSerializableConfig,
+        *,
+        site_configs: SiteConfigurations,
+        debug: bool,
+        use_git: bool,
+        pprint_value: bool,
+        wato_hide_folders_without_read_permissions: bool,
+        wato_host_attrs: Sequence[CustomHostAttrSpec],
+        tags: TagConfigSpec,
+        user_localizations: Mapping[str, Mapping[str, str]],
     ) -> None:
         job_interface.get_logger().debug("Running Quick setup stage action finally")
         with job_interface.gui_context(
-            UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+            UserPermissions.from_serialized_config(
+                user_permission_config,
+                all_permissions(),
+            )
         ):
-            localize(self._language)
+            localize(self._language, user_localizations)
             try:
                 self._run_quick_setup_stage_action(
                     job_interface,
-                    site_configs=active_config.sites,
-                    debug=active_config.debug,
+                    ctx=QuickSetupContext(
+                        tree=FolderTree(
+                            config=HostsAndFoldersConfig(
+                                wato_hide_folders_without_read_permissions=wato_hide_folders_without_read_permissions,
+                                wato_host_attrs=wato_host_attrs,
+                                tags=TagConfig.from_config(tags),
+                                sites=site_configs,
+                            )
+                        ),
+                        site_configs=site_configs,
+                        debug=debug,
+                        use_git=use_git,
+                        pprint_value=pprint_value,
+                        user=user,
+                    ),
                 )
             except Exception as e:
                 job_interface.get_logger().debug(
@@ -383,11 +419,7 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
                 ).save_to_file(Path(job_interface.get_work_dir()))
 
     def _run_quick_setup_stage_action(
-        self,
-        job_interface: BackgroundProcessInterface,
-        *,
-        site_configs: Mapping[SiteId, SiteConfiguration],
-        debug: bool,
+        self, job_interface: BackgroundProcessInterface, *, ctx: QuickSetupContext
     ) -> None:
         job_interface.send_progress_update(_("Starting Quick stage action..."))
 
@@ -395,7 +427,7 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
         built_stages_up_to_index = [
             stage() for stage in quick_setup.stages[: self._stage_index + 1]
         ]
-        form_spec_map = build_formspec_map_from_stages(built_stages_up_to_index)
+        form_spec_map = build_formspec_map_from_stages(built_stages_up_to_index, ctx)
         action_result = verify_custom_validators_and_recap_stage(
             quick_setup=quick_setup,
             stage_index=self._stage_index,
@@ -404,8 +436,7 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
             form_spec_map=form_spec_map,
             built_stages=built_stages_up_to_index,
             progress_logger=JobBasedProgressLogger(job_interface),
-            site_configs=site_configs,
-            debug=debug,
+            ctx=ctx,
         )
 
         job_interface.send_progress_update(_("Saving the result..."))
@@ -421,6 +452,15 @@ def start_quick_setup_stage_job(
     language: str,
     user_permission_config: UserPermissionSerializableConfig,
     job_uuid: str | None,
+    *,
+    site_configs: SiteConfigurations,
+    debug: bool,
+    use_git: bool,
+    pprint_value: bool,
+    wato_hide_folders_without_read_permissions: bool,
+    wato_host_attrs: Sequence[CustomHostAttrSpec],
+    tags: TagConfigSpec,
+    user_localizations: Mapping[str, Mapping[str, str]],
 ) -> str:
     if job_uuid is None:
         job_uuid = str(uuid.uuid4())
@@ -444,6 +484,14 @@ def start_quick_setup_stage_job(
                 user_input_stages=user_input_stages,
                 language=language,
                 user_permission_config=user_permission_config,
+                site_configs=site_configs,
+                debug=debug,
+                use_git=use_git,
+                pprint_value=pprint_value,
+                wato_hide_folders_without_read_permissions=wato_hide_folders_without_read_permissions,
+                wato_host_attrs=wato_host_attrs,
+                tags=tags,
+                user_localizations=user_localizations,
             ),
         ),
         InitialStatusArgs(
@@ -464,7 +512,9 @@ def start_quick_setup_stage_job(
     return job.get_job_id()
 
 
-class QuickSetupStageActionJobArgs(BaseModel, frozen=True):
+class QuickSetupStageActionRemoteArgs(BaseModel, frozen=True):
+    """What a central site sends to a remote site to start a stage action there"""
+
     job_uuid: str
     quick_setup_id: QuickSetupId
     action_id: ActionId
@@ -472,6 +522,17 @@ class QuickSetupStageActionJobArgs(BaseModel, frozen=True):
     user_input_stages: Sequence[dict]
     language: str
     user_permission_config: UserPermissionSerializableConfig
+
+
+class QuickSetupStageActionJobArgs(QuickSetupStageActionRemoteArgs, frozen=True):
+    site_configs: SiteConfigurations
+    debug: bool
+    use_git: bool
+    pprint_value: bool
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
+    user_localizations: Mapping[str, Mapping[str, str]]
 
 
 def quick_setup_stage_action_job_entry_point(
@@ -485,7 +546,16 @@ def quick_setup_stage_action_job_entry_point(
         user_input_stages=args.user_input_stages,
         language=args.language,
     ).run_quick_setup_stage_action(
-        job_interface, user_permission_config=args.user_permission_config
+        job_interface,
+        user_permission_config=args.user_permission_config,
+        site_configs=args.site_configs,
+        debug=args.debug,
+        use_git=args.use_git,
+        pprint_value=args.pprint_value,
+        wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
+        wato_host_attrs=args.wato_host_attrs,
+        tags=args.tags,
+        user_localizations=args.user_localizations,
     )
 
 
@@ -498,12 +568,13 @@ class NextStageStructure:
 
 def get_stage_structure(
     stage: QuickSetupStage,
+    ctx: QuickSetupContext,
     prefill_data: ParsedFormData | None = None,
 ) -> NextStageStructure:
     return NextStageStructure(
         components=[
             get_stage_components_from_widget(widget, prefill_data)
-            for widget in stage_components(stage)
+            for widget in stage_components(stage, ctx)
         ],
         prev_button=Button(label=stage.prev_button_label, aria_label=PREV_BUTTON_ARIA_LABEL)
         if stage.prev_button_label
@@ -535,7 +606,7 @@ def start_quick_setup_stage_action_job_on_remote(
     debug: bool,
 ) -> str:
     job_uuid = str(uuid.uuid4())
-    args = QuickSetupStageActionJobArgs(
+    args = QuickSetupStageActionRemoteArgs(
         job_uuid=job_uuid,
         quick_setup_id=quick_setup_id,
         action_id=action_id,
@@ -565,7 +636,10 @@ def start_quick_setup_stage_action_job_on_remote(
 
 
 class AutomationQuickSetupStageAction(AutomationCommand[QuickSetupStageActionJobArgs]):
-    """Start a Quick Setup stage action in the background on a remote site"""
+    """Start a Quick Setup stage action in the background on a remote site
+
+    The stage action runs with the configuration of the remote site, not the one of the central
+    site that asked for it."""
 
     @override
     def command_name(self) -> str:
@@ -579,7 +653,18 @@ class AutomationQuickSetupStageAction(AutomationCommand[QuickSetupStageActionJob
             api_request["user_permission_config"] = (
                 UserPermissionSerializableConfig.from_global_config(config)
             )
-        return QuickSetupStageActionJobArgs.model_validate_json(api_request["args"])
+        remote_args = QuickSetupStageActionRemoteArgs.model_validate_json(api_request["args"])
+        return QuickSetupStageActionJobArgs(
+            **dict(remote_args),
+            site_configs=config.sites,
+            debug=config.debug,
+            use_git=config.wato_use_git,
+            pprint_value=config.wato_pprint_config,
+            wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
+            wato_host_attrs=config.wato_host_attrs,
+            tags=config.tags.get_dict_format(),
+            user_localizations=config.user_localizations,
+        )
 
     @override
     def execute(self, api_request: QuickSetupStageActionJobArgs) -> str:
@@ -591,6 +676,14 @@ class AutomationQuickSetupStageAction(AutomationCommand[QuickSetupStageActionJob
             job_uuid=api_request.job_uuid,
             language=api_request.language,
             user_permission_config=api_request.user_permission_config,
+            site_configs=api_request.site_configs,
+            debug=api_request.debug,
+            use_git=api_request.use_git,
+            pprint_value=api_request.pprint_value,
+            wato_hide_folders_without_read_permissions=api_request.wato_hide_folders_without_read_permissions,
+            wato_host_attrs=api_request.wato_host_attrs,
+            tags=api_request.tags,
+            user_localizations=api_request.user_localizations,
         )
 
 

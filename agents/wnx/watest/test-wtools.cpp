@@ -460,19 +460,13 @@ TEST(Wtools, PerfDiskCounter) {
 }
 
 TEST(Wtools, PerfTs) {
-    // Instance less Check
-    // 8154 is "Terminal Services" perf counter without instances
-    // 2066 is "Terminal Services" perf counter without instances
-    auto pos = tst::g_terminal_services_indexes.cbegin();
-    auto index = *pos;
+    // Instance less Check: "Terminal Services" is a perf object without
+    // instances. Its index differs per machine and another machine's index
+    // can be a different object here, so look it up by name.
+    const auto ts_index = FindPerfIndexInRegistry(L"Terminal Services");
+    ASSERT_TRUE(ts_index.has_value());
+    const auto index = *ts_index;
     auto perf_data = ReadPerformanceDataFromRegistry(std::to_wstring(index));
-    while (perf_data.data_ == nullptr || !FindPerfObject(perf_data, index)) {
-        // no data or data is not valid:
-        ++pos;
-        ASSERT_TRUE(pos != tst::g_terminal_services_indexes.cend());
-        index = *pos;
-        perf_data = ReadPerformanceDataFromRegistry(std::to_wstring(index));
-    }
     ASSERT_TRUE(perf_data.data_);
     EXPECT_TRUE(perf_data.len_ > 30) << "Data should be big enough";
 
@@ -554,9 +548,6 @@ TEST(Wtools, FindPerfIndexInRegistry) {
 
     index = perf::FindPerfIndexInRegistry(L"Terminal Services");
     ASSERT_TRUE(index.has_value());
-
-    EXPECT_NE(std::ranges::find(tst::g_terminal_services_indexes, *index),
-              tst::g_terminal_services_indexes.end());
 
     index = perf::FindPerfIndexInRegistry(L"Memory");
     ASSERT_TRUE(index.has_value());
@@ -858,13 +849,19 @@ TEST(Wtools, MangleNameForPerfCounter) {
 }
 
 TEST(Wtools, OsInfo) {
-    const auto obtained = *GetOsInfo();
+    const auto info = GetOsInfo();
+    ASSERT_TRUE(info.has_value());
+    const auto &obtained = *info;
     EXPECT_TRUE(obtained.name.starts_with(L"Microsoft Windows"));
-    EXPECT_TRUE(obtained.name.ends_with(L"Pro") ||      // local
-                obtained.name.ends_with(L"Standard"));  // CI
+    // Any edition: only that the name is the product name alone, without
+    // the "|<windows dir>|<device>" part of WMI's Win32_OperatingSystem.Name.
+    EXPECT_GT(obtained.name.size(),
+              std::wstring_view{L"Microsoft Windows "}.size());
+    EXPECT_EQ(obtained.name.find(L'|'), std::wstring::npos);
 
     const auto num_strings = cma::tools::SplitString(obtained.version, L".");
     // 10.0.14559
+    ASSERT_GE(num_strings.size(), 3U);
     EXPECT_GE(std::stoi(num_strings[0]), 10);
     EXPECT_GE(std::stoi(num_strings[1]), 0);
     EXPECT_GE(std::stoi(num_strings[2]), 20);

@@ -16,6 +16,7 @@ from cmk.gui.logwatch._page import (
     get_worst_chunk,
     parse_file,
 )
+from cmk.livestatus_client import LqUnsafeValueError
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 HOST = HostName("myhost")
@@ -36,26 +37,19 @@ def test_parse_file_empty_file() -> None:
     assert _parse([]) == []
 
 
-def test_parse_file_converts_value_error_to_general_exception() -> None:
-    with (
-        patch(
-            "cmk.gui.logwatch._page.get_logfile_lines",
-            side_effect=ValueError("contains whitespace"),
-        ),
-        pytest.raises(MKGeneralException, match="Cannot parse log file"),
-    ):
-        parse_file(None, HOST, FILE, hidecontext=False, debug=False)
+# A tab cannot be escaped for the Columns: header (escape_filename only handles spaces), so the
+# typed query builder rejects the file name before any livestatus contact.
+UNSAFE_FILE = "my\tfile.log"
+
+
+def test_parse_file_converts_lq_unsafe_value_error_to_general_exception() -> None:
+    with pytest.raises(MKGeneralException, match="Cannot parse log file"):
+        parse_file(None, HOST, UNSAFE_FILE, hidecontext=False, debug=False)
 
 
 def test_parse_file_reraises_in_debug_mode() -> None:
-    with (
-        patch(
-            "cmk.gui.logwatch._page.get_logfile_lines",
-            side_effect=ValueError("contains whitespace"),
-        ),
-        pytest.raises(ValueError, match="contains whitespace"),
-    ):
-        parse_file(None, HOST, FILE, hidecontext=False, debug=True)
+    with pytest.raises(LqUnsafeValueError, match="contains whitespace"):
+        parse_file(None, HOST, UNSAFE_FILE, hidecontext=False, debug=True)
 
 
 def test_parse_file_skips_leading_hash_lines() -> None:

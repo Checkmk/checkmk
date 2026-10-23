@@ -5,6 +5,7 @@
 
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
+import io
 import logging
 import os
 import shutil
@@ -22,7 +23,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_rename import perform_rename_hosts
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.gui.wsgi.app import gui_context
 from cmk.livestatus_client import (
@@ -30,6 +31,32 @@ from cmk.livestatus_client import (
     SiteConfigurations,
 )
 from cmk.utils.redis import disable_redis
+
+_SITE_CONFIGS = SiteConfigurations(
+    {
+        SiteId("NO_SITE"): SiteConfiguration(
+            id=SiteId("NO_SITE"),
+            alias="Local site NO_SITE",
+            socket=("local", None),
+            disable_wato=True,
+            disabled=False,
+            insecure=False,
+            url_prefix="/NO_SITE/",
+            multisiteurl="",
+            persist=False,
+            replicate_ec=False,
+            replicate_mkps=False,
+            replication=None,
+            timeout=5,
+            user_login=True,
+            proxy=None,
+            user_attribute_sync_connections="all",
+            status_host=None,
+            message_broker_port=5672,
+            is_trusted=False,
+        )
+    }
+)
 
 
 def _noop_pending_changes() -> PendingChanges:
@@ -42,11 +69,11 @@ def _noop_pending_changes() -> PendingChanges:
     )
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture
 def test_env(
     monkeypatch: MonkeyPatch,
     with_admin_login: UserId,
-    load_config: None,
+    tree: FolderTree,
 ) -> Iterator[None]:
     monkeypatch.setattr(
         check_mk_automations,
@@ -57,8 +84,8 @@ def test_env(
     with disable_redis():
         yield
 
-    shutil.rmtree(folder_tree().root_folder().filesystem_path(), ignore_errors=True)
-    os.makedirs(folder_tree().root_folder().filesystem_path())
+    shutil.rmtree(tree.root_folder().filesystem_path(), ignore_errors=True)
+    os.makedirs(tree.root_folder().filesystem_path())
 
 
 @pytest.mark.parametrize(
@@ -119,12 +146,14 @@ def test_env(
     ],
 )
 @pytest.mark.parametrize("use_subfolder", [True, False])
+@pytest.mark.usefixtures("test_env")
 def test_rename_host(
     use_subfolder: bool,
     hosts_to_create: list[tuple[HostName, HostAttributes, list[HostName] | None]],
     renamings: list[tuple[HostName, HostName]],
     expected_hosts: set[str],
     expected_clusters: dict[str, set[str]],
+    tree: FolderTree,
 ) -> None:
     # GIVEN
     with open("/dev/null", "w") as progress_update:
@@ -137,20 +166,16 @@ def test_rename_host(
             progress_update,
         )
         if use_subfolder:
-            folder = (
-                folder_tree()
-                .root_folder()
-                .create_subfolder(
-                    "some_subfolder",
-                    "Some Subfolder",
-                    {},
-                    pprint_value=False,
-                    pending_changes=_noop_pending_changes(),
-                    acting_user=user,
-                )
+            folder = tree.root_folder().create_subfolder(
+                "some_subfolder",
+                "Some Subfolder",
+                {},
+                pprint_value=False,
+                pending_changes=_noop_pending_changes(),
+                acting_user=user,
             )
         else:
-            folder = folder_tree().root_folder()
+            folder = tree.root_folder()
         folder.create_hosts(
             hosts_to_create,
             pprint_value=False,
@@ -160,33 +185,12 @@ def test_rename_host(
 
         # WHEN
         perform_rename_hosts(
+            tree,
             renamings=[(folder, old, new) for old, new in renamings],
             job_interface=job_interface,
             custom_user_attributes=[],
             user_connections=[],
-            site_configs={
-                SiteId("NO_SITE"): SiteConfiguration(
-                    id=SiteId("NO_SITE"),
-                    alias="Local site NO_SITE",
-                    socket=("local", None),
-                    disable_wato=True,
-                    disabled=False,
-                    insecure=False,
-                    url_prefix="/NO_SITE/",
-                    multisiteurl="",
-                    persist=False,
-                    replicate_ec=False,
-                    replicate_mkps=False,
-                    replication=None,
-                    timeout=5,
-                    user_login=True,
-                    proxy=None,
-                    user_attribute_sync_connections="all",
-                    status_host=None,
-                    message_broker_port=5672,
-                    is_trusted=False,
-                )
-            },
+            site_configs=_SITE_CONFIGS,
             pending_changes=_noop_pending_changes(),
             pprint_value=False,
             use_git=False,
@@ -208,3 +212,60 @@ def test_rename_host(
         nodes = hosts[HostName(cluster)].cluster_nodes()
         assert nodes is not None
         assert set(nodes) == expected_nodes
+
+
+@pytest.mark.parametrize(
+    "kind",
+    [
+        pytest.param("management", id="known kind"),
+        pytest.param("later", id="kind this version cannot place"),
+    ],
+)
+@pytest.mark.usefixtures("test_env")
+def test_rename_host_rewrites_the_relations_pointing_at_it(kind: str, tree: FolderTree) -> None:
+    """Both halves of a relation are stored, but only the half sitting on the counterpart names
+    the renamed host - so the pass is the same as for a parent definition."""
+    folder = tree.root_folder()
+    folder.create_hosts(
+        [(HostName("os1"), HostAttributes(), None)],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=user,
+    )
+    folder.create_hosts(
+        [
+            (
+                HostName("board"),
+                HostAttributes(
+                    {"relations": [{"kind": kind, "direction": "parent", "host": HostName("os1")}]}
+                ),
+                None,
+            ),
+        ],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=user,
+    )
+
+    perform_rename_hosts(
+        tree,
+        renamings=[(folder, HostName("os1"), HostName("os2"))],
+        job_interface=BackgroundProcessInterface(
+            "",
+            "",
+            logging.getLogger(),
+            threading.Event(),
+            lambda x: gui_context(),  # noqa: ARG005
+            io.StringIO(),
+        ),
+        custom_user_attributes=[],
+        user_connections=[],
+        site_configs=_SITE_CONFIGS,
+        pending_changes=_noop_pending_changes(),
+        pprint_value=False,
+        use_git=False,
+        debug=False,
+    )
+
+    renamed = tree.root_folder().hosts()[HostName("board")]
+    assert renamed.attributes["relations"] == [{"kind": kind, "direction": "parent", "host": "os2"}]

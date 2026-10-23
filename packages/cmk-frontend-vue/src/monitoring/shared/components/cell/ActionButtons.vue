@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkSkeleton from 'cmk-ui-library/components/CmkSkeleton.vue'
@@ -26,11 +26,15 @@ export interface CellAction {
   id: string
   label: TranslatedString
   icon: ActionIconSpec
+  /** Hover text; the label is used when none is given. */
+  tooltip?: TranslatedString | undefined
   disabled?: boolean | undefined
   // When set, the action is a link and is rendered as a native anchor; otherwise it is a button
   // that emits `select` for the parent to handle.
   url?: string | undefined
   target?: string | undefined
+  /** The legacy icon an action menu entry comes from, for a page to leave out what it shows. */
+  ident?: string | undefined
 }
 
 const props = withDefaults(
@@ -98,7 +102,7 @@ function select(action: CellAction): void {
       size="iconOnly"
       :href="action.url"
       :target="action.url ? (action.target ?? '_top') : undefined"
-      :title="action.label"
+      :title="action.tooltip ?? action.label"
       :aria-label="action.label"
       :disabled="action.disabled"
       @click="select(action)"
@@ -129,7 +133,11 @@ function select(action: CellAction): void {
               as-child
               class="monitoring-action-buttons__menu-item"
             >
-              <a :href="action.url" :target="action.target ?? '_top'">
+              <a
+                :href="action.url"
+                :target="action.target ?? '_top'"
+                :title="action.tooltip ?? action.label"
+              >
                 <ActionIcon :icon="action.icon" />
                 <span class="monitoring-action-buttons__menu-label">{{ action.label }}</span>
               </a>
@@ -137,6 +145,7 @@ function select(action: CellAction): void {
             <DropdownMenuItem
               v-else
               class="monitoring-action-buttons__menu-item"
+              :title="action.tooltip ?? action.label"
               :disabled="action.disabled === true"
               @select="select(action)"
             >
@@ -154,14 +163,12 @@ function select(action: CellAction): void {
               <CmkSkeleton type="text" />
               <CmkSkeleton type="text" />
             </div>
-            <CmkAlertBox
+            <div
               v-else-if="failed && loadedActions === null && !overflowActions.length"
-              variant="error"
-              size="small"
               class="monitoring-action-buttons__menu-status"
             >
-              {{ _t('Could not load actions.') }}
-            </CmkAlertBox>
+              <CmkAlert variant="error" size="small" :text="_t('Could not load actions.')" />
+            </div>
             <div
               v-else-if="failed && loadedActions === null"
               class="monitoring-action-buttons__menu-status monitoring-action-buttons__menu-hint"
@@ -181,7 +188,11 @@ function select(action: CellAction): void {
                 as-child
                 class="monitoring-action-buttons__menu-item"
               >
-                <a :href="action.url" :target="action.target ?? '_top'">
+                <a
+                  :href="action.url"
+                  :target="action.target ?? '_top'"
+                  :title="action.tooltip ?? action.label"
+                >
                   <ActionIcon :icon="action.icon" />
                   <span class="monitoring-action-buttons__menu-label">{{ action.label }}</span>
                 </a>
@@ -189,6 +200,7 @@ function select(action: CellAction): void {
               <DropdownMenuItem
                 v-else
                 class="monitoring-action-buttons__menu-item"
+                :title="action.tooltip ?? action.label"
                 :disabled="action.disabled === true"
                 @select="select(action)"
               >

@@ -218,8 +218,8 @@ class InstallSpec:
 
     input_prefixes: tuple[str, ...] = ()
     """Source prefixes (trailing ``/``) of packages built into this artifact
-    that no deployer covers on their own, e.g. ``packages/cmk-ui-library/``
-    for the cmk-frontend-vue dist.  Changes there deploy through this spec."""
+    whose sources there no deployer covers on their own.  Changes there
+    deploy through this spec."""
 
 
 @dataclass(frozen=True)
@@ -287,6 +287,7 @@ class Service(StrEnum):
     DCD = "dcd"
     MCP_SERVER = "mcp-server"
     AI_CONTROL_PLANE = "ai-control-plane"
+    MAPS = "maps"
 
 
 @dataclass(frozen=True)
@@ -373,12 +374,12 @@ class DeployCycleResult:
 
 @dataclass(frozen=True)
 class FrontendConfig:
-    """Configuration for the iBazel frontend supervisor."""
+    """Configuration for the frontend supervisor."""
 
     port: int = 5173
 
-    startup_timeout: float = 300.0
-    """Generous (5 min) to accommodate cold-cache iBazel builds."""
+    startup_timeout: float = 60.0
+    """Seconds to wait for the dev server's port once the initial build is done."""
 
     stderr_buffer_lines: int = 50
 

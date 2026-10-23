@@ -16,6 +16,7 @@ from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.search.quicksearch import ABCQuicksearchConductor, IncorrectLabelInputError
 from cmk.gui.sidebar._snapin._quicksearch_manager import SnapinQuicksearchManager, TooManyRowsError
 from cmk.gui.sidebar._snapin._search import (
@@ -26,6 +27,9 @@ from cmk.gui.sidebar._snapin._search import (
 )
 from cmk.gui.type_defs import SearchResult
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 
 
 @pytest.fixture(name="permissive_user", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
@@ -39,7 +43,13 @@ def fixture_permissive_user(
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request)
+    return PageContext(
+        config=config,
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
+    )
 
 
 @pytest.mark.parametrize(
@@ -72,7 +82,8 @@ def test_show_renders_and_registers_the_search_field(load_config: Config) -> Non
         rendered = output_funnel.drain()
 
     assert 'id="mk_side_search_field"' in rendered
-    assert "cmk.quicksearch.register_search_field('mk_side_search_field');" in rendered
+    assert 'data-cmk_call_ts_function="register_search_field"' in rendered
+    assert "mk_side_search_field" in rendered
     assert "cmk.quicksearch.on_search_click();" in rendered
 
 

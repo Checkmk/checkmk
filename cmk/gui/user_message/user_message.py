@@ -24,9 +24,10 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, Page, PageContext, PageResult
-from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.flashed_messages import get_flashed_messages
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
@@ -203,6 +204,7 @@ def show_user_messages() -> None:
         )
         html.close_div()
         html.close_div()
+        html.close_div()
         forms.end()
 
     html.close_div()
@@ -246,13 +248,13 @@ def show_message_actions(
 
 
 def ajax_delete_user_message(ctx: PageContext) -> None:  # noqa: ARG001
-    check_csrf_token()
+    check_csrf_token(session, request, i18n=_)
     msg_id = request.get_str_input_mandatory("id")
     message.delete_gui_message(msg_id)
 
 
 def ajax_acknowledge_user_message(ctx: PageContext) -> None:  # noqa: ARG001
-    check_csrf_token()
+    check_csrf_token(session, request, i18n=_)
     msg_id = request.get_str_input_mandatory("id")
     message.acknowledge_gui_message(msg_id)
 

@@ -4,11 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CalendarDateTime, type ZonedDateTime, toZoned } from '@internationalized/date'
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types.ts'
 import { kioskMode } from 'cmk-ui-library/lib/kiosk'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import DashboardMenuHeader from '@/dashboard/components/DashboardMenuHeader/DashboardMenuHeader.vue'
 import type { SelectedDashboard } from '@/dashboard/components/DashboardMenuHeader/types'
@@ -28,7 +29,12 @@ const testGlobalTimePicker: GlobalTimePickerProps = {
   default_time_range: 4 * 3600,
   server_time_zone: TZ,
   first_day_of_week: null,
-  refresh: { interval_seconds: null, starts_live: false, reloads_page_content: false }
+  refresh: {
+    interval_seconds: null,
+    interval_choices_seconds: [30, 60, 90],
+    starts_live: false,
+    reloads_page_content: false
+  }
 }
 
 vi.mock('@/dashboard/utils.ts', () => ({
@@ -66,6 +72,7 @@ const activeToken: DashboardTokenModel = {
 interface RenderProps {
   selectedDashboard?: SelectedDashboard | null
   canEditDashboard?: boolean
+  canCloneAsResponsive?: boolean
   linkUserGuide?: string
   isEditMode?: boolean
   publicToken?: DashboardTokenModel | null
@@ -81,6 +88,7 @@ function renderHeader(props: RenderProps = {}) {
     props: {
       selectedDashboard: customDashboard,
       canEditDashboard: true,
+      canCloneAsResponsive: false,
       linkUserGuide: 'https://docs.checkmk.com',
       isEditMode: false,
       publicToken: null,
@@ -94,10 +102,6 @@ function renderHeader(props: RenderProps = {}) {
     }
   })
 }
-
-beforeEach(() => {
-  vi.clearAllMocks()
-})
 
 describe('DashboardMenuHeader', () => {
   describe('view mode rendering', () => {
@@ -138,19 +142,36 @@ describe('DashboardMenuHeader', () => {
 
     it('renders Share and Settings dropdowns in view mode', () => {
       renderHeader()
-      expect(screen.getByText('Share')).toBeInTheDocument()
-      expect(screen.getByText('Settings')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Share' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument()
+    })
+  })
+
+  describe('clone as responsive entry', () => {
+    it('offers cloning as a responsive dashboard in the settings menu when possible', async () => {
+      const user = userEvent.setup()
+      renderHeader({ canCloneAsResponsive: true })
+
+      await user.click(screen.getByRole('button', { name: 'Settings' }))
+
+      expect(screen.getByText('Clone as responsive dashboard')).toBeInTheDocument()
+    })
+
+    it('offers only the plain clone in the settings menu when cloning as responsive is not possible', async () => {
+      const user = userEvent.setup()
+      renderHeader({ canCloneAsResponsive: false })
+
+      await user.click(screen.getByRole('button', { name: 'Settings' }))
+
+      expect(screen.getByText('Clone dashboard')).toBeInTheDocument()
+      expect(screen.queryByText('Clone as responsive dashboard')).not.toBeInTheDocument()
     })
   })
 
   describe('page navigation toggle', () => {
-    afterEach(() => {
-      vi.restoreAllMocks()
-    })
-
     async function openNavigationToggle(): Promise<HTMLAnchorElement> {
       renderHeader()
-      await fireEvent.click(screen.getByText('Settings'))
+      await fireEvent.click(screen.getByRole('button', { name: 'Settings' }))
       return screen.getByText('Show page navigation').closest('a') as HTMLAnchorElement
     }
 
@@ -179,8 +200,8 @@ describe('DashboardMenuHeader', () => {
 
     it('does not render Share or Settings dropdowns in edit mode', () => {
       renderHeader({ isEditMode: true })
-      expect(screen.queryByText('Share')).not.toBeInTheDocument()
-      expect(screen.queryByText('Settings')).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Share' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Settings' })).not.toBeInTheDocument()
     })
   })
 
@@ -252,7 +273,7 @@ describe('DashboardMenuHeader', () => {
 
     it('calls copyToClipboard when "Copy internal link" is clicked', async () => {
       renderHeader()
-      await fireEvent.click(screen.getByText('Share'))
+      await fireEvent.click(screen.getByRole('button', { name: 'Share' }))
       await waitFor(() => {
         expect(screen.getByText('Copy internal link')).toBeInTheDocument()
       })
@@ -268,7 +289,7 @@ describe('DashboardMenuHeader', () => {
         selectedDashboard: customDashboard,
         publicToken: activeToken
       })
-      expect(screen.getByText('Sharing')).toBeInTheDocument()
+      expect(screen.getByText('Public sharing')).toBeInTheDocument()
       expect(screen.getByText('active')).toBeInTheDocument()
     })
 
@@ -278,7 +299,7 @@ describe('DashboardMenuHeader', () => {
         selectedDashboard: customDashboard,
         publicToken: { ...activeToken, is_disabled: true }
       })
-      expect(screen.getByText('Sharing')).toBeInTheDocument()
+      expect(screen.getByText('Public sharing')).toBeInTheDocument()
       expect(screen.getByText('paused')).toBeInTheDocument()
     })
 

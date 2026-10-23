@@ -15,7 +15,6 @@ filegroup(
             "__init__.py",
             "BUILD",
             "OWNERS",
-            ".f12",
             "Makefile",
         ],
     ),
@@ -52,7 +51,6 @@ py_library(
 sh_library(
     name = "agents_plugins_sh",
     srcs = [
-        ".f12",
         "asmcmd.sh",
         "hpux_lunstats",
         "hpux_statgrab",

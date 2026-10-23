@@ -14,11 +14,12 @@ import {
   useVueTable
 } from '@tanstack/vue-table'
 import { useVirtualizer } from '@tanstack/vue-virtual'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { type ComponentPublicInstance, computed, inject, nextTick, provide, ref, watch } from 'vue'
 
+import { BREAKPOINTS } from '@/assets/breakpoints'
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
 import type { FetchState } from '@/monitoring/shared/services/MonitoringService'
 
@@ -26,7 +27,9 @@ import {
   COLUMN_LAYOUT_KEY,
   type ColumnJustify,
   type ColumnLayoutInfo,
+  type HeaderFitWidths,
   MONITORING_SERVICE,
+  MONITORING_TABLE_STATE,
   TABLE_BORDER_SPACING,
   TABLE_BORDER_SPACING_PX,
   resolveUpdater
@@ -35,6 +38,9 @@ import MonitoringTableHeader from './MonitoringTableHeader.vue'
 
 const DEFAULT_COLUMN_MIN_SIZE = 20
 const DEFAULT_COLUMN_MAX_SIZE = Number.POSITIVE_INFINITY
+// Below breakpoint m (sizes s and xs) pinned columns would take up most of the width, so
+// nothing is pinned and the whole table scrolls instead.
+const MIN_PINNING_CONTAINER_WIDTH = BREAKPOINTS.m
 const borderSpacing = TABLE_BORDER_SPACING_PX
 
 const props = defineProps<{
@@ -61,6 +67,7 @@ const emit = defineEmits<{
 const { _t } = usei18n()
 
 const monitoringService = inject(MONITORING_SERVICE, null)
+const tableState = inject(MONITORING_TABLE_STATE, null) ?? monitoringService
 const showSkeleton = computed(() => !props.hasLoaded || props.fetchState === 'foreground')
 const showEmptyState = computed(
   () => props.hasLoaded && props.rows.length === 0 && props.loadFailed !== true
@@ -84,7 +91,7 @@ const table = useVueTable({
   },
   state: {
     get sorting() {
-      return monitoringService?.sortState.value ?? []
+      return tableState?.sortState.value ?? []
     },
     get columnFilters() {
       return props.filterState
@@ -93,7 +100,7 @@ const table = useVueTable({
       return props.columnPinning ?? {}
     },
     get columnVisibility() {
-      return monitoringService?.columnVisibility.value ?? {}
+      return tableState?.columnVisibility.value ?? {}
     },
     get rowSelection() {
       return rowSelection.value
@@ -118,7 +125,7 @@ const table = useVueTable({
     ? { getRowId: (row: T, index: number) => String(props.getRowKey!(row, index)) }
     : {}),
   onSortingChange: (updater) => {
-    monitoringService?.updateSort(resolveUpdater(updater, monitoringService.sortState.value))
+    tableState?.updateSort(resolveUpdater(updater, tableState.sortState.value))
   },
   onColumnFiltersChange: (updater) => {
     emit('update:filterState', resolveUpdater(updater, props.filterState))
@@ -175,15 +182,24 @@ interface ColumnMetric {
   justify: ColumnJustify
 }
 
+// Reported by the header for the columns that must not cut their label.
+const headerFitWidths = ref<HeaderFitWidths>({})
+
 const columnMetrics = computed<ColumnMetric[]>(() =>
-  table.getVisibleLeafColumns().map((column) => ({
-    id: column.id,
-    min: column.columnDef.minSize ?? DEFAULT_COLUMN_MIN_SIZE,
-    max: column.columnDef.maxSize ?? DEFAULT_COLUMN_MAX_SIZE,
-    isLeftPinned: column.getIsPinned() === 'left',
-    isRightPinned: column.getIsPinned() === 'right',
-    justify: column.columnDef.meta?.justify ?? 'left'
-  }))
+  table.getVisibleLeafColumns().map((column) => {
+    const min = Math.max(
+      column.columnDef.minSize ?? DEFAULT_COLUMN_MIN_SIZE,
+      headerFitWidths.value[column.id] ?? 0
+    )
+    return {
+      id: column.id,
+      min,
+      max: Math.max(column.columnDef.maxSize ?? DEFAULT_COLUMN_MAX_SIZE, min),
+      isLeftPinned: column.getIsPinned() === 'left',
+      isRightPinned: column.getIsPinned() === 'right',
+      justify: column.columnDef.meta?.justify ?? 'left'
+    }
+  })
 )
 
 const totalMinWidth = computed(() =>
@@ -241,6 +257,7 @@ const pinningActive = computed(
   () =>
     pinningEnabled.value &&
     containerWidth.value !== null &&
+    containerWidth.value >= MIN_PINNING_CONTAINER_WIDTH &&
     containerWidth.value - borderSpacingTotal.value < totalMinWidth.value
 )
 
@@ -392,21 +409,24 @@ function tableRowAt(index: number): Row<T> {
 
 <template>
   <div ref="wrapperRef" class="monitoring-table" :aria-busy="fetchState !== 'idle'">
-    <CmkAlertBox
+    <CmkAlert
       v-if="loadFailed"
       class="monitoring-table__load-error"
       variant="error"
       :heading="_t('Could not load the results')"
       :main-button="{ title: _t('Retry'), onclick: () => emit('retry') }"
-    >
-      {{ _t('Check whether the site is reachable, then retry.') }}
-    </CmkAlertBox>
+      :text="_t('Check whether the site is reachable, then retry.')"
+    />
     <TableSkeleton v-if="showSkeleton"></TableSkeleton>
     <table v-else class="monitoring-table__table">
       <colgroup v-if="pinningEnabled">
         <col v-for="entry in columnLayout" :key="entry.id" :style="{ width: `${entry.width}px` }" />
       </colgroup>
-      <MonitoringTableHeader :header-groups="table.getHeaderGroups()" :disabled="showEmptyState" />
+      <MonitoringTableHeader
+        :header-groups="table.getHeaderGroups()"
+        :disabled="showEmptyState"
+        @fit-widths="headerFitWidths = $event"
+      />
       <tbody>
         <tr v-if="showEmptyState">
           <td :colspan="columnLayout.length" class="monitoring-table__empty-cell">
@@ -472,13 +492,7 @@ function tableRowAt(index: number): Row<T> {
 .monitoring-table__row:hover,
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 .monitoring-table__row:hover :deep(td) {
-  background-color: var(--color-dark-blue-90);
-}
-
-body[data-theme='facelift'] .monitoring-table__row:hover,
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-body[data-theme='facelift'] .monitoring-table__row:hover :deep(td) {
-  background-color: var(--color-dark-blue-10);
+  background-color: var(--background-row-hover-highlight);
 }
 
 .monitoring-table__spacer {

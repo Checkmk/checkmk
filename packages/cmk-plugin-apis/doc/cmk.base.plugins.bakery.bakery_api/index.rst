@@ -2,10 +2,10 @@
 Bakery
 ======
 
-Version 2 (UNSTABLE): `cmk.bakery.v2_unstable`
-==============================================
+Version 2: `cmk.bakery.v2`
+==========================
 
-.. automodule:: cmk.bakery.v2_unstable
+.. automodule:: cmk.bakery.v2
    :members:
 
 Version 1: `cmk.base.plugins.bakery.bakery_api.v1`

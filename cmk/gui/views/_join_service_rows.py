@@ -13,7 +13,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import regex
 from cmk.ccc.site import SiteId
 from cmk.gui.data_source import data_source_registry
-from cmk.gui.painter.v0 import columns_of_cells, JoinCell
+from cmk.gui.painter import columns_of_cells, JoinCell
 from cmk.gui.type_defs import ColumnName, LivestatusQuery, Row, Rows
 from cmk.gui.view import View
 from cmk.gui.views.sorter import SorterEntry

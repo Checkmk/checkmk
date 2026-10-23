@@ -8,8 +8,8 @@ export { default as CmkDatePicker } from './CmkDatePicker.vue'
 export { default as CmkDateTimePicker } from './CmkDateTimePicker.vue'
 export { default as CmkTimeRangePicker } from './CmkTimeRangePicker.vue'
 export { default as CmkTimeRangeDisplay } from './private/display/CmkTimeRangeDisplay.vue'
-export { default as CmkTimeRangeTooltip } from './CmkTimeRangeTooltip.vue'
 
+export { useRelativeTimeRangeText } from './useRelativeTimeRangeText'
 export { useResolvedDateTimeSettings } from './useResolvedDateTimeSettings'
 
 export type { CalendarMode, CalendarSelection } from './private/calendar/types'

@@ -6,6 +6,7 @@ import io
 import stat
 import zlib
 from collections.abc import MutableMapping
+from http import HTTPStatus
 from pathlib import Path
 from uuid import uuid4
 from zlib import compress
@@ -21,7 +22,6 @@ from pytest_mock import MockerFixture
 from cmk.agent_receiver.agent_receiver import decompression
 from cmk.agent_receiver.agent_receiver.checkmk_rest_api import (
     CMKEdition,
-    HostConfiguration,
     RegisterResponse,
 )
 from cmk.agent_receiver.agent_receiver.models import (
@@ -31,24 +31,33 @@ from cmk.agent_receiver.agent_receiver.models import (
 )
 from cmk.agent_receiver.agent_receiver.utils import R4R
 from cmk.agent_receiver.lib.certs import serialize_to_pem
-from cmk.agent_receiver.lib.config import get_config
-from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_ISSUER_HEADER, INJECTED_UUID_HEADER
-from cmk.testlib.agent_receiver.certs import agent_ca_common_name, generate_csr_pair
+from cmk.agent_receiver.lib.config import Config, get_config
+from cmk.agent_receiver.lib.mtls_auth_validator import (
+    INJECTED_ISSUER_HEADER,
+    INJECTED_SERIAL_HEADER,
+    INJECTED_UUID_HEADER,
+)
+from cmk.testlib.agent_receiver.certs import (
+    agent_ca_common_name,
+    generate_csr_pair,
+    UNREVOKED_SERIAL_NUMBER,
+)
 
 
 @pytest.fixture(name="symlink_push_host")
 def fixture_symlink_push_host(
     tmp_path: Path,
     uuid: UUID4,
+    setup_site_context: Config,
 ) -> None:
-    _symlink_push_host(tmp_path, uuid)
+    _symlink_push_host(setup_site_context, tmp_path, uuid)
 
 
 def _symlink_push_host(
+    config: Config,
     tmp_path: Path,
     uuid: UUID4,
 ) -> None:
-    config = get_config()
     source = config.agent_output_dir / str(uuid)
     (target_dir := tmp_path / "push-agent" / "hostname").mkdir(parents=True)
     source.symlink_to(target_dir)
@@ -68,7 +77,7 @@ def test_register_existing_ok(
     serialized_csr: str,
 ) -> None:
     def rest_api_register_mock(*_args: object, **_kwargs: object) -> RegisterResponse:
-        _symlink_push_host(tmp_path, uuid)
+        _symlink_push_host(get_config(), tmp_path, uuid)
         return RegisterResponse(connection_mode=ConnectionMode.PULL)
 
     mocker.patch(
@@ -84,8 +93,68 @@ def test_register_existing_ok(
             "csr": serialized_csr,
         },
     )
-    assert response.status_code == 200
-    assert set(response.json()) == {"root_cert", "agent_cert", "connection_mode"}
+    assert response.status_code == HTTPStatus.OK
+    assert set(response.json()) == {
+        "root_cert",
+        "agent_cert",
+        "connection_mode",
+        "agent_update_authorization",
+    }
+
+
+def _register_permitting_updates_at_the_site(tmp_path: Path, uuid: UUID4) -> RegisterResponse:
+    config = get_config()
+    _symlink_push_host(config, tmp_path, uuid)
+    config.registrations_dir.mkdir(parents=True, exist_ok=True)
+    (config.registrations_dir / f"{uuid}.json").write_text(
+        '{"agent_updates_permitted": true, "subject": "herbert",'
+        ' "registration_route": "register", "registered_at": 1760000000.0}'
+    )
+    return RegisterResponse(connection_mode=ConnectionMode.PULL)
+
+
+def test_register_existing_reports_the_update_permission_of_the_registration(
+    tmp_path: Path,
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID4,
+    serialized_csr: str,
+) -> None:
+    """CMK-39504 AC1, AC6"""
+    mocker.patch(
+        "cmk.agent_receiver.agent_receiver.endpoints.register",
+        lambda *_args, **_kwargs: _register_permitting_updates_at_the_site(tmp_path, uuid),
+    )
+
+    response = client.post(
+        "/register_existing",
+        auth=("herbert", "joergl"),
+        json={"uuid": str(uuid), "host_name": "myhost", "csr": serialized_csr},
+    )
+
+    assert response.json()["agent_update_authorization"] == "authorized"
+
+
+def test_register_existing_token_reports_the_update_permission_of_the_registration(
+    tmp_path: Path,
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID4,
+    serialized_csr: str,
+) -> None:
+    """CMK-39504 AC6"""
+    mocker.patch(
+        "cmk.agent_receiver.agent_receiver.endpoints.register_token",
+        lambda *_args, **_kwargs: _register_permitting_updates_at_the_site(tmp_path, uuid),
+    )
+
+    response = client.post(
+        "/register_existing_token",
+        headers={"Authorization": f"CMK-TOKEN 0:{uuid4()}"},
+        json={"uuid": str(uuid), "host_name": "myhost", "csr": serialized_csr},
+    )
+
+    assert response.json()["agent_update_authorization"] == "authorized"
 
 
 def test_register_existing_uuid_csr_mismatch(
@@ -101,7 +170,7 @@ def test_register_existing_uuid_csr_mismatch(
             "csr": serialized_csr,
         },
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert "does not match" in response.json()["detail"]
 
 
@@ -120,167 +189,64 @@ def test_register_existing_hostname_invalid(
             "csr": serialized_csr,
         },
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.json() == {"detail": "Invalid host name: 'my/../host'"}
 
 
-def test_register_register_with_hostname_host_missing(
+@pytest.mark.parametrize(
+    "host_name",
+    [
+        pytest.param("test.checkmk.com", id="FQDN"),
+        pytest.param("127.0.0.1", id="IPv4 loopback"),
+        pytest.param("93.184.216.34", id="IPv4"),
+        pytest.param("0:0:0:0:0:0:0:1", id="IPv6 uncompressed"),
+        pytest.param("2606:2800:220:1:248:1893:25c8:1946", id="IPv6"),
+        pytest.param("::", id="IPv6 unspecified"),
+        pytest.param("::1", id="IPv6 loopback"),
+    ],
+)
+def test_register_existing_accepts_host_name(
     mocker: MockerFixture,
     client: TestClient,
     uuid: UUID4,
+    serialized_csr: str,
+    host_name: str,
 ) -> None:
     mocker.patch(
-        "cmk.agent_receiver.agent_receiver.endpoints.host_configuration",
-        side_effect=HTTPException(
-            status_code=404,
-            detail="N O T  F O U N D",
-        ),
+        "cmk.agent_receiver.agent_receiver.endpoints.register",
+        return_value=RegisterResponse(connection_mode=ConnectionMode.PULL),
     )
+
     response = client.post(
-        "/register_with_hostname",
+        "/register_existing",
         auth=("herbert", "joergl"),
-        json={
-            "uuid": str(uuid),
-            "host_name": "myhost",
-        },
+        json={"uuid": str(uuid), "host_name": host_name, "csr": serialized_csr},
     )
-    assert response.status_code == 404
-    assert response.json() == {"detail": "N O T  F O U N D"}
 
-
-def test_register_register_with_hostname_wrong_site(
-    mocker: MockerFixture,
-    client: TestClient,
-    uuid: UUID4,
-) -> None:
-    mocker.patch(
-        "cmk.agent_receiver.agent_receiver.endpoints.host_configuration",
-        return_value=HostConfiguration(
-            site="some-site",
-            is_cluster=False,
-        ),
-    )
-    response = client.post(
-        "/register_with_hostname",
-        auth=("herbert", "joergl"),
-        json={
-            "uuid": str(uuid),
-            "host_name": "myhost",
-        },
-    )
-    assert response.status_code == 403
-    assert response.json() == {
-        "detail": (
-            "This host is monitored on the site some-site, "
-            "but you tried to register it at the site NO_SITE."
-        )
-    }
-
-
-def test_register_register_with_hostname_cluster_host(
-    mocker: MockerFixture,
-    client: TestClient,
-    uuid: UUID4,
-) -> None:
-    mocker.patch(
-        "cmk.agent_receiver.agent_receiver.endpoints.host_configuration",
-        return_value=HostConfiguration(
-            site="NO_SITE",
-            is_cluster=True,
-        ),
-    )
-    response = client.post(
-        "/register_with_hostname",
-        auth=("herbert", "joergl"),
-        json={
-            "uuid": str(uuid),
-            "host_name": "myhost",
-        },
-    )
-    assert response.status_code == 403
-    assert response.json() == {"detail": "This host is a cluster host. Register its nodes instead."}
-
-
-def test_register_register_with_hostname_unauthorized(
-    mocker: MockerFixture,
-    client: TestClient,
-    uuid: UUID4,
-) -> None:
-    mocker.patch(
-        "cmk.agent_receiver.agent_receiver.endpoints.host_configuration",
-        return_value=HostConfiguration(
-            site="NO_SITE",
-            is_cluster=False,
-        ),
-    )
-    mocker.patch(
-        "cmk.agent_receiver.agent_receiver.endpoints.link_host_with_uuid",
-        side_effect=HTTPException(
-            status_code=403,
-            detail="You do not have the permission for agent pairing.",
-        ),
-    )
-    response = client.post(
-        "/register_with_hostname",
-        auth=("herbert", "joergl"),
-        json={
-            "uuid": str(uuid),
-            "host_name": "myhost",
-        },
-    )
-    assert response.status_code == 403
-    assert response.json() == {"detail": "You do not have the permission for agent pairing."}
+    assert response.status_code == HTTPStatus.OK
 
 
 @pytest.mark.parametrize(
-    "hostname,valid",
+    "host_name",
     [
-        ("myhost", True),
-        ("test.checkmk.com", True),
-        ("127.0.0.1", True),
-        ("93.184.216.34", True),
-        ("0:0:0:0:0:0:0:1", True),
-        ("2606:2800:220:1:248:1893:25c8:1946", True),
-        ("::", True),
-        ("::1", True),
-        ("", False),
-        ("...", False),
-        ("my/../host", False),  # this is a regression test for CMK-11202
+        pytest.param("", id="empty"),
+        pytest.param("...", id="dots only"),
     ],
 )
-def test_register_register_with_hostname_hostname_validity(
-    mocker: MockerFixture,
+def test_register_existing_rejects_host_name(
     client: TestClient,
     uuid: UUID4,
-    hostname: str,
-    valid: bool,
+    serialized_csr: str,
+    host_name: str,
 ) -> None:
-    mocker.patch(
-        "cmk.agent_receiver.agent_receiver.endpoints.host_configuration",
-        return_value=HostConfiguration(
-            site="NO_SITE",
-            is_cluster=False,
-        ),
-    )
-    mocker.patch(
-        "cmk.agent_receiver.agent_receiver.endpoints.link_host_with_uuid", return_value=None
-    )
-
     response = client.post(
-        "/register_with_hostname",
+        "/register_existing",
         auth=("herbert", "joergl"),
-        json={
-            "uuid": str(uuid),
-            "host_name": hostname,
-        },
+        json={"uuid": str(uuid), "host_name": host_name, "csr": serialized_csr},
     )
 
-    if valid:
-        assert response.status_code == 204
-        assert not response.text
-    else:
-        assert response.status_code == 400
-        assert response.json() == {"detail": f"Invalid host name: '{hostname}'"}
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {"detail": f"Invalid host name: '{host_name}'"}
 
 
 def test_register_new_unauthenticated(
@@ -292,7 +258,7 @@ def test_register_new_unauthenticated(
     mocker.patch(
         "cmk.agent_receiver.agent_receiver.endpoints.cmk_edition",
         side_effect=HTTPException(
-            status_code=401,
+            status_code=HTTPStatus.UNAUTHORIZED,
             detail="User authentication failed",
         ),
     )
@@ -305,7 +271,7 @@ def test_register_new_unauthenticated(
             "csr": serialized_csr,
         },
     )
-    assert response.status_code == 401
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert response.json() == {"detail": "User authentication failed"}
 
 
@@ -328,7 +294,7 @@ def test_register_new_community(
             "csr": serialized_csr,
         },
     )
-    assert response.status_code == 501
+    assert response.status_code == HTTPStatus.NOT_IMPLEMENTED
     assert response.json() == {
         "detail": "The Checkmk Community edition does not support registration of new hosts"
     }
@@ -352,7 +318,7 @@ def test_register_new_uuid_csr_mismatch(
             "csr": serialized_csr,
         },
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert "does not match" in response.json()["detail"]
 
 
@@ -379,7 +345,7 @@ def _test_register_new(
             "csr": serialized_csr,
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert set(response.json()) == {"root_cert"}
 
     triggered_r4r = R4R.read(uuid)
@@ -441,7 +407,7 @@ def test_register_new_ongoing_community(
         f"/register_new_ongoing/{uuid}",
         auth=("herbert", "joergl"),
     )
-    assert response.status_code == 501
+    assert response.status_code == HTTPStatus.NOT_IMPLEMENTED
     assert response.json() == {
         "detail": "The Checkmk Community edition does not support registration of new hosts"
     }
@@ -477,7 +443,7 @@ def test_register_new_ongoing_not_found(
         ),
     ).write()
     response = _call_register_new_ongoing_ultimate(mocker, client, uuid)
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {"detail": "No registration with this UUID in progress"}
 
 
@@ -496,7 +462,7 @@ def test_register_new_ongoing_username_mismatch(
         ),
     ).write()
     response = _call_register_new_ongoing_ultimate(mocker, client, uuid)
-    assert response.status_code == 403
+    assert response.status_code == HTTPStatus.FORBIDDEN
     assert response.json() == {
         "detail": "A registration is in progress, but it was triggered by a different user"
     }
@@ -522,7 +488,7 @@ def test_register_new_ongoing_in_progress(
         ),
     ).write()
     response = _call_register_new_ongoing_ultimate(mocker, client, uuid)
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {"status": "InProgress"}
 
 
@@ -546,7 +512,7 @@ def test_register_new_ongoing_in_declined(
         ),
     ).write()
     response = _call_register_new_ongoing_ultimate(mocker, client, uuid)
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {"status": "Declined", "reason": "Registration request declined"}
 
 
@@ -566,12 +532,40 @@ def test_register_new_ongoing_success(
         ),
     ).write()
     response = _call_register_new_ongoing_ultimate(mocker, client, uuid)
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         "status": "Success",
         "agent_cert": "cert",
         "connection_mode": "push-agent",
+        "agent_update_authorization": "unavailable",
     }
+
+
+@pytest.mark.usefixtures("symlink_push_host")
+def test_register_new_ongoing_reports_the_update_permission_of_the_registration(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID4,
+) -> None:
+    """CMK-39504 AC1, AC6"""
+    R4R(
+        status=R4RStatus.DISCOVERABLE,
+        request=RequestForRegistration(
+            uuid=uuid,
+            username="user",
+            agent_labels={},
+            agent_cert="cert",
+        ),
+    ).write()
+    (registrations_dir := get_config().registrations_dir).mkdir(parents=True, exist_ok=True)
+    (registrations_dir / f"{uuid}.json").write_text(
+        '{"agent_updates_permitted": false, "subject": "user",'
+        ' "registration_route": "register_new", "registered_at": 1760000000.0}'
+    )
+
+    response = _call_register_new_ongoing_ultimate(mocker, client, uuid)
+
+    assert response.json()["agent_update_authorization"] == "not_permitted"
 
 
 def _agent_ca_common_name() -> str:
@@ -584,6 +578,7 @@ def fixture_agent_data_headers(uuid: UUID4) -> dict[str, str]:
         "compression": "zlib",
         INJECTED_UUID_HEADER: str(uuid),
         INJECTED_ISSUER_HEADER: _agent_ca_common_name(),
+        INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
     }
 
 
@@ -603,7 +598,7 @@ def test_agent_data_uuid_mismatch(
         headers=dict(agent_data_headers),
         files={"monitoring_data": ("filename", compressed_agent_data)},
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.json() == {
         "detail": f"Verified client UUID ({uuid}) does not match UUID in URL (123)"
     }
@@ -620,7 +615,7 @@ def test_agent_data_no_host(
         headers=agent_data_headers,
         files={"monitoring_data": ("filename", compressed_agent_data)},
     )
-    assert response.status_code == 403
+    assert response.status_code == HTTPStatus.FORBIDDEN
     assert response.json() == {"detail": "Host is not registered"}
 
 
@@ -645,7 +640,7 @@ def test_agent_data_pull_host(
             )
         },
     )
-    assert response.status_code == 403
+    assert response.status_code == HTTPStatus.FORBIDDEN
     assert response.json() == {"detail": "Host is not a push host"}
 
 
@@ -663,7 +658,7 @@ def test_agent_data_invalid_compression(
         },
         files={"monitoring_data": ("filename", io.BytesIO(b"certainly invalid"))},
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.json() == {"detail": "Unsupported compression algorithm: gzip"}
 
 
@@ -678,7 +673,7 @@ def test_agent_data_invalid_data(
         headers=agent_data_headers,
         files={"monitoring_data": ("filename", io.BytesIO(b"certainly invalid"))},
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.json() == {"detail": "Decompression of agent data failed"}
 
 
@@ -695,7 +690,7 @@ def test_agent_data_decompression_size(
         headers=agent_data_headers,
         files={"monitoring_data": ("filename", io.BytesIO(zlib.compress(b"\x00" * 1025, level=1)))},
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.json() == {"detail": "Decompression of agent data failed"}
 
 
@@ -716,7 +711,7 @@ def test_agent_data_success(
     file_path = tmp_path / "push-agent" / "hostname" / "agent_output"
     assert file_path.read_text() == "mock file"
 
-    assert response.status_code == 204
+    assert response.status_code == HTTPStatus.NO_CONTENT
 
 
 @pytest.fixture(name="registration_status_headers")
@@ -724,6 +719,7 @@ def fixture_registration_status_headers(uuid: UUID4) -> dict[str, str]:
     return {
         INJECTED_UUID_HEADER: str(uuid),
         INJECTED_ISSUER_HEADER: _agent_ca_common_name(),
+        INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
     }
 
 
@@ -737,7 +733,7 @@ def test_registration_status_uuid_mismtach(
         headers=registration_status_headers,
     )
 
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.json() == {
         "detail": f"Verified client UUID ({uuid}) does not match UUID in URL (123)"
     }
@@ -768,7 +764,7 @@ def test_registration_status_declined(
         headers=registration_status_headers,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         "hostname": None,
         "status": "declined",
@@ -788,7 +784,7 @@ def test_registration_status_host_not_registered(
         headers=registration_status_headers,
     )
 
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {"detail": "Host is not registered"}
 
 
@@ -813,7 +809,7 @@ def test_registration_status_push_host(
         headers=registration_status_headers,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         "hostname": "hostname",
         "status": "discoverable",
@@ -839,7 +835,7 @@ def test_registration_status_pull_host(
         headers=registration_status_headers,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         "hostname": "hostname",
         "status": None,
@@ -859,7 +855,7 @@ def test_registration_status_v2_uuid_mismtach(
         headers=registration_status_headers,
     )
 
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.json() == {
         "detail": f"Verified client UUID ({uuid}) does not match UUID in URL (123)"
     }
@@ -875,7 +871,7 @@ def test_registration_status_v2_host_not_registered(
         headers=registration_status_headers,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {"status": "NotRegistered"}
 
 
@@ -890,7 +886,7 @@ def test_registration_status_v2_push_host(
         headers=registration_status_headers,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         "status": "Registered",
         "hostname": "hostname",
@@ -914,7 +910,7 @@ def test_registration_status_v2_pull_host(
         headers=registration_status_headers,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         "status": "Registered",
         "hostname": "hostname",
@@ -934,7 +930,7 @@ def test_renew_certificate_uuid_csr_mismatch(
         json={"csr": serialize_to_pem(wrong_csr)},
     )
 
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert "does not match" in response.json()["detail"]
 
 
@@ -950,7 +946,7 @@ def test_renew_certificate_not_registered(
         json={"csr": serialized_csr},
     )
 
-    assert response.status_code == 403
+    assert response.status_code == HTTPStatus.FORBIDDEN
     assert "Host is not registered" in response.json()["detail"]
 
 
@@ -972,5 +968,53 @@ def test_renew_certificate_ok(
         json={"csr": serialized_csr},
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json()["agent_cert"].startswith("-----BEGIN CERTIFICATE-----")
+
+
+# fmt: off
+AGENT_UPDATE_REQUESTS = [
+    pytest.param("agent_update/status", {"platform": "linux_deb", "installed_aghash": "fedcba9876543210"}, id="status"),
+    pytest.param("agent_update/agent", {"platform": "linux_deb", "aghash": "0123456789abcdef"}, id="agent"),
+]
+# fmt: on
+
+
+@pytest.mark.parametrize("endpoint, body", AGENT_UPDATE_REQUESTS)
+def test_agent_update_of_another_uuid_is_rejected(
+    client: TestClient,
+    uuid: UUID4,
+    registration_status_headers: MutableMapping[str, str],
+    endpoint: str,
+    body: dict[str, str],
+) -> None:
+    other_uuid = uuid4()
+
+    response = client.post(
+        f"/{endpoint}/{other_uuid}",
+        headers=registration_status_headers,
+        json=body,
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {
+        "detail": f"Verified client UUID ({uuid}) does not match UUID in URL ({other_uuid})"
+    }
+
+
+@pytest.mark.parametrize("endpoint, body", AGENT_UPDATE_REQUESTS)
+def test_agent_update_of_an_unregistered_host_is_forbidden(
+    client: TestClient,
+    uuid: UUID4,
+    registration_status_headers: MutableMapping[str, str],
+    endpoint: str,
+    body: dict[str, str],
+) -> None:
+    response = client.post(
+        f"/{endpoint}/{uuid}",
+        headers=registration_status_headers,
+        json=body,
+    )
+
+    assert response.status_code == HTTPStatus.FORBIDDEN
+    assert response.json() == {"detail": "Host is not registered"}

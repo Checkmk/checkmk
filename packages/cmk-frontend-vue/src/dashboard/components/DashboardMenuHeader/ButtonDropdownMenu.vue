@@ -5,17 +5,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { nextTick, ref } from 'vue'
 
 import MenuButton from './MenuButton.vue'
+import type { MenuButtonName } from './types'
 
 const {
   label,
+  ariaLabel,
   right = false,
   disabled = false
-} = defineProps<{ label: TranslatedString; right?: boolean; disabled?: boolean }>()
+} = defineProps<MenuButtonName & { right?: boolean; disabled?: boolean }>()
 
 const vClickOutside = useClickOutside()
 
@@ -59,7 +60,7 @@ defineExpose({
     class="db-button-dropdown-menu"
   >
     <MenuButton
-      :aria-label="label"
+      :aria-label="ariaLabel ?? label"
       :aria-expanded="menuShown"
       :disabled="disabled"
       @click="showMenu"

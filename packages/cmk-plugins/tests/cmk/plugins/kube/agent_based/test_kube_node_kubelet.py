@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, State
@@ -17,7 +19,7 @@ from cmk.plugins.kube.schemata.section import KubeletInfo
         pytest.param(
             KubeletInfo(
                 version="1.2.3",
-                health=HealthZ(status_code=200, response="ok"),
+                health=HealthZ(status_code=HTTPStatus.OK, response="ok"),
             ),
             [
                 Result(state=State.OK, summary="Healthy"),
@@ -28,7 +30,7 @@ from cmk.plugins.kube.schemata.section import KubeletInfo
         pytest.param(
             KubeletInfo(
                 version="1.2.3",
-                health=HealthZ(status_code=500, response="bad"),
+                health=HealthZ(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, response="bad"),
             ),
             [
                 Result(state=State.CRIT, summary="Not healthy"),

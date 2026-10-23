@@ -5,14 +5,14 @@
 
 import ast
 import json
+from collections.abc import Sequence
 from pathlib import Path
 from typing import override
 
 import pytest
 
-from cmk.astrein.checker_localization import LocalizationChecker
-from cmk.astrein.checker_module_layers import ModuleLayersChecker
-from cmk.astrein.checkers import all_checkers
+from cmk.astrein.checkers.localization import LocalizationChecker
+from cmk.astrein.checkers.module_layers.checker import ModuleLayersChecker
 from cmk.astrein.cli import (
     _collect_files,
     _handle_results,
@@ -21,15 +21,15 @@ from cmk.astrein.cli import (
     CheckerResults,
 )
 from cmk.astrein.framework import ASTVisitorChecker, CheckerError
+from cmk.astrein.registry import all_checkers
+from cmk.astrein.suppressions import Suppression
 
 
 def test_select_checkers_with_all() -> None:
     checkers = all_checkers()
     selected = _select_checkers("all", checkers)
 
-    assert len(selected) == 12
-    assert LocalizationChecker in selected
-    assert ModuleLayersChecker in selected
+    assert selected == list(checkers.values())
 
 
 def test_select_checkers_with_specific_checker() -> None:
@@ -150,9 +150,7 @@ def test_collect_files_sorts_results(tmp_path: Path) -> None:
 
 
 class HappyChecker(ASTVisitorChecker):
-    @override
-    def checker_id(self) -> str:
-        return "happy-checker"
+    checker_id = "happy-checker"
 
     @override
     def visit_Module(self, node: ast.Module) -> None: ...
@@ -202,12 +200,12 @@ def test_run_checkers_counts_files_with_errors_correctly(tmp_path: Path) -> None
 
 def _make_checker(errors_by_file: dict[Path, list[CheckerError]]) -> type[ASTVisitorChecker]:
     class CustomChecker(ASTVisitorChecker):
-        @override
-        def checker_id(self) -> str:
-            return "custom-checker"
+        checker_id = "custom-checker"
 
         @override
-        def check(self, tree: ast.AST) -> list[CheckerError]:
+        def check(
+            self, tree: ast.AST, suppressions: Sequence[Suppression] | None = None
+        ) -> list[CheckerError]:
             return errors_by_file.get(self.file_path, [])
 
     return CustomChecker

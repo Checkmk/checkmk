@@ -9,11 +9,18 @@ import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
-import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, ref, watch } from 'vue'
+import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { renderTimeOfDay } from 'cmk-ui-library/lib/renderTime'
+import { computed, nextTick, ref, watch } from 'vue'
 
 import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
-import { pad2 } from '../utils/timeFormat'
+
+const { lastRefreshPosition, intervalChoicesSeconds } = defineProps<{
+  lastRefreshPosition: 'top' | 'left'
+  intervalChoicesSeconds: number[]
+}>()
 
 const {
   refreshIntervalSeconds,
@@ -32,29 +39,45 @@ watch(refreshTick, () => {
 
 const { _t } = usei18n()
 
-// Kept in sync by hand with GRAPH_REFRESH_INTERVALS_SECONDS, which backs the profile setting
-// preselecting one of these.
-const INTERVAL_CHOICES_SECONDS = [30, 60, 90]
 const TURN_OFF = 'turn-off'
 
 const intervalOptions = computed<Suggestions>(() => ({
   type: 'fixed',
   suggestions: [
-    ...[...new Set([...INTERVAL_CHOICES_SECONDS, refreshIntervalSeconds.value])]
+    ...[...new Set([...intervalChoicesSeconds, refreshIntervalSeconds.value])]
       .sort((secondsA, secondsB) => secondsA - secondsB)
       .map((seconds) => ({ name: String(seconds), title: _t('%{seconds} sec', { seconds }) })),
     { name: TURN_OFF, title: _t('Turn off') }
   ]
 }))
 
+// Polite live-region text voicing what the user just changed: the control taking the focus alone
+// does not say it.
+const announcement = ref<TranslatedString>(untranslated(''))
+
+// Cleared first: a live region only speaks on a change, so a repeated message would stay silent.
+async function announce(message: TranslatedString): Promise<void> {
+  announcement.value = untranslated('')
+  await nextTick()
+  announcement.value = message
+}
+
+// Each control unmounts itself when used, so the one taking its place takes the focus and its name
+// announces the new state.
+const intervalDropdown = ref<InstanceType<typeof CmkDropdown> | null>(null)
+const resumeButton = ref<InstanceType<typeof CmkButton> | null>(null)
+
 const intervalModel = computed<string | null>({
   get: () => String(refreshIntervalSeconds.value),
   set: (value) => {
     if (value === TURN_OFF) {
       pauseRefresh()
+      void nextTick(() => resumeButton.value?.focus())
+      void announce(_t('Live refresh off'))
     } else if (value !== null) {
       // Only rendered while the refresh runs, so this only changes the rhythm; Resume goes live.
       setRefreshIntervalSeconds(Number(value))
+      void announce(_t('Refresh interval set to %{seconds} seconds', { seconds: Number(value) }))
     }
   }
 })
@@ -65,6 +88,12 @@ function resume(): void {
   // The range first: the refresh that follows draws whatever window this leaves behind.
   emit('resume')
   resumeRefresh()
+  void nextTick(() => intervalDropdown.value?.focus())
+  void announce(
+    _t('Live refresh resumed, every %{seconds} seconds', {
+      seconds: refreshIntervalSeconds.value
+    })
+  )
 }
 
 const lastRefreshLabel = computed(() => {
@@ -72,12 +101,18 @@ const lastRefreshLabel = computed(() => {
   if (time === null) {
     return null
   }
-  return `${pad2(time.getHours())}:${pad2(time.getMinutes())}:${pad2(time.getSeconds())}`
+  return renderTimeOfDay(time)
 })
 </script>
 
 <template>
-  <div class="graphing-global-refresh-control">
+  <div
+    class="graphing-global-refresh-control"
+    :class="{
+      'graphing-global-refresh-control--last-refresh-top': lastRefreshPosition === 'top',
+      'graphing-global-refresh-control--last-refresh-left': lastRefreshPosition === 'left'
+    }"
+  >
     <span
       v-if="refreshPaused && lastRefreshLabel"
       class="graphing-global-refresh-control__last-refresh"
@@ -90,23 +125,33 @@ const lastRefreshLabel = computed(() => {
     >
       <span class="graphing-global-refresh-control__dot" aria-hidden="true" />
       <template v-if="!refreshPaused">
-        <span class="graphing-global-refresh-control__title">{{ _t('Live refresh') }}</span>
-        <span>{{ _t('every') }}</span>
+        <span class="graphing-global-refresh-control__title" aria-hidden="true">
+          {{ _t('Live refresh') }}
+        </span>
+        <span aria-hidden="true">{{ _t('every') }}</span>
         <CmkDropdown
+          ref="intervalDropdown"
           v-model="intervalModel"
           :options="intervalOptions"
-          :label="_t('Refresh interval')"
+          :label="_t('Live refresh every')"
           required
         />
       </template>
       <template v-else>
         <span class="graphing-global-refresh-control__title">{{ _t('Refresh off') }}</span>
-        <CmkButton size="small" class="graphing-global-refresh-control__resume" @click="resume">
+        <CmkButton
+          ref="resumeButton"
+          size="small"
+          class="graphing-global-refresh-control__resume"
+          :aria-label="_t('Resume live refresh')"
+          @click="resume"
+        >
           <CmkMultitoneIcon name="play" primary-color="success" size="small" />
           {{ _t('Resume') }}
         </CmkButton>
       </template>
     </div>
+    <CmkVisuallyHidden :text="announcement" live="polite" />
   </div>
 </template>
 
@@ -114,21 +159,33 @@ const lastRefreshLabel = computed(() => {
 .graphing-global-refresh-control {
   position: relative;
   display: inline-flex;
-  flex-direction: column;
-  align-items: flex-end;
   font-size: var(--font-size-normal);
   color: var(--font-color);
 }
 
+.graphing-global-refresh-control--last-refresh-top {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.graphing-global-refresh-control--last-refresh-left {
+  align-items: center;
+  gap: var(--dimension-4);
+}
+
+.graphing-global-refresh-control__last-refresh {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--font-color-strong);
+}
+
 /* Out of flow: in flow this makes the control taller when the refresh is off, and the host
    centres it in a fixed-height row, so the pill would slide out of line with the picker. */
-.graphing-global-refresh-control__last-refresh {
+.graphing-global-refresh-control--last-refresh-top .graphing-global-refresh-control__last-refresh {
   position: absolute;
   right: 0;
   bottom: 100%;
   margin-bottom: var(--dimension-3);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
 }
 
 .graphing-global-refresh-control__pill {
@@ -137,7 +194,7 @@ const lastRefreshLabel = computed(() => {
   gap: var(--dimension-3);
   padding: var(--dimension-3) var(--dimension-4);
   border-radius: var(--border-radius);
-  background: var(--graphing-refresh-live-bg);
+  background: var(--status-background-success);
 
   > :deep(.cmk-dropdown) {
     align-self: center;
@@ -145,7 +202,7 @@ const lastRefreshLabel = computed(() => {
 }
 
 .graphing-global-refresh-control__pill--paused {
-  background: var(--graphing-refresh-off-bg);
+  background: var(--status-background-warning);
 }
 
 .graphing-global-refresh-control__dot {
@@ -153,34 +210,14 @@ const lastRefreshLabel = computed(() => {
   flex: 0 0 auto;
   width: 8px;
   height: 8px;
-  border: var(--border-width-1) solid var(--graphing-refresh-live-dot-stroke);
+  border: var(--border-width-1) solid var(--status-border-color-success-strong);
   border-radius: 50%;
-  background: var(--color-corporate-green-50);
+  background: var(--success);
 }
 
 .graphing-global-refresh-control__pill--paused .graphing-global-refresh-control__dot {
-  border-color: var(--graphing-refresh-off-dot-stroke);
-  background: var(--color-yellow-50);
-}
-
-body[data-theme='facelift'] {
-  .graphing-global-refresh-control {
-    --graphing-refresh-live-bg: var(--color-corporate-green-0);
-    --graphing-refresh-off-bg: var(--color-yellow-0);
-    --graphing-refresh-live-dot-stroke: var(--color-corporate-green-70);
-    --graphing-refresh-off-dot-stroke: var(--color-yellow-70);
-  }
-}
-
-body[data-theme='modern-dark'] {
-  .graphing-global-refresh-control {
-    --graphing-refresh-live-bg: var(--color-corporate-green-100);
-    --graphing-refresh-off-bg: var(--color-yellow-100);
-
-    /* Same colour as the fill: dark mode shows no ring, but the border keeps the dot 8x8. */
-    --graphing-refresh-live-dot-stroke: var(--color-corporate-green-50);
-    --graphing-refresh-off-dot-stroke: var(--color-yellow-50);
-  }
+  border-color: var(--status-border-color-warning-strong);
+  background: var(--color-state-warning);
 }
 
 .graphing-global-refresh-control__title {
@@ -190,5 +227,6 @@ body[data-theme='modern-dark'] {
 .graphing-global-refresh-control__resume {
   margin-left: var(--dimension-3);
   gap: var(--dimension-3);
+  font-weight: var(--font-weight-default);
 }
 </style>

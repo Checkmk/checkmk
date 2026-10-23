@@ -7,11 +7,10 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.fortinet.agent_based import fortisandbox_cpu_util
 from cmk.plugins.fortinet.agent_based.fortisandbox_cpu_util import (
     check_fortisandbox_cpu_util,
-    discover_fortisandbox_cpu_util,
     parse_fortisandbox_cpu_util,
 )
 
@@ -31,10 +30,6 @@ def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
 )
 def test_parse_fortisandbox_cpu_util(string_table: StringTable, expected: int | None) -> None:
     assert parse_fortisandbox_cpu_util(string_table) == expected
-
-
-def test_discover_fortisandbox_cpu_util() -> None:
-    assert list(discover_fortisandbox_cpu_util(10)) == [Service()]
 
 
 @pytest.mark.usefixtures("empty_value_store")

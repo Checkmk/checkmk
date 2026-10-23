@@ -13,13 +13,12 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -45,10 +44,6 @@ def parse_innovaphone_licenses(string_table: StringTable) -> LicenseUsage | None
                 return None
         case _:
             return None
-
-
-def discover_innovaphone_licenses(section: LicenseUsage) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_innovaphone_licenses(params: Mapping[str, Any], section: LicenseUsage) -> CheckResult:
@@ -83,7 +78,7 @@ agent_section_innovaphone_licenses = AgentSection(
 check_plugin_innovaphone_licenses = CheckPlugin(
     name="innovaphone_licenses",
     service_name="Licenses",
-    discovery_function=discover_innovaphone_licenses,
+    discovery_function=discover_one_service,
     check_function=check_innovaphone_licenses,
     check_default_parameters={
         "levels": (90.0, 95.0),

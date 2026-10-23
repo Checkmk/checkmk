@@ -22,10 +22,10 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import (
     HostConfig,
     replace_macros,
+    Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
-from cmk.server_side_calls.v1._utils import Secret
 
 
 class Params(BaseModel):

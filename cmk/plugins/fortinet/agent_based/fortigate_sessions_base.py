@@ -14,13 +14,12 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     contains,
-    DiscoveryResult,
     exists,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 Section = int
 
@@ -30,10 +29,6 @@ def parse_fortigate_sessions_base(string_table: StringTable) -> Section | None:
         return int(string_table[0][0])
     except IndexError, ValueError:
         return None
-
-
-def discover_fortigate_sessions_base(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_fortigate_sessions_base(params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -64,7 +59,7 @@ snmp_section_fortigate_sessions_base = SimpleSNMPSection(
 check_plugin_fortigate_sessions_base = CheckPlugin(
     name="fortigate_sessions_base",
     service_name="Sessions",
-    discovery_function=discover_fortigate_sessions_base,
+    discovery_function=discover_one_service,
     check_function=check_fortigate_sessions_base,
     check_ruleset_name="fortigate_sessions",
     check_default_parameters={"levels": (100000, 150000)},

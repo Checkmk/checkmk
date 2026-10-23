@@ -9,14 +9,13 @@ from collections.abc import Sequence
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.emc.lib import DETECT_ISILON
 
 
@@ -44,10 +43,6 @@ snmp_section_emc_isilon = SNMPSection(
 #   .--ClusterHealth------------------------------------------------------.
 
 
-def discover_emc_isilon_clusterhealth(section: Sequence[StringTable]) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_emc_isilon_clusterhealth(section: Sequence[StringTable]) -> CheckResult:
     status = int(section[0][0][1])
     statusmap = ("ok", "attn", "down", "invalid")
@@ -65,16 +60,12 @@ check_plugin_emc_isilon_clusterhealth = CheckPlugin(
     name="emc_isilon_clusterhealth",
     service_name="Cluster Health",
     sections=["emc_isilon"],
-    discovery_function=discover_emc_isilon_clusterhealth,
+    discovery_function=discover_one_service,
     check_function=check_emc_isilon_clusterhealth,
 )
 
 # .
 #   .--NodeHealth------------------------------------------------------.
-
-
-def discover_emc_isilon_nodehealth(section: Sequence[StringTable]) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_emc_isilon_nodehealth(section: Sequence[StringTable]) -> CheckResult:
@@ -97,16 +88,12 @@ check_plugin_emc_isilon_nodehealth = CheckPlugin(
     name="emc_isilon_nodehealth",
     service_name="Node Health",
     sections=["emc_isilon"],
-    discovery_function=discover_emc_isilon_nodehealth,
+    discovery_function=discover_one_service,
     check_function=check_emc_isilon_nodehealth,
 )
 
 # .
 #   .--Nodes------------------------------------------------------.
-
-
-def discover_emc_isilon_nodes(section: Sequence[StringTable]) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_emc_isilon_nodes(section: Sequence[StringTable]) -> CheckResult:
@@ -121,16 +108,12 @@ check_plugin_emc_isilon_nodes = CheckPlugin(
     name="emc_isilon_nodes",
     service_name="Nodes",
     sections=["emc_isilon"],
-    discovery_function=discover_emc_isilon_nodes,
+    discovery_function=discover_one_service,
     check_function=check_emc_isilon_nodes,
 )
 
 # .
 #   .--Cluster- and Node Name-------------------------------------------.
-
-
-def discover_emc_isilon_names(section: Sequence[StringTable]) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_emc_isilon_names(section: Sequence[StringTable]) -> CheckResult:
@@ -144,7 +127,7 @@ check_plugin_emc_isilon_names = CheckPlugin(
     name="emc_isilon_names",
     service_name="Isilon Info",
     sections=["emc_isilon"],
-    discovery_function=discover_emc_isilon_names,
+    discovery_function=discover_one_service,
     check_function=check_emc_isilon_names,
 )
 

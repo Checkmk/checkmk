@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from cmk.bakery.v2_unstable import OS, Plugin
+from cmk.bakery.v2 import OS, Plugin
 from cmk.plugins.cups.bakery.mk_cups_queues import bakery_plugin_mk_cups_queues
 
 

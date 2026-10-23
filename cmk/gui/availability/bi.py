@@ -85,6 +85,9 @@ class TimelineContainer:
         # Can be optional after computation
         self.node_compute_result: NodeComputeResult | None = None
         self.timewarp_state: BITreeState | None = None
+        # Index into self.timeline of the phase the timewarp resolved to. Its start
+        # may differ from the requested timestamp when that falls between two phases.
+        self.timewarp_index: int | None = None
         # Can not be optional after computation
         self.tree_time: AVTimeStamp | None = None
 
@@ -333,7 +336,8 @@ def get_bi_split_history_data(
             ),
             only_sites=list(only_sites),
             limit=livestatus_limit,
-            auth_domain="read",
+            # Same visibility as the BI tree this history is computed for (bi.see_all)
+            auth_domain="bi",
         )
     except MKLivestatusPayloadTooLargeError:
         # If the query fails, split the time range into two and try again
@@ -400,6 +404,8 @@ def compute_bi_timelines(
             )
 
     bi_manager = BIManager()
+    # Bundle and timeline index of the phase each container's timewarp resolves to
+    timewarp_candidates: dict[TimelineContainer, tuple[NodeResultBundle, int]] = {}
 
     logger.debug(
         "Computing timelines for range %(time_range)r. %(phase_count)d phases and %(timeline_container_count)d timeline containers",
@@ -439,9 +445,14 @@ def compute_bi_timelines(
 
             timeline_container.node_compute_result = next_node_compute_result
             timeline_container.tree_time = from_time
-            if timewarp == timeline_container.tree_time:
-                timeline_container.timewarp_state = _get_timewarp_state(
-                    result_bundle, timeline_container
+            if timewarp is not None and _is_better_timewarp_phase(
+                from_time, timewarp, timeline_container in timewarp_candidates
+            ):
+                # The span of this phase is appended later on, either by the next phase
+                # of this container or by the final timeline entry below.
+                timewarp_candidates[timeline_container] = (
+                    result_bundle,
+                    len(timeline_container.timeline),
                 )
 
     # Create a final timeline entry to the end of the query interval
@@ -463,11 +474,32 @@ def compute_bi_timelines(
             )
         )
 
+        if (candidate := timewarp_candidates.get(timeline_container)) is not None:
+            timewarp_bundle, timewarp_index = candidate
+            timeline_container.timewarp_state = _get_timewarp_state(
+                timewarp_bundle, timeline_container
+            )
+            timeline_container.timewarp_index = timewarp_index
+
     logger.debug(
         "Timeline generation finished. Computed %(computed_aggregations)d aggregations",
         {"computed_aggregations": computed_aggregations},
     )
     return timeline_containers
+
+
+def _is_better_timewarp_phase(
+    from_time: AVTimeStamp, timewarp: AVTimeStamp, has_candidate: bool
+) -> bool:
+    """Whether the phase starting at `from_time` is the best timewarp match so far.
+
+    The requested timestamp rarely coincides with a phase start, especially after the
+    clamping to a relative availability range, so the timewarp snaps to the phase
+    covering it. Phases are processed in ascending order, hence the last phase starting
+    at or before the timewarp wins. The first phase serves as fallback for a timewarp
+    preceding the timeline.
+    """
+    return not has_candidate or from_time <= timewarp
 
 
 def _get_timewarp_state(
@@ -526,37 +558,9 @@ def create_bi_timeline_entry(
 def _compute_node_result_bundle(
     timeline_container: TimelineContainer, bi_manager: BIManager
 ) -> NodeResultBundle:
-    # Convert our status format into that needed by BI
-    status = timeline_container.states
-    services_by_host: dict[BIHostSpec, dict[str, BIServiceWithFullState]] = {}
-    hosts: dict[BIHostSpec, AVBITimelineState] = {}
-    for site_host_service, state_output in status.items():
-        site_host = BIHostSpec(site_id=site_host_service[0], host_name=site_host_service[1])
-        service = site_host_service[2]
-        state: int | None = state_output[0]
-
-        # Create an entry for hosts that are not explicitly referenced in the timeline container.
-        hosts.setdefault(site_host, (0, "", 0, False))
-        if service:
-            if state == -1:
-                # Ignore pending services
-                continue
-            services_by_host.setdefault(site_host, {})
-            services_by_host[site_host][service] = BIServiceWithFullState(
-                state=state,
-                has_been_checked=True,
-                plugin_output=state_output[1],
-                hard_state=state,
-                current_attempt=1,
-                max_check_attempts=1,
-                scheduled_downtime_depth=state_output[2],
-                acknowledged=False,
-                in_service_period=state_output[3],
-            )
-        else:
-            hosts[site_host] = state_output
-
-    bi_manager.status_fetcher.states = _compute_status_info(hosts, services_by_host)
+    bi_manager.status_fetcher.states = _bi_status_info_from_timeline_states(
+        timeline_container.states
+    )
     compiled_aggregation = timeline_container.aggr_compiled_aggregation
     branch = timeline_container.aggr_compiled_branch
     results = compiled_aggregation.compute_branches([branch], bi_manager.status_fetcher)
@@ -579,6 +583,40 @@ def _compute_node_result_bundle(
         )
 
     return results[0]
+
+
+def _bi_status_info_from_timeline_states(status: AVBITimelineStates) -> BIStatusInfo:
+    services_by_host: dict[BIHostSpec, dict[str, BIServiceWithFullState]] = {}
+    hosts: dict[BIHostSpec, AVBITimelineState] = {}
+    for site_host_service, state_output in status.items():
+        site_host = BIHostSpec(site_id=site_host_service[0], host_name=site_host_service[1])
+        service = site_host_service[2]
+        state: int | None = state_output[0]
+
+        # A host only referenced through its services has no history of its own (e.g. the
+        # user is a contact of the services only): treat it as missing, not as UP outside
+        # of its service period, which would turn the whole aggregate into n/a.
+        hosts.setdefault(site_host, (-1, "", 0, True))
+        if service:
+            if state == -1:
+                # Ignore pending services
+                continue
+            services_by_host.setdefault(site_host, {})
+            services_by_host[site_host][service] = BIServiceWithFullState(
+                state=state,
+                has_been_checked=True,
+                plugin_output=state_output[1],
+                hard_state=state,
+                current_attempt=1,
+                max_check_attempts=1,
+                scheduled_downtime_depth=state_output[2],
+                acknowledged=False,
+                in_service_period=state_output[3],
+            )
+        else:
+            hosts[site_host] = state_output
+
+    return _compute_status_info(hosts, services_by_host)
 
 
 def _compute_status_info(

@@ -42,6 +42,7 @@ const model = defineModel<string | number>({ default: 1 })
   margin: 0;
   display: flex;
   flex-flow: row wrap;
+  align-items: flex-end;
   list-style-type: none;
   flex-shrink: 0;
   position: relative;

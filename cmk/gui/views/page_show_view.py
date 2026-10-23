@@ -15,20 +15,21 @@ from itertools import chain
 from cmk.ccc.cpu_tracking import CPUTracker, Snapshot
 from cmk.ccc.user import UserId
 from cmk.gui import log, visuals
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.ctx_stack import g
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request, request
+from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenuDropdown
 from cmk.gui.pages import PageContext
-from cmk.gui.painter.v0 import Cell, columns_of_cells
+from cmk.gui.painter import Cell, columns_of_cells, PainterConfig, PainterContext
+from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.permissions import permission_registry
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
     PainterParameters,
@@ -48,12 +49,14 @@ from cmk.gui.visuals import (
     get_only_sites_from_context,
 )
 from cmk.gui.visuals.filter import Filter
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri_contextless
 
 from . import availability
+from .drilldown_filters import dropped_filters_warning
 from .exporter import exporter_registry
 from .row_post_processing import post_process_rows
-from .sorter import SorterEntry, SorterProtocol
+from .sorter import sorter_parameter_ident, SorterEntry, SorterProtocol
 from .store import get_all_views, get_permitted_views
 
 
@@ -73,11 +76,26 @@ def page_show_view(
         )
         _patch_view_context(view_spec)
 
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        request_cache = RequestCache(ctx.config)
         datasource = data_source_registry[view_spec["datasource"]]()
-        context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
+        context = visuals.active_context_from_request(
+            datasource.infos, view_spec["context"], request_cache
+        )
 
-        view = View(view_name, view_spec, context, user_permissions)
+        view = View(
+            view_name,
+            view_spec,
+            context,
+            PainterContext(
+                config=PainterConfig.from_config(ctx.config),
+                request=ctx.request,
+                painter_options=PainterOptions.get_instance(),
+                theme=theme,
+                url_renderer=RenderLink(ctx.request, response, display_options),
+                user_permissions=ctx.user_permissions,
+            ),
+            request_cache,
+        )
         view.row_limit = get_limit(
             view_spec_row_limit=view_spec.get("row_limit", 0),
             request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
@@ -88,6 +106,8 @@ def page_show_view(
         )
 
         view.only_sites = get_only_sites_from_context(context)
+        if (dropped_filters := dropped_filters_warning(request)) is not None:
+            view.add_warning_message(dropped_filters)
 
         view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
         view.want_checkboxes = get_want_checkboxes()
@@ -109,7 +129,7 @@ def page_show_view(
                 show_buttons=True,
                 page_menu_dropdowns_callback=page_menu_dropdowns_callback,
             ),
-            user_permissions,
+            ctx.user_permissions,
             config=ctx.config,
         )
 
@@ -254,7 +274,9 @@ def _process_availability_view(view_renderer: ABCViewRenderer, config: Config) -
             missing_single_infos=view.missing_single_infos,
             process_tracking=view.process_tracking,
             breadcrumb=breadcrumb,
+            request_cache=view.request_cache,
             filterheaders=filterheaders,
+            active_filters=all_active_filters,
         )
 
     else:
@@ -270,6 +292,7 @@ def _process_availability_view(view_renderer: ABCViewRenderer, config: Config) -
             only_sites=view.only_sites,
             process_tracking=view.process_tracking,
             breadcrumb=breadcrumb,
+            request_cache=view.request_cache,
             aggr_rows=rows,
             escape_plugin_output=config.escape_plugin_output,
         )
@@ -319,7 +342,7 @@ def _get_view_rows(
         post_process_rows(view, all_active_filters, rows)
 
     # Sorting - use view sorters and URL supplied sorters
-    _sort_data(rows, view.sorters, config)
+    _sort_data(rows, view.sorters, config, view.request_cache)
 
     with CPUTracker(log.logger.debug) as filter_rows_tracker:
         # Apply non-Livestatus filters
@@ -370,6 +393,16 @@ def _fetch_rows_from_livestatus(view: View, all_active_filters: list[Filter]) ->
     return rows, unfiltered_amount_of_rows
 
 
+def _filter_form_filters(view: View) -> list[Filter]:
+    # The merged context, not the saved one: a filter that a link carried would otherwise be
+    # applied without a form field, and the first submit of the form would drop it.
+    spec = view.spec.copy()
+    spec["context"] = view.context
+    return visuals.filters_of_visual(
+        spec, view.datasource.infos, link_filters=view.datasource.link_filters
+    )
+
+
 def _show_view(
     view_renderer: ABCViewRenderer,
     unfiltered_amount_of_rows: int,
@@ -388,18 +421,10 @@ def _show_view(
     force_checkboxes = view.spec.get("force_checkboxes", False)
     show_checkboxes = force_checkboxes or request.var("show_checkboxes", "0") == "1"
 
-    show_filters = visuals.filters_of_visual(
-        view.spec, view.datasource.infos, link_filters=view.datasource.link_filters
-    )
+    show_filters = _filter_form_filters(view)
 
     # Set browser reload
-    if (
-        browser_reload
-        and display_options.enabled(display_options.R)
-        # A reload would re-mount the Vue apps and discard the time picker state; such a view
-        # refreshes through the picker's control instead (see GUIViewRenderer._render_time_picker).
-        and not view.renders_engine_graphs
-    ):
+    if browser_reload and view.reloads_itself:
         html.browser_reload = browser_reload
 
     if config.enable_sounds and config.sounds:
@@ -439,14 +464,12 @@ def get_all_active_filters(view: View) -> list[Filter]:
         # Remove the original host name filter
         use_filters = [f for f in use_filters if f.ident != "host"]
 
-    use_filters = [f for f in use_filters if f.available()]
-
-    for filt in use_filters:
-        # TODO: Clean this up! E.g. make the Filter class implement a default method
-        if hasattr(filt, "derived_columns"):
-            filt.derived_columns(view.row_cells)
-
-    return use_filters
+    # TODO: Clean hasattr up! E.g. make the Filter class implement a default method
+    return [
+        filt.with_derived_columns(view.row_cells) if hasattr(filt, "with_derived_columns") else filt
+        for filt in use_filters
+        if filt.available()
+    ]
 
 
 def _export_view(
@@ -599,8 +622,7 @@ def _sorter_parameters_by_ident(
         if (
             isinstance(sorter, tuple)
             and sorter[0] == sorter_name
-            # Consolidate "uuid" to "ident" for a cleaner handling here
-            and sorter[1].get("ident", sorter[1].get("uuid")) == ident
+            and sorter_parameter_ident(sorter[1]) == ident
         ):
             return sorter[1]
 
@@ -608,7 +630,7 @@ def _sorter_parameters_by_ident(
         if (params := cell.painter_parameters()) is None:
             params = {}
 
-        if cell.painter_name() == sorter_name and params.get("ident", params.get("uuid")):
+        if cell.painter_name() == sorter_name and sorter_parameter_ident(params) == ident:
             return params
 
     return None
@@ -652,7 +674,12 @@ def _link_to_folder_by_path(path: str) -> str:
     )
 
 
-def _sort_data(data: Rows, sorters: list[SorterEntry], config: Config) -> None:
+def _sort_data(
+    data: Rows,
+    sorters: list[SorterEntry],
+    config: Config,
+    request_cache: RequestCache[RequestCacheConfig],
+) -> None:
     """Sort data according to list of sorters."""
     if not sorters:
         return
@@ -660,24 +687,26 @@ def _sort_data(data: Rows, sorters: list[SorterEntry], config: Config) -> None:
     # Handle case where join columns are not present for all rows
     def safe_compare(
         compfunc: SorterProtocol,
-        row1: Row,
-        row2: Row,
+        row1: Row | None,
+        row2: Row | None,
         parameters: Mapping[str, object] | None,
         config: Config,
         req: Request,
+        request_cache: RequestCache[RequestCacheConfig],
     ) -> int:
-        if row1 is None and row2 is None:  # type: ignore[unreachable]
-            return 0  # type: ignore[unreachable]
+        if row1 is None and row2 is None:
+            return 0
         if row1 is None:
-            return -1  # type: ignore[unreachable]
+            return -1
         if row2 is None:
-            return 1  # type: ignore[unreachable]
+            return 1
         return compfunc(
             row1,
             row2,
             parameters=parameters,
             config=config,
             request=req,
+            request_cache=request_cache,
         )
 
     def multisort(e1: Row, e2: Row) -> int:
@@ -692,6 +721,7 @@ def _sort_data(data: Rows, sorters: list[SorterEntry], config: Config) -> None:
                     entry.parameters,
                     config,
                     request,
+                    request_cache,
                 )
             else:
                 c = neg * entry.sorter.cmp(
@@ -700,6 +730,7 @@ def _sort_data(data: Rows, sorters: list[SorterEntry], config: Config) -> None:
                     parameters=entry.parameters,
                     config=config,
                     request=request,
+                    request_cache=request_cache,
                 )
 
             if c != 0:

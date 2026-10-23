@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator
+from http import HTTPStatus
 from unittest.mock import MagicMock
 
 import pytest
@@ -48,8 +49,8 @@ def _make_response(
 def stub_requests(monkeypatch: pytest.MonkeyPatch) -> Iterator[dict[str, MagicMock]]:
     """Map URL substrings to canned responses; return the dict so tests can override."""
     responses: dict[str, MagicMock] = {
-        "/_cluster/health": _make_response(200, _HEALTH_RESPONSE),
-        "/_nodes/stats/process": _make_response(200, _NODE_STATS_RESPONSE),
+        "/_cluster/health": _make_response(HTTPStatus.OK, _HEALTH_RESPONSE),
+        "/_nodes/stats/process": _make_response(HTTPStatus.OK, _NODE_STATS_RESPONSE),
     }
 
     def fake_get(url: str, **_kwargs: object) -> MagicMock:
@@ -85,7 +86,7 @@ def test_http_400_on_nodes_does_not_drop_cluster_health(
     integer overflow in unused stats categories. The agent must skip the failing
     section, log to stderr, and still emit cluster_health."""
     stub_requests["/_nodes/stats/process"] = _make_response(
-        400,
+        HTTPStatus.BAD_REQUEST,
         text='{"error":{"type":"illegal_argument_exception"}}',
     )
 
@@ -106,7 +107,7 @@ def test_decode_error_in_earlier_section_does_not_drop_later_section(
     """A 200 response with malformed JSON (or a ValidationError) in an earlier
     section must be isolated: log to stderr, skip that section, and still emit
     the later section."""
-    broken = _make_response(200)
+    broken = _make_response(HTTPStatus.OK)
     broken.json.side_effect = ValueError("Expecting value")
     stub_requests["/_cluster/health"] = broken
 
@@ -126,7 +127,9 @@ def test_validation_error_in_nodes_is_isolated(
 ) -> None:
     """A ValidationError inside handle_nodes (the original AWS OpenSearch trigger)
     must be caught and logged without aborting, leaving cluster_health intact."""
-    stub_requests["/_nodes/stats/process"] = _make_response(200, {"nodes": {"node-1": {}}})
+    stub_requests["/_nodes/stats/process"] = _make_response(
+        HTTPStatus.OK, {"nodes": {"node-1": {}}}
+    )
 
     rc = agent_elasticsearch_main(
         parse_arguments(["--cluster-health", "--nodes", "-P", "https", "myhost"])

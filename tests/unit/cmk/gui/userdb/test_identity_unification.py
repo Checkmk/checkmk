@@ -158,6 +158,7 @@ def test_check_credentials_stops_at_first_matching_connector(
         [],
         _NOW,
         _default_profile(),
+        time_based_lock_out_enabled=False,
         pprint_value=False,
         debug=False,
     )
@@ -183,6 +184,7 @@ def test_unknown_user_falls_through_to_next_connector(
         [],
         _NOW,
         _default_profile(),
+        time_based_lock_out_enabled=False,
         pprint_value=False,
         debug=False,
     )
@@ -216,6 +218,7 @@ def test_owning_connector_is_consulted_first_even_when_declared_last(
         [],
         _NOW,
         _default_profile(),
+        time_based_lock_out_enabled=False,
         pprint_value=False,
         debug=False,
     )
@@ -251,6 +254,7 @@ def test_without_owner_match_declaration_order_is_preserved(
         [],
         _NOW,
         _default_profile(),
+        time_based_lock_out_enabled=False,
         pprint_value=False,
         debug=False,
     )
@@ -290,6 +294,7 @@ def test_login_via_second_connector_resolves_to_existing_record(
         [],
         _NOW,
         _default_profile(),
+        time_based_lock_out_enabled=False,
         pprint_value=False,
         debug=False,
     )
@@ -336,6 +341,7 @@ def test_orphaned_owning_connector_denies_login_without_creating_a_record(
         [],
         _NOW,
         _default_profile(),
+        time_based_lock_out_enabled=False,
         pprint_value=False,
         debug=False,
     )

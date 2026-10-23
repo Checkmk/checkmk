@@ -10,12 +10,11 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 from .detect import DETECT_CISCO_SMA
@@ -37,14 +36,10 @@ def _check_mail_transfer_threads(params: Params, section: int) -> CheckResult:
     )
 
 
-def _discover_mail_transfer_threads(section: int) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 check_plugin_mail_transfer_threads = CheckPlugin(
     name="cisco_sma_mail_transfer_threads",
     service_name="Mail transfer threads",
-    discovery_function=_discover_mail_transfer_threads,
+    discovery_function=discover_one_service,
     check_function=_check_mail_transfer_threads,
     check_ruleset_name="cisco_sma_mail_transfer_threads",
     check_default_parameters=Params(

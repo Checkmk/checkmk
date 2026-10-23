@@ -20,7 +20,7 @@ from tests.system.gui.testlib.playwright.pom.setup.signature_keys import (
     SignatureKeysPage,
     UploadSignatureKeyPage,
 )
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +157,7 @@ def test_download_key(dashboard_page: MainDashboard) -> None:
     )
 
 
+@pytest.mark.skip_if_faked_artifacts
 def test_bake_and_sign(test_site: Site, dashboard_page: MainDashboard, with_key: str) -> None:
     """Go to agents and click "bake and sign."""
     agent_bakery_page = AgentBakeryPage(dashboard_page.page)

@@ -15,6 +15,10 @@ from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato import MainModuleTopicHosts
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mode import _base, WatoMode
@@ -83,7 +87,7 @@ class SomeMainModule(ABCMainModule):
         return False
 
 
-@pytest.fixture(name="main_module_registry", scope="function", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+@pytest.fixture(name="main_module_registry", scope="function")
 def fixture_main_module_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(_base, "main_module_registry", module_registry)
 
@@ -92,7 +96,16 @@ class TestWatoMode:
     @pytest.mark.usefixtures("request_context", "main_module_registry")
     def test_breadcrumb_without_additions(self, test_edition: Edition) -> None:
         assert list(
-            SomeWatoMode(test_edition, PageContext(config=Config(), request=request)).breadcrumb()
+            SomeWatoMode(
+                test_edition,
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                ),
+            ).breadcrumb()
         ) == [
             BreadcrumbItem(title="Hosts", url=None, id="hosts"),
             BreadcrumbItem(
@@ -124,7 +137,16 @@ class TestWatoMode:
             additional_breadcrumb_items,
         )
         assert list(
-            SomeWatoMode(test_edition, PageContext(config=Config(), request=request)).breadcrumb()
+            SomeWatoMode(
+                test_edition,
+                PageContext(
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+                ),
+            ).breadcrumb()
         ) == [
             BreadcrumbItem(title="Hosts", url=None, id="hosts"),
             BreadcrumbItem(title="In between 1", url=None, id=None),

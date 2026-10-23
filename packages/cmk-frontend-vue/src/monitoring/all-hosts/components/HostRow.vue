@@ -19,35 +19,50 @@ import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
-import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
+import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
+import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const props = withDefaults(
   defineProps<{
     row: HostEntry
     tableRow: Row<HostEntry>
-    // Always-visible inline buttons; their url may contain a {host} placeholder resolved per row.
+    // Inline buttons linking into Setup, shown on a host the user may open there; their url may
+    // contain a {host} placeholder resolved per row.
     rowActions?: CellAction[]
     // Lazy loader for the overflow menu entries of this host.
     loadActionMenu?: ((host: HostRef) => Promise<CellAction[]>) | undefined
+    displayOptions: DisplayOptions
+    readOnly?: boolean
   }>(),
-  { rowActions: () => [], loadActionMenu: undefined }
+  { rowActions: () => [], loadActionMenu: undefined, readOnly: false }
 )
 
 const emit = defineEmits<{
-  (event: 'open', host: HostEntry): void
+  /** `revealRelations` asks the panel to open on the host's relations. */
+  (event: 'open', host: HostEntry, revealRelations?: boolean): void
   (event: 'command', payload: { id: string; target: HostRef }): void
 }>()
 
-const { _t } = usei18n()
+const { _t, _tn } = usei18n()
+
+const relationsLabel = computed(() => {
+  const count = props.row.num_relations ?? 0
+  return _tn(
+    'Show the 1 related host of %{host}',
+    'Show the %{count} related hosts of %{host}',
+    count,
+    { count: String(count), host: props.row.name }
+  )
+})
 
 const SERVICE_COUNT_MIN_WIDTH = 35
 
 const hostRef = computed<HostRef>(() => ({ site_id: props.row.site_id, name: props.row.name }))
 
 const actionButtons = computed<CellAction[]>(() =>
-  props.rowActions.map((action) => ({
+  (props.row.setup_access === true ? props.rowActions : []).map((action) => ({
     ...action,
     url: action.url?.replace('{host}', encodeURIComponent(props.row.name))
   }))
@@ -80,14 +95,21 @@ const labels = computed(() => toLabelItems(props.row.labels ?? {}))
 const tags = computed(() => toTagItems(props.row.tags ?? {}))
 const contacts = computed(() => toNameItems(props.row.contacts ?? []))
 const contactGroups = computed(() => toNameItems(props.row.contact_groups ?? []))
+const hostGroups = computed(() => toNameItems(props.row.groups ?? []))
 
 const lastCheck = computed(() =>
-  props.row.last_check === undefined ? undefined : formatTimestamp(props.row.last_check)
+  props.row.last_check === undefined
+    ? undefined
+    : props.row.last_check === null
+      ? '–'
+      : formatDisplayTimestamp(props.row.last_check, props.displayOptions)
 )
 const lastStateChange = computed(() =>
   props.row.last_state_change === undefined
     ? undefined
-    : formatTimestamp(props.row.last_state_change)
+    : props.row.last_state_change === null
+      ? '–'
+      : formatDisplayTimestamp(props.row.last_state_change, props.displayOptions)
 )
 </script>
 
@@ -116,13 +138,45 @@ const lastStateChange = computed(() =>
     v-if="hasColumn('name')"
     column-id="name"
     :value="row.name"
-    :button="true"
+    :button="!readOnly"
     @click="emit('open', row)"
   />
+  <NumberCell
+    v-if="hasColumn('num_relations')"
+    column-id="num_relations"
+    :value="row.num_relations"
+    :button="!readOnly && !!row.num_relations"
+    :button-label="relationsLabel"
+    blank-when-zero
+    @click="emit('open', row, true)"
+  />
   <StringCell v-if="hasColumn('alias')" column-id="alias" :value="row.alias" />
-  <StringCell v-if="hasColumn('address')" column-id="address" :value="row.address" />
+  <StringCell
+    v-if="hasColumn('address')"
+    column-id="address"
+    :value="row.address"
+    :title-only-when-cut="true"
+  />
   <StringCell v-if="hasColumn('folder')" column-id="folder" :value="row.folder" />
   <StringCell v-if="hasColumn('site_id')" column-id="site_id" :value="row.site_id" />
+
+  <StringCell v-if="hasColumn('last_check')" column-id="last_check" :value="lastCheck" />
+  <StringCell
+    v-if="hasColumn('last_state_change')"
+    column-id="last_state_change"
+    :value="lastStateChange"
+  />
+  <LabelCell v-if="hasColumn('labels')" column-id="labels" :items="labels" size="small" />
+  <LabelCell v-if="hasColumn('tags')" column-id="tags" :items="tags" size="small" />
+  <LabelCell v-if="hasColumn('contacts')" column-id="contacts" :items="contacts" size="small" />
+  <LabelCell
+    v-if="hasColumn('contact_groups')"
+    column-id="contact_groups"
+    :items="contactGroups"
+    size="small"
+  />
+  <LabelCell v-if="hasColumn('groups')" column-id="groups" :items="hostGroups" size="small" />
+
   <NumberCell
     v-if="hasColumn('num_services')"
     column-id="num_services"
@@ -188,22 +242,6 @@ const lastStateChange = computed(() =>
       active: !!row.num_services_pending
     }"
     :linked-to="!row.num_services_pending ? undefined : servicesInStateLink('PENDING')"
-  />
-
-  <StringCell v-if="hasColumn('last_check')" column-id="last_check" :value="lastCheck" />
-  <StringCell
-    v-if="hasColumn('last_state_change')"
-    column-id="last_state_change"
-    :value="lastStateChange"
-  />
-  <LabelCell v-if="hasColumn('labels')" column-id="labels" :items="labels" size="small" />
-  <LabelCell v-if="hasColumn('tags')" column-id="tags" :items="tags" size="small" />
-  <LabelCell v-if="hasColumn('contacts')" column-id="contacts" :items="contacts" size="small" />
-  <LabelCell
-    v-if="hasColumn('contact_groups')"
-    column-id="contact_groups"
-    :items="contactGroups"
-    size="small"
   />
   <StringCell v-if="hasColumn('customer')" column-id="customer" :value="row.customer" />
 

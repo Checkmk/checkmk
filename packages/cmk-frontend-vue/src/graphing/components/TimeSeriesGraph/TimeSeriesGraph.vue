@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { getLocalTimeZone } from '@internationalized/date'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkTooltip, {
@@ -14,11 +15,13 @@ import CmkTooltip, {
 } from 'cmk-ui-library/components/CmkTooltip'
 import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import type { NotationFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import { scaleLinear, scaleTime } from 'd3-scale'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { drawnBinEdges } from '../../utils/bins'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../consolidation'
 import {
   CANVAS_MARGIN_LEFT,
@@ -38,8 +41,7 @@ import {
   composeSeries,
   composedValueDomain,
   createM4CacheStore,
-  hasMirroredMetric,
-  withoutOffPlotNeighbours
+  hasMirroredMetric
 } from './render/composeSeries'
 import { drawHorizontalLines } from './render/horizontalLines'
 import { drawShadedRegions } from './render/shadedRegions'
@@ -61,6 +63,7 @@ const emit = defineEmits<{
   pinCreate: [PinPayload]
   pinAction: [PinPayload]
   'update:plotLeft': [number]
+  'update:valueResolution': [number | null]
 }>()
 
 const consolidationFn = computed<ConsolidationFn>(
@@ -74,7 +77,10 @@ const MAX_ZOOM_HINT_CURSOR_OFFSET = 12
 const maxZoomHintAt = ref<{ x: number; y: number } | null>(null)
 let maxZoomHintTimer: ReturnType<typeof setTimeout> | null = null
 
-function showMaxZoomHint(point: { x: number; y: number }): void {
+// Also the host's to call when a fetch, not a press, hit the floor; then it sits at the centre.
+function showMaxZoomHint(
+  point: { x: number; y: number } = { x: plotWidth.value / 2, y: plotHeight.value / 2 }
+): void {
   maxZoomHintAt.value = point
   if (maxZoomHintTimer !== null) {
     clearTimeout(maxZoomHintTimer)
@@ -95,6 +101,7 @@ const PAN_STEP_SIZE = X_AXIS_BAND_HEIGHT - X_AXIS_TOP_RULE_HEIGHT
 const M4_BUCKETS = 4000
 
 const canvas = ref<HTMLCanvasElement | null>(null)
+const resetButton = ref<InstanceType<typeof CmkButton> | null>(null)
 const axesContainer = ref<SVGGElement | null>(null)
 
 const measureLabel = (text: string): number => measureAxisLabel(text, axesContainer.value)
@@ -169,11 +176,23 @@ const yFormatter = computed((): NotationFormatter | null => {
   return unit ? userSpecificUnit(unit, 'celsius').formatter : null
 })
 const isMirroredGraph = computed(() => hasMirroredMetric(props.metrics))
+const valueResolution = ref<number | null>(null)
 
 const xScale = scaleTime()
 const yScale = scaleLinear()
 
-const { prepareValueDomain, valueTickLabels, drawValueGrid, drawValueAxis, drawTimeAxis } = useAxes(
+function timeRangeTheValuesSpan(): TimeRange {
+  return props.data_time_range ?? props.view_time_range
+}
+
+const {
+  prepareValueDomain,
+  valueTickLabels,
+  valueResolution: axisValueResolution,
+  drawValueGrid,
+  drawValueAxis,
+  drawTimeAxis
+} = useAxes(
   axesContainer,
   xScale,
   yScale,
@@ -193,7 +212,10 @@ const {
   clearHoverAfterDelay
 } = useHover({
   metrics: () => props.metrics,
+  dataTimeRange: () => timeRangeTheValuesSpan(),
   consolidation: () => consolidationFn.value,
+  valueResolution: () => valueResolution.value,
+  axisUnit: () => props.options.y_axis?.unit ?? null,
   plotWidth,
   plotHeight,
   xScale,
@@ -224,7 +246,7 @@ const {
   xScale,
   yScale,
   plotCoords,
-  onZoom: (payload) => emit('zoom', payload),
+  onZoom: onDragZoom,
   onZoomRefused: showMaxZoomHint,
   onPlotClick: setPinAtCursor
 })
@@ -265,17 +287,18 @@ function draw(): void {
 
   const composed = composeSeries({
     metrics: props.metrics,
-    cache: m4CacheStore.ensure(props.metrics, props.data_time_range ?? props.view_time_range),
+    cache: m4CacheStore.ensure(props.metrics, timeRangeTheValuesSpan()),
+    dataTimeRange: timeRangeTheValuesSpan(),
     visibleTimeRange: [props.view_time_range.start, props.view_time_range.end],
     columnCount: Math.max(1, Math.floor(plotWidth.value)),
-    consolidation: consolidationFn.value
+    binEdges:
+      props.binUnit === null
+        ? null
+        : drawnBinEdges(props.binUnit, props.view_time_range, plotWidth.value, getLocalTimeZone())
   })
   const { paddedBuckets: inverted, stacks } = composed
 
-  recordDrawnGeometry(
-    composed.bucketsOnPlot,
-    stacks.map((series) => ({ ...series, bands: withoutOffPlotNeighbours(series.bands) }))
-  )
+  recordDrawnGeometry(composed.bucketsOnPlot, composed.stacksOnPlot)
 
   xScale
     .domain([
@@ -288,7 +311,6 @@ function draw(): void {
     props.view_time_range.start,
     props.view_time_range.end,
     plotWidth.value,
-    props.view_time_range.step,
     measureLabel
   )
 
@@ -303,6 +325,7 @@ function draw(): void {
   const valueRangeMode: ValueRangeMode =
     explicitRange !== null && props.valueRange === null ? 'explicit' : 'aligned'
   prepareValueDomain(rawYMin, rawYMax, valueRangeMode)
+  valueResolution.value = axisValueResolution()
   fitMarginToValueLabels()
 
   // Setting width/height resets the 2d context state; setTransform must follow.
@@ -334,7 +357,7 @@ function draw(): void {
     drawShadedRegions(
       axesContainer.value,
       props.shaded_regions,
-      props.data_time_range ?? props.view_time_range,
+      timeRangeTheValuesSpan(),
       xScale,
       yScale,
       { top: 0, bottom: plotHeight.value }
@@ -442,6 +465,7 @@ function onPinActionClick(): void {
 }
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Graph'), [{ combo: ['Home'], description: _t('Reset zoom') }])
 const resetLabel = _t('Reset zoom')
 const maxZoomLabel = _t('Maximum zoom reached')
 const panHovered = ref(false)
@@ -460,8 +484,14 @@ const plotAriaLabel = computed<string>(() => {
     .filter((title) => title !== '')
   return metricTitles.length > 0 ? metricTitles.join(', ') : fallbackPlotLabel
 })
+// Hands the keyboard the way back out of the zoom: Enter right after the drag resets it.
+function onDragZoom(payload: ZoomPayload): void {
+  emit('zoom', payload)
+  void nextTick(() => resetButton.value?.focus())
+}
 function onResetClick(): void {
   emit('reset')
+  canvas.value?.focus()
 }
 function onPlotKeydown(ev: KeyboardEvent): void {
   if (ev.key !== 'Home') {
@@ -508,6 +538,7 @@ watch(
     props.size,
     props.consolidationFunction,
     props.curveInterpolator,
+    props.binUnit,
     props.horizontal_lines,
     props.highlightedMetricNames,
     plotWidth.value,
@@ -520,6 +551,9 @@ watch(
 )
 
 watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
+watch(valueResolution, (resolution) => emit('update:valueResolution', resolution))
+
+defineExpose({ showMaxZoomHint })
 </script>
 
 <template>
@@ -629,6 +663,25 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
         height: `${selectionBand.height}px`
       }"
     />
+    <!-- Ahead of the pan steps in tab order, as it sits above them. -->
+    <CmkButton
+      v-if="inspecting"
+      ref="resetButton"
+      variant="secondary"
+      size="small"
+      class="graphing-time-series-graph__reset"
+      :style="{ top: `${plotTop + 6}px`, right: `${PLOT_INSET_X + 6}px` }"
+      :title="resetLabel"
+      :aria-label="resetLabel"
+      @click="onResetClick"
+    >
+      <CmkIcon
+        name="arrows-swap"
+        class="graphing-time-series-graph__reset-icon"
+        aria-hidden="true"
+      />
+      <span>{{ resetLabel }}</span>
+    </CmkButton>
     <!-- Transparent grab strip over the x-axis labels; arms the pan drag. -->
     <div
       v-if="panAffordancesVisible"
@@ -665,23 +718,6 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
         <ArrowDown class="graphing-time-series-graph__pan-caret" aria-hidden="true" />
       </CmkButton>
     </template>
-    <CmkButton
-      v-if="inspecting"
-      variant="secondary"
-      size="small"
-      class="graphing-time-series-graph__reset"
-      :style="{ top: `${plotTop + 6}px`, right: `${PLOT_INSET_X + 6}px` }"
-      :title="resetLabel"
-      :aria-label="resetLabel"
-      @click="onResetClick"
-    >
-      <CmkIcon
-        name="arrows-swap"
-        class="graphing-time-series-graph__reset-icon"
-        aria-hidden="true"
-      />
-      <span>{{ resetLabel }}</span>
-    </CmkButton>
     <!-- A zero-size anchor at the cursor; the tooltip lays the hint out beside it. -->
     <div
       v-if="maxZoomHintAt"
@@ -695,11 +731,10 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
             :side="maxZoomHintSide"
             :side-offset="MAX_ZOOM_HINT_CURSOR_OFFSET"
             align="start"
+            variant="text"
             :avoid-collisions="false"
           >
-            <div class="graphing-time-series-graph__max-zoom-hint-body" role="status">
-              {{ maxZoomLabel }}
-            </div>
+            <span role="status">{{ maxZoomLabel }}</span>
           </CmkTooltipContent>
         </CmkTooltip>
       </CmkTooltipProvider>
@@ -748,14 +783,14 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
   }
 
   .graphing-time-series-graph__axis-highlight {
-    fill: var(--graphing-interactive-wash);
+    fill: var(--background-hover-wash);
   }
 
   .graphing-time-series-graph__zoom-band {
     position: absolute;
     z-index: 1;
     pointer-events: none;
-    background: color-mix(in srgb, var(--color-corporate-green-50) 20%, transparent);
+    background: color-mix(in srgb, var(--success) 20%, transparent);
   }
 
   .graphing-time-series-graph__pan-zone {
@@ -769,6 +804,7 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
     z-index: 2;
     height: var(--dimension-8);
     gap: var(--dimension-3);
+    font-weight: var(--font-weight-default);
   }
 
   .graphing-time-series-graph__reset-icon {
@@ -782,13 +818,10 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
     position: absolute;
     z-index: 3;
     background-color: var(--ux-theme-0);
-    border-color: var(--toggle-button-group-border-color);
+    border-color: var(--border-color-default);
 
     &:hover {
-      background-image: linear-gradient(
-        var(--graphing-interactive-wash),
-        var(--graphing-interactive-wash)
-      );
+      background-image: linear-gradient(var(--background-hover-wash), var(--background-hover-wash));
     }
 
     /* Fades out the tick labels running up to the button, so none collides with it. */
@@ -834,30 +867,6 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
     position: absolute;
     z-index: 3;
     pointer-events: none;
-  }
-
-  .graphing-time-series-graph__max-zoom-hint-body {
-    box-sizing: border-box;
-    max-width: 260px;
-    padding: var(--dimension-4);
-    background: var(--default-tooltip-background-color);
-    border: var(--border-width-1) solid var(--default-tooltip-text-color);
-    border-radius: var(--border-radius);
-    font-size: var(--font-size-normal);
-    line-height: normal;
-    color: var(--default-tooltip-text-color);
-  }
-}
-
-body[data-theme='facelift'] {
-  .graphing-time-series-graph {
-    --graphing-interactive-wash: var(--color-conference-grey-10);
-  }
-}
-
-body[data-theme='modern-dark'] {
-  .graphing-time-series-graph {
-    --graphing-interactive-wash: var(--color-white-10);
   }
 }
 

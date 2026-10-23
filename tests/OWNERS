@@ -1,6 +1,8 @@
 
 per-file Makefile=file:/component_owners/local_validation/OWNERS_DEFINITION
 per-file Makefile=set noparent
+per-file run_tests.sh=file:/component_owners/system_testing/OWNERS_DEFINITION
+per-file run_tests.sh=set noparent
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

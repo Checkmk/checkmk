@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 from os.path import abspath
 from pathlib import Path
 from uuid import UUID
@@ -14,7 +15,9 @@ from cmk.utils.agent_registration import (
     _UUIDLink,
     get_r4r_filepath,
     HostAgentConnectionMode,
+    RegistrationRoute,
     UUIDLinkManager,
+    UUIDRegistration,
 )
 from cmk.utils.paths import (
     data_source_push_agent_dir,
@@ -23,6 +26,7 @@ from cmk.utils.paths import (
     r4r_new_dir,
     r4r_pending_dir,
     received_outputs_dir,
+    registrations_dir,
     uuid_lookup_dir,
 )
 
@@ -43,16 +47,21 @@ class TestUUIDLink:
         link.unlink()
 
 
-def test_uuid_link_manager_create_pull_link() -> None:
-    hostname = HostName("my-hostname")
-    raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
-
-    uuid_link_manager = UUIDLinkManager(
+def _uuid_link_manager() -> UUIDLinkManager:
+    return UUIDLinkManager(
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
         r4r_discoverable_dir=r4r_discoverable_dir,
         uuid_lookup_dir=uuid_lookup_dir,
+        registrations_dir=registrations_dir,
     )
+
+
+def test_uuid_link_manager_create_pull_link() -> None:
+    hostname = HostName("my-hostname")
+    raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
+
+    uuid_link_manager = _uuid_link_manager()
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
 
     assert len(list(received_outputs_dir.iterdir())) == 1
@@ -69,12 +78,7 @@ def test_uuid_link_manager_create_push_link() -> None:
     hostname = HostName("my-hostname")
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
-    uuid_link_manager = UUIDLinkManager(
-        received_outputs_dir=received_outputs_dir,
-        data_source_dir=data_source_push_agent_dir,
-        r4r_discoverable_dir=r4r_discoverable_dir,
-        uuid_lookup_dir=uuid_lookup_dir,
-    )
+    uuid_link_manager = _uuid_link_manager()
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=True)
 
     assert len(list(received_outputs_dir.iterdir())) == 1
@@ -91,12 +95,7 @@ def test_uuid_link_manager_create_existing_link() -> None:
     hostname = HostName("my-hostname")
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
-    uuid_link_manager = UUIDLinkManager(
-        received_outputs_dir=received_outputs_dir,
-        data_source_dir=data_source_push_agent_dir,
-        r4r_discoverable_dir=r4r_discoverable_dir,
-        uuid_lookup_dir=uuid_lookup_dir,
-    )
+    uuid_link_manager = _uuid_link_manager()
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
     # second time should be no-op, at least not fail
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
@@ -107,12 +106,7 @@ def test_uuid_link_manager_create_link_to_different_uuid() -> None:
     raw_uuid_old = "59e631e9-de89-40d6-9662-ba54569a24fb"
     raw_uuid_new = "db1ea77f-330e-4fb5-b59e-925f55290533"
 
-    uuid_link_manager = UUIDLinkManager(
-        received_outputs_dir=received_outputs_dir,
-        data_source_dir=data_source_push_agent_dir,
-        r4r_discoverable_dir=r4r_discoverable_dir,
-        uuid_lookup_dir=uuid_lookup_dir,
-    )
+    uuid_link_manager = _uuid_link_manager()
     uuid_link_manager.create_link(hostname, UUID(raw_uuid_old), push_configured=False)
     uuid_link_manager.create_link(hostname, UUID(raw_uuid_new), push_configured=False)
 
@@ -132,12 +126,7 @@ def test_uuid_link_manager_update_links_host_push(push_configured: bool) -> None
     hostname = HostName("my-hostname")
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
-    uuid_link_manager = UUIDLinkManager(
-        received_outputs_dir=received_outputs_dir,
-        data_source_dir=data_source_push_agent_dir,
-        r4r_discoverable_dir=r4r_discoverable_dir,
-        uuid_lookup_dir=uuid_lookup_dir,
-    )
+    uuid_link_manager = _uuid_link_manager()
     # During link creation the cmk_agent_connection could possibly not be calculated yet,
     # ie. push-agent or other.
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=push_configured)
@@ -156,12 +145,7 @@ def test_uuid_link_manager_update_links_host_push(push_configured: bool) -> None
 
 
 def test_uuid_link_manager_update_links_no_links_yet() -> None:
-    uuid_link_manager = UUIDLinkManager(
-        received_outputs_dir=received_outputs_dir,
-        data_source_dir=data_source_push_agent_dir,
-        r4r_discoverable_dir=r4r_discoverable_dir,
-        uuid_lookup_dir=uuid_lookup_dir,
-    )
+    uuid_link_manager = _uuid_link_manager()
     uuid_link_manager.update_links({})
 
     assert not received_outputs_dir.exists()
@@ -172,12 +156,7 @@ def test_uuid_link_manager_update_links_no_host() -> None:
     hostname = HostName("my-hostname")
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
-    uuid_link_manager = UUIDLinkManager(
-        received_outputs_dir=received_outputs_dir,
-        data_source_dir=data_source_push_agent_dir,
-        r4r_discoverable_dir=r4r_discoverable_dir,
-        uuid_lookup_dir=uuid_lookup_dir,
-    )
+    uuid_link_manager = _uuid_link_manager()
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
     uuid_link_manager.update_links({})
 
@@ -188,12 +167,7 @@ def test_uuid_link_manager_update_links_host_no_push() -> None:
     hostname = HostName("my-hostname")
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
-    uuid_link_manager = UUIDLinkManager(
-        received_outputs_dir=received_outputs_dir,
-        data_source_dir=data_source_push_agent_dir,
-        r4r_discoverable_dir=r4r_discoverable_dir,
-        uuid_lookup_dir=uuid_lookup_dir,
-    )
+    uuid_link_manager = _uuid_link_manager()
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
     uuid_link_manager.update_links({hostname: {}})
 
@@ -227,12 +201,7 @@ def test_uuid_link_manager_update_links_no_host_but_ready_or_discoverable(
     with get_r4r_filepath(folder, UUID(raw_uuid)).open("w") as f:
         f.write("")
 
-    uuid_link_manager = UUIDLinkManager(
-        received_outputs_dir=received_outputs_dir,
-        data_source_dir=data_source_push_agent_dir,
-        r4r_discoverable_dir=r4r_discoverable_dir,
-        uuid_lookup_dir=uuid_lookup_dir,
-    )
+    uuid_link_manager = _uuid_link_manager()
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
     uuid_link_manager.update_links({})
 
@@ -248,12 +217,7 @@ def test_uuid_link_manager_unlink_sources() -> None:
     hostname_2 = HostName("my-hostname-2")
     raw_uuid_2 = "db1ea77f-330e-4fb5-b59e-925f55290533"
 
-    uuid_link_manager = UUIDLinkManager(
-        received_outputs_dir=received_outputs_dir,
-        data_source_dir=data_source_push_agent_dir,
-        r4r_discoverable_dir=r4r_discoverable_dir,
-        uuid_lookup_dir=uuid_lookup_dir,
-    )
+    uuid_link_manager = _uuid_link_manager()
     uuid_link_manager.create_link(hostname_1, UUID(raw_uuid_1), push_configured=False)
     uuid_link_manager.create_link(hostname_2, UUID(raw_uuid_2), push_configured=False)
 
@@ -266,12 +230,7 @@ def test_uuid_link_manager_create_uuid_lookup() -> None:
     hostname = HostName("my-hostname")
     uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
 
-    uuid_link_manager = UUIDLinkManager(
-        received_outputs_dir=received_outputs_dir,
-        data_source_dir=data_source_push_agent_dir,
-        r4r_discoverable_dir=r4r_discoverable_dir,
-        uuid_lookup_dir=uuid_lookup_dir,
-    )
+    uuid_link_manager = _uuid_link_manager()
     uuid_link_manager.create_link(hostname, uuid, push_configured=False)
 
     assert str((uuid_lookup_dir / hostname).readlink()) == str(uuid)
@@ -283,12 +242,7 @@ def test_uuid_link_manager_update_uuid_lookup() -> None:
     uuid_old = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
     uuid_new = UUID("db1ea77f-330e-4fb5-b59e-925f55290533")
 
-    uuid_link_manager = UUIDLinkManager(
-        received_outputs_dir=received_outputs_dir,
-        data_source_dir=data_source_push_agent_dir,
-        r4r_discoverable_dir=r4r_discoverable_dir,
-        uuid_lookup_dir=uuid_lookup_dir,
-    )
+    uuid_link_manager = _uuid_link_manager()
 
     uuid_link_manager.create_link(hostname, uuid_old, push_configured=False)
     assert uuid_link_manager.uuid_store.get(hostname) == uuid_old
@@ -303,12 +257,7 @@ def test_uuid_link_manager_unlink_remove_lookup() -> None:
     hostname_2 = HostName("my-hostname-2")
     uuid_2 = UUID("db1ea77f-330e-4fb5-b59e-925f55290533")
 
-    uuid_link_manager = UUIDLinkManager(
-        received_outputs_dir=received_outputs_dir,
-        data_source_dir=data_source_push_agent_dir,
-        r4r_discoverable_dir=r4r_discoverable_dir,
-        uuid_lookup_dir=uuid_lookup_dir,
-    )
+    uuid_link_manager = _uuid_link_manager()
     uuid_link_manager.create_link(hostname_1, uuid_1, push_configured=False)
     uuid_link_manager.create_link(hostname_2, uuid_2, push_configured=False)
 
@@ -316,3 +265,128 @@ def test_uuid_link_manager_unlink_remove_lookup() -> None:
 
     assert uuid_link_manager.uuid_store.get(hostname_1) is None
     assert uuid_link_manager.uuid_store.get(hostname_2) == uuid_2
+
+
+def test_uuid_link_manager_names_the_host_that_a_uuid_is_linked_to() -> None:
+    uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
+    uuid_link_manager = _uuid_link_manager()
+
+    uuid_link_manager.create_link(HostName("my-hostname"), uuid, push_configured=False)
+
+    assert uuid_link_manager.linked_host_name(uuid) == HostName("my-hostname")
+
+
+def test_uuid_link_manager_names_no_host_after_unlink() -> None:
+    hostname = HostName("my-hostname")
+    uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
+    uuid_link_manager = _uuid_link_manager()
+    uuid_link_manager.create_link(hostname, uuid, push_configured=False)
+
+    uuid_link_manager.unlink([hostname])
+
+    assert uuid_link_manager.linked_host_name(uuid) is None
+
+
+_REGISTRATION = UUIDRegistration(
+    agent_updates_permitted=True,
+    subject="automation",
+    registration_route=RegistrationRoute.REGISTER,
+    registered_at=1760000000.0,
+)
+
+
+def test_uuid_link_manager_records_the_registration_with_the_link() -> None:
+    """CMK-39504 AC5"""
+    uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
+
+    _uuid_link_manager().link_registration(
+        HostName("my-hostname"), uuid, push_configured=False, registration=_REGISTRATION
+    )
+
+    assert (
+        _uuid_link_manager().linked_host_name(uuid),
+        _uuid_link_manager().registration(uuid),
+    ) == (HostName("my-hostname"), _REGISTRATION)
+
+
+def test_uuid_link_manager_writes_the_registration_file_that_the_agent_receiver_reads() -> None:
+    """CMK-39504 AC1, AC5"""
+    uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
+
+    _uuid_link_manager().link_registration(
+        HostName("my-hostname"), uuid, push_configured=False, registration=_REGISTRATION
+    )
+
+    assert json.loads((registrations_dir / f"{uuid}.json").read_text()) == {
+        "agent_updates_permitted": True,
+        "subject": "automation",
+        "registration_route": "register",
+        "registered_at": 1760000000.0,
+    }
+
+
+def test_uuid_link_manager_removes_the_record_when_it_unlinks_the_host() -> None:
+    """CMK-39504 AC5"""
+    uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
+    _uuid_link_manager().link_registration(
+        HostName("my-hostname"), uuid, push_configured=False, registration=_REGISTRATION
+    )
+
+    _uuid_link_manager().unlink([HostName("my-hostname")])
+
+    assert _uuid_link_manager().registration(uuid) is None
+
+
+def test_uuid_link_manager_removes_the_record_of_a_uuid_that_a_new_registration_replaces() -> None:
+    """CMK-39504 AC5"""
+    old_uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
+    _uuid_link_manager().link_registration(
+        HostName("my-hostname"), old_uuid, push_configured=False, registration=_REGISTRATION
+    )
+
+    _uuid_link_manager().link_registration(
+        HostName("my-hostname"),
+        UUID("db1ea77f-330e-4fb5-b59e-925f55290533"),
+        push_configured=False,
+        registration=_REGISTRATION,
+    )
+
+    assert _uuid_link_manager().registration(old_uuid) is None
+
+
+def test_uuid_link_manager_removes_the_record_of_a_host_that_the_configuration_lacks() -> None:
+    """CMK-39504 AC5"""
+    uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
+    _uuid_link_manager().link_registration(
+        HostName("my-hostname"), uuid, push_configured=False, registration=_REGISTRATION
+    )
+
+    _uuid_link_manager().update_links({})
+
+    assert _uuid_link_manager().registration(uuid) is None
+
+
+def test_uuid_link_manager_keeps_the_record_when_it_renames_the_host() -> None:
+    """CMK-39504 AC5"""
+    uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
+    _uuid_link_manager().link_registration(
+        HostName("my-hostname"), uuid, push_configured=False, registration=_REGISTRATION
+    )
+
+    _uuid_link_manager().rename([(HostName("my-hostname"), HostName("my-new-hostname"))])
+
+    assert _uuid_link_manager().registration(uuid) == _REGISTRATION
+
+
+def test_uuid_link_manager_keeps_the_record_when_the_link_target_changes() -> None:
+    """CMK-39504 AC5"""
+    uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
+    _uuid_link_manager().link_registration(
+        HostName("my-hostname"), uuid, push_configured=False, registration=_REGISTRATION
+    )
+
+    _uuid_link_manager().update_links(
+        {HostName("my-hostname"): {"cmk_agent_connection": HostAgentConnectionMode.PUSH.value}}
+    )
+
+    assert _uuid_link_manager().registration(uuid) == _REGISTRATION

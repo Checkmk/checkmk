@@ -17,13 +17,18 @@ from cmk.graphing.v1 import Title as TitleV1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
+    ApiGraph,
     build_matched_graphs,
+    drawn_curves,
     evaluate_graphs,
     FetchMetricNamesProtocol,
     Graph,
     HostName,
+    RequestedMetric,
     RRDMetric,
     ServiceName,
+    sort_registered_graph_plugins,
+    TimeRange,
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
@@ -31,18 +36,17 @@ from cmk.gui.i18n import _, translate_to_current_language
 from cmk.utils.servicename import ServiceName as GUIServiceName
 
 from ._built_graphs import BuiltGraph, DiscoveredGraphs
-from ._from_api import GraphFromAPI
 from ._graph_choices import GraphPluginChoice
 from ._graph_codec import GraphCodec
 from ._graph_dispatch import (
-    CommonGraphOptions,
     EvaluatedGraphs,
+    EvaluationOptions,
     FetchDataWithDiagnosticsProtocol,
+    graph_request_of,
     GraphDispatcher,
     legacy_graph_id,
 )
-from ._graph_specification import AnnotatedHostName, GraphSpecification
-from ._graphs_order import sort_registered_graph_plugins
+from ._graph_specification import AnnotatedHostName, GraphSpecification, StoredGraphSpecification
 from ._plugins import registered_graphs, registered_metrics, registered_translations
 from ._source import RRDFetchData, RRDFetchMetricNames
 
@@ -52,8 +56,11 @@ tracer = trace.get_tracer()
 class MKGraphNotFound(MKGeneralException): ...
 
 
+class MKGraphMixedUnitsError(MKGeneralException): ...
+
+
 def get_graph_plugin_choices(
-    registered_graphs: Mapping[str, GraphFromAPI],
+    registered_graphs: Mapping[str, ApiGraph],
 ) -> list[GraphPluginChoice]:
     return sorted(
         [
@@ -65,11 +72,11 @@ def get_graph_plugin_choices(
 
 
 def get_graph_plugin_from_id(
-    registered_graphs: Mapping[str, GraphFromAPI],
+    registered_graphs: Mapping[str, ApiGraph],
     graph_id: str,
-) -> GraphFromAPI:
-    if graph_id.startswith("METRIC_"):
-        metric_name = graph_id[7:]
+) -> ApiGraph:
+    if isinstance(request := graph_request_of(graph_id), RequestedMetric):
+        metric_name = request.metric_name
         return graphs_v2_unstable.Graph(
             name=graph_id,
             title=TitleV1(""),
@@ -89,8 +96,25 @@ def get_graph_plugin_from_id(
     )
 
 
+class StoredTemplateGraphSpecification(StoredGraphSpecification, frozen=True):
+    host_name: AnnotatedHostName
+    service_description: GUIServiceName
+    graph_id: str | None
+    destination: str | None
+
+    @staticmethod
+    @override
+    def graph_type_name() -> Literal["template"]:
+        return "template"
+
+    @classmethod
+    @override
+    def element_type(cls) -> Literal["pnpgraph"]:
+        return "pnpgraph"
+
+
 class TemplateGraphSpecification(GraphSpecification, frozen=True):
-    site: SiteId | None
+    site: SiteId | None = None
     host_name: AnnotatedHostName
     service_description: GUIServiceName
     graph_id: str | None = None
@@ -101,24 +125,24 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     def graph_type_name() -> Literal["template"]:
         return "template"
 
-    @classmethod
     @override
-    def add_visual_type(cls) -> Literal["pnpgraph"]:
-        return "pnpgraph"
+    def for_storage(self) -> StoredTemplateGraphSpecification:
+        return StoredTemplateGraphSpecification(
+            id=self.id,
+            host_name=self.host_name,
+            service_description=self.service_description,
+            graph_id=self.graph_id,
+            destination=self.destination,
+        )
 
 
 TEMPLATE_KIND: Final = "template"
 
 
 def _assert_uniform_unit(graph: Graph) -> None:
-    drawn = [
-        *(member for stack in graph.stacks for member in stack.members),
-        *(stack.reference for stack in graph.stacks if stack.reference is not None),
-        *(line.curve for line in graph.lines),
-    ]
-    units = {curve.attributes.unit for curve in drawn}
+    units = {drawn.curve.attributes.unit for drawn in drawn_curves(graph.stacks, graph.lines)}
     if len(units) > 1:
-        raise MKGeneralException(
+        raise MKGraphMixedUnitsError(
             _("Cannot create graph with metrics of different units: %(units)s")
             % {"units": ", ".join(sorted(repr(unit) for unit in units))}
         )
@@ -136,7 +160,7 @@ def _resolved_site(graph: Graph) -> SiteId | None:
 def build_template_graphs(
     specification: TemplateGraphSpecification,
     *,
-    registered_graphs: Sequence[GraphFromAPI],
+    registered_graphs: Sequence[ApiGraph],
     registered_metrics: Mapping[str, metrics_v1.Metric],
     fetch_metric_names: FetchMetricNamesProtocol,
 ) -> Sequence[BuiltGraph]:
@@ -146,7 +170,9 @@ def build_template_graphs(
         kind=TEMPLATE_KIND,
         registered_graphs=registered_graphs,
         registered_metrics=registered_metrics,
-        graph_name=specification.graph_id,
+        request=(
+            None if specification.graph_id is None else graph_request_of(specification.graph_id)
+        ),
     )
     for graph in graphs:
         _assert_uniform_unit(graph)
@@ -167,24 +193,25 @@ def build_template_graphs(
 
 @dataclass(frozen=True)
 class _EvaluateTemplateGraphs:
-    options: CommonGraphOptions
+    time_range: TimeRange
     fetch_data: FetchDataWithDiagnosticsProtocol
 
     @classmethod
-    def make(cls, options: Mapping[str, object]) -> Self:
+    def make(cls, options: EvaluationOptions) -> Self:
         return cls(
-            CommonGraphOptions.from_request_options(options),
+            options.time_range,
             RRDFetchData(
                 debug=active_config.debug,
                 registered_translations=registered_translations(),
+                include_edge_neighbours=options.include_edge_neighbours,
+                consolidation_function=options.consolidation_function,
             ),
         )
 
     def __call__(self, graph: Graph) -> EvaluatedGraphs:
         return EvaluatedGraphs(
             graphs=evaluate_graphs(
-                consolidation_function=self.options.consolidation_function,
-                time_range=self.options.time_range,
+                time_range=self.time_range,
                 graphs=[graph],
                 fetch_data=self.fetch_data,
             ),

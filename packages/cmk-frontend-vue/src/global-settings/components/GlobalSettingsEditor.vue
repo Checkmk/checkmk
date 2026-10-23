@@ -4,9 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import type { GlobalSettingsHint } from 'cmk-shared-typing/typescript/global_settings'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
+import type { CmkAlertBoxDeprecatedProps } from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
+import CmkCopy from 'cmk-ui-library/components/CmkCopy.vue'
+import CmkHtml from 'cmk-ui-library/components/CmkHtml.vue'
 import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -30,14 +35,23 @@ const emit = defineEmits<{
 }>()
 
 const variable = computed(() => props.session.variable)
+const siteScope = computed(() =>
+  variable.value.current.type === 'site' ? variable.value.current : null
+)
+const globalScope = computed(() =>
+  variable.value.current.type === 'global' ? variable.value.current : null
+)
+const inSiteScope = computed(() => siteScope.value !== null)
+const removable = computed(() => variable.value.current.explicit)
 const error = computed(() => props.session.error)
+const validationMessages = computed(() => props.session.validationMessages)
 const specWithoutTopLevelHelp = computed(() => ({ ...variable.value.spec, help: '' }))
 
-const draft = ref<unknown>(structuredClone(toRaw(props.session.variable.value)))
+const draft = ref<unknown>(structuredClone(toRaw(props.session.variable.current.value)))
 const confirmResetOpen = ref(false)
 
 watch(
-  () => props.session.variable.value,
+  () => props.session.variable.current.value,
   (value) => {
     draft.value = structuredClone(toRaw(value))
   }
@@ -73,23 +87,36 @@ function valuesEqual(a: unknown, b: unknown): boolean {
 }
 
 const isExplicitDefault = computed(
-  () => variable.value.modified && valuesEqual(variable.value.value, variable.value.default_value)
+  () =>
+    !inSiteScope.value &&
+    removable.value &&
+    valuesEqual(variable.value.current.value, variable.value.factory_value)
 )
 
-const resetButtonLabel = computed<TranslatedString>(() =>
-  isExplicitDefault.value ? _t('Remove explicit setting') : _t('Remove modification')
-)
+const resetButtonLabel = computed<TranslatedString>(() => {
+  if (inSiteScope.value) {
+    return _t('Remove site-specific value')
+  }
+  return isExplicitDefault.value ? _t('Remove explicit setting') : _t('Remove modification')
+})
 
 const resetConfirmation = computed<{
   heading: TranslatedString
   body: TranslatedString
   confirm: TranslatedString
-}>(() =>
-  isExplicitDefault.value
+}>(() => {
+  if (inSiteScope.value) {
+    return {
+      heading: _t('Remove site-specific value?'),
+      body: _t('The site will inherit the value from Global settings.'),
+      confirm: _t('Remove')
+    }
+  }
+  return isExplicitDefault.value
     ? {
         heading: _t('Remove explicit setting?'),
         body: _t(
-          'Removing the explicit value will restore the default value for this site. The value will be inherited from Global settings or the factory settings.'
+          'Removing the explicit value will restore the factory setting. The value will no longer be stored explicitly.'
         ),
         confirm: _t('Remove')
       }
@@ -100,13 +127,26 @@ const resetConfirmation = computed<{
         ),
         confirm: _t('Remove')
       }
-)
+})
 
-const currentStateText = computed<TranslatedString>(() =>
-  variable.value.modified
+function hintAlertProps(hint: GlobalSettingsHint): CmkAlertBoxDeprecatedProps {
+  return hint.variant === 'info' ? { variant: 'info' } : { variant: 'warning' }
+}
+
+const currentStateText = computed<TranslatedString>(() => {
+  const site = siteScope.value
+  if (site !== null) {
+    if (site.explicit) {
+      return _t('This variable is overridden on this site.')
+    }
+    return site.global_layer.explicit
+      ? _t('This variable inherits the value from Global settings.')
+      : _t('This variable is at factory settings.')
+  }
+  return variable.value.current.explicit
     ? _t('This variable has been modified.')
     : _t('This variable is at factory settings.')
-)
+})
 </script>
 
 <template>
@@ -116,11 +156,15 @@ const currentStateText = computed<TranslatedString>(() =>
         {{ _t('Save') }}
       </CmkButton>
       <CmkButton
-        v-if="variable.modified"
+        v-if="removable"
         variant="secondary"
         :icon="{ name: 'reset' }"
         :disabled="!session.editable"
-        :title="_t('Reset to factory default')"
+        :title="
+          inSiteScope
+            ? _t('Remove the value configured for this site')
+            : _t('Reset to factory default')
+        "
         @click="confirmResetOpen = true"
       >
         {{ resetButtonLabel }}
@@ -130,47 +174,76 @@ const currentStateText = computed<TranslatedString>(() =>
       </CmkButton>
     </div>
 
-    <CmkAlertBox v-if="error !== null" variant="error" :heading="error.heading">
-      <span class="global-settings-editor__error">{{ error.message }}</span>
-    </CmkAlertBox>
+    <div class="global-settings-editor__alerts">
+      <CmkAlertBoxDeprecated
+        v-if="error !== null"
+        variant="error"
+        :heading="error.heading"
+        class="global-settings-editor__alert"
+      >
+        <span class="global-settings-editor__error">{{ error.message }}</span>
+      </CmkAlertBoxDeprecated>
 
-    <CmkAlertBox
-      v-if="confirmResetOpen"
-      variant="warning"
-      :heading="resetConfirmation.heading"
-      :main-button="{ title: resetConfirmation.confirm, onclick: confirmReset }"
-      :optional-button="{
-        title: _t('Cancel'),
-        icon: 'cancel',
-        onclick: () => (confirmResetOpen = false)
-      }"
-    >
-      {{ resetConfirmation.body }}
-    </CmkAlertBox>
+      <CmkAlert
+        v-if="validationMessages.length > 0"
+        variant="error"
+        :text="_t('Could not save this setting, the errors are shown in the form.')"
+        class="global-settings-editor__alert"
+      />
 
-    <CmkAlertBox v-if="isExplicitDefault" variant="info" dismissible>
-      {{
-        _t(
-          'This setting uses an explicit value and overrides the factory and Global settings value.'
-        )
-      }}
-    </CmkAlertBox>
+      <CmkAlert
+        v-if="confirmResetOpen"
+        variant="warning"
+        :heading="resetConfirmation.heading"
+        :main-button="{ title: resetConfirmation.confirm, onclick: confirmReset }"
+        :optional-button="{
+          title: _t('Cancel'),
+          icon: 'cancel',
+          onclick: () => (confirmResetOpen = false)
+        }"
+        :text="resetConfirmation.body"
+        class="global-settings-editor__alert"
+      />
+
+      <CmkAlert
+        v-if="isExplicitDefault"
+        variant="info"
+        dismissible
+        :text="_t('This setting is stored explicitly with a value equal to the factory setting.')"
+        class="global-settings-editor__alert"
+      />
+
+      <CmkAlertBoxDeprecated
+        v-for="(hint, index) in variable.hints"
+        :key="index"
+        v-bind="hintAlertProps(hint)"
+        class="global-settings-editor__alert"
+      >
+        <span class="global-settings-editor__hint">
+          <CmkHtml :html="hint.text" />
+          <template v-if="hint.copyable !== null">
+            <code>{{ hint.copyable }}</code>
+            <CmkCopy :text="hint.copyable">
+              <CmkButton
+                size="iconOnly"
+                :icon="{ name: 'view-copy' }"
+                :aria-label="_t('Copy to clipboard')"
+              />
+            </CmkCopy>
+          </template>
+        </span>
+      </CmkAlertBoxDeprecated>
+    </div>
 
     <FormHelp :help="variable.spec.help" />
 
     <div class="global-settings-editor__sections">
       <CmkCatalogPanel :title="untranslated(variable.spec.title)">
         <GlobalSettingsRow :label="_t('Current setting')" :help="untranslated(variable.spec.help)">
-          <FormEdit v-model:data="draft" :spec="specWithoutTopLevelHelp" :backend-validation="[]" />
-        </GlobalSettingsRow>
-      </CmkCatalogPanel>
-
-      <CmkCatalogPanel :title="_t('Factory settings')">
-        <GlobalSettingsRow :label="_t('Factory setting')">
-          <FormReadonly
-            :spec="variable.spec"
-            :data="variable.default_value"
-            :backend-validation="[]"
+          <FormEdit
+            v-model:data="draft"
+            :spec="specWithoutTopLevelHelp"
+            :backend-validation="validationMessages"
           />
         </GlobalSettingsRow>
         <GlobalSettingsRow :label="_t('Current state')">
@@ -178,17 +251,36 @@ const currentStateText = computed<TranslatedString>(() =>
         </GlobalSettingsRow>
       </CmkCatalogPanel>
 
+      <CmkCatalogPanel v-if="siteScope !== null" :title="_t('Global settings')">
+        <GlobalSettingsRow :label="_t('Global setting')">
+          <FormReadonly
+            :spec="variable.spec"
+            :data="siteScope.global_layer.value"
+            :backend-validation="[]"
+          />
+        </GlobalSettingsRow>
+      </CmkCatalogPanel>
+
+      <CmkCatalogPanel :title="_t('Factory settings')">
+        <GlobalSettingsRow :label="_t('Factory setting')">
+          <FormReadonly
+            :spec="variable.spec"
+            :data="variable.factory_value"
+            :backend-validation="[]"
+          />
+        </GlobalSettingsRow>
+      </CmkCatalogPanel>
+
       <CmkCatalogPanel
-        v-if="variable.site_overrides.length > 0"
+        v-if="globalScope !== null && globalScope.site_overrides.length > 0"
         :title="_t('Site overrides')"
-        :open="false"
       >
         <p class="global-settings-editor__overrides-intro">
           {{ _t('This setting is overridden by the following sites:') }}
         </p>
         <ul class="global-settings-editor__overrides">
           <li
-            v-for="override in variable.site_overrides"
+            v-for="override in globalScope.site_overrides"
             :key="override.site_id"
             class="global-settings-editor__override"
           >
@@ -209,33 +301,57 @@ const currentStateText = computed<TranslatedString>(() =>
 .global-settings-editor {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding-bottom: 20px;
+  gap: var(--dimension-6);
+  padding-bottom: var(--dimension-7);
 }
 
 .global-settings-editor__actions {
   display: flex;
-  gap: 8px;
+  gap: var(--dimension-4);
+  margin-bottom: var(--dimension-6);
 }
 
 .global-settings-editor__sections {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--dimension-7);
+}
+
+.global-settings-editor__alerts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-5);
+
+  /* Alerts that are not shown leave only comment nodes behind. */
+  &:empty {
+    display: none;
+  }
+
+  /* Nested to outweigh the alert box's own margin. */
+  .global-settings-editor__alert {
+    margin: 0;
+  }
 }
 
 .global-settings-editor__error {
   white-space: pre-wrap;
 }
 
+.global-settings-editor__hint {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dimension-3);
+}
+
 .global-settings-editor__overrides-intro {
-  margin: 0 0 12px;
+  margin: 0 0 var(--dimension-5);
 }
 
 .global-settings-editor__overrides {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--dimension-5);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -245,8 +361,8 @@ const currentStateText = computed<TranslatedString>(() =>
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px;
-  border-radius: 2px;
+  padding: var(--dimension-5);
+  border-radius: var(--border-radius-half);
   background: var(--ux-theme-6);
 }
 

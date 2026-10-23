@@ -13,12 +13,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 class AlertSeverity(StrEnum):
@@ -55,10 +54,6 @@ agent_section_pure_storage_fa_alerts = AgentSection(
 )
 
 
-def discover_internal_alerts(section: InternalAlerts) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_internal_alerts(section: InternalAlerts) -> CheckResult:
     yield Result(
         state=State.CRIT if section.critical_alerts else State.OK,
@@ -84,6 +79,6 @@ def check_internal_alerts(section: InternalAlerts) -> CheckResult:
 check_plugin_pure_storage_fa_alerts = CheckPlugin(
     name="pure_storage_fa_alerts",
     service_name="Internal Alerts",
-    discovery_function=discover_internal_alerts,
+    discovery_function=discover_one_service,
     check_function=check_internal_alerts,
 )

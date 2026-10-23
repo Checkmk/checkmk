@@ -13,12 +13,15 @@ from collections.abc import Mapping
 
 import pytest
 
+from cmk.gui.config import Config
 from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer
 from cmk.gui.views.store import multisite_builtin_views
+from cmk.web.utils.request_cache import RequestCache
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 # The builtin view that paints engine graphs, and auto-refreshed long before the picker existed.
 ENGINE_GRAPH_VIEW = "service"
@@ -27,7 +30,13 @@ ENGINE_GRAPH_VIEW = "service"
 def _view(browser_reload: int) -> View:
     spec: ViewSpec = copy.deepcopy(multisite_builtin_views[ENGINE_GRAPH_VIEW])
     spec["browser_reload"] = browser_reload
-    view = View(ENGINE_GRAPH_VIEW, spec, spec.get("context", {}), UserPermissions({}, {}, {}, []))
+    view = View(
+        ENGINE_GRAPH_VIEW,
+        spec,
+        spec.get("context", {}),
+        make_painter_context(UserPermissions({}, {}, {}, [])),
+        RequestCache(Config()),
+    )
     # Guards the premise: without engine graphs the assertions below would be vacuous.
     assert view.renders_engine_graphs
     return view

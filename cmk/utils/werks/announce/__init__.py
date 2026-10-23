@@ -11,13 +11,10 @@ from typing import NamedTuple
 from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefined
 
 from cmk.ccc.version import ReleaseType, Version
-from cmk.werks.tool.models import Class, Compatibility, EditionV3, WerkV3
-from cmk.werks.tool.utils import (
-    has_content,
-    load_raw_files,
-    sort_by_version_and_component,
-    WerkTranslator,
-)
+from cmk.werks.flavor.cmk.models import Class, EditionV3, WerkV3
+from cmk.werks.flavor.cmk.precompile import load_raw_files
+from cmk.werks.flavor.cmk.translator import sort_by_version_and_component, WerkTranslator
+from cmk.werks.tool.models import Compatibility
 
 
 class SimpleWerk(NamedTuple):
@@ -39,7 +36,7 @@ class SimpleWerk(NamedTuple):
         return cls(
             id=werk.id,
             title=werk.title,
-            has_content=has_content(werk.description),
+            has_content=bool(werk.description.strip()),
             compatible=werk.compatible == Compatibility.COMPATIBLE,
             prefix=prefix,
             url=f"https://checkmk.com/werk/{werk.id}",

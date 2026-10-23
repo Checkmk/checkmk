@@ -1,0 +1,14 @@
+title: AWS v2: Exceptions
+agents: aws_v2
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check collects all exceptions during the execution of the
+ special agent {agent_aws_v2} for monitoring Amazon Web Service.
+
+ The service is {OK} if no exceptions occur
+ otherwise it goes {CRIT}.
+
+discovery:
+ One service is created.

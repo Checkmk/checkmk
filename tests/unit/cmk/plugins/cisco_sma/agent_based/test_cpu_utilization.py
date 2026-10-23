@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.cisco_sma.agent_based.cpu_utilization import (
     _check_cpu_utilization_testable,
-    _discover_cpu_utilization,
     _parse_cpu_utilization,
 )
 
@@ -14,10 +13,6 @@ from cmk.plugins.cisco_sma.agent_based.cpu_utilization import (
 def test_parse_cpu_utilizations() -> None:
     assert _parse_cpu_utilization([["10"]]) == 10.0
     assert _parse_cpu_utilization([]) is None
-
-
-def test_discover_cpu_utilization() -> None:
-    assert list(_discover_cpu_utilization(21.0)) == [Service()]
 
 
 def test_check_cpu_utilization_testable() -> None:

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -16,11 +15,16 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import translations as translations_v1
-from cmk.graphing_engine import ConsolidationFunction, TimeRange
+from cmk.graphing_engine import (
+    ApiGraph,
+    ConsolidationFunction,
+    sort_registered_graph_plugins,
+    TimeRange,
+)
 from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui import sites
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config, Config, RequestCacheConfig
 from cmk.gui.dashboard.exceptions import WidgetRenderError
 from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig
 from cmk.gui.exceptions import MKUserError
@@ -29,11 +33,11 @@ from cmk.gui.graphing import (
     discover_template_graphs,
     DiscoveredGraphs,
     evaluate_built_graphs,
+    EvaluationOptions,
     get_graph_plugin_choices,
     graph_choices,
     GraphChoices,
     GraphDestinations,
-    GraphFromAPI,
     GraphPluginChoice,
     graphs_from_api,
     GraphSpecification,
@@ -41,11 +45,10 @@ from cmk.gui.graphing import (
     registered_translations,
     resolve_graph_id_from_index,
     RRDFetchMetricNames,
-    sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
 from cmk.gui.i18n import _
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import GraphRenderOptionsVS, SingleInfos, VisualContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import (
@@ -56,7 +59,8 @@ from cmk.gui.visuals import (
     get_singlecontext_vars,
 )
 from cmk.utils.servicename import ServiceName
-from cmk.web.utils.choices import Choices
+from cmk.web.utils.choices import Choice
+from cmk.web.utils.request_cache import RequestCache
 
 from ..base import (
     Dashlet,
@@ -89,11 +93,11 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig](Dashlet[T]):
         return ["host", "service"]
 
     @staticmethod
-    def _resolve_site(host: str) -> None:
+    def _resolve_site(host: str) -> SiteId:
         with sites.prepend_site():
             query = "GET hosts\nFilter: name = %s\nColumns: name" % livestatus.lqencode(host)
             try:
-                return sites.live().query_value(query)
+                return SiteId(sites.live().query_value(query))
             except livestatus.MKLivestatusNotFoundError:
                 raise WidgetRenderError(
                     _("The host '%(host)s' could not be found on any active site.")
@@ -126,7 +130,7 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig](Dashlet[T]):
         self._cached_display_title: str | None = None
 
     @override
-    def default_display_title(self) -> str:
+    def default_display_title(self, _request_cache: RequestCache[RequestCacheConfig]) -> str:
         # TODO: This evaluates the graph only to substitute a title expression. Move the macro
         # resolution to the frontend, or give the engine a performance-data-only fetch for titles.
         if self._cached_display_title is None:
@@ -138,15 +142,15 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig](Dashlet[T]):
             start, end = Timerange.compute_range(self._dashlet_spec["timerange"]).range
             discovered = self.discover_graphs(
                 debug=active_config.debug,
-                user_permissions=UserPermissions.from_config(active_config, permission_registry),
+                user_permissions=UserPermissions.from_config(active_config, all_permissions()),
             )
             evaluated = evaluate_built_graphs(
                 [built.graph for built in discovered.graphs[:1]],
-                {
-                    "consolidation_function": ConsolidationFunction.MAX,
-                    "time_range": TimeRange(start=int(start), end=int(end), step=60),
-                    "destination": None,
-                },
+                EvaluationOptions(
+                    consolidation_function=ConsolidationFunction.MAX,
+                    time_range=TimeRange(start=int(start), end=int(end), step=60),
+                    destination=None,
+                ),
             )
         except Exception:
             return self.title()
@@ -305,7 +309,7 @@ def default_dashlet_graph_render_options() -> GraphRenderOptionsVS:
 
 def graph_templates_autocompleter(
     config: Config, value_entered_by_user: str, params: dict
-) -> Choices:
+) -> list[Choice]:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the
     completions_params to get the list of choices"""
@@ -323,11 +327,11 @@ def _graph_templates_autocompleter_testable(
     *,
     value_entered_by_user: str,
     params: Mapping[str, Any],
-    registered_plugin_graphs: Mapping[str, GraphFromAPI],
+    registered_plugin_graphs: Mapping[str, ApiGraph],
     registered_metric_definitions: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
     debug: bool,
-) -> Choices:
+) -> list[Choice]:
     if not params.get("context") and params.get("show_independent_of_context") is True:
         return _sorted_matching_graph_template_choices(
             value_entered_by_user,
@@ -352,7 +356,7 @@ def _graph_templates_autocompleter_testable(
 
 def _graph_and_single_metric_templates_choices_for_context(
     context: VisualContext,
-    registered_graphs: Mapping[str, GraphFromAPI],
+    registered_graphs: Mapping[str, ApiGraph],
     registered_metric_definitions: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
     *,
@@ -395,7 +399,7 @@ def _graph_and_single_metric_templates_choices_for_context(
 def _sorted_matching_graph_template_choices(
     value_entered_by_user: str,
     all_choices: Iterable[GraphPluginChoice],
-) -> Choices:
+) -> list[Choice]:
     return [
         (graph_template_choice.id, graph_template_choice.title)
         for graph_template_choice in sorted(

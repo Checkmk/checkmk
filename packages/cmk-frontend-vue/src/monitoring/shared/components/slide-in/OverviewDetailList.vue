@@ -19,8 +19,10 @@ defineProps<{ align?: 'start' }>()
 
 <style scoped>
 .monitoring-overview-detail-list {
+  --monitoring-overview-detail-list-label-width: 140px;
+
   display: grid;
-  grid-template-columns: minmax(120px, max-content) 1fr;
+  grid-template-columns: var(--monitoring-overview-detail-list-label-width) minmax(0, 1fr);
   gap: var(--dimension-4) var(--spacing);
   margin: 0;
 }
@@ -32,6 +34,8 @@ defineProps<{ align?: 'start' }>()
 .monitoring-overview-detail-list :slotted(dt) {
   color: var(--font-color);
   font-weight: var(--font-weight-bold);
+  hyphens: auto;
+  overflow-wrap: break-word;
 }
 
 .monitoring-overview-detail-list :slotted(dd) {

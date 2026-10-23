@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { ModeCreateOtelConf } from 'cmk-shared-typing/typescript/mode_create_otel_conf'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import type { Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
 import CmkWizard, {
   CmkWizardButton,
@@ -28,9 +28,7 @@ import OTelConfigurationSummary from './otel-configuration-steps/OTelConfigurati
 import {
   type AuthConfig,
   type EndpointConfig,
-  type EventConsoleConfig,
-  GRPC_DEFAULT_PORT,
-  HTTP_DEFAULT_PORT
+  type EventConsoleConfig
 } from './otel-configuration-steps/otelTypes'
 import type { PasswordConfig } from './otel-configuration-steps/password_store_password.types.ts'
 import {
@@ -340,7 +338,7 @@ async function onSaveClick(): Promise<void> {
           v-model:config-name="configName"
           v-model:site-id="siteId"
           config-name-prefix="opentelemetry_config_"
-          config-list-endpoint="api/internal/domain-types/otel_collector_config_receivers/collections/all"
+          config-kind="receivers"
           :already-configured-error="
             _t(
               'OpenTelemetry is already configured for this site. Select another site or update the existing configuration.'
@@ -381,8 +379,8 @@ async function onSaveClick(): Promise<void> {
           :encryption-allowed="encryption_allowed"
           :event-console-allowed="event_console_allowed"
           :may-create-password="may_create_password"
-          :grpc-default-port="GRPC_DEFAULT_PORT"
-          :http-default-port="HTTP_DEFAULT_PORT"
+          :grpc-default-port="grpc_default_port"
+          :http-default-port="http_default_port"
         />
       </template>
       <template #actions>
@@ -417,6 +415,8 @@ async function onSaveClick(): Promise<void> {
           :http-event-console="httpEventConsole"
           :grpc-endpoint-override="grpc_receiver_endpoint_override ?? null"
           :http-endpoint-override="http_receiver_endpoint_override ?? null"
+          :grpc-default-port="grpc_default_port"
+          :http-default-port="http_default_port"
         />
       </template>
 
@@ -458,6 +458,8 @@ async function onSaveClick(): Promise<void> {
               :http-event-console="httpEventConsole"
               :grpc-password-name="passwordTitle(grpcAuth)"
               :http-password-name="passwordTitle(httpAuth)"
+              :grpc-default-port="grpc_default_port"
+              :http-default-port="http_default_port"
               :endpoint-config-allowed="endpoint_config_allowed"
               :encryption-allowed="encryption_allowed"
               :event-console-allowed="event_console_allowed"
@@ -467,9 +469,12 @@ async function onSaveClick(): Promise<void> {
       </template>
       <template #actions>
         <div class="mode-otel-mode-create-o-tel-conf-app__actions">
-          <CmkAlertBox v-if="overviewValidationFailed" variant="error" size="small">
-            {{ _t('The form still contains invalid data. Please correct them and try again.') }}
-          </CmkAlertBox>
+          <CmkAlert
+            v-if="overviewValidationFailed"
+            variant="error"
+            size="small"
+            :text="_t('The form still contains invalid data. Please correct them and try again.')"
+          />
           <div class="mode-otel-mode-create-o-tel-conf-app__actions-buttons">
             <CmkWizardButton
               type="finish"

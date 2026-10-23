@@ -15,8 +15,14 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
-from cmk.gui.main_menu_types import ConfigurableMainMenuItem, MainMenuItem, MainMenuLinkItem
+from cmk.gui.main_menu_types import (
+    ConfigurableMainMenuItem,
+    MainMenuItem,
+    MainMenuLinkItem,
+    MainMenuToggleItem,
+)
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.sidebar.main_menu import (
     ajax_message_read,
     MainMenuConfigCreator,
@@ -26,6 +32,8 @@ from cmk.gui.sidebar.main_menu import (
 )
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.shared_typing.main_menu import (
     NavItem,
     NavItemHeader,
@@ -33,9 +41,9 @@ from cmk.shared_typing.main_menu import (
     NavItemShortcut,
     NavItemTopic,
     NavItemTopicEntry,
-    NavItemType,
     NavItemVueApp,
     NavLinkItem,
+    NavToggleItem,
     NavVueAppIdEnum,
     TopicItemMode,
 )
@@ -108,7 +116,13 @@ def _creator(monkeypatch: pytest.MonkeyPatch, items: Iterable[object]) -> MainMe
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request)
+    return PageContext(
+        config=config,
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
+    )
 
 
 def test_a_menu_without_topics_and_without_a_vue_app_is_dropped(
@@ -172,7 +186,6 @@ def test_a_configurable_item_is_resolved_to_its_instance(
     """A configurable menu decides per user whether it is a link or a menu with topics."""
     configurable = ConfigurableMainMenuItem(
         id=NavItemIdEnum.help,
-        type=NavItemType.configurable,
         title=_l("Help"),
         sort_index=1,
         shortcut=NavItemShortcut(key="h"),
@@ -385,6 +398,44 @@ def test_create_prefers_the_users_own_start_url(monkeypatch: pytest.MonkeyPatch)
 
     assert config.start.url == (user.start_url or "index.py")
     assert config.start.icon_path == "logo.svg"
+
+
+def _toggle_item(**kwargs: object) -> MainMenuToggleItem:
+    defaults: dict[str, object] = {
+        "id": NavItemIdEnum.ai_assistant,
+        "title": _l("AI Assistant"),
+        "sort_index": 0,
+        "shortcut": NavItemShortcut(key=" ", ctrl=True),
+    }
+    defaults.update(kwargs)
+    return MainMenuToggleItem(**defaults)  # type: ignore[arg-type]
+
+
+def test_create_lists_a_toggle_item_as_a_toggle_and_not_as_a_menu(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with monkeypatch.context() as m:
+        creator = _creator(m, [_search_item(), _toggle_item(hint=_l("Open the AI assistant"))])
+        config = creator.create(start_url="index.py", home_icon_path=None)
+
+    assert config.toggles == [
+        NavToggleItem(
+            id=NavItemIdEnum.ai_assistant,
+            title="AI Assistant",
+            sort_index=0,
+            shortcut=NavItemShortcut(key=" ", ctrl=True),
+            hint="Open the AI assistant",
+        )
+    ]
+    assert [item.id for item in [*config.main, *config.user]] == [NavItemIdEnum.search]
+
+
+def test_create_drops_a_toggle_item_that_hides_itself(monkeypatch: pytest.MonkeyPatch) -> None:
+    with monkeypatch.context() as m:
+        creator = _creator(m, [_search_item(), _toggle_item(hide=lambda: True)])
+        config = creator.create(start_url="index.py", home_icon_path=None)
+
+    assert config.toggles == []
 
 
 def test_message_read_confirms_the_deletion(

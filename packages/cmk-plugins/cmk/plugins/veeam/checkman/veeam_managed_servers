@@ -1,0 +1,26 @@
+title: Veeam: Managed server
+agents: special
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors a server managed by a Veeam Backup & Replication
+ server, collected via the Veeam special agent: a Microsoft Windows or Linux
+ server, a VMware vSphere or Cloud Director host, a Hyper-V server or
+ cluster, an SCVMM server or an SMB3 server. It reports the server type, its
+ availability status, description and roles.
+
+ This check is {OK} if the server is available to Veeam and {CRIT} if it is
+ unavailable. Both states are configurable. Any other status, or no status
+ at all, is {UNKNOWN}.
+
+ The backup server itself is a managed server too, and is reported with the
+ role "Backup server".
+
+ The data can be read with the "Veeam Backup Viewer" role.
+
+discovery:
+ One service is created for each managed server reported by the API.
+
+item:
+ The name of the managed server.

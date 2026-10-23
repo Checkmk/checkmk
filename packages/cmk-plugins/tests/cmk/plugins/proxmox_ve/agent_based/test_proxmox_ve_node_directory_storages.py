@@ -79,6 +79,49 @@ def test_discover_proxmox_ve_node_directory_storage() -> None:
     ]
 
 
+def _section_with_unknown_storage_type() -> SectionNodeStorages:
+    # Third-party Proxmox storage plugins (e.g. BlockBridge) report a plugintype
+    # that is not part of StorageType. Built like the special agent does it.
+    return SectionNodeStorages.model_validate(
+        {
+            "node": "pve-node1",
+            "storages": [
+                {
+                    "node": "pve-node1",
+                    "disk": 5368709120.0,
+                    "maxdisk": 10737418240.0,
+                    "plugintype": "blockbridge",
+                    "status": "available",
+                    "storage": "bb-storage",
+                },
+            ],
+        }
+    )
+
+
+def test_discover_proxmox_ve_node_directory_storage_unknown_type() -> None:
+    assert list(
+        discover_proxmox_ve_node_directory_storage(_section_with_unknown_storage_type())
+    ) == [
+        Service(item="bb-storage"),
+    ]
+
+
+def test_check_proxmox_ve_node_directory_storage_unknown_type() -> None:
+    section = _section_with_unknown_storage_type()
+    results = list(
+        check_proxmox_ve_node_storage(
+            item="bb-storage",
+            params={"levels": (80.0, 90.0)},
+            section=section.directory_storages,
+            storage_links=section.storage_links,
+            value_store={},
+        )
+    )
+    assert Result(state=State.OK, summary="Used: 50.00% - 5.00 GiB of 10.0 GiB") in results
+    assert Result(state=State.OK, summary="Type: blockbridge (unknown storage type)") in results
+
+
 @pytest.mark.parametrize(
     "item,params,section,expected_results",
     [

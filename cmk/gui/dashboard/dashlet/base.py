@@ -5,13 +5,15 @@
 
 import abc
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import cast, Self
 
 from cmk.gui import visuals
+from cmk.gui.config import RequestCacheConfig
 from cmk.gui.i18n import _u
 from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.utils.macros import replace_macros_in_str
+from cmk.web.utils.request_cache import RequestCache
 
 from ..title_macros import macro_mapping_from_context
 from ..type_defs import DashletConfig, ResponsiveGridBreakpoint
@@ -87,6 +89,19 @@ class ResponsiveLayoutConstraints:
                 minimum_size=WidgetSize(width=4, height=4),
                 initial_size=WidgetSize(width=8, height=7),
             ),
+        )
+
+    def with_minimum_height(self, height: int) -> Self:
+        """Same constraints, but with the given minimum height on all breakpoints."""
+        return replace(
+            self,
+            **{
+                breakpoint_id: replace(
+                    constraints,
+                    minimum_size=replace(constraints.minimum_size, height=height),
+                )
+                for breakpoint_id, constraints in self.to_dict().items()
+            },
         )
 
     def to_dict(self) -> dict[ResponsiveGridBreakpoint, ResponsiveLayoutBreakpointConstraints]:
@@ -189,15 +204,17 @@ class Dashlet[T: DashletConfig](abc.ABC):
     def dashlet_spec(self) -> T:
         return self._dashlet_spec
 
-    def default_display_title(self) -> str:
+    def default_display_title(self, _request_cache: RequestCache[RequestCacheConfig]) -> str:
         return self.title()
 
-    def _get_macro_mapping(self, title: str) -> Mapping[str, str]:
+    def _get_macro_mapping(
+        self, title: str, request_cache: RequestCache[RequestCacheConfig]
+    ) -> Mapping[str, str]:
         return macro_mapping_from_context(
             self.context if self.has_context() else {},
             self.single_infos(),
             title,
-            self.default_display_title(),
+            self.default_display_title(request_cache),
             **self._get_additional_macros(),
         )
 
@@ -208,15 +225,15 @@ class Dashlet[T: DashletConfig](abc.ABC):
     def get_additional_macro_names(cls) -> Iterable[str]:
         yield from []
 
-    def compute_title(self) -> str:
+    def compute_title(self, request_cache: RequestCache[RequestCacheConfig]) -> str:
         try:
             raw_title = self._dashlet_spec["title"]
         except KeyError:
-            raw_title = self.default_display_title()
+            raw_title = self.default_display_title(request_cache)
 
         untranslated_title = replace_macros_in_str(
             raw_title,
-            self._get_macro_mapping(raw_title),
+            self._get_macro_mapping(raw_title, request_cache),
         )
         return _u(untranslated_title)
 

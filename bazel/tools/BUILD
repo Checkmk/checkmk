@@ -1,4 +1,5 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_env.bzl", "bazel_env")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@npm//:defs.bzl", "npm_link_all_packages")
@@ -9,16 +10,20 @@ load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
 
 exports_files(
-    ["ps_script_analyzer_wrapper.ps1"],
+    [
+        "dump_fastapi_openapi_spec.py",
+        "ps_script_analyzer_wrapper.ps1",
+    ],
     visibility = ["//visibility:public"],
 )
 
 # Opts the linter's own PowerShell wrapper into PSScriptAnalyzer so we eat our
-# own dog food. Also satisfies scripts/in_bazel.sh's "every .ps1 in a filegroup"
-# requirement.
+# own dog food. Also satisfies //packages/cmk-repo-checks:bazel_lint_coverage,
+# which requires every .ps1 in a filegroup with this tag.
 filegroup(
     name = "powershell_scripts",
     srcs = ["ps_script_analyzer_wrapper.ps1"],
@@ -143,10 +148,18 @@ bazel_env(
         "osslsigncode": "@osslsigncode",
         "plantuml": "@plantuml",
         "pnpm": "@pnpm",
+        "psign": "@psign",
         "py_import_cycles": ":py-import-cycles",
         "stylelint": ":stylelint",
         "uv": "@multitool//tools/uv",
     },
+)
+
+py_library(
+    name = "dump_fastapi_openapi_spec",
+    srcs = ["dump_fastapi_openapi_spec.py"],
+    visibility = ["//visibility:public"],
+    deps = [requirement("openapi-spec-validator")],
 )
 
 py_binary(
@@ -194,3 +207,15 @@ py_binary(
         ("buildifier.check", "--lint=warn"),
     ]
 ]
+
+py_cmk_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/*.py"]),
+    imports = ["."],
+    deps = [
+        ":dump_fastapi_openapi_spec",
+        ":extract_os_packages",
+        requirement("openapi-spec-validator"),
+    ],
+)

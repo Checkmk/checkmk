@@ -80,11 +80,59 @@ metric_mem_lnx_buffers = Metric(
     unit=UNIT_BYTES,
     color=Color.LIGHT_CYAN,
 )
+metric_swap_free = Metric(
+    name="swap_free",
+    title=Title("Free swap space"),
+    unit=UNIT_BYTES,
+    color=Color.LIGHT_BLUE,
+)
+metric_caches = Metric(
+    name="caches",
+    title=Title("Memory used by caches"),
+    unit=UNIT_BYTES,
+    color=Color.DARK_GRAY,
+)
 metric_sreclaimable = Metric(
     name="sreclaimable",
     title=Title("Reclaimable slab"),
     unit=UNIT_BYTES,
     color=Color.ORANGE,
+)
+metric_mem_lnx_kernel_stack = Metric(
+    name="mem_lnx_kernel_stack",
+    title=Title("Kernel stack"),
+    unit=UNIT_BYTES,
+    color=Color.PURPLE,
+)
+metric_mem_lnx_mlocked = Metric(
+    name="mem_lnx_mlocked",
+    title=Title("Locked mmap() data"),
+    unit=UNIT_BYTES,
+    color=Color.BLUE,
+)
+metric_mem_lnx_page_tables = Metric(
+    name="mem_lnx_page_tables",
+    title=Title("Page tables"),
+    unit=UNIT_BYTES,
+    color=Color.GREEN,
+)
+metric_sec_page_tables = Metric(
+    name="sec_page_tables",
+    title=Title("Secondary page tables"),
+    unit=UNIT_BYTES,
+    color=Color.LIGHT_GREEN,
+)
+metric_percpu = Metric(
+    name="percpu",
+    title=Title("Memory allocated to percpu"),
+    unit=UNIT_BYTES,
+    color=Color.LIGHT_PURPLE,
+)
+metric_sunreclaim = Metric(
+    name="sunreclaim",
+    title=Title("Unreclaimable slab"),
+    unit=UNIT_BYTES,
+    color=Color.BROWN,
 )
 
 perfometer_mem_used_perc = Perfometer(
@@ -95,16 +143,16 @@ perfometer_mem_used_perc = Perfometer(
     ),
     segments=[
         Fraction(
-            Title(""),
+            Title("Used memory percentage"),
             UNIT_PERCENTAGE,
             Color.BLUE,
             dividend=Product(
-                Title(""),
+                Title("Used memory times 100"),
                 UNIT_NUMBER,
                 Color.GRAY,
                 [
                     Constant(
-                        Title(""),
+                        Title("Percent factor"),
                         UNIT_NUMBER,
                         Color.GRAY,
                         100.0,
@@ -200,7 +248,7 @@ graph_ram_swap_used = Graph(
     minimal_range=MinimalRange(
         0,
         Sum(
-            Title(""),
+            Title("Maximum RAM and swap used"),
             Color.GRAY,
             [
                 MaximumOf(
@@ -242,7 +290,7 @@ graph_ram_swap_used = Graph(
 )
 graph_ram_swap_overview = Graph(
     name="ram_swap_overview",
-    title=Title("RAM + swap overview"),
+    title=Title("Total virtual memory"),
     compound_lines=[
         Sum(
             Title("RAM + swap installed"),
@@ -269,19 +317,27 @@ graph_swap = Graph(
     title=Title("Swap"),
     compound_lines=[
         "swap_used",
+        "swap_free",
+    ],
+    # Swap cached pages still occupy their swap slot, so they are part of swap used
+    simple_lines=[
+        "swap_total",
         "swap_cached",
     ],
-    simple_lines=["swap_total"],
+    optional=["swap_free"],
 )
 graph_caches = Graph(
     name="caches",
     title=Title("Caches"),
+    # Only the reclaimable slab is a cache, see mem_linux.py
     compound_lines=[
-        "mem_lnx_slab",
+        "sreclaimable",
         "swap_cached",
         "mem_lnx_buffers",
         "mem_lnx_cached",
     ],
+    simple_lines=["caches"],
+    optional=["caches"],
 )
 graph_ram_used = Graph(
     name="ram_used",
@@ -306,4 +362,33 @@ graph_ram_used = Graph(
         "swap_used",
         "mem_free",
     ],
+)
+
+graph_memory_that_cannot_be_swapped_out = Graph(
+    name="memory_that_cannot_be_swapped_out",
+    title=Title("Memory that cannot be swapped out"),
+    compound_lines=[
+        "mem_lnx_kernel_stack",
+        "mem_lnx_page_tables",
+        "mem_lnx_mlocked",
+        "sec_page_tables",
+        "percpu",
+        "sunreclaim",
+    ],
+    optional=[
+        "sec_page_tables",
+        "percpu",
+        "sunreclaim",
+    ],
+)
+
+# Slab = SReclaimable + SUnreclaim
+graph_slab = Graph(
+    name="slab",
+    title=Title("Slab"),
+    compound_lines=[
+        "sreclaimable",
+        "sunreclaim",
+    ],
+    simple_lines=["mem_lnx_slab"],
 )

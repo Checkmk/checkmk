@@ -177,8 +177,8 @@ def get_frontend_supervised_prefixes() -> frozenset[str]:
     """Return the path prefixes Vite HMR takes over under ``--frontend``.
 
     Covers the frontend-supervised install specs and their input packages:
-    iBazel watches the vite target's transitive sources, so those get
-    hot-reloaded too.
+    the supervisor rebuilds the vite target on changes to its transitive
+    sources, so those get hot-reloaded too.
     """
     return frozenset(
         prefix

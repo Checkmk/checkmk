@@ -3,280 +3,54 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
-from collections.abc import Iterable
-from typing import override
+from http import HTTPStatus
 
 import pytest
-from pytest import MonkeyPatch
 
-from cmk.ccc.version import Edition
-from cmk.gui.config import Config
-from cmk.gui.form_specs import get_visitor, RawFrontendData, VisitorOptions
-from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
-from cmk.gui.form_specs.unstable.legacy_converter import (
-    TransformDataForLegacyFormatOrRecomposeFunction,
-)
-from cmk.gui.http import request
-from cmk.gui.i18n import _l
-from cmk.gui.pages import PageContext
-from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
-from cmk.gui.search.matchers import MatchItem
-from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.wato._check_mk_configuration import ConfigVariableTableRowLimit
-from cmk.gui.wato.pages import global_settings
-from cmk.gui.wato.pages.global_settings import (
-    DefaultModeEditGlobals,
-    MatchItemGeneratorSettings,
-)
-from cmk.gui.watolib.config_domain_name import (
-    ABCConfigDomain,
-    ConfigVariable,
-    ConfigVariableGroup,
-    ConfigVariableRegistry,
-    GlobalSettingsContext,
-)
-from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
-from cmk.gui.watolib.global_settings import global_settings_diff_text
-from cmk.rulesets.internal.form_specs import SimplePassword
-from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import (
-    DefaultValue,
-    FormSpec,
-    Integer,
-    Password,
-    String,
-)
+from cmk.ccc import store
+from cmk.gui.watolib.paths import wato_var_dir
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 
-@pytest.mark.usefixtures("request_context")
-def test_match_item_generator_settings(monkeypatch: MonkeyPatch, test_edition: Edition) -> None:
-    group = ConfigVariableGroup(
-        title=_l("xyz"),
-        sort_index=10,
-    )
-
-    config_variable = ConfigVariable(
-        group=group,
-        primary_domain=ConfigDomainCore,
-        ident="ident",
-        form_spec=lambda context: String(title=Title("title")),  # noqa: ARG005
-    )
-
-    class SomeSettingsMode(DefaultModeEditGlobals):
-        @override
-        def iter_all_configuration_variables(
-            self, *, debug: bool
-        ) -> Iterable[tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
-            return [
-                (
-                    group,
-                    [config_variable],
-                )
-            ]
-
-    monkeypatch.setattr(ABCConfigDomain, "get_all_default_globals", dict)
-
-    assert list(
-        MatchItemGeneratorSettings(
-            "settings",
-            "Settings",
-            lambda: SomeSettingsMode(test_edition, PageContext(config=Config(), request=request)),
-        ).generate_match_items(UserPermissions({}, {}, {}, []))
-    ) == [
-        MatchItem(
-            title="title",
-            topic="Settings",
-            url="wato.py?mode=edit_configvar&varname=ident",
-            match_texts=["title", "ident"],
+@pytest.mark.usefixtures("frontend_vue_manifest", "patch_theme")
+@pytest.mark.parametrize(
+    ("old_url", "new_url"),
+    [
+        ("wato.py?mode=globalvars", "global_settings.py"),
+        ("wato.py?mode=edit_configvar&varname=debug", "global_settings.py?varname=debug"),
+        ("wato.py?mode=edit_site_globals&site=remote", "site_specific_settings.py?site=remote"),
+        (
+            "wato.py?mode=edit_site_configvar&site=remote&varname=debug",
+            "site_specific_settings.py?site=remote&varname=debug",
         ),
-    ]
-
-
-@pytest.mark.usefixtures("request_context")
-def test_match_item_generator_settings_looks_through_transform(
-    monkeypatch: MonkeyPatch, test_edition: Edition
-) -> None:
-    # TransformDataForLegacyFormatOrRecomposeFunction is a transparent wrapper without a
-    # title of its own, so the title has to be taken from the wrapped form spec.
-    group = ConfigVariableGroup(
-        title=_l("xyz"),
-        sort_index=10,
-    )
-
-    config_variable = ConfigVariable(
-        group=group,
-        primary_domain=ConfigDomainCore,
-        ident="ident",
-        form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(  # noqa: ARG005
-            wrapped_form_spec=Integer(title=Title("Wrapped title")),
-            from_disk=lambda value: value,
-            to_disk=lambda value: value,
+        ("wato.py?mode=mkeventd_config", "event_console_settings.py"),
+        (
+            "wato.py?mode=mkeventd_edit_configvar&varname=debug",
+            "event_console_settings.py?varname=debug",
         ),
-    )
-
-    class SomeSettingsMode(DefaultModeEditGlobals):
-        @override
-        def iter_all_configuration_variables(
-            self, *, debug: bool
-        ) -> Iterable[tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
-            return [(group, [config_variable])]
-
-    monkeypatch.setattr(ABCConfigDomain, "get_all_default_globals", dict)
-
-    assert [
-        match_item.title
-        for match_item in MatchItemGeneratorSettings(
-            "settings",
-            "Settings",
-            lambda: SomeSettingsMode(test_edition, PageContext(config=Config(), request=request)),
-        ).generate_match_items(UserPermissions({}, {}, {}, []))
-    ] == ["Wrapped title"]
-
-
-@pytest.mark.usefixtures("load_config")
-def test_parse_submitted_value_keeps_cleartext_password_for_storage(
-    monkeypatch: MonkeyPatch,
-    test_edition: Edition,
+    ],
+)
+def test_a_retired_mode_redirects_to_its_settings_page(
+    logged_in_admin_wsgi_app: WebTestAppForCMK, old_url: str, new_url: str
 ) -> None:
-    registry = ConfigVariableRegistry()
-    registry.register(
-        ConfigVariable(
-            group=ConfigVariableGroupUserInterface,
-            primary_domain=ConfigDomainGUI,
-            ident="test_secret",
-            form_spec=lambda context: Password(title=Title("Secret")),  # noqa: ARG005
-        )
-    )
-    monkeypatch.setattr(global_settings, "config_variable_registry", registry)
+    response = logged_in_admin_wsgi_app.get(f"/NO_SITE/check_mk/{old_url}", status=HTTPStatus.FOUND)
 
-    request.set_var("varname", "test_secret")
-    # PasswordVisitor frontend model: (type, password_id, password, encrypted)
-    request.set_var("_vue_global_settings", json.dumps(["explicit_password", "", "hunter2", False]))
-
-    submitted = global_settings.ModeEditGlobalSetting(  # noqa: SLF001
-        test_edition, PageContext(config=Config(), request=request)
-    )._parse_submitted_value()
-
-    assert isinstance(submitted, tuple)
-    password_id_and_value = submitted[2]
-    assert isinstance(password_id_and_value, tuple)
-    assert password_id_and_value[1] == "hunter2"
+    assert response.headers["Location"] == new_url
 
 
-def _table_row_limit_form_spec(context: GlobalSettingsContext) -> Integer:
-    form_spec = ConfigVariableTableRowLimit.value_model(context)
-    assert isinstance(form_spec, Integer)
-    return form_spec
+def _config_generation() -> int:
+    return int(store.load_object_from_file(wato_var_dir() / "config-generation.mk", default=0))
 
 
-def test_table_row_limit_uses_form_spec_backend(
-    global_settings_context: GlobalSettingsContext,
+@pytest.mark.usefixtures("frontend_vue_manifest", "patch_theme")
+def test_a_stale_action_url_redirects_without_recording_a_change(
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
 ) -> None:
-    assert isinstance(ConfigVariableTableRowLimit.value_model(global_settings_context), FormSpec)
+    generation_before = _config_generation()
 
-
-def test_table_row_limit_default_matches_general_config(
-    global_settings_context: GlobalSettingsContext,
-) -> None:
-    assert _table_row_limit_form_spec(global_settings_context).prefill == DefaultValue(100)
-
-
-def test_table_row_limit_valid_value_round_trips_as_int(
-    global_settings_context: GlobalSettingsContext,
-) -> None:
-    visitor = get_visitor(
-        _table_row_limit_form_spec(global_settings_context),
-        VisitorOptions(migrate_values=False, mask_values=False),
-    )
-    assert visitor.validate(RawFrontendData(50)) == []
-    assert visitor.to_disk(RawFrontendData(50)) == 50
-
-
-def test_table_row_limit_rejects_value_below_minimum(
-    global_settings_context: GlobalSettingsContext,
-) -> None:
-    visitor = get_visitor(
-        _table_row_limit_form_spec(global_settings_context),
-        VisitorOptions(migrate_values=False, mask_values=False),
-    )
-    assert visitor.validate(RawFrontendData(0))
-
-
-def test_table_row_limit_upgrade_keeps_stored_int(
-    global_settings_context: GlobalSettingsContext,
-) -> None:
-    assert (
-        migrate_form_spec_disk_value(_table_row_limit_form_spec(global_settings_context), 42) == 42
+    logged_in_admin_wsgi_app.get(
+        "/NO_SITE/check_mk/wato.py?mode=globalvars&_action=toggle&_varname=debug&_transid=stale",
+        status=HTTPStatus.FOUND,
     )
 
-
-def _form_spec_config_variable() -> ConfigVariable:
-    return ConfigVariable(
-        group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
-        primary_domain=ConfigDomainCore,
-        ident="test_setting",
-        form_spec=lambda context: Integer(),  # noqa: ARG005
-    )
-
-
-def test_diff_text_form_spec_value_changed(
-    global_settings_context: GlobalSettingsContext,
-) -> None:
-    assert (
-        global_settings_diff_text(
-            _form_spec_config_variable(),
-            global_settings_context,
-            {"test_setting": 100},
-            {"test_setting": 66},
-        )
-        == 'Value of "test_setting" changed from 100 to 66.'
-    )
-
-
-def test_diff_text_first_override_reads_as_added(
-    global_settings_context: GlobalSettingsContext,
-) -> None:
-    assert (
-        global_settings_diff_text(
-            _form_spec_config_variable(),
-            global_settings_context,
-            {},
-            {"test_setting": 66},
-        )
-        == 'Attribute "test_setting" with value 66 added.'
-    )
-
-
-def test_diff_text_reset_reads_as_removed(
-    global_settings_context: GlobalSettingsContext,
-) -> None:
-    assert (
-        global_settings_diff_text(
-            _form_spec_config_variable(),
-            global_settings_context,
-            {"test_setting": 100},
-            {},
-        )
-        == 'Attribute "test_setting" with value 100 removed.'
-    )
-
-
-def test_diff_text_form_spec_secret_is_redacted(
-    global_settings_context: GlobalSettingsContext,
-) -> None:
-    config_variable = ConfigVariable(
-        group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
-        primary_domain=ConfigDomainCore,
-        ident="test_setting",
-        form_spec=lambda context: SimplePassword(),  # noqa: ARG005
-    )
-    diff_text = global_settings_diff_text(
-        config_variable,
-        global_settings_context,
-        {"test_setting": "old-secret"},
-        {"test_setting": "new-secret"},
-    )
-    assert diff_text == "Redacted secrets changed."
-    assert "old-secret" not in diff_text
-    assert "new-secret" not in diff_text
+    assert _config_generation() == generation_before

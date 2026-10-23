@@ -9,16 +9,19 @@ from cmk.gui.data_source import DataSourceRegistry, register_data_sources
 from cmk.gui.openapi.framework import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
-from cmk.gui.painter.v0 import PainterRegistry, painters
+from cmk.gui.painter import PainterRegistry, painters
 from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
+from cmk.gui.search.matchers import MatchItemGeneratorRegistry
+from cmk.gui.search.permissions import category_permissions_handler_registry
 from cmk.gui.type_defs import ViewName, ViewSpec
 from cmk.gui.visuals.type import VisualTypeRegistry
 
-from . import command, graph, icon, perfometer
+from . import _search, command, graph, icon, perfometer
 from ._join_service_rows import join_service_row_post_processor
 from ._openapi import register_endpoints
 from ._permissions import PERMISSION_SECTION_VIEWS
+from ._row_extenders import row_extenders_post_processor
 from .builtin_views import builtin_views
 from .command import CommandGroupRegistry, CommandRegistry
 from .datasource_selection import page_select_datasource
@@ -52,6 +55,7 @@ def register(
     data_source_registry: DataSourceRegistry,
     endpoint_family_registry: EndpointFamilyRegistry,
     versioned_endpoint_registry: VersionedEndpointRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
 ) -> None:
     multisite_builtin_views.update(builtin_views)
 
@@ -105,4 +109,6 @@ def register(
     )
     graph.register(painter_option_registry, multisite_builtin_views)
     row_post_processor_registry.register(join_service_row_post_processor)
+    row_post_processor_registry.register(row_extenders_post_processor)
     register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
+    _search.register(match_item_generator_registry, category_permissions_handler_registry)

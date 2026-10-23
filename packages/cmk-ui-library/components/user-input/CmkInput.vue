@@ -73,8 +73,8 @@ const describedByIds = computed(() => {
 const inputRef = ref<HTMLInputElement | null>(null)
 
 defineExpose({
-  focus: () => {
-    inputRef.value?.focus()
+  focus: (options?: FocusOptions) => {
+    inputRef.value?.focus(options)
   }
 })
 
@@ -141,7 +141,7 @@ immediateWatch(
 }
 
 .cmk-input--error {
-  border: 1px solid var(--inline-error-border-color);
+  border: 1px solid var(--status-border-color-error);
 }
 
 input.cmk-input--number::-webkit-outer-spin-button,

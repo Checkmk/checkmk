@@ -11,20 +11,20 @@ from pathlib import Path
 
 import pytest
 
-from cmk.automations.models.helper import AutomationResponse
-from cmk.automations.results import AnalyseServiceResult, SerializedResult
-from cmk.base.automation_helper._app import HealthCheckResponse
-from cmk.base.automation_helper._config import (
+from cmk.automations.helper._app import HealthCheckResponse
+from cmk.automations.helper._config import (
     Config,
     default_config,
     RELATIVE_CONFIG_PATH_FOR_TESTING,
     ReloaderConfig,
     ServerConfig,
 )
+from cmk.automations.models.helper import AutomationResponse
+from cmk.automations.results import AnalyseServiceResult
 from cmk.ruleset_matcher.definition import RuleGroup
 from tests.system.singlesite.linux_test_host import create_linux_test_host
 from tests.testlib.common.utils import wait_until
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def test_config_reloading_without_reloader(site: Site) -> None:
@@ -269,7 +269,7 @@ def _query_health(site: Site) -> str:
 
 def _query_analyse_service(site: Site, args: Sequence[str]) -> AnalyseServiceResult:
     return AnalyseServiceResult.deserialize(
-        SerializedResult(
+        str(
             AutomationResponse.model_validate_json(
                 _run_automation(site, "analyse-service", args)
             ).serialized_result_or_error_code

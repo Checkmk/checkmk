@@ -14,13 +14,12 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     contains,
-    DiscoveryResult,
     get_value_store,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.cpu_util import check_cpu_util
 
 
@@ -31,10 +30,6 @@ class Section:
 
 def parse_alcatel_timetra_cpu(string_table: StringTable) -> Section | None:
     return Section(float(string_table[0][0])) if string_table else None
-
-
-def discover_alcatel_timetra_cpu(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_alcatel_timetra_cpu(params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -60,7 +55,7 @@ snmp_section_alcatel_timetra_cpu = SimpleSNMPSection(
 check_plugin_alcatel_timetra_cpu = CheckPlugin(
     name="alcatel_timetra_cpu",
     service_name="CPU utilization",
-    discovery_function=discover_alcatel_timetra_cpu,
+    discovery_function=discover_one_service,
     check_function=check_alcatel_timetra_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (90.0, 95.0)},

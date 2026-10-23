@@ -10,14 +10,13 @@ from typing import NamedTuple
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.cisco.lib_ucs import DETECT, MAP_OPERABILITY
 
 
@@ -40,10 +39,6 @@ def parse_cisco_ucs_raid(string_table: StringTable) -> Section | None:
     )
 
 
-def discover_cisco_ucs_raid(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_cisco_ucs_raid(section: Section) -> CheckResult:
     yield Result(state=State(section.state), summary=f"Status: {section.operability}")
     yield Result(state=State.OK, summary=f"Model: {section.model}")
@@ -64,6 +59,6 @@ snmp_section_cisco_ucs_raid = SimpleSNMPSection(
 check_plugin_cisco_ucs_raid = CheckPlugin(
     name="cisco_ucs_raid",
     service_name="RAID Controller",
-    discovery_function=discover_cisco_ucs_raid,
+    discovery_function=discover_one_service,
     check_function=check_cisco_ucs_raid,
 )

@@ -8,6 +8,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages/cmk-maps:__pkg__",
         "//packages/cmk-wsgi:__pkg__",
         "//tests:__subpackages__",
     ],
@@ -15,7 +16,6 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui/openapi/restful_objects:type_defs",
         "//cmk/utils",
-        requirement("docstring-parser"),
         requirement("werkzeug"),
     ],
 )
@@ -30,6 +30,7 @@ py_library(
     ],
     deps = [
         "//cmk/gui:core_toolkit",
+        requirement("flask"),
     ],
 )
 
@@ -90,18 +91,13 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":permission_tracking",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/openapi/api_endpoints",
         "//cmk/gui/openapi/endpoints",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/framework:core",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/openapi/shared_endpoint_families",
-    ],
-)
-
-sh_library(
-    name = "f12",
-    srcs = [
-        ".f12",
     ],
 )

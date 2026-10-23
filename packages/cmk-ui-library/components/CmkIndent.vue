@@ -38,6 +38,6 @@ const LINE_OVERHANG = '5px'
 }
 
 .cmk-indent--error {
-  border-left-color: var(--inline-error-border-color);
+  border-left-color: var(--status-border-color-error);
 }
 </style>

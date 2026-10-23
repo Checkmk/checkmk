@@ -1,0 +1,8 @@
+################################################################################
+# Example: bazel build --config=iwyu //non-free/packages/cmc:all
+################################################################################
+common:iwyu --aspects @bazel_iwyu//bazel/iwyu:iwyu.bzl%iwyu_aspect
+common:iwyu --output_groups=report
+common:iwyu --@bazel_iwyu//:iwyu_executable=//bazel/tools:iwyu_bin
+common:iwyu --@bazel_iwyu//:iwyu_opts="--error"
+common:iwyu --@bazel_iwyu//:iwyu_mappings=//bazel/tools:iwyu_mappings

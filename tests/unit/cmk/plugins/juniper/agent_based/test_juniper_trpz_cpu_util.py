@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.juniper.agent_based.juniper_trpz_cpu_util import (
     check_juniper_trpz_cpu_util,
-    discovery_juniper_trpz_cpu_util,
     Params,
     parse_juniper_trpz_cpu_util,
     Section,
@@ -27,12 +26,6 @@ def test_parse_juniper_trpz_cpu_util_non_numeric_value() -> None:
 
 def test_parse_juniper_trpz_cpu_util_no_data() -> None:
     assert parse_juniper_trpz_cpu_util([]) is None
-
-
-def test_discovery_juniper_trpz_cpu_util() -> None:
-    assert list(discovery_juniper_trpz_cpu_util(Section(utilc=10, util1=15, util5=12))) == [
-        Service()
-    ]
 
 
 def test_check_juniper_trpz_cpu_util_below_levels() -> None:

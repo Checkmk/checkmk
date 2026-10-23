@@ -2,12 +2,29 @@ load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 
 py_library(
+    name = "active-check-result",
+    srcs = ["active_check_result.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__pkg__",
+        "//cmk/base:__subpackages__",
+        "//cmk/plugins/checkmk/automations:__pkg__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//packages/cmk-check-engine:lib",
+        "//packages/cmk-check-engine:specs",
+    ],
+)
+
+py_library(
     name = "events",
     srcs = ["events.py"],
     imports = ["../.."],
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//non-free/packages/cmk-plugins-nonfree:__subpackages__",
     ],
     deps = [
         "//cmk/utils",
@@ -28,6 +45,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/plugins/checkmk/automations:__pkg__",
     ],
     deps = [
         "//cmk/automations",
@@ -46,6 +64,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/plugins/checkmk/automations:__pkg__",
     ],
     deps = [
         "//cmk/base/config",
@@ -83,6 +102,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/plugins:__subpackages__",
     ],
     deps = [
         "//cmk/base/config",
@@ -111,16 +131,16 @@ py_library(
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
         "//cmk/config_anonymizer:__pkg__",
+        "//cmk/plugins:__subpackages__",
         "//non-free/packages/cmk-bakery:__pkg__",
+        "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/base/config",
         "//cmk/base/configlib",
-        "//cmk/base/core",
+        "//cmk/core_client",
+        "//cmk/monitoring_config/internal",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:fetchers",
-        "//packages/cmk-check-engine:snmplib",
-        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-licensing",
     ],
 )
@@ -132,14 +152,13 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/plugins:__subpackages__",
+        "//non-free/packages/cmk-plugins-nonfree/cmk/plugins/notifications:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
-        ":base-app",
         ":events",
-        "//cmk/automations",
-        "//cmk/base/automations",
-        "//cmk/base/config",
+        "//cmk/base/configlib",
         "//cmk/utils",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
@@ -148,7 +167,6 @@ py_library(
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:timeout",
         "//packages/cmk-ccc:version",
-        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-events",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:cli",
@@ -162,12 +180,10 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/plugins:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/automations",
-        "//cmk/base/automations",
-        "//cmk/base/modes:modes-registry",
         "//cmk/utils",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:i18n",
@@ -175,24 +191,9 @@ py_library(
         "//packages/cmk-ccc:tty",
         "//packages/cmk-diagnostics:engine",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-plugin-apis:automations",
         "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugin-apis:diagnostics",
-    ],
-)
-
-py_library(
-    name = "localize",
-    srcs = ["localize.py"],
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__pkg__",
-        "//cmk/base:__subpackages__",
-    ],
-    deps = [
-        "//cmk/utils",
-        "//packages/cmk-ccc:exceptions",
-        "//packages/cmk-ccc:tty",
-        "//packages/cmk-plugin-apis:cli",
     ],
 )
 
@@ -200,27 +201,13 @@ py_library(
     name = "community-app",
     srcs = ["community_app.py"],
     imports = ["../.."],
-    tags = [
-        "deballast-keep=//cmk/base:diagnostics",  # loaded at runtime via discover_modes()
-        "deballast-keep=//cmk/base:localize",  # loaded at runtime via discover_modes()
-        "deballast-keep=//cmk/base:notify",  # loaded at runtime via discover_modes()
-        "deballast-keep=//cmk/base/automations:automations",  # loaded at runtime via discover_automations()
-        "deballast-keep=//cmk/base/modes:modes",  # loaded at runtime via discover_modes()
-        "deballast-keep=//cmk/base/modes:modes-registry",  # provides discover_modes()/Modes for CLI assembly
-    ],
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
     ],
     deps = [
         ":base-app",
-        ":diagnostics",
-        ":localize",
-        ":notify",
-        "//cmk/base/automations",
         "//cmk/base/core",
-        "//cmk/base/modes",
-        "//cmk/base/modes:modes-registry",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:fetchers",
@@ -233,10 +220,10 @@ py_library(
     srcs = ["app.py"],
     imports = ["../.."],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
         "//cmk/config_anonymizer:__pkg__",
+        "//cmk/plugins/checkmk:__subpackages__",
         "//cmk/product_usage:__pkg__",
         "//cmk/update_config:__pkg__",
         "//tests:__subpackages__",
@@ -269,9 +256,9 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-ccc:config-path",
         "//packages/cmk-ccc:cpu-tracking",
+        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
-        "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:inventory",
         "//packages/cmk-check-engine:specs",
@@ -299,7 +286,6 @@ py_library(
         ":diagnostics",
         ":dump-host",
         ":events",
-        ":localize",
         ":notify",
         ":parent-scan",
         "//cmk/base/api",
@@ -309,20 +295,12 @@ py_library(
         "//cmk/base/configlib",
         "//cmk/base/core",
         "//cmk/base/core:host-check-template",
-        "//cmk/base/default_config:default-config",
         "//cmk/base/errorhandling",
         "//cmk/base/modes",
-        "//cmk/base/modes:main",
-        "//cmk/base/modes:modes-registry",
         "//cmk/base/plugins:plugins-bakery",
         "//packages/cmk-check-engine:sources",
-    ],
-)
-
-sh_library(
-    name = "f12",
-    srcs = [
-        ".f12",
+        "//packages/cmk-cli-engine:engine",
+        "//packages/cmk-cli-engine:main",
     ],
 )
 

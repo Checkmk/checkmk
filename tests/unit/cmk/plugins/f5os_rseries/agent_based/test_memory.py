@@ -5,10 +5,9 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.f5os_rseries.agent_based.memory import (
     check_f5os_rseries_memory,
-    discover_f5os_rseries_memory,
     F5OSMemorySection,
     parse_f5os_rseries_memory,
 )
@@ -37,12 +36,6 @@ def test_parse_f5os_rseries_memory(
     string_table: StringTable, expected: F5OSMemorySection | None
 ) -> None:
     assert parse_f5os_rseries_memory(string_table) == expected
-
-
-def test_discover_f5os_rseries_memory() -> None:
-    section = parse_f5os_rseries_memory(_MEM_STRING_TABLE)
-    assert section is not None
-    assert list(discover_f5os_rseries_memory(section)) == [Service()]
 
 
 def test_check_f5os_rseries_memory_ok_despite_high_overall() -> None:

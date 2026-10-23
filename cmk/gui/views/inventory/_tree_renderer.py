@@ -6,7 +6,7 @@
 
 import abc
 import time
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import total_ordering
 from typing import Literal, override
@@ -28,17 +28,19 @@ from cmk.gui.pages import PageContext
 from cmk.gui.theme import Theme
 from cmk.gui.theme.current_theme import theme as gui_theme
 from cmk.gui.utils.user_errors import user_errors
-from cmk.inventory.structured_data import (
-    HistoryStore,
-    ImmutableAttributes,
+from cmk.inventory.delta import (
     ImmutableDeltaAttributes,
     ImmutableDeltaTable,
     ImmutableDeltaTree,
+    SDDeltaValue,
+)
+from cmk.inventory.history import HistoryStore
+from cmk.inventory.raw_paths import parse_internal_raw_path
+from cmk.inventory.trees import (
+    ImmutableAttributes,
     ImmutableTable,
     ImmutableTree,
-    parse_internal_raw_path,
     RetentionInterval,
-    SDDeltaValue,
     SDKey,
     SDPath,
     SDRowIdent,
@@ -52,6 +54,7 @@ from ._display_hints import (
     inv_display_hints,
     NodeDisplayHint,
     PaintFunctionFromAPI,
+    PaintResultFromAPI,
     TableWithView,
 )
 
@@ -98,6 +101,11 @@ def compute_cell_spec(td_spec: TDSpec, text_align: Literal["", "left"]) -> tuple
             for v in td_spec.html_values
         ),
     )
+
+
+def _render_td(td_spec: TDSpec, text_align: Literal["", "left"]) -> HTML:
+    css_class, html_value = compute_cell_spec(td_spec, text_align)
+    return HTMLWriter.render_td(html_value, class_=css_class or None)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -251,6 +259,25 @@ class _SDDeltaItem:
         raise NotImplementedError
 
 
+def _paint_value(paint_function: PaintFunctionFromAPI) -> PaintFunctionFromAPI:
+    return paint_function
+
+
+def _paint_value_and_raw_value(paint_function: PaintFunctionFromAPI) -> PaintFunctionFromAPI:
+    def _paint(now: float, value: SDValue) -> PaintResultFromAPI:
+        td_styles, rendered_value = paint_function(now, value)
+        if not rendered_value:
+            return td_styles, rendered_value
+        return (
+            td_styles,
+            HTML.with_escaping(rendered_value)
+            + " "
+            + HTMLWriter.render_span(f"({value})", css="muted_text"),
+        )
+
+    return _paint
+
+
 @dataclass(frozen=True, kw_only=True)
 class _Column:
     key: SDKey
@@ -272,6 +299,7 @@ class _MinType:
 @dataclass(frozen=True)
 class _ABCItemsSorter(abc.ABC):
     hint: NodeDisplayHint
+    decorate_paint_function: Callable[[PaintFunctionFromAPI], PaintFunctionFromAPI]
 
     def _make_columns(
         self, keys: Iterable[SDKey], key_columns: Sequence[SDKey]
@@ -282,7 +310,7 @@ class _ABCItemsSorter(abc.ABC):
             _Column(
                 key=c,
                 title=h.title,
-                paint_function=h.paint_function,
+                paint_function=self.decorate_paint_function(h.paint_function),
                 key_info=f"{c}*" if c in key_columns else c,
             )
             for c in (
@@ -309,7 +337,7 @@ class _SDItemsSorter(_ABCItemsSorter):
                 title=h.title,
                 value=self.attributes.pairs[k],
                 retention_interval=self.attributes.retentions.get(k),
-                paint_function=h.paint_function,
+                paint_function=self.decorate_paint_function(h.paint_function),
                 icon_path_svc_problems=self.icon_path_svc_problems,
             )
             for k in sorted_keys
@@ -354,13 +382,6 @@ class _SDItemsSorter(_ABCItemsSorter):
         )
 
 
-def _delta_value_has_change(delta_value: SDDeltaValue) -> bool:
-    return (
-        not (delta_value.old is None and delta_value.new is None)
-        and delta_value.old != delta_value.new
-    )
-
-
 @dataclass(frozen=True)
 class _SDDeltaItemsSorter(_ABCItemsSorter):
     attributes: ImmutableDeltaAttributes
@@ -376,16 +397,16 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
                 title=h.title,
                 old=self.attributes.pairs[k].old,
                 new=self.attributes.pairs[k].new,
-                paint_function=h.paint_function,
+                paint_function=self.decorate_paint_function(h.paint_function),
             )
             for k in sorted_keys
-            if (v := self.attributes.pairs.get(k)) is not None and _delta_value_has_change(v)
+            if (v := self.attributes.pairs.get(k)) is not None and v.old != v.new
             for h in (self.hint.get_attribute_hint(k),)
         ]
 
     def _filter_delta_row_keys(self) -> Iterator[SDKey]:
         for row in self.table.rows:
-            if any(_delta_value_has_change(delta_value) for delta_value in row.values()):
+            if any(v.old != v.new for v in row.values()):
                 yield from row
 
     def sort_rows(self) -> tuple[Sequence[_Column], Sequence[Sequence[_SDDeltaItem]]]:
@@ -421,7 +442,7 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
                         _sanitize(r.get(c.key) or SDDeltaValue(old=None, new=None)) for c in columns
                     ),
                 )
-                if any(_delta_value_has_change(delta_value) for delta_value in row.values())
+                if any(v.old != v.new for v in row.values())
             ],
         )
 
@@ -512,6 +533,9 @@ class TreeRenderer:
         self._theme = theme
         self._request = request
         self._show_internal_tree_paths = show_internal_tree_paths
+        self._decorate_paint_function = (
+            _paint_value_and_raw_value if show_internal_tree_paths else _paint_value
+        )
 
     def _get_header(self, title: str, key_info: str) -> HTML:
         header = HTML.with_escaping(title)
@@ -522,19 +546,17 @@ class TreeRenderer:
     def _show_attributes(
         self, now: float, sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]
     ) -> None:
-        html.open_table()
-        for item in sorted_pairs:
-            html.open_tr()
-            html.th(self._get_header(item.title, item.key))
-            css_class, html_value = compute_cell_spec(item.compute_td_spec(now), text_align="left")
-            if css_class:
-                html.open_td(class_=css_class)
-            else:
-                html.open_td()
-            html.write_html(html_value)
-            html.close_td()
-            html.close_tr()
-        html.close_table()
+        html.write_html(
+            HTMLWriter.render_table(
+                HTML.empty().join(
+                    HTMLWriter.render_tr(
+                        HTMLWriter.render_th(self._get_header(item.title, item.key))
+                        + _render_td(item.compute_td_spec(now), text_align="left")
+                    )
+                    for item in sorted_pairs
+                )
+            )
+        )
 
     def _show_table(
         self,
@@ -563,25 +585,22 @@ class TreeRenderer:
                 class_="invtablelink",
             )
 
-        # TODO: Use table.open_table() below.
-        html.open_table(class_="data")
-        html.open_tr()
-        for column in columns:
-            html.th(self._get_header(column.title, column.key_info))
-        html.close_tr()
-
-        for row in sorted_rows:
-            html.open_tr(class_="even0")
-            for item in row:
-                css_class, html_value = compute_cell_spec(item.compute_td_spec(now), text_align="")
-                if css_class:
-                    html.open_td(class_=css_class)
-                else:
-                    html.open_td()
-                html.write_html(html_value)
-                html.close_td()
-            html.close_tr()
-        html.close_table()
+        header = HTMLWriter.render_tr(
+            HTML.empty().join(
+                HTMLWriter.render_th(self._get_header(column.title, column.key_info))
+                for column in columns
+            )
+        )
+        body = HTML.empty().join(
+            HTMLWriter.render_tr(
+                HTML.empty().join(
+                    _render_td(item.compute_td_spec(now), text_align="") for item in row
+                ),
+                class_="even0",
+            )
+            for row in sorted_rows
+        )
+        html.write_html(HTMLWriter.render_table(header + body, class_="data"))
 
     def _show_node(
         self, now: float, node: ImmutableTree | ImmutableDeltaTree, tree_id: str
@@ -630,6 +649,7 @@ class TreeRenderer:
             case ImmutableTree():
                 items_sorter = _SDItemsSorter(
                     hint,
+                    self._decorate_paint_function,
                     self._theme.detect_icon_path("svc_problems", "icon_"),
                     tree.attributes,
                     tree.table,
@@ -639,6 +659,7 @@ class TreeRenderer:
             case ImmutableDeltaTree():
                 delta_items_sorter = _SDDeltaItemsSorter(
                     hint,
+                    self._decorate_paint_function,
                     tree.attributes,
                     tree.table,
                 )

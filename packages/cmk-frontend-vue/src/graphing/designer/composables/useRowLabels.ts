@@ -21,7 +21,7 @@ export function useRowLabels(): RowLabels {
   const sourceTypeLabels: Record<ItemType, TranslatedString> = {
     rrd_metric: _t('Checkmk RRD'),
     rrd_query: _t('Checkmk RRD'),
-    metric_backend: _t('Metrics backend'),
+    telemetry_metrics: _t('Metrics backend'),
     constant: _t('Constant line'),
     scalar: _t('Service reference line'),
     rrd_formula: _t('Calculated metric')

@@ -7,24 +7,19 @@ from typing import NamedTuple
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.juniper.lib import DETECT_JUNIPER_TRPZ
 
 
 class Section(NamedTuple):
     serial: str
     version: str
-
-
-def discover_juniper_trpz_info(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_juniper_trpz_info(section: Section) -> CheckResult:
@@ -53,6 +48,6 @@ snmp_section_juniper_trpz_info = SimpleSNMPSection(
 check_plugin_juniper_trpz_info = CheckPlugin(
     name="juniper_trpz_info",
     service_name="Info",
-    discovery_function=discover_juniper_trpz_info,
+    discovery_function=discover_one_service,
     check_function=check_juniper_trpz_info,
 )

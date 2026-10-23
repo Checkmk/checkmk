@@ -1,0 +1,35 @@
+title: Veeam: Backup Job (special agent)
+agents: special
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the status of backup jobs reported by the Veeam
+ Backup & Replication REST API, collected via the Veeam special agent.
+ It reports the same information as the {VEEAM Job} service from the
+ Veeam agent plug-in, and additionally reports the time since the last
+ run, the next scheduled run, the target repository and the number of
+ objects processed. The summary shows the result and the time since the
+ last run, preceded by the status if the job is running or disabled.
+
+ This check is {OK} if the result of the last run is Success. It is
+ {WARN} if the result is Warning. It is {CRIT} if the result is Failed.
+ A job with no result yet, either because it has never run or because a
+ run is currently in progress, is {OK}. A disabled job is {OK} by default;
+ the state is configurable in the rule "Veeam: Backup job". Its last result
+ is shown for information only.
+
+ Levels can be set for the time since the last run in the rule "Veeam:
+ Backup job"; there are none by default. They are not applied to disabled
+ jobs or to jobs that have never run.
+
+ A job that disappears from the API output makes the service {UNKNOWN}.
+
+discovery:
+ One service is created for each backup job reported by the API, including
+ disabled ones. To leave out disabled jobs, disable this in the rule "Veeam:
+ Backup job discovery".
+
+item:
+ The name of the backup job, sanitized: spaces and apostrophes are replaced
+ by underscores.

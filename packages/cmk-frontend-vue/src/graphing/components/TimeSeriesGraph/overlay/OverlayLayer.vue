@@ -67,27 +67,23 @@ function redraw(): void {
       ctx,
       props.pinX,
       props.plotHeight,
-      resolvedColor('--graphing-pin-line-stroke', PIN_LINE_STROKE_FALLBACK)
+      resolvedColor('--interactive-accent-strong', PIN_LINE_STROKE_FALLBACK)
     )
   }
   if (props.hoverState) {
     drawCrosshair(ctx, props.hoverState.snapX, props.plotHeight)
     const dots: FocusDot[] = []
     for (const sample of props.hoverState.samples) {
-      if (sample.pixelY !== null) {
+      if (sample.drawnPoint !== null) {
         dots.push({
-          x: props.hoverState.snapX,
-          y: sample.pixelY,
+          x: sample.drawnPoint.x,
+          y: sample.drawnPoint.y,
           color: sample.color,
           closest: sample.isClosest
         })
       }
     }
-    drawFocusDots(
-      ctx,
-      dots,
-      resolvedColor('--graphing-focus-dot-stroke', FOCUS_DOT_STROKE_FALLBACK)
-    )
+    drawFocusDots(ctx, dots, resolvedColor('--font-color', FOCUS_DOT_STROKE_FALLBACK))
   }
 }
 
@@ -151,15 +147,5 @@ watch(() => props.pinX, redraw)
   position: absolute;
   top: 0;
   left: 0;
-}
-
-body[data-theme='facelift'] .graphing-overlay-layer {
-  --graphing-focus-dot-stroke: var(--color-conference-grey-100);
-  --graphing-pin-line-stroke: var(--color-corporate-green-70);
-}
-
-body[data-theme='modern-dark'] .graphing-overlay-layer {
-  --graphing-focus-dot-stroke: var(--color-white-100);
-  --graphing-pin-line-stroke: var(--color-corporate-green-50);
 }
 </style>

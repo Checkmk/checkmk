@@ -114,7 +114,6 @@ from cmk.utils.ip_lookup import (
     IPLookup,
     IPLookupOptional,
     IPStackConfig,
-    is_fallback_ip,
 )
 from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
 from cmk.utils.prediction import Paths as PredictionPaths
@@ -410,27 +409,19 @@ class CMKFetcher(FetcherFunction):
     def _lookup_ip_address(
         self, host_name: HostName, ip_stack_config: IPStackConfig
     ) -> HostAddress | None:
-        """Look up the host address, reporting "no address" honestly.
+        """Look up the host address.
 
-        With a strict lookup the caller has asked for a failure to be raised, so
-        its answer is passed through unchanged -- including an explicitly
-        configured or faked ``0.0.0.0``.
-
-        A tolerant `ConfiguredIPLookup` instead substitutes a fallback address
-        (``0.0.0.0`` / ``::``) for one it failed to obtain.  Passing that on
-        would point the fetchers at the local system, so it becomes ``None``:
-        `SourceBuilder` then emits a `MissingIPSource` for the sources that need
-        an address and leaves the ones that do not alone.
-
-        The sentinel check disappears together with the fallback address itself,
-        see CMK-38939.
+        The answer may be the unspecified address (``0.0.0.0`` / ``::``): a
+        tolerant `ConfiguredIPLookup` substitutes it for one it failed to
+        obtain, and it can just as well be configured or faked explicitly.
+        Either way it is passed on unchanged -- the consumers of the result
+        recognise it as "no address" and refuse to contact it.
         """
         if ip_stack_config is IPStackConfig.NO_IP:
             return None
         if self.ip_address_of_mandatory is not None:
             return self.ip_address_of_mandatory(host_name, self.default_address_family(host_name))
-        address = self.ip_address_of(host_name, self.default_address_family(host_name))
-        return None if is_fallback_ip(address) else address
+        return self.ip_address_of(host_name, self.default_address_family(host_name))
 
     @override
     def __call__(
@@ -627,13 +618,13 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
         value_store_manager: ValueStoreManager,
         *,
         clusters: Container[HostName],
-        rtc_package: AgentRawData | None,
+        get_agent_output: Callable[[], AgentRawData | None],
         omd_root: Path,
     ):
         self.config: Final = config
         self.value_store_manager: Final = value_store_manager
         self.clusters: Final = clusters
-        self.rtc_package: Final = rtc_package
+        self.get_agent_output: Final = get_agent_output
         self.check_plugins: Final = check_plugins
         self.omd_root: Final = omd_root
 
@@ -668,10 +659,10 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
                 service=service,
                 plugin=plugin,
                 check_function=check_function,
-                rtc_package=self.rtc_package,
+                get_agent_output=self.get_agent_output,
                 get_effective_host=self.config.effective_host,
                 snmp_backend=self.config.get_snmp_backend(host_name),
-                parameters=_compute_final_check_parameters(
+                get_parameters=lambda: _compute_final_check_parameters(
                     host_name, service, self.config, is_preview, self.omd_root
                 ),
             )
@@ -709,6 +700,7 @@ def _make_rrd_data_getter(
             else (
                 livestatus.MKLivestatusSocketError,
                 livestatus.MKLivestatusNotFoundError,
+                livestatus.LqUnsafeValueError,
             )
         ) as e:
             logger.warning("Cannot get historic metrics via Livestatus: %(error)s", {"error": e})
@@ -1021,8 +1013,8 @@ def get_aggregated_result(  # type: ignore[explicit-any]
     plugin: CheckPluginAPI,
     check_function: Callable[..., ServiceCheckResult],
     *,
-    parameters: Mapping[str, object],
-    rtc_package: AgentRawData | None,
+    get_parameters: Callable[[], Mapping[str, object]],
+    get_agent_output: Callable[[], AgentRawData | None],
     get_effective_host: Callable[[HostName, ServiceName, _Labels], HostName],
     snmp_backend: SNMPBackendEnum,
 ) -> AggregatedResult:
@@ -1082,9 +1074,11 @@ def get_aggregated_result(  # type: ignore[explicit-any]
         )
 
     item_kw = {} if service.item is None else {"item": service.item}
-    params_kw = {} if plugin.check_default_parameters is None else {"params": parameters}
+    params_kw: dict[str, object] = {}
 
     try:
+        if plugin.check_default_parameters is not None:
+            params_kw["params"] = get_parameters()
         check_result = check_function(**item_kw, **params_kw, **section_kws)
     except MKTimeout:
         raise
@@ -1101,7 +1095,7 @@ def get_aggregated_result(  # type: ignore[explicit-any]
                 is_cluster=is_cluster,
                 is_enforced=service.is_enforced,
                 snmp_backend=snmp_backend,
-                rtc_package=rtc_package,
+                get_agent_output=get_agent_output,
             ),
         )
 

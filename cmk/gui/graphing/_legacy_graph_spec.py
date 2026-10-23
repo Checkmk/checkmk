@@ -7,11 +7,16 @@
 from collections.abc import Mapping, Sequence
 from typing import Final, TypedDict
 
-from cmk.graphing_engine import EvaluatedCurve, EvaluatedGraph, SeriesAttributes
+from cmk.graphing_engine import (
+    drawn_curves,
+    DrawnCurve,
+    EvaluatedCurve,
+    EvaluatedGraph,
+    SeriesAttributes,
+)
 from cmk.graphing_engine import TimeRange as EngineTimeRange
 
-from ._drawn_curves import DrawnCurve, line_type_with_mirroring, serialize_drawn_curves
-from ._line_types import LineType
+from ._line_types import line_type_with_mirroring, LineType
 from ._metric_query import AttributeGroup
 
 _ATTRIBUTE_GROUPS: Final[tuple[AttributeGroup, ...]] = ("resource", "scope", "data_point")
@@ -42,7 +47,7 @@ def _attributes(
 
 def _curve(drawn: DrawnCurve[EvaluatedCurve]) -> Curve:
     return Curve(
-        line_type=line_type_with_mirroring(drawn.line_type, drawn.mirrored),
+        line_type=line_type_with_mirroring(drawn.line_type, drawn.inverse),
         color=drawn.curve.attributes.color,
         title=drawn.curve.attributes.title,
         attributes=_attributes(drawn.curve.series_attributes),
@@ -60,18 +65,11 @@ def empty_graph_spec(time_range: EngineTimeRange) -> GraphSpec:
     )
 
 
-def evaluated_to_graph_spec(
-    evaluated: EvaluatedGraph,
-    *,
-    fallback_time_range: EngineTimeRange,
-) -> GraphSpec:
+def evaluated_to_graph_spec(evaluated: EvaluatedGraph) -> GraphSpec:
     """The evaluated graph in the shape of a graph spec."""
-    time_range, curves = serialize_drawn_curves(
-        evaluated, _curve, fallback_time_range=fallback_time_range
-    )
     return GraphSpec(
-        start_time=time_range.start,
-        end_time=time_range.end,
-        step=time_range.step,
-        curves=curves,
+        start_time=evaluated.time_range.start,
+        end_time=evaluated.time_range.end,
+        step=evaluated.time_range.step,
+        curves=[_curve(drawn) for drawn in drawn_curves(evaluated.stacks, evaluated.lines)],
     )

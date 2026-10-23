@@ -16,14 +16,14 @@ from typing import override
 from playwright.sync_api import Locator, Page
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
-from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import GraphAccessor
+from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
+    GraphAccessor,
+    SURFACE_NOTICE_ERROR_SELECTOR,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
-
-# Matches both variants `GraphGroup.vue` renders: over a panel, and standalone.
-_ERROR_NOTICE_SELECTOR = ".graphing-graph-notice--error"
 
 
 class ForecastGraphList(CmkPage):
@@ -91,4 +91,4 @@ class ForecastGraph(CmkPage):
     @property
     def error_notices(self) -> Locator:
         """The engine's error state, standing in for a graph it could not draw."""
-        return self.engine_graph_group.locator(_ERROR_NOTICE_SELECTOR)
+        return self.engine_graph_group.locator(SURFACE_NOTICE_ERROR_SELECTOR)

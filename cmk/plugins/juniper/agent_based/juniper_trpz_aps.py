@@ -8,16 +8,15 @@ from cmk.agent_based.v2 import (
     any_of,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Metric,
     Result,
-    Service,
     SNMPSection,
     SNMPTree,
     startswith,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 Section = tuple[int, int]
 
@@ -28,10 +27,6 @@ def parse_juniper_trpz_aps(string_table: Sequence[StringTable]) -> Section | Non
     (1, 0)
     """
     return (int(string_table[0][0][0]), int(string_table[0][0][1])) if string_table[0] else None
-
-
-def discovery_juniper_trpz_aps(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def _check_common_juniper_trpz_aps(node_name: str, section: Section) -> CheckResult:
@@ -102,7 +97,7 @@ snmp_section_juniper_trpz_aps = SNMPSection(
 check_plugin_juniper_trpz_aps = CheckPlugin(
     name="juniper_trpz_aps",
     service_name="Access Points",
-    discovery_function=discovery_juniper_trpz_aps,
+    discovery_function=discover_one_service,
     check_function=check_juniper_trpz_aps,
     cluster_check_function=cluster_check_juniper_trpz_aps,
 )

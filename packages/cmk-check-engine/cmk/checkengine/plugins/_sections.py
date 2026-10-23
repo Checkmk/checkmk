@@ -18,7 +18,7 @@ from cmk.checkengine.snmplib import SNMPDetectBaseType
 from cmk.discover_plugins import PluginLocation
 from cmk.ruleset_matcher.ruleset_name import RuleSetName
 
-from ._common import LegacyPluginLocation, RuleSetTypeName, SectionName
+from ._common import RuleSetTypeName, SectionName
 
 AgentParseFunction = Callable[[StringTable], Any]
 
@@ -40,8 +40,7 @@ class AgentSectionPlugin(NamedTuple):
     host_label_ruleset_name: RuleSetName | None
     host_label_ruleset_type: RuleSetTypeName
     supersedes: set[SectionName]
-    # We need to allow 'None' for the trivial agent section :-|
-    location: PluginLocation | LegacyPluginLocation | None
+    location: PluginLocation
 
 
 class _OIDSpecLike(Protocol):
@@ -74,7 +73,7 @@ class SNMPSectionPlugin(NamedTuple):
     detect_spec: SNMPDetectBaseType
     trees: Sequence[_SNMPTreeLike]
     supersedes: set[SectionName]
-    location: PluginLocation | LegacyPluginLocation
+    location: PluginLocation
 
 
 SectionPlugin = AgentSectionPlugin | SNMPSectionPlugin

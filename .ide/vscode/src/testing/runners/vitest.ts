@@ -8,8 +8,7 @@ import * as path from 'path'
 
 import type { DiscoveredTest, JUnitTestCase, RuleScope, RunOptions } from '../types'
 
-export const VITEST_TEST_RULE_REGEX =
-  /\bvitest_(?:bin\.)?vitest_test\s*\(\s*[\s\S]*?name\s*=\s*"([^"]+)"/g
+export const VITEST_TEST_RULE_REGEX = /\bvitest_test\s*\(\s*[\s\S]*?name\s*=\s*"([^"]+)"/g
 
 export const VITEST_FILE_EXTS = ['.test.ts', '.test.tsx', '.test.vue', '.spec.ts', '.test.js']
 export const VITEST_FILE_REGEX = /\.(?:test|spec)\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs|vue)$/

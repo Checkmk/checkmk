@@ -28,7 +28,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request, folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request, make_folder_tree
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
@@ -73,7 +73,7 @@ class ModeRandomHosts(WatoMode):
     @override
     def action(self, config: Config) -> ActionResult:
         folder = folder_from_request(
-            folder_tree(), request.var("folder"), request.get_ascii_input("host")
+            make_folder_tree(config), request.var("folder"), request.get_ascii_input("host")
         )
         if not transactions.check_transaction(request):
             return redirect(mode_url("folder", folder=folder.path()))

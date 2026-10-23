@@ -3,12 +3,16 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { type UserFrontendConfig } from 'cmk-shared-typing/typescript/user_frontend_config'
 
-import { fetchRestAPIDeprecated } from './cmkFetch'
 import { CmkSimpleError } from './error'
+import client from './rest-api-client/client'
 
 const CONFIG_COOKIE = 'user_frontend_config'
+
+/** The warnings the server accepts for dismissal. */
+export type DismissableWarning = components['schemas']['UserDismissWarningModel']['warning']
 
 export function getUserFrontendConfig(): UserFrontendConfig | null {
   const cookieValue = _getCookie(CONFIG_COOKIE)
@@ -24,7 +28,7 @@ export function getUserFrontendConfig(): UserFrontendConfig | null {
   }
 }
 
-export function isWarningDismissed(warning: string, deflt: boolean): boolean {
+export function isWarningDismissed(warning: DismissableWarning, deflt: boolean): boolean {
   const config = getUserFrontendConfig()
   if (config === null || !config.dismissed_warnings) {
     return deflt
@@ -34,14 +38,11 @@ export function isWarningDismissed(warning: string, deflt: boolean): boolean {
 
 // Notifies the server to record the dismissal. The server updates the
 // user_frontend_config cookie, which isWarningDismissed reads on next load.
-export async function persistWarningDismissal(warning: string) {
-  await fetchRestAPIDeprecated(
-    'api/1.0/domain-types/user_config/actions/dismiss-warning/invoke',
-    'POST',
-    {
-      warning: warning
-    }
-  )
+export async function persistWarningDismissal(warning: DismissableWarning) {
+  await client.POST('/domain-types/user_config/actions/dismiss-warning/invoke', {
+    params: { header: { 'Content-Type': 'application/json' } },
+    body: { warning }
+  })
 }
 
 function _getCookie(cookieName: string): string | null {

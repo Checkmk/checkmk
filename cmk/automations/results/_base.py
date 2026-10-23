@@ -3,59 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Base classes and registry for automation results.
+"""Types shared by the concrete result modules.
 
-Provides the abstract result type, the serialization wrapper, and the global
-registry that all concrete result modules register into.
+The result type itself is cmk.automations.internal.AutomationResult.
 """
 
-from abc import ABC, abstractmethod
-from ast import literal_eval
-from dataclasses import astuple, dataclass
-from typing import override, TypeVar
-
-from cmk.ccc import version as cmk_version
-from cmk.ccc.plugin_registry import Registry
 from cmk.ruleset_matcher.labels import HostLabelValueDict
 
-from ..types import AutomationID
-
 DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
-
-
-class ResultTypeRegistry(Registry[type["ABCAutomationResult"]]):
-    @override
-    def plugin_name(self, instance: type[ABCAutomationResult]) -> AutomationID:
-        return instance.automation_call()
-
-
-result_type_registry = ResultTypeRegistry()
-
-
-class SerializedResult(str): ...
-
-
-_DeserializedType = TypeVar("_DeserializedType", bound="ABCAutomationResult")
-
-
-@dataclass
-class ABCAutomationResult(ABC):
-    def serialize(
-        self,
-        for_cmk_version: cmk_version.Version,  # used to stay compatible with older central sites  # noqa: ARG002
-    ) -> SerializedResult:
-        return self._default_serialize()
-
-    @classmethod
-    def deserialize(
-        cls: type[_DeserializedType],
-        serialized_result: SerializedResult,
-    ) -> _DeserializedType:
-        return cls(*literal_eval(serialized_result))
-
-    @staticmethod
-    @abstractmethod
-    def automation_call() -> AutomationID: ...
-
-    def _default_serialize(self) -> SerializedResult:
-        return SerializedResult(repr(astuple(self)))

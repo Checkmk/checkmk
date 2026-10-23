@@ -29,6 +29,6 @@ test.each([
 
 test('falls back to the grey placeholder without an item color', () => {
   const { chip } = renderChip()
-  expect(chip.style.backgroundColor).toBe('var(--color-mid-grey-50)')
-  expect(chip.style.color).toBe('var(--color-conference-grey-100)')
+  expect(chip.style.backgroundColor).toBe('var(--background-neutral)')
+  expect(chip.style.color).toBe('var(--tag-font-color-dark)')
 })

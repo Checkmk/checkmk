@@ -22,19 +22,14 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     contains,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     State,
     StringTable,
 )
-
-
-def discover_cisco_asa_connections(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def check_cisco_asa_connections(params: Mapping[str, Any], section: StringTable) -> CheckResult:
@@ -73,7 +68,7 @@ snmp_section_cisco_asa_connections = SimpleSNMPSection(
 check_plugin_cisco_asa_connections = CheckPlugin(
     name="cisco_asa_connections",
     service_name="Connections",
-    discovery_function=discover_cisco_asa_connections,
+    discovery_function=discover_one_service,
     check_function=check_cisco_asa_connections,
     check_ruleset_name="cisco_fw_connections",
     check_default_parameters={},

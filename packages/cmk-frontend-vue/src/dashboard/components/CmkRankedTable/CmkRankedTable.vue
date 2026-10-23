@@ -5,10 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
-import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { computed } from 'vue'
 
-import CmkDeltaArrow from '../CmkDeltaArrow.vue'
+import ContextualLinkChooser from '../ContextualLinkChooser.vue'
 import type {
   CmkRankedTableProps,
   RankedTableCell,
@@ -16,19 +15,9 @@ import type {
   RankedTableRow
 } from './types'
 
-const {
-  columns,
-  rows,
-  barColor = 'var(--color-light-blue-50)'
-} = defineProps<CmkRankedTableProps>()
+const { columns, rows } = defineProps<CmkRankedTableProps>()
 
-const emit = defineEmits<{
-  /** A cell in a column marked `clickable` was activated. */
-  cellClick: [column: RankedTableColumn, row: RankedTableRow]
-}>()
-
-// Canonical SI byte formatter (base 1000), matching the backend: 90_400_000_000 → "90.40 GB".
-const byteFormatter = new SIFormatter('B', { type: 'strict', digits: 2 })
+const DEFAULT_BAR_COLOR = 'var(--status-color-info)'
 
 // Largest value per bar column, used to scale bars of columns without a fixed `barRange`.
 const columnMax = computed<Record<string, number>>(() => {
@@ -47,25 +36,13 @@ function cell(column: RankedTableColumn, row: RankedTableRow): RankedTableCell {
 }
 
 function isNumeric(column: RankedTableColumn): boolean {
-  return column.render === 'bytes' || column.render === 'count' || column.render === 'delta'
-}
-
-/** Which way a delta cell's arrow points, or null for a change without one. */
-function deltaDirection(column: RankedTableColumn, row: RankedTableRow): 'up' | 'down' | null {
-  const value = Number(cell(column, row).value ?? 0)
-  if (!Number.isFinite(value) || value === 0) {
-    return null
-  }
-  return value > 0 ? 'up' : 'down'
+  return column.render === 'count'
 }
 
 function cellText(column: RankedTableColumn, row: RankedTableRow): string {
   const { value, formatted } = cell(column, row)
   if (formatted !== undefined) {
     return formatted
-  }
-  if (column.render === 'bytes') {
-    return byteFormatter.render(Number(value ?? 0))
   }
   return String(value ?? '')
 }
@@ -85,99 +62,158 @@ function barPercent(column: RankedTableColumn, row: RankedTableRow): number {
 }
 
 function barColorOf(column: RankedTableColumn, row: RankedTableRow): string {
-  return cell(column, row).color ?? barColor
+  return cell(column, row).color ?? DEFAULT_BAR_COLOR
 }
+
+/** Whether a column's text may be cut with an ellipsis when the width runs short. */
+function truncates(column: RankedTableColumn): boolean {
+  return !column.bar && !isNumeric(column)
+}
+
+/** Links carry their own tooltip, so only plain text cells get one on the cell. */
+function plainTextTooltip(column: RankedTableColumn, row: RankedTableRow): string | undefined {
+  const { href, choices } = cell(column, row)
+  const isPlain = href === undefined && choices === undefined
+  return truncates(column) && isPlain ? cellText(column, row) : undefined
+}
+
+// Text columns hug their content but give way first; figures never shrink, and the
+// bar column takes the remaining space.
+const gridTemplateColumns = computed(() =>
+  columns
+    .map((column) => {
+      if (column.bar) {
+        return 'minmax(max-content, 1fr)'
+      }
+      return truncates(column) ? 'minmax(2.5em, max-content)' : 'max-content'
+    })
+    .join(' ')
+)
 </script>
 
 <template>
-  <table class="db-cmk-ranked-table">
-    <thead>
-      <tr>
-        <th
-          v-for="column in columns"
-          :key="column.key"
-          class="db-cmk-ranked-table__th"
-          :class="{
-            'db-cmk-ranked-table__cell--right': isNumeric(column) && !column.bar,
-            'db-cmk-ranked-table__cell--fit': !column.bar
-          }"
-        >
-          {{ column.title }}
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="(row, index) in rows" :key="index" class="db-cmk-ranked-table__row">
-        <td
-          v-for="column in columns"
-          :key="column.key"
-          class="db-cmk-ranked-table__td"
-          :class="{
-            'db-cmk-ranked-table__cell--right': isNumeric(column) && !column.bar,
-            'db-cmk-ranked-table__cell--fit': !column.bar
-          }"
-        >
-          <div v-if="column.bar" class="db-cmk-ranked-table__bar">
-            <span class="db-cmk-ranked-table__bar-track">
-              <span
-                class="db-cmk-ranked-table__bar-fill"
-                :style="{
-                  width: `${barPercent(column, row)}%`,
-                  backgroundColor: barColorOf(column, row)
-                }"
-              />
-            </span>
-            <span class="db-cmk-ranked-table__bar-value">{{ cellText(column, row) }}</span>
-          </div>
-          <CmkButton
-            v-else-if="cell(column, row).href !== undefined"
-            variant="text"
-            size="small"
-            :href="cell(column, row).href"
+  <div class="db-cmk-ranked-table">
+    <table class="db-cmk-ranked-table__table" role="table" :style="{ gridTemplateColumns }">
+      <thead role="rowgroup">
+        <tr class="db-cmk-ranked-table__row db-cmk-ranked-table__row--head" role="row">
+          <th
+            v-for="column in columns"
+            :key="column.key"
+            class="db-cmk-ranked-table__th"
+            :class="{ 'db-cmk-ranked-table__cell--right': isNumeric(column) && !column.bar }"
+            :title="truncates(column) ? column.title : undefined"
+            role="columnheader"
           >
-            {{ cellText(column, row) }}
-          </CmkButton>
-          <CmkButton
-            v-else-if="column.clickable"
-            variant="text"
-            size="small"
-            @click="emit('cellClick', column, row)"
+            {{ column.title }}
+          </th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr
+          v-for="(row, index) in rows"
+          :key="index"
+          class="db-cmk-ranked-table__row db-cmk-ranked-table__row--body"
+          role="row"
+        >
+          <td
+            v-for="column in columns"
+            :key="column.key"
+            class="db-cmk-ranked-table__td"
+            :class="{ 'db-cmk-ranked-table__cell--right': isNumeric(column) && !column.bar }"
+            :title="plainTextTooltip(column, row)"
+            role="cell"
           >
-            {{ cellText(column, row) }}
-          </CmkButton>
-          <span v-else-if="column.render === 'delta'" class="db-cmk-ranked-table__delta">
-            <CmkDeltaArrow
-              v-if="deltaDirection(column, row) !== null"
-              :direction="deltaDirection(column, row)!"
-            />
-            {{ cellText(column, row) }}
-          </span>
-          <template v-else>{{ cellText(column, row) }}</template>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+            <div v-if="column.bar" class="db-cmk-ranked-table__bar">
+              <span class="db-cmk-ranked-table__bar-track">
+                <span
+                  class="db-cmk-ranked-table__bar-fill"
+                  :style="{
+                    width: `${barPercent(column, row)}%`,
+                    backgroundColor: barColorOf(column, row)
+                  }"
+                />
+              </span>
+              <span class="db-cmk-ranked-table__bar-value">{{ cellText(column, row) }}</span>
+            </div>
+            <ContextualLinkChooser
+              v-else-if="cell(column, row).choices !== undefined"
+              :entries="cell(column, row).choices!"
+            >
+              <CmkButton
+                class="db-cmk-ranked-table__link"
+                variant="text"
+                size="small"
+                :title="cellText(column, row)"
+              >
+                <span class="db-cmk-ranked-table__text">{{ cellText(column, row) }}</span>
+              </CmkButton>
+            </ContextualLinkChooser>
+            <CmkButton
+              v-else-if="cell(column, row).href !== undefined"
+              class="db-cmk-ranked-table__link"
+              variant="text"
+              size="small"
+              :href="cell(column, row).href"
+              :title="cellText(column, row)"
+            >
+              <span class="db-cmk-ranked-table__text">{{ cellText(column, row) }}</span>
+            </CmkButton>
+            <span v-else class="db-cmk-ranked-table__text">{{ cellText(column, row) }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
 
 <style scoped>
+/* The wrapper scrolls; the table never clips its own rows. */
 .db-cmk-ranked-table {
   width: 100%;
   height: 100%;
-  border-collapse: collapse;
-  overflow: hidden;
-  font-size: clamp(11px, 9cqh, 14px);
-  container-type: size;
+  overflow: auto;
 
-  /* Text columns hug their content (width: 1% + nowrap shrinks them to the
-     widest cell); the bar column takes all remaining space, per the design. */
-  table-layout: auto;
+  /* Set here rather than on the table, so the container query below and the bar's
+     minimum widths are measured in the same em. */
+  font-size: var(--font-size-normal);
+  container-type: inline-size;
+}
+
+/* A grid instead of the table layout algorithm: its tracks can hug their content
+   and still shrink below it, which table cells cannot. */
+.db-cmk-ranked-table__table {
+  display: grid;
+  width: 100%;
+}
+
+.db-cmk-ranked-table__table thead,
+.db-cmk-ranked-table__table tbody {
+  display: contents;
+}
+
+.db-cmk-ranked-table__row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+}
+
+/* Stays in view while the rows scroll beneath it. */
+.db-cmk-ranked-table__row--head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--even-tr-bg-color);
 }
 
 .db-cmk-ranked-table__th {
-  padding: clamp(2px, 2cqh, 8px) clamp(6px, 1cqw, 12px);
-  font-size: 0.85em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: var(--dimension-3) var(--dimension-4);
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
-  color: var(--color-mid-grey-50);
+  color: var(--font-color-muted);
   text-align: left;
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -185,18 +221,17 @@ function barColorOf(column: RankedTableColumn, row: RankedTableRow): string {
 }
 
 .db-cmk-ranked-table__td {
-  padding: clamp(2px, 2cqh, 8px) clamp(6px, 1cqw, 12px);
-  overflow: hidden;
+  min-width: 0;
+  padding: var(--dimension-3) var(--dimension-4);
   white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
 /* Zebra striping, using the shared alternating-row background tokens. */
-.db-cmk-ranked-table__row:nth-child(odd) {
+.db-cmk-ranked-table__row--body:nth-child(odd) {
   background-color: var(--odd-tr-bg-color);
 }
 
-.db-cmk-ranked-table__row:nth-child(even) {
+.db-cmk-ranked-table__row--body:nth-child(even) {
   background-color: var(--even-tr-bg-color);
 }
 
@@ -205,26 +240,37 @@ function barColorOf(column: RankedTableColumn, row: RankedTableRow): string {
   font-variant-numeric: tabular-nums;
 }
 
-.db-cmk-ranked-table__cell--fit {
-  width: 1%;
+.db-cmk-ranked-table__text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.db-cmk-ranked-table__link {
+  max-width: 100%;
 }
 
 .db-cmk-ranked-table__bar {
   display: flex;
   align-items: center;
-  gap: clamp(6px, 1cqw, 12px);
+  gap: var(--dimension-4);
 }
 
+/* Text columns give way before the bar does; only a table too narrow for a
+   meaningful bar drops it, so that the figures beside it keep their room. */
 .db-cmk-ranked-table__bar-track {
   flex: 1;
-
-  /* Keeps the bar visible when the text columns claim most of the width -- without
-     it the track is the only flexible box in the row and collapses to nothing. */
   min-width: 4em;
-  height: clamp(4px, 1.2cqh, 7px);
+  height: var(--dimension-3);
   overflow: hidden;
   background-color: var(--ux-theme-4);
   border-radius: 99999px;
+}
+
+@container (width < 24em) {
+  .db-cmk-ranked-table__bar-track {
+    display: none;
+  }
 }
 
 .db-cmk-ranked-table__bar-fill {
@@ -233,16 +279,8 @@ function barColorOf(column: RankedTableColumn, row: RankedTableRow): string {
   border-radius: 99999px;
 }
 
-/* Right-aligned like the other numeric columns, with the arrow riding along
-   the end of the figure rather than sitting in a column of its own. */
-.db-cmk-ranked-table__delta {
-  display: inline-flex;
-  gap: 4px;
-  align-items: center;
-  justify-content: flex-end;
-}
-
 .db-cmk-ranked-table__bar-value {
+  flex-shrink: 0;
   min-width: 5.5em;
   font-variant-numeric: tabular-nums;
   text-align: right;

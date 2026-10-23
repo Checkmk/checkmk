@@ -21,6 +21,7 @@ py_library(
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:groups_io",
         "//cmk/utils:paths",
+        "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ruleset-matcher",

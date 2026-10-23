@@ -18,7 +18,14 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, nextTick, ref, watch } from 'vue'
 
-import { type Domain, type FormulaDraft, type GraphItem, type ItemId, isFormula } from '../../types'
+import {
+  type Domain,
+  type FormulaDraft,
+  type FormulaItem,
+  type GraphItem,
+  type ItemId,
+  isFormula
+} from '../../types'
 import { type RefVisibility, useCalculationEditor } from '../composables/useCalculationEditor'
 import type { FunctionName, OperatorSymbol } from '../formula'
 import FormulaEditor from './FormulaEditor.vue'
@@ -86,7 +93,7 @@ const {
 
 const modeOptions: ToggleButtonOption[] = [
   { label: _t('Operations'), value: 'operations' },
-  { label: _t('Transformation'), value: 'transformation' }
+  { label: _t('Percentile'), value: 'transformation' }
 ]
 
 const calculateLabelVariants = [_t('Calculate & add'), _t('Calculate & update')]
@@ -115,11 +122,11 @@ const alert = computed<SectionAlert | null>(() => {
 const formulaEditorRef = ref<InstanceType<typeof FormulaEditor> | null>(null)
 const transformationEditorRef = ref<InstanceType<typeof TransformationEditor> | null>(null)
 
-function focus(): void {
+function focus(options?: FocusOptions): void {
   if (mode.value === 'operations') {
-    formulaEditorRef.value?.focus()
+    formulaEditorRef.value?.focus(options)
   } else {
-    transformationEditorRef.value?.focus()
+    transformationEditorRef.value?.focus(options)
   }
 }
 defineExpose({ focus })
@@ -153,13 +160,15 @@ function onInsertId(id: ItemId): void {
   }
 }
 
-function onEdit(id: ItemId): void {
+function formulaById(id: ItemId): FormulaItem | null {
   const item = items.find((candidate) => candidate.id === id)
-  if (item === undefined || !isFormula(item)) {
-    return
-  }
-  startEdit(item)
-  if (mode.value === 'operations') {
+  return item !== undefined && isFormula(item) ? item : null
+}
+
+function onEdit(id: ItemId): void {
+  const item = formulaById(id)
+  if (item !== null) {
+    startEdit(item)
     void nextTick(focus)
   }
 }
@@ -167,8 +176,9 @@ function onEdit(id: ItemId): void {
 watch(
   () => editing,
   (id) => {
-    if (id !== null) {
-      onEdit(id)
+    const item = id === null ? null : formulaById(id)
+    if (item !== null) {
+      startEdit(item)
     }
   },
   { immediate: true }
@@ -276,12 +286,6 @@ function itemActionLabel(id: ItemId): TranslatedString {
 .graphing-rrd-tab {
   display: flex;
   flex-direction: column;
-
-  --graphing-rrd-tab-separator: var(--color-mid-grey-10);
-}
-
-body[data-theme='modern-dark'] .graphing-rrd-tab {
-  --graphing-rrd-tab-separator: var(--color-mid-grey-90);
 }
 
 .graphing-rrd-tab__toggle {
@@ -355,7 +359,7 @@ body[data-theme='modern-dark'] .graphing-rrd-tab {
   flex-direction: column;
   gap: var(--dimension-4);
   padding: var(--dimension-5);
-  border-bottom: 1px solid var(--graphing-rrd-tab-separator);
+  border-bottom: 1px solid var(--border-color-subtle);
 }
 
 .graphing-rrd-tab__list {

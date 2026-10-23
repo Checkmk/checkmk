@@ -162,7 +162,7 @@ def test_action_message() -> None:
     assert thead is not None, "No <thead> found in table output"
 
     thead_children = thead.find_all(recursive=False)
-    assert len(thead_children) == 3, f"Expected only 3 children in <thead>: {thead_children!r}"
+    assert len(thead_children) == 2, f"Expected only 2 children in <thead>: {thead_children!r}"
 
     action_row = thead_children[0]
     assert action_row.name == "tr"
@@ -182,8 +182,9 @@ def test_action_message() -> None:
     assert div is not None, "No action_message_success div found"
     assert div.get_text(strip=True) == message
 
-    assert thead_children[1].name == "script"  # script to remove action message
-    assert thead_children[2].name == "tr"  # normal header row
+    fade_out = action_row.find("div", attrs={"data-cmk_call_ts_function": "fade_out_element"})
+    assert fade_out is not None, "No hook to remove the action message found"
+    assert thead_children[1].name == "tr"  # normal header row
 
 
 @pytest.mark.usefixtures("request_context")
@@ -209,14 +210,14 @@ def test_nesting() -> None:
     assert compare_html(
         written_text,
         """<h3 class="table">  TEST </h3>
-                            <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
+                            <div data-cmk_call_ts_function="update_row_info" data-cmk_call_ts_arguments="{&quot;text&quot;: &quot;1 row&quot;}"></div>
                             <table class="data oddeven">
                             <thead>
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
                             </thead>
                             <tr class="data even0">  <td>   1  </td>  <td>
                                 <h3 class="table"> TEST 2</h3>
-                                <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
+                                <div data-cmk_call_ts_function="update_row_info" data-cmk_call_ts_arguments="{&quot;text&quot;: &quot;1 row&quot;}"></div>
                                 <table class="data oddeven">
                                 <thead>
                                 <tr><th>_</th><th>|</th></tr>
@@ -251,14 +252,14 @@ def test_nesting_context() -> None:
     assert compare_html(
         written_text,
         """<h3 class="table">  TEST </h3>
-                            <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
+                            <div data-cmk_call_ts_function="update_row_info" data-cmk_call_ts_arguments="{&quot;text&quot;: &quot;1 row&quot;}"></div>
                             <table class="data oddeven">
                             <thead>
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
                             </thead>
                             <tr class="data even0">  <td>   1  </td>  <td>
                                 <h3 class="table"> TEST 2</h3>
-                                <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
+                                <div data-cmk_call_ts_function="update_row_info" data-cmk_call_ts_arguments="{&quot;text&quot;: &quot;1 row&quot;}"></div>
                                 <table class="data oddeven">
                                 <thead>
                                 <tr><th>_</th><th>|</th></tr>

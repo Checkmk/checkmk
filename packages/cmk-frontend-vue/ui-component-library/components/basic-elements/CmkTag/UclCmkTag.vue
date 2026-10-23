@@ -5,7 +5,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
-import { type Colors, type Sizes, type Variants } from 'cmk-ui-library/components/CmkTag.vue'
+import {
+  type Colors,
+  type Sizes,
+  type Spacings,
+  type Variants
+} from 'cmk-ui-library/components/CmkTag.vue'
 
 import codeExample from './UclCmkTagCodeExample.vue?raw'
 
@@ -14,6 +19,12 @@ export const panelConfig = {
     type: 'string' as const,
     title: 'Content',
     initialState: 'Status Tag'
+  },
+  value: {
+    type: 'string' as const,
+    title: 'Value',
+    initialState: '',
+    help: 'Set in bold after the content, as the value of a key: value label.'
   },
   size: {
     type: 'list' as const,
@@ -51,6 +62,16 @@ export const panelConfig = {
     }),
     initialState: 'outline' as const
   },
+  spacing: {
+    type: 'list' as const,
+    title: 'Spacing',
+    options: listOptions<Spacings>({
+      inline: 'Inline',
+      none: 'None'
+    }),
+    initialState: 'inline' as const,
+    help: 'None for a container that spaces its tags itself, e.g. with a flex gap.'
+  },
   title: {
     type: 'string' as const,
     title: 'Title',
@@ -87,9 +108,11 @@ const propState = new PanelStateCreator<typeof CmkTag>().createRef(panelConfig)
     <UclDetailPageComponent>
       <CmkTag
         :content="propState.content"
+        :value="propState.value || undefined"
         :size="propState.size"
         :color="propState.color"
         :variant="propState.variant"
+        :spacing="propState.spacing"
       />
 
       <template #properties>

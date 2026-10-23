@@ -18,7 +18,6 @@ py_library(
     name = "paths",
     srcs = ["paths.py"],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -29,10 +28,27 @@ py_library(
 )
 
 py_library(
+    name = "security_event",
+    srcs = [
+        "jsontype.py",
+        "security_event.py",
+    ],
+    visibility = [
+        "//bin:__subpackages__",
+        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
+        "//non-free/tests:__subpackages__",
+        "//omd/packages:__subpackages__",
+        "//packages:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [":paths"],
+)
+
+py_library(
     name = "man_pages",
     srcs = ["man_pages.py"],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -52,7 +68,6 @@ py_library(
     name = "encryption",
     srcs = ["encryption.py"],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -74,7 +89,6 @@ py_library(
         "msi_patch.py",
     ],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -95,7 +109,6 @@ py_library(
         "redis.py",
     ],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -114,7 +127,6 @@ py_library(
     name = "unixsocket_http",
     srcs = ["unixsocket_http.py"],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -136,7 +148,6 @@ py_library(
         "//cmk/utils/werks/announce/templates:j2_templates",
     ],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -147,7 +158,8 @@ py_library(
     deps = [
         ":utils",
         "//packages/cmk-ccc:version",
-        "//packages/cmk-werks:tool",
+        "//packages/cmk-werks:core",
+        "//packages/cmk-werks:flavor_cmk",
         requirement("GitPython"),
         requirement("jinja2"),
     ],
@@ -162,11 +174,13 @@ py_library(
             "**/nonfree/**",
             "caching_redis.py",
             "encryption.py",
+            "jsontype.py",
             "man_pages.py",
             "msi_engine.py",
             "msi_patch.py",
             "paths.py",
             "redis.py",
+            "security_event.py",
             "unixsocket_http.py",
             "werks/**",
         ],
@@ -176,7 +190,6 @@ py_library(
     # Don't introduce new dependencies over there!
     # The ones listed here are just the sad status quo
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-agent-registration-extended:__subpackages__",
         "//non-free/packages/cmk-bakery:__subpackages__",
@@ -184,14 +197,15 @@ py_library(
         "//non-free/packages/cmk-dcd:__subpackages__",
         "//non-free/packages/cmk-licensing-nonfree:__subpackages__",
         "//non-free/packages/cmk-liveproxyd:__subpackages__",
-        "//non-free/packages/cmk-network-flow:__subpackages__",
         "//non-free/packages/cmk-notification-plugins-nonfree:__subpackages__",
+        "//non-free/packages/cmk-plugins-nonfree:__subpackages__",
         "//non-free/packages/cmk-robotmk:__subpackages__",
         "//non-free/packages/cmk-telemetry:__subpackages__",
         "//non-free/tests:__subpackages__",
         "//omd/packages:__subpackages__",
         "//packages/cmk-backup:__subpackages__",
         "//packages/cmk-check-engine:__subpackages__",
+        "//packages/cmk-maps:__subpackages__",
         "//packages/cmk-notification-plugins:__subpackages__",
         "//tests:__subpackages__",
     ],
@@ -212,10 +226,10 @@ py_library(
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-ruleset-matcher",
-        "//packages/cmk-web",
         requirement("cryptography"),
         requirement("pydantic"),
         requirement("python-dateutil"),
+        ":security_event",
     ],
 )
 

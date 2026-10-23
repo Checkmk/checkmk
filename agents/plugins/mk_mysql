@@ -79,6 +79,12 @@ if [ -z "$mysql_socket_string" ]; then
     mysql_socket_string=$(ps -fww -C mysqld | grep "socket" | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
 fi
 if [ -z "$mysql_socket_string" ]; then
+    # Default location on Debian/Ubuntu. The X Protocol socket (mysqlx.sock) of
+    # MySQL 8 is skipped, as it cannot be used by the classic client.
+    mysql_socket_string=$(find /run/mysqld -type s ! -name 'mysqlx*' 2>/dev/null | sort)
+    mysql_sockets_autodetected=1
+fi
+if [ -z "$mysql_socket_string" ]; then
     do_query "" ""
 else
     IFS=" " mapfile -t mysql_sockets <<<"$mysql_socket_string"
@@ -87,10 +93,14 @@ else
     for i in "${!mysql_sockets[@]}"; do
         socket="${mysql_sockets[i]}"
         alias="${aliases[i]}"
-        if [ -z "$alias" ]; then
-            do_query "$socket" "$socket"
-        else
+        if [ -n "$alias" ]; then
             do_query "$socket" "$alias"
+        elif [ -n "$mysql_sockets_autodetected" ] && [ "$socket" = "/run/mysqld/mysqld.sock" ]; then
+            # keep the instance name "mysql" for the auto-detected default socket,
+            # which was monitored under this name before auto-detection existed
+            do_query "$socket" ""
+        else
+            do_query "$socket" "$socket"
         fi
     done
 fi

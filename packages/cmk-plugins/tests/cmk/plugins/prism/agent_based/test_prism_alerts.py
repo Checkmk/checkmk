@@ -13,12 +13,8 @@ from typing import Any
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.prism.agent_based.prism_alerts import (
-    check_prism_alerts,
-    discovery_prism_alerts,
-    parse_prism_alerts,
-)
+from cmk.agent_based.v2 import Result, State
+from cmk.plugins.prism.agent_based.prism_alerts import check_prism_alerts, parse_prism_alerts
 
 SECTION = [
     {
@@ -149,28 +145,6 @@ def test_newline_in_message(
             notice="2024-11-10 14:53:14\tDetailed license expiry info: LIC-1234 - 1.00 NODE Pro expiring on 2025-01-31, LIC-987654321 - 1.00 NODE Pro expiring on 2025-01-31",
         ),
     ]
-
-
-@pytest.mark.parametrize(
-    ["section", "expected_discovery_result"],
-    [
-        pytest.param(
-            SECTION,
-            [Service()],
-            id="If data is available, a Service is discovered.",
-        ),
-        pytest.param(
-            {},
-            [Service()],
-            id="If there are is no data (no error), Service is also discovered.",
-        ),
-    ],
-)
-def test_discovery_prism_alerts(  # type: ignore[misc]
-    section: Sequence[Mapping[Any, Any]],
-    expected_discovery_result: Sequence[Service],
-) -> None:
-    assert list(discovery_prism_alerts(section)) == expected_discovery_result
 
 
 @pytest.mark.parametrize(

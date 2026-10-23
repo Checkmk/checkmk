@@ -11,12 +11,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 @dataclass(frozen=True)
@@ -57,10 +56,6 @@ agent_section_storeonce4x_alerts = AgentSection(
 )
 
 
-def discover_storeonce4x_alerts(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
-
-
 def check_storeonce4x_alerts(section: Section) -> CheckResult:
     if not section:
         yield Result(state=State.OK, summary="No alerts at all found")
@@ -83,6 +78,6 @@ def check_storeonce4x_alerts(section: Section) -> CheckResult:
 check_plugin_storeonce4x_alerts = CheckPlugin(
     name="storeonce4x_alerts",
     service_name="Alerts",
-    discovery_function=discover_storeonce4x_alerts,
+    discovery_function=discover_one_service,
     check_function=check_storeonce4x_alerts,
 )

@@ -9,15 +9,16 @@ from typing import override
 
 from cmk.ccc.site import omd_site
 from cmk.gui.exceptions import MKUserError
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import (
+    ConflictMode,
+    continue_per_users_choice,
+    ExpiryVersion,
+    PreUpdateAction,
+)
 from cmk.update_config.plugins.lib.livestatus_tcp_xinetd_migration import (
     xinetd_has_local_modifications,
 )
-from cmk.update_config.plugins.pre_actions.utils import (
-    ConflictMode,
-    continue_per_users_choice,
-)
-from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
+from cmk.update_config.registry import pre_update_action_registry
 from cmk.utils.paths import omd_root
 
 

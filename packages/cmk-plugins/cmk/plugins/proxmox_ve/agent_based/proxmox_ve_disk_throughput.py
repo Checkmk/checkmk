@@ -15,15 +15,14 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_rate,
     get_value_store,
     GetRateError,
     IgnoreResults,
     render,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 @dataclass(frozen=True)
@@ -40,10 +39,6 @@ def parse_proxmox_ve_disk_throughput(string_table: StringTable) -> Section:
         disk_write=int(data["disk_write"]),
         uptime=int(data["uptime"]),
     )
-
-
-def discover_single(section: Section) -> DiscoveryResult:  # noqa: ARG001
-    yield Service()
 
 
 def check_proxmox_ve_disk_throughput(params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -90,7 +85,7 @@ agent_section_proxmox_ve_disk_throughput = AgentSection(
 check_plugin_proxmox_ve_disk_throughput = CheckPlugin(
     name="proxmox_ve_disk_throughput",
     service_name="Proxmox VE Disk Throughput",
-    discovery_function=discover_single,
+    discovery_function=discover_one_service,
     check_function=check_proxmox_ve_disk_throughput,
     check_ruleset_name="proxmox_ve_disk_throughput",
     check_default_parameters={

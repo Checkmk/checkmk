@@ -13,7 +13,12 @@ import dataclasses
 from typing import override
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.gui.main_menu_types import ConfigurableMainMenuItem, MainMenuItem, MainMenuLinkItem
+from cmk.gui.main_menu_types import (
+    ConfigurableMainMenuItem,
+    MainMenuItem,
+    MainMenuLinkItem,
+    MainMenuToggleItem,
+)
 from cmk.shared_typing.main_menu import (
     NavItemIdEnum,
     NavItemTopic,
@@ -45,12 +50,15 @@ def get_main_menu_items_prefixed_by_segment(
     return collected_items
 
 
-class MainMenuRegistry(Registry[MainMenuItem | MainMenuLinkItem | ConfigurableMainMenuItem]):
+class MainMenuRegistry(
+    Registry[MainMenuItem | MainMenuLinkItem | ConfigurableMainMenuItem | MainMenuToggleItem]
+):
     """A registry that contains the menu entries of the main navigation."""
 
     @override
     def plugin_name(
-        self, instance: MainMenuItem | MainMenuLinkItem | ConfigurableMainMenuItem
+        self,
+        instance: MainMenuItem | MainMenuLinkItem | ConfigurableMainMenuItem | MainMenuToggleItem,
     ) -> str:
         return instance.id
 

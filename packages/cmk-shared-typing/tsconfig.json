@@ -1,5 +1,16 @@
 {
+  // This package only emits .d.ts for the generated sources, but a tsconfig
+  // which sets no target/module/moduleResolution inherits whatever the
+  // compiler defaults to, and those defaults move between major versions:
+  // TypeScript 5 defaulted target to ES5 (hence lib ES5, module CommonJS,
+  // moduleResolution Node10), TypeScript 6 defaults to a current standard
+  // (hence ES2022 lib, module ES2022, moduleResolution Bundler). Pin them so
+  // the declarations our consumers compile against do not depend on which
+  // TypeScript rules_ts happens to ship.
   "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "emitDeclarationOnly": true,
     "declaration": true,
     "declarationMap": true,

@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.openapi.framework import (
@@ -19,13 +20,16 @@ from cmk.gui.openapi.framework.model.converter import HostConverter, TypedPlainV
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.host_relations import with_links_not_shown
+from cmk.gui.watolib.hosts_and_folders import attributes_without, Host
 
 from ._family import HOST_CONFIG_FAMILY
 from ._utils import (
+    carry_over_unexposed_attributes,
     host_etag,
     make_pending_changes,
     PERMISSIONS_UPDATE,
+    reject_deprecated_attributes,
     serialize_host,
     validate_host_attributes_for_quick_setup,
 )
@@ -48,32 +52,52 @@ def update_host_v1(
     api_context.user.need_permission("wato.edit")
     api_context.user.need_permission("wato.edit_hosts")
     acting_user = api_context.user
+    pprint_value = api_context.config.wato_pprint_config
+    pending_changes = make_pending_changes(api_context)
     if api_context.etag.enabled:
         api_context.etag.verify(host_etag(host))
 
     if not validate_host_attributes_for_quick_setup(host, body):
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title=f'The host "{host.name()}" is locked by Quick setup.',
             detail="Cannot modify locked attributes.",
         )
 
-    if body.attributes:
-        new_attributes = body.attributes.to_internal()
-        new_attributes["meta_data"] = host.attributes.get("meta_data", {})
+    new_attributes = (
+        carry_over_unexposed_attributes(host.attributes, body.attributes.to_internal())
+        if body.attributes
+        else None
+    )
+    update_attributes = body.update_attributes.to_internal() if body.update_attributes else None
+    reject_deprecated_attributes(
+        host.attributes, {**(new_attributes or {}), **(update_attributes or {})}
+    )
+
+    stored_relations = host.attributes.get("relations", [])
+    if new_attributes is not None:
+        new_attributes["relations"] = with_links_not_shown(
+            new_attributes.get("relations", []), stored_relations
+        )
+    if update_attributes is not None and "relations" in update_attributes:
+        update_attributes["relations"] = with_links_not_shown(
+            update_attributes["relations"], stored_relations
+        )
+
+    if new_attributes is not None:
         host.edit(
             new_attributes,
             host.cluster_nodes(),
-            pprint_value=api_context.config.wato_pprint_config,
-            pending_changes=make_pending_changes(api_context),
+            pprint_value=pprint_value,
+            pending_changes=pending_changes,
             acting_user=acting_user,
         )
 
-    if body.update_attributes:
+    if update_attributes is not None:
         host.update_attributes(
-            body.update_attributes.to_internal(),
-            pprint_value=api_context.config.wato_pprint_config,
-            pending_changes=make_pending_changes(api_context),
+            update_attributes,
+            pprint_value=pprint_value,
+            pending_changes=pending_changes,
             acting_user=acting_user,
         )
 
@@ -83,16 +107,28 @@ def update_host_v1(
             if attribute not in host.attributes:
                 faulty_attributes.append(attribute)
 
-        host.clean_attributes(  # silently ignores missing attributes
-            body.remove_attributes,
-            pprint_value=api_context.config.wato_pprint_config,
-            pending_changes=make_pending_changes(api_context),
-            acting_user=acting_user,
-        )
+        if "relations" in body.remove_attributes:
+            host.edit(
+                {
+                    **attributes_without(host.attributes, body.remove_attributes),
+                    "relations": with_links_not_shown([], stored_relations),
+                },
+                host.cluster_nodes(),
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
+                acting_user=acting_user,
+            )
+        else:
+            host.clean_attributes(  # silently ignores missing attributes
+                body.remove_attributes,
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
+                acting_user=acting_user,
+            )
 
         if faulty_attributes:
             raise ProblemException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Some attributes were not removed",
                 detail=f"The following attributes were not removed since they didn't exist: {', '.join(faulty_attributes)}",
             )
@@ -101,7 +137,7 @@ def update_host_v1(
         body=serialize_host(
             host, api_context=api_context, compute_effective_attributes=False, compute_links=True
         ),
-        status_code=200,
+        status_code=HTTPStatus.OK,
         etag=host_etag(host),
     )
 

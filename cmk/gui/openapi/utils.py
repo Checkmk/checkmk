@@ -7,10 +7,10 @@
 # mypy: disable-error-code="no-any-return"
 
 from collections.abc import Iterable
+from http import HTTPStatus
 from typing import Any, Literal, NewType, override
 from wsgiref.types import StartResponse, WSGIEnvironment
 
-import docstring_parser
 from werkzeug.exceptions import HTTPException
 
 from cmk.gui.http import Response
@@ -22,7 +22,7 @@ EXT = NewType("EXT", dict[str, Any])
 
 
 def problem(
-    status: int = 400,
+    status: int = HTTPStatus.BAD_REQUEST,
     title: str = "A problem occurred.",
     detail: str = "",
     type_: str | None = None,
@@ -84,7 +84,15 @@ class GeneralRestAPIException(HTTPException):
 class RestAPIRequestGeneralException(GeneralRestAPIException):
     def __init__(
         self,
-        status: Literal[400, 401, 403, 404, 406, 409, 415],
+        status: Literal[
+            HTTPStatus.BAD_REQUEST,
+            HTTPStatus.UNAUTHORIZED,
+            HTTPStatus.FORBIDDEN,
+            HTTPStatus.NOT_FOUND,
+            HTTPStatus.NOT_ACCEPTABLE,
+            HTTPStatus.CONFLICT,
+            HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
+        ],
         title: str,
         detail: str,
         fields: FIELDS | None = None,
@@ -94,7 +102,7 @@ class RestAPIRequestGeneralException(GeneralRestAPIException):
 
 
 class RestAPIRequestContentTypeException(RestAPIRequestGeneralException):
-    status: Literal[415] = 415
+    status: Literal[HTTPStatus.UNSUPPORTED_MEDIA_TYPE] = HTTPStatus.UNSUPPORTED_MEDIA_TYPE
 
     def __init__(
         self,
@@ -108,7 +116,7 @@ class RestAPIRequestContentTypeException(RestAPIRequestGeneralException):
 
 
 class RestAPIPathValidationException(RestAPIRequestGeneralException):
-    status: Literal[404] = 404
+    status: Literal[HTTPStatus.NOT_FOUND] = HTTPStatus.NOT_FOUND
 
     def __init__(
         self,
@@ -122,7 +130,7 @@ class RestAPIPathValidationException(RestAPIRequestGeneralException):
 
 
 class RestAPIHeaderSchemaValidationException(RestAPIRequestGeneralException):
-    status: Literal[400] = 400
+    status: Literal[HTTPStatus.BAD_REQUEST] = HTTPStatus.BAD_REQUEST
 
     def __init__(
         self,
@@ -136,7 +144,7 @@ class RestAPIHeaderSchemaValidationException(RestAPIRequestGeneralException):
 
 
 class RestAPIHeaderValidationException(RestAPIRequestGeneralException):
-    status: Literal[406] = 406
+    status: Literal[HTTPStatus.NOT_ACCEPTABLE] = HTTPStatus.NOT_ACCEPTABLE
 
     def __init__(
         self,
@@ -150,7 +158,7 @@ class RestAPIHeaderValidationException(RestAPIRequestGeneralException):
 
 
 class RestAPIQueryPathValidationException(RestAPIRequestGeneralException):
-    status: Literal[400] = 400
+    status: Literal[HTTPStatus.BAD_REQUEST] = HTTPStatus.BAD_REQUEST
 
     def __init__(
         self,
@@ -164,7 +172,7 @@ class RestAPIQueryPathValidationException(RestAPIRequestGeneralException):
 
 
 class RestAPIRequestDataValidationException(RestAPIRequestGeneralException):
-    status: Literal[400] = 400
+    status: Literal[HTTPStatus.BAD_REQUEST] = HTTPStatus.BAD_REQUEST
 
     def __init__(
         self,
@@ -178,7 +186,7 @@ class RestAPIRequestDataValidationException(RestAPIRequestGeneralException):
 
 
 class RestAPIWatoDisabledException(RestAPIRequestGeneralException):
-    status: Literal[403] = 403
+    status: Literal[HTTPStatus.FORBIDDEN] = HTTPStatus.FORBIDDEN
 
     def __init__(
         self,
@@ -193,7 +201,7 @@ class RestAPIWatoDisabledException(RestAPIRequestGeneralException):
 
 # ==================================================== PERMISSION Exceptions
 class RestAPIForbiddenException(RestAPIRequestGeneralException):
-    status: Literal[403] = 403
+    status: Literal[HTTPStatus.FORBIDDEN] = HTTPStatus.FORBIDDEN
 
     def __init__(
         self,
@@ -207,7 +215,7 @@ class RestAPIForbiddenException(RestAPIRequestGeneralException):
 
 
 class RestAPIPermissionException(GeneralRestAPIException):
-    status: Literal[500] = 500
+    status: Literal[HTTPStatus.INTERNAL_SERVER_ERROR] = HTTPStatus.INTERNAL_SERVER_ERROR
 
     def __init__(
         self,
@@ -224,7 +232,7 @@ class RestAPIPermissionException(GeneralRestAPIException):
 class RestAPIResponseGeneralException(GeneralRestAPIException):
     def __init__(
         self,
-        status: Literal[400, 500],
+        status: Literal[HTTPStatus.BAD_REQUEST, HTTPStatus.INTERNAL_SERVER_ERROR],
         title: str,
         detail: str,
         fields: FIELDS | None = None,
@@ -234,7 +242,7 @@ class RestAPIResponseGeneralException(GeneralRestAPIException):
 
 
 class RestAPIResponseException(RestAPIResponseGeneralException):
-    status: Literal[500] = 500
+    status: Literal[HTTPStatus.INTERNAL_SERVER_ERROR] = HTTPStatus.INTERNAL_SERVER_ERROR
 
     def __init__(
         self,
@@ -250,7 +258,7 @@ class RestAPIResponseException(RestAPIResponseGeneralException):
 class ProblemException(HTTPException):
     def __init__(
         self,
-        status: int = 400,
+        status: int = HTTPStatus.BAD_REQUEST,
         title: str = "A problem occurred.",
         detail: str = "",
         type_: str | None = None,
@@ -286,45 +294,10 @@ class ProblemException(HTTPException):
         )
 
 
-def param_description(
-    string: str | None,
-    param_name: str,
-    errors: Literal["raise", "ignore"] = "raise",
-) -> str | None:
-    """Get a param description of a docstring.
-
-    Args:
-        string:
-            The docstring from which to extract the parameter description.
-
-        param_name:
-            The name of the parameter.
-
-        errors:
-            Either 'raise' or 'ignore'.
-
-    Returns:
-        The description of the parameter, if possible.
-
-    """
-    if string is None:
-        if errors == "raise":
-            raise ValueError("No docstring was given.")
-        return None
-
-    docstring = docstring_parser.parse(string)
-    for param in docstring.params:
-        if param.arg_name == param_name and param.description is not None:
-            return param.description.replace("\n", " ")
-    if errors == "raise":
-        raise ValueError(f"Parameter {param_name!r} not found in docstring.")
-    return None
-
-
 def serve_json(
     data: Serializable,
     content_type: str = "application/json",
-    status: int = 200,
+    status: int = HTTPStatus.OK,
     profile: dict[str, str] | None = None,
 ) -> Response:
     if profile is not None:

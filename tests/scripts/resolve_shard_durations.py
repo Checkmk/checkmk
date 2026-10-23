@@ -6,7 +6,7 @@
 """Name the build the shards balance against, and log what it holds.
 
 Prints "<job>#<number>" for the trigger job to pass on. The shards read that
-build themselves, see tests/testlib/pytest_helpers/sharding.py.
+build themselves, see tests/testlib/system/shard_planning.py.
 
     tests/scripts/resolve_shard_durations.py \
         --job checkmk/master/heavy/test-system-singlesite-ultimatemt
@@ -29,7 +29,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from tests.testlib.pytest_helpers.sharding import (
+from tests.testlib.system.shard_planning import (
     fetch_durations,
     jenkins_client,
 )

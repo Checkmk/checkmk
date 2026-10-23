@@ -172,26 +172,29 @@ def _make_performance_form() -> Dictionary:
 
 rule_spec_azure_storageaccounts_usage = CheckParameters(
     name="azure_storageaccounts_usage",
-    title=Title("Azure storage usage (deprecated)"),
+    title=Title("Azure storage usage"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_usage_form,
     condition=_make_condition(),
+    is_deprecated=True,
 )
 
 
 rule_spec_azure_storageaccounts_flow = CheckParameters(
     name="azure_storageaccounts_flow",
-    title=Title("Azure storage data flow (deprecated)"),
+    title=Title("Azure storage data flow"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_flow_form,
     condition=_make_condition(),
+    is_deprecated=True,
 )
 
 
 rule_spec_azure_storageaccounts_performance = CheckParameters(
     name="azure_storageaccounts_performance",
-    title=Title("Azure storage performance (deprecated)"),
+    title=Title("Azure storage performance"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_performance_form,
     condition=_make_condition(),
+    is_deprecated=True,
 )

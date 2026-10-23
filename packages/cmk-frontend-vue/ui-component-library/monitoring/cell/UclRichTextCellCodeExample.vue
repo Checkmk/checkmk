@@ -13,10 +13,7 @@ import RichTextCell from '@/monitoring/shared/components/cell/RichTextCell.vue'
   <table>
     <tbody>
       <tr>
-        <RichTextCell
-          value="example.host.checkmk.com / Filesystem /var/log"
-          :hard-break-every="15"
-        />
+        <RichTextCell value="example.host.checkmk.com / Filesystem /var/log" />
       </tr>
       <tr>
         <RichTextCell>

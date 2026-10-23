@@ -6,6 +6,7 @@ py_library(
     imports = ["../../.."],
     visibility = [
         "//cmk:__subpackages__",
+        "//packages/cmk-maps:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -94,7 +95,7 @@ py_library(
         "//cmk/gui/fields",
         "//cmk/gui/openapi:utils",
         "//cmk/gui/openapi/restful_objects",
-        "//cmk/gui/painter:v0_base",
+        "//cmk/gui/painter",
         "//cmk/gui/sidebar",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",

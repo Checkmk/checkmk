@@ -7,18 +7,24 @@ import json
 from typing import Final
 from urllib.parse import urlencode
 
-from cmk.gui.graphing._graph_specification import GraphConsolidationFunction, GraphExportRequest
+from cmk.gui.graphing._graph_specification import (
+    GraphConsolidationFunction,
+    GraphExportRequest,
+    site_time_zone,
+)
 from cmk.gui.graphing.openapi._add_to import parse_specification
 from cmk.gui.graphing.openapi._family import GRAPH_FAMILY
 from cmk.gui.graphing.openapi.models import ApiConsolidation, ExportRequest, ExportResponse
 from cmk.gui.openapi.framework import (
     APIVersion,
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
     EndpointPermissions,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 
 # The legacy pages spell the average out, the API abbreviates it. The translation belongs here, next
@@ -40,6 +46,9 @@ def export_v1(body: ExportRequest) -> ExportResponse:
         consolidation_function=_LEGACY_CONSOLIDATION[body.consolidation_function],
         time_start=body.time_start,
         time_end=body.time_end,
+        y_range_min=ApiOmitted.to_optional(body.y_range_min),
+        y_range_max=ApiOmitted.to_optional(body.y_range_max),
+        time_zone=(site_time_zone() if isinstance(body.time_zone, ApiOmitted) else body.time_zone),
     )
     query = urlencode({"request": json.dumps(export_request.model_dump())})
     return ExportResponse(download_url=f"{body.target}.py?{query}")
@@ -53,5 +62,6 @@ ENDPOINT_EXPORT = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(),
     doc=EndpointDoc(family=GRAPH_FAMILY.name),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=export_v1)},
 )

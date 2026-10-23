@@ -14,12 +14,14 @@ export function customServiceModelFor(
   defaultTitle: string
 ): ServiceModel {
   return {
+    configurationName: '',
     metricName: item.metric_name,
     metricTypes: [],
     attributeFilter: item.attribute_filter,
     consolidation: consolidationToWire(item.consolidation_function),
     aggregator: item.aggregator ?? undefined,
     serviceName: item.title.replaceAll(DEFAULT_TITLE_MACRO, defaultTitle),
+    appendSeriesAttributes: true,
     hostName: null
   }
 }

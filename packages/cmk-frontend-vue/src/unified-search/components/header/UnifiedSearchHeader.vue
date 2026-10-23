@@ -77,7 +77,9 @@ function onInput(e: Event) {
 function onInputEnter() {
   if (isMonitoringSearch()) {
     if (searchUtils.query.input.value.length > 0) {
-      const url = 'search_open.py?q='.concat(searchUtils.query.input.value.replace(/^\//, ''))
+      const url = 'search_open.py?q='.concat(
+        encodeURIComponent(searchUtils.query.input.value.replace(/^\//, ''))
+      )
       searchUtils.history?.add(
         new HistoryEntry(searchUtils.query.toQueryLike(), {
           title: searchUtils.query.input.value,
@@ -251,7 +253,7 @@ const getSearchInputPlaceholder = computed(() => {
 .unified-search-header__input-tag {
   display: inline-flex;
   align-items: center;
-  background: var(--color-yellow-80);
+  background: var(--interactive-highlight);
   border-radius: var(--border-radius);
   height: 20px;
   padding: 0 var(--spacing-half);
@@ -270,7 +272,7 @@ const getSearchInputPlaceholder = computed(() => {
     font-size: var(--font-size-small);
 
     &:hover {
-      background: var(--color-yellow-60);
+      background: var(--interactive-highlight-hover);
     }
 
     .unified-search-header__input-tag-dismiss-icon {

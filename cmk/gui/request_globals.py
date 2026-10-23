@@ -78,4 +78,4 @@ def set_global_vars() -> None:
     )
 
     lang_code = request.args.get("lang", default=active_config.default_language, type=str)
-    i18n.localize(lang_code)  # sets g.translation
+    i18n.localize(lang_code, active_config.user_localizations)  # sets g.translation

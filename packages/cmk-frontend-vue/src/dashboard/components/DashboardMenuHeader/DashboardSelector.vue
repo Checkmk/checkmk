@@ -255,7 +255,7 @@ watch(
   align-items: center;
   justify-content: space-between;
   background-color: var(--ux-theme-5);
-  border: var(--dimension-1) solid var(--color-mid-grey-60);
+  border: var(--dimension-1) solid var(--default-form-element-border-color);
   padding: var(--dimension-4) var(--dimension-8) var(--dimension-4) var(--dimension-5);
   transition: all 0.2s ease;
   min-width: 250px;

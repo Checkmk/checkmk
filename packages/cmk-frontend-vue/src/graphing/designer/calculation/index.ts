@@ -4,5 +4,6 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 export { default as MetricsCalculationSlideout } from './MetricsCalculationSlideout.vue'
+export { default as MetricsCalculationView } from './MetricsCalculationView.vue'
 export type { RefVisibility } from './composables/useCalculationEditor'
-export type { CommitResult } from './types'
+export type { CalculationPlacement, CommitResult } from './types'

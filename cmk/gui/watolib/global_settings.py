@@ -5,6 +5,7 @@
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import AbstractContextManager, contextmanager, ExitStack
+from enum import StrEnum
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -97,16 +98,24 @@ def load_configuration_settings(
     return settings
 
 
-def effective_value(settings: Mapping[str, object], varname: str) -> tuple[object, bool]:
-    """The value in effect and whether it is the built-in default.
+class GlobalSettingsOrigin(StrEnum):
+    factory = "factory"
+    global_ = "global"
+    site = "site"
+
+
+def effective_value(
+    settings: Mapping[str, object], varname: str
+) -> tuple[object, GlobalSettingsOrigin]:
+    """The value in effect and the layer it comes from.
 
     Writers pass the same mapping they later hand to save_global_settings(),
     which rewrites the whole file, so they need a mutable copy of it.
     """
     if varname in settings:
-        return settings[varname], False
+        return settings[varname], GlobalSettingsOrigin.global_
 
-    return ABCConfigDomain.get_all_default_globals()[varname], True
+    return ABCConfigDomain.get_all_default_globals()[varname], GlobalSettingsOrigin.factory
 
 
 def effective_site_value(
@@ -114,17 +123,16 @@ def effective_site_value(
     varname: str,
     *,
     global_settings: Mapping[str, object],
-) -> tuple[object, bool]:
-    """The value in effect for the site and whether it comes from outside the site.
+) -> tuple[object, GlobalSettingsOrigin]:
+    """The value in effect for the site and the layer it comes from.
 
     Without an override the site inherits the central value, which in turn falls back
     to the built-in default.
     """
     if varname in site_globals:
-        return site_globals[varname], False
+        return site_globals[varname], GlobalSettingsOrigin.site
 
-    value, _is_built_in_default = effective_value(global_settings, varname)
-    return value, True
+    return effective_value(global_settings, varname)
 
 
 def save_global_settings_raw(
@@ -206,7 +214,10 @@ def _settings_change(
 
 
 def site_global_settings_change(
-    sites: SiteConfigurations, site_id: SiteId, site_globals: GlobalSettings
+    sites: SiteConfigurations,
+    site_id: SiteId,
+    before: GlobalSettings,
+    after: GlobalSettings,
 ) -> AbstractContextManager[None]:
     """Wraps the write of the overrides a site is about to get.
 
@@ -214,12 +225,14 @@ def site_global_settings_change(
     """
     defaults = ABCConfigDomain.get_all_default_globals()
     global_settings = load_configuration_settings()
-    site_globals_before = _site_globals_of(sites)
+    site_globals = _site_globals_of(sites)
     return _settings_change(
         sites,
-        before=finalize_all_settings_per_site(defaults, global_settings, site_globals_before),
+        before=finalize_all_settings_per_site(
+            defaults, global_settings, {**site_globals, site_id: before}
+        ),
         after=finalize_all_settings_per_site(
-            defaults, global_settings, {**site_globals_before, site_id: site_globals}
+            defaults, global_settings, {**site_globals, site_id: after}
         ),
     )
 
@@ -254,6 +267,14 @@ def make_pending_changes(
     )
 
 
+def _change_scope(config_variable: ConfigVariable, sites: Sequence[SiteId] | None) -> ChangeScope:
+    if sites is None:
+        return ChangeScope.all_activation_sites()
+    if config_variable.always_affects_local_site():
+        return ChangeScope.sites_and_local_site(sites)
+    return ChangeScope.sites(sites)
+
+
 def add_global_settings_change(
     config_variable: ConfigVariable,
     *,
@@ -275,7 +296,7 @@ def add_global_settings_change(
                 for d in config_variable.all_domains()
             },
         ),
-        ChangeScope.all_activation_sites() if sites is None else ChangeScope.sites(sites),
+        _change_scope(config_variable, sites),
     )
 
 
@@ -285,6 +306,8 @@ def make_global_settings_context(
     *,
     sites: SiteConfigurations,
     graph_timeranges: Sequence[GraphTimerange],
+    folder_choices: Callable[[], Sequence[tuple[str, str]]],
+    edits_site_specific_value: bool | None = None,
 ) -> GlobalSettingsContext:
     return GlobalSettingsContext(
         target_site_id=target_site_id,
@@ -293,6 +316,8 @@ def make_global_settings_context(
         site_neutral_var_dir=site_neutral_path(var_dir),
         configured_sites=sites,
         configured_graph_timeranges=graph_timeranges,
+        folder_choices=folder_choices,
+        edits_site_specific_value=edits_site_specific_value,
     )
 
 

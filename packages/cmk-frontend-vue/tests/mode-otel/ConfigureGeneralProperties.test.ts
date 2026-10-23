@@ -4,48 +4,48 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
-import * as cmkFetch from 'cmk-ui-library/lib/cmkFetch'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse, delay, http } from 'msw'
 import { defineComponent, ref } from 'vue'
 
 import ConfigureGeneralProperties, {
-  _resetCaches,
-  nextAvailableConfigName
+  _resetCaches
 } from '@/mode-otel/otel-configuration-steps/ConfigureGeneralProperties.vue'
 
-type RawSite = { id: string; title: string; extensions?: { logged_in?: boolean } }
+const API_BASE = `${location.protocol}//${location.host}/api/internal`
+const SITES_URL = `${API_BASE}/domain-types/site_connection/collections/all`
+const RECEIVERS_URL = `${API_BASE}/domain-types/otel_collector_config_receivers/collections/all`
+const PROM_SCRAPE_URL = `${API_BASE}/domain-types/otel_collector_config_prom_scrape/collections/all`
 
-// Sites where 'local' has no extensions field (local site = ApiOmitted logged_in)
+type RawSite = { id: string; title: string; extensions: { logged_in?: boolean } }
+
+// The local site is the one whose extensions omit `logged_in`.
 const SITES: RawSite[] = [
   { id: 'remote1', title: 'Remote Site 1', extensions: { logged_in: false } },
-  { id: 'local', title: 'Local Site' },
+  { id: 'local', title: 'Local Site', extensions: {} },
   { id: 'remote2', title: 'Remote Site 2', extensions: { logged_in: true } }
 ]
 
-function makeFetchResponse(data: unknown): cmkFetch.CmkFetchResponse {
-  return {
-    raiseForStatus: vi.fn().mockResolvedValue(undefined),
-    json: vi.fn().mockResolvedValue(data)
-  } as unknown as cmkFetch.CmkFetchResponse
+const server = useMswServer()
+
+/** Counts the site-list requests that actually reached the backend. */
+let siteRequests = 0
+
+function serveSites(sites: RawSite[], existingConfigs: unknown[] = []) {
+  server.use(
+    http.get(SITES_URL, () => {
+      siteRequests += 1
+      return HttpResponse.json({ value: sites })
+    }),
+    http.get(RECEIVERS_URL, () => HttpResponse.json({ value: existingConfigs })),
+    http.get(PROM_SCRAPE_URL, () => HttpResponse.json({ value: existingConfigs }))
+  )
 }
 
-function mockFetchAPI(handler: (url: string) => cmkFetch.CmkFetchResponse | Promise<never>) {
-  return vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockImplementation(async (url: string) => {
-    return handler(url)
-  })
-}
-
-function mockSitesResponse(sites: RawSite[], existingConfigs: unknown[] = []) {
-  return mockFetchAPI((url: string) => {
-    if (url.includes('site_connection')) {
-      return makeFetchResponse({ value: sites })
-    }
-    // OTel receivers or prom scrape list endpoint
-    return makeFetchResponse({ value: existingConfigs })
-  })
-}
-
-function mockSitesError() {
-  vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockRejectedValue(new Error('Network error'))
+function serveSitesError() {
+  // onMounted also loads the config list, so that endpoint still needs a handler.
+  serveSites([])
+  server.use(http.get(SITES_URL, () => HttpResponse.json({ title: 'Boom' }, { status: 500 })))
 }
 
 /**
@@ -54,14 +54,14 @@ function mockSitesError() {
  */
 const OTEL_PROPS = {
   configNamePrefix: 'opentelemetry_config_',
-  configListEndpoint: 'api/internal/domain-types/otel_collector_config_receivers/collections/all',
+  configKind: 'receivers',
   alreadyConfiguredError:
     'OpenTelemetry is already configured for this site. Select another site or update the existing configuration.'
 }
 
 const PROMETHEUS_PROPS = {
   configNamePrefix: 'prometheus_config_',
-  configListEndpoint: 'api/internal/domain-types/otel_collector_config_prom_scrape/collections/all',
+  configKind: 'prom_scrape',
   alreadyConfiguredError:
     'Prometheus is already configured for this site. Select another site or update the existing configuration.'
 }
@@ -79,23 +79,34 @@ function renderComponent(
     defineComponent({
       components: { ConfigureGeneralProperties },
       setup: () => ({ configName, siteId, compRef, ...propsOverride }),
-      template: `<ConfigureGeneralProperties ref="compRef" v-model:config-name="configName" v-model:site-id="siteId" :config-name-prefix="configNamePrefix" :config-list-endpoint="configListEndpoint" :already-configured-error="alreadyConfiguredError" />`
+      template: `<ConfigureGeneralProperties ref="compRef" v-model:config-name="configName" v-model:site-id="siteId" :config-name-prefix="configNamePrefix" :config-kind="configKind" :already-configured-error="alreadyConfiguredError" />`
     })
   )
 
   return { configName, siteId, compRef }
 }
 
+/** The site dropdown shows its loading hint until the site list has arrived. */
+async function waitForSites(label: string): Promise<void> {
+  await waitFor(() => expect(siteRequests).toBe(1))
+  await waitFor(() =>
+    expect(screen.getByRole('combobox', { name: 'Site selection' })).toHaveTextContent(label)
+  )
+}
+
 describe('ConfigureGeneralProperties', () => {
+  beforeEach(() => {
+    siteRequests = 0
+  })
+
   afterEach(() => {
     cleanup()
-    vi.restoreAllMocks()
     _resetCaches()
   })
 
   describe('site pre-selection', () => {
     test('pre-selects the local site (no logged_in key in extensions)', async () => {
-      mockSitesResponse(SITES)
+      serveSites(SITES)
       const { siteId } = renderComponent()
 
       await waitFor(() => expect(siteId.value).toBe('local'))
@@ -106,28 +117,23 @@ describe('ConfigureGeneralProperties', () => {
         { id: 'remote1', title: 'Remote 1', extensions: { logged_in: false } },
         { id: 'remote2', title: 'Remote 2', extensions: { logged_in: true } }
       ]
-      mockSitesResponse(allRemote)
+      serveSites(allRemote)
       const { siteId } = renderComponent()
 
       await waitFor(() => expect(siteId.value).toBe('remote1'))
     })
 
     test('does not overwrite siteId when already set (navigating back)', async () => {
-      const spy = mockSitesResponse(SITES)
+      serveSites(SITES)
       const { siteId } = renderComponent('', 'remote2')
 
-      // Wait for the site list call to complete
-      await waitFor(() =>
-        expect(spy.mock.calls.some(([url]) => String(url).includes('site_connection'))).toBe(true)
-      )
-      // Allow the async body of onMounted to finish
-      await new Promise((r) => setTimeout(r, 0))
+      await waitForSites('remote2 - Remote Site 2')
 
       expect(siteId.value).toBe('remote2')
     })
 
     test('uses cached sites on re-mount without a second network call', async () => {
-      const spy = mockSitesResponse(SITES)
+      serveSites(SITES)
 
       // First mount — populates cache
       const { siteId: siteId1 } = renderComponent()
@@ -138,14 +144,13 @@ describe('ConfigureGeneralProperties', () => {
       const { siteId: siteId2 } = renderComponent()
       await waitFor(() => expect(siteId2.value).toBe('local'))
 
-      const siteCalls = spy.mock.calls.filter(([url]) => String(url).includes('site_connection'))
-      expect(siteCalls).toHaveLength(1)
+      expect(siteRequests).toBe(1)
     })
   })
 
   describe('config name prefill', () => {
     test('prefills the first slot when no configuration exists yet', async () => {
-      mockSitesResponse(SITES, [])
+      serveSites(SITES, [])
       const { configName } = renderComponent()
 
       await waitFor(() => expect(configName.value).toBe('opentelemetry_config_1'))
@@ -153,7 +158,7 @@ describe('ConfigureGeneralProperties', () => {
 
     test('prefills the next slot after the highest existing index', async () => {
       const existingConfigs = [{ id: 'opentelemetry_config_1' }, { id: 'opentelemetry_config_2' }]
-      mockSitesResponse(SITES, existingConfigs)
+      serveSites(SITES, existingConfigs)
       const { configName } = renderComponent()
 
       await waitFor(() => expect(configName.value).toBe('opentelemetry_config_3'))
@@ -161,29 +166,26 @@ describe('ConfigureGeneralProperties', () => {
 
     test('uses the prometheus prefix for the prometheus wizard', async () => {
       const existingConfigs = [{ id: 'prometheus_config_1' }]
-      mockSitesResponse(SITES, existingConfigs)
+      serveSites(SITES, existingConfigs)
       const { configName } = renderComponent('', null, PROMETHEUS_PROPS)
 
       await waitFor(() => expect(configName.value).toBe('prometheus_config_2'))
     })
 
     test('does not overwrite a name the user already entered', async () => {
-      mockSitesResponse(SITES, [{ id: 'opentelemetry_config_1' }])
+      serveSites(SITES, [{ id: 'opentelemetry_config_1' }])
       const { configName } = renderComponent('my_custom_name')
 
-      // Let the async onMounted body run.
-      await new Promise((r) => setTimeout(r, 0))
+      await waitForSites('local - Local Site')
 
       expect(configName.value).toBe('my_custom_name')
     })
 
     test('falls back to the first slot when the config list call fails', async () => {
-      mockFetchAPI((url: string) => {
-        if (url.includes('site_connection')) {
-          return makeFetchResponse({ value: SITES })
-        }
-        throw new Error('Network error')
-      })
+      serveSites(SITES)
+      server.use(
+        http.get(RECEIVERS_URL, () => HttpResponse.json({ title: 'Boom' }, { status: 500 }))
+      )
       const { configName } = renderComponent()
 
       await waitFor(() => expect(configName.value).toBe('opentelemetry_config_1'))
@@ -192,17 +194,30 @@ describe('ConfigureGeneralProperties', () => {
 
   describe('error handling', () => {
     test('shows error message when site loading fails', async () => {
-      mockSitesError()
+      serveSitesError()
       renderComponent()
 
       await screen.findByText('Failed to load sites. Please try again.')
+    })
+
+    test('asks for the sites again on the next mount after a failed load', async () => {
+      serveSitesError()
+      renderComponent()
+      await screen.findByText('Failed to load sites. Please try again.')
+      cleanup()
+      serveSites(SITES)
+
+      const { siteId } = renderComponent()
+
+      await waitFor(() => expect(siteId.value).toBe('local'))
     })
   })
 
   describe('loading state', () => {
     test('validate() returns false while sites are still loading', async () => {
-      // Never-resolving promise keeps isLoading true
-      vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockReturnValue(new Promise(() => {}))
+      // A request that never settles keeps isLoading true
+      serveSites(SITES)
+      server.use(http.get(SITES_URL, () => delay('infinite')))
 
       const { compRef } = renderComponent('valid_name', null)
       await waitFor(() => expect(compRef.value).toBeDefined())
@@ -219,8 +234,9 @@ describe('ConfigureGeneralProperties', () => {
 
   describe('validation', () => {
     test('does not show validation errors before validate() is called', async () => {
-      mockSitesResponse([])
+      serveSites([])
       renderComponent()
+      await waitForSites('Select site')
 
       expect(
         screen.queryByText('Configuration name is required but not specified.')
@@ -229,11 +245,12 @@ describe('ConfigureGeneralProperties', () => {
     })
 
     test('validate() returns false and shows errors for empty config name', async () => {
-      mockSitesResponse([])
+      serveSites([])
       const { compRef, configName } = renderComponent('', null)
 
       await waitFor(() => expect(compRef.value).toBeDefined())
-      await new Promise((r) => setTimeout(r, 0))
+      await waitForSites('Select site')
+      await waitFor(() => expect(configName.value).toBe('opentelemetry_config_1'))
       // The field is prefilled on mount, so clear it to exercise the
       // "name is required" validation a user would hit by emptying it.
       configName.value = ''
@@ -246,11 +263,11 @@ describe('ConfigureGeneralProperties', () => {
 
     test('validate() returns false and shows error for missing site', async () => {
       // Empty site list so siteId stays null after mount
-      mockSitesResponse([])
+      serveSites([])
       const { compRef } = renderComponent('valid_name', null)
 
       await waitFor(() => expect(compRef.value).toBeDefined())
-      await new Promise((r) => setTimeout(r, 0))
+      await waitForSites('Select site')
 
       const result = await compRef.value!.validate()
 
@@ -259,7 +276,7 @@ describe('ConfigureGeneralProperties', () => {
     })
 
     test('validate() returns true when config name and site are both valid', async () => {
-      mockSitesResponse(SITES)
+      serveSites(SITES)
       const { compRef, siteId } = renderComponent('valid_name', null)
 
       await waitFor(() => expect(siteId.value).toBe('local'))
@@ -271,7 +288,7 @@ describe('ConfigureGeneralProperties', () => {
     })
 
     test('validate() returns false for invalid config name pattern', async () => {
-      mockSitesResponse(SITES)
+      serveSites(SITES)
       const { compRef, siteId } = renderComponent('123-invalid-start', null)
 
       await waitFor(() => expect(siteId.value).toBe('local'))
@@ -287,7 +304,7 @@ describe('ConfigureGeneralProperties', () => {
 
     test('validate() returns false when site already has OTel config', async () => {
       const existingConfigs = [{ extensions: { site: ['local'] } }]
-      mockSitesResponse(SITES, existingConfigs)
+      serveSites(SITES, existingConfigs)
       const { compRef, siteId } = renderComponent('valid_name', null)
 
       await waitFor(() => expect(siteId.value).toBe('local'))
@@ -303,7 +320,7 @@ describe('ConfigureGeneralProperties', () => {
 
     test('validate() returns false when site already has Prometheus config', async () => {
       const existingConfigs = [{ extensions: { site: ['local'] } }]
-      mockSitesResponse(SITES, existingConfigs)
+      serveSites(SITES, existingConfigs)
       const { compRef, siteId } = renderComponent('valid_name', null, PROMETHEUS_PROPS)
 
       await waitFor(() => expect(siteId.value).toBe('local'))
@@ -318,7 +335,7 @@ describe('ConfigureGeneralProperties', () => {
     })
 
     test('validate() passes when site has no existing config', async () => {
-      mockSitesResponse(SITES)
+      serveSites(SITES)
       const { compRef, siteId } = renderComponent('valid_name', null)
 
       await waitFor(() => expect(siteId.value).toBe('local'))
@@ -331,7 +348,7 @@ describe('ConfigureGeneralProperties', () => {
 
     test('validate() passes when config exists on a different site', async () => {
       const existingConfigs = [{ extensions: { site: ['other_site'] } }]
-      mockSitesResponse(SITES, existingConfigs)
+      serveSites(SITES, existingConfigs)
       const { compRef, siteId } = renderComponent('valid_name', null)
 
       await waitFor(() => expect(siteId.value).toBe('local'))
@@ -344,7 +361,7 @@ describe('ConfigureGeneralProperties', () => {
 
     test('validate() returns false when site has a disabled config', async () => {
       const existingConfigs = [{ extensions: { site: ['local'], disabled: true } }]
-      mockSitesResponse(SITES, existingConfigs)
+      serveSites(SITES, existingConfigs)
       const { compRef, siteId } = renderComponent('valid_name', null)
 
       await waitFor(() => expect(siteId.value).toBe('local'))
@@ -362,7 +379,7 @@ describe('ConfigureGeneralProperties', () => {
       const existingConfigs = [
         { id: 'opentelemetry_config_1', extensions: { site: ['other_site'] } }
       ]
-      mockSitesResponse(SITES, existingConfigs)
+      serveSites(SITES, existingConfigs)
       const { compRef, siteId } = renderComponent('opentelemetry_config_1', null)
 
       await waitFor(() => expect(siteId.value).toBe('local'))
@@ -381,12 +398,8 @@ describe('ConfigureGeneralProperties', () => {
       // selected site appears before the user submits. Validation must catch
       // it instead of relying on the stale cache.
       let liveConfigs: unknown[] = []
-      mockFetchAPI((url: string) => {
-        if (url.includes('site_connection')) {
-          return makeFetchResponse({ value: SITES })
-        }
-        return makeFetchResponse({ value: liveConfigs })
-      })
+      serveSites(SITES)
+      server.use(http.get(RECEIVERS_URL, () => HttpResponse.json({ value: liveConfigs })))
       const { compRef, siteId } = renderComponent('valid_name', null)
 
       await waitFor(() => expect(siteId.value).toBe('local'))
@@ -404,12 +417,10 @@ describe('ConfigureGeneralProperties', () => {
     })
 
     test('validate() returns false when config check API fails', async () => {
-      mockFetchAPI((url: string) => {
-        if (url.includes('site_connection')) {
-          return makeFetchResponse({ value: SITES })
-        }
-        throw new Error('Network error')
-      })
+      serveSites(SITES)
+      server.use(
+        http.get(RECEIVERS_URL, () => HttpResponse.json({ title: 'Boom' }, { status: 500 }))
+      )
       const { compRef, siteId } = renderComponent('valid_name', null)
 
       await waitFor(() => expect(siteId.value).toBe('local'))
@@ -420,43 +431,5 @@ describe('ConfigureGeneralProperties', () => {
       expect(result).toBe(false)
       await screen.findByText('Failed to validate site configuration. Please try again.')
     })
-  })
-})
-
-describe('nextAvailableConfigName', () => {
-  test('returns the first slot for an empty list', () => {
-    expect(nextAvailableConfigName([], 'opentelemetry_config_')).toBe('opentelemetry_config_1')
-  })
-
-  test('returns max(existing) + 1', () => {
-    expect(
-      nextAvailableConfigName(
-        ['opentelemetry_config_1', 'opentelemetry_config_2'],
-        'opentelemetry_config_'
-      )
-    ).toBe('opentelemetry_config_3')
-  })
-
-  test('skips gaps by using the highest index, not the count', () => {
-    expect(
-      nextAvailableConfigName(
-        ['opentelemetry_config_1', 'opentelemetry_config_5'],
-        'opentelemetry_config_'
-      )
-    ).toBe('opentelemetry_config_6')
-  })
-
-  test('ignores ids that do not match the prefix or are not numbered', () => {
-    expect(
-      nextAvailableConfigName(
-        [
-          'my_custom_name',
-          'opentelemetry_config_',
-          'opentelemetry_config_2',
-          'prometheus_config_9'
-        ],
-        'opentelemetry_config_'
-      )
-    ).toBe('opentelemetry_config_3')
   })
 })

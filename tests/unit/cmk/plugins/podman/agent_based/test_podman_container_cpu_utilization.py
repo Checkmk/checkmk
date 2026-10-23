@@ -3,17 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.podman.agent_based.podman_container_cpu_utilization import (
     _check_cpu_utilization_testable,
-    discover_podman_container_cpu_utilization,
 )
 
 from .lib import SECTION_CONTAINER_STATS
-
-
-def test_discover_podman_container_cpu_utilization() -> None:
-    assert list(discover_podman_container_cpu_utilization(SECTION_CONTAINER_STATS)) == [Service()]
 
 
 def test_check_cpu_utilization_testable() -> None:

@@ -1,0 +1,36 @@
+title: Veeam: Jobs Backup
+agents: windows
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the status of the backups jobs run by the Veeam
+ backup tool. In order to carry out the check, the Veeam agent plugin
+ needs to be installed on the backup server. See special instructions in the
+ comment section of the two Veeam agent plug-in scripts on how to install
+ the scripts.
+
+ This check is {OK} if the result of the backup is Success. It is {WARN} if the
+ result of the backup is Warning. It is {CRIT} if the result of the backup is
+ Failed.
+
+ If the result of the backup is None, the state of the job decides. While the
+ job is running, the previous result is kept. If the job is not running, it has
+ no execution history yet and the check is {OK}. Any state that cannot be
+ interpreted results in {UNKNOWN}.
+
+ For backup policies managed by the Veeam Agent, the result of the policy only
+ reflects applying the policy to the protected computers. Therefore, the last
+ finished backup of each computer currently protected by the policy is evaluated
+ in the same way, and the service shows the worst of them. If more than three
+ computers have problems, their number is shown and they are listed in the
+ details. Computers without problems and computers without a finished backup
+ yet are listed in the details. If the protected computers cannot be
+ determined, the service is {UNKNOWN}. This requires the current version of the
+ agent plug-in.
+
+discovery:
+ One service is created for each backup job created by the Veeam tool.
+
+item:
+ The name of the backup job.

@@ -11,8 +11,8 @@ from cmk.gui.watolib.global_settings import (
     save_global_settings_raw,
 )
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 
 
 class UpdateUseNewServiceDescription(UpdateAction):

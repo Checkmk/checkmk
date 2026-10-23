@@ -14,10 +14,20 @@ const DOMAIN = { start: 1000, end: 2000, step: 10 }
 const PLOT_LEFT = 50
 const PLOT_WIDTH = 200
 
-function makeMetric(dataPoints: (number | null)[], render: Partial<Metric['render']> = {}): Metric {
+function makeMetric(
+  dataPoints: (number | null)[],
+  {
+    stack = null,
+    inverse = false,
+    hidden = false
+  }: { stack?: string | null; inverse?: boolean; hidden?: boolean } = {}
+): Metric {
   return {
     data_points: dataPoints,
-    render: { stack: null, inverse: false, hidden: false, ...render },
+    render:
+      stack === null
+        ? { shape: 'line', inverse, hidden }
+        : { shape: 'area', stack, inverse, hidden },
     metadata: { name: 'm', color: '#3366cc' }
   } as unknown as Metric
 }
@@ -34,7 +44,7 @@ function createCanvasContextStub(): CanvasRenderingContext2D {
       if (prop === 'moveTo' || prop === 'lineTo') {
         return (x: number, y: number) => void drawnPoints.push([x, y])
       }
-      if (prop === 'fill' || prop === 'stroke') {
+      if (prop === 'fill' || prop === 'stroke' || prop === 'fillRect') {
         return () => void paintOps.push(prop)
       }
       return prop in target ? target[prop] : () => undefined
@@ -68,6 +78,7 @@ function renderBrush(overrides: Record<string, unknown> = {}) {
       width: 300,
       plotLeft: PLOT_LEFT,
       plotWidth: PLOT_WIDTH,
+      binUnit: null,
       ...overrides
     }
   })
@@ -159,4 +170,16 @@ test('draws a grouped metric as a filled area, the way the plot does', () => {
   renderBrush({ metrics })
 
   expect(paintOps).toContain('fill')
+})
+
+test('draws a bar metric as bars in the bins of its unit', () => {
+  const bars: Metric = {
+    ...makeMetric(samplesFilling(DOMAIN)),
+    render: { shape: 'bar', stack: null, aggregation: 'sum', inverse: false, hidden: false }
+  }
+
+  renderBrush({ metrics: [bars], binUnit: 'hour' })
+
+  expect(paintOps).toContain('fillRect')
+  expect(paintOps).not.toContain('stroke')
 })

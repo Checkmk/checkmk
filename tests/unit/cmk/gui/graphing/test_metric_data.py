@@ -19,33 +19,9 @@ from cmk.gui.graphing import (
     evaluated_metrics,
     EvaluatedMetric,
     merge_rrd_columns,
-    parse_performance_data,
-    RawPerformanceData,
-    reverse_translated_names,
     rrd_column_names,
-    split_predict_prefix,
-    translate_metric_names,
 )
-from cmk.gui.graphing._metric_data import (
-    map_metric_names,
-    merge_series,
-    resample,
-    rrd_originals,
-    RRDOriginal,
-    scaled_series,
-    translate_performance_data,
-)
-from cmk.gui.graphing._performance_data import RawPerformanceValue
 from cmk.gui.utils.temperature_unit import TemperatureUnit
-
-
-def test_parse_performance_data_merges_rrd_only_metrics() -> None:
-    # Legacy reads the livestatus "metrics" column too, so a metric present in RRD but absent from
-    # the live perf_data string still shows up (as a synthetic value=1 entry, deduplicated).
-    parsed = parse_performance_data("live=5", "check_mk-foo", ["live", "rrd_only"], debug=False)
-    by_name = {name: value.value for name, value in parsed.values.items()}
-    assert by_name == {"live": 5.0, "rrd_only": 1.0}
-
 
 # The check the translations below are registered for, as a passive check's performance data spells
 # it and as the plug-in names it.
@@ -81,242 +57,6 @@ _REGISTERED_METRICS: Mapping[str, metrics.Metric] = {
         color=metrics.Color.ORANGE,
     ),
 }
-
-
-def _raw(values: Mapping[str, RawPerformanceValue]) -> RawPerformanceData:
-    return RawPerformanceData(
-        check_command=_CHECK_COMMAND,
-        values={MetricName(name): value for name, value in values.items()},
-    )
-
-
-def _original(name: str, scale: float) -> RRDOriginal:
-    return RRDOriginal(metric_name=MetricName(name), scale=scale)
-
-
-def test_map_metric_names_pairs_raw_names_with_their_canonical_names() -> None:
-    # A set of canonical names cannot say which raw column produced which name; the mapping can. A
-    # raw name no translation renames is its own canonical name, so no raw name is dropped.
-    assert dict(
-        map_metric_names(
-            _CHECK_COMMAND,
-            [MetricName("old"), MetricName("untouched")],
-            _translations({"old": translations.RenameTo("new")}),
-        )
-    ) == {MetricName("old"): MetricName("new"), MetricName("untouched"): MetricName("untouched")}
-
-
-def test_two_raw_names_sharing_a_canonical_name_keep_their_own_entries() -> None:
-    # The case the frozenset cannot express at all: it reports one name where two columns exist, so
-    # a caller reading it back has no way to tell which of them it may ask an RRD for.
-    assert dict(
-        map_metric_names(
-            _CHECK_COMMAND,
-            [MetricName("if_in_octets"), MetricName("if_out_octets")],
-            _translations({"~if_.*_octets": translations.RenameTo("if_octets")}),
-        )
-    ) == {
-        MetricName("if_in_octets"): MetricName("if_octets"),
-        MetricName("if_out_octets"): MetricName("if_octets"),
-    }
-
-
-def test_a_scaling_translation_leaves_the_name_alone() -> None:
-    # A translation that only scales is still a translation, and a caller that resolves a name
-    # through the mapping has to get the raw name back rather than nothing.
-    assert dict(
-        map_metric_names(
-            _CHECK_COMMAND,
-            [MetricName("mem")],
-            _translations({"mem": translations.ScaleBy(1024)}),
-        )
-    ) == {MetricName("mem"): MetricName("mem")}
-
-
-def test_metric_names_are_reported_under_their_canonical_name() -> None:
-    assert translate_metric_names(
-        _CHECK_COMMAND,
-        [MetricName("old"), MetricName("untouched")],
-        _translations({"old": translations.RenameTo("new")}),
-    ) == {MetricName("new"), MetricName("untouched")}
-
-
-def test_a_predictive_metric_keeps_its_prefix_while_its_base_is_renamed() -> None:
-    # The prediction of a renamed metric is stored under the prefixed old name, so the prefix has to
-    # survive the rename rather than being translated as part of the name.
-    assert translate_metric_names(
-        _CHECK_COMMAND,
-        [MetricName("predict_old"), MetricName("predict_lower_old")],
-        _translations({"old": translations.RenameTo("new")}),
-    ) == {MetricName("predict_new"), MetricName("predict_lower_new")}
-
-
-def test_a_regex_translation_matches_by_pattern() -> None:
-    assert translate_metric_names(
-        _CHECK_COMMAND,
-        [MetricName("if_out_octets")],
-        _translations({"~if_.*_octets": translations.RenameTo("if_octets")}),
-    ) == {MetricName("if_octets")}
-
-
-def test_an_unregistered_check_command_translates_nothing() -> None:
-    assert translate_metric_names(
-        "check_mk-other",
-        [MetricName("old")],
-        _translations({"old": translations.RenameTo("new")}),
-    ) == {MetricName("old")}
-
-
-def test_a_scaling_translation_scales_the_value_and_every_threshold() -> None:
-    [(name, data)] = translate_performance_data(
-        _CHECK_COMMAND,
-        {
-            MetricName("x"): RawPerformanceValue(
-                value=5.0,
-                warning=7.0,
-                critical=9.0,
-                lower_warning=3.0,
-                lower_critical=1.0,
-                minimum=0.0,
-                maximum=10.0,
-            )
-        },
-        _translations({"x": translations.ScaleBy(1024)}),
-    ).items()
-    assert name == MetricName("x")
-    assert (data.value, data.warning, data.critical) == (5120.0, 7168.0, 9216.0)
-    assert (data.lower_warning, data.lower_critical) == (3072.0, 1024.0)
-    assert (data.minimum, data.maximum) == (0.0, 10240.0)
-
-
-def test_an_absent_threshold_stays_absent_when_scaled() -> None:
-    [(_name, data)] = translate_performance_data(
-        _CHECK_COMMAND,
-        {MetricName("x"): RawPerformanceValue(value=5.0)},
-        _translations({"x": translations.ScaleBy(1024)}),
-    ).items()
-    assert data.warning is None
-    assert data.maximum is None
-
-
-def test_a_metric_is_drawn_from_the_column_its_data_was_translated_from() -> None:
-    # The canonical name has no RRD of its own here: the series comes from the column the performance
-    # data carried, and it carries the factor the value was scaled by.
-    assert rrd_originals(
-        MetricName("new"),
-        _raw({"old": RawPerformanceValue(value=5.0)}),
-        _translations({"old": translations.RenameToAndScaleBy("new", 1000)}),
-    ) == [_original("old", 1000.0)]
-
-
-def test_two_columns_translated_onto_one_metric_are_both_drawn() -> None:
-    assert rrd_originals(
-        MetricName("m"),
-        _raw({"a": RawPerformanceValue(value=1.0), "b": RawPerformanceValue(value=2.0)}),
-        _translations({"a": translations.RenameTo("m"), "b": translations.RenameTo("m")}),
-    ) == [_original("a", 1.0), _original("b", 1.0)]
-
-
-def test_a_deprecated_column_absent_from_the_performance_data_is_still_drawn() -> None:
-    # The old column is gone from the performance data but its RRD may still be around, so it is read
-    # alongside the current one - scaled by the translation that renamed it.
-    assert rrd_originals(
-        MetricName("new"),
-        _raw({"new": RawPerformanceValue(value=5.0)}),
-        _translations({"old": translations.RenameToAndScaleBy("new", 1000)}),
-    ) == [_original("new", 1.0), _original("old", 1000.0)]
-
-
-def test_a_metric_without_performance_data_falls_back_to_its_own_column_unscaled() -> None:
-    assert rrd_originals(
-        MetricName("y"),
-        _raw({"x": RawPerformanceValue(value=5.0)}),
-        _translations({"x": translations.ScaleBy(1024)}),
-    ) == [_original("y", 1.0)]
-
-
-def test_reverse_translated_names_always_contains_the_metric_itself() -> None:
-    assert reverse_translated_names(MetricName("new"), []) == {MetricName("new")}
-
-
-def test_reverse_translated_names_collects_every_name_renamed_to_it() -> None:
-    assert reverse_translated_names(
-        MetricName("new"),
-        [
-            *_translations({"old": translations.RenameTo("new")}),
-            *_translations({"ancient": translations.RenameToAndScaleBy("new", 2.0)}),
-        ],
-    ) == {MetricName("new"), MetricName("old"), MetricName("ancient")}
-
-
-def test_reverse_translated_names_skips_a_regex_translation() -> None:
-    # "~.*rta" maps many raw names onto one canonical name, so it cannot be reversed.
-    assert reverse_translated_names(
-        MetricName("rta"), _translations({"~.*rta": translations.RenameTo("rta")})
-    ) == {MetricName("rta")}
-
-
-def test_reverse_translated_names_ignores_a_translation_to_another_metric() -> None:
-    assert reverse_translated_names(
-        MetricName("new"), _translations({"old": translations.RenameTo("other")})
-    ) == {MetricName("new")}
-
-
-def _series(start: int, end: int, step: int, values: Sequence[float | None]) -> TimeSeries:
-    return TimeSeries(time_range=TimeRange(start=start, end=end, step=step), values=values)
-
-
-def test_a_series_already_on_the_grid_is_handed_back_unchanged() -> None:
-    series = _series(0, 30, 10, [1.0, 2.0, 3.0])
-    assert resample(series, series.time_range, ConsolidationFunction.MAX) is series
-
-
-def test_a_coarser_grid_folds_each_bucket_with_the_consolidation_function() -> None:
-    series = _series(0, 60, 10, [1.0, 5.0, 2.0, 6.0, 3.0, 7.0])
-    coarse = TimeRange(start=0, end=60, step=30)
-    assert list(resample(series, coarse, ConsolidationFunction.MAX).values) == [5.0, 7.0]
-    assert list(resample(series, coarse, ConsolidationFunction.MIN).values) == [1.0, 3.0]
-    assert list(resample(series, coarse, ConsolidationFunction.AVERAGE).values) == [
-        8.0 / 3.0,
-        16.0 / 3.0,
-    ]
-
-
-def test_a_bucket_without_a_single_value_folds_to_a_gap() -> None:
-    series = _series(0, 60, 10, [1.0, 5.0, 2.0, None, None, None])
-    resampled = resample(series, TimeRange(start=0, end=60, step=30), ConsolidationFunction.MAX)
-    assert list(resampled.values) == [5.0, None]
-
-
-def test_a_finer_grid_forward_fills_the_points_it_has() -> None:
-    series = _series(0, 60, 30, [1.0, 2.0])
-    resampled = resample(series, TimeRange(start=0, end=60, step=10), ConsolidationFunction.MAX)
-    assert list(resampled.values) == [1.0, 1.0, 1.0, 2.0, 2.0, 2.0]
-
-
-def test_an_empty_series_becomes_a_gap_on_the_requested_grid() -> None:
-    resampled = resample(
-        _series(0, 30, 10, []), TimeRange(start=0, end=60, step=20), ConsolidationFunction.MAX
-    )
-    assert list(resampled.values) == [None, None, None]
-
-
-def test_scaling_multiplies_the_present_values_and_keeps_the_gaps() -> None:
-    scaled = scaled_series(_series(0, 30, 10, [1.0, None, 3.0]), 1024)
-    assert list(scaled.values) == [1024.0, None, 3072.0]
-
-
-def test_scaling_by_one_hands_the_series_back_unchanged() -> None:
-    series = _series(0, 30, 10, [1.0, 2.0, 3.0])
-    assert scaled_series(series, 1.0) is series
-
-
-def test_merging_takes_the_first_series_that_has_a_value_at_a_point() -> None:
-    merged = merge_series(
-        [_series(0, 30, 10, [None, 2.0, None]), _series(0, 30, 10, [9.0, 9.0, 9.0])],
-        TimeRange(start=0, end=30, step=10),
-    )
-    assert list(merged.values) == [9.0, 2.0, 9.0]
 
 
 def _merged(
@@ -410,14 +150,12 @@ def test_merging_rejects_the_none_a_nagios_core_answers_with() -> None:
 def _evaluated(
     perf_data_string: str,
     *,
-    rrd_metrics: Sequence[MetricName] = (),
     registered_translations: Sequence[translations.Translation] = (),
     temperature_unit: TemperatureUnit = TemperatureUnit.CELSIUS,
 ) -> Mapping[MetricName, EvaluatedMetric]:
     return evaluated_metrics(
         perf_data_string,
         _CHECK_COMMAND,
-        rrd_metrics,
         registered_metrics=_REGISTERED_METRICS,
         registered_translations=registered_translations,
         temperature_unit=temperature_unit,
@@ -481,14 +219,11 @@ def test_a_temperature_metric_is_converted_to_the_users_unit() -> None:
     assert (performance_data.value, performance_data.warning) == (50.0, 68.0)
 
 
-def test_a_metric_only_the_rrd_knows_is_read_as_well() -> None:
-    evaluated = _evaluated("used=10B", rrd_metrics=[MetricName("temp")])
-    assert sorted(evaluated) == [MetricName("temp"), MetricName("used")]
-
-
-def test_performance_data_wins_over_what_the_rrd_reports() -> None:
-    evaluated = _evaluated("used=10B", rrd_metrics=[MetricName("used")])
-    assert evaluated[MetricName("used")].performance_data.value == 10.0
+def test_a_temperature_metric_carries_its_already_converted_unit() -> None:
+    unit_format = _evaluated("temp=10", temperature_unit=TemperatureUnit.FAHRENHEIT)[
+        MetricName("temp")
+    ].unit_format
+    assert (unit_format.symbol, unit_format.convertible) == ("°F", False)
 
 
 def test_a_pnp_suffix_names_the_check_command_the_translation_is_looked_up_with() -> None:
@@ -509,19 +244,3 @@ def test_a_pnp_suffix_names_the_check_command_the_translation_is_looked_up_with(
         (name, metric.performance_data.value, metric.performance_data.warning)
         for name, metric in evaluated.items()
     ] == [(MetricName("used"), 0.0068, 0.3)]
-
-
-def test_a_metric_carries_no_predictive_prefix() -> None:
-    assert split_predict_prefix("util") == ("", "util")
-
-
-def test_an_upper_prediction_splits_off_its_prefix() -> None:
-    assert split_predict_prefix("predict_util") == ("predict_", "util")
-
-
-def test_a_lower_prediction_splits_off_the_longer_prefix() -> None:
-    assert split_predict_prefix("predict_lower_util") == ("predict_lower_", "util")
-
-
-def test_a_name_merely_starting_like_a_prediction_keeps_it_all() -> None:
-    assert split_predict_prefix("predictions_total") == ("", "predictions_total")

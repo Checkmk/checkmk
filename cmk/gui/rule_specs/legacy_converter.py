@@ -59,6 +59,7 @@ from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets import internal as ruleset_api_internal
 from cmk.rulesets import v1 as ruleset_api_v1
 from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceExtended,
     DictionaryExtended,
     ListExtended,
     ListOfStrings,
@@ -241,9 +242,7 @@ def _convert_to_legacy_check_parameter_rulespec(
         item_spec, item_form_spec = _get_item_spec_maker(convert_condition, localizer)
         return CheckParameterRulespecWithItem(
             check_group_name=to_convert.name,
-            title=(
-                None if to_convert.title is None else partial(to_convert.title.localize, localizer)  # type: ignore[redundant-expr]
-            ),
+            title=partial(to_convert.title.localize, localizer),
             group=_convert_to_legacy_rulespec_group(
                 legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
                 to_convert.topic,
@@ -312,7 +311,7 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
             if to_convert.parameter_form is not None
             else None
         ),
-        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),  # type: ignore[redundant-expr]
+        title=partial(to_convert.title.localize, localizer),
         is_deprecated=False,
         match_type="all",
         item_spec=item_spec,
@@ -390,7 +389,7 @@ def _convert_to_legacy_host_rule_spec_rulespec(
         valuespec=partial(
             convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
         ),
-        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),  # type: ignore[redundant-expr]
+        title=partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type=_convert_to_legacy_match_type(to_convert),
         doc_references=_get_doc_references(config_scope_prefix(to_convert.name), localizer),
@@ -412,7 +411,7 @@ def _convert_to_legacy_service_rule_spec_rulespec(
         valuespec=partial(
             convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
         ),
-        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),  # type: ignore[redundant-expr]
+        title=partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type=(
             "dict" if to_convert.eval_type == ruleset_api_v1.rule_specs.EvalType.MERGE else "all"
@@ -653,7 +652,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.SingleChoice() | SingleChoiceExtended():
             return _convert_to_legacy_dropdown_choice(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.CascadingSingleChoice():
+        case ruleset_api_v1.form_specs.CascadingSingleChoice() | CascadingSingleChoiceExtended():
             return _convert_to_legacy_cascading_dropdown(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.ServiceState():
@@ -761,7 +760,10 @@ def convert_to_legacy_valuespec(
     if to_convert.migrate is not None:
         migrate_func = (
             allow_empty_value_wrapper(to_convert.migrate)
-            if isinstance(to_convert, ruleset_api_v1.form_specs.CascadingSingleChoice)
+            if isinstance(
+                to_convert,
+                ruleset_api_v1.form_specs.CascadingSingleChoice | CascadingSingleChoiceExtended,
+            )
             else to_convert.migrate
         )
         return legacy_valuespecs.Transform(
@@ -947,12 +949,13 @@ def _convert_to_legacy_text_input(
 
     help_text = _localize_optional(to_convert.help_text, localizer)
     if to_convert.macro_support:
-        macros_help_text = (
+        localized_text = ruleset_api_v1.Help(
             "This field supports the use of macros. "
             "The corresponding plug-in replaces the macros with the actual values. "
-            "The most common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$."
-        )
-        localized_text = ruleset_api_v1.Help(macros_help_text).localize(localizer)
+            "The most common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$. "
+            "To use a custom host attribute, prefix its name with 'HOST_', "
+            "e.g. an attribute named 'OWNER' is referenced as $HOST_OWNER$."
+        ).localize(localizer)
         converted_kwargs["help"] = f"{help_text} {localized_text}" if help_text else localized_text
     else:
         converted_kwargs["help"] = help_text
@@ -1387,16 +1390,17 @@ def _convert_to_legacy_dropdown_choice(
 
 
 def _convert_to_legacy_cascading_dropdown(
-    to_convert: ruleset_api_v1.form_specs.CascadingSingleChoice,
+    to_convert: ruleset_api_v1.form_specs.CascadingSingleChoice | CascadingSingleChoiceExtended,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.CascadingDropdown:
+    elements = to_convert.elements() if callable(to_convert.elements) else to_convert.elements
     legacy_choices = [
         (
             str(element.name),
             element.title.localize(localizer),
             convert_to_legacy_valuespec(element.parameter_form, localizer),
         )
-        for element in to_convert.elements
+        for element in elements
     ]
 
     converted_kwargs: dict[str, Any] = {
@@ -1408,16 +1412,25 @@ def _convert_to_legacy_cascading_dropdown(
         case ruleset_api_v1.form_specs.InputHint():
             converted_kwargs["no_preselect_title"] = to_convert.prefill.value.localize(localizer)
         case ruleset_api_v1.form_specs.DefaultValue():
-            # CascadingSingleChoice.__post_init__ checks that prefill_selection is one of the elements
+            # __post_init__ checks that the prefill selection is one of the static elements,
+            # but dynamic elements may no longer contain it
             default_choice = next(
-                legacy_choice
-                for legacy_choice in legacy_choices
-                if legacy_choice[0] == to_convert.prefill.value
+                (
+                    legacy_choice
+                    for legacy_choice in legacy_choices
+                    if legacy_choice[0] == to_convert.prefill.value
+                ),
+                None,
             )
-            converted_kwargs["default_value"] = (
-                to_convert.prefill.value,
-                default_choice[2].default_value(),
-            )
+            if default_choice is None:
+                converted_kwargs["no_preselect_title"] = ruleset_api_v1.Title(
+                    "Please choose"
+                ).localize(localizer)
+            else:
+                converted_kwargs["default_value"] = (
+                    to_convert.prefill.value,
+                    default_choice[2].default_value(),
+                )
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
@@ -2052,7 +2065,7 @@ def _transform_proxy_forth(value: object) -> tuple[str, str | None]:
 
 
 def _transform_proxy_back(
-    value: tuple[str, str],
+    value: tuple[str, str | None],
 ) -> tuple[
     Literal["cmk_postprocessed"],
     Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
@@ -2061,8 +2074,8 @@ def _transform_proxy_back(
     match value:  # type: ignore[exhaustive-match]
         case "environment", "environment":
             return "cmk_postprocessed", "environment_proxy", ""
-        case "no_proxy", None:  # type: ignore[unreachable]
-            return "cmk_postprocessed", "no_proxy", ""  # type: ignore[unreachable]
+        case "no_proxy", None:
+            return "cmk_postprocessed", "no_proxy", ""
         case "global", str(stored_proxy_id):
             return "cmk_postprocessed", "stored_proxy", stored_proxy_id
         case "url", str(url):
@@ -2227,7 +2240,7 @@ def _transform_from_legacy_internal_proxy(
         case "environment", "environment":
             return "cmk_postprocessed", "environment_proxy", ""
 
-        case "no_proxy", None:  # type: ignore[unreachable]
+        case "no_proxy", _:
             return "cmk_postprocessed", "no_proxy", ""
 
         case "global", str(stored_proxy_id):
@@ -2619,11 +2632,12 @@ def _convert_to_legacy_text_area(
 
     help_text = _localize_optional(to_convert.help_text, localizer)
     if to_convert.macro_support:
-        macros_help_text = (
+        localized_text = ruleset_api_v1.Help(
             "This field supports the use of macros. "
-            "The corresponding plug-in replaces the macros with the actual values."
-        )
-        localized_text = ruleset_api_v1.Help(macros_help_text).localize(localizer)
+            "The corresponding plug-in replaces the macros with the actual values. "
+            "To use a custom host attribute, prefix its name with 'HOST_', "
+            "e.g. an attribute named 'OWNER' is referenced as $HOST_OWNER$."
+        ).localize(localizer)
         converted_kwargs["help"] = f"{help_text} {localized_text}" if help_text else localized_text
     else:
         converted_kwargs["help"] = help_text

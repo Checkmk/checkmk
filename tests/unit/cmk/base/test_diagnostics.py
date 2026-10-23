@@ -72,7 +72,7 @@ def _tar_names(dump: diagnostics.DiagnosticsDump) -> Sequence[str]:
 
 
 def _catalogue() -> Mapping[str, DiagnosticsPlugin]:
-    return diagnostics._load_plugin_catalogue(logger=diagnostics.ConsoleLogger())  # noqa: SLF001
+    return diagnostics.load_plugin_catalogue(logger=diagnostics.ConsoleLogger())
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
@@ -174,73 +174,6 @@ def test_dump_logs_collect_exceptions(tmp_path: Path, exception: Exception, mark
     # files yielded before the exception stay in the dump
     assert "before.txt" in _tar_names(dump)
     assert str(exception) in logger.content() or marker in logger.content()
-
-
-def _make_cli_plugin(
-    name: str, topic: Topic, sensitivity: Sensitivity, *, always: bool = False
-) -> DiagnosticsPlugin:
-    return DiagnosticsPlugin(
-        name=name,
-        description=Help("A test plugin"),
-        sensitivity=sensitivity,
-        topic=topic,
-        always=always,
-        handler=lambda _context: [],
-    )
-
-
-_CLI_TOPIC_A = Topic("Topic A")
-_CLI_TOPIC_B = Topic("Topic B")
-
-_CLI_CATALOGUE = {
-    plugin.name: plugin
-    for plugin in (
-        _make_cli_plugin("always_one", _CLI_TOPIC_A, Sensitivity.LOW, always=True),
-        _make_cli_plugin("a_low", _CLI_TOPIC_A, Sensitivity.LOW),
-        _make_cli_plugin("a_medium", _CLI_TOPIC_A, Sensitivity.MEDIUM),
-        _make_cli_plugin("b_high", _CLI_TOPIC_B, Sensitivity.HIGH),
-    )
-}
-
-
-def test_resolve_cli_selection() -> None:
-    # no options: only 'always' plugins run (empty explicit selection)
-    assert (
-        diagnostics._resolve_cli_selection(  # noqa: SLF001
-            _CLI_CATALOGUE,
-            diagnostics._cli_selection({}),  # noqa: SLF001
-        ).plugins
-        == []
-    )
-
-    selection = diagnostics._resolve_cli_selection(  # noqa: SLF001
-        _CLI_CATALOGUE,
-        diagnostics._cli_selection(  # noqa: SLF001
-            {
-                "all-topics": "low",
-                "plugins": "b_high",
-                "checkmk-server-host": "my_server",
-            }
-        ),
-    )
-    assert selection.checkmk_server_host == "my_server"
-    assert "a_low" in selection.plugins  # low via --all-topics
-    assert "a_medium" not in selection.plugins  # medium exceeds the threshold
-    assert "b_high" in selection.plugins  # explicitly selected
-    assert "always_one" not in selection.plugins  # runs anyway, needs no selection
-
-
-def test_resolve_cli_selection_rejects_unknown() -> None:
-    with pytest.raises(Exception, match="Unknown plugin"):
-        diagnostics._resolve_cli_selection(  # noqa: SLF001
-            _CLI_CATALOGUE,
-            diagnostics._cli_selection({"plugins": "nope"}),  # noqa: SLF001
-        )
-    with pytest.raises(Exception, match="Invalid sensitivity"):
-        diagnostics._resolve_cli_selection(  # noqa: SLF001
-            _CLI_CATALOGUE,
-            diagnostics._cli_selection({"all-topics": "extreme"}),  # noqa: SLF001
-        )
 
 
 def test_legacy_selection() -> None:

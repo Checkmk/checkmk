@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-
 
 import functools
 import http.client as http_client
 import json
 import traceback
 from collections.abc import Callable
+from http import HTTPStatus
 from typing import override
 from wsgiref.types import StartResponse, WSGIEnvironment
 
@@ -44,7 +43,11 @@ from cmk.gui.http import LEGACY_CONTENT_SECURITY_POLICY, request, Response, resp
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.permissions import all_permissions
+from cmk.gui.session import session
 from cmk.gui.token_auth import handle_token_page, MKTokenExpiredOrRevokedException
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wsgi.applications.utils import (
     AbstractWSGIApp,
     ensure_authentication,
@@ -132,7 +135,8 @@ def _render_exception(ctx: pages.PageContext, e: Exception, title: str) -> Respo
     status_code: int | None = e.status if isinstance(e, MKHTTPException) else None
     if _is_ajax_request():
         return _json_error_response(
-            f"{title}: {e}" if title else str(e), status_code=status_code if status_code else 200
+            f"{title}: {e}" if title else str(e),
+            status_code=status_code if status_code else HTTPStatus.OK,
         )
 
     if plain_error():
@@ -211,7 +215,13 @@ class CheckmkApp(AbstractWSGIApp):
             #                 Flask.make_response()
             #                     AbstractWSGIApp.__call__()
             #                         CheckmkApp.wsgi_app()
-            context = pages.PageContext(config=active_config, request=request)
+            context = pages.PageContext(
+                config=active_config,
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(active_config, all_permissions()),
+            )
             return _process_request(
                 context, environ, start_response, debug=self.debug, testing=self.testing
             )
@@ -222,7 +232,7 @@ def _is_ajax_request() -> bool:
     return request.has_var("_ajaxid")
 
 
-def _json_error_response(error_message: str, status_code: int = 200) -> Response:
+def _json_error_response(error_message: str, status_code: int = HTTPStatus.OK) -> Response:
     """Return a JSON error response for AJAX endpoints"""
     resp = Response(
         response=json.dumps({"result_code": 1, "result": error_message, "severity": "error"}),
@@ -241,14 +251,19 @@ def _process_request(
 ) -> WSGIResponse:
     resp: Response
     try:
+        # Parse the form before the code below accesses it. Otherwise a too large form
+        # could first be parsed in a page handler swallowing all exceptions (like
+        # _noauth) or in one of the except clauses below (like _page_not_found), so
+        # the RequestEntityTooLarge clause below would never see it. Don't assign the
+        # result to "_": That would shadow the i18n function _() in this whole function.
+        ctx.request.form
+
         try:
             file_name = requested_file_name(ctx.request, on_error="raise")
         except WebMKNotFound as exc:
             raise MKNotFound(str(exc)) from exc
 
-        if file_name is None:
-            page_handler = _page_not_found  # type: ignore[unreachable]
-        elif _handler := pages.get_page_handler(file_name):
+        if _handler := pages.get_page_handler(file_name):
             page_handler = ensure_authentication(_handler)
         elif _handler := pages.get_page_handler(f"noauth:{file_name}"):
             page_handler = _noauth(_handler)
@@ -312,7 +327,19 @@ def _process_request(
         )
 
     except RequestEntityTooLarge as e:
-        resp = _render_exception(ctx, e, title=_("Request too large"))
+        # Parsing the form failed after consuming parts of the request body, so
+        # request.values is broken. Like for the mod_wsgi OSError below, we must NOT
+        # call _render_exception() or anything else accessing form data: werkzeug
+        # would either raise again outside of this handler or parse the rest of the
+        # body into a bogus form.
+        logger.warning(
+            "Request too large for %(path)r: %(error)s", {"path": ctx.request.path, "error": e}
+        )
+        resp = Response(
+            response=[f"{_('Request too large')}: {e.description}\n"],
+            mimetype="text/plain",
+            status=HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+        )
 
     except Exception as e:
         if isinstance(e, OSError) and "mod_wsgi" in str(e):

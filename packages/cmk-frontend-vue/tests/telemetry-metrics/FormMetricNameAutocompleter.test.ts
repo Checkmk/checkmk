@@ -6,8 +6,8 @@
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, delay, http } from 'msw'
-import { setupServer } from 'msw/node'
 import { describe, expect, test } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
@@ -15,11 +15,7 @@ import FormMetricNameAutocompleter from '@/telemetry-metrics/FormMetricNameAutoc
 
 const METRIC_NAMES_URL = `${location.protocol}//${location.host}/api/internal/domain-types/telemetry_metrics/actions/names_with_types/invoke`
 
-const server = setupServer()
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
+const server = useMswServer()
 
 interface Choice {
   name: string
@@ -89,12 +85,12 @@ describe('FormMetricNameAutocompleter', () => {
   })
 
   test('keeps the free-text input available when the backend warns', async () => {
-    mockNamesWithTypes([{ name: 'cpu', types: ['gauge'] }], 'Metric backend is disabled.')
+    mockNamesWithTypes([{ name: 'cpu', types: ['gauge'] }], 'Data backend is disabled.')
     const user = userEvent.setup()
     renderFormMetricNameAutocompleter()
 
     await user.click(screen.getByRole('combobox', { name: 'Metric name' }))
-    expect(await screen.findByText('Metric backend is disabled.')).toBeInTheDocument()
+    expect(await screen.findByText('Data backend is disabled.')).toBeInTheDocument()
 
     const input = screen.getByRole('textbox', { name: 'filter' })
     await user.click(input)

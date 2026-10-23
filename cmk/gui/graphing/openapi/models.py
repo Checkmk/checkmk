@@ -8,7 +8,7 @@ from collections.abc import Callable, Mapping
 from typing import Annotated, Literal, Self
 
 from annotated_types import Interval
-from pydantic import Json
+from pydantic import Discriminator, Json, model_validator
 
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel
@@ -18,7 +18,8 @@ from cmk.web.utils.icons import IconNames
 
 from .._built_graphs import BuiltGraph, DiscoveredGraphs
 from .._graph_dispatch import serialize_graphs
-from .._unit_format import apply_temperature_unit
+from .._graph_specification import TimeZoneName
+from .._user_specific_unit import user_unit_format
 
 type ApiConsolidation = Literal["min", "max", "avg"]
 
@@ -99,15 +100,46 @@ class ApiMetricMetadata:
 
 
 @api_model
-class ApiMetricRender:
-    stack: str | None = api_field(
-        description="The stack group id. None = line; unique id = area; shared id = stacked.",
+class ApiLineRender:
+    shape: Literal["line"] = api_field(description="Draws the metric as a line.")
+    inverse: bool = api_field(description="Whether the metric is mirrored.", example=False)
+    hidden: bool = api_field(
+        description="Whether the metric is drawn (used for stack baselines).", example=False
+    )
+
+
+@api_model
+class ApiAreaRender:
+    shape: Literal["area"] = api_field(description="Draws the metric as an area.")
+    stack: str = api_field(
+        description="The stack group id. A unique id draws an area; a shared id stacks them.",
         example="stack-0",
     )
     inverse: bool = api_field(description="Whether the metric is mirrored.", example=False)
     hidden: bool = api_field(
         description="Whether the metric is drawn (used for stack baselines).", example=False
     )
+
+
+@api_model
+class ApiBarRender:
+    shape: Literal["bar"] = api_field(description="Draws the metric as bars, one per bin.")
+    stack: str | None = api_field(
+        description="The stack group id the bars rest on, or null for bars of their own.",
+        example=None,
+    )
+    aggregation: Literal["sum"] = api_field(
+        description="How the data points inside one bin combine into its bar.", example="sum"
+    )
+    inverse: bool = api_field(description="Whether the metric is mirrored.", example=False)
+    hidden: bool = api_field(
+        description="Whether the metric is drawn (used for stack baselines).", example=False
+    )
+
+
+type ApiMetricRender = Annotated[
+    ApiLineRender | ApiAreaRender | ApiBarRender, Discriminator("shape")
+]
 
 
 @api_model
@@ -145,8 +177,8 @@ class ApiShadedRegion:
 class ApiMetric:
     metadata: ApiMetricMetadata = api_field(description="The metric metadata.")
     render: ApiMetricRender = api_field(description="The metric rendering options.")
-    data_points: list[float | None] | None = api_field(
-        description="The data points. None when unfetched; an array (possibly with nulls) otherwise.",
+    data_points: list[float | None] = api_field(
+        description="The data points, null where the series holds no value at that step.",
         example=[1.0, 2.5, None, 3.0],
     )
 
@@ -201,7 +233,7 @@ class ApiYAxis:
         unit_format: UnitFormat | None = None
         conversion: Callable[[float], float] = lambda value: value
         if built.y_axis_unit is not None:
-            unit_format, conversion = apply_temperature_unit(built.y_axis_unit, temperature_unit)
+            unit_format, conversion = user_unit_format(built.y_axis_unit, temperature_unit)
         return cls(
             unit=(ApiOmitted() if unit_format is None else ApiUnitFormat.from_shared(unit_format)),
             explicit_range=(
@@ -254,9 +286,22 @@ class ApiDiscoveredGraph:
             "graph_id": "cpu_load",
         },
     )
+    add_type: str | None = api_field(
+        description=(
+            "The add-to type this graph is offered under (e.g. 'pnpgraph', 'custom_graph', "
+            "'combined_graph'), which is used to build the burger menu entries. Null for graph "
+            "kinds that offer no add-to action."
+        ),
+        example="pnpgraph",
+    )
 
     @classmethod
     def from_built(cls, built: BuiltGraph, temperature_unit: TemperatureUnit) -> Self:
+        if built.specification is None or (stored := built.specification.for_storage()) is None:
+            add_type = None
+        else:
+            add_type = stored.element_type()
+
         return cls(
             internal=json.dumps(serialize_graphs([built.graph])),
             title=built.graph.title,
@@ -265,6 +310,7 @@ class ApiDiscoveredGraph:
             add_to_specification=(
                 None if built.specification is None else built.specification.model_dump()
             ),
+            add_type=add_type,
         )
 
 
@@ -463,12 +509,24 @@ class AddToContainerRequest(AddToRequest):
 
 @api_model
 class AddToContainerResponse:
+    redirect_url: str = api_field(
+        description="The URL of the container page the graph was added to, to navigate to.",
+        example="custom_graph.py?name=my_custom_graph&owner=my_user",
+    )
     sidebar_reload_required: bool = api_field(
         description=(
             "Whether the sidebar has to be reloaded. Adding to a container the user does not own "
             "clones it first, which makes a new page appear in the sidebar."
         ),
         example=False,
+    )
+
+
+@api_model
+class AddToVisualResponse:
+    redirect_url: str = api_field(
+        description="The URL of the visual the graph was added to, to navigate to.",
+        example="dashboard.py?name=my_dashboard",
     )
 
 
@@ -508,6 +566,34 @@ class ExportRequest:
         example=1781528400,
         default=None,
     )
+    y_range_min: float | ApiOmitted = api_field(
+        description=("Lower bound of the Y axis. Inferred from the displayed data when omitted."),
+        example=0.0,
+        default_factory=ApiOmitted,
+    )
+    y_range_max: float | ApiOmitted = api_field(
+        description=("Upper bound of the Y axis. Inferred from the displayed data when omitted."),
+        example=100.0,
+        default_factory=ApiOmitted,
+    )
+    time_zone: TimeZoneName | ApiOmitted = api_field(
+        description=(
+            "The IANA time zone the graph is displayed in, which an exported image labels its "
+            "time axis in. The site's time zone when omitted."
+        ),
+        example="Europe/Berlin",
+        default_factory=ApiOmitted,
+    )
+
+    @model_validator(mode="after")
+    def _reject_inverted_y_range(self) -> Self:
+        if (
+            not isinstance(self.y_range_min, ApiOmitted)
+            and not isinstance(self.y_range_max, ApiOmitted)
+            and self.y_range_min >= self.y_range_max
+        ):
+            raise ValueError("'y_range_min' must not be greater or equal than 'y_range_max'.")
+        return self
 
 
 @api_model

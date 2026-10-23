@@ -2,5 +2,5 @@
   "homepage": "https://modwsgi.readthedocs.io/",
   "maintainers": [],
   "repository": ["github:GrahamDumpleton/mod_wsgi"],
-  "versions": ["5.0.2.cmk.1"]
+  "versions": ["6.1.0.cmk.1"]
 }

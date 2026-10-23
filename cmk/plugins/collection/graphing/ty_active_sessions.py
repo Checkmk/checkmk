@@ -25,6 +25,12 @@ metric_tcp_active_sessions = metrics.Metric(
     unit=UNIT_COUNTER,
     color=metrics.Color.BROWN,
 )
+metric_total_active_sessions = metrics.Metric(
+    name="total_active_sessions",
+    title=Title("Total active sessions"),
+    unit=UNIT_COUNTER,
+    color=metrics.Color.DARK_GRAY,
+)
 metric_udp_active_sessions = metrics.Metric(
     name="udp_active_sessions",
     title=Title("Active UDP sessions"),
@@ -60,5 +66,9 @@ graph_palo_alto_sessions = graphs.Graph(
         "udp_active_sessions",
         "icmp_active_sessions",
         "sslproxy_active_sessions",
+    ],
+    simple_lines=[
+        metrics.WarningOf("total_active_sessions"),
+        metrics.CriticalOf("total_active_sessions"),
     ],
 )

@@ -9,17 +9,21 @@ import type {
   GlobalSettingsVariable
 } from 'cmk-shared-typing/typescript/global_settings'
 import CmkAccordionItem from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItem.vue'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
-import CmkTag from 'cmk-ui-library/components/CmkTag.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
+import CmkChip from 'cmk-ui-library/components/CmkChip.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
+import type { GlobalSettingsScope } from '../api'
+import { type ModificationFilter, isModified, isSiteOverride } from '../lib/values'
 import GlobalSettingsVariableRow from './GlobalSettingsVariableRow.vue'
 
-const { _t, _tn } = usei18n()
+const { _t } = usei18n()
 
 const props = defineProps<{
   topic: GlobalSettingsTopic
+  scope: GlobalSettingsScope
   value: string
   /** The variables to show, or null while no search narrows them. */
   match: ReadonlySet<string> | null
@@ -28,6 +32,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   edit: [variable: GlobalSettingsVariable]
+  filter: [filter: ModificationFilter]
 }>()
 
 // Only the variable array is filtered, so the header counts below stay totals.
@@ -38,19 +43,23 @@ const shownVariables = computed(() => {
     : props.topic.variables.filter((variable) => match.has(variable.name))
 })
 
-const modifiedCount = computed(
-  () => props.topic.variables.filter((variable) => variable.modified).length
-)
-const variableCountLabel = computed(() =>
-  _tn('%{count} variable', '%{count} variables', props.topic.variables.length, {
-    count: props.topic.variables.length
-  })
-)
+const modifiedCount = computed(() => props.topic.variables.filter(isModified).length)
+const siteOverrideCount = computed(() => props.topic.variables.filter(isSiteOverride).length)
 const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modifiedCount.value }))
+const siteOverrideCountLabel = computed(() =>
+  props.scope.type === 'site'
+    ? _t('%{count} overridden on this site', { count: siteOverrideCount.value })
+    : _t('%{count} overridden on sites', { count: siteOverrideCount.value })
+)
+const siteOverrideFilterLabel = computed(() =>
+  props.scope.type === 'site'
+    ? _t('Show only the settings this site overrides')
+    : _t('Show only the settings the sites override')
+)
 </script>
 
 <template>
-  <CmkAccordionItem :value="value" :icon="topic.icon">
+  <CmkAccordionItem :value="value" :icon="topic.icon" class="global-settings-topic">
     <template #header>
       <div class="global-settings-topic__header">
         <span class="global-settings-topic__headline">{{ topic.headline }}</span>
@@ -58,46 +67,66 @@ const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modif
       </div>
     </template>
     <template #header-right>
-      <CmkTag
-        size="medium"
-        variant="fill"
-        class="global-settings-topic__count"
-        :content="variableCountLabel"
-        :title="variableCountLabel"
-      />
-      <CmkTag
-        size="medium"
-        variant="fill"
-        class="global-settings-topic__count"
-        :content="modifiedCountLabel"
-        :title="modifiedCountLabel"
-      />
+      <CmkChip
+        v-if="modifiedCount > 0"
+        color="others"
+        variant="outline"
+        :title="_t('Show only the modified settings')"
+        @click="emit('filter', 'modified')"
+      >
+        {{ modifiedCountLabel }}
+      </CmkChip>
+      <CmkChip
+        v-if="siteOverrideCount > 0"
+        color="others"
+        variant="outline"
+        :title="siteOverrideFilterLabel"
+        @click="emit('filter', 'site')"
+      >
+        {{ siteOverrideCountLabel }}
+      </CmkChip>
     </template>
     <template #content>
-      <CmkAlertBox v-if="topic.warning !== null" variant="warning" size="small">
-        {{ topic.warning }}
-      </CmkAlertBox>
-      <GlobalSettingsVariableRow
-        v-for="variable in shownVariables"
-        :key="variable.name"
-        :variable="variable"
-        :query="query"
-        @edit="emit('edit', variable)"
+      <CmkAlert
+        v-if="topic.warning !== null"
+        variant="warning"
+        :text="untranslated(topic.warning)"
       />
+      <div class="global-settings-topic__rows">
+        <GlobalSettingsVariableRow
+          v-for="variable in shownVariables"
+          :key="variable.name"
+          :variable="variable"
+          :query="query"
+          @edit="emit('edit', variable)"
+        />
+      </div>
     </template>
   </CmkAccordionItem>
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
+.global-settings-topic :deep(.cmk-accordion-item__content-wrapper) {
+  padding: 20px 30px;
+}
+
+/* The rows reach into the left padding by their small edit icon (12px) and
+   its gap, so the setting names stay aligned with the rest of the content. */
+.global-settings-topic__rows {
+  margin-left: calc(-12px - var(--dimension-4));
+  overflow-x: auto;
+}
+
 .global-settings-topic__header {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: var(--dimension-2);
 }
 
 .global-settings-topic__headline {
-  color: var(--global-settings-topic-headline-color);
+  color: var(--font-color);
   font-size: var(--font-size-large);
   font-weight: var(--font-weight-bold);
 }
@@ -106,10 +135,5 @@ const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modif
   color: var(--global-settings-topic-subline-color);
   font-size: var(--font-size-normal);
   font-weight: var(--font-weight-default);
-}
-
-.global-settings-topic__count {
-  min-width: 90px;
-  text-align: center;
 }
 </style>

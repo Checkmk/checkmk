@@ -14,14 +14,9 @@ plug-in family (``cmk/plugins/<family>/cli/<module>.py``) and the plug-in instan
 name must start with the prefix returned by :func:`entry_point_prefixes`.
 """
 
-# The application object handed to every command is not typed yet (see BaseApp).
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
-
-type BaseApp = Any  # FIXME: the application object's type lives in cmk.base for now
+from pathlib import Path
 
 type Options = Mapping[str, object]
 """The parsed sub-options of a command, keyed by their long option name.
@@ -44,8 +39,9 @@ class GlobalOptions:
     """The options every command accepts.
 
     The engine declares and parses them, and applies the effects that are its own
-    (log level, debug mode, profiling) before the command's handler runs. The
-    handler receives the values for whatever it has to do with them itself.
+    (log level, profiling) before the command's handler runs. The handler
+    receives the values for whatever it has to do with them itself, such as
+    switching on debug mode for the Checkmk code it reaches.
     """
 
     verbosity: int = 0
@@ -62,8 +58,12 @@ class GlobalOptions:
     """
 
 
-type CommandHandler = Callable[[BaseApp, GlobalOptions, Options, Args], int]
-"""The signature of a command's handler; it returns the exit status."""
+type CommandHandler = Callable[[Path, GlobalOptions, Options, Args], int]
+"""The signature of a command's handler; it returns the exit status.
+
+The first argument is the site's root directory. A command that needs more of
+the runtime than that builds it itself, e.g. with ``cmk.base.app.make_app()``.
+"""
 
 
 def _validate_argument_declaration(
@@ -117,10 +117,10 @@ class CLICommand:
     Example:
     ********
 
-    >>> def greet(app: BaseApp, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    >>> def greet(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
     ...     print("Hello", ", ".join(args))
     ...     return 0
-    >>> mode_greet = CLICommand(
+    >>> cli_command_greet = CLICommand(
     ...     long_option="greet",
     ...     handler_function=greet,
     ...     short_help="Greet the given names",
@@ -168,7 +168,6 @@ def entry_point_prefixes() -> Mapping[type[CLICommand], str]:
 
 __all__ = [
     "Args",
-    "BaseApp",
     "CLICommand",
     "CLIOption",
     "CommandHandler",

@@ -7,27 +7,32 @@
 # mypy: disable-error-code="type-arg"
 
 import json
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any, NamedTuple
 
 import cmk.ccc.version as cmk_version
 from cmk.automations import results
+from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.automations.results import SetAutochecksInput
-from cmk.automations.types import AutomationID
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import DiscoverySettings
 from cmk.checkengine.plugins import CheckPluginName
+from cmk.diagnostics.automation_types import CreateDiagnosticsDumpV2Result
 from cmk.events.notification_result import NotificationContext
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
-from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
+from cmk.gui.watolib.activate_changes import (
+    sync_changes_from_active_config_before_remote_automation,
+)
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     check_mk_remote_automation_serialized,
     get_local_automation_failure_message,
     MKAutomationException,
 )
-from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, folder_tree
+from cmk.gui.watolib.host_attributes import CollectedHostAttributes
+from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, FolderTree
 from cmk.ruleset_matcher.labels import HostLabel, Labels
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
@@ -36,9 +41,14 @@ from cmk.utils.servicename import Item, ServiceName
 
 class AutomationResponse(NamedTuple):
     command: AutomationID
-    serialized_result: results.SerializedResult
+    serialized_result: str
     local: bool
     cmdline: Iterable[str]
+
+
+def _hosts_collected_only_for_restart_and_reload() -> Mapping[HostName, CollectedHostAttributes]:
+    # The hooks handed the hosts are only called on a restart or a reload of the core.
+    raise MKGeneralException("Only the restart and the reload automation collect the hosts")
 
 
 def _automation_serialized(
@@ -53,6 +63,9 @@ def _automation_serialized(
     non_blocking_http: bool = False,
     force_cli_interface: bool = False,
     debug: bool,
+    collect_hosts: Callable[
+        [], Mapping[HostName, CollectedHostAttributes]
+    ] = _hosts_collected_only_for_restart_and_reload,
 ) -> AutomationResponse:
     if args is None:
         args = []
@@ -65,8 +78,9 @@ def _automation_serialized(
             stdin_data=stdin_data,
             timeout=timeout,
             force_cli_interface=force_cli_interface,
+            for_cmk_version=cmk_version.__version__,
             debug=debug,
-            collect_all_hosts=lambda: collect_all_hosts(folder_tree()),
+            collect_all_hosts=collect_hosts,
         )
         return AutomationResponse(
             command=command,
@@ -84,7 +98,13 @@ def _automation_serialized(
             indata=indata,
             stdin_data=stdin_data,
             timeout=timeout,
-            sync=sync_changes_before_remote_automation if sync else lambda site_id, debug: None,  # noqa: ARG005
+            # Syncing starts an activation, which needs a tree; the automation
+            # wrappers are handed none, so the sync builds its own.
+            sync=(
+                sync_changes_from_active_config_before_remote_automation
+                if sync
+                else lambda site_id, debug: None  # noqa: ARG005
+            ),
             non_blocking_http=non_blocking_http,
             debug=debug,
         ),
@@ -116,7 +136,7 @@ def _automation_failure(
     )
 
 
-def _deserialize[ResultType: results.ABCAutomationResult](
+def _deserialize[ResultType: AutomationResult](
     response: AutomationResponse,
     result_type: type[ResultType],
     *,
@@ -446,26 +466,42 @@ def delete_hosts(
     )
 
 
-def restart(hosts_to_update: Sequence[HostName] | None, *, debug: bool) -> results.RestartResult:
+def restart(
+    hosts_to_update: Sequence[HostName] | None,
+    *,
+    tree: FolderTree,
+    timeout: int | None,
+    debug: bool,
+) -> results.RestartResult:
     return _deserialize(
         _automation_serialized(
             AutomationID("restart"),
             automation_config=LocalAutomationConfig(),
             args=hosts_to_update,
+            timeout=timeout,
             debug=debug,
+            collect_hosts=lambda: collect_all_hosts(tree),
         ),
         results.RestartResult,
         debug=debug,
     )
 
 
-def reload(hosts_to_update: Sequence[HostName] | None, *, debug: bool) -> results.ReloadResult:
+def reload(
+    hosts_to_update: Sequence[HostName] | None,
+    *,
+    tree: FolderTree,
+    timeout: int | None,
+    debug: bool,
+) -> results.ReloadResult:
     return _deserialize(
         _automation_serialized(
             AutomationID("reload"),
             automation_config=LocalAutomationConfig(),
             args=hosts_to_update,
+            timeout=timeout,
             debug=debug,
+            collect_hosts=lambda: collect_all_hosts(tree),
         ),
         results.ReloadResult,
         debug=debug,
@@ -482,8 +518,8 @@ def get_configuration(
             AutomationID("get-configuration"),
             automation_config=LocalAutomationConfig(),
             indata=config_var_names,
-            # We must not call this through the automation helper,
-            # see automation call execution.
+            # Don't depend on the automation helper: a fresh GUI process may need
+            # this while the helper is (re)starting, e.g. during `omd reload`.
             force_cli_interface=True,
             debug=debug,
         ),
@@ -713,13 +749,15 @@ def get_agent_output(
     agent_type: str,
     timeout: int | None,
     *,
+    cached: bool,
     debug: bool,
 ) -> results.GetAgentOutputResult:
     return _deserialize(
         _automation_serialized(
             AutomationID("get-agent-output"),
             automation_config=automation_config,
-            args=[host_name, agent_type],
+            # Keep the directive trailing: older versions ignore extra arguments.
+            args=[host_name, agent_type, *(("@cached",) if cached else ())],
             timeout=timeout,
             debug=debug,
         ),
@@ -795,7 +833,7 @@ def create_diagnostics_dump_v2(
     timeout: int,
     *,
     debug: bool,
-) -> results.CreateDiagnosticsDumpV2Result:
+) -> CreateDiagnosticsDumpV2Result:
     return _deserialize(
         _automation_serialized(
             AutomationID("create-diagnostics-dump-v2"),
@@ -805,7 +843,7 @@ def create_diagnostics_dump_v2(
             non_blocking_http=True,
             debug=debug,
         ),
-        results.CreateDiagnosticsDumpV2Result,
+        CreateDiagnosticsDumpV2Result,
         debug=debug,
     )
 

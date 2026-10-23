@@ -9,12 +9,8 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 
 import cmk.utils.paths
-from cmk.checkengine.snmp_backends.classic import (  # astrein: disable=cmk-module-layer-violation
-    ClassicSNMPBackend,
-)
-from cmk.checkengine.snmp_backends.stored_walk import (  # astrein: disable=cmk-module-layer-violation
-    StoredWalkSNMPBackend,
-)
+from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
+from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.snmplib import (
     get_single_oid,
     OID,
@@ -35,7 +31,7 @@ cmk.utils.paths.snmpwalks_dir = Path(params[3])
 backend: Callable[[SNMPHostConfig], SNMPBackend]
 match backend_type:
     case SNMPBackendEnum.INLINE:
-        from cmk.checkengine.snmp_backends.inline import (  # type: ignore[import-not-found,unused-ignore]  # astrein: disable=cmk-module-layer-violation
+        from cmk.checkengine.snmp_backends.inline import (  # type: ignore[import-not-found,unused-ignore]
             InlineSNMPBackend,
         )
 

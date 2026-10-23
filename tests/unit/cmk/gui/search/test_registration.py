@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.search.matchers import match_item_generator_registry
-from cmk.gui.search.permissions import search_permissions_handler_registry
+from cmk.gui.search.permissions import (
+    category_permissions_handler_registry,
+    search_permissions_handler_registry,
+)
 
 
 def test_all_categorized_providers_have_a_permissions_handler() -> None:
@@ -18,3 +21,7 @@ def test_all_categorized_providers_have_a_permissions_handler() -> None:
         for category in match_item_generator_registry
     }
     assert categorized_providers <= set(search_permissions_handler_registry)
+
+
+def test_all_category_permission_handlers_refer_to_known_categories() -> None:
+    assert set(category_permissions_handler_registry) <= set(match_item_generator_registry)

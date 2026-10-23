@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
+
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type { ContextFilters } from '@/dashboard/types/filter.ts'
 import type {
@@ -19,6 +21,8 @@ import WizardStageContainer from '../../components/WizardStageContainer.vue'
 import Stage1 from './stage1/StageContents.vue'
 
 interface OtherWizardProps {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   contextFilters: ContextFilters
   editWidgetSpec?: WidgetSpec | null
@@ -43,6 +47,8 @@ defineEmits<{
       <CloseButton @close="$emit('close')" />
       <Stage1
         :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
         :edit-widget-spec="editWidgetSpec ?? null"
         @add-widget="
           (content, generalSettings, filterContext) =>

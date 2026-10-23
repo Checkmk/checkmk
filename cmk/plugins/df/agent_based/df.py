@@ -39,6 +39,10 @@ def _filter_df_blocks(
     never_ignore_mountpoints = inventory_options.get("never_ignore_mountpoints", [])
 
     for df_block in df_blocks:
+        if not _ignore_mountpoint(df_block.mountpoint, never_ignore_mountpoints):
+            yield df_block
+            continue
+
         if df_block.mountpoint in EXCLUDED_MOUNTPOINTS:
             continue
 
@@ -49,10 +53,6 @@ def _filter_df_blocks(
             continue
 
         if df_block.fs_type not in ignore_fs_types:
-            yield df_block
-            continue
-
-        if not _ignore_mountpoint(df_block.mountpoint, never_ignore_mountpoints):
             yield df_block
             continue
 

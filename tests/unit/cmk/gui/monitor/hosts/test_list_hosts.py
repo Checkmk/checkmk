@@ -11,15 +11,11 @@ import pytest
 import cmk.utils.paths
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
-from cmk.gui.monitor.hosts._api._filters import (
-    AndNode,
-    NumericCondition,
-    SiteScopedFilter,
-    StringCondition,
-)
+from cmk.gui.monitor.hosts._api._filters import SiteScopedFilter
 from cmk.gui.monitor.hosts._api._list_hosts import _handle_list_hosts
-from cmk.gui.monitor.hosts._models import HostOptionalField, HostState
+from cmk.gui.monitor.hosts._models import HostOptionalField
 from cmk.gui.monitor.hosts.table import HostTable, InvalidFilterError, MonitorFolders
+from cmk.gui.monitor.shared import AndNode, HostState, NumericCondition, StringCondition
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.gui.setup_git_test_helper import (

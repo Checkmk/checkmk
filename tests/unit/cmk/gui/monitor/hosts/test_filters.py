@@ -9,7 +9,8 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from cmk.ccc.site import SiteId
-from cmk.gui.monitor.hosts._api._filters import (
+from cmk.gui.monitor.hosts._api._filters import parse_as_livestatus_filter, scope_filter_by_site
+from cmk.gui.monitor.shared import (
     AndNode,
     BooleanCondition,
     FilterNode,
@@ -20,8 +21,6 @@ from cmk.gui.monitor.hosts._api._filters import (
     NumericCondition,
     NumericOp,
     OrNode,
-    parse_as_livestatus_filter,
-    scope_filter_by_site,
     SiteChoiceCondition,
     StateChoiceCondition,
     StringCondition,

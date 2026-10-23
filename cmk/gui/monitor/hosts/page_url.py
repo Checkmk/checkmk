@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.http import Request
+from cmk.gui.monitor.shared import FILTER_NODE, FilterNode
 from cmk.web.utils.urls import makeuri_contextless
-
-from ._api._filters import FILTER_NODE, FilterNode
 
 
 def all_hosts_url(

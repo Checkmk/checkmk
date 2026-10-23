@@ -9,6 +9,7 @@ from typing import Annotated, Self
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.monitor.setup_folders import SetupFolderSource
+from cmk.gui.monitor.shared import HostStateLabel
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -36,7 +37,6 @@ from .._impl import LiveStatusHostRepository
 from .._models import (
     Host,
     HostLabelValue,
-    HostStateLabel,
     MAX_RESOLVED_RELATIONS,
     RelatedHost,
     RelatedHostHealth,

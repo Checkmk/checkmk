@@ -12,6 +12,7 @@ from pydantic import PlainValidator
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.monitor.setup_folders import SetupFolderSource
+from cmk.gui.monitor.shared import FILTER_NODE, FilterNode, HostStateLabel
 from cmk.gui.monitor.site_scope import MonitorSite, MonitorSites
 from cmk.gui.monitor.table_widget import TableRows
 from cmk.gui.openapi.framework import (
@@ -42,20 +43,13 @@ from .._models import (
     HostSort,
     HostSortColumn,
     HostSortDirection,
-    HostStateLabel,
     UnixTimestamp,
 )
 from .._repositories import HostRepository
 from .._table_catalog import DEFAULT_HOST_SORT, HOST_TABLE
 from ..context_filters import translate_filters
 from ._family import MONITOR_HOSTS_FAMILY
-from ._filters import (
-    FILTER_NODE,
-    FilterNode,
-    parse_as_livestatus_filter,
-    scope_filter_by_site,
-    SiteScopedFilter,
-)
+from ._filters import parse_as_livestatus_filter, scope_filter_by_site, SiteScopedFilter
 from ._modes import build_host_modes, ModeInfo
 from ._urls import host_view_link
 from ._validators import parse_host_search_query, parse_host_sort_options

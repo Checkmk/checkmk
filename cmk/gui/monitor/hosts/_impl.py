@@ -18,6 +18,7 @@ from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
+from cmk.gui.monitor.shared import folder_files_matching, HostState
 from cmk.gui.monitor.site_scope import MonitorSites
 from cmk.gui.sites import SiteStates
 from cmk.gui.utils.host_relation_kinds import kind_accepts
@@ -39,12 +40,7 @@ from cmk.livestatus_client.types import Column
 from cmk.ruleset_matcher.labels import BuiltinLabelsKey
 
 from ._exceptions import HostNotFoundError
-from ._folder import (
-    folder_files_matching,
-    folder_path_from_filename,
-    folder_title,
-    MonitorFolders,
-)
+from ._folder import folder_path_from_filename, folder_title, MonitorFolders
 from ._models import (
     Event,
     EventClass,
@@ -54,7 +50,6 @@ from ._models import (
     HostOptionalField,
     HostSort,
     HostSortColumn,
-    HostState,
     MAX_RESOLVED_RELATIONS,
     RelatedHost,
     RelatedHostHealth,

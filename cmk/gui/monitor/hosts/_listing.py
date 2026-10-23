@@ -7,9 +7,9 @@ from typing import Final
 
 from pydantic import TypeAdapter
 
+from cmk.gui.monitor.shared import FILTER_NODE, FilterNode
 from cmk.gui.monitor.table_widget import ListingParser
 
-from ._api._filters import FILTER_NODE, FilterNode
 from ._api._list_hosts import HostsRequestBody
 
 HOST_LISTING: Final = ListingParser[FilterNode](TypeAdapter(HostsRequestBody), FILTER_NODE)

@@ -9,7 +9,9 @@ import pytest
 import time_machine
 
 from cmk.ccc.site import SiteId
-from cmk.gui.monitor.hosts._api._filters import (
+from cmk.gui.monitor.hosts._api._filters import SiteScopedFilter
+from cmk.gui.monitor.hosts.context_filters import translate_filters
+from cmk.gui.monitor.shared import (
     AndNode,
     BooleanCondition,
     FilterNode,
@@ -18,12 +20,10 @@ from cmk.gui.monitor.hosts._api._filters import (
     NotNode,
     NumericCondition,
     OrNode,
-    SiteScopedFilter,
     StateChoiceCondition,
     StringCondition,
     TimestampCondition,
 )
-from cmk.gui.monitor.hosts.context_filters import translate_filters
 from cmk.gui.type_defs import FilterHTTPVariables, VisualContext
 
 

@@ -11,8 +11,8 @@ from pydantic import ValidationError
 from werkzeug.test import create_environ
 
 from cmk.gui.http import Request
-from cmk.gui.monitor.hosts._api._filters import AndNode, StringCondition
 from cmk.gui.monitor.hosts.page_url import all_hosts_url
+from cmk.gui.monitor.shared import AndNode, StringCondition
 
 
 def test_without_filter_or_search_is_the_plain_page() -> None:

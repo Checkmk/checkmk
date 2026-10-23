@@ -13,6 +13,14 @@ their clauses become a single "all_of" condition per field, which filters the sa
 from collections.abc import Sequence
 
 from cmk.gui.i18n import _
+from cmk.gui.monitor.shared import (
+    AndNode,
+    FilterNode,
+    LabelChoiceCondition,
+    LabelField,
+    StringCondition,
+    StringField,
+)
 from cmk.gui.search.spec import (
     HostAddress,
     HostAlias,
@@ -21,15 +29,6 @@ from cmk.gui.search.spec import (
     HostTag,
     PrefixedSearch,
     Term,
-)
-
-from ._api._filters import (
-    AndNode,
-    FilterNode,
-    LabelChoiceCondition,
-    LabelField,
-    StringCondition,
-    StringField,
 )
 
 

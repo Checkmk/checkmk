@@ -11,18 +11,17 @@ from cmk.gui.monitor.legacy_context import (
     PageFilterModel,
     translate_context,
 )
-from cmk.gui.type_defs import FilterName, VisualContext
-
-from ._api._filters import (
+from cmk.gui.monitor.shared import (
     BooleanField,
     FILTER_NODE,
     LabelField,
     NameListField,
     NumericField,
-    scope_filter_by_site,
-    SiteScopedFilter,
     StringField,
 )
+from cmk.gui.type_defs import FilterName, VisualContext
+
+from ._api._filters import scope_filter_by_site, SiteScopedFilter
 
 type _HostField = (
     StringField

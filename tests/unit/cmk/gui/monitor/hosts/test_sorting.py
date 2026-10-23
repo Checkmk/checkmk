@@ -8,14 +8,9 @@ import functools
 import pytest
 from polyfactory.factories import DataclassFactory
 
-from cmk.gui.monitor.hosts._models import (
-    Host,
-    HostSort,
-    HostSortColumn,
-    HostSortDirection,
-    HostState,
-)
+from cmk.gui.monitor.hosts._models import Host, HostSort, HostSortColumn, HostSortDirection
 from cmk.gui.monitor.hosts._sorting import host_sorter, sort_naturally
+from cmk.gui.monitor.shared import HostState
 
 
 class HostFactory(DataclassFactory[Host]):

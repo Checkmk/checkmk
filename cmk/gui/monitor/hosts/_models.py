@@ -15,25 +15,14 @@ import dataclasses
 import datetime as dt
 import enum
 from collections.abc import Mapping
-from typing import assert_never, Literal, NewType, override, Self
+from typing import assert_never, NewType, override, Self
 
+from cmk.gui.monitor.shared import HostState, HostStateLabel
 from cmk.gui.utils.host_relations import RelationDirection
 from cmk.ruleset_matcher.labels import LabelSource
 
 type UnixTimestamp = int
 """An instant as whole seconds since the epoch (UTC)."""
-
-type HostStateLabel = Literal["UP", "DOWN", "UNREACHABLE", "PENDING"]
-
-
-class HostState(enum.IntEnum):
-    UP = 0
-    DOWN = 1
-    UNREACHABLE = 2
-    # Not a real Livestatus state: assigned to a host that has never been checked, whose raw
-    # `state` column is meaningless (always 0). See ``LiveStatusHostRepository`` for where this
-    # gets constructed instead of the real state.
-    PENDING = 3
 
 
 @dataclasses.dataclass(frozen=True)

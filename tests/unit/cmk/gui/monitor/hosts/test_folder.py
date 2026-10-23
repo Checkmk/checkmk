@@ -6,12 +6,8 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.gui.monitor.hosts._folder import (
-    folder_matching_filters,
-    folder_path_from_filename,
-    folder_title,
-    MonitorFolders,
-)
+from cmk.gui.monitor.hosts._folder import folder_path_from_filename, folder_title, MonitorFolders
+from cmk.gui.monitor.shared import folder_matching_filters
 
 
 class _SetupTitling:

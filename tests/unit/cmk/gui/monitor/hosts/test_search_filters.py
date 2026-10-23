@@ -7,14 +7,14 @@ from typing import Literal
 
 import pytest
 
-from cmk.gui.monitor.hosts._api._filters import (
+from cmk.gui.monitor.hosts.search_filters import host_search_filter, UnsupportedSearchError
+from cmk.gui.monitor.shared import (
     AndNode,
     FilterNode,
     LabelChoiceCondition,
     StringCondition,
     StringField,
 )
-from cmk.gui.monitor.hosts.search_filters import host_search_filter, UnsupportedSearchError
 from cmk.gui.search.spec import parse, PrefixedSearch
 
 

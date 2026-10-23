@@ -295,6 +295,7 @@ py_cmk_test(
         "//cmk/gui/monitor/router",
         "//cmk/gui/monitor/services",
         "//cmk/gui/monitor/setup_folders",
+        "//cmk/gui/monitor/shared",
         "//cmk/gui/monitor/table_widget",
         "//cmk/gui/nagvis",
         "//cmk/gui/png",

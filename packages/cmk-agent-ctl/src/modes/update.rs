@@ -26,6 +26,10 @@ pub fn check(
     registry: &Registry,
     client_config: &ClientConfig,
 ) -> AnyhowResult<()> {
+    if !updater.is_configured()? {
+        println!("Agent updates are not configured for this host");
+        return Ok(());
+    }
     let api = agent_receiver_api::Api {
         use_proxy: client_config.use_proxy,
     };
@@ -55,6 +59,10 @@ pub fn update(
     client_config: &ClientConfig,
     signature: SignatureCheck,
 ) -> AnyhowResult<()> {
+    if !updater.is_configured()? {
+        println!("Agent updates are not configured for this host");
+        return Ok(());
+    }
     let api = agent_receiver_api::Api {
         use_proxy: client_config.use_proxy,
     };

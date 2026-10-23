@@ -23,7 +23,7 @@ use crate::constants;
 use crate::environment::PathResolver;
 use crate::site_spec;
 use crate::types::AgentHash;
-use anyhow::{bail, Context, Error, Result as AnyhowResult};
+use anyhow::{anyhow, bail, Context, Error, Result as AnyhowResult};
 use log::{log, Level};
 use serde::{Deserialize, Serialize};
 use serde_with::DisplayFromStr;
@@ -645,12 +645,25 @@ impl WritableUpdater {
     }
 }
 
+/// The update configuration, as this run found it.
+#[derive(Debug)]
+enum ConfigState {
+    /// No file: agent updates are not configured for this host.
+    Absent,
+
+    /// A file that failed to load.
+    Broken(Error),
+
+    Loaded(UpdaterConfig),
+}
+
 /// The three updater artifacts of this host, loaded together.
 ///
 /// Fields are private: what is missing or broken is only observable through
-/// [`Updater::is_operational`] and [`Updater::summary`].
+/// [`Updater::is_configured`], [`Updater::is_operational`] and
+/// [`Updater::summary`].
 pub struct Updater {
-    config: Option<UpdaterConfig>,
+    config: ConfigState,
     state: UpdateState,
     agent_info: Option<AgentInfo>,
     load_error: Option<Error>,
@@ -665,13 +678,14 @@ pub struct Updater {
 impl Updater {
     pub fn new(paths: &PathResolver) -> Self {
         let mut load_error = None;
-        let config = Self::load_or_log(
-            "updater configuration",
-            Level::Warn,
-            UpdaterConfig::load_if_configured(&paths.updater_config_path),
-            &mut load_error,
-        )
-        .flatten();
+        let config = match UpdaterConfig::load_if_configured(&paths.updater_config_path) {
+            Ok(None) => ConfigState::Absent,
+            Ok(Some(config)) => ConfigState::Loaded(config),
+            Err(error) => {
+                log::warn!("Continuing without updater configuration: {error:#}");
+                ConfigState::Broken(error)
+            }
+        };
         if !paths.updater_state_path.exists() {
             log::info!(
                 "No updater state at {:?}, starting from the default state",
@@ -771,13 +785,14 @@ impl Updater {
             self.load_error
                 .as_ref()
                 .map_or_else(String::new, |error| format!(", error '{error:#}'")),
-            self.config
-                .as_ref()
-                .map(|config| format!(
+            match &self.config {
+                ConfigState::Absent => String::from("not configured"),
+                ConfigState::Broken(error) => format!("broken: {error:#}"),
+                ConfigState::Loaded(config) => format!(
                     "activated: {}, interval {}",
                     config.activated, config.interval
-                ))
-                .unwrap_or_else(|| String::from("not configured")),
+                ),
+            },
             self.state,
             self.agent_info
                 .as_ref()
@@ -790,14 +805,35 @@ impl Updater {
     ///
     /// True even when the config has `activated = false`: by design.
     pub fn is_operational(&self) -> bool {
-        self.load_error.is_none() && self.config.is_some() && self.agent_info.is_some()
+        self.load_error.is_none() && self.loaded_config().is_some() && self.agent_info.is_some()
+    }
+
+    /// Whether agent updates are configured for this host.
+    ///
+    /// # Errors
+    ///
+    /// If a configuration is deployed but failed to load.
+    pub fn is_configured(&self) -> AnyhowResult<bool> {
+        match &self.config {
+            ConfigState::Absent => Ok(false),
+            ConfigState::Broken(error) => Err(anyhow!("{error:#}")),
+            ConfigState::Loaded(_) => Ok(true),
+        }
+    }
+
+    /// The configuration, if it loaded.
+    fn loaded_config(&self) -> Option<&UpdaterConfig> {
+        match &self.config {
+            ConfigState::Loaded(config) => Some(config),
+            ConfigState::Absent | ConfigState::Broken(_) => None,
+        }
     }
 
     /// Whether this host is supposed to update its agent automatically.
     ///
     /// False when no updater configuration is deployed at all.
     fn is_activated(&self) -> bool {
-        self.config.as_ref().is_some_and(|config| config.activated)
+        self.loaded_config().is_some_and(|config| config.activated)
     }
 
     /// Integrated updater main action.
@@ -963,8 +999,7 @@ impl Updater {
         signatures: &[agent_receiver_api::AgentSignature],
     ) -> AnyhowResult<InstallOutcome> {
         let Some(socket) = self
-            .config
-            .as_ref()
+            .loaded_config()
             .and_then(|config| config.installer_socket.as_ref())
         else {
             log::info!("No installer socket is configured, leaving {package:?} where it is");
@@ -1143,8 +1178,7 @@ impl Updater {
     }
 
     pub fn signature_keys(&self) -> &[String] {
-        self.config
-            .as_ref()
+        self.loaded_config()
             .map_or(&[], |config| &config.signature_keys)
     }
 
@@ -1767,7 +1801,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let updater = Updater::new(&paths);
 
         assert!(updater.load_error.is_none());
-        assert_eq!(updater.config.unwrap().interval, 60);
+        assert_eq!(updater.loaded_config().unwrap().interval, 60);
         assert_eq!(updater.state.last_check, Some(1759276800));
         assert_eq!(updater.agent_info.unwrap().hash.as_str(), INSTALLED_HASH);
     }
@@ -1778,7 +1812,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         let updater = Updater::new(&artifact_paths(&dir));
 
-        assert!(updater.config.is_none());
+        assert!(!updater.is_configured().unwrap());
         assert_eq!(updater.state, UpdateState::default());
         assert!(updater.agent_info.is_none());
     }
@@ -1795,6 +1829,8 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(!updater.is_operational());
     }
 
+    /// A broken configuration must not read as "not configured": the operator
+    /// has to learn that it is broken, and which file.
     #[test]
     fn test_updater_new_survives_a_malformed_config() {
         let dir = tempfile::TempDir::new().unwrap();
@@ -1803,14 +1839,12 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         let updater = Updater::new(&paths);
 
-        assert!(updater.config.is_none());
         assert!(!updater.is_operational());
-        // The agent info fails to load afterwards, but the config error is kept.
         // The context quotes the path with `{:?}`, which escapes the separators
         // of a Windows path, so the expectation has to be built the same way.
         assert!(updater
-            .load_error
-            .unwrap()
+            .is_configured()
+            .unwrap_err()
             .to_string()
             .contains(&format!("{:?}", paths.updater_config_path)));
     }
@@ -1871,7 +1905,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_summary_reports_config_and_hash_but_no_signature_keys() {
         let updater = Updater {
-            config: Some(UpdaterConfig {
+            config: ConfigState::Loaded(UpdaterConfig {
                 signature_keys: vec![String::from(SIGNATURE_KEY)],
                 ..some_config().unwrap()
             }),
@@ -1970,7 +2004,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     /// The state plays no role for [`Updater::is_operational`].
     fn updater(config: Option<UpdaterConfig>, agent_info: Option<AgentInfo>) -> Updater {
         Updater {
-            config,
+            config: config.map_or(ConfigState::Absent, ConfigState::Loaded),
             state: UpdateState::default(),
             agent_info,
             load_error: None,

@@ -3852,9 +3852,13 @@ def reload_configuration(
         except Exception:
             _set_log_levels(previous_log_levels)
             raise
-        # Update the replication status only now that the new configuration is in effect, so a
-        # failed reload keeps the previous one. As the event server uses the new configuration
-        # already, complete the reload even if updating the replication status fails.
+    # Update the replication status only now that the new configuration is in effect, so a failed
+    # reload keeps the previous one. Like the status server switching the replication mode, hold the
+    # lock of the event status, so neither undoes what the other one changes. The status server may
+    # take the lock of the configuration while holding that lock, so take it only afterwards. As
+    # the event server uses the new configuration already, complete the reload even if updating
+    # the replication status fails.
+    with event_status.lock:
         try:
             _update_replication_status(
                 settings, logger, slave_status, config, start_over=start_over

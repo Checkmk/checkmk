@@ -450,6 +450,43 @@ def test_reload_completes_although_the_replication_status_cannot_be_updated(
     assert ticket_file.read_text() == "disk full"
 
 
+class _LockStatesWhileLogging(logging.Handler):
+    """Records whether the lock of the event status is held whenever a message with the given
+    beginning gets logged"""
+
+    def __init__(self, beginning: str, event_status: EventStatus) -> None:
+        super().__init__()
+        self._beginning = beginning
+        self._event_status = event_status
+        self.lock_states: list[bool] = []
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        if record.getMessage().startswith(self._beginning):
+            self.lock_states.append(self._event_status.lock.locked())
+
+
+def test_reload_updates_the_replication_status_while_the_event_status_is_locked(
+    settings: ec.Settings,
+    logger: logging.Logger,
+    history: History,
+    event_status: EventStatus,
+    reload: _Reload,
+) -> None:
+    # The status server switches the replication mode while holding the same lock, so the reload
+    # can't undo a switch between reading the saved replication status and updating it in memory.
+    # Once the reload updated it, it logs the replication mode.
+    activate_config(settings, f"replication = {_REPLICATION!r}\n")
+    lock_states = _LockStatesWhileLogging("Replication: slave configuration", event_status)
+    logger.addHandler(lock_states)
+    try:
+        reload(history)
+    finally:
+        logger.removeHandler(lock_states)
+
+    assert lock_states.lock_states == [True]
+
+
 @pytest.fixture(name="signal_handler")
 def fixture_signal_handler(logger: logging.Logger) -> SignalHandler:
     return SignalHandler(logger)

@@ -34,6 +34,7 @@ use std::io;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
 use x509_parser::certificate::X509Certificate;
 
 /// Fallback update interval, matching the default of the agent updater ruleset.
@@ -674,6 +675,76 @@ impl WritableUpdater {
         self.state.save(&self.state_path)
     }
 
+    /// Note `hash` before the hand-over: installing it may end this process.
+    pub fn store_pending_hash(&mut self, hash: &AgentHash) -> AnyhowResult<()> {
+        self.state.pending_hash = Some(hash.to_string());
+        self.state.save(&self.state_path)
+    }
+
+    /// Settle the package handed over in an earlier run: the installed hash says
+    /// whether its installation took effect, and a failure the install step
+    /// reported gives the reason. With nothing pending, or nothing known about
+    /// the installed agent, the state stays as it is.
+    pub fn settle_pending_install(&mut self) -> AnyhowResult<()> {
+        let Some(pending) = self.state.pending_hash.as_deref() else {
+            return Ok(());
+        };
+        let Some(info) = &self.agent_info else {
+            return Ok(());
+        };
+        if info.hash.as_str() == pending {
+            self.record_applied_update()
+        } else {
+            #[cfg(unix)]
+            let reported = self.reported_install_error(pending);
+            // On Windows no install step reports a result.
+            #[cfg(windows)]
+            let reported = None;
+            self.record_failed_install(reported)
+        }
+    }
+
+    /// The pending package runs: record when, and drop the error that preceded it.
+    fn record_applied_update(&mut self) -> AnyhowResult<()> {
+        self.state.last_update = Some(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs());
+        self.state.pending_hash = None;
+        self.state.last_error = None;
+        self.state.save(&self.state_path)
+    }
+
+    /// The pending package does not run: record that its installation failed.
+    fn record_failed_install(&mut self, reported: Option<String>) -> AnyhowResult<()> {
+        let pending = self.state.pending_hash.as_deref().unwrap_or("unknown");
+        let error = match reported {
+            Some(reported) => {
+                format!("The installation of agent package {pending} failed: {reported}")
+            }
+            None => format!(
+                "The installation of agent package {} did not take effect, the installed agent is {}",
+                pending,
+                self.agent_info
+                    .as_ref()
+                    .map_or("unknown", |info| info.hash.as_str())
+            ),
+        };
+        log::warn!("{error}");
+        self.state.last_error = Some(error);
+        self.state.pending_hash = None;
+        self.state.save(&self.state_path)
+    }
+
+    /// The error the install step reported for `pending`, if it reported a
+    /// failure of that package. An absent or unreadable report is no reason.
+    #[cfg(unix)]
+    fn reported_install_error(&self, pending: &str) -> Option<String> {
+        let result: super::install::InstallResult =
+            serde_json::from_slice(&fs::read(&self.install_result_path).ok()?).ok()?;
+        if result.aghash.as_str() != pending || result.success {
+            return None;
+        }
+        result.error
+    }
+
     /// The site of the source answered 501: no more requests go through it.
     pub fn record_source_unavailable(&mut self) -> AnyhowResult<()> {
         let Some(source) = self.state.source.as_mut() else {
@@ -687,6 +758,12 @@ impl WritableUpdater {
             "The site of the update source serves no agent updates, connection {} gets no more update requests",
             source.uuid
         );
+        self.state.save(&self.state_path)
+    }
+
+    /// The hand-over did not happen, so nothing waits for installation.
+    pub fn clear_pending_hash(&mut self) -> AnyhowResult<()> {
+        self.state.pending_hash = None;
         self.state.save(&self.state_path)
     }
 }
@@ -719,6 +796,10 @@ pub struct Updater {
 
     /// Where a verified package is spooled for the privileged installer.
     package_dir: PathBuf,
+
+    /// Where the privileged install step reports how the installation went.
+    #[cfg(unix)]
+    install_result_path: PathBuf,
 }
 
 impl Updater {
@@ -763,6 +844,8 @@ impl Updater {
             load_error,
             state_path: paths.updater_state_path.clone(),
             package_dir: paths.updater_package_dir.clone(),
+            #[cfg(unix)]
+            install_result_path: paths.install_result_path.clone(),
         }
     }
 
@@ -957,9 +1040,8 @@ impl Updater {
     /// it out once its signature has been checked. Installing the spooled
     /// package is not part of it.
     ///
-    /// The package is the only thing written: the updater state is left alone,
-    /// because a fetch made by hand must not shift the schedule of the
-    /// automatic cycle, the same way [`Updater::check`] does not.
+    /// The package is the only thing written: recording the outcome in the
+    /// updater state is left to the cycle that calls this.
     ///
     /// With [`SignatureCheck::Skip`] both the pre-check and the verification
     /// are left out, and a package nothing vouches for is spooled for a
@@ -1031,8 +1113,8 @@ impl Updater {
     /// manager takes.
     ///
     /// Writes no artifact of the updater, as [`Updater::fetch_update`] does
-    /// not: reconciling the outcome belongs to the automatic cycle, which
-    /// compares hashes on a later run.
+    /// not: reconciling the outcome belongs to the cycle, which compares hashes
+    /// on a later run.
     ///
     /// # Arguments
     ///
@@ -1341,6 +1423,8 @@ mod tests {
     const OTHER_SITE: &str = "other-server/site";
     const STATE_FILE: &str = "state.json";
     const PACKAGE_DIR: &str = "update";
+    #[cfg(unix)]
+    const INSTALL_RESULT_FILE: &str = "agent-install-result.json";
     const PACKAGE: &[u8] = b"an agent package";
 
     /// Length of a signature under the 2048 bit key of [`SITE_SIGNATURE`].
@@ -1722,6 +1806,139 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     }
 
     #[test]
+    fn test_settle_pending_install_without_a_pending_package_changes_nothing() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let state = UpdateState {
+            last_error: Some(String::from("boom")),
+            ..Default::default()
+        };
+        let mut updater = writable_in(&dir, state.clone());
+
+        updater.settle_pending_install().unwrap();
+
+        assert_eq!(updater.state, state);
+    }
+
+    #[test]
+    fn test_settle_pending_install_records_the_applied_update() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = writable_in(
+            &dir,
+            UpdateState {
+                pending_hash: Some(String::from(INSTALLED_HASH)),
+                last_error: Some(String::from("boom")),
+                ..Default::default()
+            },
+        );
+
+        updater.settle_pending_install().unwrap();
+
+        let saved = UpdateState::load(&updater.state_path).unwrap();
+        assert!(saved.last_update.is_some());
+        assert_eq!(saved.pending_hash, None);
+        assert_eq!(saved.last_error, None);
+    }
+
+    #[test]
+    fn test_settle_pending_install_records_the_failed_install() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = writable_in(
+            &dir,
+            UpdateState {
+                pending_hash: Some(String::from(TARGET_HASH)),
+                ..Default::default()
+            },
+        );
+
+        updater.settle_pending_install().unwrap();
+
+        let saved = UpdateState::load(&updater.state_path).unwrap();
+        assert_eq!(saved.pending_hash, None);
+        assert_eq!(
+            saved.last_error.unwrap(),
+            "The installation of agent package fedcba9876543210 did not take effect, \
+             the installed agent is 0123456789abcdef"
+        );
+    }
+
+    /// The package manager's own error explains a failure better than the
+    /// hashes do.
+    #[cfg(unix)]
+    #[test]
+    fn test_settle_pending_install_reports_the_install_steps_error() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = writable_in(
+            &dir,
+            UpdateState {
+                pending_hash: Some(String::from(TARGET_HASH)),
+                ..Default::default()
+            },
+        );
+        fs::write(
+            &updater.install_result_path,
+            r#"{"aghash": "fedcba9876543210", "success": false, "error": "dpkg failed", "finished": 1759276800}"#,
+        )
+        .unwrap();
+
+        updater.settle_pending_install().unwrap();
+
+        assert_eq!(
+            UpdateState::load(&updater.state_path)
+                .unwrap()
+                .last_error
+                .unwrap(),
+            "The installation of agent package fedcba9876543210 failed: dpkg failed"
+        );
+    }
+
+    /// A report about another package says nothing about the pending one.
+    #[cfg(unix)]
+    #[test]
+    fn test_settle_pending_install_ignores_the_result_of_another_package() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = writable_in(
+            &dir,
+            UpdateState {
+                pending_hash: Some(String::from(TARGET_HASH)),
+                ..Default::default()
+            },
+        );
+        fs::write(
+            &updater.install_result_path,
+            r#"{"aghash": "1111111111111111", "success": false, "error": "dpkg failed", "finished": 1759276800}"#,
+        )
+        .unwrap();
+
+        updater.settle_pending_install().unwrap();
+
+        assert_eq!(
+            UpdateState::load(&updater.state_path)
+                .unwrap()
+                .last_error
+                .unwrap(),
+            "The installation of agent package fedcba9876543210 did not take effect, \
+             the installed agent is 0123456789abcdef"
+        );
+    }
+
+    /// Without the info of the installed agent there is nothing to compare
+    /// with, so the note stays for a later run.
+    #[test]
+    fn test_settle_pending_install_without_agent_info_keeps_the_note() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let state = UpdateState {
+            pending_hash: Some(String::from(TARGET_HASH)),
+            ..Default::default()
+        };
+        let mut updater = writable_in(&dir, state.clone());
+        updater.agent_info = None;
+
+        updater.settle_pending_install().unwrap();
+
+        assert_eq!(updater.state, state);
+    }
+
+    #[test]
     fn test_record_source_unavailable_marks_the_saved_source() {
         let dir = tempfile::TempDir::new().unwrap();
         let mut updater = writable_in(
@@ -1735,6 +1952,25 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         updater.record_source_unavailable().unwrap();
 
         assert!(!saved_source(&updater).unwrap().available);
+    }
+
+    /// The note is written before the hand-over, which may not return.
+    #[test]
+    fn test_store_pending_hash_saves_the_note() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = writable_in(&dir, UpdateState::default());
+
+        updater
+            .store_pending_hash(&TARGET_HASH.parse().unwrap())
+            .unwrap();
+
+        assert_eq!(
+            UpdateState::load(&updater.state_path)
+                .unwrap()
+                .pending_hash
+                .unwrap(),
+            TARGET_HASH
+        );
     }
 
     #[test]
@@ -2120,6 +2356,8 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             load_error: None,
             state_path: PathBuf::from(STATE_FILE),
             package_dir: PathBuf::from(PACKAGE_DIR),
+            #[cfg(unix)]
+            install_result_path: PathBuf::from(INSTALL_RESULT_FILE),
         }
     }
 
@@ -2143,6 +2381,8 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         Updater {
             state,
             state_path: dir.path().join(STATE_FILE),
+            #[cfg(unix)]
+            install_result_path: dir.path().join(INSTALL_RESULT_FILE),
             ..updater(some_config(), some_agent_info())
         }
     }

@@ -48,6 +48,9 @@ pub fn check(
 /// the signature again regardless, so a package nobody vouched for is spooled
 /// here and refused there.
 ///
+/// A package handed over in an earlier run is settled first: the installed
+/// hash says whether its installation took effect.
+///
 /// # Errors
 ///
 /// If the site cannot be asked, does not deliver the package it offered, if
@@ -67,6 +70,8 @@ pub fn update(
         use_proxy: client_config.use_proxy,
     };
 
+    updater.settle_pending_install()?;
+
     let fetched = updater.fetch_update(registry, &api, signature)?;
 
     println!("{}", report_fetch(&fetched));
@@ -77,11 +82,21 @@ pub fn update(
 
     #[cfg(unix)]
     if let FetchOutcome::Spooled {
-        path, signatures, ..
+        path,
+        signatures,
+        hash,
+        ..
     } = &fetched
     {
-        let outcome = updater.install_update(path, signatures)?;
-        println!("{}", report_install(outcome, path));
+        updater.store_pending_hash(hash)?;
+        let outcome = updater.install_update(path, signatures);
+        if !matches!(outcome, Ok(InstallOutcome::HandedOver)) {
+            if let Err(error) = updater.clear_pending_hash() {
+                log::warn!("Could not clear the pending installation: {error:#}");
+            }
+        }
+
+        println!("{}", report_install(outcome?, path));
     }
     Ok(())
 }

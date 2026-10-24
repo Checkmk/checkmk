@@ -562,3 +562,25 @@ package_msi(
     tools = ["//agents/windows/plugins:scripts/stamp_version.sh"],
     version_file = ":cmk_version",
 )
+
+pkg_files(
+    name = "msi_install_qemu_files",
+    srcs = [
+        "install/msi-install-qemu.ps1",
+        ":check_mk_agent_msi",
+    ],
+)
+
+pkg_tar(
+    name = "msi_install_qemu_stage",
+    srcs = [":msi_install_qemu_files"],
+    extension = "tar.gz",
+)
+
+qemu_test(
+    name = "msi-install-qemu",
+    src = "install/msi_install_qemu.py",
+    args = ["$(rootpath install/Product.wxs)"],
+    data = ["install/Product.wxs"],
+    stage = ":msi_install_qemu_stage",
+)

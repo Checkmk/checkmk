@@ -59,6 +59,17 @@ _CISCO_TEMPERATURE_ADMIN_STATE_MAP = {
     "3": "testing",
 }
 
+_CISCO_TEMPERATURE_OPER_STATE_MAP = {
+    "1": "up",
+    "2": "down",
+    "3": "testing",
+    "4": "unknown",
+    "5": "dormant",
+    "6": "not present",
+    "7": "lower layer down",
+    "8": "degraded",
+}
+
 
 class EntSensorThresholdRelation(enum.IntEnum):
     LESS_THAN = 1
@@ -388,10 +399,10 @@ def _map_admin_states_exact_name(
 
     admin_states_dict = {}
     for val in admin_states:
-        if len(val) == 3:  # backwards compatibility
-            _, if_name, admin_state = val
+        if len(val) == 4:  # backwards compatibility
+            _, if_name, admin_state, _oper_state = val
         else:
-            if_name, admin_state = val
+            if_name, admin_state, _oper_state = val
         for sensor_id, descr in descriptions.items():
             if descr.startswith(if_name):
                 admin_states_dict[sensor_id] = _CISCO_TEMPERATURE_ADMIN_STATE_MAP.get(admin_state)
@@ -427,16 +438,21 @@ def _get_contained_sensor_ids(
 
 
 def _map_admin_states_container(
-    if_oid_admin_states: Mapping[str, str],
+    if_oid_admin_states: Mapping[str, Sequence[str]],
     sensor_if_map: Sequence[Sequence[str]],
     container: Mapping[str, set[str]],
-) -> Mapping[str, str | None]:
+) -> Mapping[str, list[str | None]]:
     admin_states_dict = {}
 
     sensor_oid_admin_status_map = {
-        sensor_oid.removesuffix(".0"): _CISCO_TEMPERATURE_ADMIN_STATE_MAP.get(
-            if_oid_admin_states.get(if_ref_oid.split(".")[-1], "")
-        )
+        sensor_oid.removesuffix(".0"): [
+            _CISCO_TEMPERATURE_ADMIN_STATE_MAP.get(
+                if_oid_admin_states.get(if_ref_oid.split(".")[-1], ["", ""])[0]
+            ),
+            _CISCO_TEMPERATURE_OPER_STATE_MAP.get(
+                if_oid_admin_states.get(if_ref_oid.split(".")[-1], ["", ""])[1]
+            ),
+        ]
         for [sensor_oid, if_ref_oid] in sensor_if_map
         # this was written with the expectation that the entAliasMappingIdentifier always
         # points to ifTable. If not, the referenced oid needs to be added to the SNMPTree
@@ -465,7 +481,10 @@ def _map_admin_states(
     # Map admin state of Ethernet ports to sensor_ids of corresponding ethernet port sensors.
     # Since the naming schema in the description can differ between interfaces and physical entities
     # use the entAliasMappingIdentifier to map between the ifEntry and the entPhysicalEntry
-    if_oid_admin_states = {if_oid: admin_state for if_oid, if_name, admin_state in admin_states}
+    if_oid_admin_states = {
+        if_oid: [admin_state, oper_state]
+        for if_oid, if_name, admin_state, oper_state in admin_states
+    }
     admin_states_dict = _map_admin_states_container(if_oid_admin_states, sensor_if_map, container)
 
     if len(admin_states_dict) == 0:  # fallback if entAliasMapping did not work
@@ -533,6 +552,7 @@ snmp_section_cisco_temperature = SNMPSection(
                 OIDEnd(),
                 OIDCached("2"),  # Description of the sensor
                 OIDCached("7"),  # ifAdminStatus
+                OIDCached("8"),  # ifOperStatus
             ],
         ),
         SNMPTree(
@@ -638,11 +658,25 @@ def discover_cisco_temperature_dom(params: Mapping[str, Any], section: Section) 
         _CISCO_TEMPERATURE_ADMIN_STATE_MAP[admin_state]
         for admin_state in params.get("admin_states", ["1"])
     } | {None}
+    oper_states_to_discover = {
+        _CISCO_TEMPERATURE_OPER_STATE_MAP[oper_state]
+        for oper_state in params.get("operational_states", [])
+    } | {None}
     for item, attrs in parsed_dom.items():
-        dev_state = attrs.get("raw_dev_state")
-        adm_state = attrs.get("admin_state")
-        if dev_state == "1" and adm_state in admin_states_to_discover:
-            yield Service(item=item)
+        try:
+            dev_state = attrs.get("raw_dev_state")
+            admin_state = attrs.get("admin_state")
+            if admin_state is None:
+                continue
+            adm_state, oper_state = admin_state
+            if (
+                dev_state == "1"
+                and adm_state in admin_states_to_discover
+                and oper_state in oper_states_to_discover
+            ):
+                yield Service(item=item)
+        except TypeError:
+            continue
 
 
 def _determine_levels(
@@ -707,7 +741,10 @@ check_plugin_cisco_temperature_dom = CheckPlugin(
     service_name="DOM %s",
     sections=["cisco_temperature"],
     discovery_function=discover_cisco_temperature_dom,
-    discovery_default_parameters={"admin_states": ["1"]},
+    discovery_default_parameters={
+        "admin_states": ["1"],
+        "operational_states": ["1", "2", "3", "4", "5", "6", "7", "8"],
+    },
     discovery_ruleset_name="discovery_cisco_dom_rules",
     check_function=check_cisco_temperature_dom,
     check_ruleset_name="cisco_dom",

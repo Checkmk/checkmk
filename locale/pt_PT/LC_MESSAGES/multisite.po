@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-10-22 18:31+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -3374,6 +3374,10 @@ msgstr "Abortar com um erro"
 
 msgid "Abort your modifications."
 msgstr "Aborte as suas modificações."
+
+#, fuzzy
+msgid "Aborted"
+msgstr "Alertado"
 
 #, python-format
 msgid ""
@@ -30710,6 +30714,10 @@ msgstr "Manuseio de textos demasiado longos (afecta apenas a tabela)"
 msgid "Haproxy"
 msgstr "Haproxy"
 
+#, fuzzy
+msgid "Hard aborted"
+msgstr "Hardware"
+
 msgid "Hard query limit"
 msgstr "Limite de consulta difícil"
 
@@ -43872,6 +43880,14 @@ msgstr ""
 "Mapear o estado operacional (<tt>ifOperStatus</tt>) para um estado de "
 "monitoramento."
 
+#, fuzzy
+msgid ""
+"Map the transfer state reported by the SnapMirror relationship to a "
+"monitoring state."
+msgstr ""
+"Mapear o estado operacional (<tt>ifOperStatus</tt>) para um estado de "
+"monitoramento."
+
 msgid "Map to contact groups"
 msgstr "Mapa para grupos de contacto"
 
@@ -46429,6 +46445,10 @@ msgstr "Estado de monitorização em caso de falha na análise da versão"
 msgid "Monitoring state of HAProxy frontend is %s"
 msgstr "Estado de monitorização se o frontend HAProxy for %s"
 
+#, fuzzy
+msgid "Monitoring state per transfer state"
+msgstr "Estado de monitorização para qualquer outro estado de unidade"
+
 msgid "Monitoring state requirement"
 msgstr "Monitoramento da exigência do estado"
 
@@ -47559,15 +47579,16 @@ msgstr "Descoberta do NetApp Qtree"
 msgid "NetApp SVM traffic"
 msgstr "Tráfego líquido de dados"
 
+#, fuzzy
+msgid "NetApp SnapVault / SnapMirror"
+msgstr "NetApp Snapvaults / Tempo de atraso do Snapmirror"
+
 msgid "NetApp Snapshot Reserve"
 msgstr "Reserva de Instantâneos da NetApp"
 
 #, fuzzy
 msgid "NetApp Snapshot Volumes"
 msgstr "Reserva de Instantâneos da NetApp"
-
-msgid "NetApp Snapvaults / Snapmirror Lag Time"
-msgstr "NetApp Snapvaults / Tempo de atraso do Snapmirror"
 
 msgid "NetApp Volumes"
 msgstr "Volumes da NetApp"
@@ -50497,6 +50518,12 @@ msgstr ""
 
 msgid "ONLINE"
 msgstr "ONLINE"
+
+msgid ""
+"ONTAP marks a SnapMirror relationship as unhealthy, for example when an "
+"update failed. The reasons reported by ONTAP are shown in the service "
+"summary. Older ONTAP versions may not report the health."
+msgstr ""
 
 msgid "OO/Notif"
 msgstr "OO/Notificação"
@@ -66272,9 +66299,6 @@ msgstr "Endereço IP de origem"
 msgid "Source NAT name"
 msgstr "Nome NAT de origem"
 
-msgid "Source Path"
-msgstr "Caminho da Fonte"
-
 #, fuzzy
 msgid "Source association changed"
 msgstr "Ativação simultânea de alterações"
@@ -67872,6 +67896,10 @@ msgid ""
 msgstr ""
 "Indique se o estado local ou o estado do dispositivo remoto são diferentes "
 "de ativo/standby."
+
+#, fuzzy
+msgid "State if the relationship is unhealthy"
+msgstr "Estado resultante se o estado for \"insalubre\""
 
 msgid "State if tunnel is not found"
 msgstr "Estado se não for encontrado um túnel"
@@ -85251,6 +85279,10 @@ msgstr "Transacções"
 msgid "Transferredsize"
 msgstr "Transferredsize"
 
+#, fuzzy
+msgid "Transferring"
+msgstr "Transferredsize"
+
 #, python-format
 msgid "Transferring: %d new, %d changed and %d vanished files"
 msgstr "Transferência: %d novos ficheiros, %d alterados e %d desaparecidos"
@@ -95852,7 +95884,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -96378,7 +96409,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -103010,6 +103040,9 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Source Path"
+#~ msgstr "Caminho da Fonte"
 
 #~ msgid ""
 #~ "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "

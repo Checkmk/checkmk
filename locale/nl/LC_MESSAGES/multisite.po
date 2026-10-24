@@ -3368,6 +3368,10 @@ msgstr "Afbreken met een fout"
 msgid "Abort your modifications."
 msgstr "Breek uw wijzigingen af."
 
+#, fuzzy
+msgid "Aborted"
+msgstr "Alerted"
+
 #, python-format
 msgid ""
 "Aborting because the number of hosts (%d) exceeds the configured maximum "
@@ -30696,6 +30700,10 @@ msgstr "Behandeling van te lange teksten (betreft alleen tabel)"
 msgid "Haproxy"
 msgstr "Haproxy"
 
+#, fuzzy
+msgid "Hard aborted"
+msgstr "Hardware"
+
 msgid "Hard query limit"
 msgstr "Harde query limiet"
 
@@ -43859,6 +43867,14 @@ msgstr ""
 "bewakingstoestand."
 
 #, fuzzy
+msgid ""
+"Map the transfer state reported by the SnapMirror relationship to a "
+"monitoring state."
+msgstr ""
+"Zet de operationele toestand (<tt>ifOperStatus</tt>) om in een "
+"bewakingstoestand."
+
+#, fuzzy
 msgid "Map to contact groups"
 msgstr "Overeenkomen met contactgroepen"
 
@@ -46408,6 +46424,10 @@ msgstr "Bewakingstoestand in geval van mislukte versie-parsing"
 msgid "Monitoring state of HAProxy frontend is %s"
 msgstr "Controle toestand als HAProxy frontend %s is"
 
+#, fuzzy
+msgid "Monitoring state per transfer state"
+msgstr "Bewakingstoestand voor elke andere eenheidstoestand"
+
 msgid "Monitoring state requirement"
 msgstr "Controle staatsvereiste"
 
@@ -47545,15 +47565,16 @@ msgstr "NetApp Qtree ontdekking"
 msgid "NetApp SVM traffic"
 msgstr "Netto dataverkeer"
 
+#, fuzzy
+msgid "NetApp SnapVault / SnapMirror"
+msgstr "NetApp Snapvaults / Snapmirror Vertragingstijd"
+
 msgid "NetApp Snapshot Reserve"
 msgstr "NetApp Snapshot Reserve"
 
 #, fuzzy
 msgid "NetApp Snapshot Volumes"
 msgstr "NetApp Snapshot Reserve"
-
-msgid "NetApp Snapvaults / Snapmirror Lag Time"
-msgstr "NetApp Snapvaults / Snapmirror Vertragingstijd"
 
 msgid "NetApp Volumes"
 msgstr "NetApp Volumes"
@@ -50499,6 +50520,12 @@ msgstr ""
 
 msgid "ONLINE"
 msgstr "ONLINE"
+
+msgid ""
+"ONTAP marks a SnapMirror relationship as unhealthy, for example when an "
+"update failed. The reasons reported by ONTAP are shown in the service "
+"summary. Older ONTAP versions may not report the health."
+msgstr ""
 
 msgid "OO/Notif"
 msgstr "OO/Notif"
@@ -66249,9 +66276,6 @@ msgstr "Bron IP-adres"
 msgid "Source NAT name"
 msgstr "Naam bron NAT"
 
-msgid "Source Path"
-msgstr "Bron Pad"
-
 #, fuzzy
 msgid "Source association changed"
 msgstr "Simultane activering van veranderingen"
@@ -67851,6 +67875,10 @@ msgid ""
 msgstr ""
 "Geeft aan of de lokale of de remote apparaatstatus anders zijn dan actief/"
 "standby."
+
+#, fuzzy
+msgid "State if the relationship is unhealthy"
+msgstr "Resulterende status als de status \"ongezond\" is"
 
 msgid "State if tunnel is not found"
 msgstr "Staat indien tunnel niet is gevonden"
@@ -85280,6 +85308,10 @@ msgid "Transactions / sec"
 msgstr "Transacties"
 
 msgid "Transferredsize"
+msgstr "Transferredsize"
+
+#, fuzzy
+msgid "Transferring"
 msgstr "Transferredsize"
 
 #, fuzzy, python-format
@@ -103093,6 +103125,9 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Source Path"
+#~ msgstr "Bron Pad"
 
 #~ msgid ""
 #~ "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "

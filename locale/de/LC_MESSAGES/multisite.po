@@ -3413,6 +3413,10 @@ msgstr "Abbruch mit Fehler"
 msgid "Abort your modifications."
 msgstr "Breche Veränderungen ab."
 
+#, fuzzy
+msgid "Aborted"
+msgstr "Alarmiert"
+
 #, python-format
 msgid ""
 "Aborting because the number of hosts (%d) exceeds the configured maximum "
@@ -29694,6 +29698,10 @@ msgstr "Umgang mit zu langen Texten (Betrifft Tabellen)"
 msgid "Haproxy"
 msgstr "HA-Proxy"
 
+#, fuzzy
+msgid "Hard aborted"
+msgstr "Hardware"
+
 msgid "Hard query limit"
 msgstr "Hartes Abfragelimit"
 
@@ -42230,6 +42238,14 @@ msgstr ""
 "Bildet den Betriebszustand (<tt>ifOperStatus</tt>) auf einen Monitoring-"
 "Zustand ab."
 
+#, fuzzy
+msgid ""
+"Map the transfer state reported by the SnapMirror relationship to a "
+"monitoring state."
+msgstr ""
+"Bildet den Betriebszustand (<tt>ifOperStatus</tt>) auf einen Monitoring-"
+"Zustand ab."
+
 msgid "Map to contact groups"
 msgstr "Kontaktgruppen zuordnen"
 
@@ -44662,6 +44678,10 @@ msgstr "Monitoring-Zustand im Falle eines Parsingfehlers der Version"
 msgid "Monitoring state of HAProxy frontend is %s"
 msgstr "Monitoring-Zustand, wenn das HAProxy Frontend %s ist"
 
+#, fuzzy
+msgid "Monitoring state per transfer state"
+msgstr "Monitoring-Zustand für alle übrigen Zustände der Einheit"
+
 msgid "Monitoring state requirement"
 msgstr "Monitoring-Zustandsanforderung"
 
@@ -45705,14 +45725,15 @@ msgstr "NetApp Qtree Erkennung"
 msgid "NetApp SVM traffic"
 msgstr "Netzwerkdaten"
 
+#, fuzzy
+msgid "NetApp SnapVault / SnapMirror"
+msgstr "NetApp Snapvaults / Snapmirror Lag-Zeit"
+
 msgid "NetApp Snapshot Reserve"
 msgstr "NetApp Snapshot-Reserve"
 
 msgid "NetApp Snapshot Volumes"
 msgstr "NetApp Snapshot Volumes"
-
-msgid "NetApp Snapvaults / Snapmirror Lag Time"
-msgstr "NetApp Snapvaults / Snapmirror Lag-Zeit"
 
 msgid "NetApp Volumes"
 msgstr "NetApp Volumes"
@@ -48478,6 +48499,12 @@ msgstr ""
 
 msgid "ONLINE"
 msgstr "ONLINE"
+
+msgid ""
+"ONTAP marks a SnapMirror relationship as unhealthy, for example when an "
+"update failed. The reasons reported by ONTAP are shown in the service "
+"summary. Older ONTAP versions may not report the health."
+msgstr ""
 
 msgid "OO/Notif"
 msgstr "Auß.Ben"
@@ -63531,9 +63558,6 @@ msgstr "IP-Adresse der Quelle"
 msgid "Source NAT name"
 msgstr "NAT-Name der Quelle"
 
-msgid "Source Path"
-msgstr "Quellpfad"
-
 msgid "Source association changed"
 msgstr "Quellenzuordnung geändert"
 
@@ -65100,6 +65124,10 @@ msgid ""
 msgstr ""
 "Zustand, wenn der lokale oder der Remote-Gerätezustand ein anderer als aktiv/"
 "standby ist."
+
+#, fuzzy
+msgid "State if the relationship is unhealthy"
+msgstr "Resultierender Zustand, wenn der Status \"unhealthy\" ist"
 
 msgid "State if tunnel is not found"
 msgstr "Zustand, wenn Tunnel nicht gefunden wird"
@@ -82149,6 +82177,10 @@ msgid "Transactions / sec"
 msgstr "Transaktionen / sec"
 
 msgid "Transferredsize"
+msgstr "Übertragungsgröße"
+
+#, fuzzy
+msgid "Transferring"
 msgstr "Übertragungsgröße"
 
 #, python-format
@@ -99494,6 +99526,9 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Source Path"
+#~ msgstr "Quellpfad"
 
 #~ msgid ""
 #~ "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "

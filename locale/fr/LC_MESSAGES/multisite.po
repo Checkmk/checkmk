@@ -3421,6 +3421,10 @@ msgstr "Abandonner avec une erreur"
 msgid "Abort your modifications."
 msgstr "Abandonnez vos modifications."
 
+#, fuzzy
+msgid "Aborted"
+msgstr "Alerté"
+
 #, python-format
 msgid ""
 "Aborting because the number of hosts (%d) exceeds the configured maximum "
@@ -30953,6 +30957,10 @@ msgstr "Traitement des textes trop longs (affecte uniquement le tableau)"
 msgid "Haproxy"
 msgstr "Haproxy"
 
+#, fuzzy
+msgid "Hard aborted"
+msgstr "Matériel informatique"
+
 msgid "Hard query limit"
 msgstr "Limite stricte des requêtes"
 
@@ -44225,6 +44233,14 @@ msgstr ""
 "état de surveillance."
 
 #, fuzzy
+msgid ""
+"Map the transfer state reported by the SnapMirror relationship to a "
+"monitoring state."
+msgstr ""
+"Mettez en correspondance l'état opérationnel (<tt>ifOperStatus</tt>) avec un "
+"état de surveillance."
+
+#, fuzzy
 msgid "Map to contact groups"
 msgstr "Faire correspondre les groupes de contact"
 
@@ -46789,6 +46805,10 @@ msgstr "Etat du suivi en cas d'échec de l'analyse de la version"
 msgid "Monitoring state of HAProxy frontend is %s"
 msgstr "Surveillance de l'état si le frontend HAProxy est %s"
 
+#, fuzzy
+msgid "Monitoring state per transfer state"
+msgstr "État de surveillance pour tout autre état d'unité"
+
 msgid "Monitoring state requirement"
 msgstr "Suivi des exigences de l'État"
 
@@ -47928,15 +47948,16 @@ msgstr "Découverte de NetApp Qtree"
 msgid "NetApp SVM traffic"
 msgstr "Trafic de données nettes"
 
+#, fuzzy
+msgid "NetApp SnapVault / SnapMirror"
+msgstr "Temps de latence des Snapvaults / Snapmirror de NetApp"
+
 msgid "NetApp Snapshot Reserve"
 msgstr "Réserve d'instantanés NetApp"
 
 #, fuzzy
 msgid "NetApp Snapshot Volumes"
 msgstr "Réserve d'instantanés NetApp"
-
-msgid "NetApp Snapvaults / Snapmirror Lag Time"
-msgstr "Temps de latence des Snapvaults / Snapmirror de NetApp"
 
 msgid "NetApp Volumes"
 msgstr "Volumes NetApp"
@@ -50898,6 +50919,12 @@ msgstr ""
 
 msgid "ONLINE"
 msgstr "EN LIGNE"
+
+msgid ""
+"ONTAP marks a SnapMirror relationship as unhealthy, for example when an "
+"update failed. The reasons reported by ONTAP are shown in the service "
+"summary. Older ONTAP versions may not report the health."
+msgstr ""
 
 msgid "OO/Notif"
 msgstr "OO/Notif"
@@ -66817,9 +66844,6 @@ msgstr "Adresse IP source"
 msgid "Source NAT name"
 msgstr "Nom du NAT source"
 
-msgid "Source Path"
-msgstr "Chemin source"
-
 #, fuzzy
 msgid "Source association changed"
 msgstr "Activation simultanée des changements"
@@ -68427,6 +68451,10 @@ msgid ""
 "State if the local or the remote device state are other than active/standby."
 msgstr ""
 "Indique si l'état du dispositif local ou distant est autre que actif/standby."
+
+#, fuzzy
+msgid "State if the relationship is unhealthy"
+msgstr "État résultant si l'état est \"malsain\""
 
 msgid "State if tunnel is not found"
 msgstr "État si le tunnel n'est pas trouvé"
@@ -86022,6 +86050,10 @@ msgid "Transactions / sec"
 msgstr "Transactions"
 
 msgid "Transferredsize"
+msgstr "Taille du transfert"
+
+#, fuzzy
+msgid "Transferring"
 msgstr "Taille du transfert"
 
 #, python-format
@@ -104011,6 +104043,9 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Source Path"
+#~ msgstr "Chemin source"
 
 #~ msgid ""
 #~ "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "

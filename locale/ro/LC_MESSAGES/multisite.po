@@ -3399,6 +3399,10 @@ msgstr "Renunț cu o eroare"
 msgid "Abort your modifications."
 msgstr "Renunță la modificările tale."
 
+#, fuzzy
+msgid "Aborted"
+msgstr "Alertat"
+
 #, python-format
 msgid ""
 "Aborting because the number of hosts (%d) exceeds the configured maximum "
@@ -30794,6 +30798,10 @@ msgstr "Gestionarea textelor prea lungi (afectează doar tabelul)"
 msgid "Haproxy"
 msgstr "Haproxy"
 
+#, fuzzy
+msgid "Hard aborted"
+msgstr "Hardware"
+
 msgid "Hard query limit"
 msgstr "Limita de interogare dură"
 
@@ -44001,6 +44009,14 @@ msgstr ""
 "Maparea stării operaționale (<tt>ifOperStatus</tt>) într-o stare de "
 "monitorizare."
 
+#, fuzzy
+msgid ""
+"Map the transfer state reported by the SnapMirror relationship to a "
+"monitoring state."
+msgstr ""
+"Maparea stării operaționale (<tt>ifOperStatus</tt>) într-o stare de "
+"monitorizare."
+
 msgid "Map to contact groups"
 msgstr "Hartă pentru grupuri de contact"
 
@@ -46561,6 +46577,10 @@ msgstr "Starea de monitorizare în caz de eșec al analizei versiunii"
 msgid "Monitoring state of HAProxy frontend is %s"
 msgstr "Monitorizarea stării dacă frontendul HAProxy este %s"
 
+#, fuzzy
+msgid "Monitoring state per transfer state"
+msgstr "Starea de monitorizare pentru orice altă stare a unității"
+
 msgid "Monitoring state requirement"
 msgstr "Monitorizarea cerinței de stat"
 
@@ -47705,15 +47725,16 @@ msgstr "Descoperirea Qtree de la NetApp"
 msgid "NetApp SVM traffic"
 msgstr "Traficul net de date"
 
+#, fuzzy
+msgid "NetApp SnapVault / SnapMirror"
+msgstr "Snapvaults NetApp / Snapmirror Lag Time"
+
 msgid "NetApp Snapshot Reserve"
 msgstr "Rezerva de instantanee NetApp"
 
 #, fuzzy
 msgid "NetApp Snapshot Volumes"
 msgstr "Rezerva de instantanee NetApp"
-
-msgid "NetApp Snapvaults / Snapmirror Lag Time"
-msgstr "Snapvaults NetApp / Snapmirror Lag Time"
 
 msgid "NetApp Volumes"
 msgstr "Volumele NetApp"
@@ -50648,6 +50669,12 @@ msgstr ""
 
 msgid "ONLINE"
 msgstr "ONLINE"
+
+msgid ""
+"ONTAP marks a SnapMirror relationship as unhealthy, for example when an "
+"update failed. The reasons reported by ONTAP are shown in the service "
+"summary. Older ONTAP versions may not report the health."
+msgstr ""
 
 msgid "OO/Notif"
 msgstr "OO/Notif"
@@ -66496,9 +66523,6 @@ msgstr "Adresa IP sursă"
 msgid "Source NAT name"
 msgstr "Denumire NAT sursă"
 
-msgid "Source Path"
-msgstr "Calea sursei"
-
 #, fuzzy
 msgid "Source association changed"
 msgstr "Activarea simultană a modificărilor"
@@ -68111,6 +68135,10 @@ msgid ""
 msgstr ""
 "Stare dacă starea dispozitivului local sau a dispozitivului la distanță este "
 "alta decât activă/în așteptare."
+
+#, fuzzy
+msgid "State if the relationship is unhealthy"
+msgstr "Starea rezultată în cazul în care starea este \"nesănătoasă\""
 
 msgid "State if tunnel is not found"
 msgstr "Stare dacă nu se găsește tunelul"
@@ -85596,6 +85624,10 @@ msgid "Transactions / sec"
 msgstr "Tranzacții"
 
 msgid "Transferredsize"
+msgstr "Transferredimensiune"
+
+#, fuzzy
+msgid "Transferring"
 msgstr "Transferredimensiune"
 
 #, python-format
@@ -103472,6 +103504,9 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Source Path"
+#~ msgstr "Calea sursei"
 
 #~ msgid ""
 #~ "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "

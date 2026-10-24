@@ -3229,6 +3229,10 @@ msgstr "エラーで中止"
 msgid "Abort your modifications."
 msgstr "変更を中止します。"
 
+#, fuzzy
+msgid "Aborted"
+msgstr "警告"
+
 #, python-format
 msgid ""
 "Aborting because the number of hosts (%d) exceeds the configured maximum "
@@ -28725,6 +28729,10 @@ msgstr "長すぎるテキストの処理(表のみに影響します)"
 msgid "Haproxy"
 msgstr "Haproxy"
 
+#, fuzzy
+msgid "Hard aborted"
+msgstr "ハードウェア"
+
 msgid "Hard query limit"
 msgstr "ハードクエリ制限"
 
@@ -41013,6 +41021,12 @@ msgid ""
 "Map the operational state (<tt>ifOperStatus</tt>) to a monitoring state."
 msgstr "運用状態(<tt>ifOperStatus</tt>)を監視状態にマッピングします。"
 
+#, fuzzy
+msgid ""
+"Map the transfer state reported by the SnapMirror relationship to a "
+"monitoring state."
+msgstr "運用状態(<tt>ifOperStatus</tt>)を監視状態にマッピングします。"
+
 msgid "Map to contact groups"
 msgstr "連絡先グループにマッピングする"
 
@@ -43473,6 +43487,10 @@ msgstr "バージョン解析に失敗した場合の監視状態"
 msgid "Monitoring state of HAProxy frontend is %s"
 msgstr "HAProxy フロントエンドが %s である場合の状態の監視"
 
+#, fuzzy
+msgid "Monitoring state per transfer state"
+msgstr "他のユニット状態の監視状態"
+
 msgid "Monitoring state requirement"
 msgstr "状態要件の監視"
 
@@ -44541,14 +44559,15 @@ msgstr "NetApp Qtreeの検出"
 msgid "NetApp SVM traffic"
 msgstr "NetApp SVM トラフィック"
 
+#, fuzzy
+msgid "NetApp SnapVault / SnapMirror"
+msgstr "NetApp Snapvaults / Snapmirrorのラグタイム"
+
 msgid "NetApp Snapshot Reserve"
 msgstr "NetAppスナップショットリザーブ"
 
 msgid "NetApp Snapshot Volumes"
 msgstr "NetApp スナップショットボリューム"
-
-msgid "NetApp Snapvaults / Snapmirror Lag Time"
-msgstr "NetApp Snapvaults / Snapmirrorのラグタイム"
 
 msgid "NetApp Volumes"
 msgstr "NetAppボリューム"
@@ -47306,6 +47325,12 @@ msgstr ""
 
 msgid "ONLINE"
 msgstr "オンライン"
+
+msgid ""
+"ONTAP marks a SnapMirror relationship as unhealthy, for example when an "
+"update failed. The reasons reported by ONTAP are shown in the service "
+"summary. Older ONTAP versions may not report the health."
+msgstr ""
 
 msgid "OO/Notif"
 msgstr "OO/Notif"
@@ -62248,9 +62273,6 @@ msgstr "送信元IPアドレス"
 msgid "Source NAT name"
 msgstr "ソースNAT名"
 
-msgid "Source Path"
-msgstr "ソースパス"
-
 msgid "Source association changed"
 msgstr "ソースの関連付けが変更されました"
 
@@ -63768,6 +63790,10 @@ msgid ""
 msgstr ""
 "ローカルまたはリモートデバイスの状態がアクティブ/スタンバイ以外である場合の状"
 "態。"
+
+#, fuzzy
+msgid "State if the relationship is unhealthy"
+msgstr "ステータスが\"unhealthy\"の場合の結果の状態"
 
 msgid "State if tunnel is not found"
 msgstr "トンネルが見つからない場合の状態"
@@ -80353,6 +80379,10 @@ msgid "Transactions / sec"
 msgstr "トランザクション"
 
 msgid "Transferredsize"
+msgstr "トランスファーサイズ"
+
+#, fuzzy
+msgid "Transferring"
 msgstr "トランスファーサイズ"
 
 #, python-format
@@ -97963,6 +97993,9 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid "Source Path"
+#~ msgstr "ソースパス"
 
 #~ msgid ""
 #~ "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "

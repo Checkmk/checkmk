@@ -56,9 +56,13 @@ _TOOLS = {
     "--answer": ":answer/autounattend-core.xml",
     "--bios": "@qemu_linux_x86_64//:share/qemu/bios-256k.bin",
     "--first-logon": ":guest/first-logon.ps1",
+    "--install-mssql": ":guest/install-mssql.ps1",
     "--media": "@win2022_eval_iso//file",
+    "--odbc": "@msodbcsql17_msi//file",
     "--qemu": "@qemu_linux_x86_64//:bin/qemu-system-x86_64",
     "--qemu-img": "@qemu_linux_x86_64//:bin/qemu-img",
+    "--sql-cu": "@mssql2022_cu//file",
+    "--sql-iso": "@mssql2022_dev_iso//file",
     "--verify": ":guest/verify-image.ps1",
     "--virtio-win": "@virtio_win_iso//file",
 }

@@ -12,8 +12,9 @@ the install is a cold one, with a fresh clock and only the devices it needs:
      first-logon.ps1 (the guest agent from the virtio-win ISO, the serial
      console, Defender removed, autologon, test signing, time and account
      settings), which powers the guest off
-  2. provisioning: first-logon.ps1's result, Eval activation, NGEN flush,
-     component store cleanup, removal of C:\\setup and TRIM
+  2. provisioning: first-logon.ps1's result, Eval activation, SQL Server
+     2022 Developer with three instances from the SQL ISO on a CD drive,
+     NGEN flush, component store cleanup, removal of C:\\setup and TRIM
   3. verification: the device set the tests use, verify-image.ps1
 then a zstd-compressed copy. The result is a cleanly shut down disk without
 snapshots: a running state only resumes on the CPU it was saved on, so it is
@@ -39,7 +40,7 @@ import subprocess
 import sys
 import time
 from collections.abc import Iterator, Sequence
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from dataclasses import dataclass
 from pathlib import Path
 from types import FrameType
@@ -55,6 +56,13 @@ from qemu_windows.session import run_in_session, SessionError
 # selects by /IMAGE/NAME, which survives a reordered ISO.
 _IMAGE_NAME = "Windows Server 2022 SERVERDATACENTERCORE"
 
+# SQL Server: the build every instance must run after the CU, and the max
+# server memory of each instance (install-mssql.ps1 sets it,
+# verify-image.ps1 checks both).
+MSSQL_VERSION = "16.0.4295.3"
+MSSQL_MAX_MEMORY_MB = 512
+_SQL_SETUP_LOG = r"C:\Program Files\Microsoft SQL Server\160\Setup Bootstrap\Log"
+_SQL_SUMMARY = rf"{_SQL_SETUP_LOG}\Summary.txt"
 # first-logon.ps1's marker, written last: 'ok', or what failed.
 _DONE = r"C:\setup\done.txt"
 _VERIFY = r"C:\Windows\Temp\verify-image.ps1"
@@ -72,8 +80,12 @@ class Config:
     firmware: Path
     media: Path
     virtio_win: Path
+    sql_iso: Path
+    sql_cu: Path
+    odbc: Path
     answer: Path
     first_logon: Path
+    install_mssql: Path
     verify: Path
     # The user's options.
     out: Path
@@ -91,9 +103,12 @@ def parse_args(argv: Sequence[str]) -> Config:
         usage="%(prog)s <tool options from BUILD> -- --out <image.qcow2>"
         " [--work <dir>] [--keep-work]"
     )
-    for tool in ("qemu", "qemu-img", "bios", "media", "virtio-win"):
+    for tool in (
+        *("qemu", "qemu-img", "bios", "media", "virtio-win"),
+        *("sql-iso", "sql-cu", "odbc"),
+    ):
         parser.add_argument(f"--{tool}", type=Path, required=True)
-    for template in ("answer", "first-logon", "verify"):
+    for template in ("answer", "first-logon", "install-mssql", "verify"):
         parser.add_argument(f"--{template}", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--work", type=Path)
@@ -107,8 +122,12 @@ def parse_args(argv: Sequence[str]) -> Config:
         firmware=args.bios.resolve().parent,
         media=args.media.resolve(),
         virtio_win=args.virtio_win.resolve(),
+        sql_iso=args.sql_iso.resolve(),
+        sql_cu=args.sql_cu.resolve(),
+        odbc=args.odbc.resolve(),
         answer=args.answer.resolve(),
         first_logon=args.first_logon.resolve(),
+        install_mssql=args.install_mssql.resolve(),
         verify=args.verify.resolve(),
         out=out,
         work=(_user_path(args.work) if args.work else out.parent) / "test-vm-build-core",
@@ -125,7 +144,7 @@ def check_paths(config: Config) -> None:
     """Fails before the build on paths it could not use or would overwrite."""
     # QEMU option values are comma-separated, and fat: drives split on ':',
     # as do protocol prefixes of qemu-img file names.
-    for path in (config.out, config.work, config.media, config.virtio_win):
+    for path in (config.out, config.work, config.media, config.virtio_win, config.sql_iso):
         if "," in str(path) or ":" in str(path):
             raise BuildError(f"{path}: QEMU cannot take a path with ',' or ':'")
     if config.out.exists():
@@ -278,8 +297,11 @@ def _install(config: Config) -> None:
 
 
 def _provision(config: Config) -> None:
+    # The SQL ISO on a CD drive: install-mssql.ps1 finds it by its setup.exe.
+    sql_cd = ["-drive", f"file={config.sql_iso},if=ide,bus=1,unit=0,media=cdrom,readonly=on"]
     _step("provisioning boot")
-    with _boot(config) as (vm, guest):
+    with ExitStack() as boots:
+        vm, guest = boots.enter_context(_boot(config, sql_cd))
         _wait_ready(guest)
 
         _step("first-logon.ps1's result")
@@ -301,6 +323,47 @@ def _provision(config: Config) -> None:
                 raise BuildError(f"Eval activation failed:\n{activation}")
             time.sleep(30)
         sys.stdout.write(activation)
+
+        # SQL Server setup refuses to run while a reboot is pending, hence
+        # after the cold boot; and before the NGEN flush, which then also
+        # compiles what setup queued. A setup run that asks for a reboot ends
+        # install-mssql.ps1 early (C:\setup\mssql\reboot-required): a cold
+        # boot, then it carries on with the instances that are still missing,
+        # or, after the last one, with the rest of the install. At most one
+        # run per instance, plus that one.
+        _step("SQL Server 2022 Developer: MSSQLSERVER, SQLEXPRESS_NAME, SQLEXPRESS_WOW (~15 min)")
+        guest.powershell(
+            r"Remove-Item -Recurse -Force C:\setup\mssql -ErrorAction Ignore;"
+            r" New-Item -ItemType Directory -Force C:\setup\mssql\cu | Out-Null"
+        )
+        copy_start = time.monotonic()
+        guest.put(config.odbc, r"C:\setup\mssql\msodbcsql17.msi")
+        guest.put(config.sql_cu, rf"C:\setup\mssql\cu\{config.sql_cu.name}")
+        guest.put(config.install_mssql, r"C:\setup\mssql\install-mssql.ps1")
+        payload = sum(f.stat().st_size for f in (config.odbc, config.sql_cu, config.install_mssql))
+        sys.stdout.write(
+            f"payload copied: {payload / 1e6:.0f} MB in {time.monotonic() - copy_start:.0f} s\n"
+        )
+        logs = config.work / "guest-logs"
+        logs.mkdir(exist_ok=True)
+        for run in range(1, 5):
+            _install_mssql(guest, logs)
+            # check=True: a failed probe ends the build instead of passing
+            # for "no reboot needed".
+            if not guest.exists(r"C:\setup\mssql\reboot-required"):
+                break
+            if run == 4:
+                raise BuildError(f"SQL Server setup still asks for a reboot after {run} cold boots")
+            _step("cold boot for SQL Server setup")
+            guest.powershell(r"Remove-Item C:\setup\mssql\reboot-required")
+            _shutdown(vm, guest)
+            vm, guest = boots.enter_context(_boot(config, sql_cd))
+            _wait_ready(guest)
+        try:
+            guest.get(_SQL_SUMMARY, logs / "mssql-summary.txt")
+        except VmError:
+            sys.stdout.write("warning: copying SQL Server setup's Summary.txt failed\n")
+        _sizes(config, guest)
 
         # Left pending, the "NGEN ... Critical" tasks compile the queued .NET
         # assemblies on their idle trigger, i.e. during a test tier.
@@ -339,11 +402,11 @@ def _provision(config: Config) -> None:
         else:
             sys.stdout.writelines(f"{line}\n" for line in lines[-3:])
 
-        # The provisioning files (first-logon.ps1 with the test password)
-        # stay out of the image; their logs go to the build's work dir.
-        logs = config.work / "guest-logs"
+        # The provisioning files (first-logon.ps1 with the test password, the
+        # SQL payload) stay out of the image; their logs go to the build's
+        # work dir, next to install-mssql.log and SQL Server setup's last
+        # Summary.txt.
         _step(rf"removing C:\setup (logs to {logs})")
-        logs.mkdir(exist_ok=True)
         try:
             names = guest.powershell(r"(Get-ChildItem C:\setup -Filter *.log).Name").stdout
             for name in names.splitlines():
@@ -377,10 +440,40 @@ def _check_first_logon(guest: Guest) -> None:
         raise BuildError(f"first-logon.ps1 failed:\n{marker}\n{log}")
 
 
+def _install_mssql(guest: Guest, logs: Path) -> None:
+    """One run of install-mssql.ps1 in the console session; its full output
+    to guest-logs, on the console without the lines the CU's self-extractor
+    prints for every file it unpacks."""
+    try:
+        output = run_in_session(
+            guest,
+            r"powershell -NoProfile -ExecutionPolicy Bypass -File C:\setup\mssql\install-mssql.ps1"
+            f" -SaPassword {guest.password} -MaxMemoryMB {MSSQL_MAX_MEMORY_MB}",
+            3600,
+        )
+    except SessionError as e:
+        _log_mssql(logs, e.log)
+        try:
+            summary = guest.read(_SQL_SUMMARY).decode(errors="replace")
+        except VmError:
+            summary = ""
+        raise BuildError(f"SQL Server install failed (logs: {_SQL_SETUP_LOG}): {e}\n{summary}")
+    _log_mssql(logs, output)
+
+
+def _log_mssql(logs: Path, output: str) -> None:
+    with (logs / "install-mssql.log").open("a") as log:
+        log.write(output)
+    sys.stdout.writelines(
+        f"{line}\n" for line in output.splitlines() if not line.startswith("Preparing: ")
+    )
+
+
 def _verify(config: Config) -> str:
     """The Eval expiry, from a boot of exactly the device set the state
     action and the tests use: the checks see the guest as the tests will,
-    as the Administrator in the console session."""
+    as the Administrator in the console session (the SQL Server checks log
+    in with Windows authentication)."""
     _step("verification boot")
     with _boot(config) as (vm, guest):
         _wait_ready(guest)
@@ -389,7 +482,8 @@ def _verify(config: Config) -> str:
         try:
             verification = run_in_session(
                 guest,
-                f"powershell -NoProfile -ExecutionPolicy Bypass -File {_VERIFY}",
+                f"powershell -NoProfile -ExecutionPolicy Bypass -File {_VERIFY}"
+                f" -SqlVersion {MSSQL_VERSION} -SqlMaxMemoryMB {MSSQL_MAX_MEMORY_MB}",
                 900,
             )
         except SessionError as e:

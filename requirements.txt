@@ -902,7 +902,9 @@ cmk-dev-site==1.22.0 \
 cmk-werk-zeug==0.4.12 \
     --hash=sha256:8eb2edf5bb4cdc24cc9aa559092c023858b8d217de04d3779cedfb0bcbc02af0 \
     --hash=sha256:d4615dc419e5fa1c0a97ea6f992339558605e68ba1b641a5885b1459730422c2
-    # via -r tests/dev-requirements.in
+    # via
+    #   -r non-free/packages/cmk-dev-ai/requirements.in
+    #   -r tests/dev-requirements.in
 contourpy==1.4.0 \
     --hash=sha256:018227e134b73090b06f911e773a526c77c9af426be29065500ce096a5accd4c \
     --hash=sha256:072a702e2e178f4fcf96f04775d0c059e4c917925abf0d3208ebb6865df3c23d \

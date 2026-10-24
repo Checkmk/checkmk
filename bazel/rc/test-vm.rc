@@ -1,0 +1,6 @@
+################################################################################
+# The Windows test VM (agents/wnx/test-vm): its image build and the targets
+# that fetch its media or image, which are incompatible without this.
+# Example: bazel run --config=test-vm //agents/wnx/test-vm:build-core -- --out <image.qcow2>
+################################################################################
+common:test-vm --//agents/wnx/test-vm:enable

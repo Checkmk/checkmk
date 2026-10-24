@@ -163,6 +163,9 @@ common:clippy --aspects=@rules_rust//rust:defs.bzl%rust_clippy_aspect
 common:clippy --output_groups=+clippy_checks
 common:clippy --@rules_rust//:clippy_flags=-Dwarnings
 
+# --config=test-vm, the Windows test VM (agents/wnx/test-vm)
+import %workspace%/bazel/rc/test-vm.rc
+
 # Turn off automatic capturing of environmental stuff like PATH - those will be set explicitly
 # (see https://blog.aspect.build/bazelrc-flags)
 common --incompatible_strict_action_env

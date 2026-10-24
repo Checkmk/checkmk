@@ -1,7 +1,24 @@
 # Build dependencies of the C++ Windows agent (agents/wnx).
 
 wnx_repos = use_extension("//bazel/module:wnx_repositories.bzl", "repos")
-use_repo(wnx_repos, "wine_linux_x86_64", "wine_mono", "wix3")
+use_repo(
+    wnx_repos,
+    "wine_linux_x86_64",
+    "wine_mono",
+    "wix3",
+)
+
+# The Windows test VM (agents/wnx/test-vm): the media its image is built
+# from. Not build dependencies: only the image build fetches them.
+# Not exported as `repos`, like most extensions here: Bzlmod numbers
+# same-named extensions in use order, so one more `repos` would rename the
+# repositories of every later one.
+test_vm_repos = use_extension("//bazel/extensions:test_vm_repositories.bzl", "test_vm")
+use_repo(
+    test_vm_repos,
+    "virtio_win_iso",
+    "win2022_eval_iso",
+)
 
 # Vendored dependencies of the C++ Windows agent; the same
 # tarballs the vcxproj build unpacks into agents/wnx/extlibs.

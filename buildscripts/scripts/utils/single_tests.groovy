@@ -146,6 +146,7 @@ void run_make_target(Map args) {
         docker.withRegistry(DOCKER_REGISTRY, "nexus") {
             def faked_artifacts = args.faked_artifacts ? "--package-contains-faked-artifacts" : "";
             def mk_oracle_binary_path_arg = args.mk_oracle_binary_path ? "MK_ORACLE_BINARY_PATH='${args.mk_oracle_binary_path}'" : "";
+            def run_tests_script = args.run_tests_script ?: "tests/run_tests.sh";
 
             // no inline bash comments are allowed in this sh call
             sh("""
@@ -165,7 +166,7 @@ void run_make_target(Map args) {
                 OTEL_SDK_DISABLED='${env.OTEL_SDK_DISABLED}' \
                 OTEL_EXPORTER_OTLP_ENDPOINT='${env.OTEL_EXPORTER_OTLP_ENDPOINT}' \
                 ${mk_oracle_binary_path_arg} \
-                tests/run_tests.sh ${args.make_target}
+                ${run_tests_script} ${args.make_target}
             """);
         }
     }
@@ -178,6 +179,7 @@ void run_make_target_k8s(Map args) {
     ]) {
         def faked_artifacts = args.faked_artifacts ? "--package-contains-faked-artifacts" : "";
         def mk_oracle_binary_path_arg = args.mk_oracle_binary_path ? "MK_ORACLE_BINARY_PATH='${args.mk_oracle_binary_path}'" : "";
+        def run_tests_script = args.run_tests_script ?: "tests/run_tests.sh";
         def working_dir = "${checkout_dir}";
 
         if (args.prepare_fake_git_overlay) {
@@ -216,7 +218,7 @@ void run_make_target_k8s(Map args) {
                 OTEL_SDK_DISABLED='${env.OTEL_SDK_DISABLED}' \
                 OTEL_EXPORTER_OTLP_ENDPOINT='${env.OTEL_EXPORTER_OTLP_ENDPOINT}' \
                 ${mk_oracle_binary_path_arg} \
-                tests/run_tests.sh ${args.make_target}
+                ${run_tests_script} ${args.make_target}
             """);
         } finally {
             // these lines are mandatory to prevent a broken archiveArtifacts step

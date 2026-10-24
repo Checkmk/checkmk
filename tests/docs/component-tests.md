@@ -81,9 +81,10 @@ heavy-chain runs, resulting in quicker feedback.
   split out into packages yet is tested in `tests/unit/`; run by Bazel.
 - **Component** — next to the code under test, usually
   `[non-free/]packages/<package>/tests/component/`; run by Bazel.
-- **System** — `tests/system/<suite>/`; run by pytest directly, targets defined
-  in `tests/run_tests.sh` (e.g. `test-system-singlesite`,
-  `test-system-multisite`).
+- **System** — `tests/system/<suite>/`, or `non-free/tests/system/<suite>/` for
+  suites that only test non-free components; run by pytest directly, targets
+  defined in `tests/run_tests.sh` or `non-free/tests/run_tests.sh` respectively
+  (e.g. `test-system-singlesite`, `test-system-relay`).
 
 ### CI
 

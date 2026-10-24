@@ -10,7 +10,7 @@ void run_relay_tests(Map args) {
     try {
         stage("Relay image artifact test") {
             dir("${args.checkout_dir}") {
-                sh("tests/run_tests.sh test-artifact-relay-image");
+                sh("non-free/tests/run_tests.sh test-artifact-relay-image");
             }
         }
 
@@ -24,7 +24,7 @@ void run_relay_tests(Map args) {
                         VERSION='${args.version}' \
                         DISTRO='${args.distro}' \
                         TEST_FILTER='${args.test_filter}' \
-                        tests/run_tests.sh ${args.make_target}
+                        non-free/tests/run_tests.sh ${args.make_target}
                     """);
                 }
             }

@@ -55,11 +55,9 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-system-singlesite-k8s              Run single site system tests (not requires_non_root_user)
   test-system-singlesite-non-root         Run single site system tests (requires_non_root_user)
   test-system-redfish                     Run system tests for redfish
-  test-system-relay                       Run system tests for the relay (ultimate edition)
   test-system-mk-oracle                   Run system tests for the mk_oracle agent plugins
   test-system-otel                        Run system tests for otel (ultimate edition)
   test-system-azure                       Run system tests for azure (ultimate edition)
-  test-system-ai-features                 Run system tests for the mcp-server and the ai-control-plane (pro edition)
   test-system-oauth                       Run system tests for the oauth authorization server (pro edition)
   test-system-multisite                   Run multisite system tests
   test-system-agent-updates               Run system tests for agent updates (needs a running systemd)
@@ -106,8 +104,6 @@ MYPY / FORMAT / PACKAGING
   test-mypy-cmk                           Run mypy on cmk targets
   test-mypy-gpl                           Run mypy with GPL config
   test-packaging                          Run packaging tests
-  test-artifact-relay-image               Run relay image artifact tests
-  test-artifact-relay-image-docker        Run relay image artifact tests in docker
   test-github-actions                     Run format, lint, unit tests, and mypy (community edition)
 
 OTHER TESTS
@@ -138,6 +134,8 @@ UTILITIES
   clean                                   Remove .mypy_cache
   what-gerrit-makes                       Run validate_changes.py in live mode
   help                                    Show this help message
+
+Targets of the suites below non-free/tests/ are in non-free/tests/run_tests.sh.
 
 ENVIRONMENT VARIABLES
   EDITION           Edition to use (default: pro)
@@ -334,19 +332,6 @@ test-system-redfish() {
         --session-timeout 1800
 }
 
-test-system-relay() {
-    _pytest -x "$(realpath "$REPO_PATH/non-free/tests/system/relay")" \
-        "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 3600
-}
-
-# Unlike the -docker variants generated further below, which run the site in a
-# container via run-dockerized.py, this one only runs the test code itself in a
-# build container via run-in-docker.sh. Same for test-system-mk-oracle-docker.
-test-system-relay-docker() {
-    DOCKER_RUN_ADDOPTS="-v $HOME/.docker/config.json:$HOME/.docker/config.json:ro -v $HOME/.cmk-credentials:$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
-        "$REPO_PATH/scripts/run-in-docker.sh" tests/run_tests.sh test-system-relay
-}
-
 test-system-mk-oracle() {
     _pytest -x "$(realpath "$SCRIPT_DIR/system/mk_oracle")" \
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 3600 \
@@ -355,6 +340,9 @@ test-system-mk-oracle() {
         ${MK_ORACLE_BINARY_PATH:+"$MK_ORACLE_BINARY_PATH"}
 }
 
+# Unlike the -docker variants generated further below, which run the site in a
+# container via run-dockerized.py, this one only runs the test code itself in a
+# build container via run-in-docker.sh.
 test-system-mk-oracle-docker() {
     DOCKER_RUN_ADDOPTS="-v $HOME/.docker/config.json:$HOME/.docker/config.json:ro -v $HOME/.cmk-credentials:$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
         "$REPO_PATH/scripts/run-in-docker.sh" tests/run_tests.sh test-system-mk-oracle
@@ -376,12 +364,6 @@ test-system-azure-ultimate() {
     EDITION=ultimate _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/ultimate/azure_extended/" \
         --session-timeout 1800
-}
-
-test-system-ai-features() {
-    EDITION=pro _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$REPO_PATH/non-free/tests/system/ai_features")" \
-        --session-timeout 3600
 }
 
 test-system-oauth() {
@@ -525,7 +507,6 @@ test-system-singlesite-non-root-docker() { _system-tests-docker test-system-sing
 test-system-redfish-docker() { _system-tests-docker test-system-redfish; }
 test-system-otel-docker() { _system-tests-docker test-system-otel; }
 test-system-azure-docker() { _system-tests-docker test-system-azure; }
-test-system-ai-features-docker() { _system-tests-docker test-system-ai-features; }
 test-system-multisite-docker() { _system-tests-docker test-system-multisite; }
 test-system-agent-updates-docker() { _system-tests-docker-systemd test-system-agent-updates; }
 test-system-update-community-docker() { _system-tests-docker test-system-update-community; }
@@ -596,19 +577,6 @@ test-py-extensions() {
 test-packaging() {
     export PATH="$PATH:$(bazel run //bazel/tools:bazel_env print-path)"
     _pytest --log-cli-level=INFO "$SCRIPT_DIR/packaging"
-}
-
-test-artifact-relay-image() {
-    _pytest -x "$(realpath "$REPO_PATH/non-free/tests/packaging/relay_image")" \
-        "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 3600
-}
-
-# Unlike the -docker variants that run a site in a container via
-# run-dockerized.py, this one only runs the test code itself in a build
-# container via run-in-docker.sh; the relay image under test is pulled there.
-test-artifact-relay-image-docker() {
-    DOCKER_RUN_ADDOPTS="-v $HOME/.docker/config.json:$HOME/.docker/config.json:ro -v $HOME/.cmk-credentials:$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION -e RELAY_IMAGE_TAG" \
-        "$REPO_PATH/scripts/run-in-docker.sh" tests/run_tests.sh test-artifact-relay-image
 }
 
 # ---------------------------------------------------------------------------
@@ -797,4 +765,7 @@ main() {
     fi
 }
 
-main "$@"
+# non-free/tests/run_tests.sh sources this file for its helpers and dispatches itself.
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main "$@"
+fi

@@ -1,9 +1,10 @@
 # The Windows Server 2022 test VM of the *-qemu test tiers: the
 # image build (make_image.py) and the guest-side files it pushes into the
-# guest. See README.md.
+# guest. The image is pinned in image.bzl; see README.md.
 
 load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@rules_shell//shell:sh_library.bzl", "sh_library")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
 # Off by default, which makes the targets that need the VM's media
@@ -40,6 +41,13 @@ py_cmk_test(
     size = "small",
     srcs = glob(["tests/*.py"]),
     deps = [":make_image"],
+)
+
+# The upload script, for `bazel lint` (shellcheck): the Jenkins job runs it
+# directly.
+sh_library(
+    name = "shell_scripts",
+    srcs = ["upload-image.sh"],
 )
 
 # The guest-side scripts, for `bazel lint` (PSScriptAnalyzer).

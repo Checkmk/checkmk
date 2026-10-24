@@ -28,9 +28,10 @@ after the install is a cold one with only the devices it needs:
    it), the RTC in UTC (the runner sets the guest clock from the host after each
    resume), no password expiry, and the mount point the agent tests look for. It
    then powers the guest off: until then, the build has no channel into the guest.
-2. Provisioning: first-logon.ps1's result, Eval activation, an NGEN flush, a component
-   store cleanup, the removal of `C:\setup` (its logs go to the build's work directory)
-   and a TRIM.
+2. Provisioning: first-logon.ps1's result, Eval activation, SQL Server 2022 Developer
+   with the three instances the mk-sql tests expect (`guest/install-mssql.ps1`, from
+   the SQL ISO on a CD drive), an NGEN flush, a component store cleanup, the removal
+   of `C:\setup` (its logs go to the build's work directory) and a TRIM.
 3. Verification: the device set the tests use, and `guest/verify-image.ps1`.
 
 ## Building an image
@@ -39,13 +40,15 @@ after the install is a cold one with only the devices it needs:
 bazel run --config=test-vm //agents/wnx/test-vm:build-core -- --out <dir>/<name>.qcow2
 ```
 
-builds an image on a host with `/dev/kvm`. The Eval licence runs 180 days from the
-build, and the build prints its end. It takes
+builds an image on a host with `/dev/kvm` in about 40 minutes, plus the media download.
+The Eval licence runs 180 days from the build, and the build prints its end. It takes
 `--work <dir>` for its ~13 GiB work disk and `--keep-work` to keep it, with the guest's
 provisioning logs, after a successful build. Unlike the tests, the build needs network
 access: the guest activates the Eval licence online. The image has no Python: the
 pytest suites bring their own.
-The Eval and virtio-win ISOs are pinned in `bazel/extensions/test_vm_repositories.bzl`.
+The media (Eval ISO, virtio-win ISO, SQL Server ISO and CU, ODBC driver) are pinned in
+`bazel/extensions/test_vm_repositories.bzl`; a new SQL Server CU also bumps `MSSQL_VERSION`
+in `make_image.py`.
 
 ## Reaching a guest
 

@@ -13,8 +13,9 @@ _TOOLS = [
     *("--qemu", "bin/qemu-system-x86_64", "--qemu-img", "bin/qemu-img"),
     *("--bios", "share/qemu/bios-256k.bin", "--media", "file/downloaded"),
     *("--virtio-win", "virtio/downloaded"),
+    *("--sql-iso", "sql/downloaded", "--sql-cu", "cu/downloaded", "--odbc", "odbc/downloaded"),
     *("--answer", "answer/autounattend-core.xml", "--first-logon", "guest/first-logon.ps1"),
-    *("--verify", "guest/verify-image.ps1"),
+    *("--install-mssql", "guest/install-mssql.ps1", "--verify", "guest/verify-image.ps1"),
 ]
 
 
@@ -22,6 +23,7 @@ def config(tmp_path: Path) -> Config:
     return replace(
         parse_args([*_TOOLS, "--out", str(tmp_path / "image.qcow2")]),
         media=tmp_path / "media.iso",
+        sql_iso=tmp_path / "sql.iso",
     )
 
 
@@ -69,6 +71,7 @@ def test_output_in_a_missing_directory_is_refused(tmp_path: Path) -> None:
         pytest.param(lambda c, d: replace(c, out=d / "image,1.qcow2"), id="comma in the output"),
         pytest.param(lambda c, d: replace(c, work=d / "work:1"), id="colon in the work dir"),
         pytest.param(lambda c, d: replace(c, media=d / "eval:iso"), id="colon in the media"),
+        pytest.param(lambda c, d: replace(c, sql_iso=d / "sql,iso"), id="comma in the SQL media"),
     ],
 )
 # fmt: on

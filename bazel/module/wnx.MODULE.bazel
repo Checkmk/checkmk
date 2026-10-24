@@ -16,6 +16,9 @@ use_repo(
 test_vm_repos = use_extension("//bazel/extensions:test_vm_repositories.bzl", "test_vm")
 use_repo(
     test_vm_repos,
+    "msodbcsql17_msi",
+    "mssql2022_cu",
+    "mssql2022_dev_iso",
     "virtio_win_iso",
     "win2022_eval_iso",
 )

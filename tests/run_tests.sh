@@ -595,14 +595,11 @@ test-py-extensions() {
 
 test-packaging() {
     export PATH="$PATH:$(bazel run //bazel/tools:bazel_env print-path)"
-    # The relay image suite tests a different artifact (an OCI image, not a
-    # deb/rpm), needs a Docker daemon, and has its own target below.
-    _pytest --log-cli-level=INFO "$SCRIPT_DIR/packaging" \
-        --ignore="$SCRIPT_DIR/packaging/nonfree/ultimate/relay_image"
+    _pytest --log-cli-level=INFO "$SCRIPT_DIR/packaging"
 }
 
 test-artifact-relay-image() {
-    _pytest -x "$(realpath "$SCRIPT_DIR/packaging/nonfree/ultimate/relay_image")" \
+    _pytest -x "$(realpath "$REPO_PATH/non-free/tests/packaging/relay_image")" \
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 3600
 }
 

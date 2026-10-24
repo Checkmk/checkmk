@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { HttpResponse, http } from 'msw'
+import { restApiHttp } from 'cmk-ui-library/vitest.msw'
 
 type Choices = Array<[string, string]>
 
@@ -15,10 +15,12 @@ export interface AutocompleteRequest {
 
 /** Answers the REST autocompleters with the `[id, value]` choices `suggest` returns for the request. */
 export function restAutocompleter(suggest: (request: AutocompleteRequest) => Choices) {
-  return http.post('*/api/internal/objects/autocomplete/*', async ({ request }) => {
-    const { value, parameters } = (await request.json()) as Omit<AutocompleteRequest, 'ident'>
-    const ident = decodeURIComponent(new URL(request.url).pathname.split('/').pop()!)
-    const choices = suggest({ ident, value, parameters })
-    return HttpResponse.json({ choices: choices.map(([id, value]) => ({ id, value })) })
-  })
+  return restApiHttp.post(
+    '/objects/autocomplete/{autocomplete_id}',
+    async ({ params, request, response }) => {
+      const { value = '', parameters = {} } = await request.json()
+      const choices = suggest({ ident: params.autocomplete_id, value, parameters })
+      return response(200).json({ choices: choices.map(([id, value]) => ({ id, value })) })
+    }
+  )
 }

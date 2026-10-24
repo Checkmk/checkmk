@@ -518,9 +518,6 @@ importers:
       npm-run-all2:
         specifier: ^8.0.4
         version: 8.0.4
-      openapi-msw:
-        specifier: ^2.1.0
-        version: 2.1.0(msw@2.13.4(@types/node@22.19.17)(typescript@6.0.3))
       prettier:
         specifier: ^3.8.2
         version: 3.8.3
@@ -619,6 +616,9 @@ importers:
       msw:
         specifier: ^2.13.3
         version: 2.13.4(@types/node@25.6.0)(typescript@6.0.3)
+      openapi-msw:
+        specifier: ^2.1.0
+        version: 2.1.0(msw@2.13.4(@types/node@25.6.0)(typescript@6.0.3))
       typescript:
         specifier: ^6.0.2
         version: 6.0.3
@@ -15891,9 +15891,9 @@ snapshots:
     dependencies:
       openapi-typescript-helpers: 0.1.0
 
-  openapi-msw@2.1.0(msw@2.13.4(@types/node@22.19.17)(typescript@6.0.3)):
+  openapi-msw@2.1.0(msw@2.13.4(@types/node@25.6.0)(typescript@6.0.3)):
     dependencies:
-      msw: 2.13.4(@types/node@22.19.17)(typescript@6.0.3)
+      msw: 2.13.4(@types/node@25.6.0)(typescript@6.0.3)
 
   openapi-typescript-helpers@0.1.0: {}
 

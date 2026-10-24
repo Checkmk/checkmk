@@ -79,7 +79,7 @@ test('FormString with autocompleter renders backend validation messages', async 
   const specWithAutocompleter: FormSpec.String = {
     ...spec,
     autocompleter: {
-      data: { ident: '', params: {} },
+      data: { ident: 'config_hostname', params: {} },
       fetch_method: 'rest_autocomplete'
     }
   }

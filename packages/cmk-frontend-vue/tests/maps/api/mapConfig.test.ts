@@ -3,11 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-import { HttpResponse, http } from 'msw'
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
 import { MapConfigApi } from '@/maps/api/mapConfig'
+import { toWireConfig } from '@/maps/api/wire'
 import type { MapConfig } from '@/maps/types/api'
 
 import { aMap, newMapView } from '../support/fixtures'
@@ -34,10 +36,28 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
     objects: []
   })
 
+  const storedMap: components['schemas']['MapObject'] = {
+    domainType: 'map',
+    id: 'map1',
+    title: 'Map One',
+    extensions: {
+      owner: 'alice',
+      visibility: { publish: 'private', hide_in_monitor_menu: false },
+      is_builtin: false,
+      can_edit: true,
+      can_delete: true,
+      config: toWireConfig(staticMap),
+      config_b64: base64url(staticMap),
+      sig: 'deadbeef',
+      map_link_titles: {}
+    },
+    links: []
+  }
+
   it('lists maps and flattens the domain collection into MapRead rows', async () => {
     server.use(
-      http.get('*/api/internal/domain-types/map/collections/all', () =>
-        HttpResponse.json({
+      restApiHttp.get('/domain-types/map/collections/all', ({ response }) =>
+        response(200).json({
           id: 'map',
           domainType: 'map',
           value: [
@@ -94,24 +114,7 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
 
   it('fetches a map and decodes the GUI-signed map from extensions', async () => {
     server.use(
-      http.get('*/api/internal/objects/map/map1', () =>
-        HttpResponse.json({
-          domainType: 'map',
-          id: 'map1',
-          title: 'Map One',
-          extensions: {
-            owner: 'alice',
-            visibility: { publish: 'private', hide_in_monitor_menu: false },
-            is_builtin: false,
-            can_edit: true,
-            can_delete: true,
-            config: staticMap,
-            config_b64: base64url(staticMap),
-            sig: 'deadbeef'
-          },
-          links: []
-        })
-      )
+      restApiHttp.get('/objects/map/{name}', ({ response }) => response(200).json(storedMap))
     )
 
     const signed = await api.get('map1')
@@ -124,15 +127,9 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
   it('creates a map with a JSON POST to the collection', async () => {
     const seen: SeenRequest[] = []
     server.use(
-      http.post('*/api/internal/domain-types/map/collections/all', async ({ request }) => {
+      restApiHttp.post('/domain-types/map/collections/all', async ({ request, response }) => {
         seen.push(await snapshot(request))
-        return HttpResponse.json({
-          domainType: 'map',
-          id: 'map1',
-          title: 'x',
-          extensions: {},
-          links: []
-        })
+        return response(200).json(storedMap)
       })
     )
 
@@ -147,14 +144,16 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
 
   it('surfaces a duplicate-name conflict with its status so the create dialog can show it', async () => {
     server.use(
-      http.post('*/api/internal/domain-types/map/collections/all', () =>
-        HttpResponse.json(
-          {
-            title: "The map 'map1' already exists",
-            detail: 'Use the update endpoint to modify an existing map.',
-            status: 409
-          },
-          { status: 409 }
+      restApiHttp.post('/domain-types/map/collections/all', ({ response }) =>
+        response.untyped(
+          HttpResponse.json(
+            {
+              title: "The map 'map1' already exists",
+              detail: 'Use the update endpoint to modify an existing map.',
+              status: 409
+            },
+            { status: 409 }
+          )
         )
       )
     )
@@ -170,15 +169,9 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
   it('updates a map with PUT + If-Match: * and preserves visibility when omitted', async () => {
     const seen: SeenRequest[] = []
     server.use(
-      http.put('*/api/internal/objects/map/map1', async ({ request }) => {
+      restApiHttp.put('/objects/map/{name}', async ({ request, response }) => {
         seen.push(await snapshot(request))
-        return HttpResponse.json({
-          domainType: 'map',
-          id: 'map1',
-          title: 'x',
-          extensions: {},
-          links: []
-        })
+        return response(200).json(storedMap)
       })
     )
 
@@ -192,15 +185,9 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
   it('strips transient auto:* and site objects from the persisted wire config', async () => {
     const seen: SeenRequest[] = []
     server.use(
-      http.put('*/api/internal/objects/map/map1', async ({ request }) => {
+      restApiHttp.put('/objects/map/{name}', async ({ request, response }) => {
         seen.push(await snapshot(request))
-        return HttpResponse.json({
-          domainType: 'map',
-          id: 'map1',
-          title: 'x',
-          extensions: {},
-          links: []
-        })
+        return response(200).json(storedMap)
       })
     )
 
@@ -235,9 +222,9 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
   it('deletes a map with DELETE + If-Match: *', async () => {
     const seen: SeenRequest[] = []
     server.use(
-      http.delete('*/api/internal/objects/map/map1', async ({ request }) => {
+      restApiHttp.delete('/objects/map/{name}', async ({ request, response }) => {
         seen.push(await snapshot(request))
-        return new HttpResponse(null, { status: 204 })
+        return response(204).empty()
       })
     )
 

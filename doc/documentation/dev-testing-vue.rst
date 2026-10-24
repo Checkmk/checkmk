@@ -30,8 +30,9 @@ Do
 * Find elements through the accessibility layer:
   ``screen.getByRole('<role>', { name: '<accessible name>' })``.
 * Drive them with ``@testing-library/user-event``.
-* Simulate API backends with MockServiceWorker (grep ``from 'msw'`` for
-  examples).
+* Simulate API backends with MockServiceWorker through
+  ``cmk-ui-library/vitest.msw``, whose handlers are typed by the API's
+  OpenAPI schema.
 
 Do not
 ======

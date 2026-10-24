@@ -84,7 +84,9 @@ js_library(
     srcs = ["vitest.msw.ts"],
     visibility = ["//packages:__subpackages__"],
     deps = [
+        ":node_modules/cmk-shared-typing-bzl",
         ":node_modules/msw",
+        ":node_modules/openapi-msw",
         "//:node_modules/vitest",
     ],
 )

@@ -281,8 +281,8 @@ if (Test-Path C:\setup) {
     $failures += 'C:\setup still exists'
 }
 
-# The Eval licence: activated, with the expiry make_image.py prints (the
-# VM shuts down hourly once it has expired).
+# The Eval licence: activated, with the expiry make_image.py records next
+# to the image pin (the VM shuts down hourly once it has expired).
 $lic = Get-CimInstance SoftwareLicensingProduct -Filter "PartialProductKey IS NOT NULL AND ApplicationID='55c92734-d682-4d71-983e-d6ec3f16059f'"
 $expiry = (Get-Date).AddMinutes($lic.GracePeriodRemaining).ToUniversalTime().ToString('yyyy-MM-dd')
 Write-Output "licence: $($lic.Name), LicenseStatus $($lic.LicenseStatus), expires $expiry"

@@ -1,6 +1,6 @@
 # The Windows Server 2022 test VM of the *-qemu test tiers: the
 # image build (make_image.py) and the guest-side files it pushes into the
-# guest. See README.md.
+# guest. The image is pinned in image.bzl; see README.md.
 
 load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library", "py_pytest_main", "py_test")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")

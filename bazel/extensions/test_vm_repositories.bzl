@@ -1,9 +1,19 @@
-"""Module extension declaring the media of the Windows test VM image."""
+"""Module extension declaring the Windows test VM image and its media."""
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
+load("//agents/wnx/test-vm:image.bzl", "WINDOWS_TEST_IMAGE")
 
 def _repos_impl(mctx):
+    # The Windows test VM image the *-qemu tiers resume (agents/wnx/test-vm):
+    # a cleanly shut down, zstd-compressed qcow2.
+    http_file(
+        name = "win2022_core_image",
+        downloaded_file_path = "win2022-core.qcow2",
+        sha256 = WINDOWS_TEST_IMAGE.sha256,
+        urls = [UPSTREAM_MIRROR_URL + WINDOWS_TEST_IMAGE.file],
+    )
+
     # The media the image is built from (agents/wnx/test-vm, bazel run
     # only): Microsoft's Eval media and SQL Server 2022 Developer, mirrored
     # on Nexus under versioned names.
@@ -44,7 +54,8 @@ def _repos_impl(mctx):
         urls = [UPSTREAM_MIRROR_URL + "msodbcsql17-17.11.1.1-x64.msi"],
     )
 
-    # Fully pinned by sha256: nothing for MODULE.bazel.lock to record.
+    # Fully pinned by sha256: nothing for MODULE.bazel.lock to record, so
+    # re-pinning the image (at least every 180 days) does not touch it.
     return mctx.extension_metadata(reproducible = True)
 
 test_vm = module_extension(

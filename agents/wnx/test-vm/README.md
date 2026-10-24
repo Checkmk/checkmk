@@ -5,8 +5,10 @@ integration suites, Pester, the Rust tests of cmk-agent-ctl, mk-sql and mk-oracl
 MSI install) inside a real Windows Server 2022 VM, driven from Linux. This directory
 builds that VM's image.
 
-The image is Windows Server 2022 Datacenter Evaluation, Server Core, provisioned by
-`make_image.py` and cleanly shut down. QEMU itself is `@qemu_linux_x86_64`, a static build from `third_party/qemu`, so
+The image (`@win2022_core_image`, pinned in `image.bzl`) is Windows Server 2022
+Datacenter Evaluation, Server Core, provisioned by `make_image.py` and cleanly shut
+down. It is published on Nexus upstream-archives and shared by CI and developers.
+QEMU itself is `@qemu_linux_x86_64`, a static build from `third_party/qemu`, so
 building the image needs `/dev/kvm` (readable and writable, e.g. through the kvm
 group) but no QEMU package. The guest's user and password are fixed test values
 (`USER` and `PASSWORD` in `bazel/tools/windows_vm/qemu_windows/guest.py`): the
@@ -34,18 +36,23 @@ after the install is a cold one with only the devices it needs:
    of `C:\setup` (its logs go to the build's work directory) and a TRIM.
 3. Verification: the device set the tests use, and `guest/verify-image.ps1`.
 
-## Building an image
+## Building a new image
+
+The Eval licence runs 180 days from the build (`image.bzl` records its end). Build and
+publish a new image with the manual Jenkins job
+`buildscripts/scripts/winagt-build-test-vm-image.groovy`, which runs
 
 ```
 bazel run --config=test-vm //agents/wnx/test-vm:build-core -- --out <dir>/<name>.qcow2
+agents/wnx/test-vm/upload-image.sh <dir>/<name>.qcow2 <name>.qcow2
 ```
 
-builds an image on a host with `/dev/kvm` in about 40 minutes, plus the media download.
-The Eval licence runs 180 days from the build, and the build prints its end. It takes
-`--work <dir>` for its ~13 GiB work disk and `--keep-work` to keep it, with the guest's
-provisioning logs, after a successful build. Unlike the tests, the build needs network
-access: the guest activates the Eval licence online. The image has no Python: the
-pytest suites bring their own.
+in a pod with `/dev/kvm` (about 40 minutes, plus the media download and the upload),
+then put the three fields the upload prints (name, sha256, Eval expiry) into
+`image.bzl`. A local build takes `--work <dir>` for its ~13 GiB work disk and
+`--keep-work` to keep it, with the guest's provisioning logs, after a successful build.
+Unlike the tests, the build needs network access: the guest activates the Eval licence
+online. The image has no Python: the pytest suites bring their own.
 The media (Eval ISO, virtio-win ISO, SQL Server ISO and CU, ODBC driver) are pinned in
 `bazel/extensions/test_vm_repositories.bzl`; a new SQL Server CU also bumps `MSSQL_VERSION`
 in `make_image.py`.

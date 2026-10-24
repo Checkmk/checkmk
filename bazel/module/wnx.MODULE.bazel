@@ -8,8 +8,9 @@ use_repo(
     "wix3",
 )
 
-# The Windows test VM (agents/wnx/test-vm): the media its image is built
-# from. Not build dependencies: only the image build fetches them.
+# The Windows test VM (agents/wnx/test-vm): its image and the media it is
+# built from. Not build dependencies: only the image build and the tests
+# that boot a VM fetch them.
 # Not exported as `repos`, like most extensions here: Bzlmod numbers
 # same-named extensions in use order, so one more `repos` would rename the
 # repositories of every later one.
@@ -20,6 +21,7 @@ use_repo(
     "mssql2022_cu",
     "mssql2022_dev_iso",
     "virtio_win_iso",
+    "win2022_core_image",
     "win2022_eval_iso",
 )
 

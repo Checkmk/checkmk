@@ -25,8 +25,8 @@ Run through Bazel, which provides QEMU and the pinned media:
   bazel run --config=test-vm //agents/wnx/test-vm:build-core -- --out <image.qcow2> [--work <dir>] [--keep-work]
 --work holds the uncompressed disk (~13 GiB) and the guest's provisioning
 logs, defaults to the directory of --out, and is removed after a successful
-build unless --keep-work is given. The last line prints the image's Eval
-expiry.
+build unless --keep-work is given. The last line prints the Eval expiry
+the image pin needs; <image.qcow2>.expires holds it for upload-image.sh.
 """
 
 import argparse
@@ -509,13 +509,14 @@ def _compress(config: Config, expires: str) -> None:
         check=True,
     )
     partial.rename(config.out)
+    config.out.with_name(config.out.name + ".expires").write_text(f"{expires}\n")
     if config.keep_work:
         sys.stdout.write(f"work dir kept: {config.work}\n")
     else:
         shutil.rmtree(config.work)
     sys.stdout.write(f"image: {config.out}\n")
     sys.stdout.write(f"size: {config.out.stat().st_size} bytes\n")
-    sys.stdout.write(f"Eval expiry: {expires}\n")
+    sys.stdout.write(f'image.bzl: expires = "{expires}"\n')
 
 
 if __name__ == "__main__":

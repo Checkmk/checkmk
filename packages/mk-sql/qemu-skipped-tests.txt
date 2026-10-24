@@ -1,0 +1,20 @@
+# mk-sql tests skipped in the QEMU tier (mk-sql-tests-qemu), passed to
+# the test binaries as --skip (substring match).
+
+# validate_stdout() counts the editions of the legacy Windows nodes (one
+# Standard, two Express instances, one of them 32-bit); the QEMU images run
+# SQL Server 2022 Developer for all three instances. Skipping it loses the
+# whole test, not only the edition counts: the plugin-mode exit code, the
+# section order, the per-instance config/state/details lines and the
+# bad-config path would all pass on the images. Needs a test change by the
+# mk-sql owners (drop the edition counts or make them per endpoint).
+test_run_as_plugin_with_config
+
+# Remote tests that assert on the agentbuild node: its computer name, and
+# its tempdb and model file counts.
+test_check_exclude
+test_find_no_detect_two_custom_instances_remote
+test_get_computer_name
+# Also asserts the agentbuild computer name, and that every database but
+# tempdb has a backup, which the images' fresh instances lack.
+test_validate_all_instances_remote

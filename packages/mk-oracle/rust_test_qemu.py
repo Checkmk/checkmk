@@ -61,7 +61,7 @@ def main(argv: list[str]) -> int:
     return tier.run(
         "ora",
         script="rust-test-qemu.cmd",
-        args=[arg for name in skip for arg in ("--skip", name)],
+        args=tier.skip_args(skip),
         env=env,
     )
 

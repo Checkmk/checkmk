@@ -56,7 +56,10 @@ fn main_instance_name() -> InstanceName {
     InstanceName::from("MSSQLSERVER")
 }
 
-#[cfg(windows)]
+// The CFLAGS assertion checks the cargo build environment on the legacy
+// Windows nodes; under Bazel the toolchain owns those flags (and the CRT
+// linkage is asserted by static_crt_test).
+#[cfg(all(windows, not(feature = "build_system_bazel")))]
 #[test]
 fn test_environment() {
     // C code built via cc must not use assert(): it maps to _wassert,

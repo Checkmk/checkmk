@@ -12,12 +12,12 @@ spawns and COM services such as Windows Update need that session, and the
 guest agent itself runs as LocalSystem in session 0.
 
 The script, a .cmd or a .ps1 that Windows PowerShell runs, runs in that
-directory, with its path in QEMU_GDIR and its name, unique per run, in
-QEMU_RID. Its exit code (ERRORLEVEL at its end, exit /b N, or a .ps1's
-exit N) is the result: 0 passes, anything else fails, including the
-NTSTATUS of a crash. A .cmd must not call plain `exit`, which would end the
-wrapper that records the result. Its output is printed once it has
-finished.
+directory, with its path in QEMU_GDIR, its name, unique per run, in
+QEMU_RID and the guest user's password in QEMU_VM_PASSWORD. Its exit code
+(ERRORLEVEL at its end, exit /b N, or a .ps1's exit N) is the result: 0
+passes, anything else fails, including the NTSTATUS of a crash. A .cmd must
+not call plain `exit`, which would end the wrapper that records the result.
+Its output is printed once it has finished.
 
 Every test gets its own VM: the saved state of the Server Core test image
 (windows_vm_state.bzl), resumed on a throwaway disk layer in TEST_TMPDIR
@@ -85,7 +85,8 @@ def run(
             _vm,
             guest,
         ):
-            return _run(guest, rid, wrapper(rid, script, args, env or {}), collect)
+            task = wrapper(rid, script, args, {"QEMU_VM_PASSWORD": guest.password, **(env or {})})
+            return _run(guest, rid, task, collect)
     except VmError as e:
         sys.stderr.write(f"error: {e}\n")
         return 1
@@ -115,6 +116,12 @@ def read_list(path: Path) -> list[str]:
         for line in path.read_text().splitlines()
         if (entry := line.strip()) and not entry.startswith("#")
     ]
+
+
+def skip_args(names: Sequence[str]) -> list[str]:
+    """libtest arguments that skip the tests whose names contain one of
+    names."""
+    return [arg for name in names for arg in ("--skip", name)]
 
 
 def wrapper(rid: str, script: str, args: Sequence[str], env: Mapping[str, str]) -> str:

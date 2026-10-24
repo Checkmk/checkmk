@@ -5,7 +5,7 @@
 from pathlib import Path
 
 import pytest
-from qemu_windows.tier import cmd_literal, read_list, wrapper
+from qemu_windows.tier import cmd_literal, read_list, skip_args, wrapper
 
 
 def test_calls_a_cmd_script_with_its_args() -> None:
@@ -55,6 +55,10 @@ def test_comment_only_list_file_is_empty(tmp_path: Path) -> None:
     path.write_text("# nothing excluded\n")
 
     assert not read_list(path)
+
+
+def test_skip_args_pass_each_name_to_libtest_as_a_skip() -> None:
+    assert skip_args(["test_a", "test_b"]) == ["--skip", "test_a", "--skip", "test_b"]
 
 
 def test_cmd_literal_doubles_the_percent_signs_cmd_exe_would_expand() -> None:

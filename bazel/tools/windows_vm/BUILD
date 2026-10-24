@@ -110,6 +110,7 @@ pkg_files(
     visibility = [
         "//packages/cmk-agent-ctl:__pkg__",
         "//packages/mk-oracle:__pkg__",
+        "//packages/mk-sql:__pkg__",
     ],
 )
 

@@ -1,7 +1,11 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@host_crates//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_library", "rust_test_suite")
+load("//bazel/rules:crlf_files.bzl", "crlf_files")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
+load("//bazel/rules:xcomp/qemu_test.bzl", "qemu_test")
 load("//bazel/rules:xcomp/rust.bzl", "rust_binary", "rust_test")
 load("//bazel/rules:xcomp/rust_wine_test.bzl", "rust_wine_test")
 load("//bazel/testing:static_crt.bzl", "static_crt_test")
@@ -174,6 +178,100 @@ rust_wine_test(
         "$(rootpaths :test-registry-fixtures)",
     ],
     skip_file = "wine-skipped-tests.txt",
+)
+
+# The integration tests, cross compiled for Windows and run inside the
+# real-Windows QEMU VM by :mk-sql-tests-qemu below. They run the binary the
+# runner stages at <cwd>/packages/mk-sql/mk-sql (build_system_bazel), so
+# unlike :mk-sql-lib-test-external they do not depend on the host :mk-sql.
+[
+    rust_test(
+        name = "%s-windows" % t,
+        srcs = ["tests/%s.rs" % t],
+        compile_data = [
+            "tests/files/no-mssql.yml",
+            "tests/files/not-yaml.yml",
+            "tests/files/test-config.yml",
+            "tests/files/test-no-ms-sql.yml",
+            "tests/files/test-mini.yml",
+        ],
+        crate_features = ["build_system_bazel"],
+        crate_root = "tests/%s.rs" % t,
+        platform = "//bazel/platforms:x86_64-windows-msvc",
+        tags = ["manual"],
+        deps = all_crate_deps() + [
+            ":mk-sql-lib",
+            ":mk-sql-tests-common",
+            "@host_crates//:assert_cmd",
+            "@host_crates//:tempfile",
+        ],
+    )
+    for t in [
+        "test_ms_sql",
+        "test_running_instances",
+    ]
+]
+
+# cmd.exe needs CRLF line ends, which a Linux checkout lacks.
+crlf_files(
+    name = "qemu_tests_script",
+    srcs = ["rust-test-qemu.cmd"],
+    suffixes = [".cmd"],
+)
+
+pkg_files(
+    name = "qemu_tests_root",
+    testonly = True,
+    srcs = [
+        ":mk-sql-lib-test-internal-windows",
+        ":qemu_tests_script",
+        ":test_ms_sql-windows",
+        ":test_running_instances-windows",
+    ],
+)
+
+pkg_files(
+    name = "qemu_tests_binary",
+    srcs = [":mk-sql-windows"],
+    prefix = "packages/mk-sql",
+)
+
+pkg_files(
+    name = "qemu_tests_fixtures",
+    srcs = [
+        "tests/files/ci-scripts/manage-test-registry-set.ps1",
+        ":test-registry-fixtures",
+    ],
+    strip_prefix = strip_prefix.from_pkg(),
+)
+
+# The guest's directory, the tests' cwd:
+#   *.exe                     the test binaries
+#   packages\mk-sql\          mk-sql.exe
+#   tests\files\              the registry test sets and
+#                             manage-test-registry-set.ps1
+pkg_tar(
+    name = "qemu_tests_stage",
+    testonly = True,
+    srcs = [
+        ":qemu_tests_binary",
+        ":qemu_tests_fixtures",
+        ":qemu_tests_root",
+        "//bazel/tools/windows_vm:run_rust_tests",
+    ],
+    extension = "tar.gz",
+)
+
+# Runs the Windows lib and integration tests inside the real-Windows QEMU
+# VM against the image's SQL Server instances, with the registry fixtures
+# imported. The remote tests use the guest's own SQL Server too (see
+# rust_test_qemu.py).
+qemu_test(
+    name = "mk-sql-tests-qemu",
+    src = "rust_test_qemu.py",
+    args = ["$(rootpath qemu-skipped-tests.txt)"],
+    data = ["qemu-skipped-tests.txt"],
+    stage = ":qemu_tests_stage",
 )
 
 rust_library(

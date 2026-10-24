@@ -32,7 +32,10 @@ fn bin_command_path_impl() -> OsString {
 fn bin_command_path_impl() -> OsString {
     let cwd = std::env::current_dir().unwrap();
     // Binary has same name as parent directory
+    #[cfg(not(windows))]
     let relative_path: std::path::PathBuf = ["packages", "mk-sql", "mk-sql"].iter().collect();
+    #[cfg(windows)]
+    let relative_path: std::path::PathBuf = ["packages", "mk-sql", "mk-sql.exe"].iter().collect();
     let path = cwd.join(relative_path);
     assert!(path.is_file());
     path.into()

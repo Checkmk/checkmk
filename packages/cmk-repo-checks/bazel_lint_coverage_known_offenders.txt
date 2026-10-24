@@ -32,7 +32,6 @@ packages/mk-oracle/run_unified.sh
 packages/mk-oracle/src/main.rs
 packages/mk-oracle/tests/perf/install.sh
 packages/mk-sql/src/main.rs
-packages/mk-sql/tests/test_running_instances.rs
 packages/mk-sql/wine-prepare.sh
 packages/neb/test/NagiosMockup.cc
 tests/packaging/package_validator/src/main.rs

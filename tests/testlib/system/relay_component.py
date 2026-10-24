@@ -10,7 +10,7 @@ binary can be exec'd against a mock target service. No site, no CMC, no relay
 daemon are involved.
 
 ``DockerHttpMock`` and ``run_check`` are generic enough that the system relay suite
-(``tests/system/relay``, which does have a site, a core and a relay daemon) uses
+(``non-free/tests/system/relay``, which does have a site, a core and a relay daemon) uses
 them too, rather than growing a second HTTP-container class. They live here and
 not in ``relay_docker`` because that module imports
 ``CheckmkApp`` and ``openapi_session``, and this one must stay free of them; the
@@ -19,7 +19,7 @@ container lifecycle helpers both need come from ``container_lifecycle``.
 Provides:
     CheckResult          -- exit code + output of an exec'd active check
     DockerHttpMock       -- minimal HTTP server as an active-check target
-                            (also used by tests/system/relay)
+                            (also used by non-free/tests/system/relay)
     idle_relay_container -- relay image started idle for exec-based checks
     run_check            -- exec an active-check plugin, parse its result
     run_via_checkhelper  -- drive checkhelper and decode its result frame

@@ -335,7 +335,7 @@ test-system-redfish() {
 }
 
 test-system-relay() {
-    _pytest -x "$(realpath "$SCRIPT_DIR/system/relay")" \
+    _pytest -x "$(realpath "$REPO_PATH/non-free/tests/system/relay")" \
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 3600
 }
 

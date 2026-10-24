@@ -9,7 +9,11 @@ description:
  The check displays the measured value of the sensor.
 
 item:
- The fixed statement {{Summary}}
+ The inletLabel, for example {{I1}}, resulting in {{Input I1}}.
+ A missing label uses {{Inlet <ID>}}. Multiple PDUs include the PDU ID.
+ Duplicate labels include the inlet identity to keep services distinct.
 
 discovery:
- One service is created for each phase.
+ One service per inlet with supported electrical measurements.
+ Residual-current-only inlets do not create an electrical summary.
+ Outlet readings are never substituted for inlet readings.

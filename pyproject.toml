@@ -230,8 +230,9 @@ warn_required_dynamic_aliases = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# tests.system and its non-free counterpart non-free/tests/system are namespace packages
-# (see tests/__init__.py). Keep the module names rooted at the repository for both.
+# tests.system and tests.packaging span their non-free counterparts below non-free/tests/
+# as namespace packages (see tests/__init__.py). Keep the module names rooted at the
+# repository for both trees.
 pythonpath = ["."]
 consider_namespace_packages = true
 addopts = [

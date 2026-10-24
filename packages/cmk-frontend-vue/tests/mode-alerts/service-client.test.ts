@@ -5,6 +5,7 @@
  */
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { afterEach, expect, test } from 'vitest'
 

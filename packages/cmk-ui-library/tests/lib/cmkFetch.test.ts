@@ -5,21 +5,21 @@
  */
 import { cmkFetch } from 'cmk-ui-library/lib/cmkFetch'
 import { CmkNetworkError } from 'cmk-ui-library/lib/error'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-import { HttpResponse, http } from 'msw'
+import { untypedHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse } from 'msw'
 
 const data = {
   some_random_playload: 123
 }
 
 export const restHandlers = [
-  http.get('some_random_url', () => {
+  untypedHttp.get('some_random_url', () => {
     return HttpResponse.json(data)
   }),
-  http.get('some_broken_endpoint', () => {
+  untypedHttp.get('some_broken_endpoint', () => {
     return HttpResponse.json(data, { status: 418 })
   }),
-  http.get('some_endpoint_with_crashreport_response', () => {
+  untypedHttp.get('some_endpoint_with_crashreport_response', () => {
     return HttpResponse.json(
       {
         detail: 'some_detail',
@@ -29,7 +29,7 @@ export const restHandlers = [
       { status: 500 }
     )
   }),
-  http.get('some_unreachable_endpoint', () => {
+  untypedHttp.get('some_unreachable_endpoint', () => {
     return HttpResponse.error()
   })
 ]

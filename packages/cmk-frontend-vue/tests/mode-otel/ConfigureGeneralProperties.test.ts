@@ -5,6 +5,7 @@
  */
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, delay, http } from 'msw'
 import { defineComponent, ref } from 'vue'
 

@@ -215,6 +215,14 @@ export function checkmkVueTestConfig(packageDir) {
               message:
                 "Use useMswServer from 'cmk-ui-library/vitest.msw', which also resets the " +
                 'handlers after each test and fails on unhandled requests.'
+            },
+            {
+              name: 'msw',
+              importNames: ['http'],
+              message:
+                "Use restApiHttp or openApiHttp from 'cmk-ui-library/vitest.msw', whose " +
+                'handlers are typed by the OpenAPI schema. For a URL without one, use ' +
+                'untypedHttp from there.'
             }
           ],
           patterns: [...RESTRICTED_IMPORT_PATTERNS]

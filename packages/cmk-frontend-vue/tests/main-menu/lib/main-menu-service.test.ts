@@ -5,8 +5,8 @@
  */
 import type { NavItemShortcut, NavItems } from 'cmk-shared-typing/typescript/main_menu'
 import { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-import { HttpResponse, http } from 'msw'
+import { untypedHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse } from 'msw'
 
 import { MainMenuService } from '@/main-menu/lib/main-menu-service'
 
@@ -28,33 +28,35 @@ const userMessages = (count: number) => ({
 const unackIncompWerks = (count: number) => ({ count, text: 'werks', tooltip: '' })
 
 const server = useMswServer(
-  http.get('*/ajax_sidebar_get_messages.py', () =>
+  untypedHttp.get('*/ajax_sidebar_get_messages.py', () =>
     HttpResponse.json({ result_code: 0, result: userMessages(0) })
   ),
-  http.get('*/ajax_sidebar_get_unack_incomp_werks.py', () =>
+  untypedHttp.get('*/ajax_sidebar_get_unack_incomp_werks.py', () =>
     HttpResponse.json({ result_code: 0, result: unackIncompWerks(0) })
   )
 )
 
 const answerUserMessages = (count: number) =>
   server.use(
-    http.get('*/ajax_sidebar_get_messages.py', () =>
+    untypedHttp.get('*/ajax_sidebar_get_messages.py', () =>
       HttpResponse.json({ result_code: 0, result: userMessages(count) })
     )
   )
 
 const answerUnackIncompWerks = (count: number) =>
   server.use(
-    http.get('*/ajax_sidebar_get_unack_incomp_werks.py', () =>
+    untypedHttp.get('*/ajax_sidebar_get_unack_incomp_werks.py', () =>
       HttpResponse.json({ result_code: 0, result: unackIncompWerks(count) })
     )
   )
 
 const failUserMessages = () =>
-  server.use(http.get('*/ajax_sidebar_get_messages.py', () => HttpResponse.error()))
+  server.use(untypedHttp.get('*/ajax_sidebar_get_messages.py', () => HttpResponse.error()))
 
 const failUnackIncompWerks = () =>
-  server.use(http.get('*/ajax_sidebar_get_unack_incomp_werks.py', () => HttpResponse.error()))
+  server.use(
+    untypedHttp.get('*/ajax_sidebar_get_unack_incomp_werks.py', () => HttpResponse.error())
+  )
 
 const navItems = (shortcut: NavItemShortcut): NavItems => [
   {

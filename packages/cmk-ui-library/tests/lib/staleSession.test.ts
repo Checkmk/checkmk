@@ -6,26 +6,26 @@
 import { cmkFetch } from 'cmk-ui-library/lib/cmkFetch'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import { StaleSession, StaleSessionError } from 'cmk-ui-library/lib/staleSession'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-import { HttpResponse, http } from 'msw'
+import { untypedHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse } from 'msw'
 import { beforeEach, vi } from 'vitest'
 
 const SITE = 'http://localhost:3000/mysite/check_mk'
 
 useMswServer(
-  http.get(`${SITE}/ajax_poll.py`, () =>
+  untypedHttp.get(`${SITE}/ajax_poll.py`, () =>
     HttpResponse.redirect(`${SITE}/login.py?_origtarget=ajax_poll.py`, 302)
   ),
-  http.get(`${SITE}/login.py`, () => HttpResponse.html('<html>Login</html>')),
-  http.get(`${SITE}/moved.py`, () => HttpResponse.redirect(`${SITE}/index.py`, 302)),
-  http.get(`${SITE}/index.py`, () => HttpResponse.html('<html>Index</html>')),
-  http.get(`${SITE}/denied.py`, () =>
+  untypedHttp.get(`${SITE}/login.py`, () => HttpResponse.html('<html>Login</html>')),
+  untypedHttp.get(`${SITE}/moved.py`, () => HttpResponse.redirect(`${SITE}/index.py`, 302)),
+  untypedHttp.get(`${SITE}/index.py`, () => HttpResponse.html('<html>Index</html>')),
+  untypedHttp.get(`${SITE}/denied.py`, () =>
     HttpResponse.text('Permission denied', { status: 401, statusText: 'Unauthorized' })
   ),
-  http.get(`${SITE}/api/internal/version`, () =>
+  untypedHttp.get(`${SITE}/api/internal/version`, () =>
     HttpResponse.json({ title: 'Unauthorized', status: 401 }, { status: 401 })
   ),
-  http.get(`${SITE}/ajax_fine.py`, () => HttpResponse.json({ result_code: 0, result: 'ok' }))
+  untypedHttp.get(`${SITE}/ajax_fine.py`, () => HttpResponse.json({ result_code: 0, result: 'ok' }))
 )
 
 let warn: ReturnType<typeof vi.spyOn>

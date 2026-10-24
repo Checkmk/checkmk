@@ -7,6 +7,7 @@ import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor, within } from '@testing-library/vue'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, delay, http } from 'msw'
 import { defineComponent, ref } from 'vue'
 

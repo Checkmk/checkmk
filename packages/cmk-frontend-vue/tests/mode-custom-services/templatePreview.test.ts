@@ -5,6 +5,7 @@
  */
 import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, delay, http } from 'msw'
 import { afterEach, expect, test, vi } from 'vitest'
 import { type EffectScope, effectScope, nextTick, ref } from 'vue'

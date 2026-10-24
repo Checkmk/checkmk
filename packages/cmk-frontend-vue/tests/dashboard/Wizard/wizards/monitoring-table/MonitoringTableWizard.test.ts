@@ -10,6 +10,7 @@ import {
   useProvideFilterDefinitions
 } from 'cmk-ui-library/components/filter'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h, provide, ref } from 'vue'

@@ -10,6 +10,7 @@ import {
   wizardContextProvider
 } from 'cmk-ui-library/components/CmkWizard/utils.ts'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { afterEach, expect, test, vi } from 'vitest'
 import { defineComponent, ref } from 'vue'

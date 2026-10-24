@@ -5,19 +5,19 @@
  */
 import { Api } from 'cmk-ui-library/lib/api-client'
 import { StaleSession, StaleSessionError } from 'cmk-ui-library/lib/staleSession'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-import { HttpResponse, http } from 'msw'
+import { untypedHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse } from 'msw'
 import { beforeEach, vi } from 'vitest'
 
 const SITE = 'http://localhost:3000/mysite/check_mk/'
 
 useMswServer(
-  http.get(`${SITE}sidebar_snapin.py`, () =>
+  untypedHttp.get(`${SITE}sidebar_snapin.py`, () =>
     HttpResponse.redirect(`${SITE}login.py?_origtarget=sidebar_snapin.py`, 302)
   ),
-  http.get(`${SITE}login.py`, () => HttpResponse.html('<html>Login</html>')),
-  http.get(`${SITE}ajax_fine.py`, () => HttpResponse.json({ result_code: 0, result: 'ok' })),
-  http.all(`${SITE}endpoint`, ({ request }) => {
+  untypedHttp.get(`${SITE}login.py`, () => HttpResponse.html('<html>Login</html>')),
+  untypedHttp.get(`${SITE}ajax_fine.py`, () => HttpResponse.json({ result_code: 0, result: 'ok' })),
+  untypedHttp.all(`${SITE}endpoint`, ({ request }) => {
     return HttpResponse.json({ result: request.method })
   })
 )

@@ -10,6 +10,7 @@ import type {
   ValidationMessage
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'

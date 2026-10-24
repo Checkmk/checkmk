@@ -5,8 +5,8 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-import { HttpResponse, http } from 'msw'
+import { untypedHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse } from 'msw'
 
 import ProfilingFlamegraphApp from '../../frontend/ProfilingFlamegraphApp.vue'
 import type { HotspotData, ProfilingFlamegraphData } from '../../frontend/types'
@@ -52,7 +52,7 @@ const PAYLOAD: ProfilingFlamegraphData = {
   total_functions: 4
 }
 
-useMswServer(http.get(DATA_URL, () => HttpResponse.json(PAYLOAD)))
+useMswServer(untypedHttp.get(DATA_URL, () => HttpResponse.json(PAYLOAD)))
 
 beforeAll(() => {
   Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })

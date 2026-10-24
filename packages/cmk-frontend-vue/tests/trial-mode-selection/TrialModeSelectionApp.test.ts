@@ -13,8 +13,8 @@ import {
 } from 'cmk-shared-typing/typescript/trial_mode_selection_request'
 import { type TrialModeVerificationRequest } from 'cmk-shared-typing/typescript/trial_mode_verification_request'
 import { type TrialModeVerificationResponse } from 'cmk-shared-typing/typescript/trial_mode_verification_response'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-import { HttpResponse, http } from 'msw'
+import { untypedHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import TrialModeSelectionApp from '@/trial-mode-selection/TrialModeSelectionApp.vue'
@@ -60,7 +60,7 @@ function ajaxResult(result: unknown) {
 
 /** Records every save before answering it. */
 function onSave(answer: () => Response | Promise<Response>) {
-  return http.post(SAVE_ENDPOINT, async ({ request }) => {
+  return untypedHttp.post(SAVE_ENDPOINT, async ({ request }) => {
     received.save.push(await decode<SaveRequest>(request))
     return answer()
   })
@@ -68,7 +68,7 @@ function onSave(answer: () => Response | Promise<Response>) {
 
 /** Records every verification request before answering it. */
 function onVerification(answer: (sent: VerificationRequest) => Response | Promise<Response>) {
-  return http.post(VERIFICATION_ENDPOINT, async ({ request }) => {
+  return untypedHttp.post(VERIFICATION_ENDPOINT, async ({ request }) => {
     const sent = await decode<VerificationRequest>(request)
     received.verification.push(sent)
     return answer(sent)

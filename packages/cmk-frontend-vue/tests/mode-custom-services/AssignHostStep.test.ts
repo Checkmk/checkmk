@@ -8,6 +8,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/vue'
 import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { ConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { afterEach, expect, test } from 'vitest'
 import { defineComponent, ref } from 'vue'

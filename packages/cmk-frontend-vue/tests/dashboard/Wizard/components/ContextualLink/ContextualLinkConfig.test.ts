@@ -9,6 +9,7 @@ import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h } from 'vue'

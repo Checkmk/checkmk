@@ -3,8 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-import { HttpResponse, http } from 'msw'
+import { untypedHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
 import { ConnectionsApi } from '@/maps/api/connections'
@@ -31,7 +31,7 @@ const sampleConnection: ConnectionConfig = {
 }
 
 const server = useMswServer(
-  http.get('*/api/v1/connections', () => HttpResponse.json([sampleConnection]))
+  untypedHttp.get('*/api/v1/connections', () => HttpResponse.json([sampleConnection]))
 )
 
 function newService(): ConnectionsService {
@@ -54,7 +54,7 @@ describe('ConnectionsService', () => {
 
   it('reports the daemon error message on failure', async () => {
     server.use(
-      http.get('*/api/v1/connections', () =>
+      untypedHttp.get('*/api/v1/connections', () =>
         HttpResponse.json({ detail: 'Failed' }, { status: 500 })
       )
     )
@@ -73,7 +73,7 @@ describe('ConnectionsService', () => {
   it('shares one request between concurrent lazy loads', async () => {
     let requests = 0
     server.use(
-      http.get('*/api/v1/connections', () => {
+      untypedHttp.get('*/api/v1/connections', () => {
         requests += 1
         return HttpResponse.json([sampleConnection])
       })

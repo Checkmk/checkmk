@@ -6,6 +6,7 @@
 import { render } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { type Ref, defineComponent, h, ref } from 'vue'

@@ -5,8 +5,8 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen } from '@testing-library/vue'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-import { HttpResponse, http } from 'msw'
+import { untypedHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse } from 'msw'
 
 import QuickSetupAsync from '@/quick-setup/QuickSetupAsync.vue'
 import type { Action, QuickSetupGuidedResponse } from '@/quick-setup/rest-api/response_schemas'
@@ -62,8 +62,8 @@ async function startDeployment() {
     background_job_exception: null
   })
   server.use(
-    http.get(setupUrl, () => HttpResponse.json(overview)),
-    http.get(`${setupUrl}/quick_setup_stage/1`, () =>
+    untypedHttp.get(setupUrl, () => HttpResponse.json(overview)),
+    untypedHttp.get(`${setupUrl}/quick_setup_stage/1`, () =>
       HttpResponse.json({
         components: [],
         actions: [
@@ -73,14 +73,14 @@ async function startDeployment() {
         prev_button: back
       })
     ),
-    http.get(`${setupUrl}/quick_setup_stage/2`, () =>
+    untypedHttp.get(`${setupUrl}/quick_setup_stage/2`, () =>
       HttpResponse.json({
         components: [],
         actions: [action('confirm_url', 'Confirm URL')],
         prev_button: back
       })
     ),
-    http.post(`${setupUrl}/actions/run-stage-action/invoke`, async ({ request }) => {
+    untypedHttp.post(`${setupUrl}/actions/run-stage-action/invoke`, async ({ request }) => {
       const { stage_action_id: id } = (await request.json()) as { stage_action_id: string }
       if (id.startsWith('deploy_')) {
         pullSelected = id === 'deploy_pull'
@@ -92,12 +92,14 @@ async function startDeployment() {
       }
       return HttpResponse.json({ ...result(), stage_recap: [] })
     }),
-    http.get(`${api}/background_job/deployment`, () =>
+    untypedHttp.get(`${api}/background_job/deployment`, () =>
       HttpResponse.json({
         extensions: { active: false, status: { log_info: { JobProgressUpdate: [] } } }
       })
     ),
-    http.get(`${api}/quick_setup_stage_action_result/deployment`, () => HttpResponse.json(result()))
+    untypedHttp.get(`${api}/quick_setup_stage_action_result/deployment`, () =>
+      HttpResponse.json(result())
+    )
   )
   render(
     wrapInSuspense(QuickSetupAsync, {

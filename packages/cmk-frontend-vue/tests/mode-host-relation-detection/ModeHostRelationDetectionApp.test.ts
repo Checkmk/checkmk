@@ -7,6 +7,7 @@ import { userEvent } from '@testing-library/user-event'
 import { render, screen, waitFor, within } from '@testing-library/vue'
 import type { ScopeChoice } from 'cmk-shared-typing/typescript/mode_host_relation_detection'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { expect, test, vi } from 'vitest'
 

@@ -1,6 +1,9 @@
 load("@host_crates//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_library", "rust_test_suite")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
+load("//bazel/rules:xcomp/qemu_test.bzl", "qemu_test")
 load("//bazel/rules:xcomp/rust.bzl", "rust_binary", "rust_test")
 load("//bazel/rules:xcomp/rust_wine_test.bzl", "rust_wine_test")
 load("//bazel/testing:static_crt.bzl", "static_crt_test")
@@ -133,6 +136,46 @@ rust_wine_test(
         # The tests bind loopback ports; concurrent instances collide.
         "exclusive",
     ],
+)
+
+pkg_files(
+    name = "qemu_tests_controller",
+    srcs = [":cmk-agent-ctl-windows"],
+    prefix = "packages/cmk-agent-ctl",
+)
+
+pkg_files(
+    name = "qemu_tests_bin",
+    testonly = True,
+    srcs = [
+        ":cmk-agent-ctl-lib-internal-windows",
+        ":test_cli-windows",
+        ":test_pull-windows",
+        ":test_status-windows",
+    ],
+)
+
+# The guest's directory, the tests' cwd:
+#   *.exe                                the test binaries
+#   packages\cmk-agent-ctl\cmk-agent-ctl.exe  where common/mod.rs finds it
+pkg_tar(
+    name = "qemu_tests_stage",
+    testonly = True,
+    srcs = [
+        ":qemu_tests_bin",
+        ":qemu_tests_controller",
+        "//bazel/tools/windows_vm:run_rust_tests",
+    ],
+    extension = "tar.gz",
+)
+
+# The Wine complement inside the real-Windows QEMU VM: the
+# elevation-guarded external tests self-skip under Wine and only run
+# here, with a real elevated token.
+qemu_test(
+    name = "cmk-agent-ctl-tests-qemu",
+    src = "rust_test_qemu.py",
+    stage = ":qemu_tests_stage",
 )
 
 rust_library(

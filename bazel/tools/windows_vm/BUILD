@@ -1,5 +1,7 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
+load("//bazel/rules:crlf_files.bzl", "crlf_files")
 
 # Separate libraries, so that what uses one is not rebuilt when another
 # changes: a saved VM state depends on the machine, the guest agent and the
@@ -90,6 +92,21 @@ py_library(
         ":state",
         "@rules_python//python/runfiles",
     ],
+)
+
+# cmd.exe needs CRLF line ends, which a Linux checkout lacks.
+crlf_files(
+    name = "run_rust_tests_crlf",
+    srcs = ["run-rust-tests.cmd"],
+    suffixes = [".cmd"],
+)
+
+# For the stages of the Rust packages' *-tests-qemu: the script that runs
+# their test binaries in the guest.
+pkg_files(
+    name = "run_rust_tests",
+    srcs = [":run_rust_tests_crlf"],
+    visibility = ["//packages/cmk-agent-ctl:__pkg__"],
 )
 
 py_pytest_main(

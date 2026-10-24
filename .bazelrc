@@ -8,7 +8,7 @@
 #   performance.rc   resource usage of the Bazel server
 #   correctness.rc   hermeticity, lockfile and incompatible/migration flags
 #   checkmk.rc       Checkmk specific build settings
-#   ci.rc, debug.rc, iwyu.rc, mypy.rc, deballast.rc  the respective --config
+#   ci.rc, debug.rc, iwyu.rc, mypy.rc, deballast.rc, test-vm.rc  the respective --config
 #
 # The import order matters for options set in more than one file: the last value of a single
 # value option wins, repeatable options keep the order.  Today only the startup --host_jvm_args
@@ -56,6 +56,7 @@ import %workspace%/bazel/rc/debug.rc
 import %workspace%/bazel/rc/iwyu.rc
 import %workspace%/bazel/rc/mypy.rc
 import %workspace%/bazel/rc/deballast.rc
+import %workspace%/bazel/rc/test-vm.rc
 
 # The remote.bazelrc file contains the secrets for accessing the remote cache and must be added by the corresponding
 # Jenkins job (or a user) in the form of:

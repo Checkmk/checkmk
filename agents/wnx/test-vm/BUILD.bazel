@@ -1,0 +1,88 @@
+# The Windows Server 2022 test VM of the *-qemu test tiers: the
+# image build (make_image.py) and the guest-side files it pushes into the
+# guest. See README.md.
+
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
+
+# Off by default, which makes the targets that need the VM's media
+# incompatible: whole-repo sweeps then skip them instead of fetching
+# several GiB (`bazel cquery ... //...` also analyzes manual targets).
+# --config=test-vm (bazel/rc/test-vm.rc) turns it on.
+bool_flag(
+    name = "enable",
+    build_setting_default = False,
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "disabled",
+    flag_values = {":enable": "False"},
+    visibility = ["//visibility:public"],
+)
+
+# The image build without its media, for `bazel lint` and the unit tests:
+# build-core is manual, which `bazel lint ...` skips.
+py_library(
+    name = "make_image",
+    srcs = ["make_image.py"],
+    imports = ["."],
+    deps = [
+        "//bazel/tools/windows_vm:guest",
+        "//bazel/tools/windows_vm:machine",
+        "//bazel/tools/windows_vm:session",
+    ],
+)
+
+py_cmk_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/*.py"]),
+    deps = [":make_image"],
+)
+
+# The guest-side scripts, for `bazel lint` (PSScriptAnalyzer).
+filegroup(
+    name = "guest_scripts",
+    srcs = glob(["guest/*.ps1"]),
+    tags = ["lint-with-psscriptanalyzer"],
+)
+
+_TOOLS = {
+    "--answer": ":answer/autounattend-core.xml",
+    "--bios": "@qemu_linux_x86_64//:share/qemu/bios-256k.bin",
+    "--first-logon": ":guest/first-logon.ps1",
+    "--media": "@win2022_eval_iso//file",
+    "--qemu": "@qemu_linux_x86_64//:bin/qemu-system-x86_64",
+    "--qemu-img": "@qemu_linux_x86_64//:bin/qemu-img",
+    "--verify": ":guest/verify-image.ps1",
+    "--virtio-win": "@virtio_win_iso//file",
+}
+
+_DATA = [
+    "@qemu_linux_x86_64//:firmware",
+    "@qemu_linux_x86_64//:qemu",
+]
+
+py_binary(
+    name = "build-core",
+    srcs = ["make_image.py"],
+    args = [
+        arg
+        for option, label in _TOOLS.items()
+        for arg in [
+            option,
+            "$(rootpath %s)" % label,
+        ]
+    ],
+    data = _DATA + list(_TOOLS.values()),
+    main = "make_image.py",
+    # Downloads several GiB of media and needs /dev/kvm: bazel run only.
+    tags = ["manual"],
+    target_compatible_with = select({
+        ":disabled": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    deps = [":make_image"],
+)

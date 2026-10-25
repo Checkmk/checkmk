@@ -690,7 +690,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_redis', [])
 
 agent_config['mk_redis'] = [
-{'id': '0f339552-8dd4-429d-b981-2a01c1ec1c03', 'value': {'deployment': ('sync', None), 'instances': ('autodetect', None)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '0f339552-8dd4-429d-b981-2a01c1ec1c03', 'value': 'autodetect', 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_redis']
 
 

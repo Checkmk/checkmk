@@ -73,8 +73,16 @@ msgid " (in relation to all successful packets)"
 msgstr " (in relatie tot alle succesvolle pakketten)"
 
 #, fuzzy
+msgid " (lower levels)"
+msgstr "Lagere niveaus"
+
+#, fuzzy
 msgid " (required)"
 msgstr "is vereist"
+
+#, fuzzy
+msgid " (upper levels)"
+msgstr "Bovenste niveaus"
 
 #, fuzzy
 msgid " - Checkmk security notice"
@@ -98,6 +106,11 @@ msgid " Activate this option"
 msgstr " Activeer deze optie"
 
 msgid " Choose 'No levels' to disable these thresholds."
+msgstr ""
+
+msgid ""
+" Data stored in the data backend are never included in the backup and must "
+"be backed up separately."
 msgstr ""
 
 #, python-format
@@ -283,6 +296,41 @@ msgstr "\"%(hostname)s\" is geen geldige hostnaam"
 
 #, python-format
 msgid "\"%(source)s\" and \"%(target)s\" are already related in another way."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "\"%(value)s\" is not a folder path."
+msgstr "De waarde %(value)r is hier niet toegestaan."
+
+#, python-format
+msgid ""
+"\"%(value)s\" is not a host tag. Tags are given as \"tag\" or \"group:tag\"."
+msgstr ""
+
+#, python-format
+msgid ""
+"\"%(value)s\" is not a label. Labels are given as \"key:value\", e.g. "
+"\"os:linux\", or as a key prefix, e.g. \"cmk/aws*\"."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "\"%(value)s\" is not a valid regular expression."
+msgstr "Ongeldige reguliere uitdrukking"
+
+#, python-format
+msgid "\"%(value)s\" uses a look-around, which is not supported."
+msgstr ""
+
+#, python-format
+msgid ""
+"\"%(value)s\": a \"*\" cannot stand for any label key or tag group. Please "
+"specify one, e.g. \"os:linux\"."
+msgstr ""
+
+#, python-format
+msgid ""
+"\"%(value)s\": a \"*\" matches by prefix and needs text before it, e.g. "
+"\"%(example)s\"."
 msgstr ""
 
 #, python-format
@@ -3312,6 +3360,12 @@ msgstr "ALLNET IP Sensorische Apparaten"
 msgid "AP name"
 msgstr "AP naam"
 
+msgid ""
+"APACHE_FORWARDED_HEADERS is set to 'manual', but no matching RequestHeader "
+"configuration was found in the usual system Apache locations. Is this "
+"intentional?"
+msgstr ""
+
 #, fuzzy
 msgid "APC Inrow System Events"
 msgstr "APC Inrow Systeem Gebeurtenissen"
@@ -3880,6 +3934,10 @@ msgstr "Afbreken met een fout"
 
 msgid "Abort your modifications."
 msgstr "Breek uw wijzigingen af."
+
+#, fuzzy
+msgid "Aborted"
+msgstr "Alerted"
 
 msgid "Aborting change."
 msgstr "Verandering afbreken."
@@ -7154,6 +7212,10 @@ msgstr "Alle host- en service-downtimes (inclusief ids)"
 msgid "All hosts"
 msgstr "Alle gastheren"
 
+msgid ""
+"All hosts can only be searched by host name, alias, address, label and tag."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "All hosts configured via this rule set will do a hardware and software "
@@ -8331,6 +8393,9 @@ msgstr "Apache ActiveMQ wachtrijen"
 msgid "Apache Server"
 msgstr "Apache Server"
 
+msgid "Apache X-Forwarded-Proto/-Ssl headers"
+msgstr ""
+
 #, fuzzy
 msgid "Apache local password file (htpasswd)"
 msgstr "Apache Lokaal Wachtwoord Bestand (htpasswd)"
@@ -8853,6 +8918,12 @@ msgstr ""
 "Wijs services toe aan piggyback host(s) genoemd als de 'Origin Domain' "
 "geconfigureerd in AWS"
 
+#, fuzzy
+msgid "Assign services to piggyback host(s) named as the distribution ID"
+msgstr ""
+"Wijs services toe aan piggyback host(s) genoemd als de 'Origin Domain' "
+"geconfigureerd in AWS"
+
 msgid "Assign services to the following cluster:"
 msgstr "Wijs diensten toe aan het volgende cluster:"
 
@@ -8962,6 +9033,10 @@ msgstr "Asynchroon"
 
 msgid "Asynchronous closing connections"
 msgstr "Asynchrone verbindingen sluiten"
+
+#, fuzzy
+msgid "Asynchronous execution of plug-ins"
+msgstr "Asynchrone uitvoering van plugins"
 
 #, fuzzy
 msgid "Asynchronous execution of plug-ins (deprecated)"
@@ -11139,6 +11214,17 @@ msgstr "Bakken en tekenen"
 msgid "Bake and sign agents"
 msgstr "Bakken en agenten tekenen"
 
+msgid ""
+"Bake certificates into the agent that the agent controller should trust when "
+"connecting to this site. They are trusted in addition to the site "
+"certificate the controller receives while registering, but only on the "
+"connections to this site, the ones that are already registered included. "
+"Installing the agent therefore keeps the agent controller trusting its site "
+"across a rotation of the site CA, without a re-registration.<br>Note that "
+"only certificates are baked. Private keys are never part of the agent "
+"package."
+msgstr ""
+
 msgid "Bake new agent packages for Linux, Windows and other operating systems"
 msgstr ""
 "Nieuwe agent-pakketten bakken voor Linux, Windows en andere "
@@ -12147,7 +12233,9 @@ msgid ""
 "sections, which SNMPv3 contexts Checkmk should ask for when getting "
 "information via SNMPv3. The default context is only queried if it is "
 "selected here. If several contexts return the same OIDs, only the data of "
-"the first context is used."
+"the first context is used.<br><br>All matching rules apply. For each "
+"section, the first rule that names it or applies to all SNMP sections is "
+"used."
 msgstr ""
 "Standaard gebruikt Checkmk geen specifieke context tijdens SNMPv3 queries, "
 "maar sommige apparaten bieden hun informatie aan in verschillende SNMPv3 "
@@ -14109,6 +14197,10 @@ msgstr "Certificaat om verzoeken te ondertekenen (PEM)"
 msgid "Certificate has no subject alternative name"
 msgstr "Verkeerd certificaat's onderwerp alt naam"
 
+#, fuzzy
+msgid "Certificate in PEM format"
+msgstr "Certificaatketen"
+
 msgid "Certificate is not signed by trusted authority"
 msgstr "Certificaat is niet ondertekend door vertrouwde autoriteit"
 
@@ -14145,6 +14237,15 @@ msgstr "Geldigheid van het site-certificaat"
 
 msgid "Certificates for HTTPS verification"
 msgstr "Certificaten voor HTTPS-verificatie"
+
+#, fuzzy
+msgid "Certificates of this site"
+msgstr "Diensten van Site"
+
+msgid ""
+"Certificates that are not managed by this site, for example the CA of your "
+"own public key infrastructure."
+msgstr ""
 
 msgid "Change"
 msgstr "Verander"
@@ -15153,6 +15254,13 @@ msgstr ""
 #, fuzzy
 msgid "Checkmk with times metrics"
 msgstr "Checkmk met tijden prestatiegegevens"
+
+msgid ""
+"Checkmk's OAuth and MCP endpoints need to know whether the original client "
+"request arrived via HTTP or HTTPS. By default (<tt>APACHE_FORWARDED_HEADERS "
+"auto</tt>), the system Apache sets the X-Forwarded-Proto and X-Forwarded-Ssl "
+"headers for the site itself, based on what it sees on its own connection."
+msgstr ""
 
 #, fuzzy
 msgid "Checkmk: API: bytes"
@@ -17200,6 +17308,14 @@ msgstr ""
 
 msgid "Configure compliance state checking"
 msgstr "Toestandcontrole op naleving configureren"
+
+#, fuzzy
+msgid "Configure connect credentials"
+msgstr "Gebruik geloofsbrieven"
+
+#, fuzzy
+msgid "Configure credentials"
+msgstr "Agenten configureren"
 
 msgid "Configure custom agent file deployments"
 msgstr "Aangepaste implementaties van agentbestanden configureren"
@@ -20103,6 +20219,10 @@ msgid "Custom attributes"
 msgstr "Aangepaste attributen"
 
 #, fuzzy
+msgid "Custom certificates"
+msgstr "CA-certificaat"
+
+#, fuzzy
 msgid "Custom check"
 msgstr "Customcheck"
 
@@ -20967,6 +21087,17 @@ msgid "Data source: %(title)s"
 msgstr "Datasource: %s"
 
 #, fuzzy
+msgid "Data sources CRITICAL"
+msgstr "Instantie-ID"
+
+msgid ""
+"Data sources can report problems that did not stop them from producing data, "
+"for example a single endpoint the configured account is not allowed to "
+"access. Warnings result in the state configured here. Informational messages "
+"are always OK."
+msgstr ""
+
+#, fuzzy
 msgid "Data store name"
 msgstr "Datastore Naam"
 
@@ -21449,9 +21580,6 @@ msgstr "Standaard configuratie"
 msgid "Default context"
 msgstr "Standaard kleur"
 
-msgid "Default credentials"
-msgstr "Standaard inloggegevens"
-
 msgid "Default dynamic visuals permission"
 msgstr ""
 
@@ -21486,9 +21614,6 @@ msgstr "Standaard lay-out"
 
 msgid "Default layout"
 msgstr "Standaard lay-out"
-
-msgid "Default levels"
-msgstr "Standaardniveaus"
 
 msgid "Default limit set by AWS"
 msgstr "Standaard limiet ingesteld door AWS"
@@ -21748,6 +21873,22 @@ msgid ""
 "Authentication and connection options from the default settings are used "
 "automatically, but can be overridden per database if needed."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"Define the host that gets the discovered CloudFront services. You can assign "
+"them to the AWS account host, as for other AWS services, or to piggyback "
+"hosts. With the 'Origin Domain' option, the host name is the domain of the "
+"first origin of the distribution. With the distribution ID option, each "
+"distribution gets its own host, named as the ID of the distribution. Create "
+"a host with exactly this name, or use the dynamic host management to create "
+"the hosts."
+msgstr ""
+"Definieer de host om de ontdekte CloudFront-diensten aan toe te wijzen. U "
+"kunt ze toewijzen aan de AWS host zoals elke andere AWS service of aan een "
+"piggyback host die zal worden genoemd als de 'Origin Domain' gespecificeerd "
+"in de CloudFront distributie - in het geval u de tweede optie selecteert, "
+"zult u de piggyback host(s) moeten creëren"
 
 msgid ""
 "Define the host to assign the discovered CloudFront services. You can assign "
@@ -22563,14 +22704,6 @@ msgstr "Invoegtoepassing voor Hyper-V VM-gastinformatie implementeren"
 msgid "Deploy Hyper-V monitoring plug-ins"
 msgstr "Unitrends plugins implementeren"
 
-#, fuzzy
-msgid "Deploy Inotify plug-in"
-msgstr "Inotify plugin uitrollen"
-
-#, fuzzy
-msgid "Deploy MSSQL Server plug-in"
-msgstr "MSSQL Server plugin implementeren"
-
 msgid "Deploy OpenHardwareMonitor (headless)"
 msgstr "Zet OpenHardwareMonitor in (headless)"
 
@@ -22657,16 +22790,8 @@ msgid "Deploy the MegaRAID plug-in"
 msgstr "Inzet MegaRAID plugin"
 
 #, fuzzy
-msgid "Deploy the MySQL plug-in"
-msgstr "De MySQL plugin implementeren"
-
-#, fuzzy
 msgid "Deploy the Oracle plug-in"
 msgstr "Inzet Arcserve plugin"
-
-#, fuzzy
-msgid "Deploy the SAP HANA plug-in"
-msgstr "De SAP HANA plugin implementeren"
 
 #, fuzzy
 msgid "Deploy the StorCLI plug-in"
@@ -23054,6 +23179,10 @@ msgid "Device going online"
 msgstr "Apparaat gaat online"
 
 #, fuzzy
+msgid "Device information"
+msgstr "Informatie ophalen over..."
+
+#, fuzzy
 msgid "Device name"
 msgstr "Naam apparaat"
 
@@ -23073,6 +23202,10 @@ msgstr "Apparaat online"
 
 msgid "Device state not available"
 msgstr "Toestand apparaat niet beschikbaar"
+
+#, fuzzy
+msgid "Device states"
+msgstr "Dienstverleningsstatus"
 
 #, fuzzy
 msgid "Device statuses"
@@ -24214,8 +24347,9 @@ msgstr "Vraag niet om een reactie"
 msgid "Do not backup historical data"
 msgstr "Maak geen back-up van historische gegevens"
 
+#, fuzzy
 msgid ""
-"Do not backup metric data (RRD files), the monitoring history and log files"
+"Do not backup metric data (RRD files), the monitoring history and log files."
 msgstr ""
 "Maak geen back-up van metrische gegevens (RRD-bestanden), de "
 "monitoringgeschiedenis en logbestanden"
@@ -24242,6 +24376,18 @@ msgstr "Niet verzenden naar host op afstand"
 msgid "Do not configure Windows Firewall"
 msgstr "Windows Firewall niet configureren"
 
+#, fuzzy
+msgid "Do not configure a port"
+msgstr "Windows Firewall niet configureren"
+
+#, fuzzy
+msgid "Do not configure connect credentials"
+msgstr "Windows Firewall niet configureren"
+
+#, fuzzy
+msgid "Do not configure credentials"
+msgstr "Windows Firewall niet configureren"
+
 msgid "Do not convert case"
 msgstr "Niet omzetten geval"
 
@@ -24261,10 +24407,6 @@ msgid "Do not deploy Hyper-V plug-ins"
 msgstr "Zet de Zypper plugin niet in"
 
 #, fuzzy
-msgid "Do not deploy Inotify plug-in"
-msgstr "Inotify plugin niet implementeren"
-
-#, fuzzy
 msgid "Do not deploy MSSQL Server plug-in"
 msgstr "De MySQL plugin niet implementeren"
 
@@ -24282,10 +24424,6 @@ msgstr "Gebruik de mtr plugin niet"
 #, fuzzy
 msgid "Do not deploy Windows Updates plug-in"
 msgstr "Windows Updates plugin niet implementeren"
-
-#, fuzzy
-msgid "Do not deploy plug-in for Microsoft SQL Server"
-msgstr "Implementeer geen plugin voor Microsoft SQL Server"
 
 #, fuzzy
 msgid "Do not deploy plug-in for Windows interfaces"
@@ -24320,20 +24458,8 @@ msgid "Do not deploy the MegaRAID plug-in"
 msgstr "Implementeer de MegaRAID plugin niet"
 
 #, fuzzy
-msgid "Do not deploy the MySQL plug-in"
-msgstr "De MySQL plugin niet implementeren"
-
-#, fuzzy
 msgid "Do not deploy the Oracle plug-in"
 msgstr "Geen iptables plugin implementeren"
-
-#, fuzzy
-msgid "Do not deploy the Redis plug-in"
-msgstr "Zet de Redis plugin niet in"
-
-#, fuzzy
-msgid "Do not deploy the SAP HANA plug-in"
-msgstr "Implementeer de SAP HANA plugin niet"
 
 #, fuzzy
 msgid "Do not deploy the SAP R/3 plug-in"
@@ -24751,9 +24877,6 @@ msgstr "Gebruik geen TLS/SSL/Https (onveilig)"
 msgid "Don't use a namespace prefix"
 msgstr "Gebruik geen namespace voorvoegsel"
 
-msgid "Don't use password"
-msgstr "Gebruik geen wachtwoord"
-
 msgid "Don't use quotes"
 msgstr "Gebruik geen aanhalingstekens"
 
@@ -25092,6 +25215,12 @@ msgstr "Duur van de back-up"
 
 msgid "Duration of last build"
 msgstr "Duur van laatste bouw"
+
+msgid ""
+"During a graceful rotation of the site CA, select both the current and the "
+"upcoming CA, so that the agent controllers keep trusting the site before and "
+"after the rotation is finalized."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -26152,6 +26281,10 @@ msgstr "E-mails met %s per seconde"
 #, fuzzy
 msgid "Emails containing malicious attachment per second"
 msgstr "E-mails met %s per seconde"
+
+#, fuzzy
+msgid "Embed certificates"
+msgstr "ACME-certificaten"
 
 msgid "Embedded image"
 msgstr "Ingesloten afbeelding"
@@ -29494,6 +29627,10 @@ msgstr "Schijfniveaus van archiefsystemen (NetApp, IBM SVC)"
 msgid "Files"
 msgstr "Bestanden"
 
+#, fuzzy
+msgid "Files and folders to be monitored"
+msgstr "Bestanden toevoegen die moeten worden bewaakt"
+
 msgid "Files are unpackaged and remain in your system."
 msgstr ""
 
@@ -30482,6 +30619,14 @@ msgid ""
 msgstr ""
 "Voor de tweede keer '%s' gevonden in boom '%s'. Elk element kan maar één "
 "keer gekozen worden."
+
+#, python-format
+msgid ""
+"Found a RequestHeader for X-Forwarded-Proto/X-Forwarded-Ssl in %(files)s. "
+"Checkmk already sets this header itself; remove the manual entry to avoid "
+"duplicate or conflicting configuration, or set APACHE_FORWARDED_HEADERS to "
+"'manual' if this Apache needs it."
+msgstr ""
 
 #, python-format
 msgid "Found all %(num_groups)d groups."
@@ -32040,6 +32185,10 @@ msgstr "Behandeling van te lange teksten (betreft alleen tabel)"
 msgid "Haproxy"
 msgstr "Haproxy"
 
+#, fuzzy
+msgid "Hard aborted"
+msgstr "Hardware"
+
 msgid "Hard query limit"
 msgstr "Harde query limiet"
 
@@ -32181,6 +32330,12 @@ msgstr "Gezondheidscontrole"
 
 msgid "Health check percentage healty"
 msgstr "Percentage gezondheidscontrole"
+
+msgid ""
+"Health of switches, Fibre Channel switches, routers, firewalls, wireless "
+"controllers and appliances, based on the host label cmk/device_type. "
+"Product, model, serial, location and contact require HW/SW Inventory."
+msgstr ""
 
 #, fuzzy
 msgid "Health probe status"
@@ -33119,8 +33274,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Here, you can specify levels for different policies which overrule the "
-"levels from the <i>Default levels</i> parameter. This setting only works in "
-"NetApp Clustermode setups."
+"default lag time levels."
 msgstr ""
 "Hier kunt u niveaus voor verschillende beleidsregels specificeren die de "
 "niveaus van de <i>Standaardniveaus</i> parameter overrulen. Deze instelling "
@@ -38117,6 +38271,20 @@ msgstr ""
 "Merk op dat dit alles betreft wat deel uitmaakt van de overeenkomende "
 "namespaces, zoals pods bijvoorbeeld."
 
+msgid ""
+"If your system Apache sits behind another proxy or load balancer that "
+"terminates TLS and forwards plain HTTP to it, that automatic value would be "
+"wrong. Run <tt>omd config set APACHE_FORWARDED_HEADERS manual</tt> for the "
+"site and set the headers yourself in the system Apache configuration "
+"instead, e.g. <tt>RequestHeader set X-Forwarded-Proto \"https\"</tt>."
+msgstr ""
+
+msgid ""
+"If your system Apache terminates TLS itself, or sits behind a proxy or load "
+"balancer that does, the 'Apache X-Forwarded-Proto/-Ssl headers' test covers "
+"whether the Checkmk GUI is correctly told about it."
+msgstr ""
+
 msgid "Ignore"
 msgstr "Negeer"
 
@@ -39781,6 +39949,10 @@ msgstr "Interface groepen"
 
 msgid "Interface settings"
 msgstr "Interface-instellingen"
+
+#, fuzzy
+msgid "Interfaces CRITICAL"
+msgstr "Instantie-ID"
 
 msgid "Intermission"
 msgstr "Pauze"
@@ -41760,6 +41932,13 @@ msgstr ""
 #, fuzzy
 msgid "Labels: Inventorize the labels"
 msgstr "Inventariseer de labels"
+
+#, fuzzy
+msgid "Lag time (default levels)"
+msgstr "Standaardniveaus"
+
+msgid "Lag time (policy-specific levels)"
+msgstr ""
 
 msgid "Lambda"
 msgstr "Lambda"
@@ -45801,6 +45980,14 @@ msgstr ""
 "Zet de operationele toestand (<tt>ifOperStatus</tt>) om in een "
 "bewakingstoestand."
 
+#, fuzzy
+msgid ""
+"Map the transfer state reported by the SnapMirror relationship to a "
+"monitoring state."
+msgstr ""
+"Zet de operationele toestand (<tt>ifOperStatus</tt>) om in een "
+"bewakingstoestand."
+
 msgid ""
 "Map the update status reported by the device to a monitoring state. A status "
 "that appears in none of the three lists results in UNKNOWN. The status "
@@ -46464,6 +46651,10 @@ msgstr "Maximaal verwachte looptijd voor hartslagpakket"
 #, python-format
 msgid "Maximum image size: %(max_w)dx%(max_h)dpx"
 msgstr "Maximale afbeeldingsgrootte: %(max_w)dx%(max_h)dpx"
+
+#, fuzzy
+msgid "Maximum lag time"
+msgstr "Maximale leeftijd"
 
 #, fuzzy
 msgid "Maximum latency"
@@ -48547,6 +48738,10 @@ msgstr "Bewakingstoestand in geval van mislukte versie-parsing"
 msgid "Monitoring state of HAProxy frontend is %(state)s"
 msgstr "Controle toestand als HAProxy frontend %s is"
 
+#, fuzzy
+msgid "Monitoring state per transfer state"
+msgstr "Bewakingstoestand voor elke andere eenheidstoestand"
+
 msgid "Monitoring state requirement"
 msgstr "Controle staatsvereiste"
 
@@ -49685,15 +49880,20 @@ msgstr "NetApp Qtree ontdekking"
 msgid "NetApp SVM traffic"
 msgstr "Netto dataverkeer"
 
+#, fuzzy
+msgid "NetApp SnapVault / SnapMirror"
+msgstr "NetApp Snapvaults / Snapmirror Vertragingstijd"
+
+#, fuzzy
+msgid "NetApp SnapVault discovery"
+msgstr "NetApp snapvault discovery"
+
 msgid "NetApp Snapshot Reserve"
 msgstr "NetApp Snapshot Reserve"
 
 #, fuzzy
 msgid "NetApp Snapshot Volumes"
 msgstr "NetApp Snapshot Reserve"
-
-msgid "NetApp Snapvaults / Snapmirror Lag Time"
-msgstr "NetApp Snapvaults / Snapmirror Vertragingstijd"
 
 msgid "NetApp Volumes"
 msgstr "NetApp Volumes"
@@ -49705,9 +49905,6 @@ msgstr "NetApp Filers: Gebruikte ruimte in bestandssysteem met 32-bits tellers"
 #, fuzzy
 msgid "NetApp filers: used space in file systems"
 msgstr "NetApp-filers: Gebruikte ruimte in bestandssystemen"
-
-msgid "NetApp snapvault discovery"
-msgstr "NetApp snapvault discovery"
 
 #, fuzzy
 msgid "NetApp via Ontap REST API"
@@ -49786,6 +49983,10 @@ msgstr "Nieuwe verbindingen"
 #, fuzzy
 msgid "Network containers"
 msgstr "Docker-containers"
+
+#, fuzzy
+msgid "Network devices"
+msgstr "Netwerk scan"
 
 #, fuzzy
 msgid "Network effectiveness ratio"
@@ -51127,6 +51328,10 @@ msgstr "Host wedstrijd lijst"
 #, fuzzy
 msgid "Not a number"
 msgstr "Poortnummer"
+
+#, fuzzy, python-format
+msgid "Not a valid PEM encoded certificate: %(error)s"
+msgstr "Ongeldig certificaatbestand: %(e)s"
 
 #, fuzzy
 msgid "Not a valid URL (only HTTP and HTTPS URLs are allowed)."
@@ -52723,6 +52928,12 @@ msgstr ""
 msgid "ONLINE"
 msgstr "ONLINE"
 
+msgid ""
+"ONTAP marks a SnapMirror relationship as unhealthy, for example when an "
+"update failed. The reasons reported by ONTAP are shown in the service "
+"summary. Older ONTAP versions may not report the health."
+msgstr ""
+
 msgid "OO/Notif"
 msgstr "OO/Notif"
 
@@ -53166,22 +53377,6 @@ msgstr "Alleen overeenkomende hosts toevoegen"
 #, fuzzy
 msgid "Only alert if all peers are failed"
 msgstr "Alleen hoofdletters zijn toegestaan"
-
-#, fuzzy
-msgid ""
-"Only applicable to clustermode installations. The service name of snapvault "
-"services is composed of the destination vserver (SVM) and the destination "
-"volume by default. Check this box if you would like to use the destination "
-"volume as the service name on its own. Please be advised that this may lead "
-"to a service name that is not unique, resulting in some services, which are "
-"not shown!"
-msgstr ""
-"Alleen van toepassing op clustermode installaties. De servicebeschrijving "
-"van snapvault-services is standaard samengesteld uit de bestemmings-VServer "
-"(SVM) en het bestemmingsvolume. Vink dit vakje aan als u het "
-"bestemmingsvolume wilt gebruiken als de servicebeschrijving op zichzelf. "
-"Houd er rekening mee dat dit kan leiden tot een servicebeschrijving die niet "
-"uniek is, wat resulteert in sommige services, die niet worden getoond!"
 
 #, fuzzy
 msgid ""
@@ -57559,6 +57754,10 @@ msgstr "Voer een bestandsnaam in."
 msgid "Please enter a required match."
 msgstr "Geef een absolute padnaam op"
 
+#, fuzzy
+msgid "Please enter a search term."
+msgstr "Voer een bestandsnaam in."
+
 msgid "Please enter a time."
 msgstr "Geef een tijd op."
 
@@ -57685,15 +57884,6 @@ msgstr ""
 "Merk op dat de mapping naar de numerieke ServiceNow status op uw systeem kan "
 "gewijzigd zijn en kan verschillen van onze definities. Gebruik in dit geval "
 "de onderstaande optie."
-
-msgid ""
-"Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "
-"\"https\"</tt> in your system Apache configuration to tell the Checkmk GUI "
-"about the SSL setup."
-msgstr ""
-"Merk op dat u <tt>RequestHeader set X-Forwarded-Proto \"https\"</tt> in uw "
-"systeem Apache configuratie moet instellen om de Checkmk GUI te vertellen "
-"over de SSL setup."
 
 msgid "Please note that your site will be deleted when the trial period ends. "
 msgstr ""
@@ -58067,6 +58257,10 @@ msgstr ""
 "relatief pad gebruikt, is dat relatief ten opzichte van Checkmk's directory "
 "voor variabele gegevens, die <tt>%s</tt> is."
 
+#, fuzzy, python-format
+msgid "Please specify the tag group, e.g. \"tg:criticality:%(tag)s\"."
+msgstr "Geef een titel op voor uw tag groep \"%s\"."
+
 #, fuzzy
 msgid "Please specify the user and password needed to access the XML interface"
 msgstr ""
@@ -58285,10 +58479,6 @@ msgstr "Naam van het beleid"
 msgid "Policy violation count"
 msgstr "Aantal beleidsschendingen"
 
-#, fuzzy
-msgid "Policy-specific levels (cluster mode only)"
-msgstr "Beleidsspecifieke niveaus (alleen Clustermodus)"
-
 msgid "Pool name"
 msgstr "Naam zwembad"
 
@@ -58466,6 +58656,10 @@ msgid "Power supplies"
 msgstr "Stroomvoorziening"
 
 #, fuzzy
+msgid "Power supplies and fans CRITICAL"
+msgstr "Stroomvoorziening"
+
+#, fuzzy
 msgid "Power supply"
 msgstr "Stroomvoorziening"
 
@@ -58586,6 +58780,10 @@ msgstr "Voorspelling"
 #, fuzzy, python-format
 msgid "Prediction for %(host_name)s - %(service_name)s"
 msgstr "Voorspelling voor %(host_name)s - %(service_name)s - %(metric_name)s"
+
+#, fuzzy
+msgid "Prediction of "
+msgstr "Voorspelling"
 
 #, fuzzy
 msgid "Predictive levels (only on CMC)"
@@ -63615,7 +63813,7 @@ msgid ""
 "Runs a data backend instance on this site. If you are running a distributed "
 "Checkmk setup with multiple sites on the same machine, please configure "
 "different port numbers per each site via the site-specific global settings "
-"to avoid port binding conflicts."
+"to avoid port binding conflicts. "
 msgstr ""
 
 msgid "Runtime"
@@ -64360,6 +64558,10 @@ msgstr "Map opslaan en bekijken"
 #, fuzzy
 msgid "Save as new layout for this aggregation"
 msgstr "Maak een kopie van deze aggregatie"
+
+#, fuzzy
+msgid "Save interval"
+msgstr "Scan interval"
 
 msgid "Save response"
 msgstr "Reactie opslaan"
@@ -68206,6 +68408,9 @@ msgstr "Locatie (afgedwongen)"
 msgid "Site Alias"
 msgstr "Site Alias"
 
+msgid "Site CA (etc/ssl/ca.pem)"
+msgstr ""
+
 #, fuzzy
 msgid "Site DNS cache is already up to date."
 msgstr "Deze regel ID wordt al gebruikt."
@@ -68244,6 +68449,12 @@ msgstr "Plaats back-up"
 
 msgid "Site backup targets"
 msgstr "Site back-updoelen"
+
+msgid ""
+"Site backups include this configuration, but not the data stored in the data "
+"backend. A restore keeps the data currently stored on the site. That data "
+"can only be used with the data backend version that wrote it or a newer one."
+msgstr ""
 
 #, fuzzy
 msgid "Site certificate subject alternative names"
@@ -69182,9 +69393,6 @@ msgstr "Bron IP-adres"
 #, fuzzy
 msgid "Source NAT name"
 msgstr "Naam bron NAT"
-
-msgid "Source Path"
-msgstr "Bron Pad"
 
 #, fuzzy
 msgid "Source association changed"
@@ -70810,6 +71018,10 @@ msgstr ""
 "standby."
 
 #, fuzzy
+msgid "State if the relationship is unhealthy"
+msgstr "Resulterende status als de status \"ongezond\" is"
+
+#, fuzzy
 msgid "State if the version does not match"
 msgstr "Staat als de failover link niet up is."
 
@@ -70900,6 +71112,10 @@ msgid ""
 msgstr ""
 "Staat in geval het gecontroleerde apparaat noch Android noch iOS is (of niet "
 "kan worden gelezen)"
+
+#, fuzzy
+msgid "State in case the data source reports warnings"
+msgstr "Staten behandeld als waarschuwing"
 
 msgid "State info"
 msgstr "Info van de staat"
@@ -73218,6 +73434,10 @@ msgstr "Temperatuur eenheid"
 #, fuzzy
 msgid "Temperature, humidity, electrical parameters, etc."
 msgstr "Temperatuur, Vochtigheid, Elektrische Parameters, enz."
+
+#, fuzzy
+msgid "Temperatures CRITICAL"
+msgstr "Tafelspaces"
 
 msgid "Temperatures of NVIDIA graphics card"
 msgstr "Temperaturen van NVIDIA grafische kaart"
@@ -75603,6 +75823,9 @@ msgstr "De naam van de database op de Mailbox Server."
 
 msgid "The database to authenticate on."
 msgstr "De database om te authenticeren."
+
+msgid "The default MySQL socket is <tt>/var/run/mysqld/mysqld.sock</tt>."
+msgstr ""
 
 msgid ""
 "The default critical level of 101 percent cannot be reached, so with the "
@@ -78160,6 +78383,11 @@ msgstr ""
 "planningen die naar dit rapport verwijzen verwijderen om het rapport te "
 "kunnen verwijderen."
 
+#, python-format
+msgid ""
+"The report location %(path)s is outside of the report archive of %(owner)s"
+msgstr ""
+
 #, fuzzy
 msgid "The report you are trying to preview has no valid file name"
 msgstr "Het rapport dat u probeert te bekijken heeft geen geldige bestandsnaam"
@@ -78473,6 +78701,15 @@ msgstr "De agenda die u probeert te bewerken bestaat niet."
 msgid "The scrape interval must be an integer higher than 0."
 msgstr "Het cluster moet ten minste één knooppunt hebben"
 
+#, python-format
+msgid "The search prefix \"%(prefix)s:\" needs a value."
+msgstr ""
+
+#, python-format
+msgid ""
+"The search prefix \"st:\" has an empty service state. Use one of: %(states)s."
+msgstr ""
+
 msgid "The secret access key for your AWS account"
 msgstr "De geheime toegangssleutel voor uw AWS account"
 
@@ -78603,6 +78840,21 @@ msgid ""
 msgstr ""
 "De service mag niet in een van de geselecteerde servicegroepen zitten. Voor "
 "host-events wordt deze voorwaarde gewoon genegeerd."
+
+#, fuzzy
+msgid ""
+"The service name of SnapVault services is composed of the destination "
+"vserver (SVM) and the destination volume by default. Check this box if you "
+"would like to use the destination volume as the service name on its own. "
+"Please be advised that this may lead to a service name that is not unique, "
+"resulting in some services which are not shown."
+msgstr ""
+"Alleen van toepassing op clustermode installaties. De servicebeschrijving "
+"van snapvault-services is standaard samengesteld uit de bestemmings-VServer "
+"(SVM) en het bestemmingsvolume. Vink dit vakje aan als u het "
+"bestemmingsvolume wilt gebruiken als de servicebeschrijving op zichzelf. "
+"Houd er rekening mee dat dit kan leiden tot een servicebeschrijving die niet "
+"uniek is, wat resulteert in sommige services, die niet worden getoond!"
 
 #, fuzzy
 msgid ""
@@ -79027,6 +79279,11 @@ msgstr "De test ontbreekt."
 
 msgid "The text"
 msgstr "De tekst"
+
+#, python-format
+msgid ""
+"The text \"%(text)s\" is not preceded by a search prefix such as \"h:\"."
+msgstr ""
 
 msgid "The text entered here is handled as a regular expression pattern."
 msgstr ""
@@ -79760,6 +80017,12 @@ msgid ""
 msgstr ""
 "Deze aangepaste service attributen kunnen worden toegewezen aan diensten met "
 "behulp van de regelset <a href=\"%s\">%s</a>."
+
+#, python-format
+msgid ""
+"These filters could not be carried over, so this page shows a wider scope "
+"than the clicked object: %(filters)s"
+msgstr ""
 
 msgid ""
 "These hosts have at least once in the last 24 hours connected the update "
@@ -81529,7 +81792,8 @@ msgid ""
 "might become available. One such use case is the enforcing of 32-bit network "
 "interface counters (section <tt>if</tt>, superseded by <tt>if64</tt>) in "
 "case the 64-bit counters reported by the device are useless due to broken "
-"firmware."
+"firmware.<br><br>All matching rules apply. If several of them list the same "
+"section, the first one decides whether the section is disabled or enabled."
 msgstr ""
 "Deze optie maakt het mogelijk om het ophalen van individuele secties "
 "helemaal achterwege te laten. Als gevolg daarvan kunnen geassocieerde "
@@ -82921,6 +83185,7 @@ msgstr ""
 "te controleren. U kunt de poorttoestanden configureren voor inventarisatie "
 "en het gebruik van de beschrijving als servicenaam."
 
+#, fuzzy
 msgid ""
 "This rule can be used to customize the data acquisition interval of SNMP "
 "based sections. This can be useful for cases where fetching the data takes "
@@ -82932,7 +83197,9 @@ msgid ""
 "choose in this rule. This is especially important for counter-based checks "
 "such as the interface checks. A check interval which is shorter then the "
 "interval for fetching the data might result in misleading output (e.g. far "
-"too large interface throughputs) in such cases."
+"too large interface throughputs) in such cases.<br><br>All matching rules "
+"apply. If several of them list the same section, the first one decides its "
+"fetch interval."
 msgstr ""
 "Deze regel kan worden gebruikt om het data-acquisitie-interval van SNMP-"
 "gebaseerde secties aan te passen. Dit kan nuttig zijn in gevallen waar het "
@@ -86178,12 +86445,36 @@ msgid "Top 10: Disk utilization"
 msgstr "Sophos Schijfgebruik"
 
 #, fuzzy
+msgid "Top 10: Hottest temperature sensors"
+msgstr "Temperatuur alarm"
+
+#, fuzzy
 msgid "Top 10: Input bandwidth"
 msgstr "Invoerbandbreedte"
 
 #, fuzzy
+msgid "Top 10: Interface input bandwidth"
+msgstr "Invoerbandbreedte"
+
+msgid "Top 10: Interface input errors"
+msgstr ""
+
+#, fuzzy
+msgid "Top 10: Interface output bandwidth"
+msgstr "Invoerbandbreedte"
+
+msgid "Top 10: Interface output errors"
+msgstr ""
+
+msgid "Top 10: Lowest uptime (recent reboots)"
+msgstr ""
+
+#, fuzzy
 msgid "Top 10: Output bandwidth"
 msgstr "Uitgangsbandbreedte"
+
+msgid "Top 10: Slowest SNMP polling"
+msgstr ""
 
 msgid "Top Talkers"
 msgstr "Top praters"
@@ -89170,6 +89461,10 @@ msgstr "Transacties"
 msgid "Transferredsize"
 msgstr "Transferredsize"
 
+#, fuzzy
+msgid "Transferring"
+msgstr "Transferredsize"
+
 #, fuzzy, python-format
 msgid ""
 "Transferring: %(new)d new, %(changed)d changed and %(vanished)d vanished "
@@ -90368,6 +90663,10 @@ msgstr "Onbekende gebruiker"
 msgid "Unknown rule with ID %(rule_id)s"
 msgstr "Onbekende site %s"
 
+#, fuzzy, python-format
+msgid "Unknown search prefix \"%(prefix)s:\"."
+msgstr "Onbekende gebruiker: %s"
+
 #, fuzzy
 msgid "Unknown security event"
 msgstr "Onbekende gebruiker"
@@ -90375,6 +90674,10 @@ msgstr "Onbekende gebruiker"
 #, fuzzy
 msgid "Unknown service"
 msgstr "Onbekende gebruiker"
+
+#, python-format
+msgid "Unknown service state \"%(state)s\". Use one of: %(states)s."
+msgstr ""
 
 #, python-format
 msgid "Unknown site %(site_id)s"
@@ -90531,6 +90834,11 @@ msgstr "UP gastheren"
 
 msgid "Up-to-date replicas"
 msgstr "Bijgewerkte replica's"
+
+msgid ""
+"Upcoming site CA of a pending certificate rotation (etc/ssl/"
+"pending_certificate_rotation/ca.pem)"
+msgstr ""
 
 msgid "Update"
 msgstr "Update"
@@ -97603,6 +97911,12 @@ msgstr "Verkeerd certificaat's onderwerp alt naam"
 msgid "Wrong customer"
 msgstr "Verkeerde klant"
 
+msgid "X-Forwarded-Proto/-Ssl are configured manually, as configured"
+msgstr ""
+
+msgid "X-Forwarded-Proto/-Ssl are set automatically"
+msgstr ""
+
 msgid "XDA hitratio"
 msgstr "XDA hitratio"
 
@@ -101141,6 +101455,10 @@ msgstr "is vereist"
 msgid "is used in"
 msgstr "Deze gebruiker"
 
+#, fuzzy
+msgid "it is not available here"
+msgstr "Is niet beschikbaar"
+
 msgid "jitter"
 msgstr "jitter"
 
@@ -101260,9 +101578,6 @@ msgstr "maximum"
 
 msgid "memory"
 msgstr "geheugen"
-
-msgid "messages"
-msgstr "berichten"
 
 msgid "metric"
 msgstr "metrisch"
@@ -102078,6 +102393,12 @@ msgstr "Tests uitvoeren"
 msgid "th notification"
 msgstr "e kennisgeving"
 
+msgid "the clicked object has no value for it"
+msgstr ""
+
+msgid "the clicked object lacks the configured key"
+msgstr ""
+
 msgid ""
 "the connection has been closed; our socket is waiting for the remote "
 "endpoint to shutdown"
@@ -102425,6 +102746,208 @@ msgid ""
 "you want to increase your service limit, "
 msgstr ""
 
+msgid ""
+"Flamegraph of %1 functions, total time %2 — see hotspots table for details."
+msgstr ""
+
+msgid "Depth"
+msgstr ""
+
+msgid "Self:"
+msgstr ""
+
+#, fuzzy
+msgid "Total:"
+msgstr "Totaal"
+
+#, fuzzy
+msgid "Called by:"
+msgstr "Gewijzigd"
+
+#, fuzzy
+msgid "calls"
+msgstr "Beller ID"
+
+#, fuzzy
+msgid "Hotspots table"
+msgstr "Soort tafel"
+
+#, fuzzy
+msgid "Select function"
+msgstr "Afgewezen verbindingen"
+
+#, fuzzy
+msgid "Self-time"
+msgstr "Server tijd"
+
+#, fuzzy
+msgid "Cumulative"
+msgstr "Aangepast"
+
+#, fuzzy
+msgid "ms/call"
+msgstr "Beller ID"
+
+#, fuzzy
+msgid "Calls"
+msgstr "Beller ID"
+
+#, fuzzy
+msgid "Expand details"
+msgstr "Uitbreiden"
+
+#, fuzzy
+msgid "Select function %1"
+msgstr "Afgewezen verbindingen"
+
+#, fuzzy
+msgid "Number of calls"
+msgstr "Aantal tabellen"
+
+msgid "Total calls / primitive (non-recursive) calls"
+msgstr ""
+
+#, fuzzy
+msgid "Show callers / callees"
+msgstr "Toon alle regels"
+
+#, fuzzy
+msgid "Called by"
+msgstr "Gewijzigd"
+
+#, fuzzy
+msgid "GUI request"
+msgstr "verzoeken"
+
+#, fuzzy
+msgid "cmk --profile"
+msgstr "Aangepaste titel"
+
+#, fuzzy
+msgid "Loading profile data"
+msgstr "Profiel bewerken"
+
+#, fuzzy
+msgid "Failed to load profile data"
+msgstr "Het decoderen van certificaatgegevens is mislukt"
+
+#, fuzzy
+msgid "Hide details"
+msgstr "Gastheer Details"
+
+msgid "Elapsed real-world time of the HTTP request"
+msgstr ""
+
+msgid "Wall"
+msgstr ""
+
+#, fuzzy
+msgid "Recorded"
+msgstr "Herstel"
+
+#, fuzzy
+msgid "Functions"
+msgstr "Functie"
+
+#, fuzzy
+msgid "Search flamegraph..."
+msgstr "Zoektijd grafieken"
+
+#, fuzzy
+msgid "Clear search"
+msgstr "Regel zoeken"
+
+msgid "Selected (click to clear)"
+msgstr ""
+
+#, fuzzy
+msgid "Clear selection"
+msgstr "Map Selectie"
+
+#, fuzzy
+msgid "Filter table..."
+msgstr "Filter bekijken"
+
+#, fuzzy
+msgid "Clear filter"
+msgstr "Zoekfilter"
+
+#, fuzzy
+msgid "No profiling data available"
+msgstr "Geen gegevens beschikbaar"
+
+#, fuzzy
+msgid "Upload is unavailable"
+msgstr "niet beschikbaar"
+
+msgid ""
+"The upload form was not rendered by the page. Reload the page; if the error "
+"persists the performance-profiles feature may be misconfigured."
+msgstr ""
+
+#, fuzzy
+msgid "Upload failed"
+msgstr "Upload MIB-bestand"
+
+msgid "Drag & drop a cProfile dump here"
+msgstr ""
+
+#, fuzzy
+msgid "Browse files"
+msgstr "Kernbestanden"
+
+msgid "cProfile dumps, max 10 MB"
+msgstr ""
+
+#, fuzzy
+msgid "Remove selected file"
+msgstr "Bestand op afstand"
+
+#, fuzzy
+msgid "Upload & analyze"
+msgstr "Upload nieuw:"
+
+#, fuzzy
+msgid "Choose different file"
+msgstr "Klok verschil"
+
+msgid "Drop a cProfile dump here or"
+msgstr ""
+
+#, fuzzy
+msgid "Browse"
+msgstr "rijen"
+
+#, fuzzy
+msgid "profiles match"
+msgstr "Voorvoegsel match"
+
+#, fuzzy
+msgid "profiles stored"
+msgstr "Bestandenbestand"
+
+#, fuzzy
+msgid "Search source or type..."
+msgstr "Zoekbereik"
+
+msgid ""
+"No profiles stored yet. Enable profiling in Global settings > User interface "
+"> Profile requests and perform some requests, run a base command with cmk --"
+"profile, or upload a cProfile dump above."
+msgstr ""
+
+#, fuzzy
+msgid "Timestamp"
+msgstr "Tijdstempelformaat"
+
+#, fuzzy
+msgid "View flamegraph"
+msgstr "Filter toevoegen"
+
+#, fuzzy
+msgid "No profiles match the current search."
+msgstr "Procesnaam matching"
+
 msgid "Toggle accordion item %{item}"
 msgstr ""
 
@@ -102595,10 +103118,6 @@ msgstr ""
 #, fuzzy
 msgid "Failed to read from clipboard"
 msgstr "Geheim gekopieerd naar klembord"
-
-#, fuzzy
-msgid "Clear search"
-msgstr "Regel zoeken"
 
 msgid "Slide-in"
 msgstr ""
@@ -103155,10 +103674,6 @@ msgstr "Enkele waarden beperken"
 msgid "Select lowest value"
 msgstr "Enkele waarden beperken"
 
-#, fuzzy
-msgid "Clear selection"
-msgstr "Map Selectie"
-
 msgid "avg."
 msgstr ""
 
@@ -103471,6 +103986,10 @@ msgid "Public sharing expired on"
 msgstr "Groeperingsexpressie"
 
 #, fuzzy
+msgid "Filters left out"
+msgstr "Map Selectie"
+
+#, fuzzy
 msgid "%{n} object with alerts"
 msgid_plural "%{n} objects with alerts"
 msgstr[0] "objecten"
@@ -103640,9 +104159,6 @@ msgstr "Beschikbare poorten"
 msgid "%{name} (resolved by name)"
 msgstr ""
 
-msgid "mins"
-msgstr "minuten"
-
 #, fuzzy
 msgid "Follow dashboard time range"
 msgstr "Toon grafiek tijdsbereik"
@@ -103679,6 +104195,9 @@ msgstr "niet beschikbaar"
 #, fuzzy
 msgid "Configure and edit an existing custom graph"
 msgstr "Maak aangepaste grafiek"
+
+msgid "Requires the permission \"Customize and use custom graphs\"."
+msgstr ""
 
 #, fuzzy
 msgid "Link existing custom graph"
@@ -103773,16 +104292,28 @@ msgid "Contextual filter = clicked element"
 msgstr "Verwijder dit element"
 
 #, fuzzy
+msgid "Link %{n}"
+msgstr "Single"
+
+#, fuzzy
+msgid "Delete contextual link"
+msgstr "Inhoud toevoegen"
+
+#, fuzzy
+msgid "Link name"
+msgstr "Naam van de stad"
+
+#, fuzzy
+msgid "e.g. host details"
+msgstr "BI host details"
+
+#, fuzzy
 msgid "Include dashboard & widget filters"
 msgstr "Toegepaste filters:"
 
 #, fuzzy
-msgid "Remove link"
-msgstr "Verwijder alle"
-
-#, fuzzy
-msgid "Add link"
-msgstr "Plugin toevoegen"
+msgid "Include filter context of clicked element"
+msgstr "Verwijder dit element"
 
 #, fuzzy
 msgid "Select a category"
@@ -103797,6 +104328,10 @@ msgid "Select a target"
 msgstr "Selecteer gegevensbron"
 
 #, fuzzy
+msgid "This action can’t be undone."
+msgstr "Deze job kan niet gestopt worden"
+
+#, fuzzy
 msgid "Select a target for the contextual link."
 msgstr "Aansluiting toevoegen"
 
@@ -103806,6 +104341,13 @@ msgstr "Voeg ten minste één kindknooppunt toe."
 
 msgid "Every contextual link needs a title and a target."
 msgstr ""
+
+msgid "Select a key for every label, tag and auxiliary tag filter."
+msgstr ""
+
+#, fuzzy
+msgid "A link carries at most %{count} auxiliary tags."
+msgstr "Hulp tag toevoegen"
 
 msgid "Must be a non-negative integer."
 msgstr ""
@@ -105700,10 +106242,6 @@ msgid_plural "Delete metrics %{names}?"
 msgstr[0] "Gebruikers verwijderen"
 msgstr[1] "Gebruikers verwijderen"
 
-#, fuzzy
-msgid "This action can’t be undone."
-msgstr "Deze job kan niet gestopt worden"
-
 msgid "Calculations that use this metric are also deleted:"
 msgid_plural "Calculations that use these metrics are also deleted:"
 msgstr[0] ""
@@ -106160,18 +106698,6 @@ msgid "Custom range"
 msgstr "Timerbereik aanpassen"
 
 #, fuzzy
-msgid "More time ranges"
-msgstr "Formaat tijdbereiken"
-
-#, fuzzy
-msgid "More ranges"
-msgstr "Montagemogelijkheden"
-
-#, fuzzy
-msgid "Time ranges"
-msgstr "Tijdsspanne"
-
-#, fuzzy
 msgid "Configuration name is required but not specified."
 msgstr "JSON inloggegevens voor dienstaccount"
 
@@ -106218,6 +106744,18 @@ msgstr ""
 #, fuzzy
 msgid "undocumented"
 msgstr "Documentatie URL"
+
+#, fuzzy
+msgid "More time ranges"
+msgstr "Formaat tijdbereiken"
+
+#, fuzzy
+msgid "More ranges"
+msgstr "Montagemogelijkheden"
+
+#, fuzzy
+msgid "Time ranges"
+msgstr "Tijdsspanne"
 
 #, fuzzy
 msgid "Loading content..."
@@ -106757,10 +107295,6 @@ msgstr ""
 #, fuzzy
 msgid "Delete failed"
 msgstr "Standaard gebruikersprofiel"
-
-#, fuzzy
-msgid "Upload failed"
-msgstr "Upload MIB-bestand"
 
 #, fuzzy
 msgid "Delete image \"%{name}\"?"
@@ -108309,10 +108843,6 @@ msgstr ""
 #, fuzzy
 msgid "No matches for the current filter."
 msgstr "Procesnaam matching"
-
-#, fuzzy
-msgid "Clear filter"
-msgstr "Zoekfilter"
 
 #, fuzzy
 msgid "%{own}, worst service %{worst}"
@@ -111098,10 +111628,6 @@ msgstr "Etiketteringsopties"
 msgid "The hosts could not be loaded, so nothing was exported."
 msgstr "De groep Base DN kon niet worden gevonden."
 
-#, fuzzy
-msgid "The export failed: %{error}"
-msgstr "Verificatie is mislukt: %(error)s"
-
 msgid ""
 "Exported %{exported} of %{matched} hosts. Show more hosts to export more."
 msgstr ""
@@ -111121,9 +111647,6 @@ msgid "Selected host: %{selected} | Total hosts: %{total}"
 msgid_plural "Selected hosts: %{selected} | Total hosts: %{total}"
 msgstr[0] ""
 msgstr[1] ""
-
-msgid "Dismiss"
-msgstr ""
 
 #, fuzzy
 msgid "Actions for selected hosts"
@@ -111444,6 +111967,24 @@ msgstr ""
 msgid ""
 "Show only services in a problem state (WARN, CRIT or UNKNOWN) that are "
 "neither acknowledged nor in a scheduled downtime"
+msgstr ""
+
+#, fuzzy
+msgid "Exporting services…"
+msgstr "In afwachting van diensten"
+
+#, fuzzy
+msgid "The services could not be loaded, so nothing was exported."
+msgstr "De groep Base DN kon niet worden gevonden."
+
+msgid ""
+"Exported %{exported} of %{matched} services. Show more services to export "
+"more."
+msgstr ""
+
+msgid ""
+"Exported %{exported} of %{matched} services. Narrow the filters to export "
+"all of them."
 msgstr ""
 
 #, fuzzy
@@ -111777,6 +112318,9 @@ msgstr ""
 msgid "Remove one or more filters to widen the results."
 msgstr ""
 
+msgid "Dismiss"
+msgstr ""
+
 #, fuzzy
 msgid "Show:"
 msgstr "Toon"
@@ -111853,6 +112397,10 @@ msgstr ""
 #, fuzzy
 msgid "no match"
 msgstr "Geen overeenkomsten"
+
+#, fuzzy
+msgid "The export failed: %{error}"
+msgstr "Verificatie is mislukt: %(error)s"
 
 #, fuzzy
 msgid "Press [Enter] on a column header to sort by it"
@@ -111989,192 +112537,6 @@ msgstr ""
 #, fuzzy
 msgid "Manage in global settings"
 msgstr "Globale instelling wijzigen"
-
-msgid ""
-"Flamegraph of %1 functions, total time %2 — see hotspots table for details."
-msgstr ""
-
-msgid "Depth"
-msgstr ""
-
-msgid "Self:"
-msgstr ""
-
-#, fuzzy
-msgid "Total:"
-msgstr "Totaal"
-
-#, fuzzy
-msgid "Called by:"
-msgstr "Gewijzigd"
-
-#, fuzzy
-msgid "calls"
-msgstr "Beller ID"
-
-#, fuzzy
-msgid "Hotspots table"
-msgstr "Soort tafel"
-
-#, fuzzy
-msgid "Select function"
-msgstr "Afgewezen verbindingen"
-
-#, fuzzy
-msgid "Self-time"
-msgstr "Server tijd"
-
-#, fuzzy
-msgid "Cumulative"
-msgstr "Aangepast"
-
-#, fuzzy
-msgid "ms/call"
-msgstr "Beller ID"
-
-#, fuzzy
-msgid "Calls"
-msgstr "Beller ID"
-
-#, fuzzy
-msgid "Expand details"
-msgstr "Uitbreiden"
-
-#, fuzzy
-msgid "Select function %1"
-msgstr "Afgewezen verbindingen"
-
-#, fuzzy
-msgid "Number of calls"
-msgstr "Aantal tabellen"
-
-msgid "Total calls / primitive (non-recursive) calls"
-msgstr ""
-
-#, fuzzy
-msgid "Show callers / callees"
-msgstr "Toon alle regels"
-
-#, fuzzy
-msgid "Called by"
-msgstr "Gewijzigd"
-
-#, fuzzy
-msgid "GUI request"
-msgstr "verzoeken"
-
-#, fuzzy
-msgid "cmk --profile"
-msgstr "Aangepaste titel"
-
-#, fuzzy
-msgid "Loading profile data"
-msgstr "Profiel bewerken"
-
-#, fuzzy
-msgid "Failed to load profile data"
-msgstr "Het decoderen van certificaatgegevens is mislukt"
-
-#, fuzzy
-msgid "Hide details"
-msgstr "Gastheer Details"
-
-msgid "Elapsed real-world time of the HTTP request"
-msgstr ""
-
-msgid "Wall"
-msgstr ""
-
-#, fuzzy
-msgid "Recorded"
-msgstr "Herstel"
-
-#, fuzzy
-msgid "Functions"
-msgstr "Functie"
-
-#, fuzzy
-msgid "Search flamegraph..."
-msgstr "Zoektijd grafieken"
-
-msgid "Selected (click to clear)"
-msgstr ""
-
-#, fuzzy
-msgid "Filter table..."
-msgstr "Filter bekijken"
-
-#, fuzzy
-msgid "No profiling data available"
-msgstr "Geen gegevens beschikbaar"
-
-#, fuzzy
-msgid "Upload is unavailable"
-msgstr "niet beschikbaar"
-
-msgid ""
-"The upload form was not rendered by the page. Reload the page; if the error "
-"persists the performance-profiles feature may be misconfigured."
-msgstr ""
-
-msgid "Drag & drop a cProfile dump here"
-msgstr ""
-
-#, fuzzy
-msgid "Browse files"
-msgstr "Kernbestanden"
-
-msgid "cProfile dumps, max 10 MB"
-msgstr ""
-
-#, fuzzy
-msgid "Remove selected file"
-msgstr "Bestand op afstand"
-
-#, fuzzy
-msgid "Upload & analyze"
-msgstr "Upload nieuw:"
-
-#, fuzzy
-msgid "Choose different file"
-msgstr "Klok verschil"
-
-msgid "Drop a cProfile dump here or"
-msgstr ""
-
-#, fuzzy
-msgid "Browse"
-msgstr "rijen"
-
-#, fuzzy
-msgid "profiles match"
-msgstr "Voorvoegsel match"
-
-#, fuzzy
-msgid "profiles stored"
-msgstr "Bestandenbestand"
-
-#, fuzzy
-msgid "Search source or type..."
-msgstr "Zoekbereik"
-
-msgid ""
-"No profiles stored yet. Enable profiling in Global settings > User interface "
-"> Profile requests and perform some requests, run a base command with cmk --"
-"profile, or upload a cProfile dump above."
-msgstr ""
-
-#, fuzzy
-msgid "Timestamp"
-msgstr "Tijdstempelformaat"
-
-#, fuzzy
-msgid "View flamegraph"
-msgstr "Filter toevoegen"
-
-#, fuzzy
-msgid "No profiles match the current search."
-msgstr "Procesnaam matching"
 
 #, fuzzy
 msgid "Save actions"
@@ -113649,13 +114011,77 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
-#, fuzzy
-#~ msgid " (lower levels)"
-#~ msgstr "Lagere niveaus"
+#~ msgid "Default credentials"
+#~ msgstr "Standaard inloggegevens"
 
 #, fuzzy
-#~ msgid " (upper levels)"
-#~ msgstr "Bovenste niveaus"
+#~ msgid "Deploy Inotify plug-in"
+#~ msgstr "Inotify plugin uitrollen"
+
+#, fuzzy
+#~ msgid "Deploy MSSQL Server plug-in"
+#~ msgstr "MSSQL Server plugin implementeren"
+
+#, fuzzy
+#~ msgid "Deploy the MySQL plug-in"
+#~ msgstr "De MySQL plugin implementeren"
+
+#, fuzzy
+#~ msgid "Deploy the SAP HANA plug-in"
+#~ msgstr "De SAP HANA plugin implementeren"
+
+#, fuzzy
+#~ msgid "Do not deploy Inotify plug-in"
+#~ msgstr "Inotify plugin niet implementeren"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for Microsoft SQL Server"
+#~ msgstr "Implementeer geen plugin voor Microsoft SQL Server"
+
+#, fuzzy
+#~ msgid "Do not deploy the MySQL plug-in"
+#~ msgstr "De MySQL plugin niet implementeren"
+
+#, fuzzy
+#~ msgid "Do not deploy the Redis plug-in"
+#~ msgstr "Zet de Redis plugin niet in"
+
+#, fuzzy
+#~ msgid "Do not deploy the SAP HANA plug-in"
+#~ msgstr "Implementeer de SAP HANA plugin niet"
+
+#~ msgid "Don't use password"
+#~ msgstr "Gebruik geen wachtwoord"
+
+#~ msgid ""
+#~ "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "
+#~ "\"https\"</tt> in your system Apache configuration to tell the Checkmk "
+#~ "GUI about the SSL setup."
+#~ msgstr ""
+#~ "Merk op dat u <tt>RequestHeader set X-Forwarded-Proto \"https\"</tt> in "
+#~ "uw systeem Apache configuratie moet instellen om de Checkmk GUI te "
+#~ "vertellen over de SSL setup."
+
+#, fuzzy
+#~ msgid "Policy-specific levels (cluster mode only)"
+#~ msgstr "Beleidsspecifieke niveaus (alleen Clustermodus)"
+
+#~ msgid "Source Path"
+#~ msgstr "Bron Pad"
+
+#~ msgid "messages"
+#~ msgstr "berichten"
+
+#~ msgid "mins"
+#~ msgstr "minuten"
+
+#, fuzzy
+#~ msgid "Remove link"
+#~ msgstr "Verwijder alle"
+
+#, fuzzy
+#~ msgid "Add link"
+#~ msgstr "Plugin toevoegen"
 
 #, fuzzy, python-format
 #~ msgid "%(address)s (%(volume)s)"
@@ -113664,10 +114090,6 @@ msgstr ""
 #, fuzzy, python-format
 #~ msgid "%(value)r is not a known application."
 #~ msgstr "%(value)s is geen geldig versienummer."
-
-#, fuzzy, python-format
-#~ msgid "%(value)r is not a known protocol."
-#~ msgstr "De waarde %(value)r is hier niet toegestaan."
 
 #, fuzzy, python-format
 #~ msgid "%(var)s: %(message)s"
@@ -113826,10 +114248,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Please add at least one flow source endpoint."
 #~ msgstr "Voeg ten minste één kindknooppunt toe."
-
-#, fuzzy
-#~ msgid "Prediction of "
-#~ msgstr "Voorspelling"
 
 #, fuzzy, python-format
 #~ msgid "Protocol %(id)d"
@@ -120599,9 +121017,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Show notification bulks"
 #~ msgstr "kennisgevingsregel"
-
-#~ msgid "States treated as warning"
-#~ msgstr "Staten behandeld als waarschuwing"
 
 #~ msgid "States which result in Warning"
 #~ msgstr "Staten die resulteren in waarschuwing"

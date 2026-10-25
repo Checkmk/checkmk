@@ -70,8 +70,14 @@ msgstr " (すべてのパケットに関して(成功 + エラー))"
 msgid " (in relation to all successful packets)"
 msgstr " (成功したすべてのパケットに関して)"
 
+msgid " (lower levels)"
+msgstr " (下位レベル)"
+
 msgid " (required)"
 msgstr " (必須)"
+
+msgid " (upper levels)"
+msgstr " (上位レベル)"
 
 msgid " - Checkmk security notice"
 msgstr " - Checkmkのセキュリティに関するお知らせ"
@@ -93,6 +99,11 @@ msgstr " このオプションを有効にする"
 
 msgid " Choose 'No levels' to disable these thresholds."
 msgstr " これらの閾値を無効にするには、「レベルなし」を選択してください。"
+
+msgid ""
+" Data stored in the data backend are never included in the backup and must "
+"be backed up separately."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -274,6 +285,41 @@ msgstr "\"%(hostname)s\"は有効なホスト名ではありません"
 #, python-format
 msgid "\"%(source)s\" and \"%(target)s\" are already related in another way."
 msgstr "「%(source)s」と「%(target)s」はすでに別の方法で関連付けられています。"
+
+#, fuzzy, python-format
+msgid "\"%(value)s\" is not a folder path."
+msgstr "%(value)r は既知のプロトコルではありません。"
+
+#, python-format
+msgid ""
+"\"%(value)s\" is not a host tag. Tags are given as \"tag\" or \"group:tag\"."
+msgstr ""
+
+#, python-format
+msgid ""
+"\"%(value)s\" is not a label. Labels are given as \"key:value\", e.g. "
+"\"os:linux\", or as a key prefix, e.g. \"cmk/aws*\"."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "\"%(value)s\" is not a valid regular expression."
+msgstr "無効な正規表現"
+
+#, python-format
+msgid "\"%(value)s\" uses a look-around, which is not supported."
+msgstr ""
+
+#, python-format
+msgid ""
+"\"%(value)s\": a \"*\" cannot stand for any label key or tag group. Please "
+"specify one, e.g. \"os:linux\"."
+msgstr ""
+
+#, python-format
+msgid ""
+"\"%(value)s\": a \"*\" matches by prefix and needs text before it, e.g. "
+"\"%(example)s\"."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -3263,6 +3309,12 @@ msgstr "ALLNET IP Sensoricデバイス"
 msgid "AP name"
 msgstr "AP名"
 
+msgid ""
+"APACHE_FORWARDED_HEADERS is set to 'manual', but no matching RequestHeader "
+"configuration was found in the usual system Apache locations. Is this "
+"intentional?"
+msgstr ""
+
 msgid "APC Inrow System Events"
 msgstr "APC Inrowシステムイベント"
 
@@ -3752,6 +3804,10 @@ msgstr "エラーで中止"
 
 msgid "Abort your modifications."
 msgstr "変更を中止します。"
+
+#, fuzzy
+msgid "Aborted"
+msgstr "警告"
 
 msgid "Aborting change."
 msgstr "変更を中止します。"
@@ -6775,6 +6831,10 @@ msgid "All hosts"
 msgstr "すべてのホスト"
 
 msgid ""
+"All hosts can only be searched by host name, alias, address, label and tag."
+msgstr ""
+
+msgid ""
 "All hosts configured via this rule set will do a hardware and software "
 "inventory after every check cycle if there's at least one inventory plug-in "
 "which processes status data. <b>Note:</b> in order to get any useful result "
@@ -7897,6 +7957,9 @@ msgstr "Apache ActiveMQキュー"
 msgid "Apache Server"
 msgstr "Apacheサーバー"
 
+msgid "Apache X-Forwarded-Proto/-Ssl headers"
+msgstr ""
+
 msgid "Apache local password file (htpasswd)"
 msgstr "Apacheローカルパスワードファイル(htpasswd)"
 
@@ -8379,6 +8442,12 @@ msgstr ""
 "AWSで設定した'Origin Domain'という名前のピギーバックホスト(複数可)にサービス"
 "を割り当てる"
 
+#, fuzzy
+msgid "Assign services to piggyback host(s) named as the distribution ID"
+msgstr ""
+"AWSで設定した'Origin Domain'という名前のピギーバックホスト(複数可)にサービス"
+"を割り当てる"
+
 msgid "Assign services to the following cluster:"
 msgstr "次のクラスターにサービスを割り当てます。"
 
@@ -8487,6 +8556,10 @@ msgstr "非同期"
 
 msgid "Asynchronous closing connections"
 msgstr "非同期のクローズ接続"
+
+#, fuzzy
+msgid "Asynchronous execution of plug-ins"
+msgstr "プラグインの非同期実行（非推奨）"
 
 msgid "Asynchronous execution of plug-ins (deprecated)"
 msgstr "プラグインの非同期実行（非推奨）"
@@ -10329,6 +10402,17 @@ msgstr "ベイクと署名"
 msgid "Bake and sign agents"
 msgstr "エージェントのベイクと署名"
 
+msgid ""
+"Bake certificates into the agent that the agent controller should trust when "
+"connecting to this site. They are trusted in addition to the site "
+"certificate the controller receives while registering, but only on the "
+"connections to this site, the ones that are already registered included. "
+"Installing the agent therefore keeps the agent controller trusting its site "
+"across a rotation of the site CA, without a re-registration.<br>Note that "
+"only certificates are baked. Private keys are never part of the agent "
+"package."
+msgstr ""
+
 msgid "Bake new agent packages for Linux, Windows and other operating systems"
 msgstr ""
 "Linux, Windows, その他のオペレーティングシステム用の新しいエージェントパッ"
@@ -11212,6 +11296,7 @@ msgstr ""
 "ベルとして追加されます。Checkmkがアノテーションのキーで検索するパターンを指定"
 "することで、インポートされるアノテーションをさらに制限することができます。"
 
+#, fuzzy
 msgid ""
 "By default, Checkmk does not use a specific context during SNMPv3 queries, "
 "but some devices are offering their information in different SNMPv3 "
@@ -11219,7 +11304,9 @@ msgid ""
 "sections, which SNMPv3 contexts Checkmk should ask for when getting "
 "information via SNMPv3. The default context is only queried if it is "
 "selected here. If several contexts return the same OIDs, only the data of "
-"the first context is used."
+"the first context is used.<br><br>All matching rules apply. For each "
+"section, the first rule that names it or applies to all SNMP sections is "
+"used."
 msgstr ""
 "デフォルトでは、Checkmk は SNMPv3 クエリ中に特定のコンテキストを使用しません"
 "が、一部のデバイスは異なる SNMPv3 コンテキストで情報を提供します。このルール"
@@ -13114,6 +13201,10 @@ msgstr "暗号化された認証リクエスト、レスポンス用の証明書
 msgid "Certificate has no subject alternative name"
 msgstr "証明書にサブジェクトの別名がありません"
 
+#, fuzzy
+msgid "Certificate in PEM format"
+msgstr "証明書チェーン"
+
 msgid "Certificate is not signed by trusted authority"
 msgstr "証明書が信頼できる機関により署名されていない"
 
@@ -13143,6 +13234,15 @@ msgstr "証明書の有効期限"
 
 msgid "Certificates for HTTPS verification"
 msgstr "HTTPS検証用の証明書"
+
+#, fuzzy
+msgid "Certificates of this site"
+msgstr "サイトのサービス"
+
+msgid ""
+"Certificates that are not managed by this site, for example the CA of your "
+"own public key infrastructure."
+msgstr ""
 
 msgid "Change"
 msgstr "変更"
@@ -14068,6 +14168,13 @@ msgstr ""
 
 msgid "Checkmk with times metrics"
 msgstr "Checkmkのタイムメトリクス"
+
+msgid ""
+"Checkmk's OAuth and MCP endpoints need to know whether the original client "
+"request arrived via HTTP or HTTPS. By default (<tt>APACHE_FORWARDED_HEADERS "
+"auto</tt>), the system Apache sets the X-Forwarded-Proto and X-Forwarded-Ssl "
+"headers for the site itself, based on what it sees on its own connection."
+msgstr ""
 
 msgid "Checkmk: API: bytes"
 msgstr "Checkmk: API: bytes"
@@ -15944,6 +16051,14 @@ msgstr ""
 
 msgid "Configure compliance state checking"
 msgstr "コンプライアンス状態チェックの設定"
+
+#, fuzzy
+msgid "Configure connect credentials"
+msgstr "秘密の認証情報をチェックする"
+
+#, fuzzy
+msgid "Configure credentials"
+msgstr "エージェントを構成する"
 
 msgid "Configure custom agent file deployments"
 msgstr "カスタムエージェントファイルのデプロイを設定"
@@ -18644,6 +18759,10 @@ msgstr "カスタムアドレス"
 msgid "Custom attributes"
 msgstr "カスタム属性"
 
+#, fuzzy
+msgid "Custom certificates"
+msgstr "カスタムCA証明書"
+
 msgid "Custom check"
 msgstr "カスタムチェック"
 
@@ -19436,6 +19555,17 @@ msgstr "データソース: %(datasource)s"
 msgid "Data source: %(title)s"
 msgstr "データソース: %(title)s"
 
+#, fuzzy
+msgid "Data sources CRITICAL"
+msgstr "Data Guard CRITICAL"
+
+msgid ""
+"Data sources can report problems that did not stop them from producing data, "
+"for example a single endpoint the configured account is not allowed to "
+"access. Warnings result in the state configured here. Informational messages "
+"are always OK."
+msgstr ""
+
 msgid "Data store name"
 msgstr "データストア名"
 
@@ -19890,9 +20020,6 @@ msgstr "デフォルト設定"
 msgid "Default context"
 msgstr "デフォルトのコンテキスト"
 
-msgid "Default credentials"
-msgstr "デフォルトの資格情報"
-
 msgid "Default dynamic visuals permission"
 msgstr "動的ビジュアルのデフォルト権限"
 
@@ -19922,9 +20049,6 @@ msgstr "デフォルトレイヤー (z)"
 
 msgid "Default layout"
 msgstr "デフォルトのレイアウト"
-
-msgid "Default levels"
-msgstr "デフォルトレベル"
 
 msgid "Default limit set by AWS"
 msgstr "AWF設定のデフォルトの制限値"
@@ -20172,6 +20296,21 @@ msgstr ""
 "ス識別子（サービス名、インスタンス名、SID、TNSエイリアス）を含める必要があり"
 "ます。認証及び接続オプションはデフォルト設定が自動的に使用されますが、必要に"
 "応じてデータベース毎に上書きすることも可能です。"
+
+#, fuzzy
+msgid ""
+"Define the host that gets the discovered CloudFront services. You can assign "
+"them to the AWS account host, as for other AWS services, or to piggyback "
+"hosts. With the 'Origin Domain' option, the host name is the domain of the "
+"first origin of the distribution. With the distribution ID option, each "
+"distribution gets its own host, named as the ID of the distribution. Create "
+"a host with exactly this name, or use the dynamic host management to create "
+"the hosts."
+msgstr ""
+"発見されたCloudFrontサービスを割り当てるホストを定義します。他のAWSサービスと"
+"同様にAWSホストに割り当てるか、CloudFrontディストリビューションで指定され"
+"た'Origin Domain'と同じ名前のピギーバックホストに割り当てることができます - "
+"後者のオプションを選択した場合、ピギーバックホストを作成する必要があります"
 
 msgid ""
 "Define the host to assign the discovered CloudFront services. You can assign "
@@ -20966,12 +21105,6 @@ msgstr "Hyper-V VM ゲスト情報プラグインのデプロイ"
 msgid "Deploy Hyper-V monitoring plug-ins"
 msgstr "Hyper-V 監視プラグインをデプロイする"
 
-msgid "Deploy Inotify plug-in"
-msgstr "Inotifyプラグインをデプロイする"
-
-msgid "Deploy MSSQL Server plug-in"
-msgstr "MSSQL Serverプラグインを展開する"
-
 msgid "Deploy OpenHardwareMonitor (headless)"
 msgstr "OpenHardwareMonitorのデプロイ(ヘッドレス)"
 
@@ -21041,14 +21174,8 @@ msgstr "Kubernetesエージェントをクラスタにデプロイする"
 msgid "Deploy the MegaRAID plug-in"
 msgstr "MegaRAIDプラグインをデプロイする"
 
-msgid "Deploy the MySQL plug-in"
-msgstr "MySQLプラグインをデプロイする"
-
 msgid "Deploy the Oracle plug-in"
 msgstr "Oracleプラグインのデプロイ"
-
-msgid "Deploy the SAP HANA plug-in"
-msgstr "SAP HANAプラグインをデプロイする"
 
 msgid "Deploy the StorCLI plug-in"
 msgstr "StorCLIプラグインをデプロイする"
@@ -21405,6 +21532,10 @@ msgstr "デバイスコンポーネントの消費電力"
 msgid "Device going online"
 msgstr "デバイスがオンラインになります"
 
+#, fuzzy
+msgid "Device information"
+msgstr "ファイル情報"
+
 msgid "Device name"
 msgstr "デバイス名"
 
@@ -21422,6 +21553,10 @@ msgstr "オンラインデバイス"
 
 msgid "Device state not available"
 msgstr "デバイスの状態は利用できません"
+
+#, fuzzy
+msgid "Device states"
+msgstr "デバイスステータス"
 
 msgid "Device statuses"
 msgstr "デバイスステータス"
@@ -22470,8 +22605,9 @@ msgstr "コメントを求めないでください"
 msgid "Do not backup historical data"
 msgstr "履歴データをバックアップしないでください"
 
+#, fuzzy
 msgid ""
-"Do not backup metric data (RRD files), the monitoring history and log files"
+"Do not backup metric data (RRD files), the monitoring history and log files."
 msgstr ""
 "メトリックデータ(RRDファイル)、監視履歴、およびログファイルをバックアップしな"
 "いでください"
@@ -22498,6 +22634,18 @@ msgstr "製品の使用状況を収集しないでください"
 msgid "Do not configure Windows Firewall"
 msgstr "Windowsファイアウォールを設定しないでください"
 
+#, fuzzy
+msgid "Do not configure a port"
+msgstr "Windowsファイアウォールを設定しないでください"
+
+#, fuzzy
+msgid "Do not configure connect credentials"
+msgstr "Windowsファイアウォールを設定しないでください"
+
+#, fuzzy
+msgid "Do not configure credentials"
+msgstr "Windowsファイアウォールを設定しないでください"
+
 msgid "Do not convert case"
 msgstr "ケースを変換しないでください"
 
@@ -22513,9 +22661,6 @@ msgstr "Hyper-V VMゲスト情報プラグインをデプロイしないでく�
 msgid "Do not deploy Hyper-V plug-ins"
 msgstr "Hyper-Vプラグインをデプロイしないでください"
 
-msgid "Do not deploy Inotify plug-in"
-msgstr "Inotifyプラグインをデプロイしないでください"
-
 msgid "Do not deploy MSSQL Server plug-in"
 msgstr "MySQLプラグインをデプロイしないでください"
 
@@ -22530,9 +22675,6 @@ msgstr "Robotmkをデプロイしないでください"
 
 msgid "Do not deploy Windows Updates plug-in"
 msgstr "Windows Updateプラグインを展開しないでください"
-
-msgid "Do not deploy plug-in for Microsoft SQL Server"
-msgstr "Microsoft SQL Serverのプラグインをデプロイしないでください"
 
 msgid "Do not deploy plug-in for Windows interfaces"
 msgstr "Windowsインターフェイス用のプラグインをデプロイしないでください"
@@ -22559,17 +22701,8 @@ msgstr "Jolokiaプラグインをデプロイしないでください"
 msgid "Do not deploy the MegaRAID plug-in"
 msgstr "MegaRAIDプラグインをデプロイしないでください"
 
-msgid "Do not deploy the MySQL plug-in"
-msgstr "MySQLプラグインをデプロイしないでください"
-
 msgid "Do not deploy the Oracle plug-in"
 msgstr "Oracle プラグインをデプロイしないでください"
-
-msgid "Do not deploy the Redis plug-in"
-msgstr "Redisプラグインをデプロイしないでください"
-
-msgid "Do not deploy the SAP HANA plug-in"
-msgstr "SAP HANA プラグインをデプロイしないでください"
 
 msgid "Do not deploy the SAP R/3 plug-in"
 msgstr "SAP R/3プラグインをデプロイしないでください"
@@ -22941,9 +23074,6 @@ msgstr "TLS/SSL/Httpsを使用しないでください(安全ではありませ�
 msgid "Don't use a namespace prefix"
 msgstr "名前空間プレフィックスを使用しないでください"
 
-msgid "Don't use password"
-msgstr "パスワードを使用しないでください"
-
 msgid "Don't use quotes"
 msgstr "引用符は使用しないでください"
 
@@ -23283,6 +23413,12 @@ msgstr "バックアップの期間"
 
 msgid "Duration of last build"
 msgstr "最後のビルドの期間"
+
+msgid ""
+"During a graceful rotation of the site CA, select both the current and the "
+"upcoming CA, so that the agent controllers keep trusting the site before and "
+"after the rotation is finalized."
+msgstr ""
 
 msgid ""
 "During each run, the agent will fetch events which are at maximum this old. "
@@ -24289,6 +24425,10 @@ msgstr "1秒あたり 悪意のあるURL を含むメール"
 
 msgid "Emails containing malicious attachment per second"
 msgstr "1秒あたり悪意のある添付ファイルを含むメール"
+
+#, fuzzy
+msgid "Embed certificates"
+msgstr "ACME証明書"
 
 msgid "Embedded image"
 msgstr "埋め込み画像"
@@ -27434,6 +27574,10 @@ msgstr "ファイラーディスクレベル(NetApp、IBM SVC)"
 msgid "Files"
 msgstr "ファイル"
 
+#, fuzzy
+msgid "Files and folders to be monitored"
+msgstr "監視するファイルを追加する"
+
 msgid "Files are unpackaged and remain in your system."
 msgstr "ファイルは解凍され、システム内に残ります。"
 
@@ -28348,6 +28492,14 @@ msgid ""
 msgstr ""
 "ツリー '%(element)s' で '%(tree_id)s' が 2 回目見つかりました。各要素は 1 回"
 "だけ選択できます。"
+
+#, python-format
+msgid ""
+"Found a RequestHeader for X-Forwarded-Proto/X-Forwarded-Ssl in %(files)s. "
+"Checkmk already sets this header itself; remove the manual entry to avoid "
+"duplicate or conflicting configuration, or set APACHE_FORWARDED_HEADERS to "
+"'manual' if this Apache needs it."
+msgstr ""
 
 #, python-format
 msgid "Found all %(num_groups)d groups."
@@ -29802,6 +29954,10 @@ msgstr "長すぎるテキストの処理(表のみに影響します)"
 msgid "Haproxy"
 msgstr "Haproxy"
 
+#, fuzzy
+msgid "Hard aborted"
+msgstr "ハードウェア"
+
 msgid "Hard query limit"
 msgstr "ハードクエリ制限"
 
@@ -29934,6 +30090,12 @@ msgstr "ヘルスチェックの正常カウント"
 
 msgid "Health check percentage healty"
 msgstr "ヘルスチェックの正常な割合"
+
+msgid ""
+"Health of switches, Fibre Channel switches, routers, firewalls, wireless "
+"controllers and appliances, based on the host label cmk/device_type. "
+"Product, model, serial, location and contact require HW/SW Inventory."
+msgstr ""
 
 msgid "Health probe status"
 msgstr "ヘルスプローブステータス"
@@ -30762,10 +30924,10 @@ msgstr ""
 "ここでは、systemdサービスを検出する際に自動的に作成されるホストラベルを設定す"
 "ることができます。"
 
+#, fuzzy
 msgid ""
 "Here, you can specify levels for different policies which overrule the "
-"levels from the <i>Default levels</i> parameter. This setting only works in "
-"NetApp Clustermode setups."
+"default lag time levels."
 msgstr ""
 "ここでは、<i>デフォルトレベル</i>パラメータのレベルを上書きする、異なるポリ"
 "シーのレベルを指定することができます。この設定は、NetApp Clustermodeセット"
@@ -35261,6 +35423,20 @@ msgstr ""
 "きます。一致するネームスペースのみが監視されます。これは、たとえばPodなど、一"
 "致する名前空間の一部であるすべてに関係することに注意してください。"
 
+msgid ""
+"If your system Apache sits behind another proxy or load balancer that "
+"terminates TLS and forwards plain HTTP to it, that automatic value would be "
+"wrong. Run <tt>omd config set APACHE_FORWARDED_HEADERS manual</tt> for the "
+"site and set the headers yourself in the system Apache configuration "
+"instead, e.g. <tt>RequestHeader set X-Forwarded-Proto \"https\"</tt>."
+msgstr ""
+
+msgid ""
+"If your system Apache terminates TLS itself, or sits behind a proxy or load "
+"balancer that does, the 'Apache X-Forwarded-Proto/-Ssl headers' test covers "
+"whether the Checkmk GUI is correctly told about it."
+msgstr ""
+
 msgid "Ignore"
 msgstr "無視する"
 
@@ -36824,6 +37000,10 @@ msgstr "インターフェイスグループ"
 
 msgid "Interface settings"
 msgstr "インターフェース設定"
+
+#, fuzzy
+msgid "Interfaces CRITICAL"
+msgstr "インスタンス CRITICAL"
 
 msgid "Intermission"
 msgstr "休憩"
@@ -38627,6 +38807,13 @@ msgstr ""
 
 msgid "Labels: Inventorize the labels"
 msgstr "ラベル：ラベルの一覧表示"
+
+#, fuzzy
+msgid "Lag time (default levels)"
+msgstr "デフォルトレベル"
+
+msgid "Lag time (policy-specific levels)"
+msgstr ""
 
 msgid "Lambda"
 msgstr "Lambda"
@@ -42360,6 +42547,12 @@ msgid ""
 "Map the operational state (<tt>ifOperStatus</tt>) to a monitoring state."
 msgstr "運用状態(<tt>ifOperStatus</tt>)を監視状態にマッピングします。"
 
+#, fuzzy
+msgid ""
+"Map the transfer state reported by the SnapMirror relationship to a "
+"monitoring state."
+msgstr "運用状態(<tt>ifOperStatus</tt>)を監視状態にマッピングします。"
+
 msgid ""
 "Map the update status reported by the device to a monitoring state. A status "
 "that appears in none of the three lists results in UNKNOWN. The status "
@@ -42993,6 +43186,10 @@ msgstr "ハートビートパケットの最大予想実行時間"
 #, python-format
 msgid "Maximum image size: %(max_w)dx%(max_h)dpx"
 msgstr "最大画像サイズ: %(max_w)dx%(max_h)dpx"
+
+#, fuzzy
+msgid "Maximum lag time"
+msgstr "最大経過時間"
 
 msgid "Maximum latency"
 msgstr "最大レイテンシ"
@@ -44908,6 +45105,10 @@ msgstr "バージョン解析に失敗した場合の監視状態"
 msgid "Monitoring state of HAProxy frontend is %(state)s"
 msgstr "HAProxy サーバが「%(state)s」である場合の状態監視"
 
+#, fuzzy
+msgid "Monitoring state per transfer state"
+msgstr "他のユニット状態の監視状態"
+
 msgid "Monitoring state requirement"
 msgstr "状態要件の監視"
 
@@ -45938,14 +46139,19 @@ msgstr "NetApp Qtreeの検出"
 msgid "NetApp SVM traffic"
 msgstr "NetApp SVM トラフィック"
 
+#, fuzzy
+msgid "NetApp SnapVault / SnapMirror"
+msgstr "NetApp Snapvaults / Snapmirrorのラグタイム"
+
+#, fuzzy
+msgid "NetApp SnapVault discovery"
+msgstr "NetApp snapvaultディスカバリー"
+
 msgid "NetApp Snapshot Reserve"
 msgstr "NetAppスナップショットリザーブ"
 
 msgid "NetApp Snapshot Volumes"
 msgstr "NetApp スナップショットボリューム"
-
-msgid "NetApp Snapvaults / Snapmirror Lag Time"
-msgstr "NetApp Snapvaults / Snapmirrorのラグタイム"
 
 msgid "NetApp Volumes"
 msgstr "NetAppボリューム"
@@ -45957,9 +46163,6 @@ msgstr ""
 
 msgid "NetApp filers: used space in file systems"
 msgstr "NetApp ファイラー：ファイルシステム内の使用済み領域"
-
-msgid "NetApp snapvault discovery"
-msgstr "NetApp snapvaultディスカバリー"
 
 msgid "NetApp via Ontap REST API"
 msgstr "Ontap REST API経由のNetApp"
@@ -46030,6 +46233,10 @@ msgstr "ネットワーク接続"
 
 msgid "Network containers"
 msgstr "ネットワークコンテナ"
+
+#, fuzzy
+msgid "Network devices"
+msgstr "ネットワークスキャン"
 
 msgid "Network effectiveness ratio"
 msgstr "ネットワーク有効性比率"
@@ -47248,6 +47455,10 @@ msgstr "リストがありません"
 
 msgid "Not a number"
 msgstr "数ではありません"
+
+#, fuzzy, python-format
+msgid "Not a valid PEM encoded certificate: %(error)s"
+msgstr "無効な証明書: %(e)s"
 
 msgid "Not a valid URL (only HTTP and HTTPS URLs are allowed)."
 msgstr "無効なURLです（HTTPおよびHTTPSのURLのみが許可されています）。"
@@ -48698,6 +48909,12 @@ msgstr ""
 msgid "ONLINE"
 msgstr "オンライン"
 
+msgid ""
+"ONTAP marks a SnapMirror relationship as unhealthy, for example when an "
+"update failed. The reasons reported by ONTAP are shown in the service "
+"summary. Older ONTAP versions may not report the health."
+msgstr ""
+
 msgid "OO/Notif"
 msgstr "OO/Notif"
 
@@ -49109,20 +49326,6 @@ msgstr "一致するホストのみを追加します"
 
 msgid "Only alert if all peers are failed"
 msgstr "すべてのピアが障害状態の場合にのみアラートを送信"
-
-msgid ""
-"Only applicable to clustermode installations. The service name of snapvault "
-"services is composed of the destination vserver (SVM) and the destination "
-"volume by default. Check this box if you would like to use the destination "
-"volume as the service name on its own. Please be advised that this may lead "
-"to a service name that is not unique, resulting in some services, which are "
-"not shown!"
-msgstr ""
-"クラスターモードのインストールにのみ適用されます。snapvaultサービスのサービス"
-"名は、デフォルトでは宛先vserver (SVM)と宛先ボリュームで構成されます。宛先ボ"
-"リュームを単独でサービス名として使用する場合は、このボックスをオンにします。"
-"これにより、サービス名が一意でなくなり、一部のサービスが表示されなくなる可能"
-"性があることに注意してください！"
 
 msgid ""
 "Only applies to problem notifications and if periodic notifications are "
@@ -53107,6 +53310,10 @@ msgstr "名前を入力してください。"
 msgid "Please enter a required match."
 msgstr "必要な一致条件を入力してください。"
 
+#, fuzzy
+msgid "Please enter a search term."
+msgstr "名前を入力してください。"
+
 msgid "Please enter a time."
 msgstr "時間を入力してください。"
 
@@ -53232,15 +53439,6 @@ msgstr ""
 "ServiceNowの数値状態へのマッピングは、お客様のシステムで変更される可能性があ"
 "り、当社の定義と異なる場合があることにご注意ください。この場合、以下のオプ"
 "ションを使用してください。"
-
-msgid ""
-"Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "
-"\"https\"</tt> in your system Apache configuration to tell the Checkmk GUI "
-"about the SSL setup."
-msgstr ""
-"Checkmk GUIにSSL設定を通知するには、システムのApache構成で<tt>RequestHeader "
-"set X-Forwarded-Proto \"https\"</tt>を設定する必要があることに注意してくださ"
-"い。"
 
 msgid "Please note that your site will be deleted when the trial period ends. "
 msgstr ""
@@ -53581,6 +53779,10 @@ msgstr ""
 "Checkmkの変数データ用ディレクトリ(<tt>%(var_dir)s</tt>)からの相対パスになりま"
 "す。"
 
+#, fuzzy, python-format
+msgid "Please specify the tag group, e.g. \"tg:criticality:%(tag)s\"."
+msgstr "タググループ \"%(tag_group_id)s\"のタイトルを指定してください。"
+
 msgid "Please specify the user and password needed to access the XML interface"
 msgstr ""
 "XMLインターフェースへのアクセスに必要なユーザー名とパスワードを指定してくださ"
@@ -53767,9 +53969,6 @@ msgstr "ポリシー名"
 msgid "Policy violation count"
 msgstr "ポリシー違反回数"
 
-msgid "Policy-specific levels (cluster mode only)"
-msgstr "ポリシー固有のレベル(クラスターモードのみ)"
-
 msgid "Pool name"
 msgstr "プール名"
 
@@ -53928,6 +54127,10 @@ msgstr "Powerサブシステム"
 msgid "Power supplies"
 msgstr "電源供給装置"
 
+#, fuzzy
+msgid "Power supplies and fans CRITICAL"
+msgstr "電源供給装置"
+
 msgid "Power supply"
 msgstr "電源供給装置"
 
@@ -54042,6 +54245,9 @@ msgstr "予測"
 #, python-format
 msgid "Prediction for %(host_name)s - %(service_name)s"
 msgstr "%(host_name)sの予測 - %(service_name)s"
+
+msgid "Prediction of "
+msgstr "予測 "
 
 msgid "Predictive levels (only on CMC)"
 msgstr "予測レベル(CMCのみ)"
@@ -58729,11 +58935,12 @@ msgstr ""
 msgid "Running sessions"
 msgstr "セッションの実行"
 
+#, fuzzy
 msgid ""
 "Runs a data backend instance on this site. If you are running a distributed "
 "Checkmk setup with multiple sites on the same machine, please configure "
 "different port numbers per each site via the site-specific global settings "
-"to avoid port binding conflicts."
+"to avoid port binding conflicts. "
 msgstr ""
 "このサイト上でデータバックエンドインスタンスを実行します。同一マシン上で複数"
 "のサイトを持つ分散型Checkmkセットアップを運用している場合は、ポートバインディ"
@@ -59407,6 +59614,10 @@ msgstr "保存してフォルダを確認"
 
 msgid "Save as new layout for this aggregation"
 msgstr "この集計の新しいレイアウトとして保存する"
+
+#, fuzzy
+msgid "Save interval"
+msgstr "スクレイピング間隔"
 
 msgid "Save response"
 msgstr "応答を保存"
@@ -63077,6 +63288,9 @@ msgstr "サイト(強制)"
 msgid "Site Alias"
 msgstr "サイトエイリアス"
 
+msgid "Site CA (etc/ssl/ca.pem)"
+msgstr ""
+
 msgid "Site DNS cache is already up to date."
 msgstr "サイトのDNSキャッシュはすでに最新の状態です。"
 
@@ -63112,6 +63326,12 @@ msgstr "サイトのバックアップ"
 
 msgid "Site backup targets"
 msgstr "サイトのバックアップターゲット"
+
+msgid ""
+"Site backups include this configuration, but not the data stored in the data "
+"backend. A restore keeps the data currently stored on the site. That data "
+"can only be used with the data backend version that wrote it or a newer one."
+msgstr ""
 
 msgid "Site certificate subject alternative names"
 msgstr "証明書サブジェクトの別名"
@@ -64015,9 +64235,6 @@ msgstr "送信元IPアドレス"
 
 msgid "Source NAT name"
 msgstr "ソースNAT名"
-
-msgid "Source Path"
-msgstr "ソースパス"
 
 msgid "Source association changed"
 msgstr "ソースの関連付けが変更されました"
@@ -65553,6 +65770,10 @@ msgstr ""
 "ローカルまたはリモートデバイスの状態がアクティブ/スタンバイ以外である場合の状"
 "態。"
 
+#, fuzzy
+msgid "State if the relationship is unhealthy"
+msgstr "ステータスが\"unhealthy\"の場合の結果の状態"
+
 msgid "State if the version does not match"
 msgstr "バージョンが一致しない場合の状態"
 
@@ -65632,6 +65853,10 @@ msgid ""
 "State in case the checked device is neither Android nor iOS (or cannot be "
 "read)"
 msgstr "チェックした端末がAndroid, iOS以外の場合（または読込不可の場合）の状態"
+
+#, fuzzy
+msgid "State in case the data source reports warnings"
+msgstr "警告として扱われるステート"
 
 msgid "State info"
 msgstr "状態情報"
@@ -67740,6 +67965,10 @@ msgstr "温度ユニット"
 
 msgid "Temperature, humidity, electrical parameters, etc."
 msgstr "温度、湿度、電気的パラメータなど。"
+
+#, fuzzy
+msgid "Temperatures CRITICAL"
+msgstr "テーブルスペース CRITICAL"
 
 msgid "Temperatures of NVIDIA graphics card"
 msgstr "NVIDIAグラフィックカードの温度"
@@ -70087,6 +70316,9 @@ msgstr "メールボックスサーバー上のデータベース名。"
 
 msgid "The database to authenticate on."
 msgstr "認証するデータベースを指定します。"
+
+msgid "The default MySQL socket is <tt>/var/run/mysqld/mysqld.sock</tt>."
+msgstr ""
 
 msgid ""
 "The default critical level of 101 percent cannot be reached, so with the "
@@ -72711,6 +72943,11 @@ msgstr ""
 "るには、最初にこのレポートを参照しているすべてのスケジュールを削除する必要が"
 "あります。"
 
+#, python-format
+msgid ""
+"The report location %(path)s is outside of the report archive of %(owner)s"
+msgstr ""
+
 msgid "The report you are trying to preview has no valid file name"
 msgstr "プレビューしようとしているレポートに有効なファイル名がありません"
 
@@ -73019,6 +73256,15 @@ msgstr "編集しようとしているスケジュールが存在しません。
 msgid "The scrape interval must be an integer higher than 0."
 msgstr "スクレイプ間隔は、０より大きい整数でなければなりません。"
 
+#, python-format
+msgid "The search prefix \"%(prefix)s:\" needs a value."
+msgstr ""
+
+#, python-format
+msgid ""
+"The search prefix \"st:\" has an empty service state. Use one of: %(states)s."
+msgstr ""
+
 msgid "The secret access key for your AWS account"
 msgstr "AWSアカウントのシークレットアクセスキー"
 
@@ -73157,6 +73403,20 @@ msgid ""
 msgstr ""
 "サービスは、選択したサービスグループのいずれにも含まれていてはなりません。ホ"
 "ストイベントの場合、この条件は単に無視されます。"
+
+#, fuzzy
+msgid ""
+"The service name of SnapVault services is composed of the destination "
+"vserver (SVM) and the destination volume by default. Check this box if you "
+"would like to use the destination volume as the service name on its own. "
+"Please be advised that this may lead to a service name that is not unique, "
+"resulting in some services which are not shown."
+msgstr ""
+"クラスターモードのインストールにのみ適用されます。snapvaultサービスのサービス"
+"名は、デフォルトでは宛先vserver (SVM)と宛先ボリュームで構成されます。宛先ボ"
+"リュームを単独でサービス名として使用する場合は、このボックスをオンにします。"
+"これにより、サービス名が一意でなくなり、一部のサービスが表示されなくなる可能"
+"性があることに注意してください！"
 
 msgid ""
 "The service name of qtree services is composed of the quota, quota-users and "
@@ -73582,6 +73842,11 @@ msgstr "テストがありません。"
 
 msgid "The text"
 msgstr "テキスト"
+
+#, python-format
+msgid ""
+"The text \"%(text)s\" is not preceded by a search prefix such as \"h:\"."
+msgstr ""
 
 msgid "The text entered here is handled as a regular expression pattern."
 msgstr "ここに入力されたテキストは、正規表現パターンとして処理されます。"
@@ -74309,6 +74574,14 @@ msgid ""
 msgstr ""
 "これらのカスタムサービス属性は、ルールセット <a href=\"%(url)s\">%(label)s</"
 "a>.を使用してサービスに割り当てることができます。"
+
+#, fuzzy, python-format
+msgid ""
+"These filters could not be carried over, so this page shows a wider scope "
+"than the clicked object: %(filters)s"
+msgstr ""
+"以下のサイトにはアクセスできなかったため、表示されているデータは不完全であ"
+"り、算出された可用性は不正確である可能性があります：%(sites)s"
 
 msgid ""
 "These hosts have at least once in the last 24 hours connected the update "
@@ -76025,6 +76298,7 @@ msgstr ""
 "このオブジェクトは、リモートサイトからのシャドウオブジェクトです。ここでは管"
 "理できません。"
 
+#, fuzzy
 msgid ""
 "This option allows to omit individual sections from being fetched at all. As "
 "a result, associated Checkmk services may be entirely missing. However, some "
@@ -76036,7 +76310,8 @@ msgid ""
 "might become available. One such use case is the enforcing of 32-bit network "
 "interface counters (section <tt>if</tt>, superseded by <tt>if64</tt>) in "
 "case the 64-bit counters reported by the device are useless due to broken "
-"firmware."
+"firmware.<br><br>All matching rules apply. If several of them list the same "
+"section, the first one decides whether the section is disabled or enabled."
 msgstr ""
 "このオプションでは、個々のセクションの取得を一切省略することができる。その結"
 "果、関連する Checkmk サービスが完全に欠落する可能性があります。ただし、チェッ"
@@ -77369,6 +77644,7 @@ msgstr ""
 "このルールは、ブロケードポートのサービス検出を制御するために使用できます。イ"
 "ンベントリのポート状態と、サービス名としての説明の使用を設定できます。"
 
+#, fuzzy
 msgid ""
 "This rule can be used to customize the data acquisition interval of SNMP "
 "based sections. This can be useful for cases where fetching the data takes "
@@ -77380,7 +77656,9 @@ msgid ""
 "choose in this rule. This is especially important for counter-based checks "
 "such as the interface checks. A check interval which is shorter then the "
 "interval for fetching the data might result in misleading output (e.g. far "
-"too large interface throughputs) in such cases."
+"too large interface throughputs) in such cases.<br><br>All matching rules "
+"apply. If several of them list the same section, the first one decides its "
+"fetch interval."
 msgstr ""
 "このルールは、SNMPベースのセクションのデータ取得間隔をカスタマイズするために"
 "使用することができます。データの取得に通常のチェック間隔と同等以上の時間がか"
@@ -80541,11 +80819,35 @@ msgstr "トップ10：CPU使用率(Windows)"
 msgid "Top 10: Disk utilization"
 msgstr "トップ10：ディスク使用率"
 
+#, fuzzy
+msgid "Top 10: Hottest temperature sensors"
+msgstr "温度センサー"
+
 msgid "Top 10: Input bandwidth"
 msgstr "トップ10：入力帯域幅"
 
+#, fuzzy
+msgid "Top 10: Interface input bandwidth"
+msgstr "トップ10：入力帯域幅"
+
+msgid "Top 10: Interface input errors"
+msgstr ""
+
+#, fuzzy
+msgid "Top 10: Interface output bandwidth"
+msgstr "トップ10：入力帯域幅"
+
+msgid "Top 10: Interface output errors"
+msgstr ""
+
+msgid "Top 10: Lowest uptime (recent reboots)"
+msgstr ""
+
 msgid "Top 10: Output bandwidth"
 msgstr "トップ10：出力帯域幅"
+
+msgid "Top 10: Slowest SNMP polling"
+msgstr ""
 
 msgid "Top Talkers"
 msgstr "トップトーカー"
@@ -82925,6 +83227,10 @@ msgstr "トランザクション"
 msgid "Transferredsize"
 msgstr "トランスファーサイズ"
 
+#, fuzzy
+msgid "Transferring"
+msgstr "トランスファーサイズ"
+
 #, python-format
 msgid ""
 "Transferring: %(new)d new, %(changed)d changed and %(vanished)d vanished "
@@ -84067,11 +84373,19 @@ msgstr "不明なルールセット"
 msgid "Unknown rule with ID %(rule_id)s"
 msgstr "不明なルール ID%(rule_id)s"
 
+#, fuzzy, python-format
+msgid "Unknown search prefix \"%(prefix)s:\"."
+msgstr "不明なエラー: %(e)s"
+
 msgid "Unknown security event"
 msgstr "不明なセキュリティイベント"
 
 msgid "Unknown service"
 msgstr "不明なサービス"
+
+#, python-format
+msgid "Unknown service state \"%(state)s\". Use one of: %(states)s."
+msgstr ""
 
 #, python-format
 msgid "Unknown site %(site_id)s"
@@ -84225,6 +84539,11 @@ msgstr "UPホスト"
 
 msgid "Up-to-date replicas"
 msgstr "最新のレプリカ"
+
+msgid ""
+"Upcoming site CA of a pending certificate rotation (etc/ssl/"
+"pending_certificate_rotation/ca.pem)"
+msgstr ""
 
 msgid "Update"
 msgstr "アップデート"
@@ -90875,6 +91194,12 @@ msgstr "証明書のサブジェクトのalt名間違い"
 msgid "Wrong customer"
 msgstr "間違ったカスタマー"
 
+msgid "X-Forwarded-Proto/-Ssl are configured manually, as configured"
+msgstr ""
+
+msgid "X-Forwarded-Proto/-Ssl are set automatically"
+msgstr ""
+
 msgid "XDA hitratio"
 msgstr "XDA ヒット率"
 
@@ -94278,6 +94603,10 @@ msgstr "必須"
 msgid "is used in"
 msgstr "使用"
 
+#, fuzzy
+msgid "it is not available here"
+msgstr "利用できません"
+
 msgid "jitter"
 msgstr "ジッター"
 
@@ -94393,9 +94722,6 @@ msgstr "最大"
 
 msgid "memory"
 msgstr "記憶"
-
-msgid "messages"
-msgstr "メッセージ"
 
 msgid "metric"
 msgstr "メトリック"
@@ -95157,6 +95483,12 @@ msgstr "テスト"
 msgid "th notification"
 msgstr "通知"
 
+msgid "the clicked object has no value for it"
+msgstr ""
+
+msgid "the clicked object lacks the configured key"
+msgstr ""
+
 msgid ""
 "the connection has been closed; our socket is waiting for the remote "
 "endpoint to shutdown"
@@ -95506,6 +95838,210 @@ msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
 
+msgid ""
+"Flamegraph of %1 functions, total time %2 — see hotspots table for details."
+msgstr ""
+"%1 関数のフラメグラフ、合計時間 %2 — 詳細についてはホットスポット表を参照して"
+"ください。"
+
+msgid "Depth"
+msgstr "Depth"
+
+msgid "Self:"
+msgstr "Self:"
+
+msgid "Total:"
+msgstr "合計："
+
+msgid "Called by:"
+msgstr "呼び出し元："
+
+#, fuzzy
+msgid "calls"
+msgstr "コールイン"
+
+#, fuzzy
+msgid "Hotspots table"
+msgstr "テーブルの種類"
+
+#, fuzzy
+msgid "Select function"
+msgstr "オプション選択"
+
+#, fuzzy
+msgid "Self-time"
+msgstr "サーバー時間"
+
+#, fuzzy
+msgid "Cumulative"
+msgstr "カスタマイズフィールド"
+
+msgid "ms/call"
+msgstr "ms/call"
+
+#, fuzzy
+msgid "Calls"
+msgstr "コールイン"
+
+#, fuzzy
+msgid "Expand details"
+msgstr "すべて展開"
+
+#, fuzzy
+msgid "Select function %1"
+msgstr "オプション選択"
+
+#, fuzzy
+msgid "Number of calls"
+msgstr "テーブルの数"
+
+msgid "Total calls / primitive (non-recursive) calls"
+msgstr "総呼び出し数 / プリミティブ（非再帰）呼び出し数"
+
+#, fuzzy
+msgid "Show callers / callees"
+msgstr "すべてのサイクルを表示"
+
+#, fuzzy
+msgid "Called by"
+msgstr "変更"
+
+#, fuzzy
+msgid "GUI request"
+msgstr "GETリクエスト"
+
+#, fuzzy
+msgid "cmk --profile"
+msgstr "カスタムプロフィール"
+
+#, fuzzy
+msgid "Loading profile data"
+msgstr "プロファイルを編集する"
+
+#, fuzzy
+msgid "Failed to load profile data"
+msgstr "証明書データのデコードに失敗しました"
+
+#, fuzzy
+msgid "Hide details"
+msgstr "ホストの詳細"
+
+msgid "Elapsed real-world time of the HTTP request"
+msgstr "HTTPリクエストの実稼働時間"
+
+msgid "Wall"
+msgstr "Wall"
+
+#, fuzzy
+msgid "Recorded"
+msgstr "回復します"
+
+#, fuzzy
+msgid "Functions"
+msgstr "機能"
+
+msgid "Search flamegraph..."
+msgstr "flamegraphを検索..."
+
+msgid "Clear search"
+msgstr "検索をクリア"
+
+msgid "Selected (click to clear)"
+msgstr "選択中（クリックでクリア）"
+
+#, fuzzy
+msgid "Clear selection"
+msgstr "フォルダの選択"
+
+msgid "Filter table..."
+msgstr "テーブルをフィルタリング..."
+
+#, fuzzy
+msgid "Clear filter"
+msgstr "検索フィルター"
+
+#, fuzzy
+msgid "No profiling data available"
+msgstr "データなし"
+
+#, fuzzy
+msgid "Upload is unavailable"
+msgstr "利用不可"
+
+msgid ""
+"The upload form was not rendered by the page. Reload the page; if the error "
+"persists the performance-profiles feature may be misconfigured."
+msgstr ""
+"アップロードフォームがページに正しく表示されませんでした。ページを再読み込み"
+"してください。それでもエラーが続く場合は、パフォーマンスプロファイル機能の設"
+"定に誤りがある可能性があります。"
+
+#, fuzzy
+msgid "Upload failed"
+msgstr "アップロードされたファイル"
+
+msgid "Drag & drop a cProfile dump here"
+msgstr "cProfileのダンプをここにドラッグアンドドロップしてください"
+
+#, fuzzy
+msgid "Browse files"
+msgstr "コアファイル"
+
+msgid "cProfile dumps, max 10 MB"
+msgstr "cProfile ダンプ（最大 10 MB）"
+
+#, fuzzy
+msgid "Remove selected file"
+msgstr "リモートファイル"
+
+#, fuzzy
+msgid "Upload & analyze"
+msgstr "新規アップロード:"
+
+#, fuzzy
+msgid "Choose different file"
+msgstr "別のスタートページを選択してください"
+
+msgid "Drop a cProfile dump here or"
+msgstr "ここにcProfileのダンプファイルをドロップするか、"
+
+#, fuzzy
+msgid "Browse"
+msgstr "行"
+
+#, fuzzy
+msgid "profiles match"
+msgstr "プレフィックス一致"
+
+#, fuzzy
+msgid "profiles stored"
+msgstr "ファイルストア"
+
+msgid "Search source or type..."
+msgstr "ソースを検索、またはキーワードを入力..."
+
+msgid ""
+"No profiles stored yet. Enable profiling in Global settings > User interface "
+"> Profile requests and perform some requests, run a base command with cmk --"
+"profile, or upload a cProfile dump above."
+msgstr ""
+"まだプロファイルは保存されていません。グローバル設定 ＞ ユーザーインター"
+"フェースの プロファイルリクエストでプロファイリングを有効にし、いくつかのリク"
+"エストを実行するか、cmk --profile オプションを指定して基本コマンドを実行する"
+"か、または上記の cProfile ダンプをアップロードしてください。"
+
+#, fuzzy
+msgid "Timestamp"
+msgstr "タイムスタンプ形式"
+
+#, fuzzy
+msgid "View flamegraph"
+msgstr "フィルタのビューを表示"
+
+#, fuzzy
+msgid "No profiles match the current search."
+msgstr "現在の検索クエリにはフィルターを適用できません。"
+
 msgid "Toggle accordion item %{item}"
 msgstr "トグル式アコーディオンアイテムn item%{item}"
 
@@ -95664,9 +96200,6 @@ msgstr ""
 #, fuzzy
 msgid "Failed to read from clipboard"
 msgstr "秘密をクリップボードにコピーする"
-
-msgid "Clear search"
-msgstr "検索をクリア"
 
 #, fuzzy
 msgid "Slide-in"
@@ -96183,10 +96716,6 @@ msgstr "単一の値を選択する"
 msgid "Select lowest value"
 msgstr "単一の値を選択する"
 
-#, fuzzy
-msgid "Clear selection"
-msgstr "フォルダの選択"
-
 msgid "avg."
 msgstr "avg."
 
@@ -96476,6 +97005,10 @@ msgid "Public sharing expired on"
 msgstr "共有期限が切れました"
 
 #, fuzzy
+msgid "Filters left out"
+msgstr "ファイル選択"
+
+#, fuzzy
 msgid "%{n} object with alerts"
 msgid_plural "%{n} objects with alerts"
 msgstr[0] "オブジェクト"
@@ -96622,9 +97155,6 @@ msgstr "利用可能なビューから選択"
 msgid "%{name} (resolved by name)"
 msgstr ""
 
-msgid "mins"
-msgstr "分"
-
 #, fuzzy
 msgid "Follow dashboard time range"
 msgstr "グラフの時間範囲を表示する"
@@ -96658,6 +97188,9 @@ msgstr "まだ利用できません。"
 #, fuzzy
 msgid "Configure and edit an existing custom graph"
 msgstr "カスタムグラフを作成する"
+
+msgid "Requires the permission \"Customize and use custom graphs\"."
+msgstr ""
 
 #, fuzzy
 msgid "Link existing custom graph"
@@ -96739,16 +97272,28 @@ msgid "Contextual filter = clicked element"
 msgstr "このエレメントを削除します"
 
 #, fuzzy
+msgid "Link %{n}"
+msgstr "単一の %{n}"
+
+#, fuzzy
+msgid "Delete contextual link"
+msgstr "コンテキストヘルプアイコン"
+
+#, fuzzy
+msgid "Link name"
+msgstr "アップリンク名"
+
+#, fuzzy
+msgid "e.g. host details"
+msgstr "BIホストの詳細"
+
+#, fuzzy
 msgid "Include dashboard & widget filters"
 msgstr "ダッシュボードにフォルダー %{n} を準備しました"
 
 #, fuzzy
-msgid "Remove link"
-msgstr "名前を削除する"
-
-#, fuzzy
-msgid "Add link"
-msgstr "プラグインを追加"
+msgid "Include filter context of clicked element"
+msgstr "このエレメントを削除します"
 
 msgid "Select a category"
 msgstr "カテゴリを選択"
@@ -96761,6 +97306,10 @@ msgid "Select a target"
 msgstr "ターゲットを選択"
 
 #, fuzzy
+msgid "This action can’t be undone."
+msgstr "この操作は元に戻せません。"
+
+#, fuzzy
 msgid "Select a target for the contextual link."
 msgstr "OAuth2接続の権限を選択してください。"
 
@@ -96770,6 +97319,13 @@ msgstr "少なくとも1つの連絡先グループを追加してください�
 
 msgid "Every contextual link needs a title and a target."
 msgstr ""
+
+msgid "Select a key for every label, tag and auxiliary tag filter."
+msgstr ""
+
+#, fuzzy
+msgid "A link carries at most %{count} auxiliary tags."
+msgstr "補助タグを追加する"
 
 msgid "Must be a non-negative integer."
 msgstr "非負の整数でなければなりません。"
@@ -98562,10 +99118,6 @@ msgid "Delete metric %{names}?"
 msgid_plural "Delete metrics %{names}?"
 msgstr[0] "メトリック %{names} を削除しますか？"
 
-#, fuzzy
-msgid "This action can’t be undone."
-msgstr "この操作は元に戻せません。"
-
 msgid "Calculations that use this metric are also deleted:"
 msgid_plural "Calculations that use these metrics are also deleted:"
 msgstr[0] ""
@@ -99014,18 +99566,6 @@ msgid "Custom range"
 msgstr "時間範囲をカスタマイズ"
 
 #, fuzzy
-msgid "More time ranges"
-msgstr "時間範囲をフォーマットする"
-
-#, fuzzy
-msgid "More ranges"
-msgstr "その他のオプション"
-
-#, fuzzy
-msgid "Time ranges"
-msgstr "時間範囲"
-
-#, fuzzy
 msgid "Configuration name is required but not specified."
 msgstr "%s は必須だが指定はない。"
 
@@ -99073,6 +99613,18 @@ msgstr ""
 #, fuzzy
 msgid "undocumented"
 msgstr "ドキュメント"
+
+#, fuzzy
+msgid "More time ranges"
+msgstr "時間範囲をフォーマットする"
+
+#, fuzzy
+msgid "More ranges"
+msgstr "その他のオプション"
+
+#, fuzzy
+msgid "Time ranges"
+msgstr "時間範囲"
 
 #, fuzzy
 msgid "Loading content..."
@@ -99609,10 +100161,6 @@ msgstr ""
 #, fuzzy
 msgid "Delete failed"
 msgstr "デフォルトのプロファイル"
-
-#, fuzzy
-msgid "Upload failed"
-msgstr "アップロードされたファイル"
 
 msgid "Delete image \"%{name}\"?"
 msgstr "画像「%{name}」を削除しますか？"
@@ -101171,10 +101719,6 @@ msgstr "問題なし — すべてOKです。"
 #, fuzzy
 msgid "No matches for the current filter."
 msgstr "現在の検索クエリにはフィルターを適用できません。"
-
-#, fuzzy
-msgid "Clear filter"
-msgstr "検索フィルター"
 
 #, fuzzy
 msgid "%{own}, worst service %{worst}"
@@ -104077,10 +104621,6 @@ msgid "The hosts could not be loaded, so nothing was exported."
 msgstr "グループベースDNが見つかりませんでした。"
 
 #, fuzzy
-msgid "The export failed: %{error}"
-msgstr "検証失敗: %(error)s"
-
-#, fuzzy
 msgid ""
 "Exported %{exported} of %{matched} hosts. Show more hosts to export more."
 msgstr ""
@@ -104103,9 +104643,6 @@ msgstr[0] "(ホスト選択)"
 msgid "Selected host: %{selected} | Total hosts: %{total}"
 msgid_plural "Selected hosts: %{selected} | Total hosts: %{total}"
 msgstr[0] "選択されたホスト: %{selected} | ホスト総数: %{total}"
-
-msgid "Dismiss"
-msgstr "閉じる"
 
 #, fuzzy
 msgid "Actions for selected hosts"
@@ -104404,6 +104941,30 @@ msgid ""
 msgstr ""
 "「問題状態」（WARN または CRIT）にあり、かつ「承認済み」でも「スケジュールダ"
 "ウンタイム中」でもないホストのみを表示する"
+
+#, fuzzy
+msgid "Exporting services…"
+msgstr "サービスの読み込み中…"
+
+#, fuzzy
+msgid "The services could not be loaded, so nothing was exported."
+msgstr "グループベースDNが見つかりませんでした。"
+
+#, fuzzy
+msgid ""
+"Exported %{exported} of %{matched} services. Show more services to export "
+"more."
+msgstr ""
+"%{matched}件のホストのうち、%{limit}件を表示しています。検索条件を絞り込ん"
+"で、残りのホストを表示してください。"
+
+#, fuzzy
+msgid ""
+"Exported %{exported} of %{matched} services. Narrow the filters to export "
+"all of them."
+msgstr ""
+"%{matched}件のホストのうち、%{limit}件を表示しています。検索条件を絞り込ん"
+"で、残りのホストを表示してください。"
 
 #, fuzzy
 msgid "Selected service: %{count}"
@@ -104739,6 +105300,9 @@ msgstr ""
 msgid "Remove one or more filters to widen the results."
 msgstr "検索結果を広げるには、1つ以上のフィルタを解除してください。"
 
+msgid "Dismiss"
+msgstr "閉じる"
+
 msgid "Show:"
 msgstr "Show:"
 
@@ -104809,6 +105373,10 @@ msgstr "リロードのカウントダウンを一時停止、次のリロード
 #, fuzzy
 msgid "no match"
 msgstr "一致するものはありません"
+
+#, fuzzy
+msgid "The export failed: %{error}"
+msgstr "検証失敗: %(error)s"
 
 msgid "Press [Enter] on a column header to sort by it"
 msgstr "列ヘッダーで [Enter] キーを押すと、その列で並べ替えられます"
@@ -104978,195 +105546,6 @@ msgstr "30日後にリマインドする"
 
 msgid "Manage in global settings"
 msgstr "グローバル設定で管理する"
-
-msgid ""
-"Flamegraph of %1 functions, total time %2 — see hotspots table for details."
-msgstr ""
-"%1 関数のフラメグラフ、合計時間 %2 — 詳細についてはホットスポット表を参照して"
-"ください。"
-
-msgid "Depth"
-msgstr "Depth"
-
-msgid "Self:"
-msgstr "Self:"
-
-msgid "Total:"
-msgstr "合計："
-
-msgid "Called by:"
-msgstr "呼び出し元："
-
-#, fuzzy
-msgid "calls"
-msgstr "コールイン"
-
-#, fuzzy
-msgid "Hotspots table"
-msgstr "テーブルの種類"
-
-#, fuzzy
-msgid "Select function"
-msgstr "オプション選択"
-
-#, fuzzy
-msgid "Self-time"
-msgstr "サーバー時間"
-
-#, fuzzy
-msgid "Cumulative"
-msgstr "カスタマイズフィールド"
-
-msgid "ms/call"
-msgstr "ms/call"
-
-#, fuzzy
-msgid "Calls"
-msgstr "コールイン"
-
-#, fuzzy
-msgid "Expand details"
-msgstr "すべて展開"
-
-#, fuzzy
-msgid "Select function %1"
-msgstr "オプション選択"
-
-#, fuzzy
-msgid "Number of calls"
-msgstr "テーブルの数"
-
-msgid "Total calls / primitive (non-recursive) calls"
-msgstr "総呼び出し数 / プリミティブ（非再帰）呼び出し数"
-
-#, fuzzy
-msgid "Show callers / callees"
-msgstr "すべてのサイクルを表示"
-
-#, fuzzy
-msgid "Called by"
-msgstr "変更"
-
-#, fuzzy
-msgid "GUI request"
-msgstr "GETリクエスト"
-
-#, fuzzy
-msgid "cmk --profile"
-msgstr "カスタムプロフィール"
-
-#, fuzzy
-msgid "Loading profile data"
-msgstr "プロファイルを編集する"
-
-#, fuzzy
-msgid "Failed to load profile data"
-msgstr "証明書データのデコードに失敗しました"
-
-#, fuzzy
-msgid "Hide details"
-msgstr "ホストの詳細"
-
-msgid "Elapsed real-world time of the HTTP request"
-msgstr "HTTPリクエストの実稼働時間"
-
-msgid "Wall"
-msgstr "Wall"
-
-#, fuzzy
-msgid "Recorded"
-msgstr "回復します"
-
-#, fuzzy
-msgid "Functions"
-msgstr "機能"
-
-msgid "Search flamegraph..."
-msgstr "flamegraphを検索..."
-
-msgid "Selected (click to clear)"
-msgstr "選択中（クリックでクリア）"
-
-msgid "Filter table..."
-msgstr "テーブルをフィルタリング..."
-
-#, fuzzy
-msgid "No profiling data available"
-msgstr "データなし"
-
-#, fuzzy
-msgid "Upload is unavailable"
-msgstr "利用不可"
-
-msgid ""
-"The upload form was not rendered by the page. Reload the page; if the error "
-"persists the performance-profiles feature may be misconfigured."
-msgstr ""
-"アップロードフォームがページに正しく表示されませんでした。ページを再読み込み"
-"してください。それでもエラーが続く場合は、パフォーマンスプロファイル機能の設"
-"定に誤りがある可能性があります。"
-
-msgid "Drag & drop a cProfile dump here"
-msgstr "cProfileのダンプをここにドラッグアンドドロップしてください"
-
-#, fuzzy
-msgid "Browse files"
-msgstr "コアファイル"
-
-msgid "cProfile dumps, max 10 MB"
-msgstr "cProfile ダンプ（最大 10 MB）"
-
-#, fuzzy
-msgid "Remove selected file"
-msgstr "リモートファイル"
-
-#, fuzzy
-msgid "Upload & analyze"
-msgstr "新規アップロード:"
-
-#, fuzzy
-msgid "Choose different file"
-msgstr "別のスタートページを選択してください"
-
-msgid "Drop a cProfile dump here or"
-msgstr "ここにcProfileのダンプファイルをドロップするか、"
-
-#, fuzzy
-msgid "Browse"
-msgstr "行"
-
-#, fuzzy
-msgid "profiles match"
-msgstr "プレフィックス一致"
-
-#, fuzzy
-msgid "profiles stored"
-msgstr "ファイルストア"
-
-msgid "Search source or type..."
-msgstr "ソースを検索、またはキーワードを入力..."
-
-msgid ""
-"No profiles stored yet. Enable profiling in Global settings > User interface "
-"> Profile requests and perform some requests, run a base command with cmk --"
-"profile, or upload a cProfile dump above."
-msgstr ""
-"まだプロファイルは保存されていません。グローバル設定 ＞ ユーザーインター"
-"フェースの プロファイルリクエストでプロファイリングを有効にし、いくつかのリク"
-"エストを実行するか、cmk --profile オプションを指定して基本コマンドを実行する"
-"か、または上記の cProfile ダンプをアップロードしてください。"
-
-#, fuzzy
-msgid "Timestamp"
-msgstr "タイムスタンプ形式"
-
-#, fuzzy
-msgid "View flamegraph"
-msgstr "フィルタのビューを表示"
-
-#, fuzzy
-msgid "No profiles match the current search."
-msgstr "現在の検索クエリにはフィルターを適用できません。"
 
 #, fuzzy
 msgid "Save actions"
@@ -106776,11 +107155,67 @@ msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
 
-#~ msgid " (lower levels)"
-#~ msgstr " (下位レベル)"
+#~ msgid "Default credentials"
+#~ msgstr "デフォルトの資格情報"
 
-#~ msgid " (upper levels)"
-#~ msgstr " (上位レベル)"
+#~ msgid "Deploy Inotify plug-in"
+#~ msgstr "Inotifyプラグインをデプロイする"
+
+#~ msgid "Deploy MSSQL Server plug-in"
+#~ msgstr "MSSQL Serverプラグインを展開する"
+
+#~ msgid "Deploy the MySQL plug-in"
+#~ msgstr "MySQLプラグインをデプロイする"
+
+#~ msgid "Deploy the SAP HANA plug-in"
+#~ msgstr "SAP HANAプラグインをデプロイする"
+
+#~ msgid "Do not deploy Inotify plug-in"
+#~ msgstr "Inotifyプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy plug-in for Microsoft SQL Server"
+#~ msgstr "Microsoft SQL Serverのプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy the MySQL plug-in"
+#~ msgstr "MySQLプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy the Redis plug-in"
+#~ msgstr "Redisプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy the SAP HANA plug-in"
+#~ msgstr "SAP HANA プラグインをデプロイしないでください"
+
+#~ msgid "Don't use password"
+#~ msgstr "パスワードを使用しないでください"
+
+#~ msgid ""
+#~ "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "
+#~ "\"https\"</tt> in your system Apache configuration to tell the Checkmk "
+#~ "GUI about the SSL setup."
+#~ msgstr ""
+#~ "Checkmk GUIにSSL設定を通知するには、システムのApache構成で"
+#~ "<tt>RequestHeader set X-Forwarded-Proto \"https\"</tt>を設定する必要がある"
+#~ "ことに注意してください。"
+
+#~ msgid "Policy-specific levels (cluster mode only)"
+#~ msgstr "ポリシー固有のレベル(クラスターモードのみ)"
+
+#~ msgid "Source Path"
+#~ msgstr "ソースパス"
+
+#~ msgid "messages"
+#~ msgstr "メッセージ"
+
+#~ msgid "mins"
+#~ msgstr "分"
+
+#, fuzzy
+#~ msgid "Remove link"
+#~ msgstr "名前を削除する"
+
+#, fuzzy
+#~ msgid "Add link"
+#~ msgstr "プラグインを追加"
 
 #, python-format
 #~ msgid "%(address)s (%(volume)s)"
@@ -106789,10 +107224,6 @@ msgstr ""
 #, python-format
 #~ msgid "%(value)r is not a known application."
 #~ msgstr "%(value)r は既知のアプリケーションではありません。"
-
-#, python-format
-#~ msgid "%(value)r is not a known protocol."
-#~ msgstr "%(value)r は既知のプロトコルではありません。"
 
 #, python-format
 #~ msgid "%(var)s: %(message)s"
@@ -107049,9 +107480,6 @@ msgstr ""
 #~ "待機するポートです。コレクターに直接アクセスできない場合（例：NATの背後に"
 #~ "ある場合）に使用します。複数のコレクターが同じポートにプッシュを行うことが"
 #~ "できます。"
-
-#~ msgid "Prediction of "
-#~ msgstr "予測 "
 
 #, python-format
 #~ msgid "Protocol %(id)d"
@@ -114503,9 +114931,6 @@ msgstr ""
 
 #~ msgid "Show notification bulks"
 #~ msgstr "一括通知ルールを表示"
-
-#~ msgid "States treated as warning"
-#~ msgstr "警告として扱われるステート"
 
 #~ msgid "States which result in Warning"
 #~ msgstr "警告が発生する状態"

@@ -1478,7 +1478,7 @@ def _render_check_manpage(
     name = checktype.split()[0]
 
     try:
-        page = man_pages.parse_man_page(name, man_page_path_map[name])
+        page = man_pages.parse_man_page(name, man_page_path_map[name], debug=False)
     except KeyError:
         return "", ""
 

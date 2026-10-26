@@ -48,7 +48,7 @@ def man_page_dirs_for_test(tmp_path: Path) -> Mapping[str, Sequence[str]]:
 @pytest.fixture(scope="module", name="catalog")
 def get_catalog() -> man_pages.ManPageCatalog:
     return man_pages.load_man_page_catalog(
-        discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
+        discover_families(raise_errors=True), PluginGroup.CHECKMAN.value, debug=False
     )
 
 
@@ -57,7 +57,7 @@ def get_all_pages() -> Mapping[str, man_pages.ManPage]:
     mpm = man_pages.make_man_page_path_map(
         discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
     )
-    return {name: man_pages.parse_man_page(name, path) for name, path in mpm.items()}
+    return {name: man_pages.parse_man_page(name, path, debug=False) for name, path in mpm.items()}
 
 
 def test_man_page_path_only_shipped() -> None:

@@ -280,7 +280,7 @@ def _mode_list_checks(
     ]
 
     all_check_manuals = {
-        n: man_pages.parse_man_page(n, p)
+        n: man_pages.parse_man_page(n, p, debug=global_options.debug)
         for n, p in man_pages.make_man_page_path_map(
             discover_families(raise_errors=global_options.debug),
             PluginGroup.CHECKMAN.value,
@@ -319,7 +319,7 @@ def _mode_list_checks(
 
 def _run_list_checks(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # load_checks() and parse_man_page() read cmk.ccc.debug
+        # load_checks() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_list_checks(context.omd_root, context.global_options, options, args)

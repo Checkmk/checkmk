@@ -502,7 +502,10 @@ def _get_check_catalog(
     tree: CatalogTree = {}
 
     for path, entries in man_pages.load_man_page_catalog(
-        plugin_families, PluginGroup.CHECKMAN.value, blocked_paths=blocked_paths
+        plugin_families,
+        PluginGroup.CHECKMAN.value,
+        blocked_paths=blocked_paths,
+        debug=False,
     ).items():
         if not path_prefix_matches(path):
             continue
@@ -595,7 +598,9 @@ class ModeCheckManPage(WatoMode):
         except KeyError:
             raise MKUserError(None, _("There is no manual page for this check."))
 
-        self._manpage = man_pages.parse_man_page(self._check_plugin_name, man_page_path)
+        self._manpage = man_pages.parse_man_page(
+            self._check_plugin_name, man_page_path, debug=False
+        )
         self._check_default_parameters: object = None
 
         checks = get_check_information(debug=active_config.debug).plugin_infos

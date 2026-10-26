@@ -57,7 +57,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:i18n",
         "//packages/cmk-ccc:tty",

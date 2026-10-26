@@ -7,7 +7,6 @@
 import sys
 from pathlib import Path
 
-import cmk.ccc.debug
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.cli.internal import (
     Args,
@@ -40,7 +39,7 @@ def _mode_man(
     if (man_page_path := man_page_path_map.get(args[0])) is None:
         raise MKBailOut(f"No manpage for {args[0]}. Sorry.")
 
-    man_page = man_pages.parse_man_page(args[0], man_page_path)
+    man_page = man_pages.parse_man_page(args[0], man_page_path, debug=global_options.debug)
     renderer: type[man_pages.ConsoleManPageRenderer] | type[man_pages.NowikiManPageRenderer]
     match options.get("renderer", "console"):
         case "console":
@@ -61,9 +60,6 @@ def _mode_man(
 
 
 def _run_man(context: CommandContext, options: Options, args: Args) -> ExitCode:
-    if context.global_options.debug:
-        # parse_man_page() reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_man(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -110,15 +106,13 @@ def _mode_browse_man(
             discover_families(raise_errors=global_options.debug),
             PluginGroup.CHECKMAN.value,
             blocked_paths=blocked_feature_files(omd_root),
+            debug=global_options.debug,
         )
     )
     return ExitCode.SUCCESS
 
 
 def _run_browse_man(context: CommandContext, options: Options, args: Args) -> ExitCode:
-    if context.global_options.debug:
-        # parse_man_page() reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_browse_man(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:

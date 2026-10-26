@@ -24,6 +24,7 @@ import MapZoomResetPill from '@/maps/map/components/MapZoomResetPill.vue'
 import { useMapObjectMenus } from '@/maps/map/composables/useMapObjectMenus'
 import { useObjectResize } from '@/maps/map/composables/useObjectResize'
 import { useRovingFocus } from '@/maps/map/composables/useRovingFocus'
+import { spaceFillingPane } from '@/maps/map/static/canvasSpace'
 import { useCanvasBackground } from '@/maps/map/static/composables/useCanvasBackground'
 import { useCanvasExtents } from '@/maps/map/static/composables/useCanvasExtents'
 import { useCanvasLayout } from '@/maps/map/static/composables/useCanvasLayout'
@@ -117,18 +118,48 @@ const { _t } = usei18n()
 const viewport = useCanvasViewport({
   canvas,
   config: () => props.config,
-  width: () => extents.width.value,
-  height: () => extents.height.value,
+  width: () => space.value.width,
+  height: () => space.value.height,
   editMode: () => props.editMode,
   preview: () => props.preview === true,
   classic: () => classic.value,
   backgroundUrl: () => background.url.value,
-  backgroundSize: () => background.naturalSize.value
+  backgroundSize: () => background.naturalSize.value,
+  backgroundBox: () => backgroundBox.value
+})
+
+/**
+ * The coordinate space the canvas shows. The default renderer fills its pane at
+ * one scale for both axes: the map's own space is extended, to the right or
+ * below, to the pane's proportions, so a grid cell stays square and nothing is
+ * distorted. What is stored as the map's size stays ``extents``. The classic
+ * renderer and the settings preview show the map's own space as it is.
+ */
+const space = computed(() => {
+  const own = { width: extents.width.value, height: extents.height.value }
+  return classic.value || props.preview === true
+    ? own
+    : spaceFillingPane(own, viewport.restingPane.value)
+})
+
+/**
+ * The background keeps the map's own space, at its origin: objects are placed
+ * from the top left, so that is where the picture they sit on has to start.
+ */
+const backgroundBox = computed(() => {
+  const { width, height } = space.value
+  if (width === extents.width.value && height === extents.height.value) {
+    return null
+  }
+  return {
+    size: `${(extents.width.value / width) * 100}% ${(extents.height.value / height) * 100}%`,
+    position: 'left top'
+  }
 })
 
 // The line and label layers draw in display pixels so their strokes and glyphs
-// keep their proportions under the asymmetric stretch; they need the scale to
-// place themselves against the objects.
+// keep their proportions; they need the scale to place themselves against the
+// objects.
 provide(CANVAS_SCALE, viewport.scale)
 
 function snap(value: number): number {
@@ -194,8 +225,8 @@ function onContextProperties(): void {
 const layout = useCanvasLayout({
   config: () => props.config,
   states: () => props.states,
-  width: () => extents.width.value,
-  height: () => extents.height.value,
+  width: () => space.value.width,
+  height: () => space.value.height,
   filterNeedle: () => props.filterNeedle,
   problemsOnly: () => props.problemsOnly,
   editMode: () => props.editMode,
@@ -342,7 +373,9 @@ defineExpose({
   getCanvasEl: () => canvas.value,
   getMapPosition: viewport.mapPositionOf,
   resetZoom: viewport.resetZoom,
-  getNativeSize: () => ({ w: extents.width.value, h: extents.height.value })
+  getNativeSize: () => ({ w: extents.width.value, h: extents.height.value }),
+  /** The coordinate space the canvas element spans, to map pointer positions into. */
+  getShownSize: () => ({ w: space.value.width, h: space.value.height })
 })
 </script>
 
@@ -366,8 +399,8 @@ defineExpose({
     <MapCanvasGrid
       v-if="editMode && (snapGrid ?? 0) > 0"
       :size="snapGrid ?? 0"
-      :width="extents.width.value"
-      :height="extents.height.value"
+      :width="space.width"
+      :height="space.height"
     />
 
     <MapMarqueeBox v-if="marquee.visible.value" :rect="marquee.rect.value" :layer="90" />

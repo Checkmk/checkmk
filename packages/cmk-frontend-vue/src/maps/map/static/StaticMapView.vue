@@ -129,7 +129,7 @@ function onLineDragStart(
 ): void {
   const element = canvas.value?.getCanvasEl()
   if (element) {
-    props.editor.startLineDrag(event, object, mode, element, canvas.value?.getNativeSize() ?? null)
+    props.editor.startLineDrag(event, object, mode, element, canvas.value?.getShownSize() ?? null)
   }
 }
 

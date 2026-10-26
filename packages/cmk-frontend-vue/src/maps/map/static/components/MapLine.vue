@@ -45,7 +45,7 @@ defineEmits<{
 // Injected from MapCanvas. Translates the line's native obj.x/y coords
 // into display-pixel coords so strokes, arrowheads, and text labels render
 // at their natural proportions inside the no-viewBox SVG (which itself sits
-// at the asymmetric-stretched canvas display size).
+// at the scaled canvas display size).
 const canvasScale = inject(
   CANVAS_SCALE,
   computed(() => ({ sx: 1, sy: 1 }))

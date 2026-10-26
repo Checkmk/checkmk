@@ -12,9 +12,10 @@
  * itself changes.
  *
  * A stored size is authoritative — reusing it verbatim is what makes a reload
- * lay the map out exactly as the editor did. It is only ever clamped up, for an
- * object placed beyond it (through the API, say), and then against raw
- * coordinates so the padding below cannot silently re-inflate the stored size.
+ * lay the map out exactly as the editor did. It only grows for an object placed
+ * beyond it (past the map's own space on a wide pane, or through the API), and
+ * then by the object's padding so the object does not end up on the edge. Once
+ * grown, the object lies inside and the size stays put.
  *
  * Where the renderer draws the background at its own pixel size, the space is
  * that size and ends no earlier than the last object beyond the image, as NagVis
@@ -90,7 +91,10 @@ function extent(
     )
   }
   if (stored !== null && stored !== undefined) {
-    return objects.reduce((far, object) => Math.max(far, reach(object, axis)), stored)
+    return objects.reduce(
+      (far, object) => Math.max(far, reach(object, axis) > stored ? edge(object, axis) : stored),
+      stored
+    )
   }
   return objects.reduce(
     (far, object) => Math.max(far, edge(object, axis)),

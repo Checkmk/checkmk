@@ -83,11 +83,11 @@ describe('useCanvasExtents', () => {
     })
   })
 
-  it('clamps a too-small stored size up to the raw coordinates, without re-padding', () => {
-    // Stored < an object's raw coord → grow to the coord (1000/700), not +150.
+  it('grows a stored size past an object beyond it, padding included', () => {
+    // An object at 1000/700 on a stored 900×600 would sit on the edge.
     expect(extentsOf(mapWith({ canvas_width: 900, canvas_height: 600 }))).toEqual({
-      w: 1000,
-      h: 700
+      w: 1150,
+      h: 850
     })
   })
 
@@ -168,7 +168,7 @@ describe('useCanvasExtents', () => {
       canvas_height: 900,
       objects: [anObject({ id: '1', type: 'line', x: 100, y: 100, x2: 1500, y2: 950 })]
     })
-    expect(extentsOf(config)).toEqual({ w: 1500, h: 950 })
+    expect(extentsOf(config)).toEqual({ w: 1650, h: 1100 })
   })
 
   it('counts where a line ends, not only where it starts', () => {

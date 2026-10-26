@@ -51,8 +51,8 @@ export interface CanvasViewport {
   style: ComputedRef<Record<string, string>>
   /**
    * Scale from map coordinates to display pixels, for the SVG layers that draw
-   * in display pixels so their strokes and glyphs keep their proportions under
-   * the asymmetric stretch.
+   * in display pixels so their strokes and glyphs keep their size however the
+   * canvas is scaled.
    */
   scale: ComputedRef<CanvasScale>
   /** A point inside the canvas element, in map coordinates. */
@@ -66,6 +66,12 @@ export interface CanvasViewport {
    * depends on it, so that the measurement re-runs when the canvas resizes.
    */
   displaySize: Ref<Size>
+  /**
+   * The scrolling pane's size while unzoomed, which the default renderer fills.
+   * Zoomed, scrollbars shrink the measured pane; following that would reshape
+   * the map under the zoom.
+   */
+  restingPane: Ref<Size>
 }
 
 function scrollAncestorOf(element: HTMLElement | null): HTMLElement | null {
@@ -92,6 +98,11 @@ export function useCanvasViewport(source: {
   backgroundUrl: () => string | null
   /** The background's pixel size, where it is drawn at that size. */
   backgroundSize: () => Size | null
+  /**
+   * Where the background sits inside the canvas, as CSS ``background-size``
+   * and ``background-position``; without it, it covers the whole canvas.
+   */
+  backgroundBox?: (() => { size: string; position: string } | null) | undefined
 }): CanvasViewport {
   const zoom = ref(1)
   const paneSize = ref<Size>({ width: 0, height: 0 })
@@ -103,21 +114,21 @@ export function useCanvasViewport(source: {
     }
   }
 
+  // A window resize changes the pane and the canvas in the same frame, and the
+  // observer reports both in one call.
   const observer = useResizeObserver((entries) => {
-    const entry = entries[0]
-    if (!entry) {
-      return
-    }
-    const element = entry.target as HTMLElement
-    const box = entry.contentBoxSize?.[0]
-    if (element === source.canvas.value) {
-      setSize(
-        displaySize,
-        box ? box.inlineSize : element.clientWidth,
-        box ? box.blockSize : element.clientHeight
-      )
-    } else {
-      setSize(paneSize, element.clientWidth, element.clientHeight)
+    for (const entry of entries) {
+      const element = entry.target as HTMLElement
+      const box = entry.contentBoxSize?.[0]
+      if (element === source.canvas.value) {
+        setSize(
+          displaySize,
+          box ? box.inlineSize : element.clientWidth,
+          box ? box.blockSize : element.clientHeight
+        )
+      } else {
+        setSize(paneSize, element.clientWidth, element.clientHeight)
+      }
     }
   })
   observer.observe(source.canvas)
@@ -148,6 +159,20 @@ export function useCanvasViewport(source: {
         zoom.value = 1
       }
     }
+  )
+
+  // Zoomed, the canvas outgrows the pane and its scrollbars shrink the pane;
+  // refitting to that would resize the canvas until a scrollbar goes away
+  // again, and round it goes. So the canvas keeps the pane it had unzoomed.
+  const restingPane = ref<Size>({ width: 0, height: 0 })
+  watch(
+    [paneSize, zoom],
+    ([pane, current]) => {
+      if (current === 1) {
+        restingPane.value = pane
+      }
+    },
+    { immediate: true }
   )
 
   function onWheel(event: WheelEvent): void {
@@ -212,9 +237,9 @@ export function useCanvasViewport(source: {
     if (source.classic() && width && height) {
       return { width: `${width}px`, height: `${height}px`, ...zoomed }
     }
-    const pane = paneSize.value
-    if (zoom.value !== 1 && pane.width && pane.height) {
-      return { width: `${pane.width}px`, height: `${pane.height}px`, ...zoomed }
+    const resting = restingPane.value
+    if (zoom.value !== 1 && resting.width && resting.height) {
+      return { width: `${resting.width}px`, height: `${resting.height}px`, ...zoomed }
     }
     // Unzoomed, size in CSS so the canvas tracks the pane without a JS
     // round-trip: driving the pixel size off the observed pane lets a
@@ -230,12 +255,18 @@ export function useCanvasViewport(source: {
       base.backgroundColor = config.background_color
     }
     if (config.background_image) {
+      const box = source.backgroundBox?.() ?? null
       base.backgroundImage = `url(${source.backgroundUrl()})`
       base.backgroundRepeat = 'no-repeat'
       // Drawn at its own size, the image stays put where objects beyond it
       // widen the canvas, as on a NagVis page.
       const native = source.backgroundSize()
-      base.backgroundSize = native ? `${native.width}px ${native.height}px` : '100% 100%'
+      base.backgroundSize = native
+        ? `${native.width}px ${native.height}px`
+        : (box?.size ?? '100% 100%')
+      if (box) {
+        base.backgroundPosition = box.position
+      }
     }
     return base
   })
@@ -272,6 +303,7 @@ export function useCanvasViewport(source: {
     // Read through a ref so the value is current even when the canvas remounted
     // after this composable ran.
     scroller: () => pane.value,
-    displaySize
+    displaySize,
+    restingPane
   }
 }

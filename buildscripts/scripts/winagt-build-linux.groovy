@@ -27,9 +27,19 @@ void main() {
         "//packages/mk-oracle:mk-oracle-windows",
         "//agents/wnx/extensions/robotmk_ext:robotmk_ext-windows",
     ];
+    // The exes the MSI embeds, signed during the build (msi_* in
+    // agents/wnx/BUILD.bazel). Archived as embedded and not signed again
+    // afterwards: one signature, and the archived file is the one in the
+    // MSI, like run.ps1 ships it.
+    def msi_exe_targets = [
+        "//packages/cmk-agent-ctl:cmk-agent-ctl-windows": "//agents/wnx:msi_cmk-agent-ctl",
+    ];
+    def signed_in_build = ["cmk-agent-ctl.exe"];
     // Built and archived like the binaries, but there is no -static-crt tier
     // for an MSI to check.
-    def targets = exe_targets + ["//agents/wnx:check_mk_agent_msi"];
+    def targets = exe_targets.collect { msi_exe_targets[it] ?: it } + [
+        "//agents/wnx:check_mk_agent_msi",
+    ];
     // The Wine unit-test tiers of the targets above (a separate list:
     // not every artifact has one).
     def wine_test_targets = [
@@ -100,7 +110,7 @@ void main() {
             // right away and archives nothing, so unsigned or partially
             // signed binaries are never published.
             stage("Sign windows binaries") {
-                sign_windows_binaries(safe_branch_name, cmk_version, "artefacts");
+                sign_windows_binaries(safe_branch_name, cmk_version, "artefacts", signed_in_build);
             }
         }
 
@@ -143,7 +153,7 @@ void main() {
 void build_windows_binaries(String branch_name, String cmk_version, List targets, String binary_directory) {
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
 
-    // The MSI embeds the PowerShell scripts signed during the build,
+    // The MSI embeds the PowerShell scripts and exes signed during the build,
     // like the MSI winagt-build builds with --sign-azure. CMK-39886
     windows.with_azure_signing_flag(
         branch_name, "${WORKSPACE}/.azure_signing_credentials"
@@ -166,12 +176,14 @@ void build_windows_binaries(String branch_name, String cmk_version, List targets
     }
 }
 
-void sign_windows_binaries(String branch_name, String cmk_version, String binary_directory) {
+void sign_windows_binaries(
+    String branch_name, String cmk_version, String binary_directory, List signed_in_build
+) {
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
 
     // The package build and the bakery also need each MSI unsigned
     // (check_mk_agent_unsigned.msi, see cmk/utils/msi_engine.py), so
-    // keep a copy and sign everything else.
+    // keep a copy and sign everything else not signed in the build.
     def files = sh(
         script: """
             set -euo pipefail
@@ -181,7 +193,7 @@ void sign_windows_binaries(String branch_name, String cmk_version, String binary
             find ${binary_directory} -maxdepth 1 -type f ! -name '*_unsigned.msi' | sort
             """,
         returnStdout: true,
-    ).trim().split("\n") as List;
+    ).trim().split("\n").findAll { !(it.tokenize("/").last() in signed_in_build) };
     windows.sign_with_azure(branch_name, "--cmk_version=${cmk_version}", files);
 }
 

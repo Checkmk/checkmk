@@ -1,6 +1,7 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
+load("//bazel/rules:sign_azure.bzl", "sign_file_azure")
 load("//bazel/rules:xcomp/cc.bzl", "cc_binary")
 load("//bazel/rules:xcomp/package_msi.bzl", "package_msi")
 load("//bazel/toolchains/cc/clang/xwin:rc.bzl", "windows_rc")
@@ -333,6 +334,36 @@ exports_files(
     visibility = ["//agents/windows/plugins:__pkg__"],
 )
 
+# The exes //agents/wnx:check_mk_agent_msi embeds: signed whenever signing
+# credentials are given, like the exes run.ps1 signs before linking the MSI
+# (Start-BinarySigning). Needs --//bazel/rules:azure_signing_credentials_file,
+# see sign_azure.bzl.
+MSI_EXES = {
+    "check_mk_service": ":check_mk_service-windows",
+    "cmk-agent-ctl": "//packages/cmk-agent-ctl:cmk-agent-ctl-windows",
+}
+
+[
+    sign_file_azure(
+        name = "azure_signed_" + name,
+        src = exe,
+        tags = ["manual"],
+    )
+    for name, exe in MSI_EXES.items()
+]
+
+[
+    alias(
+        name = "msi_" + name,
+        actual = select({
+            "//bazel/rules:azure_signing_credentials_file_unset": exe,
+            "//conditions:default": ":azure_signed_" + name,
+        }),
+        tags = ["manual"],
+    )
+    for name, exe in MSI_EXES.items()
+]
+
 package_msi(
     name = "check_mk_agent_msi",
     srcs = [
@@ -346,8 +377,8 @@ package_msi(
     # Where Product.wxs expects them.
     stage_files = {
         "//agents/windows/plugins:msi_plugins": "agents/wnx/install/plugins.tar",
-        "//packages/cmk-agent-ctl:cmk-agent-ctl-windows": "artefacts/cmk-agent-ctl.exe",
-        ":check_mk_service-windows": "agents/wnx/build/check_mk_service/x64/Release/check_mk_service.exe",
+        ":msi_check_mk_service": "agents/wnx/build/check_mk_service/x64/Release/check_mk_service.exe",
+        ":msi_cmk-agent-ctl": "artefacts/cmk-agent-ctl.exe",
     },
     tags = ["manual"],
     version_file = ":cmk_version",

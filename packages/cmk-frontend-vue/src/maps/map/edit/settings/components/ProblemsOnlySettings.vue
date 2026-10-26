@@ -23,12 +23,14 @@ const labelId = useId()
 
 <template>
   <SettingsSection :title="_t('Problems')">
-    <!-- .stop on the switch: the slider toggles itself, and the wrapping label
-         would forward a second click to the hidden checkbox. -->
-    <label class="maps-problems-only-settings__toggle">
-      <CmkSwitch v-model="form.problems_only" :aria-labelledby="labelId" @click.stop />
-      <span :id="labelId">{{ _t('Show only problems') }}</span>
-    </label>
+    <!-- No <label> around the switch: its slider toggles itself, and a label
+         would pass the click on to the hidden checkbox, switching it back. -->
+    <span class="maps-problems-only-settings__toggle">
+      <CmkSwitch v-model="form.problems_only" :aria-labelledby="labelId" />
+      <span :id="labelId" @click="form.problems_only = !form.problems_only">
+        {{ _t('Show only problems') }}
+      </span>
+    </span>
   </SettingsSection>
 </template>
 

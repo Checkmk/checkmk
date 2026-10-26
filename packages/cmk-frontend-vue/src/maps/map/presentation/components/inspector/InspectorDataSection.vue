@@ -319,19 +319,22 @@ watch(
       </template>
     </template>
 
-    <!-- .stop on the switch: the slider toggles itself; without it the wrapping
-         label would forward a second click to the hidden checkbox. -->
-    <label v-if="element.kind === 'shape'" class="maps-inspector-data-section__slot">
+    <!-- No <label> around the switch: its slider toggles itself, and a label
+         would pass the click on to the hidden checkbox, switching it back. -->
+    <span v-if="element.kind === 'shape'" class="maps-inspector-data-section__slot">
       <CmkSwitch
         :model-value="element.data_slot ?? false"
         :aria-labelledby="slotLabelId"
         @update:model-value="emit('patch', { data_slot: $event })"
-        @click.stop
       />
-      <span :id="slotLabelId" class="maps-inspector-data-section__slot-label">
+      <span
+        :id="slotLabelId"
+        class="maps-inspector-data-section__slot-label"
+        @click="emit('patch', { data_slot: !element.data_slot })"
+      >
         {{ _t('Data slot (fill in connect mode)') }}
       </span>
-    </label>
+    </span>
   </section>
 </template>
 

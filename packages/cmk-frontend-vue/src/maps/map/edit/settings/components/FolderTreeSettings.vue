@@ -135,28 +135,29 @@ const pickedSites = computed<string[]>({
     </EditField>
 
     <div class="maps-folder-tree-settings__toggles">
-      <!-- .stop on the switches: the slider toggles itself, and the wrapping
-           label would forward a second click to the hidden checkbox. -->
-      <label class="maps-folder-tree-settings__toggle">
-        <CmkSwitch
-          v-model="form.ft_show_empty_folders"
-          :aria-labelledby="labelIds.emptyFolders"
-          @click.stop
-        />
-        <span :id="labelIds.emptyFolders">{{ _t('Show empty folders') }}</span>
-      </label>
-      <label class="maps-folder-tree-settings__toggle">
-        <CmkSwitch
-          v-model="form.ft_show_services"
-          :aria-labelledby="labelIds.services"
-          @click.stop
-        />
-        <span :id="labelIds.services">{{ _t('Expand hosts to their services') }}</span>
-      </label>
-      <label class="maps-folder-tree-settings__toggle">
-        <CmkSwitch v-model="form.problems_only" :aria-labelledby="labelIds.problems" @click.stop />
-        <span :id="labelIds.problems">{{ _t('Show only folders/hosts with problems') }}</span>
-      </label>
+      <!-- No <label> around the switches: a slider toggles itself, and a label
+           would pass the click on to the hidden checkbox, switching it back. -->
+      <span class="maps-folder-tree-settings__toggle">
+        <CmkSwitch v-model="form.ft_show_empty_folders" :aria-labelledby="labelIds.emptyFolders" />
+        <span
+          :id="labelIds.emptyFolders"
+          @click="form.ft_show_empty_folders = !form.ft_show_empty_folders"
+        >
+          {{ _t('Show empty folders') }}
+        </span>
+      </span>
+      <span class="maps-folder-tree-settings__toggle">
+        <CmkSwitch v-model="form.ft_show_services" :aria-labelledby="labelIds.services" />
+        <span :id="labelIds.services" @click="form.ft_show_services = !form.ft_show_services">
+          {{ _t('Expand hosts to their services') }}
+        </span>
+      </span>
+      <span class="maps-folder-tree-settings__toggle">
+        <CmkSwitch v-model="form.problems_only" :aria-labelledby="labelIds.problems" />
+        <span :id="labelIds.problems" @click="form.problems_only = !form.problems_only">
+          {{ _t('Show only folders/hosts with problems') }}
+        </span>
+      </span>
       <EditField
         v-if="form.problems_only"
         :label="_t('Problem severity')"
@@ -174,14 +175,15 @@ const pickedSites = computed<string[]>({
           @update:model-value="form.ft_problems_severity = ($event as 'any' | 'critical') ?? 'any'"
         />
       </EditField>
-      <label class="maps-folder-tree-settings__toggle">
-        <CmkSwitch
-          v-model="form.ft_only_hard_states"
-          :aria-labelledby="labelIds.hardStates"
-          @click.stop
-        />
-        <span :id="labelIds.hardStates">{{ _t('Use hard states only') }}</span>
-      </label>
+      <span class="maps-folder-tree-settings__toggle">
+        <CmkSwitch v-model="form.ft_only_hard_states" :aria-labelledby="labelIds.hardStates" />
+        <span
+          :id="labelIds.hardStates"
+          @click="form.ft_only_hard_states = !form.ft_only_hard_states"
+        >
+          {{ _t('Use hard states only') }}
+        </span>
+      </span>
     </div>
   </SettingsSection>
 </template>

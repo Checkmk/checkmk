@@ -85,7 +85,7 @@ const { _t } = usei18n()
       <CmkLabel>{{ _t('Monitor menu') }}</CmkLabel>
       <CmkCheckbox
         :model-value="access.hideInMonitorMenu.value"
-        :label="_t('Hide this map in the Monitor menu')"
+        :label="_t('Hide this map from the Monitor menu')"
         @update:model-value="access.setHideInMonitorMenu"
       />
     </div>

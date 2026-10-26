@@ -33,11 +33,10 @@ interface CapturedEvents {
   slide: Record<string, unknown> | null
   patches: Record<string, unknown>[]
   group: number
-  save: number
 }
 
 function renderPanel(selection: PresentationElement[]): CapturedEvents {
-  const captured = reactive<CapturedEvents>({ slide: null, patches: [], group: 0, save: 0 })
+  const captured = reactive<CapturedEvents>({ slide: null, patches: [], group: 0 })
   render(
     defineComponent({
       components: { PresentationInspectorPanel },
@@ -53,9 +52,6 @@ function renderPanel(selection: PresentationElement[]): CapturedEvents {
           },
           onGroup: () => {
             captured.group += 1
-          },
-          onSave: () => {
-            captured.save += 1
           }
         }
       },
@@ -66,11 +62,9 @@ function renderPanel(selection: PresentationElement[]): CapturedEvents {
           connection-id="live_1"
           :targets="[]"
           background-image-name=""
-          save-label=""
           @slide="onSlide"
           @patch="onPatch"
           @group="onGroup"
-          @save="onSave"
         />
       `
     }),
@@ -197,13 +191,6 @@ describe('PresentationInspectorPanel', () => {
 
     await user.click(screen.getByRole('button', { name: 'Element' }))
     expect(screen.getByRole('heading', { name: 'Appearance' })).toBeInTheDocument()
-  })
-
-  it('reports save from the topbar save button', async () => {
-    const user = userEvent.setup()
-    const captured = renderPanel([])
-    await user.click(screen.getByRole('button', { name: 'Save now' }))
-    expect(captured.save).toBe(1)
   })
 
   it('renames the element via the header input', async () => {

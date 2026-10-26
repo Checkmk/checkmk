@@ -36,7 +36,6 @@ const props = defineProps<{
   connectionId: string
   targets: { id: string; name: string }[]
   backgroundImageName: string
-  saveLabel: string
 }>()
 
 const emit = defineEmits<{
@@ -44,7 +43,6 @@ const emit = defineEmits<{
   delete: []
   duplicate: []
   slide: [Partial<PresentationView>]
-  save: []
   group: []
   ungroup: []
   /** Reopen the template gallery, which greets an empty slide on its own. */
@@ -169,16 +167,6 @@ const slidePresets = SLIDE_PRESETS
           @click="tab = 'element'"
         >
           {{ _t('Element') }}
-        </button>
-      </div>
-      <div class="maps-presentation-inspector-panel__save">
-        <span class="maps-presentation-inspector-panel__save-label">{{ saveLabel }}</span>
-        <button
-          class="maps-presentation-inspector-panel__icon"
-          :title="_t('Save now')"
-          @click="emit('save')"
-        >
-          <PresentationGlyph :svg="ICONS.save" />
         </button>
       </div>
     </div>
@@ -455,19 +443,6 @@ const slidePresets = SLIDE_PRESETS
 .maps-presentation-inspector-panel__tab:disabled {
   opacity: 0.4;
   cursor: default;
-}
-
-.maps-presentation-inspector-panel__save {
-  display: flex;
-  align-items: center;
-  gap: var(--dimension-3);
-  min-width: 0;
-}
-
-.maps-presentation-inspector-panel__save-label {
-  font-size: var(--font-size-normal);
-  color: var(--font-color-dimmed);
-  white-space: nowrap;
 }
 
 .maps-presentation-inspector-panel__grow {

@@ -89,7 +89,7 @@ const doc = useSlideDocument(
   () => props.config,
   () => selection.clear()
 )
-const { local, elements, byId, topLevelId, isGrouped, isHidden, isLocked, history, saveLabel } = doc
+const { local, elements, byId, topLevelId, isGrouped, isHidden, isLocked, history } = doc
 
 const containerRef = ref<HTMLElement | null>(null)
 const slideW = computed(() => local.value.width)
@@ -681,12 +681,10 @@ function patchCurrentSlot(patch: Record<string, unknown>): void {
       :connection-id="config.connection_id"
       :targets="connectorTargets"
       :background-image-name="backgroundImageName"
-      :save-label="saveLabel"
       @patch="editing.patchSelection"
       @delete="editing.remove"
       @duplicate="editing.duplicate"
       @slide="slide.change"
-      @save="doc.saveNow"
       @group="editing.group"
       @ungroup="editing.ungroup"
       @browse-templates="galleryOpen = true"

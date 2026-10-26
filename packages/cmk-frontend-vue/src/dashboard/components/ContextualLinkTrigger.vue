@@ -37,6 +37,7 @@ const entries = computed(() =>
     v-model:open="open"
     :entries="entries"
     :reference="reference"
+    in-svg
   >
     <slot :several="several" />
   </ContextualLinkAnchor>

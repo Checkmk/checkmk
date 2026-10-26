@@ -18,10 +18,13 @@ import {
 
 import type { ContextualLinkEntry } from '@/dashboard/lib/contextualLinkUrl'
 
+import HtmlBoundary from './HtmlBoundary.vue'
+
 defineProps<{
   entries: ContextualLinkEntry[]
   /** Opens the menu below this element instead of below the trigger. */
   reference?: HTMLElement | null | undefined
+  inSvg?: boolean
 }>()
 
 const open = defineModel<boolean>('open', { default: false })
@@ -32,17 +35,19 @@ const open = defineModel<boolean>('open', { default: false })
     <DropdownMenuTrigger as-child>
       <slot />
     </DropdownMenuTrigger>
-    <DropdownMenuPortal>
-      <DropdownMenuContent
-        class="cmk-vue-app db-contextual-link-chooser"
-        :side-offset="4"
-        v-bind="reference ? { reference, align: 'start' } : {}"
-      >
-        <DropdownMenuItem v-for="(entry, index) in entries" :key="index" as-child>
-          <a :href="entry.href" class="db-contextual-link-chooser__item">{{ entry.title }}</a>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenuPortal>
+    <HtmlBoundary :in-svg="inSvg">
+      <DropdownMenuPortal>
+        <DropdownMenuContent
+          class="cmk-vue-app db-contextual-link-chooser"
+          :side-offset="4"
+          v-bind="reference ? { reference, align: 'start' } : {}"
+        >
+          <DropdownMenuItem v-for="(entry, index) in entries" :key="index" as-child>
+            <a :href="entry.href" class="db-contextual-link-chooser__item">{{ entry.title }}</a>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenuPortal>
+    </HtmlBoundary>
   </DropdownMenuRoot>
 </template>
 

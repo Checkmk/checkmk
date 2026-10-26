@@ -17,6 +17,7 @@ defineProps<{
   title?: string | undefined
   /** Opens the menu of several below this element instead of below the link. */
   reference?: HTMLElement | null | undefined
+  inSvg?: boolean
 }>()
 
 const open = defineModel<boolean>('open', { default: false })
@@ -38,6 +39,7 @@ defineSlots<{ default(props: { several: boolean }): unknown }>()
     v-model:open="open"
     :entries="entries"
     :reference="reference"
+    :in-svg="inSvg"
   >
     <a role="button" tabindex="0" class="db-contextual-link-anchor" :title="title">
       <slot :several="true" />

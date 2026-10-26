@@ -106,6 +106,24 @@ describe('ContextualLinkTrigger', () => {
     expect(button).toHaveAttribute('aria-expanded', 'true')
   })
 
+  it('opens its menu as HTML from inside an SVG figure', async () => {
+    const figure = defineComponent({
+      setup: () => () =>
+        h('svg', [
+          h(
+            ContextualLinkTrigger,
+            { links: [SEARCHHOST, SEARCHSVC], linkProperties: DOWN_HOSTS, filters: {} },
+            { default: () => h('text', 'Down') }
+          )
+        ])
+    })
+    render(figure)
+
+    await userEvent.click(screen.getByText('Down'))
+
+    expect(await screen.findByRole('menu')).toBeInstanceOf(HTMLElement)
+  })
+
   it('tells its slot whether it offers several links', () => {
     render(ContextualLinkTrigger, {
       props: { links: [SEARCHHOST, SEARCHSVC], linkProperties: DOWN_HOSTS, filters: {} },

@@ -1013,6 +1013,12 @@ def evaluate_stats(query: str, columns: list[ColumnName], result: ResultList) ->
             ...                [], [{'state': 0}, {'state': 2}, {'state': 1}])
             [{'stat_1': 2, 'stat_2': 1}]
 
+        A negation replaces the counting directive before it
+
+            >>> evaluate_stats("Stats: state = 2\\nStatsNegate:\\nStats: state = 0\\nStatsNegate:",
+            ...                [], [{'state': 0}, {'state': 2}, {'state': 2}])
+            [{'stat_1': 1, 'stat_2': 2}]
+
         Only counting directives combine
 
             >>> evaluate_stats("Stats: sum state\\nStats: state = 0\\nStatsAnd: 2", [],
@@ -1081,7 +1087,7 @@ def _stats_reducers(query: str) -> list[ReduceFunc]:
             operands = [_counting_operand(stack.pop()) for _ in range(int(operand_count))]
             stack.append(_combined(all if combinator == "StatsAnd" else any, operands))
         elif line.startswith("StatsNegate:"):
-            raise LivestatusTestingError("StatsNegate is not yet implemented!")
+            stack.append(_negated(_counting_operand(stack.pop())))
     return stack
 
 
@@ -1097,6 +1103,10 @@ def _combined(
     combine: Callable[[Iterable[bool]], bool], operands: list[FilterKeyFunc]
 ) -> _CountingColumn:
     return _CountingColumn(lambda entry: combine(operand(entry) for operand in operands))
+
+
+def _negated(operand: FilterKeyFunc) -> _CountingColumn:
+    return _CountingColumn(lambda entry: not operand(entry))
 
 
 def _counting_operand(column: ReduceFunc) -> FilterKeyFunc:

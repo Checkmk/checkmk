@@ -10,6 +10,7 @@ import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
+import EditField from '@/maps/map/edit/components/EditField.vue'
 import type { PresentationTheme, ShapeElement } from '@/maps/types/api'
 
 import { fieldNumber } from '../../elements'
@@ -51,38 +52,48 @@ const dashOptions = computed(() => ({
   <CmkCatalogPanel :title="_t('Appearance')">
     <div class="maps-inspector-appearance-section">
       <div class="maps-inspector-appearance-section__row">
-        <div v-if="!isConnector" class="maps-inspector-appearance-section__field">
-          <span class="maps-cap">{{ _t('Fill') }}</span>
+        <EditField
+          v-if="!isConnector"
+          class="maps-inspector-appearance-section__field"
+          :label="_t('Fill')"
+        >
           <ColorField
             :label="_t('Fill')"
             :value="element.fill"
             :default-color="tokens['--pres-shape-fill']"
             @set="emit('patch', { fill: $event })"
           />
-        </div>
-        <div class="maps-inspector-appearance-section__field">
-          <span class="maps-cap">{{ _t('Stroke') }}</span>
+        </EditField>
+        <EditField class="maps-inspector-appearance-section__field" :label="_t('Stroke')">
           <ColorField
             :label="_t('Stroke')"
             :value="element.stroke"
             :default-color="tokens['--pres-shape-stroke']"
             @set="emit('patch', { stroke: $event })"
           />
-        </div>
-        <label class="maps-inspector-appearance-section__num">
-          <span class="maps-cap">{{ _t('Width') }}</span>
+        </EditField>
+        <EditField
+          v-slot="{ id }"
+          class="maps-inspector-appearance-section__num"
+          labels-control
+          :label="_t('Width')"
+        >
           <CmkInput
+            :id="id"
             type="number"
             :model-value="element.stroke_width"
             min="0"
             max="64"
             @update:model-value="patch('stroke_width', $event)"
           />
-        </label>
+        </EditField>
       </div>
       <div class="maps-inspector-appearance-section__row">
-        <div v-if="!element.flow" class="maps-inspector-appearance-section__field">
-          <span class="maps-cap">{{ _t('Stroke style') }}</span>
+        <EditField
+          v-if="!element.flow"
+          class="maps-inspector-appearance-section__field"
+          :label="_t('Stroke style')"
+        >
           <CmkDropdown
             :model-value="element.dash"
             :options="dashOptions"
@@ -90,22 +101,31 @@ const dashOptions = computed(() => ({
             width="fill"
             @update:model-value="emit('patch', { dash: $event })"
           />
-        </div>
-        <div v-else class="maps-inspector-appearance-section__field">
-          <span class="maps-cap">{{ _t('Stroke style') }}</span>
+        </EditField>
+        <EditField
+          v-else
+          class="maps-inspector-appearance-section__field"
+          :label="_t('Stroke style')"
+        >
           <span class="maps-inspector-appearance-section__note">{{
             _t('Flow animation overrides the stroke style')
           }}</span>
-        </div>
-        <label v-if="element.shape === 'rect'" class="maps-inspector-appearance-section__num">
-          <span class="maps-cap">{{ _t('Radius') }}</span>
+        </EditField>
+        <EditField
+          v-if="element.shape === 'rect'"
+          v-slot="{ id }"
+          class="maps-inspector-appearance-section__num"
+          labels-control
+          :label="_t('Radius')"
+        >
           <CmkInput
+            :id="id"
             type="number"
             :model-value="element.corner_radius"
             min="0"
             @update:model-value="patch('corner_radius', $event)"
           />
-        </label>
+        </EditField>
       </div>
     </div>
   </CmkCatalogPanel>
@@ -126,16 +146,10 @@ const dashOptions = computed(() => ({
 }
 
 .maps-inspector-appearance-section__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
   min-width: 0;
 }
 
 .maps-inspector-appearance-section__num {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
   width: 76px;
 }
 

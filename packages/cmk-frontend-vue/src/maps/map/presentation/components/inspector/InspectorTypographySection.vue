@@ -11,6 +11,7 @@ import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
+import EditField from '@/maps/map/edit/components/EditField.vue'
 import type { PresentationTheme, TextElement } from '@/maps/types/api'
 
 import { fieldNumber } from '../../elements'
@@ -50,8 +51,7 @@ const alignOptions = computed(() => [
 <template>
   <CmkCatalogPanel :title="_t('Typography')">
     <div class="maps-inspector-typography-section">
-      <div class="maps-inspector-typography-section__field">
-        <span class="maps-cap">{{ _t('Font') }}</span>
+      <EditField class="maps-inspector-typography-section__field" :label="_t('Font')">
         <CmkDropdown
           :model-value="element.font_family ?? ''"
           :options="fontOptions"
@@ -59,20 +59,25 @@ const alignOptions = computed(() => [
           :label="_t('Font')"
           @update:model-value="emit('patch', { font_family: $event || null })"
         />
-      </div>
+      </EditField>
       <div class="maps-inspector-typography-section__row">
-        <label class="maps-inspector-typography-section__num">
-          <span class="maps-cap">{{ _t('Size') }}</span>
+        <EditField
+          v-slot="{ id }"
+          class="maps-inspector-typography-section__num"
+          labels-control
+          :label="_t('Size')"
+        >
           <CmkInput
+            :id="id"
             type="number"
+            unit="px"
             :model-value="element.font_size"
             min="4"
             max="512"
             @update:model-value="patch('font_size', $event)"
           />
-        </label>
-        <div class="maps-inspector-typography-section__field">
-          <span class="maps-cap">{{ _t('Style') }}</span>
+        </EditField>
+        <EditField class="maps-inspector-typography-section__field" :label="_t('Style')">
           <div class="maps-inspector-typography-section__toggles">
             <button
               class="maps-inspector-typography-section__toggle"
@@ -99,35 +104,32 @@ const alignOptions = computed(() => [
               {{ _t('I') }}
             </button>
           </div>
-        </div>
+        </EditField>
       </div>
-      <div class="maps-inspector-typography-section__field">
-        <span class="maps-cap">{{ _t('Align') }}</span>
+      <EditField class="maps-inspector-typography-section__field" :label="_t('Align')">
         <CmkToggleButtonGroup
           :model-value="element.text_align"
           :options="alignOptions"
           size="small"
           @update:model-value="emit('patch', { text_align: $event })"
         />
-      </div>
+      </EditField>
       <div class="maps-inspector-typography-section__row">
-        <div class="maps-inspector-typography-section__field">
-          <span class="maps-cap">{{ _t('Color') }}</span>
+        <EditField class="maps-inspector-typography-section__field" :label="_t('Color')">
           <ColorField
             :label="_t('Color')"
             :default-color="tokens['--pres-fg']"
             :value="element.color"
             @set="emit('patch', { color: $event })"
           />
-        </div>
-        <div class="maps-inspector-typography-section__field">
-          <span class="maps-cap">{{ _t('Background') }}</span>
+        </EditField>
+        <EditField class="maps-inspector-typography-section__field" :label="_t('Background')">
           <ColorField
             :label="_t('Background')"
             :value="element.background"
             @set="emit('patch', { background: $event })"
           />
-        </div>
+        </EditField>
       </div>
     </div>
   </CmkCatalogPanel>
@@ -149,9 +151,6 @@ const alignOptions = computed(() => [
 
 .maps-inspector-typography-section__field,
 .maps-inspector-typography-section__num {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
   min-width: 0;
   flex: 1;
 }

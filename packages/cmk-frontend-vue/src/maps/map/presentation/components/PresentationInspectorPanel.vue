@@ -14,6 +14,7 @@ import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
 import ImagePicker from '@/maps/image-library/components/ImagePicker.vue'
+import EditField from '@/maps/map/edit/components/EditField.vue'
 import { useMapsApis } from '@/maps/services/context'
 import type { PresentationElement, PresentationTheme, PresentationView } from '@/maps/types/api'
 
@@ -268,18 +269,20 @@ const slidePresets = SLIDE_PRESETS
               </div>
             </div>
             <div class="maps-presentation-inspector-panel__body">
-              <div class="maps-presentation-inspector-panel__row">
-                <span class="maps-cap">{{ _t('Opacity') }}</span>
-                <input
-                  class="maps-presentation-inspector-panel__range"
-                  type="range"
-                  min="0"
-                  max="100"
-                  :value="Math.round(multiOpacity * 100)"
-                  @input="onMultiOpacity"
-                />
-                <span class="maps-range-pct">{{ Math.round(multiOpacity * 100) }}%</span>
-              </div>
+              <EditField v-slot="{ id }" labels-control :label="_t('Opacity')">
+                <div class="maps-presentation-inspector-panel__row">
+                  <input
+                    :id="id"
+                    class="maps-presentation-inspector-panel__range"
+                    type="range"
+                    min="0"
+                    max="100"
+                    :value="Math.round(multiOpacity * 100)"
+                    @input="onMultiOpacity"
+                  />
+                  <span class="maps-range-pct">{{ Math.round(multiOpacity * 100) }}%</span>
+                </div>
+              </EditField>
               <div class="maps-presentation-inspector-panel__row">
                 <CmkButton class="maps-presentation-inspector-panel__grow" @click="emit('group')">{{
                   _t('Group')
@@ -329,26 +332,38 @@ const slidePresets = SLIDE_PRESETS
                     </button>
                   </div>
                   <div class="maps-presentation-inspector-panel__row">
-                    <label class="maps-presentation-inspector-panel__num">
-                      <span class="maps-cap">{{ _t('Width') }}</span>
+                    <EditField
+                      v-slot="{ id }"
+                      class="maps-presentation-inspector-panel__num"
+                      labels-control
+                      :label="_t('Width')"
+                    >
                       <CmkInput
+                        :id="id"
                         type="number"
+                        unit="px"
                         :model-value="view.width"
                         min="320"
                         max="8192"
                         @change="onSideChange('width', $event)"
                       />
-                    </label>
-                    <label class="maps-presentation-inspector-panel__num">
-                      <span class="maps-cap">{{ _t('Height') }}</span>
+                    </EditField>
+                    <EditField
+                      v-slot="{ id }"
+                      class="maps-presentation-inspector-panel__num"
+                      labels-control
+                      :label="_t('Height')"
+                    >
                       <CmkInput
+                        :id="id"
                         type="number"
+                        unit="px"
                         :model-value="view.height"
                         min="320"
                         max="8192"
                         @change="onSideChange('height', $event)"
                       />
-                    </label>
+                    </EditField>
                   </div>
                 </div>
               </CmkCatalogPanel>
@@ -372,11 +387,7 @@ const slidePresets = SLIDE_PRESETS
                     kind="image"
                     @update:model-value="emit('slide', { background_image: $event || null })"
                   />
-                  <CmkButton
-                    class="maps-presentation-inspector-panel__grow"
-                    :disabled="bgUploading"
-                    @click="bgFileInput?.click()"
-                  >
+                  <CmkButton :disabled="bgUploading" @click="bgFileInput?.click()">
                     {{ bgUploading ? _t('Uploading…') : _t('Upload background image…') }}
                   </CmkButton>
                   <input
@@ -527,12 +538,10 @@ const slidePresets = SLIDE_PRESETS
 .maps-presentation-inspector-panel__range {
   flex: 1;
   min-width: 0;
+  accent-color: var(--interactive-accent);
 }
 
 .maps-presentation-inspector-panel__num {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
   flex: 1;
   min-width: 0;
 }

@@ -10,6 +10,7 @@ import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
+import EditField from '@/maps/map/edit/components/EditField.vue'
 import type { PresentationElement } from '@/maps/types/api'
 
 import { fieldNumber } from '../../elements'
@@ -64,33 +65,39 @@ function setOpacity(e: Event): void {
   <CmkCatalogPanel :title="_t('Layout')">
     <div class="maps-inspector-layout-section">
       <div class="maps-inspector-layout-section__grid">
-        <label class="maps-inspector-layout-section__num">
-          <span class="maps-cap">{{ _t('X') }}</span>
+        <EditField v-slot="{ id }" labels-control :label="_t('X')">
           <CmkInput
+            :id="id"
             type="number"
+            unit="px"
             :model-value="round(element.x)"
             @update:model-value="set('x', $event)"
           />
-        </label>
-        <label
-          class="maps-inspector-layout-section__num maps-inspector-layout-section__num--second"
+        </EditField>
+        <EditField
+          v-slot="{ id }"
+          class="maps-inspector-layout-section__second-column"
+          labels-control
+          :label="_t('Y')"
         >
-          <span class="maps-cap">{{ _t('Y') }}</span>
           <CmkInput
+            :id="id"
             type="number"
+            unit="px"
             :model-value="round(element.y)"
             @update:model-value="set('y', $event)"
           />
-        </label>
-        <label class="maps-inspector-layout-section__num">
-          <span class="maps-cap">{{ _t('W') }}</span>
+        </EditField>
+        <EditField v-slot="{ id }" labels-control :label="_t('W')">
           <CmkInput
+            :id="id"
             type="number"
+            unit="px"
             :model-value="round(element.w)"
             min="8"
             @update:model-value="setSize('w', $event)"
           />
-        </label>
+        </EditField>
         <button
           type="button"
           class="maps-inspector-layout-section__aspect"
@@ -106,30 +113,32 @@ function setOpacity(e: Event): void {
             size="small"
           />
         </button>
-        <label class="maps-inspector-layout-section__num">
-          <span class="maps-cap">{{ _t('H') }}</span>
+        <EditField v-slot="{ id }" labels-control :label="_t('H')">
           <CmkInput
+            :id="id"
             type="number"
+            unit="px"
             :model-value="round(element.h)"
             min="8"
             @update:model-value="setSize('h', $event)"
           />
-        </label>
-        <label class="maps-inspector-layout-section__num">
-          <span class="maps-cap">{{ _t('Rotation') }}</span>
+        </EditField>
+        <EditField v-slot="{ id }" labels-control :label="_t('Rotation')">
           <CmkInput
+            :id="id"
             type="number"
+            unit="°"
             :model-value="Math.round(element.rotation)"
             min="-360"
             max="360"
             @update:model-value="set('rotation', $event)"
           />
-        </label>
+        </EditField>
       </div>
-      <div class="maps-inspector-layout-section__field">
-        <span class="maps-cap">{{ _t('Opacity') }}</span>
+      <EditField v-slot="{ id }" labels-control :label="_t('Opacity')">
         <div class="maps-inspector-layout-section__row">
           <input
+            :id="id"
             class="maps-inspector-layout-section__range"
             type="range"
             min="0"
@@ -140,7 +149,7 @@ function setOpacity(e: Event): void {
           />
           <span class="maps-range-pct">{{ Math.round(element.opacity * 100) }}%</span>
         </div>
-      </div>
+      </EditField>
     </div>
   </CmkCatalogPanel>
 </template>
@@ -161,20 +170,8 @@ function setOpacity(e: Event): void {
   align-items: end;
 }
 
-.maps-inspector-layout-section__num {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
-}
-
-.maps-inspector-layout-section__num--second {
+.maps-inspector-layout-section__second-column {
   grid-column: 3;
-}
-
-.maps-inspector-layout-section__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
 }
 
 .maps-inspector-layout-section__row {
@@ -186,6 +183,7 @@ function setOpacity(e: Event): void {
 .maps-inspector-layout-section__range {
   flex: 1;
   min-width: 0;
+  accent-color: var(--interactive-accent);
 }
 
 .maps-inspector-layout-section__aspect {

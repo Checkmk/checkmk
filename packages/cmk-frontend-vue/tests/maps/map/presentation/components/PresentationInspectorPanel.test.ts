@@ -155,6 +155,11 @@ describe('PresentationInspectorPanel', () => {
     expect(screen.getByText('Show as')).toBeInTheDocument()
   })
 
+  it('names the opacity slider by its label', () => {
+    renderPanel([createElement('rect', 0, 0)])
+    expect(screen.getByRole('slider', { name: 'Opacity' })).toBeInTheDocument()
+  })
+
   it('hides the layout numbers for connectors', () => {
     const line = createElement('line', 0, 0)
     renderPanel([line])

@@ -10,6 +10,7 @@ import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, onMounted, ref, watch } from 'vue'
 
+import EditField from '@/maps/map/edit/components/EditField.vue'
 import { useConnections } from '@/maps/services/context'
 import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
@@ -160,11 +161,7 @@ function onAggregationChange(v: string): void {
 
 <template>
   <div class="maps-presentation-binding-form">
-    <div
-      v-if="connectionOptions.suggestions.length > 1"
-      class="maps-presentation-binding-form__field"
-    >
-      <span class="maps-cap">{{ _t('Connection') }}</span>
+    <EditField v-if="connectionOptions.suggestions.length > 1" :label="_t('Connection')">
       <CmkDropdown
         :model-value="element.connection_id ?? DEFAULT_CONNECTION"
         :options="connectionOptions"
@@ -172,10 +169,9 @@ function onAggregationChange(v: string): void {
         :label="_t('Connection')"
         @update:model-value="onConnectionChange"
       />
-    </div>
+    </EditField>
 
-    <div class="maps-presentation-binding-form__field">
-      <span class="maps-cap">{{ _t('Object type') }}</span>
+    <EditField :label="_t('Object type')">
       <CmkDropdown
         :model-value="bindKind"
         :options="bindKindOptions"
@@ -183,11 +179,10 @@ function onAggregationChange(v: string): void {
         :label="_t('Object type')"
         @update:model-value="onBindKindChange"
       />
-    </div>
+    </EditField>
 
     <template v-if="bindKind === 'host'">
-      <div class="maps-presentation-binding-form__field">
-        <span class="maps-cap">{{ _t('Host') }}</span>
+      <EditField :label="_t('Host')">
         <MapsObjectField
           kind="host"
           :label="_t('Host')"
@@ -195,9 +190,8 @@ function onAggregationChange(v: string): void {
           :placeholder="_t('Bind to host…')"
           @update:model-value="onHostChange"
         />
-      </div>
-      <div class="maps-presentation-binding-form__field">
-        <span class="maps-cap">{{ _t('Service (optional)') }}</span>
+      </EditField>
+      <EditField :label="_t('Service (optional)')">
         <MapsObjectField
           kind="service"
           :host-name="element.host_name ?? ''"
@@ -206,16 +200,13 @@ function onAggregationChange(v: string): void {
           :placeholder="_t('Whole host if empty')"
           @update:model-value="onServiceChange"
         />
-      </div>
+      </EditField>
     </template>
 
-    <div
+    <EditField
       v-else-if="bindKind === 'hostgroup' || bindKind === 'servicegroup'"
-      class="maps-presentation-binding-form__field"
+      :label="bindKind === 'hostgroup' ? _t('Host group') : _t('Service group')"
     >
-      <span class="maps-cap">{{
-        bindKind === 'hostgroup' ? _t('Host group') : _t('Service group')
-      }}</span>
       <MapsObjectField
         :kind="bindKind"
         :label="bindKind === 'hostgroup' ? _t('Host group') : _t('Service group')"
@@ -223,10 +214,9 @@ function onAggregationChange(v: string): void {
         :placeholder="_t('Pick a group…')"
         @update:model-value="onGroupChange"
       />
-    </div>
+    </EditField>
 
-    <div v-else class="maps-presentation-binding-form__field">
-      <span class="maps-cap">{{ _t('BI aggregation') }}</span>
+    <EditField v-else :label="_t('BI aggregation')">
       <MapsSuggestionField
         :label="_t('BI aggregation')"
         :model-value="element.aggregation_id ?? ''"
@@ -235,7 +225,7 @@ function onAggregationChange(v: string): void {
         :empty-hint="noAggregationsHint(_t)"
         @update:model-value="onAggregationChange"
       />
-    </div>
+    </EditField>
 
     <!-- A gadget's metric belongs with the service it reads — host/service
          consumers drop the picker in here, right under the binding. -->
@@ -255,11 +245,5 @@ function onAggregationChange(v: string): void {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-5);
-}
-
-.maps-presentation-binding-form__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
 }
 </style>

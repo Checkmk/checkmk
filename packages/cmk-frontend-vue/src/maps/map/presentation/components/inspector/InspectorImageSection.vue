@@ -11,6 +11,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import ImagePicker from '@/maps/image-library/components/ImagePicker.vue'
+import EditField from '@/maps/map/edit/components/EditField.vue'
 import type { ImageElement } from '@/maps/types/api'
 
 import { imageRefName } from '../../elements'
@@ -48,16 +49,14 @@ function onUrlChange(e: Event): void {
 <template>
   <CmkCatalogPanel :title="_t('Image')">
     <div class="maps-inspector-image-section">
-      <div class="maps-inspector-image-section__field">
-        <span class="maps-cap">{{ _t('From image library') }}</span>
+      <EditField :label="_t('From image library')">
         <ImagePicker
           :model-value="storeImageName"
           :placeholder="_t('Choose an image…')"
           @update:model-value="emit('patch', { src: $event || null })"
         />
-      </div>
-      <div class="maps-inspector-image-section__field">
-        <span class="maps-cap">{{ _t('…or image URL') }}</span>
+      </EditField>
+      <EditField :label="_t('…or image URL')">
         <CmkInput
           field-size="fill"
           :model-value="externalSrc"
@@ -65,9 +64,8 @@ function onUrlChange(e: Event): void {
           :placeholder="_t('https://…')"
           @change="onUrlChange"
         />
-      </div>
-      <div class="maps-inspector-image-section__field">
-        <span class="maps-cap">{{ _t('Fit') }}</span>
+      </EditField>
+      <EditField :label="_t('Fit')">
         <CmkDropdown
           :model-value="element.fit"
           :options="fitOptions"
@@ -75,7 +73,7 @@ function onUrlChange(e: Event): void {
           width="fill"
           @update:model-value="emit('patch', { fit: $event })"
         />
-      </div>
+      </EditField>
     </div>
   </CmkCatalogPanel>
 </template>
@@ -86,11 +84,5 @@ function onUrlChange(e: Event): void {
   flex-direction: column;
   gap: var(--dimension-4);
   padding: var(--dimension-4) 0;
-}
-
-.maps-inspector-image-section__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
 }
 </style>

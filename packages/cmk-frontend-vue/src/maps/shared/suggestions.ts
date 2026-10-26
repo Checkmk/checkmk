@@ -4,7 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { Response, type Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
+import type usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type Ref, computed } from 'vue'
 
 /**
@@ -66,4 +68,11 @@ export function suggestionList(
   loading: () => boolean = () => false
 ): SuggestionList {
   return { items: computed(items), loading: computed(loading) }
+}
+
+/** What every BI aggregation picker says when it has nothing to offer. */
+export function noAggregationsHint(_t: ReturnType<typeof usei18n>['_t']): TranslatedString {
+  return _t(
+    'No BI aggregations available. Either you are not permitted to see them or no BI aggregation is configured.'
+  )
 }

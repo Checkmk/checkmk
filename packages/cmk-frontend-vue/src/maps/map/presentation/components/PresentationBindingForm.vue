@@ -13,7 +13,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useConnections } from '@/maps/services/context'
 import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
-import { suggestionList, titledSuggestions } from '@/maps/shared/suggestions'
+import { noAggregationsHint, suggestionList, titledSuggestions } from '@/maps/shared/suggestions'
 import type { AggregationInfo, DataElement, ShapeElement } from '@/maps/types/api'
 
 import { EMPTY_BINDING } from '../binding'
@@ -232,7 +232,7 @@ function onAggregationChange(v: string): void {
         :model-value="element.aggregation_id ?? ''"
         :list="aggregationList"
         :placeholder="_t('Pick an aggregation…')"
-        :empty-hint="_t('No aggregations available')"
+        :empty-hint="noAggregationsHint(_t)"
         @update:model-value="onAggregationChange"
       />
     </div>

@@ -30,6 +30,7 @@ import MapsColorInput from '@/maps/shared/components/MapsColorInput.vue'
 import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
 import MapsTextArea from '@/maps/shared/components/MapsTextArea.vue'
+import { noAggregationsHint } from '@/maps/shared/suggestions'
 import type { MapElement, MonitoredObjectType } from '@/maps/types/api'
 import { dyngroupTypeOptions, lineObjectTypeOptions } from '@/maps/utils/dropdownOptions'
 
@@ -181,11 +182,7 @@ const showsRecognizeServices = computed(() => choosesServiceCounting(type.value,
           :label="_t('BI aggregation')"
           :list="suggestions.aggregations"
           :placeholder="_t('aggregation id')"
-          :empty-hint="
-            _t(
-              'No BI aggregations available — none are configured in Checkmk, or your user has no permission to view them.'
-            )
-          "
+          :empty-hint="noAggregationsHint(_t)"
         />
       </PropertyRow>
       <PropertyRow v-if="!isLine" v-slot="{ id }" labels-control :label="_t('Expand depth')">

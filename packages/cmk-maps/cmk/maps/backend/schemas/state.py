@@ -51,6 +51,9 @@ class ObjectState(BaseModel):
     last_state_change: float | None = None
     # Set in distributed Checkmk setups to identify the originating site.
     site_id: str | None = None
+    # The host an ``auto_host`` presentation tile was bound to: only the daemon
+    # resolves it, and the tile's name and commands need it.
+    host_name: str | None = None
     # Populated only for type=='aggregation' when the MapElement has expand_depth > 0.
     tree: AggregationNode | None = None
     # Aggregated service-state counts; populated only for type=='host'.

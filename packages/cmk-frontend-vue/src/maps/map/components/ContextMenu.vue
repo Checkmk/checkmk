@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 
 import MapsMenu from '@/maps/shared/components/MapsMenu.vue'
 import MapsMenuItem from '@/maps/shared/components/MapsMenuItem.vue'
@@ -158,10 +158,35 @@ const hostServicesUrl = computed(() => {
     { site: site.value }
   )
 })
+
+// A menu with nothing in it is no menu: it does not open at all.
+const empty = computed(
+  () =>
+    !!props.checkmkUrl &&
+    !renderedTemplate.value &&
+    !hostUrl.value &&
+    !hostServicesUrl.value &&
+    !serviceUrl.value &&
+    !groupUrl.value &&
+    !aggregationUrl.value &&
+    !aggregationOverviewUrl.value &&
+    !lineHasBinding.value &&
+    !props.showEdit
+)
+watch(
+  empty,
+  (isEmpty) => {
+    if (isEmpty) {
+      emit('close')
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
   <MapsMenu
+    v-if="!empty"
     :x="x"
     :y="y"
     :label="displayName"

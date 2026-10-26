@@ -52,7 +52,15 @@ export function useElementDrillDown(options: DrillDownOptions, emit: DrillDownEm
       return null
     }
     const obj = mapElementFromElement(el)
-    return obj ? { ...obj, connection_id: connectionFor(el) } : null
+    // A tile bound to the site's own host learns which host that is only from
+    // its state; its name and every command on it need it.
+    return obj
+      ? {
+          ...obj,
+          host_name: obj.host_name || stateFor(el)?.host_name || null,
+          connection_id: connectionFor(el)
+        }
+      : null
   }
 
   function ariaLabel(el: PresentationElement): string | undefined {

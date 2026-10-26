@@ -805,6 +805,9 @@ async def _get_presentation_states(
         auth_user=auth_user,
         visited_maps=frozenset({cfg.name}),
     )
+    for el in bound:
+        if not el.host_name and (state := state_map.get(el.id)) and (host := _host_of(el)):
+            state_map[el.id] = state.model_copy(update={"host_name": host})
     states = list(state_map.values())
 
     connection_ok = await _derive_connection_ok(states, connection)

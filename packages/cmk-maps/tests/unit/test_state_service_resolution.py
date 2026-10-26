@@ -611,6 +611,24 @@ def test_presentation_map_resolves_group_bindings(
     )
 
 
+def test_presentation_auto_host_tile_names_the_host_it_was_bound_to(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Only the daemon knows which host an ``auto_host`` tile shows; without it
+    in the state the tile has no name and no commands."""
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    monkeypatch.setattr(state_service, "_resolve_primary_host", AsyncMock(return_value="heute"))
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"heute": ObjectState(object_id="x", type="host", state="UP")}
+    )
+    view = PresentationView(elements=[DataElement(id="tile", kind="data", auto_host=True)])
+    map_cfg = MapConfig(name="pres", alias="P", connection_id="mock", view=view)
+
+    result = asyncio.run(get_map_states(map_cfg))
+
+    assert {s.object_id: s.host_name for s in result.states} == {"tile": "heute"}
+
+
 def test_presentation_view_rejects_duplicate_element_ids() -> None:
     with pytest.raises(ValueError, match="duplicate element id"):
         PresentationView(

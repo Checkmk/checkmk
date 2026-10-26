@@ -144,6 +144,13 @@ def test_rest_model_rejects_css_injection_color(field: str) -> None:
         map_from_spec(dense)
 
 
+def test_rest_model_rejects_css_injection_background_color() -> None:
+    dense = DaemonMapConfig.model_validate(_STATIC_MAP).model_dump(mode="json")
+    dense["background_color"] = "#fff; background: url(x)"
+    with pytest.raises(ValidationError):
+        map_from_spec(dense)
+
+
 def test_rest_round_trip_keeps_the_background_layout() -> None:
     laid_out = {**_STATIC_MAP, "background_style": "zoom", "background_position": "center"}
     dense = DaemonMapConfig.model_validate(laid_out).model_dump(mode="json")

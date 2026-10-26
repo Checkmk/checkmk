@@ -121,3 +121,9 @@ def test_background_defaults_to_its_own_size_at_the_top_left() -> None:
 def test_unknown_background_layout_is_rejected(field: str, value: str) -> None:
     with pytest.raises(ValidationError):
         MapConfig.model_validate({"name": "m", field: value})
+
+
+def test_background_color_that_is_no_color_is_rejected() -> None:
+    # It ends up in the canvas' inline style.
+    with pytest.raises(ValidationError):
+        MapConfig.model_validate({"name": "m", "background_color": "red; background: url(x)"})

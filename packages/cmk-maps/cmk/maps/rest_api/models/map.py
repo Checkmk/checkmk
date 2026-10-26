@@ -974,7 +974,7 @@ class MapConfig:
         example="floorplan.png",
         default_factory=ApiOmitted,
     )
-    background_color: str | None | ApiOmitted = api_field(
+    background_color: _Color | None | ApiOmitted = api_field(
         description="Background color.", example="#0f172a", default_factory=ApiOmitted
     )
     background_style: BackgroundStyle | ApiOmitted = api_field(
@@ -1041,7 +1041,7 @@ class MapListEntry:
         example="floorplan.png",
         default_factory=ApiOmitted,
     )
-    background_color: str | None | ApiOmitted = api_field(
+    background_color: _Color | None | ApiOmitted = api_field(
         description="Background color.", example="#0f172a", default_factory=ApiOmitted
     )
     background_style: BackgroundStyle | ApiOmitted = api_field(

@@ -398,6 +398,11 @@ class MapConfig(BaseModel):
     # pathological payload.
     objects: list[MapElement] = Field(default=[], max_length=5000)
 
+    @field_validator("background_color")
+    @classmethod
+    def _validate_background_color(cls, v: str | None) -> str | None:
+        return validate_color(v)
+
 
 class MapCreate(BaseModel):
     _migrate_legacy_keys = model_validator(mode="before")(accept_legacy_backend_id)

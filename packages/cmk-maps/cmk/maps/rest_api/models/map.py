@@ -391,16 +391,20 @@ class MapWorldmapView:
         example="https://tiles.example.com/{z}/{x}/{y}.png",
         default_factory=ApiOmitted,
     )
-    tile_saturate: float | None | ApiOmitted = api_field(
+    tile_saturate: Annotated[float, Field(ge=0, le=100)] | None | ApiOmitted = api_field(
         description="CSS saturate() percent (0..100).", example=100.0, default_factory=ApiOmitted
     )
     auto_source: Literal["all_hosts", "hostgroup", "servicegroup"] | None | ApiOmitted = api_field(
-        description="Automap source that populates geo-tagged hosts.",
+        description="Which geo-tagged hosts are placed on the map automatically.",
         example="all_hosts",
         default_factory=ApiOmitted,
     )
     auto_filter_value: str | ApiOmitted = api_field(
-        description="Automap group filter value.", example="linux", default_factory=ApiOmitted
+        description=(
+            "The name of the host or service group whose geo-tagged hosts are placed automatically."
+        ),
+        example="linux",
+        default_factory=ApiOmitted,
     )
     problems_only: bool | ApiOmitted = api_field(
         description="Show only objects with problems.", example=False, default_factory=ApiOmitted

@@ -82,7 +82,7 @@ export function useMapLifecycle(source: {
       // The daemon inflates the auto-source hosts from the config it was just
       // handed, so they can only be asked for after the connect registered it.
       maps.loadAutoObjects(name, registered).catch((error: unknown) => {
-        report(error, 'Failed to load the hosts of the automap source')
+        report(error, 'Failed to load the automatically placed hosts')
       })
     })()
   })

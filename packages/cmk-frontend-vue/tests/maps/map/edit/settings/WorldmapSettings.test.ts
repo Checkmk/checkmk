@@ -31,7 +31,7 @@ describe('WorldmapSettings', () => {
     shown.value = true
 
     await waitFor(() =>
-      expect(screen.getByRole('combobox', { name: 'Automap source' })).toHaveFocus()
+      expect(screen.getByRole('combobox', { name: 'Automatic object placement' })).toHaveFocus()
     )
   })
 })

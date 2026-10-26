@@ -52,7 +52,7 @@ onMounted(() => {
 const autoSourceOptions = computed(() => ({
   type: 'fixed' as const,
   suggestions: [
-    { name: '', title: _t('None — manual placement only') },
+    { name: '', title: _t('None, place objects manually') },
     { name: 'all_hosts', title: _t('All hosts with geo coordinates') },
     { name: 'hostgroup', title: _t('Hosts in host group…') },
     { name: 'servicegroup', title: _t('Hosts hosting a service in service group…') }
@@ -129,7 +129,7 @@ const tileUrlBlocked = computed(
         :title="_t('Closes settings and switches the map to picker mode.')"
         @click="emit('pick-view')"
       >
-        <CmkIcon name="zoom" size="small" />
+        <CmkIcon name="search" variant="inline" size="small" />
         <span>{{ _t('Pick from map') }}</span>
       </CmkButton>
     </div>
@@ -156,7 +156,12 @@ const tileUrlBlocked = computed(
         "
       />
     </EditField>
-    <EditField v-slot="{ id }" labels-control :label="_t('Map saturation (%)')">
+    <EditField
+      v-slot="{ id }"
+      labels-control
+      :label="_t('Map saturation (%)')"
+      :help="_t('Left empty, the map shows at 100 %, in its full colors.')"
+    >
       <CmkInput
         :id="id"
         v-model="form.worldmap_tile_saturate"
@@ -164,13 +169,13 @@ const tileUrlBlocked = computed(
         :min="0"
         :max="100"
         :step="5"
-        :placeholder="_t('100 (default)')"
+        placeholder="100"
       />
     </EditField>
 
     <div ref="automapSource">
       <EditField
-        :label="_t('Automap source')"
+        :label="_t('Automatic object placement')"
         :help="
           _t(
             'Hosts are auto-discovered from monitoring data via maps_lat/maps_lng labels or LAT/LONG custom variables. They show up alongside any objects you place manually.'
@@ -181,7 +186,7 @@ const tileUrlBlocked = computed(
           ref="automapSourceDropdown"
           :model-value="form.worldmap_auto_source"
           :options="autoSourceOptions"
-          :label="_t('Automap source')"
+          :label="_t('Automatic object placement')"
           width="fill"
           @update:model-value="
             form.worldmap_auto_source = ($event ?? '') as typeof form.worldmap_auto_source

@@ -171,6 +171,13 @@ def test_rest_model_rejects_object_filter_without_filter_header() -> None:
         map_from_spec(dense)
 
 
+def test_rest_model_rejects_tile_saturation_the_daemon_would_reject() -> None:
+    dense = DaemonMapConfig.model_validate(_WORLDMAP_MAP).model_dump(mode="json")
+    dense["view"]["tile_saturate"] = 150
+    with pytest.raises(ValidationError):
+        map_from_spec(dense)
+
+
 def test_rest_model_normalises_valid_object_filter() -> None:
     dense = DaemonMapConfig.model_validate(_WORLDMAP_MAP).model_dump(mode="json")
     dense["objects"][0]["object_filter"] = "Filter: host_name ~ srv"

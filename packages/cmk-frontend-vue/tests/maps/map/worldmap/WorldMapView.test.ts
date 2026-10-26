@@ -70,7 +70,7 @@ describe('WorldMapView — a map with nothing on it', () => {
       onOpenSettings: (focus) => opened.push(focus)
     })
 
-    await userEvent.click(screen.getByRole('button', { name: 'Automap source' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Automatic object placement' }))
 
     expect(opened).toEqual(['automap_source'])
   })

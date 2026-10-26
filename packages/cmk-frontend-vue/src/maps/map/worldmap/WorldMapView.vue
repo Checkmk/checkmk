@@ -99,7 +99,7 @@ const emptyState = computed<{ text: string; toSettings: boolean } | null>(() => 
   return props.canEdit
     ? {
         text: _tp(
-          '%{link} is a button that opens the "Automap source" setting',
+          '%{link} is a button that opens the "Automatic object placement" setting',
           'No objects yet. Use the Edit button at the bottom right to place some, or turn on %{link} to place hosts by their maps_lat and maps_lng labels.'
         ),
         toSettings: true
@@ -261,7 +261,7 @@ defineExpose({
               size="small"
               class="maps-world-map-view__empty-link"
               @click="emit('open-settings', 'automap_source')"
-              >{{ _t('Automap source') }}</CmkButton
+              >{{ _t('Automatic object placement') }}</CmkButton
             >{{ emptyState.text.split('%{link}')[1] }}
           </template>
           <template v-else>{{ emptyState.text }}</template>

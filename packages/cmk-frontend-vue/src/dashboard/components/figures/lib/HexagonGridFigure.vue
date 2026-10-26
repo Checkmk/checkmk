@@ -25,6 +25,8 @@ import {
   neighbourIndex
 } from './hexagon'
 
+const FOCUS_OUTLINE_OFFSET = 5
+
 export interface HexagonShape {
   style: HexagonStyle
   scale: number
@@ -133,7 +135,8 @@ const currentBox = computed(() => {
     y: center.y - layout.boxHeight / 2,
     width: layout.boxWidth,
     height: layout.boxHeight,
-    highlight: hexagonPath(layout.radius, center)
+    highlight: hexagonPath(layout.radius, center),
+    focus: hexagonPath(layout.radius + FOCUS_OUTLINE_OFFSET, center)
   }
 })
 
@@ -285,7 +288,12 @@ async function navigate(event: KeyboardEvent): Promise<void> {
         :d="currentBox.highlight"
         pointer-events="none"
       />
-      <g v-if="currentBox" :key="currentBox.index" ref="linkCell">
+      <g
+        v-if="currentBox"
+        :key="currentBox.index"
+        ref="linkCell"
+        class="db-hexagon-grid-figure__link"
+      >
         <ContextualLinkTrigger
           v-model:open="menuOpen"
           :links="currentBox.cell.links"
@@ -303,6 +311,7 @@ async function navigate(event: KeyboardEvent): Promise<void> {
             fill="transparent"
           />
         </ContextualLinkTrigger>
+        <path class="db-hexagon-grid-figure__focus" :d="currentBox.focus" pointer-events="none" />
       </g>
     </g>
   </svg>
@@ -323,5 +332,19 @@ async function navigate(event: KeyboardEvent): Promise<void> {
 
 .db-hexagon-grid-figure__highlight {
   fill: color-mix(in srgb, var(--font-color) 10%, transparent);
+}
+
+/* The focused hexagon is outlined, instead of the square box of the link around it. */
+.db-hexagon-grid-figure__link > :focus-visible {
+  outline: none;
+}
+
+.db-hexagon-grid-figure__focus {
+  fill: none;
+}
+
+.db-hexagon-grid-figure__link > :focus-visible ~ .db-hexagon-grid-figure__focus {
+  stroke: var(--font-color);
+  stroke-width: 2;
 }
 </style>

@@ -244,7 +244,9 @@ describe('CmkSiteOverviewHostsFigure', () => {
       hosts: [host('alpha'), host('beta', { num_warn: 2 }), host('gamma', { num_crit: 1 })]
     })
 
-    const fills = [...container.querySelectorAll('path')].map((path) => path.style.fill)
+    const fills = [...container.querySelectorAll('path')]
+      .map((path) => path.style.fill)
+      .filter((fill) => fill !== '')
     expect(fills.at(-1)).toBe('var(--background-muted)')
   })
 

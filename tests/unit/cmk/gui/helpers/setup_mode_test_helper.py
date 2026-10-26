@@ -91,6 +91,11 @@ def form_values(page: str, form_name: str) -> dict[str, str]:
     return values
 
 
+def error_messages(page: str) -> list[str]:
+    """The error messages the page shows, e.g. the one refusing a submitted form"""
+    return [div.get_text() for div in BeautifulSoup(page, "html.parser").select("div.error")]
+
+
 def data_table(page: str, title: str | None = None) -> Tag:
     """The titled table, or the first table of a page whose table has no title."""
     soup = BeautifulSoup(page, "html.parser")

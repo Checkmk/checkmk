@@ -10,14 +10,12 @@
 import abc
 import ast
 import contextlib
-import io
 import logging
 import re
 import socket
 import sys
 import time
 import warnings
-import zipfile
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -221,6 +219,7 @@ from ._rulespecs import RulespecLogwatchEC
 from .config_domain import ConfigDomainEventConsole
 from .defines import syslog_facilities, syslog_priorities
 from .helpers import action_choices, service_levels
+from .mib_upload import CompileMib, upload_mibs
 from .permission_section import PERMISSION_SECTION_EVENT_CONSOLE
 
 
@@ -3830,7 +3829,6 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
                         mimetype,
                         content,
                         pending_changes=_pending_changes_for_ec(config=config, acting_user=user.id),
-                        debug=config.debug,
                     )
                 )
                 return None
@@ -3847,144 +3845,25 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         content: bytes,
         *,
         pending_changes: PendingChanges,
-        debug: bool,
     ) -> str:
-        self._validate_mib_file_name(filename)
-
-        if self._is_zipfile(io.BytesIO(content)):
-            msg = self._process_uploaded_zip_file(
-                filename, content, pending_changes=pending_changes, debug=debug
-            )
-        else:
-            if (
-                mimetype == "application/tar"
-                or filename.lower().endswith(".gz")
-                or filename.lower().endswith(".tgz")
-            ):
-                raise Exception(_("Sorry, uploading TAR/GZ files is not yet implemented."))
-
-            msg = self._process_uploaded_mib_file(
-                filename, content, pending_changes=pending_changes, debug=debug
+        def add_change(stored_filename: str, msg: str) -> None:
+            self._add_change(
+                action_name="uploaded-mib",
+                text=_("MIB %(filename)s: %(msg)s") % {"filename": stored_filename, "msg": msg},
+                pending_changes=pending_changes,
             )
 
-        return msg
-
-    # Used zipfile.is_zipfile(io.BytesIO(content)) before, but this only
-    # possible with python 2.7. zipfile is only supporting checking of files by
-    # their path.
-    def _is_zipfile(self, fo: io.BytesIO) -> bool:
-        try:
-            with zipfile.ZipFile(fo) as _opened_file:
-                pass
-            return True
-        except zipfile.BadZipfile:
-            return False
-
-    def _process_uploaded_zip_file(
-        self,
-        filename: str,  # noqa: ARG002
-        content: bytes,
-        *,
-        pending_changes: PendingChanges,
-        debug: bool,
-    ) -> str:
-        with zipfile.ZipFile(io.BytesIO(content)) as zip_obj:
-            messages = []
-            success, fail = 0, 0
-            for entry in zip_obj.infolist():
-                mib_file_name = entry.filename
-                try:
-                    if mib_file_name[-1] == "/":
-                        continue  # silently skip directories
-                    self._validate_mib_file_name(mib_file_name)
-                    with zip_obj.open(mib_file_name) as mib_obj:
-                        messages.append(
-                            self._process_uploaded_mib_file(
-                                mib_file_name,
-                                mib_obj.read(),
-                                pending_changes=pending_changes,
-                                debug=debug,
-                            )
-                        )
-                    success += 1
-                except Exception as e:
-                    messages.append(
-                        _("Skipped %(mib_file_name)s: %(e)s")
-                        % {"mib_file_name": mib_file_name, "e": e}
-                    )
-                    fail += 1
-
-        return "<br>\n".join(
-            messages
-        ) + "<br><br>\nProcessed %d MIB files, skipped %d MIB files" % (success, fail)
-
-    def _process_uploaded_mib_file(
-        self,
-        filename: str,
-        content_bytes: bytes,
-        *,
-        pending_changes: PendingChanges,
-        debug: bool,
-    ) -> str:
-        mibname = filename.split(".", maxsplit=1)[0] if "." in filename else filename
-
-        # FIXME: This is a temporary local fix that should be removed once
-        # handling of file contents uses a uniformly encoded representation
-        try:
-            content = content_bytes.decode("utf-8")
-        except UnicodeDecodeError:
-            content = content_bytes.decode("latin-1")
-
-        msg = self._validate_and_compile_mib(mibname=mibname.upper(), content=content, debug=debug)
-        self._paths.local_mibs_dir.value.mkdir(parents=True, exist_ok=True)
-        with (self._paths.local_mibs_dir.value / filename).open("wb") as f:
-            f.write(content_bytes)
-        self._add_change(
-            action_name="uploaded-mib",
-            text=_("MIB %(filename)s: %(msg)s") % {"filename": filename, "msg": msg},
-            pending_changes=pending_changes,
-        )
-        return msg
-
-    def _validate_mib_file_name(self, filename: str) -> None:
-        if filename.startswith(".") or "/" in filename:
-            raise Exception(_("Invalid file name"))
-
-    def _validate_and_compile_mib(self, *, mibname: str, content: str, debug: bool) -> str:  # noqa: ARG002
-        if not content or content.isspace():
-            raise Exception(_("The file is empty"))
-
-        # The import is deliberately done here and not at module level: the MIB compiler adds
-        # about 4 MB to every process importing it, and every process loading the GUI imports
-        # this module. This way it is only loaded when a MIB is uploaded.
-        from cmk.ec.mib_compiler import compile_mib  # astrein: disable=module-layers
-
-        results = compile_mib(
-            mibname=mibname,
-            content=content,
+        return upload_mibs(
+            filename,
+            mimetype,
+            content,
+            make_compile_mib=_make_compile_mib,
+            paths=self._paths,
             source_dirs=[path for path, _title, _deletable in self._mib_dirs()],
-            search_dirs=[self._paths.compiled_mibs_dir.value],
-            destination_dir=self._paths.compiled_mibs_dir.value,
+            # Saving every change right away gets the stored MIB files activated even if the
+            # request dies before the rest of a zip file is uploaded.
+            on_stored=add_change,
         )
-        errors = []
-        for name, mib_status in sorted(results.items()):
-            if mibname == name and mib_status == "failed":
-                raise Exception(
-                    _("Failed to compile your module: %(error)s")
-                    % {"error": getattr(mib_status, "error")}
-                )
-            if mib_status == "missing":
-                errors.append(_("%(name)s - Dependency missing") % {"name": name})
-            elif mib_status == "failed":
-                errors.append(
-                    _("%(name)s - Failed to compile (%(error)s)")
-                    % {"name": name, "error": getattr(mib_status, "error")}
-                )
-        msg = _("MIB file %(mibname)s uploaded.") % {"mibname": mibname}
-        if errors:
-            msg += "<br>" + _("But there were errors:") + "<br>"
-            msg += "<br>\n".join(errors)
-        return msg
 
     @override
     def page(self, config: Config) -> None:
@@ -4008,6 +3887,15 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             forms.end()
 
             html.hidden_fields()
+
+
+def _make_compile_mib() -> CompileMib:
+    # The import is deliberately done here and not at module level: the MIB compiler adds about 4 MB
+    # to every process importing it, and every process loading the GUI imports this module. This way
+    # it is only loaded when an uploaded MIB gets compiled.
+    from cmk.ec.mib_compiler import compile_mib  # astrein: disable=module-layers
+
+    return compile_mib
 
 
 def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:

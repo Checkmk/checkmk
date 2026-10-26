@@ -148,6 +148,7 @@ py_cmk_test(
         requirement("flask"),
         requirement("httpx"),
         requirement("polyfactory"),
+        requirement("pysmi"),
         requirement("pytest-mock"),
         requirement("python-dateutil"),
         requirement("time-machine"),

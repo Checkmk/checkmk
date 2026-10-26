@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen } from '@testing-library/vue'
 import UclPropertiesPanel from '@ucl/_ucl/components/detail-page/UclPropertiesPanel.vue'
 import type { PanelConfig } from '@ucl/_ucl/types/prop-panel'
 import { PanelStateCreator } from '@ucl/_ucl/types/prop-panel'
@@ -42,6 +42,14 @@ test('renders text input for a string prop', () => {
   }
   render(UclPropertiesPanel, { props: { config, modelValue: { label: 'default' } } })
   screen.getByRole('textbox')
+})
+
+test('renders colour input for a color prop', () => {
+  const config: PanelConfig = {
+    color: { type: 'color', title: 'Color', initialState: '#3cc2ff' }
+  }
+  render(UclPropertiesPanel, { props: { config, modelValue: { color: '#3cc2ff' } } })
+  expect(screen.getByLabelText('Color')).toHaveValue('#3cc2ff')
 })
 
 test('renders number input for a number prop', () => {
@@ -116,6 +124,7 @@ describe('prop type interactions update component', () => {
   const dummyConfig = {
     booleanProp: { type: 'boolean', title: 'Boolean', initialState: false },
     stringProp: { type: 'string', title: 'String', initialState: '' },
+    colorProp: { type: 'color', title: 'Color', initialState: '#000000' },
     numberProp: { type: 'number', title: 'Number', initialState: 0 },
     multilineStringProp: {
       type: 'multiline-string',
@@ -153,6 +162,7 @@ describe('prop type interactions update component', () => {
       props: {
         booleanProp: { type: Boolean, required: true },
         stringProp: { type: String, required: true },
+        colorProp: { type: String, required: true },
         numberProp: { type: Number, required: true },
         multilineStringProp: { type: String, required: true },
         stringArrayProp: { type: Array as PropType<string[]>, required: true },
@@ -163,6 +173,7 @@ describe('prop type interactions update component', () => {
         <div>
           <span data-testid="boolean-prop">{{ booleanProp }}</span>
           <span data-testid="string-prop">{{ stringProp }}</span>
+          <span data-testid="color-prop">{{ colorProp }}</span>
           <span data-testid="number-prop">{{ numberProp }}</span>
           <pre data-testid="multiline-string-prop">{{ multilineStringProp }}</pre>
           <ul data-testid="string-array-prop">
@@ -185,6 +196,7 @@ describe('prop type interactions update component', () => {
         <DummyComponent
           :booleanProp="propState.booleanProp"
           :stringProp="propState.stringProp"
+          :colorProp="propState.colorProp"
           :numberProp="propState.numberProp"
           :multilineStringProp="propState.multilineStringProp"
           :stringArrayProp="propState.stringArrayProp"
@@ -207,6 +219,13 @@ describe('prop type interactions update component', () => {
     expect(screen.getByTestId('string-prop')).toBeEmptyDOMElement()
     await userEvent.type(screen.getByLabelText('String'), 'hello')
     expect(screen.getByTestId('string-prop')).toHaveTextContent('hello')
+  })
+
+  test('color', async () => {
+    render(makeTestApp())
+    expect(screen.getByTestId('color-prop')).toHaveTextContent('#000000')
+    await fireEvent.update(screen.getByLabelText('Color'), '#123456')
+    expect(screen.getByTestId('color-prop')).toHaveTextContent('#123456')
   })
 
   test('number', async () => {

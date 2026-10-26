@@ -21,6 +21,15 @@ export interface StringPropDef {
   hiddenWhen?: (state: Record<string, unknown>) => boolean
 }
 
+export interface ColorPropDef {
+  type: 'color'
+  title: string
+  /** A `#rrggbb` hex color, the only format the native color input accepts. */
+  initialState: string
+  help?: string
+  hiddenWhen?: (state: Record<string, unknown>) => boolean
+}
+
 export interface ListOption<T extends string = string> {
   title: string
   name: NonNullable<T>
@@ -72,6 +81,7 @@ export interface MultiSelectPropDef<T extends string = string> {
 export type PropDef =
   | BoolPropDef
   | StringPropDef
+  | ColorPropDef
   | NumberPropDef
   | ListPropDef<string>
   | MultilineStringPropDef

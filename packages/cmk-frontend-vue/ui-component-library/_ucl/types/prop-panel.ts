@@ -8,6 +8,7 @@ import { type Component, type Ref, ref } from 'vue'
 
 import type {
   BoolPropDef,
+  ColorPropDef,
   ListPropDef,
   MultiSelectPropDef,
   MultilineStringPropDef,
@@ -22,6 +23,7 @@ import type {
 
 export type {
   BoolPropDef,
+  ColorPropDef,
   ListPropDef,
   MultilineStringPropDef,
   MultiSelectPropDef,
@@ -59,7 +61,7 @@ export type PanelState = Record<string, boolean | string | number | string[]>
 
 type InferStateFromDef<T extends PropDef> = T extends BoolPropDef
   ? boolean
-  : T extends StringPropDef
+  : T extends StringPropDef | ColorPropDef
     ? string
     : T extends NumberPropDef
       ? number

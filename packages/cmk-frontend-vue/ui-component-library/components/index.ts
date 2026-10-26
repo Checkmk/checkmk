@@ -22,6 +22,7 @@ import UclCmkButton from './basic-elements/CmkButton/UclCmkButton.vue'
 import UclCmkChip from './basic-elements/CmkChip/UclCmkChip.vue'
 import UclCmkCode from './basic-elements/CmkCode/UclCmkCode.vue'
 import UclCmkColorPicker from './basic-elements/CmkColorPicker/UclCmkColorPicker.vue'
+import UclCmkColorSwatch from './basic-elements/CmkColorSwatch/UclCmkColorSwatch.vue'
 import UclCmkIconButton from './basic-elements/CmkIconButton/UclCmkIconButton.vue'
 import UclCmkIconLink from './basic-elements/CmkIconLink/UclCmkIconLink.vue'
 import UclCmkInlineButton from './basic-elements/CmkInlineButton/UclCmkInlineButton.vue'
@@ -110,6 +111,7 @@ const basicElementsPages = [
   new Page('CmkChip', UclCmkChip),
   new Page('CmkCode', UclCmkCode),
   new Page('CmkColorPicker', UclCmkColorPicker),
+  new Page('CmkColorSwatch', UclCmkColorSwatch, { status: 'new', statusSince: '2026-10-26' }),
   new Page('CmkLabeledSwitch', UclCmkLabeledSwitch),
   new Page('CmkLink', UclCmkLink),
   new Page('CmkSwitch', UclCmkSwitch),

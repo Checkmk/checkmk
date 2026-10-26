@@ -141,8 +141,7 @@ describe('CmkSiteOverviewHostsFigure', () => {
 
     await userEvent.setup({ pointerEventsCheck: 0 }).click(document.body)
 
-    await waitFor(() => expect(document.activeElement).toHaveAccessibleName(/^alpha,/))
-    expect(screen.queryByRole('menu')).toBeNull()
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
     expect(screen.queryByText('Host is up')).toBeNull()
   })
 

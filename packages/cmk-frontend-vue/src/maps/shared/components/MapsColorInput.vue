@@ -124,17 +124,22 @@ function onTyped(value: string): void {
 
 <template>
   <div ref="rootEl" class="maps-color-input">
-    <!-- .stop on the switch: the slider toggles itself, and the wrapping label
-         would forward a second click to the hidden checkbox. -->
-    <label v-if="enableLabel !== undefined" class="maps-color-input__toggle">
+    <!-- No <label> around the switch: its slider toggles itself, and a label
+         would also pass the click on to the hidden checkbox inside, switching
+         it straight back. The text toggles too; the switch carries the name. -->
+    <span v-if="enableLabel !== undefined" class="maps-color-input__toggle">
       <CmkSwitch
         :model-value="enabled"
         :aria-label="_t('%{enable} – %{name}', { enable: enableLabel, name: label })"
         @update:model-value="setEnabled"
-        @click.stop
       />
-      <span>{{ enableLabel }}</span>
-    </label>
+      <span
+        class="maps-color-input__toggle-text"
+        aria-hidden="true"
+        @click="setEnabled(!enabled)"
+        >{{ enableLabel }}</span
+      >
+    </span>
     <span
       class="maps-color-input__swatch"
       :class="{ 'maps-color-input__swatch--disabled': !enabled }"
@@ -173,6 +178,10 @@ function onTyped(value: string): void {
   gap: var(--dimension-4);
   font-size: var(--font-size-normal);
   color: var(--font-color);
+  white-space: nowrap;
+}
+
+.maps-color-input__toggle-text {
   cursor: pointer;
 }
 

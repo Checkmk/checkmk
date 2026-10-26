@@ -7,6 +7,7 @@ import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { describe, expect, it } from 'vitest'
+import { defineComponent, h, ref } from 'vue'
 
 import MapsColorInput from '@/maps/shared/components/MapsColorInput.vue'
 
@@ -85,5 +86,47 @@ describe('MapsColorInput – names', () => {
     renderInput({ enableLabel: untranslated('Use color') })
 
     expect(screen.getByRole('switch', { name: 'Use color – Background' })).toBeInTheDocument()
+  })
+})
+
+describe('MapsColorInput – the switch', () => {
+  /** Bound both ways, as a form binds it, so every toggle feeds back in. */
+  function renderBound() {
+    const value = ref<string | null>(null)
+    render(
+      defineComponent({
+        setup: () => () =>
+          h(MapsColorInput, {
+            modelValue: value.value,
+            'onUpdate:modelValue': (next: string | null) => (value.value = next),
+            defaultColor: '#000000',
+            label: untranslated('Background'),
+            enableLabel: untranslated('Use color'),
+            noneValue: null
+          })
+      }),
+      { global: mapsGlobal() }
+    )
+    return value
+  }
+
+  it('turns the colour on and off on every click', async () => {
+    const value = renderBound()
+    const toggle = screen.getByRole('switch', { name: 'Use color – Background' })
+
+    await userEvent.click(toggle)
+    expect(value.value).toBe('#000000')
+    await userEvent.click(toggle)
+    expect(value.value).toBeNull()
+    await userEvent.click(toggle)
+    expect(value.value).toBe('#000000')
+  })
+
+  it('also toggles from its text', async () => {
+    const value = renderBound()
+
+    await userEvent.click(screen.getByText('Use color'))
+
+    expect(value.value).toBe('#000000')
   })
 })

@@ -35,7 +35,10 @@ const model = defineModel<string>({ required: true })
 
 <style scoped>
 .maps-text-area {
+  box-sizing: border-box;
   width: 100%;
+  max-width: 100%;
+  resize: vertical;
   padding: var(--dimension-3) var(--dimension-4);
   font-family: inherit;
   font-size: var(--font-size-normal);

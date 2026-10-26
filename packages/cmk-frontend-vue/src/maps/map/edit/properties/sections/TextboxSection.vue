@@ -50,10 +50,22 @@ const alignOptions = computed(() => ({
       />
     </PropertyRow>
     <PropertyRow v-slot="{ id }" labels-control :label="_t('Width')">
-      <CmkInput :id="id" v-model="form.textbox_width" type="number" :placeholder="_t('auto')" />
+      <CmkInput
+        :id="id"
+        v-model="form.textbox_width"
+        type="number"
+        unit="px"
+        :placeholder="_t('auto')"
+      />
     </PropertyRow>
     <PropertyRow v-slot="{ id }" labels-control :label="_t('Height')">
-      <CmkInput :id="id" v-model="form.textbox_height" type="number" :placeholder="_t('auto')" />
+      <CmkInput
+        :id="id"
+        v-model="form.textbox_height"
+        type="number"
+        unit="px"
+        :placeholder="_t('auto')"
+      />
     </PropertyRow>
     <PropertyRow v-slot="{ id, label }" labels-control :label="_t('Background')">
       <MapsColorInput

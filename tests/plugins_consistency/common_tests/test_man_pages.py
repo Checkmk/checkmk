@@ -5,8 +5,7 @@
 
 
 import os
-from collections.abc import Mapping, Sequence
-from pathlib import Path
+from collections.abc import Mapping
 
 import pytest
 
@@ -20,29 +19,6 @@ from tests.code_quality.bazel_utils import bazel_repo_root as repo_path
 _NONFREE_INDICATORS = {"nonfree", "non-free"}
 _NONFREE_LICENSE = "Checkmk Enterprise License"
 _FREE_LICENSE = "GPLv2"
-
-_IF64_MAN_PAGE = man_pages.ManPage(
-    name="if64",
-    path=Path("/this/path/is/irrelevant/for/the/test/if64"),
-    title="Monitor Network Interfaces via Standard MIB Using 64-Bit Counters",
-    agents=["snmp"],
-    catalog=["hw", "network", "generic"],
-    license="GPLv2",
-    distribution="check_mk",
-    description=(
-        "This check does the same as {interfaces} but uses 64-bit counters from\nthe {IF-MIB}"
-        " {.1.3.6.1.2.1.31.1.1.1}. This allows to correctly\nmonitor switch ports with a traffic"
-        " of more then 2GB per check interval.\n\nAlso, this check can use {ifAlias} instead if"
-        " ..."  # shortened for this test
-    ),
-    item=None,
-    discovery=None,
-    cluster=None,
-)
-
-
-def man_page_dirs_for_test(tmp_path: Path) -> Mapping[str, Sequence[str]]:
-    return {"additional_test_folders": [str(tmp_path)], **discover_families(raise_errors=True)}
 
 
 @pytest.fixture(scope="module", name="catalog")
@@ -67,45 +43,6 @@ def test_man_page_path_only_shipped() -> None:
     assert mpm["if64"] == repo_path() / "cmk" / "plugins" / "network" / "checkman" / "if64"
 
 
-def test_man_page_path_both_dirs(tmp_path: Path) -> None:
-    (tmp_checkman := tmp_path / "checkman").mkdir()
-    f1 = tmp_checkman / "file1"
-    f1.write_text("x", encoding="utf-8")
-
-    man_page_path_map = man_pages.make_man_page_path_map(
-        man_page_dirs_for_test(tmp_path), PluginGroup.CHECKMAN.value
-    )
-    assert man_page_path_map["file1"] == tmp_checkman / "file1"
-    assert "file2" not in man_page_path_map
-
-    (tmp_checkman / "file2").touch()
-
-    # This tests that make_manpage_path_map is not cached.
-    # Not sure if this is realy required.
-    man_page_path_map = man_pages.make_man_page_path_map(
-        man_page_dirs_for_test(tmp_path), PluginGroup.CHECKMAN.value
-    )
-    assert man_page_path_map["file2"] == tmp_checkman / "file2"
-
-
-def test_all_man_pages(tmp_path: Path) -> None:
-    (tmp_checkman := tmp_path / "checkman").mkdir()
-    (tmp_checkman / ".asd").write_text("", encoding="utf-8")
-    (tmp_checkman / "asd~").write_text("", encoding="utf-8")
-    (tmp_checkman / "if").write_text("", encoding="utf-8")
-
-    pages = man_pages.make_man_page_path_map(
-        man_page_dirs_for_test(tmp_path), PluginGroup.CHECKMAN.value
-    )
-
-    assert len(pages) > 1241
-    assert ".asd" not in pages
-    assert "asd~" not in pages
-
-    assert pages["if"] == tmp_checkman / "if"
-    assert pages["if64"] == repo_path() / "cmk" / "plugins" / "network" / "checkman" / "if64"
-
-
 def test_load_all_man_pages(all_pages: Mapping[str, man_pages.ManPage]) -> None:
     for _name, man_page in all_pages.items():
         assert isinstance(man_page, man_pages.ManPage)
@@ -123,11 +60,6 @@ def test_print_man_page_table(capsys: pytest.CaptureFixture[str]) -> None:
 
     assert len(lines) > 1241
     assert "enterasys_powersupply" in out
-
-
-def man_page_catalog_titles() -> None:
-    assert man_pages.CATALOG_TITLES["hw"]
-    assert man_pages.CATALOG_TITLES["os"]
 
 
 def test_load_man_page_catalog(catalog: man_pages.ManPageCatalog) -> None:
@@ -218,20 +150,6 @@ def test_no_subtree_and_entries_on_same_level(catalog: man_pages.ManPageCatalog)
         assert has_entries != has_categories, (
             "A category must only have entries or categories, not both"
         )
-
-
-def test_print_man_page_nowiki_content() -> None:
-    content = man_pages.NowikiManPageRenderer(_IF64_MAN_PAGE).render_page()
-    assert content.startswith("TI:")
-    assert "\nSA:" in content
-    assert "License:" in content
-
-
-@pytest.mark.usefixtures("capsys")
-def test_print_man_page() -> None:
-    rendered = man_pages.ConsoleManPageRenderer(_IF64_MAN_PAGE).render_page()
-    assert rendered.startswith(" if64    ")
-    assert "\n License: " in rendered
 
 
 def test_missing_catalog_entries_of_man_pages(all_pages: Mapping[str, man_pages.ManPage]) -> None:

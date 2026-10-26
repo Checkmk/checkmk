@@ -21,6 +21,7 @@ py_cmk_test(
     deps = [
         "//cmk/gui:request_globals",
         "//cmk/utils",
+        "//cmk/utils:man_pages",
         "//cmk/utils:msi_patch",
         "//cmk/utils:redis",
         "//cmk/utils:werks",

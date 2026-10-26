@@ -124,9 +124,25 @@ def _make_livestatus_response(response: Response, output_format: str) -> str:
     else:
         raise ValueError(f"Unknown output format: {output_format}")
 
-    code = 200
-    length = len(data)
-    return f"{code:<3} {length:>11}\n{data}"
+    return _response_with_header(200, data)
+
+
+def _response_with_header(code: int, data: str) -> str:
+    """The data with the 16-byte header of `ResponseHeader: fixed16` in front of it.
+
+    >>> _response_with_header(200, "[]")
+    '200           2\\n[]'
+    """
+    return f"{code:<3} {len(data):>11}\n{data}"
+
+
+class _ErrorAnswer(Exception):
+    """The site answers the query with a status other than 200, like the core does."""
+
+    def __init__(self, code: int, message: str) -> None:
+        super().__init__(f"{code}: {message}")
+        self.code = code
+        self.message = message
 
 
 class MockLiveStatusConnection:
@@ -405,6 +421,7 @@ program_start num_hosts num_services max_long_output_size core_pid edition'
         match_type: MatchType = "strict",
         force_pos: int | None = None,
         sites: Collection[SiteName] | None = None,
+        error: tuple[int, str] | None = None,
     ) -> MockLiveStatusConnection:
         """Add a LiveStatus query to be expected by this class.
 
@@ -428,6 +445,10 @@ program_start num_hosts num_services max_long_output_size core_pid edition'
                 Optionally the sites where the query should be expected. NOTE: When this is not
                 given, we default to all configured sites, unless the query stats with `COMMAND`. In
                 this case, we default to the FIRST SITE configured.
+
+            error:
+                Optionally a status and a message. The site then answers the query with them,
+                like the core answers a query that it cannot run, instead of with rows.
 
         Returns:
             The object itself, so you can chain.
@@ -456,7 +477,7 @@ program_start num_hosts num_services max_long_output_size core_pid edition'
             connections = (conn for conn in self.connections.values() if not conn.unreachable)
 
         for single_conn in connections:
-            single_conn.expect_query(query, match_type, force_pos)
+            single_conn.expect_query(query, match_type, force_pos, error)
         return self
 
     def make_site_unreachable(self, site_name: SiteName) -> MockLiveStatusConnection:
@@ -621,7 +642,7 @@ class MockSingleSiteConnection:
         self._site_name = site_name
         self._multisite = multisite_connection
         self._last_response: io.StringIO | None = None
-        self._expected_queries: list[tuple[str, MatchType]] = []
+        self._expected_queries: list[tuple[str, MatchType, tuple[int, str] | None]] = []
         self.unreachable = False
 
         self.socket = FakeSocket(self)
@@ -651,6 +672,7 @@ class MockSingleSiteConnection:
         query: str | list[str],
         match_type: MatchType = "strict",
         force_pos: int | None = None,
+        error: tuple[int, str] | None = None,
     ) -> MockSingleSiteConnection:
         if match_type not in ("strict", "ellipsis", "loose"):
             raise ValueError(f"match_type {match_type!r} not supported.")
@@ -659,9 +681,9 @@ class MockSingleSiteConnection:
             query = "\n".join(query)
 
         if force_pos is not None:
-            self._expected_queries.insert(force_pos, (query, match_type))
+            self._expected_queries.insert(force_pos, (query, match_type, error))
         else:
-            self._expected_queries.append((query, match_type))
+            self._expected_queries.append((query, match_type, error))
         return self
 
     def result_of_next_query(self, query: str) -> tuple[Response, str]:
@@ -674,7 +696,7 @@ class MockSingleSiteConnection:
                 f"{self._format_sent_queries()}"
             )
 
-        expected_query, match_type = self._expected_queries.pop(0)
+        expected_query, match_type, error = self._expected_queries.pop(0)
         output_format = pick_header(query, "OutputFormat", "json")
 
         if query.startswith("GET "):
@@ -699,6 +721,9 @@ class MockSingleSiteConnection:
                 f"{self._format_sent_queries()}"
             )
 
+        if error is not None:
+            raise _ErrorAnswer(*error)
+
         def _generate_output() -> Iterable[list[ColumnName]]:
             if query.startswith("COMMAND"):
                 return
@@ -722,7 +747,13 @@ class MockSingleSiteConnection:
         self._sent_queries.append(data)
         if data[-2:] == b"\n\n":
             data = data[:-2]
-        response, output_format = self.result_of_next_query(data.decode("utf-8"))
+        try:
+            response, output_format = self.result_of_next_query(data.decode("utf-8"))
+        except _ErrorAnswer as answer:
+            # The core ends each error message with a line break (OutputBuffer::setError).
+            error = _response_with_header(answer.code, f"{answer.message}\n")
+            self._last_response = io.StringIO(error)
+            return
         self._last_response = io.StringIO(_make_livestatus_response(response, output_format))
 
     def __enter__(self) -> None:

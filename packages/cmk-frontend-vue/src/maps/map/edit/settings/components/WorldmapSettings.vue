@@ -11,9 +11,10 @@ from the hosts' own coordinates.
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
-import { computed, onMounted, useTemplateRef } from 'vue'
+import { computed, onMounted, useTemplateRef, watch } from 'vue'
 
 import EditField from '@/maps/map/edit/components/EditField.vue'
 import SettingsSection from '@/maps/map/edit/settings/components/SettingsSection.vue'
@@ -24,6 +25,7 @@ import {
   geoViewOutOfRange
 } from '@/maps/map/edit/settings/settingsForm'
 import { useSettings } from '@/maps/services/context'
+import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import { isAllowedTileUrl } from '@/maps/shared/worldmap/tileLayer'
 
 const props = defineProps<{
@@ -59,11 +61,25 @@ const autoSourceOptions = computed(() => ({
   ]
 }))
 
-const needsGroupName = computed(
-  () =>
-    form.value.worldmap_auto_source === 'hostgroup' ||
-    form.value.worldmap_auto_source === 'servicegroup'
+const groupKind = computed(() =>
+  form.value.worldmap_auto_source === 'hostgroup' ||
+  form.value.worldmap_auto_source === 'servicegroup'
+    ? form.value.worldmap_auto_source
+    : null
 )
+
+// A group picked for the other kind of group must not survive the swap; a
+// detour over a choice without a group keeps it.
+let pickedFor = groupKind.value
+watch(groupKind, (kind) => {
+  if (kind === null) {
+    return
+  }
+  if (pickedFor !== null && kind !== pickedFor) {
+    form.value.worldmap_auto_filter_value = ''
+  }
+  pickedFor = kind
+})
 const groupNameMissing = computed(
   () => props.saveAttempted && !form.value.worldmap_auto_filter_value
 )
@@ -194,19 +210,16 @@ const tileUrlBlocked = computed(
         />
       </EditField>
     </div>
-    <EditField
-      v-if="needsGroupName"
-      v-slot="{ id }"
-      labels-control
-      :label="_t('Group name')"
-      required
-    >
-      <CmkInput
-        :id="id"
+    <EditField v-if="groupKind" :label="_t('Group name')" required>
+      <CmkInlineValidation
+        :validation="groupNameMissing ? [_t('Pick a group to discover hosts from.')] : []"
+      />
+      <MapsObjectField
         v-model="form.worldmap_auto_filter_value"
-        :placeholder="_t('group name')"
-        field-size="fill"
-        :external-errors="groupNameMissing ? [_t('Pick a group to discover hosts from.')] : []"
+        :kind="groupKind"
+        :label="_t('Group name')"
+        :placeholder="_t('Select a group')"
+        :has-error="groupNameMissing"
       />
     </EditField>
   </SettingsSection>

@@ -28,6 +28,7 @@ import type { MapEditor } from '@/maps/map/composables/useMapEditor'
 import type { SettingsFocus } from '@/maps/map/edit/settings/settingsForm'
 import type { LineEndpoint } from '@/maps/map/worldmap/composables/useWorldmapLines'
 import type { MarkerMove } from '@/maps/map/worldmap/composables/useWorldmapMarkers'
+import { roundCoordinate } from '@/maps/map/worldmap/coordinates'
 import { type LatLng, type WorldmapViewport, pointObjects } from '@/maps/map/worldmap/geo'
 import { useMaps } from '@/maps/services/context'
 import MapsMenu from '@/maps/shared/components/MapsMenu.vue'
@@ -163,9 +164,12 @@ function onEndpointBind(
   [lat, lng]: LatLng,
   boundTo: string | null
 ): void {
+  const at = { lat: roundCoordinate(lat), lng: roundCoordinate(lng) }
   void props.editor.updateObjectProperties(
     id,
-    endpoint === 1 ? { lat, lng, start_ref: boundTo } : { lat2: lat, lng2: lng, end_ref: boundTo }
+    endpoint === 1
+      ? { ...at, start_ref: boundTo }
+      : { lat2: at.lat, lng2: at.lng, end_ref: boundTo }
   )
 }
 

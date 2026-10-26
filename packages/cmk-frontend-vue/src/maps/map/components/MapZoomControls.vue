@@ -91,6 +91,7 @@ defineEmits<{ 'zoom-in': []; 'zoom-out': []; fit: [] }>()
   justify-content: center;
   width: var(--dimension-9);
   height: var(--dimension-9);
+  margin: 0;
   padding: 0;
   font-size: var(--font-size-large);
   line-height: 1;

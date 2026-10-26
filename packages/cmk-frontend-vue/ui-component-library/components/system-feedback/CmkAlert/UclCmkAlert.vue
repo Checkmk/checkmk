@@ -63,7 +63,7 @@ export const panelConfig = {
     type: 'boolean' as const,
     title: 'Dismissible',
     initialState: false,
-    help: 'Only available for info and success variants. Only has effect when no buttons are enabled.'
+    help: 'Only available for info, success and warning variants. Only has effect when no buttons are enabled.'
   },
   autoDismiss: { type: 'boolean' as const, title: 'Auto Dismiss (6s)', initialState: false },
   mainButton: {

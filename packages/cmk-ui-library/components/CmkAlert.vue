@@ -36,7 +36,7 @@ export type Sizes = 'small' | 'medium'
 export type CmkAlertButton = { title: TranslatedString; onclick: () => void }
 export type CmkAlertOptionalButton = CmkAlertButton & { icon?: SimpleIcons }
 
-const DISMISSIBLE_VARIANTS = ['info', 'success'] as const
+const DISMISSIBLE_VARIANTS = ['info', 'success', 'warning'] as const
 type DismissibleVariants = (typeof DISMISSIBLE_VARIANTS)[number]
 
 const ALERT_TO_BUTTON_VARIANT = {

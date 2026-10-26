@@ -48,10 +48,10 @@ function reset() {
     </section>
 
     <section>
-      <h3>Small: dismissible (info and success only)</h3>
+      <h3>Small: dismissible (info, success and warning)</h3>
       <div class="ucl-cmk-alert-dev__stack">
         <CmkAlert
-          v-for="v in ['info', 'success'] as const"
+          v-for="v in ['info', 'success', 'warning'] as const"
           :key="v"
           :variant="v"
           size="small"
@@ -96,9 +96,9 @@ function reset() {
     </section>
 
     <section>
-      <h3>Medium: dismissible (info and success only)</h3>
+      <h3>Medium: dismissible (info, success and warning)</h3>
       <CmkAlert
-        v-for="v in ['info', 'success'] as const"
+        v-for="v in ['info', 'success', 'warning'] as const"
         :key="v"
         :variant="v"
         :heading="_t('Headline')"
@@ -110,7 +110,7 @@ function reset() {
     <section>
       <h3>Medium: not dismissible</h3>
       <CmkAlert
-        v-for="v in ['warning', 'error', 'loading'] as const"
+        v-for="v in ['error', 'loading'] as const"
         :key="v"
         :variant="v"
         :heading="_t('Headline')"

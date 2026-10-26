@@ -43,6 +43,18 @@ test('CmkAlert dismissible success closes via the close button', async () => {
   expect(screen.queryByRole('status')).toBeNull()
 })
 
+test('CmkAlert dismissible warning closes via the close button', async () => {
+  render(CmkAlert, { props: { variant: 'warning', dismissible: true, text: 'Check the port.' } })
+  await userEvent.click(screen.getByRole('button', { name: 'Close' }))
+  expect(screen.queryByRole('alert')).toBeNull()
+})
+
+test('CmkAlert error offers no close button', () => {
+  // @ts-expect-error an error is never dismissible
+  render(CmkAlert, { props: { variant: 'error', dismissible: true, text: 'Failed.' } })
+  expect(screen.queryByRole('button', { name: 'Close' })).toBeNull()
+})
+
 test('CmkAlert with buttons offers no close button', () => {
   render(CmkAlert, {
     props: {

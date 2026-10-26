@@ -2153,7 +2153,7 @@ def get_otel_only_resources(
 
 
 def get_otel_identity_labels_section(resource: AzureResource) -> _Section:
-    # The metric backend routes an OTel series to the host whose identity labels all equal
+    # The data backend routes an OTel series to the host whose identity labels all equal
     # the attributes the Azure receiver sets on the series.
     # The receiver sets the resource group in lower case.
     # A label value cannot contain a colon, the fetcher decodes "%3A" and "%25".

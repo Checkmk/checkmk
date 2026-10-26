@@ -101,7 +101,6 @@ onUnmounted(restoreFocus)
   justify-content: space-between;
   gap: var(--dimension-4);
   padding-bottom: var(--dimension-5);
-  border-bottom: 1px solid var(--default-border-color);
 }
 
 .maps-modal__title {
@@ -112,10 +111,14 @@ onUnmounted(restoreFocus)
   white-space: nowrap;
 }
 
+/* The body scrolls, which clips whatever pokes out of it. The inline padding
+   leaves room for the focus ring of a full-width input; the negative margin
+   keeps the fields where the header and footer start. */
 .maps-modal__body {
-  padding: var(--dimension-6) 0;
   flex: 1;
   min-height: 0;
+  margin: 0 calc(-1 * var(--dimension-3));
+  padding: var(--dimension-6) var(--dimension-3);
   overflow: auto;
 }
 
@@ -125,6 +128,5 @@ onUnmounted(restoreFocus)
   justify-content: flex-end;
   gap: var(--dimension-3);
   padding-top: var(--dimension-5);
-  border-top: 1px solid var(--default-border-color);
 }
 </style>

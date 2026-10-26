@@ -186,7 +186,7 @@ async function submit() {
         <p v-else class="maps-create-map-modal__hint">
           {{
             _t(
-              "Part of the map's address, filled in from the display name. Letters, digits, hyphens and underscores only."
+              'The ID is used in the URL of the map and is filled in from the display name. Use only letters, digits, hyphens (-) and underscores (_).'
             )
           }}
         </p>

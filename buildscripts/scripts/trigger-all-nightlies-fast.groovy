@@ -22,6 +22,21 @@ void main() {
         CUSTOM_GIT_REF: effective_git_ref,
         FAKE_ARTIFACTS: fake_artifacts,
         DISABLE_CACHE: disable_cache,
+
+        // test specific parameters
+        RUN_COMPONENT_MK_ORACLE_TEST: true,
+        RUN_DOCKER_INTEGRATION_TEST: true,
+        RUN_MULTI_SITE_TEST: true,
+        RUN_SINGLE_SITE_TEST: true,
+        RUN_SYSTEM_AGENT_UPDATE_TEST: true,
+        RUN_UPDATE_TEST: true,
+
+        // image specific parameters
+        BUILD_CMK_IMAGE: true,
+        PUSH_TO_REGISTRY: true,
+        PUSH_TO_REGISTRY_ONLY: false,
+        SET_BRANCH_LATEST_TAG: false,
+        SET_LATEST_TAG: false,
     ];
     def job_parameters_no_check = [
         CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,

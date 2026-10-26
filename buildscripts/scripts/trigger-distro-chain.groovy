@@ -70,6 +70,7 @@ void main() {
         PUSH_TO_REGISTRY_ONLY: params.PUSH_TO_REGISTRY_ONLY,
         SET_LATEST_TAG: params.SET_LATEST_TAG,
         SET_BRANCH_LATEST_TAG: params.SET_BRANCH_LATEST_TAG,
+        USE_CASE: use_case,
     ];
     def job_parameters_packages = job_parameters_common + [
         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,

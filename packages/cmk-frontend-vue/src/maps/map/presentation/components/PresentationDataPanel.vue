@@ -360,8 +360,10 @@ function onDragStart(e: DragEvent, payload: BindingDropPayload): void {
   font-size: var(--font-size-large);
 }
 
+/* No tab panel follows these tabs to draw the line under them. */
 .maps-presentation-data-panel__tabs {
   padding: var(--dimension-4) var(--dimension-5) 0;
+  box-shadow: inset 0 -1px 0 var(--border-color-strong);
 }
 
 .maps-presentation-data-panel__search {

@@ -84,6 +84,7 @@ watch(
       <CmkIconButton
         name="close"
         size="small"
+        class="maps-edit-panel__close"
         :title="_t('Close')"
         :aria-label="_t('Close')"
         @click="emit('cancel-add')"
@@ -136,6 +137,15 @@ watch(
   gap: var(--dimension-4);
   padding: var(--dimension-5) var(--dimension-6);
   border-bottom: 1px solid var(--default-border-color);
+}
+
+/* Checkmk's icon buttons fade on hover (``img.iconbutton:hover``). */
+.maps-edit-panel__close {
+  transition: opacity 0.15s;
+}
+
+.maps-edit-panel__close:hover {
+  opacity: 0.5;
 }
 
 .maps-edit-panel__heading {

@@ -118,14 +118,15 @@ defineEmits<{
   opacity: 1;
 }
 
-/* Nested under the block to outweigh CmkIconButton's own padding reset. */
+/* Nested under the block to outweigh CmkIconButton's own padding reset.
+   Checkmk's icon buttons fade on hover (``img.iconbutton:hover``); a hover
+   background would barely differ from the bar's own. */
 .maps-map-view-topbar .maps-map-view-topbar__button {
   padding: var(--dimension-3);
-  border-radius: var(--border-radius);
-  transition: background-color 0.15s;
+  transition: opacity 0.15s;
 }
 
 .maps-map-view-topbar .maps-map-view-topbar__button:hover {
-  background: var(--input-hover-bg-color);
+  opacity: 0.5;
 }
 </style>

@@ -232,13 +232,13 @@ test('keeps the graph on screen when a refetch fails, stating the error over it'
 
 test("reports the response's own per-metric errors alongside the graph", async () => {
   postSpy.mockResolvedValue({
-    data: { ...FETCHED, errors: ['Metrics backend is unavailable.'] },
+    data: { ...FETCHED, errors: ['The data backend is not reachable.'] },
     error: undefined,
     response: new Response('{}', { status: 200 })
   } as never)
   renderFigure()
 
-  expect(await screen.findByText('Metrics backend is unavailable.')).toBeInTheDocument()
+  expect(await screen.findByText('The data backend is not reachable.')).toBeInTheDocument()
   expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
 })
 
@@ -261,7 +261,7 @@ test('states errors and warnings together, at the error severity', async () => {
   postSpy.mockResolvedValue({
     data: {
       ...FETCHED,
-      errors: ['Metrics backend is unavailable.'],
+      errors: ['The data backend is not reachable.'],
       warnings: ['The query matched more than 100 time series.']
     },
     error: undefined,
@@ -271,7 +271,7 @@ test('states errors and warnings together, at the error severity', async () => {
 
   // One pill states both, so the advice is not dropped for arriving next to a failure.
   const message = await screen.findByText(
-    'Metrics backend is unavailable. The query matched more than 100 time series.'
+    'The data backend is not reachable. The query matched more than 100 time series.'
   )
   expect(message.closest('.cmk-surface-notice')).toHaveClass('cmk-surface-notice--error')
 })

@@ -638,11 +638,11 @@ test("states the response's own per-metric errors without offering a retry", asy
   const response = fetchDataResponse() as { data: Record<string, unknown> }
   vi.spyOn(client, 'POST').mockResolvedValue({
     ...response,
-    data: { ...response.data, errors: ['Metrics backend is unavailable.'] }
+    data: { ...response.data, errors: ['The data backend is not reachable.'] }
   } as never)
   renderBody('view')
 
-  expect(await screen.findByText('Metrics backend is unavailable.')).toBeInTheDocument()
+  expect(await screen.findByText('The data backend is not reachable.')).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
 })
 
@@ -854,7 +854,7 @@ test('toggling visibility in the appearance table drops the metric from the prev
 test.each([
   { kind: 'an RRD query', source: () => rrdQuerySource('Q'), telemetryMetricsAvailable: false },
   {
-    kind: 'a metrics backend query',
+    kind: 'an OpenTelemetry metrics query',
     source: () => telemetryMetricsSource('Q'),
     telemetryMetricsAvailable: true
   }

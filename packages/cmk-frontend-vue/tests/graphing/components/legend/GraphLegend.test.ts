@@ -83,7 +83,7 @@ function legendRowTitles(container: Element): (string | undefined)[] {
   )
 }
 
-// Only metrics-backend series arrive with attributes.
+// Only OpenTelemetry metrics series arrive with attributes.
 const REQUESTS: Metric = {
   metadata: {
     name: 'requests',
@@ -440,7 +440,7 @@ test('a metric without attributes offers nothing to expand', () => {
   expect(screen.queryByRole('button', { name: /toggle attributes/i })).not.toBeInTheDocument()
 })
 
-test('expanding a metrics-backend entry lists its attributes by name, value and kind', async () => {
+test('expanding an OpenTelemetry metrics entry lists its attributes by name, value and kind', async () => {
   render(GraphLegend, { props: { metrics: [REQUESTS] } })
 
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle attributes of Requests' }))
@@ -458,7 +458,7 @@ test('expanding a metrics-backend entry lists its attributes by name, value and 
   expect(statusRow).toHaveTextContent('Data point')
 })
 
-test('collapsing a metrics-backend entry hides its attributes again', async () => {
+test('collapsing an OpenTelemetry metrics entry hides its attributes again', async () => {
   render(GraphLegend, { props: { metrics: [REQUESTS] } })
   const toggle = screen.getByRole('button', { name: 'Toggle attributes of Requests' })
 

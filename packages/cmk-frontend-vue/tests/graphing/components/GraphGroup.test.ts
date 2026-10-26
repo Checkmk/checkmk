@@ -645,14 +645,14 @@ test('acknowledges a retry in flight instead of leaving the error in place', asy
 
 test("reports the response's own per-metric errors, which no retry would fix", async () => {
   postSpy.mockResolvedValue({
-    data: { ...FETCHED, errors: ['Metrics backend is unavailable.'] },
+    data: { ...FETCHED, errors: ['The data backend is not reachable.'] },
     error: undefined,
     response: new Response('{}', { status: 200 })
   } as never)
   renderGroup()
 
   await waitFor(() => expect(notice()).toBeInTheDocument())
-  expect(within(notice()!).getByText('Metrics backend is unavailable.')).toBeInTheDocument()
+  expect(within(notice()!).getByText('The data backend is not reachable.')).toBeInTheDocument()
   // The panel still renders whatever data did resolve.
   expect(screen.getByTestId('graph-panel')).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()

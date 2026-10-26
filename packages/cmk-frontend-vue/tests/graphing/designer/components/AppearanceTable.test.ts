@@ -191,7 +191,7 @@ test('lists a multi-line row as one legend-styled row per resolved line', () => 
   expect(swatches[1]!.getAttribute('style')).toMatch(/#ff0000|rgb\(255, 0, 0\)/)
 })
 
-test('a resolved metrics-backend series expands into its attribute table', async () => {
+test('a resolved OpenTelemetry metrics series expands into its attribute table', async () => {
   renderTable(
     [telemetryMetricsItem('B', { title: 'Latency' })],
     new Map([['B', [backendMetric('line one')]]])

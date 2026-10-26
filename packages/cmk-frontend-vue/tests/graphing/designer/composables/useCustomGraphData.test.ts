@@ -339,7 +339,7 @@ test("exposes the response's own non-fatal errors and warnings, each apart", asy
   postSpy.mockImplementationOnce(async () => ({
     data: {
       ...(fetchResponse(['A']) as object),
-      errors: ['Metrics backend is unavailable.'],
+      errors: ['The data backend is not reachable.'],
       warnings: ['The query for A matched more than 100 time series.']
     },
     error: undefined,
@@ -348,7 +348,7 @@ test("exposes the response's own non-fatal errors and warnings, each apart", asy
   const { data } = mount([rrdMetricItem('A')])
   await flush()
 
-  expect(data.partialErrors.value).toEqual(['Metrics backend is unavailable.'])
+  expect(data.partialErrors.value).toEqual(['The data backend is not reachable.'])
   // Apart from the errors, so a truncation can be stated as advisory rather than as a failure.
   expect(data.warnings.value).toEqual(['The query for A matched more than 100 time series.'])
   // Non-fatal, both of them: the fetch itself succeeded.
@@ -393,7 +393,7 @@ test('clears the diagnostics when the last data source is removed', async () => 
   postSpy.mockImplementationOnce(async () => ({
     data: {
       ...(fetchResponse(['A']) as object),
-      errors: ['Metrics backend is unavailable.'],
+      errors: ['The data backend is not reachable.'],
       warnings: ['The query for A matched more than 100 time series.']
     },
     error: undefined,

@@ -187,24 +187,26 @@ void main() {
         ]) {
             dir("${checkout_dir}") {
                 smart_stage(name: 'Build Image', condition: build_image) {
-                    /// TODO: fix this:
-                    /// build-cmk-container does not support the downloads dir
-                    /// to have an arbitrary location, so we have to provide
-                    /// `download` inside the checkout_dir
-                    sh("""
-                        scripts/run-uvenv python \
-                        buildscripts/scripts/build-cmk-container.py \
-                        --branch=${branch_name} \
-                        --edition=${params.EDITION} \
-                        --version=${cmk_version} \
-                        --source_path=${source_dir} \
-                        --set_latest_tag=${params.SET_LATEST_TAG} \
-                        --set_branch_latest_tag=${params.SET_BRANCH_LATEST_TAG} \
-                        --no_cache=${params.BUILD_IMAGE_WITHOUT_CACHE} \
-                        --image_cmk_base=${params.CUSTOM_CMK_BASE_IMAGE} \
-                        --action=build \
-                        -vvv
-                    """);
+                    stage("Build container image") {
+                        /// TODO: fix this:
+                        /// build-cmk-container does not support the downloads dir
+                        /// to have an arbitrary location, so we have to provide
+                        /// `download` inside the checkout_dir
+                        sh("""
+                            scripts/run-uvenv python \
+                            buildscripts/scripts/build-cmk-container.py \
+                            --branch=${branch_name} \
+                            --edition=${params.EDITION} \
+                            --version=${cmk_version} \
+                            --source_path=${source_dir} \
+                            --set_latest_tag=${params.SET_LATEST_TAG} \
+                            --set_branch_latest_tag=${params.SET_BRANCH_LATEST_TAG} \
+                            --no_cache=${params.BUILD_IMAGE_WITHOUT_CACHE} \
+                            --image_cmk_base=${params.CUSTOM_CMK_BASE_IMAGE} \
+                            --action=build \
+                            -vvv
+                        """);
+                    }
 
                     def filename = versioning.get_docker_artifact_name(EDITION, cmk_version);
 

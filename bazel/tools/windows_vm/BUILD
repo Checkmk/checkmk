@@ -82,7 +82,10 @@ py_library(
     name = "tier",
     srcs = ["qemu_windows/tier.py"],
     imports = ["."],
-    visibility = ["//bazel/rules:__pkg__"],
+    visibility = [
+        "//agents/wnx/tests/qemu:__pkg__",
+        "//bazel/rules:__pkg__",
+    ],
     deps = [
         ":session",
         ":state",

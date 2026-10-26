@@ -46,10 +46,10 @@ def test_python_module(
     )
     assert exe_output.ret_code == 1
     assert exe_output.stdout.startswith("\r\n\tAgent updates are not configured for this host")
-    copy_cmk_updater(
-        repo_root / "non-free" / "packages" / "cmk-update-agent",
-        data_dir / "plugins",
-    )
+    updater_dir = repo_root / "non-free" / "packages" / "cmk-update-agent"
+    if not updater_dir.is_dir():
+        pytest.skip("the GPL-only repository has no non-free updater")
+    copy_cmk_updater(updater_dir, data_dir / "plugins")
     exe_output = run_agent(
         default_yaml_config,
         param="updater",

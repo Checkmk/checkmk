@@ -2,37 +2,17 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "title": "maps_app",
-  "description": "What maps.py hands the mounted Maps app. Only wiring, no data: everything the app shows it fetches.",
+  "description": "What maps.py hands the mounted Maps app: the page menu's event, and the list layout its page menu offers the other of. Everything else the app shows it fetches.",
   "properties": {
-    "links": { "$ref": "#/$defs/maps_page_links" },
-    "breadcrumb_root": {
-      "description": "The main menu levels Maps hangs under; the app puts its own levels behind them.",
-      "type": "array",
-      "items": { "$ref": "#/$defs/maps_breadcrumb_item" }
+    "page_menu_event": {
+      "description": "The DOM event the map list's page menu entries dispatch, with the action as its detail.",
+      "type": "string"
+    },
+    "list_layout": {
+      "title": "MapListLayout",
+      "description": "The layout the map list is shown in, as the server-rendered page menu has it.",
+      "enum": ["cards", "table"]
     }
   },
-  "required": ["links", "breadcrumb_root"],
-  "$defs": {
-    "maps_page_links": {
-      "title": "MapsPageLinks",
-      "description": "The Checkmk pages the app links out to.",
-      "type": "object",
-      "properties": {
-        "settings": {
-          "description": "The Maps settings page.",
-          "type": "string"
-        }
-      },
-      "required": ["settings"]
-    },
-    "maps_breadcrumb_item": {
-      "title": "MapsBreadcrumbItem",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "link": { "type": ["string", "null"] }
-      },
-      "required": ["title", "link"]
-    }
-  }
+  "required": ["page_menu_event", "list_layout"]
 }

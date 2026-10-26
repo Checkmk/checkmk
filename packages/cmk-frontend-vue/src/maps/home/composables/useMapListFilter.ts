@@ -5,9 +5,11 @@
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { type ComputedRef, type Ref, computed, ref } from 'vue'
+import { useDebounceRef } from 'cmk-ui-library/lib/useDebounce'
+import { type ComputedRef, type Ref, computed, ref, watch } from 'vue'
 
 import { useAuth, useMaps } from '@/maps/services/context'
+import { replaceUrlParam } from '@/maps/shared/pageMenu'
 import type { MapRead } from '@/maps/types/api'
 import { type MapOwnerKind, mapOwnerKind } from '@/maps/utils/mapVisibility'
 
@@ -27,6 +29,19 @@ export interface ScopeOption {
  */
 const OWNER_ORDER: readonly MapOwnerKind[] = ['you', 'other', 'builtin']
 
+const SCOPE_PARAM = 'scope'
+const SEARCH_PARAM = 'search'
+
+function isMapScope(value: string | null): value is MapScope {
+  return value === 'all' || OWNER_ORDER.some((kind) => kind === value)
+}
+
+/** The scope the page URL carries, so the way back from a map keeps it. */
+function initialScope(): MapScope {
+  const value = new URLSearchParams(window.location.search).get(SCOPE_PARAM)
+  return isMapScope(value) ? value : 'all'
+}
+
 export function useMapListFilter(): {
   searchQuery: Ref<string>
   /**
@@ -45,8 +60,10 @@ export function useMapListFilter(): {
   const auth = useAuth()
   const maps = useMaps()
 
-  const searchQuery = ref('')
-  const chosenScope = ref<MapScope>('all')
+  const searchQuery = ref(new URLSearchParams(window.location.search).get(SEARCH_PARAM) ?? '')
+  // Safari throws once the URL is replaced too often, as on every keystroke.
+  watch(useDebounceRef(searchQuery, 100), (value) => replaceUrlParam(SEARCH_PARAM, value))
+  const chosenScope = ref<MapScope>(initialScope())
 
   /**
    * The list in its display order, each map with the owner kind the filter and
@@ -92,6 +109,7 @@ export function useMapListFilter(): {
         : 'all',
     set: (value) => {
       chosenScope.value = value
+      replaceUrlParam(SCOPE_PARAM, value === 'all' ? '' : value)
     }
   })
 

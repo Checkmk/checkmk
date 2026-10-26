@@ -4,10 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { describe, expect, it, vi } from 'vitest'
-import { type Ref, nextTick, ref } from 'vue'
 
 import { useMapBulkActions } from '@/maps/home/composables/useMapBulkActions'
-import type { MapListView, MapRead } from '@/maps/types/api'
+import type { MapRead } from '@/maps/types/api'
 
 import { aListedMap } from '../../support/fixtures'
 import { fakeMapsServices, runWithServices } from '../../support/services'
@@ -20,7 +19,7 @@ function map(name: string, over: Partial<MapRead> = {}): MapRead {
  * The composable on the app's own services, with the two bulk calls and the
  * toasts observed on the real instances.
  */
-function setup(maps: MapRead[], viewMode: Ref<MapListView> = ref('table')) {
+function setup(maps: MapRead[]) {
   const services = fakeMapsServices()
   services.maps.maps.value = maps
   const store = {
@@ -33,13 +32,9 @@ function setup(maps: MapRead[], viewMode: Ref<MapListView> = ref('table')) {
   }
   const openSettings = vi.fn()
   const api = runWithServices(services, () =>
-    useMapBulkActions({
-      filteredMaps: () => maps,
-      viewMode: () => viewMode.value,
-      openSettings
-    })
+    useMapBulkActions({ filteredMaps: () => maps, openSettings })
   )
-  return { api, openSettings, viewMode, store, toast }
+  return { api, openSettings, store, toast }
 }
 
 describe('useMapBulkActions — selection', () => {
@@ -64,16 +59,6 @@ describe('useMapBulkActions — selection', () => {
   it('is false for an empty map list', () => {
     const { api } = setup([])
     expect(api.allFilteredSelected.value).toBe(false)
-  })
-
-  it('clears the selection when switching to cards view', async () => {
-    const viewMode = ref<MapListView>('table')
-    const { api } = setup([map('a')], viewMode)
-    api.toggleMapSelection('a')
-    expect(api.selectedCount.value).toBe(1)
-    viewMode.value = 'cards'
-    await nextTick()
-    expect(api.selectedCount.value).toBe(0)
   })
 })
 

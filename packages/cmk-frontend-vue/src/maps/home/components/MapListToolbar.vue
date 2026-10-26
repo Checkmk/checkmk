@@ -5,9 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <!--
 The controls that narrow the map list: a search and which of the maps to show.
-``MapListHeader`` places them in its bar, ahead of the page's own actions; how
-many maps are left and how they are drawn is ``MapListResultBar``'s, above the
-list itself.
+The search stays here rather than in the page menu, whose search reloads the
+page, so the list narrows as it is typed.
 -->
 <script setup lang="ts">
 import CmkChip from 'cmk-ui-library/components/CmkChip.vue'

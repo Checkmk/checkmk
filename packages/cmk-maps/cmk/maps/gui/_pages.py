@@ -12,25 +12,29 @@ ticket handshake and the rest the internal family in
 """
 
 from dataclasses import asdict
+from pathlib import Path
 from typing import override
 
-from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
+import cmk.utils.paths
+from cmk.ccc import store
+from cmk.ccc.user import UserId
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import VisualPublic
 from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermissions
 from cmk.maps.gui._images import seed_builtin_images
-from cmk.maps.gui._settings import tile_csp_sources
+from cmk.maps.gui._page_menu import map_list_page_menu, maps_breadcrumb, PAGE_MENU_EVENT
+from cmk.maps.gui._settings import map_object_defaults, MapListView, tile_csp_sources
 from cmk.maps.gui._settings_page import SETTINGS_URL
 from cmk.maps.gui._tickets import _publishable_contact_groups, _publishable_sites
-from cmk.shared_typing.maps import MapsApp, MapsBreadcrumbItem, MapsPageLinks
+from cmk.shared_typing.maps import MapListLayout, MapsApp
 
 
 class ShowMapsPage(Page):
@@ -58,17 +62,23 @@ class ShowMapsPage(Page):
         # Preview (settings live-preview iframe) and kiosk (NOC wall) render the
         # map chromeless: no Checkmk main navigation, just the SPA.
         chromeless = ctx.request.has_var("preview") or ctx.request.has_var("kiosk")
-        # No heading and no page menu, like the dashboard page: the SPA routes
-        # between the map list, a map and the image library client side, and
-        # server chrome cannot follow that. So it renders its own title and the
-        # actions over the list, and nothing here has to be hidden again once the
-        # bundle mounts.
+        # The map list is a Checkmk page with its heading and page menu. A map
+        # renders its own title bar over the canvas, so it gets neither. The SPA
+        # loads the other page when it switches between the two, so the server
+        # chrome always belongs to what is shown.
+        on_list = not ctx.request.has_var("name") and not ctx.request.has_var("mode")
+        breadcrumb = maps_breadcrumb() if on_list else Breadcrumb()
+        layout = _list_layout(ctx)
         make_header(
             html,
             title=_("Maps"),
-            breadcrumb=Breadcrumb(),
-            page_menu=None,
-            show_top_heading=False,
+            breadcrumb=breadcrumb,
+            page_menu=(
+                map_list_page_menu(user, breadcrumb, settings_url=SETTINGS_URL, layout=layout)
+                if on_list
+                else None
+            ),
+            show_top_heading=on_list,
             show_main_navigation=not chromeless,
             enable_main_page_scrollbar=False,
             debug=ctx.config.debug,
@@ -86,32 +96,29 @@ class ShowMapsPage(Page):
         # ``#main_page_content.vue-scrolling > *`` from stretching stray nodes
         # and pushing the mount point off-screen; the SPA fills the wrapper.
         html.open_div(class_="maps-app--embed")
-        # No data props: the SPA fetches everything it shows (the ticket, the map
-        # and the listing, the authoring defaults). Hydrating any
-        # of it would be a second data-assembly path to keep in step with those,
-        # and its optionality would reach every consumer of the values. It also
-        # turns a forbidden or unknown ``?name=`` into a plain REST 403/404 the
-        # SPA can render, rather than a silently absent prop.
+        # Only what the page itself decides or the SPA cannot fetch goes in as a
+        # prop; the SPA fetches everything it shows (the ticket, the map and the
+        # listing, the authoring defaults). Hydrating any of that would be a
+        # second data-assembly path to keep in step with those, and its
+        # optionality would reach every consumer of the values. It also turns a
+        # forbidden or unknown ``?name=`` into a plain REST 403/404 the SPA can
+        # render, rather than a silently absent prop.
         #
-        # ``links`` is not data but wiring: the settings page has no other entry
-        # point (Maps has no Setup tile) and its page name belongs here, not to a
-        # TypeScript constant that a rename would leave pointing nowhere. The
-        # dashboard page hands its own out the same way.
+        # ``list_layout`` is what the page decides: the page menu above is
+        # rendered here and offers the layout not shown, so the list has to show
+        # this one.
         #
-        # ``breadcrumb_root`` is the same kind of wiring: the levels above the SPA
-        # (the main menu Maps hangs under), so the app can put its own levels
-        # behind them without naming a Checkmk menu in TypeScript. The settings
-        # page roots its breadcrumb the same way.
+        # ``page_menu_event`` is not data but wiring: the page menu above
+        # dispatches it, and its name belongs to ``_page_menu``, not to a
+        # TypeScript constant a rename would leave listening for nothing. The
+        # monitoring pages hand out their export event the same way.
         html.open_div(id_="app")
         html.vue_component(
             "cmk-maps",
             data=asdict(
                 MapsApp(
-                    links=MapsPageLinks(settings=SETTINGS_URL),
-                    breadcrumb_root=[
-                        MapsBreadcrumbItem(title=str(item.title), link=item.url)
-                        for item in make_main_menu_breadcrumb(main_menu_registry.menu_customize())
-                    ],
+                    page_menu_event=PAGE_MENU_EVENT,
+                    list_layout=MapListLayout(layout),
                 )
             ),
         )
@@ -119,6 +126,35 @@ class ShowMapsPage(Page):
         html.close_div()
         html.footer()
         return None
+
+
+def _list_layout(ctx: PageContext) -> MapListView:
+    # Remembered per user: the ways back to the list (breadcrumbs, back links)
+    # load a bare maps.py and would otherwise lose the layout last chosen.
+    path = None if user.id is None else _list_layout_path(user.id)
+    stored = (
+        None if path is None else _as_list_layout(store.load_object_from_file(path, default=None))
+    )
+    if (requested := _as_list_layout(ctx.request.get_ascii_input("layout"))) is None:
+        return stored or map_object_defaults()["map_list_view"]
+    # The switch leaves ``layout`` in the URL, so a reload must not write again.
+    if path is not None and requested != stored:
+        store.save_object_to_file(path, requested)
+    return requested
+
+
+def _list_layout_path(user_id: UserId) -> Path:
+    return cmk.utils.paths.profile_dir / user_id / "maps_list_layout.mk"
+
+
+def _as_list_layout(value: object) -> MapListView | None:
+    match value:
+        case "cards":
+            return "cards"
+        case "table":
+            return "table"
+        case _:
+            return None
 
 
 def _authorized_public(requested: object) -> VisualPublic:

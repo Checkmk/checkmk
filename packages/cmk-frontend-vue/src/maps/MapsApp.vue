@@ -8,9 +8,9 @@ The Maps app.
 
 It owns the services every surface below it uses, the session it needs before it
 can show anything, and which view the page's query string asks for. The page
-renders the mount point and the handful of Checkmk URLs the SPA links out to:
-everything else shown here the SPA fetches, so there is one data-assembly path
-instead of a server-rendered second one.
+renders the mount point and hands in only what it decides itself or the SPA
+cannot fetch: everything else shown here the SPA fetches, so there is one
+data-assembly path instead of a server-rendered second one.
 -->
 <script setup lang="ts">
 import type { MapsApp } from 'cmk-shared-typing/typescript/maps'
@@ -19,15 +19,15 @@ import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { type Component, computed, defineAsyncComponent, onUnmounted, watch } from 'vue'
 
+import { provideMapListLayout } from '@/maps/home/composables/useMapListViewMode'
 import type { NavState } from '@/maps/services/NavigationService'
 import {
   createMapsServices,
   disposeMapsServices,
   provideMapsServices
 } from '@/maps/services/context'
-import { provideMapsBreadcrumbRoot } from '@/maps/shared/breadcrumb'
 import MapsToastContainer from '@/maps/shared/components/MapsToastContainer.vue'
-import { provideMapsPageLinks } from '@/maps/shared/pageLinks'
+import { provideMapsPageMenuEvent } from '@/maps/shared/pageMenu'
 
 // Lazy, so the heavy views (leaflet, d3) stay in their own chunks and load only
 // when one is actually opened.
@@ -46,8 +46,8 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 
 const services = createMapsServices()
 provideMapsServices(services)
-provideMapsPageLinks(props.links)
-provideMapsBreadcrumbRoot(props.breadcrumb_root)
+provideMapsPageMenuEvent(props.page_menu_event)
+provideMapListLayout(props.list_layout)
 onUnmounted(() => {
   disposeMapsServices(services)
 })

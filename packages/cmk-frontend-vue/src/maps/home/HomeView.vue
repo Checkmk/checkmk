@@ -6,6 +6,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 <!--
 The map launcher: which maps this user has, as cards or as a table, and the
 actions that create, copy, import or remove one.
+
+Heading, search and the page-wide actions are the Checkmk page menu ``maps.py``
+renders above the app (see ``shared/pageMenu.ts``); this view handles what its
+entries ask for.
 -->
 <script setup lang="ts">
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
@@ -20,7 +24,6 @@ import MapBulkEditSlideIn from '@/maps/home/components/MapBulkEditSlideIn.vue'
 import MapCardGrid from '@/maps/home/components/MapCardGrid.vue'
 import MapCloneDialog from '@/maps/home/components/MapCloneDialog.vue'
 import MapListEmptyState from '@/maps/home/components/MapListEmptyState.vue'
-import MapListHeader from '@/maps/home/components/MapListHeader.vue'
 import MapListResultBar from '@/maps/home/components/MapListResultBar.vue'
 import MapListTable from '@/maps/home/components/MapListTable.vue'
 import MapListToolbar from '@/maps/home/components/MapListToolbar.vue'
@@ -32,6 +35,7 @@ import { useMapListFilter } from '@/maps/home/composables/useMapListFilter'
 import { useMapListViewMode } from '@/maps/home/composables/useMapListViewMode'
 import { useAuth, useConnections, useMaps, useNavigation } from '@/maps/services/context'
 import MapsConfirmDialog from '@/maps/shared/components/MapsConfirmDialog.vue'
+import { onPageMenuAction } from '@/maps/shared/pageMenu'
 import type { MapRead } from '@/maps/types/api'
 
 const { _t } = usei18n()
@@ -42,7 +46,7 @@ const nav = useNavigation()
 
 const { searchQuery, scope, scopeOptions, showScopeFilter, displayedMaps, isOrderPristine } =
   useMapListFilter()
-const { viewMode, viewModeOptions, setViewMode } = useMapListViewMode()
+const { viewMode } = useMapListViewMode()
 const { exportMap } = useMapExport()
 const clone = useMapClone()
 const mapImport = useMapImport()
@@ -51,8 +55,7 @@ const showCreate = ref(false)
 const confirmDelete = ref<MapRead | null>(null)
 
 const bulk = useMapBulkActions({
-  filteredMaps: () => displayedMaps.value,
-  viewMode: () => viewMode.value
+  filteredMaps: () => displayedMaps.value
 })
 
 const importInput = ref<HTMLInputElement | null>(null)
@@ -87,6 +90,17 @@ function openCreatedMap(name: string): void {
   nav.navigate({ view: 'map', name })
 }
 
+onPageMenuAction((action) => {
+  switch (action) {
+    case 'create':
+      showCreate.value = true
+      break
+    case 'import':
+      importInput.value?.click()
+      break
+  }
+})
+
 onMounted(async () => {
   // The list shows connection display names, which only an administrator sees.
   if (auth.isAdmin.value) {
@@ -99,24 +113,15 @@ onMounted(async () => {
 <template>
   <div class="maps-home-view" role="region" :aria-label="_t('Maps')">
     <main class="maps-home-view__main">
-      <MapListHeader @create="showCreate = true" @import="importInput?.click()">
-        <MapListToolbar
-          v-if="hasMaps"
-          v-model:scope="scope"
-          v-model:search-query="searchQuery"
-          :scope-options="scopeOptions"
-          :show-scope-filter="showScopeFilter"
-        />
-      </MapListHeader>
-
       <div class="maps-home-view__list">
-        <MapListResultBar
-          v-if="hasMaps"
-          :count="displayedMaps.length"
-          :view-mode="viewMode"
-          :view-mode-options="viewModeOptions"
-          @update:view-mode="setViewMode"
-        />
+        <MapListResultBar v-if="hasMaps" :count="displayedMaps.length">
+          <MapListToolbar
+            v-model:scope="scope"
+            v-model:search-query="searchQuery"
+            :scope-options="scopeOptions"
+            :show-scope-filter="showScopeFilter"
+          />
+        </MapListResultBar>
 
         <div v-if="maps.loading.value" class="maps-home-view__loading">
           <CmkLoading />
@@ -207,7 +212,7 @@ onMounted(async () => {
     @cancel="clone.cancel"
   />
 
-  <!-- Opened by the header's "Import map" menu entry; a file input has no
+  <!-- Opened by the page menu's "Import map" entry; a file input has no
        styling of its own worth keeping. -->
   <input
     v-if="auth.canCreateMaps.value"

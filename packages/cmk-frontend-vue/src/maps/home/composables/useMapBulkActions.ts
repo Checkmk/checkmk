@@ -4,16 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useMaps, useToast } from '@/maps/services/context'
 import { errorText } from '@/maps/shared/errorText'
 import { metadataUpdatesFrom } from '@/maps/shared/metadataForm'
-import type { MapListView, MapRead } from '@/maps/types/api'
+import type { MapRead } from '@/maps/types/api'
 
 interface MapBulkActionsOptions {
   filteredMaps: () => MapRead[]
-  viewMode: () => MapListView
   /**
    * Opens the single-map settings modal. Optional: without it a selection of
    * one goes through the bulk slide-in like any other.
@@ -22,14 +21,13 @@ interface MapBulkActionsOptions {
 }
 
 /**
- * Multi-select + bulk delete/edit for the map list. Selection is reset
- * when switching to cards view (the checkboxes only render in the table). Bulk
- * delete keeps the still-selected set on partial failure so the operator can
- * retry; bulk edit collapses to the single-map settings modal when exactly one
- * editable map is selected. Maps the user may not edit are filtered out of edits.
+ * Multi-select + bulk delete/edit for the map list. Bulk delete keeps the
+ * still-selected set on partial failure so the operator can retry; bulk edit
+ * collapses to the single-map settings modal when exactly one editable map is
+ * selected. Maps the user may not edit are filtered out of edits.
  */
 export function useMapBulkActions(options: MapBulkActionsOptions) {
-  const { filteredMaps, viewMode, openSettings } = options
+  const { filteredMaps, openSettings } = options
   const mapsStore = useMaps()
   const toast = useToast()
   const { _t } = usei18n()
@@ -38,12 +36,6 @@ export function useMapBulkActions(options: MapBulkActionsOptions) {
   const confirmBulkDelete = ref(false)
   const bulkBusy = ref(false)
   const showBulkEdit = ref(false)
-
-  watch(viewMode, (mode) => {
-    if (mode === 'cards' && selectedMaps.value.size > 0) {
-      selectedMaps.value = new Set()
-    }
-  })
 
   function clearSelection() {
     selectedMaps.value = new Set()

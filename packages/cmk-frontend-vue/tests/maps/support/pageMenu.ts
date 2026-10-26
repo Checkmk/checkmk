@@ -1,0 +1,13 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+import type { PageMenuAction } from '@/maps/shared/pageMenu'
+
+import { PAGE_MENU_EVENT } from './services'
+
+/** Clicks a page menu entry: they dispatch the event the SPA listens for. */
+export function triggerPageMenu(action: PageMenuAction): void {
+  document.dispatchEvent(new CustomEvent(PAGE_MENU_EVENT, { detail: action }))
+}

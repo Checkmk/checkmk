@@ -27,6 +27,17 @@ export interface NavState {
   preview: boolean
 }
 
+/** Loads a URL as a new page; `replace` keeps the current history entry. */
+export type PageLoader = (url: string, options: { replace: boolean }) => void
+
+function loadPage(url: string, { replace }: { replace: boolean }): void {
+  if (replace) {
+    window.location.replace(url)
+  } else {
+    window.location.assign(url)
+  }
+}
+
 const ADMIN_TABS: readonly AdminTab[] = ['icons']
 
 function isAdminTab(value: string | null): value is AdminTab {
@@ -74,8 +85,10 @@ function buildUrl(target: NavTarget): string {
  * vue-router.
  *
  * State travels in the page query string (`maps.py?name=<map>`,
- * `maps.py?mode=<admin-tab>`) and transitions use the History API, mirroring the
- * Dashboard app (`dashboard/utils.ts` urlHandler). No hash, no reload.
+ * `maps.py?mode=<admin-tab>`). Moving from one map to another uses the History
+ * API, mirroring the Dashboard app (`dashboard/utils.ts` urlHandler). Every
+ * other move loads the page: the map list carries the server's heading and page
+ * menu and a map does not, so only a load keeps that chrome in step.
  */
 export class NavigationService {
   public readonly state: NavState = reactive(parse(window.location.search))
@@ -84,7 +97,7 @@ export class NavigationService {
     Object.assign(this.state, parse(window.location.search))
   }
 
-  public constructor() {
+  public constructor(private readonly load: PageLoader = loadPage) {
     window.addEventListener('popstate', this.onPopState)
   }
 
@@ -95,6 +108,10 @@ export class NavigationService {
 
   public navigate(target: NavTarget): void {
     const url = buildUrl(target)
+    if (this.needsLoad(target)) {
+      this.load(url, { replace: false })
+      return
+    }
     if (url !== window.location.pathname + window.location.search) {
       window.history.pushState({}, '', url)
     }
@@ -102,8 +119,17 @@ export class NavigationService {
   }
 
   public replace(target: NavTarget): void {
-    window.history.replaceState({}, '', buildUrl(target))
+    const url = buildUrl(target)
+    if (this.needsLoad(target)) {
+      this.load(url, { replace: true })
+      return
+    }
+    window.history.replaceState({}, '', url)
     this.onPopState()
+  }
+
+  private needsLoad(target: NavTarget): boolean {
+    return target.view !== 'map' || this.state.view !== 'map'
   }
 
   public href(target: NavTarget): string {

@@ -11,24 +11,18 @@ Console's. It renders the global settings editor, which saves each value through
 the global settings REST API, with one topic per Maps config variable group.
 """
 
-from cmk.gui.breadcrumb import (
-    Breadcrumb,
-    BreadcrumbItem,
-    make_current_page_breadcrumb_item,
-    make_main_menu_breadcrumb,
-)
+from cmk.gui.breadcrumb import Breadcrumb, make_current_page_breadcrumb_item
 from cmk.gui.config import Config
 from cmk.gui.global_settings import central_settings, ensure_page_access, render_settings_page
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
-from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariable
 from cmk.maps.gui._config_domain import ConfigDomainMaps
+from cmk.maps.gui._page_menu import maps_breadcrumb
 from cmk.shared_typing.global_settings import GlobalSettingsApp
 
 SETTINGS_URL = "maps_settings.py"
-_MAPS_HOME_URL = "maps.py"
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -52,9 +46,7 @@ def _owned_by_maps(config_variable: ConfigVariable) -> bool:
 
 
 def _breadcrumb(title: str) -> Breadcrumb:
-    # Maps has no Setup tile; its pages hang under Customize → Maps.
-    breadcrumb = make_main_menu_breadcrumb(main_menu_registry.menu_customize())
-    breadcrumb.append(BreadcrumbItem(title=_("Maps"), url=_MAPS_HOME_URL, id="maps"))
+    breadcrumb = maps_breadcrumb()
     breadcrumb.append(make_current_page_breadcrumb_item(title))
     return breadcrumb
 

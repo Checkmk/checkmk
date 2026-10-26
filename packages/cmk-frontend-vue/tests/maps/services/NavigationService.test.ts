@@ -11,15 +11,17 @@ import { NavigationService } from '@/maps/services/NavigationService'
 const PAGE = '/site/check_mk/maps.py'
 
 let nav: NavigationService | null = null
+let loads: { url: string; replace: boolean }[] = []
 
 function open(search: string): NavigationService {
   window.history.replaceState({}, '', `${PAGE}${search}`)
-  nav = new NavigationService()
+  nav = new NavigationService((url, { replace }) => loads.push({ url, replace }))
   return nav
 }
 
 beforeEach(() => {
   window.history.replaceState({}, '', PAGE)
+  loads = []
 })
 
 afterEach(() => {
@@ -56,24 +58,31 @@ describe('NavigationService — reading the page URL', () => {
 })
 
 describe('NavigationService — moving around', () => {
-  it('pushes the map into the history and follows it in the state', () => {
+  it('pushes the next map into the history and follows it in the state', () => {
+    const service = open('?name=prod')
+    service.navigate({ view: 'map', name: 'staging' })
+    expect(window.location.search).toBe('?name=staging')
+    expect(service.state).toMatchObject({ view: 'map', name: 'staging' })
+    expect(loads).toEqual([])
+  })
+
+  it('loads a map from the list as a page, so the list chrome goes', () => {
     const service = open('')
     service.navigate({ view: 'map', name: 'prod' })
-    expect(window.location.search).toBe('?name=prod')
-    expect(service.state).toMatchObject({ view: 'map', name: 'prod' })
+    expect(loads).toEqual([{ url: '/site/check_mk/maps.py?name=prod', replace: false }])
+    expect(service.state.view).toBe('home')
+  })
+
+  it('loads the list as a page, so it gets its heading and page menu', () => {
+    const service = open('?name=prod')
+    service.navigate({ view: 'home' })
+    expect(loads).toEqual([{ url: '/site/check_mk/maps.py', replace: false }])
   })
 
   it('keeps the page path, so the SPA stays on maps.py', () => {
     const service = open('')
     service.navigate({ view: 'admin', tab: 'icons' })
-    expect(window.location.pathname).toBe('/site/check_mk/maps.py')
-    expect(window.location.search).toBe('?mode=icons')
-  })
-
-  it('leaves the list without a query string', () => {
-    const service = open('?name=prod')
-    service.navigate({ view: 'home' })
-    expect(window.location.search).toBe('')
+    expect(loads).toEqual([{ url: '/site/check_mk/maps.py?mode=icons', replace: false }])
   })
 
   it('adds no history entry for the page that is already open', () => {
@@ -85,11 +94,8 @@ describe('NavigationService — moving around', () => {
 
   it('replaces the entry instead of adding one, for a bounce', () => {
     const service = open('?mode=icons')
-    const before = window.history.length
     service.replace({ view: 'home' })
-    expect(window.location.search).toBe('')
-    expect(window.history.length).toBe(before)
-    expect(service.state.view).toBe('home')
+    expect(loads).toEqual([{ url: '/site/check_mk/maps.py', replace: true }])
   })
 
   it('keeps the rotation pool in the link to the next map', () => {
@@ -109,11 +115,11 @@ describe('NavigationService — moving around', () => {
 
 describe('NavigationService — lifetime', () => {
   it('follows the browser going back', () => {
-    const service = open('')
-    service.navigate({ view: 'map', name: 'prod' })
-    window.history.replaceState({}, '', PAGE)
+    const service = open('?name=prod')
+    service.navigate({ view: 'map', name: 'staging' })
+    window.history.replaceState({}, '', `${PAGE}?name=prod`)
     window.dispatchEvent(new PopStateEvent('popstate'))
-    expect(service.state.view).toBe('home')
+    expect(service.state.name).toBe('prod')
   })
 
   it('stops listening once the app is gone, so a remount does not stack listeners', () => {

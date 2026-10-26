@@ -70,6 +70,12 @@ function signedMap(view: MapView, extra: Partial<MapConfig> = {}): SignedMap {
 
 let services: ReturnType<typeof fakeMapsServices>
 
+// Navigation reloads the page between the list and a map, so the URL is set
+// before the services read it, as a page load would.
+function openMapPage(): void {
+  window.history.replaceState({}, '', '/site/check_mk/maps.py?name=map1')
+}
+
 function opensMap(view: MapView, extra: Partial<MapConfig> = {}): void {
   vi.mocked(services.apis.mapConfig.get).mockResolvedValue(signedMap(view, extra))
 }
@@ -110,10 +116,9 @@ beforeAll(async () => {
 
 describe('MapView – map-type dispatch', () => {
   beforeEach(() => {
+    openMapPage()
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
-    // Point navigation at a map so the shell fetches and renders one.
-    services.nav.replace({ view: 'map', name: 'map1' })
   })
 
   it('renders the static MapCanvas for a static view', async () => {
@@ -187,9 +192,9 @@ describe('MapView – the area around a static map', () => {
 
 describe('MapView – loading / error / read-only states', () => {
   beforeEach(() => {
+    openMapPage()
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
-    services.nav.replace({ view: 'map', name: 'map1' })
   })
 
   it('shows the loading spinner and no renderer while the map fetch is in flight', async () => {
@@ -228,9 +233,9 @@ describe('MapView – loading / error / read-only states', () => {
 
 describe('MapView – breadcrumb', () => {
   beforeEach(() => {
+    openMapPage()
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
-    services.nav.replace({ view: 'map', name: 'map1' })
   })
 
   it('links back to the map list and ends on the open map', async () => {
@@ -269,9 +274,9 @@ describe('MapView – what the settings slide-in is handed', () => {
 
   beforeEach(() => {
     handedMap = null
+    openMapPage()
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
-    services.nav.replace({ view: 'map', name: 'map1' })
   })
 
   it('carries the sharing and delete rights over from the map list', async () => {
@@ -318,6 +323,7 @@ describe('MapView – following a map object', () => {
   })
 
   beforeEach(() => {
+    openMapPage()
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
   })
@@ -342,9 +348,9 @@ describe('MapView – following a map object', () => {
 
 describe('MapView – unreachable sites', () => {
   beforeEach(() => {
+    openMapPage()
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
-    services.nav.replace({ view: 'map', name: 'map1' })
     vi.mocked(services.apis.mapStates.fetchStates).mockResolvedValue({
       map_name: 'map1',
       states: [],
@@ -432,9 +438,9 @@ describe('MapView – saving the settings', () => {
   })
 
   beforeEach(() => {
+    openMapPage()
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
-    services.nav.replace({ view: 'map', name: 'map1' })
   })
 
   async function saveSettings(): Promise<void> {

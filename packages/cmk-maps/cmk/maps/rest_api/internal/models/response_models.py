@@ -389,8 +389,8 @@ class MapsAuthoringSettings:
         example=None,
     )
     map_list_view: MapListView = api_field(
-        description="Site-wide default layout of the map overview. Each operator's own "
-        "choice overrides this in the browser.",
+        description="Site-wide default layout of the map overview, until an operator "
+        "chooses their own.",
         example="cards",
     )
 

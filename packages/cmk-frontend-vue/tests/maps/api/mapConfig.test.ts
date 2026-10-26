@@ -150,7 +150,7 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
       http.post('*/api/internal/domain-types/map/collections/all', () =>
         HttpResponse.json(
           {
-            title: "The map 'map1' already exists.",
+            title: "The map 'map1' already exists",
             detail: 'Use the update endpoint to modify an existing map.',
             status: 409
           },

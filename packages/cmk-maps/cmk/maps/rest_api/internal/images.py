@@ -129,7 +129,7 @@ def delete_image_v1(
         usage = [_usage(entry) for entry in blocking]
         raise ProblemException(
             status=HTTPStatus.CONFLICT,
-            title=f"The image {name!r} is still in use.",
+            title=f"The image {name!r} is still in use",
             detail="Repeat with 'force' to delete it and leave those maps without it.",
             ext=EXT({"usage": _USAGE_ADAPTER.dump_python(usage, mode="json", by_alias=True)}),
         )

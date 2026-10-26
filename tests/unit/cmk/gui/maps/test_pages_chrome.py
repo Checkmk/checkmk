@@ -13,7 +13,8 @@ from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.maps.gui._pages import _chrome, _list_layout
+from cmk.maps.gui import store
+from cmk.maps.gui._pages import _list_layout, _shown_map
 from cmk.maps.gui._settings import map_object_defaults
 
 
@@ -27,17 +28,29 @@ def _ctx() -> PageContext:
     )
 
 
-def test_map_gets_no_page_menu(request_context: None, with_admin_login: UserId) -> None:
+def test_shown_map_is_the_one_named(request_context: None, with_admin_login: UserId) -> None:
+    store.save_map(
+        with_admin_login, "mine", {"name": "mine", "view": {"type": "static"}}, public=False
+    )
     request.set_var("name", "mine")
-    assert _chrome(_ctx(), "cards")[2] is None
+    shown = _shown_map(_ctx())
+    assert shown is not None and shown.name() == "mine"
 
 
 def test_image_library_goes_before_a_map_name(
     request_context: None, with_admin_login: UserId
 ) -> None:
+    store.save_map(
+        with_admin_login, "mine", {"name": "mine", "view": {"type": "static"}}, public=False
+    )
     request.set_var("name", "mine")
     request.set_var("mode", "icons")
-    assert _chrome(_ctx(), "cards")[0] == "Images"
+    assert _shown_map(_ctx()) is None
+
+
+def test_empty_map_name_shows_the_list(request_context: None, with_admin_login: UserId) -> None:
+    request.set_var("name", "")
+    assert _shown_map(_ctx()) is None
 
 
 def test_list_layout_is_the_global_default_until_one_is_chosen(

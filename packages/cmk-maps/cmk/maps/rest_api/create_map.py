@@ -46,7 +46,7 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
     if not user.may("general.edit_map"):
         raise RestAPIRequestGeneralException(
             status=HTTPStatus.FORBIDDEN,
-            title="You are not allowed to create maps.",
+            title="You are not allowed to create maps",
             detail="Creating maps requires the 'Customize and use maps' permission.",
         )
     # ``user.ident`` narrows to a guaranteed UserId and raises (not stripped
@@ -82,7 +82,7 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
         # surface as an uncaught 500 with a crash report; answer a clean error.
         raise ProblemException(
             status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            title="The map could not be stored.",
+            title="The map could not be stored",
             detail=str(exc),
         ) from exc
     if not created:
@@ -91,7 +91,7 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
         # "name taken" from "name malformed" — the SPA surfaces each differently.
         raise RestAPIRequestGeneralException(
             status=HTTPStatus.CONFLICT,
-            title=f"The map {name!r} already exists.",
+            title=f"The map {name!r} already exists",
             detail="Use the update endpoint to modify an existing map.",
         )
     page = get_own_map(user_id, name)

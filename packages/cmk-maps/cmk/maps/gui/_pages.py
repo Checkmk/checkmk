@@ -20,6 +20,7 @@ from cmk.ccc import store
 from cmk.ccc.user import UserId
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import response
@@ -41,7 +42,10 @@ from cmk.maps.gui._page_menu import (
 from cmk.maps.gui._settings import map_object_defaults, MapListView, tile_csp_sources
 from cmk.maps.gui._settings_page import SETTINGS_URL
 from cmk.maps.gui._tickets import _publishable_contact_groups, _publishable_sites
+from cmk.maps.gui.pagetype import MapPage
+from cmk.maps.gui.store import get_permitted_map
 from cmk.shared_typing.maps import MapListLayout, MapsApp
+from cmk.web.utils.escaping import escape
 
 
 class ShowMapsPage(Page):
@@ -57,6 +61,7 @@ class ShowMapsPage(Page):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         user.need_permission("maps.use")
+        shown = _shown_map(ctx)
         # Geo maps let the browser fetch tiles straight from the tile server, so
         # this policy is what decides which ones it may reach — the SPA's default
         # host plus whatever the site has configured. Widened for this page
@@ -75,7 +80,7 @@ class ShowMapsPage(Page):
         # switches between them, so the server chrome always belongs to what is
         # shown.
         layout = _list_layout(ctx)
-        title, breadcrumb, page_menu = _chrome(ctx, layout)
+        title, breadcrumb, page_menu = _chrome(ctx, shown, layout)
         make_header(
             html,
             title=title,
@@ -103,9 +108,7 @@ class ShowMapsPage(Page):
         # prop; the SPA fetches everything it shows (the ticket, the map and the
         # listing, the authoring defaults). Hydrating any of that would be a
         # second data-assembly path to keep in step with those, and its
-        # optionality would reach every consumer of the values. It also turns a
-        # forbidden or unknown ``?name=`` into a plain REST 403/404 the SPA can
-        # render, rather than a silently absent prop.
+        # optionality would reach every consumer of the values.
         #
         # ``list_layout`` is what the page decides: the page menu above is
         # rendered here and offers the layout not shown, so the list has to show
@@ -129,6 +132,20 @@ class ShowMapsPage(Page):
         html.close_div()
         html.footer()
         return None
+
+
+def _require_visible_map(name: str) -> MapPage:
+    """Answer an unknown map like an unknown view or dashboard.
+
+    A map the user may not see reads the same as one that does not exist, so
+    the page does not tell which names are taken.
+    """
+    if (page := get_permitted_map(name)) is None:
+        raise MKUserError(
+            "name",
+            _("The requested map %(name)s does not exist") % {"name": escape(name)},
+        )
+    return page
 
 
 def _list_layout(ctx: PageContext) -> MapListView:
@@ -160,10 +177,10 @@ def _as_list_layout(value: object) -> MapListView | None:
             return None
 
 
-def _chrome(ctx: PageContext, layout: MapListView) -> tuple[str, Breadcrumb, PageMenu | None]:
-    # The image library goes before a map name, as the SPA's router has it, so
-    # the chrome rendered here belongs to the view the SPA shows.
-    if not _shows_images(ctx) and ctx.request.has_var("name"):
+def _chrome(
+    ctx: PageContext, shown: MapPage | None, layout: MapListView
+) -> tuple[str, Breadcrumb, PageMenu | None]:
+    if shown is not None:
         return _("Maps"), Breadcrumb(), None
     if _shows_images(ctx) and user.may("maps.configure"):
         breadcrumb = images_breadcrumb()
@@ -174,6 +191,15 @@ def _chrome(ctx: PageContext, layout: MapListView) -> tuple[str, Breadcrumb, Pag
         breadcrumb,
         map_list_page_menu(user, breadcrumb, settings_url=SETTINGS_URL, layout=layout),
     )
+
+
+def _shown_map(ctx: PageContext) -> MapPage | None:
+    # The image library goes before a map name, and an empty name is the list,
+    # as the SPA's router has it, so the chrome rendered here belongs to the
+    # view the SPA shows.
+    if _shows_images(ctx) or not (name := ctx.request.get_str_input("name")):
+        return None
+    return _require_visible_map(name)
 
 
 def _shows_images(ctx: PageContext) -> bool:

@@ -68,7 +68,7 @@ def update_map_v1(
     if page is None:
         raise RestAPIRequestGeneralException(
             status=HTTPStatus.NOT_FOUND,
-            title=f"The map {name!r} does not exist.",
+            title=f"The map {name!r} does not exist",
             detail="No map with this name is visible to you.",
         )
     owner = page.config.owner
@@ -76,7 +76,7 @@ def update_map_v1(
         if not page.may_edit():
             raise RestAPIRequestGeneralException(
                 status=HTTPStatus.FORBIDDEN,
-                title=f"You are not allowed to edit the map {name!r}.",
+                title=f"You are not allowed to edit the map {name!r}",
                 detail="Editing a foreign map requires the 'edit foreign maps' permission.",
             )
         target_owner = owner
@@ -84,7 +84,7 @@ def update_map_v1(
         if not user.may("general.edit_map"):
             raise RestAPIRequestGeneralException(
                 status=HTTPStatus.FORBIDDEN,
-                title=f"You are not allowed to edit the map {name!r}.",
+                title=f"You are not allowed to edit the map {name!r}",
                 detail="Creating or customizing maps requires the edit permission.",
             )
         target_owner = user_id
@@ -116,7 +116,7 @@ def update_map_v1(
         # surface as an uncaught 500 with a crash report; answer a clean error.
         raise ProblemException(
             status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            title="The map could not be stored.",
+            title="The map could not be stored",
             detail=str(exc),
         ) from exc
     updated = get_own_map(target_owner, name)

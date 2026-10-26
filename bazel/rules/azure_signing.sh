@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Authenticode signing via Azure Artifact Signing with psign, and verification
-# of each signature and its RFC 3161 timestamp. Sourced by sign_azure.sh and
-# sign_tar_azure.sh.
+# of each signature and its RFC 3161 timestamp. Sourced by sign_azure.sh,
+# sign_tar_azure.sh and sign_file_azure.sh.
 #
 # Environment:
 #   AZURE_ARTIFACT_SIGNING_ENDPOINT, _ACCOUNT, _PROFILE
@@ -33,6 +33,30 @@ EXPECTED_SIGNER="CN=Checkmk GmbH,O=Checkmk GmbH,"
 # The timestamp server fails a request now and then, and a build signs several
 # files. psign only replaces the file once signing succeeded, so trying again is safe.
 MAX_ATTEMPTS=3
+
+# Exports the settings of a credentials file: one KEY=VALUE line per
+# AZURE_ARTIFACT_SIGNING_* setting. The file is read, never sourced, and its
+# contents are never printed.
+#
+# Usage: azure_signing_load_credentials CREDENTIALS_FILE
+azure_signing_load_credentials() {
+    local credentials_file="$1" line key
+    if [ ! -f "$credentials_file" ]; then
+        echo "error: Azure signing credentials file does not exist: $credentials_file" >&2
+        return 2
+    fi
+    while IFS= read -r line || [ -n "$line" ]; do
+        case "$line" in
+            "" | "#"*) continue ;;
+        esac
+        key="${line%%=*}"
+        if [[ " ${AZURE_SIGNING_VARS[*]} " != *" $key "* ]]; then
+            echo "error: unexpected key in $credentials_file: $key" >&2
+            return 2
+        fi
+        export "$key=${line#*=}"
+    done <"$credentials_file"
+}
 
 # Usage: azure_signing_init PSIGN OSSLSIGNCODE WORK_DIR ROOT_PEM...
 azure_signing_init() {

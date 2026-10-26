@@ -112,6 +112,16 @@ def test_win_eventlog_filter_users() -> None:
     ]
 
 
+def test_win_eventlog_filter_without_restriction() -> None:
+    # The rule set stores an empty string for "include all" or "exclude none".
+    conf = {"filter_ids": [("*", "", "")]}
+    result = list(get_win_eventlog_windows_config(conf))
+    assert result == [
+        WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
+        WindowsConfigEntry(path=["logwatch", "filter_ids"], content=[{"*": ";;"}]),
+    ]
+
+
 def test_win_eventlog_cluster_mapping() -> None:
     conf = {
         "cluster_mapping": [

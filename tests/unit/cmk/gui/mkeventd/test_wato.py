@@ -6,17 +6,20 @@
 import copy
 import dataclasses
 import io
+import json
+import re
 import signal
 import socket
 import threading
 import time
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from datetime import datetime, UTC
 from pathlib import Path
 from types import FrameType
 from typing import cast
 from unittest.mock import Mock  # Import Mock
+from urllib.parse import parse_qsl, urlsplit
 
 import pytest
 import time_machine
@@ -37,6 +40,7 @@ from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.mkeventd import wato as mkeventd_wato
+from cmk.gui.page_menu import PageMenuLink
 from cmk.gui.search.matchers import MatchItem, MatchItemConfig
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.roles import UserPermissions
@@ -50,6 +54,7 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.livestatus_client import SingleSiteConnection, SiteConfiguration, SiteConfigurations
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.mkp_tool import Installer, Manifest, PackageName, PackagePart, PackageVersion
 from cmk.web.utils.flashed_messages import get_flashed_messages
 from tests.testlib.unit.fake_site import no_site_configuration
 from tests.testlib.unit.gui.web_test_app import CmkTestResponse, SetConfig, WebTestAppForCMK
@@ -101,21 +106,21 @@ def test_match_item_generator_ec_rule_packs_and_rules() -> None:
             match_texts=["rule pack", "rule_pack_id"],
         ),
         MatchItem(
-            title="rule_id (descr)",
-            topic="Event Console rules",
-            url="wato.py?edit=0&mode=mkeventd_edit_rule&rule_pack=rule_pack_id",
-            match_texts=["rule_id", "descr"],
-        ),
-        MatchItem(
             title="mkp_rule_pack_id (MKP Rule pack)",
             topic="Event Console rule packs",
             url="wato.py?mode=mkeventd_rules&rule_pack=mkp_rule_pack_id",
             match_texts=["mkp rule pack", "mkp_rule_pack_id"],
         ),
         MatchItem(
+            title="rule_id (descr)",
+            topic="Event Console rules",
+            url="wato.py?edit_rule=rule_id&mode=mkeventd_edit_rule&rule_pack=rule_pack_id",
+            match_texts=["rule_id", "descr"],
+        ),
+        MatchItem(
             title="mkp_rule_id (descr)",
             topic="Event Console rules",
-            url="wato.py?edit=0&mode=mkeventd_edit_rule&rule_pack=mkp_rule_pack_id",
+            url="wato.py?edit_rule=mkp_rule_id&mode=mkeventd_edit_rule&rule_pack=mkp_rule_pack_id",
             match_texts=["mkp_rule_id", "descr", "comment"],
         ),
     ]
@@ -146,10 +151,10 @@ def test_send_event(monkeypatch: MonkeyPatch) -> None:
 
 
 def _rule_pack(
-    *rules: ec.Rule, disabled: bool = False, rule_pack_id: str = "pack"
+    *rules: ec.Rule, disabled: bool = False, rule_pack_id: str = "pack", title: str | None = None
 ) -> ec.ECRulePackSpec:
     return ec.ECRulePackSpec(
-        id=rule_pack_id, title=rule_pack_id.title(), disabled=disabled, rules=list(rules)
+        id=rule_pack_id, title=title or rule_pack_id.title(), disabled=disabled, rules=list(rules)
     )
 
 
@@ -173,6 +178,7 @@ def _simulator(
         ),
         SiteConfigurations({simulated_site: _site_configuration(simulated_site)}),
         hostname_translation or TranslationOptions(),
+        Edition.COMMUNITY,
     )
 
 
@@ -750,6 +756,26 @@ def _export_file(rule_pack_id: str = "pack") -> Path:
     return _paths().mkp_rule_pack_dir.value / f"{rule_pack_id}.mk"
 
 
+def _packaged(rule_pack: ec.ECRulePackSpec) -> ec.MkpRulePackProxy:
+    """Makes the rule pack one of an installed MKP, like installing the MKP does"""
+    proxy = _exported(rule_pack)
+    Installer(cmk.utils.paths.installed_packages_dir).add_installed_manifest(
+        Manifest(
+            title="MKP",
+            name=PackageName("mkp"),
+            description="",
+            version=PackageVersion("1.0.0"),
+            version_packaged="2.5.0",
+            version_min_required="2.5.0",
+            version_usable_until=None,
+            author="",
+            download_url="",
+            files={PackagePart.EC_RULE_PACKS: [Path(f"{rule_pack['id']}.mk")]},
+        )
+    )
+    return proxy
+
+
 def _stored_rule_pack(rule_pack_id: str = "pack") -> ec.ECRulePack:
     [rule_pack] = [rp for rp in ec.load_rule_packs(_paths()) if rp["id"] == rule_pack_id]
     return rule_pack
@@ -874,14 +900,33 @@ def _rule_pack_list(config: Config, edition: Edition) -> str:
     return render_page(_mode(mkeventd_wato.ModeEventConsoleRulePacks, config, edition), config)
 
 
+def _rule_pack_list_rows(
+    config: Config, edition: Edition, live: MockLiveStatusConnection
+) -> list[TableRow]:
+    with _rule_pack_list_queries(live):
+        return table_rows(_rule_pack_list(config, edition), "Rule packs")
+
+
+def _drop_vars(row: TableRow, index: str) -> dict[str, str]:
+    """The query variables of dropping the row dragged with its handle at the position"""
+    [dragger] = [a for cell in row.values() for a in cell.select("a.element_dragger")]
+    [base_url] = re.findall(r'url_drop_handler\(("(?:[^"\\]|\\.)*")', str(dragger["onmousedown"]))
+    return dict(parse_qsl(urlsplit(json.loads(base_url)).query)) | {"_index": index}
+
+
 def _rule_pack_list_action(config: Config, edition: Edition) -> ActionResult:
     return _mode(mkeventd_wato.ModeEventConsoleRulePacks, config, edition).action(config)
+
+
+def _commercial_rule_pack_list_action(config: Config) -> ActionResult:
+    """The action of the rule pack list of a commercial edition, which knows MKPs"""
+    return _rule_pack_list_action(config, Edition.PRO)
 
 
 @_setup_page
 def test_deleting_a_rule_pack_removes_it(load_config: Config, test_edition: Edition) -> None:
     _save_rule_packs(_rule_pack(rule_pack_id="first"), _rule_pack(rule_pack_id="second"))
-    submit(_delete="0")
+    submit(_delete="first")
 
     result = _rule_pack_list_action(load_config, test_edition)
 
@@ -894,7 +939,7 @@ def test_deleting_a_rule_pack_is_a_pending_change_of_the_event_console(
     load_config: Config, test_edition: Edition
 ) -> None:
     _save_rule_packs(_rule_pack())
-    submit(_delete="0")
+    submit(_delete="pack")
 
     _rule_pack_list_action(load_config, test_edition)
 
@@ -902,11 +947,25 @@ def test_deleting_a_rule_pack_is_a_pending_change_of_the_event_console(
 
 
 @_setup_page
-def test_moving_a_rule_pack_reorders_the_rule_packs(
+def test_deleting_a_rule_pack_with_a_non_ascii_id_removes_it(
     load_config: Config, test_edition: Edition
 ) -> None:
+    # Only the rule pack editor restricts the IDs to ASCII, unlike hand-written rule packs or MKPs.
+    _save_rule_packs(_rule_pack(rule_pack_id="müll"))
+    submit(_delete="müll")
+
+    _rule_pack_list_action(load_config, test_edition)
+
+    assert _rule_pack_ids() == []
+
+
+@_setup_page
+def test_moving_a_rule_pack_reorders_the_rule_packs(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
     _save_rule_packs(_rule_pack(rule_pack_id="first"), _rule_pack(rule_pack_id="second"))
-    submit(_move="0", _index="1")
+    rows = _rule_pack_list_rows(load_config, test_edition, mock_livestatus)
+    submit(**_drop_vars(rows[0], "1"))
 
     _rule_pack_list_action(load_config, test_edition)
 
@@ -914,72 +973,275 @@ def test_moving_a_rule_pack_reorders_the_rule_packs(
 
 
 @_setup_page
-def test_exporting_a_rule_pack_offers_it_with_its_rules_for_packaging(
-    load_config: Config, test_edition: Edition
+def test_moving_a_rule_pack_on_a_page_showing_another_order_is_refused(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="rule"))))
-    submit(_export="0")
+    # The position to move it to means another one once another user changed the rule packs.
+    _save_rule_packs(*(_rule_pack(rule_pack_id=id_) for id_ in ["a", "b", "c", "d"]))
+    rows = _rule_pack_list_rows(load_config, test_edition, mock_livestatus)
+    _save_rule_packs(*(_rule_pack(rule_pack_id=id_) for id_ in ["b", "c", "d"]))
+    submit(**_drop_vars(rows[3], "2"))
 
-    _rule_pack_list_action(load_config, test_edition)
+    with pytest.raises(MKUserError, match="The rule packs changed meanwhile"):
+        _rule_pack_list_action(load_config, test_edition)
+
+
+@pytest.mark.parametrize(
+    "index", [pytest.param("2", id="behind the last one"), pytest.param("-1", id="negative")]
+)
+@_setup_page
+def test_moving_a_rule_pack_to_a_position_which_does_not_exist_is_refused(
+    index: str,
+    load_config: Config,
+    test_edition: Edition,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    _save_rule_packs(_rule_pack(rule_pack_id="first"), _rule_pack(rule_pack_id="second"))
+    rows = _rule_pack_list_rows(load_config, test_edition, mock_livestatus)
+    submit(**_drop_vars(rows[1], index))
+
+    with pytest.raises(MKUserError, match=f"There is no position {index} "):
+        _rule_pack_list_action(load_config, test_edition)
+
+
+@_setup_page
+def test_exporting_a_rule_pack_offers_it_with_its_rules_for_packaging(load_config: Config) -> None:
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="rule"))))
+    submit(_export="pack")
+
+    _commercial_rule_pack_list_action(load_config)
 
     assert ec.RulePackType.type_of(_stored_rule_pack(), {}) is ec.RulePackType.exported
     assert _rule_ids() == ["rule"]
 
 
 @_setup_page
-def test_dissolving_an_exported_rule_pack_withdraws_it_from_packaging(
-    load_config: Config, test_edition: Edition
-) -> None:
+def test_dissolving_an_exported_rule_pack_withdraws_it_from_packaging(load_config: Config) -> None:
     _save_rule_packs(_exported(_rule_pack(_stored(ec.Rule(id="rule")))))
-    submit(_dissolve="0")
+    submit(_dissolve="pack")
 
-    _rule_pack_list_action(load_config, test_edition)
+    _commercial_rule_pack_list_action(load_config)
 
     assert ec.RulePackType.type_of(_stored_rule_pack(), {}) is ec.RulePackType.internal
     assert _rule_ids() == ["rule"]
     assert not _export_file().exists()
 
 
+@_setup_page
+def test_dissolving_one_of_several_rule_packs_sharing_an_export_keeps_it_for_the_others(
+    load_config: Config,
+) -> None:
+    _sharing_an_export()
+    submit(_dissolve="pack", rule_pack_occurrences="2")
+
+    _commercial_rule_pack_list_action(load_config)
+
+    assert _rules_per_rule_pack() == [["first", "second"], ["first", "second"], []]
+
+
 def _rule_pack_modified_after_packaging() -> None:
-    """Saves a rule pack, modified by adding a rule, and its version without it for packaging"""
-    _exported(_rule_pack(_stored(ec.Rule(id="packaged"))))
+    """Saves a rule pack, modified by adding a rule, and its version without it in an MKP"""
+    _packaged(_rule_pack(_stored(ec.Rule(id="packaged"))))
     _save_rule_packs(_rule_pack(_stored(ec.Rule(id="packaged")), _stored(ec.Rule(id="added"))))
 
 
 @_setup_page
 def test_resetting_a_modified_rule_pack_restores_its_version_for_packaging(
-    load_config: Config, test_edition: Edition
+    load_config: Config,
 ) -> None:
     _rule_pack_modified_after_packaging()
-    submit(_reset="0")
+    submit(_reset="pack")
 
-    _rule_pack_list_action(load_config, test_edition)
+    _commercial_rule_pack_list_action(load_config)
 
     assert _rule_ids() == ["packaged"]
 
 
 @_setup_page
 def test_synchronizing_a_modified_rule_pack_puts_the_modification_into_its_packaging(
-    load_config: Config, test_edition: Edition
+    load_config: Config,
 ) -> None:
     _rule_pack_modified_after_packaging()
-    submit(_synchronize="0")
+    submit(_synchronize="pack")
 
-    _rule_pack_list_action(load_config, test_edition)
+    _commercial_rule_pack_list_action(load_config)
 
-    assert ec.RulePackType.type_of(_stored_rule_pack(), {}) is ec.RulePackType.exported
+    assert isinstance(_stored_rule_pack(), ec.MkpRulePackProxy)
     assert _rule_ids() == ["packaged", "added"]
 
 
+def _internal(rule_pack: ec.ECRulePackSpec) -> ec.ECRulePack:
+    return rule_pack
+
+
+@pytest.mark.parametrize(
+    "action, make_rule_pack",
+    [
+        pytest.param("_delete", _exported, id="delete an exported one"),
+        pytest.param("_export", _exported, id="export an exported one"),
+        pytest.param("_dissolve", _internal, id="dissolve an internal one"),
+        pytest.param("_dissolve", _packaged, id="dissolve an unmodified one of an MKP"),
+        pytest.param("_reset", _internal, id="reset an internal one"),
+        pytest.param("_synchronize", _internal, id="synchronize an internal one"),
+    ],
+)
 @_setup_page
-def test_dissolving_a_rule_pack_which_is_not_exported_is_refused(
+def test_changing_a_rule_pack_in_a_way_the_list_does_not_offer_for_it_is_refused(
+    action: str,
+    make_rule_pack: Callable[[ec.ECRulePackSpec], ec.ECRulePack],
+    load_config: Config,
+) -> None:
+    # The rule pack list of another browser tab may still offer what fitted the rule pack before.
+    _save_rule_packs(make_rule_pack(_rule_pack(_stored(ec.Rule(id="rule")))))
+    submit(**{action: "pack"})
+
+    with pytest.raises(MKUserError, match="This is not possible for the rule pack pack"):
+        _commercial_rule_pack_list_action(load_config)
+
+    assert _rule_ids() == ["rule"]
+
+
+@pytest.mark.parametrize(
+    "make_other", [pytest.param(_internal, id="internal"), pytest.param(_exported, id="exported")]
+)
+@_setup_page
+def test_exporting_a_rule_pack_with_the_id_of_another_one_is_refused(
+    make_other: Callable[[ec.ECRulePackSpec], ec.ECRulePack], load_config: Config
+) -> None:
+    # Its export would replace the one of the other rule pack, or the other way around.
+    _save_rule_packs(
+        make_other(_rule_pack(_stored(ec.Rule(id="other")))),
+        _rule_pack(_stored(ec.Rule(id="rule"))),
+    )
+    submit(_export="pack", rule_pack_occurrence="1", rule_pack_occurrences="2")
+
+    with pytest.raises(MKUserError, match="This is not possible for the rule pack pack"):
+        _commercial_rule_pack_list_action(load_config)
+
+    assert _rules_per_rule_pack() == [["other"], ["rule"]]
+
+
+@pytest.mark.parametrize(
+    "action, make_rule_pack",
+    [
+        pytest.param("_export", _internal, id="export an internal one"),
+        pytest.param("_dissolve", _exported, id="dissolve an exported one"),
+    ],
+)
+@_setup_page
+def test_the_community_edition_refuses_changing_a_rule_pack_for_mkps(
+    action: str,
+    make_rule_pack: Callable[[ec.ECRulePackSpec], ec.ECRulePack],
+    load_config: Config,
+) -> None:
+    # Like its rule pack list, which offers nothing for MKPs, as it has none.
+    _save_rule_packs(make_rule_pack(_rule_pack(_stored(ec.Rule(id="rule")))))
+    submit(**{action: "pack"})
+
+    with pytest.raises(MKUserError, match="This is not possible for the rule pack pack"):
+        _rule_pack_list_action(load_config, Edition.COMMUNITY)
+
+    assert _rule_ids() == ["rule"]
+
+
+@pytest.mark.parametrize(
+    "action", ["_delete", "_move", "_export", "_dissolve", "_reset", "_synchronize"]
+)
+@_setup_page
+def test_changing_a_rule_pack_which_does_not_exist_is_refused(
+    action: str, load_config: Config, test_edition: Edition
+) -> None:
+    # The rule pack list of another browser tab may still show a rule pack deleted meanwhile.
+    _save_rule_packs(_rule_pack())
+    submit(**{action: "deleted"})
+
+    with pytest.raises(MKUserError, match="The requested rule pack does not exist."):
+        _rule_pack_list_action(load_config, test_edition)
+
+
+@pytest.mark.parametrize(
+    "occurrence", [pytest.param("1", id="behind the last one"), pytest.param("-1", id="negative")]
+)
+@_setup_page
+def test_changing_a_rule_pack_after_the_last_one_with_its_id_is_refused(
+    occurrence: str, load_config: Config, test_edition: Edition
+) -> None:
+    # The rule pack list of another browser tab may still show a second rule pack with the ID.
+    _save_rule_packs(_rule_pack())
+    submit(_delete="pack", rule_pack_occurrence=occurrence)
+
+    with pytest.raises(MKUserError, match="The requested rule pack does not exist."):
+        _rule_pack_list_action(load_config, test_edition)
+
+
+@_setup_page
+def test_changing_one_of_several_rule_packs_with_the_same_id_after_their_number_changed_is_refused(
     load_config: Config, test_edition: Edition
 ) -> None:
-    _save_rule_packs(_rule_pack())
-    submit(_dissolve="0")
+    # The rule pack list of another browser tab may still show a rule pack with the ID deleted
+    # meanwhile, so the same occurrence would tell another one.
+    _save_rule_packs(_rule_pack(title="Second"), _rule_pack(title="Third"))
+    submit(_delete="pack", rule_pack_occurrence="1", rule_pack_occurrences="3")
 
-    with pytest.raises(MKUserError, match="rule pack was not exported"):
+    with pytest.raises(MKUserError, match="The requested rule pack does not exist."):
         _rule_pack_list_action(load_config, test_edition)
+
+    assert [rule_pack["title"] for rule_pack in ec.load_rule_packs(_paths())] == [
+        "Second",
+        "Third",
+    ]
+
+
+def _follow(link_vars: Mapping[str, str]) -> None:
+    """Makes the request the one of the link, without the variables of the page before"""
+    request.del_vars()
+    set_request_vars(**link_vars)
+
+
+def _button_link_vars(row: TableRow, title: str) -> dict[str, str]:
+    """The query variables of the link of the button"""
+    [button] = [button for cell in row.values() for button in cell.select(f'a[title="{title}"]')]
+    return dict(parse_qsl(urlsplit(str(button["href"])).query))
+
+
+def _confirmed_link_vars(row: TableRow, title: str) -> dict[str, str]:
+    """The query variables of the link of the button, which asks for a confirmation first"""
+    [button] = [button for cell in row.values() for button in cell.select(f'a[title="{title}"]')]
+    assert button["data-cmk_on_click"] == "confirm_link"
+    url = json.loads(str(button["data-cmk_on_click_arguments"]))["url"]
+    return dict(parse_qsl(urlsplit(url).query))
+
+
+@_setup_page
+def test_deleting_a_rule_pack_with_its_button_removes_it(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _save_rule_packs(_rule_pack(rule_pack_id="first"), _rule_pack(rule_pack_id="second"))
+    with _rule_pack_list_queries(mock_livestatus):
+        rows = table_rows(_rule_pack_list(load_config, test_edition), "Rule packs")
+    submit(**_confirmed_link_vars(rows[1], "Delete this rule pack"))
+
+    _rule_pack_list_action(load_config, test_edition)
+
+    assert _rule_pack_ids() == ["first"]
+
+
+@_setup_page
+def test_deleting_one_of_several_rule_packs_with_the_same_id_with_its_button_removes_that_one(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # Hand-written rule packs may have the same ID, so may a modified one of an MKP and the one
+    # installing the MKP again added.
+    _save_rule_packs(
+        _rule_pack(_stored(ec.Rule(id="first"))), _rule_pack(_stored(ec.Rule(id="second")))
+    )
+    with _rule_pack_list_queries(mock_livestatus):
+        rows = table_rows(_rule_pack_list(load_config, test_edition), "Rule packs")
+    submit(**_confirmed_link_vars(rows[1], "Delete this rule pack"))
+
+    _rule_pack_list_action(load_config, test_edition)
+
+    assert _rule_ids() == ["first"]
 
 
 @_setup_page
@@ -1144,6 +1406,18 @@ def test_rule_pack_list_counts_the_rules_and_their_hits_on_all_sites(
 
 
 @_setup_page
+def test_rule_pack_list_counts_the_hits_of_each_of_several_rule_packs_with_the_same_id(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="a"))), _rule_pack(_stored(ec.Rule(id="b"))))
+
+    with _rule_pack_list_queries(mock_livestatus, rule_hits=[(omd_site(), "a", 2)]):
+        rows = table_rows(_rule_pack_list(load_config, test_edition), "Rule packs")
+
+    assert [row["Hits"].get_text(strip=True) for row in rows] == ["2", "0"]
+
+
+@_setup_page
 def test_rule_pack_search_without_a_match_says_so(
     load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
 ) -> None:
@@ -1187,6 +1461,22 @@ def test_rule_pack_search_is_kept_when_looking_at_the_matching_rules(
     rows = _found_rule_packs(load_config, test_edition, mock_livestatus)
 
     assert [link_vars(row["Rules"]).get("search") for row in rows] == ["disk", None]
+
+
+@_setup_page
+def test_rule_pack_search_finds_only_the_matching_one_of_several_rule_packs_with_the_same_id(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _save_rule_packs(
+        _rule_pack(_stored(ec.Rule(id="failed", description="disk failed"))),
+        _rule_pack(_stored(ec.Rule(id="load", description="CPU load"))),
+    )
+    set_request_vars(search="disk")
+
+    with _rule_pack_list_queries(mock_livestatus):
+        rows = table_rows(_rule_pack_list(load_config, test_edition), "Found rule packs")
+
+    assert [row["#"].get_text(strip=True) for row in rows] == ["0"]
 
 
 @_setup_page
@@ -1271,12 +1561,18 @@ def _rule_list(config: Config, edition: Edition) -> str:
     return render_page(_mode(mkeventd_wato.ModeEventConsoleRules, config, edition), config)
 
 
+def _rule_list_rows(
+    config: Config, edition: Edition, live: MockLiveStatusConnection
+) -> list[TableRow]:
+    with _rule_hit_queries(live):
+        return table_rows(_rule_list(config, edition), "Rules")
+
+
 def _listed_rule(
     rule: ec.Rule, config: Config, edition: Edition, live: MockLiveStatusConnection
 ) -> TableRow:
     _save_rule_packs(_rule_pack(_stored(rule)))
-    with _rule_hit_queries(live):
-        [row] = table_rows(_rule_list(config, edition), "Rules")
+    [row] = _rule_list_rows(config, edition, live)
     return row
 
 
@@ -1285,7 +1581,7 @@ def test_deleting_a_rule_removes_it_from_its_rule_pack(
     load_config: Config, test_edition: Edition
 ) -> None:
     _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))))
-    submit(rule_pack="pack", _delete="0")
+    submit(rule_pack="pack", _delete="first")
 
     result = _rule_list_action(load_config, test_edition)
 
@@ -1300,7 +1596,7 @@ def test_deleting_a_rule_of_an_exported_rule_pack_updates_the_export(
     _save_rule_packs(
         _exported(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))))
     )
-    submit(rule_pack="pack", _delete="0")
+    submit(rule_pack="pack", _delete="first")
 
     _rule_list_action(load_config, test_edition)
 
@@ -1308,15 +1604,109 @@ def test_deleting_a_rule_of_an_exported_rule_pack_updates_the_export(
 
 
 @_setup_page
+def test_deleting_a_rule_of_a_packaged_rule_pack_removes_it_from_the_modified_rule_pack(
+    load_config: Config,
+) -> None:
+    _save_rule_packs(
+        _packaged(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))))
+    )
+    submit(rule_pack="pack", _delete="first")
+
+    _rule_list_action(load_config, Edition.PRO)
+
+    assert _rule_ids() == ["second"]
+
+
+@_setup_page
 def test_moving_a_rule_reorders_the_rules_of_its_rule_pack(
-    load_config: Config, test_edition: Edition
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
 ) -> None:
     _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))))
-    submit(rule_pack="pack", _move="0", _index="1")
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+    submit(**_drop_vars(rows[0], "1"))
 
     _rule_list_action(load_config, test_edition)
 
     assert _rule_ids() == ["second", "first"]
+
+
+@_setup_page
+def test_moving_a_rule_on_a_page_showing_another_order_is_refused(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # The position to move it to means another one once another user changed the rules.
+    _save_rule_packs(_rule_pack(*(_stored(ec.Rule(id=id_)) for id_ in ["a", "b", "c", "d"])))
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+    _save_rule_packs(_rule_pack(*(_stored(ec.Rule(id=id_)) for id_ in ["b", "c", "d"])))
+    submit(**_drop_vars(rows[3], "2"))
+
+    with pytest.raises(MKUserError, match="The rules of this rule pack changed meanwhile"):
+        _rule_list_action(load_config, test_edition)
+
+
+@_setup_page
+def test_moving_a_rule_of_a_packaged_rule_pack_reorders_the_rules_of_the_modified_rule_pack(
+    load_config: Config, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _save_rule_packs(
+        _packaged(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))))
+    )
+    rows = _rule_list_rows(load_config, Edition.PRO, mock_livestatus)
+    submit(**_drop_vars(rows[0], "1"))
+
+    _rule_list_action(load_config, Edition.PRO)
+
+    assert _rule_ids() == ["second", "first"]
+
+
+@pytest.mark.parametrize(
+    "index", [pytest.param("2", id="behind the last one"), pytest.param("-1", id="negative")]
+)
+@_setup_page
+def test_moving_a_rule_to_a_position_which_does_not_exist_is_refused(
+    index: str,
+    load_config: Config,
+    test_edition: Edition,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))))
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+    submit(**_drop_vars(rows[1], index))
+
+    with pytest.raises(MKUserError, match=f"There is no position {index} "):
+        _rule_list_action(load_config, test_edition)
+
+
+@pytest.mark.parametrize("action", ["_delete", "_move"])
+@_setup_page
+def test_changing_a_rule_which_does_not_exist_is_refused(
+    action: str, load_config: Config, test_edition: Edition
+) -> None:
+    # The rule list of another browser tab may still show a rule deleted meanwhile.
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="rule"))))
+    submit(rule_pack="pack", **{action: "deleted"})
+
+    with pytest.raises(MKUserError, match="The requested rule does not exist."):
+        _rule_list_action(load_config, test_edition)
+
+
+@_setup_page
+def test_deleting_one_of_several_rules_with_the_same_id_with_its_button_removes_that_one(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # Hand-written rule packs may have several rules with the same ID.
+    _save_rule_packs(
+        _rule_pack(
+            _stored(ec.Rule(id="rule", description="first")),
+            _stored(ec.Rule(id="rule", description="second")),
+        )
+    )
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+    submit(**_confirmed_link_vars(rows[1], "Delete this rule"))
+
+    _rule_list_action(load_config, test_edition)
+
+    assert [rule.get("description") for rule in _stored_rule_pack()["rules"]] == ["first"]
 
 
 @_setup_page
@@ -1327,7 +1717,7 @@ def test_moving_a_rule_to_another_rule_pack_puts_it_first_there(
         _rule_pack(_stored(ec.Rule(id="a")), _stored(ec.Rule(id="b")), rule_pack_id="source"),
         _rule_pack(_stored(ec.Rule(id="c")), rule_pack_id="target"),
     )
-    submit(rule_pack="source", _move_to="yes", _move_to_b="target")
+    submit(rule_pack="source", _move_to="yes", **{"_move_to_0:b": "0:target"})
 
     _rule_list_action(load_config, test_edition)
 
@@ -1342,11 +1732,276 @@ def test_moving_a_rule_to_an_exported_rule_pack_updates_the_export(
         _rule_pack(_stored(ec.Rule(id="a")), rule_pack_id="source"),
         _exported(_rule_pack(_stored(ec.Rule(id="b")), rule_pack_id="target")),
     )
-    submit(rule_pack="source", _move_to="yes", _move_to_a="target")
+    submit(rule_pack="source", _move_to="yes", **{"_move_to_0:a": "0:target"})
 
     _rule_list_action(load_config, test_edition)
 
     assert _rule_ids("target") == ["a", "b"]
+
+
+def _move_to_form_values(page: str, row: TableRow, rule_pack_title: str) -> dict[str, str]:
+    """The values of the form after choosing the rule pack to move the rule of the row to"""
+    [select] = row["Move to pack..."].select("select")
+    [value] = [
+        str(option["value"])
+        for option in select.select("option")
+        if option.get_text() == rule_pack_title
+    ]
+    return {**form_values(page, "move_to"), str(select["name"]): value}
+
+
+def _rules_per_rule_pack() -> list[list[str]]:
+    return [
+        [rule["id"] for rule in rule_pack["rules"]] for rule_pack in ec.load_rule_packs(_paths())
+    ]
+
+
+@_setup_page
+def test_moving_a_rule_to_one_of_several_rule_packs_with_the_same_id_moves_it_there(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _save_rule_packs(
+        _rule_pack(_stored(ec.Rule(id="rule"))),
+        _rule_pack(rule_pack_id="target", title="First"),
+        _rule_pack(rule_pack_id="target", title="Second"),
+    )
+    with _rule_hit_queries(mock_livestatus):
+        page = _rule_list(load_config, test_edition)
+    [row] = table_rows(page, "Rules")
+    submit(**_move_to_form_values(page, row, "Second"))
+
+    _rule_list_action(load_config, test_edition)
+
+    assert _rules_per_rule_pack() == [[], [], ["rule"]]
+
+
+@_setup_page
+def test_moving_one_of_several_rules_with_the_same_id_to_another_rule_pack_moves_that_one(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # Hand-written rule packs may have several rules with the same ID.
+    _save_rule_packs(
+        _rule_pack(
+            _stored(ec.Rule(id="rule", description="first")),
+            _stored(ec.Rule(id="rule", description="second")),
+        ),
+        _rule_pack(rule_pack_id="target"),
+    )
+    with _rule_hit_queries(mock_livestatus):
+        page = _rule_list(load_config, test_edition)
+    rows = table_rows(page, "Rules")
+    submit(**_move_to_form_values(page, rows[1], "Target"))
+
+    _rule_list_action(load_config, test_edition)
+
+    assert (_rule_descriptions("pack"), _rule_descriptions("target")) == (["first"], ["second"])
+
+
+@_setup_page
+def test_moving_a_rule_to_another_rule_pack_reloads_the_rule_list(
+    load_config: Config, test_edition: Edition
+) -> None:
+    # Rendered for the request moving the rule, the rule list would choose the same rule pack for
+    # the next rule with the ID of the moved one.
+    _save_rule_packs(
+        _rule_pack(_stored(ec.Rule(id="rule")), _stored(ec.Rule(id="rule")), rule_pack_id="source"),
+        _rule_pack(rule_pack_id="target"),
+    )
+    submit(rule_pack="source", _move_to="yes", **{"_move_to_0/2:rule": "0:target"})
+
+    result = _rule_list_action(load_config, test_edition)
+
+    assert redirect_vars(result) == {"mode": "mkeventd_rules", "rule_pack": "source"}
+
+
+@_setup_page
+def test_moving_a_rule_to_another_rule_pack_keeps_the_search_of_the_rule_list(
+    load_config: Config, test_edition: Edition
+) -> None:
+    _save_rule_packs(
+        _rule_pack(_stored(ec.Rule(id="rule")), rule_pack_id="source"),
+        _rule_pack(rule_pack_id="target"),
+    )
+    submit(rule_pack="source", search="rule", _move_to="yes", **{"_move_to_0:rule": "0:target"})
+
+    result = _rule_list_action(load_config, test_edition)
+
+    assert redirect_vars(result) == {
+        "mode": "mkeventd_rules",
+        "rule_pack": "source",
+        "search": "rule",
+    }
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        pytest.param("0:unknown", id="unknown ID"),
+        pytest.param("1:target", id="unknown further one with the ID"),
+        pytest.param("0/2:target", id="another number of ones with the ID"),
+        pytest.param("target", id="without which one with the ID"),
+        pytest.param(5000 * "1" + ":target", id="more digits than Python converts"),
+    ],
+)
+@_setup_page
+def test_moving_a_rule_to_a_rule_pack_which_does_not_exist_is_refused(
+    target: str, load_config: Config, test_edition: Edition
+) -> None:
+    _save_rule_packs(
+        _rule_pack(_stored(ec.Rule(id="rule")), rule_pack_id="source"),
+        _rule_pack(rule_pack_id="target"),
+    )
+    submit(rule_pack="source", _move_to="yes", **{"_move_to_0:rule": target})
+
+    with pytest.raises(MKUserError, match="The requested rule pack does not exist.") as e:
+        _rule_list_action(load_config, test_edition)
+
+    assert e.value.varname == "_move_to_0:rule"
+
+
+@_setup_page
+def test_moving_a_rule_which_does_not_exist_to_another_rule_pack_is_refused(
+    load_config: Config, test_edition: Edition
+) -> None:
+    # The rule list of another browser tab may still show a rule deleted meanwhile.
+    _save_rule_packs(
+        _rule_pack(_stored(ec.Rule(id="rule")), rule_pack_id="source"),
+        _rule_pack(rule_pack_id="target"),
+    )
+    submit(rule_pack="source", _move_to="yes", **{"_move_to_0:deleted": "0:target"})
+
+    with pytest.raises(MKUserError, match="The requested rule does not exist."):
+        _rule_list_action(load_config, test_edition)
+
+
+@_setup_page
+def test_moving_a_rule_to_the_empty_entry_of_its_dropdown_changes_nothing(
+    load_config: Config, test_edition: Edition
+) -> None:
+    _save_rule_packs(
+        _rule_pack(_stored(ec.Rule(id="rule")), rule_pack_id="source"),
+        _rule_pack(rule_pack_id="target"),
+    )
+    submit(rule_pack="source", _move_to="yes", **{"_move_to_0:rule": ""})
+
+    result = _rule_list_action(load_config, test_edition)
+
+    assert _rules_per_rule_pack() == [["rule"], []]
+    assert redirect_vars(result) == {"mode": "mkeventd_rules", "rule_pack": "source"}
+
+
+@_setup_page
+def test_moving_a_rule_to_its_own_rule_pack_is_refused(
+    load_config: Config, test_edition: Edition
+) -> None:
+    # The rule list doesn't offer it, as the rule would show up twice and replace another one.
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))))
+    submit(rule_pack="pack", _move_to="yes", **{"_move_to_0:second": "0:pack"})
+
+    with pytest.raises(MKUserError, match="The rule is in this rule pack already."):
+        _rule_list_action(load_config, test_edition)
+
+
+def _sharing_an_export() -> None:
+    """Saves two rule packs with the same ID sharing an export, and another rule pack
+
+    Hand-written rule packs may share one, so may ones exported before exporting a rule pack with
+    the ID of another one was refused."""
+    _save_rule_packs(
+        _exported(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second")))),
+        ec.MkpRulePackProxy("pack"),
+        _rule_pack(rule_pack_id="other"),
+    )
+
+
+@_setup_page
+def test_moving_a_rule_to_another_rule_pack_sharing_its_export_is_refused(
+    load_config: Config, test_edition: Edition
+) -> None:
+    _sharing_an_export()
+    submit(
+        rule_pack="pack",
+        rule_pack_occurrences="2",
+        _move_to="yes",
+        **{"_move_to_0:second": "1/2:pack"},
+    )
+
+    with pytest.raises(MKUserError, match="The rule is in this rule pack already."):
+        _rule_list_action(load_config, test_edition)
+
+    assert _rules_per_rule_pack() == [["first", "second"], ["first", "second"], []]
+
+
+@_setup_page
+def test_rule_list_offers_moving_a_rule_only_to_rule_packs_not_sharing_its_export(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _sharing_an_export()
+    set_request_vars(rule_pack_occurrences="2")
+
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+
+    assert [option.get_text() for option in rows[0]["Move to pack..."].select("option")] == [
+        "",
+        "Other",
+    ]
+
+
+@_setup_page
+def test_rule_list_offers_no_moving_without_another_rule_pack_to_move_the_rules_to(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # Like _sharing_an_export(), but without another rule pack
+    _save_rule_packs(
+        _exported(_rule_pack(_stored(ec.Rule(id="rule")))), ec.MkpRulePackProxy("pack")
+    )
+    set_request_vars(rule_pack_occurrences="2")
+
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+
+    assert "Move to pack..." not in rows[0]
+
+
+def _deleting_the_rule_of_a_second_rule_pack_with_the_id(
+    config: Config, edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    """Makes the request delete the rule of the second of two rule packs with the same ID
+
+    Like the delete button of the rule in the rule list of that rule pack."""
+    _save_rule_packs(
+        _rule_pack(_stored(ec.Rule(id="first"))), _rule_pack(_stored(ec.Rule(id="second")))
+    )
+    set_request_vars(rule_pack_occurrence="1", rule_pack_occurrences="2")
+    [row] = _rule_list_rows(config, edition, mock_livestatus)
+    _follow(_confirmed_link_vars(row, "Delete this rule"))
+    submit()
+
+
+@_setup_page
+def test_deleting_a_rule_of_one_of_several_rule_packs_with_the_same_id_deletes_it_there(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _deleting_the_rule_of_a_second_rule_pack_with_the_id(load_config, test_edition, mock_livestatus)
+
+    _rule_list_action(load_config, test_edition)
+
+    assert _rules_per_rule_pack() == [["first"], []]
+
+
+@_setup_page
+def test_deleting_a_rule_of_one_of_several_rule_packs_with_the_same_id_returns_to_its_rule_list(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _deleting_the_rule_of_a_second_rule_pack_with_the_id(load_config, test_edition, mock_livestatus)
+
+    result = _rule_list_action(load_config, test_edition)
+
+    assert redirect_vars(result) == {
+        "mode": "mkeventd_rules",
+        "rule_pack": "pack",
+        "rule_pack_occurrence": "1",
+        "rule_pack_occurrences": "2",
+    }
 
 
 @_setup_page
@@ -1572,6 +2227,22 @@ def test_saving_a_new_rule_pack_is_a_pending_change_of_the_event_console(
 
 
 @_setup_page
+def test_saving_a_new_rule_pack_works_if_an_mkp_has_one_with_the_id_of_the_default_one(
+    load_config: Config,
+) -> None:
+    # A new rule pack starts as the default one. The sample rule pack has its ID, so an MKP made of
+    # it does, too.
+    _save_rule_packs(_packaged(_rule_pack(rule_pack_id="default")))
+    _submit_rule_pack_form(
+        load_config, Edition.PRO, rule_pack_p_id="new", rule_pack_p_title="New rule pack"
+    )
+
+    _rule_pack_editor(load_config, Edition.PRO).action(load_config)
+
+    assert _rule_pack_ids() == ["new", "default"]
+
+
+@_setup_page
 def test_saving_a_rule_pack_with_the_id_of_another_one_is_refused(
     load_config: Config, test_edition: Edition
 ) -> None:
@@ -1589,7 +2260,7 @@ def test_saving_an_edited_rule_pack_keeps_its_rules(
     load_config: Config, test_edition: Edition
 ) -> None:
     _save_rule_packs(_rule_pack(_stored(ec.Rule(id="rule"))))
-    set_request_vars(edit="0")
+    set_request_vars(rule_pack="pack")
     _submit_rule_pack_form(load_config, test_edition, rule_pack_p_title="Renamed")
 
     _rule_pack_editor(load_config, test_edition).action(load_config)
@@ -1602,7 +2273,7 @@ def test_saving_an_edited_exported_rule_pack_updates_the_export(
     load_config: Config, test_edition: Edition
 ) -> None:
     _save_rule_packs(_exported(_rule_pack()))
-    set_request_vars(edit="0")
+    set_request_vars(rule_pack="pack")
     _submit_rule_pack_form(load_config, test_edition, rule_pack_p_disabled="on")
 
     _rule_pack_editor(load_config, test_edition).action(load_config)
@@ -1611,11 +2282,58 @@ def test_saving_an_edited_exported_rule_pack_updates_the_export(
 
 
 @_setup_page
+def test_saving_an_edited_packaged_rule_pack_puts_the_change_into_a_modified_copy(
+    load_config: Config,
+) -> None:
+    _save_rule_packs(_packaged(_rule_pack()))
+    packaged = _export_file().read_text()
+    set_request_vars(rule_pack="pack")
+    _submit_rule_pack_form(load_config, Edition.PRO, rule_pack_p_disabled="on")
+
+    _rule_pack_editor(load_config, Edition.PRO).action(load_config)
+
+    assert not isinstance(_stored_rule_pack(), ec.MkpRulePackProxy)
+    assert _stored_rule_pack()["disabled"] is True
+    assert _export_file().read_text() == packaged
+
+
+@_setup_page
+def test_saving_an_unchanged_packaged_rule_pack_keeps_it_the_one_of_the_mkp(
+    load_config: Config,
+) -> None:
+    _save_rule_packs(_packaged(_rule_pack()))
+    set_request_vars(rule_pack="pack")
+    _submit_rule_pack_form(load_config, Edition.PRO)
+
+    _rule_pack_editor(load_config, Edition.PRO).action(load_config)
+
+    assert isinstance(_stored_rule_pack(), ec.MkpRulePackProxy)
+
+
+@_setup_page
+def test_saving_an_unchanged_packaged_rule_pack_of_another_edition_keeps_it_the_one_of_the_mkp(
+    load_config: Config,
+) -> None:
+    # An MKP made with the multi-tenancy edition has a customer, which other editions don't show.
+    _save_rule_packs(
+        _packaged(
+            ec.ECRulePackSpec(id="pack", title="Pack", disabled=False, rules=[], customer="c")
+        )
+    )
+    set_request_vars(rule_pack="pack")
+    _submit_rule_pack_form(load_config, Edition.PRO)
+
+    _rule_pack_editor(load_config, Edition.PRO).action(load_config)
+
+    assert isinstance(_stored_rule_pack(), ec.MkpRulePackProxy)
+
+
+@_setup_page
 def test_the_id_and_title_of_an_exported_rule_pack_are_fixed(
     load_config: Config, test_edition: Edition
 ) -> None:
     _save_rule_packs(_exported(_rule_pack()))
-    set_request_vars(edit="0")
+    set_request_vars(rule_pack="pack")
 
     form = form_values(
         render_page(_rule_pack_editor(load_config, test_edition), load_config), "rule_pack"
@@ -1629,17 +2347,122 @@ def test_editing_an_unknown_rule_pack_is_refused(
     load_config: Config, test_edition: Edition
 ) -> None:
     _save_rule_packs(_rule_pack())
-    set_request_vars(edit="1")
+    set_request_vars(rule_pack="unknown")
 
-    with pytest.raises(MKUserError, match="The rule pack you are trying to edit does not exist."):
+    with pytest.raises(MKUserError, match="The requested rule pack does not exist."):
         _rule_pack_editor(load_config, test_edition)
+
+
+@_setup_page
+def test_editing_a_rule_pack_by_its_position_is_refused(
+    load_config: Config, test_edition: Edition
+) -> None:
+    # Links from before rule packs were addressed by their ID, e.g. bookmarks, would add one.
+    _save_rule_packs(_rule_pack())
+    set_request_vars(edit="0")
+
+    with pytest.raises(MKUserError, match="The link to this rule pack is outdated."):
+        _rule_pack_editor(load_config, test_edition)
+
+
+@_setup_page
+def test_editing_a_rule_pack_with_its_button_after_another_one_was_added_edits_it(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _save_rule_packs(_rule_pack(rule_pack_id="first"), _rule_pack(rule_pack_id="second"))
+    with _rule_pack_list_queries(mock_livestatus):
+        rows = table_rows(_rule_pack_list(load_config, test_edition), "Rule packs")
+    # Another user adds a rule pack, which comes first.
+    _save_rule_packs(
+        _rule_pack(rule_pack_id="new"),
+        _rule_pack(rule_pack_id="first"),
+        _rule_pack(rule_pack_id="second"),
+    )
+    set_request_vars(**_button_link_vars(rows[1], "Edit properties of this rule pack"))
+    _submit_rule_pack_form(load_config, test_edition, rule_pack_p_title="Renamed")
+
+    _rule_pack_editor(load_config, test_edition).action(load_config)
+
+    assert [_stored_rule_pack(id_)["title"] for id_ in ["new", "first", "second"]] == [
+        "New",
+        "First",
+        "Renamed",
+    ]
+
+
+@_setup_page
+def test_editing_one_of_several_rule_packs_with_the_same_id_with_its_button_edits_that_one(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _save_rule_packs(_rule_pack(), _rule_pack())
+    with _rule_pack_list_queries(mock_livestatus):
+        rows = table_rows(_rule_pack_list(load_config, test_edition), "Rule packs")
+    set_request_vars(**_button_link_vars(rows[1], "Edit properties of this rule pack"))
+    # The ID of a rule pack of an MKP is fixed, so the ID it has already is no reason to refuse it.
+    _submit_rule_pack_form(load_config, test_edition, rule_pack_p_title="Renamed")
+
+    _rule_pack_editor(load_config, test_edition).action(load_config)
+
+    assert [rule_pack["title"] for rule_pack in ec.load_rule_packs(_paths())] == [
+        "Pack",
+        "Renamed",
+    ]
+
+
+@_setup_page
+def test_listing_the_rules_of_one_of_several_rule_packs_with_the_same_id_lists_its_rules(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _save_rule_packs(_rule_pack(title="First"), _rule_pack(title="Second"))
+    with _rule_pack_list_queries(mock_livestatus):
+        rows = table_rows(_rule_pack_list(load_config, test_edition), "Rule packs")
+    _follow(_button_link_vars(rows[1], "Edit the rules in this pack"))
+
+    rule_list = _mode(mkeventd_wato.ModeEventConsoleRules, load_config, test_edition)
+
+    assert rule_list.title() == "Rule pack Second"
+
+
+@_setup_page
+def test_rule_list_of_a_rule_pack_with_a_non_ascii_id_is_shown(
+    load_config: Config, test_edition: Edition
+) -> None:
+    # Only the rule pack editor restricts the IDs to ASCII, unlike hand-written rule packs or MKPs.
+    _save_rule_packs(_rule_pack(rule_pack_id="müll"))
+    set_request_vars(rule_pack="müll")
+
+    rule_list = _mode(mkeventd_wato.ModeEventConsoleRules, load_config, test_edition)
+
+    assert rule_list.title() == "Rule pack Müll"
+
+
+@_setup_page
+def test_editing_the_properties_of_the_rule_pack_of_a_rule_list_edits_that_rule_pack(
+    load_config: Config, test_edition: Edition
+) -> None:
+    _save_rule_packs(_rule_pack(rule_pack_id="first"), _rule_pack(rule_pack_id="second"))
+    set_request_vars(rule_pack="second")
+    menu = _mode(mkeventd_wato.ModeEventConsoleRules, load_config, test_edition).page_menu(
+        load_config, Breadcrumb()
+    )
+    [item] = [
+        entry.item
+        for dropdown in menu.dropdowns
+        for topic in dropdown.topics
+        for entry in topic.entries
+        if entry.title == "Edit properties"
+    ]
+    assert isinstance(item, PageMenuLink) and item.link.url is not None
+    set_request_vars(**dict(parse_qsl(urlsplit(item.link.url).query)))
+
+    assert _rule_pack_editor(load_config, test_edition).title() == "Edit rule pack second"
 
 
 @pytest.mark.parametrize(
     "variables, title",
     [
         pytest.param({}, "Add rule pack", id="new"),
-        pytest.param({"edit": "0"}, "Edit rule pack pack", id="edit"),
+        pytest.param({"rule_pack": "pack"}, "Edit rule pack pack", id="edit"),
     ],
 )
 @_setup_page
@@ -1684,12 +2507,27 @@ def test_saving_a_clone_inserts_it_before_the_original(
     load_config: Config, test_edition: Edition
 ) -> None:
     _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))))
-    set_request_vars(rule_pack="pack", clone="1")
+    set_request_vars(rule_pack="pack", clone_rule="second")
     _submit_rule_form(load_config, test_edition, rule_p_id="clone")
 
     _rule_editor(load_config, test_edition).action(load_config)
 
     assert _rule_ids() == ["first", "clone", "second"]
+
+
+@_setup_page
+def test_saving_a_copy_of_a_rule_deleted_meanwhile_puts_the_copy_first(
+    load_config: Config, test_edition: Edition
+) -> None:
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="original"))))
+    set_request_vars(rule_pack="pack", clone_rule="original")
+    _submit_rule_form(load_config, test_edition, rule_p_id="copy")
+    # Another user deletes the original.
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first"))))
+
+    _rule_editor(load_config, test_edition).action(load_config)
+
+    assert _rule_ids() == ["copy", "first"]
 
 
 @_setup_page
@@ -1706,11 +2544,24 @@ def test_saving_a_new_rule_of_an_exported_rule_pack_updates_the_export(
 
 
 @_setup_page
+def test_saving_a_new_rule_of_a_packaged_rule_pack_puts_it_into_the_modified_rule_pack(
+    load_config: Config,
+) -> None:
+    _save_rule_packs(_packaged(_rule_pack(_stored(ec.Rule(id="existing")))))
+    set_request_vars(rule_pack="pack")
+    _submit_rule_form(load_config, Edition.PRO, rule_p_id="new")
+
+    _rule_editor(load_config, Edition.PRO).action(load_config)
+
+    assert _rule_ids() == ["new", "existing"]
+
+
+@_setup_page
 def test_saving_an_edited_rule_replaces_it(
     load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
 ) -> None:
     _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))))
-    set_request_vars(rule_pack="pack", edit="1")
+    set_request_vars(rule_pack="pack", edit_rule="second")
     _submit_rule_form(load_config, test_edition, rule_p_description="edited")
     mock_livestatus.expect_query("COMMAND [...] EC_RESETCOUNTERS;second", match_type="ellipsis")
 
@@ -1725,7 +2576,7 @@ def test_saving_an_edited_rule_resets_its_hit_counters_in_the_local_event_consol
     load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
 ) -> None:
     _save_rule_packs(_rule_pack(_stored(ec.Rule(id="rule"))))
-    set_request_vars(rule_pack="pack", edit="0")
+    set_request_vars(rule_pack="pack", edit_rule="rule")
     _submit_rule_form(load_config, test_edition)
     mock_livestatus.expect_query(
         "COMMAND [...] EC_RESETCOUNTERS;rule", match_type="ellipsis", sites=[omd_site()]
@@ -1740,7 +2591,7 @@ def test_changing_the_id_of_an_existing_rule_is_refused(
     load_config: Config, test_edition: Edition
 ) -> None:
     _save_rule_packs(_rule_pack(_stored(ec.Rule(id="rule"))))
-    set_request_vars(rule_pack="pack", edit="0")
+    set_request_vars(rule_pack="pack", edit_rule="rule")
     _submit_rule_form(load_config, test_edition, rule_p_id="renamed")
 
     with pytest.raises(
@@ -1815,18 +2666,47 @@ def test_rule_editor_finds_the_rule_pack_of_a_rule_given_by_its_id(
 
     editor = _rule_editor(load_config, test_edition)
 
-    assert (editor.title(), request.var("rule_pack"), request.var("edit")) == (
+    assert (editor.title(), request.var("rule_pack"), request.var("edit_rule")) == (
         "Edit rule second",
         "pack",
-        "1",
+        "second",
     )
+
+
+@_setup_page
+def test_rule_editor_finds_the_first_rule_pack_of_a_rule_given_by_its_id(
+    load_config: Config, test_edition: Edition
+) -> None:
+    # Hand-written rule packs or MKPs may have rules with the same ID.
+    _save_rule_packs(
+        _rule_pack(_stored(ec.Rule(id="rule")), rule_pack_id="first"),
+        _rule_pack(_stored(ec.Rule(id="rule")), rule_pack_id="second"),
+    )
+    set_request_vars(rule_id="rule")
+
+    _rule_editor(load_config, test_edition)
+
+    assert request.var("rule_pack") == "first"
+
+
+@_setup_page
+def test_rule_editor_finds_a_rule_of_a_rule_pack_with_a_rule_without_an_id(
+    load_config: Config, test_edition: Edition
+) -> None:
+    # Nobody validates hand-written rules, and the Event Console compiles no disabled ones.
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(disabled=True)), _stored(ec.Rule(id="rule"))))
+    set_request_vars(rule_pack="pack", edit_rule="rule")
+
+    assert _rule_editor(load_config, test_edition).title() == "Edit rule rule"
 
 
 @pytest.mark.parametrize(
     "variables, field",
     [
-        pytest.param({"rule_id": "unknown"}, "rule_id", id="by ID"),
-        pytest.param({"rule_pack": "pack", "edit": "1"}, "edit", id="by number"),
+        pytest.param({"rule_id": "unknown"}, "rule_id", id="without its rule pack"),
+        pytest.param(
+            {"rule_pack": "pack", "edit_rule": "unknown"}, "edit_rule", id="in its rule pack"
+        ),
     ],
 )
 @_setup_page
@@ -1842,12 +2722,165 @@ def test_editing_an_unknown_rule_is_refused(
     assert e.value.varname == field
 
 
+@_setup_page
+def test_copying_an_unknown_rule_is_refused(load_config: Config, test_edition: Edition) -> None:
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="rule"))))
+    set_request_vars(rule_pack="pack", clone_rule="unknown")
+
+    with pytest.raises(MKUserError, match="The rule you are trying to copy does not exist."):
+        _rule_editor(load_config, test_edition)
+
+
+@pytest.mark.parametrize(
+    "varname", [pytest.param("edit", id="edit"), pytest.param("clone", id="copy")]
+)
+@_setup_page
+def test_editing_or_copying_a_rule_by_its_position_is_refused(
+    varname: str, load_config: Config, test_edition: Edition
+) -> None:
+    # Links from before rules were addressed by their ID, e.g. bookmarks, would add one, which
+    # might be the ID of another rule.
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="0"))))
+    set_request_vars(rule_pack="pack", **{varname: "0"})
+
+    with pytest.raises(MKUserError, match="The link to this rule is outdated."):
+        _rule_editor(load_config, test_edition)
+
+
+@_setup_page
+def test_editing_a_rule_with_its_button_after_another_one_was_added_edits_it(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))))
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+    # Another user adds a rule, which comes first.
+    _save_rule_packs(
+        _rule_pack(
+            _stored(ec.Rule(id="new")), _stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))
+        )
+    )
+    set_request_vars(**_button_link_vars(rows[1], "Edit this rule"))
+    _submit_rule_form(load_config, test_edition, rule_p_description="edited")
+    mock_livestatus.expect_query("COMMAND [...] EC_RESETCOUNTERS;second", match_type="ellipsis")
+
+    # The rule list connected to the sites already.
+    with mock_livestatus(expect_status_query=False):
+        _rule_editor(load_config, test_edition).action(load_config)
+
+    assert _rule_descriptions() == [None, None, "edited"]
+
+
+@_setup_page
+def test_copying_a_rule_with_its_button_after_another_one_was_added_inserts_the_copy_before_it(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))))
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+    # Another user adds a rule, which comes first.
+    _save_rule_packs(
+        _rule_pack(
+            _stored(ec.Rule(id="new")), _stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))
+        )
+    )
+    set_request_vars(**_button_link_vars(rows[1], "Create a copy of this rule"))
+    _submit_rule_form(load_config, test_edition, rule_p_id="copy")
+
+    _rule_editor(load_config, test_edition).action(load_config)
+
+    assert _rule_ids() == ["new", "first", "copy", "second"]
+
+
+def _editing_the_rule_of_a_second_rule_pack_with_the_id(
+    config: Config, edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    """Makes the request save the rule of the second of two rule packs with the same ID, edited
+
+    Like the rule editor the edit button of the rule in the rule list of that rule pack opens."""
+    _save_rule_packs(
+        _rule_pack(_stored(ec.Rule(id="first"))), _rule_pack(_stored(ec.Rule(id="second")))
+    )
+    set_request_vars(rule_pack_occurrence="1", rule_pack_occurrences="2")
+    [row] = _rule_list_rows(config, edition, mock_livestatus)
+    _follow(_button_link_vars(row, "Edit this rule"))
+    _submit_rule_form(config, edition, rule_p_description="edited")
+    mock_livestatus.expect_query("COMMAND [...] EC_RESETCOUNTERS;second", match_type="ellipsis")
+
+
+@_setup_page
+def test_editing_a_rule_of_one_of_several_rule_packs_with_the_same_id_edits_it_there(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _editing_the_rule_of_a_second_rule_pack_with_the_id(load_config, test_edition, mock_livestatus)
+
+    # The rule list connected to the sites already.
+    with mock_livestatus(expect_status_query=False):
+        _rule_editor(load_config, test_edition).action(load_config)
+
+    assert [
+        rule.get("description")
+        for rule_pack in ec.load_rule_packs(_paths())
+        for rule in rule_pack["rules"]
+    ] == [None, "edited"]
+
+
+@_setup_page
+def test_editing_a_rule_of_one_of_several_rule_packs_with_the_same_id_returns_to_its_rule_list(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _editing_the_rule_of_a_second_rule_pack_with_the_id(load_config, test_edition, mock_livestatus)
+
+    # The rule list connected to the sites already.
+    with mock_livestatus(expect_status_query=False):
+        result = _rule_editor(load_config, test_edition).action(load_config)
+
+    assert redirect_vars(result) == {
+        "mode": "mkeventd_rules",
+        "rule_pack": "pack",
+        "rule_pack_occurrence": "1",
+        "rule_pack_occurrences": "2",
+    }
+
+
+@_setup_page
+def test_rule_editor_finds_a_rule_with_a_non_ascii_id_given_by_its_id(
+    load_config: Config, test_edition: Edition
+) -> None:
+    # Only the rule editor restricts the IDs to ASCII, unlike hand-written rule packs or MKPs.
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="regel-ä"))))
+    set_request_vars(rule_id="regel-ä")
+
+    assert _rule_editor(load_config, test_edition).title() == "Edit rule regel-ä"
+
+
+@_setup_page
+def test_editing_one_of_several_rules_with_the_same_id_with_its_button_edits_that_one(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # Hand-written rule packs may have several rules with the same ID.
+    _save_rule_packs(
+        _rule_pack(
+            _stored(ec.Rule(id="rule", description="first")),
+            _stored(ec.Rule(id="rule", description="second")),
+        )
+    )
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+    set_request_vars(**_button_link_vars(rows[1], "Edit this rule"))
+    _submit_rule_form(load_config, test_edition, rule_p_description="edited")
+    mock_livestatus.expect_query("COMMAND [...] EC_RESETCOUNTERS;rule", match_type="ellipsis")
+
+    # The rule list connected to the sites already.
+    with mock_livestatus(expect_status_query=False):
+        _rule_editor(load_config, test_edition).action(load_config)
+
+    assert _rule_descriptions() == ["first", "edited"]
+
+
 @pytest.mark.parametrize(
     "variables, title",
     [
         pytest.param({}, "Add rule", id="new"),
-        pytest.param({"clone": "0"}, "Add rule", id="clone"),
-        pytest.param({"edit": "0"}, "Edit rule rule", id="edit"),
+        pytest.param({"clone_rule": "rule"}, "Add rule", id="clone"),
+        pytest.param({"edit_rule": "rule"}, "Edit rule rule", id="edit"),
     ],
 )
 @_setup_page

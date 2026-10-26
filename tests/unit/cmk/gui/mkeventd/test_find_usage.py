@@ -59,15 +59,15 @@ _RULE_PACKS: Sequence[ec.ECRulePack] = [
             [
                 (
                     "Event Console rule: test2",
-                    "wato.py?edit=0&mode=mkeventd_edit_rule&rule_pack=default",
+                    "wato.py?edit_rule=test2&mode=mkeventd_edit_rule&rule_pack=default",
                 ),
                 (
                     "Event Console rule: test1",
-                    "wato.py?edit=2&mode=mkeventd_edit_rule&rule_pack=default",
+                    "wato.py?edit_rule=test1&mode=mkeventd_edit_rule&rule_pack=default",
                 ),
                 (
                     "Event Console rule: test",
-                    "wato.py?edit=3&mode=mkeventd_edit_rule&rule_pack=default",
+                    "wato.py?edit_rule=test&mode=mkeventd_edit_rule&rule_pack=default",
                 ),
             ],
             id="existing contact group, should match",
@@ -89,3 +89,37 @@ def test_find_usages_of_contact_group_in_ec_rules(
         _find_usage.find_usages_of_contact_group_in_ec_rules(contact_group, {}, rule_packs)
         == expected_result
     )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_rules_without_an_id_do_not_keep_the_usages_of_a_contact_group_from_being_found() -> None:
+    # Nobody validates hand-written rules, and the Event Console compiles no disabled ones.
+    rule_packs: Sequence[ec.ECRulePack] = [
+        {
+            "id": "default",
+            "title": "Default rule pack",
+            "disabled": False,
+            "rules": [
+                {"disabled": True},
+                {
+                    "id": "test",
+                    "contact_groups": {
+                        "groups": ["my_contact_group"],
+                        "notify": True,
+                        "precedence": "host",
+                    },
+                },
+            ],
+        }
+    ]
+
+    used_in = _find_usage.find_usages_of_contact_group_in_ec_rules(
+        "my_contact_group", {}, rule_packs
+    )
+
+    assert used_in == [
+        (
+            "Event Console rule: test",
+            "wato.py?edit_rule=test&mode=mkeventd_edit_rule&rule_pack=default",
+        )
+    ]

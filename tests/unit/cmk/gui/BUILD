@@ -141,6 +141,7 @@ py_cmk_test(
         "//packages/cmk-inventory:inventory",
         "//packages/cmk-livestatus-client:livestatus-api",
         "//packages/cmk-livestatus-client:py_livestatus",
+        "//packages/cmk-mkp-tool",
         "//packages/cmk-wsgi",
         "//tests/testlib/unit",
         "//tests/unit:conftest",

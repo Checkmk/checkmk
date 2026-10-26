@@ -208,6 +208,7 @@ def setup_fake_omd_site(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     makedirs(cmk.utils.paths.var_dir / "php-api")
     makedirs(cmk.utils.paths.var_dir / "wato/php-api")
     makedirs(cmk.utils.paths.var_dir / "wato/auth")
+    makedirs(cmk.utils.paths.installed_packages_dir)
     makedirs(cmk.utils.paths.tmp_dir / "wato/activation")
     makedirs(cmk.utils.paths.omd_root / "var/log")
     makedirs(cmk.utils.paths.omd_root / "tmp/check_mk")

@@ -15,6 +15,8 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import GlobalSettings
 from cmk.web.utils.urls import makeuri_contextless
 
+from .helpers import rules_with_editor_vars
+
 
 class UsagesOfContactGroupInMkeventdNotifyContactGroupFinder:
     __name__ = "find_usages_of_contact_group_in_mkeventd_notify_contactgroup"
@@ -51,23 +53,14 @@ def find_usages_of_contact_group_in_ec_rules(
     used_in: list[tuple[str, str]] = []
     if rule_packs is None:
         rule_packs = ec.load_rule_packs(ec.create_paths(cmk.utils.paths.omd_root))
-    for pack in rule_packs:
-        for nr, rule in enumerate(pack.get("rules", [])):
-            if name in rule.get("contact_groups", {}).get("groups", []):
-                used_in.append(
-                    (
-                        "{}: {}".format(_("Event Console rule"), rule["id"]),
-                        makeuri_contextless(
-                            request,
-                            [
-                                ("mode", "mkeventd_edit_rule"),
-                                ("edit", nr),
-                                ("rule_pack", pack["id"]),
-                            ],
-                            filename="wato.py",
-                        ),
-                    )
+    for rule, editor_vars in rules_with_editor_vars(rule_packs):
+        if name in rule.get("contact_groups", {}).get("groups", []):
+            used_in.append(
+                (
+                    "{}: {}".format(_("Event Console rule"), rule["id"]),
+                    makeuri_contextless(request, editor_vars, filename="wato.py"),
                 )
+            )
     return used_in
 
 
@@ -76,17 +69,8 @@ def find_timeperiod_usage_in_ec_rules(
 ) -> list[tuple[str, str]]:
     used_in: list[tuple[str, str]] = []
     rule_packs = ec.load_rule_packs(ec.create_paths(cmk.utils.paths.omd_root))
-    for rule_pack in rule_packs:
-        for rule_index, rule in enumerate(rule_pack["rules"]):
-            if rule.get("match_timeperiod") == time_period_name:
-                url = makeuri_contextless(
-                    request,
-                    [
-                        ("mode", "mkeventd_edit_rule"),
-                        ("edit", rule_index),
-                        ("rule_pack", rule_pack["id"]),
-                    ],
-                    filename="wato.py",
-                )
-                used_in.append((_("Event Console rule"), url))
+    for rule, editor_vars in rules_with_editor_vars(rule_packs):
+        if rule.get("match_timeperiod") == time_period_name:
+            url = makeuri_contextless(request, editor_vars, filename="wato.py")
+            used_in.append((_("Event Console rule"), url))
     return used_in

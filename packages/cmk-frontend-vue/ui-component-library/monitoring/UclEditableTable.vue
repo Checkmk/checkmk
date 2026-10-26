@@ -82,7 +82,7 @@ const columns: ColumnDef<DemoLine>[] = [
 ]
 
 const SOURCE_TITLES: Record<string, string> = {
-  metrics_backend: 'Metrics backend',
+  otel_metrics: 'OpenTelemetry metrics',
   cmk_rrd: 'CMK RRD',
   calculated: 'Calculated metric',
   reference: 'Reference line'
@@ -125,7 +125,7 @@ function makeLine(sourceName: string): DemoLine {
 }
 
 const lines = ref<DemoLine[]>([
-  { ...makeLine('metrics_backend'), title: 'CPU $METRIC_NAME$ - system', color: '#3c85f2' },
+  { ...makeLine('otel_metrics'), title: 'CPU $METRIC_NAME$ - system', color: '#3c85f2' },
   { ...makeLine('cmk_rrd'), title: 'accounting > Check_MK > cmk_time_agent', color: '#e69138' },
   { ...makeLine('cmk_rrd'), title: 'accounting > Check_MK > cmk_time_agent', color: '#6fd7d0' },
   { ...makeLine('calculated'), title: 'Sum B+C', color: '#f2b26d' },

@@ -6,15 +6,13 @@
 
 from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Final, Literal, NamedTuple, NotRequired, TypedDict
+from typing import Literal, NamedTuple, NotRequired, TypedDict
 
 import yaml
 
 from .bakery_api.v1 import FileGenerator, OS, password_store, Plugin, PluginConfig, register
 
 GuiAuth = str | tuple[str, tuple[str, password_store.PasswordId | str]]
-# must be identical to the values in the GUI
-_SYSTEM_DATABASES: Final[tuple[str, str, str, str]] = ("model", "master", "msdb", "tempdb")
 
 
 class MsSqlSetup(NamedTuple):
@@ -346,12 +344,6 @@ def _to_tls(tls: GuiTls | None) -> SqlTls | None:
         return SqlTls(ca="", client_certificate=client_certificate)
 
     return None
-
-
-def _to_exclude_databases(gui_data: Sequence[str] | None) -> list[str]:
-    if gui_data is None:
-        return []
-    return [value for flag, value in zip(gui_data, _SYSTEM_DATABASES) if flag]
 
 
 def _is_allowed(conf: GuiMainConf, base_os: OS) -> bool:

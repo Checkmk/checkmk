@@ -139,13 +139,21 @@ py_doc_test(
 py_cmk_test(
     name = "unit",
     size = "small",
-    srcs = glob(["tests/**/*.py"]),
+    srcs = glob(["tests/unit/**/*.py"]),
+    args = ["packages/cmk-ec/tests/unit"],
     deps = [
         ":cmk-ec",
         ":forwarder",
-        ":mib_compiler",
         requirement("time-machine"),
     ],
+)
+
+py_cmk_test(
+    name = "component",
+    size = "small",
+    srcs = glob(["tests/component/**/*.py"]),
+    args = ["packages/cmk-ec/tests/component"],
+    deps = [":mib_compiler"],
 )
 
 py_wheel(

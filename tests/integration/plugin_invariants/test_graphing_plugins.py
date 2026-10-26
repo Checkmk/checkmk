@@ -303,7 +303,6 @@ def _metric_names_by_module(
     return metric_names_by_module
 
 
-@pytest.mark.skip_if_edition("community")
 def test_bundles() -> None:
     offenders = [
         (module, metric_names, bundles)

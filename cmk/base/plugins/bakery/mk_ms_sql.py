@@ -11,7 +11,9 @@ from typing import Literal, NamedTuple, NotRequired, TypedDict
 import yaml
 from pydantic import BaseModel
 
-from .bakery_api.v1 import FileGenerator, OS, password_store, Plugin, PluginConfig, register
+from cmk.utils.password_store import extract_formspec_password, FormSpecPassword
+
+from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
 
 
 class MsSqlSetup(NamedTuple):
@@ -35,9 +37,14 @@ OS_Setups: Sequence[MsSqlSetup] = [
 ]
 
 
-_Auth = str | tuple[Literal["remote"], tuple[str, password_store.PasswordId]]
+class _Credentials(BaseModel):
+    user: str
+    password: FormSpecPassword
 
-_SectionMode = Literal["sync", "async", "disabled"] | None
+
+_Auth = tuple[Literal["local"], None] | tuple[Literal["remote"], _Credentials]
+
+_SectionMode = Literal["sync", "asynchronous", "disabled"]
 
 
 class _Tls(BaseModel):
@@ -55,7 +62,9 @@ class _Conn(BaseModel):
     exclude_databases: Sequence[str] = ()
 
 
-_Discovery = tuple[bool, Literal["all"] | tuple[Literal["include", "exclude"], Sequence[str]]]
+class _Discovery(BaseModel):
+    detect: bool
+    instances: tuple[Literal["all"], None] | tuple[Literal["include", "exclude"], Sequence[str]]
 
 
 class _Options(BaseModel):
@@ -78,7 +87,7 @@ class _Instance(BaseModel):
 
 
 class _MainConf(BaseModel):
-    auth: _Auth = "local"
+    auth: _Auth = ("local", None)
     conn: _Conn | None = None
     sections: Mapping[str, _SectionMode] | None = None
     cache_age: int | None = None
@@ -89,7 +98,8 @@ class _MainConf(BaseModel):
 
 
 class _Config(BaseModel):
-    main: _MainConf
+    deployment: tuple[Literal["do_not_deploy", "sync"], None]
+    main: _MainConf = _MainConf()
     other: Sequence[_MainConf] = ()
 
 
@@ -168,6 +178,8 @@ class SqlOutput(TypedDict):
 
 def check_get_ms_sql_files(conf: Mapping[str, object]) -> FileGenerator:
     config = _Config.model_validate(conf)
+    if config.deployment[0] == "do_not_deploy":
+        return
     for o_s in OS_Setups:
         if _is_allowed(config.main, o_s.base_os):
             yield Plugin(
@@ -241,31 +253,26 @@ def _to_sql_conn(conn: _Conn) -> SqlConn:
 def _to_sql_sections(
     sections: Mapping[str, _SectionMode] | None,
 ) -> list[dict[str, SqlSection | None]] | None:
+    # mk-sql runs only the listed sections, so a disabled section is left out.
     return (
-        [{name: _to_sql_section(mode)} for name, mode in sections.items() if mode is not None]
+        [{name: _to_sql_section(mode)} for name, mode in sections.items() if mode != "disabled"]
         if sections
         else None
     )
 
 
-def _to_sql_section(mode: Literal["sync", "async", "disabled"]) -> SqlSection | None:
-    match mode:
-        case "sync":
-            return None
-        case "async":
-            return SqlSection(is_async=True)
-        case "disabled":
-            return SqlSection(disabled=True)
+def _to_sql_section(mode: Literal["sync", "asynchronous"]) -> SqlSection | None:
+    return None if mode == "sync" else SqlSection(is_async=True)
 
 
 def _to_sql_discovery(discovery: _Discovery) -> SqlDiscovery:
-    d = SqlDiscovery(detect=discovery[0])
-    match discovery[1]:
+    d = SqlDiscovery(detect=discovery.detect)
+    match discovery.instances:
         case ("include", instances):
             d["include"] = list(instances)
         case ("exclude", instances):
             d["exclude"] = list(instances)
-        case _:
+        case ("all", _):
             pass
 
     return d
@@ -305,14 +312,14 @@ def _to_sql_piggyback(piggyback: _Piggyback) -> SqlPiggyback:
 
 def _to_sql_auth(auth: _Auth) -> SqlAuth:
     match auth:
-        case ("remote", (user, password)):
+        case ("local", _):
+            return SqlAuth(username="", type="integrated")
+        case ("remote", credentials):
             return SqlAuth(
-                username=user,
-                password=password_store.extract(password),
+                username=credentials.user,
+                password=extract_formspec_password(credentials.password),
                 type="sql_server",
             )
-        case _:
-            return SqlAuth(username="", type="integrated")
 
 
 def _to_options(options: _Options | None) -> SqlOptions | None:
@@ -335,7 +342,7 @@ def _to_tls(tls: _Tls | None) -> SqlTls | None:
 
 
 def _is_allowed(conf: _MainConf, base_os: OS) -> bool:
-    return conf.auth != "local" or base_os is OS.WINDOWS
+    return conf.auth[0] != "local" or base_os is OS.WINDOWS
 
 
 register.bakery_plugin(

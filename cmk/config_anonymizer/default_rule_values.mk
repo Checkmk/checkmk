@@ -618,7 +618,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_ms_sql', [])
 
 agent_config['mk_ms_sql'] = [
-{'id': 'd84533fd-d7ac-4dba-8ff6-74aa2508f584', 'value': {'main': {'auth': 'local'}}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'd84533fd-d7ac-4dba-8ff6-74aa2508f584', 'value': {'deployment': ('sync', None), 'main': {'auth': ('local', None)}, 'other': []}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_ms_sql']
 
 

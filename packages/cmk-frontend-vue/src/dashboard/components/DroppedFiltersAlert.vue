@@ -13,11 +13,19 @@ defineProps<{
   // Translated by the server, which names the filters.
   warning: string
 }>()
+
+const emit = defineEmits<{ dismiss: [] }>()
 </script>
 
 <template>
   <div class="db-dropped-filters-alert">
-    <CmkAlert variant="warning" :heading="_t('Filters left out')" :text="untranslated(warning)" />
+    <CmkAlert
+      variant="warning"
+      dismissible
+      :heading="_t('Filters left out')"
+      :text="untranslated(warning)"
+      @update:open="emit('dismiss')"
+    />
   </div>
 </template>
 

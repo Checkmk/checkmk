@@ -837,6 +837,7 @@ const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(
           <DroppedFiltersAlert
             v-if="droppedFiltersWarning !== null"
             :warning="droppedFiltersWarning"
+            @dismiss="droppedFiltersWarning = null"
           />
           <AddWidgetPage
             v-if="Object.entries(dashboardWidgets.widgetCores.value).length === 0"

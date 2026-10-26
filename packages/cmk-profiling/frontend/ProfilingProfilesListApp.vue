@@ -216,7 +216,6 @@ onUnmounted(() => {
           {{ _t('Browse files') }}
         </CmkButton>
         <div class="profiling-profiles-list-app__upload-hint">
-          <!-- eslint-disable-next-line vue/no-bare-strings-in-template -- file-size unit -->
           {{ _t('cProfile dumps, max 10 MB') }}
         </div>
       </template>

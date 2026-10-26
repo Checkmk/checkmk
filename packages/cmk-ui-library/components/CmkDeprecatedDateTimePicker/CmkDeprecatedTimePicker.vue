@@ -272,7 +272,6 @@ function onPopupKey(e: KeyboardEvent) {
 
 <template>
   <span v-click-outside="() => (popupOpen = false)" class="cmk-deprecated-time-picker">
-    <!-- eslint-disable vue/no-bare-strings-in-template -->
     <span class="cmk-deprecated-time-picker__field">
       <input
         ref="hoursRef"
@@ -311,7 +310,6 @@ function onPopupKey(e: KeyboardEvent) {
       :aria-label="_t('Open time picker')"
       @click="togglePopup"
     />
-    <!-- eslint-enable vue/no-bare-strings-in-template -->
     <div v-if="popupOpen" class="cmk-deprecated-time-picker__popup" @keydown="onPopupKey">
       <div class="cmk-deprecated-time-picker__columns">
         <div ref="hoursColumnRef" class="cmk-deprecated-time-picker__column">

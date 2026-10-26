@@ -58,6 +58,7 @@ export function checkmkVueConfig({
 }) {
   return {
     files: [`${packageDir}/**/*.{ts,tsx,vue,js,mjs}`],
+    linterOptions: { reportUnusedDisableDirectives: 'error' },
     languageOptions: {
       parserOptions: {
         project,
@@ -97,6 +98,7 @@ export function checkmkVueConfig({
       ],
       eqeqeq: 'error',
       'vue/eqeqeq': 'error',
+      'vue/comment-directive': ['error', { reportUnusedDisableDirectives: true }],
       'no-var': 'error',
       'no-restricted-syntax': ['error', ...RESTRICTED_SYNTAX],
       'no-restricted-imports': ['error', { patterns: [...RESTRICTED_IMPORT_PATTERNS] }],

@@ -407,7 +407,6 @@ onUnmounted(() => {
           :key="i"
           class="profiling-flamegraph-canvas__tooltip-caller"
         >
-          <!-- eslint-disable-next-line vue/no-bare-strings-in-template -- single-word count unit -->
           {{ c.function }} ({{ formatCalls(c.ncalls, c.primitive_calls) }} {{ _t('calls') }})
         </div>
       </template>

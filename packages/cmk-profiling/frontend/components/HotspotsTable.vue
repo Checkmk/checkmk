@@ -234,7 +234,6 @@ const virtualHotspots = computed(() =>
               class="profiling-hotspots-table__sort-btn"
               @click="toggleSort('ms_per_call')"
             >
-              <!-- eslint-disable-next-line vue/no-bare-strings-in-template -- unit column label -->
               {{ _t('ms/call') }}{{ sortIndicator('ms_per_call') }}
             </button>
           </th>
@@ -412,7 +411,6 @@ const virtualHotspots = computed(() =>
                         {{ formatMs(c.cumulative_time_ms) }}
                       </span>
                       <span class="profiling-hotspots-table__edge-count">
-                        <!-- eslint-disable-next-line vue/no-bare-strings-in-template -- single-word count unit -->
                         {{ formatCalls(c.ncalls, c.primitive_calls) }} {{ _t('calls') }}
                       </span>
                     </div>

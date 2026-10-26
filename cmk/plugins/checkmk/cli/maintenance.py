@@ -9,7 +9,6 @@ import os
 import time
 from pathlib import Path
 
-import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.base import config
 from cmk.base.configlib.servicename import make_final_service_name_config
@@ -234,9 +233,6 @@ def _mode_flush(
 
 
 def _run_flush(context: CommandContext, options: Options, args: Args) -> ExitCode:
-    if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_flush(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

@@ -105,9 +105,6 @@ def _mode_cleanup_piggyback(
 
 
 def _run_cleanup_piggyback(context: CommandContext, options: Options, args: Args) -> ExitCode:
-    if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_cleanup_piggyback(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:

@@ -207,7 +207,7 @@ export function checkmkVueTestConfig(packageDir) {
               name: '@vue/test-utils',
               message:
                 'Use @testing-library/vue instead of @vue/test-utils. ' +
-                'See https://wiki.lan.checkmk.net/spaces/DEV/pages/149528812/All+things+Vue'
+                'See https://checkmk-int.atlassian.net/wiki/x/no9lD'
             },
             {
               name: 'msw/node',

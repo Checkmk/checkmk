@@ -111,10 +111,7 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopicRegistry,
 )
 from cmk.gui.watolib.host_rename import RenameHostHookRegistry
-from cmk.gui.watolib.hosts_and_folders import (
-    FolderReader,
-    FolderValidatorsRegistry,
-)
+from cmk.gui.watolib.hosts_and_folders import FolderReader
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
@@ -173,7 +170,6 @@ def register(
     config_file_registry: ConfigFileRegistry,
     rename_host_hook_registry: RenameHostHookRegistry,
     command_group_registry: CommandGroupRegistry,
-    folder_validators_registry: FolderValidatorsRegistry,
     user_attribute_registry: UserAttributeRegistry,
     quick_setup_registry: QuickSetupRegistry,
     help_info_line: Callable[[], str],
@@ -283,7 +279,6 @@ def register(
         cron_job_registry,
     )
     watolib_registration.register(
-        edition,
         rulespec_group_registry,
         automation_command_registry,
         job_registry,
@@ -296,7 +291,6 @@ def register(
         config_variable_group_registry,
         autocompleter_registry,
         replication_path_registry,
-        folder_validators_registry,
         cron_job_registry,
     )
 

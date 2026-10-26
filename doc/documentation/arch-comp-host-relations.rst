@@ -151,7 +151,7 @@ White-box overall system
         [Host rename] as rename
         [Hosts and folders\n(mirror)] as hosts
         [validate_host_relations\n(validate-host hook)] as validation
-        [FolderValidators\n(edition hook)] as validators
+        [folder_validator_registry\n(per-operation lists)] as validators
         [Activate changes] as activation
         [Relations export] as export
         [Site snapshots\n(ultimatemt only)] as snapshots
@@ -183,8 +183,8 @@ White-box overall system
     detection_api ..> hosts: read hosts (suggestions)
     detection_api ..> jobs: start / read result
     jobs ..> hosts: read hosts / store relations
-    hosts ..> validators: validate_host_relation
-    jobs ..> validators: validate_host_relation
+    hosts ..> validators: host_relation
+    jobs ..> validators: host_relation
     hosts ..> hosts_mk: save both hosts
     activation ..> export: before building snapshots
     export ..> hosts: read all hosts
@@ -365,8 +365,7 @@ Setup:
   "Relation detection". What the page gets from Python is typed in
   ``packages/cmk-shared-typing/source/mode_host_relation_detection.json``.
 * ``cmk/gui/watolib/registration.py``: Registers the attribute, the
-  ``validate-host`` hook, the replication path, the two background jobs and the
-  default ``validate_host_relation``, which accepts every pair.
+  ``validate-host`` hook, the replication path and the two background jobs.
   ``cmk/gui/wato/pages/__init__.py`` registers the page and its menu entry,
   ``cmk/gui/openapi/registration.py`` the endpoints of the detection.
 * ``cmk/gui/wato/_check_mk_configuration.py``: The global setting "Logging" >
@@ -377,8 +376,10 @@ Setup:
 * ``cmk/gui/nonfree/ultimatemt/host_and_folder_validators.py``
   (``validate_host_relation``) and
   ``cmk/gui/nonfree/ultimatemt/managed_snapshots.py`` (``relations_of_site``):
-  The rules of the multi-tenant edition, registered in
-  ``cmk/gui/nonfree/ultimatemt/registration.py``.
+  The rules of the multi-tenant edition. ``validate_host_relation`` is appended
+  to ``folder_validator_registry.host_relation`` in
+  ``cmk/gui/nonfree/ultimatemt/registration.py``;
+  ``managed_snapshots.py`` filters the relations per customer.
 
 Monitoring GUI:
 
@@ -451,9 +452,9 @@ Interfaces
   more than that.
 * Global setting "Logging" > "Host relations" (logger
   ``cmk.web.host_relations``, default "Warning"), see `Operation`_.
-* Edition hook ``validate_host_relation`` of ``FolderValidators``. It
-  lets an edition refuse a relation between hosts of two sites. Only
-  ``ultimatemt`` uses it, to refuse relations between customers.
+* Validators in ``folder_validator_registry.host_relation``. They let an
+  edition or feature refuse a relation between hosts of two sites. Only ``ultimatemt``
+  appends one, to refuse relations between customers.
 * Pending changes: a related host written as a side effect gets a change of its
   own with the action ``mirror-relation``. Renaming adds ``rename-relation``,
   the store run ``detect-relations``. These show up in the audit log of the
@@ -486,7 +487,7 @@ for a new host) does the following:
 
    * If the pair keeps a relation, the related host must exist and be visible to
      the user, and the edition must accept the two sites
-     (``validate_host_relation``).
+     (the ``host_relation`` validators).
    * A related host that already stores the wanted half is skipped.
    * Otherwise its ``relations`` value must be readable. Writing the half
      into a value that cannot be read would replace it, and with it every
@@ -495,7 +496,7 @@ for a new host) does the following:
    * The change of the related host goes through ``Host.apply_edit()``: the
      user needs write permission for the host, the host must not be locked (a
      host locked by Quick setup refuses a new half, not the removal of one), and
-     the edition hook ``validate_edit_host`` is asked.
+     the ``edit_host`` validators are asked.
    * If the user may not see the related host, the error message does not name
      its folder or contact groups.
 
@@ -507,18 +508,19 @@ For a pair the save changes, each of these checks refuses the save. A pair the
 save does not change is settled on a best effort basis: a related host that is
 missing or hidden from the user is left alone without a message, as a message
 would tell whether it exists; one that is locked, not writable for the user,
-refused by ``validate_edit_host`` or stores a ``relations`` value that cannot be
-read is logged as a warning and left as it is. ``validate_host_relations`` keeps
-reporting them (a missing related host only to users who may see all hosts, see
-`Security considerations`_). ``validate_host_relation`` is not asked about such
-a pair, as the host stores it already. This way a broken related host never
-blocks saving the host the user is working on, as long as the save leaves that
-relation alone. Only a save of the host holding the primary half settles such a
-pair: saving the OS host never writes the board's half, as its own half is only
-a copy of it. An OS host half the board does not store stays until the relation
-is stored on the board or removed from the OS host. The one exception: if the
-save changes the site of the host, ``validate_host_relation`` is asked about all
-of its relations (see below).
+refused by the ``edit_host`` validators or stores a ``relations`` value that
+cannot be read is logged as a warning and left as it is.
+``validate_host_relations`` keeps reporting them (a missing related host only to
+users who may see all hosts, see `Security considerations`_). The
+``host_relation`` validators are not asked about such a pair, as the host stores
+it already. This way a broken related host never blocks saving the host the user
+is working on, as long as the save leaves that relation alone. Only a save of
+the host holding the primary half settles such a pair: saving the OS host never
+writes the board's half, as its own half is only a copy of it. An OS host half
+the board does not store stays until the relation is stored on the board or
+removed from the OS host. The one exception: if the save changes the site of the
+host, the ``host_relation`` validators are asked about all of its relations (see
+below).
 
 When several hosts are created at once, the related hosts are looked up among
 the hosts that already exist. A relation to a host created in the same call is
@@ -533,10 +535,10 @@ Deleting, renaming, cloning hosts and changing their site
   deleted host stores from the related hosts. A half that only the related host
   stores stays behind. This cleanup runs with superuser rights, so a user can
   delete their own host even if the related host is in a folder they may not
-  write to. A half also stays behind on a host that is locked, that
-  ``validate_edit_host`` refuses, or whose ``relations`` value cannot be read.
-  Such a half is reported by ``validate_host_relations`` and ignored by the
-  export. A host locked by Quick setup loses its half like any other, since
+  write to. A half also stays behind on a host that is locked, that the
+  ``edit_host`` validators refuse, or whose ``relations`` value cannot be
+  read. Such a half is reported by ``validate_host_relations`` and ignored by
+  the export. A host locked by Quick setup loses its half like any other, since
   removing it stores nothing on the host. The delete confirmation of a host
   lists the first ``MAX_LISTED_RELATED_HOSTS`` related hosts.
 * **Renaming** a host updates all links to the old name, just like for parents.
@@ -549,10 +551,11 @@ Deleting, renaming, cloning hosts and changing their site
   pending change for the rename is recorded although nothing was written.
 * **Cloning** a host does not copy its relations, because the related hosts
   would not know about the clone.
-* **Changing the site** of hosts asks the edition hook about each relation of
-  every host that changes its site. This applies to moving hosts or folders,
-  changing the ``site`` attribute of a host or a folder, and removing it in the
-  host cleanup. Related hosts that are moved along are not checked. Hosts with
+* **Changing the site** of hosts asks the ``host_relation``
+  validators about each relation of every host that changes its site. This
+  applies to moving hosts or folders, changing the ``site`` attribute of a host
+  or a folder, and removing it in the host cleanup. Related hosts that are
+  moved along are not checked. Hosts with
   an explicit ``site`` attribute do not change their site when their folder
   does, and are not checked either. The sites of the related hosts are part of
   the change, because the exported relation names the site of the related
@@ -702,8 +705,8 @@ flow. The page is a wizard:
    a category (like a location) rather than one machine. For each pair the page
    shows whether it can be stored, is already stored, is stored differently, or
    cannot be written (and why). "Cannot be written" checks what a save checks
-   (see `Editing a host`_, step 3), except ``validate_edit_host``, which only
-   the store run asks; it then reports the pair as not writable.
+   (see `Editing a host`_, step 3), except the ``edit_host`` validators,
+   which only the store run asks; it then reports the pair as not writable.
 
 4. **Summary.** The page sends the id of the scan, the findings to use and what
    the user changed (excluded rows, answered questions, resolved conflicts), not
@@ -801,7 +804,7 @@ Testing
   ``test_host_relations_export.py``: The export and the activation warnings. ``host_relations_fakes.py`` holds the shared fakes.
 * ``tests/unit/cmk/gui/watolib/test_hosts_and_folders.py``: The mirror when
   hosts are created, edited, deleted and moved or change their site, the checks
-  before writing (locks, Quick setup, edition hooks), and
+  before writing (locks, Quick setup, folder validators), and
   ``validate_host_relations``. ``test_host_rename.py``: Renaming.
   ``test_host_attributes.py`` (and its edition variants): The topic "Related
   hosts" of the attribute.

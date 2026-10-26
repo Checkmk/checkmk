@@ -30,7 +30,7 @@ from collections.abc import (
     Sequence,
 )
 from contextlib import contextmanager, suppress
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from functools import cached_property, wraps
 from http import HTTPStatus
@@ -64,7 +64,6 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.regex import regex, WATO_FOLDER_PATH_NAME_CHARS
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
-from cmk.ccc.version import edition
 from cmk.gui import hooks, userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import Config
@@ -1449,25 +1448,27 @@ def _refusal_of(
 
 
 def need_relatable(site_id: SiteId, counterpart: Host) -> None:
-    """Let the edition refuse a relation between the hosts of these two sites."""
+    """Let the ``host_relation`` validators refuse a relation between the hosts of these two
+    sites."""
     folder = counterpart.folder()
-    folder.validators.validate_host_relation(
-        site_id, counterpart.site_id(), SiteConfigurations(folder.tree.config.sites)
-    )
+    for validate in folder.validators.host_relation:
+        validate(site_id, counterpart.site_id(), SiteConfigurations(folder.tree.config.sites))
 
 
 def _need_edit_accepted(host: Host, attributes: HostAttributes) -> None:
-    """Let the edition refuse ``host`` being edited to ``attributes``."""
+    """Let the ``edit_host`` validators refuse ``host`` being edited to ``attributes``."""
     folder = host.folder()
-    folder.validators.validate_edit_host(
-        folder.site_id(), host.name(), attributes, SiteConfigurations(folder.tree.config.sites)
-    )
+    for validate in folder.validators.edit_host:
+        validate(
+            folder.site_id(), host.name(), attributes, SiteConfigurations(folder.tree.config.sites)
+        )
 
 
 def _need_relatable_from(
     site_id: SiteId, hosts: Iterable[Host], resolve_host: Callable[[HostName], Host | None]
 ) -> set[SiteId]:
-    """Let the edition refuse a relation ``hosts`` keep once they are monitored on ``site_id``.
+    """Let the ``host_relation`` validators refuse a relation ``hosts`` keep once they are
+    monitored on ``site_id``.
 
     A counterpart among ``hosts`` moves along, so that relation stays on one site.
 
@@ -1494,8 +1495,8 @@ def _need_links_relatable(
     *,
     moving: Container[HostName] = (),
 ) -> set[SiteId]:
-    """Let the edition refuse the relations ``links`` name once their host is monitored on
-    ``site_id``. Counterparts in ``moving`` move along and are skipped.
+    """Let the ``host_relation`` validators refuse the relations ``links`` name once their host
+    is monitored on ``site_id``. Counterparts in ``moving`` move along and are skipped.
 
     Returns the sites of the counterparts asked about.
     """
@@ -1588,8 +1589,8 @@ def _need_relation_mirror(
             counterpart.writable_relations(links)
             counterpart.permissions.need_permission("write", acting_user)
             need_writable_folders([counterpart.folder()], acting_user=acting_user)
-            # validate_edit_host does not look at relations, so the stored attributes stand for
-            # the edit.
+            # The edit_host validators do not look at relations, so the stored attributes stand
+            # for the edit.
             _need_edit_accepted(counterpart, counterpart.attributes)
             pending.append(_MirrorWrite(counterpart, links, visible, optional))
     return pending
@@ -2138,7 +2139,7 @@ class Folder:
             tree=tree,
             name=name,
             parent_folder=parent_folder,
-            validators=folder_validators_registry[str(edition(cmk.utils.paths.omd_root))],
+            validators=folder_validator_registry,
             folder_id=uuid.uuid4().hex,
             folder_path=(folder_path := os.path.join(parent_folder.path(), name)),
             title=title or _fallback_title(folder_path),
@@ -2166,7 +2167,7 @@ class Folder:
             tree=tree,
             name=name,
             parent_folder=parent_folder,
-            validators=folder_validators_registry[str(edition(cmk.utils.paths.omd_root))],
+            validators=folder_validator_registry,
             # Cleanup this compatibility code by adding a cmk-update-config action
             folder_id=serialized["__id"] if "__id" in serialized else uuid.uuid4().hex,
             folder_path=folder_path,
@@ -2190,7 +2191,7 @@ class Folder:
         folder_id: str,
         folder_path: str,
         parent_folder: Folder | None,
-        validators: FolderValidators,
+        validators: FolderValidatorRegistry,
         title: str,
         attributes: HostAttributes,
         locked: bool,
@@ -3205,9 +3206,8 @@ class Folder:
         acting_user.need_permission("wato.manage_folders")
         self.permissions.need_permission("write", acting_user)
         self.need_unlocked_subfolders()
-        self.validators.validate_create_subfolder(
-            self, attributes, SiteConfigurations(self.tree.config.sites)
-        )
+        for validate in self.validators.create_subfolder:
+            validate(self, attributes, SiteConfigurations(self.tree.config.sites))
         _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"], acting_user)
 
         attributes = update_metadata(attributes, created_by=acting_user.id)
@@ -3316,9 +3316,8 @@ class Folder:
         target_folder.permissions.need_permission("write", acting_user)
         target_folder.need_unlocked_subfolders()
         subfolder.need_recursive_permission("write", acting_user)  # Inheritance is changed
-        self.validators.validate_move_subfolder_to(
-            subfolder, target_folder, SiteConfigurations(self.tree.config.sites)
-        )
+        for validate in self.validators.move_subfolder_to:
+            validate(subfolder, target_folder, SiteConfigurations(self.tree.config.sites))
         if os.path.exists(target_folder.filesystem_path() + "/" + subfolder.name()):
             raise MKUserError(
                 None,
@@ -3410,9 +3409,8 @@ class Folder:
         acting_user.need_permission("wato.edit_folders")
         self.permissions.need_permission("write", acting_user)
         self.need_unlocked()
-        self.validators.validate_edit_folder(
-            self, new_attributes, SiteConfigurations(self.tree.config.sites)
-        )
+        for validate in self.validators.edit_folder:
+            validate(self, new_attributes, SiteConfigurations(self.tree.config.sites))
         new_site_id = (
             new_attributes["site"] if "site" in new_attributes else self._inherited_site_id()
         )
@@ -3483,7 +3481,7 @@ class Folder:
 
     def create_hosts(
         self,
-        entries: Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
+        entries: Sequence[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
         *,
         pprint_value: bool,
         pending_changes: PendingChanges,
@@ -3503,9 +3501,8 @@ class Folder:
         """
         # 1. Check preconditions
         self.prepare_create_hosts(acting_user=acting_user)
-        self.validators.validate_create_hosts(
-            entries, self.site_id(), SiteConfigurations(self.tree.config.sites)
-        )
+        for validate in self.validators.create_hosts:
+            validate(entries, self.site_id(), SiteConfigurations(self.tree.config.sites))
 
         validated = [
             (
@@ -3772,9 +3769,8 @@ class Folder:
         self.need_unlocked_hosts()
         target_folder.permissions.need_permission("write", acting_user)
         target_folder.need_unlocked_hosts()
-        self.validators.validate_move_hosts(
-            self, host_names, target_folder, SiteConfigurations(self.tree.config.sites)
-        )
+        for validate in self.validators.move_hosts:
+            validate(self, host_names, target_folder, SiteConfigurations(self.tree.config.sites))
         target_site = target_folder.site_id()
         counterpart_sites = (
             _need_relatable_from(
@@ -5441,41 +5437,86 @@ class FolderSiteStats:
             FolderSiteStats._walk_folder_tree(subfolder, hosts, folders)
 
 
-@dataclass(frozen=True)
-class FolderValidators:
-    """Edition specific validation of Setup folder and host changes
+class ValidateEditHost(Protocol):
+    """Must not look at the relations: the relation mirror passes the stored attributes of a
+    host for an edit of its relations."""
 
-    The callbacks get the site configurations passed explicitly: they are the
-    part of the config the validations (customer assignments of sites) are
-    based on, and the callbacks must not rely on a request context being
-    around (e.g. cmk-post-rename-site runs them unattended).
+    def __call__(
+        self,
+        folder_site_id: SiteId,
+        host_name: HostName,
+        attributes: HostAttributes,
+        sites: SiteConfigurations,
+        /,
+    ) -> None: ...
+
+
+class ValidateCreateHosts(Protocol):
+    def __call__(
+        self,
+        entries: Sequence[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
+        site_id: SiteId,
+        sites: SiteConfigurations,
+        /,
+    ) -> None: ...
+
+
+class ValidateCreateSubfolder(Protocol):
+    def __call__(
+        self, folder: Folder, attributes: HostAttributes, sites: SiteConfigurations, /
+    ) -> None: ...
+
+
+class ValidateEditFolder(Protocol):
+    def __call__(
+        self, folder: Folder, new_attributes: HostAttributes, sites: SiteConfigurations, /
+    ) -> None: ...
+
+
+class ValidateMoveHosts(Protocol):
+    def __call__(
+        self,
+        folder: Folder,
+        host_names: Iterable[HostName],
+        target_folder: Folder,
+        sites: SiteConfigurations,
+        /,
+    ) -> None: ...
+
+
+class ValidateMoveSubfolderTo(Protocol):
+    def __call__(
+        self, subfolder: Folder, target_folder: Folder, sites: SiteConfigurations, /
+    ) -> None: ...
+
+
+class ValidateHostRelation(Protocol):
+    def __call__(
+        self, site_id: SiteId, other_site_id: SiteId, sites: SiteConfigurations, /
+    ) -> None: ...
+
+
+@dataclass
+class FolderValidatorRegistry:
+    """Validation of Setup folder and host changes
+
+    An operation is refused by the first of its validators raising MKUserError. The
+    validators get the site configurations passed explicitly: they are the part of the
+    config the validations (customer assignments of sites) are based on, and the
+    validators must not rely on a request context being around (e.g.
+    cmk-post-rename-site runs them unattended).
     """
 
-    ident: str
-    validate_edit_host: Callable[[SiteId, HostName, HostAttributes, SiteConfigurations], None]
-    validate_create_hosts: Callable[
-        [
-            Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
-            SiteId,
-            SiteConfigurations,
-        ],
-        None,
-    ]
-    validate_create_subfolder: Callable[[Folder, HostAttributes, SiteConfigurations], None]
-    validate_edit_folder: Callable[[Folder, HostAttributes, SiteConfigurations], None]
-    validate_move_hosts: Callable[[Folder, Iterable[HostName], Folder, SiteConfigurations], None]
-    validate_move_subfolder_to: Callable[[Folder, Folder, SiteConfigurations], None]
-    #: Called with the sites of the two hosts of a relation a save establishes.
-    validate_host_relation: Callable[[SiteId, SiteId, SiteConfigurations], None]
+    edit_host: list[ValidateEditHost] = field(default_factory=list)
+    create_hosts: list[ValidateCreateHosts] = field(default_factory=list)
+    create_subfolder: list[ValidateCreateSubfolder] = field(default_factory=list)
+    edit_folder: list[ValidateEditFolder] = field(default_factory=list)
+    move_hosts: list[ValidateMoveHosts] = field(default_factory=list)
+    move_subfolder_to: list[ValidateMoveSubfolderTo] = field(default_factory=list)
+    host_relation: list[ValidateHostRelation] = field(default_factory=list)
 
 
-class FolderValidatorsRegistry(Registry[FolderValidators]):
-    @override
-    def plugin_name(self, instance: FolderValidators) -> str:
-        return instance.ident
-
-
-folder_validators_registry = FolderValidatorsRegistry()
+folder_validator_registry = FolderValidatorRegistry()
 
 
 def strip_hostname_whitespace_chars(host: str) -> str:

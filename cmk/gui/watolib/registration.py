@@ -9,7 +9,6 @@ from collections.abc import Sequence
 from datetime import timedelta
 from functools import partial
 
-from cmk.ccc import version
 from cmk.gui import hooks
 from cmk.gui.autocompleters import AutocompleterRegistry
 from cmk.gui.background_job.job import BackgroundJobRegistry
@@ -77,11 +76,7 @@ from .host_rename import (
     RenameHostBackgroundJob,
     RenameHostsBackgroundJob,
 )
-from .hosts_and_folders import (
-    FolderValidators,
-    FolderValidatorsRegistry,
-    rebuild_folder_lookup_cache,
-)
+from .hosts_and_folders import rebuild_folder_lookup_cache
 from .notifications import (
     find_timeperiod_usage_in_notification_rules,
     find_usages_of_contact_group_in_notification_rules,
@@ -109,7 +104,6 @@ from .user_profile import handle_ldap_sync_finished, PushUserProfilesToSite
 
 
 def register(
-    edition: version.Edition,
     rulespec_group_registry: RulespecGroupRegistry,
     automation_command_registry: AutomationCommandRegistry,
     job_registry: BackgroundJobRegistry,
@@ -122,7 +116,6 @@ def register(
     config_variable_group_registry: ConfigVariableGroupRegistry,
     autocompleter_registry: AutocompleterRegistry,
     replication_path_registry: ReplicationPathRegistry,
-    folder_validators_registry: FolderValidatorsRegistry,
     cron_job_registry: CronJobRegistry,
 ) -> None:
     _register_automation_commands(automation_command_registry)
@@ -133,18 +126,6 @@ def register(
     host_relations_export.register(replication_path_registry)
     _register_host_attribute(host_attribute_registry)
     _register_cronjobs(cron_job_registry)
-    folder_validators_registry.register(
-        FolderValidators(
-            str(edition),
-            validate_edit_host=lambda s, n, a, si: None,  # noqa: ARG005
-            validate_create_hosts=lambda e, s, si: None,  # noqa: ARG005
-            validate_create_subfolder=lambda f, a, si: None,  # noqa: ARG005
-            validate_edit_folder=lambda f, a, si: None,  # noqa: ARG005
-            validate_move_hosts=lambda f, n, t, si: None,  # noqa: ARG005
-            validate_move_subfolder_to=lambda f, t, si: None,  # noqa: ARG005
-            validate_host_relation=lambda s, o, si: None,  # noqa: ARG005
-        )
-    )
     _sync_remote_sites.register(automation_command_registry, cron_job_registry)
     rulespec_groups.register(rulespec_group_registry)
     rulespec_group_registry.register(RulespecGroupEnforcedServices)

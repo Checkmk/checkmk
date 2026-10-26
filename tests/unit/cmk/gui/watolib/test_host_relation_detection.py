@@ -1065,7 +1065,7 @@ def test_a_pair_the_edition_refuses_is_reported_instead_of_offered(tree: FolderT
     _create_host(root, "srv-01", HostAttributes({"site": SiteId("customer_b")}))
     tree.invalidate_caches()
     root = tree.root_folder()
-    root.validators = replace(root.validators, validate_host_relation=refuse_relations_across_sites)
+    root.validators = replace(root.validators, host_relation=[refuse_relations_across_sites])
 
     found = detect_relations(tree, evidence=_evidence(), acting_user=_SUPERUSER)
 

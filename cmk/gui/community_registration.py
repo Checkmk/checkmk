@@ -105,7 +105,7 @@ from cmk.gui.watolib.host_attributes import (
     host_attribute_topic_registry,
 )
 from cmk.gui.watolib.host_rename import rename_host_hook_registry
-from cmk.gui.watolib.hosts_and_folders import folder_validators_registry, host_action_menu_registry
+from cmk.gui.watolib.hosts_and_folders import host_action_menu_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.notification_parameter import (
@@ -208,7 +208,6 @@ def register(
         config_file_registry=config_file_registry,
         rename_host_hook_registry=rename_host_hook_registry,
         command_group_registry=command_group_registry,
-        folder_validators_registry=folder_validators_registry,
         user_attribute_registry=user_attribute_registry,
         quick_setup_registry=quick_setup_registry,
         help_info_line=default_info_line,

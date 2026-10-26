@@ -41,6 +41,6 @@ def fake_hosts(**relations: object) -> Mapping[HostName, RelatedHost]:
 
 
 def refuse_relations_across_sites(site_id: SiteId, other_site_id: SiteId, _sites: object) -> None:
-    """``validate_host_relation`` of an edition that keeps every customer on a site of its own."""
+    """The ``host_relation`` validator of an edition giving each customer a site of its own."""
     if site_id != other_site_id:
         raise MKUserError(None, "Only hosts of the same customer can be related.")

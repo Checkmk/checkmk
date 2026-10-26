@@ -2301,7 +2301,7 @@ def test_mirror_batch_refuses_a_counterpart_the_edition_refuses_before_touching_
     root = tree.root_folder()
     os1 = _create_host(root, "os1")
     _create_host(root, "board")
-    root.validators = replace(root.validators, validate_edit_host=_refuse_editing_board)
+    root.validators = replace(root.validators, edit_host=[_refuse_editing_board])
 
     with pytest.raises(MKUserError, match="The edition refuses 'board'"):
         RelationMirrorBatch(root, acting_user=_SUPERUSER).need_edit(
@@ -2334,7 +2334,7 @@ def test_mirror_batch_refuses_a_site_the_edition_refuses_for_a_kept_relation(
             }
         ),
     )
-    root.validators = replace(root.validators, validate_host_relation=refuse_relations_across_sites)
+    root.validators = replace(root.validators, host_relation=[refuse_relations_across_sites])
 
     with pytest.raises(MKUserError, match="Only hosts of the same customer"):
         RelationMirrorBatch(root, acting_user=_SUPERUSER).need_edit(
@@ -2348,9 +2348,7 @@ def test_create_asks_the_edition_about_the_folder_site_of_a_host_with_an_empty_s
     """An empty site is the placeholder for the folder's one, as in Host.site_id()."""
     folder = _subfolder(tree.root_folder(), "site_a", HostAttributes({"site": SiteId("site_a")}))
     _create_host(folder, "board")
-    folder.validators = replace(
-        folder.validators, validate_host_relation=refuse_relations_across_sites
-    )
+    folder.validators = replace(folder.validators, host_relation=[refuse_relations_across_sites])
 
     os1 = _create_host(
         folder,

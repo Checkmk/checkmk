@@ -5,3 +5,6 @@
 startup --host_jvm_args=-XX:ActiveProcessorCount=8
 startup --host_jvm_args=-XX:ParallelGCThreads=4
 startup --host_jvm_args=-XX:ConcGCThreads=2
+
+# Keep the per-action sandbox symlink churn in RAM, off the filesystem journal
+common:linux --sandbox_base=/dev/shm

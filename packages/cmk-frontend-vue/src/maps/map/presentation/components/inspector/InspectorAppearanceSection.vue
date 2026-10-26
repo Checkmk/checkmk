@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -47,66 +48,67 @@ const dashOptions = computed(() => ({
 </script>
 
 <template>
-  <section class="maps-inspector-appearance-section">
-    <h3 class="maps-section-title">{{ _t('Appearance') }}</h3>
-    <div class="maps-inspector-appearance-section__row">
-      <div v-if="!isConnector" class="maps-inspector-appearance-section__field">
-        <span class="maps-cap">{{ _t('Fill') }}</span>
-        <ColorField
-          :label="_t('Fill')"
-          :value="element.fill"
-          :default-color="tokens['--pres-shape-fill']"
-          @set="emit('patch', { fill: $event })"
-        />
+  <CmkCatalogPanel :title="_t('Appearance')">
+    <div class="maps-inspector-appearance-section">
+      <div class="maps-inspector-appearance-section__row">
+        <div v-if="!isConnector" class="maps-inspector-appearance-section__field">
+          <span class="maps-cap">{{ _t('Fill') }}</span>
+          <ColorField
+            :label="_t('Fill')"
+            :value="element.fill"
+            :default-color="tokens['--pres-shape-fill']"
+            @set="emit('patch', { fill: $event })"
+          />
+        </div>
+        <div class="maps-inspector-appearance-section__field">
+          <span class="maps-cap">{{ _t('Stroke') }}</span>
+          <ColorField
+            :label="_t('Stroke')"
+            :value="element.stroke"
+            :default-color="tokens['--pres-shape-stroke']"
+            @set="emit('patch', { stroke: $event })"
+          />
+        </div>
+        <label class="maps-inspector-appearance-section__num">
+          <span class="maps-cap">{{ _t('Width') }}</span>
+          <CmkInput
+            type="number"
+            :model-value="element.stroke_width"
+            min="0"
+            max="64"
+            @update:model-value="patch('stroke_width', $event)"
+          />
+        </label>
       </div>
-      <div class="maps-inspector-appearance-section__field">
-        <span class="maps-cap">{{ _t('Stroke') }}</span>
-        <ColorField
-          :label="_t('Stroke')"
-          :value="element.stroke"
-          :default-color="tokens['--pres-shape-stroke']"
-          @set="emit('patch', { stroke: $event })"
-        />
+      <div class="maps-inspector-appearance-section__row">
+        <div v-if="!element.flow" class="maps-inspector-appearance-section__field">
+          <span class="maps-cap">{{ _t('Stroke style') }}</span>
+          <CmkDropdown
+            :model-value="element.dash"
+            :options="dashOptions"
+            :label="_t('Stroke style')"
+            width="fill"
+            @update:model-value="emit('patch', { dash: $event })"
+          />
+        </div>
+        <div v-else class="maps-inspector-appearance-section__field">
+          <span class="maps-cap">{{ _t('Stroke style') }}</span>
+          <span class="maps-inspector-appearance-section__note">{{
+            _t('Flow animation overrides the stroke style')
+          }}</span>
+        </div>
+        <label v-if="element.shape === 'rect'" class="maps-inspector-appearance-section__num">
+          <span class="maps-cap">{{ _t('Radius') }}</span>
+          <CmkInput
+            type="number"
+            :model-value="element.corner_radius"
+            min="0"
+            @update:model-value="patch('corner_radius', $event)"
+          />
+        </label>
       </div>
-      <label class="maps-inspector-appearance-section__num">
-        <span class="maps-cap">{{ _t('Width') }}</span>
-        <CmkInput
-          type="number"
-          :model-value="element.stroke_width"
-          min="0"
-          max="64"
-          @update:model-value="patch('stroke_width', $event)"
-        />
-      </label>
     </div>
-    <div class="maps-inspector-appearance-section__row">
-      <div v-if="!element.flow" class="maps-inspector-appearance-section__field">
-        <span class="maps-cap">{{ _t('Stroke style') }}</span>
-        <CmkDropdown
-          :model-value="element.dash"
-          :options="dashOptions"
-          :label="_t('Stroke style')"
-          width="fill"
-          @update:model-value="emit('patch', { dash: $event })"
-        />
-      </div>
-      <div v-else class="maps-inspector-appearance-section__field">
-        <span class="maps-cap">{{ _t('Stroke style') }}</span>
-        <span class="maps-inspector-appearance-section__note">{{
-          _t('Flow animation overrides the stroke style')
-        }}</span>
-      </div>
-      <label v-if="element.shape === 'rect'" class="maps-inspector-appearance-section__num">
-        <span class="maps-cap">{{ _t('Radius') }}</span>
-        <CmkInput
-          type="number"
-          :model-value="element.corner_radius"
-          min="0"
-          @update:model-value="patch('corner_radius', $event)"
-        />
-      </label>
-    </div>
-  </section>
+  </CmkCatalogPanel>
 </template>
 
 <style scoped>
@@ -114,6 +116,7 @@ const dashOptions = computed(() => ({
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
+  padding: var(--dimension-4) 0;
 }
 
 .maps-inspector-appearance-section__row {

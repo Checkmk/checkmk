@@ -32,6 +32,8 @@ const props = defineProps<{
   offersGrid: boolean
   /** False while a dialog over the map owns the keyboard. */
   keyboardActive: boolean
+  /** The slide inspector takes the right edge, so the tools sit left of it. */
+  besideInspector: boolean
 }>()
 
 const emit = defineEmits<{
@@ -109,7 +111,10 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
 </script>
 
 <template>
-  <div class="maps-map-edit-tools">
+  <div
+    class="maps-map-edit-tools"
+    :class="{ 'maps-map-edit-tools--beside-inspector': besideInspector }"
+  >
     <Transition
       enter-from-class="maps-map-edit-tools__pop-enter-from"
       enter-active-class="maps-map-edit-tools__pop-enter-active"
@@ -219,6 +224,10 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
   justify-content: flex-end;
   gap: var(--dimension-5);
   pointer-events: none;
+}
+
+.maps-map-edit-tools--beside-inspector {
+  right: calc(var(--maps-presentation-inspector-width) + var(--dimension-8));
 }
 
 .maps-map-edit-tools > * {

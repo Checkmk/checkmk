@@ -34,7 +34,8 @@ function renderTools(selection: string[], keyboardActive = true) {
       connectionId: 'test',
       offersAddObject: true,
       offersGrid: true,
-      keyboardActive
+      keyboardActive,
+      besideInspector: false
     },
     global: mapsGlobal({}, services)
   })

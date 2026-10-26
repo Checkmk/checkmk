@@ -4,9 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
+import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { PresentationElement } from '@/maps/types/api'
 
@@ -18,6 +20,9 @@ const props = defineProps<{ element: PresentationElement }>()
 const emit = defineEmits<{ patch: [Record<string, unknown>] }>()
 
 const aspectLocked = ref(false)
+const aspectLabel = computed(() =>
+  aspectLocked.value ? _t('Unlock aspect ratio') : _t('Lock aspect ratio')
+)
 
 function round(v: number): number {
   return Math.round(v)
@@ -56,93 +61,120 @@ function setOpacity(e: Event): void {
 </script>
 
 <template>
-  <section class="maps-inspector-layout-section">
-    <h3 class="maps-section-title">{{ _t('Layout') }}</h3>
-    <div class="maps-inspector-layout-section__grid">
-      <label class="maps-inspector-layout-section__num">
-        <span class="maps-cap">{{ _t('X') }}</span>
-        <CmkInput
-          type="number"
-          :model-value="round(element.x)"
-          @update:model-value="set('x', $event)"
-        />
-      </label>
-      <label class="maps-inspector-layout-section__num">
-        <span class="maps-cap">{{ _t('Y') }}</span>
-        <CmkInput
-          type="number"
-          :model-value="round(element.y)"
-          @update:model-value="set('y', $event)"
-        />
-      </label>
-      <label class="maps-inspector-layout-section__num">
-        <span class="maps-cap">{{ _t('W') }}</span>
-        <CmkInput
-          type="number"
-          :model-value="round(element.w)"
-          min="8"
-          @update:model-value="setSize('w', $event)"
-        />
-      </label>
-      <label class="maps-inspector-layout-section__num">
-        <span class="maps-cap">{{ _t('H') }}</span>
-        <CmkInput
-          type="number"
-          :model-value="round(element.h)"
-          min="8"
-          @update:model-value="setSize('h', $event)"
-        />
-      </label>
+  <CmkCatalogPanel :title="_t('Layout')">
+    <div class="maps-inspector-layout-section">
+      <div class="maps-inspector-layout-section__grid">
+        <label class="maps-inspector-layout-section__num">
+          <span class="maps-cap">{{ _t('X') }}</span>
+          <CmkInput
+            type="number"
+            :model-value="round(element.x)"
+            @update:model-value="set('x', $event)"
+          />
+        </label>
+        <label
+          class="maps-inspector-layout-section__num maps-inspector-layout-section__num--second"
+        >
+          <span class="maps-cap">{{ _t('Y') }}</span>
+          <CmkInput
+            type="number"
+            :model-value="round(element.y)"
+            @update:model-value="set('y', $event)"
+          />
+        </label>
+        <label class="maps-inspector-layout-section__num">
+          <span class="maps-cap">{{ _t('W') }}</span>
+          <CmkInput
+            type="number"
+            :model-value="round(element.w)"
+            min="8"
+            @update:model-value="setSize('w', $event)"
+          />
+        </label>
+        <button
+          type="button"
+          class="maps-inspector-layout-section__aspect"
+          :class="{ 'maps-inspector-layout-section__aspect--on': aspectLocked }"
+          :title="aspectLabel"
+          :aria-label="aspectLabel"
+          :aria-pressed="aspectLocked"
+          @click="aspectLocked = !aspectLocked"
+        >
+          <CmkMultitoneIcon
+            :name="aspectLocked ? 'chain' : 'broken-chain'"
+            primary-color="font"
+            size="small"
+          />
+        </button>
+        <label class="maps-inspector-layout-section__num">
+          <span class="maps-cap">{{ _t('H') }}</span>
+          <CmkInput
+            type="number"
+            :model-value="round(element.h)"
+            min="8"
+            @update:model-value="setSize('h', $event)"
+          />
+        </label>
+        <label class="maps-inspector-layout-section__num">
+          <span class="maps-cap">{{ _t('Rotation') }}</span>
+          <CmkInput
+            type="number"
+            :model-value="Math.round(element.rotation)"
+            min="-360"
+            max="360"
+            @update:model-value="set('rotation', $event)"
+          />
+        </label>
+      </div>
+      <div class="maps-inspector-layout-section__field">
+        <span class="maps-cap">{{ _t('Opacity') }}</span>
+        <div class="maps-inspector-layout-section__row">
+          <input
+            class="maps-inspector-layout-section__range"
+            type="range"
+            min="0"
+            max="100"
+            :aria-label="_t('Opacity')"
+            :value="Math.round(element.opacity * 100)"
+            @input="setOpacity"
+          />
+          <span class="maps-range-pct">{{ Math.round(element.opacity * 100) }}%</span>
+        </div>
+      </div>
     </div>
-    <div class="maps-inspector-layout-section__row">
-      <label class="maps-inspector-layout-section__num maps-inspector-layout-section__num--rot">
-        <span class="maps-cap">{{ _t('Rotation') }}</span>
-        <CmkInput
-          type="number"
-          :model-value="Math.round(element.rotation)"
-          min="-360"
-          max="360"
-          @update:model-value="set('rotation', $event)"
-        />
-      </label>
-      <button
-        class="maps-inspector-layout-section__aspect"
-        :class="{ 'maps-inspector-layout-section__aspect--on': aspectLocked }"
-        :title="_t('Lock aspect ratio')"
-        @click="aspectLocked = !aspectLocked"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path v-if="aspectLocked" d="M8 11V7a4 4 0 0 1 8 0v4M5 11h14v10H5z" />
-          <path v-else d="M8 11V7a4 4 0 0 1 7.5-2M5 11h14v10H5z" />
-        </svg>
-      </button>
-    </div>
-    <div class="maps-inspector-layout-section__row">
-      <span class="maps-cap maps-inspector-layout-section__cap--inline">{{ _t('Opacity') }}</span>
-      <input
-        class="maps-range"
-        type="range"
-        min="0"
-        max="100"
-        :value="Math.round(element.opacity * 100)"
-        @input="setOpacity"
-      />
-      <span class="maps-range-pct">{{ Math.round(element.opacity * 100) }}%</span>
-    </div>
-  </section>
+  </CmkCatalogPanel>
 </template>
 
 <style scoped>
 .maps-inspector-layout-section {
   display: flex;
   flex-direction: column;
-  gap: var(--dimension-4);
+  gap: var(--dimension-5);
+  padding: var(--dimension-4) 0;
 }
 
+/* X/Y and W/H line up in two columns; the aspect lock sits between W and H. */
 .maps-inspector-layout-section__grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--dimension-4);
+  grid-template-columns: max-content max-content max-content;
+  gap: var(--dimension-5) var(--dimension-4);
+  align-items: end;
+}
+
+.maps-inspector-layout-section__num {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-3);
+}
+
+.maps-inspector-layout-section__num--second {
+  grid-column: 3;
+}
+
+.maps-inspector-layout-section__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-3);
 }
 
 .maps-inspector-layout-section__row {
@@ -151,42 +183,32 @@ function setOpacity(e: Event): void {
   gap: var(--dimension-4);
 }
 
-.maps-inspector-layout-section__num {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-2);
-  min-width: 0;
-}
-
-.maps-inspector-layout-section__num--rot {
+.maps-inspector-layout-section__range {
   flex: 1;
-}
-
-.maps-inspector-layout-section__cap--inline {
-  min-width: 52px;
+  min-width: 0;
 }
 
 .maps-inspector-layout-section__aspect {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin-top: var(--dimension-5);
-  border: 1px solid var(--default-form-element-border-color);
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid transparent;
   border-radius: var(--border-radius);
   background: transparent;
-  color: var(--font-color-dimmed);
   cursor: pointer;
+  opacity: 0.6;
+}
+
+.maps-inspector-layout-section__aspect:hover {
+  opacity: 1;
 }
 
 .maps-inspector-layout-section__aspect--on {
-  color: var(--interactive-accent);
   border-color: var(--interactive-accent);
-}
-
-.maps-inspector-layout-section__aspect svg {
-  width: 15px;
-  height: 15px;
+  opacity: 1;
 }
 </style>

@@ -958,6 +958,7 @@ function closeBulkAckModal(sent: boolean): void {
         :keyboard-active="editKeyboardActive"
         :offers-add-object="!isPresentation"
         :offers-grid="!isWorldmap && !isPresentation"
+        :beside-inspector="isPresentation && editor.editMode.value"
         @start-placing="onStartPlacing()"
         @toggle-edit-mode="onToggleEditMode"
         @delete-selection="onObjectAction('delete')"

@@ -167,6 +167,9 @@ maps.py emits, so they match nothing on the other pages sharing this bundle.
   --maps-shadow-canvas-overlay-high:
     0 10px 15px -3px rgb(0 0 0 / 30%), 0 4px 6px -4px rgb(0 0 0 / 30%);
 
+  /* Shared with the edit tools, which step left of the slide inspector. */
+  --maps-presentation-inspector-width: 280px;
+
   height: 100%;
   contain: layout;
 }

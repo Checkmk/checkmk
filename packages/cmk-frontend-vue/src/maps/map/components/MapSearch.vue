@@ -9,6 +9,8 @@ import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
 
+import { useNavigation } from '@/maps/services/context'
+
 const props = defineProps<{
   modelValue: string
   placeholder?: TranslatedString
@@ -21,6 +23,7 @@ const props = defineProps<{
 const emit = defineEmits<{ 'update:modelValue': [string] }>()
 
 const { _t } = usei18n()
+const nav = useNavigation()
 
 const operators = computed(() => {
   const all = [
@@ -109,7 +112,11 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   <div
     ref="rootRef"
     class="maps-map-search"
-    :class="{ 'maps-map-search--open': dropdownOpen, 'maps-map-search--inline': inline }"
+    :class="{
+      'maps-map-search--open': dropdownOpen,
+      'maps-map-search--inline': inline,
+      'maps-map-search--kiosk': nav.state.kiosk && !inline
+    }"
   >
     <CmkIcon name="search" size="small" class="maps-map-search__search-icon" />
     <input
@@ -188,6 +195,13 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   background: var(--maps-map-view-overlay-bg);
   border: 1px solid var(--default-border-color);
   min-width: 300px;
+}
+
+/* Full screen has no title bar to clear; the exit holds the corner, and the
+   left one belongs to the zoom controls and the radar summary. */
+.maps-map-search--kiosk {
+  top: var(--dimension-5);
+  right: calc(var(--dimension-5) + var(--dimension-9) + var(--dimension-4));
 }
 
 /* Embedded in a toolbar: sit in the normal flow, so it never

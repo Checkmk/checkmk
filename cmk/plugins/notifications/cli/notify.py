@@ -98,7 +98,7 @@ def _mode_notify(
 
 def _run_notify(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
+        # the notification code reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_notify(context.omd_root, context.global_options, options, args)

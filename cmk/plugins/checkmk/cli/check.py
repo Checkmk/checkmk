@@ -124,7 +124,7 @@ def _mode_check(
 
 def _run_check(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
+        # the check engine and the crash reports read cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_check(context.omd_root, context.global_options, options, args)

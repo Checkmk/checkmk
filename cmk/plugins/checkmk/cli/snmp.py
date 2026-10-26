@@ -376,7 +376,7 @@ def _mode_snmpget(
 
 def _run_snmpget(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
+        # get_single_oid() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_snmpget(context.omd_root, context.global_options, options, args)

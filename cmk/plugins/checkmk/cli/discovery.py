@@ -321,7 +321,7 @@ def _mode_check_discovery(
 
 def _run_check_discovery(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
+        # the check engine reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_check_discovery(context.omd_root, context.global_options, options, args)
@@ -622,7 +622,7 @@ def _mode_discover(
 
 def _run_discover(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
+        # the check engine reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_discover(context.omd_root, context.global_options, options, args)

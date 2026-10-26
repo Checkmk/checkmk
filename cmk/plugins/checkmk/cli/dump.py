@@ -276,7 +276,7 @@ def _mode_dump_agent(
 
 def _run_dump_agent(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
+        # the check engine reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_dump_agent(context.omd_root, context.global_options, options, args)
@@ -389,7 +389,7 @@ def _mode_dump_hosts(
 
 def _run_dump_hosts(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
+        # the check engine reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_dump_hosts(context.omd_root, context.global_options, options, args)

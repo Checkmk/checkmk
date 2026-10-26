@@ -331,7 +331,7 @@ def _mode_inventory(
 
 def _run_inventory(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
+        # the check engine reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_inventory(context.omd_root, context.global_options, options, args)
@@ -559,7 +559,7 @@ def _run_inventorize_marked_hosts(
     context: CommandContext, options: Options, args: Args
 ) -> ExitCode:
     if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
+        # the check engine reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_inventorize_marked_hosts(

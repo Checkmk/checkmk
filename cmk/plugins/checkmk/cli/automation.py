@@ -95,7 +95,7 @@ def _mode_automation(
 
 def _run_automation(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # exit_on_config_file_load_error() reads cmk.ccc.debug
+        # the automations read cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_automation(context.omd_root, context.global_options, options, args)

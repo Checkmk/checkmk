@@ -133,7 +133,7 @@ def _mode_dump_nagios_config(
 
 def _run_dump_nagios_config(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
+        # creating the core config reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_dump_nagios_config(context.omd_root, context.global_options, options, args)
@@ -288,7 +288,7 @@ def _mode_update(
 
 def _run_update(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
+        # creating the core config reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_update(context.omd_root, context.global_options, options, args)
@@ -409,7 +409,7 @@ def _mode_restart(
 
 def _run_restart(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
+        # creating the core config reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_restart(context.omd_root, context.global_options, options, args)
@@ -531,7 +531,7 @@ def _mode_reload(
 
 def _run_reload(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
+        # creating the core config reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_reload(context.omd_root, context.global_options, options, args)

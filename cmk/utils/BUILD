@@ -211,7 +211,6 @@ py_library(
     deps = [
         ":paths",
         "//packages/cmk-ccc:config-path",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:i18n",

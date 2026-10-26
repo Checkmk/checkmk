@@ -1376,6 +1376,7 @@ class ConfigCache:
             use_dns_cache=self._loaded_config.use_dns_cache,
             ipv4_addresses=self._loaded_config.ipaddresses,
             ipv6_addresses=self._loaded_config.ipv6addresses,
+            debug=self._debug,
         )
 
     def make_snmp_config(

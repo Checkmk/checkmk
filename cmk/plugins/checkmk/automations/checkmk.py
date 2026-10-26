@@ -2945,6 +2945,7 @@ def _automation_diag_cmk_agent(
                 hostname=host_name,
                 family=address_family_config(family),
                 force_file_cache_renewal=False,
+                debug=cmk.ccc.debug.enabled(),
             )
         except Exception:
             return DiagCmkAgentResult(
@@ -3907,6 +3908,7 @@ def _automation_update_dns_cache(
             ),
             get_ip_stack_config=env.ip_lookup_config.ip_stack_config,
             lookup_ip_address=ip_lookup.make_lookup_ip_address(env.ip_lookup_config),
+            debug=cmk.ccc.debug.enabled(),
         )
     )
 

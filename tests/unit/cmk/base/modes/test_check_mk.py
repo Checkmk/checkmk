@@ -45,6 +45,7 @@ def test_a_state_exits_with_its_monitoring_meaning(state: int, expected: ExitCod
 
 def _ip_lookup_config() -> ip_lookup.IPLookupConfig:
     return ip_lookup.IPLookupConfig(
+        debug=False,
         ip_stack_config=lambda host_name: ip_lookup.IPStackConfig.IPv4,  # noqa: ARG005
         is_snmp_host=lambda host_name: False,  # noqa: ARG005
         is_snmp_management=lambda host_name: False,  # noqa: ARG005

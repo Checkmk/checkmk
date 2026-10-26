@@ -55,6 +55,7 @@ def _mode_update_dns_cache(
         ),
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         lookup_ip_address=(ip_lookup.make_lookup_ip_address(ip_lookup_config)),
+        debug=global_options.debug,
     )
     return ExitCode.SUCCESS
 

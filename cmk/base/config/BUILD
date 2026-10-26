@@ -17,7 +17,6 @@ py_library(
         "//cmk/piggyback:backend",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:regex",

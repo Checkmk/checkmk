@@ -129,6 +129,7 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
         autochecks_dir=paths.autochecks_dir,
         discovered_host_labels_dir=paths.discovered_host_labels_dir,
         builtin_host_labels_file=Path("/dev/null"),
+        debug=debug.enabled(),
     )
     parser_config = config.make_parser_config(
         EMPTY_CONFIG,

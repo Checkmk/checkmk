@@ -87,6 +87,7 @@ def _activate(
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+        debug=False,
     )
     core, _real_client = app.create_core(loaded_config)
     core_client = _NoopRunNagiosClient(

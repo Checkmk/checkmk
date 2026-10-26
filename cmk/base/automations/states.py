@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import override
 
+import cmk.ccc.debug
 import cmk.utils.paths
 from cmk import trace
 from cmk.automations.internal import AutomationState
@@ -60,4 +61,5 @@ def _derive_loading_result(raw_config: Mapping[str, object]) -> config.LoadingRe
             autochecks_dir=cmk.utils.paths.autochecks_dir,
             discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
             builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+            debug=cmk.ccc.debug.enabled(),
         )

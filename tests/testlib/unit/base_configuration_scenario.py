@@ -70,6 +70,7 @@ class Scenario:
             builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
             excluded_service_ids=self._excluded_service_ids,
             relay_supported_active_checks=self._relay_supported_active_checks,
+            debug=self._debug,
         )
         return LoadingResult(
             loaded_config=loaded_config,
@@ -84,10 +85,12 @@ class Scenario:
         edition: Edition = Edition.COMMUNITY,
         excluded_service_ids: Container[ServiceID] = frozenset(),
         relay_supported_active_checks: Container[str] = frozenset(),
+        debug: bool = True,
     ) -> None:
         super().__init__()
 
         self._edition = edition
+        self._debug = debug
         self._excluded_service_ids = excluded_service_ids
         self._relay_supported_active_checks = relay_supported_active_checks
         tag_config = cmk.ruleset_matcher.tags.sample_tag_config()

@@ -22,7 +22,6 @@ import pytest
 from pytest import MonkeyPatch
 
 import cmk.base.configlib.fetchers
-import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.base import config, notify
 from cmk.base.config import ConfigCache, EnforcedServicesTable, make_host_tags, make_hosts_config
@@ -334,6 +333,7 @@ def _config_cache_of(loaded_config: BaseConfig) -> ConfigCache:
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+        debug=False,
     )
 
 
@@ -2506,6 +2506,7 @@ def test_config_cache_max_cachefile_age_no_cluster() -> None:
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+        debug=False,
     )
 
     assert xyz_host not in config.make_hosts_config(loaded_config).clusters
@@ -2529,6 +2530,7 @@ def test_config_cache_max_cachefile_age_cluster() -> None:
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+        debug=False,
     )
 
     assert clu in config.make_hosts_config(loaded_config).clusters
@@ -2732,6 +2734,7 @@ def test_load_config_folder_paths(folder_path_test_config: BaseConfig) -> None:
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=Path("/dev/null"),
+        debug=False,
     )
     hosts_config = config.make_hosts_config(folder_path_test_config)
     ruleset_matcher = config_cache.ruleset_matcher
@@ -3410,7 +3413,6 @@ def test_get_active_service_data_crash(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setattr(cmk.ccc.debug, cmk.ccc.debug.enabled.__name__, lambda: False)
     # Patch the module that holds the binding actually being read, not the
     # re-export in `cmk.base.config`: those are independent bindings.
     monkeypatch.setattr(
@@ -3427,7 +3429,7 @@ def test_get_active_service_data_crash(
         },
     )
     host_name = HostName("test_host")
-    ts = Scenario()
+    ts = Scenario(debug=False)
     ts.add_host(host_name)
     ts.set_ruleset_bundle(
         "active_checks",
@@ -3482,7 +3484,6 @@ def test_get_active_service_data_not_supported_on_relay(
     that a defect can be traced, and there is no defect to trace in a configuration the
     user is free to correct.
     """
-    monkeypatch.setattr(cmk.ccc.debug, cmk.ccc.debug.enabled.__name__, lambda: debug_enabled)
     monkeypatch.setattr(
         config._impl,  # noqa: SLF001
         "load_active_checks",
@@ -3499,7 +3500,7 @@ def test_get_active_service_data_not_supported_on_relay(
         },
     )
     host_name = HostName("test_host")
-    ts = Scenario()
+    ts = Scenario(debug=debug_enabled)
     ts.add_host(host_name)
     ts.set_ruleset_bundle(
         "active_checks",

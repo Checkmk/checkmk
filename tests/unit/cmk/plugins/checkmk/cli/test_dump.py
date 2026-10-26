@@ -129,6 +129,7 @@ class TestDumpAgent:
                     autochecks_dir=cmk_paths.autochecks_dir,
                     discovered_host_labels_dir=cmk_paths.discovered_host_labels_dir,
                     builtin_host_labels_file=cmk_paths.builtin_host_labels_file,
+                    debug=False,
                 ),
             ),
         )
@@ -271,6 +272,7 @@ class TestDumpAgentSnmpBackend:
                     autochecks_dir=cmk_paths.autochecks_dir,
                     discovered_host_labels_dir=cmk_paths.discovered_host_labels_dir,
                     builtin_host_labels_file=cmk_paths.builtin_host_labels_file,
+                    debug=False,
                 ),
             ),
         )

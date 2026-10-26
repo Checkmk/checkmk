@@ -116,6 +116,7 @@ def main() -> int:
             discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
             builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
             excluded_service_ids=frozenset(CONFIG.disabled_service_ids),
+            debug=debug,
         )
 
         secrets = load_secrets_file(

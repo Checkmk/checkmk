@@ -1332,6 +1332,7 @@ def _execute_autodiscovery(
             autochecks_dir=autochecks_dir,
             discovered_host_labels_dir=discovered_host_labels_dir,
             builtin_host_labels_file=builtin_host_labels_file,
+            debug=cmk.ccc.debug.enabled(),
         ),
     )
     ip_address_of = env.ip_address_of(on_failure=IPLookupFailureMode.COLLECT)

@@ -19,8 +19,6 @@ from typing import Literal, override
 import pytest
 from pytest import MonkeyPatch
 
-import cmk.ccc.debug
-
 # We need an active check plugin that exists.
 # The ExecutableFinder demands a location that exits :-/
 # We're importing it here, so that this fails the linters if that is removed.
@@ -741,6 +739,7 @@ def test_create_nagios_servicedefs_active_check(  # type: ignore[misc]
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=Path("/dev/null"),
+        debug=False,
     )
     config_cache.label_manager = LabelManager(
         FakeLabelConfig(service_labels),
@@ -945,6 +944,7 @@ def test_create_nagios_servicedefs_with_warnings(  # type: ignore[misc]
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=Path("/dev/null"),
+        debug=False,
     )
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)  # noqa: ARG005
 
@@ -1035,6 +1035,7 @@ def test_create_nagios_servicedefs_omit_service(  # type: ignore[misc]
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=Path("/dev/null"),
+        debug=False,
     )
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)  # noqa: ARG005
     monkeypatch.setattr(config_cache, "service_ignored", lambda *_: True)
@@ -1119,10 +1120,9 @@ def test_create_nagios_servicedefs_invalid_args(  # type: ignore[misc]
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=Path("/dev/null"),
+        debug=False,
     )
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)  # noqa: ARG005
-
-    monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
@@ -1224,6 +1224,7 @@ def test_create_nagios_config_commands(
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+        debug=False,
     )
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)  # noqa: ARG005
 

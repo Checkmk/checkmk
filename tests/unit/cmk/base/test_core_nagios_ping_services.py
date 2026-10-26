@@ -240,6 +240,7 @@ def _generated_ping_service_config(
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=Path("/dev/null"),
+        debug=False,
     )
 
     final_service_name_config = make_final_service_name_config(

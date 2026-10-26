@@ -105,6 +105,7 @@ def _prepare(
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+        debug=False,
     )
     loading_result = config.LoadingResult(
         loaded_config=EMPTY_CONFIG,
@@ -186,6 +187,7 @@ class TestAutomationDiagHost:
                         autochecks_dir=cmk.utils.paths.autochecks_dir,
                         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
                         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+                        debug=False,
                     ),
                 ),
                 app=app,
@@ -329,6 +331,7 @@ def test_automation_active_check(  # type: ignore[misc]
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+        debug=False,
     )
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)  # noqa: ARG005
 
@@ -409,6 +412,7 @@ def test_automation_active_check_invalid_args(  # type: ignore[misc]
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+        debug=False,
     )
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)  # noqa: ARG005
 

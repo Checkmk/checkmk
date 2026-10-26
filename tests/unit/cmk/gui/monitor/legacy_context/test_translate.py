@@ -120,6 +120,12 @@ def _translate(context: VisualContext) -> ContextFilterTranslation[_JSON]:
             id="exact text",
         ),
         pytest.param(
+            "host",
+            {"host": "web-01", "neg_host": "on"},
+            _not(_condition("name", "matches", r"^web\-01$")),
+            id="negated exact text",
+        ),
+        pytest.param(
             "hostnameoralias",
             {"hostnameoralias": "web"},
             {

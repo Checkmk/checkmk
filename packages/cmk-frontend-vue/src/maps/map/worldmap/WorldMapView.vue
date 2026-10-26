@@ -35,6 +35,7 @@ import MapsMenu from '@/maps/shared/components/MapsMenu.vue'
 import MapsMenuItem from '@/maps/shared/components/MapsMenuItem.vue'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 import { hasAutoSource } from '@/maps/utils/model'
+import { problemObjects } from '@/maps/utils/objectFilter'
 
 import WorldMapCanvas from './components/WorldMapCanvas.vue'
 
@@ -110,7 +111,14 @@ const emptyState = computed<{ text: string; toSettings: boolean } | null>(() => 
 
 // The same objects the canvas fits the viewport to, so the control never
 // promises something the map will not do.
-const canFit = computed(() => pointObjects(props.config?.objects ?? []).length > 0)
+const canFit = computed(() => {
+  const objects = props.config?.objects ?? []
+  const shown =
+    props.editor.editMode.value && !props.preview
+      ? objects
+      : problemObjects(objects, props.problemsOnly, props.states)
+  return pointObjects(shown).length > 0
+})
 
 /** Where a right-click on the empty map opened the menu. */
 const canvasMenu = ref<{ x: number; y: number } | null>(null)

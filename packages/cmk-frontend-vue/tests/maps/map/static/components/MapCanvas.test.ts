@@ -233,6 +233,27 @@ describe('MapCanvas – smoke with real MapElement', () => {
     expect(stateColorTokenOf(container)).toBe('var(--color-state-up)')
   })
 
+  it('leaves an object without a problem out of a map showing only problems', () => {
+    const config = aMap({
+      ...sampleConfig,
+      objects: [
+        ...sampleConfig.objects,
+        anObject({ id: '2', type: 'host', x: 300, y: 200, host_name: 'db01', z: 1 })
+      ]
+    })
+    const states = {
+      ...sampleStates,
+      '2': aState({ object_id: '2', type: 'host', state: 'DOWN' })
+    }
+    render(MapCanvas, {
+      props: { ...baseProps, config, states, problemsOnly: true },
+      global: mapsGlobal(stubs)
+    })
+
+    expect(screen.getByRole('button', { name: 'db01, Down' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'localhost, Up' })).toBeNull()
+  })
+
   it('reflects a state change (UP → DOWN) in icon colour and accessible name', async () => {
     const { container, rerender } = render(MapCanvas, {
       props: { ...baseProps, config: smokeConfig },

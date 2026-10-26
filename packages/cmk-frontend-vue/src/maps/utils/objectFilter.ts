@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { MapElement } from '@/maps/types/api'
+import type { MapElement, ObjectState } from '@/maps/types/api'
 
 import { getEffectiveObjectType } from './naming'
 import { STATEFUL_OBJECT_TYPES, isProblemState } from './problemState'
@@ -130,15 +130,35 @@ export function dimmedStyle(dimmed: boolean): { opacity?: string; filter?: strin
 }
 
 // "Problems only" map toggle: stateful objects must currently be in a
-// problem state to stay visible; decorative types (image, textbox, …) and an
-// inactive toggle always pass. Shared by the static and worldmap canvases.
-export function passesProblemFilter(
-  obj: MapElement,
+// problem state to stay; decorative types (image, textbox, …) and an inactive
+// toggle always pass. A line bound to a state of its own goes by that state,
+// any other line goes with the objects it connects, so none ends in empty
+// space. Shared by the static and worldmap canvases.
+export function problemObjects(
+  objects: MapElement[],
   problemsOnly: boolean | undefined,
-  state: string | undefined
-): boolean {
-  if (!problemsOnly || !STATEFUL_OBJECT_TYPES.has(obj.type)) {
-    return true
+  states: Readonly<Record<string, ObjectState | undefined>>
+): MapElement[] {
+  if (!problemsOnly) {
+    return objects
   }
-  return isProblemState(state)
+  const passes = (object: MapElement, type: string): boolean =>
+    !STATEFUL_OBJECT_TYPES.has(type) || isProblemState(states[object.id]?.state)
+  const ids = new Set(objects.map((object) => object.id))
+  const shown = new Set(
+    objects
+      .filter((object) => object.type !== 'line' && passes(object, object.type))
+      .map((object) => object.id)
+  )
+  const reaches = (ref: string | null | undefined): boolean =>
+    !ref || !ids.has(ref) || shown.has(ref)
+  return objects.filter((object) => {
+    if (object.type !== 'line') {
+      return shown.has(object.id)
+    }
+    const bound = getEffectiveObjectType(object)
+    return STATEFUL_OBJECT_TYPES.has(bound)
+      ? passes(object, bound)
+      : reaches(object.start_ref) && reaches(object.end_ref)
+  })
 }

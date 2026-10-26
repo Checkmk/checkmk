@@ -14,7 +14,7 @@
 import { type ComputedRef, computed } from 'vue'
 
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
-import { dimmedStyle, objectMatchesFilter, passesProblemFilter } from '@/maps/utils/objectFilter'
+import { dimmedStyle, objectMatchesFilter, problemObjects } from '@/maps/utils/objectFilter'
 
 /** Stacking order of the object under the pointer, above everything placed. */
 const DRAGGED_Z = 100
@@ -36,7 +36,7 @@ export interface CanvasLayout {
   placedObjects: ComputedRef<MapElement[]>
   /** Lines grouped so they interleave with the objects by stacking order. */
   lineLayers: ComputedRef<LineLayer[]>
-  /** Whether a search or the problems filter is narrowing the map. */
+  /** Whether a search is narrowing the map. */
   filtering: ComputedRef<boolean>
   matches: (object: MapElement) => boolean
   objectStyle: (object: MapElement) => Record<string, string | number | undefined>
@@ -65,13 +65,22 @@ export function useCanvasLayout(source: {
     return object.z ?? source.config().default_z ?? 1
   }
 
+  // "Only problems" means what it says; the editor still shows everything. Left
+  // out rather than hidden, so keyboard focus cannot land on what is not shown.
+  const shownObjects = computed(() => {
+    const objects = source.config().objects
+    return source.editMode()
+      ? objects
+      : problemObjects(objects, source.problemsOnly(), source.states())
+  })
+
   const placedObjects = computed(() =>
-    source.config().objects.filter((object) => object.type !== 'line')
+    shownObjects.value.filter((object) => object.type !== 'line')
   )
 
   const lineLayers = computed((): LineLayer[] => {
     const byZ = new Map<number, MapElement[]>()
-    for (const object of source.config().objects) {
+    for (const object of shownObjects.value) {
       if (object.type !== 'line') {
         continue
       }
@@ -86,19 +95,14 @@ export function useCanvasLayout(source: {
     return [...byZ.entries()].sort(([a], [b]) => a - b).map(([z, lines]) => ({ z, lines }))
   })
 
-  const filtering = computed(
-    () => (source.filterNeedle() ?? '').trim() !== '' || !!source.problemsOnly()
-  )
+  const filtering = computed(() => (source.filterNeedle() ?? '').trim() !== '')
 
   function matches(object: MapElement): boolean {
-    return (
-      objectMatchesFilter(object, source.filterNeedle() ?? '') &&
-      passesProblemFilter(object, source.problemsOnly(), source.states()[object.id]?.state)
-    )
+    return objectMatchesFilter(object, source.filterNeedle() ?? '')
   }
 
-  /** Everything filtered out fades rather than vanishing, so the map's shape
-   *  stays readable and the operator keeps their bearings. */
+  /** What the search leaves out fades rather than vanishing, so the map's
+   *  shape stays readable and the operator keeps their bearings. */
   function dimming(object: MapElement): Record<string, string | undefined> {
     return {
       ...dimmedStyle(!matches(object)),

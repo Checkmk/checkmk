@@ -190,6 +190,36 @@ describe('WorldMapCanvas', () => {
     expect(leaflet.mapStub.remove).toHaveBeenCalledTimes(1)
   })
 
+  it('leaves an object without a problem off a map showing only problems', async () => {
+    const config = aMap({
+      ...sampleConfig(),
+      objects: [
+        ...sampleConfig().objects,
+        anObject({ id: 'h2', type: 'host', lat: 48.1, lng: 11.6, host_name: 'munich-host', z: 1 })
+      ]
+    })
+    const states = {
+      ...sampleStates,
+      h2: aState({ object_id: 'h2', type: 'host', state: 'DOWN' })
+    }
+    render(WorldMapCanvas, {
+      global: mapsGlobal(),
+      props: { ...baseProps, config, states, problemsOnly: true }
+    })
+
+    expect(await screen.findByRole('button', { name: 'munich-host, Down' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'berlin-host, Up' })).toBeNull()
+  })
+
+  it('keeps every object in the editor, where only problems would hide what is edited', async () => {
+    render(WorldMapCanvas, {
+      global: mapsGlobal(),
+      props: { ...baseProps, config: sampleConfig(), problemsOnly: true, editMode: true }
+    })
+
+    expect(await screen.findByRole('button', { name: 'berlin-host, Up' })).toBeInTheDocument()
+  })
+
   it('reports a click on a marker as a click on its object', async () => {
     const user = userEvent.setup()
     const { clicked } = renderCanvas()

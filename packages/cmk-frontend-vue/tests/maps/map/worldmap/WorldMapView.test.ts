@@ -9,9 +9,9 @@ import { describe, expect, it } from 'vitest'
 
 import { useMapEditor } from '@/maps/map/composables/useMapEditor'
 import WorldMapView from '@/maps/map/worldmap/WorldMapView.vue'
-import type { MapConfig, WorldmapView } from '@/maps/types/api'
+import type { MapConfig, ObjectState, WorldmapView } from '@/maps/types/api'
 
-import { aMap, anObject } from '../../support/fixtures'
+import { aMap, aState, anObject } from '../../support/fixtures'
 import { fakeMapsServices, mapsGlobal, runWithServices } from '../../support/services'
 
 const geoView = (view: Partial<WorldmapView> = {}): WorldmapView => ({
@@ -29,11 +29,15 @@ function renderView(
   {
     canEdit = true,
     autoObjects = 'loaded',
-    onOpenSettings = () => {}
+    onOpenSettings = () => {},
+    states = {},
+    problemsOnly = false
   }: {
     canEdit?: boolean
     autoObjects?: 'none' | 'loading' | 'loaded' | 'failed'
     onOpenSettings?: (focus: string) => void
+    states?: Record<string, ObjectState>
+    problemsOnly?: boolean
   } = {}
 ) {
   const services = fakeMapsServices()
@@ -43,14 +47,14 @@ function renderView(
     global: mapsGlobal({ WorldMapCanvas: true }, services),
     props: {
       config,
-      states: {},
+      states,
       editor,
       error: null,
       preview: false,
       canEdit,
       checkmkUrl: null,
       filterNeedle: '',
-      problemsOnly: false,
+      problemsOnly,
       'onOpen-settings': onOpenSettings
     }
   })
@@ -108,5 +112,28 @@ describe('WorldMapView — a map with nothing on it', () => {
     renderView(aMap({ view: geoView(), objects: [anObject({ id: 'h1', type: 'host' })] }))
 
     expect(screen.queryByText(/No objects yet/)).toBeNull()
+  })
+})
+
+describe('WorldMapView — fitting the view', () => {
+  const berlin = anObject({
+    id: 'h1',
+    type: 'host',
+    lat: 52.5,
+    lng: 13.4,
+    host_name: 'berlin-host'
+  })
+  const states = { h1: aState({ object_id: 'h1', type: 'host', state: 'UP' }) }
+
+  it('offers to fit the objects on the map', () => {
+    renderView(aMap({ view: geoView(), objects: [berlin] }), { states })
+
+    expect(screen.getByRole('button', { name: 'Fit all objects' })).toBeInTheDocument()
+  })
+
+  it('offers no fit when showing only problems leaves nothing on the map', () => {
+    renderView(aMap({ view: geoView(), objects: [berlin] }), { states, problemsOnly: true })
+
+    expect(screen.queryByRole('button', { name: 'Fit all objects' })).toBeNull()
   })
 })

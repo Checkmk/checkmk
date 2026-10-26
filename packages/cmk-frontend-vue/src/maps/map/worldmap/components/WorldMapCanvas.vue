@@ -53,7 +53,7 @@ import {
   dimmedStyle,
   objectMatchesTerms,
   parseFilterTerms,
-  passesProblemFilter
+  problemObjects
 } from '@/maps/utils/objectFilter'
 import { stateRank } from '@/maps/utils/stateColors'
 import { labelText } from '@/maps/utils/template'
@@ -132,17 +132,21 @@ const objectsById = computed(
   () => new Map(props.config.objects.map((object) => [object.id, object]))
 )
 
-const filterActive = computed(() => props.filterNeedle.trim() !== '' || props.problemsOnly)
+const filterActive = computed(() => props.filterNeedle.trim() !== '')
+
+// "Only problems" means what it says; the editor still shows everything.
+const shownObjects = computed(() =>
+  props.editMode
+    ? props.config.objects
+    : problemObjects(props.config.objects, props.problemsOnly, props.states)
+)
 
 // Parsed once per needle rather than once per object: every object on the map
 // is matched against the same query.
 const filterTerms = computed(() => parseFilterTerms(props.filterNeedle))
 
 function matches(object: MapElement): boolean {
-  return (
-    objectMatchesTerms(object, filterTerms.value) &&
-    passesProblemFilter(object, props.problemsOnly, props.states[object.id]?.state)
-  )
+  return objectMatchesTerms(object, filterTerms.value)
 }
 
 function iconSizeOf(object: MapElement): number {
@@ -245,7 +249,7 @@ function onMarkersDropped(moves: MarkerMove[]): void {
 
 const markers = useWorldmapMarkers({
   map: () => map,
-  objects: () => props.config.objects,
+  objects: () => shownObjects.value,
   fallbackAt: () => (viewport.value ? [viewport.value.lat, viewport.value.lng] : DEFAULT_CENTRE),
   iconSizeOf,
   defaultZ: () => props.config.default_z ?? 1,
@@ -260,7 +264,7 @@ const markers = useWorldmapMarkers({
 
 const lines = useWorldmapLines({
   map: () => map,
-  objects: () => props.config.objects,
+  objects: () => shownObjects.value,
   colorOf,
   editMode: () => props.editMode,
   isSelected,
@@ -473,7 +477,7 @@ watch(
 
 /** Brings every object that has a place of its own into view. */
 function fitAll(): void {
-  const placed = pointObjects(props.config.objects)
+  const placed = pointObjects(shownObjects.value)
   if (map && placed.length) {
     map.fitBounds(L.latLngBounds(placed.map(({ at }) => at)), { padding: FIT_PADDING })
   }

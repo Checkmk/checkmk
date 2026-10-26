@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from pysmi.compiler import MibStatus
 
 import cmk.ec.export as ec
 from cmk.gui.mkeventd.mib_upload import upload_mibs
@@ -20,7 +19,7 @@ _MIB = b"TEST-MIB DEFINITIONS ::= BEGIN\nEND\n"
 
 @dataclass(frozen=True, kw_only=True)
 class _Compilation:
-    mibname: str
+    mibname: ec.MibName
     content: str
     source_dirs: Sequence[Path]
     search_dirs: Sequence[Path]
@@ -33,19 +32,19 @@ class _FakeCompiler:
     The compiled MIB gets the status "compiled", other MIBs the given status, e.g. the ones it
     imports."""
 
-    def __init__(self, statuses: Mapping[str, MibStatus] | None = None) -> None:
+    def __init__(self, statuses: Mapping[ec.MibName, ec.MibStatus] | None = None) -> None:
         self._statuses = statuses or {}
         self.compilations: list[_Compilation] = []
 
     def __call__(
         self,
         *,
-        mibname: str,
+        mibname: ec.MibName,
         content: str,
         source_dirs: Iterable[Path],
         search_dirs: Iterable[Path],
         destination_dir: Path,
-    ) -> Mapping[str, MibStatus]:
+    ) -> Mapping[ec.MibName, ec.MibStatus]:
         self.compilations.append(
             _Compilation(
                 mibname=mibname,
@@ -55,7 +54,7 @@ class _FakeCompiler:
                 destination_dir=destination_dir,
             )
         )
-        return {mibname: MibStatus("compiled")} | dict(self._statuses)
+        return {mibname: ec.MibStatus(status="compiled")} | dict(self._statuses)
 
 
 class _FakeCompilerMaker:
@@ -69,10 +68,9 @@ class _FakeCompilerMaker:
         return self.made[-1]
 
 
-def _failed(error: str) -> MibStatus:
+def _failed(error: str) -> ec.MibStatus:
     """The status of a MIB the compiler failed to compile, with the error"""
-    status: MibStatus = MibStatus("failed").set_options(error=error)  # type: ignore[no-untyped-call]
-    return status
+    return ec.MibStatus(status="failed", error=error)
 
 
 @pytest.fixture(name="paths")
@@ -140,7 +138,7 @@ def test_uploading_a_mib_tells_about_the_stored_file(paths: ec.Paths) -> None:
 
 
 def test_uploading_a_mib_reports_the_mibs_it_imports_which_are_missing(paths: ec.Paths) -> None:
-    compiler = _FakeCompiler({"SNMPv2-SMI": MibStatus("missing")})
+    compiler = _FakeCompiler({ec.MibName("SNMPv2-SMI"): ec.MibStatus(status="missing")})
 
     message = _upload("test-mib.txt", _MIB, paths, compiler)
 
@@ -158,7 +156,7 @@ def test_uploading_a_mib_which_is_no_utf8_keeps_it_unchanged(paths: ec.Paths) ->
 
 
 def test_uploading_a_mib_which_fails_to_compile_is_refused(paths: ec.Paths) -> None:
-    compiler = _FakeCompiler({"BROKEN": _failed("Bad grammar")})
+    compiler = _FakeCompiler({ec.MibName("BROKEN"): _failed("Bad grammar")})
 
     with pytest.raises(Exception, match="Failed to compile your module: Bad grammar"):
         _upload("broken.txt", b"BROKEN DEFINITIONS ::= BEGIN nonsense", paths, compiler)

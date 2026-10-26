@@ -19,19 +19,17 @@ class CompileMib(Protocol):
     """Compiles the MIB with the name and content into the destination directory
 
     The MIB may import the MIBs in the source directories and the compiled ones in the search
-    directories. The result tells the status of the MIB and of the ones it imports, e.g. "compiled".
-    A failed one has the error in its attribute "error". These are the statuses of pysmi, which are
-    strings, so that only the MIB compiler needs pysmi."""
+    directories. The result tells the status of the MIB and of the ones it imports."""
 
     def __call__(
         self,
         *,
-        mibname: str,
+        mibname: ec.MibName,
         content: str,
         source_dirs: Iterable[Path],
         search_dirs: Iterable[Path],
         destination_dir: Path,
-    ) -> Mapping[str, str]: ...
+    ) -> Mapping[ec.MibName, ec.MibStatus]: ...
 
 
 def upload_mibs(
@@ -124,7 +122,7 @@ def _upload_mib_file(
     paths: ec.Paths,
     source_dirs: Sequence[Path],
 ) -> str:
-    mibname = filename.split(".", maxsplit=1)[0] if "." in filename else filename
+    mibname = ec.MibName(filename.split(".", maxsplit=1)[0].upper())
 
     # FIXME: This is a temporary local fix that should be removed once
     # handling of file contents uses a uniformly encoded representation
@@ -134,7 +132,7 @@ def _upload_mib_file(
         content = content_bytes.decode("latin-1")
 
     msg = _validate_and_compile_mib(
-        mibname=mibname.upper(),
+        mibname=mibname,
         content=content,
         make_compile_mib=make_compile_mib,
         paths=paths,
@@ -153,7 +151,7 @@ def _validate_mib_file_name(filename: str) -> None:
 
 def _validate_and_compile_mib(
     *,
-    mibname: str,
+    mibname: ec.MibName,
     content: str,
     make_compile_mib: Callable[[], CompileMib],
     paths: ec.Paths,
@@ -171,17 +169,16 @@ def _validate_and_compile_mib(
     )
     errors = []
     for name, mib_status in sorted(results.items()):
-        if mibname == name and mib_status == "failed":
+        if mibname == name and mib_status.status == "failed":
             raise Exception(
-                _("Failed to compile your module: %(error)s")
-                % {"error": getattr(mib_status, "error")}
+                _("Failed to compile your module: %(error)s") % {"error": mib_status.error}
             )
-        if mib_status == "missing":
+        if mib_status.status == "missing":
             errors.append(_("%(name)s - Dependency missing") % {"name": name})
-        elif mib_status == "failed":
+        elif mib_status.status == "failed":
             errors.append(
                 _("%(name)s - Failed to compile (%(error)s)")
-                % {"name": name, "error": getattr(mib_status, "error")}
+                % {"name": name, "error": mib_status.error}
             )
     msg = _("MIB file %(mibname)s uploaded.") % {"mibname": mibname}
     if errors:

@@ -3893,9 +3893,10 @@ def _make_compile_mib() -> CompileMib:
     # The import is deliberately done here and not at module level: the MIB compiler adds about 4 MB
     # to every process importing it, and every process loading the GUI imports this module. This way
     # it is only loaded when an uploaded MIB gets compiled.
-    from cmk.ec.mib_compiler import compile_mib  # astrein: disable=module-layers
+    from cmk.ec.mib_compiler import MibCompiler  # astrein: disable=module-layers
 
-    return compile_mib
+    # upload_mibs() compiles all MIBs of a zip file with it, so the parser is built only once.
+    return MibCompiler().compile
 
 
 def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:

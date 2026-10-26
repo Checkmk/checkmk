@@ -54,6 +54,15 @@ py_library(
 )
 
 py_library(
+    name = "mib_status",
+    srcs = ["cmk/ec/mib_status.py"],
+    imports = ["."],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+py_library(
     name = "mib_compiler",
     srcs = ["cmk/ec/mib_compiler.py"],
     imports = ["."],
@@ -63,7 +72,10 @@ py_library(
         "//packages:__subpackages__",
         "//tests:__subpackages__",
     ],
-    deps = [requirement("pysmi")],
+    deps = [
+        ":mib_status",
+        requirement("pysmi"),
+    ],
 )
 
 py_library(
@@ -102,6 +114,7 @@ py_library(
     ],
     deps = [
         ":event",
+        ":mib_status",
         ":syslog",
         "//packages/cmk-ccc:daemon",
         "//packages/cmk-ccc:exceptions",
@@ -132,6 +145,7 @@ py_doc_test(
         "event",
         "forwarder",
         "mib_compiler",
+        "mib_status",
         "syslog",
     ],
 )
@@ -153,7 +167,11 @@ py_cmk_test(
     size = "small",
     srcs = glob(["tests/component/**/*.py"]),
     args = ["packages/cmk-ec/tests/component"],
-    deps = [":mib_compiler"],
+    deps = [
+        ":mib_compiler",
+        ":mib_status",
+        requirement("pysmi"),
+    ],
 )
 
 py_wheel(
@@ -168,6 +186,7 @@ py_wheel(
         ":event",
         ":forwarder",
         ":mib_compiler",
+        ":mib_status",
         ":py_typed",
         ":syslog",
     ],
@@ -209,6 +228,7 @@ py_requirements_test(
         ":forwarder",
         ":cmk-ec",
         ":mib_compiler",
+        ":mib_status",
     ],
     requirements_in = "requirements.in",
 )

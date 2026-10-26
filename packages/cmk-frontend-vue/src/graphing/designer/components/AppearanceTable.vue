@@ -5,8 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { ColumnDef } from '@tanstack/vue-table'
+import TruncateText from 'cmk-ui-library/components/CmkDropdown/TruncateText.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
 import EditableTable from '@/monitoring/shared/components/EditableTable.vue'
@@ -182,17 +183,31 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
           @update:model-value="store.patch(row.id, { color: $event })"
         />
         <AutomaticColorCell v-else />
-        <BaseCell v-if="isSingleLine(row)" column-id="title" vertical-align="middle" no-wrap>{{
-          resolvedTitles.get(row.id) ?? row.title
-        }}</BaseCell>
+        <BaseCell
+          v-if="isSingleLine(row)"
+          column-id="title"
+          vertical-align="middle"
+          no-wrap
+          class="graphing-appearance-table__title"
+        >
+          <TruncateText
+            :text="untranslated(resolvedTitles.get(row.id) ?? row.title)"
+            :suffix-count="10"
+          />
+        </BaseCell>
         <CollapsibleCell
           v-else
           column-id="title"
           vertical-align="middle"
+          class="graphing-appearance-table__title"
           :expanded="isExpanded(row)"
           @update:expanded="expandedRows = { ...expandedRows, [row.id]: $event }"
-          >{{ resolvedTitles.get(row.id) ?? row.title }}</CollapsibleCell
         >
+          <TruncateText
+            :text="untranslated(resolvedTitles.get(row.id) ?? row.title)"
+            :suffix-count="10"
+          />
+        </CollapsibleCell>
         <DropdownCell
           column-id="line_style"
           vertical-align="middle"
@@ -235,6 +250,7 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
               v-if="hasAttributes(entry.metric)"
               column-id="title"
               vertical-align="middle"
+              class="graphing-appearance-table__title"
               :expanded="expandedSeries[seriesKey(row.id, entry.metric)] === true"
               @update:expanded="
                 expandedSeries = {
@@ -242,11 +258,18 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
                   [seriesKey(row.id, entry.metric)]: $event
                 }
               "
-              >{{ entry.metric.metadata.title }}</CollapsibleCell
             >
-            <BaseCell v-else column-id="title" vertical-align="middle" no-wrap>{{
-              entry.metric.metadata.title
-            }}</BaseCell>
+              <TruncateText :text="untranslated(entry.metric.metadata.title)" :suffix-count="10" />
+            </CollapsibleCell>
+            <BaseCell
+              v-else
+              column-id="title"
+              vertical-align="middle"
+              no-wrap
+              class="graphing-appearance-table__title"
+            >
+              <TruncateText :text="untranslated(entry.metric.metadata.title)" :suffix-count="10" />
+            </BaseCell>
             <td :colspan="2" />
             <StatsCells :stats="entry.stats" />
           </tr>
@@ -277,6 +300,20 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
 .graphing-appearance-table {
   flex: 0 1 auto;
   min-height: 0;
+}
+
+/* Enable automatic truncation of all titles:
+   max-width: 0 keeps the title out of the table's width, so it truncates to the space left. */
+.graphing-appearance-table__title {
+  max-width: 0;
+  min-width: 120px;
+}
+
+/* BaseCell's content is a flex item, which would not shrink below the full title.
+   Keep this rule flat: a nested :deep() would compile to a selector that never matches. */
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
+.graphing-appearance-table__title :deep(.monitoring-base-cell__plain) {
+  min-width: 0;
 }
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */

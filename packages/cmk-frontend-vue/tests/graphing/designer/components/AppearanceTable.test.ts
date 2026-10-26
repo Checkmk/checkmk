@@ -156,9 +156,9 @@ test('names every row by its resolved title, single-line and group alike', () =>
       ['B', 'CPU load - <HOST_NAME>/<SERVICE_DESCRIPTION>']
     ])
   )
-  expect(screen.getByText('Resolved CPU')).toBeInTheDocument()
-  expect(screen.getByText('CPU load - <HOST_NAME>/<SERVICE_DESCRIPTION>')).toBeInTheDocument()
-  expect(screen.queryByText('$DEFAULT_TITLE$')).not.toBeInTheDocument()
+  expect(screen.getByTitle('Resolved CPU')).toBeInTheDocument()
+  expect(screen.getByTitle('CPU load - <HOST_NAME>/<SERVICE_DESCRIPTION>')).toBeInTheDocument()
+  expect(screen.queryByTitle('$DEFAULT_TITLE$')).not.toBeInTheDocument()
 })
 
 test('lists a multi-line row as one legend-styled row per resolved line', () => {

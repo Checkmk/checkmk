@@ -473,9 +473,9 @@ test('the metrics tab names a row by what the fetch resolved it to', async () =>
   await waitFor(() => expect(within(metricsTab).getByText('CPU')).toBeInTheDocument())
   // Q fanned out to a single series, yet a group row is named by its group title.
   expect(
-    within(metricsTab).getByText('util - <HOST_NAME>/<SERVICE_DESCRIPTION>')
+    within(metricsTab).getByTitle('util - <HOST_NAME>/<SERVICE_DESCRIPTION>')
   ).toBeInTheDocument()
-  expect(within(metricsTab).queryByText('CPU of my-host')).not.toBeInTheDocument()
+  expect(within(metricsTab).queryByTitle('CPU of my-host')).not.toBeInTheDocument()
 })
 
 test('a row keeps the name of the last fetch until the one its edit triggers lands', async () => {
@@ -495,7 +495,7 @@ test('a row keeps the name of the last fetch until the one its edit triggers lan
   const metricsTab = await screen.findByRole('tabpanel')
   await waitFor(() =>
     expect(
-      within(metricsTab).getByText('util - <HOST_NAME>/<SERVICE_DESCRIPTION>')
+      within(metricsTab).getByTitle('util - <HOST_NAME>/<SERVICE_DESCRIPTION>')
     ).toBeInTheDocument()
   )
 
@@ -503,11 +503,11 @@ test('a row keeps the name of the last fetch until the one its edit triggers lan
   await nextTick()
 
   expect(
-    within(metricsTab).getByText('util - <HOST_NAME>/<SERVICE_DESCRIPTION>')
+    within(metricsTab).getByTitle('util - <HOST_NAME>/<SERVICE_DESCRIPTION>')
   ).toBeInTheDocument()
-  expect(within(metricsTab).queryByText('CPU of my-host')).not.toBeInTheDocument()
+  expect(within(metricsTab).queryByTitle('CPU of my-host')).not.toBeInTheDocument()
 
-  await waitFor(() => expect(within(metricsTab).getByText('CPU of my-host')).toBeInTheDocument())
+  await waitFor(() => expect(within(metricsTab).getByTitle('CPU of my-host')).toBeInTheDocument())
 })
 
 test('the metrics tab carries no marker while nothing blocks the save', async () => {

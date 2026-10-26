@@ -311,7 +311,7 @@ test('the display name states what a row resolved to, next to its editable title
     resolvedTitles: new Map([['A', 'CPU utilization']])
   })
 
-  expect(screen.getByText('CPU utilization')).toBeInTheDocument()
+  expect(screen.getByTitle('CPU utilization')).toBeInTheDocument()
   expect(screen.getByLabelText('Title')).toHaveValue('$DEFAULT_TITLE$')
 })
 

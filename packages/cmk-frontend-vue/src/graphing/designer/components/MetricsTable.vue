@@ -8,10 +8,11 @@ import type { ColumnDef, RowSelectionState } from '@tanstack/vue-table'
 import type { TitleMacroGroup } from 'cmk-shared-typing/typescript/custom_graph_designer'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import { CmkAddDropdown } from 'cmk-ui-library/components/CmkDropdown'
+import TruncateText from 'cmk-ui-library/components/CmkDropdown/TruncateText.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 
@@ -396,9 +397,17 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
               />
             </div>
           </CollapsibleCell>
-          <BaseCell column-id="display_name" vertical-align="middle" no-wrap>{{
-            resolvedTitles.get(row.id) ?? row.title
-          }}</BaseCell>
+          <BaseCell
+            column-id="display_name"
+            vertical-align="middle"
+            no-wrap
+            class="graphing-metrics-table__display-name"
+          >
+            <TruncateText
+              :text="untranslated(resolvedTitles.get(row.id) ?? row.title)"
+              :suffix-count="10"
+            />
+          </BaseCell>
           <DropdownCell
             column-id="line_style"
             vertical-align="middle"
@@ -519,6 +528,20 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
 
 .graphing-metrics-table__selection-count {
   font-weight: var(--font-weight-bold);
+}
+
+/* Enable automatic truncation of the display name:
+   max-width: 0 keeps the name out of the table's width, so it truncates to the space left. */
+.graphing-metrics-table__display-name {
+  max-width: 0;
+  min-width: 120px;
+}
+
+/* BaseCell's content is a flex item, which would not shrink below the full name.
+   Keep this rule flat: a nested :deep() would compile to a selector that never matches. */
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
+.graphing-metrics-table__display-name :deep(.monitoring-base-cell__plain) {
+  min-width: 0;
 }
 
 /* Indent to the title input: the title cell's padding, its chevron, and the gap between them. */

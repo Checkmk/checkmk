@@ -29,7 +29,8 @@ from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 def migrate(value: object) -> Mapping[str, object]:
     if not isinstance(value, dict):
-        return {"deployment": ("do_not_deploy", None)}
+        # The form requires the configuration, so give it its default.
+        return {"deployment": ("do_not_deploy", None), "mtr_config": []}
     if "deployment" in value:
         return value
     return {

@@ -30,7 +30,12 @@ def _migrate_entry(value: object) -> tuple[str, Mapping[str, object]]:
         case (str() as path, list() as operations):
             return "folder", {"path": path, "operations": operations}
         case (str() as path, list() as files, list() as operations):
-            return "files", {"path": path, "files": files, "operations": operations}
+            # Older releases stored empty file names, which the form rejects now.
+            return "files", {
+                "path": path,
+                "files": [f for f in files if f],
+                "operations": operations,
+            }
         case _:
             raise ValueError(f"Unexpected value: {value!r}")
 
@@ -40,7 +45,8 @@ def migrate(value: object) -> Mapping[str, object]:
         return value
     match value:
         case None:
-            return {"deployment": ("do_not_deploy", None)}
+            # The form requires the entries, so give them their default.
+            return {"deployment": ("do_not_deploy", None), "entries": []}
         case (
             int() | float() as heartbeat_timeout,
             int() | float() as write_interval,

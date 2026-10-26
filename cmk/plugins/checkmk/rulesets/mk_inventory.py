@@ -24,7 +24,12 @@ from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 def migrate(value: object) -> Mapping[str, object]:
     if value is None:
-        return {"deployment": ("do_not_deploy", None)}
+        # The form requires the other elements, so give them their defaults.
+        return {
+            "deployment": ("do_not_deploy", None),
+            "interval": 14400.0,
+            "reg_paths": ("default", None),
+        }
     if not isinstance(value, dict):
         raise ValueError(f"Unexpected value: {value!r}")
     if "deployment" in value:

@@ -7,19 +7,25 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
+from cmk.gui.form_specs import get_visitor, RawDiskData, registration, VisitorOptions
 from cmk.plugins.mtr.rulesets.mtr import (
     _address_configuration,
     _valuespec_agent_config_mtr,
     migrate,
+    rule_spec_mtr,
 )
-from cmk.rulesets.v1.form_specs import List, String
+from cmk.rulesets.v1.form_specs import Dictionary, List, String
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 
 
 @pytest.mark.parametrize(
     "old, expected",
     [
-        pytest.param(None, {"deployment": ("do_not_deploy", None)}, id="do_not_deploy"),
+        pytest.param(
+            None,
+            {"deployment": ("do_not_deploy", None), "mtr_config": []},
+            id="do_not_deploy",
+        ),
         pytest.param(
             {"interval": 60, "mtr_config": [{"hostname": "example.com"}]},
             {"deployment": ("cached", 60.0), "mtr_config": [{"hostname": "example.com"}]},
@@ -122,3 +128,29 @@ def test_same_host_twice_with_distinct_settings() -> None:
 def test_duplicate_destinations_rejected(mtr_config: Sequence[Mapping[str, object]]) -> None:
     with pytest.raises(ValidationError):
         _validate_mtr_config(mtr_config)
+
+
+@pytest.fixture(name="rule_form")
+def _rule_form() -> Dictionary:
+    return rule_spec_mtr.parameter_form()
+
+
+@pytest.fixture
+def _register_form_spec_visitors() -> None:
+    registration.register()
+
+
+def _validate_after_the_update(rule_form: Dictionary, rule: object) -> object:
+    # The update migrates and stores the rule, then validates what it stored.
+    updated = get_visitor(
+        rule_form, VisitorOptions(migrate_values=True, mask_values=False)
+    ).to_disk(RawDiskData(rule))
+    return get_visitor(rule_form, VisitorOptions(migrate_values=False, mask_values=True)).validate(
+        RawDiskData(updated)
+    )
+
+
+@pytest.mark.usefixtures("_register_form_spec_visitors")
+def test_a_do_not_deploy_rule_validates_after_the_update(rule_form: Dictionary) -> None:
+    """CMK-33871: a "do not deploy" rule of a previous release is valid after the update."""
+    assert _validate_after_the_update(rule_form, None) == []

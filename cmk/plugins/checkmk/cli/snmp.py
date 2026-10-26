@@ -263,9 +263,6 @@ def _mode_snmpwalk(
 
 
 def _run_snmpwalk(context: CommandContext, options: Options, args: Args) -> ExitCode:
-    if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_snmpwalk(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

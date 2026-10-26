@@ -1101,6 +1101,7 @@ def test_create_notifications_custom_script_with_call_parameters() -> None:
         fallback_email="",
         rule_nr=0,
         timeperiods_active={},
+        debug=True,
     )
     # Should create exactly one notification without raising ValueError
     assert len(notifications) == 1
@@ -1177,6 +1178,7 @@ def test_cancellation_removes_contacts() -> None:
         fallback_email="",
         rule_nr=0,
         timeperiods_active={},
+        debug=True,
     )
     assert len(notifications) == 1
 
@@ -1191,6 +1193,7 @@ def test_cancellation_removes_contacts() -> None:
         fallback_email="",
         rule_nr=1,
         timeperiods_active={},
+        debug=True,
     )
 
     assert len(notifications) == 1
@@ -1216,6 +1219,7 @@ def test_cancellation_of_all_contacts_removes_entry() -> None:
         fallback_email="",
         rule_nr=0,
         timeperiods_active={},
+        debug=True,
     )
     assert len(notifications) == 1
 
@@ -1230,6 +1234,7 @@ def test_cancellation_of_all_contacts_removes_entry() -> None:
         fallback_email="",
         rule_nr=1,
         timeperiods_active={},
+        debug=True,
     )
 
     assert len(notifications) == 0
@@ -1253,6 +1258,7 @@ def test_locked_notification_cannot_be_cancelled_by_user_rule() -> None:
         fallback_email="",
         rule_nr=0,
         timeperiods_active={},
+        debug=True,
     )
     assert len(notifications) == 1
 
@@ -1267,6 +1273,7 @@ def test_locked_notification_cannot_be_cancelled_by_user_rule() -> None:
         fallback_email="",
         rule_nr=1,
         timeperiods_active={},
+        debug=True,
     )
 
     assert len(notifications) == 1
@@ -1297,6 +1304,7 @@ def test_different_plugins_create_separate_entries() -> None:
         fallback_email="",
         rule_nr=0,
         timeperiods_active={},
+        debug=True,
     )
     notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
@@ -1309,6 +1317,7 @@ def test_different_plugins_create_separate_entries() -> None:
         fallback_email="",
         rule_nr=1,
         timeperiods_active={},
+        debug=True,
     )
 
     assert len(notifications) == 2
@@ -1335,6 +1344,7 @@ def test_no_duplicate_notifications_for_overlapping_contacts() -> None:
         fallback_email="",
         rule_nr=0,
         timeperiods_active={},
+        debug=True,
     )
     notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
@@ -1347,6 +1357,7 @@ def test_no_duplicate_notifications_for_overlapping_contacts() -> None:
         fallback_email="",
         rule_nr=1,
         timeperiods_active={},
+        debug=True,
     )
 
     assert len(notifications) == 1
@@ -1386,6 +1397,7 @@ def test_no_parameter_overwrite_for_same_contacts_and_plugin() -> None:
         fallback_email="",
         rule_nr=0,
         timeperiods_active={},
+        debug=True,
     )
     notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
@@ -1398,6 +1410,7 @@ def test_no_parameter_overwrite_for_same_contacts_and_plugin() -> None:
         fallback_email="",
         rule_nr=1,
         timeperiods_active={},
+        debug=True,
     )
 
     assert len(notifications) == 2
@@ -1427,6 +1440,7 @@ def test_no_duplicate_bulk_notifications_for_overlapping_contacts() -> None:
         fallback_email="",
         rule_nr=0,
         timeperiods_active={"24X7": True},
+        debug=True,
     )
 
     bulk_rule2 = _make_add_rule(contact_users=["userX", "userZ"])
@@ -1442,6 +1456,7 @@ def test_no_duplicate_bulk_notifications_for_overlapping_contacts() -> None:
         fallback_email="",
         rule_nr=1,
         timeperiods_active={"24X7": True},
+        debug=True,
     )
 
     assert _count_contact_occurrences(notifications, ContactName("userX")) == 1
@@ -1466,6 +1481,7 @@ def test_identical_rules_merge_contacts() -> None:
         fallback_email="",
         rule_nr=0,
         timeperiods_active={},
+        debug=True,
     )
     notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
@@ -1478,6 +1494,7 @@ def test_identical_rules_merge_contacts() -> None:
         fallback_email="",
         rule_nr=1,
         timeperiods_active={},
+        debug=True,
     )
 
     assert len(notifications) == 1
@@ -1503,6 +1520,7 @@ def test_identical_rules_same_contact_no_duplicate() -> None:
         fallback_email="",
         rule_nr=0,
         timeperiods_active={},
+        debug=True,
     )
     notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
@@ -1515,6 +1533,7 @@ def test_identical_rules_same_contact_no_duplicate() -> None:
         fallback_email="",
         rule_nr=1,
         timeperiods_active={},
+        debug=True,
     )
 
     assert len(notifications) == 1
@@ -1554,6 +1573,7 @@ def test_cancellation_removes_contact_from_all_matching_entries() -> None:
         fallback_email="",
         rule_nr=0,
         timeperiods_active={},
+        debug=True,
     )
     notifications, rule_info = notify._create_notifications(  # noqa: SLF001
         enriched_context=enriched_context,
@@ -1566,6 +1586,7 @@ def test_cancellation_removes_contact_from_all_matching_entries() -> None:
         fallback_email="",
         rule_nr=1,
         timeperiods_active={},
+        debug=True,
     )
     assert len(notifications) == 2
 
@@ -1580,6 +1601,7 @@ def test_cancellation_removes_contact_from_all_matching_entries() -> None:
         fallback_email="",
         rule_nr=2,
         timeperiods_active={},
+        debug=True,
     )
 
     assert len(notifications) == 0
@@ -1605,6 +1627,7 @@ def test_user_rule_creates_separate_entry_when_locked_entry_exists() -> None:
         fallback_email="",
         rule_nr=0,
         timeperiods_active={},
+        debug=True,
     )
     assert len(notifications) == 1
 
@@ -1620,6 +1643,7 @@ def test_user_rule_creates_separate_entry_when_locked_entry_exists() -> None:
         fallback_email="",
         rule_nr=1,
         timeperiods_active={},
+        debug=True,
     )
 
     # Locked entry stays untouched, user gets a separate entry
@@ -1647,6 +1671,7 @@ def test_user_rule_for_same_contact_as_locked_entry_is_suppressed() -> None:
         fallback_email="",
         rule_nr=0,
         timeperiods_active={},
+        debug=True,
     )
 
     # User rule (allow_disable=True → locked=False) targets same contact
@@ -1661,6 +1686,7 @@ def test_user_rule_for_same_contact_as_locked_entry_is_suppressed() -> None:
         fallback_email="",
         rule_nr=1,
         timeperiods_active={},
+        debug=True,
     )
 
     # userX is already covered by the locked entry — no duplicate
@@ -1688,6 +1714,7 @@ def test_user_rule_partial_overlap_with_locked_entry() -> None:
         fallback_email="",
         rule_nr=0,
         timeperiods_active={},
+        debug=True,
     )
 
     notifications, rule_info = notify._create_notifications(  # noqa: SLF001
@@ -1702,6 +1729,7 @@ def test_user_rule_partial_overlap_with_locked_entry() -> None:
         fallback_email="",
         rule_nr=1,
         timeperiods_active={},
+        debug=True,
     )
 
     assert len(notifications) == 2
@@ -2347,6 +2375,7 @@ def _do_notify(
         keepalive=False,
         all_timeperiods={},
         timeperiods_active={} if timeperiods_active is None else timeperiods_active,
+        debug=False,
     )
 
 
@@ -2363,6 +2392,7 @@ def _notification_test(
         all_timeperiods={},
         dispatch=dispatch,
         timeperiods_active={},
+        debug=True,
     )
 
 
@@ -2457,7 +2487,7 @@ def test_notification_is_spooled_for_local_delivery() -> None:
     ],
 )
 # fmt: on
-@pytest.mark.usefixtures("core_notification", "release_locks", "disable_debug", "isolated_logging")
+@pytest.mark.usefixtures("core_notification", "release_locks", "isolated_logging")
 def test_notification_of_bulk_rule_is_stored_for_bulk_delivery(
     bulk: NotifyBulkType,
     timeperiods_active: Mapping[str, bool],
@@ -2708,6 +2738,7 @@ def _send_bulk(bulk_root: Path) -> None:
         uuids,
         _environment_proxy,
         plugin_timeout=10,
+        debug=False,
     )
 
 
@@ -2771,7 +2802,7 @@ def test_bulk_can_be_sent_newest_first(tmp_path: Path) -> None:
     ]
 
 
-@pytest.mark.usefixtures("no_monitoring_core", "disable_debug")
+@pytest.mark.usefixtures("no_monitoring_core")
 def test_corrupted_bulk_notification_is_dropped(tmp_path: Path) -> None:
     _install_plugin(_TEST_PLUGIN, tmp_path)
     _store_bulk_notification(tmp_path / "bulk", "h1", {})

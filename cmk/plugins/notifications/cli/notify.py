@@ -14,7 +14,6 @@ import sys
 from collections.abc import Mapping
 from pathlib import Path
 
-import cmk.ccc.debug
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
 from cmk.automations.backends.helper import AutomationHelperUnavailable, HelperExecutor
@@ -92,14 +91,12 @@ def _mode_notify(
         timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
             livestatus.get_optional_timeperiods_active_map, logger.warning
         ),
+        debug=global_options.debug,
     )
     return _notification_exit_code(exit_status)
 
 
 def _run_notify(context: CommandContext, options: Options, args: Args) -> ExitCode:
-    if context.global_options.debug:
-        # the notification code reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_notify(context.omd_root, context.global_options, options, args)
     except MKTerminate:

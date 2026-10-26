@@ -83,7 +83,7 @@ HTTP_PROXY: Final = EnvironmentProxyConfig()
     ],
 )
 def test_raw_context_from_string(context: str, expected: EventContext) -> None:
-    assert raw_context_from_string(context) == expected
+    assert raw_context_from_string(context, debug=True) == expected
 
 
 @pytest.mark.parametrize(
@@ -111,6 +111,7 @@ def test_complete_raw_context_pre_formats_state_change_with_local_tz(
             with_dump=False,
             contacts_needed=False,
             analyse=False,
+            debug=True,
         )
 
     assert enriched["LASTHOSTSTATECHANGE_LOCAL"] == expected_host
@@ -132,6 +133,7 @@ def test_complete_raw_context_skips_local_field_for_host_notification() -> None:
             with_dump=False,
             contacts_needed=False,
             analyse=False,
+            debug=True,
         )
 
     assert enriched["LASTHOSTSTATECHANGE_LOCAL"] == "2025-05-12 08:11:34 UTC"

@@ -22,7 +22,6 @@ from typing import cast, Literal, Protocol
 from urllib.parse import quote, urlencode
 
 import cmk.ccc.daemon
-import cmk.ccc.debug
 import cmk.livestatus_client as livestatus
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.hostaddress import HostName
@@ -74,6 +73,8 @@ def event_keepalive(
     call_every_loop: _LoopIntervalFunction | None = None,
     loop_interval: int | None = None,
     shutdown_function: Callable[[], object] | None = None,
+    *,
+    debug: bool,
 ) -> None:
     last_config_timestamp = config_timestamp()
 
@@ -124,7 +125,7 @@ def event_keepalive(
                     except OSError:
                         new_data = b""
                     except Exception as e:
-                        if cmk.ccc.debug.enabled():
+                        if debug:
                             raise
                         logger.info("Cannot read data from CMC: %(error)s", {"error": e})
 
@@ -136,10 +137,12 @@ def event_keepalive(
                     data += new_data
 
                 try:
-                    context = raw_context_from_string(data.rstrip(b"\n").decode("utf-8"))
+                    context = raw_context_from_string(
+                        data.rstrip(b"\n").decode("utf-8"), debug=debug
+                    )
                     event_function(context, timeperiods_active)
                 except Exception:
-                    if cmk.ccc.debug.enabled():
+                    if debug:
                         raise
                     logger.exception("ERROR:")
 
@@ -147,7 +150,7 @@ def event_keepalive(
                 _send_reply_ready()
 
         except Exception:
-            if cmk.ccc.debug.enabled():
+            if debug:
                 raise
             logger.exception("ERROR:")
 
@@ -155,7 +158,7 @@ def event_keepalive(
             try:
                 call_every_loop(timeperiods_active)  # type: ignore[possibly-undefined]
             except Exception:
-                if cmk.ccc.debug.enabled():
+                if debug:
                     raise
                 logger.exception("ERROR:")
 
@@ -199,7 +202,7 @@ def pipe_decode_raw_context(raw_context: EventContext) -> None:
         raw_context["LONGSERVICEOUTPUT"] = _remove_pipe_encoding(long_output)
 
 
-def raw_context_from_string(data: str) -> EventContext:
+def raw_context_from_string(data: str, *, debug: bool) -> EventContext:
     # Context is line-by-line in g_notify_readahead_buffer
     context: EventContext = {}
     if not data:
@@ -210,7 +213,7 @@ def raw_context_from_string(data: str) -> EventContext:
             # Dynamically adding to TypedDict...
             context[varname] = expand_backslashes(value)  # type: ignore[literal-required]
     except Exception:  # line without '=' ignored or alerted
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise
     pipe_decode_raw_context(context)
     return context
@@ -241,7 +244,9 @@ def find_host_service_in_context(context: EventContext) -> str:
 # Fetch information about an objects contacts via Livestatus. This is
 # necessary for notifications from Nagios, which does not send this
 # information in macros.
-def livestatus_fetch_contacts(host: HostName, service: ServiceName | None) -> ContactList | None:
+def livestatus_fetch_contacts(
+    host: HostName, service: ServiceName | None, *, debug: bool
+) -> ContactList | None:
     try:
         if service:
             query = f"GET services\nFilter: host_name = {host}\nFilter: service_description = {service}\nColumns: contacts"
@@ -260,10 +265,10 @@ def livestatus_fetch_contacts(host: HostName, service: ServiceName | None) -> Co
             return None
 
         # Service not found: try again with contacts of host!
-        return livestatus_fetch_contacts(host, None)
+        return livestatus_fetch_contacts(host, None, debug=debug)
 
     except Exception:
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise
         return None  # We must allow notifications without Livestatus access
 
@@ -272,6 +277,7 @@ def add_rulebased_macros(
     raw_context: EventContext,
     ensure_nagios: Callable[[str], object],
     contacts_needed: bool,
+    debug: bool,
 ) -> None:
     # For the rule based notifications we need the list of contacts
     # an object has. The CMC does send this in the macro "CONTACTS"
@@ -284,7 +290,7 @@ def add_rulebased_macros(
         )
 
         contact_list = livestatus_fetch_contacts(
-            HostName(raw_context["HOSTNAME"]), raw_context.get("SERVICEDESC")
+            HostName(raw_context["HOSTNAME"]), raw_context.get("SERVICEDESC"), debug=debug
         )
         if contact_list is not None:
             raw_context["CONTACTS"] = ",".join(contact_list)
@@ -305,6 +311,7 @@ def complete_raw_context(
     with_dump: bool,
     contacts_needed: bool,
     analyse: bool,
+    debug: bool,
 ) -> EnrichedEventContext:
     """Extend the raw notification context
 
@@ -391,7 +398,7 @@ def complete_raw_context(
         if (value := enriched_context.get("LASTSERVICEOK")) is not None:
             enriched_context["LASTSERVICEOK_REL"] = get_readable_rel_date(value)
 
-        add_rulebased_macros(enriched_context, ensure_nagios, contacts_needed)
+        add_rulebased_macros(enriched_context, ensure_nagios, contacts_needed, debug=debug)
 
         # For custom notifications the number is set to 0 by the core (Nagios and CMC). We force at least
         # number 1 here, so that rules with conditions on numbers do not fail (the minimum is 1 here)

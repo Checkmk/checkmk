@@ -38,7 +38,6 @@ from functools import partial
 from pathlib import Path
 from typing import cast, Literal
 
-import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.base import events
@@ -379,6 +378,7 @@ def do_notify(
     keepalive: bool,
     all_timeperiods: TimeperiodSpecs,
     timeperiods_active: _CoreTimeperiodsActive,
+    debug: bool,
 ) -> int | None:
     global _log_to_stdout, notify_mode
     _log_to_stdout = options.get("log-to-stdout", _log_to_stdout)
@@ -415,6 +415,7 @@ def do_notify(
                 config_contacts=config_contacts,
                 all_timeperiods=all_timeperiods,
                 timeperiods_active=timeperiods_active,
+                debug=debug,
             )
 
         if keepalive:
@@ -425,6 +426,7 @@ def do_notify(
                 define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
                 all_timeperiods=all_timeperiods,
+                debug=debug,
             )
         elif notify_mode == "replay":
             try:
@@ -440,6 +442,7 @@ def do_notify(
                 define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
                 all_timeperiods=all_timeperiods,
+                debug=debug,
             )
         elif notify_mode == "test":
             assert isinstance(args[0], dict)  # type: ignore[unreachable]
@@ -452,10 +455,11 @@ def do_notify(
                 define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
                 all_timeperiods=all_timeperiods,
+                debug=debug,
             )
         elif notify_mode == "stdin":
             _notify_notify(
-                events.raw_context_from_string(sys.stdin.read()),
+                events.raw_context_from_string(sys.stdin.read(), debug=debug),
                 timeperiods_active,
                 get_http_proxy,
                 ensure_nagios,
@@ -463,6 +467,7 @@ def do_notify(
                 define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
                 all_timeperiods=all_timeperiods,
+                debug=debug,
             )
         elif notify_mode == "send-bulks":
             _send_ripe_bulks(
@@ -470,6 +475,7 @@ def do_notify(
                 timeperiods_active,
                 bulk_interval=notification_config.bulk_interval,
                 plugin_timeout=notification_config.plugin_timeout,
+                debug=debug,
             )
         else:
             _notify_notify(
@@ -481,6 +487,7 @@ def do_notify(
                 define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
                 all_timeperiods=all_timeperiods,
+                debug=debug,
             )
 
     except Exception:
@@ -506,6 +513,7 @@ def _notify_notify(
     all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
     dispatch: str = "",
+    debug: bool,
 ) -> NotifyAnalysisInfo | None:
     """
     This function processes one raw notification and decides wether it should be spooled or not.
@@ -523,6 +531,7 @@ def _notify_notify(
         with_dump=notification_config.logging_level <= 10,
         contacts_needed=True,
         analyse=analyse,
+        debug=debug,
     )
 
     if not analyse:
@@ -571,6 +580,7 @@ def _notify_notify(
             analyse=analyse,
             dispatch=dispatch,
             timeperiods_active=timeperiods_active,
+            debug=debug,
         )
     return None
 
@@ -586,6 +596,7 @@ def _locally_deliver_raw_context(
     analyse: bool = False,
     dispatch: str = "",
     timeperiods_active: _CoreTimeperiodsActive,
+    debug: bool,
 ) -> NotifyAnalysisInfo | None:
     try:
         logger.debug("Preparing rule based notifications")
@@ -599,10 +610,11 @@ def _locally_deliver_raw_context(
             analyse=analyse,
             dispatch=dispatch,
             timeperiods_active=timeperiods_active,
+            debug=debug,
         )
 
     except Exception:
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise
         logger.exception("ERROR:")
 
@@ -619,6 +631,7 @@ def notification_replay_backlog(
     config_contacts: ConfigContacts,
     all_timeperiods: TimeperiodSpecs,
     timeperiods_active: _CoreTimeperiodsActive,
+    debug: bool,
 ) -> None:
     global notify_mode
     notify_mode = "replay"
@@ -633,6 +646,7 @@ def notification_replay_backlog(
         define_servicegroups=define_servicegroups,
         config_contacts=config_contacts,
         all_timeperiods=all_timeperiods,
+        debug=debug,
     )
 
 
@@ -646,6 +660,7 @@ def notification_analyse_backlog(
     config_contacts: ConfigContacts,
     all_timeperiods: TimeperiodSpecs,
     timeperiods_active: _CoreTimeperiodsActive,
+    debug: bool,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "replay"
@@ -661,6 +676,7 @@ def notification_analyse_backlog(
         config_contacts=config_contacts,
         all_timeperiods=all_timeperiods,
         analyse=True,
+        debug=debug,
     )
 
 
@@ -675,6 +691,7 @@ def notification_test(
     all_timeperiods: TimeperiodSpecs,
     dispatch: str = "",
     timeperiods_active: _CoreTimeperiodsActive,
+    debug: bool,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "test"
@@ -698,6 +715,7 @@ def notification_test(
         all_timeperiods=all_timeperiods,
         analyse=True,
         dispatch=dispatch,
+        debug=debug,
     )
 
 
@@ -724,6 +742,7 @@ def _notify_keepalive(
     define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
     all_timeperiods: TimeperiodSpecs,
+    debug: bool,
 ) -> None:
     events.event_keepalive(
         event_function=partial(
@@ -734,14 +753,17 @@ def _notify_keepalive(
             define_servicegroups=define_servicegroups,
             config_contacts=config_contacts,
             all_timeperiods=all_timeperiods,
+            debug=debug,
         ),
         call_every_loop=partial(
             _send_ripe_bulks,
             get_http_proxy,
             bulk_interval=notification_config.bulk_interval,
             plugin_timeout=notification_config.plugin_timeout,
+            debug=debug,
         ),
         loop_interval=notification_config.bulk_interval,
+        debug=debug,
     )
 
 
@@ -769,6 +791,7 @@ def _notify_rulebased(
     analyse: bool = False,
     dispatch: str = "",
     timeperiods_active: _CoreTimeperiodsActive,
+    debug: bool,
 ) -> NotifyAnalysisInfo:
     # First step: go through all rules and construct our list of
     # notification entries. Each entry identifies a unique notification
@@ -815,6 +838,7 @@ def _notify_rulebased(
                 fallback_email=notification_config.fallback_email,
                 rule_nr=nr,
                 timeperiods_active=timeperiods_active,
+                debug=debug,
             )
 
     plugin_info = _process_notifications(
@@ -831,6 +855,7 @@ def _notify_rulebased(
         spooling=notification_config.spooling,
         analyse=analyse,
         dispatch=dispatch,
+        debug=debug,
     )
 
     return rule_info, plugin_info
@@ -911,6 +936,7 @@ def _create_notifications(
     fallback_email: str,
     rule_nr: int,
     timeperiods_active: _CoreTimeperiodsActive,
+    debug: bool,
 ) -> tuple[Notifications, list[NotifyRuleInfo]]:
     contacts = rbn_rule_contacts(
         rule,
@@ -948,7 +974,7 @@ def _create_notifications(
 
         notifications[:] = [e for e in notifications if e.contacts]
     elif contacts:
-        bulk = _rbn_get_bulk_params(rule, timeperiods_active)
+        bulk = _rbn_get_bulk_params(rule, timeperiods_active, debug=debug)
 
         # TODO CMK-20135 use old format for user notifications for now
         plugin_parameters = (
@@ -1000,6 +1026,7 @@ def _process_notifications(
     spooling: Literal["local", "remote", "both", "off"],
     analyse: bool,
     dispatch: str = "",
+    debug: bool,
 ) -> list[NotifyPluginInfo]:
     plugin_info: list[NotifyPluginInfo] = []
 
@@ -1115,7 +1142,7 @@ def _process_notifications(
                         )
 
             except Exception as e:
-                if cmk.ccc.debug.enabled():
+                if debug:
                     raise
                 logger.exception("    ERROR:")
                 log_to_history(
@@ -1264,7 +1291,7 @@ def rbn_split_plugin_context(plugin_context: NotificationContext) -> list[Notifi
 
 
 def _rbn_get_bulk_params(
-    rule: EventRule, timeperiods_active: _CoreTimeperiodsActive
+    rule: EventRule, timeperiods_active: _CoreTimeperiodsActive, *, debug: bool
 ) -> NotifyBulkParameters | None:
     bulk = rule.get("bulk")
 
@@ -1285,7 +1312,7 @@ def _rbn_get_bulk_params(
     try:
         active = timeperiods_active.get(params["timeperiod"], False)
     except MKLivestatusException:
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise
         # If a livestatus connection error appears we will bulk the
         # notification in the first place. When the connection is available
@@ -2008,6 +2035,7 @@ def _handle_spoolfile(
     config_contacts: ConfigContacts,
     all_timeperiods: TimeperiodSpecs,
     timeperiods_active: _CoreTimeperiodsActive,
+    debug: bool,
 ) -> int:
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
     logger.info("----------------------------------------------------------------------")
@@ -2064,6 +2092,7 @@ def _handle_spoolfile(
             config_contacts=config_contacts,
             all_timeperiods=all_timeperiods,
             timeperiods_active=timeperiods_active,
+            debug=debug,
         )
         # TODO: It is a bug that we don't transport result information and monitoring history
         # entries back to the origin site. The intermediate or final results should be sent back to
@@ -2494,6 +2523,7 @@ def _send_ripe_bulks(
     *,
     bulk_interval: int,
     plugin_timeout: int,
+    debug: bool,
 ) -> None:
     ripe = find_bulks(
         True,
@@ -2505,9 +2535,11 @@ def _send_ripe_bulks(
         logger.info("Sending out %(num_ripe)d ripe bulk notifications", {"num_ripe": len(ripe)})
         for bulk_dir, _age, _interval, _timeperiod, _count, uuids, _bulk_id in ripe:
             try:
-                notify_bulk(bulk_dir, uuids, get_http_proxy, plugin_timeout=plugin_timeout)
+                notify_bulk(
+                    bulk_dir, uuids, get_http_proxy, plugin_timeout=plugin_timeout, debug=debug
+                )
             except Exception:
-                if cmk.ccc.debug.enabled():
+                if debug:
                     raise
                 logger.exception("Error sending bulk %(bulk)s:", {"bulk": bulk_dir})
 
@@ -2518,6 +2550,7 @@ def notify_bulk(
     get_http_proxy: events.ProxyGetter,
     *,
     plugin_timeout: int,
+    debug: bool,
 ) -> None:
     parts = dirname.split("/")
     contact = parts[-3]
@@ -2537,7 +2570,7 @@ def notify_bulk(
         try:
             params, context = store.load_object_from_file(Path(dirname) / notify_uuid, default=None)
         except Exception as e:
-            if cmk.ccc.debug.enabled():
+            if debug:
                 raise
             logger.info(
                 "    Deleting corrupted or empty bulk file %(dirname)s/%(uuid)s: %(error)s",
@@ -2604,7 +2637,9 @@ def notify_bulk(
 
     # Repeat with unhandled uuids (due to different parameters)
     if unhandled_uuids:
-        notify_bulk(dirname, unhandled_uuids, get_http_proxy, plugin_timeout=plugin_timeout)
+        notify_bulk(
+            dirname, unhandled_uuids, get_http_proxy, plugin_timeout=plugin_timeout, debug=debug
+        )
 
     # Remove directory. Not necessary if emtpy
     try:

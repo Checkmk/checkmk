@@ -29,7 +29,6 @@ py_library(
     deps = [
         "//cmk/utils",
         "//packages/cmk-ccc:daemon",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:regex",
         "//packages/cmk-ccc:site",
@@ -160,7 +159,6 @@ py_library(
         ":events",
         "//cmk/base/configlib",
         "//cmk/utils",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:regex",

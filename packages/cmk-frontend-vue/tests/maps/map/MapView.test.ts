@@ -127,6 +127,13 @@ describe('MapView – map-type dispatch', () => {
     await expectOnlyRenderer('renderer-static')
   })
 
+  it('titles the browser tab after the map', async () => {
+    opensMap(newMapView('static'), { alias: 'Datacenter Munich' })
+    renderMap()
+
+    await waitFor(() => expect(document.title).toBe('Datacenter Munich'))
+  })
+
   it('renders the WorldMapView for a worldmap view', async () => {
     opensMap(newMapView('worldmap'))
     renderMap()

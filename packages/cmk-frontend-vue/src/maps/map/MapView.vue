@@ -158,6 +158,17 @@ const mapFilterNeedle = ref('')
 watch(mapName, () => {
   mapFilterNeedle.value = ''
 })
+
+// The server titles the page after the map it loads; moving to another map, or
+// renaming this one, happens without a load.
+watch(
+  () => mapConfig.value?.alias || mapConfig.value?.name,
+  (title) => {
+    if (title) {
+      document.title = title
+    }
+  }
+)
 const isLoading = computed(
   () => mapsStore.loading.value || (statesStore.initialLoad.value && !mapsStore.error.value)
 )

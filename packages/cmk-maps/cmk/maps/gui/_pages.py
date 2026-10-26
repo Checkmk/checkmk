@@ -180,8 +180,9 @@ def _as_list_layout(value: object) -> MapListView | None:
 def _chrome(
     ctx: PageContext, shown: MapPage | None, layout: MapListView
 ) -> tuple[str, Breadcrumb, PageMenu | None]:
+    # The map's own title, so a tab or a history entry says which map it is.
     if shown is not None:
-        return _("Maps"), Breadcrumb(), None
+        return shown.title() or shown.name(), Breadcrumb(), None
     if _shows_images(ctx) and user.may("maps.configure"):
         breadcrumb = images_breadcrumb()
         return _("Images"), breadcrumb, images_page_menu(breadcrumb)

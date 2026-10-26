@@ -274,6 +274,7 @@ def _mode_update(
                 edition=app.edition,
                 loaded_config=loaded_config,
                 make_fetcher_trigger=app.make_fetcher_trigger,
+                debug=global_options.debug,
             )
     except Exception as e:
         console.error(f"Configuration Error: {e}", file=sys.stderr)
@@ -401,6 +402,7 @@ def _mode_restart(
         edition=app.edition,
         loaded_config=loaded_config,
         make_fetcher_trigger=app.make_fetcher_trigger,
+        debug=global_options.debug,
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
@@ -523,6 +525,7 @@ def _mode_reload(
         edition=app.edition,
         loaded_config=loaded_config,
         make_fetcher_trigger=app.make_fetcher_trigger,
+        debug=global_options.debug,
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))

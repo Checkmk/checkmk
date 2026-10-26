@@ -1378,6 +1378,7 @@ def _execute_autodiscovery(
         edition=app.edition,
         loaded_config=env.loaded_config,
         make_fetcher_trigger=app.make_fetcher_trigger,
+        debug=cmk.ccc.debug.enabled(),
     )
 
     return discovery_results, True
@@ -2581,6 +2582,7 @@ def _execute_silently(
             edition=env.app.edition,
             loaded_config=env.loaded_config,
             make_fetcher_trigger=env.app.make_fetcher_trigger,
+            debug=cmk.ccc.debug.enabled(),
         )
     except (MKBailOut, MKGeneralException) as e:
         raise MKAutomationError(str(e))

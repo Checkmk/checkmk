@@ -13,7 +13,6 @@ from contextlib import contextmanager, suppress
 from dataclasses import fields
 from typing import Literal
 
-import cmk.ccc.debug
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk import trace
@@ -80,6 +79,7 @@ def build_and_activate_monitoring_config(
     edition: Edition,
     loaded_config: BaseConfig,
     make_fetcher_trigger: FetcherTriggerFactory,
+    debug: bool,
 ) -> None:
     try:
         with activation_lock(
@@ -108,11 +108,12 @@ def build_and_activate_monitoring_config(
                 edition=edition,
                 loaded_config=loaded_config,
                 make_fetcher_trigger=make_fetcher_trigger,
+                debug=debug,
             )
             core_client.run(action, log=_print)
 
     except Exception as e:
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise
         raise MKBailOut("An error occurred: %s" % e)
 
@@ -147,6 +148,7 @@ def do_create_config(
     edition: Edition,
     loaded_config: BaseConfig,
     make_fetcher_trigger: FetcherTriggerFactory,
+    debug: bool,
 ) -> None:
     """Creating the monitoring core configuration and additional files
 
@@ -191,7 +193,7 @@ def do_create_config(
                 make_fetcher_trigger=make_fetcher_trigger,
             )
     except Exception as e:
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise
         raise MKGeneralException("Error creating configuration: %s" % e)
 

@@ -49,7 +49,6 @@ py_library(
     deps = [
         "//cmk/automations",
         "//cmk/utils",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:tty",

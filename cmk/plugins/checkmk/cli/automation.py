@@ -52,7 +52,7 @@ def _mode_automation(
 
     name, automation_args = AutomationID(args[0]), list(args[1:])
     for_cmk_version = _for_cmk_version(options)
-    automations = Automations(discover_automations())
+    automations = Automations(discover_automations(), debug=global_options.debug)
     with tracer.span(
         f"mode_automation[{name}]",
         attributes={
@@ -95,7 +95,7 @@ def _mode_automation(
 
 def _run_automation(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # the automations read cmk.ccc.debug
+        # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_automation(context.omd_root, context.global_options, options, args)

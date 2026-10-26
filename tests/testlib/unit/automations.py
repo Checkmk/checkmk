@@ -26,6 +26,7 @@ def make_common_state(
     state = CommonState(
         cmk.utils.paths.omd_root,
         {f.name: getattr(EMPTY_CONFIG, f.name) for f in dataclasses.fields(EMPTY_CONFIG)},
+        debug=True,
     )
     state.loading_result = loading_result
     if app is not None:

@@ -47,20 +47,22 @@ def _result_named(name: str) -> type[_Result]:
 
 @dataclass
 class _RecordingState(AutomationState):
-    built_for: Path
-    updated_for: list[Path] = field(default_factory=list)
+    built_for: tuple[Path, bool]
+    updated_for: list[tuple[Path, bool]] = field(default_factory=list)
 
     @override
-    def update(self, omd_root: Path, _raw_config: Mapping[str, object]) -> None:
-        self.updated_for.append(omd_root)
+    def update(self, omd_root: Path, _raw_config: Mapping[str, object], *, debug: bool) -> None:
+        self.updated_for.append((omd_root, debug))
 
 
 @dataclass(eq=False)  # hashed by identity: the engine keys states by factory
 class _RecordingFactory:
     built: list[_RecordingState] = field(default_factory=list)
 
-    def __call__(self, omd_root: Path, _raw_config: Mapping[str, object]) -> _RecordingState:
-        self.built.append(state := _RecordingState(built_for=omd_root))
+    def __call__(
+        self, omd_root: Path, _raw_config: Mapping[str, object], debug: bool
+    ) -> _RecordingState:
+        self.built.append(state := _RecordingState(built_for=(omd_root, debug)))
         return state
 
 
@@ -79,15 +81,14 @@ def _automation(
     )
 
 
-def _loaded_engine(plugins: Iterable[DiscoveredAutomation]) -> Automations:
-    engine = Automations(plugins)
+def _loaded_engine(plugins: Iterable[DiscoveredAutomation], *, debug: bool) -> Automations:
+    engine = Automations(plugins, debug=debug)
     engine.update(Path("/old"), {})
     return engine
 
 
-@pytest.mark.usefixtures("disable_debug")
 def test_execution_before_the_first_update_fails() -> None:
-    engine = Automations([_automation("a", _RecordingFactory())])
+    engine = Automations([_automation("a", _RecordingFactory())], debug=False)
 
     assert engine.execute(AutomationID("a"), []) is AutomationError.KNOWN_ERROR
 
@@ -104,7 +105,8 @@ def test_an_automation_without_state_needs_no_configuration() -> None:
                 handler=handle,
                 result=_result_named("a"),
             )
-        ]
+        ],
+        debug=True,
     )
     # Nothing can be derived from an empty mapping: a state that tried would fail.
     engine.update(Path("/old"), {})
@@ -123,7 +125,8 @@ def test_only_automations_that_ask_for_it_read_the_configuration_under_lock() ->
                 lock_configuration=True,
             ),
             _automation("unlocked", _RecordingFactory()),
-        ]
+        ],
+        debug=True,
     )
 
     assert [
@@ -134,7 +137,7 @@ def test_only_automations_that_ask_for_it_read_the_configuration_under_lock() ->
 
 def test_state_is_built_once_on_first_execution() -> None:
     factory = _RecordingFactory()
-    engine = _loaded_engine([_automation("a", factory)])
+    engine = _loaded_engine([_automation("a", factory)], debug=True)
 
     engine.execute(AutomationID("a"), [])
     engine.execute(AutomationID("a"), [])
@@ -144,7 +147,7 @@ def test_state_is_built_once_on_first_execution() -> None:
 
 def test_automations_naming_the_same_factory_share_one_state() -> None:
     factory = _RecordingFactory()
-    engine = _loaded_engine([_automation("a", factory), _automation("b", factory)])
+    engine = _loaded_engine([_automation("a", factory), _automation("b", factory)], debug=True)
 
     engine.execute(AutomationID("a"), [])
     engine.execute(AutomationID("b"), [])
@@ -154,17 +157,17 @@ def test_automations_naming_the_same_factory_share_one_state() -> None:
 
 def test_update_reaches_the_built_states() -> None:
     factory = _RecordingFactory()
-    engine = _loaded_engine([_automation("a", factory)])
+    engine = _loaded_engine([_automation("a", factory)], debug=True)
     engine.execute(AutomationID("a"), [])
 
     engine.update(Path("/new"), {})
 
-    assert factory.built[0].updated_for == [Path("/new")]
+    assert factory.built[0].updated_for == [(Path("/new"), True)]
 
 
 def test_update_leaves_unbuilt_states_alone() -> None:
     factory = _RecordingFactory()
-    engine = _loaded_engine([_automation("a", factory)])
+    engine = _loaded_engine([_automation("a", factory)], debug=True)
 
     engine.update(Path("/new"), {})
 
@@ -173,12 +176,12 @@ def test_update_leaves_unbuilt_states_alone() -> None:
 
 def test_state_built_after_update_uses_the_new_arguments() -> None:
     factory = _RecordingFactory()
-    engine = _loaded_engine([_automation("a", factory)])
+    engine = _loaded_engine([_automation("a", factory)], debug=True)
 
     engine.update(Path("/new"), {})
     engine.execute(AutomationID("a"), [])
 
-    assert [state.built_for for state in factory.built] == [Path("/new")]
+    assert [state.built_for for state in factory.built] == [(Path("/new"), True)]
 
 
 def test_handler_output_does_not_reach_stdout(capsys: pytest.CaptureFixture[str]) -> None:
@@ -194,7 +197,8 @@ def test_handler_output_does_not_reach_stdout(capsys: pytest.CaptureFixture[str]
                 handler=chatty_handler,
                 result=_result_named("chatty"),
             )
-        ]
+        ],
+        debug=True,
     )
 
     engine.execute(AutomationID("chatty"), [])
@@ -202,7 +206,6 @@ def test_handler_output_does_not_reach_stdout(capsys: pytest.CaptureFixture[str]
     assert capsys.readouterr().out == ""
 
 
-@pytest.mark.usefixtures("disable_debug")
 def test_output_of_a_failing_handler_reaches_stdout(capsys: pytest.CaptureFixture[str]) -> None:
     def failing_handler(_state: _RecordingState, _args: list[str]) -> _Result:
         sys.stdout.write("chatter")
@@ -216,8 +219,29 @@ def test_output_of_a_failing_handler_reaches_stdout(capsys: pytest.CaptureFixtur
                 handler=failing_handler,
                 result=_result_named("failing"),
             )
-        ]
+        ],
+        debug=False,
     )
 
     assert engine.execute(AutomationID("failing"), []) is AutomationError.KNOWN_ERROR
     assert capsys.readouterr().out == "chatter"
+
+
+def test_a_failing_automation_raises_under_debug() -> None:
+    def failing_handler(_state: _RecordingState, _args: list[str]) -> _Result:
+        raise MKGeneralException("broken")
+
+    engine = _loaded_engine(
+        [
+            Automation(
+                name=AutomationID("failing"),
+                state_factory=_RecordingFactory(),
+                handler=failing_handler,
+                result=_result_named("failing"),
+            )
+        ],
+        debug=True,
+    )
+
+    with pytest.raises(MKGeneralException, match="broken"):
+        engine.execute(AutomationID("failing"), [])

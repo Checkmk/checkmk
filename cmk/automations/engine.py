@@ -11,7 +11,6 @@ from contextlib import contextmanager, nullcontext, redirect_stdout
 from pathlib import Path
 from typing import Any, Final
 
-import cmk.ccc.debug
 from cmk import trace
 from cmk.automations.internal import (
     Automation,
@@ -64,8 +63,9 @@ class Automations:
     builds the single state its command needs and nothing else.
     """
 
-    def __init__(self, plugins: Iterable[DiscoveredAutomation]) -> None:
+    def __init__(self, plugins: Iterable[DiscoveredAutomation], *, debug: bool) -> None:
         super().__init__()
+        self._debug: Final = debug
         self._automations: Final[Mapping[AutomationID, DiscoveredAutomation]] = {
             automation.name: automation for automation in plugins
         }
@@ -87,7 +87,7 @@ class Automations:
         """
         self._arguments = (omd_root, raw_config)
         for state in self._states_by_factory.values():
-            state.update(omd_root, raw_config)
+            state.update(omd_root, raw_config, debug=self._debug)
 
     def _get_state(self, automation: DiscoveredAutomation) -> AutomationState:
         try:
@@ -97,7 +97,7 @@ class Automations:
                 raise MKAutomationError("The configuration has not been loaded")
             return self._states_by_factory.setdefault(
                 automation.state_factory,
-                automation.state_factory(*self._arguments),
+                automation.state_factory(*self._arguments, self._debug),
             )
 
     # Called either via the CLI's "cmk --automation" mode or via the "/automation" endpoint of the
@@ -130,13 +130,13 @@ class Automations:
             logger.error(  # noqa: TRY400
                 "Execution of automation '%(cmd)s' failed: %(error)s", {"cmd": cmd, "error": e}
             )
-            if cmk.ccc.debug.enabled():
+            if self._debug:
                 raise
             return AutomationError.KNOWN_ERROR
 
         except Exception:
             logger.exception("Execution of automation '%(cmd)s' failed", {"cmd": cmd})
-            if cmk.ccc.debug.enabled():
+            if self._debug:
                 raise
             return AutomationError.UNKNOWN_ERROR
 

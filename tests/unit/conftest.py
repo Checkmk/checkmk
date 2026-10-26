@@ -80,14 +80,6 @@ def enable_debug_fixture() -> Generator[None]:
     yield from fake_site.enable_cmk_debug()
 
 
-@pytest.fixture
-def disable_debug() -> Generator[None]:
-    debug_mode = cmk.ccc.debug.debug_mode
-    cmk.ccc.debug.disable()
-    yield
-    cmk.ccc.debug.debug_mode = debug_mode
-
-
 @pytest.fixture(scope="session")
 def fixture_umask() -> Generator[None]:
     """Ensure the unit tests always use the same umask"""

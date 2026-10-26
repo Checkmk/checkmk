@@ -12,7 +12,6 @@ import json
 import logging
 from pathlib import Path
 
-import cmk.ccc.debug
 import cmk.livestatus_client as livestatus
 import cmk.utils.timeperiod
 from cmk.automations.internal import Automation, AutomationID
@@ -60,7 +59,7 @@ def _automation_notification_replay(
         timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
             livestatus.get_optional_timeperiods_active_map, log=logger.warning
         ),
-        debug=cmk.ccc.debug.enabled(),
+        debug=state.debug,
     )
     return NotificationReplayResult()
 
@@ -90,7 +89,7 @@ def _automation_notification_analyse(
             timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
                 livestatus.get_optional_timeperiods_active_map, log=logger.warning
             ),
-            debug=cmk.ccc.debug.enabled(),
+            debug=state.debug,
         )
     )
 
@@ -124,7 +123,7 @@ def _automation_notification_test(
             timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
                 livestatus.get_optional_timeperiods_active_map, log=logger.warning
             ),
-            debug=cmk.ccc.debug.enabled(),
+            debug=state.debug,
         )
     )
 

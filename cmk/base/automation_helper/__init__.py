@@ -105,7 +105,7 @@ def _application() -> FastAPI:
 
     return make_application(
         omd_root=omd_root,
-        engine=Automations(discover_automations()),
+        engine=Automations(discover_automations(), debug=False),
         cache=Cache.setup(client=get_redis_client()),
         config=config,
         reload_config=_reload_automation_config,

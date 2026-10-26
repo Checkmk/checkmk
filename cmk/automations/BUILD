@@ -23,7 +23,6 @@ py_library(
     deps = [
         "//cmk/utils",
         "//cmk/utils:unixsocket_http",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:i18n",
         "//packages/cmk-ccc:log",

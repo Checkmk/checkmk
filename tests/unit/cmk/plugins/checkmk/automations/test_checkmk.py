@@ -17,7 +17,6 @@ from typing import NoReturn, override
 import pytest
 from pytest import MonkeyPatch
 
-import cmk.ccc.debug
 import cmk.ccc.resulttype as result
 
 # We need an active check plugin that exists.
@@ -226,7 +225,7 @@ def _patch_plugin_loading(
 
 class AutomationActiveCheckTestable(checkmk.AutomationActiveCheck):
     @override
-    def _execute_check_plugin(self, commandline: Sequence[str]) -> tuple[int, str]:
+    def _execute_check_plugin(self, commandline: Sequence[str], *, debug: bool) -> tuple[int, str]:
         return (0, f"Assume I ran {commandline!r}")
 
 
@@ -416,8 +415,6 @@ def test_automation_active_check_invalid_args(  # type: ignore[misc]
     )
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)  # noqa: ARG005
 
-    monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
-
     active_check = checkmk.AutomationActiveCheck()
     active_check.execute(
         make_common_state(
@@ -442,7 +439,9 @@ class _RecordingAutomation(checkmk.AutomationActiveCheck):
         self.shipped_site_stores: AdHocSiteStores | None = None
 
     @override
-    def _execute_check_plugin(self, commandline: str) -> tuple[ServiceState, ServiceDetails]:
+    def _execute_check_plugin(
+        self, commandline: str, *, debug: bool
+    ) -> tuple[ServiceState, ServiceDetails]:
         self.calls["local"] = commandline
         return (0, "local output")
 
@@ -454,6 +453,7 @@ class _RecordingAutomation(checkmk.AutomationActiveCheck):
         command_line: str,
         *,
         site_stores: AdHocSiteStores | None = None,
+        debug: bool,
     ) -> tuple[ServiceState, ServiceDetails]:
         self.calls["relay"] = (relay_id, str(host), command_line)
         self.shipped_site_stores = site_stores
@@ -637,7 +637,7 @@ def test_execute_on_relay_import_error_is_unknown(monkeypatch: pytest.MonkeyPatc
 
     monkeypatch.setattr(auto, "_submit_to_relay", _raise)
     state, output = auto._execute_check_plugin_on_relay(  # noqa: SLF001
-        "relay-1", HostName("myhost"), "check_httpv2 -u http://x"
+        "relay-1", HostName("myhost"), "check_httpv2 -u http://x", debug=False
     )
     assert state == 3
     assert "not available" in output
@@ -645,14 +645,13 @@ def test_execute_on_relay_import_error_is_unknown(monkeypatch: pytest.MonkeyPatc
 
 def test_execute_on_relay_submit_failure_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
     auto = checkmk.AutomationActiveCheck()
-    monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 
     def _raise(relay_id: str, host: HostName, command: str, **_kw: object) -> NoReturn:  # noqa: ARG001
         raise TimeoutError("no result")
 
     monkeypatch.setattr(auto, "_submit_to_relay", _raise)
     state, output = auto._execute_check_plugin_on_relay(  # noqa: SLF001
-        "relay-1", HostName("myhost"), "check_httpv2 -u http://x"
+        "relay-1", HostName("myhost"), "check_httpv2 -u http://x", debug=False
     )
     assert state == 3
     assert "relay execution failed" in output
@@ -797,7 +796,9 @@ def test_delete_hosts_deletes_inventorized_host_labels() -> None:
         {"cmk/inventory/product": "foo"}
     )
 
-    checkmk.automation_delete_hosts.handler(NoState(cmk.utils.paths.omd_root, {}), [str(host_name)])
+    checkmk.automation_delete_hosts.handler(
+        NoState(cmk.utils.paths.omd_root, {}, debug=True), [str(host_name)]
+    )
 
     assert not (cmk.utils.paths.inventorized_host_labels_dir / f"{host_name}.json").exists()
 

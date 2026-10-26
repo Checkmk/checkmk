@@ -16,7 +16,6 @@ py_library(
         "//cmk/base:notify",
         "//cmk/base/automations",
         "//cmk/utils",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:automations",
     ],

@@ -30,12 +30,14 @@ from cmk.utils import log
 
 
 class RawConfigState(AutomationState):
-    def __init__(self, _omd_root: object, raw_config: Mapping[str, object]) -> None:
+    def __init__(self, _omd_root: object, raw_config: Mapping[str, object], debug: bool) -> None:
         self._raw_config = raw_config
+        self.debug = debug
 
     @override
-    def update(self, _omd_root: object, raw_config: Mapping[str, object]) -> None:
+    def update(self, _omd_root: object, raw_config: Mapping[str, object], *, debug: bool) -> None:
         self._raw_config = raw_config
+        self.debug = debug
 
     @property
     def raw_config(self) -> Mapping[str, object]:

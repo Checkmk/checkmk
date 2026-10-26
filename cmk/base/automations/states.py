@@ -6,7 +6,6 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import override
 
-import cmk.ccc.debug
 import cmk.utils.paths
 from cmk import trace
 from cmk.automations.internal import AutomationState
@@ -24,12 +23,14 @@ class BaseConfigState(AutomationState):
     nothing below them: no hosts, no rulesets, no caches.
     """
 
-    def __init__(self, _omd_root: Path, raw_config: Mapping[str, object]) -> None:
+    def __init__(self, _omd_root: Path, raw_config: Mapping[str, object], debug: bool) -> None:
         self.loaded_config = config.make_base_config(raw_config)
+        self.debug = debug
 
     @override
-    def update(self, _omd_root: Path, raw_config: Mapping[str, object]) -> None:
+    def update(self, _omd_root: Path, raw_config: Mapping[str, object], *, debug: bool) -> None:
         self.loaded_config = config.make_base_config(raw_config)
+        self.debug = debug
 
 
 class CommonState(AutomationState):
@@ -40,26 +41,30 @@ class CommonState(AutomationState):
     builds it once. They will move to states of their own, one by one.
     """
 
-    def __init__(self, omd_root: Path, raw_config: Mapping[str, object]) -> None:
+    def __init__(self, omd_root: Path, raw_config: Mapping[str, object], debug: bool) -> None:
         self.app: CheckmkBaseApp = make_app(omd_root)
-        self.loading_result = _derive_loading_result(raw_config)
+        self.loading_result = _derive_loading_result(raw_config, debug=debug)
+        self.debug = debug
 
     @override
-    def update(self, omd_root: Path, raw_config: Mapping[str, object]) -> None:
+    def update(self, omd_root: Path, raw_config: Mapping[str, object], *, debug: bool) -> None:
         # The site, and with it the app, does not change while we run. We rebuild the
         # app anyway, so that the state is derived from its arguments alone.
         self.app = make_app(omd_root)
         # Deriving afresh also resets all caches below the configuration, including
         # those of the ruleset optimizer: a new configuration starts from scratch.
-        self.loading_result = _derive_loading_result(raw_config)
+        self.loading_result = _derive_loading_result(raw_config, debug=debug)
+        self.debug = debug
 
 
-def _derive_loading_result(raw_config: Mapping[str, object]) -> config.LoadingResult:
+def _derive_loading_result(
+    raw_config: Mapping[str, object], *, debug: bool
+) -> config.LoadingResult:
     with tracer.span("derive_loading_result"):
         return config.perform_post_config_loading_actions(
             raw_config,
             autochecks_dir=cmk.utils.paths.autochecks_dir,
             discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
             builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
-            debug=cmk.ccc.debug.enabled(),
+            debug=debug,
         )

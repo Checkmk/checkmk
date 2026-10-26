@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Final
 
 from cmk.ccc import store
+from cmk.ccc.exceptions import MKTerminate, MKTimeout
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
@@ -119,10 +120,12 @@ class AllValueStoresStore:
 class ValueStore(MutableMapping[str, Any]):
     """Implements the mutable mapping that is exposed to the plugins
 
-    This class ensures that users indeed use strings as keys, and that the
-    (potentially) failing literal_eval is done in the plugin scope.
+    This class ensures that users indeed use strings as keys.
+    Values are deserialized lazily (with literal_eval) when they are accessed.
+    A stored value that cannot be deserialized is treated as missing and dropped,
+    so the plugin starts over instead of failing on every run.
 
-    It would be nice to also move the repr to the plugin scope,
+    It would be nice to move the repr to the plugin scope,
     but I can't see a way to do that without adding a redundant serialization
     in every __setitem__ call.
 
@@ -134,7 +137,10 @@ class ValueStore(MutableMapping[str, Any]):
     d["kez"] = "value"
     ```
 
-    For now we just trust the users to not mess up the `repr` implementation.
+    If a value cannot be serialized, the previously stored value is kept,
+    or the key is left out if there is none: anything written in its place
+    could not be deserialized again.
+    A timeout or termination is re-raised instead, so that nothing is saved at all.
     """
 
     def __init__(self, initial_data: Mapping[str, str]) -> None:
@@ -142,12 +148,6 @@ class ValueStore(MutableMapping[str, Any]):
         self._raw_serializer: Final = repr
         self._deserialize: Final = literal_eval
         self._accessed: dict[str, object] = {}
-
-    def _serialize(self, value: object) -> str:  # TODO: reconsider
-        try:
-            return self._raw_serializer(value)
-        except Exception as e:
-            return f"<Exception in `{self._raw_serializer.__name__}` call: {e!r}>"
 
     @staticmethod
     def _validate_key(key: object) -> str:
@@ -166,7 +166,17 @@ class ValueStore(MutableMapping[str, Any]):
             return self._accessed[key]
         except KeyError:
             pass
-        return self._accessed.setdefault(key, self._deserialize(self._serialized[key]))
+        serialized = self._serialized[key]
+        try:
+            value = self._deserialize(serialized)
+        except (ValueError, SyntaxError, TypeError, MemoryError, RecursionError) as exc:
+            logger.warning(
+                "value store: dropping undeserializable value of key %(key)r: %(exc)r",
+                {"key": key, "exc": exc},
+            )
+            del self._serialized[key]
+            raise KeyError(key) from exc
+        return self._accessed.setdefault(key, value)
 
     def __setitem__(self, key: str, value: Any) -> None:
         """
@@ -182,6 +192,11 @@ class ValueStore(MutableMapping[str, Any]):
         self._serialized.pop(key, None)
         self._accessed.pop(key, None)
 
+    def clear(self) -> None:
+        """Remove all items without deserializing them"""
+        self._serialized.clear()
+        self._accessed.clear()
+
     def __iter__(self) -> Iterator[str]:
         return iter(self._serialized | self._accessed)
 
@@ -189,7 +204,18 @@ class ValueStore(MutableMapping[str, Any]):
         return sum(1 for _ in self)
 
     def export(self) -> Mapping[str, str]:
-        return self._serialized | {k: self._serialize(v) for k, v in self._accessed.items()}
+        exported = {**self._serialized}
+        for key, value in self._accessed.items():
+            try:
+                exported[key] = self._raw_serializer(value)
+            except (MKTerminate, MKTimeout):
+                raise
+            except Exception as exc:
+                logger.warning(
+                    "value store: cannot serialize key %(key)r, not updating it: %(exc)r",
+                    {"key": key, "exc": exc},
+                )
+        return exported
 
 
 class ValueStoreManager:

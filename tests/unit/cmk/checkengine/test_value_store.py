@@ -3,10 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+import json
+from collections.abc import Iterator, Mapping, MutableMapping
+from contextlib import contextmanager
 from pathlib import Path
+from typing import override
 
 import pytest
+
+from cmk.ccc.exceptions import MKTerminate, MKTimeout
 
 from cmk.utils.hostaddress import HostName
 
@@ -78,11 +83,6 @@ class TestAllValueStoresStore:
         }
 
 
-class _BrokenRepr(str):
-    def __repr__(self) -> str:
-        raise ValueError("I'm broken!")
-
-
 class Test_ValueStore:
     @staticmethod
     def _get_vs() -> value_store.ValueStore:
@@ -101,11 +101,6 @@ class Test_ValueStore:
         vs = self._get_vs()
         with pytest.raises(KeyError):
             _ = vs["missing_key"]
-
-    def test_getitem_bad(self) -> None:
-        vs = self._get_vs()
-        with pytest.raises(ValueError):
-            _ = vs["bad_key"]
 
     def test_setitem(self) -> None:
         vs = self._get_vs()
@@ -133,18 +128,6 @@ class Test_ValueStore:
 
     def test_len(self) -> None:
         assert len(self._get_vs()) == 2
-
-    def test_write_rogue(self) -> None:
-        vs = self._get_vs()
-        # it's unlikely to encounter an object that can't be repr'd, but we need to deal with it
-        rogue = _BrokenRepr()
-        vs["rogue"] = rogue
-        assert vs["rogue"] is rogue
-
-        # next time we access it, it will raise
-        next_times_vs = value_store.ValueStore(vs.export())
-        with pytest.raises(SyntaxError):
-            _ = next_times_vs["rogue"]
 
 
 _TEST_HOST = HostName("test-host")
@@ -206,3 +189,125 @@ class TestValueStoreManager:
 
         assert store.inspect_updated is not None
         assert _KEY_OUTER not in store.inspect_updated
+
+
+class _BrokenRepr:
+    def __init__(self, exc: Exception) -> None:
+        self._exc = exc
+
+    @override
+    def __repr__(self) -> str:
+        raise self._exc
+
+
+# What earlier versions stored when `repr` failed
+_PLACEHOLDER = "<Exception in `repr` call: MKTimeout('timed out')>"
+
+
+def _write_values(counters: Path, values: Mapping[str, str]) -> None:
+    counters.write_text(json.dumps([[list(_KEY_OUTER), values]]))
+
+
+def _stored_values(counters: Path) -> Mapping[str, str]:
+    service_key = (_TEST_HOST, str(_SERVICE_OUTER[0]), _SERVICE_OUTER[1])
+    return value_store.AllValueStoresStore(counters).load().get(service_key, {})
+
+
+@contextmanager
+def _check_run(counters: Path) -> Iterator[MutableMapping[str, object]]:
+    with (
+        set_value_store_manager(
+            value_store.ValueStoreManager(
+                _TEST_HOST,
+                value_store.AllValueStoresStore(counters, log_debug=lambda x: None),
+            ),
+            store_changes=True,
+        ) as mgr,
+        mgr.namespace(_SERVICE_OUTER),
+    ):
+        yield get_value_store()
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        pytest.param(MKTimeout("timed out"), id="timeout"),
+        pytest.param(MKTerminate(), id="terminate"),
+    ],
+)
+def test_abort_during_save_leaves_the_file_unchanged(tmp_path: Path, exc: Exception) -> None:
+    counters = tmp_path / "counters"
+    _write_values(counters, {"key": "1"})
+    before = counters.read_text()
+
+    with pytest.raises(type(exc)), _check_run(counters) as store:
+        store["key"] = _BrokenRepr(exc)
+
+    assert counters.read_text() == before
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        pytest.param(ValueError("broken"), id="value-error"),
+        pytest.param(TimeoutError("foreign SIGALRM handler"), id="foreign-timeout"),
+    ],
+)
+def test_unserializable_value_keeps_the_stored_value(tmp_path: Path, exc: Exception) -> None:
+    counters = tmp_path / "counters"
+    _write_values(counters, {"key": "1"})
+
+    with _check_run(counters) as store:
+        store["key"] = _BrokenRepr(exc)
+        store["other"] = 2
+
+    assert _stored_values(counters) == {"key": "1", "other": "2"}
+
+
+def test_unserializable_new_value_is_not_stored(tmp_path: Path) -> None:
+    counters = tmp_path / "counters"
+
+    with _check_run(counters) as store:
+        store["key"] = _BrokenRepr(ValueError("broken"))
+        store["other"] = 2
+
+    assert _stored_values(counters) == {"other": "2"}
+
+
+@pytest.mark.parametrize(
+    "stored",
+    [
+        pytest.param(_PLACEHOLDER, id="placeholder"),
+        pytest.param("inf", id="not-a-literal"),
+    ],
+)
+def test_undeserializable_value_reads_as_missing(tmp_path: Path, stored: str) -> None:
+    counters = tmp_path / "counters"
+    _write_values(counters, {"key": stored})
+
+    with _check_run(counters) as store:
+        value = store.get("key")
+
+    assert value is None
+
+
+def test_undeserializable_value_is_not_written_back(tmp_path: Path) -> None:
+    counters = tmp_path / "counters"
+    # "other" keeps the store non-empty, otherwise it is not saved at all
+    _write_values(counters, {"key": _PLACEHOLDER, "other": "1"})
+
+    with _check_run(counters) as store:
+        store.get("key")
+
+    assert _stored_values(counters) == {"other": "1"}
+
+
+def test_clear_removes_undeserializable_values_too(tmp_path: Path) -> None:
+    counters = tmp_path / "counters"
+    _write_values(counters, {"key": _PLACEHOLDER, "other": "1"})
+
+    with _check_run(counters) as store:
+        store.clear()
+        remaining = list(store)
+
+    assert remaining == []

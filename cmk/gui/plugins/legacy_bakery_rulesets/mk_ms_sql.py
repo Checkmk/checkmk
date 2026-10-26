@@ -376,45 +376,45 @@ def _get_custom_instances() -> ListOf:
     )
 
 
-def _get_config() -> list[tuple[str, ValueSpec]]:
-    return [
-        (
-            "auth",
-            _mssql_authentication(),
-        ),
-        (
-            "conn",
-            _mssql_connection(),
-        ),
-        (
-            "sections",
-            _mssql_sections(),
-        ),
-        (
-            "cache_age",
-            _mssql_cache_age(),
-        ),
-        (
-            "piggyback_host",
-            _mssql_piggyback_host(),
-        ),
-        (
-            "discovery",
-            _get_discovery(),
-        ),
-        (
-            "instances",
-            _get_custom_instances(),
-        ),
-        (
-            "options",
-            Dictionary(
-                title=_("Options"),
-                elements=_get_options(),
-                required_keys=[],
+def _get_config(title: str | None, conn_required: bool) -> Dictionary:
+    return Dictionary(
+        title=title,
+        elements=[
+            (
+                "auth",
+                _mssql_authentication(),
             ),
-        ),
-    ]
+            (
+                "conn",
+                _mssql_connection(),
+            ),
+            (
+                "sections",
+                _mssql_sections(),
+            ),
+            (
+                "cache_age",
+                _mssql_cache_age(),
+            ),
+            (
+                "piggyback_host",
+                _mssql_piggyback_host(),
+            ),
+            (
+                "discovery",
+                _get_discovery(),
+            ),
+            (
+                "instances",
+                _get_custom_instances(),
+            ),
+            (
+                "options",
+                _get_options(),
+            ),
+        ],
+        required_keys=["auth", "conn"] if conn_required else ["auth"],
+    )
 
 
 def validate_max_connections(count: int, varprefix: str) -> None:
@@ -422,31 +422,35 @@ def validate_max_connections(count: int, varprefix: str) -> None:
         raise MKUserError(varprefix, _("Value should be positive"))
 
 
-def _get_options() -> list[tuple[str, ValueSpec]]:
-    return [
-        (
-            "max_connections",
-            Integer(
-                title=_("Max allowed connections"),
-                default_value=6,
-                validate=validate_max_connections,
-                help=_("Maximal count of connections to the SQL server"),
-            ),
-        ),
-        (
-            "ignore_inactive_local_instances",
-            Checkbox(
-                title=_("Ignore inactive local instances (Windows)"),
-                label=_("Skip local instances that are not running"),
-                help=_(
-                    "If enabled, the plug-in will not attempt to connect to "
-                    "locally detected instances that are currently stopped. "
-                    "Only applicable for Windows."
+def _get_options() -> Dictionary:
+    return Dictionary(
+        title=_("Options"),
+        elements=[
+            (
+                "max_connections",
+                Integer(
+                    title=_("Max allowed connections"),
+                    default_value=6,
+                    validate=validate_max_connections,
+                    help=_("Maximal count of connections to the SQL server"),
                 ),
-                default_value=False,
             ),
-        ),
-    ]
+            (
+                "ignore_inactive_local_instances",
+                Checkbox(
+                    title=_("Ignore inactive local instances (Windows)"),
+                    label=_("Skip local instances that are not running"),
+                    help=_(
+                        "If enabled, the plug-in will not attempt to connect to "
+                        "locally detected instances that are currently stopped. "
+                        "Only applicable for Windows."
+                    ),
+                    default_value=False,
+                ),
+            ),
+        ],
+        required_keys=[],
+    )
 
 
 def _valuespec_agent_config_mk_ms_sql() -> Alternative:
@@ -465,11 +469,7 @@ def _valuespec_agent_config_mk_ms_sql() -> Alternative:
                 elements=[
                     (
                         "main",
-                        Dictionary(
-                            title=_("Monitor databases"),
-                            elements=_get_config(),
-                            required_keys=["auth"],
-                        ),
+                        _get_config(_("Monitor databases"), conn_required=False),
                     ),
                     (
                         "other",
@@ -477,10 +477,7 @@ def _valuespec_agent_config_mk_ms_sql() -> Alternative:
                             title=_("Monitor databases on other hosts"),
                             add_label="Add config to monitor MS SQL database on other hosts",
                             del_label="Remove config",
-                            valuespec=Dictionary(
-                                elements=_get_config(),
-                                required_keys=["auth", "conn"],
-                            ),
+                            valuespec=_get_config(None, conn_required=True),
                         ),
                     ),
                 ],

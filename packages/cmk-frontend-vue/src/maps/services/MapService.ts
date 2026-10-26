@@ -344,8 +344,8 @@ export class MapService {
   }
 
   /**
-   * Stamps a new order onto the maps. The list endpoint sorts by ``sort_order``,
-   * so this survives a reload. Saved one by one: reordering is rare and the lists
+   * Stamps a new order onto the maps. The map list sorts by ``sort_order``, so
+   * this survives a reload. Saved one by one: reordering is rare and the lists
    * are small.
    */
   public async reorderMaps(order: { name: string; sort_order: number }[]): Promise<void> {

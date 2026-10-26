@@ -97,8 +97,35 @@ describe('useMapListFilter — reordering', () => {
     expect(filter.isOrderPristine.value).toBe(false)
   })
 
-  it('refuses a drag while maps of several owners are mixed in', async () => {
-    const filter = await setup([listed('a', { owner: 'me' }), listed('b', { is_builtin: true })])
-    expect(filter.isOrderPristine.value).toBe(false)
+  it('lists your maps in the order they were dragged into', async () => {
+    const filter = await setup([
+      listed('a', { owner: 'me', sort_order: 1 }),
+      listed('b', { owner: 'me', sort_order: 0 })
+    ])
+    expect(filter.displayedMaps.value.map((map) => map.name)).toEqual(['b', 'a'])
+  })
+
+  // Each owner's order only orders that owner's maps.
+  it("keeps other users' maps in title order, whatever they dragged", async () => {
+    const filter = await setup([
+      listed('anna-1', { owner: 'anna', sort_order: 0 }),
+      listed('anna-2', { owner: 'anna', sort_order: 1 }),
+      listed('bob-1', { owner: 'bob', sort_order: 0 }),
+      listed('bob-2', { owner: 'bob', sort_order: 1 })
+    ])
+    expect(filter.displayedMaps.value.map((map) => map.name)).toEqual([
+      'anna-1',
+      'anna-2',
+      'bob-1',
+      'bob-2'
+    ])
+  })
+
+  it('lists the built-in maps in their shipped order', async () => {
+    const filter = await setup([
+      listed('a', { is_builtin: true, sort_order: 1 }),
+      listed('b', { is_builtin: true, sort_order: 0 })
+    ])
+    expect(filter.displayedMaps.value.map((map) => map.name)).toEqual(['b', 'a'])
   })
 })

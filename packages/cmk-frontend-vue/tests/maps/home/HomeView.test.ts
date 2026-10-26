@@ -5,7 +5,7 @@
  */
 // @vitest-environment jsdom
 import userEvent from '@testing-library/user-event'
-import { render, screen, waitFor } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import HomeView from '@/maps/home/HomeView.vue'
@@ -184,5 +184,51 @@ describe('HomeView', () => {
     await userEvent.click(await screen.findByRole('checkbox', { name: 'Select prod' }))
 
     expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+  })
+})
+
+async function cardOf(name: string): Promise<HTMLElement> {
+  const link = await screen.findByRole('link', { name })
+  const card = link.closest<HTMLElement>('[role="listitem"]')
+  if (!card) {
+    throw new Error(`no card for ${name}`)
+  }
+  return card
+}
+
+/** jsdom has no DataTransfer; this is the part of it a drag touches. */
+function dragData(dropEffect: DataTransfer['dropEffect'] = 'move') {
+  return {
+    dataTransfer: {
+      dropEffect,
+      effectAllowed: 'uninitialized',
+      setData: vi.fn(),
+      setDragImage: vi.fn()
+    }
+  }
+}
+
+describe('HomeView — reordering cards', () => {
+  const mine = (name: string): MapRead => listed(name, { owner: 'me', can_edit: true })
+
+  it('offers your own maps for dragging while built-in ones are listed too', async () => {
+    await renderHome([mine('first'), listed('demo', { is_builtin: true })])
+    expect(await cardOf('first')).toHaveAttribute('draggable', 'true')
+    expect(await cardOf('demo')).not.toHaveAttribute('draggable', 'true')
+  })
+
+  it('stores the order your maps were dragged into', async () => {
+    await renderHome([mine('first'), mine('second'), listed('demo', { is_builtin: true })])
+    const reorder = vi.spyOn(services.maps, 'reorderMaps').mockResolvedValue()
+
+    const second = await cardOf('second')
+    await fireEvent.dragStart(second, dragData())
+    await fireEvent.dragOver(await cardOf('first'), dragData())
+    await fireEvent.dragEnd(second, dragData('move'))
+
+    expect(reorder).toHaveBeenCalledWith([
+      { name: 'second', sort_order: 0 },
+      { name: 'first', sort_order: 1 }
+    ])
   })
 })

@@ -42,6 +42,14 @@ function initialScope(): MapScope {
   return isMapScope(value) ? value : 'all'
 }
 
+/**
+ * The order a drag stored. The list arrives sorted by title, and the sort is
+ * stable, so maps that were never dragged keep that order.
+ */
+export function byStoredOrder(a: MapRead, b: MapRead): number {
+  return a.sort_order - b.sort_order
+}
+
 export function useMapListFilter(): {
   searchQuery: Ref<string>
   /**
@@ -53,7 +61,7 @@ export function useMapListFilter(): {
   scopeOptions: ComputedRef<ScopeOption[]>
   showScopeFilter: ComputedRef<boolean>
   displayedMaps: ComputedRef<MapRead[]>
-  /** True while the displayed order matches the store's, so a drag may reorder. */
+  /** True while no search hides any of your maps, so a drag may reorder them. */
   isOrderPristine: ComputedRef<boolean>
 } {
   const { _t } = usei18n()
@@ -68,8 +76,7 @@ export function useMapListFilter(): {
   /**
    * The list in its display order, each map with the owner kind the filter and
    * the ordering both need. Ordering does not depend on the query, so it is
-   * done once here instead of on every keystroke; bucketing keeps each block in
-   * the store's own sort order.
+   * done once here instead of on every keystroke.
    */
   const orderedMaps = computed<{ map: MapRead; kind: MapOwnerKind }[]>(() => {
     const userId = auth.user.value?.user_id
@@ -80,7 +87,12 @@ export function useMapListFilter(): {
       const kind = mapOwnerKind(map, userId)
       buckets.get(kind)?.push({ map, kind })
     }
-    return OWNER_ORDER.flatMap((kind) => buckets.get(kind) ?? [])
+    return OWNER_ORDER.flatMap((kind) => {
+      const bucket = buckets.get(kind) ?? []
+      // Others' maps keep the title order the list arrives in: each owner's
+      // sort_order only orders that owner's own maps.
+      return kind === 'other' ? bucket : bucket.sort((a, b) => byStoredOrder(a.map, b.map))
+    })
   })
 
   const presentKinds = computed<Set<MapOwnerKind>>(
@@ -127,7 +139,7 @@ export function useMapListFilter(): {
       .map(({ map }) => map)
   })
 
-  const isOrderPristine = computed(() => !searchQuery.value.trim() && presentKinds.value.size <= 1)
+  const isOrderPristine = computed(() => !searchQuery.value.trim())
 
   return {
     searchQuery,

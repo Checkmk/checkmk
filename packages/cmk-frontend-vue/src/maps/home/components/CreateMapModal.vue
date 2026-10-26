@@ -280,7 +280,7 @@ async function submit() {
 
 .maps-create-map-modal__warning {
   font-size: var(--font-size-normal);
-  color: var(--color-state-warning);
+  color: var(--status-text-color-warning);
 }
 
 .maps-create-map-modal__hint {
@@ -291,7 +291,7 @@ async function submit() {
 .maps-create-map-modal__link {
   display: block;
   margin-top: var(--dimension-3);
-  color: var(--color-state-warning);
+  color: var(--status-text-color-warning);
   font-weight: var(--font-weight-bold);
   text-decoration: underline;
 }

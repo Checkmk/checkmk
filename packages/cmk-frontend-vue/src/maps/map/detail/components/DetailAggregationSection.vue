@@ -181,7 +181,7 @@ const viewChoices = computed(() => ({
 }
 
 .maps-detail-aggregation-section__stale {
-  color: var(--color-state-warning);
+  color: var(--status-text-color-warning);
   font-style: italic;
   font-size: var(--font-size-normal);
 }

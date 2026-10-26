@@ -170,7 +170,7 @@ watch(
 }
 
 .maps-edit-panel__hint--placing {
-  color: var(--color-state-warning);
+  color: var(--status-text-color-warning);
 }
 
 /* The scroll container is itself the field column: a gap rather than sibling

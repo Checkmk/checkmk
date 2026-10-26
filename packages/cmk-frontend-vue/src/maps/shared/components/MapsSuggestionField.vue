@@ -94,6 +94,6 @@ const noResultsHint = computed<TranslatedString>(() =>
   margin: var(--dimension-3) 0 0;
   font-size: var(--font-size-normal);
   line-height: 1.375;
-  color: var(--color-state-warning);
+  color: var(--status-text-color-warning);
 }
 </style>

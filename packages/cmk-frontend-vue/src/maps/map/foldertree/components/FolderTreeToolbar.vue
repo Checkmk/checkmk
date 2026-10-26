@@ -241,6 +241,6 @@ function selectMode(value: string): void {
 
 .maps-folder-tree-toolbar__truncated {
   font-weight: var(--font-weight-bold);
-  color: var(--color-state-warning);
+  color: var(--status-text-color-warning);
 }
 </style>

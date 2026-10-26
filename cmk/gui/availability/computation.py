@@ -49,6 +49,7 @@ from .type_defs import (
     AVRawData,
     AVRawServices,
     AVSpan,
+    AVTimelineLabelling,
     AVTimelineRows,
     AVTimelineStates,
     AVTimelineStatistics,
@@ -81,54 +82,17 @@ def get_host_service_availability_rawdata(
     # them because grouping by host or service groups has to know which groups were asked
     # for, see filter_groups_of_entries(). Pass an empty sequence when the caller filters
     # without a context (then there is nothing to restrict the groups by).
-    time_range: AVTimeRange = avoptions["range"][0]
-
-    av_filter = "Filter: time >= %d\nFilter: time < %d\n" % time_range
     if av_object:
-        tl_site, tl_host, tl_service = av_object
-        av_filter += f"Filter: host_name = {lqencode(str(tl_host))}\nFilter: service_description = {lqencode(tl_service)}\n"
+        tl_site = av_object[0]
         assert tl_site is not None
         only_sites = [tl_site]
-    elif what == "service":
-        av_filter += "Filter: service_description !=\n"
-    else:
-        av_filter += "Filter: service_description =\n"
 
-    # Add Columns needed for object identification
-    columns = ["host_name", "service_description"]
-
-    # Columns for availability
-    columns += [
-        "duration",
-        "from",
-        "until",
-        "state",
-        "host_down",
-        "in_downtime",
-        "in_host_downtime",
-        "in_notification_period",
-        "in_service_period",
-        "is_flapping",
-    ]
-    if include_output:
-        columns.append("log_output")
-    if include_long_output:
-        columns.append("long_log_output")
-        columns.append("service_check_command")
-        columns.append("service_custom_variables")
-    if "use_display_name" in avoptions["labelling"]:
-        columns.append("service_display_name")
-    if "show_alias" in avoptions["labelling"]:
-        columns.append("host_alias")
-
-    # If we group by host/service group then make sure that that information is available
-    grouping = avoptions["grouping"]
-    if grouping is not None and grouping != "host":
-        columns.append(grouping)
-
-    headers = av_filter
-    headers += "Timelimit: %d\n" % avoptions["timelimit"]
-    headers += filterheaders
+    columns = build_statehist_columns(
+        include_output, include_long_output, avoptions["labelling"], avoptions["grouping"]
+    )
+    headers = build_statehist_headers(
+        what, av_object, avoptions["range"][0], avoptions["timelimit"], filterheaders
+    )
     logrow_limit = avoptions["logrow_limit"]
     # Add a +1 overflow margin so a site returning exactly the limit can be told
     # apart from one whose data was truncated.
@@ -151,23 +115,13 @@ def get_host_service_availability_rawdata(
     columns = ["site"] + columns
     spans: list[AVSpan] = [cast(AVSpan, dict(zip(columns, s))) for s in data]
     amount_filtered_rows = len(spans)
+    spans, exceeded_log_row_limit = apply_logrow_limit(spans, livestatus_limit)
 
     # When a group filter is set, only care about these groups in the group fields
+    grouping = avoptions["grouping"]
     with CPUTracker(logger.debug) as filter_rows_tracker:
         if grouping in ("host_groups", "service_groups"):
             filter_groups_of_entries(context, active_filters, grouping, spans)
-
-    # Now we find out if the log row limit was exceeded. The livestatus "Limit:"
-    # header is applied to each site individually, so we must check the per-site
-    # row count instead of the summed count of all sites - otherwise a multisite
-    # setup would raise false positives. If the limit was exceeded we cut off the
-    # last element because it might be incomplete.
-    exceeded_log_row_limit: bool = False
-    if livestatus_limit is not None:
-        rows_per_site = Counter(row[0] for row in data)
-        if any(count >= livestatus_limit for count in rows_per_site.values()):
-            exceeded_log_row_limit = True
-            spans = spans[:-1]
 
     if view_process_tracking:
         view_process_tracking.amount_unfiltered_rows = len(data)
@@ -177,6 +131,82 @@ def get_host_service_availability_rawdata(
         view_process_tracking.duration_filter_rows = filter_rows_tracker.duration
 
     return spans_by_object(spans), exceeded_log_row_limit
+
+
+def build_statehist_columns(
+    include_output: bool,
+    include_long_output: bool,
+    labelling: Sequence[AVTimelineLabelling],
+    grouping: Literal["host", "host_groups", "service_groups"] | None,
+) -> list[ColumnName]:
+    # Add Columns needed for object identification
+    columns = ["host_name", "service_description"]
+
+    # Columns for availability
+    columns += [
+        "duration",
+        "from",
+        "until",
+        "state",
+        "host_down",
+        "in_downtime",
+        "in_host_downtime",
+        "in_notification_period",
+        "in_service_period",
+        "is_flapping",
+    ]
+    if include_output:
+        columns.append("log_output")
+    if include_long_output:
+        columns.append("long_log_output")
+        columns.append("service_check_command")
+        columns.append("service_custom_variables")
+    if "use_display_name" in labelling:
+        columns.append("service_display_name")
+    if "show_alias" in labelling:
+        columns.append("host_alias")
+
+    # If we group by host/service group then make sure that that information is available
+    if grouping is not None and grouping != "host":
+        columns.append(grouping)
+    return columns
+
+
+def build_statehist_headers(
+    what: AVObjectType,
+    av_object: AVObjectSpec,
+    time_range: AVTimeRange,
+    timelimit: int,
+    filterheaders: FilterHeader,
+) -> str:
+    headers = "Filter: time >= %d\nFilter: time < %d\n" % time_range
+    if av_object:
+        _tl_site, tl_host, tl_service = av_object
+        headers += f"Filter: host_name = {lqencode(str(tl_host))}\nFilter: service_description = {lqencode(tl_service)}\n"
+    elif what == "service":
+        headers += "Filter: service_description !=\n"
+    else:
+        headers += "Filter: service_description =\n"
+    headers += "Timelimit: %d\n" % timelimit
+    return headers + filterheaders
+
+
+def apply_logrow_limit(
+    spans: list[AVSpan], livestatus_limit: int | None
+) -> tuple[list[AVSpan], bool]:
+    """Detect whether any site reached the log row limit and cut off the last span if so
+
+    The livestatus "Limit:" header is applied to each site individually, so the per-site
+    span count is checked instead of the summed count of all sites - otherwise a multisite
+    setup would raise false positives. The last span is dropped because it might be
+    incomplete.
+    """
+    if livestatus_limit is None:
+        return spans, False
+    spans_per_site = Counter(span["site"] for span in spans)
+    if any(count >= livestatus_limit for count in spans_per_site.values()):
+        return spans[:-1], True
+    return spans, False
 
 
 def filter_groups_of_entries(

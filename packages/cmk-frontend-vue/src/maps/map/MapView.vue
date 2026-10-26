@@ -73,7 +73,7 @@ import type { AnchorRect } from '@/maps/utils/anchorRect'
 import { resolveCheckmkUrl } from '@/maps/utils/deploymentBase'
 import { objectDeleteTitle, objectDisplayName } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkUrl, openUrl } from '@/maps/utils/mapNavigation'
-import { monitoringObjectId, newMapElement } from '@/maps/utils/model'
+import { derivesItsContent, monitoringObjectId, newMapElement } from '@/maps/utils/model'
 import { asBoundObject } from '@/maps/utils/naming'
 
 // Lazy, one chunk per map type: leaflet rides with the geo map and d3 with the
@@ -151,8 +151,7 @@ const showsMapState = computed(
     statesStore.lastUpdate.value !== null
 )
 const isPresentation = computed(() => mapConfig.value?.view.type === 'presentation')
-// Content comes from a live query, so there is nothing on it to arrange.
-const derivesItsContent = computed(() => isFlowmap.value || isRadar.value || isFolderTree.value)
+const showsDerivedContent = computed(() => derivesItsContent(mapConfig.value?.view))
 
 const mapFilterNeedle = ref('')
 watch(mapName, () => {
@@ -211,7 +210,7 @@ const showsEditTools = computed(
     !isKiosk.value &&
     !isPreview.value &&
     !!mapConfig.value &&
-    !derivesItsContent.value &&
+    !showsDerivedContent.value &&
     !drawerObject.value
 )
 
@@ -709,6 +708,28 @@ const settingsParentMapSize = ref<{ width: number; height: number } | null>(null
 async function onSettingsPickWorldmapView(done: (at: WorldmapViewport | null) => void) {
   done((await worldmapViewRef.value?.pickViewport()) ?? null)
 }
+
+// The map list opens a map straight in its settings or its editor. Acted on
+// once the map and the right to edit it are known, then dropped from the URL,
+// so a reload shows the map as usual.
+watch(
+  () => [nav.state.open, mapConfigAsRead.value] as const,
+  ([open, map]) => {
+    if (!open || !map) {
+      return
+    }
+    if (open === 'settings') {
+      if (canEdit.value) {
+        openSettings()
+      }
+    } else if (showsEditTools.value && !editor.editMode.value) {
+      editor.toggleEditMode()
+    }
+    nav.replace({ view: 'map', name: map.name })
+  },
+  // After the render: the geo map's settings take its size from the mounted view.
+  { immediate: true, flush: 'post' }
+)
 
 function onSettingsWorldmapViewChange(at: WorldmapViewport) {
   worldmapViewRef.value?.setViewport(at)

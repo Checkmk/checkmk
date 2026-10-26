@@ -13,7 +13,6 @@ import type {
   CfgImport,
   FolderTreeView,
   MapBulkDeleteResult,
-  MapBulkEditResult,
   MapConfig,
   MapEnvelope,
   MapRead,
@@ -395,24 +394,6 @@ export class MapService {
       this.maps.value = this.maps.value.filter((m) => !removed.has(m.name))
     }
     return { deleted, failed }
-  }
-
-  public async bulkEditMaps(
-    names: string[],
-    updates: Partial<MapConfig>
-  ): Promise<MapBulkEditResult> {
-    const { _t } = usei18n()
-    const updated: string[] = []
-    const failed: { name: string; reason: string }[] = []
-    for (const name of names) {
-      try {
-        await this.saveMapMetadata(name, updates)
-        updated.push(name)
-      } catch (e: unknown) {
-        failed.push({ name, reason: e instanceof Error ? e.message : _t('edit failed') })
-      }
-    }
-    return { updated, failed }
   }
 
   private async persist(map: MapConfig): Promise<void> {

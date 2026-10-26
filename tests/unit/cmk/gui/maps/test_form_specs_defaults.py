@@ -22,7 +22,6 @@ from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, VisitorOptions
 from cmk.maps.gui.form_specs.global_settings import map_defaults_spec, object_defaults_spec
 from cmk.maps.gui.form_specs.map_metadata import (
     flow_view_spec,
-    map_bulk_metadata_spec,
     map_metadata_spec,
 )
 from cmk.rulesets.v1.form_specs import Dictionary
@@ -71,4 +70,3 @@ def test_map_metadata_specs_build(with_choices: bool, request_context: None) -> 
     # both on a configured site (choices) and a fresh one (none).
     choices = _CHOICES if with_choices else None
     assert isinstance(map_metadata_spec(choices), Dictionary)
-    assert isinstance(map_bulk_metadata_spec(choices), Dictionary)

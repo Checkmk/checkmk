@@ -38,7 +38,7 @@ def _no_connections(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(_settings, "effective_settings", lambda: {"maps_connections": []})
 
 
-@pytest.mark.parametrize("spec_name", ["map_metadata", "map_bulk_metadata", "flow_view"])
+@pytest.mark.parametrize("spec_name", ["map_metadata", "flow_view"])
 @pytest.mark.usefixtures("no_connections")
 def test_build_spec_returns_dictionary_for_known_names(spec_name: FormSchemaName) -> None:
     assert isinstance(_build_spec(spec_name), Dictionary)

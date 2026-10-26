@@ -39,11 +39,8 @@ const METADATA_READERS: Record<string, (value: unknown) => Partial<MapConfig>> =
 }
 
 /**
- * The map fields a metadata form's values describe.
- *
- * Only the fields the values actually carry: an untouched field is left out
- * entirely, which is what lets a bulk edit overwrite exactly what was ticked
- * and nothing else.
+ * The map fields a metadata form's values describe: only the fields the
+ * values actually carry.
  */
 export function metadataUpdatesFrom(values: Record<string, unknown>): Partial<MapConfig> {
   const updates: Partial<MapConfig> = {}

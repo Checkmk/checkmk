@@ -221,16 +221,6 @@ export interface MapBulkDeleteResult {
   failed: MapBulkDeleteFailure[]
 }
 
-export interface MapBulkEditFailure {
-  name: string
-  reason: string
-}
-
-export interface MapBulkEditResult {
-  updated: string[]
-  failed: MapBulkEditFailure[]
-}
-
 export type ServicesSummary = Daemon['ServicesSummary']
 
 // The daemon types ``state`` as a plain string: it passes Livestatus values

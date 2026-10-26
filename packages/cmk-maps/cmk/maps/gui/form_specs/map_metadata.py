@@ -290,59 +290,6 @@ def map_metadata_spec(
     )
 
 
-# Metadata fields the FormSpec covers; used by the API to slice
-# MapRead → form-data and merge form-data → MapUpdate. Anything not
-# in this set stays out of the FormSpec contract.
-METADATA_FIELDS = (
-    "alias",
-    "connection_id",
-    "icon_size",
-    "default_z",
-    "render_mode",
-    "rotation_interval",
-    "rotation_pools",
-    "click_action",
-    "hover_template",
-    "context_template",
-)
-
-# ``alias`` stays single-map: applying one alias to many would collapse
-# their identities. Everything else is safe to overwrite in bulk.
-BULK_METADATA_FIELDS = tuple(f for f in METADATA_FIELDS if f != "alias")
-
-
-def _build_bulk_metadata_spec(
-    connection_choices: Sequence[tuple[str, str]] | None,
-) -> Dictionary:
-    # required=False makes FormEdit render a per-field activation checkbox,
-    # so only the elements the operator ticks end up in the wire payload.
-    single = map_metadata_spec(connection_choices)
-    elements = {
-        key: DictElement(
-            required=False,
-            group=elem.group,
-            parameter_form=elem.parameter_form,
-        )
-        for key, elem in single.elements.items()
-        if key in BULK_METADATA_FIELDS
-    }
-    return Dictionary(
-        title=Title("Apply to selected maps"),
-        help_text=Help(
-            "Pick the fields you want to overwrite on every selected map. "
-            "Unchecked fields stay untouched. Read-only demo maps are "
-            "skipped automatically."
-        ),
-        elements=elements,
-    )
-
-
-def map_bulk_metadata_spec(
-    connection_choices: Sequence[tuple[str, str]] | None = None,
-) -> Dictionary:
-    return _build_bulk_metadata_spec(connection_choices)
-
-
 _TOPOLOGY = MapsDictGroup(
     title=Title("Hosts & Layer"),
     help_text=Help(

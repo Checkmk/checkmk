@@ -19,7 +19,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   cancel: []
   delete: []
-  edit: []
   'toggle-select-all': [checked: boolean]
 }>()
 
@@ -52,9 +51,6 @@ const ariaLabel = computed(() =>
         </label>
       </div>
       <div class="maps-map-bulk-action-bar__actions">
-        <CmkButton variant="primary" :disabled="busy" @click="emit('edit')">
-          {{ _t('Edit') }}
-        </CmkButton>
         <CmkButton variant="danger" :disabled="busy" @click="emit('delete')">
           {{ _t('Delete') }}
         </CmkButton>

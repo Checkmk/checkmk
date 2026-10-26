@@ -12,9 +12,19 @@ import { reactive } from 'vue'
  */
 export type AdminTab = 'icons'
 
+/** What a map opens with, when the map list asks for more than the map. */
+export type MapOpening = 'settings' | 'editor'
+
 export type NavTarget =
   | { view: 'home' }
-  | { view: 'map'; name: string; kiosk?: boolean; preview?: boolean; rotation?: string | null }
+  | {
+      view: 'map'
+      name: string
+      kiosk?: boolean
+      preview?: boolean
+      rotation?: string | null
+      open?: MapOpening
+    }
   | { view: 'admin'; tab: AdminTab }
 
 export interface NavState {
@@ -25,6 +35,7 @@ export interface NavState {
   /** The rotation pool a map was opened in, which it rotates on within. */
   rotation: string | null
   preview: boolean
+  open: MapOpening | null
 }
 
 /** Loads a URL as a new page; `replace` keeps the current history entry. */
@@ -44,19 +55,48 @@ function isAdminTab(value: string | null): value is AdminTab {
   return value !== null && (ADMIN_TABS as readonly string[]).includes(value)
 }
 
+function isMapOpening(value: string | null): value is MapOpening {
+  return value === 'settings' || value === 'editor'
+}
+
 function parse(search: string): NavState {
   const params = new URLSearchParams(search)
   const mode = params.get('mode')
   const name = params.get('name')
   const kiosk = params.get('kiosk') === '1'
   const preview = params.get('preview') === '1'
+  const open = params.get('open')
   if (isAdminTab(mode)) {
-    return { view: 'admin', name: null, tab: mode, kiosk: false, preview: false, rotation: null }
+    return {
+      view: 'admin',
+      name: null,
+      tab: mode,
+      kiosk: false,
+      preview: false,
+      rotation: null,
+      open: null
+    }
   }
   if (name) {
-    return { view: 'map', name, tab: null, kiosk, preview, rotation: params.get('rotation') }
+    return {
+      view: 'map',
+      name,
+      tab: null,
+      kiosk,
+      preview,
+      rotation: params.get('rotation'),
+      open: isMapOpening(open) ? open : null
+    }
   }
-  return { view: 'home', name: null, tab: null, kiosk: false, preview: false, rotation: null }
+  return {
+    view: 'home',
+    name: null,
+    tab: null,
+    kiosk: false,
+    preview: false,
+    rotation: null,
+    open: null
+  }
 }
 
 function buildUrl(target: NavTarget): string {
@@ -72,6 +112,9 @@ function buildUrl(target: NavTarget): string {
     }
     if (target.rotation) {
       params.set('rotation', target.rotation)
+    }
+    if (target.open) {
+      params.set('open', target.open)
     }
   } else if (target.view === 'admin') {
     params.set('mode', target.tab)

@@ -250,6 +250,59 @@ describe('MapView – breadcrumb', () => {
   })
 })
 
+describe('MapView – opened from the map list', () => {
+  const settingsProbe = { template: '<div data-testid="settings-open" />' }
+
+  function openMapPageWith(open: string): void {
+    window.history.replaceState({}, '', `/site/check_mk/maps.py?name=map1&open=${open}`)
+    services = fakeMapsServices()
+    vi.stubGlobal('EventSource', FakeEventSource)
+  }
+
+  function renderOpened(view: MapView, canEdit: boolean) {
+    opensMap(view)
+    services.maps.maps.value = [aListedMap({ name: 'map1', can_edit: canEdit })]
+    const { global: provided } = provideServices(services)
+    return render(MapViewComponent, {
+      global: { ...provided, stubs: { ...stubs, MapSettingsModal: settingsProbe } }
+    })
+  }
+
+  async function expectOpenDropped(): Promise<void> {
+    await waitFor(() => expect(window.location.search).toBe('?name=map1'))
+  }
+
+  it('opens the settings and drops the request from the URL', async () => {
+    openMapPageWith('settings')
+    renderOpened(newMapView('static'), true)
+    await waitFor(() => expect(screen.getByTestId('settings-open')).toBeInTheDocument())
+    await expectOpenDropped()
+  })
+
+  it('opens the editor and drops the request from the URL', async () => {
+    openMapPageWith('editor')
+    renderOpened(newMapView('static'), true)
+    await waitFor(() => expect(screen.getByText('Editing')).toBeInTheDocument())
+    await expectOpenDropped()
+  })
+
+  it('opens no editor on a map whose content comes from a live query', async () => {
+    openMapPageWith('editor')
+    renderOpened(newMapView('flow'), true)
+    await expectOnlyRenderer('renderer-flow')
+    await expectOpenDropped()
+    expect(screen.queryByText('Editing')).toBeNull()
+  })
+
+  it('opens no settings on a map the user may not edit', async () => {
+    openMapPageWith('settings')
+    renderOpened(newMapView('static'), false)
+    await waitFor(() => expect(screen.getByTestId('renderer-static')).toBeInTheDocument())
+    await expectOpenDropped()
+    expect(screen.queryByTestId('settings-open')).toBeNull()
+  })
+})
+
 describe('MapView – what the settings slide-in is handed', () => {
   // Ownership and sharing live on the map-list row, not in the daemon config
   // the canvas renders from. A settings form built from the config alone reads

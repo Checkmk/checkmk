@@ -100,6 +100,11 @@ export function newObjectState(
   }
 }
 
+/** Content comes from a live query, so there is nothing on the map to arrange. */
+export function derivesItsContent(view: MapView | undefined): boolean {
+  return view?.type === 'flow' || view?.type === 'radar' || view?.type === 'foldertree'
+}
+
 /** A geo map that populates itself from the hosts' own coordinates. */
 export function hasAutoSource(view: MapView | undefined): boolean {
   return view?.type === 'worldmap' && !!view.auto_source

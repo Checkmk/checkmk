@@ -172,6 +172,17 @@ describe('HomeView', () => {
 
   it('shows the layout the page was handed', async () => {
     await renderHome([listed('prod')], { layout: 'table' })
-    expect(await screen.findByRole('columnheader', { name: /Name/ })).toBeInTheDocument()
+    expect(await screen.findByRole('columnheader', { name: /Title/ })).toBeInTheDocument()
+  })
+
+  it('offers deleting the selection to a user who may only delete some maps', async () => {
+    await renderHome([listed('prod', { can_delete: true })], {
+      capabilities: fullCapabilities({ may_edit: false, configure: false }),
+      layout: 'table'
+    })
+
+    await userEvent.click(await screen.findByRole('checkbox', { name: 'Select prod' }))
+
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument()
   })
 })

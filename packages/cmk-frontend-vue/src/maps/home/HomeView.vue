@@ -20,7 +20,6 @@ import { computed, onMounted, ref } from 'vue'
 import CreateMapModal from '@/maps/home/components/CreateMapModal.vue'
 import MapBulkActionBar from '@/maps/home/components/MapBulkActionBar.vue'
 import MapBulkDeleteDialog from '@/maps/home/components/MapBulkDeleteDialog.vue'
-import MapBulkEditSlideIn from '@/maps/home/components/MapBulkEditSlideIn.vue'
 import MapCardGrid from '@/maps/home/components/MapCardGrid.vue'
 import MapCloneDialog from '@/maps/home/components/MapCloneDialog.vue'
 import MapListEmptyState from '@/maps/home/components/MapListEmptyState.vue'
@@ -149,9 +148,8 @@ onMounted(async () => {
           v-else
           :maps="displayedMaps"
           :selected-maps="bulk.selectedMaps.value"
-          :all-selected="bulk.allFilteredSelected.value"
           @toggle-select="bulk.toggleMapSelection"
-          @toggle-select-all="bulk.toggleSelectAllFiltered"
+          @toggle-select-group="bulk.setSelected"
           @clone="clone.start"
           @export="exportMap"
           @delete="confirmDelete = $event"
@@ -171,25 +169,13 @@ onMounted(async () => {
   />
 
   <MapBulkActionBar
-    v-if="auth.canCreateMaps.value"
     :count="bulk.selectedCount.value"
     :busy="bulk.bulkBusy.value"
     :select-all-checked="bulk.allFilteredSelected.value"
-    :select-all-label="_t('Select all (%{n} visible)', { n: displayedMaps.length })"
+    :select-all-label="_t('Select all (%{n})', { n: bulk.selectableCount.value })"
     @cancel="bulk.clearSelection"
-    @edit="bulk.openBulkEdit"
     @delete="bulk.openBulkDelete"
     @toggle-select-all="bulk.toggleSelectAllFiltered($event)"
-  />
-
-  <MapBulkEditSlideIn
-    v-if="bulk.showBulkEdit.value"
-    :open="bulk.showBulkEdit.value"
-    :names="bulk.editableSelectedNames.value"
-    :aliases="bulk.editableSelectedAliases.value"
-    :saving="bulk.bulkBusy.value"
-    @cancel="bulk.showBulkEdit.value = false"
-    @apply="bulk.doBulkEdit"
   />
 
   <MapBulkDeleteDialog

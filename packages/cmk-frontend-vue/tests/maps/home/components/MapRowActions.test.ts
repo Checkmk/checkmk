@@ -9,9 +9,10 @@ import { render, screen } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
 import MapRowActions from '@/maps/home/components/MapRowActions.vue'
+import { NavigationService } from '@/maps/services/NavigationService'
 import type { MapRead } from '@/maps/types/api'
 
-import { aListedMap } from '../../support/fixtures'
+import { aListedMap, newMapView } from '../../support/fixtures'
 import {
   aTicket,
   fakeMapsServices,
@@ -24,12 +25,16 @@ function listed(over: Partial<MapRead> = {}): MapRead {
 }
 
 /** Renders the actions for a session with the given capabilities. */
+let loaded: string[] = []
+
 async function renderActions(
   map: MapRead,
   capabilities = fullCapabilities(),
   variant: 'menu' | 'inline' = 'menu'
 ) {
-  const services = fakeMapsServices({}, aTicket({ capabilities }))
+  loaded = []
+  const nav = new NavigationService((url) => loaded.push(url))
+  const services = fakeMapsServices({ nav }, aTicket({ capabilities }))
   await services.auth.init()
   return render(MapRowActions, { ...provideServices(services), props: { map, variant } })
 }
@@ -129,6 +134,44 @@ describe('MapRowActions — in a table row', () => {
     expect(
       screen.queryByRole('button', { name: 'Delete map "Production"' })
     ).not.toBeInTheDocument()
+  })
+
+  it("opens the map's properties and its editor, like the dashboards list", async () => {
+    await renderActions(listed({ can_edit: true }), fullCapabilities(), 'inline')
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Edit properties of map "Production"' })
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Edit map "Production"' }))
+
+    expect(loaded).toEqual([
+      expect.stringContaining('?name=prod&open=settings'),
+      expect.stringContaining('?name=prod&open=editor')
+    ])
+  })
+
+  it('says why a map whose content comes from a live query has no editor', async () => {
+    await renderActions(
+      listed({ can_edit: true, view_type: 'flow', view: newMapView('flow') }),
+      fullCapabilities(),
+      'inline'
+    )
+
+    expect(
+      screen.getByRole('button', { name: 'Edit properties of map "Production"' })
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Edit map "Production"' })).not.toBeInTheDocument()
+    expect(
+      screen.getByTitle(
+        'Edit map is not available: the content of this map comes from a live query.'
+      )
+    ).toBeInTheDocument()
+  })
+
+  it('offers neither properties nor editor for a map this user may not edit', async () => {
+    await renderActions(listed({ can_edit: false }), fullCapabilities(), 'inline')
+
+    expect(screen.queryByRole('button', { name: /Edit/ })).not.toBeInTheDocument()
   })
 
   it('reports which map a button was used on', async () => {

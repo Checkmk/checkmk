@@ -351,7 +351,7 @@ OpenAPI types, not from hand-written copies.
    * - POST
      - ``objects/maps_form/{spec}/actions/{schema,parse}/invoke``
      - ``FormSpec`` schemas for the authoring dialogs and translation of their
-       values (``map_metadata``, ``map_bulk_metadata``, ``flow_view``).
+       values (``map_metadata``, ``flow_view``).
    * - POST
      - ``domain-types/maps_metric_info/actions/resolve/invoke``
      - Metric display semantics for perf data the SPA sends.

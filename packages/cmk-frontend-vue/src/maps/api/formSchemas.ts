@@ -23,7 +23,7 @@ import type { ValidationMessage } from 'cmk-shared-typing/typescript/vue_formspe
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
 /** The dialogs that are rendered from a server-side FormSpec. */
-export type FormSchemaName = 'map_metadata' | 'map_bulk_metadata' | 'flow_view'
+export type FormSchemaName = 'map_metadata' | 'flow_view'
 
 /** A form spec's schema together with its values, as the form wants them. */
 export type FormSchemaAndData = components['schemas']['MapsFormSchemaResponse']

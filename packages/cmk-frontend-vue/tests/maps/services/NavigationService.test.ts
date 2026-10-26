@@ -55,6 +55,15 @@ describe('NavigationService — reading the page URL', () => {
   it('ignores an unknown mode rather than showing an empty admin view', () => {
     expect(open('?mode=nope').state).toMatchObject({ view: 'home', tab: null })
   })
+
+  it('reads what the map list asked the map to open in', () => {
+    expect(open('?name=prod&open=settings').state).toMatchObject({ name: 'prod', open: 'settings' })
+    expect(open('?name=prod&open=editor').state).toMatchObject({ name: 'prod', open: 'editor' })
+  })
+
+  it('ignores an unknown opening', () => {
+    expect(open('?name=prod&open=nope').state).toMatchObject({ name: 'prod', open: null })
+  })
 })
 
 describe('NavigationService — moving around', () => {

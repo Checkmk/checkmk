@@ -591,23 +591,5 @@ class MapBulkDeleteResult(BaseModel):
     failed: list[MapBulkDeleteFailure]
 
 
-class MapBulkEdit(BaseModel):
-    names: Annotated[list[_MapNameStr], Field(min_length=1, max_length=500)]
-    # Untyped dict on purpose: the API layer first runs the FormSpec wire
-    # conversions (rotation cascading → int, click_action bool → literal)
-    # and then validates the resulting subset against ``MapUpdate``.
-    updates: dict[str, object]
-
-
-class MapBulkEditFailure(BaseModel):
-    name: str
-    reason: str
-
-
-class MapBulkEditResult(BaseModel):
-    updated: list[str]
-    failed: list[MapBulkEditFailure]
-
-
 class MapBulkExport(BaseModel):
     names: Annotated[list[_MapNameStr], Field(min_length=1, max_length=500)]

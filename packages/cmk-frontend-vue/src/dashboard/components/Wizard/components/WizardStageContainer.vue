@@ -7,20 +7,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 const props = withDefaults(
   defineProps<{
     overflowHidden?: boolean
-    size?: 'medium' | 'large'
   }>(),
   {
-    overflowHidden: false,
-    size: 'medium'
+    overflowHidden: false
   }
 )
 </script>
 
 <template>
-  <div
-    class="db-wizard-stage-container__steps-container"
-    :class="{ 'db-wizard-stage-container--size-large': props.size === 'large' }"
-  >
+  <div class="db-wizard-stage-container__steps-container">
     <div
       class="db-wizard-stage-container__steps-inner-container"
       :class="{ 'db-wizard-stage-container--overflow-hidden': props.overflowHidden }"
@@ -32,18 +27,17 @@ const props = withDefaults(
 
 <style scoped>
 .db-wizard-stage-container__steps-container {
-  flex: 2;
-  height: 100vh;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
   padding: var(--dimension-10);
+  box-sizing: border-box;
   background-color: var(--ux-theme-1);
-}
-
-.db-wizard-stage-container--size-large {
-  flex: 3;
 }
 
 .db-wizard-stage-container__steps-inner-container {
   height: 95vh;
+  max-height: 100%;
   overflow-y: auto;
   position: relative;
 }

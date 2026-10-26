@@ -25,6 +25,5 @@ conditions defined in the file COPYING, which is part of this source code packag
   width: 100%;
   flex: 1;
   height: 100%;
-  column-gap: var(--spacing);
 }
 </style>

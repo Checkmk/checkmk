@@ -43,9 +43,9 @@ def test_win_eventlog_skip_duplicated() -> None:
 
 def test_win_eventlog_logfiles() -> None:
     conf = {
-        "logfiles": [
-            ("Application", "warn", True),
-            ("System", "crit", False),
+        "event_logs": [
+            {"log": ("named", "Application"), "severity": "warn", "context": True},
+            {"log": ("named", "System"), "severity": "crit", "context": False},
         ],
     }
     result = list(get_win_eventlog_windows_config(conf))
@@ -64,7 +64,7 @@ def test_win_eventlog_logfiles() -> None:
 def test_win_eventlog_filter_ids() -> None:
     conf = {
         "filter_ids": [
-            ("Application", ["100", "200"], ["300"]),
+            {"log": ("named", "Application"), "include": ["100", "200"], "exclude": ["300"]},
         ],
     }
     result = list(get_win_eventlog_windows_config(conf))
@@ -80,7 +80,7 @@ def test_win_eventlog_filter_ids() -> None:
 def test_win_eventlog_filter_sources() -> None:
     conf = {
         "filter_sources": [
-            ("System", ["src1"], ["src2", "src3"]),
+            {"log": ("named", "System"), "include": ["src1"], "exclude": ["src2", "src3"]},
         ],
     }
     result = list(get_win_eventlog_windows_config(conf))
@@ -98,7 +98,7 @@ def test_win_eventlog_filter_users() -> None:
         get_win_eventlog_windows_config(
             {
                 "filter_users": [
-                    ("Security", ["admin"], []),
+                    {"log": ("named", "Security"), "include": ["admin"], "exclude": []},
                 ],
             }
         )
@@ -113,8 +113,8 @@ def test_win_eventlog_filter_users() -> None:
 
 
 def test_win_eventlog_filter_without_restriction() -> None:
-    # The rule set stores an empty string for "include all" or "exclude none".
-    conf = {"filter_ids": [("*", "", "")]}
+    # An empty list includes all or excludes no messages.
+    conf = {"filter_ids": [{"log": ("all", None), "include": [], "exclude": []}]}
     result = list(get_win_eventlog_windows_config(conf))
     assert result == [
         WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
@@ -141,8 +141,8 @@ def test_win_eventlog_cluster_mapping() -> None:
 def test_win_eventlog_text_pattern() -> None:
     conf = {
         "text_pattern": [
-            ("OK", ".*success.*"),
-            ("CRIT", ".*error.*"),
+            {"log": ("named", "OK"), "pattern": ".*success.*"},
+            {"log": ("named", "CRIT"), "pattern": ".*error.*"},
         ],
     }
     result = list(get_win_eventlog_windows_config(conf))
@@ -160,12 +160,12 @@ def test_win_eventlog_full_config() -> None:
         "sendall": True,
         "vista_api": True,
         "skip_duplicated": False,
-        "logfiles": [("Application", "warn", True)],
-        "filter_ids": [("Application", ["100"], ["200"])],
-        "filter_sources": [("System", ["src1"], [])],
-        "filter_users": [("Security", [], ["guest"])],
+        "event_logs": [{"log": ("named", "Application"), "severity": "warn", "context": True}],
+        "filter_ids": [{"log": ("named", "Application"), "include": ["100"], "exclude": ["200"]}],
+        "filter_sources": [{"log": ("named", "System"), "include": ["src1"], "exclude": []}],
+        "filter_users": [{"log": ("named", "Security"), "include": [], "exclude": ["guest"]}],
         "cluster_mapping": [{"name": "mycluster", "ips": ["1.2.3.4"]}],
-        "text_pattern": [("WARN", ".*warning.*")],
+        "text_pattern": [{"log": ("named", "WARN"), "pattern": ".*warning.*"}],
     }
     result = list(get_win_eventlog_windows_config(conf))
     expected = [
@@ -198,3 +198,33 @@ def test_win_eventlog_full_config() -> None:
         ),
     ]
     assert result == expected
+
+
+def test_win_eventlog_all_event_logs() -> None:
+    conf = {"event_logs": [{"log": ("all", None), "severity": "off", "context": False}]}
+    result = list(get_win_eventlog_windows_config(conf))
+    assert result == [
+        WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
+        WindowsConfigEntry(path=["logwatch", "logfile"], content=[{"*": "off nocontext"}]),
+    ]
+
+
+def test_win_eventlog_empty_filters_are_skipped() -> None:
+    conf = {
+        "event_logs": [],
+        "filter_ids": [],
+        "filter_sources": [],
+        "filter_users": [],
+        "text_pattern": [],
+        "sendall": False,
+        "skip_duplicated": False,
+        "cluster_mapping": [],
+        "vista_api": False,
+    }
+    result = list(get_win_eventlog_windows_config(conf))
+    assert result == [
+        WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
+        WindowsConfigEntry(path=["logwatch", "vista_api"], content=False),
+        WindowsConfigEntry(path=["logwatch", "skip_duplicated"], content=False),
+        WindowsConfigEntry(path=["logwatch", "logfile"], content=[]),
+    ]

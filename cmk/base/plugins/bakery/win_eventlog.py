@@ -10,8 +10,24 @@ from pydantic import BaseModel
 
 from .bakery_api.v1 import register, WindowsConfigEntry, WindowsConfigGenerator
 
-# The rule set stores an empty string for "include all" or "exclude none".
-_Names = Sequence[str] | Literal[""]
+_Log = tuple[Literal["all"], None] | tuple[Literal["named"], str]
+
+
+class _EventLog(BaseModel):
+    log: _Log
+    severity: Literal["warn", "crit", "all", "off"]
+    context: bool
+
+
+class _Filter(BaseModel):
+    log: _Log
+    include: Sequence[str]
+    exclude: Sequence[str]
+
+
+class _TextPattern(BaseModel):
+    log: _Log
+    pattern: str
 
 
 class _Cluster(BaseModel):
@@ -20,14 +36,14 @@ class _Cluster(BaseModel):
 
 
 class _Config(BaseModel):
-    logfiles: Sequence[tuple[str, str, bool]] | None = None
-    filter_ids: Sequence[tuple[str, _Names, _Names]] | None = None
-    filter_sources: Sequence[tuple[str, _Names, _Names]] | None = None
-    filter_users: Sequence[tuple[str, _Names, _Names]] | None = None
-    text_pattern: Sequence[tuple[str, str]] | None = None
+    event_logs: Sequence[_EventLog] | None = None
+    filter_ids: Sequence[_Filter] = ()
+    filter_sources: Sequence[_Filter] = ()
+    filter_users: Sequence[_Filter] = ()
+    text_pattern: Sequence[_TextPattern] = ()
     sendall: bool = False
     skip_duplicated: bool | None = None
-    cluster_mapping: Sequence[_Cluster] | None = None
+    cluster_mapping: Sequence[_Cluster] = ()
     vista_api: bool | None = None
 
 
@@ -35,7 +51,7 @@ def get_win_eventlog_windows_config(conf: Mapping[str, object]) -> WindowsConfig
     config = _Config.model_validate(conf)
     yield from _get_win_eventlog_config(config)
     yield from _get_win_eventlog_filters(config)
-    if config.cluster_mapping is not None:
+    if config.cluster_mapping:
         clusters = {}
         for cluster_config in config.cluster_mapping:
             cluster_name = cluster_config.name
@@ -43,13 +59,17 @@ def get_win_eventlog_windows_config(conf: Mapping[str, object]) -> WindowsConfig
             clusters[cluster_name] = cluster_ips
 
         yield WindowsConfigEntry(path=["logwatch", "clusters"], content=clusters)
-    if config.text_pattern is not None:
+    if config.text_pattern:
         entries = []
-        for name, value in config.text_pattern:
-            key = name.lower()
-            entries.append(f"{key}:{value}")
+        for pattern in config.text_pattern:
+            key = _log_key(pattern.log)
+            entries.append(f"{key}:{pattern.pattern}")
 
         yield WindowsConfigEntry(path=["logwatch", "text_pattern"], content=entries)
+
+
+def _log_key(log: _Log) -> str:
+    return "*" if log[1] is None else log[1].lower()
 
 
 def _get_win_eventlog_config(config: _Config) -> WindowsConfigGenerator:
@@ -63,11 +83,14 @@ def _get_win_eventlog_config(config: _Config) -> WindowsConfigGenerator:
             path=["logwatch", "skip_duplicated"], content=config.skip_duplicated
         )
 
-    if config.logfiles is not None:
+    # An empty list is meaningful here: it replaces the default event logs of the agent.
+    if config.event_logs is not None:
         entries = []
-        for name, severity, context in config.logfiles:
-            key = name.lower()
-            value = "{} {}".format(severity, "context" if context else "nocontext")
+        for event_log in config.event_logs:
+            key = _log_key(event_log.log)
+            value = "{} {}".format(
+                event_log.severity, "context" if event_log.context else "nocontext"
+            )
 
             entries.append({key: value})
 
@@ -75,29 +98,29 @@ def _get_win_eventlog_config(config: _Config) -> WindowsConfigGenerator:
 
 
 def _get_win_eventlog_filters(config: _Config) -> WindowsConfigGenerator:
-    if config.filter_ids is not None:
+    if config.filter_ids:
         entries = []
-        for name, includes, excludes in config.filter_ids:
-            key = name.lower()
-            value = f"{';'.join(includes)};;{';'.join(excludes)}"
+        for filter_ in config.filter_ids:
+            key = _log_key(filter_.log)
+            value = f"{';'.join(filter_.include)};;{';'.join(filter_.exclude)}"
             entries.append({key: value})
 
         yield WindowsConfigEntry(path=["logwatch", "filter_ids"], content=entries)
 
-    if config.filter_sources is not None:
+    if config.filter_sources:
         entries = []
-        for name, includes, excludes in config.filter_sources:
-            key = name.lower()
-            value = f"{';'.join(includes)};;{';'.join(excludes)}"
+        for filter_ in config.filter_sources:
+            key = _log_key(filter_.log)
+            value = f"{';'.join(filter_.include)};;{';'.join(filter_.exclude)}"
             entries.append({key: value})
 
         yield WindowsConfigEntry(path=["logwatch", "filter_sources"], content=entries)
 
-    if config.filter_users is not None:
+    if config.filter_users:
         entries = []
-        for name, includes, excludes in config.filter_users:
-            key = name.lower()
-            value = f"{';'.join(includes)};;{';'.join(excludes)}"
+        for filter_ in config.filter_users:
+            key = _log_key(filter_.log)
+            value = f"{';'.join(filter_.include)};;{';'.join(filter_.exclude)}"
             entries.append({key: value})
 
         yield WindowsConfigEntry(path=["logwatch", "filter_users"], content=entries)

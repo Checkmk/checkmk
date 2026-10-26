@@ -1068,7 +1068,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('win_eventlog', [])
 
 agent_config['win_eventlog'] = [
-{'id': '8e05d650-58d1-4d96-a112-a74d69b5c58d', 'value': {'logfiles': [], 'sendall': False, 'skip_duplicated': False}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '8e05d650-58d1-4d96-a112-a74d69b5c58d', 'value': {'event_logs': [], 'filter_ids': [], 'filter_sources': [], 'filter_users': [], 'text_pattern': [], 'sendall': False, 'skip_duplicated': False, 'cluster_mapping': [], 'vista_api': False}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['win_eventlog']
 
 

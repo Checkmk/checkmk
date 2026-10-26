@@ -12,7 +12,6 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Final, Literal, NamedTuple, TypedDict
 
-import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
@@ -434,6 +433,7 @@ def run_checking(
     secrets_config_site: StoredSecrets,
     trusted_ca_file: Path,
     fake_dns: HostAddress | None,
+    debug: bool,
 ) -> ServiceState:
     file_cache_options = handle_fetcher_options(options)
     try:
@@ -447,7 +447,7 @@ def run_checking(
         label_manager,
         omd_root=cmk.utils.paths.omd_root,
         var_dir=cmk.utils.paths.var_dir,
-        debug=cmk.ccc.debug.enabled(),
+        debug=debug,
     )
 
     # handle adhoc-check

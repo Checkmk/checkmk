@@ -117,6 +117,7 @@ def _mode_check(
         ),
         fake_dns=fake_dns,
         trusted_ca_file=cmk.utils.paths.trusted_ca_file,
+        debug=global_options.debug,
     )
     return state_exit_code(state)
 

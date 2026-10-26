@@ -18,7 +18,6 @@ py_library(
         "//cmk/base/errorhandling",
         "//cmk/utils",
         "//packages/cmk-ccc:cpu-tracking",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:version",

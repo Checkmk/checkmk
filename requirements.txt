@@ -4673,6 +4673,10 @@ pyyaml-ft==8.0.0 \
     --hash=sha256:de04cfe9439565e32f178106c51dd6ca61afaa2907d143835d501d84703d3793 \
     --hash=sha256:e64fa5f3e2ceb790d50602b2fd4ec37abbd760a8c778e46354df647e7c5a4ebb
     # via libcst
+qemu-qmp==0.0.6 \
+    --hash=sha256:5d7c5af0e9de427696e3bf72e333965c3a697929f77f6b7ddc30c989fc7b539b \
+    --hash=sha256:a3c25d871fab549122b2340810de1f99481002c942a2132476b062aacdbf6e92
+    # via -r tests/dev-requirements.in
 reactivex==4.1.0 \
     --hash=sha256:485750ec8d9b34bcc8ff4318971d234dc4f595058a1b4435a74aefef4b2bc9bd \
     --hash=sha256:c7499e3c802bccaa20839b3e17355a7d939573fded3f38ba3d4796278a169a3d

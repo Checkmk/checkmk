@@ -35,7 +35,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
 
-const { _t, _tn } = usei18n()
+const { _t } = usei18n()
 
 const { loading, query, errorMessage, matchingUploaded, matchingAll, uploadFiles } =
   useImageLibrary()
@@ -56,13 +56,6 @@ const tiles = computed(() =>
     monochrome: image.name.endsWith('.svg')
   }))
 )
-
-const countLabel = computed(() => {
-  const shown = tiles.value.length
-  return isImageKind.value
-    ? _tn('%{n} image', '%{n} images', shown, { n: shown })
-    : _tn('%{n} icon', '%{n} icons', shown, { n: shown })
-})
 
 function select(name: string) {
   emit('update:modelValue', name)
@@ -138,12 +131,10 @@ function select(name: string) {
             class="maps-image-picker__image"
             :class="{ 'maps-image-picker__image--monochrome': tile.monochrome }"
           />
-          <span class="maps-image-picker__tile-name">{{ tile.name }}</span>
         </button>
       </div>
 
       <div class="maps-image-picker__footer">
-        <span class="maps-image-picker__count">{{ countLabel }}</span>
         <ImageUploadButton :label="uploadLabel" variant="text" @change="uploadFiles" />
       </div>
       <p v-if="errorMessage" class="maps-image-picker__error">{{ errorMessage }}</p>
@@ -184,6 +175,7 @@ function select(name: string) {
   width: 100%;
   padding: var(--dimension-4) var(--dimension-5);
   font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-default);
   line-height: 16px;
   text-align: left;
   background: var(--default-form-element-bg-color);
@@ -228,21 +220,26 @@ function select(name: string) {
   text-align: center;
 }
 
+/* Icons only: the name is in each tile's tooltip, and a caption this narrow
+   was never more than its first three letters. */
 .maps-image-picker__grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--dimension-3);
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: var(--dimension-2);
   max-height: 208px;
   padding: var(--dimension-4);
   overflow-y: auto;
 }
 
+/* Checkmk styles every button of the page; a tile is a plain image. */
 .maps-image-picker__tile {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--dimension-3);
-  padding: var(--dimension-3);
+  justify-content: center;
+  margin: 0;
+  padding: var(--dimension-2);
+  background: none;
+  border: none;
   border-radius: var(--border-radius);
 }
 
@@ -257,8 +254,8 @@ function select(name: string) {
 
 .maps-image-picker__image {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
 }
 
@@ -268,29 +265,12 @@ function select(name: string) {
   filter: var(--icon-filter-invert);
 }
 
-.maps-image-picker__tile-name {
-  width: 100%;
-  overflow: hidden;
-  font-family: monospace;
-  font-size: var(--font-size-small);
-  line-height: 1.25;
-  color: var(--font-color-dimmed);
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .maps-image-picker__footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: var(--dimension-4);
   border-top: 1px solid var(--default-border-color);
-}
-
-.maps-image-picker__count {
-  font-size: var(--font-size-small);
-  color: var(--font-color-dimmed);
 }
 
 .maps-image-picker__error {

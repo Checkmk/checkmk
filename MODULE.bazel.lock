@@ -8294,6 +8294,10 @@
             "https://files.pythonhosted.org/packages/f4/f4/a4541072bb9422c8a883ab55255f918fa378ecf083f5b85e87fc2b4eda1b/pyyaml-6.0.3-cp314-cp314-win_arm64.whl": "sha256:93dda82c9c22deb0a405ea4dc5f2d0cda384168e466364dec6255b293923b2f3",
             "https://files.pythonhosted.org/packages/f9/11/ba845c23988798f40e52ba45f34849aa8a1f2d4af4b798588010792ebad6/pyyaml-6.0.3-cp313-cp313-musllinux_1_2_aarch64.whl": "sha256:f7057c9a337546edc7973c0d3ba84ddcdf0daa14533c2065749c9075001090e6"
           },
+          "qemu-qmp": {
+            "https://files.pythonhosted.org/packages/47/8e/0d41329b82879ee1d4b522566c6d06368119650f8143168f3c3edf2a8afe/qemu_qmp-0.0.6-py3-none-any.whl": "sha256:5d7c5af0e9de427696e3bf72e333965c3a697929f77f6b7ddc30c989fc7b539b",
+            "https://files.pythonhosted.org/packages/ea/20/f3fa6bfbcd570a09d5ec65a5398be9251d2bf07398874d2a2c97a05cbdeb/qemu_qmp-0.0.6.tar.gz": "sha256:a3c25d871fab549122b2340810de1f99481002c942a2132476b062aacdbf6e92"
+          },
           "reactivex": {
             "https://files.pythonhosted.org/packages/0a/10/86e89009e2c464b80990b203fd9e0be61b5d27ee47039344568f8f8aa45a/reactivex-6.1.0.tar.gz": "sha256:09c856a3d727a08331e891d4af360b8a0069f34391957f21e417e62ffe81518c",
             "https://files.pythonhosted.org/packages/d3/30/c32480116648235d0f29f932cdf2557b0c5ec0a11abfc338f1948d0510ab/reactivex-6.1.0-py3-none-any.whl": "sha256:9f3519afb08b122b2e2130b8811319f97cd4e2e432cab4a321cae0b3ee516a56"

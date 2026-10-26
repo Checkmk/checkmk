@@ -42,6 +42,7 @@ pytest-playwright # used for the GUI system tests
 pytest-repeat # used to rerun system tests
 pytest-rerunfailures # used to rerun flaky tests
 python-lsp-server  # Note: There are extras, but the default seems sensible.
+qemu.qmp  # used by the Windows agent's QEMU test VMs (bazel/tools/windows_vm)
 requirements-parser # used to parse requirements.txt file for testing
 responses  # used for unit tests
 ruff

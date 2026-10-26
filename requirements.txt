@@ -5377,6 +5377,10 @@ pyyaml==6.0.3 \
     #   sarif-tools
     #   sphinx-autoapi
     #   vcrpy
+qemu-qmp==0.0.6 \
+    --hash=sha256:5d7c5af0e9de427696e3bf72e333965c3a697929f77f6b7ddc30c989fc7b539b \
+    --hash=sha256:a3c25d871fab549122b2340810de1f99481002c942a2132476b062aacdbf6e92
+    # via -r tests/dev-requirements.in
 reactivex==6.1.0 \
     --hash=sha256:09c856a3d727a08331e891d4af360b8a0069f34391957f21e417e62ffe81518c \
     --hash=sha256:9f3519afb08b122b2e2130b8811319f97cd4e2e432cab4a321cae0b3ee516a56

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <!--
-Adding an object to a map: pick a type, say what it shows, then place it.
+Adding an object to a map: pick a type, fill in what it shows, then place it.
 
 While placing, the panel shrinks to its header: the draft is already described,
 and the fields would otherwise cover the corner of the canvas the object is
@@ -78,7 +78,9 @@ watch(
       <div class="maps-edit-panel__heading">
         <p class="maps-edit-panel__title">{{ _t('Add object') }}</p>
         <p class="maps-edit-panel__hint" :class="{ 'maps-edit-panel__hint--placing': placing }">
-          {{ placing ? _t('Click on map to place…') : _t('Say what it shows, then place it') }}
+          {{
+            placing ? _t('Click on map to place…') : _t('Choose a type, then place it on the map')
+          }}
         </p>
       </div>
       <CmkIconButton

@@ -510,6 +510,7 @@ def compute_availability_groups(
     what: AVObjectType,  # noqa: ARG001
     av_data: AVData,
     avoptions: AVOptions,
+    group_titles: Mapping[str, str],
 ) -> AVGroups:
     grouping = avoptions["grouping"]
     if not grouping:
@@ -523,12 +524,6 @@ def compute_availability_groups(
     all_group_ids = get_av_groups(av_data, avoptions)
 
     # 2. Compute names for the groups and sort according to these names
-    group_titles: dict[str, str] = {}
-    if grouping != "host":
-        # grouping is "host_groups" or "service_groups"; map to the group type.
-        group_type: Literal["host", "service"] = "host" if grouping == "host_groups" else "service"
-        group_titles = dict(all_groups(group_type))
-
     titled_groups: list[tuple[str, AVGroupKey]] = []
     for group_id in all_group_ids:
         if grouping == "host":
@@ -557,6 +552,15 @@ def compute_availability_groups(
         availability_tables.append((title, group_table))
 
     return availability_tables
+
+
+def availability_group_titles(
+    grouping: Literal["host", "host_groups", "service_groups"] | None,
+) -> dict[str, str]:
+    """The titles of the groups compute_availability_groups() groups by, keyed by group name"""
+    if grouping is None or grouping == "host":
+        return {}
+    return dict(all_groups("host" if grouping == "host_groups" else "service"))
 
 
 def object_title(what: AVObjectType, av_entry: AVEntry) -> str:

@@ -5,7 +5,11 @@
 
 import time
 
-from cmk.gui.availability.computation import compute_availability_groups, object_title
+from cmk.gui.availability.computation import (
+    availability_group_titles,
+    compute_availability_groups,
+    object_title,
+)
 from cmk.gui.availability.layout import (
     get_object_cells,
     layout_availability_table,
@@ -113,7 +117,9 @@ def _output_availability_csv(
             table.cell(title, text)
 
     _av_output_set_content_disposition("Checkmk-Availability")
-    availability_tables = compute_availability_groups(what, av_data, avoptions)
+    availability_tables = compute_availability_groups(
+        what, av_data, avoptions, availability_group_titles(avoptions["grouping"])
+    )
     with table_element("av_items", output_format="csv", limit=table_row_limit) as table:
         for group_title, availability_table in availability_tables:
             av_table = layout_availability_table(what, group_title, availability_table, avoptions)

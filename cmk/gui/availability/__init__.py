@@ -19,6 +19,7 @@ from .annotations import (
 )
 from .bi import get_bi_availability
 from .computation import (
+    availability_group_titles,
     compute_availability,
     compute_availability_groups,
     get_host_service_availability_rawdata,
@@ -57,6 +58,7 @@ __all__ = [
     "AVRawData",
     "AVSpan",
     "SiteHost",
+    "availability_group_titles",
     "compute_availability",
     "compute_availability_groups",
     "get_annotation_date_render_function",

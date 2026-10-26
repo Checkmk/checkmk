@@ -14,6 +14,7 @@ from cmk.gui import sites
 from cmk.gui.availability.annotations import load_annotations
 from cmk.gui.availability.bi import get_bi_availability
 from cmk.gui.availability.computation import (
+    availability_group_titles,
     compute_availability,
     compute_availability_groups,
     get_host_service_availability_rawdata,
@@ -562,7 +563,9 @@ def do_render_availability(
     *,
     table_row_limit: int,
 ) -> None:
-    availability_tables = compute_availability_groups(what, av_data, avoptions)
+    availability_tables = compute_availability_groups(
+        what, av_data, avoptions, availability_group_titles(avoptions["grouping"])
+    )
     if av_mode == "timeline":
         render_availability_timelines(
             what, availability_tables, avoptions, table_row_limit=table_row_limit

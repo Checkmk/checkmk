@@ -13,12 +13,9 @@ from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 from cmk.web.utils.permission_verification import BasePerm
 
 # The REST endpoints used by the MCP tools. May diverge, but for now they are simple enough.
+# The Livestatus query endpoint has no community edition, so the pro unit tests check it.
 _READ_ONLY_TOOL_ENDPOINTS = [
     ("checkmk_version", "get", "/version"),
-    ("get_hosts", "post", "/domain-types/host/collections/all"),
-    ("get_services", "post", "/domain-types/service/collections/all"),
-    ("get_monitoring_overview", "post", "/domain-types/host/collections/all"),
-    ("get_monitoring_overview", "post", "/domain-types/service/collections/all"),
     ("get_comments", "get", "/domain-types/comment/collections/{collection_name}"),
     ("get_downtimes", "get", "/domain-types/downtime/collections/all"),
     ("get_ec_events", "get", "/domain-types/event_console/collections/all"),
@@ -28,7 +25,6 @@ _READ_ONLY_TOOL_ENDPOINTS = [
     ("get_metric_history", "post", "/domain-types/metric/actions/get/invoke"),
     ("get_metric_history", "post", "/domain-types/graph/actions/translate_metric_names/invoke"),
     ("get_config_changes", "get", "/domain-types/audit_log/collections/all"),
-    ("get_inventory", "post", "/domain-types/host/collections/all"),
     ("get_inventory", "get", "/domain-types/inventory/collections/all"),
     ("read_setup_configuration", "get", "/objects/host_config/{host_name}"),
     ("read_setup_configuration", "get", "/objects/folder_config/{folder}"),

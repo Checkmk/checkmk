@@ -9,7 +9,7 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import type { GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
-import { useTimeRange } from '@/dashboard/components/TimeRange/useTimeRange'
+import { useTimeRangeSource } from '@/dashboard/components/TimeRange/useTimeRangeSource'
 import {
   type UseGraphRenderOptions,
   useGraphRenderOptions
@@ -35,6 +35,7 @@ export interface UseCustomGraph
   extends UseValidate, UseGraphRenderOptions, UseWidgetVisualizationOptions {
   customGraph: Ref<string | null>
   customGraphValidationErrors: Ref<string[]>
+  followDashboardTimeRange: Ref<boolean>
   timeRange: Ref<GraphTimerange>
 
   widgetProps: Ref<WidgetProps | null>
@@ -54,9 +55,11 @@ export const useCustomGraph = async (
   const customGraph = ref<string | null>(currentContent?.custom_graph || null)
   const customGraphValidationErrors = ref<string[]>([])
 
-  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
-    currentContent?.timerange ?? null
-  )
+  const {
+    followDashboard: followDashboardTimeRange,
+    timeRange,
+    widgetProps: generateTimeRangeSpec
+  } = useTimeRangeSource(currentContent?.timerange ?? null)
 
   const {
     title,
@@ -82,7 +85,6 @@ export const useCustomGraph = async (
     graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
-    dontFollowTimerange,
     graphRenderOptions
   } = useGraphRenderOptions(currentContent?.graph_render_options, currentContent === null)
 
@@ -147,7 +149,7 @@ export const useCustomGraph = async (
   })
 
   watch(
-    [customGraph, timeRange, widgetGeneralSettings, graphRenderOptions],
+    [customGraph, followDashboardTimeRange, timeRange, widgetGeneralSettings, graphRenderOptions],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -159,6 +161,7 @@ export const useCustomGraph = async (
   return {
     customGraph,
     customGraphValidationErrors,
+    followDashboardTimeRange,
     timeRange,
 
     title,
@@ -182,7 +185,6 @@ export const useCustomGraph = async (
     graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
-    dontFollowTimerange,
 
     widgetProps: widgetProps as Ref<WidgetProps>,
     getSubmitProps: _computeWidgetProps

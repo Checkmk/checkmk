@@ -11,22 +11,20 @@ from pydantic_core import ErrorDetails
 
 from cmk.gui.dashboard.event_bar_chart_window import exceeds_event_bar_chart_span
 from cmk.gui.dashboard.type_defs import (
-    DashboardWindow,
     DashletConfig,
     EventBarChartDashletConfig,
     EventBarChartRenderBarChart,
     EventBarChartRenderMode,
     EventBarChartRenderSimpleNumber,
-    FixedWindow,
 )
 from cmk.gui.fields.attributes import MappingConverter
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.openapi.framework.model.common_fields import timerange_from_internal, TimerangeModel
+from cmk.gui.openapi.framework.model.common_fields import TimerangeModel
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 from cmk.gui.valuespec import Timerange
 
-from ._base import BaseWidgetContent
+from ._base import BaseWidgetContent, time_range_from_internal, time_range_to_internal
 
 type TimeResolution = Literal["hour", "day"]
 type TimelineWindow = Literal["dashboard"] | TimerangeModel
@@ -43,18 +41,6 @@ TIMELINE_SPAN_ERROR = "The time range must not span more than two years."
 _WINDOW_DESCRIPTION = "The time range to count over, or `dashboard` to follow the dashboard."
 
 
-def _window_to_internal(window: TimelineWindow) -> DashboardWindow | FixedWindow:
-    if window == "dashboard":
-        return DashboardWindow(type="dashboard")
-    return FixedWindow(type="range", window=window.to_internal())
-
-
-def _window_from_internal(window: DashboardWindow | FixedWindow) -> TimelineWindow:
-    if window["type"] == "dashboard":
-        return "dashboard"
-    return timerange_from_internal(window["window"])
-
-
 @api_model
 class BarChartRenderMode:
     type: Literal["bar_chart"] = api_field(description="Renders a bar chart.")
@@ -67,7 +53,7 @@ class BarChartRenderMode:
     def from_internal(cls, config: EventBarChartRenderBarChart) -> Self:
         return cls(
             type="bar_chart",
-            time_range=_window_from_internal(config["time_range"]),
+            time_range=time_range_from_internal(config["time_range"]),
             time_resolution=_RESOLUTION_CONVERTER.from_checkmk(config["time_resolution"]),
         )
 
@@ -75,7 +61,7 @@ class BarChartRenderMode:
         return (
             "bar_chart",
             EventBarChartRenderBarChart(
-                time_range=_window_to_internal(self.time_range),
+                time_range=time_range_to_internal(self.time_range),
                 time_resolution=_RESOLUTION_CONVERTER.to_checkmk(self.time_resolution),
             ),
         )
@@ -90,7 +76,7 @@ class SimpleNumberRenderMode:
         return (
             "simple_number",
             EventBarChartRenderSimpleNumber(
-                time_range=_window_to_internal(self.time_range),
+                time_range=time_range_to_internal(self.time_range),
             ),
         )
 
@@ -110,7 +96,7 @@ def _render_mode_from_internal(
         case ("simple_number", config):
             return SimpleNumberRenderMode(
                 type="simple_number",
-                time_range=_window_from_internal(config["time_range"]),
+                time_range=time_range_from_internal(config["time_range"]),
             )
         case x:
             # TODO: change to `assert_never` once mypy can handle it correctly

@@ -87,8 +87,17 @@ class DashletConfig(_DashletConfigMandatory, total=False):
     show_title: bool | Literal["transparent"]
 
 
+class FixedWindow(TypedDict):
+    type: Literal["range"]
+    window: TimerangeValue
+
+
+class DashboardWindow(TypedDict):
+    type: Literal["dashboard"]
+
+
 class ABCGraphDashletConfig(DashletConfig):
-    timerange: TimerangeValue
+    timerange: DashboardWindow | FixedWindow
     graph_render_options: GraphRenderOptionsVS
 
 
@@ -122,15 +131,6 @@ class EmbeddedCustomGraphDashletConfig(ABCGraphDashletConfig):
 
 class MetricCurrentValue(TypedDict):
     type: Literal["current"]
-
-
-class FixedWindow(TypedDict):
-    type: Literal["range"]
-    window: TimerangeValue
-
-
-class DashboardWindow(TypedDict):
-    type: Literal["dashboard"]
 
 
 class MetricFixedWindow(FixedWindow):
@@ -177,7 +177,7 @@ class SingleGraphDashletConfig(SingleMetricDashletConfig):
 
 class AverageScatterplotDashletConfig(DashletConfig):
     metric: str
-    time_range: TimerangeValue
+    time_range: DashboardWindow | FixedWindow
     metric_color: str | None
     avg_color: str | None
     median_color: str | None

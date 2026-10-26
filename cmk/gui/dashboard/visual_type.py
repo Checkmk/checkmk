@@ -45,6 +45,7 @@ from .type_defs import (
     ABCGraphDashletConfig,
     DashboardConfig,
     DashboardName,
+    DashboardWindow,
     EmbeddedViewDashletConfig,
     ViewDashletConfig,
 )
@@ -182,8 +183,8 @@ class VisualTypeDashboards(VisualType):
             dashlet_spec = cast(ABCGraphDashletConfig, dashlet_spec)
 
             # The "add to visual" popup does not provide a timerange information,
-            # but this is not an optional value. Set it to 25h initially.
-            dashlet_spec.setdefault("timerange", "25h")
+            # but this is not an optional value. Follow the dashboard initially.
+            dashlet_spec.setdefault("timerange", DashboardWindow(type="dashboard"))
 
         add_widget(dashlet_spec, dashboard)
 

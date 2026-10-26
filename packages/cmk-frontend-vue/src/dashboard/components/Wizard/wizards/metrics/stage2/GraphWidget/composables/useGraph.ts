@@ -8,7 +8,7 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import type { GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
-import { useTimeRange } from '@/dashboard/components/TimeRange/useTimeRange'
+import { useTimeRangeSource } from '@/dashboard/components/TimeRange/useTimeRangeSource'
 import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
@@ -32,6 +32,7 @@ const DEFAULT_COLOR_SCHEMAS = ['default_metric', 'default_theme']
 const CONTENT_TYPE = 'single_timeseries'
 export interface UseGraph
   extends UseWidgetHandler, UseGraphRenderOptions, UseWidgetVisualizationOptions {
+  followDashboardTimeRange: Ref<boolean>
   timeRange: Ref<GraphTimerange>
   color: Ref<string>
 }
@@ -46,9 +47,11 @@ export const useGraph = async (
   const currentContent =
     currentSpec?.content?.type === CONTENT_TYPE ? (currentSpec?.content as GraphContent) : null
 
-  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
-    currentContent?.timerange ?? null
-  )
+  const {
+    followDashboard: followDashboardTimeRange,
+    timeRange,
+    widgetProps: generateTimeRangeSpec
+  } = useTimeRangeSource(currentContent?.timerange ?? null)
 
   const {
     title,
@@ -74,7 +77,6 @@ export const useGraph = async (
     graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
-    dontFollowTimerange,
     graphRenderOptions
   } = useGraphRenderOptions(currentContent?.graph_render_options, currentContent === null)
 
@@ -120,7 +122,7 @@ export const useGraph = async (
   }
 
   watch(
-    [timeRange, widgetGeneralSettings, graphRenderOptions, color],
+    [followDashboardTimeRange, timeRange, widgetGeneralSettings, graphRenderOptions, color],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -130,6 +132,7 @@ export const useGraph = async (
   await _updateWidgetProps()
 
   return {
+    followDashboardTimeRange,
     timeRange,
 
     title,
@@ -154,7 +157,6 @@ export const useGraph = async (
     graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
-    dontFollowTimerange,
 
     widgetProps: widgetProps as Ref<WidgetProps>,
     getSubmitProps: _computeWidgetProps

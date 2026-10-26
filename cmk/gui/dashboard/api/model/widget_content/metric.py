@@ -48,7 +48,7 @@ from ..contextual_link import (
     contextual_link_to_internal,
     ContextualLinkSpec,
 )
-from ._base import BaseWidgetContent
+from ._base import BaseWidgetContent, time_range_from_internal, time_range_to_internal
 
 
 # TODO: Reimplement/Investigate a validation function for this class MetricDisplayRangeFixedModel
@@ -400,7 +400,9 @@ class AverageScatterplotContent(_BaseMetricContent):
     type: Literal["average_scatterplot"] = api_field(
         description="Display a scatterplot of average values over time.",
     )
-    time_range: TimerangeModel = api_field(description="Time range to select values from.")
+    time_range: Literal["dashboard"] | TimerangeModel = api_field(
+        description="Time range to select values from, or `dashboard` to follow the dashboard.",
+    )
     metric_color: DefaultOrColor = api_field(description="Color of the scattered dots.")
     average_color: DefaultOrColor = api_field(description="Color of the average.")
     median_color: DefaultOrColor = api_field(description="Color of the median.")
@@ -424,7 +426,7 @@ class AverageScatterplotContent(_BaseMetricContent):
         return cls(
             type="average_scatterplot",
             metric=config["metric"],
-            time_range=timerange_from_internal(config["time_range"]),
+            time_range=time_range_from_internal(config["time_range"]),
             metric_color=config.get("metric_color") or "default",
             average_color=config.get("avg_color") or "default",
             median_color=config.get("median_color") or "default",
@@ -437,7 +439,7 @@ class AverageScatterplotContent(_BaseMetricContent):
         config = AverageScatterplotDashletConfig(
             type=self.internal_type(),
             metric=self.metric,
-            time_range=self.time_range.to_internal(),
+            time_range=time_range_to_internal(self.time_range),
             metric_color=self.metric_color,
             avg_color=self.average_color,
             median_color=self.median_color,

@@ -26,7 +26,7 @@ from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config, RequestCacheConfig
 from cmk.gui.dashboard.exceptions import WidgetRenderError
-from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig
+from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig, DashboardWindow
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import (
     build_template_graphs,
@@ -125,7 +125,7 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig](Dashlet[T]):
         # configured. So we assume the default timerange here by default.
         # TODO: If the comment above is correct, the typing is wrong => suppression for now
         if "timerange" not in self._dashlet_spec:
-            self._dashlet_spec["timerange"] = "25h"  # type: ignore[unreachable]
+            self._dashlet_spec["timerange"] = DashboardWindow(type="dashboard")  # type: ignore[unreachable]
 
         self._cached_display_title: str | None = None
 
@@ -139,7 +139,10 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig](Dashlet[T]):
 
     def _resolve_display_title(self) -> str:
         try:
-            start, end = Timerange.compute_range(self._dashlet_spec["timerange"]).range
+            window = self._dashlet_spec["timerange"]
+            start, end = Timerange.compute_range(
+                window["window"] if window["type"] == "range" else "25h"
+            ).range
             discovered = self.discover_graphs(
                 debug=active_config.debug,
                 user_permissions=UserPermissions.from_config(active_config, all_permissions()),

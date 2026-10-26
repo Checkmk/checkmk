@@ -79,7 +79,7 @@ def _agent_download_token() -> AuthToken:
 def _graph_widget(widget_type: str = "pnpgraph", **extra: object) -> DashletConfig:
     widget: dict[str, object] = {
         "type": widget_type,
-        "timerange": "25h",
+        "timerange": {"type": "dashboard"},
         "graph_id": "cpu_utilization",
         # An explicit site keeps the widget from resolving one over livestatus while it is
         # constructed.

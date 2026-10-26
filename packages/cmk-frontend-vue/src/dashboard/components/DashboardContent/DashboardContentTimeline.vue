@@ -4,13 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkSurfaceNotice from 'cmk-ui-library/components/CmkSurfaceNotice.vue'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
-import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import { useWidgetSource } from '@/dashboard/composables/useWidgetSource'
-import type { TimelineContent } from '@/dashboard/types/widget.ts'
+import type { TimelineContent, WidgetEmitTimeRange } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 import {
   type BinUnit,
@@ -18,14 +16,17 @@ import {
   type GraphFetchParams,
   GraphFigure,
   type GraphFigureSource,
-  fetchedGraphOf
+  type RequestedTimeRange,
+  fetchedGraphOf,
+  toDateTimeRange,
+  toRequestedTimeRange
 } from '@/graphing'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
 
-const { _t } = usei18n()
 const props = defineProps<ContentProps<TimelineContent>>()
+const emit = defineEmits<WidgetEmitTimeRange>()
 const { source, headers } = useWidgetSource(props)
 
 const barChart = computed(() => {
@@ -36,6 +37,21 @@ const barChart = computed(() => {
   return renderMode
 })
 const binUnit = computed<BinUnit>(() => barChart.value.time_resolution)
+
+// A bar chart that follows the dashboard has no window of its own.
+const timerange = computed(() =>
+  barChart.value.time_range === 'dashboard' ? undefined : barChart.value.time_range
+)
+const dashboardTimeRange = computed(() =>
+  timerange.value === undefined ? toRequestedTimeRange(props.range) : undefined
+)
+
+// A bar chart with its own time range zooms and pans for itself, leaving the dashboard as it is.
+function onCommitTimeRange(range: RequestedTimeRange): void {
+  if (timerange.value === undefined) {
+    emit('updateTimeRange', toDateTimeRange(range, props.range.from.timeZone))
+  }
+}
 
 async function fetchBars({ fetchWindow }: GraphFetchParams): Promise<FetchedGraph> {
   try {
@@ -83,19 +99,14 @@ const figureSource = computed<GraphFigureSource>(() => ({
     content-overflow="hidden"
   >
     <div class="db-content-timeline" :class="{ 'db-content-timeline--preview': isPreview }">
-      <CmkSurfaceNotice
-        v-if="barChart.time_range === 'dashboard'"
-        variant="info"
-        :message="_t('This widget follows the dashboard time range')"
-        :description="_t('The bar chart does not support the dashboard time range yet.')"
-      />
       <GraphFigure
-        v-else
         :source="figureSource"
-        :timerange="barChart.time_range"
+        :timerange="timerange"
+        :requested-time-range="dashboardTimeRange"
         legend="none"
         :show-pin="false"
         :show-burger-menu="false"
+        @commit-time-range="onCommitTimeRange"
       />
     </div>
   </DashboardContentContainer>

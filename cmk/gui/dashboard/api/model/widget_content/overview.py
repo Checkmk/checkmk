@@ -6,12 +6,10 @@ from typing import Literal, override, Self
 
 from cmk.gui.dashboard.type_defs import (
     AlertOverviewDashletConfig,
-    DashboardWindow,
-    FixedWindow,
     SiteOverviewDashletConfig,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.gui.openapi.framework.model.common_fields import timerange_from_internal, TimerangeModel
+from cmk.gui.openapi.framework.model.common_fields import TimerangeModel
 
 from ..context_filters import AGGREGATE_HOST_FILTER_ADAPTER, AggregateHostContextFilter
 from ..contextual_link import (
@@ -20,7 +18,7 @@ from ..contextual_link import (
     contextual_link_to_internal,
     ContextualLinkSpec,
 )
-from ._base import BaseWidgetContent
+from ._base import BaseWidgetContent, time_range_from_internal, time_range_to_internal
 
 
 @api_model
@@ -46,14 +44,9 @@ class AlertOverviewContent(BaseWidgetContent):
 
     @classmethod
     def from_internal(cls, config: AlertOverviewDashletConfig) -> Self:
-        window = config["time_range"]
         return cls(
             type="alert_overview",
-            time_range=(
-                "dashboard"
-                if window["type"] == "dashboard"
-                else timerange_from_internal(window["window"])
-            ),
+            time_range=time_range_from_internal(config["time_range"]),
             limit_objects=config.get("limit_objects", ApiOmitted()),
         )
 
@@ -61,11 +54,7 @@ class AlertOverviewContent(BaseWidgetContent):
     def to_internal(self) -> AlertOverviewDashletConfig:
         config = AlertOverviewDashletConfig(
             type=self.internal_type(),
-            time_range=(
-                DashboardWindow(type="dashboard")
-                if self.time_range == "dashboard"
-                else FixedWindow(type="range", window=self.time_range.to_internal())
-            ),
+            time_range=time_range_to_internal(self.time_range),
         )
         if not isinstance(self.limit_objects, ApiOmitted):
             config["limit_objects"] = self.limit_objects

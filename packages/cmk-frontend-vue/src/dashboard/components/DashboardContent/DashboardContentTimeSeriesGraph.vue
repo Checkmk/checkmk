@@ -55,10 +55,22 @@ const props =
   >()
 const emit = defineEmits<WidgetEmitTimeRange>()
 
-const dashboardTimeRange = computed(() => toRequestedTimeRange(props.range))
+// A graph that follows the dashboard has no window of its own.
+const timerange = computed(() => {
+  const content = props.content
+  const configured = content.type === 'average_scatterplot' ? content.time_range : content.timerange
+  return configured === 'dashboard' ? undefined : configured
+})
+const followsDashboard = computed(() => timerange.value === undefined)
+const dashboardTimeRange = computed(() =>
+  followsDashboard.value ? toRequestedTimeRange(props.range) : undefined
+)
 
+// A graph with its own time range zooms and pans for itself, leaving the dashboard as it is.
 function onCommitTimeRange(range: RequestedTimeRange): void {
-  emit('updateTimeRange', toDateTimeRange(range, props.range.from.timeZone))
+  if (followsDashboard.value) {
+    emit('updateTimeRange', toDateTimeRange(range, props.range.from.timeZone))
+  }
 }
 
 const shell = ref<DiscoveredGraph | null>(null)
@@ -307,10 +319,6 @@ if (sharedWidgetGraphs === undefined) {
 const graphRenderOptions = computed(() => {
   const content = props.content
   return 'graph_render_options' in content ? content.graph_render_options : undefined
-})
-const timerange = computed(() => {
-  const content = props.content
-  return content.type === 'average_scatterplot' ? content.time_range : content.timerange
 })
 const legendOptions = computed(() =>
   props.content.type === 'average_scatterplot' ? props.content : graphRenderOptions.value

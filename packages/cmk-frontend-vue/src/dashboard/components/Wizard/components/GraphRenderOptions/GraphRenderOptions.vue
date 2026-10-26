@@ -53,7 +53,6 @@ const graphLegendStyle = defineModel<GraphLegendStyle>('graphLegendStyle', { req
 
 const clickToPlacePin = defineModel<boolean>('clickToPlacePin', { required: true })
 const showBurgerMenu = defineModel<boolean>('showBurgerMenu', { required: true })
-const dontFollowTimerange = defineModel<boolean>('dontFollowTimerange', { required: true })
 
 const displayColorChooser = computed(() => color.value !== undefined && colorOptions.length > 0)
 const displayPresentation = computed(() => presentation.value !== undefined)
@@ -170,16 +169,6 @@ const displayPresentation = computed(() => presentation.value !== undefined)
             :label="_t('Show burger menu for graph options')"
           />
         </div>
-      </FieldComponent>
-    </TableFormRow>
-
-    <TableFormRow>
-      <FieldDescription>{{ _t('Time range synchronization') }}</FieldDescription>
-      <FieldComponent>
-        <CmkCheckbox
-          v-model:model-value="dontFollowTimerange"
-          :label="_t('Do not follow timerange changes of other graphs on the current dashboard')"
-        />
       </FieldComponent>
     </TableFormRow>
   </TableForm>

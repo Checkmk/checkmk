@@ -13,7 +13,11 @@ import { createSharedGraphFetcher } from '@/dashboard/components/DashboardConten
 import { useProvideCmkToken } from '@/dashboard/composables/useCmkToken'
 import { useProvideSharedWidgetGraphs } from '@/dashboard/composables/useSharedWidgetGraphs'
 import type { SharedWidgetGraphs } from '@/dashboard/types/page.ts'
-import type { CustomGraphContent, EmbeddedCustomGraphContent } from '@/dashboard/types/widget.ts'
+import type {
+  AverageScatterplotContent,
+  CustomGraphContent,
+  EmbeddedCustomGraphContent
+} from '@/dashboard/types/widget.ts'
 
 import { makeContentProps } from '@tests/dashboard/contentProps'
 
@@ -48,12 +52,22 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       :data-min-value-axis-width="minValueAxisWidth"
       :data-show-burger-menu="showBurgerMenu"
       :data-requested-time-range="JSON.stringify(requestedTimeRange)"
+      :data-timerange="JSON.stringify(timerange)"
     >{{ source.type === 'definition' ? source.internal : source.key }}<button
       data-testid="emit-commit-time-range"
       @click="$emit('commitTimeRange', { start: 1767225600, end: 1767229200 })"
     /></div>`
   }
 }))
+
+const SCATTERPLOT_CONTENT: AverageScatterplotContent = {
+  type: 'average_scatterplot',
+  metric: 'util',
+  time_range: { type: 'predefined', value: 'last_25_hours' },
+  metric_color: 'default',
+  average_color: 'default',
+  median_color: 'default'
+}
 
 const CUSTOM_GRAPH_CONTENT: CustomGraphContent = {
   type: 'custom_graph',
@@ -296,16 +310,7 @@ describe('the legend of a graph widget', () => {
 
   test('of a scatterplot follows the options on its content', async () => {
     renderWidget({
-      content: {
-        type: 'average_scatterplot',
-        metric: 'util',
-        time_range: { type: 'predefined', value: 'last_25_hours' },
-        metric_color: 'default',
-        average_color: 'default',
-        median_color: 'default',
-        show_legend: true,
-        legend_style: 'extended'
-      }
+      content: { ...SCATTERPLOT_CONTENT, show_legend: true, legend_style: 'extended' }
     })
 
     expect(await legendOf()).toBe('extended')
@@ -313,14 +318,7 @@ describe('the legend of a graph widget', () => {
 
   test('of a scatterplot stored without the option is not drawn', async () => {
     renderWidget({
-      content: {
-        type: 'average_scatterplot',
-        metric: 'util',
-        time_range: { type: 'predefined', value: 'last_25_hours' },
-        metric_color: 'default',
-        average_color: 'default',
-        median_color: 'default'
-      }
+      content: SCATTERPLOT_CONTENT
     })
 
     expect(await legendOf()).toBe('none')
@@ -486,9 +484,22 @@ describe('createSharedGraphFetcher', () => {
   })
 })
 
-describe('the time range of a graph widget', () => {
-  test("is the dashboard's range, not the configured one", async () => {
-    renderWidget()
+const FOLLOWING_AND_SEPARATE = [
+  {
+    widget: 'a graph',
+    following: { ...CUSTOM_GRAPH_CONTENT, timerange: 'dashboard' as const },
+    separate: CUSTOM_GRAPH_CONTENT
+  },
+  {
+    widget: 'a scatterplot',
+    following: { ...SCATTERPLOT_CONTENT, time_range: 'dashboard' as const },
+    separate: SCATTERPLOT_CONTENT
+  }
+]
+
+describe.each(FOLLOWING_AND_SEPARATE)('the time range of $widget', ({ following, separate }) => {
+  test("is the dashboard's range while it follows the dashboard", async () => {
+    renderWidget({ content: following })
 
     const figure = await screen.findByTestId('graph-figure')
     expect(JSON.parse(figure.getAttribute('data-requested-time-range')!)).toEqual({
@@ -496,20 +507,42 @@ describe('the time range of a graph widget', () => {
       end: 1767229200
     })
   })
-})
 
-describe('a time range committed in the graph', () => {
-  test('is reported as the dashboard range, in its time zone', async () => {
-    const { emitted } = renderWidget()
+  test('is its own range while it keeps one', async () => {
+    renderWidget({ content: separate })
 
-    await fireEvent.click(await screen.findByTestId('emit-commit-time-range'))
-
-    const [[range]] = emitted('updateTimeRange') as [[typeof baseProps.range]]
-    expect(range.from.toAbsoluteString()).toBe('2026-01-01T00:00:00.000Z')
-    expect(range.to.toAbsoluteString()).toBe('2026-01-01T01:00:00.000Z')
-    expect(range.from.timeZone).toBe(baseProps.range.from.timeZone)
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-requested-time-range')).toBeNull()
+    expect(JSON.parse(figure.getAttribute('data-timerange')!)).toEqual({
+      type: 'predefined',
+      value: 'last_25_hours'
+    })
   })
 })
+
+describe.each(FOLLOWING_AND_SEPARATE)(
+  'a time range committed in $widget',
+  ({ following, separate }) => {
+    test('is reported as the dashboard range, in its time zone', async () => {
+      const { emitted } = renderWidget({ content: following })
+
+      await fireEvent.click(await screen.findByTestId('emit-commit-time-range'))
+
+      const [[range]] = emitted('updateTimeRange') as [[typeof baseProps.range]]
+      expect(range.from.toAbsoluteString()).toBe('2026-01-01T00:00:00.000Z')
+      expect(range.to.toAbsoluteString()).toBe('2026-01-01T01:00:00.000Z')
+      expect(range.from.timeZone).toBe(baseProps.range.from.timeZone)
+    })
+
+    test('leaves the dashboard alone while the widget keeps its own range', async () => {
+      const { emitted } = renderWidget({ content: separate })
+
+      await fireEvent.click(await screen.findByTestId('emit-commit-time-range'))
+
+      expect(emitted('updateTimeRange')).toBeUndefined()
+    })
+  }
+)
 
 describe('the widget pin', () => {
   const pinOf = async (): Promise<string | null> =>

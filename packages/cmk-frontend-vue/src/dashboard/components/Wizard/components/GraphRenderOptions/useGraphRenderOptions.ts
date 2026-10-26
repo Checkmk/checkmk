@@ -22,8 +22,6 @@ export interface UseGraphRenderOptions {
 
   clickToPlacePin: Ref<boolean>
   showBurgerMenu: Ref<boolean>
-
-  dontFollowTimerange: Ref<boolean>
 }
 
 export interface UseGraphRenderProps extends UseGraphRenderOptions {
@@ -56,8 +54,6 @@ export const useGraphRenderOptions = (
   const clickToPlacePin = ref<boolean>(data?.show_pin ?? true)
   const showBurgerMenu = ref<boolean>(data?.show_controls ?? false)
 
-  const dontFollowTimerange = ref<boolean>(data?.fixed_timerange ?? false)
-
   const graphRenderOptions = computed<GraphRenderOptions>(() => {
     return {
       show_time_axis: horizontalAxis.value,
@@ -70,8 +66,7 @@ export const useGraphRenderOptions = (
       show_legend: graphLegend.value,
       legend_style: graphLegendStyle.value,
       show_pin: clickToPlacePin.value,
-      show_controls: showBurgerMenu.value,
-      fixed_timerange: dontFollowTimerange.value
+      show_controls: showBurgerMenu.value
     }
   })
 
@@ -92,7 +87,6 @@ export const useGraphRenderOptions = (
 
     clickToPlacePin,
     showBurgerMenu,
-    dontFollowTimerange,
 
     graphRenderOptions,
 

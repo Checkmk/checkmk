@@ -558,6 +558,68 @@ class TestMigrateAlertOverviewTimeRange:
         assert result["widgets"]["w1"]["time_range"] == time_range  # type: ignore[typeddict-item]
 
 
+class TestMigrateAverageScatterplotTimeRange:
+    def test_a_stored_timerange_follows_the_dashboard(self) -> None:
+        dashboard = _responsive_dashboard({"type": "average_scatterplot", "time_range": 14400})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == {  # type: ignore[typeddict-item]
+            "type": "dashboard"
+        }
+
+    def test_a_migrated_time_range_stays_unchanged(self) -> None:
+        time_range = {"type": "range", "window": 14400}
+        dashboard = _responsive_dashboard({"type": "average_scatterplot", "time_range": time_range})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == time_range  # type: ignore[typeddict-item]
+
+
+class TestMigrateGraphTimeRange:
+    def test_a_stored_timerange_follows_the_dashboard(self) -> None:
+        dashboard = _responsive_dashboard(
+            {"type": "pnpgraph", "timerange": "25h", "graph_render_options": {}}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["timerange"] == {"type": "dashboard"}  # type: ignore[typeddict-item]
+
+    def test_a_graph_that_did_not_follow_time_range_changes_keeps_its_window(self) -> None:
+        dashboard = _responsive_dashboard(
+            {
+                "type": "combined_graph",
+                "timerange": "25h",
+                "graph_render_options": {"fixed_timerange": True, "show_pin": True},
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        widget = result["widgets"]["w1"]
+        assert widget["timerange"] == {"type": "range", "window": "25h"}  # type: ignore[typeddict-item]
+        assert widget["graph_render_options"] == {"show_pin": True}  # type: ignore[typeddict-item]
+
+    def test_a_graph_without_a_timerange_follows_the_dashboard(self) -> None:
+        dashboard = _responsive_dashboard({"type": "single_timeseries", "graph_render_options": {}})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["timerange"] == {"type": "dashboard"}  # type: ignore[typeddict-item]
+
+    def test_a_migrated_time_range_stays_unchanged(self) -> None:
+        time_range = {"type": "range", "window": "25h"}
+        dashboard = _responsive_dashboard(
+            {"type": "problem_graph", "timerange": time_range, "graph_render_options": {}}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["timerange"] == time_range  # type: ignore[typeddict-item]
+
+
 class TestMigrateTimelineTimeRange:
     @pytest.mark.parametrize(
         "render_mode",

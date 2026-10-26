@@ -29,7 +29,6 @@ from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import (
     ColorHex,
-    timerange_from_internal,
     TimerangeModel,
 )
 from cmk.gui.type_defs import (
@@ -41,7 +40,7 @@ from cmk.gui.type_defs import (
     VerticalAxisWidth,
 )
 
-from ._base import BaseWidgetContent
+from ._base import BaseWidgetContent, time_range_from_internal, time_range_to_internal
 
 
 @api_model
@@ -98,10 +97,6 @@ class GraphRenderOptions:
         description="Show time range previews.",
         default_factory=ApiOmitted,
     )
-    fixed_timerange: bool | ApiOmitted = api_field(
-        description="Do not follow timerange changes of other graphs on the current page.",
-        default_factory=ApiOmitted,
-    )
 
     @staticmethod
     def _vertical_axis_width_from_internal(
@@ -137,7 +132,6 @@ class GraphRenderOptions:
             show_time_range_previews=graph_render_options.get(
                 "show_time_range_previews", ApiOmitted()
             ),
-            fixed_timerange=graph_render_options.get("fixed_timerange", ApiOmitted()),
         )
 
     def to_internal(self) -> GraphRenderOptionsVS:
@@ -170,16 +164,14 @@ class GraphRenderOptions:
             options["show_pin"] = self.show_pin
         if not isinstance(self.show_time_range_previews, ApiOmitted):
             options["show_time_range_previews"] = self.show_time_range_previews
-        if not isinstance(self.fixed_timerange, ApiOmitted):
-            options["fixed_timerange"] = self.fixed_timerange
 
         return options
 
 
 @api_model
 class _BaseGraphContent(BaseWidgetContent, ABC):
-    timerange: TimerangeModel = api_field(
-        description="The time range for the graph, e.g. '25h' for last 25 hours.",
+    timerange: Literal["dashboard"] | TimerangeModel = api_field(
+        description="The time range for the graph, or `dashboard` to follow the dashboard.",
     )
     graph_render_options: GraphRenderOptions | ApiOmitted = api_field(
         description="Graph render options",
@@ -195,7 +187,7 @@ class _BaseGraphContent(BaseWidgetContent, ABC):
     def _to_internal(self) -> ABCGraphDashletConfig:
         return ABCGraphDashletConfig(
             type=self.internal_type(),
-            timerange=self.timerange.to_internal(),
+            timerange=time_range_to_internal(self.timerange),
             graph_render_options=self._get_graph_render_options_internal(),
         )
 
@@ -219,7 +211,7 @@ class ProblemGraphContent(_BaseGraphContent):
     def from_internal(cls, config: ProblemsGraphDashletConfig) -> Self:
         return cls(
             type="problem_graph",
-            timerange=timerange_from_internal(config.get("timerange", "25h")),
+            timerange=time_range_from_internal(config["timerange"]),
             graph_render_options=GraphRenderOptions.from_internal(
                 config.get("graph_render_options", {})
             ),
@@ -248,7 +240,7 @@ class CombinedGraphContent(_BaseGraphContent):
     def from_internal(cls, config: CombinedGraphDashletConfig) -> Self:
         return cls(
             type="combined_graph",
-            timerange=timerange_from_internal(config.get("timerange", "25h")),
+            timerange=time_range_from_internal(config["timerange"]),
             graph_render_options=GraphRenderOptions.from_internal(
                 config.get("graph_render_options", {})
             ),
@@ -285,7 +277,7 @@ class SingleTimeseriesContent(_BaseGraphContent):
     def from_internal(cls, config: SingleTimeseriesDashletConfig) -> Self:
         return cls(
             type="single_timeseries",
-            timerange=timerange_from_internal(config.get("timerange", "25h")),
+            timerange=time_range_from_internal(config["timerange"]),
             graph_render_options=GraphRenderOptions.from_internal(
                 config.get("graph_render_options", {})
             ),
@@ -319,7 +311,7 @@ class CustomGraphContent(_BaseGraphContent):
     def from_internal(cls, config: CustomGraphDashletConfig) -> Self:
         return cls(
             type="custom_graph",
-            timerange=timerange_from_internal(config.get("timerange", "25h")),
+            timerange=time_range_from_internal(config["timerange"]),
             graph_render_options=GraphRenderOptions.from_internal(
                 config.get("graph_render_options", {})
             ),
@@ -332,7 +324,7 @@ class CustomGraphContent(_BaseGraphContent):
         #       so we can't use **self._to_internal() here
         return CustomGraphDashletConfig(
             type=self.internal_type(),
-            timerange=self.timerange.to_internal(),
+            timerange=time_range_to_internal(self.timerange),
             graph_render_options=self._get_graph_render_options_internal(),
             custom_graph=self.custom_graph,
         )
@@ -418,7 +410,7 @@ class EmbeddedCustomGraphContent(_BaseGraphContent):
         handler = _embedded_custom_graph_handler()
         return cls(
             type="embedded_custom_graph",
-            timerange=timerange_from_internal(config.get("timerange", "25h")),
+            timerange=time_range_from_internal(config["timerange"]),
             graph_render_options=GraphRenderOptions.from_internal(
                 config.get("graph_render_options", {})
             ),
@@ -435,7 +427,7 @@ class EmbeddedCustomGraphContent(_BaseGraphContent):
             raise ValueError("Widget is not supported by this edition")
         return EmbeddedCustomGraphDashletConfig(
             type=self.internal_type(),
-            timerange=self.timerange.to_internal(),
+            timerange=time_range_to_internal(self.timerange),
             graph_render_options=self._get_graph_render_options_internal(),
             definition=handler.definition_to_internal(self.definition),
         )
@@ -494,7 +486,7 @@ class PerformanceGraphContent(_BaseGraphContent):
             source = legacy_source
         return cls(
             type="performance_graph",
-            timerange=timerange_from_internal(config.get("timerange", "25h")),
+            timerange=time_range_from_internal(config["timerange"]),
             graph_render_options=GraphRenderOptions.from_internal(
                 config.get("graph_render_options", {})
             ),
@@ -510,13 +502,13 @@ class PerformanceGraphContent(_BaseGraphContent):
         if isinstance(self.source, int):
             return TemplateGraphDashletConfig(
                 type=self.internal_type(),
-                timerange=self.timerange.to_internal(),
+                timerange=time_range_to_internal(self.timerange),
                 graph_render_options=self._get_graph_render_options_internal(),
                 source=self.source,
             )
         return TemplateGraphDashletConfig(
             type=self.internal_type(),
-            timerange=self.timerange.to_internal(),
+            timerange=time_range_to_internal(self.timerange),
             graph_render_options=self._get_graph_render_options_internal(),
             graph_id=self.source,
         )

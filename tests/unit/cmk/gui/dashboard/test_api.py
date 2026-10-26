@@ -157,7 +157,7 @@ def test_embedded_custom_graph_content_without_its_edition_has_empty_definition(
     # e.g. after a downgrade: the stored definition cannot be rendered here, and stays stored
     config = EmbeddedCustomGraphDashletConfig(
         type="embedded_custom_graph",
-        timerange="25h",
+        timerange={"type": "dashboard"},
         graph_render_options={},
         definition={"version": 2, "graph_options": {}, "data_sources": []},
     )

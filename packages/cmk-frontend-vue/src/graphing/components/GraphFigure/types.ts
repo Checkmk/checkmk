@@ -39,7 +39,8 @@ export type GraphFigureLegend = 'none' | 'compact' | 'extended'
  */
 export interface GraphFigureProps {
   source: GraphFigureSource
-  timerange: TimerangeModel
+  /** The figure's own window; required unless the host sets `requestedTimeRange`. */
+  timerange?: TimerangeModel | undefined
   /**
    * The host's own window, which replaces `timerange` while set. The host keeps it current: the
    * figure then runs no refresh timer of its own.

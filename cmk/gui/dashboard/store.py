@@ -45,6 +45,7 @@ from .type_defs import (
     ContextualLinkConfig,
     DashboardConfig,
     DashboardName,
+    DashboardWindow,
     DashletConfig,
     EmbeddedViewDashletConfig,
     FixedWindow,
@@ -262,8 +263,12 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
         widget_id: _clamp_timeline_window(
             _migrate_timeline_time_range(
                 _migrate_alert_overview_time_range(
-                    _migrate_inventory_link(
-                        _migrate_metric_time_range(widget), dashboard.get("owner")
+                    _migrate_graph_time_range(
+                        _migrate_scatterplot_time_range(
+                            _migrate_inventory_link(
+                                _migrate_metric_time_range(widget), dashboard.get("owner")
+                            )
+                        )
                     )
                 )
             )
@@ -304,6 +309,49 @@ def _migrate_alert_overview_time_range(widget: DashletConfig) -> DashletConfig:
         return widget
     time_range = cast(FixedWindow, {"type": "range", "window": raw["time_range"]})
     return cast(DashletConfig, {**widget, "time_range": time_range})
+
+
+def _migrate_scatterplot_time_range(widget: DashletConfig) -> DashletConfig:
+    if widget["type"] != "average_scatterplot":
+        return widget
+    raw = cast(dict[str, object], widget)
+    if isinstance(raw.get("time_range"), dict):
+        return widget
+    return cast(DashletConfig, {**widget, "time_range": DashboardWindow(type="dashboard")})
+
+
+_GRAPH_TYPES = frozenset(
+    {
+        "pnpgraph",
+        "single_timeseries",
+        "combined_graph",
+        "problem_graph",
+        "custom_graph",
+        "embedded_custom_graph",
+    }
+)
+
+
+def _migrate_graph_time_range(widget: DashletConfig) -> DashletConfig:
+    """A graph that did not follow time range changes keeps its own window, any other graph
+    follows the dashboard. The window replaces the "fixed_timerange" render option."""
+    if widget["type"] not in _GRAPH_TYPES:
+        return widget
+    raw = cast(dict[str, object], widget)
+    render_options = dict(cast(dict[str, object], raw.get("graph_render_options") or {}))
+    fixed = render_options.pop("fixed_timerange", False)
+    time_range: object
+    match raw.get("timerange"):
+        case dict() as window:
+            time_range = window
+        case window if window is not None and fixed:
+            time_range = FixedWindow(type="range", window=cast(TimerangeValue, window))
+        case _:
+            time_range = DashboardWindow(type="dashboard")
+    return cast(
+        DashletConfig,
+        {**widget, "timerange": time_range, "graph_render_options": render_options},
+    )
 
 
 def _migrate_timeline_time_range(widget: DashletConfig) -> DashletConfig:

@@ -8,7 +8,7 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import { type GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
-import { useTimeRange } from '@/dashboard/components/TimeRange/useTimeRange'
+import { useTimeRangeSource } from '@/dashboard/components/TimeRange/useTimeRangeSource'
 import {
   type UseGraphRenderOptions,
   useGraphRenderOptions
@@ -34,6 +34,7 @@ const CONTENT_TYPE = 'problem_graph'
 export interface UsePercentageOfServiceProblems
   extends UseWidgetHandler, UseWidgetVisualizationOptions, UseGraphRenderOptions {
   timeRangeType: Ref<TimeRangeType>
+  followDashboardTimeRange: Ref<boolean>
   timeRange: Ref<GraphTimerange>
 }
 
@@ -60,9 +61,11 @@ export const usePercentageOfServiceProblems = async (
     currentSpec?.content?.type === CONTENT_TYPE
       ? (currentSpec?.content as ProblemGraphContent)
       : null
-  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
-    currentContent?.timerange ?? null
-  )
+  const {
+    followDashboard: followDashboardTimeRange,
+    timeRange,
+    widgetProps: generateTimeRangeSpec
+  } = useTimeRangeSource(currentContent?.timerange ?? null)
   const {
     horizontalAxis,
     verticalAxis,
@@ -74,7 +77,6 @@ export const usePercentageOfServiceProblems = async (
     graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
-    dontFollowTimerange,
     graphRenderOptions
   } = useGraphRenderOptions(currentContent?.graph_render_options, currentContent === null)
 
@@ -119,6 +121,7 @@ export const usePercentageOfServiceProblems = async (
   watch(
     [
       timeRangeType,
+      followDashboardTimeRange,
       timeRange,
       widgetGeneralSettings,
       horizontalAxis,
@@ -130,8 +133,7 @@ export const usePercentageOfServiceProblems = async (
       graphLegend,
       graphLegendStyle,
       clickToPlacePin,
-      showBurgerMenu,
-      dontFollowTimerange
+      showBurgerMenu
     ],
     useDebounceFn(() => {
       void _updateWidgetProps()
@@ -143,6 +145,7 @@ export const usePercentageOfServiceProblems = async (
 
   return {
     timeRangeType,
+    followDashboardTimeRange,
     timeRange,
 
     title,
@@ -166,7 +169,6 @@ export const usePercentageOfServiceProblems = async (
     graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
-    dontFollowTimerange,
 
     widgetProps: widgetProps as Ref<WidgetProps>,
     getSubmitProps: _computeWidgetProps

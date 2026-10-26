@@ -19,8 +19,7 @@ const requiredProps = {
   graphLegend: false,
   graphLegendStyle: 'compact' as const,
   clickToPlacePin: true,
-  showBurgerMenu: false,
-  dontFollowTimerange: false
+  showBurgerMenu: false
 }
 
 describe('GraphRenderOptions', () => {

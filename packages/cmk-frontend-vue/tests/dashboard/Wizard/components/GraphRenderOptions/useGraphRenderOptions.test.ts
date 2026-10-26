@@ -21,7 +21,6 @@ describe('useGraphRenderOptions', () => {
       expect(opts.graphLegendStyle.value).toBe('compact')
       expect(opts.clickToPlacePin.value).toBe(true)
       expect(opts.showBurgerMenu.value).toBe(false)
-      expect(opts.dontFollowTimerange.value).toBe(false)
     })
 
     it('keeps the legend off for stored options without it', () => {
@@ -47,8 +46,7 @@ describe('useGraphRenderOptions', () => {
           show_legend: true,
           legend_style: 'extended',
           show_pin: false,
-          show_controls: true,
-          fixed_timerange: true
+          show_controls: true
         },
         false
       )
@@ -62,7 +60,6 @@ describe('useGraphRenderOptions', () => {
       expect(opts.graphLegendStyle.value).toBe('extended')
       expect(opts.clickToPlacePin.value).toBe(false)
       expect(opts.showBurgerMenu.value).toBe(true)
-      expect(opts.dontFollowTimerange.value).toBe(true)
     })
   })
 
@@ -95,8 +92,7 @@ describe('useGraphRenderOptions', () => {
         show_legend: true,
         legend_style: 'compact',
         show_pin: true,
-        show_controls: false,
-        fixed_timerange: false
+        show_controls: false
       })
     })
 

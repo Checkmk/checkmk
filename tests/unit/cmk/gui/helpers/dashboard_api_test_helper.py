@@ -198,6 +198,33 @@ class TestSingleTimeseriesContent:
             },
         )
 
+    @pytest.mark.usefixtures("mock_livestatus")
+    @pytest.mark.parametrize(
+        "timerange",
+        ["dashboard", {"type": "predefined", "value": "last_25_hours"}],
+    )
+    def test_reads_back_the_timerange(
+        self, clients: ClientRegistry, timerange: str | dict[str, str]
+    ) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "single_timeseries",
+                            "timerange": timerange,
+                            "graph_render_options": {},
+                            "metric": "availability",
+                            "color": "#ABCDEF",
+                        }
+                    )
+                },
+            )
+        )
+        widget = next(iter(resp.json["extensions"]["widgets"].values()))
+        assert widget["content"]["timerange"] == timerange
+
 
 class TestCustomGraphContent:
     def test_create(self, clients: ClientRegistry) -> None:
@@ -312,6 +339,33 @@ class TestAverageScatterplotContent:
                 "median_color": "default",
             },
         )
+
+    @pytest.mark.parametrize(
+        "time_range",
+        ["dashboard", {"type": "predefined", "value": "last_25_hours"}],
+    )
+    def test_reads_back_the_time_range(
+        self, clients: ClientRegistry, time_range: str | dict[str, str]
+    ) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "average_scatterplot",
+                            "time_range": time_range,
+                            "metric": "availability",
+                            "metric_color": "default",
+                            "average_color": "default",
+                            "median_color": "default",
+                        }
+                    )
+                },
+            )
+        )
+        widget = next(iter(resp.json["extensions"]["widgets"].values()))
+        assert widget["content"]["time_range"] == time_range
 
     def test_keeps_the_legend(self, clients: ClientRegistry) -> None:
         resp = clients.DashboardClient.create_relative_grid_dashboard(

@@ -78,10 +78,15 @@ const plotWidth = computed(() =>
 )
 
 const followsHostRange = computed(() => props.requestedTimeRange !== undefined)
-const baseTimeRange = (): RequestedTimeRange =>
-  props.requestedTimeRange === undefined
-    ? computeEpochTimeRange(props.timerange)
-    : { start: props.requestedTimeRange.start, end: props.requestedTimeRange.end }
+const baseTimeRange = (): RequestedTimeRange => {
+  if (props.requestedTimeRange !== undefined) {
+    return { start: props.requestedTimeRange.start, end: props.requestedTimeRange.end }
+  }
+  if (props.timerange === undefined) {
+    throw new Error('A graph figure needs either a timerange or a requested time range.')
+  }
+  return computeEpochTimeRange(props.timerange)
+}
 
 const requestedTimeRange = ref<RequestedTimeRange>(baseTimeRange())
 const zoomSessionActive = ref(false)
@@ -212,11 +217,19 @@ const {
 )
 
 watch(
-  () => [sourceKey.value, binUnit.value, props.combinationMode, JSON.stringify(props.timerange)],
+  () => [
+    sourceKey.value,
+    binUnit.value,
+    props.combinationMode,
+    JSON.stringify(props.timerange),
+    followsHostRange.value
+  ],
   () => {
     zoomSessionActive.value = false
     abandonInspection()
     refresh()
+    // Stop first: a figure that starts following the host must not keep its own timer.
+    timer.stop()
     startTimer()
   }
 )

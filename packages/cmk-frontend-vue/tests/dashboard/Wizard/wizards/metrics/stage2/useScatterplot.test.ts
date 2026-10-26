@@ -114,4 +114,33 @@ describe('useScatterplot', () => {
 
     expect(content.legend_style).toBe('extended')
   })
+
+  it('follows the dashboard time range for a new widget', async () => {
+    const content = await submittedContent(await openScatterplot())
+
+    expect(content.time_range).toBe('dashboard')
+  })
+
+  it('keeps following the dashboard for a widget stored that way', async () => {
+    const content = await submittedContent(
+      await openScatterplot({ ...STORED, time_range: 'dashboard' })
+    )
+
+    expect(content.time_range).toBe('dashboard')
+  })
+
+  it('keeps the stored separate time range of an edited widget', async () => {
+    const content = await submittedContent(await openScatterplot(STORED))
+
+    expect(content.time_range).toEqual({ type: 'predefined', value: 'last_25_hours' })
+  })
+
+  it('submits a separate time range once the widget stops following the dashboard', async () => {
+    const handler = await openScatterplot()
+    handler.followDashboardTimeRange.value = false
+
+    const content = await submittedContent(handler)
+
+    expect(content.time_range).not.toBe('dashboard')
+  })
 })

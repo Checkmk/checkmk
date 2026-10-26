@@ -8,7 +8,7 @@ import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
-import { defineComponent, h } from 'vue'
+import { type Ref, defineComponent, h } from 'vue'
 
 import type {
   AlertTimelineContent,
@@ -25,6 +25,7 @@ type TimelineContent = AlertTimelineContent | NotificationTimelineContent
 type TimelineWindow = TimelineContent['render_mode']['time_range']
 
 interface TimelineHandler {
+  followDashboardTimeRange: Ref<boolean>
   getSubmitProps: () => Promise<WidgetProps>
 }
 
@@ -115,13 +116,22 @@ describe.each([
     expect(await submittedWindow(handler)).toEqual(FIXED_WINDOW)
   })
 
-  it('starts a widget that follows the dashboard from the default fixed window', async () => {
-    const newWidget = await openWizard(useTimeline, null)
-    const followingWidget = await openWizard(useTimeline, storedTimeline(type, 'dashboard'))
+  it('follows the dashboard time range for a new widget', async () => {
+    const handler = await openWizard(useTimeline, null)
 
-    const submitted = await submittedWindow(followingWidget)
+    expect(await submittedWindow(handler)).toBe('dashboard')
+  })
 
-    expect(submitted).not.toBe('dashboard')
-    expect(submitted).toEqual(await submittedWindow(newWidget))
+  it('keeps following the dashboard for a widget stored that way', async () => {
+    const handler = await openWizard(useTimeline, storedTimeline(type, 'dashboard'))
+
+    expect(await submittedWindow(handler)).toBe('dashboard')
+  })
+
+  it('submits a separate time range once the widget stops following the dashboard', async () => {
+    const handler = await openWizard(useTimeline, null)
+    handler.followDashboardTimeRange.value = false
+
+    expect(await submittedWindow(handler)).not.toBe('dashboard')
   })
 })

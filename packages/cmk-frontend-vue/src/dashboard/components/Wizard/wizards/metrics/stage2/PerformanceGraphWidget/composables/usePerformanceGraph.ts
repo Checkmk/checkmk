@@ -8,7 +8,7 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import type { GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
-import { useTimeRange } from '@/dashboard/components/TimeRange/useTimeRange'
+import { useTimeRangeSource } from '@/dashboard/components/TimeRange/useTimeRangeSource'
 import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
@@ -31,6 +31,7 @@ import {
 const CONTENT_TYPE = 'performance_graph'
 export interface UsePerformanceGraph
   extends UseWidgetHandler, UseGraphRenderOptions, UseWidgetVisualizationOptions {
+  followDashboardTimeRange: Ref<boolean>
   timeRange: Ref<GraphTimerange>
 
   widgetProps: Ref<WidgetProps>
@@ -47,9 +48,11 @@ export const usePerformanceGraph = async (
       ? (currentSpec?.content as PerformanceGraphContent)
       : null
 
-  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
-    currentContent?.timerange ?? null
-  )
+  const {
+    followDashboard: followDashboardTimeRange,
+    timeRange,
+    widgetProps: generateTimeRangeSpec
+  } = useTimeRangeSource(currentContent?.timerange ?? null)
 
   const {
     title,
@@ -75,7 +78,6 @@ export const usePerformanceGraph = async (
     graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
-    dontFollowTimerange,
     graphRenderOptions
   } = useGraphRenderOptions(currentContent?.graph_render_options, currentContent === null)
 
@@ -118,7 +120,7 @@ export const usePerformanceGraph = async (
   }
 
   watch(
-    [timeRange, widgetGeneralSettings, graphRenderOptions],
+    [followDashboardTimeRange, timeRange, widgetGeneralSettings, graphRenderOptions],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -128,6 +130,7 @@ export const usePerformanceGraph = async (
   await _updateWidgetProps()
 
   return {
+    followDashboardTimeRange,
     timeRange,
 
     title,
@@ -151,7 +154,6 @@ export const usePerformanceGraph = async (
     graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
-    dontFollowTimerange,
 
     widgetProps: widgetProps as Ref<WidgetProps>,
     getSubmitProps: _computeWidgetProps

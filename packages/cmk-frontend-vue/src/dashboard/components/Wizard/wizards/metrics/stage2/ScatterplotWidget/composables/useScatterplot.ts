@@ -8,7 +8,7 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import type { GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
-import { useTimeRange } from '@/dashboard/components/TimeRange/useTimeRange'
+import { useTimeRangeSource } from '@/dashboard/components/TimeRange/useTimeRangeSource'
 import {
   type UseGraphLegend,
   useGraphLegend
@@ -32,6 +32,7 @@ import { type UseAdditionalOptions, useAdditionalOptions } from './useAdditional
 const CONTENT_TYPE = 'average_scatterplot'
 export interface UseScatterplot
   extends UseWidgetHandler, UseWidgetVisualizationOptions, UseAdditionalOptions, UseGraphLegend {
+  followDashboardTimeRange: Ref<boolean>
   timeRange: Ref<GraphTimerange>
   widgetProps: Ref<WidgetProps>
 }
@@ -48,9 +49,11 @@ export const useScatterplot = async (
       ? (currentSpec?.content as ScatterplotContent)
       : null
 
-  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
-    currentContent?.time_range ?? null
-  )
+  const {
+    followDashboard: followDashboardTimeRange,
+    timeRange,
+    widgetProps: generateTimeRangeSpec
+  } = useTimeRangeSource(currentContent?.time_range ?? null)
 
   const {
     title,
@@ -121,6 +124,7 @@ export const useScatterplot = async (
 
   watch(
     [
+      followDashboardTimeRange,
       timeRange,
       widgetGeneralSettings,
       metricColor,
@@ -138,6 +142,7 @@ export const useScatterplot = async (
   await _updateWidgetProps()
 
   return {
+    followDashboardTimeRange,
     timeRange,
 
     title,

@@ -56,12 +56,12 @@ test('lists every series the query resolved to', () => {
   expect(screen.getByText('second')).toBeInTheDocument()
 })
 
-test('a series expands into its attribute table', async () => {
+test('clicking the title of a series expands it into its attribute table', async () => {
   renderPreview([backendMetric('line one')])
 
   expect(screen.queryByText('host.arch')).not.toBeInTheDocument()
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Toggle attributes of line one' }))
+  await fireEvent.click(screen.getByText('line one'))
 
   const archRow = screen.getByText('host.arch').closest('tr')!
   expect(archRow).toHaveTextContent('x64')

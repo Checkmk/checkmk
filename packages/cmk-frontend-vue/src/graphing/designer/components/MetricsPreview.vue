@@ -37,6 +37,12 @@ function toggleAttributes(name: string): void {
   expandedNames.value = withNameToggled(expandedNames.value, name)
 }
 
+function onTitleClick(metric: Metric): void {
+  if (hasAttributes(metric)) {
+    toggleAttributes(metric.metadata.name)
+  }
+}
+
 /** Guards an expanded line whose series came back without attributes. */
 function showsAttributes(metric: Metric): boolean {
   return hasAttributes(metric) && expandedNames.value.includes(metric.metadata.name)
@@ -73,7 +79,12 @@ function attributesId(name: string): string {
                 />
               </td>
               <td class="graphing-metrics-preview__name">
-                <span class="graphing-metrics-preview__title" :title="line.metadata.title">
+                <span
+                  class="graphing-metrics-preview__title"
+                  :class="{ 'graphing-metrics-preview__title--toggle': hasAttributes(line) }"
+                  :title="line.metadata.title"
+                  @click="onTitleClick(line)"
+                >
                   {{ line.metadata.title }}
                 </span>
                 <CmkIconButton
@@ -151,6 +162,10 @@ function attributesId(name: string): string {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.graphing-metrics-preview__title--toggle {
+  cursor: pointer;
 }
 
 .graphing-metrics-preview__attributes {

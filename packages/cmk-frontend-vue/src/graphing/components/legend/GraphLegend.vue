@@ -127,6 +127,12 @@ function toggleAttributes(name: string) {
   expandedMetricNames.value = withNameToggled(expandedMetricNames.value, name)
 }
 
+function onTitleClick(metric: Metric) {
+  if (hasAttributes(metric)) {
+    toggleAttributes(metric.metadata.name)
+  }
+}
+
 function attributesId(index: number): string {
   return `${componentId}-attributes-${index}`
 }
@@ -216,7 +222,12 @@ function toggleLine(name: string) {
                     class="graphing-graph-legend__swatch"
                     :style="{ background: m.metadata.color }"
                   />
-                  <span class="graphing-graph-legend__title" :title="m.metadata.title">
+                  <span
+                    class="graphing-graph-legend__title"
+                    :class="{ 'graphing-graph-legend__title--toggle': hasAttributes(m) }"
+                    :title="m.metadata.title"
+                    @click="onTitleClick(m)"
+                  >
                     {{ m.metadata.title }}
                   </span>
                   <button
@@ -456,6 +467,10 @@ function toggleLine(name: string) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.graphing-graph-legend__title--toggle {
+  cursor: pointer;
 }
 
 .graphing-graph-legend__attributes-toggle {

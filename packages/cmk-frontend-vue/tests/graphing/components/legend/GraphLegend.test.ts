@@ -440,10 +440,10 @@ test('a metric without attributes offers nothing to expand', () => {
   expect(screen.queryByRole('button', { name: /toggle attributes/i })).not.toBeInTheDocument()
 })
 
-test('expanding an OpenTelemetry metrics entry lists its attributes by name, value and kind', async () => {
+test('clicking an OpenTelemetry metrics title lists its attributes by name, value and kind', async () => {
   render(GraphLegend, { props: { metrics: [REQUESTS] } })
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Toggle attributes of Requests' }))
+  await fireEvent.click(screen.getByText('Requests'))
 
   expect(screen.getByText('Attribute name')).toBeInTheDocument()
   expect(screen.getByText('Attribute value')).toBeInTheDocument()

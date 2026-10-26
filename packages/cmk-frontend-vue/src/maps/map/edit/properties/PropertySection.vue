@@ -16,7 +16,6 @@ way a FormSpec renders the elements of an optional dictionary entry.
 <script setup lang="ts">
 import { CmkCollapsibleTitle } from 'cmk-ui-library/components/CmkCollapsible'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
-import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { ref } from 'vue'
 
@@ -25,8 +24,6 @@ const props = defineProps<{
   collapsible?: boolean
   /** Only read for a collapsible section, and only for its initial state. */
   defaultOpen?: boolean
-  /** Shown beside a collapsible heading, so a folded section still says what it holds. */
-  sideTitle?: TranslatedString
   /** Hides the rows, e.g. while the heading's switch is off. */
   empty?: boolean
 }>()
@@ -39,7 +36,6 @@ const open = ref(props.defaultOpen === true)
     <CmkCollapsibleTitle
       v-if="collapsible"
       :title="title"
-      :side-title="sideTitle ?? untranslated('')"
       :open="open"
       @toggle-open="open = !open"
     />

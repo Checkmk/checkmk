@@ -8,6 +8,7 @@ Where a click on the object leads. Left empty it goes to the object's own page
 in Checkmk, which the field offers as its placeholder.
 -->
 <script setup lang="ts">
+import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
@@ -39,12 +40,7 @@ const offersAutoUrl = computed(() => !!props.autoUrl && !form.value.url)
 </script>
 
 <template>
-  <PropertySection
-    :title="_t('Link')"
-    collapsible
-    :default-open="!!form.url"
-    :side-title="untranslated(form.url)"
-  >
+  <PropertySection :title="_t('Link')" collapsible :default-open="!!form.url">
     <PropertyRow v-slot="{ id }" labels-control :label="_t('URL')" tall>
       <div class="maps-link-section__url">
         <CmkInput
@@ -53,15 +49,16 @@ const offersAutoUrl = computed(() => !!props.autoUrl && !form.value.url)
           :placeholder="untranslated(autoUrl ?? 'https://…')"
           field-size="fill"
         />
-        <button
+        <CmkButton
           v-if="offersAutoUrl"
-          type="button"
+          variant="text"
+          size="small"
           class="maps-link-section__adopt"
           @click="form.url = autoUrl ?? ''"
         >
-          {{ _t('Automatically derived from Checkmk URL when left empty') }}
+          {{ _t('Use the derived URL') }}
           {{ untranslated('→') }}
-        </button>
+        </CmkButton>
       </div>
     </PropertyRow>
     <PropertyRow :label="_t('Target')">
@@ -86,22 +83,8 @@ const offersAutoUrl = computed(() => !!props.autoUrl && !form.value.url)
   min-width: 0;
 }
 
-/* A hint that can be clicked, so none of the theme's button chrome. */
 .maps-link-section__adopt {
-  height: auto;
-  margin: 0;
-  padding: 0;
+  align-self: flex-start;
   font-size: var(--font-size-small);
-  font-weight: var(--font-weight-default);
-  letter-spacing: normal;
-  color: var(--font-color-dimmed);
-  text-align: left;
-  background: none;
-  border: none;
-}
-
-.maps-link-section__adopt:hover {
-  color: var(--font-color);
-  text-decoration: underline;
 }
 </style>

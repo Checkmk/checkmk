@@ -36,13 +36,15 @@ import { dyngroupTypeOptions, lineObjectTypeOptions } from '@/maps/utils/dropdow
 const props = defineProps<{
   object: MapElement
   suggestions: ObjectSuggestions
+  /** The map's connection, which the object reads from unless it overrides it. */
+  mapConnectionId: string
 }>()
 
 const form = defineModel<ObjectForm>('form', { required: true })
 
 const { _t } = usei18n()
 
-const { options: connectionOptions } = useConnectionOverride()
+const { options: connectionOptions } = useConnectionOverride(() => props.mapConnectionId)
 
 const dyngroupTypeSuggestions = computed(() => ({
   type: 'fixed' as const,
@@ -151,14 +153,16 @@ const showsRecognizeServices = computed(() => choosesServiceCounting(type.value,
       </p>
     </template>
 
-    <div v-if="showsStateChecks" class="maps-identity-section__checks">
-      <CmkCheckbox v-model="form.only_hard_states" :label="_t('Only hard states')" />
-      <CmkCheckbox
-        v-if="showsRecognizeServices"
-        v-model="form.recognize_services"
-        :label="_t('Consider services')"
-      />
-    </div>
+    <PropertyRow v-if="showsStateChecks" :label="_t('State')">
+      <div class="maps-identity-section__checks">
+        <CmkCheckbox v-model="form.only_hard_states" :label="_t('Only hard states')" />
+        <CmkCheckbox
+          v-if="showsRecognizeServices"
+          v-model="form.recognize_services"
+          :label="_t('Consider services')"
+        />
+      </div>
+    </PropertyRow>
 
     <PropertyRow v-if="type === 'map'" :label="_t('Map name')">
       <MapsSuggestionField

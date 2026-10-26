@@ -220,12 +220,17 @@ const autoUrl = computed((): string | null => {
 
 const objectType = computed(() => props.object.type)
 const isLine = computed(() => objectType.value === 'line')
-// A line left without a host stays a plain line, as updatesFromForm stores it.
-const stateful = computed(
-  () =>
-    !VISUAL_ONLY_TYPES.includes(boundType.value) &&
-    !(isLine.value && boundType.value === 'host' && !form.value.host_name)
-)
+// A graph bound to neither host nor service embeds a URL, and a line bound to
+// no host has no state, as updatesFromForm stores it.
+const stateful = computed(() => {
+  if (boundType.value === 'graph') {
+    return !!(form.value.host_name || form.value.service_description)
+  }
+  if (isLine.value && boundType.value === 'host') {
+    return !!form.value.host_name
+  }
+  return !VISUAL_ONLY_TYPES.includes(boundType.value)
+})
 const showsIdentity = computed(() => !['textbox', 'graph', 'image'].includes(objectType.value))
 const showsAppearance = computed(() => !['line', 'textbox', 'graph'].includes(objectType.value))
 const showsFilter = computed(() => leavesOutMembers(boundType.value))
@@ -299,6 +304,7 @@ function onConfirmDelete(): void {
           v-model:form="form"
           :object="object"
           :suggestions="suggestions"
+          :map-connection-id="props.connectionId"
         />
         <TextboxSection v-if="objectType === 'textbox'" v-model:form="form" />
         <template v-if="objectType === 'graph'">
@@ -327,6 +333,7 @@ function onConfirmDelete(): void {
           v-model:form="form"
           :metrics="metrics"
           :map-icon-size="mapIconSize"
+          :stateful="stateful"
         />
         <LinkSection v-model:form="form" :auto-url="autoUrl" />
         <FilterSection v-if="showsFilter" v-model:form="form" :is-host="boundType === 'host'" />

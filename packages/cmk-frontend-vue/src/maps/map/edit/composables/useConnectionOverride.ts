@@ -11,9 +11,12 @@ import { useMapsApis } from '@/maps/services/context'
 
 /**
  * The connections an object may read from instead of the map's own, offered as
- * a dropdown whose empty value means "inherit from map".
+ * a dropdown whose empty value means "inherit from map" -- named after the
+ * connection that inherits, so the choice says what it reads from.
  */
-export function useConnectionOverride(): { options: ComputedRef<Suggestions> } {
+export function useConnectionOverride(mapConnectionId: () => string): {
+  options: ComputedRef<Suggestions>
+} {
   const { connections: connectionsApi } = useMapsApis()
   const { _t } = usei18n()
 
@@ -30,10 +33,20 @@ export function useConnectionOverride(): { options: ComputedRef<Suggestions> } {
     }
   })()
 
+  const inherited = computed(() => {
+    const id = mapConnectionId()
+    return connections.value.find((connection) => connection.id === id)?.label ?? id
+  })
+
   const options = computed<Suggestions>(() => ({
     type: 'fixed',
     suggestions: [
-      { name: '', title: _t('Inherit from map') },
+      {
+        name: '',
+        title: inherited.value
+          ? _t('Inherit from map (%{connection})', { connection: inherited.value })
+          : _t('Inherit from map')
+      },
       ...connections.value.map((connection) => ({
         name: connection.id,
         title: untranslated(connection.label)

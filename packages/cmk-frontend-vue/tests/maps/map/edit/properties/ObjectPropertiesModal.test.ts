@@ -190,6 +190,28 @@ describe('ObjectPropertiesModal – conditional fields by object type', () => {
 
     expect(screen.getByText('Available: {{name}}')).toBeInTheDocument()
   })
+
+  it('offers a graph that only embeds a URL no state placeholders', () => {
+    renderModal(
+      obj({ type: 'graph', graph_url: 'https://example.com/graph.png', hover_template: '{{name}}' })
+    )
+
+    expect(screen.getByText('Available: {{name}}')).toBeInTheDocument()
+  })
+
+  it('offers a host line without a host no state placeholders, whatever service it showed', () => {
+    renderModal(
+      obj({
+        type: 'line',
+        line_object_type: 'host',
+        host_name: null,
+        service_description: 'CPU load',
+        hover_template: '{{name}}'
+      })
+    )
+
+    expect(screen.getByText('Available: {{name}}')).toBeInTheDocument()
+  })
 })
 
 describe('ObjectPropertiesModal – field names', () => {

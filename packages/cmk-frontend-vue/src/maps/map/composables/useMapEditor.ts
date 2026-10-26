@@ -609,6 +609,9 @@ export function useMapEditor() {
       aggregation_id: draft.aggregation_id || null,
       object_types: draft.type === 'dyngroup' ? draft.object_types : null,
       object_filter: draft.type === 'dyngroup' ? draft.object_filter || null : null,
+      // A host with failing services is not fine, so a new host shows them, as
+      // a NagVis host does by default.
+      recognize_services: draft.type === 'host',
       ...(draft.expand_depth ? { expand_depth: draft.expand_depth } : {}),
       label: {
         show: s.label_show,

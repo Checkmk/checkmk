@@ -25,6 +25,8 @@ const props = defineProps<{
   metrics: ObjectMetrics
   /** The map's own icon size, shown as the placeholder an object inherits. */
   mapIconSize?: number | null | undefined
+  /** Whether the object has a state of its own, which a custom icon has to carry. */
+  stateful: boolean
 }>()
 
 const form = defineModel<ObjectForm>('form', { required: true })
@@ -115,13 +117,27 @@ const sizeInherited = computed(
     </template>
 
     <PropertyRow v-else :label="_t('Custom icon')" tall>
-      <ImagePicker v-model="form.display.image" />
+      <div class="maps-appearance-section__icon">
+        <ImagePicker v-model="form.display.image" />
+        <p v-if="stateful" class="maps-appearance-section__note">
+          {{ _t('Replaces the state icon. The state is then shown as a ring around it.') }}
+        </p>
+      </div>
     </PropertyRow>
   </PropertySection>
 </template>
 
 <style scoped>
+.maps-appearance-section__icon {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--dimension-3);
+  min-width: 0;
+}
+
 .maps-appearance-section__note {
+  margin: 0;
   color: var(--font-color-dimmed);
 }
 </style>

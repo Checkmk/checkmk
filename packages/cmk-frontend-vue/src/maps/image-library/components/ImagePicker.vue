@@ -174,6 +174,7 @@ function select(name: string) {
   align-items: center;
   gap: var(--dimension-4);
   width: 100%;
+  margin: 0; /* the theme gives every button a side margin */
   padding: var(--dimension-4) var(--dimension-5);
   font-size: var(--font-size-normal);
   font-weight: var(--font-weight-default);

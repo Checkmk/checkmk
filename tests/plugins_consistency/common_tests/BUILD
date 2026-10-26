@@ -19,6 +19,7 @@ py_library(
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:graphing",
+        "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-plugins:all_families",
         "//tests/code_quality:bazel_utils",
         requirement("pytest"),

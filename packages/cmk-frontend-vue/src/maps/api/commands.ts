@@ -21,7 +21,6 @@ import { API_ROOT } from 'cmk-ui-library/lib/rest-api-client/constants'
 
 import { stripCheckmkBase } from '@/maps/utils/mapNavigation'
 import {
-  type DowntimeRecur,
   ScheduleDowntimeApi,
   type ScheduleDowntimeOptions
 } from '@/monitoring/shared/api/actions/downtime'
@@ -35,18 +34,6 @@ export interface AcknowledgeOptions {
   persistent: boolean
   /** When the acknowledgement lapses, as an ISO timestamp; without one it stays. */
   expire_on?: string
-}
-
-/** Scheduling a downtime, however many objects it is applied to. */
-export interface DowntimeOptions {
-  /** When it begins, as an ISO timestamp (``useDowntimeWindow``'s ``asIso``). */
-  startTime: string
-  /** When it ends, as an ISO timestamp. */
-  endTime: string
-  comment: string
-  /** Minutes a flexible downtime lasts once it starts; `0` keeps it fixed. */
-  durationMinutes?: number
-  recur?: DowntimeRecur
 }
 
 type MapCommandVerb = components['schemas']['MapsCommandRequest']['action']
@@ -78,14 +65,14 @@ function restClient(checkmkUrl: string | null): RestClient {
   return created
 }
 
-/** The downtime fields every endpoint takes; a window is fixed and one-off unless said otherwise. */
-function downtimeFields(options: DowntimeOptions) {
+/** The downtime fields every endpoint takes. */
+function downtimeFields(options: ScheduleDowntimeOptions) {
   return {
     start_time: options.startTime,
     end_time: options.endTime,
     comment: options.comment,
-    duration: options.durationMinutes ?? 0,
-    recur: options.recur ?? 'fixed'
+    duration: options.durationMinutes,
+    recur: options.recur
   }
 }
 
@@ -152,7 +139,7 @@ export class CommandsApi {
     )
   }
 
-  public async downtimeHost(hostname: string, options: DowntimeOptions): Promise<void> {
+  public async downtimeHost(hostname: string, options: ScheduleDowntimeOptions): Promise<void> {
     unwrap(
       await client.POST('/domain-types/downtime/collections/host', {
         ...JSON_BODY,
@@ -168,7 +155,7 @@ export class CommandsApi {
   public async downtimeService(
     hostname: string,
     serviceDescription: string,
-    options: DowntimeOptions
+    options: ScheduleDowntimeOptions
   ): Promise<void> {
     unwrap(
       await client.POST('/domain-types/downtime/collections/service', {
@@ -330,7 +317,7 @@ export class CommandsApi {
   public async downtimeHostgroup(
     checkmkUrl: string | null,
     groupName: string,
-    options: DowntimeOptions,
+    options: ScheduleDowntimeOptions,
     childHosts: string[] = []
   ): Promise<void> {
     const target = childHosts.length
@@ -356,7 +343,7 @@ export class CommandsApi {
   public async downtimeServicegroup(
     checkmkUrl: string | null,
     groupName: string,
-    options: DowntimeOptions
+    options: ScheduleDowntimeOptions
   ): Promise<void> {
     unwrap(
       await restClient(checkmkUrl).POST('/domain-types/downtime/collections/service', {

@@ -33,7 +33,9 @@ describe('api client — commands about one object', () => {
     await commands.downtimeService('web01', 'CPU', {
       startTime: '2026-09-23T08:00:00Z',
       endTime: '2026-09-23T10:00:00Z',
-      comment: 'patching'
+      comment: 'patching',
+      durationMinutes: 0,
+      recur: 'fixed'
     })
 
     expect(JSON.parse(seen[0]!.body)).toEqual({

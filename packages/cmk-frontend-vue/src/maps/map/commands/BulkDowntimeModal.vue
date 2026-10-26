@@ -13,21 +13,23 @@ them; each is scheduled in turn, a few at a time.
 -->
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
-import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
-import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { ref } from 'vue'
+import { type Ref, computed, ref } from 'vue'
 
-import type { DowntimeOptions } from '@/maps/api/commands'
 import { useMapsApis } from '@/maps/services/context'
 import MapsModal from '@/maps/shared/components/MapsModal.vue'
 import type { CommandTarget } from '@/maps/types/api'
+import type { ScheduleDowntimeOptions } from '@/monitoring/shared/api/actions/downtime'
+import ScheduleDowntimeForm, {
+  type ScheduleDowntimeFormValues
+} from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
+import { noDowntimeWindow } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
 
 import CommandFeedback from './CommandFeedback.vue'
 import CommandTargetList from './CommandTargetList.vue'
-import DowntimeWindowFields from './DowntimeWindowFields.vue'
+import { messageOf } from './commandErrors'
+import { childHostTargets, targetKindOf, useCommandForms } from './commandForms'
 import { useBulkCommandSubmit } from './useBulkCommandSubmit'
-import { useDowntimeWindow } from './useDowntimeWindow'
 
 const { commands } = useMapsApis()
 
@@ -42,36 +44,49 @@ const props = defineProps<{
 const emit = defineEmits<{ close: [sent: boolean] }>()
 
 const { _t } = usei18n()
-const { range, isValid, asIso } = useDowntimeWindow()
-const comment = ref('')
+const forms = useCommandForms()
+const draft = ref(forms.downtimeValues()) as Ref<ScheduleDowntimeFormValues>
+const valid = ref(false)
+const children = ref<CommandTarget[]>([])
+// Resolved once per submit, so every target gets the same window.
+let downtime: ScheduleDowntimeOptions | null = null
 
 const { submitting, progress, succeeded, pending, error, blocked, submit, reject } =
   useBulkCommandSubmit({
     what: 'bulk-downtime',
-    targets: () => props.targets,
+    targets: () => [...props.targets, ...children.value],
     onDone: () => emit('close', true),
     send: (target) => {
-      const window = asIso()
-      const options: DowntimeOptions = {
-        startTime: window.start,
-        endTime: window.end,
-        comment: comment.value
-      }
+      const options = downtime!
       return target.service
         ? commands.downtimeService(target.host, target.service, options)
         : commands.downtimeHost(target.host, options)
     }
   })
 
-function onSubmit(): void {
-  if (!comment.value.trim()) {
+const kind = computed(() => targetKindOf(props.targets))
+
+async function onSubmit(): Promise<void> {
+  if (!valid.value || blocked.value) {
     return
   }
-  if (!isValid.value) {
-    reject(_t('Please provide a start and an end time, with the end after the start.'))
+  downtime = forms.downtimeOptions(draft.value)
+  if (downtime === null) {
+    reject(noDowntimeWindow().message)
     return
   }
-  void submit()
+  // Looked up before the first run only: a retry is about what refused.
+  if (progress.value === 0) {
+    try {
+      children.value = draft.value.includeChildHosts
+        ? await childHostTargets(commands, props.targets)
+        : []
+    } catch (caught) {
+      reject(messageOf(caught, _t('Could not find the child hosts')))
+      return
+    }
+  }
+  await submit()
 }
 </script>
 
@@ -79,6 +94,7 @@ function onSubmit(): void {
   <MapsModal
     :open="true"
     :title="_t('Schedule downtime for several')"
+    :scrolls="false"
     closable
     @close="emit('close', succeeded > 0)"
   >
@@ -88,16 +104,12 @@ function onSubmit(): void {
 
     <CommandTargetList :targets="targets" />
 
-    <div class="maps-bulk-downtime-modal__fields">
-      <div class="maps-bulk-downtime-modal__field">
-        <CmkLabel>{{ _t('Downtime period') }}</CmkLabel>
-        <DowntimeWindowFields v-model="range" />
-      </div>
-      <div class="maps-bulk-downtime-modal__field">
-        <CmkLabel>{{ _t('Comment') }}</CmkLabel>
-        <CmkInput v-model="comment" field-size="fill" :placeholder="`${_t('Comment')}…`" />
-      </div>
-    </div>
+    <ScheduleDowntimeForm
+      v-model="draft"
+      class="maps-bulk-downtime-modal__form"
+      v-bind="forms.downtimeProps(kind)"
+      @update:valid="valid = $event"
+    />
 
     <CommandFeedback
       :error="error"
@@ -109,11 +121,7 @@ function onSubmit(): void {
       <CmkButton variant="secondary" @click="emit('close', succeeded > 0)">
         {{ _t('Cancel') }}
       </CmkButton>
-      <CmkButton
-        variant="primary"
-        :disabled="blocked || !comment.trim() || !isValid"
-        @click="onSubmit"
-      >
+      <CmkButton variant="primary" :disabled="blocked || !valid" @click="onSubmit">
         {{
           submitting
             ? _t('Scheduling %{current}/%{total}…', { current: progress, total: pending })
@@ -131,16 +139,10 @@ function onSubmit(): void {
   font-size: var(--font-size-normal);
 }
 
-.maps-bulk-downtime-modal__fields {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-4);
+/* A fixed width, so opening the advanced options, whose labels are long, wraps
+   them instead of widening the dialog around the form. */
+.maps-bulk-downtime-modal__form {
+  width: min(520px, 80vw);
   margin-top: var(--dimension-5);
-}
-
-.maps-bulk-downtime-modal__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-2);
 }
 </style>

@@ -12,7 +12,6 @@
  * shared action factories are not used because they replace Checkmk's answer
  * with a generic one, and a rejected group command needs the reason.
  */
-import { getLocalTimeZone, now } from '@internationalized/date'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type ComputedRef, type Ref, computed, reactive, ref, watch } from 'vue'
@@ -28,20 +27,14 @@ import CommentForm, {
   type CommentValues
 } from '@/monitoring/shared/components/action/actions/CommentForm.vue'
 import ScheduleDowntimeForm, {
-  type ScheduleDowntimeFormValues,
-  defaultScheduleDowntimeValues
+  type ScheduleDowntimeFormValues
 } from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
-import {
-  ACK_ACTION_ID,
-  acknowledgeDefaults
-} from '@/monitoring/shared/components/action/actions/acknowledge'
+import { ACK_ACTION_ID } from '@/monitoring/shared/components/action/actions/acknowledge'
 import { COMMENT_ACTION_ID } from '@/monitoring/shared/components/action/actions/comment'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import {
   SCHEDULE_DOWNTIME_ACTION_ID,
-  downtimePresets,
-  noDowntimeWindow,
-  scheduleDowntimeOptions
+  noDowntimeWindow
 } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
 import {
   type MonitoringActionRegistry,
@@ -50,7 +43,7 @@ import {
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 
 import { describeGroupCommandError, messageOf } from './commandErrors'
-import { useMapsCommandSettings } from './commandSettings'
+import { acknowledgeOptions, useCommandForms } from './commandForms'
 
 export const OBJECT_ACTION_IDS = {
   acknowledge: ACK_ACTION_ID,
@@ -123,9 +116,7 @@ export function useObjectActions(options: ObjectActionsOptions): ObjectActions {
   const { commands } = useMapsApis()
   const statesStore = useStates()
   const toast = useToast()
-  const settings = useMapsCommandSettings()
-  const ackDefaults = acknowledgeDefaults(settings.acknowledge_defaults)
-  const presets = downtimePresets(settings.downtime_presets)
+  const forms = useCommandForms()
 
   const commandScope = computed(() => {
     const object = options.object()
@@ -203,29 +194,10 @@ export function useObjectActions(options: ObjectActionsOptions): ObjectActions {
       submitLabel: _t('Acknowledge'),
       ...groupHint,
       form: AcknowledgeForm,
-      formProps: {
-        targetKind,
-        presetsUrl: settings.acknowledge_presets_url,
-        notificationRulesUrl: settings.notification_rules_url
-      },
-      defaultValues: () => ({
-        comment: '',
-        expireOnEnabled: false,
-        expireOn: now(getLocalTimeZone()).add({ seconds: ackDefaults.expireSeconds }),
-        sticky: ackDefaults.sticky,
-        persistent: ackDefaults.persistent,
-        notify: ackDefaults.notify
-      }),
+      formProps: forms.acknowledgeProps(targetKind),
+      defaultValues: forms.acknowledgeValues,
       perform: (_targets, values) => {
-        const ack = {
-          comment: values.comment,
-          sticky: values.sticky,
-          notify: values.notify,
-          persistent: values.persistent,
-          ...(values.expireOnEnabled && values.expireOn
-            ? { expire_on: values.expireOn.toDate().toISOString() }
-            : {})
-        }
+        const ack = acknowledgeOptions(values)
         return run(
           scope,
           () => {
@@ -284,15 +256,10 @@ export function useObjectActions(options: ObjectActionsOptions): ObjectActions {
       submitLabel: _t('Schedule downtime'),
       ...groupHint,
       form: ScheduleDowntimeForm,
-      formProps: {
-        targetKind,
-        recurrences: settings.downtime_recurrences,
-        presets,
-        presetsUrl: settings.downtime_presets_url
-      },
-      defaultValues: () => defaultScheduleDowntimeValues(presets),
+      formProps: forms.downtimeProps(targetKind),
+      defaultValues: forms.downtimeValues,
       perform: async (_targets, values) => {
-        const downtime = scheduleDowntimeOptions(values, presets)
+        const downtime = forms.downtimeOptions(values)
         if (downtime === null) {
           return noDowntimeWindow()
         }

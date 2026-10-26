@@ -11,7 +11,7 @@ import BulkAckModal from '@/maps/map/commands/BulkAckModal.vue'
 import type { MapsApis } from '@/maps/services/context'
 import type { CommandTarget } from '@/maps/types/api'
 
-import { fakeMapsServices, provideServices } from '../../support/services'
+import { aCommandSettings, fakeMapsServices, provideServices } from '../../support/services'
 
 function target(
   host: string,
@@ -21,17 +21,24 @@ function target(
   return { host, service, site }
 }
 
-function renderModal(targets: CommandTarget[], skipped = 0) {
+function renderModal(
+  targets: CommandTarget[],
+  skipped = 0,
+  settings: Parameters<typeof aCommandSettings>[0] = {}
+) {
   return render(BulkAckModal, {
-    ...provideServices(services),
+    ...provideServices(services, aCommandSettings(settings)),
     props: { origin: 'agg-1', targets, skipped }
   })
 }
 
-async function clickSubmit(targetCount: number) {
-  const user = userEvent.setup()
+async function typeComment() {
   // The dialog content teleports into the document body a tick after mount.
-  await user.click(await screen.findByRole('button', { name: `Acknowledge ${targetCount}` }))
+  await userEvent.type(await screen.findByPlaceholderText('Enter a comment…'), 'switch swap')
+}
+
+async function clickSubmit(targetCount: number) {
+  await userEvent.click(screen.getByRole('button', { name: `Acknowledge ${targetCount}` }))
 }
 
 let services: ReturnType<typeof fakeMapsServices>
@@ -48,9 +55,20 @@ describe('BulkAckModal', () => {
     expect(await screen.findByText('2 without a problem left out')).toBeInTheDocument()
   })
 
-  it('pre-fills the comment with where the targets came from', async () => {
-    renderModal([target('web01')])
-    expect(await screen.findByRole('textbox')).toHaveValue('Bulk-ack: agg-1')
+  it('starts from the acknowledgement options the site has set up', async () => {
+    renderModal([target('web01')], 0, {
+      acknowledge_defaults: { sticky: true, persistent: true, notify: false, expire_seconds: 60 }
+    })
+    await typeComment()
+    await clickSubmit(1)
+    await waitFor(() =>
+      expect(commands.acknowledgeHost).toHaveBeenCalledWith('web01', {
+        comment: 'switch swap',
+        sticky: true,
+        notify: false,
+        persistent: true
+      })
+    )
   })
 
   it('lists every target', async () => {
@@ -63,9 +81,10 @@ describe('BulkAckModal', () => {
 
   it('routes each target to host or service ack', async () => {
     renderModal([target('web01', 'PING', 'remote'), target('db02')])
+    await typeComment()
     await clickSubmit(2)
     await waitFor(() => expect(commands.acknowledgeService).toHaveBeenCalledTimes(1))
-    const options = { comment: 'Bulk-ack: agg-1', sticky: true, notify: true, persistent: false }
+    const options = { comment: 'switch swap', sticky: false, notify: true, persistent: false }
     expect(commands.acknowledgeService).toHaveBeenCalledWith('web01', 'PING', options)
     expect(commands.acknowledgeHost).toHaveBeenCalledTimes(1)
     expect(commands.acknowledgeHost).toHaveBeenCalledWith('db02', options)
@@ -74,6 +93,7 @@ describe('BulkAckModal', () => {
   it('acknowledges every target even beyond the concurrency cap', async () => {
     const targets = Array.from({ length: 12 }, (_, i) => target(`h${i}`))
     renderModal(targets)
+    await typeComment()
     await clickSubmit(12)
     await waitFor(() => expect(commands.acknowledgeHost).toHaveBeenCalledTimes(12))
     await screen.findByText('12 acknowledged')
@@ -83,6 +103,7 @@ describe('BulkAckModal', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     vi.mocked(commands.acknowledgeHost).mockRejectedValueOnce(new Error('pipe closed'))
     renderModal([target('bad'), target('good')])
+    await typeComment()
     await clickSubmit(2)
     await waitFor(() => expect(commands.acknowledgeHost).toHaveBeenCalledTimes(2))
     // The failure summary names the failed target in its sample list.
@@ -97,6 +118,7 @@ describe('BulkAckModal', () => {
     vi.mocked(commands.acknowledgeHost).mockRejectedValueOnce(new Error('pipe closed'))
     renderModal([target('bad'), target('good')])
 
+    await typeComment()
     await clickSubmit(2)
     await screen.findByText(/1 of 2 failed: bad/)
 

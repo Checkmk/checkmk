@@ -8,32 +8,29 @@ Acknowledge several problems at once: the contributing leaves of a BI
 aggregation, or the nodes an operator picked on a flow map.
 
 Neither is a Checkmk host or service group, so there is no single command for
-them and each is acknowledged in turn. What they were picked from goes into the
-comment, so the audit log traces every entry back to where it was asked for.
+them and each is acknowledged in turn.
 -->
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
-import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
-import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { onMounted, ref } from 'vue'
+import { type Ref, ref } from 'vue'
 
-import type { AcknowledgeOptions } from '@/maps/api/commands'
 import { useMapsApis } from '@/maps/services/context'
 import MapsModal from '@/maps/shared/components/MapsModal.vue'
 import type { CommandTarget } from '@/maps/types/api'
+import AcknowledgeForm, {
+  type AcknowledgeValues
+} from '@/monitoring/shared/components/action/actions/AcknowledgeForm.vue'
 
 import CommandFeedback from './CommandFeedback.vue'
 import CommandTargetList from './CommandTargetList.vue'
+import { acknowledgeOptions, targetKindOf, useCommandForms } from './commandForms'
 import { useBulkCommandSubmit } from './useBulkCommandSubmit'
 
 const { commands } = useMapsApis()
 
 const props = defineProps<{
-  /**
-   * What the operator picked these from — an aggregation, a map. It rides along
-   * in the comment, so the audit log says where the acknowledgement came from.
-   */
+  /** What the operator picked these from — an aggregation, a map. */
   origin: string
   targets: CommandTarget[]
   /** How many were picked but have no problem to acknowledge, and are left out. */
@@ -45,35 +42,24 @@ const props = defineProps<{
 const emit = defineEmits<{ close: [sent: boolean] }>()
 
 const { _t } = usei18n()
-const comment = ref(`Bulk-ack: ${props.origin}`)
-const sticky = ref(true)
-const notify = ref(true)
-const persistent = ref(false)
-const commentEl = ref<HTMLInputElement | null>(null)
-
-function options(): AcknowledgeOptions {
-  return {
-    comment: comment.value,
-    sticky: sticky.value,
-    notify: notify.value,
-    persistent: persistent.value
-  }
-}
-
-onMounted(() => commentEl.value?.focus())
+const forms = useCommandForms()
+const draft = ref(forms.acknowledgeValues()) as Ref<AcknowledgeValues>
+const valid = ref(false)
 
 const { submitting, progress, succeeded, pending, error, blocked, submit } = useBulkCommandSubmit({
   what: 'bulk-ack',
   targets: () => props.targets,
   onDone: () => emit('close', true),
-  send: (target) =>
-    target.service
-      ? commands.acknowledgeService(target.host, target.service, options())
-      : commands.acknowledgeHost(target.host, options())
+  send: (target) => {
+    const options = acknowledgeOptions(draft.value)
+    return target.service
+      ? commands.acknowledgeService(target.host, target.service, options)
+      : commands.acknowledgeHost(target.host, options)
+  }
 })
 
 function onSubmit(): void {
-  if (comment.value.trim()) {
+  if (valid.value) {
     void submit()
   }
 }
@@ -83,6 +69,7 @@ function onSubmit(): void {
   <MapsModal
     :open="true"
     :title="_t('Acknowledge several problems')"
+    :scrolls="false"
     closable
     @close="emit('close', succeeded > 0)"
   >
@@ -96,20 +83,12 @@ function onSubmit(): void {
 
     <CommandTargetList :targets="targets" />
 
-    <div class="maps-bulk-ack-modal__fields">
-      <div>
-        <label class="maps-bulk-ack-modal__label">{{ _t('Comment') }}</label>
-        <CmkInput
-          ref="commentEl"
-          v-model="comment"
-          field-size="fill"
-          :placeholder="`${_t('Comment')}…`"
-        />
-      </div>
-      <CmkCheckbox v-model="sticky" :label="_t('Sticky (stays until OK)')" />
-      <CmkCheckbox v-model="notify" :label="_t('Send notification')" />
-      <CmkCheckbox v-model="persistent" :label="_t('Persistent')" />
-    </div>
+    <AcknowledgeForm
+      v-model="draft"
+      class="maps-bulk-ack-modal__form"
+      v-bind="forms.acknowledgeProps(targetKindOf(targets))"
+      @update:valid="valid = $event"
+    />
 
     <CommandFeedback
       :error="error"
@@ -121,7 +100,7 @@ function onSubmit(): void {
       <CmkButton variant="secondary" @click="emit('close', succeeded > 0)">
         {{ _t('Cancel') }}
       </CmkButton>
-      <CmkButton variant="primary" :disabled="blocked || !comment.trim()" @click="onSubmit">
+      <CmkButton variant="primary" :disabled="blocked || !valid" @click="onSubmit">
         {{
           submitting
             ? _t('Acknowledging %{current}/%{total}…', {
@@ -148,18 +127,7 @@ function onSubmit(): void {
   font-size: var(--font-size-normal);
 }
 
-.maps-bulk-ack-modal__fields {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-4);
+.maps-bulk-ack-modal__form {
   margin-top: var(--dimension-5);
-}
-
-.maps-bulk-ack-modal__label {
-  display: block;
-  margin-bottom: var(--dimension-3);
-  color: var(--font-color-dimmed);
-  font-size: var(--font-size-normal);
-  font-weight: var(--font-weight-medium);
 }
 </style>

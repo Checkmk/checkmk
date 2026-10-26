@@ -303,6 +303,7 @@ VITE_SRCS = [
     ":node_modules/marked",
     ":node_modules/msw",
     ":node_modules/openapi-fetch",
+    ":node_modules/openapi-msw",
     ":node_modules/reka-ui",
     ":node_modules/rollup",
     ":node_modules/sanitize-html",

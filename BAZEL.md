@@ -64,7 +64,7 @@ For GUI tests that live under `nonfree/`, use the explicit targets:
 ```console
 $ bazel test //tests/unit/cmk/gui/nonfree/pro:all
 $ bazel test //tests/unit/cmk/gui/nonfree/ultimate:all
-$ bazel test //tests/unit/editions/...
+$ bazel test //tests/integration/edition_scope/...
 ```
 
 Available editions: `community`, `pro`, `ultimate`, `ultimatemt`, `cloud`.

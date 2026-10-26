@@ -16,7 +16,7 @@ py_cmk_test(
         # These tests test the scope of the edition.
         # Trimming these dependencies to a minimum defeats the purpose.
         "//cmk/editions:community",
-        "//tests/unit/editions/lib",
+        "//tests/integration/edition_scope/lib",
         requirement("pytest-random-order"),
     ],
 )

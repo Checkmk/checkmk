@@ -9,7 +9,7 @@ from typing import Final
 
 from cmk.agent_based.v2 import CheckPlugin, entry_point_prefixes
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
-from tests.unit.editions.lib.frozen_service_names import FROZEN_SERVICE_NAMES
+from tests.integration.edition_scope.lib.frozen_service_names import FROZEN_SERVICE_NAMES
 
 RATIONALE: Final = """A service's name identifies the RRD files storing its metric history.
 If the service name changes, the new name no longer matches the existing RRD files: users lose the

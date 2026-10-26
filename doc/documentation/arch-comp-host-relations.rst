@@ -826,7 +826,7 @@ Testing
 * ``tests/unit/cmk/gui/nonfree/ultimatemt/test_managed_snapshots.py`` and
   ``test_host_and_folder_validators.py``: The multi-tenant rules.
 * ``test_available_replication_paths.py`` of each edition under
-  ``tests/unit/editions/``: The replication path ``host_relations``.
+  ``tests/integration/edition_scope/``: The replication path ``host_relations``.
   ``tests/unit/cmk/gui/nonfree/ultimatemt/watolib/test_config_sync.py``: The
   snapshot of a remote site contains ``relations.mk``.
 * ``tests/unit/cmk/config_anonymizer/test_hosts.py``: Anonymizing the related

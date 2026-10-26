@@ -6,7 +6,9 @@
 
 from typing import Final
 
-from tests.unit.editions.lib.extract_shipped_host_labels import extract_shipped_host_labels
+from tests.integration.edition_scope.lib.extract_shipped_host_labels import (
+    extract_shipped_host_labels,
+)
 
 DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/site",

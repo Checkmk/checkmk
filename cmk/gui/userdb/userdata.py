@@ -316,9 +316,11 @@ class UserData:
         userspec: UserSpec,
         user_attribute_specs: Sequence[tuple[str, UserAttribute]],
     ) -> Self:
-        attrs = CustomAttributes(dict(user_attribute_specs))
-        for name, _attr in user_attribute_specs:
-            attrs[name] = userspec.get(name)
+        specs = dict(user_attribute_specs)
+        attrs = CustomAttributes(specs)
+        for name, value in userspec.items():
+            if name in specs:
+                attrs[name] = value
 
         return cls(
             alias=userspec["alias"],

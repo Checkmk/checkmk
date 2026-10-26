@@ -15,7 +15,6 @@ from collections.abc import Iterable, Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
 
-import cmk.ccc.debug
 from cmk.base import config
 from cmk.base.config import ConfigCache
 from cmk.base.modes.check_mk import load_checks
@@ -112,9 +111,6 @@ def _mode_list_hosts(
 
 
 def _run_list_hosts(context: CommandContext, options: Options, args: Args) -> ExitCode:
-    if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_list_hosts(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
@@ -194,9 +190,6 @@ def _mode_list_tag(
 
 
 def _run_list_tag(context: CommandContext, options: Options, args: Args) -> ExitCode:
-    if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_list_tag(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:

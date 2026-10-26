@@ -4,15 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Literal, NamedTuple, NotRequired, TypedDict
 
 import yaml
+from pydantic import BaseModel
 
 from .bakery_api.v1 import FileGenerator, OS, password_store, Plugin, PluginConfig, register
-
-GuiAuth = str | tuple[str, tuple[str, password_store.PasswordId | str]]
 
 
 class MsSqlSetup(NamedTuple):
@@ -36,63 +35,62 @@ OS_Setups: Sequence[MsSqlSetup] = [
 ]
 
 
-class GuiTls(TypedDict):
-    client_certificate: str
+_Auth = str | tuple[Literal["remote"], tuple[str, password_store.PasswordId]]
+
+_SectionMode = Literal["sync", "async", "disabled"] | None
 
 
-class GuiConn(TypedDict):
-    hostname: str
-    fail_over_partner: str
-    port: int
-    timeout: int
-    trust_server_certificate: bool
-    tls: GuiTls
-    backend: str
-    exclude_databases: Sequence[str]
+class _Tls(BaseModel):
+    client_certificate: str = ""
 
 
-_SectionType = Literal["sync", "async", "disabled"] | None
+class _Conn(BaseModel):
+    hostname: str = ""
+    fail_over_partner: str = ""
+    port: int | None = None
+    timeout: int | None = None
+    trust_server_certificate: bool | None = None
+    tls: _Tls | None = None
+    backend: str = ""
+    exclude_databases: Sequence[str] = ()
 
 
-GuiIncludeExclude = str | tuple[str, list[str]]
+_Discovery = tuple[bool, Literal["all"] | tuple[Literal["include", "exclude"], Sequence[str]]]
 
 
-GuiDiscovery = tuple[bool, GuiIncludeExclude]
+class _Options(BaseModel):
+    max_connections: int | None = None
+    ignore_inactive_local_instances: bool = False
 
 
-class GuiOptions(TypedDict):
-    max_connections: NotRequired[int]
-    ignore_inactive_local_instances: NotRequired[bool]
+class _Piggyback(BaseModel):
+    hostname: str = ""
+    sections: Mapping[str, _SectionMode] | None = None
+    cache_age: int | None = None
 
 
-class GuiPiggyback(TypedDict):
-    hostname: str
-    sections: dict[str, _SectionType]
-    cache_age: int
-
-
-class GuiInstance(TypedDict):
+class _Instance(BaseModel):
     sid: str
-    auth: GuiAuth
-    conn: GuiConn
-    alias: str
-    piggyback: GuiPiggyback
+    auth: _Auth | None = None
+    conn: _Conn | None = None
+    alias: str = ""
+    piggyback: _Piggyback | None = None
 
 
-class GuiMainConf(TypedDict):
-    auth: GuiAuth
-    conn: GuiConn
-    sections: dict[str, _SectionType]
-    cache_age: int
-    piggyback_host: str
-    discovery: GuiDiscovery
-    instances: list[GuiInstance]
-    options: GuiOptions
+class _MainConf(BaseModel):
+    auth: _Auth = "local"
+    conn: _Conn | None = None
+    sections: Mapping[str, _SectionMode] | None = None
+    cache_age: int | None = None
+    piggyback_host: str = ""
+    discovery: _Discovery | None = None
+    instances: Sequence[_Instance] = ()
+    options: _Options | None = None
 
 
-class GuiAllConf(TypedDict):
-    main: GuiMainConf
-    other: list[GuiMainConf]
+class _Config(BaseModel):
+    main: _MainConf
+    other: Sequence[_MainConf] = ()
 
 
 class SqlOptions(TypedDict):
@@ -168,13 +166,10 @@ class SqlOutput(TypedDict):
     configs: NotRequired[list[SqlMainEntry]]
 
 
-def check_get_ms_sql_files(conf: GuiAllConf) -> FileGenerator:
+def check_get_ms_sql_files(conf: Mapping[str, object]) -> FileGenerator:
+    config = _Config.model_validate(conf)
     for o_s in OS_Setups:
-        main = conf.get("main")  # Start with a list containing the first element of the tuple
-        if main and _is_allowed(main, o_s.base_os):  # type: ignore[redundant-expr]
-            configs = [main]
-            if (others := conf.get("other")) is not None:  # type: ignore[comparison-overlap]
-                configs.extend(others)
+        if _is_allowed(config.main, o_s.base_os):
             yield Plugin(
                 base_os=o_s.base_os,
                 target=o_s.plugin_target,
@@ -182,18 +177,18 @@ def check_get_ms_sql_files(conf: GuiAllConf) -> FileGenerator:
             )
             yield PluginConfig(
                 base_os=o_s.base_os,
-                lines=list(_get_mssql_yaml_lines(configs)),
+                lines=list(_get_mssql_yaml_lines([config.main, *config.other])),
                 target=Path(o_s.config_name),
             )
 
 
-def _get_mssql_yaml_lines(configs: Sequence[GuiMainConf]) -> Iterable[str]:
+def _get_mssql_yaml_lines(configs: Sequence[_MainConf]) -> Iterable[str]:
     result = {"mssql": _create_mssql_dict(configs)}
     yield "---"  # according to spec in Jira
     yield from yaml.dump(result, indent=2, sort_keys=False).splitlines()
 
 
-def _create_mssql_dict(configs: Sequence[GuiMainConf]) -> SqlOutput:
+def _create_mssql_dict(configs: Sequence[_MainConf]) -> SqlOutput:
     main = _create_main(configs[0])
     output = SqlOutput(main=main)
     if len(configs) > 1:
@@ -202,153 +197,145 @@ def _create_mssql_dict(configs: Sequence[GuiMainConf]) -> SqlOutput:
     return output
 
 
-def _create_main(conf: GuiMainConf) -> SqlMain:
-    auth_type: GuiAuth = conf.get("auth", "local")
-    main = SqlMain(authentication=_to_sql_auth(auth_type))
-    if conn := conf.get("conn"):
-        main["connection"] = _to_sql_conn(conn)
+def _create_main(conf: _MainConf) -> SqlMain:
+    main = SqlMain(authentication=_to_sql_auth(conf.auth))
+    if conf.conn is not None and conf.conn.model_fields_set:
+        main["connection"] = _to_sql_conn(conf.conn)
 
-    if cache_age := conf.get("cache_age"):
-        main["cache_age"] = cache_age
-    if piggyback_host := conf.get("piggyback_host"):
-        main["piggyback_host"] = piggyback_host
-    if (sections := _to_sql_sections(conf.get("sections"))) is not None:
+    if conf.cache_age:
+        main["cache_age"] = conf.cache_age
+    if conf.piggyback_host:
+        main["piggyback_host"] = conf.piggyback_host
+    if (sections := _to_sql_sections(conf.sections)) is not None:
         main["sections"] = sections
-    if discovery := conf.get("discovery"):
-        main["discovery"] = _to_sql_discovery(discovery)
+    if conf.discovery is not None:
+        main["discovery"] = _to_sql_discovery(conf.discovery)
 
-    if instances := conf.get("instances"):
-        main["instances"] = _to_sql_instances(instances)
-    if (options := _to_options(conf.get("options"))) is not None:
+    if conf.instances:
+        main["instances"] = _to_sql_instances(conf.instances)
+    if (options := _to_options(conf.options)) is not None:
         main["options"] = options
 
     return main
 
 
-def _to_sql_conn(conn: GuiConn) -> SqlConn:
-    connection = SqlConn(hostname="localhost")
-    if hostname := conn.get("hostname"):
-        connection["hostname"] = hostname
-    if fail_over_partner := conn.get("fail_over_partner"):
-        connection["fail_over_partner"] = fail_over_partner
-    if port := conn.get("port"):
-        connection["port"] = port
-    if timeout := conn.get("timeout"):
-        connection["timeout"] = timeout
-    if (trust := conn.get("trust_server_certificate")) is not None:  # type: ignore[comparison-overlap]
-        connection["trust_server_certificate"] = trust
-    if tls := _to_tls(conn.get("tls")):
+def _to_sql_conn(conn: _Conn) -> SqlConn:
+    connection = SqlConn(hostname=conn.hostname or "localhost")
+    if conn.fail_over_partner:
+        connection["fail_over_partner"] = conn.fail_over_partner
+    if conn.port:
+        connection["port"] = conn.port
+    if conn.timeout:
+        connection["timeout"] = conn.timeout
+    if conn.trust_server_certificate is not None:
+        connection["trust_server_certificate"] = conn.trust_server_certificate
+    if tls := _to_tls(conn.tls):
         connection["tls"] = tls
-    if backend := conn.get("backend"):
-        connection["backend"] = backend
-    if exclude_databases := conn.get("exclude_databases"):
-        connection["exclude_databases"] = list(exclude_databases)
+    if conn.backend:
+        connection["backend"] = conn.backend
+    if conn.exclude_databases:
+        connection["exclude_databases"] = list(conn.exclude_databases)
     return connection
 
 
 def _to_sql_sections(
-    sections: dict[str, _SectionType] | None,
+    sections: Mapping[str, _SectionMode] | None,
 ) -> list[dict[str, SqlSection | None]] | None:
     return (
-        [{name: _to_sql_section(kind=kind)} for name, kind in sections.items() if kind is not None]
+        [{name: _to_sql_section(mode)} for name, mode in sections.items() if mode is not None]
         if sections
         else None
     )
 
 
-def _to_sql_section(kind: _SectionType) -> SqlSection | None:
-    if kind == "sync":
-        return None
-    section = SqlSection()
-    match kind:  # type: ignore[exhaustive-match]
+def _to_sql_section(mode: Literal["sync", "async", "disabled"]) -> SqlSection | None:
+    match mode:
+        case "sync":
+            return None
         case "async":
-            section["is_async"] = True
+            return SqlSection(is_async=True)
         case "disabled":
-            section["disabled"] = True
-
-    return section
+            return SqlSection(disabled=True)
 
 
-def _to_sql_discovery(discovery: GuiDiscovery) -> SqlDiscovery:
+def _to_sql_discovery(discovery: _Discovery) -> SqlDiscovery:
     d = SqlDiscovery(detect=discovery[0])
-    combi_list = discovery[1]
-    if isinstance(combi_list, tuple):
-        match combi_list[0]:  # type: ignore[exhaustive-match]
-            case "include":
-                d["include"] = combi_list[1]
-            case "exclude":
-                d["exclude"] = combi_list[1]
+    match discovery[1]:
+        case ("include", instances):
+            d["include"] = list(instances)
+        case ("exclude", instances):
+            d["exclude"] = list(instances)
+        case _:
+            pass
 
     return d
 
 
-def _to_sql_instances(instances: Iterable[GuiInstance]) -> list[SqlInstance]:
+def _to_sql_instances(instances: Iterable[_Instance]) -> list[SqlInstance]:
     return [_to_sql_instance(i) for i in instances]
 
 
-def _to_sql_instance(instance: GuiInstance) -> SqlInstance:
-    i = SqlInstance(sid=instance["sid"])
-    if conn := instance.get("conn"):
-        i["connection"] = _to_sql_conn(conn)
-    if auth := instance.get("auth"):
-        i["authentication"] = _to_sql_auth(auth)
-    if alias := instance.get("alias"):
-        i["alias"] = alias
-    if piggyback := instance.get("piggyback"):
-        i["piggyback"] = _to_sql_piggyback(piggyback)
+def _to_sql_instance(instance: _Instance) -> SqlInstance:
+    i = SqlInstance(sid=instance.sid)
+    if instance.conn is not None and instance.conn.model_fields_set:
+        i["connection"] = _to_sql_conn(instance.conn)
+    if instance.auth is not None:
+        i["authentication"] = _to_sql_auth(instance.auth)
+    if instance.alias:
+        i["alias"] = instance.alias
+    # The old rule set allowed to tick the piggyback option without a host name.
+    if instance.piggyback is not None and instance.piggyback.hostname:
+        i["piggyback"] = _to_sql_piggyback(instance.piggyback)
     return i
 
 
-def _to_configs(configs: Iterable[GuiMainConf]) -> list[SqlMainEntry]:
+def _to_configs(configs: Iterable[_MainConf]) -> list[SqlMainEntry]:
     return [SqlMainEntry(main=_create_main(i)) for i in configs]
 
 
-def _to_sql_piggyback(piggyback: GuiPiggyback) -> SqlPiggyback:
-    p = SqlPiggyback(hostname=piggyback["hostname"])
-    if cache_age := piggyback.get("cache_age"):
-        p["cache_age"] = cache_age
-    if (sections := _to_sql_sections(piggyback.get("sections"))) is not None:
+def _to_sql_piggyback(piggyback: _Piggyback) -> SqlPiggyback:
+    p = SqlPiggyback(hostname=piggyback.hostname)
+    if piggyback.cache_age:
+        p["cache_age"] = piggyback.cache_age
+    if (sections := _to_sql_sections(piggyback.sections)) is not None:
         p["sections"] = sections
 
     return p
 
 
-def _to_sql_auth(auth_type: GuiAuth) -> SqlAuth:
-    match auth_type:
-        case "local":
-            return SqlAuth(username="", type="integrated")
-        case ("remote", (u, p)):
-            return SqlAuth(username=str(u), password=password_store.extract(p), type="sql_server")
+def _to_sql_auth(auth: _Auth) -> SqlAuth:
+    match auth:
+        case ("remote", (user, password)):
+            return SqlAuth(
+                username=user,
+                password=password_store.extract(password),
+                type="sql_server",
+            )
         case _:
             return SqlAuth(username="", type="integrated")
 
 
-def _to_options(options: GuiOptions | None) -> SqlOptions | None:
+def _to_options(options: _Options | None) -> SqlOptions | None:
     if options is None:
         return None
 
     sql_options = SqlOptions()
-    if max_connections := options.get("max_connections"):
-        sql_options["max_connections"] = max_connections
-    if options.get("ignore_inactive_local_instances"):
+    if options.max_connections:
+        sql_options["max_connections"] = options.max_connections
+    if options.ignore_inactive_local_instances:
         sql_options["ignore_inactive_local_instances"] = True
 
     return sql_options or None
 
 
-def _to_tls(tls: GuiTls | None) -> SqlTls | None:
-    if tls is None:
+def _to_tls(tls: _Tls | None) -> SqlTls | None:
+    if tls is None or not tls.client_certificate:
         return None
-
-    if client_certificate := tls.get("client_certificate"):
-        return SqlTls(ca="", client_certificate=client_certificate)
-
-    return None
+    return SqlTls(ca="", client_certificate=tls.client_certificate)
 
 
-def _is_allowed(conf: GuiMainConf, base_os: OS) -> bool:
-    auth_type: GuiAuth = conf.get("auth", "local")
-    return auth_type != "local" or base_os is OS.WINDOWS
+def _is_allowed(conf: _MainConf, base_os: OS) -> bool:
+    return conf.auth != "local" or base_os is OS.WINDOWS
 
 
 register.bakery_plugin(

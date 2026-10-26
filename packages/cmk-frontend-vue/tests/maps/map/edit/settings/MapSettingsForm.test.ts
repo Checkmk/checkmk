@@ -96,7 +96,7 @@ const unsavedChangesDialogStub = defineComponent({
       props.open
         ? h('div', [
             h('button', { type: 'button', onClick: () => emit('confirm') }, 'Discard changes'),
-            h('button', { type: 'button', onClick: () => emit('cancel') }, 'Stay on page')
+            h('button', { type: 'button', onClick: () => emit('cancel') }, 'Keep editing')
           ])
         : h('div')
   }

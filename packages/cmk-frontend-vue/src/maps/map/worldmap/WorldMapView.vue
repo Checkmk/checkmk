@@ -32,7 +32,6 @@ import { useMaps } from '@/maps/services/context'
 import MapsMenu from '@/maps/shared/components/MapsMenu.vue'
 import MapsMenuItem from '@/maps/shared/components/MapsMenuItem.vue'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
-import type { AnchorRect } from '@/maps/utils/anchorRect'
 import { hasAutoSource } from '@/maps/utils/model'
 
 import WorldMapCanvas from './components/WorldMapCanvas.vue'
@@ -56,8 +55,8 @@ const emit = defineEmits<{
   'update:filterNeedle': [needle: string]
   'update:problemsOnly': [value: boolean]
   'object-click': [object: MapElement, event?: MouseEvent]
-  /** Open the object's properties, anchored where the operator asked. */
-  'object-properties': [object: MapElement, anchor: AnchorRect | null]
+  /** Open the object's properties. */
+  'object-properties': [object: MapElement]
   'object-delete': [object: MapElement]
   /** An object was just dropped onto the map. */
   placed: []
@@ -155,13 +154,10 @@ function onEndpointBind(
   )
 }
 
-/**
- * Double-click opens the object's properties, anchored on the object itself so
- * the dialog appears where the operator is looking.
- */
-function onObjectDblclick(object: MapElement, anchor: AnchorRect | null): void {
+/** Double-click opens the object's properties. */
+function onObjectDblclick(object: MapElement): void {
   if (props.editor.editMode.value) {
-    emit('object-properties', object, anchor)
+    emit('object-properties', object)
   }
 }
 
@@ -215,7 +211,7 @@ defineExpose({
         :checkmk-url="checkmkUrl"
         @object-click="(object, event) => emit('object-click', object, event)"
         @object-dblclick="onObjectDblclick"
-        @object-properties="(object, anchor) => emit('object-properties', object, anchor)"
+        @object-properties="(object) => emit('object-properties', object)"
         @object-delete="emit('object-delete', $event)"
         @object-duplicate="
           (object) => {

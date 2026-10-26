@@ -48,7 +48,6 @@ import {
 import { useSettings } from '@/maps/services/context'
 import { applyTileLayer } from '@/maps/shared/worldmap/tileLayer'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
-import { type AnchorRect, anchorRectOf } from '@/maps/utils/anchorRect'
 import { objectDisplayName } from '@/maps/utils/dropdownOptions'
 import {
   dimmedStyle,
@@ -97,8 +96,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'object-click': [object: MapElement, event?: MouseEvent]
-  'object-dblclick': [object: MapElement, anchor: AnchorRect | null]
-  'object-properties': [object: MapElement, anchor: AnchorRect | null]
+  'object-dblclick': [object: MapElement]
+  'object-properties': [object: MapElement]
   'object-delete': [object: MapElement]
   'object-duplicate': [object: MapElement]
   'object-detach': [object: MapElement]
@@ -191,9 +190,9 @@ function onObjectClick(object: MapElement, event?: MouseEvent): void {
   emit('object-click', object, event)
 }
 
-function onObjectDblclick(object: MapElement, event: MouseEvent): void {
+function onObjectDblclick(object: MapElement): void {
   if (!props.preview) {
-    emit('object-dblclick', object, anchorRectOf(event.currentTarget))
+    emit('object-dblclick', object)
   }
 }
 
@@ -311,12 +310,11 @@ const labelViews = computed(() =>
   })
 )
 
-/** Where the context menu stood, so the properties dialog opens next to it. */
 function onContextProperties(): void {
-  const { object, x, y } = menus.context
+  const { object } = menus.context
   menus.close()
   if (object) {
-    emit('object-properties', object, { left: x, top: y, right: x, bottom: y })
+    emit('object-properties', object)
   }
 }
 
@@ -530,7 +528,7 @@ defineExpose({
         :preview="preview"
         :tab-stop="roving.isTabStop(view.object.id)"
         @activate="onObjectClick(view.object, $event)"
-        @double-click="onObjectDblclick(view.object, $event)"
+        @double-click="onObjectDblclick(view.object)"
         @context-menu="onObjectContext(view.object, $event)"
         @hover="(event, anchor) => onObjectHover(view.object, event, anchor)"
         @hover-leave="closeHoverCard"

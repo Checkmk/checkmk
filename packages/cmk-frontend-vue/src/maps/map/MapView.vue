@@ -258,24 +258,6 @@ const propsModalObject = ref<MapElement | null>(null)
  */
 const justPlacedId = ref<string | null>(null)
 
-/**
- * The box the properties card sits beside, or ``null`` when it was reached
- * from somewhere with nothing to sit next to and opens as a centered dialog.
- *
- * Live rather than snapshotted at open time: the canvas re-lays out under the
- * open card (a window resize moves every object), and a stale box would place
- * the card beside where the object used to be.
- */
-const openedOnAnchor = ref<AnchorRect | null>(null)
-// A just-placed object sits beside its card too, so the operator still sees
-// where it went; its element only renders after the card opens. Kept apart
-// from ``justPlacedId``, which a save clears before it is done.
-const besidePlaced = ref(false)
-const propsModalAnchor = computed<AnchorRect | null>(() =>
-  openedOnAnchor.value || besidePlaced.value
-    ? (selectedObjectAnchor.value ?? openedOnAnchor.value)
-    : null
-)
 const deleteTargetObject = ref<MapElement | null>(null)
 const bulkDeleteOpen = ref(false)
 
@@ -287,7 +269,7 @@ function onObjectAction(action: MapObjectAction): void {
   }
   switch (action) {
     case 'edit':
-      openPropsModal(object, selectedObjectAnchor.value)
+      openPropsModal(object)
       break
     case 'duplicate':
       void editor.duplicateSelected()
@@ -332,9 +314,8 @@ const deleteDialogTitle = computed(() => {
   return obj ? objectDeleteTitle(obj, _t) : _t('Delete object')
 })
 
-function openPropsModal(obj: MapElement, anchor?: AnchorRect | null) {
+function openPropsModal(obj: MapElement) {
   editor.selectObject(obj.id)
-  openedOnAnchor.value = anchor ?? null
   propsModalObject.value = obj
 }
 
@@ -344,7 +325,6 @@ function onObjectPlaced() {
     return
   }
   justPlacedId.value = obj.id
-  besidePlaced.value = true
   openPropsModal(obj)
 }
 
@@ -358,9 +338,7 @@ function onSaveWorldmapViewport(at: WorldmapViewport) {
 
 function _closePropsModal() {
   propsModalObject.value = null
-  openedOnAnchor.value = null
   justPlacedId.value = null
-  besidePlaced.value = false
 }
 
 /** Dismissing the modal: an object that only exists because of it goes with it. */
@@ -1028,7 +1006,7 @@ function closeBulkAckModal(sent: boolean): void {
         :map-icon-size="mapConfig?.icon_size ?? settingsStore.settings.value.icon_size"
         :map-default-z="mapConfig?.default_z ?? 1"
         :checkmk-url="checkmkUrl"
-        :anchor-rect="propsModalAnchor"
+        :avoid="selectedObjectAnchor"
         @close="onPropsModalClose"
         @save="onPropsModalSave"
         @delete="onPropsModalDelete"

@@ -16,11 +16,9 @@ const props = defineProps<{ open: boolean }>()
 defineEmits<{ confirm: []; cancel: [] }>()
 
 const title = computed(() => _t('Discard unsaved changes?'))
-const message = computed(() =>
-  _t('You have unsaved changes on this page. Leaving now will discard them.')
-)
+const message = computed(() => _t('You have unsaved changes. Closing now will discard them.'))
 const discardLabel = computed(() => _t('Discard changes'))
-const stayLabel = computed(() => _t('Stay on page'))
+const stayLabel = computed(() => _t('Keep editing'))
 
 // Pre-select the safe action so Enter dismisses the dialog instead of
 // destroying work. CmkPopup disables reka-ui's auto-focus, so the focus

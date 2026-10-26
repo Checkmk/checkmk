@@ -34,7 +34,6 @@ import { useCanvasPan } from '@/maps/map/static/composables/useCanvasPan'
 import { CANVAS_SCALE, useCanvasViewport } from '@/maps/map/static/composables/useCanvasViewport'
 import { useSettings } from '@/maps/services/context'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
-import { type AnchorRect, anchorRectOf } from '@/maps/utils/anchorRect'
 import { objectDisplayName } from '@/maps/utils/dropdownOptions'
 
 import MapCanvasGrid from './MapCanvasGrid.vue'
@@ -78,8 +77,8 @@ const emit = defineEmits<{
   'object-drag-end': [id: string, x: number, y: number]
   'objects-drag-end': [moves: { id: string; x: number; y: number }[]]
   'object-click': [object: MapElement, event?: MouseEvent]
-  'object-dblclick': [object: MapElement, anchor: AnchorRect | null]
-  'object-properties': [object: MapElement, anchor: AnchorRect | null]
+  'object-dblclick': [object: MapElement]
+  'object-properties': [object: MapElement]
   'object-delete': [object: MapElement]
   'object-duplicate': [object: MapElement]
   'object-straighten': [object: MapElement]
@@ -184,15 +183,11 @@ function withContextObject(act: (object: MapElement) => void): void {
   }
 }
 
-/**
- * "Edit properties" hands over where the menu stood, so the properties dialog
- * can open next to the object rather than in the middle of the map.
- */
 function onContextProperties(): void {
-  const { object, x, y } = menus.context
+  const { object } = menus.context
   menus.close()
   if (object) {
-    emit('object-properties', object, { left: x, top: y, right: x, bottom: y })
+    emit('object-properties', object)
   }
 }
 
@@ -398,7 +393,7 @@ defineExpose({
           @line-drag-start="(event, mode) => emit('line-drag-start', event, line, mode)"
           @context-menu="(event) => menus.openContext(line, event)"
           @line-click="onLineClick(line)"
-          @line-dblclick="emit('object-dblclick', line, anchorRectOf($event.currentTarget))"
+          @line-dblclick="emit('object-dblclick', line)"
           @hover="menus.openHover(line, $event)"
           @hover-leave="menus.hover.scheduleClose()"
         />
@@ -422,7 +417,7 @@ defineExpose({
       :tab-stop="roving.isTabStop(object.id)"
       @pointer-down="onObjectPointerDown($event, object)"
       @activate="onObjectActivate(object, $event)"
-      @double-click="emit('object-dblclick', object, anchorRectOf($event.currentTarget))"
+      @double-click="emit('object-dblclick', object)"
       @context-menu="menus.openContext(object, $event)"
       @hover="
         (event, anchor) => !editMode && menus.openHover(object, event, { anchorRect: anchor })

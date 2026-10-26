@@ -66,6 +66,7 @@ class IntermediateMonitoringConfig:
     host_tags: HostTags
     plugins: AgentBasedPlugins
     hosts_to_update: set[HostName] | None
+    debug: bool
 
     loaded_config: BaseConfig
 

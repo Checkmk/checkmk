@@ -218,6 +218,7 @@ def make_nagios_config_builder() -> MonitoringConfigBuilder:
                 if nagios_core_config.delay_precompile
                 else PrecompileMode.INSTANT
             ),
+            debug=intermediate_config.debug,
         )
 
     return MonitoringConfigBuilder(name="nagios", build=build)
@@ -308,6 +309,7 @@ def _precompile_hostchecks(
     get_ip_stack_config: Callable[[HostName], IPStackConfig],
     ip_address_of: ip_lookup.IPLookup,
     precompile_mode: PrecompileMode,
+    debug: bool,
 ) -> None:
     with suppress(IOError):
         sys.stdout.write("Precompiling host checks...")
@@ -322,6 +324,7 @@ def _precompile_hostchecks(
         get_ip_stack_config,
         ip_address_of,
         precompile_mode=precompile_mode,
+        debug=debug,
     )
     with suppress(IOError):
         sys.stdout.write(tty.ok + "\n")

@@ -22,7 +22,6 @@ from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
 from typing import assert_never
 
-import cmk.ccc.debug
 import cmk.checkengine.plugin_backend as agent_based_register
 from cmk.base.config import ConfigCache, FilterMode
 from cmk.ccc import store, tty
@@ -114,6 +113,7 @@ def precompile_hostchecks(
     ip_address_of: IPLookup,
     *,
     precompile_mode: PrecompileMode,
+    debug: bool,
 ) -> None:
     console.verbose("Precompiling host checks...")
 
@@ -147,7 +147,7 @@ def precompile_hostchecks(
         except MKIPAddressLookupError as e:
             console.error(f"Error precompiling checks for host {hostname}: {e}", file=sys.stderr)
         except Exception as e:
-            if cmk.ccc.debug.enabled():
+            if debug:
                 raise
             console.error(f"Error precompiling checks for host {hostname}: {e}", file=sys.stderr)
             sys.exit(5)

@@ -20,7 +20,6 @@ py_library(
         "//cmk/monitoring_config/internal",
         "//cmk/utils",
         "//packages/cmk-ccc:config-path",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:store",

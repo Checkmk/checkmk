@@ -191,6 +191,7 @@ def do_create_config(
                 edition=edition,
                 loaded_config=loaded_config,
                 make_fetcher_trigger=make_fetcher_trigger,
+                debug=debug,
             )
     except Exception as e:
         if debug:
@@ -272,6 +273,7 @@ def _create_active_config(
     edition: Edition,
     loaded_config: BaseConfig,
     make_fetcher_trigger: FetcherTriggerFactory,
+    debug: bool,
 ) -> None:
     config_warnings.initialize()
 
@@ -291,6 +293,7 @@ def _create_active_config(
         intermediate_config = IntermediateMonitoringConfig(
             edition=edition,
             make_fetcher_trigger=make_fetcher_trigger,
+            debug=debug,
             config_creation_context=config_creation_context,
             passwords=passwords,
             licensing_handler=licensing_handler_factory(),

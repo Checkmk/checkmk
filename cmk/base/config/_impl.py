@@ -2801,12 +2801,6 @@ class ConfigCache:
             return "Check_MK Discovery"
         return "Check_MK inventory"
 
-    def agent_exclude_sections(self, host_name: HostName) -> dict[str, str]:
-        settings = self.ruleset_matcher.get_host_values_all(
-            host_name, self._loaded_config.agent_exclude_sections, self.label_manager.labels_of_host
-        )
-        return settings[0] if settings else {}
-
     def ping_levels(self, host_name: HostName) -> PingLevels:
         levels: PingLevels = {}
 

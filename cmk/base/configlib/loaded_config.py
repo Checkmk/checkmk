@@ -129,9 +129,6 @@ class BaseConfig(  # type: ignore[explicit-any]
     )
     piggyback_max_cachefile_age: int = 3600
     agent_encryption: Sequence[RuleSpec[str | None]] = dataclasses.field(default_factory=list)
-    agent_exclude_sections: Sequence[RuleSpec[dict[str, str]]] = dataclasses.field(
-        default_factory=list
-    )
     telemetry_custom_service: Sequence[RuleSpec[Mapping[str, object]]] = dataclasses.field(
         default_factory=list
     )

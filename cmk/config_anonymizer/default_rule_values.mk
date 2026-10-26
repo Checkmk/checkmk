@@ -345,6 +345,15 @@ agent_config['dnsclient'] = [
 
 agent_config = locals().setdefault('agent_config', {})
 
+agent_config.setdefault('agent_exclude_sections', [])
+
+agent_config['agent_exclude_sections'] = [
+{'id': 'f49dc496-6172-4718-bf79-bd38bbfc04b3', 'value': {'sections': []}, 'condition': {}, 'options': {'disabled': False}},
+] + agent_config['agent_exclude_sections']
+
+
+agent_config = locals().setdefault('agent_config', {})
+
 agent_config.setdefault('exclude_sections_aix', [])
 
 agent_config['exclude_sections_aix'] = [
@@ -1257,13 +1266,6 @@ globals().setdefault('agent_encryption', [])
 agent_encryption = [
 {'id': 'aed26744-00ac-40d0-a890-99615f77009e', 'value': None, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_encryption
-
-
-globals().setdefault('agent_exclude_sections', [])
-
-agent_exclude_sections = [
-{'id': 'f49dc496-6172-4718-bf79-bd38bbfc04b3', 'value': {'sections': []}, 'condition': {}, 'options': {'disabled': False}},
-] + agent_exclude_sections
 
 
 globals().setdefault('agent_ports', [])

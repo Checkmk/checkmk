@@ -51,6 +51,8 @@ REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
     # 3.0: fix the misspelled Eaton UPS environment rule set
     "checkgroup_parameters:eaton_enviroment": "checkgroup_parameters:eaton_environment",
     "static_checks:eaton_enviroment": "static_checks:eaton_environment",
+    # 3.0: migrated to rulesets v1 (AgentConfig)
+    "agent_exclude_sections": "agent_config:agent_exclude_sections",
 }
 
 # Please keep this functionality even if we currently don't have any replaced SNMP sections!

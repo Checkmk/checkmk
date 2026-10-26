@@ -39,10 +39,13 @@ from cmk.checkengine.snmplib import SNMPRawData
 from cmk.checkengine.source_abc import Source
 from cmk.checkengine.source_builder import SourceBuilder
 from cmk.checkengine.sources._sources import (
+    MgmtSNMPSource,
     MissingIPSource,
     PiggybackSource,
     ProgramSource,
+    SNMPSource,
     SpecialAgentSource,
+    TCPSource,
 )
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
@@ -81,9 +84,11 @@ def _make_sources(
     tmp_path: Path,
     special_agent_command_lines: Sequence[tuple[str, SpecialAgentCommandLine]] | None = None,
     host_address: HostAddress | None | _Default = _DEFAULT,
+    management_address: HostAddress | None | _Default = _DEFAULT,
     ip_stack_config: IPStackConfig = IPStackConfig.IPv4,
     simulation_mode: bool = True,
     file_cache_options: FileCacheOptions = FileCacheOptions(),
+    force_stored_walks: bool = False,
 ) -> Sequence[Source]:
     # Too many arguments to this function.  Let's wrap it to make it easier
     # to test.
@@ -92,6 +97,9 @@ def _make_sources(
     # the resolvable one so a test changes one thing at a time.  None is a
     # meaningful value here ("no address at all"), hence the sentinel.
     host_address = ipaddress if isinstance(host_address, _Default) else host_address
+    management_address = (
+        ipaddress if isinstance(management_address, _Default) else management_address
+    )
     ip_family: Literal[socket.AddressFamily.AF_INET] = socket.AddressFamily.AF_INET
     config_cache = loading_result.config_cache
     return SourceBuilder(
@@ -115,6 +123,7 @@ def _make_sources(
                 relative_walk_cache_path=tmp_path,
                 relative_section_cache_path=Path("dev/null"),
                 caching_config=lambda host_name: {},  # noqa: ARG005
+                force_stored_walks=force_stored_walks,
             ),
         ),
         simulation_mode=simulation_mode,
@@ -132,7 +141,7 @@ def _make_sources(
         computed_datasources=config_cache.computed_datasources(hostname),
         datasource_programs=config_cache.datasource_programs(hostname),
         tag_list=loading_result.host_tags.tag_list(hostname),
-        management_ip=ipaddress,
+        management_ip=management_address,
         management_protocol=config_cache.management_protocol(hostname),
         special_agent_command_lines=(
             config_cache.special_agent_command_lines(
@@ -210,6 +219,106 @@ def test_snmp_host(snmp_ds: TagID, monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
         type(source.fetcher())
         for source in _make_sources(hostname, loading_result, tmp_path=tmp_path)
     ] == [SNMPFetcher, PiggybackFetcher]
+
+
+def test_snmp_host_without_address_reports_missing_ip(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    hostname = HostName("snmp-host")
+    tags = {TagGroupID("agent"): TagID("no-agent"), TagGroupID("snmp_ds"): TagID("snmp-v2")}
+
+    ts = Scenario()
+    ts.add_host(hostname, tags=tags)
+    loading_result = ts.apply(monkeypatch)
+    assert [
+        type(source)
+        for source in _make_sources(
+            hostname, loading_result, tmp_path=tmp_path, host_address=None, simulation_mode=False
+        )
+    ] == [MissingIPSource, PiggybackSource]
+
+
+def test_snmp_host_read_from_a_forced_stored_walk_needs_no_address(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    hostname = HostName("snmp-host")
+    tags = {TagGroupID("agent"): TagID("no-agent"), TagGroupID("snmp_ds"): TagID("snmp-v2")}
+
+    ts = Scenario()
+    ts.add_host(hostname, tags=tags)
+    loading_result = ts.apply(monkeypatch)
+    assert [
+        type(source)
+        for source in _make_sources(
+            hostname,
+            loading_result,
+            tmp_path=tmp_path,
+            host_address=None,
+            simulation_mode=False,
+            force_stored_walks=True,
+        )
+    ] == [SNMPSource, PiggybackSource]
+
+
+def test_no_ip_snmp_host_is_not_read_from_a_forced_stored_walk(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    hostname = HostName("no-ip-snmp-host")
+    tags = {TagGroupID("agent"): TagID("no-agent"), TagGroupID("snmp_ds"): TagID("snmp-v2")}
+
+    ts = Scenario()
+    ts.add_host(hostname, tags=tags)
+    loading_result = ts.apply(monkeypatch)
+    assert [
+        type(source)
+        for source in _make_sources(
+            hostname,
+            loading_result,
+            tmp_path=tmp_path,
+            host_address=None,
+            ip_stack_config=IPStackConfig.NO_IP,
+            simulation_mode=False,
+            force_stored_walks=True,
+        )
+    ] == [PiggybackSource]
+
+
+def test_snmp_management_board_without_address_reports_missing_ip(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    hostname = HostName("agent-host")
+
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_option("management_protocol", {hostname: "snmp"})
+    loading_result = ts.apply(monkeypatch)
+    assert [
+        type(source)
+        for source in _make_sources(
+            hostname, loading_result, tmp_path=tmp_path, management_address=None
+        )
+    ] == [TCPSource, MissingIPSource, PiggybackSource]
+
+
+def test_snmp_management_board_read_from_a_forced_stored_walk_needs_no_address(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    hostname = HostName("agent-host")
+
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_option("management_protocol", {hostname: "snmp"})
+    loading_result = ts.apply(monkeypatch)
+    assert [
+        type(source)
+        for source in _make_sources(
+            hostname,
+            loading_result,
+            tmp_path=tmp_path,
+            management_address=None,
+            force_stored_walks=True,
+        )
+    ] == [TCPSource, MgmtSNMPSource, PiggybackSource]
 
 
 def test_dual_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

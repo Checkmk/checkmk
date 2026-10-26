@@ -299,8 +299,16 @@ class SourceBuilder:
         if self.ip_stack_config is IPStackConfig.NO_IP:
             return
 
-        if self.ipaddress is None:
-            self._add(MissingIPSource(self.host_name, self.ipaddress, "snmp"))
+        # The backend override of the fetcher config (--snmp-backend) is left out on
+        # purpose: honouring it would let a host without a resolvable address be read
+        # from its walk under "--snmp-backend stored-walk" as well, which it never was.
+        # Consider it once that is wanted.
+        ipaddress = self.ipaddress
+        if ipaddress is None and self._source_config.snmp_fetcher_config.force_stored_walks:
+            ipaddress = HostAddress("127.0.0.1")
+
+        if ipaddress is None:
+            self._add(MissingIPSource(self.host_name, ipaddress, "snmp"))
             return
 
         self._add(
@@ -309,7 +317,7 @@ class SourceBuilder:
                 self.plugins,
                 self.host_name,
                 self.host_ip_family,
-                self.ipaddress,
+                ipaddress,
                 max_age=self.max_age_snmp,
                 file_cache_path_base=self._file_cache_path_base,
                 file_cache_path_relative=self._file_cache_path_relative,
@@ -323,7 +331,15 @@ class SourceBuilder:
         if self.management_protocol is None:
             return
 
-        if self.management_ip is None:
+        management_ip = self.management_ip
+        if (
+            management_ip is None
+            and self.management_protocol == "snmp"
+            and self._source_config.snmp_fetcher_config.force_stored_walks
+        ):
+            management_ip = HostAddress("127.0.0.1")
+
+        if management_ip is None:
             self._add(MissingIPSource(self.host_name, None, f"mgmt_{self.management_protocol}"))
             return
 
@@ -335,7 +351,7 @@ class SourceBuilder:
                         self.plugins,
                         self.host_name,
                         self.host_ip_family,
-                        self.management_ip,
+                        management_ip,
                         max_age=self.max_age_snmp,
                         file_cache_path_base=self._file_cache_path_base,
                         file_cache_path_relative=self._file_cache_path_relative,
@@ -346,7 +362,7 @@ class SourceBuilder:
                     IPMISource(
                         self._source_config,
                         self.host_name,
-                        self.management_ip,
+                        management_ip,
                         max_age=self.max_age_agent,
                         file_cache_path_base=self._file_cache_path_base,
                         file_cache_path_relative=self._file_cache_path_relative,

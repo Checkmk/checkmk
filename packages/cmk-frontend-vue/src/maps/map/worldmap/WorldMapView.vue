@@ -25,6 +25,7 @@ import MapSearch from '@/maps/map/components/MapSearch.vue'
 import MapZoomControls from '@/maps/map/components/MapZoomControls.vue'
 import ProblemsOnlyToggle from '@/maps/map/components/ProblemsOnlyToggle.vue'
 import type { MapEditor } from '@/maps/map/composables/useMapEditor'
+import type { SettingsFocus } from '@/maps/map/edit/settings/settingsForm'
 import type { LineEndpoint } from '@/maps/map/worldmap/composables/useWorldmapLines'
 import type { MarkerMove } from '@/maps/map/worldmap/composables/useWorldmapMarkers'
 import { type LatLng, type WorldmapViewport, pointObjects } from '@/maps/map/worldmap/geo'
@@ -36,7 +37,7 @@ import { hasAutoSource } from '@/maps/utils/model'
 
 import WorldMapCanvas from './components/WorldMapCanvas.vue'
 
-const { _t } = usei18n()
+const { _t, _tp } = usei18n()
 
 const props = defineProps<{
   config: MapConfig | null
@@ -64,14 +65,21 @@ const emit = defineEmits<{
   'view-changed': []
   /** The operator wants this viewport to be the one the map opens on. */
   'save-viewport': [at: WorldmapViewport]
+  /** Open the map's settings at the option that fills the map with hosts. */
+  'open-settings': [focus: SettingsFocus]
 }>()
 
 const canvas = useTemplateRef<InstanceType<typeof WorldMapCanvas>>('canvas')
 
 const { autoObjects } = useMaps()
 
-/** What to say on a map with nothing on it; nothing while there may still be. */
-const emptyText = computed<string | null>(() => {
+/**
+ * What to say on a map with nothing on it, and whether to point at the setting
+ * that fills it; nothing while there may still be something.
+ */
+// The button sits inside the sentence, so the sentence stays one msgid and the
+// placeholder marks where the button goes.
+const emptyState = computed<{ text: string; toSettings: boolean } | null>(() => {
   const config = props.config
   if (!config || config.objects.length > 0 || props.editor.editMode.value || props.preview) {
     return null
@@ -81,15 +89,22 @@ const emptyText = computed<string | null>(() => {
     // that failed says nothing about them.
     return autoObjects.value !== 'loaded'
       ? null
-      : _t(
-          'No hosts with geo coordinates found — set the maps_lat and maps_lng labels on hosts to show them here'
-        )
+      : {
+          text: _t(
+            'No hosts with geo coordinates found. Set the maps_lat and maps_lng labels on hosts to show them here.'
+          ),
+          toSettings: false
+        }
   }
   return props.canEdit
-    ? _t(
-        'No objects yet — click the Edit button (bottom right) to place some, or populate the map from hosts with the maps_lat and maps_lng labels under Map settings → Automap source'
-      )
-    : _t('This map has no objects yet')
+    ? {
+        text: _tp(
+          '%{link} is a button that opens the "Automap source" setting',
+          'No objects yet. Use the Edit button at the bottom right to place some, or turn on %{link} to place hosts by their maps_lat and maps_lng labels.'
+        ),
+        toSettings: true
+      }
+    : { text: _t('This map has no objects yet'), toSettings: false }
 })
 
 // The same objects the canvas fits the viewport to, so the control never
@@ -237,8 +252,20 @@ defineExpose({
       />
 
       <!-- Text only, as on a static map; over the tiles, which stay usable. -->
-      <div v-if="emptyText" class="maps-world-map-view__empty">
-        <p class="maps-world-map-view__empty-text">{{ emptyText }}</p>
+      <div v-if="emptyState" class="maps-world-map-view__empty">
+        <p class="maps-world-map-view__empty-text">
+          <template v-if="emptyState.toSettings">
+            {{ emptyState.text.split('%{link}')[0]
+            }}<CmkButton
+              variant="text"
+              size="small"
+              class="maps-world-map-view__empty-link"
+              @click="emit('open-settings', 'automap_source')"
+              >{{ _t('Automap source') }}</CmkButton
+            >{{ emptyState.text.split('%{link}')[1] }}
+          </template>
+          <template v-else>{{ emptyState.text }}</template>
+        </p>
       </div>
 
       <div
@@ -291,6 +318,16 @@ defineExpose({
   justify-content: center;
   padding: var(--dimension-8);
   pointer-events: none;
+}
+
+/* The overlay lets clicks through to the tiles; the button takes its own. It
+   sits in the sentence, so it drops the button's box. */
+.maps-world-map-view__empty-link {
+  height: auto;
+  margin: 0;
+  padding: 0;
+  vertical-align: baseline;
+  pointer-events: auto;
 }
 
 .maps-world-map-view__empty-text {

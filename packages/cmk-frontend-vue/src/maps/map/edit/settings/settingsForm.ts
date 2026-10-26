@@ -82,6 +82,9 @@ export interface SettingsForm {
   context_template: string
 }
 
+/** A settings option the dialog can open at, when sent there from the map. */
+export type SettingsFocus = 'automap_source'
+
 /** The map's stored geo view, or where the parent map is currently looking. */
 export function initialGeoView(
   map: MapRead,

@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
@@ -27,13 +28,18 @@ function renderView(
   config: MapConfig,
   {
     canEdit = true,
-    autoObjects = 'loaded'
-  }: { canEdit?: boolean; autoObjects?: 'none' | 'loading' | 'loaded' | 'failed' } = {}
-): void {
+    autoObjects = 'loaded',
+    onOpenSettings = () => {}
+  }: {
+    canEdit?: boolean
+    autoObjects?: 'none' | 'loading' | 'loaded' | 'failed'
+    onOpenSettings?: (focus: string) => void
+  } = {}
+) {
   const services = fakeMapsServices()
   services.maps.autoObjects.value = autoObjects
   const editor = runWithServices(services, () => useMapEditor())
-  render(WorldMapView, {
+  return render(WorldMapView, {
     global: mapsGlobal({ WorldMapCanvas: true }, services),
     props: {
       config,
@@ -44,7 +50,8 @@ function renderView(
       canEdit,
       checkmkUrl: null,
       filterNeedle: '',
-      problemsOnly: false
+      problemsOnly: false,
+      'onOpen-settings': onOpenSettings
     }
   })
 }
@@ -53,8 +60,19 @@ describe('WorldMapView — a map with nothing on it', () => {
   it('shows an editor both ways to fill it', () => {
     renderView(aMap({ view: geoView(), objects: [] }))
 
-    expect(screen.getByText(/No objects yet — click the Edit button/)).toBeInTheDocument()
+    expect(screen.getByText(/No objects yet\. Use the Edit button/)).toBeInTheDocument()
     expect(screen.getByText(/maps_lat and maps_lng labels/)).toBeInTheDocument()
+  })
+
+  it('opens the settings at the option that places hosts automatically', async () => {
+    const opened: string[] = []
+    renderView(aMap({ view: geoView(), objects: [] }), {
+      onOpenSettings: (focus) => opened.push(focus)
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Automap source' }))
+
+    expect(opened).toEqual(['automap_source'])
   })
 
   it('tells a viewer only that it is empty', () => {

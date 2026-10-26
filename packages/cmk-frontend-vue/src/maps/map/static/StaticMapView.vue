@@ -187,7 +187,7 @@ function onObjectDblclick(object: MapElement): void {
         <p class="maps-static-map-view__empty-text">
           {{
             canEdit
-              ? _t('No objects yet — click the Edit button (bottom right) to add some')
+              ? _t('No objects yet. Use the Edit button at the bottom right to add some.')
               : _t('This map has no objects yet')
           }}
         </p>

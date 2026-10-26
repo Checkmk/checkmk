@@ -54,6 +54,7 @@ import MapObjectActionBar, {
 import { useElementRect } from '@/maps/map/edit/composables/useElementRect'
 import ObjectPropertiesModal from '@/maps/map/edit/properties/ObjectPropertiesModal.vue'
 import MapSettingsModal from '@/maps/map/edit/settings/MapSettingsModal.vue'
+import type { SettingsFocus } from '@/maps/map/edit/settings/settingsForm'
 import type WorldMapViewType from '@/maps/map/worldmap/WorldMapView.vue'
 import type { WorldmapViewport } from '@/maps/map/worldmap/geo'
 import {
@@ -679,6 +680,7 @@ watch(mapName, () => {
 })
 const showSettings = ref(false)
 const settingsWorldmapView = ref<WorldmapViewport | null>(null)
+const settingsFocus = ref<SettingsFocus | null>(null)
 const settingsParentMapSize = ref<{ width: number; height: number } | null>(null)
 
 // The picker runs on the map itself: the geo map's view shows the banner and
@@ -713,10 +715,11 @@ function onSettingsWorldmapViewChange(at: WorldmapViewport) {
   worldmapViewRef.value?.setViewport(at)
 }
 
-function openSettings() {
+function openSettings(focus: SettingsFocus | null = null) {
   if (!mapConfig.value) {
     return
   }
+  settingsFocus.value = focus
   settingsWorldmapView.value = null
   settingsParentMapSize.value = isWorldmap.value
     ? (worldmapViewRef.value?.getContainerSize() ?? null)
@@ -790,7 +793,7 @@ function closeBulkAckModal(sent: boolean): void {
       :dimmed="!!drawerObject"
       @toggle-rotation="toggleRotationPause"
       @open-full-screen="openKioskInNewTab"
-      @open-settings="openSettings"
+      @open-settings="openSettings()"
     >
       <template #breadcrumb>
         <CmkBreadcrumb :items="breadcrumbItems" />
@@ -832,6 +835,7 @@ function closeBulkAckModal(sent: boolean): void {
         @placed="onObjectPlaced"
         @view-changed="geoViewTick++"
         @save-viewport="onSaveWorldmapViewport"
+        @open-settings="openSettings"
       />
 
       <radar-map-view
@@ -1019,6 +1023,7 @@ function closeBulkAckModal(sent: boolean): void {
       :map="mapConfigAsRead"
       :worldmap-view="settingsWorldmapView"
       :parent-map-size="settingsParentMapSize"
+      :initial-focus="settingsFocus"
       @close="showSettings = false"
       @updated="onSettingsUpdated"
       @pick-worldmap-view="onSettingsPickWorldmapView"

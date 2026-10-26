@@ -40,6 +40,7 @@ import RadarSettings from '@/maps/map/edit/settings/components/RadarSettings.vue
 import StaticMapSettings from '@/maps/map/edit/settings/components/StaticMapSettings.vue'
 import WorldmapSettings from '@/maps/map/edit/settings/components/WorldmapSettings.vue'
 import {
+  type SettingsFocus,
   flowViewData,
   formFromMap,
   geoViewOutOfRange,
@@ -65,6 +66,8 @@ const props = defineProps<{
   map: MapRead
   worldmapView?: { lat: number; lng: number; zoom: number } | null
   parentMapSize?: { width: number; height: number } | null
+  /** The option to open at, when the map sent the operator here for it. */
+  initialFocus?: SettingsFocus | null
 }>()
 
 const emit = defineEmits<{
@@ -614,6 +617,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
                     v-else-if="mapType === 'worldmap'"
                     v-model:form="form"
                     :save-attempted="saveAttempted"
+                    :initial-focus="initialFocus ?? null"
                     @pick-view="startWorldmapViewPick"
                   />
                   <!-- A flow map's view fields are a FormSpec too, so their

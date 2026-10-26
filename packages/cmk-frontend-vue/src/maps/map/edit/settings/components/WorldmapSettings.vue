@@ -13,12 +13,13 @@ import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
-import { computed } from 'vue'
+import { computed, onMounted, useTemplateRef } from 'vue'
 
 import EditField from '@/maps/map/edit/components/EditField.vue'
 import SettingsSection from '@/maps/map/edit/settings/components/SettingsSection.vue'
 import {
   GEO_MAX_ZOOM,
+  type SettingsFocus,
   type SettingsForm,
   geoViewOutOfRange
 } from '@/maps/map/edit/settings/settingsForm'
@@ -28,6 +29,8 @@ import { isAllowedTileUrl } from '@/maps/shared/worldmap/tileLayer'
 const props = defineProps<{
   /** True once the operator tried to save, so gaps may be pointed out. */
   saveAttempted: boolean
+  /** The option to bring into view and focus on opening. */
+  initialFocus?: SettingsFocus | null
 }>()
 
 const form = defineModel<SettingsForm>('form', { required: true })
@@ -35,6 +38,16 @@ const form = defineModel<SettingsForm>('form', { required: true })
 const emit = defineEmits<{ 'pick-view': [] }>()
 
 const { _t } = usei18n()
+
+const automapSource = useTemplateRef<HTMLElement>('automapSource')
+const automapSourceDropdown =
+  useTemplateRef<InstanceType<typeof CmkDropdown>>('automapSourceDropdown')
+onMounted(() => {
+  if (props.initialFocus === 'automap_source') {
+    automapSource.value?.scrollIntoView({ block: 'center' })
+    automapSourceDropdown.value?.focus()
+  }
+})
 
 const autoSourceOptions = computed(() => ({
   type: 'fixed' as const,
@@ -155,24 +168,27 @@ const tileUrlBlocked = computed(
       />
     </EditField>
 
-    <EditField
-      :label="_t('Automap source')"
-      :help="
-        _t(
-          'Hosts are auto-discovered from monitoring data via maps_lat/maps_lng labels or LAT/LONG custom variables. They show up alongside any objects you place manually.'
-        )
-      "
-    >
-      <CmkDropdown
-        :model-value="form.worldmap_auto_source"
-        :options="autoSourceOptions"
+    <div ref="automapSource">
+      <EditField
         :label="_t('Automap source')"
-        width="fill"
-        @update:model-value="
-          form.worldmap_auto_source = ($event ?? '') as typeof form.worldmap_auto_source
+        :help="
+          _t(
+            'Hosts are auto-discovered from monitoring data via maps_lat/maps_lng labels or LAT/LONG custom variables. They show up alongside any objects you place manually.'
+          )
         "
-      />
-    </EditField>
+      >
+        <CmkDropdown
+          ref="automapSourceDropdown"
+          :model-value="form.worldmap_auto_source"
+          :options="autoSourceOptions"
+          :label="_t('Automap source')"
+          width="fill"
+          @update:model-value="
+            form.worldmap_auto_source = ($event ?? '') as typeof form.worldmap_auto_source
+          "
+        />
+      </EditField>
+    </div>
     <EditField
       v-if="needsGroupName"
       v-slot="{ id }"

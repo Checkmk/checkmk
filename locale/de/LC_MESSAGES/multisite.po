@@ -23427,6 +23427,9 @@ msgstr "Das MegaRAID-Plugin nicht verteilen"
 msgid "Do not deploy the Oracle plug-in"
 msgstr "Oracle-Plugin nicht verteilen"
 
+msgid "Do not deploy the Redis plug-in"
+msgstr "Das Redis-Plugin nicht verteilen"
+
 msgid "Do not deploy the SAP R/3 plug-in"
 msgstr "Das SAP R/3-Plugin nicht verteilen"
 
@@ -23807,6 +23810,9 @@ msgstr "Verwende kein TLS/SSL/Https (unsicher)"
 
 msgid "Don't use a namespace prefix"
 msgstr "Verwende keinen Namespace Präfix"
+
+msgid "Don't use password"
+msgstr "Kein Passwort verwenden"
 
 msgid "Don't use quotes"
 msgstr "Keine Anführungszeichen verwenden"
@@ -110109,14 +110115,8 @@ msgstr ""
 #~ msgid "Do not deploy the MySQL plug-in"
 #~ msgstr "Das MySQL-Plugin nicht verteilen"
 
-#~ msgid "Do not deploy the Redis plug-in"
-#~ msgstr "Das Redis-Plugin nicht verteilen"
-
 #~ msgid "Do not deploy the SAP HANA plug-in"
 #~ msgstr "Das SAP HANA-Plugin nicht verteilen"
-
-#~ msgid "Don't use password"
-#~ msgstr "Kein Passwort verwenden"
 
 #~ msgid ""
 #~ "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "

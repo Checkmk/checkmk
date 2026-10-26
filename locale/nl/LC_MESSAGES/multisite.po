@@ -24462,6 +24462,10 @@ msgid "Do not deploy the Oracle plug-in"
 msgstr "Geen iptables plugin implementeren"
 
 #, fuzzy
+msgid "Do not deploy the Redis plug-in"
+msgstr "Zet de Redis plugin niet in"
+
+#, fuzzy
 msgid "Do not deploy the SAP R/3 plug-in"
 msgstr "Implementeer de SAP R/3 plugin niet"
 
@@ -24876,6 +24880,9 @@ msgstr "Gebruik geen TLS/SSL/Https (onveilig)"
 
 msgid "Don't use a namespace prefix"
 msgstr "Gebruik geen namespace voorvoegsel"
+
+msgid "Don't use password"
+msgstr "Gebruik geen wachtwoord"
 
 msgid "Don't use quotes"
 msgstr "Gebruik geen aanhalingstekens"
@@ -114043,15 +114050,8 @@ msgstr ""
 #~ msgstr "De MySQL plugin niet implementeren"
 
 #, fuzzy
-#~ msgid "Do not deploy the Redis plug-in"
-#~ msgstr "Zet de Redis plugin niet in"
-
-#, fuzzy
 #~ msgid "Do not deploy the SAP HANA plug-in"
 #~ msgstr "Implementeer de SAP HANA plugin niet"
-
-#~ msgid "Don't use password"
-#~ msgstr "Gebruik geen wachtwoord"
 
 #~ msgid ""
 #~ "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "

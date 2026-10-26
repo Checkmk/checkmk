@@ -22704,6 +22704,9 @@ msgstr "MegaRAIDプラグインをデプロイしないでください"
 msgid "Do not deploy the Oracle plug-in"
 msgstr "Oracle プラグインをデプロイしないでください"
 
+msgid "Do not deploy the Redis plug-in"
+msgstr "Redisプラグインをデプロイしないでください"
+
 msgid "Do not deploy the SAP R/3 plug-in"
 msgstr "SAP R/3プラグインをデプロイしないでください"
 
@@ -23073,6 +23076,9 @@ msgstr "TLS/SSL/Httpsを使用しないでください(安全ではありませ�
 
 msgid "Don't use a namespace prefix"
 msgstr "名前空間プレフィックスを使用しないでください"
+
+msgid "Don't use password"
+msgstr "パスワードを使用しないでください"
 
 msgid "Don't use quotes"
 msgstr "引用符は使用しないでください"
@@ -107179,14 +107185,8 @@ msgstr ""
 #~ msgid "Do not deploy the MySQL plug-in"
 #~ msgstr "MySQLプラグインをデプロイしないでください"
 
-#~ msgid "Do not deploy the Redis plug-in"
-#~ msgstr "Redisプラグインをデプロイしないでください"
-
 #~ msgid "Do not deploy the SAP HANA plug-in"
 #~ msgstr "SAP HANA プラグインをデプロイしないでください"
-
-#~ msgid "Don't use password"
-#~ msgstr "パスワードを使用しないでください"
 
 #~ msgid ""
 #~ "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "

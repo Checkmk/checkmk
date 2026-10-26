@@ -24570,6 +24570,10 @@ msgid "Do not deploy the Oracle plug-in"
 msgstr "Nu implementați plugin-ul iptables"
 
 #, fuzzy
+msgid "Do not deploy the Redis plug-in"
+msgstr "Nu implementați extensia Redis"
+
+#, fuzzy
 msgid "Do not deploy the SAP R/3 plug-in"
 msgstr "Nu implementați extensia SAP R/3"
 
@@ -24980,6 +24984,9 @@ msgstr "Nu folosiți TLS/SSL/Https (nesigur)"
 
 msgid "Don't use a namespace prefix"
 msgstr "Nu folosiți un prefix de spațiu de nume"
+
+msgid "Don't use password"
+msgstr "Nu folosiți parola"
 
 msgid "Don't use quotes"
 msgstr "Nu folosiți ghilimele"
@@ -114528,15 +114535,8 @@ msgstr ""
 #~ msgstr "Nu implementați plugin-ul MySQL"
 
 #, fuzzy
-#~ msgid "Do not deploy the Redis plug-in"
-#~ msgstr "Nu implementați extensia Redis"
-
-#, fuzzy
 #~ msgid "Do not deploy the SAP HANA plug-in"
 #~ msgstr "Nu implementați extensia SAP HANA"
-
-#~ msgid "Don't use password"
-#~ msgstr "Nu folosiți parola"
 
 #~ msgid ""
 #~ "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "

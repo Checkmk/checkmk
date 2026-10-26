@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-21 17:31+0000\n"
+"PO-Revision-Date: 2026-10-25 18:31+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -24467,6 +24467,10 @@ msgid "Do not deploy the Oracle plug-in"
 msgstr "Não implante o plugin iptables"
 
 #, fuzzy
+msgid "Do not deploy the Redis plug-in"
+msgstr "Não utilize o plug-in Redis"
+
+#, fuzzy
 msgid "Do not deploy the SAP R/3 plug-in"
 msgstr "Não implantar o plug-in SAP R/3"
 
@@ -24878,6 +24882,9 @@ msgstr "Não use TLS/SSL/Https (inseguro)"
 
 msgid "Don't use a namespace prefix"
 msgstr "Não use um prefixo de namespace"
+
+msgid "Don't use password"
+msgstr "Não use a senha"
 
 msgid "Don't use quotes"
 msgstr "Não usar citações"
@@ -113954,15 +113961,8 @@ msgstr ""
 #~ msgstr "Não implante o plugin MySQL"
 
 #, fuzzy
-#~ msgid "Do not deploy the Redis plug-in"
-#~ msgstr "Não utilize o plug-in Redis"
-
-#, fuzzy
 #~ msgid "Do not deploy the SAP HANA plug-in"
 #~ msgstr "Não implantar o plug-in SAP HANA"
-
-#~ msgid "Don't use password"
-#~ msgstr "Não use a senha"
 
 #~ msgid ""
 #~ "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "

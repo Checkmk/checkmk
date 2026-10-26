@@ -24298,6 +24298,10 @@ msgid "Do not deploy the Oracle plug-in"
 msgstr "Non distribuire il plugin iptables"
 
 #, fuzzy
+msgid "Do not deploy the Redis plug-in"
+msgstr "Non distribuire il plugin Redis"
+
+#, fuzzy
 msgid "Do not deploy the SAP R/3 plug-in"
 msgstr "Non distribuire il plugin SAP R/3"
 
@@ -24714,6 +24718,9 @@ msgstr "Non usare TLS/SSL/Https (non sicuro)"
 
 msgid "Don't use a namespace prefix"
 msgstr "Non usare un prefisso dello spazio dei nomi"
+
+msgid "Don't use password"
+msgstr "Non usare la password"
 
 msgid "Don't use quotes"
 msgstr "Non usare le virgolette"
@@ -113850,15 +113857,8 @@ msgstr ""
 #~ msgstr "Non distribuire il plugin MySQL"
 
 #, fuzzy
-#~ msgid "Do not deploy the Redis plug-in"
-#~ msgstr "Non distribuire il plugin Redis"
-
-#, fuzzy
 #~ msgid "Do not deploy the SAP HANA plug-in"
 #~ msgstr "Non distribuire il plugin SAP HANA"
-
-#~ msgid "Don't use password"
-#~ msgstr "Non usare la password"
 
 #~ msgid ""
 #~ "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "

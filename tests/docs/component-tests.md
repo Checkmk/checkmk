@@ -166,7 +166,7 @@ fetchers, and anything the site does in response. Those are system tests.
 Unlike the agent receiver and relay engine suites, the following two fake
 nothing at all, because their dependency can be used as in production:
 
-- **The metric backend** — a query and schema layer, tested against a ClickHouse
+- **The data backend** — a query and schema layer, tested against a ClickHouse
   server started by the test, so what queries return and whether a schema
   upgrade _and its downgrade_ work are directly checkable.
 - **mk-oracle** — an agent plugin binary, tested against an Oracle database.

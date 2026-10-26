@@ -77,12 +77,12 @@ def _checking_options(parsed: Mapping[str, object]) -> CheckingOptions:
 
 
 def _mode_check(
-    omd_root: Path, _global_options: GlobalOptions, parsed: Options, args: Args
+    omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args
 ) -> ExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(parsed)
     options = _checking_options(parsed)
-    plugins = load_checks()
+    plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -123,7 +123,7 @@ def _mode_check(
 
 def _run_check(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() and load_checks() read cmk.ccc.debug
+        # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_check(context.omd_root, context.global_options, options, args)

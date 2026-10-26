@@ -273,7 +273,7 @@ def _mode_list_checks(
 ) -> ExitCode:
     from cmk.utils import man_pages
 
-    plugins = load_checks()
+    plugins = load_checks(debug=global_options.debug)
     section_plugins: Iterable[AgentSectionPlugin | SNMPSectionPlugin] = [
         *plugins.agent_sections.values(),
         *plugins.snmp_sections.values(),
@@ -318,9 +318,6 @@ def _mode_list_checks(
 
 
 def _run_list_checks(context: CommandContext, options: Options, args: Args) -> ExitCode:
-    if context.global_options.debug:
-        # load_checks() reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_list_checks(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:

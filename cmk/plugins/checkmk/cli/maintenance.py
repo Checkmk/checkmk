@@ -136,10 +136,10 @@ cli_command_cleanup_piggyback = CLICommand(
 
 
 def _mode_flush(
-    _omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
+    _omd_root: Path, global_options: GlobalOptions, _options: Options, args: Args
 ) -> ExitCode:
     hosts = host_addresses(args)
-    plugins = load_checks()
+    plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -240,7 +240,7 @@ def _mode_flush(
 
 def _run_flush(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() and load_checks() read cmk.ccc.debug
+        # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_flush(context.omd_root, context.global_options, options, args)

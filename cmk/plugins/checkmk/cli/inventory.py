@@ -120,7 +120,7 @@ def _mode_inventory(
     except ValueError as exc:
         raise MKBailOut("Unknown SNMP backend") from exc
 
-    plugins = load_checks()
+    plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     host_tags = loading_result.host_tags
@@ -331,7 +331,7 @@ def _mode_inventory(
 
 def _run_inventory(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() and load_checks() read cmk.ccc.debug
+        # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_inventory(context.omd_root, context.global_options, options, args)
@@ -374,7 +374,7 @@ cli_command_inventory = CLICommand(
 
 
 def _mode_inventorize_marked_hosts(
-    omd_root: Path, _global_options: GlobalOptions, options: Options, _args: Args
+    omd_root: Path, global_options: GlobalOptions, options: Options, _args: Args
 ) -> ExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
@@ -391,7 +391,7 @@ def _mode_inventorize_marked_hosts(
     # We do not resolve the `latest` link here, as any given serial might be removed by the core.
     latest_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
 
-    plugins = load_checks()
+    plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     hosts_config = loading_result.hosts_config
@@ -559,7 +559,7 @@ def _run_inventorize_marked_hosts(
     context: CommandContext, options: Options, args: Args
 ) -> ExitCode:
     if context.global_options.debug:
-        # config.load() and load_checks() read cmk.ccc.debug
+        # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_inventorize_marked_hosts(

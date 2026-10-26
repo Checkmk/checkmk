@@ -115,8 +115,8 @@ from cmk.utils.servicename import ServiceName
 tracer = trace.get_tracer()
 
 
-def load_checks() -> AgentBasedPlugins:
-    plugins = load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
+def load_checks(*, debug: bool) -> AgentBasedPlugins:
+    plugins = load_all_plugins(raise_errors=debug)
     if sys.stderr.isatty():
         for error_msg in plugins.errors:
             console.error(error_msg, file=sys.stderr)

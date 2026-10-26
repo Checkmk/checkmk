@@ -44,7 +44,7 @@ from cmk.utils.log import console
 
 
 def _mode_dump_nagios_config(
-    omd_root: Path, _global_options: GlobalOptions, options: Options, raw_host_names: Args
+    omd_root: Path, global_options: GlobalOptions, options: Options, raw_host_names: Args
 ) -> ExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
@@ -53,7 +53,7 @@ def _mode_dump_nagios_config(
     from cmk.base.core.nagios import create_config
     from cmk.base.core.nagios._create_config import NagiosCoreConfig
 
-    plugins = load_checks()
+    plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -133,7 +133,7 @@ def _mode_dump_nagios_config(
 
 def _run_dump_nagios_config(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() and load_checks() read cmk.ccc.debug
+        # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_dump_nagios_config(context.omd_root, context.global_options, options, args)
@@ -205,7 +205,7 @@ def _mode_update(
 ) -> ExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
-    plugins = load_checks()
+    plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -288,7 +288,7 @@ def _mode_update(
 
 def _run_update(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() and load_checks() read cmk.ccc.debug
+        # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_update(context.omd_root, context.global_options, options, args)
@@ -329,12 +329,12 @@ cli_command_update = CLICommand(
 
 
 def _mode_restart(
-    omd_root: Path, _global_options: GlobalOptions, options: Options, raw_host_names: Args
+    omd_root: Path, global_options: GlobalOptions, options: Options, raw_host_names: Args
 ) -> ExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
     args = host_addresses(raw_host_names)
-    plugins = load_checks()
+    plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -409,7 +409,7 @@ def _mode_restart(
 
 def _run_restart(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() and load_checks() read cmk.ccc.debug
+        # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_restart(context.omd_root, context.global_options, options, args)
@@ -451,12 +451,12 @@ cli_command_restart = CLICommand(
 
 
 def _mode_reload(
-    omd_root: Path, _global_options: GlobalOptions, options: Options, raw_host_names: Args
+    omd_root: Path, global_options: GlobalOptions, options: Options, raw_host_names: Args
 ) -> ExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
     args = host_addresses(raw_host_names)
-    plugins = load_checks()
+    plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -531,7 +531,7 @@ def _mode_reload(
 
 def _run_reload(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() and load_checks() read cmk.ccc.debug
+        # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_reload(context.omd_root, context.global_options, options, args)

@@ -62,7 +62,7 @@ from cmk.utils.log import console
 
 
 def _mode_dump_agent(
-    omd_root: Path, _global_options: GlobalOptions, options: Options, args: Args
+    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> ExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
@@ -75,7 +75,7 @@ def _mode_dump_agent(
     except ValueError as exc:
         raise MKBailOut("Unknown SNMP backend") from exc
 
-    plugins = load_checks()
+    plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -270,7 +270,7 @@ def _mode_dump_agent(
 
 def _run_dump_agent(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() and load_checks() read cmk.ccc.debug
+        # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_dump_agent(context.omd_root, context.global_options, options, args)
@@ -311,12 +311,12 @@ cli_command_dump_agent = CLICommand(
 
 
 def _mode_dump_hosts(
-    _omd_root: Path, _global_options: GlobalOptions, options: Options, args: Args
+    _omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> ExitCode:
     fake_dns = fake_dns_address(options)
     hostlist: Iterable[HostName] = host_addresses(args)
     logger = logging.getLogger("cmk.base.modes")  # this might go nowhere.
-    plugins = load_checks()
+    plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -383,7 +383,7 @@ def _mode_dump_hosts(
 
 def _run_dump_hosts(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # config.load() and load_checks() read cmk.ccc.debug
+        # config.load() reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_dump_hosts(context.omd_root, context.global_options, options, args)

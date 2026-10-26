@@ -6,7 +6,6 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import TypedDict
 
 from cmk.ccc.user import UserId
 from cmk.gui import pagetypes
@@ -46,42 +45,6 @@ class MapConfig(pagetypes.OverridableConfig):
     connection_id: str
     object_count: int
     map_spec: MapSpec
-
-
-class MapRead(TypedDict):
-    """The light list projection of a map — what the SPA renders in the overview.
-
-    Mirrors the REST ``MapListEntry`` summary, minus the heavy ``objects`` list.
-    ``view`` stays opaque (the daemon validates the payload shape, not the GUI);
-    everything the list actually renders is spelled out.
-    """
-
-    name: MapName
-    alias: str
-    background_image: str | None
-    background_color: str | None
-    icon_size: int | None
-    connection_id: str
-    view_type: str
-    view: Mapping[str, object]
-    object_count: int
-    rotation_interval: int
-    rotation_pools: list[str]
-    version: int
-    sort_order: int
-    click_action: str
-    hide_in_monitor_menu: bool
-    hover_template: str | None
-    context_template: str | None
-    render_mode: str
-    default_z: int
-    can_edit: bool
-    can_delete: bool
-    owner: str
-    is_builtin: bool
-    # The raw VisualPublic: False (private), True (published to all), or
-    # ("contact_groups"|"sites", [...]). None on a config that never set it.
-    public: VisualPublic | None
 
 
 def map_config_from_spec(

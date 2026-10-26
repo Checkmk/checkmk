@@ -23,7 +23,7 @@ from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import VisualPublic
 from cmk.gui.utils.roles import UserPermissions
 from cmk.maps.gui.pagetype import MapPage
-from cmk.maps.gui.type_defs import map_config_from_spec, MapName, MapRead, MapSpec
+from cmk.maps.gui.type_defs import map_config_from_spec, MapName, MapSpec
 
 
 @request_memoize()
@@ -166,58 +166,5 @@ def delete_map(owner: UserId, name: MapName) -> None:
         memoized.remove_instance((owner, name))
 
 
-def _opt_str(value: object) -> str | None:
-    return value if isinstance(value, str) else None
-
-
-def _opt_int(value: object) -> int | None:
-    return value if isinstance(value, int) and not isinstance(value, bool) else None
-
-
 def rotation_pools_of(value: object) -> list[str]:
     return [pool for pool in value if isinstance(pool, str)] if isinstance(value, list) else []
-
-
-def _int(value: object, default: int) -> int:
-    return value if isinstance(value, int) and not isinstance(value, bool) else default
-
-
-def map_to_read(page: MapPage, can_edit: bool, can_delete: bool) -> MapRead:
-    """Project a map to the SPA's light ``MapRead`` list shape.
-
-    Reads the display fields from the opaque ``map_spec`` payload (a full
-    MapConfig); the heavy ``objects`` list is intentionally dropped. ``can_edit``
-    and ``can_delete`` are the pagetype authorization for this exact instance
-    (``MapPage.may_edit``/``may_delete``), so built-ins and unauthorized foreign
-    maps surface as read-only.
-    """
-    cfg = page.config
-    payload = cfg.map_spec
-    raw_view = payload.get("view")
-    view = raw_view if isinstance(raw_view, dict) else {}
-    return MapRead(
-        name=cfg.name,
-        alias=str(payload.get("alias") or cfg.name),
-        background_image=_opt_str(payload.get("background_image")),
-        background_color=_opt_str(payload.get("background_color")),
-        icon_size=_opt_int(payload.get("icon_size")),
-        connection_id=cfg.connection_id,
-        view_type=cfg.map_type,
-        view=view,
-        object_count=cfg.object_count,
-        rotation_interval=_int(payload.get("rotation_interval"), 0),
-        rotation_pools=rotation_pools_of(payload.get("rotation_pools")),
-        version=_int(payload.get("version"), 0),
-        sort_order=_int(payload.get("sort_order"), 0),
-        click_action=str(payload.get("click_action") or "link"),
-        hide_in_monitor_menu=cfg.hidden,
-        hover_template=_opt_str(payload.get("hover_template")),
-        context_template=_opt_str(payload.get("context_template")),
-        render_mode=str(payload.get("render_mode") or "default"),
-        default_z=_int(payload.get("default_z"), 1),
-        can_edit=can_edit,
-        can_delete=can_delete,
-        owner=str(cfg.owner),
-        is_builtin=page.is_builtin(),
-        public=cfg.public,
-    )

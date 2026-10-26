@@ -117,27 +117,9 @@ def test_map_config_from_spec_presentation_counts_elements() -> None:
     assert cfg.title == "pres"  # falls back to the name when no alias
 
 
-def test_map_to_read_projects_light_shape() -> None:
-    map_spec = {
-        "alias": "Net",
-        "connection_id": "cmk_heute",
-        "view": {"type": "worldmap", "lat": 1.0},
-        "objects": [{"id": "o1"}],
-        "render_mode": "nagvis_classic",
-        "rotation_interval": 30,
-        "rotation_pools": ["noc", 7],
-    }
-    page = MapPage(map_config_from_spec(UserId("alice"), "net", map_spec))
-    read = store.map_to_read(page, can_edit=True, can_delete=True)
-    assert read["name"] == "net"
-    assert read["view_type"] == "worldmap"
-    assert read["object_count"] == 1
-    assert read["render_mode"] == "nagvis_classic"
-    assert read["rotation_interval"] == 30
-    assert read["rotation_pools"] == ["noc"]
-    assert read["can_edit"] is True
-    assert read["can_delete"] is True
-    assert "objects" not in read  # heavy payload dropped from the list shape
+def test_rotation_pools_of_keeps_only_pool_names() -> None:
+    assert store.rotation_pools_of(["noc", 7]) == ["noc"]
+    assert store.rotation_pools_of("noc") == []
 
 
 def test_delete_map_round_trip(

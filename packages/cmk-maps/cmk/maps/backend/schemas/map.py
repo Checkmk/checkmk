@@ -354,10 +354,10 @@ class MapElement(BaseModel):
 class MapConfig(BaseModel):
     _migrate_legacy_keys = model_validator(mode="before")(accept_legacy_backend_id)
 
-    # Constrained like MapRead.name: the name keys the in-memory cache and the
-    # on-disk path, so an unvalidated value would allow cache poisoning / path
-    # traversal via the (auth-only) register endpoint. Matches the GUI's
-    # is_valid_map_name so a GUI-saved map always round-trips.
+    # The name keys the in-memory cache and the on-disk path, so an unvalidated
+    # value would allow cache poisoning / path traversal via the (auth-only)
+    # register endpoint. Matches the GUI's is_valid_map_name so a GUI-saved map
+    # always round-trips.
     name: str = Field(..., min_length=1, max_length=MAP_NAME_MAX_LENGTH, pattern=MAP_NAME_PATTERN)
     alias: str = ""
     connection_id: str = "live_1"
@@ -402,78 +402,6 @@ class MapConfig(BaseModel):
     @classmethod
     def _validate_background_color(cls, v: str | None) -> str | None:
         return validate_color(v)
-
-
-class MapCreate(BaseModel):
-    _migrate_legacy_keys = model_validator(mode="before")(accept_legacy_backend_id)
-
-    name: str = Field(..., min_length=1, max_length=MAP_NAME_MAX_LENGTH, pattern=MAP_NAME_PATTERN)
-    alias: str = ""
-    background_image: _AssetRef = None
-    background_color: str | None = None
-    background_style: BackgroundStyle = "single"
-    background_position: BackgroundPosition = "top_left"
-    icon_size: int | None = None
-    connection_id: str = "live_1"
-    view: MapView = StaticView()
-    render_mode: RenderMode = "default"
-    default_z: int = 1
-
-
-class MapUpdate(BaseModel):
-    _migrate_legacy_keys = model_validator(mode="before")(accept_legacy_backend_id)
-
-    alias: str | None = None
-    background_image: _AssetRef = None
-    background_color: str | None = None
-    background_style: BackgroundStyle | None = None
-    background_position: BackgroundPosition | None = None
-    icon_size: int | None = None
-    connection_id: str | None = None
-    view: MapView | None = None
-    sort_order: int | None = None
-    click_action: ClickAction | None = None
-    hover_template: str | None = None
-    context_template: str | None = None
-    rotation_interval: int | None = None
-    rotation_pools: list[_RotationPool] | None = Field(default=None, max_length=MAX_ROTATION_POOLS)
-    render_mode: RenderMode | None = None
-    default_z: int | None = None
-    canvas_width: int | None = None
-    canvas_height: int | None = None
-
-
-class MapOrderItem(BaseModel):
-    name: str
-    sort_order: int
-
-
-class MapRead(BaseModel):
-    _migrate_legacy_keys = model_validator(mode="before")(accept_legacy_backend_id)
-
-    name: str
-    alias: str
-    background_image: _AssetRef
-    background_color: str | None = None
-    background_style: BackgroundStyle = "single"
-    background_position: BackgroundPosition = "top_left"
-    icon_size: int | None
-    connection_id: str
-    view_type: str
-    view: MapView
-    object_count: int
-    rotation_interval: int
-    rotation_pools: list[str] = Field(default_factory=list)
-    version: int = 0
-    sort_order: int = 0
-    click_action: ClickAction = "link"
-    hover_template: str | None = None
-    context_template: str | None = None
-    render_mode: RenderMode = "default"
-    default_z: int = 1
-    # Per-user capability stamped by the list endpoint: whether the requesting
-    # user may edit this map (admins, or non-admins with edit permission).
-    can_edit: bool = False
 
 
 class MapElementUpdate(BaseModel):
@@ -573,40 +501,3 @@ class MapElementUpdate(BaseModel):
         return optional_member_pattern(v)
 
     _migrate_weathermap = model_validator(mode="before")(migrate_weathermap)
-
-
-class MapClone(BaseModel):
-    new_name: str = Field(
-        ..., min_length=1, max_length=MAP_NAME_MAX_LENGTH, pattern=MAP_NAME_PATTERN
-    )
-    alias: str | None = None
-
-
-class MapPermissionsRead(BaseModel):
-    """Which roles have view/edit access to a specific map (by name, not wildcard)."""
-
-    view: list[str]
-    edit: list[str]
-
-
-_MapNameStr = Annotated[
-    str, Field(min_length=1, max_length=MAP_NAME_MAX_LENGTH, pattern=MAP_NAME_PATTERN)
-]
-
-
-class MapBulkDelete(BaseModel):
-    names: Annotated[list[_MapNameStr], Field(min_length=1, max_length=500)]
-
-
-class MapBulkDeleteFailure(BaseModel):
-    name: str
-    reason: str
-
-
-class MapBulkDeleteResult(BaseModel):
-    deleted: list[str]
-    failed: list[MapBulkDeleteFailure]
-
-
-class MapBulkExport(BaseModel):
-    names: Annotated[list[_MapNameStr], Field(min_length=1, max_length=500)]

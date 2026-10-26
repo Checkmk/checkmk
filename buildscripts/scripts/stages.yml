@@ -87,6 +87,9 @@ VARIABLES:
     - NAME: CHANGED_RUST_WORKSPACE_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep -E '^(Cargo\\..*|\\.cargo/config\\.toml|packages/[^/]+/BUILD)$' || true"
 
+    - NAME: CHANGED_GROOVY_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^buildscripts/.*\\.groovy$\\|^buildscripts/scripts/check_no_privileged_containers.py$' || true"
+
     - NAME: CHANGED_MK_ORACLE_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-oracle/\\|^packages/[^/]*$' || true"
 
@@ -101,6 +104,13 @@ STAGES:
           bazel run //buildscripts/scripts:check_no_remote_cache_tags &> ${RESULTS}/results.txt && rm ${RESULTS}/results.txt || exit 1
           bazel mod graph --output=json | jq -e ".. | select(.name? == \"boringssl\")" >"${RESULTS}/results.txt" && exit 1 || true
       RESULT_CHECK_FILE_PATTERN: "results/results.txt"
+
+    # CI jobs must not use docker-in-docker (privileged: true)
+    - NAME: "No privileged containers"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_GROOVY_FILES
+      COMMAND: "bazel run //buildscripts/scripts:check_no_privileged_containers &> ${RESULTS}/privileged-containers.txt || exit 1; : > ${RESULTS}/privileged-containers.txt"
+      TEXT_ON_SKIP: "No Groovy files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/privileged-containers.txt"
 
     # check_thirdparty_modules compares all source.json hashes with the files.
     # The repository cache would hide a stale hash (it serves the old file by

@@ -20,6 +20,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { type Component, computed, defineAsyncComponent, onUnmounted, watch } from 'vue'
 
 import { provideMapListLayout } from '@/maps/home/composables/useMapListViewMode'
+import { provideMapsCommandSettings } from '@/maps/map/commands/commandSettings'
 import type { NavState } from '@/maps/services/NavigationService'
 import {
   createMapsServices,
@@ -46,6 +47,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 
 const services = createMapsServices()
 provideMapsServices(services)
+provideMapsCommandSettings(props.commands)
 provideMapsPageMenuEvent(props.page_menu_event)
 provideMapListLayout(props.list_layout)
 onUnmounted(() => {

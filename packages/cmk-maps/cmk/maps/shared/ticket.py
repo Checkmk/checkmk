@@ -45,6 +45,7 @@ type CommandVerb = Literal[
     "remove_acknowledgement",
     "force_check",
     "schedule_downtime",
+    "remove_all_downtimes",
     "add_comment",
     "enable_notifications",
     "disable_notifications",

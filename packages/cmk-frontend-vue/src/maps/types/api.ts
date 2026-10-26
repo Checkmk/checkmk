@@ -256,20 +256,6 @@ export type MetricInfoEntry = Schemas['MapsMetric']
 
 export type MetricInfoResult = Schemas['MapsMetricInfoResponse']
 
-// One scheduled downtime as the SPA lists it. Not a wire type: the Checkmk REST
-// API answers with domain objects, and this is the row projected out of one.
-export interface DowntimeEntry {
-  id: string
-  site_id: string
-  host_name: string
-  service_description?: string
-  author: string
-  comment: string
-  start_time: string
-  end_time: string
-  type: 'host' | 'service'
-}
-
 export type ServiceNode = Daemon['ServiceNode']
 export type TopologyNode = Daemon['TopologyNode']
 export type MapStates = Daemon['MapStates']

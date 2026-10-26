@@ -23,9 +23,12 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import type { CommandVerb } from '@/maps/api/ticket'
+import ObjectActionModal from '@/maps/map/commands/ObjectActionModal.vue'
+import { useObjectActions } from '@/maps/map/commands/useObjectActions'
 import { useMetricInfo } from '@/maps/map/composables/useMetricInfo'
 import { metricTitlesOf, metricUnitsOf } from '@/maps/map/composables/useMetricUnits'
 import { useAuth } from '@/maps/services/context'
+import MapsConfirmDialog from '@/maps/shared/components/MapsConfirmDialog.vue'
 import type { CommandTarget, MapElement, ObjectState } from '@/maps/types/api'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkUrl, stripCheckmkBase } from '@/maps/utils/mapNavigation'
@@ -75,14 +78,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: []
-  acknowledge: []
-  'remove-ack': []
-  'schedule-downtime': []
-  'remove-downtime': []
-  'force-check': []
-  'add-comment': []
-  'enable-notifications': []
-  'disable-notifications': []
   /**
    * A host was picked out of the drawer -- from the topology, a group's members
    * or an aggregation's leaves. ``seed`` carries a state for targets that never
@@ -167,7 +162,12 @@ const { historyData, mainHistoryKey, mainThresholds, HISTORY_MINUTES } = usePerf
 })
 
 const isSite = computed(() => props.object?.type === 'site')
-const isAggregation = computed(() => props.object?.type === 'aggregation')
+
+const actions = useObjectActions({
+  object: () => props.object,
+  state: () => props.state,
+  checkmkUrl: () => props.checkmkUrl
+})
 
 // A dyngroup's scope is its bundled hosts where it names them, and otherwise
 // whatever its filter actually matched -- which is what its members are.
@@ -301,7 +301,6 @@ const accentStyle = computed(() => ({
       :style="accentStyle"
       :aria-label="displayName"
       tabindex="-1"
-      @click.stop
       @keydown.esc="emit('close')"
     >
       <div class="maps-detail-drawer__severity-bar" />
@@ -418,24 +417,20 @@ const accentStyle = computed(() => ({
       </div>
 
       <!-- An aggregation gets no command footer: the commands dispatch by host
-           and service, which a BI aggregation does not have, so every button
-           would be a silent no-op. Its own pane offers the one command that
-           does apply -- acknowledging the real leaves underneath. -->
+           and service, which a BI aggregation does not have. Its own pane offers
+           the one command that does apply -- acknowledging the real leaves
+           underneath. -->
       <DetailActions
-        v-if="!isSite && !isAggregation"
+        v-if="actions.scope.value"
+        v-model:feedback-open="actions.feedbackOpen.value"
         :state="state"
         :problematic="isProblemState(state?.state)"
-        :is-group="isGroup"
+        :is-group="actions.scope.value === 'group'"
         :member-count="groupMembers.length"
         :can="canCommand"
-        @acknowledge="emit('acknowledge')"
-        @remove-ack="emit('remove-ack')"
-        @force-check="emit('force-check')"
-        @schedule-downtime="emit('schedule-downtime')"
-        @remove-downtime="emit('remove-downtime')"
-        @add-comment="emit('add-comment')"
-        @enable-notifications="emit('enable-notifications')"
-        @disable-notifications="emit('disable-notifications')"
+        :running="actions.running"
+        :feedback="actions.feedback.value"
+        @select="actions.select"
       />
 
       <footer v-else-if="isSite && siteProblemsUrl" class="maps-detail-drawer__site-actions">
@@ -450,6 +445,22 @@ const accentStyle = computed(() => ({
       </footer>
     </aside>
   </Transition>
+
+  <ObjectActionModal
+    v-if="object && actions.activeAction.value"
+    :object="object"
+    :action="actions.activeAction.value"
+    :submit="actions.submit"
+    @close="actions.close"
+  />
+  <MapsConfirmDialog
+    :open="actions.confirmingRemoveDowntimes.value"
+    variant="warning"
+    :title="_t('Remove all downtimes of %{name}?', { name: displayName })"
+    :confirm-label="_t('Remove downtimes')"
+    @confirm="actions.confirmRemoveDowntimes"
+    @cancel="actions.close"
+  />
 </template>
 
 <style scoped>

@@ -4,8 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <!--
-What a command dialog acts on, named like its other fields: what kind of object
-above, which one below.
+What a command dialog acts on, set like the shared forms' sections below it:
+what kind of object as the label, which one as the value.
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -36,8 +36,10 @@ const name = computed(() => getMapElementName(props.object))
 .maps-command-object-name {
   display: flex;
   flex-direction: column;
-  gap: var(--dimension-2);
-  font-size: var(--font-size-normal);
+  gap: var(--dimension-3);
+  padding: var(--spacing);
+  border-radius: var(--border-radius);
+  background: var(--ux-theme-3);
 }
 
 .maps-command-object-name__kind {

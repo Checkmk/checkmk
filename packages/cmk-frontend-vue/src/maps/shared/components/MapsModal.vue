@@ -17,8 +17,14 @@ const props = withDefaults(
     open: boolean
     title?: TranslatedString
     closable?: boolean
+    /**
+     * Whether the body scrolls. A short form with a date picker turns it off:
+     * the picker's calendar opens below its field and a scrolling body would
+     * clip it.
+     */
+    scrolls?: boolean
   }>(),
-  { closable: true, title: untranslated('') }
+  { closable: true, title: untranslated(''), scrolls: true }
 )
 
 defineEmits<{ close: [] }>()
@@ -74,7 +80,7 @@ onUnmounted(restoreFocus)
           @click="$emit('close')"
         />
       </header>
-      <div class="maps-modal__body">
+      <div class="maps-modal__body" :class="{ 'maps-modal__body--static': !scrolls }">
         <slot />
       </div>
       <footer v-if="$slots.footer" class="maps-modal__footer">
@@ -120,6 +126,10 @@ onUnmounted(restoreFocus)
   margin: 0 calc(-1 * var(--dimension-3));
   padding: var(--dimension-6) var(--dimension-3);
   overflow: auto;
+}
+
+.maps-modal__body--static {
+  overflow: visible;
 }
 
 .maps-modal__footer {

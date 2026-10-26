@@ -122,6 +122,15 @@ def test_the_ticket_grants_no_command_without_the_command_gate(
         assert gather_capabilities(user)["commands"] == []
 
 
+def test_scheduling_downtimes_does_not_grant_removing_all_of_them(
+    request_context: None,  # noqa: ARG001
+    with_user: tuple[UserId, str],
+) -> None:
+    # As in the views, lifting every downtime of an object is a permission of its own.
+    with _scoped(with_user[0], "general.act", "action.downtimes"):
+        assert gather_capabilities(user)["commands"] == ["schedule_downtime"]
+
+
 def test_a_command_without_the_command_gate_is_forbidden(
     request_context: None,  # noqa: ARG001
     with_user: tuple[UserId, str],

@@ -26,6 +26,14 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.monitor.command import (
+    acknowledge_defaults,
+    acknowledge_presets_url,
+    downtime_presets,
+    downtime_presets_url,
+    downtime_recurrences,
+    notification_rules_url,
+)
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.permissions import all_permissions
@@ -44,7 +52,15 @@ from cmk.maps.gui._settings_page import SETTINGS_URL
 from cmk.maps.gui._tickets import _publishable_contact_groups, _publishable_sites
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import get_permitted_map
-from cmk.shared_typing.maps import MapListLayout, MapsApp
+from cmk.shared_typing.maps import (
+    AcknowledgeDefaults,
+    DowntimePreset,
+    DowntimeRecurrence,
+    DowntimeUntilKeyword,
+    MapListLayout,
+    MapsApp,
+    MapsCommandSettings,
+)
 from cmk.web.utils.escaping import escape
 
 
@@ -110,6 +126,10 @@ class ShowMapsPage(Page):
         # second data-assembly path to keep in step with those, and its
         # optionality would reach every consumer of the values.
         #
+        # ``commands`` is what the SPA cannot fetch, as on the monitoring pages:
+        # how the site has its acknowledge and downtime dialogs set up, which no
+        # endpoint serves and the dialogs need before they open.
+        #
         # ``list_layout`` is what the page decides: the page menu above is
         # rendered here and offers the layout not shown, so the list has to show
         # this one.
@@ -124,6 +144,7 @@ class ShowMapsPage(Page):
             data=asdict(
                 MapsApp(
                     page_menu_event=PAGE_MENU_EVENT,
+                    commands=_command_settings(ctx),
                     list_layout=MapListLayout(layout),
                 )
             ),
@@ -132,6 +153,36 @@ class ShowMapsPage(Page):
         html.close_div()
         html.footer()
         return None
+
+
+def _command_settings(ctx: PageContext) -> MapsCommandSettings:
+    ack = acknowledge_defaults(ctx.config)
+    return MapsCommandSettings(
+        acknowledge_defaults=AcknowledgeDefaults(
+            sticky=ack.sticky,
+            persistent=ack.persistent,
+            notify=ack.notify,
+            expire_seconds=ack.expire_seconds,
+        ),
+        acknowledge_presets_url=acknowledge_presets_url(ctx.config),
+        notification_rules_url=notification_rules_url(ctx.config),
+        # Repeating a downtime is the edition's to offer; an edition without it
+        # offers none.
+        downtime_recurrences=[
+            DowntimeRecurrence(recur=recurrence.recur, title=recurrence.title)
+            for recurrence in downtime_recurrences.offered()
+        ],
+        downtime_presets=[
+            DowntimePreset(
+                title=preset.title,
+                end=(
+                    preset.end if isinstance(preset.end, int) else DowntimeUntilKeyword(preset.end)
+                ),
+            )
+            for preset in downtime_presets(ctx.config)
+        ],
+        downtime_presets_url=downtime_presets_url(ctx.config),
+    )
 
 
 def _require_visible_map(name: str) -> MapPage:

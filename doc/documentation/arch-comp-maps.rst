@@ -467,6 +467,11 @@ checks. The Maps ticket cannot trigger them.
   ``api/1.0`` at the ``checkmk_url`` of the object's connection; only
   same-origin URLs work in practice, because the page's CSP allows
   ``connect-src`` only for ``'self'`` (and the Checkmk crash report server).
+  The child hosts a downtime includes are looked up where the downtime goes:
+  for a host on the page's own site, for a host group, like the group's hosts,
+  at the connection's site. Maps takes the command forms and
+  ``ScheduleDowntimeApi`` from ``monitoring/shared``, the same ones the
+  monitoring pages use.
 * **Reschedule check, enable/disable notifications, enable/disable active
   checks** have no Checkmk REST endpoint. Maps offers them through
   ``maps_command``. The endpoint requires ``general.act`` plus the verb's

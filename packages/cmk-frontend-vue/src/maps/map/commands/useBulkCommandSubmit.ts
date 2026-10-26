@@ -7,9 +7,8 @@
  * Sending one monitoring command about many things from a modal, and what the
  * operator sees while it happens.
  *
- * The same contract as ``useCommandSubmit``, with the two differences a fan-out
- * brings. It reports how far along it is, because a wide selection takes long
- * enough that a still button would read as a hang. And it can half-succeed: if
+ * It reports how far along it is, because a wide selection takes long enough
+ * that a still button would read as a hang. And it can half-succeed: if
  * some targets refused the command, the modal stays open with the count and a
  * sample of what refused, so the operator can look and try again — only a run
  * that took everywhere closes itself.

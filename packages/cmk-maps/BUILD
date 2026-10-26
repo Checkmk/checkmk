@@ -124,6 +124,7 @@ py_library(
         "//cmk/gui/form_specs",
         "//cmk/gui/global_settings",
         "//cmk/gui/graphing",
+        "//cmk/gui/monitor/command",
         "//cmk/gui/pagetypes",
         "//cmk/gui/rule_specs:legacy_converter",
         "//cmk/gui/sidebar",

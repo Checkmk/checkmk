@@ -2,17 +2,47 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "title": "maps_app",
-  "description": "What maps.py hands the mounted Maps app: the page menu's event, and the list layout its page menu offers the other of. Everything else the app shows it fetches.",
+  "description": "What maps.py hands the mounted Maps app: the page menu's event, the site's command dialog settings, and the list layout its page menu offers the other of. Everything else the app shows it fetches.",
   "properties": {
     "page_menu_event": {
       "description": "The DOM event the map list's page menu entries dispatch, with the action as its detail.",
       "type": "string"
     },
+    "commands": { "$ref": "#/$defs/maps_command_settings" },
     "list_layout": {
       "title": "MapListLayout",
       "description": "The layout the map list is shown in, as the server-rendered page menu has it.",
       "enum": ["cards", "table"]
     }
   },
-  "required": ["page_menu_event", "list_layout"]
+  "required": ["page_menu_event", "commands", "list_layout"],
+  "$defs": {
+    "maps_command_settings": {
+      "title": "MapsCommandSettings",
+      "description": "How the site has the acknowledge and downtime dialogs set up, as the monitoring pages hand it to theirs.",
+      "type": "object",
+      "properties": {
+        "acknowledge_defaults": { "$ref": "monitoring/_base.json#/$defs/acknowledge_defaults" },
+        "acknowledge_presets_url": { "type": ["string", "null"] },
+        "notification_rules_url": { "type": ["string", "null"] },
+        "downtime_recurrences": {
+          "type": "array",
+          "items": { "$ref": "monitoring/_base.json#/$defs/downtime_recurrence" }
+        },
+        "downtime_presets": {
+          "type": "array",
+          "items": { "$ref": "monitoring/_base.json#/$defs/downtime_preset" }
+        },
+        "downtime_presets_url": { "type": ["string", "null"] }
+      },
+      "required": [
+        "acknowledge_defaults",
+        "acknowledge_presets_url",
+        "notification_rules_url",
+        "downtime_recurrences",
+        "downtime_presets",
+        "downtime_presets_url"
+      ]
+    }
+  }
 }

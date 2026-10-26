@@ -19,8 +19,13 @@ import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client, { createClient, unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { API_ROOT } from 'cmk-ui-library/lib/rest-api-client/constants'
 
-import type { DowntimeEntry } from '@/maps/types/api'
 import { stripCheckmkBase } from '@/maps/utils/mapNavigation'
+import {
+  type DowntimeRecur,
+  ScheduleDowntimeApi,
+  type ScheduleDowntimeOptions
+} from '@/monitoring/shared/api/actions/downtime'
+import { hostNameQuery } from '@/monitoring/shared/api/actions/query'
 
 /** Acknowledging a problem, however many objects it is applied to. */
 export interface AcknowledgeOptions {
@@ -28,6 +33,8 @@ export interface AcknowledgeOptions {
   sticky: boolean
   notify: boolean
   persistent: boolean
+  /** When the acknowledgement lapses, as an ISO timestamp; without one it stays. */
+  expire_on?: string
 }
 
 /** Scheduling a downtime, however many objects it is applied to. */
@@ -37,6 +44,9 @@ export interface DowntimeOptions {
   /** When it ends, as an ISO timestamp. */
   endTime: string
   comment: string
+  /** Minutes a flexible downtime lasts once it starts; `0` keeps it fixed. */
+  durationMinutes?: number
+  recur?: DowntimeRecur
 }
 
 type MapCommandVerb = components['schemas']['MapsCommandRequest']['action']
@@ -53,7 +63,11 @@ type RestClient = ReturnType<typeof createClient>
  */
 const restClients = new Map<string, RestClient>()
 
-function restClient(checkmkUrl: string): RestClient {
+function restClient(checkmkUrl: string | null): RestClient {
+  // Without a connection URL the command goes to the page's own site.
+  if (!checkmkUrl) {
+    return client
+  }
   const baseUrl = `${stripCheckmkBase(checkmkUrl)}/check_mk/${API_ROOT}`
   const existing = restClients.get(baseUrl)
   if (existing) {
@@ -64,51 +78,22 @@ function restClient(checkmkUrl: string): RestClient {
   return created
 }
 
-/**
- * A plain downtime window: it starts when it says it does (``duration: 0``) and
- * does not repeat. The endpoints default to this; the schema asks for it anyway.
- */
-const DOWNTIME_DEFAULTS = { duration: 0, recur: 'fixed' } as const
+/** The downtime fields every endpoint takes; a window is fixed and one-off unless said otherwise. */
+function downtimeFields(options: DowntimeOptions) {
+  return {
+    start_time: options.startTime,
+    end_time: options.endTime,
+    comment: options.comment,
+    duration: options.durationMinutes ?? 0,
+    recur: options.recur ?? 'fixed'
+  }
+}
 
-/** A comment that does not outlive a core restart; the same holds as above. */
+/** A comment that does not outlive a core restart, as the endpoints default to. */
 const COMMENT_DEFAULTS = { persistent: false } as const
 
 /** Every command body is JSON, which the endpoints ask for by header. */
 const JSON_BODY = { params: { header: { 'Content-Type': 'application/json' } } } as const
-
-function toDowntimeEntry(
-  id: string,
-  extensions: components['schemas']['DowntimeExtensionsModel']
-): DowntimeEntry {
-  return {
-    id,
-    site_id: extensions.site_id,
-    host_name: extensions.host_name,
-    ...(extensions.service_description !== undefined
-      ? { service_description: extensions.service_description }
-      : {}),
-    author: extensions.author,
-    comment: extensions.comment,
-    start_time: extensions.start_time,
-    end_time: extensions.end_time,
-    type: extensions.is_service ? 'service' : 'host'
-  }
-}
-
-async function listDowntimes(
-  checkmkUrl: string,
-  query: { host_name: string; service_description?: string; downtime_type: string }
-): Promise<DowntimeEntry[]> {
-  const collection = unwrap(
-    await restClient(checkmkUrl).GET('/domain-types/downtime/collections/all', {
-      params: { query }
-    })
-  )
-  // ``id`` is optional in the schema, and an entry without one cannot be acted on.
-  return collection.value.flatMap((downtime) =>
-    downtime.id === undefined ? [] : [toDowntimeEntry(downtime.id, downtime.extensions)]
-  )
-}
 
 /**
  * A verb Maps runs itself. An object off a map the site could not be resolved
@@ -174,10 +159,7 @@ export class CommandsApi {
         body: {
           downtime_type: 'host',
           host_name: hostname,
-          start_time: options.startTime,
-          end_time: options.endTime,
-          comment: options.comment,
-          ...DOWNTIME_DEFAULTS
+          ...downtimeFields(options)
         }
       })
     )
@@ -195,16 +177,13 @@ export class CommandsApi {
           downtime_type: 'service',
           host_name: hostname,
           service_descriptions: [serviceDescription],
-          start_time: options.startTime,
-          end_time: options.endTime,
-          comment: options.comment,
-          ...DOWNTIME_DEFAULTS
+          ...downtimeFields(options)
         }
       })
     )
   }
 
-  public async removeDowntimeHost(checkmkUrl: string, hostname: string): Promise<void> {
+  public async removeDowntimeHost(checkmkUrl: string | null, hostname: string): Promise<void> {
     unwrap(
       await restClient(checkmkUrl).POST('/domain-types/downtime/actions/delete/invoke', {
         ...JSON_BODY,
@@ -214,7 +193,7 @@ export class CommandsApi {
   }
 
   public async removeDowntimeService(
-    checkmkUrl: string,
+    checkmkUrl: string | null,
     hostname: string,
     serviceDescription: string
   ): Promise<void> {
@@ -226,35 +205,6 @@ export class CommandsApi {
           host_name: hostname,
           service_descriptions: [serviceDescription]
         }
-      })
-    )
-  }
-
-  public listDowntimesHost(checkmkUrl: string, hostname: string): Promise<DowntimeEntry[]> {
-    return listDowntimes(checkmkUrl, { host_name: hostname, downtime_type: 'host' })
-  }
-
-  public listDowntimesService(
-    checkmkUrl: string,
-    hostname: string,
-    serviceDescription: string
-  ): Promise<DowntimeEntry[]> {
-    return listDowntimes(checkmkUrl, {
-      host_name: hostname,
-      service_description: serviceDescription,
-      downtime_type: 'service'
-    })
-  }
-
-  public async removeDowntimeById(
-    checkmkUrl: string,
-    downtimeId: string,
-    siteId: string
-  ): Promise<void> {
-    unwrap(
-      await restClient(checkmkUrl).POST('/domain-types/downtime/actions/delete/invoke', {
-        ...JSON_BODY,
-        body: { delete_type: 'by_id', downtime_id: downtimeId, site_id: siteId }
       })
     )
   }
@@ -328,7 +278,7 @@ export class CommandsApi {
   // terms of partial failures) than looping per-member from the UI.
 
   public async acknowledgeHostgroup(
-    checkmkUrl: string,
+    checkmkUrl: string | null,
     groupName: string,
     options: AcknowledgeOptions
   ): Promise<void> {
@@ -341,7 +291,7 @@ export class CommandsApi {
   }
 
   public async acknowledgeServicegroup(
-    checkmkUrl: string,
+    checkmkUrl: string | null,
     groupName: string,
     options: AcknowledgeOptions
   ): Promise<void> {
@@ -353,28 +303,58 @@ export class CommandsApi {
     )
   }
 
-  public async downtimeHostgroup(
-    checkmkUrl: string,
-    groupName: string,
-    options: DowntimeOptions
+  /** The hosts below the given ones in the parent tree, looked up where the parents are monitored. */
+  public childHosts(checkmkUrl: string | null, parents: string[]): Promise<string[]> {
+    return new ScheduleDowntimeApi(restClient(checkmkUrl)).resolveChildHosts(parents)
+  }
+
+  /** Every host of a host group, as the group's own downtime covers them. */
+  public async hostgroupHosts(checkmkUrl: string | null, groupName: string): Promise<string[]> {
+    const data = unwrap(
+      await restClient(checkmkUrl).POST('/domain-types/host/collections/all', {
+        ...JSON_BODY,
+        body: { columns: ['name'], query: { op: '>=', left: 'groups', right: groupName } }
+      })
+    )
+    return data.value.flatMap((host) => (host.id === undefined ? [] : [host.id]))
+  }
+
+  public downtimeHosts(
+    checkmkUrl: string | null,
+    hostnames: string[],
+    options: ScheduleDowntimeOptions
   ): Promise<void> {
+    return new ScheduleDowntimeApi(restClient(checkmkUrl)).scheduleDowntime(hostnames, options)
+  }
+
+  public async downtimeHostgroup(
+    checkmkUrl: string | null,
+    groupName: string,
+    options: DowntimeOptions,
+    childHosts: string[] = []
+  ): Promise<void> {
+    const target = childHosts.length
+      ? {
+          downtime_type: 'host_by_query' as const,
+          query: {
+            op: 'or' as const,
+            expr: [
+              { op: '>=' as const, left: 'groups', right: groupName },
+              hostNameQuery(childHosts)
+            ]
+          }
+        }
+      : { downtime_type: 'hostgroup' as const, hostgroup_name: groupName }
     unwrap(
       await restClient(checkmkUrl).POST('/domain-types/downtime/collections/host', {
         ...JSON_BODY,
-        body: {
-          downtime_type: 'hostgroup',
-          hostgroup_name: groupName,
-          start_time: options.startTime,
-          end_time: options.endTime,
-          comment: options.comment,
-          ...DOWNTIME_DEFAULTS
-        }
+        body: { ...target, ...downtimeFields(options) }
       })
     )
   }
 
   public async downtimeServicegroup(
-    checkmkUrl: string,
+    checkmkUrl: string | null,
     groupName: string,
     options: DowntimeOptions
   ): Promise<void> {
@@ -384,10 +364,7 @@ export class CommandsApi {
         body: {
           downtime_type: 'servicegroup',
           servicegroup_name: groupName,
-          start_time: options.startTime,
-          end_time: options.endTime,
-          comment: options.comment,
-          ...DOWNTIME_DEFAULTS
+          ...downtimeFields(options)
         }
       })
     )

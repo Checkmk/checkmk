@@ -4,7 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen } from '@testing-library/vue'
+import { render, screen, waitFor, within } from '@testing-library/vue'
+import type { MapsCommandSettings } from 'cmk-shared-typing/typescript/maps'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { CommandVerb } from '@/maps/api/ticket'
@@ -13,6 +14,7 @@ import type { MapElement, ObjectState } from '@/maps/types/api'
 
 import { aState, anObject } from '../../support/fixtures'
 import {
+  aCommandSettings,
   aTicket,
   fakeMapsServices,
   fullCapabilities,
@@ -27,6 +29,7 @@ const ALL_COMMANDS: CommandVerb[] = [
   'remove_acknowledgement',
   'force_check',
   'schedule_downtime',
+  'remove_all_downtimes',
   'add_comment',
   'disable_notifications',
   'enable_notifications'
@@ -67,10 +70,14 @@ interface DrawerProps {
   unattended?: boolean
 }
 
-async function renderDrawer(props: DrawerProps, commands: CommandVerb[] = ALL_COMMANDS) {
+async function renderDrawer(
+  props: DrawerProps,
+  commands: CommandVerb[] = ALL_COMMANDS,
+  settings: MapsCommandSettings = aCommandSettings()
+) {
   const services = fakeMapsServices({}, aTicket({ capabilities: fullCapabilities({ commands }) }))
   await services.auth.init()
-  const { global: provided } = provideServices(services)
+  const { global: provided } = provideServices(services, settings)
   const utils = render(DetailDrawer, {
     props,
     global: { ...provided, stubs }
@@ -78,7 +85,7 @@ async function renderDrawer(props: DrawerProps, commands: CommandVerb[] = ALL_CO
   if (props.object) {
     await screen.findByRole('button', { name: 'Close' })
   }
-  return utils
+  return { ...utils, commands: services.apis.commands, toasts: services.toasts }
 }
 
 describe('DetailDrawer – header rendering', () => {
@@ -167,24 +174,234 @@ describe('DetailDrawer – command-button capability gating', () => {
     expect(screen.queryByRole('button', { name: 'Acknowledge' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Remove ACK' })).toBeInTheDocument()
   })
+
+  it('offers a group only the commands Checkmk applies to a whole group', async () => {
+    await renderDrawer({
+      object: anObject({ id: 'g1', type: 'hostgroup', group_name: 'linux' }),
+      state: aState({ object_id: 'g1', type: 'hostgroup', state: 'DOWN' }),
+      connectionId: 'test',
+      checkmkUrl: 'http://localhost/site/check_mk/'
+    })
+
+    expect(screen.getByRole('button', { name: /Acknowledge/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Downtime/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Force check' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add comment' })).not.toBeInTheDocument()
+  })
+
+  it('offers a group without a problem nothing to acknowledge', async () => {
+    await renderDrawer({
+      object: anObject({ id: 'g1', type: 'hostgroup', group_name: 'linux' }),
+      state: aState({ object_id: 'g1', type: 'hostgroup', state: 'UP' }),
+      connectionId: 'test',
+      checkmkUrl: 'http://localhost/site/check_mk/'
+    })
+
+    expect(screen.queryByRole('button', { name: /Acknowledge/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Downtime/ })).toBeInTheDocument()
+  })
 })
 
-describe('DetailDrawer – command emits', () => {
-  it('emits the matching command event when an action button is clicked', async () => {
+describe('DetailDrawer – commands', () => {
+  it('acknowledges through the shared form in a dialog', async () => {
     const user = userEvent.setup()
-    const { emitted } = await renderDrawer({
+    const { commands } = await renderDrawer({
       object: service(),
       state: criticalState(),
       connectionId: 'test'
     })
 
     await user.click(screen.getByRole('button', { name: 'Acknowledge' }))
-    await user.click(screen.getByRole('button', { name: 'Force check' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Acknowledge problem' })
+    await user.type(within(dialog).getByRole('textbox', { name: /Comment/ }), 'On it')
+    await user.click(within(dialog).getByRole('button', { name: 'Acknowledge' }))
 
-    expect(emitted('acknowledge')).toHaveLength(1)
-    expect(emitted('force-check')).toHaveLength(1)
+    expect(commands.acknowledgeService).toHaveBeenCalledWith(
+      'web01',
+      'CPU load',
+      expect.objectContaining({ comment: 'On it' })
+    )
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(await screen.findByText('Acknowledgement set')).toBeInTheDocument()
   })
 
+  it('keeps the dialog open with what Checkmk said when it refuses', async () => {
+    const user = userEvent.setup()
+    const { commands } = await renderDrawer({
+      object: service(),
+      state: criticalState(),
+      connectionId: 'test'
+    })
+    vi.mocked(commands.addCommentService).mockRejectedValue(new Error('Host not found'))
+
+    await user.click(screen.getByRole('button', { name: 'Add comment' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Add comment' })
+    await user.type(within(dialog).getByRole('textbox', { name: /Comment/ }), 'Note')
+    await user.click(within(dialog).getByRole('button', { name: 'Add comment' }))
+
+    expect(await within(dialog).findByText('Could not add the comment')).toBeInTheDocument()
+    expect(within(dialog).getByText('Host not found')).toBeInTheDocument()
+  })
+
+  it("offers the site's downtime durations and repeats", async () => {
+    const user = userEvent.setup()
+    await renderDrawer(
+      { object: service(), state: criticalState(), connectionId: 'test' },
+      ALL_COMMANDS,
+      aCommandSettings({
+        downtime_presets: [{ title: 'Two hours', end: 7200 }],
+        downtime_recurrences: [
+          { recur: 'fixed', title: 'never' },
+          { recur: 'week', title: 'weekly' }
+        ]
+      })
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Schedule downtime' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Schedule downtime' })
+
+    expect(within(dialog).getByRole('button', { name: 'Two hours' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    )
+  })
+
+  it('forces a check right away, without a dialog', async () => {
+    const user = userEvent.setup()
+    const { commands } = await renderDrawer({
+      object: service(),
+      state: criticalState({ site_id: 'siteA' }),
+      connectionId: 'test'
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Force check' }))
+
+    expect(commands.forceCheckService).toHaveBeenCalledWith('web01', 'CPU load', 'siteA')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('says why a command without a dialog failed', async () => {
+    const user = userEvent.setup()
+    const { commands } = await renderDrawer({
+      object: service(),
+      state: criticalState(),
+      connectionId: 'test'
+    })
+    vi.mocked(commands.forceCheckService).mockRejectedValue(new Error('Host not found'))
+
+    await user.click(screen.getByRole('button', { name: 'Force check' }))
+
+    expect(await screen.findByText('Could not schedule the check')).toBeInTheDocument()
+  })
+
+  it('shows a command as running until Checkmk has taken it', async () => {
+    const user = userEvent.setup()
+    const { commands } = await renderDrawer({
+      object: service(),
+      state: criticalState(),
+      connectionId: 'test'
+    })
+    let resolve = (): void => {}
+    vi.mocked(commands.forceCheckService).mockReturnValue(
+      new Promise<void>((settle) => (resolve = settle))
+    )
+
+    const button = screen.getByRole('button', { name: 'Force check' })
+    await user.click(button)
+    expect(button).toHaveAttribute('aria-busy', 'true')
+
+    resolve()
+
+    expect(await screen.findByText('Force check scheduled')).toBeInTheDocument()
+    expect(button).toHaveAttribute('aria-busy', 'false')
+  })
+
+  it('does not show a command for one object as running on the next', async () => {
+    const user = userEvent.setup()
+    const { commands, rerender } = await renderDrawer({
+      object: service(),
+      state: criticalState(),
+      connectionId: 'test'
+    })
+    vi.mocked(commands.forceCheckService).mockReturnValue(new Promise<void>(() => {}))
+
+    await user.click(screen.getByRole('button', { name: 'Force check' }))
+    await rerender({
+      object: service({ id: 's2', service_description: 'Memory' }),
+      state: criticalState({ object_id: 's2' })
+    })
+
+    expect(screen.getByRole('button', { name: 'Force check' })).toHaveAttribute(
+      'aria-busy',
+      'false'
+    )
+  })
+
+  it('reports in a toast once the slide-in has closed', async () => {
+    const user = userEvent.setup()
+    const { commands, toasts, rerender } = await renderDrawer({
+      object: service(),
+      state: criticalState(),
+      connectionId: 'test'
+    })
+    let resolve = (): void => {}
+    vi.mocked(commands.forceCheckService).mockReturnValue(
+      new Promise<void>((settle) => (resolve = settle))
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Force check' }))
+    await rerender({ object: null })
+    resolve()
+
+    await waitFor(() =>
+      expect(toasts.toasts.value.map((toast) => toast.message)).toContain('Force check scheduled')
+    )
+  })
+
+  it('lets its clicks reach the page, where the map closes its menus', async () => {
+    const user = userEvent.setup()
+    await renderDrawer({ object: service(), state: criticalState(), connectionId: 'test' })
+    const onPageClick = vi.fn()
+    document.addEventListener('click', onPageClick, { once: true })
+
+    await user.click(screen.getByRole('button', { name: 'Force check' }))
+
+    expect(onPageClick).toHaveBeenCalled()
+  })
+
+  it('offers removing the downtimes only to who may remove all of them', async () => {
+    await renderDrawer(
+      { object: service(), state: criticalState({ in_downtime: true }), connectionId: 'test' },
+      ALL_COMMANDS.filter((verb) => verb !== 'remove_all_downtimes')
+    )
+
+    expect(screen.queryByRole('button', { name: 'Remove downtimes' })).not.toBeInTheDocument()
+  })
+
+  it('removes the downtimes only once confirmed', async () => {
+    const user = userEvent.setup()
+    const { commands } = await renderDrawer({
+      object: service(),
+      state: criticalState({ in_downtime: true }),
+      connectionId: 'test',
+      checkmkUrl: 'http://localhost/site/check_mk/'
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Remove downtimes' }))
+    expect(commands.removeDowntimeService).not.toHaveBeenCalled()
+
+    const dialog = await screen.findByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Remove downtimes' }))
+
+    expect(commands.removeDowntimeService).toHaveBeenCalledWith(
+      'http://localhost/site/check_mk/',
+      'web01',
+      'CPU load'
+    )
+  })
+})
+
+describe('DetailDrawer – closing', () => {
   it('emits close when the header close button is clicked', async () => {
     const user = userEvent.setup()
     const { emitted } = await renderDrawer({

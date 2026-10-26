@@ -91,46 +91,97 @@ describe('api client — Checkmk REST API transport', () => {
   const CMK_BASE = 'http://cmk.example.com/heute'
   const API_BASE = `${CMK_BASE}/check_mk/api/1.0`
 
-  it('lists downtimes via the REST collection and maps the wire items', async () => {
+  it('schedules a repeating, flexible group downtime at the connection site', async () => {
     const seen: SeenRequest[] = []
     server.use(
-      http.get(`${API_BASE}/domain-types/downtime/collections/all`, async ({ request }) => {
+      http.post(`${API_BASE}/domain-types/downtime/collections/host`, async ({ request }) => {
         seen.push(await snapshot(request))
-        return HttpResponse.json({
-          value: [
-            {
-              id: '42',
-              extensions: {
-                site_id: 'heute',
-                host_name: 'srv01',
-                author: 'cmkadmin',
-                comment: 'maintenance',
-                start_time: '2026-07-02T10:00:00+00:00',
-                end_time: '2026-07-02T12:00:00+00:00',
-                is_service: false
-              }
-            }
-          ]
-        })
+        return new HttpResponse(null, { status: 204 })
       })
     )
 
-    const entries = await commands.listDowntimesHost(CMK_BASE, 'srv01')
+    await commands.downtimeHostgroup(CMK_BASE, 'linux', {
+      startTime: '2026-09-23T08:00:00Z',
+      endTime: '2026-09-23T10:00:00Z',
+      comment: 'patching',
+      durationMinutes: 30,
+      recur: 'week'
+    })
 
-    expect(seen[0]!.url.searchParams.get('host_name')).toBe('srv01')
-    expect(seen[0]!.url.searchParams.get('downtime_type')).toBe('host')
-    expect(entries).toEqual([
+    expect(JSON.parse(seen[0]!.body)).toEqual({
+      downtime_type: 'hostgroup',
+      hostgroup_name: 'linux',
+      start_time: '2026-09-23T08:00:00Z',
+      end_time: '2026-09-23T10:00:00Z',
+      comment: 'patching',
+      duration: 30,
+      recur: 'week'
+    })
+  })
+
+  it('schedules a group downtime and its child hosts in one request', async () => {
+    const seen: SeenRequest[] = []
+    server.use(
+      http.post(`${API_BASE}/domain-types/downtime/collections/host`, async ({ request }) => {
+        seen.push(await snapshot(request))
+        return new HttpResponse(null, { status: 204 })
+      })
+    )
+
+    await commands.downtimeHostgroup(
+      CMK_BASE,
+      'linux',
       {
-        id: '42',
-        site_id: 'heute',
-        host_name: 'srv01',
-        author: 'cmkadmin',
-        comment: 'maintenance',
-        start_time: '2026-07-02T10:00:00+00:00',
-        end_time: '2026-07-02T12:00:00+00:00',
-        type: 'host'
+        startTime: '2026-09-23T08:00:00Z',
+        endTime: '2026-09-23T10:00:00Z',
+        comment: 'patching',
+        durationMinutes: 0,
+        recur: 'fixed'
+      },
+      ['access01']
+    )
+
+    expect(seen).toHaveLength(1)
+    expect(JSON.parse(seen[0]!.body)).toMatchObject({
+      downtime_type: 'host_by_query',
+      query: {
+        op: 'or',
+        expr: [
+          { op: '>=', left: 'groups', right: 'linux' },
+          { op: 'or', expr: [{ op: '=', left: 'name', right: 'access01' }] }
+        ]
       }
+    })
+  })
+
+  it('looks up child hosts at the connection site', async () => {
+    const replies = [[{ id: 'access01' }], []]
+    server.use(
+      http.post(`${API_BASE}/domain-types/host/collections/all`, () =>
+        HttpResponse.json({ value: replies.shift() ?? [] })
+      )
+    )
+
+    await expect(commands.childHosts(CMK_BASE, ['core01'])).resolves.toEqual(['access01'])
+  })
+
+  it('asks the connection site for every host of a host group', async () => {
+    const seen: SeenRequest[] = []
+    server.use(
+      http.post(`${API_BASE}/domain-types/host/collections/all`, async ({ request }) => {
+        seen.push(await snapshot(request))
+        return HttpResponse.json({ value: [{ id: 'core01' }, { id: 'core02' }] })
+      })
+    )
+
+    await expect(commands.hostgroupHosts(CMK_BASE, 'switches')).resolves.toEqual([
+      'core01',
+      'core02'
     ])
+    expect(JSON.parse(seen[0]!.body)).toEqual({
+      columns: ['name'],
+      query: { op: '>=', left: 'groups', right: 'switches' }
+    })
   })
 
   it('sends REST commands as a JSON POST to the addressed site', async () => {

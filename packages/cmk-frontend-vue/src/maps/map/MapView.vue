@@ -30,8 +30,6 @@ import {
 } from 'vue'
 
 import BulkAckModal from '@/maps/map/commands/BulkAckModal.vue'
-import ObjectCommandModals from '@/maps/map/commands/ObjectCommandModals.vue'
-import { useObjectActions } from '@/maps/map/commands/useObjectActions'
 import MapKioskExit from '@/maps/map/components/MapKioskExit.vue'
 import MapProblemsPill, { type ProblemCounts } from '@/maps/map/components/MapProblemsPill.vue'
 import MapSitesPill from '@/maps/map/components/MapSitesPill.vue'
@@ -476,8 +474,6 @@ const detailDrawerState = computed(() => {
   }
   return undefined
 })
-const detailActions = useObjectActions(() => checkmkUrl.value)
-const drawerCommands = detailActions.drawerHandlers(() => detailDrawerObject.value)
 
 // All host MapElements on this map, keyed by hostname so the Drawer's
 // topology section can decide whether a parent/child entry can highlight on
@@ -781,9 +777,9 @@ onMounted(() => {
 })
 
 // A bulk ack's effect shows up in monitoring a moment later, so closing it
-// asks the state stream for a fresh picture -- the same thing the
-// single-object modals do via ``useObjectActions``. A dialog the operator
-// dismissed without sending anything has nothing to show.
+// asks the state stream for a fresh picture -- the same thing the slide-in's
+// own commands do. A dialog the operator dismissed without sending anything has
+// nothing to show.
 function closeBulkAckModal(sent: boolean): void {
   bulkAckModal.value = null
   if (sent) {
@@ -931,14 +927,11 @@ function closeBulkAckModal(sent: boolean): void {
         :connection-id="detailDrawerObject?.connection_id ?? mapConfig?.connection_id ?? null"
         :selectable-hosts="selectableHostNames"
         :unattended="isKiosk || isPreview"
-        v-on="drawerCommands"
         @close="closeDetail"
         @select-host="onSelectHost"
         @bulk-acknowledge="onDetailBulkAcknowledge"
       />
     </div>
-
-    <ObjectCommandModals :actions="detailActions" :checkmk-url="checkmkUrl" />
 
     <BulkAckModal
       v-if="bulkAckModal"

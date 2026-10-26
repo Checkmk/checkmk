@@ -167,7 +167,7 @@ const addSourceSuggestions = computed(() => {
   const suggestions = [
     { name: 'rrd_metric', title: _t('Checkmk RRD') },
     ...(telemetryMetricsAvailable
-      ? [{ name: 'telemetry_metrics', title: _t('Metrics backend') }]
+      ? [{ name: 'telemetry_metrics', title: _t('OpenTelemetry metrics') }]
       : []),
     { name: 'scalar', title: _t('Service reference line') },
     { name: 'constant', title: _t('Constant line') }

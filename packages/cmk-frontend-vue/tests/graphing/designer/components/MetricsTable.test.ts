@@ -345,13 +345,13 @@ test('a telemetry_metrics row expands to the telemetry metrics form', async () =
 test('the telemetry metrics source is offered only when the feature is available', async () => {
   renderTable([], false)
   await fireEvent.click(screen.getByRole('combobox', { name: 'Add source' }))
-  expect(screen.queryByRole('option', { name: 'Metrics backend' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('option', { name: 'OpenTelemetry metrics' })).not.toBeInTheDocument()
 })
 
 test('adding a telemetry metrics source opens its form', async () => {
   const { store } = renderTable([], true)
   await fireEvent.click(screen.getByRole('combobox', { name: 'Add source' }))
-  await fireEvent.click(await screen.findByRole('option', { name: 'Metrics backend' }))
+  await fireEvent.click(await screen.findByRole('option', { name: 'OpenTelemetry metrics' }))
 
   expect(store.items.value[0]).toMatchObject({ type: 'telemetry_metrics', metric_name: null })
   expect(await screen.findByText('Then consolidate by')).toBeInTheDocument()
@@ -416,7 +416,7 @@ describe('a blocked row', () => {
     'Checkmk RRD': { ...newRrdMetricDraft('A', '#28a2f3'), title: '' },
     'Constant line': { ...newConstantDraft('A', '#28a2f3'), title: '' },
     'Service reference line': { ...newScalarDraft('A', '#28a2f3'), title: '' },
-    'Metrics backend': {
+    'OpenTelemetry metrics': {
       ...newTelemetryMetricsDraft('A'),
       title: '',
       consolidation_function: { type: 'gauge_last', lookback_seconds: 0 }

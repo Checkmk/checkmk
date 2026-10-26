@@ -24,7 +24,9 @@ export function useFormulaMessages(): FormulaMessages {
       case 'cyclic-ref':
         return _t('"%{id}" refers back to this formula (circular reference).', { id: issue.id })
       case 'domain-mismatch':
-        return _t('Cannot mix RRD and metrics backend data: "%{id}".', { id: issue.id })
+        return _t('Cannot mix RRD data and OpenTelemetry metrics: "%{id}".', {
+          id: issue.id
+        })
       case 'needs-consolidation':
         return _t('Consolidate "%{id}" using avg, min, max or sum.', { id: issue.id })
     }

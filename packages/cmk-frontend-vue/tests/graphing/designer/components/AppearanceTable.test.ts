@@ -262,7 +262,7 @@ test('collapsing a multi-line row hides its per-line rows, reopening brings them
   expect(screen.getByText('line two')).toBeInTheDocument()
 })
 
-test('a row states its source, telling RRD and metrics backend rows apart', () => {
+test('a row states its source, telling RRD and OpenTelemetry metrics rows apart', () => {
   renderTable(
     [
       rrdMetricItem('A', { title: 'From RRD' }),
@@ -272,7 +272,7 @@ test('a row states its source, telling RRD and metrics backend rows apart', () =
   )
 
   expect(screen.getByText('Checkmk RRD')).toBeInTheDocument()
-  expect(screen.getByText('Metrics backend')).toBeInTheDocument()
+  expect(screen.getByText('OpenTelemetry metrics')).toBeInTheDocument()
 })
 
 test('per-row colour and visibility changes leave the other row untouched', async () => {

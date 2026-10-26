@@ -42,7 +42,7 @@ _SUGGESTIONS_SELECTOR = ".cmk-suggestions"
 _FILTER_BOX_SELECTOR = "input[aria-label='filter']"
 _ADD_SOURCE_SELECTOR = "button[aria-label='Add source']"
 _RRD_SOURCE = "Checkmk RRD"
-_METRIC_BACKEND_SOURCE = "Metrics backend"
+_TELEMETRY_METRICS_SOURCE = "OpenTelemetry metrics"
 _METRIC_NAME_FIELD = "Metric name"
 
 # The graph appearance tab, where a multi-line source lists the series it resolved to.
@@ -191,11 +191,11 @@ class CustomGraphDesigner(CmkPage):
         self.main_area.locator(_ADD_SOURCE_SELECTOR).click()
         # The source types are a fixed list, offered in full and without a filter box.
         self._select_suggestion(
-            self._open_suggestions(_METRIC_BACKEND_SOURCE), _METRIC_BACKEND_SOURCE
+            self._open_suggestions(_TELEMETRY_METRICS_SOURCE), _TELEMETRY_METRICS_SOURCE
         )
         expect(
             self.source_rows,
-            f"Adding a {_METRIC_BACKEND_SOURCE} source did not add a row to the metrics table",
+            f"Adding a {_TELEMETRY_METRICS_SOURCE} source did not add a row to the metrics table",
         ).to_have_count(rows_before + 1)
 
         # The new row is appended and auto-expanded, so its form is the last one.

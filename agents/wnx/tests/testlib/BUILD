@@ -2,13 +2,19 @@ load("@aspect_rules_py//py:defs.bzl", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_library")
 
-py_library(
-    name = "wnx-agent-python-testlib",
+filegroup(
+    name = "srcs",
     srcs = [
         "__init__.py",
         "agent_output.py",
         "utils.py",
     ],
+    visibility = ["//agents/wnx/tests:__subpackages__"],
+)
+
+py_library(
+    name = "wnx-agent-python-testlib",
+    srcs = [":srcs"],
     imports = [".."],
     visibility = ["//visibility:public"],
     deps = [

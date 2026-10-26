@@ -6,14 +6,14 @@ load("//agents/wnx/test-vm:image.bzl", "TEST_VM_DATA", "WINDOWS_TEST_VM", "test_
 # Copies a payload's stage into the guest and runs it there.
 _TIER = "//bazel/tools/windows_vm:tier"
 
-def _qemu_test_impl(name, visibility, src, args, data, env_inherit, stage, timeout):
+def _qemu_test_impl(name, visibility, src, args, data, deps, env_inherit, stage, timeout):
     # The runner on its own, compatible and not manual, so that `bazel lint`
     # and the repository's py-file checks see it.
     py_library(
         name = name + "_runner",
         srcs = [src],
         visibility = ["//visibility:private"],
-        deps = [Label(_TIER)],
+        deps = deps or [Label(_TIER)],
     )
 
     py_test(
@@ -62,6 +62,10 @@ targets in data.""",
         ),
         "data": attr.label_list(
             doc = "Runfiles of the runner on the host; what the guest needs goes in stage.",
+            configurable = False,
+        ),
+        "deps": attr.label_list(
+            doc = "Python libraries the runner imports; without them, qemu_windows's tier.",
             configurable = False,
         ),
         "env_inherit": attr.string_list(

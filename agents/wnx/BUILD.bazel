@@ -99,6 +99,8 @@ cc_binary(
     opt = True,
     platform = "//bazel/platforms:x86_64-windows-msvc",
     tags = ["manual"],
+    # The MSI genrule plus the pytest suites under tests/.
+    visibility = ["//agents/wnx:__subpackages__"],
     deps = [
         ":engine",
         ":wnx_headers",
@@ -125,6 +127,12 @@ filegroup(
         "install/resources/**",
         "test_files/**",
     ]),
+    visibility = ["//agents/wnx:__subpackages__"],
+)
+
+filegroup(
+    name = "pytest_test_files",
+    srcs = glob(["tests/files/**"]),
     visibility = ["//agents/wnx:__subpackages__"],
 )
 
@@ -422,6 +430,9 @@ file_from_flag(
     content = ["{VERSION}"],
     replace_labels = {"VERSION": "@cmk//version"},
     tags = ["manual"],
+    # Also the version the controller is built with, for the integration
+    # suite's test_check_mk_run.
+    visibility = ["//agents/wnx:__subpackages__"],
 )
 
 # Use --cmk_version, with a fallback to the branch version in wnx_version.h if not given.
@@ -464,6 +475,11 @@ filegroup(
 exports_files(
     ["install/resources/configure_and_exec.ps1"],
     visibility = ["//agents/windows/plugins:__pkg__"],
+)
+
+exports_files(
+    ["install/resources/check_mk.yml"],
+    visibility = ["//agents/wnx:__subpackages__"],
 )
 
 # The exes //agents/wnx:check_mk_agent_msi embeds: signed whenever signing

@@ -6,6 +6,7 @@
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
+import { nextTick } from 'vue'
 
 import { useMapEditor } from '@/maps/map/composables/useMapEditor'
 import MapEditTools from '@/maps/map/edit/components/MapEditTools.vue'
@@ -142,6 +143,47 @@ describe('MapEditTools – the add-object panel', () => {
       expect(screen.queryByRole('combobox', { name: 'Object type' })).not.toBeInTheDocument()
     )
     expect(screen.getByText('Click on map to place…')).toBeInTheDocument()
+  })
+
+  it('closes once the object is placed', async () => {
+    const { editor } = renderTools([])
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add object' }))
+    await screen.findByRole('combobox', { name: 'Object type' })
+    editor.draft.type = 'textbox'
+    await nextTick()
+    editor.startPlacing()
+    await editor.placeAt(100, 100)
+
+    await waitFor(() => expect(screen.queryByText('Add object', { selector: 'p' })).toBeNull())
+  })
+
+  // A host whose location is known lands on the geo map without a click, so
+  // placing starts and ends in the same tick.
+  it('closes once a geo-located object is placed in the same tick', async () => {
+    const { editor } = renderTools([])
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add object' }))
+    await screen.findByRole('combobox', { name: 'Object type' })
+    editor.draft.type = 'textbox'
+    await nextTick()
+    editor.startPlacing()
+    await editor.placeAtLatLng(50, 10)
+
+    await waitFor(() => expect(screen.queryByText('Add object', { selector: 'p' })).toBeNull())
+  })
+
+  it('stays open when placing is cancelled, so the draft can be placed again', async () => {
+    const { editor } = renderTools([])
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add object' }))
+    await screen.findByRole('combobox', { name: 'Object type' })
+    editor.draft.type = 'textbox'
+    await nextTick()
+    editor.startPlacing()
+    editor.cancelPlacing()
+
+    expect(await screen.findByRole('combobox', { name: 'Object type' })).toBeInTheDocument()
   })
 })
 

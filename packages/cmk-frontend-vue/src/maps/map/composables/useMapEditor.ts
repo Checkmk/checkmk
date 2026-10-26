@@ -526,6 +526,9 @@ export function useMapEditor() {
   }
 
   const placing = ref(false)
+  // Counts the objects placed from the draft. Placing can start and end in the
+  // same tick (a geo-located host), so watchers can't rely on `placing` flipping.
+  const placedCount = ref(0)
   const draft = reactive<NewObjectDraft>({
     type: '',
     host_name: '',
@@ -686,6 +689,7 @@ export function useMapEditor() {
     mapsStore.scheduleSave()
     selectObject(obj.id)
     resetDraft()
+    placedCount.value++
   }
 
   async function placeAtLatLng(lat: number, lng: number) {
@@ -914,6 +918,7 @@ export function useMapEditor() {
     startLineDrag,
     updateObjectProperties,
     placing,
+    placedCount,
     draft,
     resetDraft,
     startPlacing,

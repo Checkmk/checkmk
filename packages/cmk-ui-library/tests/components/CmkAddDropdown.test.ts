@@ -12,7 +12,7 @@ import { defineComponent, h, shallowRef } from 'vue'
 const OPTIONS: Suggestions = {
   type: 'fixed',
   suggestions: [
-    { name: 'metrics_backend', title: untranslated('Metrics backend') },
+    { name: 'otel_metrics', title: untranslated('OpenTelemetry metrics') },
     { name: 'cmk_rrd', title: untranslated('CMK RRD') }
   ]
 }

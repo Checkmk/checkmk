@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 /**
- * The Checkmk page menu above the map list.
+ * The Checkmk page menu above the map list and the image library.
  *
  * ``maps.py`` renders it (``cmk/maps/gui/_page_menu.py``). Its entries act on
  * state the SPA owns, so they dispatch one DOM event with the action as its
@@ -12,7 +12,7 @@
  */
 import { type InjectionKey, inject, onBeforeUnmount, onMounted, provide } from 'vue'
 
-const PAGE_MENU_ACTIONS = ['create', 'import'] as const
+const PAGE_MENU_ACTIONS = ['create', 'import', 'upload'] as const
 
 export type PageMenuAction = (typeof PAGE_MENU_ACTIONS)[number]
 

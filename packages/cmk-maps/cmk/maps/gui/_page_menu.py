@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""The Checkmk page menu of the map list.
+"""The Checkmk page menus of the map list and the image library.
 
 The actions open what the SPA owns (a dialog, a file picker), so they do not
 link anywhere: they dispatch :data:`PAGE_MENU_EVENT` with the action as its
@@ -31,7 +31,9 @@ from cmk.web.utils.icons import IconNames, StaticIcon
 PAGE_MENU_EVENT: Final = "cmk-maps-page-menu"
 MAPS_HOME_URL: Final = "maps.py"
 
-type PageMenuAction = Literal["create", "import"]
+IMAGES_URL: Final = f"{MAPS_HOME_URL}?mode=icons"
+
+type PageMenuAction = Literal["create", "import", "upload"]
 
 
 def maps_breadcrumb() -> Breadcrumb:
@@ -39,6 +41,39 @@ def maps_breadcrumb() -> Breadcrumb:
     breadcrumb = make_main_menu_breadcrumb(main_menu_registry.menu_customize())
     breadcrumb.append(BreadcrumbItem(title=_("Maps"), url=MAPS_HOME_URL, id="maps"))
     return breadcrumb
+
+
+def images_breadcrumb() -> Breadcrumb:
+    breadcrumb = maps_breadcrumb()
+    breadcrumb.append(BreadcrumbItem(title=_("Images"), url=IMAGES_URL, id="maps_images"))
+    return breadcrumb
+
+
+def images_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
+    return PageMenu(
+        dropdowns=[
+            PageMenuDropdown(
+                name="images",
+                title=_("Images"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Images"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Upload image"),
+                                icon_name=StaticIcon(IconNames.upload),
+                                item=_dispatch("upload"),
+                                name="maps_upload_image",
+                                is_shortcut=True,
+                                is_suggested=True,
+                            )
+                        ],
+                    )
+                ],
+            )
+        ],
+        breadcrumb=breadcrumb,
+    )
 
 
 def map_list_page_menu(
@@ -107,7 +142,7 @@ def _maps_dropdown(acting_user: LoggedInUser, settings_url: str) -> PageMenuDrop
                     PageMenuEntry(
                         title=_("Images"),
                         icon_name=StaticIcon(IconNames.icons),
-                        item=make_simple_link(f"{MAPS_HOME_URL}?mode=icons"),
+                        item=make_simple_link(IMAGES_URL),
                         name="maps_images",
                     ),
                     PageMenuEntry(

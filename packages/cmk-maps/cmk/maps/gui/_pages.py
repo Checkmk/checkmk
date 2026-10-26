@@ -25,12 +25,19 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.page_menu import PageMenu
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import VisualPublic
 from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermissions
 from cmk.maps.gui._images import seed_builtin_images
-from cmk.maps.gui._page_menu import map_list_page_menu, maps_breadcrumb, PAGE_MENU_EVENT
+from cmk.maps.gui._page_menu import (
+    images_breadcrumb,
+    images_page_menu,
+    map_list_page_menu,
+    maps_breadcrumb,
+    PAGE_MENU_EVENT,
+)
 from cmk.maps.gui._settings import map_object_defaults, MapListView, tile_csp_sources
 from cmk.maps.gui._settings_page import SETTINGS_URL
 from cmk.maps.gui._tickets import _publishable_contact_groups, _publishable_sites
@@ -62,23 +69,19 @@ class ShowMapsPage(Page):
         # Preview (settings live-preview iframe) and kiosk (NOC wall) render the
         # map chromeless: no Checkmk main navigation, just the SPA.
         chromeless = ctx.request.has_var("preview") or ctx.request.has_var("kiosk")
-        # The map list is a Checkmk page with its heading and page menu. A map
-        # renders its own title bar over the canvas, so it gets neither. The SPA
-        # loads the other page when it switches between the two, so the server
-        # chrome always belongs to what is shown.
-        on_list = not ctx.request.has_var("name") and not ctx.request.has_var("mode")
-        breadcrumb = maps_breadcrumb() if on_list else Breadcrumb()
+        # The map list and the image library are Checkmk pages with their
+        # heading and page menu. A map renders its own title bar over the
+        # canvas, so it gets neither. The SPA loads the other page when it
+        # switches between them, so the server chrome always belongs to what is
+        # shown.
         layout = _list_layout(ctx)
+        title, breadcrumb, page_menu = _chrome(ctx, layout)
         make_header(
             html,
-            title=_("Maps"),
+            title=title,
             breadcrumb=breadcrumb,
-            page_menu=(
-                map_list_page_menu(user, breadcrumb, settings_url=SETTINGS_URL, layout=layout)
-                if on_list
-                else None
-            ),
-            show_top_heading=on_list,
+            page_menu=page_menu,
+            show_top_heading=page_menu is not None,
             show_main_navigation=not chromeless,
             enable_main_page_scrollbar=False,
             debug=ctx.config.debug,
@@ -155,6 +158,26 @@ def _as_list_layout(value: object) -> MapListView | None:
             return "table"
         case _:
             return None
+
+
+def _chrome(ctx: PageContext, layout: MapListView) -> tuple[str, Breadcrumb, PageMenu | None]:
+    # The image library goes before a map name, as the SPA's router has it, so
+    # the chrome rendered here belongs to the view the SPA shows.
+    if not _shows_images(ctx) and ctx.request.has_var("name"):
+        return _("Maps"), Breadcrumb(), None
+    if _shows_images(ctx) and user.may("maps.configure"):
+        breadcrumb = images_breadcrumb()
+        return _("Images"), breadcrumb, images_page_menu(breadcrumb)
+    breadcrumb = maps_breadcrumb()
+    return (
+        _("Maps"),
+        breadcrumb,
+        map_list_page_menu(user, breadcrumb, settings_url=SETTINGS_URL, layout=layout),
+    )
+
+
+def _shows_images(ctx: PageContext) -> bool:
+    return ctx.request.get_ascii_input("mode") == "icons"
 
 
 def _authorized_public(requested: object) -> VisualPublic:

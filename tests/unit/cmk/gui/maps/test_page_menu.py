@@ -12,7 +12,13 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu, PageMenuLink
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
-from cmk.maps.gui._page_menu import map_list_page_menu, maps_breadcrumb, PAGE_MENU_EVENT
+from cmk.maps.gui._page_menu import (
+    images_breadcrumb,
+    images_page_menu,
+    map_list_page_menu,
+    maps_breadcrumb,
+    PAGE_MENU_EVENT,
+)
 from cmk.maps.gui._settings import MapListView
 
 
@@ -80,3 +86,10 @@ def test_user_without_permissions_gets_no_list_actions(
 ) -> None:
     with UserContext(with_user[0], UserPermissions({}, {}, {}, [])):
         assert _entry_names(_menu(), "maps") == []
+
+
+def test_upload_is_the_quick_button_of_the_image_library(
+    request_context: None, with_admin_login: UserId
+) -> None:
+    menu = images_page_menu(images_breadcrumb())
+    assert "maps_upload_image" in [entry.name for entry in menu.shortcuts]

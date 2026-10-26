@@ -13,7 +13,7 @@ from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.maps.gui._pages import _list_layout
+from cmk.maps.gui._pages import _chrome, _list_layout
 from cmk.maps.gui._settings import map_object_defaults
 
 
@@ -25,6 +25,19 @@ def _ctx() -> PageContext:
         session=session,
         user_permissions=UserPermissions.from_config(Config(), all_permissions()),
     )
+
+
+def test_map_gets_no_page_menu(request_context: None, with_admin_login: UserId) -> None:
+    request.set_var("name", "mine")
+    assert _chrome(_ctx(), "cards")[2] is None
+
+
+def test_image_library_goes_before_a_map_name(
+    request_context: None, with_admin_login: UserId
+) -> None:
+    request.set_var("name", "mine")
+    request.set_var("mode", "icons")
+    assert _chrome(_ctx(), "cards")[0] == "Images"
 
 
 def test_list_layout_is_the_global_default_until_one_is_chosen(

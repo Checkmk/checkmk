@@ -13,6 +13,8 @@ import CmkButton from 'cmk-ui-library/components/CmkButton'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useTemplateRef } from 'vue'
 
+import { IMAGE_UPLOAD_ACCEPT } from '@/maps/image-library/upload'
+
 const { label, variant = 'primary' } = defineProps<{
   label: TranslatedString
   /** 'text' is the quiet variant for a footer; 'primary' heads a page. */
@@ -36,7 +38,7 @@ const fileInput = useTemplateRef<HTMLInputElement>('fileInput')
     <input
       ref="fileInput"
       type="file"
-      accept="image/png,image/jpeg,image/svg+xml,image/webp"
+      :accept="IMAGE_UPLOAD_ACCEPT"
       multiple
       class="maps-image-upload-button__input"
       @change="$emit('change', $event)"

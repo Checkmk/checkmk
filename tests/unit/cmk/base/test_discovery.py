@@ -1550,6 +1550,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                     ),
                     host_name=HostName("test_node"),
                     error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+                    debug=True,
                 ),
                 section_plugins={
                     SectionName("agent_only"): _trivial("agent_only"),
@@ -1569,6 +1570,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                     ),
                     host_name=HostName("test_node"),
                     error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+                    debug=True,
                 ),
                 section_plugins={
                     SectionName("shared"): _trivial("shared"),
@@ -1679,6 +1681,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
+        debug=True,
     )
     service_name_config = config_cache.make_passive_service_name_config(
         make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
@@ -1703,6 +1706,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
                 relative_walk_cache_path=Path("dev/null"),
                 relative_section_cache_path=Path("dev/null"),
                 caching_config=lambda host_name: {},  # noqa: ARG005
+                debug=True,
             ),
         ),
         plugins=plugins,
@@ -1723,6 +1727,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
             path=Path("/pw/store"),
             secrets={},
         ),
+        debug=True,
     )
 
     succeeded = commandline_discovery(
@@ -1750,6 +1755,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         inventorized_host_labels_dir=cmk.utils.paths.inventorized_host_labels_dir,
+        debug=True,
     )
 
     assert succeeded is True
@@ -1768,7 +1774,6 @@ class _FailingFetcher(FetcherFunction):
         raise MKIPAddressLookupError(f"Failed to lookup IPv4 address of {host_name} via DNS")
 
 
-@pytest.mark.usefixtures("disable_debug")
 def test_commandline_discovery_reports_failure(tmp_path: Path) -> None:
     """A failed discovery is reported to the caller, not only printed.
 
@@ -1793,6 +1798,7 @@ def test_commandline_discovery_reports_failure(tmp_path: Path) -> None:
         autochecks_dir=tmp_path / "autochecks",
         discovered_host_labels_dir=tmp_path / "host_labels",
         inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
+        debug=False,
     )
 
     assert succeeded is False
@@ -1840,6 +1846,7 @@ def test_commandline_discovery_reports_failed_source(tmp_path: Path) -> None:
         autochecks_dir=autochecks_dir,
         discovered_host_labels_dir=tmp_path / "host_labels",
         inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
+        debug=True,
     )
 
     assert succeeded is False
@@ -1893,6 +1900,7 @@ def test_commandline_discovery_ii_keeps_services_and_labels_when_a_source_failed
         autochecks_dir=_autochecks_dir(tmp_path),
         discovered_host_labels_dir=labels_dir,
         inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
+        debug=True,
     )
 
     assert succeeded is False
@@ -1972,6 +1980,7 @@ def test_commandline_discovery_discovers_inventorized_host_labels(tmp_path: Path
         autochecks_dir=tmp_path / "autochecks",
         discovered_host_labels_dir=tmp_path / "host_labels",
         inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
+        debug=True,
     )
 
     assert DiscoveredHostLabelsStore(host_name, tmp_path / "host_labels").load() == [
@@ -2000,6 +2009,7 @@ def test_execute_check_discovery_ignores_inventorized_host_labels(tmp_path: Path
         read_discovered_host_labels=lambda host_name: [  # noqa: ARG005
             HostLabel("cmk/inventory/product", "foo", None)
         ],
+        debug=True,
     )
 
     assert [r.summary for r in check_results if "label" in r.summary] == [
@@ -2039,6 +2049,7 @@ def _test_providers(host_name: HostName, rows: StringTable) -> Mapping[HostKey, 
                 ),
                 host_name=host_name,
                 error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+                debug=True,
             ),
             section_plugins={_TEST_SECTION_NAME: _section_plugin(_TEST_SECTION)},
         )
@@ -2081,6 +2092,7 @@ def _run_commandline_service_discovery(
         autochecks_dir=_autochecks_dir(tmp_path),
         discovered_host_labels_dir=labels_dir,
         inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
+        debug=True,
     )
     return {e.id() for e in AutochecksStore(host_name, _autochecks_dir(tmp_path)).read()}
 
@@ -2258,6 +2270,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
                     ),
                     host_name=hostname,
                     error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+                    debug=True,
                 ),
                 section_plugins={
                     _TEST_LABELS_NAME: _section_plugin(_TEST_LABELS_SECTION),
@@ -2321,6 +2334,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                     ),
                     host_name=node1_hostname,
                     error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+                    debug=True,
                 ),
                 section_plugins={
                     _TEST_LABELS_NAME: _section_plugin(_TEST_LABELS_SECTION),
@@ -2339,6 +2353,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                     ),
                     host_name=node2_hostname,
                     error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+                    debug=True,
                 ),
                 section_plugins={
                     _TEST_LABELS_NAME: _section_plugin(_TEST_LABELS_SECTION),
@@ -2442,6 +2457,7 @@ def test__discovery_considers_host_labels(
             providers=providers,
             plugins=plugins,
             on_error=OnError.RAISE,
+            debug=True,
         )
     } == expected_services
 
@@ -2600,6 +2616,7 @@ def test__discover_host_labels_and_services_on_realhost(
         providers=providers,
         plugins=plugins,
         on_error=OnError.RAISE,
+        debug=True,
     )
 
     services = {s.id() for s in discovered_services}
@@ -2654,6 +2671,7 @@ def test__discover_services_on_cluster(
             check_plugins=_TEST_CHECK_PLUGINS,
         ),
         OnError.RAISE,
+        debug=True,
     ) == {
         "test-node1": [
             AutocheckEntry(

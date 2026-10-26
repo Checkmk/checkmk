@@ -91,7 +91,7 @@ def test_migrated_parameters_are_accepted_by_the_check_engine() -> None:
                 check_plugin_wmic_process.check_default_parameters or {}
             ),
         ]
-    ).evaluate(lambda _timeperiod: False)
+    ).evaluate(lambda _timeperiod: False, debug=True)
 
     assert effective == _MIGRATED
 

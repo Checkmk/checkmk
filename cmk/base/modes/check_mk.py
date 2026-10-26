@@ -533,6 +533,7 @@ def run_checking(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
                     force_stored_walks=bool(options.get("usewalk", False)),
+                    debug=debug,
                 ),
             ),
             plugins=plugins,
@@ -552,6 +553,7 @@ def run_checking(
             simulation_mode=loaded_config.simulation_mode,
             secrets_config_relay=secrets_config_relay,
             secrets_config_site=secrets_config_site,
+            debug=debug,
         )
         parser = CMKParser(
             config.make_parser_config(
@@ -562,6 +564,7 @@ def run_checking(
             ),
             selected_sections=selected_sections,
             keep_outdated=file_cache_options.keep_outdated,
+            debug=debug,
         )
         checker_config = CheckerConfig(
             only_from=only_from,
@@ -659,6 +662,7 @@ def run_checking(
                     ),
                     exit_spec=exit_code_spec(hostname),
                     timeperiods_active=checker_config.timeperiods_active,
+                    debug=debug,
                 )
 
             checks_result = [
@@ -750,6 +754,7 @@ def execute_active_check_inventory(
     inventorized_host_labels_dir: Path,
     discovered_host_labels_dir: Path,
     autodiscovery_dir: Path,
+    debug: bool,
 ) -> Sequence[ActiveCheckResult]:
     inv_store = InventoryStore(cmk.utils.paths.omd_root)
     previous_tree = inv_store.load_previous_inventory_tree(host_name=host_name)
@@ -782,6 +787,7 @@ def execute_active_check_inventory(
             parameters=parameters,
             raw_intervals_from_config=raw_intervals_from_config,
             previous_tree=previous_tree,
+            debug=debug,
         )
 
     inv_paths = InventoryPaths(cmk.utils.paths.omd_root)

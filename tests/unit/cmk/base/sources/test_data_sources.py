@@ -124,6 +124,7 @@ def _make_sources(
                 relative_section_cache_path=Path("dev/null"),
                 caching_config=lambda host_name: {},  # noqa: ARG005
                 force_stored_walks=force_stored_walks,
+                debug=True,
             ),
         ),
         simulation_mode=simulation_mode,

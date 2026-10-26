@@ -197,6 +197,7 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
             submitter=submitter,
             exit_spec=ExitSpec(),
             timeperiods_active={},
+            debug=debug.enabled(),
         )
         checks_result = submitter.results
         assert checks_result

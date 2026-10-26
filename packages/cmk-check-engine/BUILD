@@ -30,7 +30,6 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
     ],
@@ -206,7 +205,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//cmk/utils",
-        "//packages/cmk-ccc:debug",
     ],
 )
 
@@ -222,7 +220,6 @@ py_library(
         ":helper-interface",
         ":specs",
         "//cmk/piggyback:backend",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-check-engine/cmk/checkengine/parser",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
@@ -268,7 +265,6 @@ py_library(
         ":lib",
         ":section-parser",
         ":specs",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-check-engine/cmk/checkengine/parser",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",

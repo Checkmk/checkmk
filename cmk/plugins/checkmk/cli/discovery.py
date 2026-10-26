@@ -206,6 +206,7 @@ def _mode_check_discovery(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
                     force_stored_walks=bool(options.get("usewalk", False)),
+                    debug=global_options.debug,
                 ),
             ),
             plugins=plugins,
@@ -235,6 +236,7 @@ def _mode_check_discovery(
                 path=cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS),
                 secrets=secrets,
             ),
+            debug=global_options.debug,
         )
         parser = CMKParser(
             config.make_parser_config(
@@ -245,6 +247,7 @@ def _mode_check_discovery(
             ),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
+            debug=global_options.debug,
         )
         summarizer = CMKSummarizer(
             hostname,
@@ -302,6 +305,7 @@ def _mode_check_discovery(
                         hn, cmk.utils.paths.autochecks_dir
                     ).read(),
                     read_discovered_host_labels=label_manager.discovered_labels_of_host,
+                    debug=global_options.debug,
                 )
             check_results = [
                 *check_results,
@@ -322,7 +326,7 @@ def _mode_check_discovery(
 
 def _run_check_discovery(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # the check engine reads cmk.ccc.debug
+        # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_check_discovery(context.omd_root, context.global_options, options, args)
@@ -491,6 +495,7 @@ def _mode_discover(
             ),
             selected_sections=selected_sections,
             keep_outdated=file_cache_options.keep_outdated,
+            debug=global_options.debug,
         )
         fetcher = CMKFetcher(
             config_cache,
@@ -525,6 +530,7 @@ def _mode_discover(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
                     force_stored_walks=bool(options.get("usewalk", False)),
+                    debug=global_options.debug,
                 ),
             ),
             plugins=plugins,
@@ -555,6 +561,7 @@ def _mode_discover(
                 path=cmk.utils.password_store.pending_secrets_path_site(),
                 secrets=secrets,
             ),
+            debug=global_options.debug,
         )
         recording_fetcher = RecordingFetcher(fetcher)
         any_failed = False
@@ -615,6 +622,7 @@ def _mode_discover(
                 autochecks_dir=cmk.utils.paths.autochecks_dir,
                 discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
                 inventorized_host_labels_dir=cmk.utils.paths.inventorized_host_labels_dir,
+                debug=global_options.debug,
             )
             any_failed |= not succeeded
 
@@ -623,7 +631,7 @@ def _mode_discover(
 
 def _run_discover(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # the check engine reads cmk.ccc.debug
+        # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_discover(context.omd_root, context.global_options, options, args)

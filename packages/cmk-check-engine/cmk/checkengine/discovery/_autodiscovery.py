@@ -12,7 +12,6 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import assert_never, Literal
 
-import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher_abc import FetcherFunction
@@ -152,6 +151,7 @@ def automation_discovery(
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
     inventorized_host_labels_dir: Path,
+    debug: bool,
 ) -> DiscoveryReport:
     logger.debug("Doing discovery with '%(settings)s'", {"settings": settings})
     results = {
@@ -183,6 +183,7 @@ def automation_discovery(
             host_sections_by_host,
             section_plugins,
             error_handling=section_error_handling,
+            debug=debug,
         )
 
         if settings.update_host_labels and not is_cluster:
@@ -239,6 +240,7 @@ def automation_discovery(
                 providers,
                 plugins,
                 on_error,
+                debug=debug,
             ),
             is_cluster=is_cluster,
             cluster_nodes=cluster_nodes,
@@ -308,7 +310,7 @@ def automation_discovery(
 
     except Exception as e:
         logger.exception("Discovery failed")
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise
         results[host_name].error_text = str(e)
 
@@ -500,6 +502,7 @@ def autodiscovery(
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
     inventorized_host_labels_dir: Path,
+    debug: bool,
 ) -> AutodiscoveryResult:
     if not _may_rediscover(
         host_name=host_name,
@@ -534,6 +537,7 @@ def autodiscovery(
         autochecks_dir=autochecks_dir,
         discovered_host_labels_dir=discovered_host_labels_dir,
         inventorized_host_labels_dir=inventorized_host_labels_dir,
+        debug=debug,
     )
     if result.error_text is not None:
         # for offline hosts the error message is empty. This is to remain
@@ -724,6 +728,7 @@ def discovery_by_host(  # should go to a different file, I think.
     providers: Mapping[HostKey, Provider],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     on_error: OnError,
+    debug: bool,
 ) -> Mapping[HostName, Sequence[AutocheckEntry]]:
     candidates = find_plugins(
         providers,
@@ -737,7 +742,12 @@ def discovery_by_host(  # should go to a different file, I think.
     try:
         discovered_services = {
             host_name: discover_services(
-                host_name, candidates, providers=providers, plugins=plugins, on_error=on_error
+                host_name,
+                candidates,
+                providers=providers,
+                plugins=plugins,
+                on_error=on_error,
+                debug=debug,
             )
             for host_name in host_names
         }

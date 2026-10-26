@@ -8,7 +8,6 @@ py_library(
     deps = [
         "//cmk/utils",
         "//packages/cmk-ccc:cleanup",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:regex",

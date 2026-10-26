@@ -369,14 +369,16 @@ def _mode_snmpget(
             backend_override=snmp_backend_override,
         )
         backend = _make_backend(snmp_config)
-        value = get_single_oid(oid, single_oid_cache={}, backend=backend)
+        value = get_single_oid(
+            oid, single_oid_cache={}, backend=backend, debug=global_options.debug
+        )
         sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")
     return ExitCode.SUCCESS
 
 
 def _run_snmpget(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # get_single_oid() reads cmk.ccc.debug
+        # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_snmpget(context.omd_root, context.global_options, options, args)

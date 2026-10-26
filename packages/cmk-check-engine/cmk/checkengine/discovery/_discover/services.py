@@ -7,7 +7,6 @@ import itertools
 import logging
 from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 
-import cmk.ccc.debug
 from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery.types import QualifiedDiscovery
@@ -120,6 +119,7 @@ def discover_services(
     providers: Mapping[HostKey, Provider],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     on_error: OnError,
+    debug: bool,
 ) -> Sequence[AutocheckEntry]:
     service_table: dict[ServiceID, AutocheckEntry] = {}
     for check_plugin_name in plugin_names:
@@ -140,6 +140,7 @@ def discover_services(
                         ),
                         providers=providers,
                         on_error=on_error,
+                        debug=debug,
                     )
                 }
             )
@@ -166,6 +167,7 @@ def _discover_plugins_services(
     host_key: HostKey,
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
+    debug: bool,
 ) -> Iterator[AutocheckEntry]:
     try:
         plugin = plugins[check_plugin_name]
@@ -179,7 +181,7 @@ def _discover_plugins_services(
     try:
         kwargs = get_section_kwargs(providers, host_key, plugin.sections)
     except Exception:
-        if cmk.ccc.debug.enabled() or on_error is OnError.RAISE:
+        if debug or on_error is OnError.RAISE:
             raise
         if on_error is OnError.WARN:
             logger.warning(

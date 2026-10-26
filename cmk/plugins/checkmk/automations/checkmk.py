@@ -364,6 +364,7 @@ def _automation_service_discovery(
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
+        debug=cmk.ccc.debug.enabled(),
     )
     fetcher = CMKFetcher(
         config_cache,
@@ -389,6 +390,7 @@ def _automation_service_discovery(
                 caching_config=make_parsed_snmp_fetch_intervals_config(
                     env.loaded_config, env.ruleset_matcher, label_manager.labels_of_host
                 ),
+                debug=cmk.ccc.debug.enabled(),
             ),
         ),
         plugins=plugins,
@@ -411,6 +413,7 @@ def _automation_service_discovery(
             path=(site_secrets_path := cmk.utils.password_store.pending_secrets_path_site()),
             secrets=load_secrets_file(site_secrets_path),
         ),
+        debug=cmk.ccc.debug.enabled(),
     )
     recording_fetcher = RecordingFetcher(fetcher)
     # sort clusters last, to have them operate with the new nodes host labels.
@@ -468,6 +471,7 @@ def _automation_service_discovery(
             autochecks_dir=autochecks_dir,
             discovered_host_labels_dir=discovered_host_labels_dir,
             inventorized_host_labels_dir=inventorized_host_labels_dir,
+            debug=cmk.ccc.debug.enabled(),
         )
 
         if results[hostname].error_text is None:
@@ -529,6 +533,7 @@ def _automation_special_agent_discovery_preview(
         agent_name=run_settings.agent_name,
         cmds=cmds,
         is_cmc=env.loaded_config.monitoring_core == "cmc",
+        debug=cmk.ccc.debug.enabled(),
     )
     return _get_discovery_preview(
         run_settings.host_config.host_name,
@@ -620,6 +625,7 @@ def _automation_discovery_preview(
                         label_manager.labels_of_host,
                     ),
                     relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
+                    debug=cmk.ccc.debug.enabled(),
                 ),
             ),
             plugins=env.plugins,
@@ -637,6 +643,7 @@ def _automation_discovery_preview(
             # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
             # and tabula rasa)
             max_cachefile_age=MaxAge.zero(),
+            debug=cmk.ccc.debug.enabled(),
         )
         hosts_config = env.hosts_config
         ip_family = ip_lookup_config.default_address_family(host_name)
@@ -905,6 +912,7 @@ def _execute_discovery(
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
+        debug=cmk.ccc.debug.enabled(),
     )
 
     with (
@@ -981,6 +989,7 @@ def _execute_discovery(
             autochecks_dir=autochecks_dir,
             discovered_host_labels_dir=discovered_host_labels_dir,
             inventorized_host_labels_dir=inventorized_host_labels_dir,
+            debug=cmk.ccc.debug.enabled(),
         )
     with tracer.span("preview.active_checks", attributes={"cmk.host_name": host_name}):
         table_with_active_checks = {
@@ -1114,6 +1123,7 @@ def _execute_autodiscovery(
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
+        debug=cmk.ccc.debug.enabled(),
     )
     fetcher = CMKFetcher(
         env.config_cache,
@@ -1141,6 +1151,7 @@ def _execute_autodiscovery(
                     env.label_manager.labels_of_host,
                 ),
                 relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
+                debug=cmk.ccc.debug.enabled(),
             ),
         ),
         plugins=env.plugins,
@@ -1169,6 +1180,7 @@ def _execute_autodiscovery(
             ),
             secrets=secrets,
         ),
+        debug=cmk.ccc.debug.enabled(),
     )
     recording_fetcher = RecordingFetcher(fetcher)
     section_plugins = SectionPluginMapper(
@@ -1281,6 +1293,7 @@ def _execute_autodiscovery(
                         autochecks_dir=autochecks_dir,
                         discovered_host_labels_dir=base_discovered_host_labels_dir,
                         inventorized_host_labels_dir=inventorized_host_labels_dir,
+                        debug=cmk.ccc.debug.enabled(),
                     )
                     if not autodiscovery_result.skipped:
                         autodiscovery_queue.remove(host_name)
@@ -2022,7 +2035,9 @@ class AutomationAnalyseServices:
                         "checkgroup": checkgroup_name,
                         "checktype": str(service.check_plugin_name),
                         "item": service.item,
-                        "parameters": service.parameters.preview(timeperiod_active),
+                        "parameters": service.parameters.preview(
+                            timeperiod_active, debug=cmk.ccc.debug.enabled()
+                        ),
                     },
                     discovered_labels=service.discovered_labels,
                 )
@@ -2091,7 +2106,9 @@ class AutomationAnalyseServices:
                     "inv_parameters": service.discovered_parameters,
                     "factory_settings": plugin.check_default_parameters,
                     # effective parameters:
-                    "parameters": service.parameters.preview(timeperiod_active),
+                    "parameters": service.parameters.preview(
+                        timeperiod_active, debug=cmk.ccc.debug.enabled()
+                    ),
                 },
                 discovered_labels=service.discovered_labels,
             )
@@ -2988,6 +3005,7 @@ def _automation_diag_cmk_agent(
         ),
         mode=Mode.CHECKING,
         secrets=ActivatedSecrets(),  # not used anyway.
+        debug=cmk.ccc.debug.enabled(),
     )
 
     if raw_data.is_ok():
@@ -3355,6 +3373,7 @@ class AutomationDiagHost:
                         config_cache.label_manager.labels_of_host,
                     ),
                     relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
+                    debug=cmk.ccc.debug.enabled(),
                 ),
             ),
             simulation_mode=loaded_config.simulation_mode,
@@ -3434,6 +3453,7 @@ class AutomationDiagHost:
                 fetcher,
                 Mode.CHECKING,
                 secrets_config,
+                debug=cmk.ccc.debug.enabled(),
             )
             if raw_data.is_ok():
                 # We really receive a byte string here. The agent sections
@@ -4043,6 +4063,7 @@ def _automation_get_agent_output(
                             env.ruleset_matcher,
                             env.config_cache.label_manager.labels_of_host,
                         ),
+                        debug=cmk.ccc.debug.enabled(),
                     ),
                 ),
                 simulation_mode=env.loaded_config.simulation_mode,
@@ -4097,6 +4118,7 @@ def _automation_get_agent_output(
                     source.fetcher(),
                     Mode.CHECKING,
                     secrets=secrets,
+                    debug=cmk.ccc.debug.enabled(),
                 )
                 host_sections = parse_raw_data(
                     make_parser(
@@ -4116,6 +4138,7 @@ def _automation_get_agent_output(
                             section_cache_path=section_cache_path,
                         ),
                         keep_outdated=file_cache_options.keep_outdated,
+                        debug=cmk.ccc.debug.enabled(),
                     ),
                     raw_data,
                     selection=NO_SELECTION,

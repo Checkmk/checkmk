@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Final, final, override, Protocol, Self, TypeVar
 
 import cmk.ccc.resulttype as result
-from cmk.ccc import debug
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.version_info import general_version_infos_from_env
 from cmk.checkengine.fetcher_abc import DeserializationContext, Fetcher, FetcherError, Mode
@@ -41,6 +40,8 @@ class FetcherTrigger(JsonSerializable[Mapping[str, str], DeserializationContext]
         fetcher: Fetcher[_TRawData],
         mode: Mode,
         secrets: FetcherSecrets,
+        *,
+        debug: bool,
     ) -> result.Result[_TRawData, Exception]:
         try:
             cached = file_cache.read(mode)
@@ -71,7 +72,7 @@ class FetcherTrigger(JsonSerializable[Mapping[str, str], DeserializationContext]
             # These are intentionally raised exceptions for which we don't need crash reports
             return result.Error(exc)
         except Exception as exc:
-            if debug.enabled():
+            if debug:
                 raise
             self._on_error()
             return result.Error(exc)

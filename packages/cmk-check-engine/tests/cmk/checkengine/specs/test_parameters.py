@@ -44,24 +44,32 @@ class TestTimespecificParameterSet:
         assert not tsp.timeperiod_values
 
     def test_evaluate_constant_reevaluates_to_itself(self) -> None:
-        assert TimespecificParameterSet(_default(), ()).evaluate(lambda x: True) == _default()  # noqa: ARG005
+        assert (
+            TimespecificParameterSet(_default(), ()).evaluate(lambda _x: True, debug=False)
+            == _default()
+        )
 
     def test_evaluate_no_period_active(self) -> None:
         assert (
-            TimespecificParameterSet(_default(), _tp_values()).evaluate(lambda x: False)  # noqa: ARG005
+            TimespecificParameterSet(_default(), _tp_values()).evaluate(
+                lambda _x: False,
+                debug=False,
+            )
             == _default()
         )
 
     def test_evaluate_first_period_wins(self) -> None:
         always_true = lambda x: True  # noqa: ARG005
-        assert TimespecificParameterSet(_default(), _tp_values()).evaluate(always_true) == {
+        assert TimespecificParameterSet(_default(), _tp_values()).evaluate(
+            always_true, debug=False
+        ) == {
             "default": 42,
             "value": "from tp1",
         }
 
     def test_evaluate_tp_filtering(self) -> None:
         assert TimespecificParameterSet(_default(), _tp_values()).evaluate(
-            lambda x: x == "tp2"
+            lambda x: x == "tp2", debug=False
         ) == {"default": 42, "value": "from tp2"}
 
 
@@ -85,7 +93,9 @@ class TestTimespecificParameters:
                     ],
                 ),
             )
-        ).evaluate(always_true) == {"key": "I am only default, but the most specific rule!"}
+        ).evaluate(always_true, debug=False) == {
+            "key": "I am only default, but the most specific rule!"
+        }
 
     def test_keys_of_active_timeperiods_are_aggregated(self) -> None:
         assert set(
@@ -97,7 +107,7 @@ class TestTimespecificParameters:
                         {"key3": ""}, [(TimeperiodName("inactive_tp"), {"key4": ""})]
                     ),
                 )
-            ).evaluate(lambda x: x == "active_tp")
+            ).evaluate(lambda x: x == "active_tp", debug=False)
         ) == {"key1", "key2", "key3"}
 
 

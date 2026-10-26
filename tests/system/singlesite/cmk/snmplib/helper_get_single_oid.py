@@ -20,8 +20,6 @@ from cmk.checkengine.snmplib import (
     SNMPHostConfig,
 )
 
-cmk.ccc.debug.enable()
-
 params: tuple[OID, str, Mapping[str, object], str] = ast.literal_eval(sys.stdin.read())
 oid = params[0]
 backend_type = SNMPBackendEnum.deserialize(params[1])
@@ -51,6 +49,7 @@ sys.stdout.write(
                 oid,
                 single_oid_cache=single_oid_cache,
                 backend=backend(config),
+                debug=True,
             ),
             single_oid_cache,
         )

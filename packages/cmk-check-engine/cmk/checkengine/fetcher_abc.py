@@ -36,6 +36,7 @@ class DeserializationContext:
 
     base_path: Path
     snmp_plugin_store: SNMPPluginStore
+    debug: bool
 
 
 class FetcherFunction(ABC):

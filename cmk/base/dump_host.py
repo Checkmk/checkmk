@@ -136,6 +136,7 @@ def dump_host(
     ip_address_of_mgmt: IPLookupOptional,
     simulation_mode: bool,
     timeperiod_active: IsTimeperiodActiveCallback,
+    debug: bool,
 ) -> None:
     print_("\n")
     label_manager = config_cache.label_manager
@@ -258,6 +259,7 @@ def dump_host(
                             ruleset_matcher=config_cache.ruleset_matcher,
                             labels_of_host=config_cache.label_manager.labels_of_host,
                         ),
+                        debug=debug,
                     ),
                 ),
                 file_cache_options=FileCacheOptions(),
@@ -329,7 +331,7 @@ def dump_host(
             [
                 str(service.check_plugin_name),
                 str(service.item),
-                _evaluate_params(service.parameters, timeperiod_active),
+                _evaluate_params(service.parameters, timeperiod_active, debug=debug),
                 service.description,
                 ",".join(
                     core_objects_config.servicegroups_of_service(
@@ -353,10 +355,10 @@ def _complementary_family(
 
 
 def _evaluate_params(
-    params: TimespecificParameters, timeperiod_active: IsTimeperiodActiveCallback
+    params: TimespecificParameters, timeperiod_active: IsTimeperiodActiveCallback, *, debug: bool
 ) -> str:
     return (
-        repr(params.evaluate(timeperiod_active))
+        repr(params.evaluate(timeperiod_active, debug=debug))
         if params.is_constant()
-        else f"Timespecific parameters at {cmk.utils.render.date_and_time(time.time())}: {params.evaluate(timeperiod_active)!r}"
+        else f"Timespecific parameters at {cmk.utils.render.date_and_time(time.time())}: {params.evaluate(timeperiod_active, debug=debug)!r}"
     )

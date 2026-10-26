@@ -65,6 +65,7 @@ class SNMPFetcherConfig:
     relative_walk_cache_path: Path
     relative_section_cache_path: Path
     force_stored_walks: bool = False
+    debug: bool = False
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -123,6 +124,7 @@ class SNMPFetcher(Fetcher[SNMPRawData, SNMPFetcherParams]):
         caching_config: Mapping[SNMPSectionName, int],
         snmp_config: SNMPHostConfig,
         force_stored_walks: bool,
+        debug: bool,
     ) -> None:
         super().__init__()
         self.sections: Final = sections
@@ -136,6 +138,7 @@ class SNMPFetcher(Fetcher[SNMPRawData, SNMPFetcherParams]):
         self.caching_config: Final = caching_config
         self.snmp_config: Final = snmp_config
         self.force_stored_walks: Final = force_stored_walks
+        self.debug: Final = debug
         self._backend: SNMPBackend | None = None
 
     @override
@@ -153,6 +156,7 @@ class SNMPFetcher(Fetcher[SNMPRawData, SNMPFetcherParams]):
             and self.caching_config == other.caching_config
             and self.snmp_config == other.snmp_config
             and self.force_stored_walks == other.force_stored_walks
+            and self.debug == other.debug
         )
 
     @override
@@ -200,6 +204,7 @@ class SNMPFetcher(Fetcher[SNMPRawData, SNMPFetcherParams]):
             snmp_config=SNMPHostConfig.deserialize(snmp_config),
             caching_config=params["caching_config"],
             force_stored_walks=params["force_stored_walks"],
+            debug=ctx.debug,
         )
 
     @property
@@ -230,6 +235,7 @@ class SNMPFetcher(Fetcher[SNMPRawData, SNMPFetcherParams]):
                     f"caching_config={self.caching_config!r}",
                     f"snmp_config={self.snmp_config!r}",
                     f"force_stored_walks={self.force_stored_walks!r}",
+                    f"debug={self.debug!r}",
                 )
             )
             + ")"
@@ -261,6 +267,7 @@ class SNMPFetcher(Fetcher[SNMPRawData, SNMPFetcherParams]):
             sections=[(name, self.plugin_store[name].detect_spec) for name in select_from],
             scan_config=self.scan_config,
             backend=backend,
+            debug=self.debug,
         )
 
     def _get_selection(self, mode: Mode) -> frozenset[SNMPSectionName]:

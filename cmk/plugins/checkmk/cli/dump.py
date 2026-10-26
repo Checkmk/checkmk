@@ -173,6 +173,7 @@ def _mode_dump_agent(
                     ),
                     # Note: 'usewalk' is not in the options of this mode. We use options.get() just for consistency.
                     force_stored_walks=bool(options.get("usewalk", False)),
+                    debug=global_options.debug,
                 ),
             ),
             simulation_mode=loaded_config.simulation_mode,
@@ -227,6 +228,7 @@ def _mode_dump_agent(
                 source.fetcher(),
                 FetchMode.CHECKING,
                 secrets,
+                debug=global_options.debug,
             )
             host_sections = parse_raw_data(
                 make_parser(
@@ -246,6 +248,7 @@ def _mode_dump_agent(
                         section_cache_path=section_cache_path,
                     ),
                     keep_outdated=file_cache_options.keep_outdated,
+                    debug=global_options.debug,
                 ),
                 raw_data,
                 selection=NO_SELECTION,
@@ -276,7 +279,7 @@ def _mode_dump_agent(
 
 def _run_dump_agent(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # the check engine reads cmk.ccc.debug
+        # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_dump_agent(context.omd_root, context.global_options, options, args)
@@ -383,13 +386,14 @@ def _mode_dump_hosts(
                 timeperiod_active=timeperiod.TimeperiodActiveCoreLookup(
                     livestatus.get_optional_timeperiods_active_map, log=logger.warning
                 ).get,
+                debug=global_options.debug,
             )
         return ExitCode.SUCCESS
 
 
 def _run_dump_hosts(context: CommandContext, options: Options, args: Args) -> ExitCode:
     if context.global_options.debug:
-        # the check engine reads cmk.ccc.debug
+        # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
     try:
         return _mode_dump_hosts(context.omd_root, context.global_options, options, args)

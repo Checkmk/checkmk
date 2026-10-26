@@ -232,6 +232,7 @@ def _inventory_as_check(
                     caching_config=make_parsed_snmp_fetch_intervals_config(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
+                    debug=cmk.ccc.debug.enabled(),
                 ),
             ),
             plugins=plugins,
@@ -261,6 +262,7 @@ def _inventory_as_check(
                 ),
                 secrets=secrets,
             ),
+            debug=cmk.ccc.debug.enabled(),
         )
         parser = CMKParser(
             config.make_parser_config(
@@ -271,6 +273,7 @@ def _inventory_as_check(
             ),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
+            debug=cmk.ccc.debug.enabled(),
         )
         summarizer = CMKSummarizer(
             hostname,
@@ -316,6 +319,7 @@ def _inventory_as_check(
                     inventorized_host_labels_dir=cmk.utils.paths.inventorized_host_labels_dir,
                     discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
                     autodiscovery_dir=cmk.utils.paths.autodiscovery_dir,
+                    debug=cmk.ccc.debug.enabled(),
                 )
             check_results = [
                 *check_results,

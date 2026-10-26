@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, NamedTuple, override, Self
 
-from cmk.ccc import debug
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.helper_interface import HostKey, SourceType
 from cmk.checkengine.parser import HostSections
@@ -69,6 +68,7 @@ class SectionsParser[TSeq: Sequence]:
         #       See `cmk.base.checkers.CheckPluginMapper.__getitem__`.
         #
         error_handling: Callable[[SectionName, TSeq], str],
+        debug: bool,
     ) -> None:
         super().__init__()
         self._host_sections: HostSections[Mapping[SectionName, TSeq]] = host_sections
@@ -76,6 +76,7 @@ class SectionsParser[TSeq: Sequence]:
         self._memoized_results: dict[SectionName, _ParsingResult | None] = {}
         self._host_name = host_name
         self.error_handling: Final = error_handling
+        self._debug: Final = debug
 
     @override
     def __repr__(self) -> str:
@@ -114,7 +115,7 @@ class SectionsParser[TSeq: Sequence]:
         try:
             return parse_function(list(raw_data))
         except Exception:
-            if debug.enabled():
+            if self._debug:
                 raise
             self.parsing_errors.append(self.error_handling(section_name, raw_data))
             return None
@@ -224,6 +225,7 @@ def make_providers[TSeq: Sequence](
     section_plugins: Mapping[SectionName, SectionPlugin],
     *,
     error_handling: Callable[[SectionName, TSeq], str],
+    debug: bool,
 ) -> Mapping[HostKey, Provider]:
     return {
         host_key: ParsedSectionsResolver(
@@ -231,6 +233,7 @@ def make_providers[TSeq: Sequence](
                 host_sections=host_sections,
                 host_name=host_key.hostname,
                 error_handling=error_handling,
+                debug=debug,
             ),
             section_plugins={
                 section_name: section_plugins[section_name]

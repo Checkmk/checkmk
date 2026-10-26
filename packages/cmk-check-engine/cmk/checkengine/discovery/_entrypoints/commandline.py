@@ -10,7 +10,6 @@ from collections.abc import Callable, Container, Mapping, Sequence
 from pathlib import Path
 
 import cmk.ccc.cleanup
-import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, OnError
@@ -64,6 +63,7 @@ def commandline_discovery(
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
     inventorized_host_labels_dir: Path,
+    debug: bool,
 ) -> bool:
     """Implementing cmk -I and cmk -II
 
@@ -104,6 +104,7 @@ def commandline_discovery(
             host_sections_by_host,
             section_plugins,
             error_handling=section_error_handling,
+            debug=debug,
         )
         _commandline_discovery_on_host(
             real_host_name=host_name,
@@ -122,10 +123,11 @@ def commandline_discovery(
             autochecks_dir=autochecks_dir,
             discovered_host_labels_dir=discovered_host_labels_dir,
             inventorized_host_labels_dir=inventorized_host_labels_dir,
+            debug=debug,
         )
 
     except Exception as e:
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise
         section.section_error("%s" % e)
         return False
@@ -153,6 +155,7 @@ def _commandline_discovery_on_host(
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
     inventorized_host_labels_dir: Path,
+    debug: bool,
 ) -> None:
     section.section_step("Analyse discovered host labels")
 
@@ -216,6 +219,7 @@ def _commandline_discovery_on_host(
             providers=providers,
             plugins=plugins,
             on_error=on_error,
+            debug=debug,
         )
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")

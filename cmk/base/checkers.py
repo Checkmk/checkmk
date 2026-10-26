@@ -156,6 +156,7 @@ def _fetch_all(
     secrets: FetcherSecrets,
     *,
     simulation: bool,
+    debug: bool,
 ) -> Sequence[
     tuple[
         SourceInfo,
@@ -171,6 +172,7 @@ def _fetch_all(
             source.fetcher(),
             mode,
             secrets,
+            debug=debug,
         )
         for source in sources
     ]
@@ -183,6 +185,8 @@ def _do_fetch(  # type: ignore[explicit-any]
     fetcher: Fetcher,
     mode: Mode,
     secrets: FetcherSecrets,
+    *,
+    debug: bool,
 ) -> tuple[
     SourceInfo,
     result.Result[AgentRawData | SNMPRawData, Exception],
@@ -190,7 +194,7 @@ def _do_fetch(  # type: ignore[explicit-any]
 ]:
     logger.debug("Fetching source: %(source_info)s", {"source_info": source_info})
     with CPUTracker(logger.debug) as tracker:
-        raw_data = trigger.get_raw_data(file_cache, fetcher, mode, secrets)
+        raw_data = trigger.get_raw_data(file_cache, fetcher, mode, secrets, debug=debug)
     return source_info, raw_data, tracker.duration
 
 
@@ -201,10 +205,12 @@ class CMKParser:
         *,
         selected_sections: SectionNameCollection,
         keep_outdated: bool,
+        debug: bool,
     ) -> None:
         self.config: Final = config
         self.selected_sections: Final = selected_sections
         self.keep_outdated: Final = keep_outdated
+        self.debug: Final = debug
 
     def __call__(
         self,
@@ -235,6 +241,7 @@ class CMKParser:
                         section_cache_path=section_cache_path,
                     ),
                     keep_outdated=self.keep_outdated,
+                    debug=self.debug,
                 ),
                 raw_data,
                 selection=self.selected_sections,
@@ -318,8 +325,10 @@ class SpecialAgentFetcher(FetcherFunction):
         agent_name: str,
         cmds: Iterator[SpecialAgentCommandLine],
         is_cmc: bool,
+        debug: bool,
     ) -> None:
         self.trigger: Final = trigger
+        self.debug: Final = debug
         self.agent_name: Final = agent_name
         self.cmds: Final = cmds
         self.secrets: Final = secrets
@@ -350,6 +359,7 @@ class SpecialAgentFetcher(FetcherFunction):
                 ProgramFetcher(cmdline=cmd.cmdline, stdin=cmd.stdin, is_cmc=self.is_cmc),
                 Mode.DISCOVERY,
                 self.secrets,
+                debug=self.debug,
             )
             for cmd in self.cmds
         ]
@@ -384,8 +394,10 @@ class CMKFetcher(FetcherFunction):
         secrets_config_site: StoredSecrets,
         simulation_mode: bool,
         max_cachefile_age: MaxAge | None = None,
+        debug: bool,
     ) -> None:
         self.config_cache: Final = config_cache
+        self.debug: Final = debug
         self.host_tags: Final = host_tags
         self.get_relay_id: Final = get_relay_id
         self.make_trigger: Final = make_trigger
@@ -525,6 +537,7 @@ class CMKFetcher(FetcherFunction):
                 mode=self.mode,
                 secrets=secrets_config,
                 simulation=self.simulation_mode,
+                debug=self.debug,
             )
         ]
 
@@ -764,7 +777,7 @@ def _compute_final_check_parameters(
     omd_root: Path,
     debug: bool,
 ) -> Parameters:
-    params = service.parameters.evaluate(checker_config.timeperiods_active.get)
+    params = service.parameters.evaluate(checker_config.timeperiods_active.get, debug=debug)
 
     if not _needs_postprocessing(params):
         return Parameters(params)

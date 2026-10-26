@@ -50,6 +50,7 @@ class PiggybackParser(Parser[AgentRawData, AgentRawDataSection]):
         *,
         keep_outdated: bool,
         encoding_fallback: str,
+        debug: bool,
     ) -> None:
         super().__init__()
         self.hostname: Final = hostname
@@ -59,6 +60,7 @@ class PiggybackParser(Parser[AgentRawData, AgentRawDataSection]):
         self.piggyback_max_cache_age: Final = piggyback_max_cache_age
         self.keep_outdated: Final = keep_outdated
         self.encoding_fallback: Final = encoding_fallback
+        self.debug: Final = debug
 
     @override
     def parse(
@@ -102,6 +104,7 @@ class PiggybackParser(Parser[AgentRawData, AgentRawDataSection]):
             {},
             translation={},  # there are no "nested" piggyback sections
             encoding_fallback=self.encoding_fallback,
+            debug=self.debug,
         )
         for line in raw_data.split(b"\n"):
             parser = parser(line.rstrip(b"\r"))

@@ -11,7 +11,6 @@ import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Reversible, Sequence
 from typing import Any, Final, override, TypedDict
 
-import cmk.ccc.debug
 from cmk.utils.timeperiod import TimeperiodName, TIMESPECIFIC_DEFAULT_KEY, TIMESPECIFIC_VALUES_KEY
 
 __all__ = [
@@ -79,9 +78,11 @@ class TimespecificParameters:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.entries!r})"
 
-    def evaluate(self, is_active: IsTimeperiodActiveCallback) -> Mapping[str, object]:
+    def evaluate(
+        self, is_active: IsTimeperiodActiveCallback, *, debug: bool
+    ) -> Mapping[str, object]:
         return merge_parameters(
-            [entry.evaluate(is_active) for entry in self.entries],
+            [entry.evaluate(is_active, debug=debug) for entry in self.entries],
             {},
         )
 
@@ -89,14 +90,14 @@ class TimespecificParameters:
         return not any(p.timeperiod_values for p in self.entries)
 
     def preview(
-        self, is_active: IsTimeperiodActiveCallback
+        self, is_active: IsTimeperiodActiveCallback, *, debug: bool
     ) -> TimespecificParametersPreview | Mapping[str, object]:
         """Create a serializeable version for preview via automation call"""
         if self.is_constant():
-            return self.evaluate(is_active)
+            return self.evaluate(is_active, debug=debug)
         return {
             "tp_computed_params": {
-                "params": self.evaluate(is_active),
+                "params": self.evaluate(is_active, debug=debug),
                 "computed_at": time.time(),
             }
         }
@@ -136,6 +137,8 @@ class TimespecificParameterSet:
     def _active_subsets(
         self,
         is_active: IsTimeperiodActiveCallback,
+        *,
+        debug: bool,
     ) -> Iterable[Mapping[str, object]]:
         for timeperiod_name, tp_entry in self.timeperiod_values:
             try:
@@ -143,12 +146,14 @@ class TimespecificParameterSet:
                     yield tp_entry
             except Exception:
                 # Connection error
-                if cmk.ccc.debug.enabled():
+                if debug:
                     raise
                 return
 
-    def evaluate(self, is_active: IsTimeperiodActiveCallback) -> Mapping[str, object]:
-        return merge_parameters(list(self._active_subsets(is_active)), self.default)
+    def evaluate(
+        self, is_active: IsTimeperiodActiveCallback, *, debug: bool
+    ) -> Mapping[str, object]:
+        return merge_parameters(list(self._active_subsets(is_active, debug=debug)), self.default)
 
 
 def merge_parameters[T](

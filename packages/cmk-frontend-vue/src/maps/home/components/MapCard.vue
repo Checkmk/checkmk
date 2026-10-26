@@ -127,14 +127,12 @@ const title = computed(() => props.map.alias || props.map.name)
   box-shadow: 0 0 0 1px var(--default-border-color);
   transition:
     background-color 0.2s,
-    box-shadow 0.2s,
-    transform 0.2s;
+    box-shadow 0.2s;
 }
 
 .maps-map-card:hover {
   background: var(--input-hover-bg-color);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--interactive-accent) 40%, transparent);
-  transform: translateY(-2px);
 }
 
 .maps-map-card--draggable {

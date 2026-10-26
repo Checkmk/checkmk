@@ -101,7 +101,7 @@ function onKeydown(event: KeyboardEvent): void {
   border-radius: var(--border-radius);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--maps-radar-card-color) 20%, transparent);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.2s;
 }
 
 .maps-radar-card:focus-visible {
@@ -110,7 +110,7 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 .maps-radar-card:not(.maps-radar-card--compact):hover {
-  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--maps-radar-card-color) 16%, transparent);
 }
 
 .maps-radar-card--compact {

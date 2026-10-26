@@ -157,12 +157,12 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   text-align: left;
   transition:
     border-color 0.12s ease,
-    transform 0.12s ease;
+    background-color 0.12s ease;
 }
 
 .maps-presentation-template-gallery__item:hover {
   border-color: var(--interactive-accent);
-  transform: translateY(-2px);
+  background: var(--input-hover-bg-color);
 }
 
 .maps-presentation-template-gallery__blank {

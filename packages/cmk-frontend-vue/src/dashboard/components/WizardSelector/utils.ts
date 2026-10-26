@@ -26,10 +26,9 @@ export function widgetTypeToSelectorMatcher(
       return 'link_custom_graph'
     }
 
-    // edited in the Clone and Create workflows, which are not implemented yet
-    // Clone: CMK-39219; Create: CMK-39220
+    // all embedded custom graph widgets are edited in the "new" workflow
     case 'embedded_custom_graph': {
-      return null
+      return 'new_custom_graph'
     }
 
     case 'linked_view':
@@ -94,7 +93,7 @@ export function wizardSlideInSize(wizard: string): 'small' | 'medium' | 'large' 
   if (['other', 'ntop'].includes(wizard)) {
     return 'small'
   }
-  if (['view', 'classic_view'].includes(wizard)) {
+  if (['view', 'classic_view', 'new_custom_graph'].includes(wizard)) {
     return 'large'
   }
   return 'medium'

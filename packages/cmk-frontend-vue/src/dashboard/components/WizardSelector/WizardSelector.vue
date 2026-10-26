@@ -17,6 +17,7 @@ import type {
   WidgetSpec
 } from '../../types/widget'
 import AlertsAndNotificationsWizard from '../Wizard/wizards/alert-notification/AlertNotificationWizard.vue'
+import CreateCustomGraphWizard from '../Wizard/wizards/custom-graphs/CreateCustomGraphWizard.vue'
 import CustomGraphsWizard from '../Wizard/wizards/custom-graphs/CustomGraphsWizard.vue'
 import EventsWizard from '../Wizard/wizards/events/EventsWizard.vue'
 import HostsSiteWizard from '../Wizard/wizards/hosts-site/HostsSiteWizard.vue'
@@ -194,6 +195,18 @@ const handleAddEditWidget = (
 
       <CustomGraphsWizard
         v-if="selectedWizard === 'link_custom_graph'"
+        :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
+        :context-filters="contextFilters"
+        :edit-widget-spec="editWidgetSpec"
+        @go-back="handleGoBack"
+        @close="handleClose"
+        @add-widget="handleAddEditWidget"
+      />
+
+      <CreateCustomGraphWizard
+        v-if="selectedWizard === 'new_custom_graph'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"

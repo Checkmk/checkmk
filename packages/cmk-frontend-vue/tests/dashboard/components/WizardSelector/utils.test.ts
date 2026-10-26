@@ -36,16 +36,16 @@ describe('widgetTypeToSelectorMatcher', () => {
     expect(wizardKey).toBe('view')
   })
 
-  it('has no wizard to edit an embedded custom graph widget in yet', () => {
+  it('edits an embedded custom graph in the create wizard', () => {
     const wizardKey = widgetTypeToSelectorMatcher('embedded_custom_graph')
 
-    expect(wizardKey).toBeNull()
+    expect(wizardKey).toBe('new_custom_graph')
   })
 })
 
 describe('wizardSlideInSize', () => {
   const small: DashboardWidgetWorkflowKey[] = ['other', 'ntop']
-  const large: DashboardWidgetWorkflowKey[] = ['view', 'classic_view']
+  const large: DashboardWidgetWorkflowKey[] = ['view', 'classic_view', 'new_custom_graph']
   const medium = DASHBOARD_WIDGET_WORKFLOW_KEYS.filter(
     (key) => !small.includes(key) && !large.includes(key)
   )

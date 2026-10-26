@@ -57,6 +57,16 @@ describe('getDashboardWidgetWorkflows', () => {
     expect(parentKey).toBe('custom_graphs')
   })
 
+  it('offers creating a custom graph to every user', () => {
+    const dashboardCatalog = getDashboardWidgetWorkflows({ mayEditCustomGraph: false })
+
+    const newEntry = (dashboardCatalog['custom_graphs'] as WorkflowGroup).subWorkflows[
+      'new_custom_graph'
+    ]
+
+    expect(newEntry?.unavailableReason).toBeUndefined()
+  })
+
   it('disables cloning for users who may not edit custom graphs', () => {
     const dashboardCatalog = getDashboardWidgetWorkflows({ mayEditCustomGraph: false })
 

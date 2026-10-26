@@ -66,8 +66,7 @@ export function getDashboardWidgetWorkflows({
           title: _t('New custom graph'),
           subtitle: _t('Create and configure a new custom graph'),
           icon: 'graph',
-          icon_emblem: 'add',
-          unavailableReason: _t('Not available yet.')
+          icon_emblem: 'add'
         },
         clone_custom_graph: {
           title: _t('Clone custom graph'),
@@ -147,6 +146,7 @@ export function getDashboardWidgetWorkflows({
 export const DASHBOARD_WIDGET_WORKFLOW_KEYS = [
   'metrics_graphs',
   'link_custom_graph',
+  'new_custom_graph',
   'view',
   'classic_view',
   'host_site_overview',

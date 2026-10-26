@@ -15,14 +15,14 @@ A filter that is set but cannot be applied is reported instead of dropped, so th
 shows more objects than the user asked for without knowing it.
 """
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence, Set
 from dataclasses import dataclass
 
 from pydantic import TypeAdapter
 
 from cmk.gui.type_defs import FilterHTTPVariables, FilterName, VisualContext
 
-from ._catalog import LEGACY_FILTERS, SITE_FILTERS
+from ._catalog import legacy_filters, SITE_FILTERS
 from ._filters import (
     all_of,
     FilterJSON,
@@ -61,18 +61,22 @@ def translate_context[N, F](
     context: VisualContext,
     fields: Mapping[FilterName, PageField],
     page: PageFilterModel[N, F],
+    *,
+    tag_groups: Set[str] = frozenset(),
 ) -> ContextFilterTranslation[F]:
     """Translate the legacy filters in ``fields`` to conditions on the page field each is mapped
     to, in the order of ``fields``: where the page cannot take two filters together, the one
     listed first is applied. A filter that spans several fields is mapped to the field of each of
     its roles. Raises a ``ValueError`` for a filter missing from the catalog, or mapped to fields
-    that do not fit it."""
-    if unknown := fields.keys() - LEGACY_FILTERS.keys():
+    that do not fit it. ``tag_groups`` are the IDs of the configured tag groups, which the filter
+    for tags needs."""
+    catalog = legacy_filters(tag_groups=tag_groups)
+    if unknown := fields.keys() - catalog.keys():
         raise ValueError(f"Not in the catalog of legacy filters: {sorted(unknown)}")
     for name, field in fields.items():
         # Fields that do not fit their filter raise, whether or not the context sets it. A filter
         # that is not set restricts nothing, so this does not translate anything.
-        _translate_filter(LEGACY_FILTERS[name], {}, field)
+        _translate_filter(catalog[name], {}, field)
     nodes: list[FilterJSON] = []
     page_filter: F | None = None
     # Like the legacy views, only the first site filter that restricts the sites applies. If the
@@ -83,7 +87,7 @@ def translate_context[N, F](
     unapplied = {
         name
         for name, value in context.items()
-        if name not in fields and name not in SITE_FILTERS and _restricts(name, value)
+        if name not in fields and name not in SITE_FILTERS and _restricts(catalog, name, value)
     }
     if applied_site_filter is not None and applied_site_filter not in fields:
         unapplied.add(applied_site_filter)
@@ -91,7 +95,7 @@ def translate_context[N, F](
         if name in SITE_FILTERS and name != applied_site_filter:
             continue
         try:
-            node = _translate_filter(LEGACY_FILTERS[name], context.get(name, {}), field)
+            node = _translate_filter(catalog[name], context.get(name, {}), field)
             if node is None:
                 continue
             candidate = [*nodes, node]
@@ -154,9 +158,13 @@ def _translate_filter(
     return legacy_filter(value, field)
 
 
-def _restricts(name: FilterName, value: FilterHTTPVariables) -> bool:
+def _restricts(
+    catalog: Mapping[FilterName, LegacyFilter | MultiFieldFilter],
+    name: FilterName,
+    value: FilterHTTPVariables,
+) -> bool:
     """Whether a filter the page does not map restricts anything, i.e. has to be reported."""
-    if (legacy_filter := LEGACY_FILTERS.get(name)) is None:
+    if (legacy_filter := catalog.get(name)) is None:
         # Its kind is unknown, so "-1" is taken for an ignored tri-state flag.
         return any(text and text != IGNORED_TRISTATE for text in value.values())
     try:

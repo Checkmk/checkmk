@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Set
 from typing import Literal
 
 from cmk.gui.monitor.legacy_context import (
@@ -67,6 +67,7 @@ _FIELDS: Mapping[FilterName, _HostField | Mapping[str, _HostField]] = {
     "address_family": "tags",
     "address_families": "tags",
     "host_auxtags": "tags",
+    "host_tags": "tags",
     "host_labels": "labels",
     "kubernetes_cluster": "labels",
     "kubernetes_namespace": "labels",
@@ -77,5 +78,8 @@ _FIELDS: Mapping[FilterName, _HostField | Mapping[str, _HostField]] = {
 }
 
 
-def translate_filters(context: VisualContext) -> ContextFilterTranslation[SiteScopedFilter]:
-    return translate_context(context, _FIELDS, _PAGE)
+def translate_filters(
+    context: VisualContext, *, tag_groups: Set[str] = frozenset()
+) -> ContextFilterTranslation[SiteScopedFilter]:
+    """``tag_groups`` are the IDs of the configured tag groups."""
+    return translate_context(context, _FIELDS, _PAGE, tag_groups=tag_groups)

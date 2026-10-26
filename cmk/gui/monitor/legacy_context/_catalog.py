@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 """The legacy filters a monitoring page can take over, by the name the legacy visuals know them
-by. A legacy filter a page needs is added here once, then mapped to a field by each page."""
+by. ``legacy_filters`` is the one way to get them."""
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Set
 
 from cmk.gui.type_defs import FilterName
 
@@ -29,6 +29,7 @@ from ._filters import (
     site_ids,
     SiteIds,
     state_choice,
+    tags,
     text,
     time_range,
 )
@@ -41,7 +42,7 @@ SITE_FILTERS: Mapping[FilterName, SiteIds] = {
     "siteopt": site_ids("site"),
 }
 
-LEGACY_FILTERS: Mapping[FilterName, LegacyFilter | MultiFieldFilter] = {
+_STATIC_FILTERS: Mapping[FilterName, LegacyFilter | MultiFieldFilter] = {
     **{name: site(ids) for name, ids in SITE_FILTERS.items()},
     "host": exact_text("host"),
     "hostregex": text("host_regex"),
@@ -81,3 +82,11 @@ LEGACY_FILTERS: Mapping[FilterName, LegacyFilter | MultiFieldFilter] = {
         for obj in ("cluster", "namespace", "node", "deployment", "daemonset", "statefulset")
     },
 }
+
+
+def legacy_filters(*, tag_groups: Set[str]) -> Mapping[FilterName, LegacyFilter | MultiFieldFilter]:
+    """The catalog of the legacy filters a monitoring page can take over. A legacy filter a page
+    needs is added to it once, then mapped to a field by each page. The filters that need the data
+    of the configuration are made from it: ``tag_groups`` are the IDs of the configured tag
+    groups."""
+    return {**_STATIC_FILTERS, "host_tags": tags("host_tag", tag_groups)}

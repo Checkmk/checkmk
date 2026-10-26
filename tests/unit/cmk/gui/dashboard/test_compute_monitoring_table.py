@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
+from collections.abc import Sequence
 from http import HTTPStatus
 from typing import get_args
 
@@ -32,18 +34,36 @@ def _body(context: dict[str, object], **extra: object) -> dict[str, object]:
     return {"source": {"type": "explicit", "content": _CONTENT, "context": context}, **extra}
 
 
-def _compute(
+def _as_pattern(line: str) -> str:
+    """The pattern for the mock that matches the line as it is.
+
+    The mock escapes "[" and "+" of a pattern itself, so escaping them here would do it twice."""
+    return re.escape(line).replace(r"\[", "[").replace(r"\+", "+")
+
+
+def _compute_expecting_host_query(
     clients: ClientRegistry,
     live: MockLiveStatusConnection,
     body: dict[str, object],
     *,
-    filter_line: str | None = None,
+    filter_lines: Sequence[str] = (),
 ) -> Response:
-    filter_lines = [] if filter_line is None else [filter_line]
+    """Compute the widget, and expect the query for its rows to have exactly the given filter lines.
+
+    The expectation is the assertion on the filters: the mock raises if the query differs from it,
+    or if it is never sent. The columns the table queries are not of interest here. The mock reads
+    the expectation as a pattern, so the lines of the filters are matched literally."""
     live.set_sites(["NO_SITE"])
     live.expect_query("GET hosts\nStats: state >= 0")
     live.expect_query(
-        ["GET hosts", *filter_lines, "OrderBy: name asc natural", "Limit: 100"], match_type="loose"
+        [
+            "GET hosts",
+            "Columns: ...",
+            *map(_as_pattern, filter_lines),
+            "OrderBy: name asc natural",
+            "Limit: 100",
+        ],
+        match_type="ellipsis",
     )
     with live:
         return clients.DashboardClient.compute_widget("compute-monitoring-table", body)
@@ -52,11 +72,33 @@ def _compute(
 def test_a_dashboard_filter_narrows_the_host_query(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    response = _compute(
+    response = _compute_expecting_host_query(
         clients,
         mock_livestatus,
         _body({"hostregex": {"host_regex": "heute"}}),
-        filter_line="Filter: name ~~ heute",
+        filter_lines=["Filter: name ~~ heute"],
+    )
+
+    assert response.json["value"]["unapplied_filters"] == []
+
+
+def test_a_dashboard_tag_filter_narrows_the_host_query_to_the_tag(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # "agent" is a builtin tag group, so the tag configuration of the site has it without a setup.
+    response = _compute_expecting_host_query(
+        clients,
+        mock_livestatus,
+        _body(
+            {
+                "host_tags": {
+                    "host_tag_0_grp": "agent",
+                    "host_tag_0_op": "is",
+                    "host_tag_0_val": "cmk-agent",
+                }
+            }
+        ),
+        filter_lines=["Filter: tags = 'agent' 'cmk-agent'"],
     )
 
     assert response.json["value"]["unapplied_filters"] == []
@@ -65,7 +107,7 @@ def test_a_dashboard_filter_narrows_the_host_query(
 def test_a_dashboard_filter_the_table_cannot_apply_is_reported(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    response = _compute(
+    response = _compute_expecting_host_query(
         clients,
         mock_livestatus,
         _body({"host_active_checks_enabled": {"is_host_active_checks_enabled": "1"}}),
@@ -79,7 +121,9 @@ def test_a_dashboard_filter_the_table_cannot_apply_is_reported(
 def test_a_dashboard_filter_for_another_object_type_is_ignored(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    response = _compute(clients, mock_livestatus, _body({"serviceregex": {"service_regex": "CPU"}}))
+    response = _compute_expecting_host_query(
+        clients, mock_livestatus, _body({"serviceregex": {"service_regex": "CPU"}})
+    )
 
     assert response.json["value"]["unapplied_filters"] == []
 

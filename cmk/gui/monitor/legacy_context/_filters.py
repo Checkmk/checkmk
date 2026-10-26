@@ -12,7 +12,7 @@ a legacy filter.
 
 import re
 import time
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence, Set
 from dataclasses import dataclass
 from typing import Literal
 
@@ -261,6 +261,35 @@ def aux_tags(prefix: str) -> LegacyFilter:
         return all_of(nodes)
 
     return translate_aux_tags
+
+
+def tags(prefix: str, groups: Set[str]) -> LegacyFilter:
+    """The legacy filter for tags: a row for each tag a host has to have, or not to have, made of
+    the tag group, an operator and the tag. The operator "is" selects the hosts that have the tag,
+    any other one the hosts that have not. Like in the legacy filter, a row without an operator is
+    skipped and the first row without a tag group ends the list.
+
+    The legacy filter skips a row of a tag group that is not configured, which would show more
+    hosts than were asked for. Here it is reported, like a row without a tag: a page cannot ask for
+    the hosts that have no tag of a group, and ``groups`` are the IDs of the tag groups that are
+    configured."""
+
+    def translate_tags(value: FilterHTTPVariables, field: str) -> FilterJSON | None:
+        nodes: list[FilterJSON] = []
+        num = 0
+        while group := value.get(f"{prefix}_{num}_grp"):
+            operator = value.get(f"{prefix}_{num}_op")
+            tag = value.get(f"{prefix}_{num}_val", "")
+            num += 1
+            if not operator:
+                continue
+            if group not in groups:
+                raise UntranslatableFilterError
+            node = _condition(field, "all_of", [_label_pair(group, tag)])
+            nodes.append(_negate_if(node, operator != "is"))
+        return all_of(nodes)
+
+    return translate_tags
 
 
 def label_value(var: str, key: str) -> LegacyFilter:

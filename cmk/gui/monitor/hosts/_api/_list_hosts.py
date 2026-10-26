@@ -404,8 +404,17 @@ def _invalid_filter(detail: str) -> RestAPIRequestGeneralException:
 
 
 class HostTable:
-    def __init__(self, site_configs: SiteConfigurations, folders: MonitorFolders) -> None:
+    def __init__(
+        self,
+        site_configs: SiteConfigurations,
+        folders: MonitorFolders,
+        *,
+        tag_groups: Set[str] = frozenset(),
+    ) -> None:
+        """``tag_groups`` are the IDs of the configured tag groups, which the dashboard filter for
+        tags needs. A table without them reports that filter instead of applying it."""
         self._folders = folders
+        self._tag_groups = tag_groups
         self._site_ids = frozenset(site_configs)
         self._customer_of = customer_resolver(sites=site_configs)
         self._sites = MonitorSites(
@@ -480,7 +489,7 @@ class HostTable:
     def rows(
         self, *, columns: Sequence[str], sort: Sequence[str], limit: int, context: VisualContext
     ) -> TableRows[HostEntry]:
-        translation = translate_filters(context)
+        translation = translate_filters(context, tag_groups=self._tag_groups)
         response = self.list(
             limit=limit,
             query="",

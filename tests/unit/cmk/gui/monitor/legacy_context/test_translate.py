@@ -42,6 +42,7 @@ _FIELDS: _Fields = {
     "address_family": "tags",
     "address_families": "tags",
     "host_auxtags": "tags",
+    "host_tags": "tags",
     "host_labels": "labels",
     "host_last_check": "last_check",
     "host_last_state_change": "last_state_change",
@@ -63,6 +64,9 @@ _FIELDS: _Fields = {
 }
 
 
+_TAG_GROUPS = frozenset({"criticality", "agent"})
+
+
 def _condition(field: str, op: str, value: object) -> _JSON:
     return {"type": "condition", "field": field, "op": op, "value": value}
 
@@ -75,8 +79,17 @@ def _label(label: str) -> _JSON:
     return _condition("labels", "all_of", [label])
 
 
+def _tag_rows(*rows: tuple[str, str, str]) -> FilterHTTPVariables:
+    """The variables the legacy form sends for the tags, a row of tag group, operator and tag each."""
+    return {
+        f"host_tag_{number}_{part}": text
+        for number, row in enumerate(rows)
+        for part, text in zip(("grp", "op", "val"), row, strict=True)
+    }
+
+
 def _translate(context: VisualContext) -> ContextFilterTranslation[_JSON]:
-    return translate_context(context, _FIELDS, ANY_PAGE)
+    return translate_context(context, _FIELDS, ANY_PAGE, tag_groups=_TAG_GROUPS)
 
 
 @pytest.mark.parametrize(
@@ -213,6 +226,54 @@ def _translate(context: VisualContext) -> ContextFilterTranslation[_JSON]:
             {"host_auxtags_0": "snmp", "host_auxtags_2": "tcp"},
             _condition("tags", "all_of", ["snmp:snmp"]),
             id="auxiliary tags end at the first number missing",
+        ),
+        pytest.param(
+            "host_tags",
+            _tag_rows(("criticality", "is", "prod")),
+            _condition("tags", "all_of", ["criticality:prod"]),
+            id="tag",
+        ),
+        pytest.param(
+            "host_tags",
+            _tag_rows(("criticality", "isnot", "prod")),
+            _not(_condition("tags", "all_of", ["criticality:prod"])),
+            id="tag the host does not have",
+        ),
+        pytest.param(
+            "host_tags",
+            _tag_rows(("criticality", "is", "prod"), ("agent", "isnot", "no-agent")),
+            {
+                "type": "and",
+                "children": [
+                    _condition("tags", "all_of", ["criticality:prod"]),
+                    _not(_condition("tags", "all_of", ["agent:no-agent"])),
+                ],
+            },
+            id="tags, one negated",
+        ),
+        pytest.param(
+            "host_tags",
+            _tag_rows(("criticality", "", "prod"), ("agent", "is", "cmk-agent")),
+            _condition("tags", "all_of", ["agent:cmk-agent"]),
+            id="tag without an operator is skipped",
+        ),
+        pytest.param(
+            "host_tags",
+            _tag_rows(("criticality", "is", "prod"), ("", "", ""), ("agent", "is", "cmk-agent")),
+            _condition("tags", "all_of", ["criticality:prod"]),
+            id="tags end at the first without a tag group",
+        ),
+        pytest.param(
+            "host_tags",
+            _tag_rows(*[("criticality", "isnot", f"tag{number}") for number in range(4)]),
+            {
+                "type": "and",
+                "children": [
+                    _not(_condition("tags", "all_of", [f"criticality:tag{number}"]))
+                    for number in range(4)
+                ],
+            },
+            id="more tags than the form has rows",
         ),
         pytest.param(
             "host_labels",
@@ -520,6 +581,14 @@ def test_legacy_filter_translates_to_condition_on_its_field(
             {"host_auxtags": {"host_auxtags_0_neg": "on", "host_auxtags_1": "snmp"}},
             id="auxiliary tags ending before the first",
         ),
+        pytest.param({"host_tags": {}}, id="no tag variables"),
+        pytest.param(
+            {"host_tags": _tag_rows(("criticality", "", "prod"))}, id="tag without an operator"
+        ),
+        pytest.param(
+            {"host_tags": _tag_rows(("", "is", "prod"), ("criticality", "is", "prod"))},
+            id="tags ending before the first",
+        ),
         pytest.param({"kubernetes_cluster": {"kubernetes_cluster": ""}}, id="no Kubernetes object"),
         pytest.param({"host_labels": {}}, id="no label variables"),
         pytest.param({"host_last_check": {}}, id="no time bounds"),
@@ -603,6 +672,24 @@ def test_inactive_context_translates_to_no_filter(context: VisualContext) -> Non
         pytest.param(
             {"host_auxtags": {"host_auxtags_0": "snmp", "host_auxtags_1": "tc*"}},
             id="auxiliary tag the page would read as a prefix",
+        ),
+        pytest.param(
+            {"host_tags": _tag_rows(("gone", "is", "prod"))},
+            id="tag of a group that is not configured",
+        ),
+        pytest.param(
+            {"host_tags": _tag_rows(("criticality", "is", "prod"), ("gone", "isnot", "prod"))},
+            id="tag of a group that is not configured after one that is",
+        ),
+        pytest.param(
+            {"host_tags": _tag_rows(("criticality", "is", ""))}, id="host without a tag of a group"
+        ),
+        pytest.param(
+            {"host_tags": _tag_rows(("criticality", "isnot", ""))}, id="host with a tag of a group"
+        ),
+        pytest.param(
+            {"host_tags": _tag_rows(("criticality", "is", "pr*"))},
+            id="tag the page would read as a prefix",
         ),
         pytest.param(
             {"kubernetes_cluster": {"kubernetes_cluster": "prod*"}},
@@ -880,6 +967,8 @@ def test_time_range_filter_translates_to_bounds_on_timestamps(
         pytest.param("address_families", {"address_families": ""}, False, id="ignored families"),
         pytest.param("host_auxtags", {"host_auxtags_0": "snmp"}, True, id="auxiliary tag"),
         pytest.param("host_auxtags", {"host_auxtags_0": ""}, False, id="empty auxiliary tag"),
+        pytest.param("host_tags", _tag_rows(("criticality", "is", "prod")), True, id="tag"),
+        pytest.param("host_tags", _tag_rows(("criticality", "", "prod")), False, id="no operator"),
         pytest.param("kubernetes_node", {"kubernetes_node": "n1"}, True, id="Kubernetes node"),
         pytest.param(
             "host_labels",

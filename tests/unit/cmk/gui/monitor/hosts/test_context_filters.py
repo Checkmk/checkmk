@@ -24,7 +24,7 @@ from cmk.gui.monitor.hosts._api._filters import (
     TimestampCondition,
 )
 from cmk.gui.monitor.hosts.context_filters import translate_filters
-from cmk.gui.type_defs import VisualContext
+from cmk.gui.type_defs import FilterHTTPVariables, VisualContext
 
 
 # fmt: off
@@ -250,6 +250,35 @@ def test_a_dashboard_kubernetes_filter_becomes_a_condition_on_the_label_of_its_o
         sites=None,
         exclude_sites=False,
     )
+
+
+_TAG_GROUPS = frozenset({"criticality", "agent"})
+
+
+def _tag_row(group: str, operator: str, tag: str) -> FilterHTTPVariables:
+    return {"host_tag_0_grp": group, "host_tag_0_op": operator, "host_tag_0_val": tag}
+
+
+def test_a_dashboard_tag_filter_becomes_a_condition_on_the_tags_of_the_host() -> None:
+    translation = translate_filters(
+        {"host_tags": _tag_row("criticality", "is", "prod")}, tag_groups=_TAG_GROUPS
+    )
+
+    assert translation.filter == SiteScopedFilter(
+        node=LabelChoiceCondition(
+            type="condition", field="tags", op="all_of", value=["criticality:prod"]
+        ),
+        sites=None,
+        exclude_sites=False,
+    )
+
+
+def test_a_dashboard_tag_filter_of_a_group_that_is_not_configured_is_reported() -> None:
+    translation = translate_filters(
+        {"host_tags": _tag_row("gone", "is", "prod")}, tag_groups=_TAG_GROUPS
+    )
+
+    assert (translation.filter, translation.unapplied) == (None, ["host_tags"])
 
 
 @pytest.mark.parametrize(

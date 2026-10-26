@@ -35,6 +35,7 @@ MONITORING_TABLES: Final[Mapping[MonitoringTableName, MonitoringTableSpec[HostEn
         source=lambda api_context: HostTable(
             api_context.config.sites,
             MonitorFolders(FolderReader(api_context.config, api_context.user)),
+            tag_groups=frozenset(group.id for group in api_context.config.tags.tag_groups),
         ),
     ),
 }

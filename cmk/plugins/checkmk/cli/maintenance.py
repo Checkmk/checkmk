@@ -61,9 +61,6 @@ def _mode_update_dns_cache(
 
 
 def _run_update_dns_cache(context: CommandContext, options: Options, args: Args) -> ExitCode:
-    if context.global_options.debug:
-        # config.load() reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_update_dns_cache(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

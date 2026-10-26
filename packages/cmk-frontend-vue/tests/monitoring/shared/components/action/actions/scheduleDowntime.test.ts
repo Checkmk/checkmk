@@ -7,7 +7,11 @@ import { CmkApiError } from 'cmk-ui-library/lib/error'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { expect, test } from 'vitest'
 
-import { createScheduleDowntimeAction } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
+import { defaultScheduleDowntimeValues } from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
+import {
+  createScheduleDowntimeAction,
+  scheduleDowntimeOptions
+} from '@/monitoring/shared/components/action/actions/scheduleDowntime'
 
 const ERROR_HEADING = untranslated('Could not schedule the downtime for the selected hosts')
 
@@ -39,4 +43,14 @@ test('a refused downtime comes back as an error, not as a confirmation', async (
     heading: ERROR_HEADING,
     message: 'Retry the command. If it keeps failing, check whether the site is running.'
   })
+})
+
+test('a flexible downtime lasts as long as its window', () => {
+  const values = { ...defaultScheduleDowntimeValues([]), flexible: true }
+
+  expect(scheduleDowntimeOptions(values, [])?.durationMinutes).toBe(240)
+})
+
+test('a fixed downtime has no duration of its own', () => {
+  expect(scheduleDowntimeOptions(defaultScheduleDowntimeValues([]), [])?.durationMinutes).toBe(0)
 })

@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
+import defaultClient, { type createClient, unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
 import { hostNameQuery, serviceQuery } from '@/monitoring/shared/api/actions/query'
 import type { ServiceRef } from '@/monitoring/shared/api/types'
@@ -31,6 +31,12 @@ export interface ScheduleDowntimeOptions {
 
 export class ScheduleDowntimeApi {
   /**
+   * A caller that commands objects on another site passes that site's client, which may be
+   * its versioned `api/1.0` one, so every call here must stay within that API.
+   */
+  public constructor(private readonly client: ReturnType<typeof createClient> = defaultClient) {}
+
+  /**
    * Resolve the child hosts of the given hosts recursively, mirroring the classic downtime
    * dialog's "Set child hosts in downtime" option. A host is a child of `parent` when `parent`
    * is contained in its `parents` list (`parents >= parent` in Livestatus terms).
@@ -42,7 +48,7 @@ export class ScheduleDowntimeApi {
 
     while (frontier.length > 0) {
       const data = unwrap(
-        await client.POST('/domain-types/host/collections/all', {
+        await this.client.POST('/domain-types/host/collections/all', {
           params: { header: { 'Content-Type': 'application/json' } },
           body: {
             columns: ['name'],
@@ -70,7 +76,7 @@ export class ScheduleDowntimeApi {
     options: ScheduleDowntimeOptions
   ): Promise<void> {
     unwrap(
-      await client.POST('/domain-types/downtime/collections/host', {
+      await this.client.POST('/domain-types/downtime/collections/host', {
         params: { header: { 'Content-Type': 'application/json' } },
         body: {
           downtime_type: 'host_by_query',
@@ -90,7 +96,7 @@ export class ScheduleDowntimeApi {
     options: ScheduleDowntimeOptions
   ): Promise<void> {
     unwrap(
-      await client.POST('/domain-types/downtime/collections/service', {
+      await this.client.POST('/domain-types/downtime/collections/service', {
         params: { header: { 'Content-Type': 'application/json' } },
         body: {
           downtime_type: 'service_by_query',

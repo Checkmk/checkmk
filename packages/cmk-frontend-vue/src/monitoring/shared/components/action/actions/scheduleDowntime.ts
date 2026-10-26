@@ -11,6 +11,7 @@ import {
   type ScheduleDowntimeOptions
 } from '@/monitoring/shared/api/actions/downtime'
 
+import type { ActionFeedback } from '../ActionFeedback.vue'
 import type { ActionTargetKind, MonitoringAction } from '../types'
 import ScheduleDowntimeForm, {
   type DowntimePresetOption,
@@ -41,6 +42,35 @@ export function downtimePresets(
     }
   }
   return presets
+}
+
+/** What the form schedules, or `null` when its duration does not end in the future. */
+export function scheduleDowntimeOptions(
+  values: ScheduleDowntimeFormValues,
+  presets: readonly DowntimePresetOption[]
+): ScheduleDowntimeOptions | null {
+  const window = downtimeWindow(values, presets)
+  if (window === null) {
+    return null
+  }
+  return {
+    comment: values.comment.trim(),
+    startTime: window.start,
+    endTime: window.end,
+    durationMinutes: values.flexible
+      ? Math.round((new Date(window.end).getTime() - new Date(window.start).getTime()) / 60_000)
+      : 0,
+    recur: values.recur
+  }
+}
+
+export function noDowntimeWindow(): ActionFeedback {
+  const { _t } = usei18n()
+  return {
+    variant: 'error',
+    heading: _t('Could not schedule the downtime'),
+    message: _t('Select a duration that ends in the future.')
+  }
 }
 
 export interface ScheduleDowntimeKindConfig<Target> {
@@ -85,25 +115,12 @@ export function createScheduleDowntimeAction<Target>(
     },
     defaultValues: () => defaultScheduleDowntimeValues(config.presets),
     perform: async (targets: Target[], values: ScheduleDowntimeFormValues) => {
-      const window = downtimeWindow(values, config.presets)
-      if (window === null) {
-        return {
-          variant: 'error',
-          heading: _t('Could not schedule the downtime'),
-          message: _t('Select a duration that ends in the future.')
-        }
+      const options = scheduleDowntimeOptions(values, config.presets)
+      if (options === null) {
+        return noDowntimeWindow()
       }
       try {
-        const durationMinutes = values.flexible
-          ? Math.round((new Date(window.end).getTime() - new Date(window.start).getTime()) / 60_000)
-          : 0
-        const count = await config.schedule(api, targets, values, {
-          comment: values.comment.trim(),
-          startTime: window.start,
-          endTime: window.end,
-          durationMinutes,
-          recur: values.recur
-        })
+        const count = await config.schedule(api, targets, values, options)
         return { variant: 'success', message: config.successMessage(count) }
       } catch {
         return commandFailed(config.errorHeading)

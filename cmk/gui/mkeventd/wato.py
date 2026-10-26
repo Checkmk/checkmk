@@ -175,6 +175,7 @@ from cmk.livestatus_client import (
     ECSwitchMode,
     LivestatusClient,
     LocalConnection,
+    MKLivestatusConfigError,
     MKLivestatusSocketError,
     SiteConfigurations,
 )
@@ -2133,13 +2134,12 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Reset all rule hit counters
         elif request.has_var("_reset_counters"):
-            for site in _get_event_console_sync_sites():
-                LivestatusClient(sites.live()).command(ECResetCounters(), site)
-            self._add_change(
-                action_name="counter-reset",
-                text=_("Reset all rule hit counters to zero"),
-                pending_changes=pending_changes,
-            )
+            if _reset_rule_hit_counters():
+                self._add_change(
+                    action_name="counter-reset",
+                    text=_("Reset all rule hit counters to zero"),
+                    pending_changes=pending_changes,
+                )
 
         # Copy rules from master
         elif request.has_var("_copy_rules"):
@@ -3436,8 +3436,6 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                 pending_changes=pending_changes,
                 edition=self._edition,
             )
-            # Reset hit counters of this rule
-            LivestatusClient(sites.live()).command(ECResetCounters(rule["id"]), omd_site())
         return redirect(_rules_url(self._rule_pack_ref))
 
     @override
@@ -3603,6 +3601,33 @@ ConfigVariableGroupEventConsoleSNMP = ConfigVariableGroup(
 def _get_event_console_sync_sites() -> list[SiteId]:
     """Returns a list of site ids which gets the Event Console configuration replicated"""
     return [s[0] for s in get_event_console_site_choices()]
+
+
+def _reset_rule_hit_counters() -> bool:
+    """Resets the hit counters of all rules on the sites running the rules, telling whether any
+    site reset them
+
+    The rule lists add up the hits of all sites. Sites without a connection, e.g. ones disabled in
+    the "Site status" snap-in, keep their counters, and so do sites being down or failing to take
+    the command, e.g. ones gone down meanwhile. Their hits count again once the rule lists reach
+    them, so a warning names them, instead of an error, as the others reset theirs already. The
+    Event Console resets the counters of a changed rule itself, once it is in effect."""
+    client = LivestatusClient(sites.live())
+    sync_sites = _get_event_console_sync_sites()
+    failed_sites: list[SiteId] = []
+    for site in sync_sites:
+        try:
+            client.command(ECResetCounters(), site)
+        # The former for a site without a connection, the latter also for a site known to be down
+        except MKLivestatusConfigError, MKLivestatusSocketError:
+            failed_sites.append(site)
+    if failed_sites:
+        flash(
+            _("Could not reset the rule hit counters on these sites: %(sites)s")
+            % {"sites": ", ".join(failed_sites)},
+            msg_type="warning",
+        )
+    return len(failed_sites) < len(sync_sites)
 
 
 def _pending_changes_for_ec(*, config: Config, acting_user: UserId | None) -> PendingChanges:

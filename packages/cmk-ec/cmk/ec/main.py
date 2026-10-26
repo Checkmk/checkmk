@@ -17,6 +17,7 @@ import abc
 import ast
 import contextlib
 import errno
+import hashlib
 import ipaddress
 import itertools
 import json
@@ -1238,16 +1239,22 @@ class EventServer(ECServerThread):
         compiled_rules = self._compile_rules(
             config["rule_packs"], rule_optimizer=config["rule_optimizer"]
         )
-        self._config = config
-        self._history = history
-        self._snmp_trap_parser = snmp_trap_parser
-        self._rules, self._rule_by_id, self._rule_hash = compiled_rules
-        self.host_config = HostConfig(self._logger, self._connection)
-        self._rule_matcher = RuleMatcher(
-            logger=self._logger if config["debug_rules"] else None,
-            omd_site_id=self._omd_site,
-            is_active_time_period=self._time_period.active,
-        )
+        rule_digests = _rule_digests(config["rule_packs"])
+        # Messages count the hits of the rules they match, so forget the hits of the changed rules
+        # together with replacing them. Like the status server, take the lock of the event status
+        # before the one of the configuration.
+        with self._event_status.lock, self._lock_configuration:
+            self._event_status.use_rules(rule_digests)
+            self._config = config
+            self._history = history
+            self._snmp_trap_parser = snmp_trap_parser
+            self._rules, self._rule_by_id, self._rule_hash = compiled_rules
+            self.host_config = HostConfig(self._logger, self._connection)
+            self._rule_matcher = RuleMatcher(
+                logger=self._logger if config["debug_rules"] else None,
+                omd_site_id=self._omd_site,
+                is_active_time_period=self._time_period.active,
+            )
 
     def compile_rules(self, rule_packs: Sequence[ECRulePack]) -> None:
         """Precompile regular expressions and similar stuff."""
@@ -1394,12 +1401,16 @@ class EventServer(ECServerThread):
             self.log_message(event)
 
         # Rule optimizer: Rely on the compiled rules instead of the setting, which a reload changes
-        # before replacing the rules.
-        if (rule_hash := self._rule_hash) is not None:
+        # before replacing the rules. A reload may replace them while the message runs through them,
+        # so the hits count by the digests of the rules it runs through.
+        with self._lock_configuration:
+            rules, rule_hash = self._rules, self._rule_hash
+            rule_digests = self._event_status.rule_digests
+        if rule_hash is not None:
             self._hash_stats[event["facility"]][event["priority"]] += 1
             rule_candidates = rule_hash.get(event["facility"], {}).get(event["priority"], [])
         else:
-            rule_candidates = self._rules
+            rule_candidates = rules
 
         skip_pack = None
         for rule in rule_candidates:
@@ -1423,7 +1434,7 @@ class EventServer(ECServerThread):
                         {"match_groups": pprint.pformat(result.match_groups)},
                     )
 
-                self._event_status.count_rule_match(rule["id"])
+                self._event_status.count_rule_match(rule["id"], rule_digests=rule_digests)
                 if self._config["log_rulehits"]:
                     self._logger.info(
                         "Rule '%(pack)s/%(rule_id)s' hit by message %(facility)s/%(priority)s - '%(text)s'.",
@@ -2683,7 +2694,6 @@ def run_eventd(
                             config, history = reload_configuration(
                                 settings,
                                 logger,
-                                lock_configuration,
                                 history,
                                 event_status,
                                 event_server,
@@ -2792,6 +2802,55 @@ def _replication_master(config: Config) -> tuple[str, int] | None:
 #   '----------------------------------------------------------------------'
 
 
+def _changed_rule_ids(previous: Mapping[str, str], current: Mapping[str, str]) -> set[str]:
+    """The IDs of the current rules which differ from the previous ones, or which are new
+
+    Both map the IDs of the rules to their digests, see _rule_digests()."""
+    return {id_ for id_, digest in current.items() if previous.get(id_) != digest}
+
+
+def _rules_by_id(rule_packs: Iterable[ECRulePack]) -> dict[str, list[Rule]]:
+    rules: dict[str, list[Rule]] = {}
+    for rule_pack in rule_packs:
+        for rule in rule_pack["rules"]:
+            # Nobody validates rules written by hand, and the EC compiles no disabled ones, which
+            # count no hits anyway, so they may lack an ID.
+            if (id_ := rule.get("id")) is not None:
+                rules.setdefault(id_, []).append(rule)
+    return rules
+
+
+def _rule_digests(rule_packs: Iterable[ECRulePack]) -> dict[str, str]:
+    """A digest of all rules with each ID, telling which rules changed, also across restarts
+
+    Several rules may have the same ID, so the digest covers all of them, but not their order, which
+    e.g. moving their rule packs changes."""
+    return {
+        id_: hashlib.sha256(repr(sorted(map(_sorted_repr, rules))).encode("utf-8")).hexdigest()
+        for id_, rules in _rules_by_id(rule_packs).items()
+    }
+
+
+def _sorted_repr(value: object) -> str:
+    """Like repr(), but sorting the keys of dictionaries and the elements of sets
+
+    So equal rules have the same text, also in other processes: Pretty printing the rules sorts the
+    keys, but only of the sets it breaks into several lines, and equal sets may list their elements
+    in different orders, e.g. sets of strings in other processes."""
+    match value:
+        case dict():
+            items = (f"{_sorted_repr(key)}: {_sorted_repr(item)}" for key, item in value.items())
+            return "{" + ", ".join(sorted(items)) + "}"
+        case set() | frozenset():
+            return f"{type(value).__name__}([{', '.join(sorted(map(_sorted_repr, value)))}])"
+        case list():
+            return "[" + ", ".join(map(_sorted_repr, value)) + "]"
+        case tuple():
+            return "(" + ", ".join(map(_sorted_repr, value)) + ",)"
+        case _:
+            return repr(value)
+
+
 class EventStatus:
     """
     Keeps the current Event-Status.
@@ -2809,6 +2868,7 @@ class EventStatus:
     ) -> None:
         self.settings = settings
         self._config = config
+        self._rule_digests: Mapping[str, str] = _rule_digests(config["rule_packs"])
         self._perfcounters = perfcounters
         self.lock = threading.Lock()
         self._history = history
@@ -2819,6 +2879,40 @@ class EventStatus:
     def reload_configuration(self, config: Config, history: History) -> None:
         self._config = config
         self._history = history
+
+    @property
+    def rule_digests(self) -> Mapping[str, str]:
+        """The digests of the rules in use, see _rule_digests()
+
+        Using other rules replaces them instead of changing them, see use_rules()."""
+        return self._rule_digests
+
+    def use_rules(self, rule_digests: Mapping[str, str]) -> None:
+        """Tells the rules the event server uses from now on, forgetting the hits of changed ones
+
+        The hits of a changed rule would mix the ones of its previous version, so they start over.
+        The event server replaces its rules holding the lock, so no hit of the new ones gets lost,
+        and a message still running through the previous ones counts none, see count_rule_match().
+        Like counted hits, saving the status later on keeps this, as failing to save it here would
+        leave the reload half done. The rules come as their digests, see _rule_digests(), which the
+        event server computes before taking the lock."""
+        self._forget_hits_of_changed_rules(_changed_rule_ids(self._rule_digests, rule_digests))
+        self._rule_digests = rule_digests
+
+    def use_rules_of_master(self, rule_packs: Iterable[ECRulePack]) -> None:
+        """Tells the rules a replication slave got from its master
+
+        The hits of the rules come with the status of the master, see unpack_status(), so a restart
+        of the slave keeps them. Like for unpack_status(), the caller holds the lock."""
+        self._rule_digests = _rule_digests(rule_packs)
+
+    def _forget_hits_of_changed_rules(self, changed_rule_ids: set[str]) -> None:
+        if reset := sorted(changed_rule_ids & self._rule_stats.keys()):
+            self._logger.info(
+                "Resetting counters of changed rules %(rules)s", {"rules": ", ".join(reset)}
+            )
+            for rule_id in reset:
+                del self._rule_stats[rule_id]
 
     def flush(self) -> None:
         # TODO: Improve types!
@@ -2915,11 +3009,20 @@ class EventStatus:
     def save_status(self) -> None:
         now = time.time()
         status = self.pack_status()
+        # Unlike replicating the status, restoring it needs to tell which counted rules changed.
+        saved_status = {
+            **status,
+            "rule_digests": {
+                id_: self._rule_digests[id_]
+                for id_ in status["rule_stats"]
+                if id_ in self._rule_digests
+            },
+        }
         path = self.settings.paths.status_file.value
         path_new = path.parent / (path.name + ".new")
         # Believe it or not: cPickle is more than two times slower than repr()
         with path_new.open(mode="wb") as f:
-            f.write((repr(status) + "\n").encode("utf-8"))
+            f.write((repr(saved_status) + "\n").encode("utf-8"))
             f.flush()
             os.fsync(f.fileno())
         path_new.rename(path)
@@ -2948,6 +3051,12 @@ class EventStatus:
                 self._rule_stats = status["rule_stats"]
                 self._interval_starts = status.get("interval_starts", {})
                 self._logger.info("Loaded event state from %(path)s.", {"path": path})
+                # Like reloading, forget the hits of the rules changed meanwhile, e.g. by activating
+                # changes while the EC was stopped. A previous version saved no digests, though.
+                if (rule_digests := status.get("rule_digests")) is not None:
+                    self._forget_hits_of_changed_rules(
+                        _changed_rule_ids(rule_digests, self._rule_digests)
+                    )
             except Exception:
                 self._logger.exception("Error loading event state from %(path)s", {"path": path})
                 raise
@@ -3295,10 +3404,15 @@ class EventStatus:
 
         return True
 
-    def count_rule_match(self, rule_id: str) -> None:
+    def count_rule_match(self, rule_id: str, *, rule_digests: Mapping[str, str]) -> None:
+        """Counts a hit of the rule, unless a reload changed it since the message matched it
+
+        The reload forgot the hits of the changed rule, so a hit of its previous version doesn't
+        count. The digests of the rules the message ran through tell the version."""
         with self.lock:
-            self._rule_stats.setdefault(rule_id, 0)
-            self._rule_stats[rule_id] += 1
+            if rule_digests.get(rule_id) == self._rule_digests.get(rule_id):
+                self._rule_stats.setdefault(rule_id, 0)
+                self._rule_stats[rule_id] += 1
 
     # protected by self.lock
     def count_event_up(self, found: Event, event: Event) -> None:
@@ -3586,6 +3700,7 @@ def replication_update_state(
         event_server.compile_rules(slave_config["rule_packs"])
         # Update the configuration in place, as the main loop and the threads share it.
         config.update(slave_config)
+        event_status.use_rules_of_master(slave_config["rule_packs"])
 
     # Update to the masters' event state
     event_status.unpack_status(new_state["status"])
@@ -3827,37 +3942,35 @@ def _update_replication_status(
 def reload_configuration(
     settings: Settings,
     logger: Logger,
-    lock_configuration: ECLock,
     history: History,
     event_status: EventStatus,
     event_server: EventServer,
     status_server: StatusServer,
     slave_status: SlaveStatus,
 ) -> tuple[Config, History]:
-    with lock_configuration:
-        config, start_over = _read_configuration(settings, logger)
-        log_levels = _configured_log_levels(settings, logger, config)
-        previous_log_levels = {each_logger: each_logger.level for each_logger in log_levels}
+    config, start_over = _read_configuration(settings, logger)
+    log_levels = _configured_log_levels(settings, logger, config)
+    previous_log_levels = {each_logger: each_logger.level for each_logger in log_levels}
+    try:
+        # Creating the history depends on the log levels, so set them first.
+        _set_log_levels(log_levels)
+        new_history = create_history(
+            settings, config, logger, StatusTableEvents.columns, StatusTableHistory.columns
+        )
         try:
-            # Creating the history depends on the log levels, so set them first.
-            _set_log_levels(log_levels)
-            new_history = create_history(
-                settings, config, logger, StatusTableEvents.columns, StatusTableHistory.columns
-            )
-            try:
-                event_server.reload_configuration(config, new_history)
-            except Exception:
-                new_history.close()
-                raise
+            # It takes the locks for replacing its configuration itself.
+            event_server.reload_configuration(config, new_history)
         except Exception:
-            _set_log_levels(previous_log_levels)
+            new_history.close()
             raise
+    except Exception:
+        _set_log_levels(previous_log_levels)
+        raise
     # Update the replication status only now that the new configuration is in effect, so a failed
     # reload keeps the previous one. Like the status server switching the replication mode, hold the
-    # lock of the event status, so neither undoes what the other one changes. The status server may
-    # take the lock of the configuration while holding that lock, so take it only afterwards. As
-    # the event server uses the new configuration already, complete the reload even if updating
-    # the replication status fails.
+    # lock of the event status, so neither undoes what the other one changes. As the event server
+    # uses the new configuration already, complete the reload even if updating the replication
+    # status fails.
     with event_status.lock:
         try:
             _update_replication_status(

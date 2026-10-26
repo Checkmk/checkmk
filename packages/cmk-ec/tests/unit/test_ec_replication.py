@@ -11,7 +11,7 @@ import os
 import shlex
 import signal
 import socket
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from types import FrameType
 from typing import Any, Literal
@@ -47,6 +47,7 @@ from cmk.ec.query import MKClientError
 
 from .helpers import (
     activate_config,
+    FakeConnection,
     MASTER,
     new_event,
     new_message,
@@ -97,8 +98,9 @@ def _master(
     *events: ec.Event,
     rule_packs: Sequence[ec.ECRulePack] | None = None,
     actions: Sequence[ec.Action] = (),
+    rule_stats: Mapping[str, int] | None = None,
 ) -> _FetchMasterState:
-    """A reachable master with some events and, given its rule packs, a changed configuration"""
+    """A reachable master with events and hits and, given its rule packs, a changed configuration"""
 
     def fetch_master_state(_config: Config, _slave_status: SlaveStatus) -> dict[str, object]:
         state: dict[str, object] = {
@@ -108,7 +110,7 @@ def _master(
                 events=[
                     event | ec.Event(id=event_id) for event_id, event in enumerate(events, start=1)
                 ],
-                rule_stats={},
+                rule_stats=dict(rule_stats or {}),
                 interval_starts={},
             )
         }
@@ -343,7 +345,6 @@ def test_master_replicates_its_configuration_only_if_it_changed(
 def test_master_replicates_its_configuration_to_a_slave_which_synced_during_the_reload(
     settings: ec.Settings,
     logger: logging.Logger,
-    lock_configuration: ECLock,
     history: History,
     event_status: EventStatus,
     status_server: StatusServer,
@@ -358,7 +359,6 @@ def test_master_replicates_its_configuration_to_a_slave_which_synced_during_the_
         reload_configuration(
             settings,
             logger,
-            lock_configuration,
             history,
             event_status,
             slow_event_server,
@@ -416,6 +416,39 @@ def test_syncing_slave_passes_the_rules_of_its_master_on_right_away(
     response = _replicate(status_server, str(int(_NOW) - 30))
 
     assert response.get("rule_packs") == [master_rule_pack]
+
+
+def test_rule_hits_a_syncing_slave_got_from_its_master_are_restored_after_a_restart(
+    settings: ec.Settings,
+    perfcounters: Perfcounters,
+    history: History,
+    core_connection: FakeConnection,
+    event_server: EventServer,
+    event_status: EventStatus,
+    config: Config,
+    pull: _Pull,
+) -> None:
+    # The master changed the rule, which started its hits over there.
+    slave_config = replication_slave_config(config) | {
+        "rule_packs": [ec.default_rule_pack([new_rule({"id": "disk"})])]
+    }
+    event_server.reload_configuration(slave_config, history)
+    master_rule_pack = ec.default_rule_pack([new_rule({"id": "disk", "description": "edited"})])
+    pull(slave_config, _master(rule_packs=[master_rule_pack], rule_stats={"disk": 1}))
+    event_status.save_status()
+    # Like the slave's configuration after syncing, the restarted one has the rules of the master.
+    restarted_event_status = EventStatus(
+        settings,
+        slave_config,
+        perfcounters,
+        history,
+        logging.getLogger("cmk.mkeventd.EventStatus"),
+        core_connection,
+    )
+
+    restarted_event_status.load_status(event_server)
+
+    assert list(restarted_event_status.get_rule_stats()) == [("disk", 1)]
 
 
 def test_slave_which_took_over_executes_the_actions_of_its_master(

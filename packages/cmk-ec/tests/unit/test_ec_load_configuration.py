@@ -67,7 +67,6 @@ type _Reload = Callable[[History], History]
 def fixture_reload(
     settings: ec.Settings,
     logger: logging.Logger,
-    lock_configuration: ECLock,
     event_status: EventStatus,
     event_server: EventServer,
     status_server: StatusServer,
@@ -75,7 +74,8 @@ def fixture_reload(
 ) -> Iterator[_Reload]:
     """Reloads the activated configuration, replacing the given history of the EC by a new one
 
-    The histories created by reloading are closed after the test.
+    The histories created by reloading are closed after the test, unless reloading again closed them
+    already.
     """
     new_histories: list[History] = []
 
@@ -83,7 +83,6 @@ def fixture_reload(
         _config, new_history = reload_configuration(
             settings,
             logger,
-            lock_configuration,
             history,
             event_status,
             event_server,
@@ -95,7 +94,8 @@ def fixture_reload(
 
     yield reload
     for new_history in new_histories:
-        new_history.close()
+        with contextlib.suppress(sqlite3.ProgrammingError):  # if reloading closed it already
+            new_history.close()
 
 
 def test_actions_are_looked_up_by_their_id(
@@ -172,6 +172,119 @@ def test_reloading_activates_the_changed_rules(
     process_message(event_server, ec.Event(text="disk full"))
 
     assert [event["rule_id"] for event in event_status.events()] == ["reloaded"]
+
+
+def _activate_rules(settings: ec.Settings, *rules: ec.Rule) -> None:
+    activate_config(settings, f"rule_packs = [{ec.default_rule_pack(list(rules))!r}]\n")
+
+
+def test_reloading_forgets_the_hits_of_the_changed_rules(
+    settings: ec.Settings, history: History, event_status: EventStatus, reload: _Reload
+) -> None:
+    _activate_rules(settings, new_rule({"id": "changed"}), new_rule({"id": "unchanged"}))
+    history = reload(history)
+    event_status.count_rule_match("changed", rule_digests=event_status.rule_digests)
+    event_status.count_rule_match("unchanged", rule_digests=event_status.rule_digests)
+    _activate_rules(
+        settings,
+        new_rule({"id": "changed", "description": "edited"}),
+        new_rule({"id": "unchanged"}),
+    )
+
+    reload(history)
+
+    assert list(event_status.get_rule_stats()) == [("unchanged", 1)]
+
+
+def test_reloading_keeps_the_hits_of_the_rules_of_moved_rule_packs(
+    settings: ec.Settings, history: History, event_status: EventStatus, reload: _Reload
+) -> None:
+    # Several rule packs may hold rules with the same ID, e.g. copies of the rules of an export.
+    rule_1 = new_rule({"id": "disk", "comment": "1"})
+    rule_2 = new_rule({"id": "disk", "comment": "2"})
+    first = ec.ECRulePackSpec(id="first", title="First", disabled=False, rules=[rule_1])
+    second = ec.ECRulePackSpec(id="second", title="Second", disabled=False, rules=[rule_2])
+    activate_config(settings, f"rule_packs = {[first, second]!r}\n")
+    history = reload(history)
+    event_status.count_rule_match("disk", rule_digests=event_status.rule_digests)
+    activate_config(settings, f"rule_packs = {[second, first]!r}\n")
+
+    reload(history)
+
+    assert list(event_status.get_rule_stats()) == [("disk", 1)]
+
+
+@pytest.mark.parametrize(
+    "pack_disabled, rule_disabled",
+    [
+        pytest.param(True, False, id="disabled rule pack"),
+        pytest.param(False, True, id="disabled rule"),
+    ],
+)
+def test_reloading_ignores_disabled_rules_without_an_id(
+    pack_disabled: bool,
+    rule_disabled: bool,
+    settings: ec.Settings,
+    history: History,
+    event_status: EventStatus,
+    reload: _Reload,
+) -> None:
+    # Nobody validates rules written by hand, and the EC compiles no disabled ones.
+    _activate_rules(settings, new_rule({"id": "disk"}))
+    history = reload(history)
+    event_status.count_rule_match("disk", rule_digests=event_status.rule_digests)
+    rule = new_rule({"disabled": rule_disabled})
+    del rule["id"]
+    rule_packs = [
+        ec.default_rule_pack([new_rule({"id": "disk"})]),
+        ec.ECRulePackSpec(id="hand", title="By hand", disabled=pack_disabled, rules=[rule]),
+    ]
+    activate_config(settings, f"rule_packs = {rule_packs!r}\n")
+
+    reload(history)
+
+    assert list(event_status.get_rule_stats()) == [("disk", 1)]
+
+
+def test_reload_completes_although_the_status_cannot_be_saved(
+    tmp_path: Path,
+    settings: ec.Settings,
+    history: History,
+    event_status: EventStatus,
+    status_server: StatusServer,
+    reload: _Reload,
+) -> None:
+    # A directory in place of its file prevents saving the status, e.g. after forgetting the hits of
+    # a changed rule.
+    settings.paths.status_file.value.mkdir()
+    _activate_rules(settings, new_rule({"id": "changed"}))
+    history = reload(history)
+    event_status.count_rule_match("changed", rule_digests=event_status.rule_digests)
+    ticket_file = tmp_path / "ticket"
+    rule_pack = ec.default_rule_pack([new_rule({"id": "changed", "description": "edited"})])
+    activate_config(
+        settings, f"rule_packs = [{rule_pack!r}]\nactions = [{_ticket_action(ticket_file)!r}]\n"
+    )
+    reload(history)
+    event_status.new_event(new_event(ec.Event(text="disk full")))
+
+    query_status_server(status_server, "COMMAND ACTION;1;harry;ticket")
+
+    assert ticket_file.read_text() == "disk full"
+
+
+def _ticket_action(ticket_file: Path) -> ScriptAction:
+    """An action with the ID "ticket" writing the text of the event to the file"""
+    return ScriptAction(
+        id="ticket",
+        title="Open a ticket",
+        hidden=False,
+        disabled=False,
+        action=(
+            "script",
+            ScriptActionConfig(script=f'printf %s "$CMK_TEXT" > {shlex.quote(str(ticket_file))}'),
+        ),
+    )
 
 
 @pytest.fixture(name="sqlite_history")
@@ -386,7 +499,6 @@ def test_failed_reload_keeps_the_previous_configuration(
     settings: ec.Settings,
     config: Config,
     logger: logging.Logger,
-    lock_configuration: ECLock,
     history: History,
     event_status: EventStatus,
     snmp_trap_receiving_event_server: EventServer,
@@ -406,7 +518,6 @@ def test_failed_reload_keeps_the_previous_configuration(
         reload_configuration(
             settings,
             logger,
-            lock_configuration,
             history,
             event_status,
             event_server,
@@ -431,17 +542,7 @@ def test_reload_completes_although_the_replication_status_cannot_be_updated(
     # removing the saved replication status.
     settings.paths.slave_status_file.value.mkdir()
     ticket_file = tmp_path / "ticket"
-    action = ScriptAction(
-        id="ticket",
-        title="Open a ticket",
-        hidden=False,
-        disabled=False,
-        action=(
-            "script",
-            ScriptActionConfig(script=f'printf %s "$CMK_TEXT" > {shlex.quote(str(ticket_file))}'),
-        ),
-    )
-    activate_config(settings, f"actions = [{action!r}]\n")
+    activate_config(settings, f"actions = [{_ticket_action(ticket_file)!r}]\n")
     reload(history)
     event_status.new_event(new_event(ec.Event(text="disk full")))
 

@@ -357,3 +357,38 @@ def test_rules_match_while_a_reload_switches_the_rule_optimizer(
     process_message(event_server, ec.Event(text="Something happened"))
 
     assert _rule_ids_of_events(event_status) == ["matching"]
+
+
+def test_rule_hits_of_a_changed_rule_start_over_once_the_event_server_uses_it(
+    event_server: EventServer, event_status: EventStatus, settings: ec.Settings, config: Config
+) -> None:
+    _reload_configuration(event_server, settings, config, [_rule_pack("pack", _rule("changed"))])
+    process_message(event_server, ec.Event(text="Something happened"))
+    edited_rule = _rule("changed")
+    edited_rule["description"] = "edited"
+    _reload_configuration(event_server, settings, config, [_rule_pack("pack", edited_rule)])
+
+    process_message(event_server, ec.Event(text="Something happened"))
+
+    assert list(event_status.get_rule_stats()) == [("changed", 1)]
+
+
+def test_a_message_counts_no_hit_of_a_rule_a_reload_changed_since_it_matched(
+    event_server: EventServer, event_status: EventStatus, settings: ec.Settings, config: Config
+) -> None:
+    _reload_configuration(
+        event_server, settings, config, [_rule_pack("pack", _rule("changed"), _rule("unchanged"))]
+    )
+    # The message ran through these rules ...
+    rule_digests = event_status.rule_digests
+    edited_rule = _rule("changed")
+    edited_rule["description"] = "edited"
+    # ... before the reload, but counts its hits after it.
+    _reload_configuration(
+        event_server, settings, config, [_rule_pack("pack", edited_rule, _rule("unchanged"))]
+    )
+
+    event_status.count_rule_match("changed", rule_digests=rule_digests)
+    event_status.count_rule_match("unchanged", rule_digests=rule_digests)
+
+    assert list(event_status.get_rule_stats()) == [("unchanged", 1)]

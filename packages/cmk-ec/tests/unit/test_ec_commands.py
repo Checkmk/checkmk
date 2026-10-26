@@ -42,8 +42,8 @@ def test_resetting_counters_forgets_rule_hits(
     arguments: str,
     expected_rule_hits: list[tuple[str, int]],
 ) -> None:
-    event_status.count_rule_match("cpu")
-    event_status.count_rule_match("disk")
+    event_status.count_rule_match("cpu", rule_digests=event_status.rule_digests)
+    event_status.count_rule_match("disk", rule_digests=event_status.rule_digests)
 
     _command(status_server, f"RESETCOUNTERS{arguments}")
 
@@ -194,7 +194,7 @@ def test_syncing_replication_slave_resets_its_rule_hits(
     # The GUI resets the rule hits on all sites, and the next sync replaces them anyway.
     _become_replication_slave(status_server, config, history)
     slave_status["mode"] = "sync"
-    event_status.count_rule_match("disk")
+    event_status.count_rule_match("disk", rule_digests=event_status.rule_digests)
 
     _command(status_server, "RESETCOUNTERS")
 

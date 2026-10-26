@@ -52,7 +52,12 @@ from cmk.gui.watolib.config_domain_name import (
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.site_changes import SiteChanges
-from cmk.livestatus_client import SingleSiteConnection, SiteConfiguration, SiteConfigurations
+from cmk.livestatus_client import (
+    NetworkSocketDetails,
+    SingleSiteConnection,
+    SiteConfiguration,
+    SiteConfigurations,
+)
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.mkp_tool import Installer, Manifest, PackageName, PackagePart, PackageVersion
 from cmk.web.utils.flashed_messages import get_flashed_messages
@@ -190,6 +195,24 @@ def _site_configuration(site_id: SiteId) -> SiteConfiguration:
     site_config = no_site_configuration()
     site_config["id"] = site_id
     return site_config
+
+
+def _remote_site_configuration(site_id: str, *, replicate_ec: bool) -> SiteConfiguration:
+    site_config = _site_configuration(SiteId(site_id))
+    site_config["socket"] = (
+        "tcp",
+        NetworkSocketDetails(address=("127.0.0.1", 6557), tls=("plain_text", {})),
+    )
+    site_config["replicate_ec"] = replicate_ec
+    return site_config
+
+
+def _central_site_of(*remote_sites: SiteConfiguration) -> SiteConfigurations:
+    """The configuration of this site as the central site of the remote sites"""
+    return SiteConfigurations(
+        {omd_site(): _site_configuration(omd_site())}
+        | {site_config["id"]: site_config for site_config in remote_sites}
+    )
 
 
 def test_simulated_event_matches_rule_for_the_simulated_site() -> None:
@@ -1245,9 +1268,173 @@ def test_deleting_one_of_several_rule_packs_with_the_same_id_with_its_button_rem
 
 
 @_setup_page
-def test_resetting_the_counters_resets_them_in_the_event_console_of_the_site(
+def test_resetting_the_counters_resets_them_on_the_sites_getting_the_rules(
+    load_config: Config,
+    test_edition: Edition,
+    mock_livestatus: MockLiveStatusConnection,
+    set_config: SetConfig,
+) -> None:
+    mock_livestatus.set_sites([omd_site(), "remote", "standalone"])
+    submit(_reset_counters="1")
+    mock_livestatus.expect_query(
+        "COMMAND [...] EC_RESETCOUNTERS;",
+        match_type="ellipsis",
+        sites=[omd_site(), SiteId("remote")],
+    )
+
+    with (
+        set_config(
+            sites=_central_site_of(
+                _remote_site_configuration("remote", replicate_ec=True),
+                _remote_site_configuration("standalone", replicate_ec=False),
+            )
+        ),
+        mock_livestatus(expect_status_query=True),
+    ):
+        _rule_pack_list_action(load_config, test_edition)
+
+
+@_setup_page
+def test_resetting_the_counters_resets_them_only_on_sites_with_a_connection(
+    load_config: Config,
+    test_edition: Edition,
+    mock_livestatus: MockLiveStatusConnection,
+    set_config: SetConfig,
+) -> None:
+    # The GUI has no connection to a site disabled in the "Site status" snap-in, for example.
+    mock_livestatus.set_sites([omd_site()])
+    submit(_reset_counters="1")
+    mock_livestatus.expect_query(
+        "COMMAND [...] EC_RESETCOUNTERS;", match_type="ellipsis", sites=[omd_site()]
+    )
+
+    with (
+        set_config(sites=_central_site_of(_remote_site_configuration("remote", replicate_ec=True))),
+        mock_livestatus(expect_status_query=True),
+    ):
+        _rule_pack_list_action(load_config, test_edition)
+
+
+@_setup_page
+def test_resetting_the_counters_warns_about_sites_without_a_connection(
+    load_config: Config,
+    test_edition: Edition,
+    mock_livestatus: MockLiveStatusConnection,
+    set_config: SetConfig,
+) -> None:
+    # Their hits count again once the GUI connects to them, e.g. after enabling them in the "Site
+    # status" snap-in.
+    mock_livestatus.set_sites([omd_site()])
+    submit(_reset_counters="1")
+    mock_livestatus.expect_query(
+        "COMMAND [...] EC_RESETCOUNTERS;", match_type="ellipsis", sites=[omd_site()]
+    )
+
+    with (
+        set_config(sites=_central_site_of(_remote_site_configuration("remote", replicate_ec=True))),
+        mock_livestatus(expect_status_query=True),
+    ):
+        _rule_pack_list_action(load_config, test_edition)
+
+    assert _flashed_messages() == ["Could not reset the rule hit counters on these sites: remote"]
+
+
+def _fail_commands(live: MockLiveStatusConnection, site: str, monkeypatch: MonkeyPatch) -> None:
+    """Makes the site fail to take commands, like one gone down after the GUI connected to it"""
+    fake_socket = live.connections[site].socket
+    send = fake_socket.sendall
+
+    def sendall(data: bytes) -> None:
+        if data.startswith(b"COMMAND "):
+            raise ConnectionResetError("Connection reset by peer")
+        send(data)
+
+    monkeypatch.setattr(fake_socket, "sendall", sendall)
+
+
+def _sites_with_one_failing_commands(
+    live: MockLiveStatusConnection, monkeypatch: MonkeyPatch
+) -> SiteConfigurations:
+    """Lets this site be the central site of the remote sites "failing" and "remote"
+
+    Both get the rules, and the site "failing" fails to take commands. The sites are sorted, so it
+    comes before the site "remote"."""
+    live.set_sites([omd_site(), "failing", "remote"])
+    _fail_commands(live, "failing", monkeypatch)
+    return _central_site_of(
+        _remote_site_configuration("failing", replicate_ec=True),
+        _remote_site_configuration("remote", replicate_ec=True),
+    )
+
+
+@_setup_page
+def test_resetting_the_counters_resets_them_on_the_other_sites_if_one_fails_to(
+    load_config: Config,
+    test_edition: Edition,
+    mock_livestatus: MockLiveStatusConnection,
+    set_config: SetConfig,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    site_configs = _sites_with_one_failing_commands(mock_livestatus, monkeypatch)
+    submit(_reset_counters="1")
+    mock_livestatus.expect_query(
+        "COMMAND [...] EC_RESETCOUNTERS;",
+        match_type="ellipsis",
+        sites=[omd_site(), SiteId("remote")],
+    )
+
+    with set_config(sites=site_configs), mock_livestatus(expect_status_query=True):
+        _rule_pack_list_action(load_config, test_edition)
+
+    assert _flashed_messages() == ["Could not reset the rule hit counters on these sites: failing"]
+
+
+def _sites_with_one_down(
+    live: MockLiveStatusConnection, monkeypatch: MonkeyPatch
+) -> SiteConfigurations:
+    """Lets this site be the central site of the remote sites "down" and "remote"
+
+    Both get the rules, and the GUI takes the site "down" as down, as it answers no Livestatus
+    response when the GUI connects to the sites."""
+    live.set_sites([omd_site(), "down", "remote"])
+
+    def recv(length: int) -> bytes:
+        return b"x" * length
+
+    monkeypatch.setattr(live.connections["down"].socket, "recv", recv)
+    return _central_site_of(
+        _remote_site_configuration("down", replicate_ec=True),
+        _remote_site_configuration("remote", replicate_ec=True),
+    )
+
+
+@_setup_page
+def test_resetting_the_counters_warns_about_sites_being_down(
+    load_config: Config,
+    test_edition: Edition,
+    mock_livestatus: MockLiveStatusConnection,
+    set_config: SetConfig,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    site_configs = _sites_with_one_down(mock_livestatus, monkeypatch)
+    submit(_reset_counters="1")
+    mock_livestatus.expect_query(
+        "COMMAND [...] EC_RESETCOUNTERS;",
+        match_type="ellipsis",
+        sites=[omd_site(), SiteId("remote")],
+    )
+
+    with set_config(sites=site_configs), mock_livestatus(expect_status_query=True):
+        _rule_pack_list_action(load_config, test_edition)
+
+    assert _flashed_messages() == ["Could not reset the rule hit counters on these sites: down"]
+
+
+@_setup_page
+def test_resetting_the_counters_adds_a_change(
     load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
 ) -> None:
+    mock_livestatus.set_sites([omd_site()])
     submit(_reset_counters="1")
     mock_livestatus.expect_query(
         "COMMAND [...] EC_RESETCOUNTERS;", match_type="ellipsis", sites=[omd_site()]
@@ -1255,6 +1442,26 @@ def test_resetting_the_counters_resets_them_in_the_event_console_of_the_site(
 
     with mock_livestatus(expect_status_query=True):
         _rule_pack_list_action(load_config, test_edition)
+
+    assert _pending_changes() == [("counter-reset", [EVENT_CONSOLE])]
+
+
+@_setup_page
+def test_resetting_the_counters_on_no_site_adds_no_change(
+    load_config: Config,
+    test_edition: Edition,
+    mock_livestatus: MockLiveStatusConnection,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    # Activating the change would reset nothing, as reloading keeps the counters of unchanged rules.
+    mock_livestatus.set_sites([omd_site()])
+    _fail_commands(mock_livestatus, omd_site(), monkeypatch)
+    submit(_reset_counters="1")
+
+    with mock_livestatus(expect_status_query=True):
+        _rule_pack_list_action(load_config, test_edition)
+
+    assert _pending_changes() == []
 
 
 @contextmanager
@@ -2557,32 +2764,26 @@ def test_saving_a_new_rule_of_a_packaged_rule_pack_puts_it_into_the_modified_rul
 
 
 @_setup_page
-def test_saving_an_edited_rule_replaces_it(
-    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
-) -> None:
+def test_saving_an_edited_rule_replaces_it(load_config: Config, test_edition: Edition) -> None:
     _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))))
     set_request_vars(rule_pack="pack", edit_rule="second")
     _submit_rule_form(load_config, test_edition, rule_p_description="edited")
-    mock_livestatus.expect_query("COMMAND [...] EC_RESETCOUNTERS;second", match_type="ellipsis")
 
-    with mock_livestatus(expect_status_query=True):
-        _rule_editor(load_config, test_edition).action(load_config)
+    _rule_editor(load_config, test_edition).action(load_config)
 
     assert _rule_descriptions() == [None, "edited"]
 
 
 @_setup_page
-def test_saving_an_edited_rule_resets_its_hit_counters_in_the_local_event_console(
+def test_saving_an_edited_rule_leaves_resetting_its_hit_counters_to_the_event_console(
     load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
 ) -> None:
     _save_rule_packs(_rule_pack(_stored(ec.Rule(id="rule"))))
     set_request_vars(rule_pack="pack", edit_rule="rule")
-    _submit_rule_form(load_config, test_edition)
-    mock_livestatus.expect_query(
-        "COMMAND [...] EC_RESETCOUNTERS;rule", match_type="ellipsis", sites=[omd_site()]
-    )
+    _submit_rule_form(load_config, test_edition, rule_p_description="edited")
 
-    with mock_livestatus(expect_status_query=True):
+    # Fails on any query, e.g. a command resetting the counters before the changes are activated.
+    with mock_livestatus(expect_status_query=False):
         _rule_editor(load_config, test_edition).action(load_config)
 
 
@@ -2761,7 +2962,6 @@ def test_editing_a_rule_with_its_button_after_another_one_was_added_edits_it(
     )
     set_request_vars(**_button_link_vars(rows[1], "Edit this rule"))
     _submit_rule_form(load_config, test_edition, rule_p_description="edited")
-    mock_livestatus.expect_query("COMMAND [...] EC_RESETCOUNTERS;second", match_type="ellipsis")
 
     # The rule list connected to the sites already.
     with mock_livestatus(expect_status_query=False):
@@ -2803,7 +3003,6 @@ def _editing_the_rule_of_a_second_rule_pack_with_the_id(
     [row] = _rule_list_rows(config, edition, mock_livestatus)
     _follow(_button_link_vars(row, "Edit this rule"))
     _submit_rule_form(config, edition, rule_p_description="edited")
-    mock_livestatus.expect_query("COMMAND [...] EC_RESETCOUNTERS;second", match_type="ellipsis")
 
 
 @_setup_page
@@ -2866,7 +3065,6 @@ def test_editing_one_of_several_rules_with_the_same_id_with_its_button_edits_tha
     rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
     set_request_vars(**_button_link_vars(rows[1], "Edit this rule"))
     _submit_rule_form(load_config, test_edition, rule_p_description="edited")
-    mock_livestatus.expect_query("COMMAND [...] EC_RESETCOUNTERS;rule", match_type="ellipsis")
 
     # The rule list connected to the sites already.
     with mock_livestatus(expect_status_query=False):

@@ -205,7 +205,7 @@ def test_invalid_regex_fails_before_replying(
 def test_rules_table_shows_the_rule_hits(
     event_status: EventStatus, status_server: StatusServer
 ) -> None:
-    event_status.count_rule_match("disk")
+    event_status.count_rule_match("disk", rule_digests=event_status.rule_digests)
 
     status_socket = query_status_server(status_server, "GET rules")
 
@@ -268,7 +268,7 @@ def test_events_are_shown_in_the_requested_output_format(
 def test_several_queries_on_one_connection_are_answered_in_order(
     event_status: EventStatus, status_server: StatusServer
 ) -> None:
-    event_status.count_rule_match("disk")
+    event_status.count_rule_match("disk", rule_digests=event_status.rule_digests)
 
     status_socket = query_status_server(
         status_server, "GET rules\nColumns: rule_id\n\nGET rules\nColumns: rule_hits"

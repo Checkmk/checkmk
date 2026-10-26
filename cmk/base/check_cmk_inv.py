@@ -287,6 +287,7 @@ def _inventory_as_check(
             snmp_backend=config_cache.get_snmp_backend(hostname),
             keepalive=False,
             get_agent_output=lambda: recording_fetcher.serialized(hostname),
+            debug=cmk.ccc.debug.enabled(),
         )
         check_results: Sequence[ActiveCheckResult] = []
         with error_handler:

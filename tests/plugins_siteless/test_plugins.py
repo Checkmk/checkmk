@@ -172,6 +172,7 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
             clusters=(),
             get_agent_output=lambda: None,
             omd_root=Path(""),
+            debug=debug.enabled(),
         )
         assert check_plugins
 

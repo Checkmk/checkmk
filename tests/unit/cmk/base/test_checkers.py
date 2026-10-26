@@ -682,6 +682,7 @@ def _aggregated_result_of(
         get_agent_output=get_agent_output,
         get_effective_host=lambda host_name, *_args: host_name,
         snmp_backend=SNMPBackendEnum.CLASSIC,
+        debug=False,
     )
 
 
@@ -732,6 +733,7 @@ def _get_aggregated_result(
         get_agent_output=lambda: None,
         get_effective_host=lambda host_name, _service_name, _labels: host_name,
         snmp_backend=SNMPBackendEnum.CLASSIC,
+        debug=False,
     )
 
 
@@ -739,7 +741,7 @@ def _raise(**_kwargs: object) -> ServiceCheckResult:
     raise ValueError("crash")
 
 
-@pytest.mark.usefixtures("disable_debug", "patch_omd_site")
+@pytest.mark.usefixtures("patch_omd_site")
 def test_crash_report_of_a_check_function_contains_the_agent_output() -> None:
     _aggregated_result_of(_raise, lambda: AgentRawData(b"<<<uptime>>>\n123\n"))
 
@@ -787,7 +789,6 @@ def test_get_aggregated_result_passes_parameters() -> None:
     assert received["params"] == {"levels": (1, 2)}
 
 
-@pytest.mark.usefixtures("disable_debug")
 @pytest.mark.parametrize(
     "raw_parameters",
     [

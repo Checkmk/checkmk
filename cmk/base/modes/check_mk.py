@@ -590,6 +590,7 @@ def run_checking(
             snmp_backend=config_cache.get_snmp_backend(hostname),
             keepalive=False,
             get_agent_output=lambda: recording_fetcher.serialized(hostname),
+            debug=debug,
         )
 
         checks_result: Sequence[ActiveCheckResult] = []
@@ -611,6 +612,7 @@ def run_checking(
                 clusters=hosts_config.clusters,
                 get_agent_output=lambda: serialize_fetched((f[0], f[1]) for f in fetched),
                 omd_root=cmk.utils.paths.omd_root,
+                debug=debug,
             )
             with CPUTracker(console.debug) as tracker:
                 checks_result = execute_checkmk_checks(

@@ -13,7 +13,6 @@ py_library(
         "//cmk/piggyback:backend",
         "//cmk/utils",
         "//packages/cmk-ccc:cpu-tracking",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:resulttype",

@@ -261,6 +261,7 @@ def _mode_check_discovery(
             snmp_backend=config_cache.get_snmp_backend(hostname),
             keepalive=False,
             get_agent_output=lambda: recording_fetcher.serialized(hostname),
+            debug=global_options.debug,
         )
 
         check_results: Sequence[ActiveCheckResult] = []

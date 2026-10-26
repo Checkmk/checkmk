@@ -7,7 +7,6 @@
 from collections.abc import Callable
 from typing import Final, Literal
 
-import cmk.ccc.debug
 from cmk.ccc.exceptions import (
     MKGeneralException,
     MKIPAddressLookupError,
@@ -36,6 +35,7 @@ class CheckResultErrorHandler:
         snmp_backend: SNMPBackendEnum,
         keepalive: bool,
         get_agent_output: Callable[[], AgentRawData | None],
+        debug: bool,
     ) -> None:
         self.exit_spec: Final = exit_spec
         self.host_name: Final = host_name
@@ -45,6 +45,7 @@ class CheckResultErrorHandler:
         self.snmp_backend: Final = snmp_backend
         self.keepalive: Final = keepalive
         self.get_agent_output: Final = get_agent_output
+        self.debug: Final = debug
         # return value
         self._result: ActiveCheckResult | None = None
 
@@ -69,6 +70,7 @@ class CheckResultErrorHandler:
             snmp_backend=self.snmp_backend,
             keepalive=self.keepalive,
             get_agent_output=self.get_agent_output,
+            debug=self.debug,
         )
         self._result = ActiveCheckResult(state=state, summary=summary)
         return True
@@ -85,8 +87,9 @@ def _handle_failure(
     snmp_backend: SNMPBackendEnum,
     keepalive: bool,
     get_agent_output: Callable[[], AgentRawData | None],
+    debug: bool,
 ) -> tuple[ServiceState, str]:
-    if cmk.ccc.debug.enabled():
+    if debug:
         raise exc
 
     if isinstance(exc, BrokenPipeError):

@@ -28,6 +28,7 @@ def _handler() -> CheckResultErrorHandler:
         snmp_backend=SNMPBackendEnum.CLASSIC,
         keepalive=False,
         get_agent_output=lambda: AgentRawData(b"<<<uptime>>>\n123\n"),
+        debug=False,
     )
 
 
@@ -48,7 +49,6 @@ def test_no_error_keeps_status_from_callee() -> None:
     assert handler.result is None
 
 
-@pytest.mark.usefixtures("disable_debug")
 def test_MKTimeout_exception_returns_2() -> None:
     with _handler() as handler:
         raise MKTimeout("oops!")
@@ -58,7 +58,6 @@ def test_MKTimeout_exception_returns_2() -> None:
     assert handler.result.as_text() == "Timed out"
 
 
-@pytest.mark.usefixtures("disable_debug")
 def test_MKAgentError_exception_returns_2() -> None:
     with _handler() as handler:
         raise FetcherError("oops!")
@@ -68,7 +67,6 @@ def test_MKAgentError_exception_returns_2() -> None:
     assert handler.result.as_text() == "oops!"
 
 
-@pytest.mark.usefixtures("disable_debug")
 def test_MKGeneralException_returns_3() -> None:
     with _handler() as handler:
         raise MKGeneralException("kaputt!")
@@ -78,13 +76,12 @@ def test_MKGeneralException_returns_3() -> None:
     assert handler.result.as_text() == "kaputt!"
 
 
-@pytest.mark.usefixtures("disable_debug")
 def test_broken_pipe_propagates() -> None:
     with pytest.raises(BrokenPipeError), _handler():
         raise BrokenPipeError(32, "Broken pipe")
 
 
-@pytest.mark.usefixtures("disable_debug", "patch_omd_site")
+@pytest.mark.usefixtures("patch_omd_site")
 def test_unhandled_exception_returns_3() -> None:
     with _handler() as handler:
         raise ValueError("unexpected :/")
@@ -98,7 +95,7 @@ def test_unhandled_exception_returns_3() -> None:
     crash_file.unlink()
 
 
-@pytest.mark.usefixtures("disable_debug", "patch_omd_site")
+@pytest.mark.usefixtures("patch_omd_site")
 def test_crash_report_of_an_unhandled_exception_contains_the_agent_output() -> None:
     with _handler():
         raise ValueError("unexpected :/")

@@ -922,6 +922,7 @@ def _execute_discovery(
             clusters=hosts_config.clusters,
             get_agent_output=lambda: recording_fetcher.serialized(host_name),
             omd_root=cmk.utils.paths.omd_root,
+            debug=cmk.ccc.debug.enabled(),
         )
         passive_check_preview = get_check_preview(
             host_name,

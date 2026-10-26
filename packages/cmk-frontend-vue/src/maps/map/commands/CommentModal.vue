@@ -11,14 +11,14 @@ already being done about it.
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import { useMapsApis } from '@/maps/services/context'
 import MapsModal from '@/maps/shared/components/MapsModal.vue'
 import type { MapElement } from '@/maps/types/api'
-import { objectDisplayName } from '@/maps/utils/dropdownOptions'
 
 import CommandFeedback from './CommandFeedback.vue'
+import CommandObjectName from './CommandObjectName.vue'
 import { useCommandSubmit } from './useCommandSubmit'
 
 const { commands } = useMapsApis()
@@ -38,8 +38,6 @@ const commentEl = ref<HTMLInputElement | null>(null)
 onMounted(() => {
   commentEl.value?.focus()
 })
-
-const displayName = computed(() => objectDisplayName(props.object, _t))
 
 const { submitting, succeeded, error, blocked, submit } = useCommandSubmit({
   fallbackError: _t('Failed to add comment'),
@@ -73,7 +71,7 @@ function onSubmit(): void {
 
 <template>
   <MapsModal :open="true" :title="_t('Add comment')" closable @close="emit('close')">
-    <p class="maps-comment-modal__subtitle">{{ displayName }}</p>
+    <CommandObjectName :object="object" />
 
     <div class="maps-comment-modal__field">
       <label class="maps-comment-modal__label">{{ _t('Comment') }}</label>
@@ -100,12 +98,6 @@ function onSubmit(): void {
 </template>
 
 <style scoped>
-.maps-comment-modal__subtitle {
-  font-size: var(--font-size-normal);
-  color: var(--font-color-dimmed);
-  margin: calc(-1 * var(--dimension-4)) 0 0;
-}
-
 .maps-comment-modal__field {
   display: flex;
   flex-direction: column;

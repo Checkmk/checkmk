@@ -14,7 +14,6 @@ them; each is scheduled in turn, a few at a time.
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
-import CmkTimeRangePicker from 'cmk-ui-library/components/date-time/CmkTimeRangePicker.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { ref } from 'vue'
@@ -26,6 +25,7 @@ import type { CommandTarget } from '@/maps/types/api'
 
 import CommandFeedback from './CommandFeedback.vue'
 import CommandTargetList from './CommandTargetList.vue'
+import DowntimeWindowFields from './DowntimeWindowFields.vue'
 import { useBulkCommandSubmit } from './useBulkCommandSubmit'
 import { useDowntimeWindow } from './useDowntimeWindow'
 
@@ -91,7 +91,7 @@ function onSubmit(): void {
     <div class="maps-bulk-downtime-modal__fields">
       <div class="maps-bulk-downtime-modal__field">
         <CmkLabel>{{ _t('Downtime period') }}</CmkLabel>
-        <CmkTimeRangePicker v-model="range" :label="_t('Downtime period')" />
+        <DowntimeWindowFields v-model="range" />
       </div>
       <div class="maps-bulk-downtime-modal__field">
         <CmkLabel>{{ _t('Comment') }}</CmkLabel>

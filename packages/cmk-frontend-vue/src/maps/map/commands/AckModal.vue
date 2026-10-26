@@ -21,9 +21,9 @@ import type { AcknowledgeOptions } from '@/maps/api/commands'
 import { useMapsApis } from '@/maps/services/context'
 import MapsModal from '@/maps/shared/components/MapsModal.vue'
 import type { MapElement } from '@/maps/types/api'
-import { objectDisplayName } from '@/maps/utils/dropdownOptions'
 
 import CommandFeedback from './CommandFeedback.vue'
+import CommandObjectName from './CommandObjectName.vue'
 import { describeGroupCommandError, messageOf } from './commandErrors'
 import { useCommandSubmit } from './useCommandSubmit'
 
@@ -52,8 +52,6 @@ function options(): AcknowledgeOptions {
     persistent: persistent.value
   }
 }
-
-const displayName = computed(() => objectDisplayName(props.object, _t))
 
 const isGroup = computed(
   () => props.object.type === 'hostgroup' || props.object.type === 'servicegroup'
@@ -112,7 +110,7 @@ function onSubmit(): void {
 
 <template>
   <MapsModal :open="true" :title="_t('Acknowledge problem')" closable @close="emit('close')">
-    <p class="maps-ack-modal__subtitle">{{ displayName }}</p>
+    <CommandObjectName :object="object" />
     <p
       v-if="isGroup"
       class="maps-ack-modal__group-hint"
@@ -158,12 +156,6 @@ function onSubmit(): void {
 </template>
 
 <style scoped>
-.maps-ack-modal__subtitle {
-  font-size: var(--font-size-normal);
-  color: var(--font-color-dimmed);
-  margin: calc(-1 * var(--dimension-4)) 0 0;
-}
-
 /* A bulk command deserves a word of warning before it is sent. */
 .maps-ack-modal__group-hint {
   font-size: var(--font-size-normal);

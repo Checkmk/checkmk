@@ -14,7 +14,6 @@ instead, a few at a time so a wide aggregation does not arrive as a burst.
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
-import CmkTimeRangePicker from 'cmk-ui-library/components/date-time/CmkTimeRangePicker.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
@@ -24,9 +23,10 @@ import { useMapsApis, useStates } from '@/maps/services/context'
 import MapsModal from '@/maps/shared/components/MapsModal.vue'
 import type { CommandTarget, MapElement } from '@/maps/types/api'
 import { flattenAggregationLeaves } from '@/maps/utils/aggregationTree'
-import { objectDisplayName } from '@/maps/utils/dropdownOptions'
 
 import CommandFeedback from './CommandFeedback.vue'
+import CommandObjectName from './CommandObjectName.vue'
+import DowntimeWindowFields from './DowntimeWindowFields.vue'
 import { describeGroupCommandError, messageOf } from './commandErrors'
 import { fanOutCommand } from './fanOutCommand'
 import { useCommandSubmit } from './useCommandSubmit'
@@ -46,8 +46,6 @@ const emit = defineEmits<{ close: [] }>()
 
 const { range, isValid: timesValid, asIso } = useDowntimeWindow()
 const comment = ref('')
-
-const displayName = computed(() => objectDisplayName(props.object, _t))
 
 const isGroup = computed(
   () => props.object.type === 'hostgroup' || props.object.type === 'servicegroup'
@@ -157,7 +155,7 @@ function onSubmit(): void {
 
 <template>
   <MapsModal :open="true" :title="_t('Schedule downtime')" closable @close="emit('close')">
-    <p class="maps-downtime-modal__subtitle">{{ displayName }}</p>
+    <CommandObjectName :object="object" />
     <p
       v-if="isGroup"
       class="maps-downtime-modal__group-hint"
@@ -173,7 +171,7 @@ function onSubmit(): void {
     <div class="maps-downtime-modal__fields">
       <div class="maps-downtime-modal__cmk-field">
         <CmkLabel>{{ _t('Downtime period') }}</CmkLabel>
-        <CmkTimeRangePicker v-model="range" :label="_t('Downtime period')" />
+        <DowntimeWindowFields v-model="range" />
       </div>
       <div class="maps-downtime-modal__cmk-field">
         <CmkLabel>{{ _t('Comment') }}</CmkLabel>
@@ -203,12 +201,6 @@ function onSubmit(): void {
 </template>
 
 <style scoped>
-.maps-downtime-modal__subtitle {
-  font-size: var(--font-size-normal);
-  color: var(--font-color-dimmed);
-  margin: calc(-1 * var(--dimension-4)) 0 0;
-}
-
 /* A bulk command deserves a word of warning before it is sent. */
 .maps-downtime-modal__group-hint {
   font-size: var(--font-size-normal);

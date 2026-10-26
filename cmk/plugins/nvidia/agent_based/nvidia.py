@@ -93,7 +93,10 @@ def discover_nvidia_errors(section: StringTable) -> DiscoveryResult:
             yield Service()
 
 
-def check_nvidia_errors(section: StringTable) -> CheckResult:
+def check_nvidia_errors(
+    params: object,  # noqa: ARG001
+    section: StringTable,
+) -> CheckResult:
     for line in section:
         if line[0] == "GPUErrors:":
             errors = int(line[1])
@@ -111,4 +114,6 @@ check_plugin_nvidia_errors = CheckPlugin(
     sections=["nvidia"],
     discovery_function=discover_nvidia_errors,
     check_function=check_nvidia_errors,
+    check_ruleset_name="hw_errors",
+    check_default_parameters={},  # the ruleset is only for enforcing.
 )

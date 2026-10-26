@@ -783,10 +783,12 @@ class Document:
     ) -> None:
         # TODO Some painters use .svg icons which PIL currently doesn't
         # support. For now, we ship both the .png and .svg icons. Here we
-        # switch to .png only if available.
+        # switch to .png if available and skip the icon otherwise.
         # Find alternatives to PIL that support .svg
-        png_path = Path(path.replace(".svg", ".png"))
-        if path.endswith(".svg") and png_path.exists():
+        if path.endswith(".svg"):
+            png_path = Path(path.replace(".svg", ".png"))
+            if not png_path.exists():
+                return
             path = str(png_path)
 
         image = CMKImage.from_path(Path(path), ImageType.PNG)

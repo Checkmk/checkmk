@@ -9,8 +9,8 @@
  * Two things need arranging. The URL is cache-busted, because a re-upload keeps
  * the same file name and the browser would otherwise keep showing the old
  * picture. And the NagVis-compatible renderer draws the image at its own pixel
- * size, which the canvas spans at least, so it has to be measured before the
- * canvas can be laid out.
+ * size, as does every other layout but stretching, so it has to be measured
+ * before the canvas can be laid out.
  */
 import { type Ref, computed, ref, watch } from 'vue'
 
@@ -30,8 +30,8 @@ export interface CanvasBackground {
 
 export function useCanvasBackground(source: {
   config: () => MapConfig
-  /** Whether the renderer sizes the canvas to the image. */
-  sizesToImage: () => boolean
+  /** Whether the layout needs the image's own size. */
+  measure: () => boolean
 }): CanvasBackground {
   const maps = useMaps()
   const cacheKey = ref(Date.now())
@@ -66,10 +66,10 @@ export function useCanvasBackground(source: {
   // overwrite the size of the current one.
   let loadToken = 0
   watch(
-    [url, () => source.sizesToImage()],
-    ([current, sizesToImage]) => {
+    [url, () => source.measure()],
+    ([current, measure]) => {
       const token = ++loadToken
-      if (!sizesToImage || !current) {
+      if (!measure || !current) {
         naturalSize.value = null
         return
       }

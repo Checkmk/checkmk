@@ -305,6 +305,8 @@ export function mapListObjectToRead(obj: MapListObjectWire): MapRead {
     render_mode: s.render_mode ?? 'default',
     background_image: s.background_image ?? null,
     background_color: s.background_color ?? null,
+    background_style: s.background_style ?? 'single',
+    background_position: s.background_position ?? 'top_left',
     click_action: s.click_action,
     hover_template: s.hover_template ?? null,
     context_template: s.context_template ?? null,

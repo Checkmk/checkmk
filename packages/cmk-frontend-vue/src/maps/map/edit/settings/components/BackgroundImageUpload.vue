@@ -217,6 +217,7 @@ function removeOrCancel() {
   align-items: center;
   justify-content: center;
   gap: var(--dimension-4);
+  box-sizing: border-box;
   width: 100%;
   padding: var(--dimension-4) var(--dimension-5);
   font-size: var(--font-size-normal);

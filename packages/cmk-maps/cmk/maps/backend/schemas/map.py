@@ -30,6 +30,8 @@ from cmk.maps.shared.map_compat import (
 )
 from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
 from cmk.maps.shared.map_payload import (
+    BackgroundPosition,
+    BackgroundStyle,
     ClickAction,
     LinePerfdataLabel,
     LineStyle,
@@ -368,6 +370,10 @@ class MapConfig(BaseModel):
     context_template: str | None = None
     background_image: _AssetRef = None
     background_color: str | None = None
+    # How the image covers the map, in map coordinates; "nagvis_classic"
+    # ignores both and always draws it at its own size.
+    background_style: BackgroundStyle = "single"
+    background_position: BackgroundPosition = "top_left"
     # Default keeps existing maps on the Maps renderer; "nagvis_classic"
     # opts an imported map into NagVis' geometry (top-left anchoring, labels at
     # their own offset, the background at its own size).
@@ -400,6 +406,8 @@ class MapCreate(BaseModel):
     alias: str = ""
     background_image: _AssetRef = None
     background_color: str | None = None
+    background_style: BackgroundStyle = "single"
+    background_position: BackgroundPosition = "top_left"
     icon_size: int | None = None
     connection_id: str = "live_1"
     view: MapView = StaticView()
@@ -413,6 +421,8 @@ class MapUpdate(BaseModel):
     alias: str | None = None
     background_image: _AssetRef = None
     background_color: str | None = None
+    background_style: BackgroundStyle | None = None
+    background_position: BackgroundPosition | None = None
     icon_size: int | None = None
     connection_id: str | None = None
     view: MapView | None = None
@@ -440,6 +450,8 @@ class MapRead(BaseModel):
     alias: str
     background_image: _AssetRef
     background_color: str | None = None
+    background_style: BackgroundStyle = "single"
+    background_position: BackgroundPosition = "top_left"
     icon_size: int | None
     connection_id: str
     view_type: str

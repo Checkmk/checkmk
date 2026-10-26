@@ -402,6 +402,8 @@ async function save(): Promise<void> {
         ...metadataOverridesFrom(formSpec),
         background_image: form.value.background_image || null,
         background_color: form.value.background_color || null,
+        background_style: form.value.background_style,
+        background_position: form.value.background_position,
         // A presentation's slides — elements, theme, size, background — are
         // owned and autosaved by its canvas; sending a metadata-only view
         // here would blank them. The view is assembled as a loose record but
@@ -606,6 +608,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
                     v-if="mapType === 'static'"
                     v-model:form="form"
                     :background="background"
+                    :classic="map.render_mode === 'nagvis_classic'"
                   />
                   <WorldmapSettings
                     v-else-if="mapType === 'worldmap'"

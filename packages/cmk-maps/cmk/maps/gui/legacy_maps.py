@@ -215,6 +215,10 @@ def _translate_legacy_keys(spec: dict[str, object]) -> None:
     # marked the demo boards.
     spec.pop("show_in_lists", None)
     spec.pop("readonly", None)
+    # A board stretched its background over the same box its objects were
+    # placed in; Maps defaults to the image's own size, which would move them.
+    if spec.get("background_image"):
+        spec.setdefault("background_style", "stretch")
     for obj in _dict_objects(spec):
         migrate_weathermap(obj)
         if "graph_metric" in obj:

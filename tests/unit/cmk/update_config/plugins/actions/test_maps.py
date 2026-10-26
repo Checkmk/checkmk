@@ -792,6 +792,14 @@ def test_the_background_becomes_the_maps_background(admin: UserId) -> None:
     assert (_maps_backgrounds_dir() / stored).read_bytes() == _PNG
 
 
+def test_a_board_background_keeps_covering_the_box_its_objects_are_placed_in(
+    admin: UserId,
+) -> None:
+    spec = _migrated(admin, "legacy", _complete_map(background_image="gone.png")).config.map_spec
+
+    assert spec["background_style"] == "stretch"
+
+
 def test_a_missing_background_keeps_its_reference(admin: UserId) -> None:
     spec = _migrated(admin, "legacy", _complete_map(background_image="gone.png")).config.map_spec
 

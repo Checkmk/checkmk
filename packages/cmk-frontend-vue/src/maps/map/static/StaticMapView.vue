@@ -22,6 +22,7 @@ import ProblemsOnlyToggle from '@/maps/map/components/ProblemsOnlyToggle.vue'
 import type { MapEditor } from '@/maps/map/composables/useMapEditor'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 
+import { isCentered } from './canvasSpace'
 import MapCanvas from './components/MapCanvas.vue'
 
 const { _t } = usei18n()
@@ -54,12 +55,15 @@ const emit = defineEmits<{
 
 const canvas = useTemplateRef<InstanceType<typeof MapCanvas>>('canvas')
 
+const centered = computed(() => props.config !== null && isCentered(props.config, props.preview))
+
 /**
  * NagVis colors the whole page, so a label hanging past the canvas still sits
- * on the map's color.
+ * on the map's color; a centered map fills the pane around it with it, too.
  */
 const areaStyle = computed(() =>
-  props.config?.render_mode === 'nagvis_classic' && props.config.background_color
+  (props.config?.render_mode === 'nagvis_classic' || centered.value) &&
+  props.config?.background_color
     ? { backgroundColor: props.config.background_color }
     : {}
 )
@@ -152,7 +156,12 @@ function onObjectDblclick(object: MapElement): void {
 </script>
 
 <template>
-  <div class="maps-static-map-view" :style="areaStyle" @click="onAreaClick">
+  <div
+    class="maps-static-map-view"
+    :class="{ 'maps-static-map-view--centered': centered }"
+    :style="areaStyle"
+    @click="onAreaClick"
+  >
     <MapPlaceholder v-if="error" :message="error" variant="error" />
 
     <template v-else-if="config">
@@ -244,6 +253,10 @@ function onObjectDblclick(object: MapElement): void {
   flex: 1;
   overflow: auto;
   min-height: 0;
+}
+
+.maps-static-map-view--centered {
+  display: grid;
 }
 
 .maps-static-map-view__empty {

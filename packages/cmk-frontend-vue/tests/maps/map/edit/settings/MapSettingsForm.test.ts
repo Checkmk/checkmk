@@ -321,6 +321,34 @@ describe('MapSettingsForm – save', () => {
   })
 })
 
+describe('MapSettingsForm – background layout', () => {
+  it('offers the image style and position only once there is an image', async () => {
+    await renderReady()
+    expect(screen.queryByRole('combobox', { name: 'Image style' })).toBeNull()
+  })
+
+  it('leaves the image to the NagVis-compatible renderer, which shows it at its own size', async () => {
+    await renderReady(makeMap({ background_image: 'floor.png', render_mode: 'nagvis_classic' }))
+    expect(screen.queryByRole('combobox', { name: 'Image style' })).toBeNull()
+  })
+
+  it('saves where the image sits', async () => {
+    const user = userEvent.setup()
+    await renderReady(makeMap({ background_image: 'floor.png' }))
+
+    await user.click(screen.getByRole('button', { name: 'Toggle Center' }))
+    await waitFor(() => expect(footerButton('Save')).toBeEnabled())
+    await user.click(footerButton('Save'))
+
+    await waitFor(() => expect(saveMapMetadata).toHaveBeenCalledTimes(1))
+    expect(saveMapMetadata).toHaveBeenCalledWith(
+      'net-overview',
+      expect.objectContaining({ background_style: 'single', background_position: 'center' }),
+      expect.anything()
+    )
+  })
+})
+
 describe('MapSettingsForm – delete flow', () => {
   it('deletes the map on confirmation and leaves it for the map list', async () => {
     const load = vi.fn()

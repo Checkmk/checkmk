@@ -150,6 +150,8 @@ export type MapElement = Omit<Daemon['MapElement'], 'type'> & {
 export type ClickAction = Daemon['MapConfig']['click_action']
 
 export type RenderMode = Daemon['MapConfig']['render_mode']
+export type BackgroundStyle = NonNullable<Daemon['MapConfig']['background_style']>
+export type BackgroundPosition = NonNullable<Daemon['MapConfig']['background_position']>
 
 export type MapConfig = Omit<Daemon['MapConfig'], 'objects' | 'view'> & {
   objects: MapElement[]
@@ -172,6 +174,8 @@ export interface MapRead {
   alias: string
   background_image?: string | null
   background_color?: string | null
+  background_style?: BackgroundStyle
+  background_position?: BackgroundPosition
   icon_size: number | null
   connection_id: string
   view_type: string

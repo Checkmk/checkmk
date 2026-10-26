@@ -5,6 +5,8 @@
  */
 import { metadataUpdatesFrom } from '@/maps/shared/metadataForm'
 import type {
+  BackgroundPosition,
+  BackgroundStyle,
   FlowView,
   FolderTreeView,
   MapConfig,
@@ -68,6 +70,8 @@ export interface SettingsForm {
   ft_sites: string
   background_image: string
   background_color: string
+  background_style: BackgroundStyle
+  background_position: BackgroundPosition
   /** Kept for the save call and the preview patch, edited via FormSpec. */
   alias: string
   connection_id: string
@@ -129,7 +133,9 @@ export function formFromMap(
     hover_template: map.hover_template ?? '',
     context_template: map.context_template ?? '',
     background_image: map.background_image ?? '',
-    background_color: map.background_color ?? ''
+    background_color: map.background_color ?? '',
+    background_style: map.background_style ?? 'single',
+    background_position: map.background_position ?? 'top_left'
   }
 }
 
@@ -241,6 +247,8 @@ export function previewPatch(
     hover_template: (formSpec.hover_template as string) ?? '',
     context_template: (formSpec.context_template as string) ?? '',
     background_color: form.background_color || null,
+    background_style: form.background_style,
+    background_position: form.background_position,
     ...(form.map_type === 'presentation' ? {} : { view: viewFromForm(form, flowView) })
   }
 }

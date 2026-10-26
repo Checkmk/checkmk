@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { spaceFillingPane } from '@/maps/map/static/canvasSpace'
+import { backgroundLayout, spaceFillingPane } from '@/maps/map/static/canvasSpace'
 
 describe('spaceFillingPane', () => {
   it('extends a map to the right in a wider pane, keeping one scale', () => {
@@ -29,5 +29,44 @@ describe('spaceFillingPane', () => {
       width: 800,
       height: 600
     })
+  })
+})
+
+describe('backgroundLayout', () => {
+  const map = { width: 800, height: 600 }
+  const extended = { width: 1600, height: 600 }
+  const logo = { width: 160, height: 240 }
+
+  it('shows an image at its own size from the map origin', () => {
+    expect(backgroundLayout('single', 'top_left', map, extended, logo)).toEqual({
+      size: '10% 40%',
+      position: '0% 0%',
+      repeat: false
+    })
+  })
+
+  it('zooms an image to fit the map without distorting it', () => {
+    const layout = backgroundLayout('zoom', 'top_left', map, map, logo)
+    expect(layout?.size).toBe('50% 100%')
+  })
+
+  it('centers the image on a centered map', () => {
+    expect(backgroundLayout('zoom', 'center', map, map, logo)?.position).toBe('50% 0%')
+  })
+
+  it('stretches the image over the map only, not over the extended space', () => {
+    expect(backgroundLayout('stretch', 'top_left', map, extended, null)).toEqual({
+      size: '50% 100%',
+      position: '0% 0%',
+      repeat: false
+    })
+  })
+
+  it('repeats a tiled image', () => {
+    expect(backgroundLayout('tile', 'top_left', map, extended, logo)?.repeat).toBe(true)
+  })
+
+  it('waits for the image size rather than showing it stretched', () => {
+    expect(backgroundLayout('single', 'top_left', map, extended, null)).toBeNull()
   })
 })

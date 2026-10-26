@@ -993,6 +993,8 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
         # NagVis' global default z is 10 for every object type and is never
         # written per-object; objects without an explicit z inherit this.
         "default_z": 10,
+        "background_style": MAP_FIELD_DEFAULTS["background_style"],
+        "background_position": MAP_FIELD_DEFAULTS["background_position"],
         "view": {"type": "static"},
         "objects": [],
     }

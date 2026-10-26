@@ -144,6 +144,15 @@ def test_rest_model_rejects_css_injection_color(field: str) -> None:
         map_from_spec(dense)
 
 
+def test_rest_round_trip_keeps_the_background_layout() -> None:
+    laid_out = {**_STATIC_MAP, "background_style": "zoom", "background_position": "center"}
+    dense = DaemonMapConfig.model_validate(laid_out).model_dump(mode="json")
+
+    stored = spec_from_map(map_from_spec(dense))
+
+    assert (stored["background_style"], stored["background_position"]) == ("zoom", "center")
+
+
 def test_rest_model_rejects_object_filter_without_filter_header() -> None:
     # Mirrors the daemon's object_filter validation: a dyngroup filter that is not
     # safe ``Filter:`` combinator lines must be rejected at the REST write boundary.

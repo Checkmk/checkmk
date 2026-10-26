@@ -115,6 +115,8 @@ export function useCanvasExtents(source: {
   iconSizes: () => IconSizes
   /** The NagVis-compatible renderer, which draws the space at its pixel size. */
   classic: () => boolean
+  /** A size the space never falls below, so a picture shown at its own size stays whole. */
+  minimumSize?: () => { width: number; height: number } | null
 }): CanvasExtents {
   const derivedWidth = (): number => {
     const config = source.config()
@@ -155,7 +157,13 @@ export function useCanvasExtents(source: {
   )
 
   return {
-    width: computed(() => (source.classic() ? derivedWidth() : width.value)),
-    height: computed(() => (source.classic() ? derivedHeight() : height.value))
+    width: computed(() =>
+      source.classic() ? derivedWidth() : Math.max(width.value, source.minimumSize?.()?.width ?? 0)
+    ),
+    height: computed(() =>
+      source.classic()
+        ? derivedHeight()
+        : Math.max(height.value, source.minimumSize?.()?.height ?? 0)
+    )
   }
 }

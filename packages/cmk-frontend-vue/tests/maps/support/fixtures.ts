@@ -54,6 +54,8 @@ export function aMap(overrides: Partial<MapConfig> = {}): MapConfig {
     rotation_interval: 0,
     sort_order: 0,
     click_action: 'link',
+    background_style: 'single',
+    background_position: 'top_left',
     render_mode: 'default',
     default_z: 1,
     version: 0,

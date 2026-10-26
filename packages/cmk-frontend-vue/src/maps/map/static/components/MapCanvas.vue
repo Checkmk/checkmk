@@ -24,7 +24,7 @@ import MapZoomResetPill from '@/maps/map/components/MapZoomResetPill.vue'
 import { useMapObjectMenus } from '@/maps/map/composables/useMapObjectMenus'
 import { useObjectResize } from '@/maps/map/composables/useObjectResize'
 import { useRovingFocus } from '@/maps/map/composables/useRovingFocus'
-import { spaceFillingPane } from '@/maps/map/static/canvasSpace'
+import { backgroundLayout, isCentered, spaceFillingPane } from '@/maps/map/static/canvasSpace'
 import { useCanvasBackground } from '@/maps/map/static/composables/useCanvasBackground'
 import { useCanvasExtents } from '@/maps/map/static/composables/useCanvasExtents'
 import { useCanvasLayout } from '@/maps/map/static/composables/useCanvasLayout'
@@ -95,9 +95,12 @@ const canvas = useTemplateRef<HTMLElement>('canvas')
 
 const classic = computed(() => props.config.render_mode === 'nagvis_classic')
 
+const backgroundStyle = computed(() => props.config.background_style ?? 'single')
+const centered = computed(() => isCentered(props.config, props.preview === true))
+
 const background = useCanvasBackground({
   config: () => props.config,
-  sizesToImage: () => classic.value
+  measure: () => classic.value || backgroundStyle.value !== 'stretch'
 })
 
 const iconSizes = computed(() => ({
@@ -106,9 +109,13 @@ const iconSizes = computed(() => ({
   fallback: settings.settings.value.icon_size
 }))
 
+// The classic renderer draws at the background's own pixel size; every other
+// renderer derives the space from where the objects are, and keeps an image
+// shown at its own size whole.
 const extents = useCanvasExtents({
   config: () => props.config,
-  backgroundSize: () => background.naturalSize.value,
+  backgroundSize: () => (classic.value ? background.naturalSize.value : null),
+  minimumSize: () => (backgroundStyle.value === 'single' ? background.naturalSize.value : null),
   iconSizes: () => iconSizes.value,
   classic: () => classic.value
 })
@@ -123,9 +130,10 @@ const viewport = useCanvasViewport({
   editMode: () => props.editMode,
   preview: () => props.preview === true,
   classic: () => classic.value,
+  centered: () => centered.value,
   backgroundUrl: () => background.url.value,
-  backgroundSize: () => background.naturalSize.value,
-  backgroundBox: () => backgroundBox.value
+  backgroundSize: () => (classic.value ? background.naturalSize.value : null),
+  backgroundLayout: () => backgroundBox.value
 })
 
 /**
@@ -133,29 +141,27 @@ const viewport = useCanvasViewport({
  * one scale for both axes: the map's own space is extended, to the right or
  * below, to the pane's proportions, so a grid cell stays square and nothing is
  * distorted. What is stored as the map's size stays ``extents``. The classic
- * renderer and the settings preview show the map's own space as it is.
+ * renderer, the settings preview and a centered map show the map's own space as
+ * it is.
  */
 const space = computed(() => {
   const own = { width: extents.width.value, height: extents.height.value }
-  return classic.value || props.preview === true
+  return classic.value || props.preview === true || centered.value
     ? own
     : spaceFillingPane(own, viewport.restingPane.value)
 })
 
-/**
- * The background keeps the map's own space, at its origin: objects are placed
- * from the top left, so that is where the picture they sit on has to start.
- */
-const backgroundBox = computed(() => {
-  const { width, height } = space.value
-  if (width === extents.width.value && height === extents.height.value) {
-    return null
-  }
-  return {
-    size: `${(extents.width.value / width) * 100}% ${(extents.height.value / height) * 100}%`,
-    position: 'left top'
-  }
-})
+const backgroundBox = computed(() =>
+  classic.value
+    ? null
+    : backgroundLayout(
+        backgroundStyle.value,
+        props.config.background_position ?? 'top_left',
+        { width: extents.width.value, height: extents.height.value },
+        space.value,
+        background.naturalSize.value
+      )
+)
 
 // The line and label layers draw in display pixels so their strokes and glyphs
 // keep their proportions; they need the scale to place themselves against the

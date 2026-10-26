@@ -73,6 +73,10 @@ ClickAction = Literal["link", "none"]
 
 RenderMode = Literal["default", "nagvis_classic"]
 
+BackgroundStyle = Literal["single", "zoom", "stretch", "tile"]
+
+BackgroundPosition = Literal["top_left", "center"]
+
 
 class MapLabel(TypedDict):
     """A map object's label. The daemon rejects a partial one, so all of
@@ -278,6 +282,8 @@ class MapPayload(TypedDict):
     context_template: NotRequired[str | None]
     background_image: NotRequired[str | None]
     background_color: NotRequired[str]
+    background_style: NotRequired[BackgroundStyle]
+    background_position: NotRequired[BackgroundPosition]
     version: NotRequired[int]
 
 
@@ -291,6 +297,8 @@ class _MapFieldDefaults(TypedDict):
     click_action: ClickAction
     render_mode: RenderMode
     default_z: int
+    background_style: BackgroundStyle
+    background_position: BackgroundPosition
 
 
 class _ObjectFieldDefaults(TypedDict):
@@ -319,6 +327,8 @@ MAP_FIELD_DEFAULTS: Final[_MapFieldDefaults] = {
     "click_action": "link",
     "render_mode": "default",
     "default_z": 1,
+    "background_style": "single",
+    "background_position": "top_left",
 }
 OBJECT_FIELD_DEFAULTS: Final[_ObjectFieldDefaults] = {"x": 0, "y": 0, "url_target": "_blank"}
 LABEL_FIELD_DEFAULTS: Final[MapLabel] = {

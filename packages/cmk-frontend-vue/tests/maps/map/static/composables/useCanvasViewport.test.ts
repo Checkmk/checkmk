@@ -71,8 +71,10 @@ async function viewportInPane() {
       editMode: () => false,
       preview: () => false,
       classic: () => false,
+      centered: () => false,
       backgroundUrl: () => null,
-      backgroundSize: () => null
+      backgroundSize: () => null,
+      backgroundLayout: () => null
     })
   )!
   await nextTick()
@@ -95,9 +97,11 @@ function backgroundStyle(backgroundSize: { width: number; height: number } | nul
       height: () => 850,
       editMode: () => false,
       preview: () => false,
-      classic: () => backgroundSize !== null,
+      classic: () => true,
+      centered: () => false,
       backgroundUrl: () => 'floor.png',
-      backgroundSize: () => backgroundSize
+      backgroundSize: () => backgroundSize,
+      backgroundLayout: () => null
     })
   )
   const style = viewport?.style.value.backgroundSize ?? ''
@@ -132,7 +136,7 @@ describe('useCanvasViewport', () => {
     expect(backgroundStyle({ width: 640, height: 480 })).toBe('640px 480px')
   })
 
-  it('stretches the background over the canvas otherwise', () => {
+  it('stretches the background over the canvas until its size is known', () => {
     expect(backgroundStyle(null)).toBe('100% 100%')
   })
 })

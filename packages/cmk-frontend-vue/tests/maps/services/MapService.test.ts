@@ -51,6 +51,8 @@ const sampleMaps: MapRead[] = [
     render_mode: 'default',
     background_image: null,
     background_color: null,
+    background_style: 'single',
+    background_position: 'top_left',
     click_action: 'link',
     hover_template: null,
     context_template: null,

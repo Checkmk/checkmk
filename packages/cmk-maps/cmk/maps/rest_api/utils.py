@@ -12,6 +12,7 @@ mirror and the opaque ``map_spec`` dict that the pagetype store persists.
 import json
 from collections.abc import Callable, Mapping
 from http import HTTPStatus
+from typing import Final, get_args
 
 from pydantic import TypeAdapter, ValidationError
 
@@ -37,7 +38,12 @@ from cmk.maps.rest_api.models.response_models import (
     MapObject,
     MapVisibility,
 )
-from cmk.maps.shared.map_payload import ClickAction, RenderMode
+from cmk.maps.shared.map_payload import (
+    BackgroundPosition,
+    BackgroundStyle,
+    ClickAction,
+    RenderMode,
+)
 from cmk.web.utils import permission_verification as permissions
 
 # Resolving which maps the user may see checks for the other users' maps
@@ -338,6 +344,19 @@ def _render_mode(value: object) -> RenderMode:
     return "nagvis_classic" if value == "nagvis_classic" else "default"
 
 
+_BACKGROUND_STYLES: Final[Mapping[str, BackgroundStyle]] = {
+    value: value for value in get_args(BackgroundStyle)
+}
+
+
+def _background_style(value: object) -> BackgroundStyle:
+    return _BACKGROUND_STYLES.get(value, "single") if isinstance(value, str) else "single"
+
+
+def _background_position(value: object) -> BackgroundPosition:
+    return "center" if value == "center" else "top_left"
+
+
 def _click_action(value: object) -> ClickAction:
     return "none" if value == "none" else "link"
 
@@ -440,6 +459,8 @@ def serialize_map_list_entry(page: MapPage, *, can_edit: bool, can_delete: bool)
         object_count=cfg.object_count,
         background_image=_opt_str(payload.get("background_image")),
         background_color=_opt_str(payload.get("background_color")),
+        background_style=_background_style(payload.get("background_style")),
+        background_position=_background_position(payload.get("background_position")),
         icon_size=_opt_int(payload.get("icon_size")),
         rotation_interval=_int(payload.get("rotation_interval"), 0),
         rotation_pools=rotation_pools_of(payload.get("rotation_pools")),

@@ -42,6 +42,8 @@ from cmk.maps.shared.filters import (
 )
 from cmk.maps.shared.geo import LAT_LIMIT, LNG_LIMIT, MAX_ZOOM
 from cmk.maps.shared.map_payload import (
+    BackgroundPosition,
+    BackgroundStyle,
     ClickAction,
     LinePerfdataLabel,
     LineStyle,
@@ -975,6 +977,23 @@ class MapConfig:
     background_color: str | None | ApiOmitted = api_field(
         description="Background color.", example="#0f172a", default_factory=ApiOmitted
     )
+    background_style: BackgroundStyle | ApiOmitted = api_field(
+        description=(
+            "How the background image covers the map, in map coordinates: at its own size,"
+            " zoomed to fit without distortion, stretched to the map's size, or tiled."
+            " Ignored by the NagVis-compatible renderer."
+        ),
+        example="single",
+        default_factory=ApiOmitted,
+    )
+    background_position: BackgroundPosition | ApiOmitted = api_field(
+        description=(
+            "Where the background image and the map sit: at the top left, the map extended"
+            " to the right or below, or centered. Ignored by the NagVis-compatible renderer."
+        ),
+        example="top_left",
+        default_factory=ApiOmitted,
+    )
     render_mode: RenderMode | ApiOmitted = api_field(
         description="Rendering mode.", example="default", default_factory=ApiOmitted
     )
@@ -1024,6 +1043,23 @@ class MapListEntry:
     )
     background_color: str | None | ApiOmitted = api_field(
         description="Background color.", example="#0f172a", default_factory=ApiOmitted
+    )
+    background_style: BackgroundStyle | ApiOmitted = api_field(
+        description=(
+            "How the background image covers the map, in map coordinates: at its own size,"
+            " zoomed to fit without distortion, stretched to the map's size, or tiled."
+            " Ignored by the NagVis-compatible renderer."
+        ),
+        example="single",
+        default_factory=ApiOmitted,
+    )
+    background_position: BackgroundPosition | ApiOmitted = api_field(
+        description=(
+            "Where the background image and the map sit: at the top left, the map extended"
+            " to the right or below, or centered. Ignored by the NagVis-compatible renderer."
+        ),
+        example="top_left",
+        default_factory=ApiOmitted,
     )
     icon_size: int | None | ApiOmitted = api_field(
         description="Default icon size.", example=32, default_factory=ApiOmitted

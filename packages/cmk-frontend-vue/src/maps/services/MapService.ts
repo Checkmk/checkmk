@@ -259,6 +259,8 @@ export class MapService {
       rotation_interval: 0,
       sort_order: 0,
       click_action: 'link',
+      background_style: 'single',
+      background_position: 'top_left',
       render_mode: renderMode,
       default_z: 1,
       version: 0,
@@ -327,6 +329,8 @@ export class MapService {
       row.render_mode = merged.render_mode
       row.background_image = merged.background_image ?? null
       row.background_color = merged.background_color ?? null
+      row.background_style = merged.background_style ?? 'single'
+      row.background_position = merged.background_position ?? 'top_left'
       row.hover_template = merged.hover_template ?? null
       row.context_template = merged.context_template ?? null
       row.view = merged.view

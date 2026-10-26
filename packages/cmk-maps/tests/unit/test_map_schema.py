@@ -108,3 +108,16 @@ def test_rotation_pools_are_kept(pool: str) -> None:
     assert MapConfig.model_validate({"name": "m", "rotation_pools": [pool]}).rotation_pools == [
         pool
     ]
+
+
+def test_background_defaults_to_its_own_size_at_the_top_left() -> None:
+    cfg = MapConfig.model_validate({"name": "m"})
+    assert (cfg.background_style, cfg.background_position) == ("single", "top_left")
+
+
+@pytest.mark.parametrize(
+    "field, value", [("background_style", "cover"), ("background_position", "bottom")]
+)
+def test_unknown_background_layout_is_rejected(field: str, value: str) -> None:
+    with pytest.raises(ValidationError):
+        MapConfig.model_validate({"name": "m", field: value})

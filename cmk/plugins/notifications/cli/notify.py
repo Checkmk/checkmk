@@ -60,7 +60,7 @@ def _notification_exit_code(returncode: object) -> ExitCode:
 
 
 def _mode_notify(
-    omd_root: Path, _global_options: GlobalOptions, parsed: Options, args: Args
+    omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args
 ) -> ExitCode:
     options = _notify_flags(parsed)
     edition = edition_of_site(omd_root)
@@ -72,7 +72,7 @@ def _mode_notify(
         raise_mkterminate_on_sigint()
 
     with store.lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile):
-        loading_result = config.load(validate_hosts=False)
+        loading_result = config.load(validate_hosts=False, debug=global_options.debug)
 
     exit_status = do_notify(
         options,

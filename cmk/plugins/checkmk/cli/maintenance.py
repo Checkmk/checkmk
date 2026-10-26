@@ -40,10 +40,10 @@ from cmk.utils import ip_lookup
 
 
 def _mode_update_dns_cache(
-    _omd_root: Path, _global_options: GlobalOptions, options: Options, _args: Args
+    _omd_root: Path, global_options: GlobalOptions, options: Options, _args: Args
 ) -> ExitCode:
     fake_dns = fake_dns_address(options)
-    loading_result = config.load(validate_hosts=True)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     config_cache = loading_result.config_cache
     hosts_config = loading_result.hosts_config
     ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
@@ -92,9 +92,9 @@ cli_command_update_dns_cache = CLICommand(
 
 
 def _mode_cleanup_piggyback(
-    _omd_root: Path, _global_options: GlobalOptions, _options: Options, _args: Args
+    _omd_root: Path, global_options: GlobalOptions, _options: Options, _args: Args
 ) -> ExitCode:
-    loaded_config = config.load(validate_hosts=True).loaded_config
+    loaded_config = config.load(validate_hosts=True, debug=global_options.debug).loaded_config
     piggyback_backend.cleanup_piggyback_files(
         now=time.time(),
         max_cache_file_age=loaded_config.piggyback_max_cachefile_age,
@@ -140,7 +140,7 @@ def _mode_flush(
 ) -> ExitCode:
     hosts = host_addresses(args)
     plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     hosts_config = loading_result.hosts_config

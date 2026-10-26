@@ -11,7 +11,6 @@ from collections.abc import Callable, Iterable, Iterator, Mapping
 from pathlib import Path
 from typing import override
 
-import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.config import get_legacy_default_base_config
@@ -104,12 +103,12 @@ class ConfigFileLoadError(Exception):
 
 
 @contextlib.contextmanager
-def exit_on_config_file_load_error() -> Iterator[None]:
+def exit_on_config_file_load_error(*, debug: bool) -> Iterator[None]:
     """Report an unreadable config file and end the process, unless debugging"""
     try:
         yield
     except ConfigFileLoadError as e:
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise
         if sys.stderr.isatty():
             console.error(str(e), file=sys.stderr)

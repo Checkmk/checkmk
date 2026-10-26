@@ -238,7 +238,7 @@ def _mode_snmpwalk(
     if not hostnames:
         raise MKBailOut("Please specify host names to walk on.")
 
-    config_cache = config.load(validate_hosts=True).config_cache
+    config_cache = config.load(validate_hosts=True, debug=global_options.debug).config_cache
     ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_address_of = ip_lookup.make_lookup_ip_address(ip_lookup_config)
 
@@ -327,7 +327,7 @@ cli_command_snmpwalk = CLICommand(
 
 
 def _mode_snmpget(
-    _omd_root: Path, _global_options: GlobalOptions, options: Options, args: Args
+    _omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
 ) -> ExitCode:
     fake_dns = fake_dns_address(options)
     if not args:
@@ -337,7 +337,7 @@ def _mode_snmpget(
     except ValueError as exc:
         raise MKBailOut("Unknown SNMP backend") from exc
 
-    loading_result = config.load(validate_hosts=True)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     config_cache = loading_result.config_cache
     hosts_config = loading_result.hosts_config
 

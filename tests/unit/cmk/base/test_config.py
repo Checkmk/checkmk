@@ -2870,17 +2870,18 @@ def test_load_raw_config_raises_on_an_unreadable_config_file(main_mk: Path) -> N
     assert str(excinfo.value) == f"Cannot read in configuration file {main_mk}: broken"
 
 
-@pytest.mark.usefixtures("disable_debug")
 def test_exit_on_config_file_load_error_ends_the_process() -> None:
-    with pytest.raises(SystemExit) as excinfo, config.exit_on_config_file_load_error():
+    with pytest.raises(SystemExit) as excinfo, config.exit_on_config_file_load_error(debug=False):
         raise config.ConfigFileLoadError(Path("main.mk"), ValueError("broken"))
 
     assert excinfo.value.code == 1
 
 
-@pytest.mark.usefixtures("enable_debug_fixture")
 def test_exit_on_config_file_load_error_reraises_when_debugging() -> None:
-    with pytest.raises(config.ConfigFileLoadError), config.exit_on_config_file_load_error():
+    with (
+        pytest.raises(config.ConfigFileLoadError),
+        config.exit_on_config_file_load_error(debug=True),
+    ):
         raise config.ConfigFileLoadError(Path("main.mk"), ValueError("broken"))
 
 
@@ -2981,7 +2982,7 @@ cmc_host_rrd_config = [
     _add_host_in_folder(wato_lvl2_folder, "lvl2-host")
     _add_rule_in_folder(wato_lvl2_folder, "LVL2")
 
-    yield config.load(validate_hosts=True).loaded_config
+    yield config.load(validate_hosts=True, debug=True).loaded_config
 
     # Cleanup after the test. Would be better to use a dedicated test directory
     cmk.utils.paths.main_config_file.unlink()
@@ -3072,7 +3073,7 @@ def test_explicit_setting_loading() -> None:
         for foldername, setting, values in settings:
             _add_explicit_setting_in_folder(wato_main_folder / foldername, setting, values)
 
-        loading_result = config.load(validate_hosts=True)
+        loading_result = config.load(validate_hosts=True, debug=True)
         explicit_host_conf = loading_result.loaded_config.explicit_host_conf
         assert explicit_host_conf["parents"][HostName("hostA")] == "setting1"
         assert explicit_host_conf["parents"][HostName("hostB")] == "setting2"

@@ -2604,7 +2604,7 @@ def _automation_get_configuration(
     # that could be too much for the command line
     variable_names = {str(vn) for vn in ast.literal_eval(sys.stdin.read())}
 
-    with config.exit_on_config_file_load_error():
+    with config.exit_on_config_file_load_error(debug=cmk.ccc.debug.enabled()):
         raw_config = config.load_raw_config(
             config_files=config.get_config_file_paths(with_conf_d=False)
         )

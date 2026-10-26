@@ -112,11 +112,11 @@ def _print_available_plugins(catalogue: Mapping[str, DiagnosticsPlugin]) -> None
 
 
 def _mode_create_diagnostics_dump(
-    _omd_root: Path, _global_options: GlobalOptions, parsed: Options, _args: Args
+    _omd_root: Path, global_options: GlobalOptions, parsed: Options, _args: Args
 ) -> ExitCode:
     options = _cli_selection(parsed)
 
-    with exit_on_config_file_load_error():
+    with exit_on_config_file_load_error(debug=global_options.debug):
         raw_config = load_raw_config()
 
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.

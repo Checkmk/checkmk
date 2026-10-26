@@ -364,7 +364,7 @@ def _check_failed_gui_plugins(logger: logging.Logger) -> None:
 
 
 def _initialize_base_environment() -> None:
-    base_config.load(validate_hosts=True)
+    base_config.load(validate_hosts=True, debug=debug.enabled())
 
 
 @contextmanager

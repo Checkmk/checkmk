@@ -613,8 +613,8 @@ class LoadingResult:
     config_cache: ConfigCache
 
 
-def load(validate_hosts: bool) -> LoadingResult:
-    with exit_on_config_file_load_error():
+def load(validate_hosts: bool, *, debug: bool) -> LoadingResult:
+    with exit_on_config_file_load_error(debug=debug):
         raw_config = load_raw_config()
 
     loading_result = perform_post_config_loading_actions(

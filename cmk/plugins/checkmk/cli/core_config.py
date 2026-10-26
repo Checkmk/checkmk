@@ -54,7 +54,7 @@ def _mode_dump_nagios_config(
     from cmk.base.core.nagios._create_config import NagiosCoreConfig
 
     plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -206,7 +206,7 @@ def _mode_update(
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
     plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -335,7 +335,7 @@ def _mode_restart(
     fake_dns = fake_dns_address(options)
     args = host_addresses(raw_host_names)
     plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -457,7 +457,7 @@ def _mode_reload(
     fake_dns = fake_dns_address(options)
     args = host_addresses(raw_host_names)
     plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager

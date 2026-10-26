@@ -123,7 +123,7 @@ def _mode_check_discovery(
     latest_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
 
     plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     config_cache = loading_result.config_cache
     ruleset_matcher = config_cache.ruleset_matcher
@@ -408,7 +408,7 @@ def _mode_discover(
     fake_dns = fake_dns_address(parsed)
     options = _discovery_options(parsed)
     plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     hosts_config = loading_result.hosts_config
     host_tags = loading_result.host_tags

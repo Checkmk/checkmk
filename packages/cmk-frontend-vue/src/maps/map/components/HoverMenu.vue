@@ -5,14 +5,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import HoverCard from '@/maps/map/components/HoverCard.vue'
 import HoverCardHeadline from '@/maps/map/components/HoverCardHeadline.vue'
-import HoverPillRow, { type HoverPill } from '@/maps/map/components/HoverPillRow.vue'
+import HoverStateCounts, { type HoverStateCount } from '@/maps/map/components/HoverStateCounts.vue'
 import { useMetricInfo } from '@/maps/map/composables/useMetricInfo'
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
 import { displayRows, perfometerCaption } from '@/maps/map/composables/usePerfometer'
+import MapStateTag from '@/maps/map/radar/components/MapStateTag.vue'
 import { useMapsApis } from '@/maps/services/context'
 import type { MapElement, ObjectState, ServicesSummary } from '@/maps/types/api'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
@@ -23,6 +25,7 @@ import {
   getEffectiveObjectType,
   getMapElementIdentifier
 } from '@/maps/utils/naming'
+import { stateCountWordFromToken } from '@/maps/utils/objectAria'
 import { usePointerOverlayStyle } from '@/maps/utils/overlayFrame'
 import { type PerfMetric, parsePerfData, utilColor, utilPercent } from '@/maps/utils/perf'
 import { sanitizeTemplateHtml } from '@/maps/utils/sanitize'
@@ -151,22 +154,6 @@ const hasMonitoring = computed(
 const isNoPermission = computed(() => props.state?.state === 'NO_PERMISSION')
 const isNotFound = computed(() => props.state?.state === 'NOT_FOUND')
 
-const STATE_TEXT: Record<string, string> = {
-  UP: 'maps-hover-menu__state--ok',
-  OK: 'maps-hover-menu__state--ok',
-  DOWN: 'maps-hover-menu__state--down',
-  CRITICAL: 'maps-hover-menu__state--down',
-  UNREACHABLE: 'maps-hover-menu__state--unknown',
-  UNKNOWN: 'maps-hover-menu__state--unknown',
-  WARNING: 'maps-hover-menu__state--warn',
-  PENDING: 'maps-hover-menu__state--pending'
-}
-
-const dotState = computed(() => (hasMonitoring.value ? (props.state?.state ?? 'PENDING') : null))
-const stateTextColor = computed(
-  () => STATE_TEXT[props.state?.state ?? 'PENDING'] ?? 'maps-hover-menu__state--pending'
-)
-
 const subtitleText = computed(() => {
   const parts: string[] = [hoverTypeLabel.value]
   const seen = new Set<string>([displayName.value])
@@ -265,9 +252,9 @@ const nextCheckText = computed((): NextCheckText | null => {
   }
 })
 
-interface PillRow {
-  label: string
-  pills: HoverPill[]
+interface CountRow {
+  label: TranslatedString
+  counts: HoverStateCount[]
 }
 
 const dyngroupHostSet = computed<string[] | null>(() =>
@@ -278,8 +265,8 @@ const dyngroupHostSet = computed<string[] | null>(() =>
     : null
 )
 
-// Severity-descending, so the worst state reads first.
-function buildPills(summary: ServicesSummary, kind: 'hosts' | 'services'): HoverPill[] {
+// Every state, in the order the monitoring views count them.
+function buildCounts(summary: ServicesSummary, kind: 'hosts' | 'services'): HoverStateCount[] {
   const hosts = dyngroupHostSet.value
   const linkFor = (state: string | null): string | null => {
     if (!state || !props.checkmkUrl) {
@@ -308,48 +295,41 @@ function buildPills(summary: ServicesSummary, kind: 'hosts' | 'services'): Hover
   const defs =
     kind === 'hosts'
       ? ([
-          { key: 'critical', label: 'DOWN', tone: 'crit', state: 'DOWN' },
-          { key: 'unknown', label: 'UNREACH', tone: 'unknown', state: 'UNREACHABLE' },
-          { key: 'pending', label: 'PEND', tone: 'pending', state: null },
-          { key: 'ok', label: 'UP', tone: 'ok', state: 'UP' }
+          { key: 'ok', word: 'UP', tone: 'ok', state: 'UP' },
+          { key: 'critical', word: 'DOWN', tone: 'crit', state: 'DOWN' },
+          { key: 'unknown', word: 'UNREACHABLE', tone: 'unknown', state: 'UNREACHABLE' },
+          { key: 'pending', word: 'PENDING', tone: 'pending', state: null }
         ] as const)
       : ([
-          { key: 'critical', label: 'CRIT', tone: 'crit', state: 'CRITICAL' },
-          { key: 'unknown', label: 'UNKN', tone: 'unknown', state: 'UNKNOWN' },
-          { key: 'warning', label: 'WARN', tone: 'warn', state: 'WARNING' },
-          { key: 'pending', label: 'PEND', tone: 'pending', state: 'PENDING' },
-          { key: 'ok', label: 'OK', tone: 'ok', state: 'OK' }
+          { key: 'ok', word: 'OK', tone: 'ok', state: 'OK' },
+          { key: 'warning', word: 'WARNING', tone: 'warn', state: 'WARNING' },
+          { key: 'critical', word: 'CRITICAL', tone: 'crit', state: 'CRITICAL' },
+          { key: 'unknown', word: 'UNKNOWN', tone: 'unknown', state: 'UNKNOWN' },
+          { key: 'pending', word: 'PENDING', tone: 'pending', state: 'PENDING' }
         ] as const)
-  return defs
-    .filter((d) => (summary[d.key] ?? 0) > 0)
-    .map((d) => ({
-      label: d.label,
-      count: summary[d.key] ?? 0,
-      tone: d.tone,
-      url: linkFor(d.state)
-    }))
+  return defs.map((d) => ({
+    label: stateCountWordFromToken(_t, d.word),
+    count: summary[d.key] ?? 0,
+    tone: d.tone,
+    url: linkFor(d.state)
+  }))
 }
 
-const pillRows = computed<PillRow[]>(() => {
+const countRows = computed<CountRow[]>(() => {
   if (!['host', 'hostgroup', 'servicegroup', 'dyngroup'].includes(target.value.type)) {
     return []
   }
-  const rows: PillRow[] = []
+  const rows: CountRow[] = []
   const hs = props.state?.hosts_summary
   if (hs) {
-    const pills = buildPills(hs, 'hosts')
-    if (pills.length) {
-      rows.push({ label: _t('Hosts'), pills })
-    }
+    rows.push({ label: _t('Hosts'), counts: buildCounts(hs, 'hosts') })
   }
   const ss = props.state?.services_summary
   if (ss) {
-    const pills = buildPills(ss, 'services')
-    if (pills.length) {
-      rows.push({ label: _t('Services'), pills })
-    }
+    rows.push({ label: _t('Services'), counts: buildCounts(ss, 'services') })
   }
-  return rows
+  // An empty group has nothing to count, and the bar would read "No services".
+  return rows.filter((row) => row.counts.some((entry) => entry.count > 0))
 })
 
 const perfMetrics = computed((): PerfMetric[] => {
@@ -391,14 +371,13 @@ function fmtMetricValue(m: PerfMetric): string {
       <!-- eslint-enable vue/no-v-html -->
 
       <template v-else>
-        <HoverCardHeadline :name="displayName" :subtitle="subtitleText" :state="dotState">
-          <span
+        <HoverCardHeadline :name="displayName" :subtitle="subtitleText" :state="null">
+          <MapStateTag
             v-if="hasMonitoring && state"
+            :state="state.state"
+            :kind="state.type === 'service' ? 'service' : 'host'"
             class="maps-hover-menu__state"
-            :class="stateTextColor"
-          >
-            {{ state.state }}
-          </span>
+          />
           <span v-if="hasMonitoring && state && stateDuration" class="maps-hover-menu__since">
             {{ _t('since %{duration}', { duration: stateDuration }) }}
           </span>
@@ -491,14 +470,14 @@ function fmtMetricValue(m: PerfMetric): string {
             {{ state.output }}
           </div>
 
-          <!-- State pills, one labelled row per summary (host dyngroups show
-                         both Hosts and Services); each pill deep-links to the
-                         matching filtered Checkmk view. -->
-          <HoverPillRow
-            v-for="row in pillRows"
+          <!-- One labelled set of counts per summary (host dyngroups show both
+               Hosts and Services); each count deep-links to the matching
+               filtered Checkmk view. -->
+          <HoverStateCounts
+            v-for="row in countRows"
             :key="row.label"
             :label="row.label"
-            :pills="row.pills"
+            :counts="row.counts"
           />
 
           <div v-if="cmkPerfometer" class="maps-hover-menu__perfometer">
@@ -589,29 +568,7 @@ function fmtMetricValue(m: PerfMetric): string {
 
 .maps-hover-menu__state {
   flex-shrink: 0;
-  font-size: var(--font-size-normal);
-  line-height: 1.25;
-  font-weight: var(--font-weight-bold);
-}
-
-.maps-hover-menu__state--ok {
-  color: var(--status-text-color-success-bright);
-}
-
-.maps-hover-menu__state--down {
-  color: var(--status-text-color-error-bright);
-}
-
-.maps-hover-menu__state--unknown {
-  color: var(--status-text-color-unknown-bright);
-}
-
-.maps-hover-menu__state--warn {
-  color: var(--status-text-color-warning-bright);
-}
-
-.maps-hover-menu__state--pending {
-  color: var(--font-color-dimmed);
+  align-self: center;
 }
 
 .maps-hover-menu__since {

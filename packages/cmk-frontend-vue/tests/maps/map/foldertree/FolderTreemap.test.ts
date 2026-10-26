@@ -187,7 +187,7 @@ describe('FolderTreemap', () => {
       clientX: 100,
       clientY: 100
     })
-    expect(await screen.findByRole('link', { name: /1 WARN/ })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /WARN: 1/ })).toBeInTheDocument()
     unfiltered.unmount()
 
     renderTreemap('rack', cmk, warned())
@@ -197,6 +197,25 @@ describe('FolderTreemap', () => {
     })
     await screen.findByText('Folder')
     expect(screen.queryByRole('link')).toBeNull()
+  })
+
+  it('names the states on a folder card like the other hover cards', async () => {
+    const unknown = aFolderNode({
+      path: '/main',
+      title: 'Main',
+      kind: 'folder',
+      host_count: 1,
+      severity_counts: { UNKNOWN: 1 },
+      state: 'UNKNOWN'
+    })
+
+    renderTreemap('', 'http://checkmk/site/check_mk/', unknown)
+    await fireEvent.mouseMove(await screen.findByRole('button', { name: /^Main/ }), {
+      clientX: 100,
+      clientY: 100
+    })
+
+    expect(await screen.findByRole('link', { name: /^UNKNOWN: 1/ })).toBeInTheDocument()
   })
 
   it('takes the folder card down when the folder menu opens', async () => {

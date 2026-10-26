@@ -12,10 +12,13 @@ import { computed, ref } from 'vue'
 
 import HoverCard from '@/maps/map/components/HoverCard.vue'
 import HoverCardHeadline from '@/maps/map/components/HoverCardHeadline.vue'
-import HoverPillRow, { type HoverPill, type PillTone } from '@/maps/map/components/HoverPillRow.vue'
+import HoverStateCounts, {
+  type HoverStateCount,
+  type StateCountTone
+} from '@/maps/map/components/HoverStateCounts.vue'
 import type { FolderTreeNode } from '@/maps/types/api'
 import { buildFolderStateViewUrl } from '@/maps/utils/mapNavigation'
-import { stateShortWordFromToken } from '@/maps/utils/objectAria'
+import { stateCountWordFromToken } from '@/maps/utils/objectAria'
 import { usePointerOverlayStyle } from '@/maps/utils/overlayFrame'
 import { severityPills } from '@/maps/utils/stateColors'
 
@@ -40,8 +43,8 @@ const { _t, _tn } = usei18n()
 /** Where the card opens: off the pointer, so it does not sit under it. */
 const POINTER_OFFSET = 12
 
-// Only the pill tone is the card's own; order and words are the folder tree's.
-const PILL_TONE: Record<string, PillTone> = {
+// Only the tone is the card's own; the order is the folder tree's.
+const TONE: Record<string, StateCountTone> = {
   CRITICAL: 'crit',
   DOWN: 'crit',
   UNKNOWN: 'unknown',
@@ -49,20 +52,23 @@ const PILL_TONE: Record<string, PillTone> = {
   WARNING: 'warn'
 }
 
-const pills = computed<HoverPill[]>(() => {
+const counts = computed<HoverStateCount[]>(() => {
   const problems = severityPills(props.folder.severity_counts).map(({ state, count }) => ({
-    label: stateShortWordFromToken(_t, state),
-    tone: PILL_TONE[state] ?? 'pending',
+    label: stateCountWordFromToken(_t, state),
+    tone: TONE[state] ?? 'pending',
     count,
     // The "all OK" bundle has no folder of its own to filter on.
     url: props.folder.ok_group
       ? null
       : buildFolderStateViewUrl(props.checkmkUrl, props.folder.path, state)
   }))
-  const counted = problems.reduce((sum, pill) => sum + pill.count, 0)
+  const counted = problems.reduce((sum, entry) => sum + entry.count, 0)
   const healthy = Math.max(0, props.folder.host_count - counted)
   return healthy > 0
-    ? [...problems, { label: _t('OK'), tone: 'ok', count: healthy, url: null }]
+    ? [
+        ...problems,
+        { label: stateCountWordFromToken(_t, 'OK'), tone: 'ok' as const, count: healthy, url: null }
+      ]
     : problems
 })
 
@@ -95,7 +101,7 @@ const positionStyle = usePointerOverlayStyle(rootEl, () => ({
       >
         <span class="maps-folder-hover-card__hosts">{{ hosts }}</span>
       </HoverCardHeadline>
-      <HoverPillRow v-if="pills.length" :label="_t('Hosts')" :pills="pills" />
+      <HoverStateCounts v-if="counts.length" :label="_t('Hosts')" :counts="counts" />
       <div v-if="clickHint" class="maps-folder-hover-card__hint">{{ clickHint }}</div>
     </HoverCard>
   </div>

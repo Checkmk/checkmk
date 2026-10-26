@@ -9,7 +9,7 @@ import { describe, expect, it, vi } from 'vitest'
 import HoverMenu from '@/maps/map/components/HoverMenu.vue'
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
 
-import { anObject } from '../../support/fixtures'
+import { aState, anObject } from '../../support/fixtures'
 import { mapsGlobal } from '../../support/services'
 
 // Embedded in the Checkmk page, the card's fixed overlay is contained by the
@@ -111,5 +111,28 @@ describe('HoverMenu placement', () => {
     // 480 (anchor top) - 8 (gap) - 250 (grown card height).
     await waitFor(() => expect(style.top).toBe('222px'))
     vi.unstubAllGlobals()
+  })
+})
+
+describe('HoverMenu state counts', () => {
+  it('leaves out a summary with nothing to count', async () => {
+    const { findByText, queryByText } = render(HoverMenu, {
+      props: {
+        object: anObject({ id: 'o1', type: 'hostgroup', group_name: 'web' }),
+        state: aState({
+          object_id: 'o1',
+          type: 'hostgroup',
+          state: 'OK',
+          hosts_summary: { ok: 0, warning: 0, critical: 0, unknown: 0, pending: 0 },
+          services_summary: { ok: 2, warning: 0, critical: 0, unknown: 0, pending: 0 }
+        }),
+        x: 0,
+        y: 0,
+        anchorRect: null
+      },
+      global: mapsGlobal()
+    })
+    await findByText('Services')
+    expect(queryByText('Hosts')).toBeNull()
   })
 })

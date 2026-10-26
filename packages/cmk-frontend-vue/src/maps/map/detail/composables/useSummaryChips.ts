@@ -3,8 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
+import type { MapStateCount } from '@/maps/map/components/MapStateCounts.vue'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 import {
   buildHostStateViewUrl,
@@ -12,20 +14,12 @@ import {
   hostStateOn,
   stripCheckmkBase
 } from '@/maps/utils/mapNavigation'
-
-export interface SummaryChip {
-  state: string
-  count: number
-  label: string
-  tone: 'crit' | 'warn' | 'unknown' | 'pending' | 'ok'
-  url: string | null
-}
+import { summaryStateCounts } from '@/maps/utils/stateCounts'
 
 interface SummaryChipsOptions {
   object: () => MapElement | null
   state: () => ObjectState | undefined
   checkmkUrl: () => string | null | undefined
-  isSite: () => boolean
   /** Member host names for a dyngroup, so its chips can deep-link by host_regex. */
   dyngroupHosts?: () => string[] | null
 }
@@ -33,16 +27,15 @@ interface SummaryChipsOptions {
 /**
  * State-count chip rows shown in the drawer header: per-service-state chips for
  * whatever counts services, and per-host-state chips for groups of hosts and
- * sites. Each chip links into the matching Checkmk view. Host counts for a site
- * are parsed out of the site's status output ("504 hosts (504 up, 0 down,
- * 0 unreachable)").
+ * sites. Each chip links into the matching Checkmk view.
  */
 export function useSummaryChips(options: SummaryChipsOptions) {
-  const { object, state, checkmkUrl, isSite, dyngroupHosts } = options
+  const { object, state, checkmkUrl, dyngroupHosts } = options
+  const { _t } = usei18n()
 
-  function buildServiceChipUrl(stateName: string, count: number): string | null {
+  function buildServiceChipUrl(stateName: string): string | null {
     const obj = object()
-    if (count <= 0 || !obj) {
+    if (!obj) {
       return null
     }
     if (obj.type === 'dyngroup') {
@@ -60,10 +53,10 @@ export function useSummaryChips(options: SummaryChipsOptions) {
     return buildServiceStateViewUrl(checkmkUrl() ?? null, target, stateName)
   }
 
-  function buildHostChipUrl(stateName: string, count: number): string | null {
+  function buildHostChipUrl(stateName: string): string | null {
     const obj = object()
     const url = checkmkUrl()
-    if (count <= 0 || !url || !obj) {
+    if (!url || !obj) {
       return null
     }
     if (obj.type === 'dyngroup') {
@@ -84,79 +77,14 @@ export function useSummaryChips(options: SummaryChipsOptions) {
     return `${base}/check_mk/view.py?${new URLSearchParams(params)}`
   }
 
-  const serviceChips = computed<SummaryChip[]>(() => {
+  const serviceChips = computed<MapStateCount[]>(() => {
     const s = state()?.services_summary
-    if (!s) {
-      return []
-    }
-    const make = (
-      stateName: string,
-      count: number,
-      label: string,
-      tone: SummaryChip['tone']
-    ): SummaryChip => ({
-      state: stateName,
-      count,
-      label,
-      tone,
-      url: buildServiceChipUrl(stateName, count)
-    })
-    // Hide problem chips at zero (visual noise); always keep the OK anchor so
-    // the operator sees an "all green" cue when nothing is wrong.
-    return [
-      make('CRITICAL', s.critical ?? 0, 'CRIT', 'crit'),
-      make('WARNING', s.warning ?? 0, 'WARN', 'warn'),
-      make('UNKNOWN', s.unknown ?? 0, 'UNKN', 'unknown'),
-      make('PENDING', s.pending ?? 0, 'PEND', 'pending'),
-      make('OK', s.ok ?? 0, 'OK', 'ok')
-    ].filter((chip) => chip.state === 'OK' || chip.count > 0)
+    return s ? summaryStateCounts(_t, s, 'services', buildServiceChipUrl) : []
   })
 
-  // Site state output looks like "504 hosts (504 up, 0 down, 0 unreachable)";
-  // extract the host counts so we can render the same kind of chip row as services.
-  const hostsSummary = computed<{ up: number; down: number; unreachable: number } | null>(() => {
-    // Groups carry their member host-state rollup (UP→ok, DOWN→critical,
-    // UNREACHABLE→unknown).
-    const hs = state()?.hosts_summary
-    if (hs) {
-      return { up: hs.ok ?? 0, down: hs.critical ?? 0, unreachable: hs.unknown ?? 0 }
-    }
-    if (!isSite()) {
-      return null
-    }
-    const out = state()?.output
-    if (!out) {
-      return null
-    }
-    const m = out.match(/(\d+)\s+up,\s*(\d+)\s+down,\s*(\d+)\s+unreachable/)
-    if (!m?.[1] || !m[2] || !m[3]) {
-      return null
-    }
-    return { up: parseInt(m[1], 10), down: parseInt(m[2], 10), unreachable: parseInt(m[3], 10) }
-  })
-
-  const hostChips = computed<SummaryChip[]>(() => {
-    const h = hostsSummary.value
-    if (!h) {
-      return []
-    }
-    const make = (
-      stateName: string,
-      count: number,
-      label: string,
-      tone: SummaryChip['tone']
-    ): SummaryChip => ({
-      state: stateName,
-      count,
-      label,
-      tone,
-      url: buildHostChipUrl(stateName, count)
-    })
-    return [
-      make('DOWN', h.down, 'DOWN', 'crit'),
-      make('UNREACHABLE', h.unreachable, 'UNREACH', 'warn'),
-      make('UP', h.up, 'UP', 'ok')
-    ].filter((chip) => chip.state === 'UP' || chip.count > 0)
+  const hostChips = computed<MapStateCount[]>(() => {
+    const s = state()?.hosts_summary
+    return s ? summaryStateCounts(_t, s, 'hosts', buildHostChipUrl) : []
   })
 
   return { serviceChips, hostChips }

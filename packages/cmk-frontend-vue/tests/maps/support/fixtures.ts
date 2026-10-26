@@ -121,6 +121,7 @@ export function aDetails(
     service_groups: [],
     contact_groups: [],
     labels: {},
+    label_sources: {},
     comments: [],
     downtimes: [],
     ...overrides

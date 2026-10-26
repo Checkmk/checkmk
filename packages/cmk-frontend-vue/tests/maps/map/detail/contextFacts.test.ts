@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest'
 import {
   configRows,
   hasContextFacts,
-  labelEntries,
+  labelItems,
   topologyGroups
 } from '@/maps/map/detail/contextFacts'
 
@@ -78,6 +78,23 @@ describe('topologyGroups', () => {
   })
 })
 
+describe('labelItems', () => {
+  // Same order and source colors as the label chips in Checkmk's own slide-in.
+  it('sorts the labels and colors them by source', () => {
+    const details = aDetails({
+      type: 'host',
+      host_name: 'web01',
+      labels: { os: 'linux', env: 'prod', zone: 'a' },
+      label_sources: { os: 'discovered', env: 'explicit' }
+    })
+    expect(labelItems(details)).toEqual([
+      { keyValue: { key: 'env', value: 'prod' }, color: 'explicit' },
+      { keyValue: { key: 'os', value: 'linux' }, color: 'discovered' },
+      { keyValue: { key: 'zone', value: 'a' }, color: 'label' }
+    ])
+  })
+})
+
 describe('hasContextFacts', () => {
   it('is false for details that carry nothing worth a tab', () => {
     expect(hasContextFacts(aDetails({ type: 'host', host_name: 'web01' }), _t)).toBe(false)
@@ -85,7 +102,6 @@ describe('hasContextFacts', () => {
 
   it('is true as soon as there is a single label', () => {
     const details = aDetails({ type: 'host', host_name: 'web01', labels: { env: 'prod' } })
-    expect(labelEntries(details)).toEqual([['env', 'prod']])
     expect(hasContextFacts(details, _t)).toBe(true)
   })
 

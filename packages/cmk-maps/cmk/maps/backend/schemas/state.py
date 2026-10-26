@@ -114,6 +114,8 @@ class ObjectDetails(BaseModel):
     service_groups: list[str] = []
     contact_groups: list[str] = []
     labels: dict[str, str] = {}
+    # discovered, explicit or ruleset, keyed like ``labels``.
+    label_sources: dict[str, str] = {}
     comments: list[CommentInfo] = []
     downtimes: list[DowntimeInfo] = []
 

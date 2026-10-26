@@ -54,7 +54,7 @@ describe('DetailAggregationSection – the view switch', () => {
     renderSection()
 
     // Named, so the two labels are not the only thing identifying it — the
-    // drawer is 360px wide and the control carries no visible label of its own.
+    // drawer is 400px wide and the control carries no visible label of its own.
     const control = screen.getByRole('combobox', { name: 'Aggregation view' })
     // CmkDropdown resolves the selected option's label a tick after mount.
     await waitFor(() => expect(control).toHaveTextContent('Summary (depth 2)'))

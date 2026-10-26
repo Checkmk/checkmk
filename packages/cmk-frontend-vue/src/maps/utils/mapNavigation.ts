@@ -222,6 +222,9 @@ export function hostStateOn(state: string): string {
   if (state === 'UNREACHABLE') {
     return 'hst2'
   }
+  if (state === 'PENDING') {
+    return 'hstp'
+  }
   return 'hst0' // UP
 }
 
@@ -294,7 +297,7 @@ export function buildHostStateViewUrl(
   if (!checkmkUrl) {
     return null
   }
-  if (!['UP', 'DOWN', 'UNREACHABLE'].includes(state)) {
+  if (!['UP', 'DOWN', 'UNREACHABLE', 'PENDING'].includes(state)) {
     return null
   }
   if (!hosts.length || hosts.length > _MAX_HOST_REGEX_MEMBERS) {

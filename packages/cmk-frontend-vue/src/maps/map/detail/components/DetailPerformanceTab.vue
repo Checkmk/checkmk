@@ -118,8 +118,6 @@ const { _t } = usei18n()
 .maps-detail-performance-tab__headline-label {
   color: var(--font-color-dimmed);
   font-size: var(--font-size-small);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   font-weight: var(--font-weight-medium);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -140,9 +138,7 @@ const { _t } = usei18n()
 
 .maps-detail-performance-tab__heading {
   font-size: var(--font-size-small);
-  text-transform: uppercase;
   color: var(--font-color-dimmed);
-  letter-spacing: 0.04em;
   font-weight: var(--font-weight-medium);
   margin: var(--dimension-3) 0 var(--dimension-4);
 }
@@ -180,8 +176,6 @@ const { _t } = usei18n()
   cursor: pointer;
   color: var(--font-color-dimmed);
   font-size: var(--font-size-small);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   font-weight: var(--font-weight-medium);
   padding: var(--dimension-3) 0;
   user-select: none;
@@ -208,9 +202,7 @@ const { _t } = usei18n()
 
 .maps-detail-performance-tab__row-label {
   color: var(--font-color-dimmed);
-  text-transform: uppercase;
   font-size: var(--font-size-small);
-  letter-spacing: 0.04em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

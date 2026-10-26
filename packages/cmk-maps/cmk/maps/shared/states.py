@@ -17,12 +17,25 @@ frontend's type for them; ``tests/unit/cmk/gui/maps/test_critical_states.py`` pi
 this set to that definition, since this layer may not import it.
 """
 
+from collections.abc import Mapping
 from typing import Final, Literal
 
 # Livestatus integer state → the string token the SPA renders. Host and service
 # use disjoint token sets on purpose (UP/DOWN/UNREACHABLE vs OK/WARNING/...).
 HOST_STATE_MAP: Final[dict[int, str]] = {0: "UP", 1: "DOWN", 2: "UNREACHABLE"}
 SERVICE_STATE_MAP: Final[dict[int, str]] = {0: "OK", 1: "WARNING", 2: "CRITICAL", 3: "UNKNOWN"}
+
+
+def state_token(state: int, has_been_checked: bool, states: Mapping[int, str]) -> str:
+    """The token of a Livestatus host or service state.
+
+    The core reports an object that was never checked as state 0, which would
+    read as UP / OK; the views show it as pending.
+    """
+    if not has_been_checked:
+        return "PENDING"
+    return states.get(state, "UNKNOWN")
+
 
 # One combined severity scale across host *and* service states, so a worst-state
 # roll-up over a mixed set (e.g. a folder or map-link that spans both) orders them

@@ -17,7 +17,7 @@ The results are plain frozen dataclasses; :mod:`cmk.maps.rest_api.internal` maps
 them onto the wire models its endpoints publish.
 """
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from cmk.gui.exceptions import MKUserError
@@ -33,7 +33,7 @@ from cmk.livestatus_client.tables.services import Services
 from cmk.maps.shared.filters import normalize_object_filter
 from cmk.maps.shared.geo import resolve_host_coords
 from cmk.maps.shared.perfdata import parse_perf_metrics
-from cmk.maps.shared.states import HOST_STATE_MAP, SERVICE_STATE_MAP
+from cmk.maps.shared.states import HOST_STATE_MAP, SERVICE_STATE_MAP, state_token
 
 _HOST_MEMBER_COLUMNS = [
     Hosts.name,
@@ -43,6 +43,7 @@ _HOST_MEMBER_COLUMNS = [
     Hosts.scheduled_downtime_depth,
     Hosts.notifications_enabled,
     Hosts.last_state_change,
+    Hosts.has_been_checked,
 ]
 _SVC_MEMBER_COLUMNS = [
     Services.host_name,
@@ -53,6 +54,7 @@ _SVC_MEMBER_COLUMNS = [
     Services.scheduled_downtime_depth,
     Services.notifications_enabled,
     Services.last_state_change,
+    Services.has_been_checked,
 ]
 
 
@@ -175,12 +177,16 @@ def perf_metrics(host: str, service: str | None) -> PerfMetricsSource:
 # ---------------------------------------------------------------------------
 
 
+def _member_state(row: ResultRow, states: Mapping[int, str]) -> str:
+    return state_token(_int(row["state"]), bool(row["has_been_checked"]), states)
+
+
 def _host_members(rows: Iterable[ResultRow]) -> list[Member]:
     return [
         Member(
             host=str(row["name"]),
             service="",
-            state=HOST_STATE_MAP.get(_int(row["state"]), "UNKNOWN"),
+            state=_member_state(row, HOST_STATE_MAP),
             output=_first_line(row["plugin_output"]),
             acknowledged=bool(row["acknowledged"]),
             in_downtime=_int(row["scheduled_downtime_depth"]) > 0,
@@ -197,7 +203,7 @@ def _service_members(rows: Iterable[ResultRow]) -> list[Member]:
         Member(
             host=str(row["host_name"]),
             service=str(row["description"]),
-            state=SERVICE_STATE_MAP.get(_int(row["state"]), "UNKNOWN"),
+            state=_member_state(row, SERVICE_STATE_MAP),
             output=_first_line(row["plugin_output"]),
             acknowledged=bool(row["acknowledged"]),
             in_downtime=_int(row["scheduled_downtime_depth"]) > 0,

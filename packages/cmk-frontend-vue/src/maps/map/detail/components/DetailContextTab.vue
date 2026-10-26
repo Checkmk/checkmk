@@ -17,8 +17,11 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { ObjectDetails } from '@/maps/types/api'
+import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips.vue'
+import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
+import { toNameItems } from '@/monitoring/shared/labels'
 
-import { checkCommandLabel, configRows, labelEntries, topologyGroups } from '../contextFacts'
+import { checkCommandLabel, configRows, labelItems, topologyGroups } from '../contextFacts'
 import DetailMetaList from './DetailMetaList.vue'
 
 const props = defineProps<{
@@ -41,7 +44,7 @@ const checkCommand = computed(
 const configFacts = computed(() => rows.value.filter((row) => row.label !== checkCommandLabel(_t)))
 
 const topology = computed(() => topologyGroups(props.details, _t))
-const labels = computed(() => labelEntries(props.details))
+const labels = computed(() => labelItems(props.details))
 
 const selectable = computed(() => new Set(props.selectableHosts))
 </script>
@@ -55,46 +58,35 @@ const selectable = computed(() => new Set(props.selectableHosts))
       <CmkCode :code-text="checkCommand.value" width="fill" />
     </div>
 
-    <dl v-if="topology.length" class="maps-detail-context-tab__topology">
+    <!-- Laid out like the overview in Checkmk's own slide-in. Parents and
+         children on this map stay selectable, which only Maps can offer. -->
+    <OverviewDetailList v-if="topology.length || labels.length" align="start">
       <template v-for="group in topology" :key="group.label">
         <dt>{{ group.label }}</dt>
-        <dd class="maps-detail-context-tab__chip-row">
+        <dd v-if="group.isHostList" class="maps-detail-context-tab__chip-row">
           <CmkChip
             v-for="item in group.items"
             :key="item"
             size="small"
-            :color="group.isHostList ? 'info' : 'others'"
+            color="info"
             variant="outline"
-            :as-div="!group.isHostList || !selectable.has(item)"
-            @click="
-              group.isHostList && selectable.has(item) ? emit('select-host', item) : undefined
-            "
+            :as-div="!selectable.has(item)"
+            @click="selectable.has(item) ? emit('select-host', item) : undefined"
           >
             {{ item }}
           </CmkChip>
         </dd>
+        <dd v-else>
+          <OverviewChips :items="toNameItems(group.items)" />
+        </dd>
       </template>
-    </dl>
-
-    <div v-if="labels.length">
-      <div class="maps-detail-context-tab__heading">{{ _t('Labels') }}</div>
-      <div class="maps-detail-context-tab__chip-row">
-        <CmkChip
-          v-for="[key, value] in labels"
-          :key="key"
-          size="small"
-          color="others"
-          variant="outline"
-          as-div
-          :title="`${key}: ${value}`"
-        >
-          <template #start>
-            <span class="maps-detail-context-tab__label-key">{{ key }}</span>
-          </template>
-          {{ value }}
-        </CmkChip>
-      </div>
-    </div>
+      <template v-if="labels.length">
+        <dt>{{ _t('Labels') }}</dt>
+        <dd>
+          <OverviewChips :items="labels" />
+        </dd>
+      </template>
+    </OverviewDetailList>
   </div>
 </template>
 
@@ -108,34 +100,9 @@ const selectable = computed(() => new Set(props.selectableHosts))
 
 .maps-detail-context-tab__heading {
   font-size: var(--font-size-small);
-  text-transform: uppercase;
   color: var(--font-color-dimmed);
-  letter-spacing: 0.04em;
   font-weight: var(--font-weight-medium);
   margin: var(--dimension-3) 0 var(--dimension-4);
-}
-
-/* Topology labels ("Contact groups") are long and their values are rows of
-   chips, so each label gets its own line above them. */
-.maps-detail-context-tab__topology {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--dimension-4);
-  margin: 0;
-  font-size: var(--font-size-normal);
-}
-
-.maps-detail-context-tab__topology dt {
-  color: var(--font-color-dimmed);
-  text-transform: uppercase;
-  font-size: var(--font-size-small);
-  letter-spacing: 0.04em;
-  font-weight: var(--font-weight-medium);
-  margin-top: var(--dimension-3);
-}
-
-.maps-detail-context-tab__topology dd {
-  margin: 0;
 }
 
 .maps-detail-context-tab__chip-row {
@@ -143,10 +110,5 @@ const selectable = computed(() => new Set(props.selectableHosts))
   flex-wrap: wrap;
   gap: var(--dimension-3);
   margin: 0;
-}
-
-.maps-detail-context-tab__label-key {
-  color: var(--font-color-dimmed);
-  margin-right: var(--dimension-3);
 }
 </style>

@@ -10,7 +10,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import HoverCard from '@/maps/map/components/HoverCard.vue'
 import HoverCardHeadline from '@/maps/map/components/HoverCardHeadline.vue'
-import HoverStateCounts, { type HoverStateCount } from '@/maps/map/components/HoverStateCounts.vue'
+import MapStateCounts, { type MapStateCount } from '@/maps/map/components/MapStateCounts.vue'
 import { useMetricInfo } from '@/maps/map/composables/useMetricInfo'
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
 import { displayRows, perfometerCaption } from '@/maps/map/composables/usePerfometer'
@@ -25,10 +25,10 @@ import {
   getEffectiveObjectType,
   getMapElementIdentifier
 } from '@/maps/utils/naming'
-import { stateCountWordFromToken } from '@/maps/utils/objectAria'
 import { usePointerOverlayStyle } from '@/maps/utils/overlayFrame'
 import { type PerfMetric, parsePerfData, utilColor, utilPercent } from '@/maps/utils/perf'
 import { sanitizeTemplateHtml } from '@/maps/utils/sanitize'
+import { summaryStateCounts } from '@/maps/utils/stateCounts'
 import { interpolateTemplate } from '@/maps/utils/template'
 import { formatRelativeDuration, formatRelativeFuture } from '@/maps/utils/time'
 
@@ -254,7 +254,7 @@ const nextCheckText = computed((): NextCheckText | null => {
 
 interface CountRow {
   label: TranslatedString
-  counts: HoverStateCount[]
+  counts: MapStateCount[]
 }
 
 const dyngroupHostSet = computed<string[] | null>(() =>
@@ -265,11 +265,10 @@ const dyngroupHostSet = computed<string[] | null>(() =>
     : null
 )
 
-// Every state, in the order the monitoring views count them.
-function buildCounts(summary: ServicesSummary, kind: 'hosts' | 'services'): HoverStateCount[] {
+function buildCounts(summary: ServicesSummary, kind: 'hosts' | 'services'): MapStateCount[] {
   const hosts = dyngroupHostSet.value
-  const linkFor = (state: string | null): string | null => {
-    if (!state || !props.checkmkUrl) {
+  const linkFor = (state: string): string | null => {
+    if (!props.checkmkUrl) {
       return null
     }
     if (kind === 'hosts') {
@@ -292,27 +291,7 @@ function buildCounts(summary: ServicesSummary, kind: 'hosts' | 'services'): Hove
     }
     return null
   }
-  const defs =
-    kind === 'hosts'
-      ? ([
-          { key: 'ok', word: 'UP', tone: 'ok', state: 'UP' },
-          { key: 'critical', word: 'DOWN', tone: 'crit', state: 'DOWN' },
-          { key: 'unknown', word: 'UNREACHABLE', tone: 'unknown', state: 'UNREACHABLE' },
-          { key: 'pending', word: 'PENDING', tone: 'pending', state: null }
-        ] as const)
-      : ([
-          { key: 'ok', word: 'OK', tone: 'ok', state: 'OK' },
-          { key: 'warning', word: 'WARNING', tone: 'warn', state: 'WARNING' },
-          { key: 'critical', word: 'CRITICAL', tone: 'crit', state: 'CRITICAL' },
-          { key: 'unknown', word: 'UNKNOWN', tone: 'unknown', state: 'UNKNOWN' },
-          { key: 'pending', word: 'PENDING', tone: 'pending', state: 'PENDING' }
-        ] as const)
-  return defs.map((d) => ({
-    label: stateCountWordFromToken(_t, d.word),
-    count: summary[d.key] ?? 0,
-    tone: d.tone,
-    url: linkFor(d.state)
-  }))
+  return summaryStateCounts(_t, summary, kind, linkFor)
 }
 
 const countRows = computed<CountRow[]>(() => {
@@ -473,9 +452,10 @@ function fmtMetricValue(m: PerfMetric): string {
           <!-- One labelled set of counts per summary (host dyngroups show both
                Hosts and Services); each count deep-links to the matching
                filtered Checkmk view. -->
-          <HoverStateCounts
+          <MapStateCounts
             v-for="row in countRows"
             :key="row.label"
+            class="maps-hover-menu__counts"
             :label="row.label"
             :counts="row.counts"
           />
@@ -641,6 +621,10 @@ function fmtMetricValue(m: PerfMetric): string {
   line-height: 1.375;
   color: var(--font-color-dimmed);
   overflow-wrap: break-word;
+}
+
+.maps-hover-menu__counts {
+  margin-top: var(--dimension-5);
 }
 
 .maps-hover-menu__perfometer {

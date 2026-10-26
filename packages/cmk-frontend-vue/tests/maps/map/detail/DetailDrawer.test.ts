@@ -98,6 +98,19 @@ describe('DetailDrawer – header rendering', () => {
     expect(screen.getByText('CPU load too high')).toBeInTheDocument()
   })
 
+  it('says where the link to Checkmk leads', async () => {
+    await renderDrawer({
+      object: service(),
+      state: criticalState(),
+      connectionId: 'test',
+      checkmkUrl: 'http://checkmk/site/check_mk/'
+    })
+
+    expect(
+      screen.getAllByRole('link', { name: 'Open the state of web01 / CPU load in a new tab' })
+    ).not.toHaveLength(0)
+  })
+
   it('renders no drawer content when no object is selected', () => {
     render(DetailDrawer, {
       props: { object: null },

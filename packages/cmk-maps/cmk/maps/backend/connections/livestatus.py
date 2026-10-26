@@ -72,6 +72,7 @@ from cmk.maps.shared.states import (
     SERVICE_STATE_MAP,
     SEVERITY_RANK,
     severity_rank,
+    state_token,
 )
 from cmk.utils.misc import pnp_cleanup
 
@@ -132,12 +133,13 @@ def _services_summary_of_hosts(rows: list[LivestatusRow], base: int) -> Services
 
 
 def _host_state_columns(*, only_hard: bool, with_services: bool) -> list[str]:
-    """The host state column and, on request, the per-host service counts.
+    """The host state and ``has_been_checked`` and, on request, the per-host
+    service counts.
 
     The core keeps those counts, hard ones included, so the members' services
     cost no second query.
     """
-    columns = ["last_hard_state" if only_hard else "state"]
+    columns = ["last_hard_state" if only_hard else "state", "has_been_checked"]
     if with_services:
         hard = "hard_" if only_hard else ""
         columns += [f"num_services_{hard}{kind}" for kind in ("ok", "warn", "crit", "unknown")]
@@ -171,11 +173,9 @@ def _service_states_summary(states: list[str]) -> ServicesSummary:
     )
 
 
-def _service_row_state(row: LivestatusRow, base: int) -> str:
-    """The state of a service row with ``state`` and ``has_been_checked`` from *base* on."""
-    if not row_int(row, base + 1):
-        return "PENDING"
-    return SERVICE_STATE_MAP.get(row_int(row, base), "UNKNOWN")
+def _row_state(row: LivestatusRow, base: int, states: Mapping[int, str]) -> str:
+    """The state of a row with ``state`` and ``has_been_checked`` from *base* on."""
+    return state_token(row_int(row, base), bool(row_int(row, base + 1)), states)
 
 
 def _service_states_rollup(states: list[str]) -> tuple[str, ServicesSummary]:
@@ -270,12 +270,12 @@ _STALENESS_THRESHOLD = 1.5
 _HOST_DETAIL_COLS = (
     "long_plugin_output check_command latency execution_time is_flapping"
     " in_notification_period notification_period check_interval"
-    " parents childs groups contact_groups labels"
+    " parents childs groups contact_groups labels label_sources"
 )
 _SVC_DETAIL_COLS = (
     "long_plugin_output check_command latency execution_time is_flapping"
     " in_notification_period notification_period check_interval"
-    " host_groups groups contact_groups labels last_time_ok"
+    " host_groups groups contact_groups labels last_time_ok label_sources"
 )
 _COMMENT_COLS = "id author comment entry_time expire_time"
 _DOWNTIME_COLS = "id author comment start_time end_time fixed"
@@ -434,7 +434,8 @@ def _build_details(
 
     Column order must mirror ``_HOST_DETAIL_COLS`` / ``_SVC_DETAIL_COLS``.
     The leading 9 columns are common; the trailing group list differs (host:
-    parents, children, groups · service: host_groups, groups + last_time_ok).
+    parents, children, groups · service: host_groups, groups + last_time_ok),
+    both end in the label sources.
     """
     common_count = 8
     d = ObjectDetails(
@@ -459,12 +460,15 @@ def _build_details(
         d.host_groups = row_strs(row, common_count + 2)
         d.contact_groups = row_strs(row, common_count + 3)
         d.labels = {str(k): str(v) for k, v in row_dict(row, common_count + 4).items()}
+        sources = row_dict(row, common_count + 5)
     else:
         d.host_groups = row_strs(row, common_count)
         d.service_groups = row_strs(row, common_count + 1)
         d.contact_groups = row_strs(row, common_count + 2)
         d.labels = {str(k): str(v) for k, v in row_dict(row, common_count + 3).items()}
         d.last_time_ok = row_float_or_none(row, common_count + 4)
+        sources = row_dict(row, common_count + 5)
+    d.label_sources = {str(k): str(v) for k, v in sources.items()}
 
     d.comments = [
         CommentInfo(
@@ -775,7 +779,7 @@ class LivestatusConnection(ConnectionBase):
         rows = await self._query(query)
         if not rows:
             return ObjectState(object_id="", type="hostgroup", state="PENDING")
-        states = [HOST_STATE_MAP.get(row_int(r, 0), "UNKNOWN") for r in rows]
+        states = [_row_state(r, 0, HOST_STATE_MAP) for r in rows]
         worst, hosts_summary = _host_states_rollup(states)
         if services_pattern is not None:
             services_summary = await self._services_summary_where(
@@ -784,7 +788,7 @@ class LivestatusConnection(ConnectionBase):
                 only_hard=only_hard,
             )
         elif with_services:
-            services_summary = _services_summary_of_hosts(rows, 1)
+            services_summary = _services_summary_of_hosts(rows, 2)
         else:
             services_summary = None
         return ObjectState(
@@ -807,12 +811,13 @@ class LivestatusConnection(ConnectionBase):
         state_col = "last_hard_state" if only_hard else "state"
         members = excluded_members_filter("services", exclude) if exclude else ""
         query = (
-            f"GET services\nColumns: {state_col}\nFilter: groups >= {lqencode(group)}\n{members}"
+            f"GET services\nColumns: {state_col} has_been_checked\n"
+            f"Filter: groups >= {lqencode(group)}\n{members}"
         )
         rows = await self._query(query)
         if not rows:
             return ObjectState(object_id="", type="servicegroup", state="PENDING")
-        states = [SERVICE_STATE_MAP.get(row_int(r, 0), "UNKNOWN") for r in rows]
+        states = [_row_state(r, 0, SERVICE_STATE_MAP) for r in rows]
         worst, summary = _service_states_rollup(states)
         return ObjectState(
             object_id="",
@@ -837,13 +842,13 @@ class LivestatusConnection(ConnectionBase):
         )
         states: dict[str, list[str]] = {h: [] for h in hostnames}
         for r in rows:
-            states.setdefault(row_str(r, 0), []).append(_service_row_state(r, 1))
+            states.setdefault(row_str(r, 0), []).append(_row_state(r, 1, SERVICE_STATE_MAP))
         return {host: _service_states_summary(host_states) for host, host_states in states.items()}
 
     async def _services_summary_where(self, filters: str, *, only_hard: bool) -> ServicesSummary:
         state_col = "last_hard_state" if only_hard else "state"
         rows = await self._query(f"GET services\nColumns: {state_col} has_been_checked\n{filters}")
-        return _service_states_summary([_service_row_state(r, 0) for r in rows])
+        return _service_states_summary([_row_state(r, 0, SERVICE_STATE_MAP) for r in rows])
 
     @override
     async def get_dyngroup_state(
@@ -862,23 +867,25 @@ class LivestatusConnection(ConnectionBase):
             lql_filter += "\n"
         state_col = "last_hard_state" if only_hard else "state"
         if object_types == "service":
-            rows = await self._query(f"GET services\nColumns: {state_col}\n{lql_filter}")
+            rows = await self._query(
+                f"GET services\nColumns: {state_col} has_been_checked\n{lql_filter}"
+            )
             if not rows:
                 return ObjectState(object_id="", type="dyngroup", state="PENDING")
-            states = [SERVICE_STATE_MAP.get(row_int(r, 0), "UNKNOWN") for r in rows]
+            states = [_row_state(r, 0, SERVICE_STATE_MAP) for r in rows]
             worst, summary = _service_states_rollup(states)
             return ObjectState(object_id="", type="dyngroup", state=worst, services_summary=summary)
         columns = _host_state_columns(only_hard=only_hard, with_services=with_services)
         rows = await self._query(f"GET hosts\nColumns: {' '.join(columns)}\n{lql_filter}")
         if not rows:
             return ObjectState(object_id="", type="dyngroup", state="PENDING")
-        states = [HOST_STATE_MAP.get(row_int(r, 0), "UNKNOWN") for r in rows]
+        states = [_row_state(r, 0, HOST_STATE_MAP) for r in rows]
         worst, hosts_summary = _host_states_rollup(states)
         return ObjectState(
             object_id="",
             type="dyngroup",
             state=worst,
-            services_summary=_services_summary_of_hosts(rows, 1) if with_services else None,
+            services_summary=_services_summary_of_hosts(rows, 2) if with_services else None,
             hosts_summary=hosts_summary,
         )
 
@@ -908,7 +915,7 @@ class LivestatusConnection(ConnectionBase):
         # row is self-contained per host.
         tagged = await self._query_with_site(
             "GET hosts\n"
-            "Columns: name parents state plugin_output "
+            "Columns: name parents state has_been_checked plugin_output "
             "alias address acknowledged scheduled_downtime_depth last_check next_check "
             "state_type current_attempt max_check_attempts last_state_change "
             "notifications_enabled active_checks_enabled "
@@ -927,27 +934,27 @@ class LivestatusConnection(ConnectionBase):
                 parents = [p.strip() for p in raw_parents.split(",") if p.strip()]
             else:
                 parents = []
-            lc = row_float(r, 8)
-            nc = row_float(r, 9)
-            lsc = row_float(r, 13)
+            lc = row_float(r, 9)
+            nc = row_float(r, 10)
+            lsc = row_float(r, 14)
             row: TopologyRow = {
                 "name": name,
                 "parents": parents,
-                "state": HOST_STATE_MAP.get(row_int(r, 2), "UNKNOWN"),
-                "output": row_str(r, 3),
-                "alias": row_str(r, 4),
-                "address": row_str(r, 5),
-                "acknowledged": row_bool(r, 6, default=False),
-                "in_downtime": row_int(r, 7) > 0,
+                "state": _row_state(r, 2, HOST_STATE_MAP),
+                "output": row_str(r, 4),
+                "alias": row_str(r, 5),
+                "address": row_str(r, 6),
+                "acknowledged": row_bool(r, 7, default=False),
+                "in_downtime": row_int(r, 8) > 0,
                 "last_check": lc if lc > 0 else None,
                 "next_check": nc if nc > 0 else None,
-                "state_type": _STATE_TYPE_MAP.get(row_int(r, 10, default=1), "HARD"),
-                "current_attempt": row_int(r, 11),
-                "max_attempts": row_int(r, 12),
+                "state_type": _STATE_TYPE_MAP.get(row_int(r, 11, default=1), "HARD"),
+                "current_attempt": row_int(r, 12),
+                "max_attempts": row_int(r, 13),
                 "last_state_change": lsc if lsc > 0 else None,
-                "notifications_enabled": row_bool(r, 14, default=True),
-                "active_checks_enabled": row_bool(r, 15, default=True),
-                "services_summary": _services_summary_from_row(r, 16),
+                "notifications_enabled": row_bool(r, 15, default=True),
+                "active_checks_enabled": row_bool(r, 16, default=True),
+                "services_summary": _services_summary_from_row(r, 17),
             }
             # Federated multisite tags rows with site_id; single-site connections
             # don't, but consumers (FlowMap site umbrella, drawer aggregation)
@@ -962,18 +969,18 @@ class LivestatusConnection(ConnectionBase):
         rows = await self._query(
             "GET services\n"
             f"Filter: host_name = {lqencode(hostname)}\n"
-            f"Columns: description {state_col} plugin_output acknowledged scheduled_downtime_depth "
-            "last_state_change is_flapping\n"
+            f"Columns: description {state_col} has_been_checked plugin_output acknowledged "
+            "scheduled_downtime_depth last_state_change is_flapping\n"
         )
         return [
             ServiceRow(
                 name=row_str(r, 0),
-                state=SERVICE_STATE_MAP.get(row_int(r, 1), "UNKNOWN"),
-                output=row_str(r, 2),
-                acknowledged=bool(row_int(r, 3)),
-                in_downtime=row_int(r, 4) > 0,
-                last_state_change=row_float_or_none(r, 5),
-                is_flapping=bool(row_int(r, 6)),
+                state=_row_state(r, 1, SERVICE_STATE_MAP),
+                output=row_str(r, 3),
+                acknowledged=bool(row_int(r, 4)),
+                in_downtime=row_int(r, 5) > 0,
+                last_state_change=row_float_or_none(r, 6),
+                is_flapping=bool(row_int(r, 7)),
             )
             for r in rows
         ]
@@ -1015,20 +1022,20 @@ class LivestatusConnection(ConnectionBase):
         # limit + 1 so the caller can distinguish a full page from a truncated one.
         tagged = await self._query_with_site(
             f"GET services\n"
-            f"Columns: host_name description {state_col} plugin_output acknowledged "
-            f"scheduled_downtime_depth last_state_change is_flapping\n"
+            f"Columns: host_name description {state_col} has_been_checked plugin_output "
+            f"acknowledged scheduled_downtime_depth last_state_change is_flapping\n"
             f"{filters}Limit: {limit + 1}\n"
         )
         return [
             ServiceMatchRow(
                 host_name=row_str(r, 0),
                 name=row_str(r, 1),
-                state=SERVICE_STATE_MAP.get(row_int(r, 2), "UNKNOWN"),
-                output=row_str(r, 3),
-                acknowledged=bool(row_int(r, 4)),
-                in_downtime=row_int(r, 5) > 0,
-                last_state_change=row_float_or_none(r, 6),
-                is_flapping=bool(row_int(r, 7)),
+                state=_row_state(r, 2, SERVICE_STATE_MAP),
+                output=row_str(r, 4),
+                acknowledged=bool(row_int(r, 5)),
+                in_downtime=row_int(r, 6) > 0,
+                last_state_change=row_float_or_none(r, 7),
+                is_flapping=bool(row_int(r, 8)),
                 site_id=_default_site_id(sid),
             )
             for sid, r in tagged

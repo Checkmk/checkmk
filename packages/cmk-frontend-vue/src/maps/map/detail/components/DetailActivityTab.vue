@@ -86,9 +86,7 @@ const comments = computed(() => commentRows(props.details, props.nowMs, _t))
 
 .maps-detail-activity-tab__heading {
   font-size: var(--font-size-small);
-  text-transform: uppercase;
   color: var(--font-color-dimmed);
-  letter-spacing: 0.04em;
   font-weight: var(--font-weight-medium);
   margin: var(--dimension-3) 0 var(--dimension-4);
 }

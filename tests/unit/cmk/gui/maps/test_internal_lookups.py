@@ -29,7 +29,7 @@ def _expect_bi_compile(live: MockLiveStatusConnection) -> None:
 
 _MEMBER_COLUMNS = (
     "name state plugin_output acknowledged scheduled_downtime_depth notifications_enabled "
-    "last_state_change"
+    "last_state_change has_been_checked"
 )
 
 

@@ -36,27 +36,24 @@ function setup(object: MapElement | null, st: ObjectState | undefined) {
   return useSummaryChips({
     object: () => object,
     state: () => st,
-    checkmkUrl: () => 'https://cmk.example.com/mysite',
-    isSite: () => object?.type === 'site'
+    checkmkUrl: () => 'https://cmk.example.com/mysite'
   })
 }
 
 describe('serviceChips', () => {
-  it('always keeps the OK anchor and hides zero problem chips', () => {
-    const { serviceChips } = setup(
-      obj('host', { host_name: 'web01' }),
-      state({ services_summary: summary({ ok: 5 }) })
-    )
-    expect(serviceChips.value.map((c) => c.state)).toEqual(['OK'])
-    expect(serviceChips.value[0]!.count).toBe(5)
-  })
-
-  it('includes problem chips with a non-zero count, worst first', () => {
+  // The same states in the same order as the hover card, so the two read alike.
+  it('lists every service state in view order, zeros included', () => {
     const { serviceChips } = setup(
       obj('host', { host_name: 'web01' }),
       state({ services_summary: summary({ critical: 2, warning: 1, ok: 3 }) })
     )
-    expect(serviceChips.value.map((c) => c.state)).toEqual(['CRITICAL', 'WARNING', 'OK'])
+    expect(serviceChips.value.map((c) => [c.label, c.count])).toEqual([
+      ['OK', 3],
+      ['WARN', 1],
+      ['CRIT', 2],
+      ['UNKNOWN', 0],
+      ['PENDING', 0]
+    ])
   })
 
   // A host whose services were never checked would otherwise read "0 OK".
@@ -65,10 +62,7 @@ describe('serviceChips', () => {
       obj('host', { host_name: 'web01' }),
       state({ services_summary: summary({ pending: 4 }) })
     )
-    expect(serviceChips.value.map((c) => [c.label, c.count])).toEqual([
-      ['PEND', 4],
-      ['OK', 0]
-    ])
+    expect(serviceChips.value.find((c) => c.label === 'PENDING')?.count).toBe(4)
   })
 
   it('is empty without a services_summary', () => {
@@ -81,27 +75,31 @@ describe('serviceChips', () => {
       obj('host', { host_name: 'web01' }),
       state({ services_summary: summary({ critical: 1 }) })
     )
-    const crit = serviceChips.value.find((c) => c.state === 'CRITICAL')
+    const crit = serviceChips.value.find((c) => c.label === 'CRIT')
     expect(crit!.url).toContain('web01')
   })
 })
 
 describe('hostChips / hostsSummary', () => {
-  it('parses host counts from a site status output', () => {
+  it('lists every host state of a site in view order, zeros included', () => {
     const { hostChips } = setup(
       obj('site', { host_name: 'mysite' }),
-      state({ type: 'site', output: '504 hosts (502 up, 1 down, 1 unreachable)' })
+      state({ type: 'site', hosts_summary: summary({ ok: 10, pending: 2 }) })
     )
-    const byState = Object.fromEntries(hostChips.value.map((c) => [c.state, c.count]))
-    expect(byState).toEqual({ DOWN: 1, UNREACHABLE: 1, UP: 502 })
+    expect(hostChips.value.map((c) => [c.label, c.count])).toEqual([
+      ['UP', 10],
+      ['DOWN', 0],
+      ['UNREACH', 0],
+      ['PENDING', 2]
+    ])
   })
 
-  it('keeps the UP anchor and hides zero down/unreachable', () => {
+  it('links the host chips of a site to its hosts', () => {
     const { hostChips } = setup(
       obj('site', { host_name: 'mysite' }),
-      state({ type: 'site', output: '10 hosts (10 up, 0 down, 0 unreachable)' })
+      state({ type: 'site', hosts_summary: summary({ ok: 1 }) })
     )
-    expect(hostChips.value.map((c) => c.state)).toEqual(['UP'])
+    expect(hostChips.value[0]!.url).toContain('site=mysite')
   })
 
   function hostgroupChips() {
@@ -116,14 +114,14 @@ describe('hostChips / hostsSummary', () => {
 
   it('shows a hostgroup its hosts', () => {
     const { hostChips } = hostgroupChips()
-    const hosts = Object.fromEntries(hostChips.value.map((c) => [c.state, c.count]))
-    expect(hosts).toEqual({ DOWN: 1, UP: 3 })
+    const hosts = Object.fromEntries(hostChips.value.map((c) => [c.label, c.count]))
+    expect(hosts).toEqual({ UP: 3, DOWN: 1, UNREACH: 0, PENDING: 0 })
   })
 
   it('shows a hostgroup the services of its hosts', () => {
     const { serviceChips } = hostgroupChips()
-    const services = Object.fromEntries(serviceChips.value.map((c) => [c.state, c.count]))
-    expect(services).toEqual({ WARNING: 2, OK: 9 })
+    const services = Object.fromEntries(serviceChips.value.map((c) => [c.label, c.count]))
+    expect(services).toEqual({ OK: 9, WARN: 2, CRIT: 0, UNKNOWN: 0, PENDING: 0 })
   })
 
   it('links the service chips of a hostgroup to its services', () => {
@@ -136,7 +134,7 @@ describe('hostChips / hostsSummary', () => {
       obj('dyngroup', { object_filter: 'x' }),
       state({ hosts_summary: summary({ ok: 7, critical: 2 }) })
     )
-    const byState = Object.fromEntries(hostChips.value.map((c) => [c.state, c.count]))
+    const byState = Object.fromEntries(hostChips.value.map((c) => [c.label, c.count]))
     expect(byState.UP).toBe(7)
     expect(byState.DOWN).toBe(2)
   })

@@ -135,4 +135,26 @@ describe('HoverMenu state counts', () => {
     await findByText('Services')
     expect(queryByText('Hosts')).toBeNull()
   })
+
+  it('links the pending services like every other count', async () => {
+    const { findByRole } = render(HoverMenu, {
+      props: {
+        object: anObject({ id: 'o1', type: 'host', host_name: 'web01' }),
+        state: aState({
+          object_id: 'o1',
+          type: 'host',
+          state: 'UP',
+          services_summary: { ok: 1, warning: 0, critical: 0, unknown: 0, pending: 2 }
+        }),
+        x: 0,
+        y: 0,
+        anchorRect: null,
+        checkmkUrl: 'http://h/SITE/check_mk/'
+      },
+      global: mapsGlobal()
+    })
+
+    const pending = await findByRole('link', { name: /PENDING/ })
+    expect(decodeURIComponent(pending.getAttribute('href') ?? '')).toContain('stp=on')
+  })
 })

@@ -16,13 +16,13 @@ import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
+import MapStateCounts, { type MapStateCount } from '@/maps/map/components/MapStateCounts.vue'
+
 import type { AggregationLeafRow, AggregationSummary } from '../composables/useAggregationDetail'
-import type { SummaryChip } from '../composables/useSummaryChips'
-import DetailChipGrid, { type DetailChip } from './DetailChipGrid.vue'
 
 const props = defineProps<{
   summary: AggregationSummary
-  chips: SummaryChip[]
+  chips: MapStateCount[]
   view: 'summary' | 'details'
   viewOptions: { value: string; label: string }[]
   /** Whether the map object asks for a cut tree at all. */
@@ -46,7 +46,7 @@ const emit = defineEmits<{
 
 const { _t } = usei18n()
 
-// A dropdown rather than a toggle group: the drawer is 360px wide and
+// A dropdown rather than a toggle group: the drawer is 400px wide and
 // CmkToggleButtonGroup is the form-scale control (150px per option), so even
 // two options cannot sit beside the heading. The labels arrive translated.
 const viewChoices = computed(() => ({
@@ -56,15 +56,6 @@ const viewChoices = computed(() => ({
     title: untranslated(option.label)
   }))
 }))
-
-const summaryChips = computed<DetailChip[]>(() =>
-  props.chips.map((chip) => ({
-    key: chip.state,
-    label: chip.label,
-    count: chip.count,
-    tone: chip.tone
-  }))
-)
 </script>
 
 <template>
@@ -81,7 +72,7 @@ const summaryChips = computed<DetailChip[]>(() =>
       />
     </div>
 
-    <DetailChipGrid :chips="summaryChips" />
+    <MapStateCounts v-if="chips.length" :counts="chips" />
 
     <!-- Only the details view lists real leaves; naming a "worst leaf" from a
          tree that was cut at a depth would point at something that is not one. -->
@@ -180,9 +171,7 @@ const summaryChips = computed<DetailChip[]>(() =>
 .maps-detail-aggregation-section__heading {
   margin: 0;
   font-size: var(--font-size-small);
-  text-transform: uppercase;
   color: var(--font-color-dimmed);
-  letter-spacing: 0.04em;
   font-weight: var(--font-weight-medium);
 }
 

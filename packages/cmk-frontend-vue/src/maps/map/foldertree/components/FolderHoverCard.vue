@@ -12,10 +12,10 @@ import { computed, ref } from 'vue'
 
 import HoverCard from '@/maps/map/components/HoverCard.vue'
 import HoverCardHeadline from '@/maps/map/components/HoverCardHeadline.vue'
-import HoverStateCounts, {
-  type HoverStateCount,
+import MapStateCounts, {
+  type MapStateCount,
   type StateCountTone
-} from '@/maps/map/components/HoverStateCounts.vue'
+} from '@/maps/map/components/MapStateCounts.vue'
 import type { FolderTreeNode } from '@/maps/types/api'
 import { buildFolderStateViewUrl } from '@/maps/utils/mapNavigation'
 import { stateCountWordFromToken } from '@/maps/utils/objectAria'
@@ -52,7 +52,7 @@ const TONE: Record<string, StateCountTone> = {
   WARNING: 'warn'
 }
 
-const counts = computed<HoverStateCount[]>(() => {
+const counts = computed<MapStateCount[]>(() => {
   const problems = severityPills(props.folder.severity_counts).map(({ state, count }) => ({
     label: stateCountWordFromToken(_t, state),
     tone: TONE[state] ?? 'pending',
@@ -101,7 +101,12 @@ const positionStyle = usePointerOverlayStyle(rootEl, () => ({
       >
         <span class="maps-folder-hover-card__hosts">{{ hosts }}</span>
       </HoverCardHeadline>
-      <HoverStateCounts v-if="counts.length" :label="_t('Hosts')" :counts="counts" />
+      <MapStateCounts
+        v-if="counts.length"
+        class="maps-folder-hover-card__counts"
+        :label="_t('Hosts')"
+        :counts="counts"
+      />
       <div v-if="clickHint" class="maps-folder-hover-card__hint">{{ clickHint }}</div>
     </HoverCard>
   </div>
@@ -126,5 +131,9 @@ const positionStyle = usePointerOverlayStyle(rootEl, () => ({
   margin-top: var(--dimension-5);
   font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
+}
+
+.maps-folder-hover-card__counts {
+  margin-top: var(--dimension-5);
 }
 </style>

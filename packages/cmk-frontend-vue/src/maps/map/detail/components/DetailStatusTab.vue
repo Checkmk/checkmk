@@ -14,11 +14,10 @@ person who wrote the check meant for this moment.
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
+import MapStateCounts, { type MapStateCount } from '@/maps/map/components/MapStateCounts.vue'
 import type { MapElement, ObjectDetails, ObjectState } from '@/maps/types/api'
 
-import type { SummaryChip } from '../composables/useSummaryChips'
 import { checkInfoRows, identityRows, stateModifiers } from '../statusFacts'
-import DetailChipGrid, { type DetailChip } from './DetailChipGrid.vue'
 import DetailMetaList from './DetailMetaList.vue'
 import DetailStateBadges from './DetailStateBadges.vue'
 
@@ -29,9 +28,9 @@ const props = defineProps<{
   displayName: string
   checkmkUrl: string | null | undefined
   /** Per-state counts of the hosts behind this object, where it has any. */
-  hostChips: SummaryChip[]
+  hostChips: MapStateCount[]
   /** Per-state counts of the services behind it. */
-  serviceChips: SummaryChip[]
+  serviceChips: MapStateCount[]
   /** Ticks once a second so the ageing labels move on their own. */
   nowMs: number
 }>()
@@ -44,16 +43,6 @@ const facts = computed(() => [
   ...identityRows(props.object, props.state, props.displayName, props.checkmkUrl, _t),
   ...checkInfoRows(props.object, props.state, props.details, props.nowMs, _t)
 ])
-
-function asChips(chips: SummaryChip[]): DetailChip[] {
-  return chips.map((chip) => ({
-    key: chip.state,
-    label: chip.label,
-    count: chip.count,
-    tone: chip.tone,
-    url: chip.url
-  }))
-}
 </script>
 
 <template>
@@ -62,8 +51,8 @@ function asChips(chips: SummaryChip[]): DetailChip[] {
 
     <pre v-if="state.output" class="maps-detail-status-tab__output">{{ state.output }}</pre>
 
-    <DetailChipGrid :chips="asChips(hostChips)" :label="_t('Hosts')" />
-    <DetailChipGrid :chips="asChips(serviceChips)" :label="_t('Services')" />
+    <MapStateCounts v-if="hostChips.length" :counts="hostChips" :label="_t('Hosts')" />
+    <MapStateCounts v-if="serviceChips.length" :counts="serviceChips" :label="_t('Services')" />
 
     <DetailMetaList :rows="facts" />
 

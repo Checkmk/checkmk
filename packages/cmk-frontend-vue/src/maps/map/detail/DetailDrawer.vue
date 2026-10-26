@@ -186,7 +186,6 @@ const { serviceChips, hostChips } = useSummaryChips({
   object: () => props.object,
   state: () => props.state,
   checkmkUrl: () => props.checkmkUrl,
-  isSite: () => isSite.value,
   dyngroupHosts: () => dyngroupHosts.value
 })
 
@@ -452,7 +451,7 @@ const accentStyle = computed(() => ({
   z-index: var(--z-index-modal);
   display: flex;
   flex-direction: column;
-  width: min(360px, 100%);
+  width: min(400px, 100%);
   box-sizing: border-box;
   border-left: 4px solid var(--default-border-color-green);
   background: var(--default-bg-color);

@@ -4,17 +4,18 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <!--
-One labelled set of state counts on a hover card, drawn like the monitoring
-views draw a host's services.
+One set of state counts, drawn like the monitoring views draw a host's services:
+on the hover cards and in the slide-in alike.
 -->
 <script setup lang="ts">
 import CmkStateCountBar, { type StateSegment } from 'cmk-ui-library/components/CmkStateCountBar.vue'
+import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 export type StateCountTone = 'crit' | 'unknown' | 'warn' | 'pending' | 'ok'
 
-export interface HoverStateCount {
+export interface MapStateCount {
   label: TranslatedString
   count: number
   tone: StateCountTone
@@ -31,8 +32,8 @@ const COLOR: Record<StateCountTone, StateSegment['color']> = {
 }
 
 const props = defineProps<{
-  label: TranslatedString
-  counts: HoverStateCount[]
+  label?: TranslatedString | undefined
+  counts: MapStateCount[]
 }>()
 
 const segments = computed<StateSegment[]>(() =>
@@ -46,23 +47,9 @@ const segments = computed<StateSegment[]>(() =>
 </script>
 
 <template>
-  <CmkStateCountBar class="maps-hover-state-counts" :segments="segments" size="small">
-    <template #heading>
-      <span class="maps-hover-state-counts__label">{{ label }}</span>
+  <CmkStateCountBar :segments="segments" size="small">
+    <template v-if="label" #heading>
+      <CmkHeading type="h4">{{ label }}</CmkHeading>
     </template>
   </CmkStateCountBar>
 </template>
-
-<style scoped>
-.maps-hover-state-counts {
-  margin-top: var(--dimension-5);
-}
-
-.maps-hover-state-counts__label {
-  font-size: var(--font-size-small);
-  font-weight: var(--font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--font-color-dimmed);
-}
-</style>

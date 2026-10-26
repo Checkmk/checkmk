@@ -14,6 +14,11 @@
  */
 import type { ObjectDetails } from '@/maps/types/api'
 import type { TranslateFn } from '@/maps/utils/dropdownOptions'
+import {
+  type LabelCellItem,
+  labelItemText
+} from '@/monitoring/shared/components/cell/labelCellItem'
+import { labelColor } from '@/monitoring/shared/labels'
 
 import type { MetaRow } from './statusFacts'
 
@@ -83,15 +88,19 @@ export function topologyGroups(details: ObjectDetails | null, _t: TranslateFn): 
   return groups
 }
 
-export function labelEntries(details: ObjectDetails | null): [string, string][] {
+/** The labels as Checkmk's slide-in shows them: colored by source, in a stable order. */
+export function labelItems(details: ObjectDetails | null): LabelCellItem[] {
+  const sources = details?.label_sources ?? {}
   return Object.entries(details?.labels ?? {})
+    .map(([key, value]) => ({ keyValue: { key, value }, color: labelColor(sources[key] ?? '') }))
+    .sort((first, second) => labelItemText(first).localeCompare(labelItemText(second)))
 }
 
 /** Whether the context tab has anything to show. */
 export function hasContextFacts(details: ObjectDetails | null, _t: TranslateFn): boolean {
   return (
     topologyGroups(details, _t).length > 0 ||
-    labelEntries(details).length > 0 ||
+    labelItems(details).length > 0 ||
     configRows(details, _t).length > 0
   )
 }

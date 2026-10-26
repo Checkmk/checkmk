@@ -14,11 +14,12 @@ needs adjusting, the BI pack is where that happens.
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkIconLink from 'cmk-ui-library/components/CmkIconLink.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { computed } from 'vue'
 
 import MapStateTag from '@/maps/map/radar/components/MapStateTag.vue'
 import type { ObjectState } from '@/maps/types/api'
 
-defineProps<{
+const props = defineProps<{
   name: string
   /** The object's kind, spelled out ("Service", "Host group"). */
   typeLabel: string
@@ -34,6 +35,8 @@ defineProps<{
 const emit = defineEmits<{ close: [] }>()
 
 const { _t } = usei18n()
+
+const openTitle = computed(() => _t('Open the state of %{name} in a new tab', { name: props.name }))
 </script>
 
 <template>
@@ -48,8 +51,8 @@ const { _t } = usei18n()
           target="_blank"
           rel="noopener noreferrer"
           class="maps-detail-header__name maps-detail-header__name--link"
-          :title="name"
-          :aria-label="_t('Open in Checkmk')"
+          :title="openTitle"
+          :aria-label="openTitle"
           >{{ name }}</a
         >
         <span v-else class="maps-detail-header__name" :title="name">{{ name }}</span>
@@ -76,8 +79,8 @@ const { _t } = usei18n()
         :href="checkmkUrl"
         target="_blank"
         rel="noopener noreferrer"
-        :title="_t('Open in Checkmk')"
-        :aria-label="_t('Open in Checkmk')"
+        :title="openTitle"
+        :aria-label="openTitle"
       />
       <CmkIconLink
         v-if="setupUrl"

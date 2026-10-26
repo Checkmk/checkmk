@@ -55,9 +55,7 @@ defineProps<{
 
 .maps-detail-meta-list dt {
   color: var(--font-color-dimmed);
-  text-transform: uppercase;
   font-size: var(--font-size-small);
-  letter-spacing: 0.04em;
   align-self: center;
 }
 

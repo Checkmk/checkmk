@@ -6,21 +6,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 <!--
 What a group is made of, one row per member, worst first.
 
-A group is opened because something under it is wrong, so the counts double as
-the filter: picking any problem count narrows the list to problems, picking OK
-widens it again. Each row opens that member in this same drawer.
+A group is opened because something under it is wrong, so the list can be
+narrowed to the problems. Each row opens that member in this same drawer.
 -->
 <script setup lang="ts">
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
-import { computed } from 'vue'
 
+import MapStateCounts, { type MapStateCount } from '@/maps/map/components/MapStateCounts.vue'
 import type { GroupMember } from '@/maps/types/api'
 import { formatRelativeDuration } from '@/maps/utils/time'
-
-import DetailChipGrid, { type DetailChip } from './DetailChipGrid.vue'
 
 const props = defineProps<{
   members: GroupMember[]
@@ -28,7 +25,7 @@ const props = defineProps<{
   filteredCount: number
   truncatedCount: number
   loading: boolean
-  chips: { label: string; count: number; tone: DetailChip['tone'] }[]
+  chips: MapStateCount[]
   search: string
   onlyProblems: boolean
   /** Ticks once a second so the "how long ago" column moves on its own. */
@@ -45,15 +42,6 @@ const emit = defineEmits<{
 
 const { _t } = usei18n()
 
-const memberChips = computed<DetailChip[]>(() =>
-  props.chips.map((chip) => ({
-    key: chip.label,
-    label: chip.label,
-    count: chip.count,
-    tone: chip.tone
-  }))
-)
-
 function formatAge(seconds: number | null | undefined): string {
   return formatRelativeDuration(seconds, props.nowMs)
 }
@@ -65,12 +53,7 @@ function formatExact(seconds: number | null | undefined): string {
 
 <template>
   <div class="maps-detail-members-tab">
-    <DetailChipGrid
-      v-if="members.length"
-      interactive
-      :chips="memberChips"
-      @pick="emit('update:onlyProblems', $event.label !== 'OK')"
-    />
+    <MapStateCounts v-if="members.length" :counts="chips" />
 
     <div class="maps-detail-members-tab__controls">
       <CmkSearchInput

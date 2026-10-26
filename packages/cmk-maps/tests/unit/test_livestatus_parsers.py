@@ -164,6 +164,7 @@ def test_build_details_host_with_groups_and_comments() -> None:
         ["grp"],
         ["cg"],
         {"env": "prod"},
+        {"env": "explicit"},
     ]
     comment_rows = [[1, "admin", "hi", 100.0, 0]]
     details = _build_details("host", "web01", None, row, comment_rows, [])
@@ -172,6 +173,7 @@ def test_build_details_host_with_groups_and_comments() -> None:
     assert details.check_command == "check-mk-host"
     assert details.parents == ["parent01"]
     assert details.labels == {"env": "prod"}
+    assert details.label_sources == {"env": "explicit"}
     assert len(details.comments) == 1
     assert details.comments[0].author == "admin"
 
@@ -189,13 +191,15 @@ def test_build_details_service_uses_service_columns() -> None:
         ["hg"],
         ["sg"],
         ["cg"],
-        {},
+        {"os": "prod"},
         123.0,
+        {"os": "discovered"},
     ]
     details = _build_details("service", "web01", "PING", row, [], [])
     assert details.service_description == "PING"
     assert details.service_groups == ["sg"]
     assert details.last_time_ok == 123.0
+    assert details.label_sources == {"os": "discovered"}
 
 
 def test_default_site_id_explicit_sid_passthrough() -> None:

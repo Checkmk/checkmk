@@ -8,6 +8,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   buildCheckmkUrl,
   buildFolderStateViewUrl,
+  buildHostStateViewUrl,
   buildServiceStateViewUrl,
   hostStateOn,
   openUrl,
@@ -25,6 +26,7 @@ describe('svcStateOn / hostStateOn', () => {
     expect(hostStateOn('UP')).toBe('hst0')
     expect(hostStateOn('DOWN')).toBe('hst1')
     expect(hostStateOn('UNREACHABLE')).toBe('hst2')
+    expect(hostStateOn('PENDING')).toBe('hstp')
   })
 })
 
@@ -83,6 +85,15 @@ describe('buildServiceStateViewUrl', () => {
 
   it('returns null for states the svcstate filter cannot express', () => {
     expect(buildServiceStateViewUrl(cmk, { host: 'web01' }, 'DOWN')).toBeNull()
+  })
+})
+
+describe('buildHostStateViewUrl', () => {
+  it('links pending hosts through the pending box of the host state filter', () => {
+    const url = buildHostStateViewUrl('http://h/SITE/check_mk/', ['web01', 'db01'], 'PENDING')
+    const inner = new URL(url!, 'http://h').searchParams.get('start_url') ?? ''
+    expect(inner).toContain('view_name=allhosts')
+    expect(inner).toContain('hstp=on')
   })
 })
 

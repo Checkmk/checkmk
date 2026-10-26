@@ -5,8 +5,8 @@
 
 import pytest
 
-# Note: tests.plugins_consistency.common_tests needs to stay in the runfiles!
+# Note: tests.integration.plugin_consistency.common needs to stay in the runfiles!
 # There are tests living there.
-from tests.plugins_consistency.common_tests.fixtures import agent_based_plugins
+from tests.integration.plugin_consistency.common.fixtures import agent_based_plugins
 
 agent_based_plugins = pytest.fixture(scope="session")(agent_based_plugins)

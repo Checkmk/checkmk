@@ -7,7 +7,7 @@ py_library(
     srcs = ["conftest.py"],
     visibility = [":__subpackages__"],
     deps = [
-        "//tests/plugins_consistency/common_tests",
+        "//tests/integration/plugin_consistency/common",
         requirement("pytest"),
     ],
 )

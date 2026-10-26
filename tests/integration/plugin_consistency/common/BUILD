@@ -2,11 +2,11 @@ load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
-    name = "common_tests",
+    name = "common",
     testonly = True,
     srcs = glob(["**/*.py"]),
-    imports = ["../../.."],
-    visibility = ["//tests/plugins_consistency:__subpackages__"],
+    imports = ["../../../.."],
+    visibility = ["//tests/integration/plugin_consistency:__subpackages__"],
     deps = [
         "//cmk/gui/dashboard",
         "//cmk/gui/graphing",

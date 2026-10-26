@@ -374,7 +374,9 @@ from cmk.gui.pages import Page
 
 def test_top_level_tests_non_cmk_subdir_excluded(make_checker: _MakeChecker) -> None:
     source_code = "from cmk.gui.watolib.rulespecs import Rulespec"
-    checker = make_checker("tests/plugins_consistency/nonfree/pro/test_bar.py", source_code)
+    checker = make_checker(
+        "tests/integration/plugin_consistency/nonfree/pro/test_bar.py", source_code
+    )
     tree = ast.parse(source_code)
     errors = checker.check(tree)
 

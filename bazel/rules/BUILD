@@ -79,6 +79,11 @@ sh_binary(
 )
 
 sh_binary(
+    name = "sign_file_azure",
+    srcs = ["sign_file_azure.sh"],
+)
+
+sh_binary(
     name = "sign_azure",
     srcs = ["sign_azure.sh"],
     data = [

@@ -144,7 +144,7 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
           :aria-expanded="addPanelOpen"
           @click="toggleAddPanel"
         >
-          <CmkIcon name="add" size="medium" />
+          <CmkIcon name="add" size="medium" class="maps-map-edit-tools__add-icon" />
         </button>
       </div>
     </Transition>
@@ -196,7 +196,7 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
       :aria-pressed="editing"
       @click="emit('toggle-edit-mode')"
     >
-      <CmkIcon name="edit" size="medium" />
+      <CmkIcon name="edit" size="medium" :colored="false" />
     </button>
   </div>
 </template>
@@ -276,6 +276,12 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
 .maps-map-edit-tools__button--primary {
   background: var(--interactive-accent);
   box-shadow: var(--maps-shadow-canvas-overlay-high);
+}
+
+/* The icon is a light grey bitmap; on the accent it goes dark, like the label
+   of a primary button. */
+.maps-map-edit-tools__add-icon {
+  filter: brightness(0);
 }
 
 .maps-map-edit-tools__button--active {

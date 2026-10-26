@@ -20,7 +20,7 @@ defineProps<{
 
 <template>
   <span v-if="editing" class="maps-map-mode-badges__badge maps-map-mode-badges__badge--editing">
-    <CmkIcon name="edit" size="xsmall" />
+    <CmkIcon name="edit" size="xsmall" :colored="false" />
     {{ _t('Editing') }}
   </span>
 </template>

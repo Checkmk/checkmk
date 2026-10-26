@@ -4,7 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { setupServer } from 'msw/node'
+import { createOpenApiHttp } from 'openapi-msw'
 import { afterAll, afterEach, beforeAll } from 'vitest'
+
+export { createOpenApiHttp }
+export type { ResponseResolver } from 'openapi-msw'
 
 /**
  * An msw server for one test file, started and cleaned up around it.

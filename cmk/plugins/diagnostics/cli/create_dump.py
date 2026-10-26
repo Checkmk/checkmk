@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.base.config import exit_on_config_file_load_error, load_raw_config
 from cmk.base.diagnostics import (
@@ -145,9 +144,6 @@ def _mode_create_diagnostics_dump(
 
 
 def _run_create_diagnostics_dump(context: CommandContext, options: Options, args: Args) -> ExitCode:
-    if context.global_options.debug:
-        # exit_on_config_file_load_error() reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_create_diagnostics_dump(
             context.omd_root, context.global_options, options, args

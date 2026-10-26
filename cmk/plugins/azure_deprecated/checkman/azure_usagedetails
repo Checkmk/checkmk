@@ -9,20 +9,30 @@ description:
 
  Please configure the new special agent using the "Microsoft Azure" ruleset.
 
- This check reports the daily costs of the Azure subscription,
- in sum and per Azure service type and/or resource group.
+ This check reports the daily costs of the Azure subscription, in total
+ and per Azure service type. On the host of a monitored resource group,
+ it reports only the costs of that resource group.
 
- Note that cost information has a granularity of one day.
- The current value will always display the value corresonding
- to the last complete day (00:00 - 23:59 UTC).
+ Cost information has a granularity of one day. The value shows
+ the costs of the previous day (00:00 - 23:59 UTC).
 
- Levels can be imposed on this value using the rule
- "Azure Usage Details (Costs)".
+ Azure needs up to 72 hours to collect all usage for a day. Until then,
+ the reported value is an estimate: it can rise from one check cycle to the
+ next, and some Azure service types may still have no costs, so their
+ services show no data. Azure does not report when a value is final.
+
+ Checkmk stores the value it gets at each check and does not update it
+ later. Since the previous day is always less than 72 hours old, the
+ stored values are estimates and can be lower than the final costs.
+ Keep this in mind when you read the cost graphs or set levels.
+
+ You can set levels on this value with the rule
+ "Azure usage details (costs)".
 
 item:
- The name of the Azure service type or 'Summary'.
+ The name of the Azure service type, or 'Summary' for the total costs.
 
 discovery:
- One service is created for each Azure service type plus an additional summary
- service is on both the host running the agent and every
- host corresponding to a monitored resource group.
+ One service is created for each Azure service type, plus one summary
+ service. These services are created on the host that runs the special
+ agent and on every host that corresponds to a monitored resource group.

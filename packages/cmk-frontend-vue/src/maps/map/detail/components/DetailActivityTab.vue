@@ -34,7 +34,7 @@ const comments = computed(() => commentRows(props.details, props.nowMs, _t))
 <template>
   <div class="maps-detail-activity-tab">
     <div v-if="downtimes.length">
-      <div class="maps-detail-activity-tab__heading">{{ _t('Active downtimes') }}</div>
+      <div class="maps-detail-activity-tab__heading">{{ _t('Downtimes') }}</div>
       <ul class="maps-detail-activity-tab__list">
         <li
           v-for="downtime in downtimes"

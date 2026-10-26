@@ -253,4 +253,19 @@ describe('DetailDrawer – tabs', () => {
     expect(performanceTab).toHaveAttribute('aria-selected', 'true')
     expect(statusTab).toHaveAttribute('aria-selected', 'false')
   })
+
+  it('falls back to Status when the open tab goes away', async () => {
+    const user = userEvent.setup()
+    const { rerender } = await renderDrawer({
+      object: service(),
+      state: criticalState({ perf_data: 'load1=3.5;5;10;0;16' }),
+      connectionId: 'test'
+    })
+    await user.click(screen.getByRole('tab', { name: 'Performance' }))
+
+    await rerender({ object: service(), state: criticalState(), connectionId: 'test' })
+
+    expect(screen.queryByRole('tab', { name: 'Performance' })).not.toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Status' })).toHaveAttribute('aria-selected', 'true')
+  })
 })

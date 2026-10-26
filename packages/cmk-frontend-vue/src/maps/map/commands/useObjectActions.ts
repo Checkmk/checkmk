@@ -226,10 +226,10 @@ export function useObjectActions(
     statesStore.refreshAfterCommand()
   }
 
-  // No refresh: a comment changes nothing the map draws, unlike an
-  // acknowledgement or a downtime.
+  // A comment changes nothing the map draws, but the slide-in lists it.
   function closeCommentModal(): void {
     commentModalObject.value = null
+    statesStore.refreshAfterCommand()
   }
 
   function closeRemoveDowntimeModal(): void {

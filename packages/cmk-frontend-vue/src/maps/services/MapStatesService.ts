@@ -152,6 +152,11 @@ export class MapStatesService {
    * otherwise sit on a spinner that never stops, so it shows this instead.
    */
   public readonly loadError: Ref<string | null> = ref(null)
+  /**
+   * Counts the refreshes after a command, for what is fetched beside the
+   * stream -- an object's comments and downtimes -- to follow along.
+   */
+  public readonly commandRefreshes: Ref<number> = ref(0)
   public readonly topology: Ref<TopologyNode[]> = ref([])
   public readonly topologyReady: Ref<boolean> = ref(false)
   /**
@@ -489,12 +494,14 @@ export class MapStatesService {
    */
   public refreshAfterCommand(): void {
     void this.refresh()
+    this.commandRefreshes.value++
     if (this.postCommandTimer) {
       clearTimeout(this.postCommandTimer)
     }
     this.postCommandTimer = setTimeout(() => {
       this.postCommandTimer = null
       void this.refresh()
+      this.commandRefreshes.value++
     }, 1500)
   }
 

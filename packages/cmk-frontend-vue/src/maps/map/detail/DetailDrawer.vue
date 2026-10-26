@@ -34,7 +34,7 @@ import { isProblemState } from '@/maps/utils/problemState'
 import { stateColorVar } from '@/maps/utils/stateColors'
 import { objectName } from '@/maps/utils/template'
 
-import { activityCount } from './activityFacts'
+import { activityCount, activityTabLabel } from './activityFacts'
 import DetailActions from './components/DetailActions.vue'
 import DetailActivityTab from './components/DetailActivityTab.vue'
 import DetailAggregationSection from './components/DetailAggregationSection.vue'
@@ -237,15 +237,27 @@ const siteProblemsUrl = computed(() => {
   return `${stripCheckmkBase(props.checkmkUrl)}/check_mk/view.py?${params}`
 })
 
-const showContextTab = computed(() => hasContextFacts(details.value, _t))
-const showActivityTab = computed(() => activityCount(details.value) > 0)
-
 const activeTab = ref('status')
 
 // A different object may not have the tab the previous one was read on, and
 // landing on an empty pane reads as a broken drawer.
 watch([() => props.object?.host_name, () => props.object?.service_description], () => {
   activeTab.value = 'status'
+})
+
+const tabShown = computed<Record<string, boolean>>(() => ({
+  status: true,
+  performance: showPerformanceTab.value,
+  context: hasContextFacts(details.value, _t),
+  members: isGroup.value,
+  activity: activityCount(details.value) > 0
+}))
+
+// The open tab can go too, e.g. once its last downtime is removed.
+watch(tabShown, (shown) => {
+  if (!shown[activeTab.value]) {
+    activeTab.value = 'status'
+  }
 })
 
 // Focus moves in on open and back out on close, so a keyboard user lands in the
@@ -308,17 +320,17 @@ const accentStyle = computed(() => ({
         <CmkTabs v-model="activeTab" class="maps-detail-drawer__tabs">
           <template #tabs>
             <CmkTab id="status">{{ _t('Status') }}</CmkTab>
-            <CmkTab v-if="showPerformanceTab" id="performance">{{ _t('Performance') }}</CmkTab>
-            <CmkTab v-if="showContextTab" id="context">{{ _t('Context') }}</CmkTab>
-            <CmkTab v-if="isGroup" id="members">
+            <CmkTab v-if="tabShown.performance" id="performance">{{ _t('Performance') }}</CmkTab>
+            <CmkTab v-if="tabShown.context" id="context">{{ _t('Context') }}</CmkTab>
+            <CmkTab v-if="tabShown.members" id="members">
               <span class="maps-detail-drawer__tab-with-count">
                 {{ _t('Members') }}
                 <span class="maps-detail-drawer__tab-count">{{ groupMembers.length }}</span>
               </span>
             </CmkTab>
-            <CmkTab v-if="showActivityTab" id="activity">
+            <CmkTab v-if="tabShown.activity" id="activity">
               <span class="maps-detail-drawer__tab-with-count">
-                {{ _t('Activity') }}
+                {{ activityTabLabel(details, _t) }}
                 <span class="maps-detail-drawer__tab-count">{{ activityCount(details) }}</span>
               </span>
             </CmkTab>
@@ -357,7 +369,7 @@ const accentStyle = computed(() => ({
               </DetailStatusTab>
             </CmkTabContent>
 
-            <CmkTabContent v-if="showPerformanceTab" id="performance" spacing="none">
+            <CmkTabContent v-if="tabShown.performance" id="performance" spacing="none">
               <DetailPerformanceTab
                 :headline="mainHeadline"
                 :headline-row="mainPerfRow"
@@ -371,7 +383,7 @@ const accentStyle = computed(() => ({
               />
             </CmkTabContent>
 
-            <CmkTabContent v-if="showContextTab" id="context" spacing="none">
+            <CmkTabContent v-if="tabShown.context" id="context" spacing="none">
               <DetailContextTab
                 :details="details"
                 :selectable-hosts="selectableHosts ?? []"
@@ -379,7 +391,7 @@ const accentStyle = computed(() => ({
               />
             </CmkTabContent>
 
-            <CmkTabContent v-if="isGroup" id="members" spacing="none">
+            <CmkTabContent v-if="tabShown.members" id="members" spacing="none">
               <DetailMembersTab
                 :members="groupMembers"
                 :visible-members="visibleMembers"
@@ -398,7 +410,7 @@ const accentStyle = computed(() => ({
               />
             </CmkTabContent>
 
-            <CmkTabContent v-if="showActivityTab" id="activity" spacing="none">
+            <CmkTabContent v-if="tabShown.activity" id="activity" spacing="none">
               <DetailActivityTab :details="details" :now-ms="nowMs" />
             </CmkTabContent>
           </template>

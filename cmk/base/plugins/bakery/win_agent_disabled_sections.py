@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import register, WindowsConfigGenerator, WindowsGlobalConfigEntry
+from cmk.bakery.v2 import BakeryPlugin, WindowsConfigGenerator, WindowsGlobalConfigEntry
 
 
 class _Config(BaseModel):
@@ -15,13 +15,14 @@ class _Config(BaseModel):
 
 
 def get_win_agent_disabled_sections_windows_config(
-    conf: Mapping[str, object],
+    config: _Config,
 ) -> WindowsConfigGenerator:
-    config = _Config.model_validate(conf)
     yield WindowsGlobalConfigEntry(name="disabled_sections", content=list(config.sections))
 
 
-register.bakery_plugin(
+bakery_plugin_win_agent_disabled_sections = BakeryPlugin(
     name="win_agent_disabled_sections",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     windows_config_function=get_win_agent_disabled_sections_windows_config,
 )

@@ -3,20 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from typing import Literal
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import register, WindowsConfigGenerator, WindowsGlobalConfigEntry
+from cmk.bakery.v2 import BakeryPlugin, WindowsConfigGenerator, WindowsGlobalConfigEntry
 
 
 class _Config(BaseModel):
     mode: tuple[Literal["all_files"], None] | tuple[Literal["only"], Sequence[str]]
 
 
-def get_win_exe_suffixes_windows_config(conf: Mapping[str, object]) -> WindowsConfigGenerator:
-    config = _Config.model_validate(conf)
+def get_win_exe_suffixes_windows_config(config: _Config) -> WindowsConfigGenerator:
     match config.mode:
         case ("all_files", _):
             return
@@ -24,7 +23,9 @@ def get_win_exe_suffixes_windows_config(conf: Mapping[str, object]) -> WindowsCo
             yield WindowsGlobalConfigEntry(name="execute", content=list(suffixes))
 
 
-register.bakery_plugin(
+bakery_plugin_win_exe_suffixes = BakeryPlugin(
     name="win_exe_suffixes",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     windows_config_function=get_win_exe_suffixes_windows_config,
 )

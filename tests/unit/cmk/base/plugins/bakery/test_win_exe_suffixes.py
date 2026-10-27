@@ -3,21 +3,41 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.bakery.v1 import WindowsGlobalConfigEntry
-from cmk.base.plugins.bakery.win_exe_suffixes import get_win_exe_suffixes_windows_config
+from cmk.bakery.v2 import WindowsGlobalConfigEntry
+from cmk.base.plugins.bakery.win_exe_suffixes import (
+    bakery_plugin_win_exe_suffixes,
+    get_win_exe_suffixes_windows_config,
+)
 
 
 def test_win_exe_suffixes_windows_config() -> None:
-    assert list(get_win_exe_suffixes_windows_config({"mode": ("only", ["exe", "bat", "vbs"])})) == [
+    assert list(
+        get_win_exe_suffixes_windows_config(
+            bakery_plugin_win_exe_suffixes.parameter_parser(
+                {"mode": ("only", ["exe", "bat", "vbs"])}
+            )
+        )
+    ) == [
         WindowsGlobalConfigEntry(name="execute", content=["exe", "bat", "vbs"]),
     ]
 
 
 def test_win_exe_suffixes_windows_config_empty_list() -> None:
-    assert list(get_win_exe_suffixes_windows_config({"mode": ("only", [])})) == [
+    assert list(
+        get_win_exe_suffixes_windows_config(
+            bakery_plugin_win_exe_suffixes.parameter_parser({"mode": ("only", [])})
+        )
+    ) == [
         WindowsGlobalConfigEntry(name="execute", content=[]),
     ]
 
 
 def test_win_exe_suffixes_windows_config_execute_all() -> None:
-    assert list(get_win_exe_suffixes_windows_config({"mode": ("all_files", None)})) == []
+    assert (
+        list(
+            get_win_exe_suffixes_windows_config(
+                bakery_plugin_win_exe_suffixes.parameter_parser({"mode": ("all_files", None)})
+            )
+        )
+        == []
+    )

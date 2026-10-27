@@ -92,6 +92,7 @@ from omdlib.skel_permissions import (
     skel_permissions_file_path,
 )
 from omdlib.system_apache import (
+    apache_settings,
     delete_apache_hook,
     register_with_system_apache,
     unregister_from_system_apache,
@@ -1986,9 +1987,7 @@ def init_site(
         version_info,
         SitePaths.from_site_name(site.name).apache_conf,
         site.name,
-        config["APACHE_TCP_ADDR"],
-        config["APACHE_TCP_PORT"],
-        config["APACHE_FORWARDED_HEADERS"],
+        apache_settings(config),
         apache_reload,
         verbose=global_opts.verbose,
     )
@@ -2148,9 +2147,7 @@ def main_enable(
         version_info,
         site_paths.apache_conf,
         site_name,
-        config["APACHE_TCP_ADDR"],
-        config["APACHE_TCP_PORT"],
-        config["APACHE_FORWARDED_HEADERS"],
+        apache_settings(config),
         False,
         verbose=global_opts.verbose,
     )
@@ -2170,9 +2167,7 @@ def main_update_apache_config(
             version_info,
             site_paths.apache_conf,
             site_name,
-            config["APACHE_TCP_ADDR"],
-            config["APACHE_TCP_PORT"],
-            config["APACHE_FORWARDED_HEADERS"],
+            apache_settings(config),
             True,
             verbose=global_opts.verbose,
         )
@@ -2331,9 +2326,7 @@ def main_mv_or_cp(
         version_info,
         SitePaths.from_site_name(new_site.name).apache_conf,
         new_site.name,
-        config["APACHE_TCP_ADDR"],
-        config["APACHE_TCP_PORT"],
-        config["APACHE_FORWARDED_HEADERS"],
+        apache_settings(config),
         "apache-reload" in options,
         verbose=global_opts.verbose,
     )
@@ -3085,9 +3078,7 @@ def _restore_backup_from_tar_root(
         version_info,
         SitePaths.from_site_name(site.name).apache_conf,
         site.name,
-        config["APACHE_TCP_ADDR"],
-        config["APACHE_TCP_PORT"],
-        config["APACHE_FORWARDED_HEADERS"],
+        apache_settings(config),
         "apache-reload" in options,
         verbose=global_opts.verbose,
     )

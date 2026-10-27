@@ -9,6 +9,7 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
 import pydantic
 
@@ -18,6 +19,8 @@ from omdlib.utils import is_containerized
 from omdlib.version_info import VersionInfo
 
 __all__ = [
+    "ApacheSettings",
+    "apache_settings",
     "register_with_system_apache",
     "unregister_from_system_apache",
     "delete_apache_hook",
@@ -30,6 +33,20 @@ _CONF_HEADER = (
     " and 'omd config set APACHE_TCP_ADDR'.\n"
     "# Better do not edit manually\n"
 )
+
+
+class ApacheSettings(NamedTuple):
+    tcp_addr: str
+    tcp_port: str
+    forwarded_headers: str
+
+
+def apache_settings(config: Config) -> ApacheSettings:
+    return ApacheSettings(
+        tcp_addr=config["APACHE_TCP_ADDR"],
+        tcp_port=config["APACHE_TCP_PORT"],
+        forwarded_headers=config["APACHE_FORWARDED_HEADERS"],
+    )
 
 
 def write_apache_listen_conf(_site_name: str, site_home: Path, config: Config) -> None:
@@ -85,9 +102,7 @@ def register_with_system_apache(
     version_info: VersionInfo,
     apache_config: Path,
     site_name: str,
-    apache_tcp_addr: str,
-    apache_tcp_port: str,
-    forwarded_headers: str,
+    settings: ApacheSettings,
     apache_reload: bool,
     verbose: bool,
 ) -> None:
@@ -98,14 +113,12 @@ def register_with_system_apache(
 
     Root permissions are needed to make this work.
     """
-    if (err := apache_TCP_addr_has_error(apache_tcp_addr)) is not None:
-        sys.exit(f"Invalid value for '{apache_tcp_addr}' for APACHE_TCP_ADDR'. {err}\n")
-    if (err := apache_network_port_has_error(apache_tcp_port)) is not None:
-        sys.exit(f"Invalid value for '{apache_tcp_port}' for APACHE_TCP_PORT'. {err}\n")
+    if (err := apache_TCP_addr_has_error(settings.tcp_addr)) is not None:
+        sys.exit(f"Invalid value for '{settings.tcp_addr}' for 'APACHE_TCP_ADDR'. {err}\n")
+    if (err := apache_network_port_has_error(settings.tcp_port)) is not None:
+        sys.exit(f"Invalid value for '{settings.tcp_port}' for 'APACHE_TCP_PORT'. {err}\n")
 
-    create_apache_hook(
-        apache_config, site_name, apache_tcp_addr, apache_tcp_port, forwarded_headers
-    )
+    create_apache_hook(apache_config, site_name, settings)
     apply_apache_config(version_info, apache_reload, verbose)
 
 
@@ -353,16 +366,14 @@ def _render_apache_hook(
 """
 
 
-def create_apache_hook(
-    apache_config: Path,
-    site_name: str,
-    apache_tcp_addr: str,
-    apache_tcp_port: str,
-    forwarded_headers: str,
-) -> None:
+def create_apache_hook(apache_config: Path, site_name: str, settings: ApacheSettings) -> None:
     apache_config.parent.mkdir(parents=True, exist_ok=True)
     with open(apache_config, "w") as f:
-        f.write(_render_apache_hook(site_name, apache_tcp_addr, apache_tcp_port, forwarded_headers))
+        f.write(
+            _render_apache_hook(
+                site_name, settings.tcp_addr, settings.tcp_port, settings.forwarded_headers
+            )
+        )
     os.chmod(apache_config, 0o644)  # Ensure the site user can read the files created by root
 
 

@@ -3558,6 +3558,7 @@ pygments==2.21.0 \
     #   -r requirements_all.txt
     #   exchangelib
     #   furo
+    #   pytest
     #   readme-renderer
     #   rich
     #   sphinx
@@ -3772,9 +3773,9 @@ pyspnego==0.12.3 \
     # via
     #   -r requirements_all.txt
     #   requests-ntlm
-pytest==8.3.4 \
-    --hash=sha256:50e16d954148559c9a74109af1eaf0c945ba2d8f30f0a3d3335edde19788b6f6 \
-    --hash=sha256:965370d062bce11e73868e0335abac31b4d3de0e82f4007408d242b4f8610761
+pytest==9.1.1 \
+    --hash=sha256:1088fbde8f2b49d95a549a195707afa7a76a3ce9bcadc26b6d71f0ffda5fe313 \
+    --hash=sha256:37a86b45efb9a47a61a36449063e8e18d0cab3161329fc099eb21783169c4f0c
     # via
     #   -r requirements_all.txt
     #   -r requirements_dev.txt
@@ -3790,9 +3791,9 @@ pytest==8.3.4 \
     #   pytest-random-order
     #   pytest-repeat
     #   pytest-xdist
-pytest-asyncio==0.25.3 \
-    --hash=sha256:9e89518e0f9bd08928f97a3482fdc4e244df17529460bc038291ccaf8f85c7c3 \
-    --hash=sha256:fc1da2cf9f125ada7e710b4ddad05518d4cee187ae9412e9ac9271003497f07a
+pytest-asyncio==1.3.0 \
+    --hash=sha256:611e26147c7f77640e6d0a92a38ed17c3e9848063698d5c93d5aa7aa11cebff5 \
+    --hash=sha256:d7f52f36d231b80ee124cd216ffb19369aa168fc10095013c6b014a34d3ee9e5
     # via -r requirements_dev.txt
 pytest-base-url==2.1.0 \
     --hash=sha256:02748589a54f9e63fcbe62301d6b0496da0d10231b753e950c63e03aee745d45 \
@@ -3824,9 +3825,9 @@ pytest-opentelemetry==1.0.1 \
     --hash=sha256:2fbedb36ca11b2c5a4ca9692e733cdb4311590bbd64cd67fe75d34bc9cd69ed2 \
     --hash=sha256:38455f3cad047ca46861912a91169c45cf96516cce8c4036e1e0d135d0515316
     # via -r requirements_dev.txt
-pytest-playwright==0.7.1 \
-    --hash=sha256:94b551b2677ecdc16284fcd6a4f0045eafda47a60e74410f3fe4d8260e12cabf \
-    --hash=sha256:fcc46510fb75f8eba6df3bc8e84e4e902483d92be98075f20b9d160651a36d90
+pytest-playwright==0.7.2 \
+    --hash=sha256:247b61123b28c7e8febb993a187a07e54f14a9aa04edc166f7a976d88f04c770 \
+    --hash=sha256:8084e015b2b3ecff483c2160f1c8219b38b66c0d4578b23c0f700d1b0240ea38
     # via -r requirements_dev.txt
 pytest-random-order==1.1.1 \
     --hash=sha256:4472d7d34f1f1c5f3a359c4ffc5c13ed065232f31eca19c8844c1ab406e79080 \
@@ -4845,6 +4846,7 @@ typing-extensions==4.16.0 \
     #   pydantic
     #   pydantic-core
     #   pyee
+    #   pytest-asyncio
     #   reactivex
     #   referencing
     #   starlette

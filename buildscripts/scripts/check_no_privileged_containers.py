@@ -30,7 +30,6 @@ SCAN_DIR = "buildscripts"
 ALLOWED = frozenset(
     {
         "buildscripts/scripts/build-cmk-image.groovy",
-        "buildscripts/scripts/test-performance.groovy",
         "buildscripts/scripts/test-system-agent-updates.groovy",
         "buildscripts/scripts/test-system-gui-single-node.groovy",
         "buildscripts/scripts/test-system-mk-oracle.groovy",

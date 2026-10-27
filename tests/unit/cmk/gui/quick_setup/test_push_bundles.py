@@ -95,3 +95,19 @@ def test_host_overrides_can_disqualify_an_inherited_push_bundle(
     host = Host(push_folder, HostName("source"), host_attributes, None)
 
     assert not valid_special_agent_bundle(BundleReferences(hosts=[host]), allow_push_agent=True)
+
+
+@pytest.mark.usefixtures("load_config")
+def test_rule_of_another_rule_set_does_not_invalidate_a_special_agent_bundle() -> None:
+    folder = make_folder_tree(Config()).root_folder()
+    host = Host(folder, HostName("source"), {"tag_agent": "special-agents"}, None)
+    rulesets = FolderRulesets.load_folder_rulesets(folder)
+    bundle = BundleReferences(
+        hosts=[host],
+        rules=[
+            Rule.from_ruleset(folder, rulesets.get("host_contactgroups"), "all"),
+            Rule.from_ruleset(folder, rulesets.get("special_agents:aws"), {}),
+        ],
+    )
+
+    assert valid_special_agent_bundle(bundle)

@@ -54,10 +54,12 @@ from cmk.gui.watolib.configuration_bundle_store import (
 from cmk.gui.watolib.configuration_bundles import (
     bundle_domains,
     BundleReferences,
+    complementary_rules,
     delete_config_bundle,
     delete_config_bundle_objects,
     edit_config_bundle_configuration,
     identify_bundle_references,
+    special_agent_rules,
     valid_special_agent_bundle,
 )
 from cmk.gui.watolib.hosts_and_folders import (
@@ -479,10 +481,10 @@ class ModeEditConfigurationBundles(WatoMode):
                         )
                     )
                 )
-                if not bundle.rules:
+                if not (agent_rules := special_agent_rules(bundle)):
                     html.write_text(_("Push mode"))
                     continue
-                rule_value = bundle.rules[0].value
+                rule_value = agent_rules[0].value
                 try:
                     value_html = special_agent_valuespec.value_to_html(rule_value)
                 except Exception as e:
@@ -1006,8 +1008,8 @@ class ModeConfigurationBundle(WatoMode):
             ),
         ]
 
-        if self._bundle_references.rules:
-            rule = self._bundle_references.rules[0]
+        if agent_rules := special_agent_rules(self._bundle_references):
+            rule = agent_rules[0]
             bundle_entity_links.insert(
                 0,
                 MenuItem(
@@ -1056,6 +1058,30 @@ class ModeConfigurationBundle(WatoMode):
                     ).format(password_title=password["title"]),
                 )
             )
+
+        bundle_entity_links.extend(
+            MenuItem(
+                mode_or_url=mode_url(
+                    "edit_rule",
+                    varname=complementary_rule.ruleset.name,
+                    rule_id=complementary_rule.id,
+                ),
+                title=(
+                    _("Rule: {rule_name}").format(rule_name=rule_name)
+                    if (rule_name := complementary_rule.description())
+                    else _("Additional rule")
+                ),
+                icon=StaticIcon(IconNames.rulesets),
+                permission="rulesets",
+                description=_(
+                    'Rule set "{rule_title}". Deleted together with this configuration.'
+                ).format(
+                    rule_title=complementary_rule.ruleset.title() or complementary_rule.ruleset.name
+                ),
+            )
+            for complementary_rule in complementary_rules(self._bundle_references)
+        )
+
         TileMenuRenderer(bundle_entity_links, tile_size="large").show()
 
     def _page_section_bundle_configuration(self) -> None:

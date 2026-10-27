@@ -12,6 +12,7 @@ from uuid import uuid4
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -68,6 +69,7 @@ from cmk.gui.watolib.pending_changes import (
     PendingChanges,
     PendingChangesStore,
 )
+from cmk.gui.watolib.rulesets import may_edit_ruleset
 from cmk.gui.watolib.services import (
     DiscoveryAction,
     DiscoveryResult,
@@ -172,6 +174,31 @@ def create_rule(
     bundle_id: BundleId,
     site_id: str,
 ) -> CreateRule:
+    return create_bundle_rule(
+        params=params,
+        host_path=host_path,
+        rulespec_name=rulespec_name,
+        condition=RuleConditionsSpec(
+            host_tags={},
+            host_label_groups=[],
+            host_name=[host_name],
+            host_folder=host_path,
+        ),
+        bundle_id=bundle_id,
+        site_id=site_id,
+    )
+
+
+def create_bundle_rule(
+    params: Mapping[str, object],
+    host_path: str,
+    rulespec_name: str,
+    condition: RuleConditionsSpec,
+    bundle_id: BundleId,
+    site_id: str,
+    description: str = "",
+) -> CreateRule:
+    """A rule that is locked by the Quick Setup bundle, so that it is deleted with it."""
     return CreateRule(
         folder=host_path,
         ruleset=rulespec_name,
@@ -183,13 +210,8 @@ def create_rule(
                 program_id=PROGRAM_ID_QUICK_SETUP,
                 instance_id=bundle_id,
             ),
-            condition=RuleConditionsSpec(
-                host_tags={},
-                host_label_groups=[],
-                host_name=[host_name],
-                host_folder=host_path,
-            ),
-            options=RuleOptionsSpec(disabled=False, description=""),
+            condition=condition,
+            options=RuleOptionsSpec(disabled=False, description=description),
         ),
     )
 
@@ -211,6 +233,17 @@ def create_and_save_special_agent_bundle(
     )
 
 
+# Rules of other rule sets that complement the special agent rule. Arguments: the special agent
+# rule's value, bundle id, site id and the folder of the special agent host.
+type AdditionalRules = Callable[
+    [Mapping[str, object], BundleId, SiteId, Folder], Sequence[CreateRule]
+]
+
+
+def _no_additional_rules(*_args: object) -> Sequence[CreateRule]:
+    return ()
+
+
 def create_and_save_special_agent_bundle_custom_collect_params(
     special_agent_name: str,
     parameter_form: Dictionary,
@@ -218,6 +251,7 @@ def create_and_save_special_agent_bundle_custom_collect_params(
     custom_collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
     progress_logger: ProgressLogger,
     tree: FolderTree,
+    additional_rules: AdditionalRules = _no_additional_rules,
 ) -> str:
     return _create_and_save_special_agent_bundle(
         special_agent_name=special_agent_name,
@@ -226,6 +260,7 @@ def create_and_save_special_agent_bundle_custom_collect_params(
         collect_params=custom_collect_params,
         progress_logger=progress_logger,
         tree=tree,
+        additional_rules=additional_rules,
     )
 
 
@@ -300,6 +335,16 @@ def _extract_explicit_password_entities(
     return params, password_entities
 
 
+def _ensure_user_may_create_rules(rules: Sequence[CreateRule]) -> None:
+    # The Quick Setup pages need "wato.rulesets", but some rule sets need more permissions.
+    for rule in rules:
+        if not may_edit_ruleset(rule["ruleset"]):
+            raise MKAuthException(
+                _('You are not permitted to create rules of the rule set "%(ruleset)s".')
+                % {"ruleset": rule["ruleset"]}
+            )
+
+
 def _create_and_save_special_agent_bundle(
     special_agent_name: str,
     parameter_form: Dictionary,
@@ -307,6 +352,7 @@ def _create_and_save_special_agent_bundle(
     collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
     progress_logger: ProgressLogger,
     tree: FolderTree,
+    additional_rules: AdditionalRules = _no_additional_rules,
 ) -> str:
     rulespec_name = RuleGroup.SpecialAgents(special_agent_name)
     bundle_id = _find_bundle_id(all_stages_form_data)
@@ -350,6 +396,18 @@ def _create_and_save_special_agent_bundle(
         pending_changes=pending_changes,
     )
     validated_host_name = HostName(host_name)
+    rules = [
+        create_rule(
+            params=params,
+            host_name=validated_host_name,
+            host_path=folder.path(),
+            rulespec_name=rulespec_name,
+            bundle_id=bundle_id,
+            site_id=site_id,
+        ),
+        *additional_rules(params, bundle_id, site_id, folder),
+    ]
+    _ensure_user_may_create_rules(rules)
     progress_logger.log_new_progress_step(
         "create_config_bundle", "Create underlying configurations"
     )
@@ -372,16 +430,7 @@ def _create_and_save_special_agent_bundle(
                 )
             ],
             passwords=password_entities,
-            rules=[
-                create_rule(
-                    params=params,
-                    host_name=validated_host_name,
-                    host_path=folder.path(),
-                    rulespec_name=rulespec_name,
-                    bundle_id=bundle_id,
-                    site_id=site_id,
-                )
-            ],
+            rules=rules,
             dcd_connections=DCDHook.create_dcd_connections(
                 bundle_id, site_id, validated_host_name, folder
             ),

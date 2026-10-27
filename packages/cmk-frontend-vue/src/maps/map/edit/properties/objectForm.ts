@@ -219,7 +219,9 @@ export function formFromObject(object: MapElement, defaults: ObjectFormDefaults)
  * Only what the object's own type can carry is included: a hostname on a
  * textbox, or line coordinates on a worldmap object, would be stored and then
  * silently ignored by every renderer. Empty strings become null so that
- * clearing a field really unsets it rather than storing "".
+ * clearing a field really unsets it rather than storing "". A cleared number
+ * field holds "" too (a native number input's v-model keeps it), so an
+ * optional one becomes null and any other one keeps what the object stores.
  */
 export function updatesFromForm(
   form: ObjectForm,
@@ -237,7 +239,7 @@ export function updatesFromForm(
         : {
             mode: form.display.mode,
             image: form.display.image || null,
-            image_size: form.display.image_size ?? null,
+            image_size: optionalNumber(form.display.image_size),
             gadget_type: form.display.mode === 'gadget' ? form.display.gadget_type : null,
             gadget_metric:
               form.display.mode === 'gadget' ? form.display.gadget_metric || null : null
@@ -245,31 +247,31 @@ export function updatesFromForm(
     label: {
       show: form.label.show,
       text: form.label.text || null,
-      x: form.label.x,
-      y: form.label.y,
-      size: form.label.size,
+      x: numberOr(form.label.x, object.label?.x),
+      y: numberOr(form.label.y, object.label?.y),
+      size: numberOr(form.label.size, object.label?.size),
       color: form.label.color,
       background: form.label.background,
       align: form.label.align
     },
     label_border: form.label_border || null,
-    label_maxlen: form.label_maxlen ?? null,
+    label_maxlen: optionalNumber(form.label_maxlen),
     textbox_background: form.textbox_background || null,
     textbox_border: form.textbox_border || null,
-    textbox_width: form.textbox_width ?? null,
-    textbox_height: form.textbox_height ?? null,
+    textbox_width: optionalNumber(form.textbox_width),
+    textbox_height: optionalNumber(form.textbox_height),
     graph_url: form.graph_url || null,
     graph_embed_type: form.graph_embed_type,
-    graph_width: form.graph_width,
-    graph_height: form.graph_height,
-    graph_refresh_interval: form.graph_refresh_interval,
+    graph_width: numberOr(form.graph_width, object.graph_width),
+    graph_height: numberOr(form.graph_height, object.graph_height),
+    graph_refresh_interval: numberOr(form.graph_refresh_interval, object.graph_refresh_interval),
     graph_metric: form.graph_metric.length ? form.graph_metric : null,
     graph_id: form.graph_id || null,
     graph_time_window: form.graph_time_window,
     line_style: form.line_style,
     line_color: form.line_color || null,
     line_color_border: form.line_color_border || null,
-    line_width: form.line_width ?? null,
+    line_width: optionalNumber(form.line_width),
     line_perfdata_label: form.line_perfdata_label,
     line_weather_color: form.line_weather_color,
     url: form.url || null,
@@ -279,7 +281,7 @@ export function updatesFromForm(
     context_template: form.context_template || null,
     exclude_members: form.exclude_members || null,
     exclude_member_states: form.exclude_member_states || null,
-    z: form.z
+    z: numberOr(form.z, object.z)
   }
 
   // A line is bound like the object it shows; switching what that is drops the
@@ -332,7 +334,7 @@ export function updatesFromForm(
     updates.aggregation_id = form.aggregation_id || null
   }
   if (type === 'aggregation') {
-    updates.expand_depth = form.expand_depth ?? 0
+    updates.expand_depth = numberOr(form.expand_depth, object.expand_depth ?? 0)
   }
   if (bound === 'dyngroup') {
     updates.object_types = form.object_types
@@ -352,20 +354,32 @@ export function updatesFromForm(
       updates.weathermap_metric_out = (form.weathermap_metric && form.weathermap_metric_out) || null
     }
     if (mapType !== 'worldmap') {
-      updates.x = form.x
-      updates.y = form.y
-      updates.x2 = form.x2
-      updates.y2 = form.y2
+      updates.x = numberOr(form.x, object.x)
+      updates.y = numberOr(form.y, object.y)
+      updates.x2 = numberOr(form.x2, object.x2)
+      updates.y2 = numberOr(form.y2, object.y2)
     }
   } else if (mapType === 'worldmap') {
-    updates.lat = form.lat
-    updates.lng = form.lng
+    updates.lat = numberOr(form.lat, object.lat)
+    updates.lng = numberOr(form.lng, object.lng)
   } else {
-    updates.x = form.x
-    updates.y = form.y
+    updates.x = numberOr(form.x, object.x)
+    updates.y = numberOr(form.y, object.y)
   }
 
   return updates
+}
+
+function isNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+function optionalNumber(value: number | undefined): number | null {
+  return isNumber(value) ? value : null
+}
+
+function numberOr<T>(value: number, stored: T): number | T {
+  return isNumber(value) ? value : stored
 }
 
 /**

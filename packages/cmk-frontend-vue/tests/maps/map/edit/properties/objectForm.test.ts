@@ -22,6 +22,9 @@ function serviceLine(): MapElement {
   return obj({ type: 'line', host_name: 'sw01', service_description: 'Interface 1' })
 }
 
+/** What an emptied number input holds: its native v-model keeps the "". */
+const EMPTIED = '' as unknown as number
+
 function formOf(object: MapElement) {
   return formFromObject(object, { z: 7 })
 }
@@ -123,6 +126,23 @@ describe('updatesFromForm', () => {
     form.url = ''
 
     expect(updatesFromForm(form, object, 'static').url).toBeNull()
+  })
+
+  it('unsets an optional number field that was emptied', () => {
+    const object = obj({ type: 'line', line_width: 4 })
+    const form = formOf(object)
+    form.line_width = EMPTIED
+
+    expect(updatesFromForm(form, object, 'static').line_width).toBeNull()
+  })
+
+  it('keeps the stored value of any other number field that was emptied', () => {
+    const object = obj({ type: 'host', z: 3 })
+    const form = formOf(object)
+    form.x = EMPTIED
+    form.z = EMPTIED
+
+    expect(updatesFromForm(form, object, 'static')).toMatchObject({ x: 40, z: 3 })
   })
 
   it('drops the display block for a graph and a line — neither has an icon', () => {

@@ -2,14 +2,14 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from pathlib import Path
 from shlex import quote
 from typing import Literal
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import FileGenerator, OS, PluginConfig, register
+from cmk.bakery.v2 import BakeryPlugin, FileGenerator, OS, PluginConfig
 
 
 class _Config(BaseModel):
@@ -18,8 +18,7 @@ class _Config(BaseModel):
     """Empty string: use the default commands"""
 
 
-def get_python_plugins_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Config.model_validate(conf)
+def get_python_plugins_files(config: _Config) -> FileGenerator:
     if config.python_version == "auto" and not config.command:
         return
 
@@ -46,7 +45,9 @@ def _get_python_plugins_config(config: _Config) -> Iterator[str]:
         yield "PYTHON2="
 
 
-register.bakery_plugin(
+bakery_plugin_python_plugins = BakeryPlugin(
     name="python_plugins",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     files_function=get_python_plugins_files,
 )

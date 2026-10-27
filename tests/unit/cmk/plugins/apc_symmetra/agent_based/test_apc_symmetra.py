@@ -70,47 +70,68 @@ STRING_TABLE_3 = [
         ]
     ],
     [
-        ["0010000000000000"],
-        ["0000000000000000"],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""],
+        ["1000000000000000", "0010000000000000"],
+        ["1000000000000000", "0000000000000000"],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
     ],
 ]
 # Cartridge flagging "Overvoltage" together with "Needs Replacement".
 STRING_TABLE_4 = [
     STRING_TABLE_3[0],
     STRING_TABLE_3[1],
-    [["0110000000000000"]],
+    [["1000000000000000", "0110000000000000"]],
 ]
 # Cartridge flagging "Disconnected" only.
 STRING_TABLE_5 = [
     STRING_TABLE_3[0],
     STRING_TABLE_3[1],
-    [["1000000000000000"]],
+    [["1000000000000000", "1000000000000000"]],
 ]
 # Cartridge flagging "Disconnected" together with "Overvoltage".
 STRING_TABLE_6 = [
     STRING_TABLE_3[0],
     STRING_TABLE_3[1],
-    [["1100000000000000"]],
+    [["1000000000000000", "1100000000000000"]],
+]
+# Cartridge reporting an exceeded lifetime in its health, but no "Needs Replacement" flag.
+STRING_TABLE_7 = [
+    STRING_TABLE_3[0],
+    STRING_TABLE_3[1],
+    [["0010000000000000", "0000000000000000"]],
+]
+# Cartridge reporting an exceeded lifetime together with "Needs Replacement".
+STRING_TABLE_8 = [
+    STRING_TABLE_3[0],
+    STRING_TABLE_3[1],
+    [["0010000000000000", "0010000000000000"]],
+]
+# Cartridges reporting a lifetime near end and an acknowledged exceeded lifetime.
+STRING_TABLE_9 = [
+    STRING_TABLE_3[0],
+    STRING_TABLE_3[1],
+    [
+        ["0100000000000000", "0000000000000000"],
+        ["0000100000000000", "0000000000000000"],
+    ],
 ]
 
 
@@ -304,6 +325,58 @@ STRING_TABLE_SENSORS_AND_BATTERY = [
                 ),
             ],
             id="cartridge_needs_replacement_follows_replace_state",
+        ),
+        pytest.param(
+            STRING_TABLE_7,
+            {"capacity": ("fixed", (95, 80)), "calibration_state": 0, "battery_replace_state": 2},
+            [
+                Result(state=State.OK, summary="Battery status: normal"),
+                Result(state=State.OK, summary="No battery needs replacing"),
+                Result(state=State.OK, summary="Output status: on line (calibration invalid)"),
+                Result(state=State.OK, summary="Capacity: 99.00%"),
+                Metric(name="capacity", value=99.0, boundaries=(0, 100)),
+                Result(state=State.OK, summary="Time remaining: 14 hours 23 minutes"),
+                Metric(name="runtime", value=51825.0),
+                Result(state=State.CRIT, summary="Battery pack cartridge 0: Lifetime exceeded"),
+            ],
+            id="cartridge_lifetime_exceeded_follows_replace_state",
+        ),
+        pytest.param(
+            STRING_TABLE_8,
+            {"capacity": ("fixed", (95, 80)), "calibration_state": 0, "battery_replace_state": 2},
+            [
+                Result(state=State.OK, summary="Battery status: normal"),
+                Result(state=State.OK, summary="No battery needs replacing"),
+                Result(state=State.OK, summary="Output status: on line (calibration invalid)"),
+                Result(state=State.OK, summary="Capacity: 99.00%"),
+                Metric(name="capacity", value=99.0, boundaries=(0, 100)),
+                Result(state=State.OK, summary="Time remaining: 14 hours 23 minutes"),
+                Metric(name="runtime", value=51825.0),
+                Result(
+                    state=State.CRIT,
+                    summary="Battery pack cartridge 0: Needs Replacement, Lifetime exceeded",
+                ),
+            ],
+            id="cartridge_status_and_health_in_one_result",
+        ),
+        pytest.param(
+            STRING_TABLE_9,
+            {"capacity": ("fixed", (95, 80)), "calibration_state": 0, "battery_replace_state": 2},
+            [
+                Result(state=State.OK, summary="Battery status: normal"),
+                Result(state=State.OK, summary="No battery needs replacing"),
+                Result(state=State.OK, summary="Output status: on line (calibration invalid)"),
+                Result(state=State.OK, summary="Capacity: 99.00%"),
+                Metric(name="capacity", value=99.0, boundaries=(0, 100)),
+                Result(state=State.OK, summary="Time remaining: 14 hours 23 minutes"),
+                Metric(name="runtime", value=51825.0),
+                Result(state=State.OK, summary="Battery pack cartridge 0: Lifetime near end"),
+                Result(
+                    state=State.OK,
+                    summary="Battery pack cartridge 1: Lifetime exceeded acknowledged",
+                ),
+            ],
+            id="cartridge_other_health_bits_ok",
         ),
         pytest.param(
             STRING_TABLE_2,

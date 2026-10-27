@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 from cmk.ccc.site import omd_site
 from cmk.ccc.store import load_from_mk_file
@@ -54,18 +54,6 @@ _LEGACY_UPDATER_GROUP = DictGroupExtended(
 )
 
 
-def _migrate(obj: object) -> Mapping[str, object]:
-    if not isinstance(obj, Mapping):
-        raise ValueError(obj)
-
-    if not obj:
-        return {
-            "updater_registration": "manual",
-        }
-
-    return obj
-
-
 def _migrate_activated(value: object) -> str:
     match value:
         # Up to Checkmk 2.5, the only updater was the legacy one. The compatible entry keeps it.
@@ -76,96 +64,20 @@ def _migrate_activated(value: object) -> str:
     raise ValueError(value)
 
 
-def _migrate_proxy_old_format(
-    value: object,
-) -> tuple[str, object]:
-    match value:
-        # used for migration from 2.4.0 version
-        case None:
-            return "no_proxy", None
-        # used for migration from 2.4.0 version
-        case "env":
-            return "env_proxy", "env"
-        # used for migration from 2.4.0 version
-        case {
-            "server": server,
-            "port": port,
-            "proxy_protocol": proxy_config,
-        }:
-            protocol, credentials = _parse_proxy_protocol(proxy_config)
-            creds = {}
-            if credentials:
-                creds = {
-                    "credentials": {
-                        "user": credentials[0],
-                        "password": credentials[1],
-                    }
-                }
-            return "explicit_proxy", {
-                "server": server,
-                "port": port,
-                "proxy_protocol": protocol,
-                **creds,
-            }
-        # new format with CascadingSingleChoice element
-        case ((str() as choice), config):
-            return choice, config
-        case _:
-            raise ValueError(value)
-
-
-def _parse_proxy_protocol(
-    proxy_protocol: object,
-) -> tuple[str, tuple[str, str] | None]:
-    match proxy_protocol:
-        case ("http", Mapping() as credentials):
-            return "http", credentials["credentials"]
-        case ("http", None):
-            return "http", None
-        case ("socks4", None):
-            return "socks4", None
-        case ("socks5", Mapping() as credentials):
-            return "socks5", credentials["credentials"]
-        case ("socks5", None):
-            return "socks5", None
-        case "http":
-            return "http", None
-        case "socks4":
-            return "socks4", None
-        case "socks5":
-            return "socks5", None
-        case _:
-            return "http", None
-
-
 def _migrate_edition(value: object) -> str:
     match value:
+        # Builds before Checkmk 2.5.0b1 stored the choice as a tuple. Checkmk 2.5 cannot
+        # convert it, so such rules can still come from a 2.5 site.
         case (str(choice), None):
             return _migrate_edition(choice)
-        case "bit64" | "64bit":
+        case "bit64":
             return "bit64"
-        case "32bit" | "bit32" | "script":
+        case "bit32" | "script":
             # 32bit binaries are no longer supported, migrate to script since that is the
             # only alternative for 32bit systems.
             return "script"
         case _:
             raise ValueError(value)
-
-
-def _migrate_certificates(value: object) -> Sequence[tuple[str, str, bytes]]:
-    if isinstance(value, list):
-        result: list[tuple[str, str, bytes]] = []
-        for idx, cert in enumerate(value):
-            if isinstance(cert, str):
-                # Old format: PEM string, convert to FileUpload tuple
-                cert_bytes = cert.encode()
-                result.append((f"certificate_{idx}.pem", "application/x-pem-file", cert_bytes))
-            elif isinstance(cert, tuple) and len(cert) == 3:
-                # Already in new format
-                name, mime_type, content = cert
-                result.append((str(name), str(mime_type), bytes(content)))
-        return result
-    return []
 
 
 def _valuespec_proxy_settings() -> CascadingSingleChoice:
@@ -252,7 +164,6 @@ def _valuespec_proxy_settings() -> CascadingSingleChoice:
                 ),
             ),
         ],
-        migrate=_migrate_proxy_old_format,
     )
 
 
@@ -444,7 +355,6 @@ def _valuespec_certificates() -> List[tuple[str, str, bytes]]:
             title=Title("CA or self-signed certificate"),
         ),
         add_element_label=Label("Add CA or self-signed certificate"),
-        migrate=_migrate_certificates,
     )
 
 
@@ -539,20 +449,12 @@ def _is_ultimatemt_remote_site() -> bool:
     distributed_wato_file = paths.check_mk_config_dir / "distributed_wato.mk"
     if not distributed_wato_file.exists() or distributed_wato_file.stat().st_size == 0:
         return False
-    is_distributed_setup_remote_site = load_from_mk_file(
+    return load_from_mk_file(
         distributed_wato_file,
         key="is_distributed_setup_remote_site",
         default=False,
         lock=False,
     )
-    # On 2.4 site this option is called `is_wato_slave_site`
-    is_wato_slave_site = load_from_mk_file(
-        distributed_wato_file,
-        key="is_wato_slave_site",
-        default=False,
-        lock=False,
-    )
-    return is_distributed_setup_remote_site or is_wato_slave_site
 
 
 def _validate_signature_keys(value: Sequence[object]) -> None:
@@ -650,7 +552,6 @@ def _valuespec_agent_config_cmk_update_agent() -> Dictionary:
                 group=_LEGACY_UPDATER_GROUP,
             ),
         },
-        migrate=_migrate,
     )
 
 

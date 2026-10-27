@@ -64,23 +64,11 @@ def test_returns_true_when_is_distributed_setup_remote_site_flag_set(
     assert cmk_update_agent._is_ultimatemt_remote_site() is True  # noqa: SLF001
 
 
-def test_returns_true_when_legacy_is_wato_slave_site_flag_set(
-    monkeypatch: pytest.MonkeyPatch, config_dir: Path
-) -> None:
-    # On 2.4 sites the flag is still named `is_wato_slave_site`.
-    _set_edition(monkeypatch, Edition.ULTIMATEMT)
-    (config_dir / "distributed_wato.mk").write_text("is_wato_slave_site = True\n")
-
-    assert cmk_update_agent._is_ultimatemt_remote_site() is True  # noqa: SLF001
-
-
-def test_returns_false_when_remote_site_flags_are_false(
+def test_returns_false_when_remote_site_flag_is_false(
     monkeypatch: pytest.MonkeyPatch, config_dir: Path
 ) -> None:
     _set_edition(monkeypatch, Edition.ULTIMATEMT)
-    (config_dir / "distributed_wato.mk").write_text(
-        "is_distributed_setup_remote_site = False\nis_wato_slave_site = False\n"
-    )
+    (config_dir / "distributed_wato.mk").write_text("is_distributed_setup_remote_site = False\n")
 
     assert cmk_update_agent._is_ultimatemt_remote_site() is False  # noqa: SLF001
 
@@ -88,9 +76,7 @@ def test_returns_false_when_remote_site_flags_are_false(
 @pytest.mark.parametrize(
     "value, expected",
     [
-        pytest.param("64bit", "bit64", id="legacy-64bit"),
-        pytest.param("32bit", "script", id="legacy-32bit"),
-        pytest.param("bit32", "script", id="legacy-bit32"),
+        pytest.param(("bit32", None), "script", id="32bit-choice-with-empty-parameters"),
         pytest.param(
             "bit64",
             "bit64",
@@ -233,3 +219,13 @@ def test_a_rule_of_checkmk_2_5_validates_after_the_update(
         )
         == []
     )
+
+
+@pytest.mark.usefixtures("_register_form_spec_visitors")
+def test_the_update_leaves_an_empty_rule_empty(rule_form: Dictionary) -> None:
+    """An empty rule of Checkmk 2.5 sets no option after the update."""
+    updated = get_visitor(
+        rule_form, VisitorOptions(migrate_values=True, mask_values=False)
+    ).to_disk(RawDiskData({}))
+
+    assert updated == {}

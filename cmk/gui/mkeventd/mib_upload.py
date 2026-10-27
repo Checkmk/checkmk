@@ -47,7 +47,8 @@ def upload_mibs(
     The MIBs may import the ones in the source directories and the compiled ones. They are all
     compiled with the same compiling, made only when compiling the first one, as loading the
     compiler takes long. Right after storing a MIB file, on_stored gets its name and the message
-    about it. The result is the message about all uploaded MIB files for the user."""
+    about it, and its failure fails the upload. The result is the message about all uploaded MIB
+    files for the user."""
     make_compile_mib = functools.cache(make_compile_mib)
     _validate_mib_file_name(filename)
 
@@ -99,14 +100,16 @@ def _upload_zip_file(
                         paths=paths,
                         source_dirs=source_dirs,
                     )
-                on_stored(mib_file_name, msg)
-                messages.append(msg)
-                success += 1
             except Exception as e:
                 messages.append(
                     _("Skipped %(mib_file_name)s: %(e)s") % {"mib_file_name": mib_file_name, "e": e}
                 )
                 fail += 1
+            else:
+                # The MIB file is stored, so it's no longer one to skip.
+                on_stored(mib_file_name, msg)
+                messages.append(msg)
+                success += 1
 
     return "<br>\n".join(messages) + "<br><br>\nProcessed %d MIB files, skipped %d MIB files" % (
         success,

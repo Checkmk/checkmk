@@ -241,6 +241,23 @@ def test_uploading_a_zip_file_tells_about_every_mib_file_right_after_storing_it(
     ]
 
 
+def test_uploading_a_zip_file_fails_if_telling_about_a_stored_mib_file_fails(
+    paths: ec.Paths,
+) -> None:
+    # The MIB file is stored, so reporting it as skipped would be wrong.
+    def fail(_name: str, _msg: str) -> None:
+        raise OSError("Cannot save the change")
+
+    with pytest.raises(OSError, match="Cannot save the change"):
+        _upload(
+            "mibs.zip",
+            _zip_file({"test-mib.txt": _MIB}),
+            paths,
+            mimetype="application/zip",
+            on_stored=fail,
+        )
+
+
 def test_uploading_a_zip_file_reports_how_many_mib_files_it_processed_and_skipped(
     paths: ec.Paths,
 ) -> None:

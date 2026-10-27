@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.bakery.v2 import WindowsConfigEntry
-from cmk.base.plugins.bakery.win_set_wmi_timeout import (
+from cmk.plugins.windows.bakery.win_set_wmi_timeout import (
     bakery_plugin_win_set_wmi_timeout,
     get_win_set_wmi_timeout_windows_config,
 )

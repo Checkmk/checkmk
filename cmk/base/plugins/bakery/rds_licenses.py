@@ -3,21 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import FileGenerator, OS, Plugin, register
+from cmk.bakery.v2 import BakeryPlugin, FileGenerator, OS, Plugin
 
 
 class _Config(BaseModel):
     deployment: tuple[Literal["do_not_deploy", "sync", "cached"], float | None]
 
 
-def get_rds_licenses_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Config.model_validate(conf)
+def get_rds_licenses_files(config: _Config) -> FileGenerator:
     if config.deployment[0] == "do_not_deploy":
         return
 
@@ -28,7 +26,9 @@ def get_rds_licenses_files(conf: Mapping[str, object]) -> FileGenerator:
     )
 
 
-register.bakery_plugin(
+bakery_plugin_rds_licenses = BakeryPlugin(
     name="rds_licenses",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     files_function=get_rds_licenses_files,
 )

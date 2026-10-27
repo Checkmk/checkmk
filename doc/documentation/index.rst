@@ -14,6 +14,18 @@ Architecture
    arch-werk.rst
    arch-experimental-flags.rst
 
+Testing
+-------
+
+.. toctree::
+   :maxdepth: 1
+
+   dev-testing.rst
+   dev-testing-classification.rst
+   dev-testing-flaky.rst
+   dev-testing-python.rst
+   dev-testing-vue.rst
+
 APIs
 ----
 

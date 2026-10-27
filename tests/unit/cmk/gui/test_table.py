@@ -351,6 +351,47 @@ def test_a_search_which_is_no_regular_expression_finds_the_rows_containing_it() 
     assert read_out_simple_table(written_text)[1:] == [["disk(s)full"]]
 
 
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_a_search_finds_no_rows_by_cells_with_an_empty_search_text() -> None:
+    # E.g. the URLs of links to the rows tell the pages they are on.
+    request.set_var("search", "disk")
+
+    with output_funnel.plugged():
+        with table_element(table_id="0", title="Messages", limit=100) as table:
+            for text in ["disk full", "cpu"]:
+                table.row()
+                table.cell("Text", text)
+                link = HTML.without_escaping('<a href="wato.py?mode=disk">Edit</a>')
+                table.cell("Link", link, search_text="")
+        written_text = "".join(output_funnel.drain())
+
+    assert read_out_simple_table(written_text)[1:] == [["diskfull", "Edit"]]
+
+
+def _table_with_search_texts() -> str:
+    with output_funnel.plugged():
+        with table_element(table_id="0", title="States", limit=100) as table:
+            for state in ["CRIT", "OK"]:
+                table.row()
+                state_html = HTML.without_escaping(f'<span class="state">{state}</span>')
+                table.cell("State", state_html, search_text=state)
+        return "".join(output_funnel.drain())
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_a_search_finds_rows_by_the_search_text_of_a_cell() -> None:
+    request.set_var("search", "crit")
+
+    assert read_out_simple_table(_table_with_search_texts())[1:] == [["CRIT"]]
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_a_search_finds_no_rows_by_the_html_of_a_cell_with_a_search_text() -> None:
+    request.set_var("search", "span")
+
+    assert "Found no matching rows." in _table_with_search_texts()
+
+
 @pytest.mark.usefixtures("request_context")
 def test_search_term_is_the_search_in_lower_case_with_its_blanks() -> None:
     request.set_var("search", " Disk ")

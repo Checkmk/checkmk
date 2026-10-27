@@ -2334,9 +2334,6 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     "you have activated <i>Force message archiving</i> in the global settings."
                 )
             )
-        elif search_expression and not found_packs:
-            html.show_message(_("Found no rule packs."))
-            return
 
         id_to_mkp = _rule_pack_to_mkp_map(self._paths, self._edition)
 
@@ -2361,7 +2358,10 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
                 unique_id = id_ in unique_ids
 
-                table.row(css=["matches_search"] if nr in found_packs else [])
+                # The table searching the HTML of the cells might miss found ones, e.g. ones found by
+                # one of their rules, or with text the page escapes, so they stay fixed.
+                found = nr in found_packs
+                table.row(css=["matches_search"] if found else [], fixed=found)
                 table.cell("#", css=["narrow nowrap"])
                 html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
@@ -2506,17 +2506,21 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                         )
 
                 table.cell(_("ID"), id_)
-                table.cell(_("Title"), rule_pack["title"])
+                # The page escapes the title, e.g. "&" as "&amp;".
+                table.cell(_("Title"), rule_pack["title"], search_text=rule_pack["title"])
 
                 if self._edition is Edition.ULTIMATEMT:
                     table.cell(_("Customer"))
                     if "customer" in rule_pack:
                         html.write_text_permissive(customer_api().get_customer_name(rule_pack))
 
+                rule_count = "%d" % len(rule_pack["rules"])
+                # The URL of the link tells the rule list, which would match every row.
                 table.cell(
                     _("Rules"),
-                    HTMLWriter.render_a("%d" % len(rule_pack["rules"]), href=rules_url),
+                    HTMLWriter.render_a(rule_count, href=rules_url),
                     css=["number"],
+                    search_text=rule_count,
                 )
 
                 table.cell(_("Hits"), str(rule_pack_hits[nr]), css=["number"])
@@ -2580,7 +2584,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
     @override
     def _breadcrumb_url(self) -> str:
-        return _rules_url(self._rule_pack_ref)
+        # The rule editor passes the search on to the rule list it returns to.
+        return _rules_url(self._rule_pack_ref, self._search_expression())
 
     @override
     def _from_vars(self) -> None:
@@ -2625,7 +2630,13 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     title=_("Add rule"),
                     icon_name=StaticIcon(IconNames.new),
                     item=make_simple_link(
-                        makeuri_contextless(request, rule_editor_vars(self._rule_pack_ref))
+                        makeuri_contextless(
+                            request,
+                            [
+                                *rule_editor_vars(self._rule_pack_ref),
+                                *_search_vars(self._search_expression()),
+                            ],
+                        )
                     ),
                     is_shortcut=True,
                     is_suggested=True,
@@ -2649,9 +2660,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
     @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token(session, request, i18n=_)
+        rules_url = _rules_url(self._rule_pack_ref, self._search_expression())
 
         if not transactions.check_transaction(request):
-            return redirect(_rules_url(self._rule_pack_ref))
+            return redirect(rules_url)
 
         id_to_mkp = _rule_pack_to_mkp_map(self._paths, self._edition)
         type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
@@ -2699,7 +2711,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     )
                     # Rendered for this request, the rule list would choose the same rule pack for
                     # the next rule with the ID of the moved one.
-                    return redirect(_rules_url(self._rule_pack_ref, self._search_expression()))
+                    return redirect(rules_url)
             # The rule a rule pack was chosen for is gone, e.g. deleted meanwhile. Choosing the empty
             # entry of a dropdown moves nothing, though.
             if any(value for _varname, value in request.itervars("_move_to_")):
@@ -2725,7 +2737,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             if type_ == ec.RulePackType.exported:
                 self._export_mkp_rule_pack(self._rule_pack, config)
             self._save_rules(config)
-            return redirect(_rules_url(self._rule_pack_ref))
+            return redirect(rules_url)
 
         if request.has_var("_move"):
             _verify_not_searching()
@@ -2759,7 +2771,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 text=_("Changed position of rule %(rule_id)s") % {"rule_id": rule["id"]},
                 pending_changes=pending_changes,
             )
-        return redirect(_rules_url(self._rule_pack_ref))
+        return redirect(rules_url)
 
     def _rule_to_change(self, varname: str) -> int:
         """Returns the position of the rule with the ID of the variable"""
@@ -2770,7 +2782,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         )
 
     def _rule_action_url(self, action: str, rule: RuleRef, *more_vars: HTTPVariable) -> str:
-        """The URL of the action of the rule list for the rule"""
+        """The URL of the action of the rule list for the rule, which keeps the search of the list"""
         return makeactionuri_contextless(
             request,
             transactions.get(),
@@ -2778,6 +2790,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 ("mode", "mkeventd_rules"),
                 *self._rule_pack_ref.to_vars("rule_pack"),
                 *rule.to_vars(action),
+                *_search_vars(self._search_expression()),
                 *more_vars,
             ],
             filename="wato.py",
@@ -2800,9 +2813,6 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         event = self._show_event_simulator()
         if not rules:
             html.show_message(_("This package does not yet contain any rules."))
-            return
-        if search_expression and not found_rules:
-            html.show_message(_("No rules found."))
             return
 
         move_choices = self._move_choices()
@@ -2849,8 +2859,13 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             )
             order = _order_digest(_rule_ids(rules))
             searching = bool(table_search_term())
+            search_vars = _search_vars(self._search_expression())
             for nr, (rule, rule_ref) in enumerate(zip(rules, RuleRef.of(rules), strict=True)):
-                table.row(css=["matches_search"] if rule in found_rules else [])
+                # Besides the found rules, the table shows the ones matching the search in other
+                # columns. It might miss found ones, as it searches the HTML of the cells, e.g.
+                # escaped text, and leaves out their ID, so they stay fixed.
+                found = rule in found_rules
+                table.row(css=["matches_search"] if found else [], fixed=found)
                 delete_url = make_confirm_delete_link(
                     i18n=_,
                     url=self._rule_action_url("_delete", rule_ref),
@@ -2858,11 +2873,15 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     message=_("ID: %(id_)s") % {"id_": rule["id"]},
                     suffix=rule.get("description", ""),
                 )
+                # The rule editor passes the search on to the rule list it returns to.
                 edit_url = makeuri_contextless(
-                    request, rule_editor_vars(self._rule_pack_ref, rule_ref), filename="wato.py"
+                    request,
+                    [*rule_editor_vars(self._rule_pack_ref, rule_ref), *search_vars],
+                    filename="wato.py",
                 )
                 clone_url = makeuri_contextless(
-                    request, rule_editor_vars(self._rule_pack_ref, rule_ref, "clone_rule")
+                    request,
+                    [*rule_editor_vars(self._rule_pack_ref, rule_ref, "clone_rule"), *search_vars],
                 )
 
                 table.cell("#", css=["narrow nowrap"])
@@ -2923,7 +2942,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         % {"groups": ", ".join(rule["contact_groups"]["groups"]) or _("(none)")},
                     )
 
-                table.cell(_("ID"), HTMLWriter.render_a(rule["id"], edit_url))
+                # The URL of the link tells the rule pack, which would match every row.
+                table.cell(_("ID"), HTMLWriter.render_a(rule["id"], edit_url), search_text="")
 
                 if self._edition is Edition.ULTIMATEMT:
                     table.cell(_("Customer"))
@@ -2960,6 +2980,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         _("State"),
                         HTMLWriter.render_span(txt, class_="state_rounded_fill"),
                         css=["state state%s" % stateval],
+                        search_text=txt,
                     )
 
                 # Syslog priority
@@ -2992,10 +3013,11 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 # ECRuleSpec the match type is wrong for the UI. In the config we only have str.
                 # during EC runtime we may have a pattern in that field.
                 assert not isinstance(match, re.Pattern)
-                table.cell(_("Text to match"), match)
+                table.cell(_("Text to match"), match, search_text=match)
 
                 # Description
-                table.cell(_("Description"))
+                # The link to the context information has its title, e.g. "Context information".
+                table.cell(_("Description"), search_text=rule.get("description", ""))
                 url = rule.get("docu_url")
                 if url:
                     html.icon_button(
@@ -3009,7 +3031,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
                 # Move rule to other pack
                 if move_choices:
-                    table.cell(_("Move to pack..."))
+                    # The rule packs to move the rule to would match every row.
+                    table.cell(_("Move to pack..."), search_text="")
                     html.dropdown(
                         "_move_to_" + rule_ref.form_value(),
                         [("", ""), *move_choices],
@@ -3324,8 +3347,9 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
+        rules_url = _rules_url(self._rule_pack_ref, self._search_expression())
         if not transactions.check_transaction(request):
-            return redirect(_rules_url(self._rule_pack_ref))
+            return redirect(rules_url)
 
         vs = self._valuespec(config.sites)
         rule = vs.from_html_vars("rule")
@@ -3434,7 +3458,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                 pending_changes=pending_changes,
                 edition=self._edition,
             )
-        return redirect(_rules_url(self._rule_pack_ref))
+        return redirect(rules_url)
 
     @override
     def page(self, config: Config) -> None:
@@ -4018,12 +4042,16 @@ def _rules_url(pack: RulePackRef, search_expression: str | None = None) -> str:
     """The URL of the rule list of the rule pack
 
     The rule list shows the rules the search finds, if any."""
-    search = [("search", search_expression)] if search_expression else []
     return makeuri_contextless(
         request,
-        [("mode", "mkeventd_rules"), *pack.to_vars("rule_pack"), *search],
+        [("mode", "mkeventd_rules"), *pack.to_vars("rule_pack"), *_search_vars(search_expression)],
         filename="wato.py",
     )
+
+
+def _search_vars(search_expression: str | None) -> list[HTTPVariable]:
+    """The variable of the search of a list, if any"""
+    return [("search", search_expression)] if search_expression else []
 
 
 def _rule_pack_action_url(action: str, pack: RulePackRef, *more_vars: HTTPVariable) -> str:
@@ -4062,7 +4090,8 @@ def _verify_not_searching() -> None:
     """Refuses moving a rule on a page with a search, which the rule list doesn't offer
 
     With a search, the rule list shows only the rules it finds, so the position of a dragged one
-    among them tells nothing about the others."""
+    among them tells nothing about the others. Unlike the ones of the rule pack list, its action
+    URLs carry the search."""
     if table_search_term():
         raise MKUserError(
             None,

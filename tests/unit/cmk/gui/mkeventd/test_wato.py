@@ -1699,10 +1699,10 @@ def test_rule_pack_search_without_a_match_says_so(
     _save_rule_packs(_rule_pack())
     set_request_vars(search="no such thing")
 
-    with _local_event_console(mock_livestatus, _CENTRAL_STATUS):
+    with _rule_pack_list_queries(mock_livestatus):
         page = _rule_pack_list(load_config, test_edition)
 
-    assert "Found no rule packs." in page
+    assert "Found no matching rows." in page
 
 
 def _found_rule_packs(
@@ -1752,6 +1752,66 @@ def test_rule_pack_search_finds_only_the_matching_one_of_several_rule_packs_with
         rows = table_rows(_rule_pack_list(load_config, test_edition), "Found rule packs")
 
     assert [row["#"].get_text(strip=True) for row in rows] == ["0"]
+
+
+@_setup_page
+def test_rule_pack_search_finds_the_rule_packs_matching_by_a_rule_also_for_a_search_with_blanks(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # The link to the matching rules encodes the search, e.g. as "disk+failed".
+    _save_rule_packs(
+        _rule_pack(_stored(ec.Rule(id="failed", description="disk failed")), rule_pack_id="storage")
+    )
+    set_request_vars(search="disk failed")
+
+    with _rule_pack_list_queries(mock_livestatus):
+        rows = table_rows(_rule_pack_list(load_config, test_edition), "Found rule packs")
+
+    assert [row["ID"].get_text() for row in rows] == ["storage"]
+
+
+@_setup_page
+def test_rule_pack_search_shows_rule_packs_matching_it_in_other_columns_without_found_ones(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="rule"))))
+    set_request_vars(search="7")
+
+    with _rule_pack_list_queries(mock_livestatus, rule_hits=[(omd_site(), "rule", 7)]):
+        rows = table_rows(_rule_pack_list(load_config, test_edition), "Found rule packs")
+
+    assert [row["ID"].get_text() for row in rows] == ["pack"]
+
+
+@_setup_page
+def test_rule_pack_search_shows_no_rule_packs_for_the_links_to_their_rules(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # The links to the rules tell the mode of the rule list, "mkeventd_rules".
+    _save_rule_packs(_rule_pack(rule_pack_id="modems"), _rule_pack(rule_pack_id="cpu"))
+    set_request_vars(search="mode")
+
+    with _rule_pack_list_queries(mock_livestatus):
+        rows = table_rows(_rule_pack_list(load_config, test_edition), "Found rule packs")
+
+    assert [row["ID"].get_text() for row in rows] == ["modems"]
+
+
+@_setup_page
+def test_rule_pack_search_shows_no_rule_packs_for_the_html_of_their_title(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # The page escapes "&" as "&amp;".
+    _save_rule_packs(
+        _rule_pack(rule_pack_id="storage", title="Disks & filesystems"),
+        _rule_pack(rule_pack_id="camping"),
+    )
+    set_request_vars(search="amp")
+
+    with _rule_pack_list_queries(mock_livestatus):
+        rows = table_rows(_rule_pack_list(load_config, test_edition), "Found rule packs")
+
+    assert [row["ID"].get_text() for row in rows] == ["camping"]
 
 
 @_setup_page
@@ -2170,6 +2230,146 @@ def test_moving_a_rule_to_another_rule_pack_keeps_the_search_of_the_rule_list(
     }
 
 
+@_setup_page
+def test_deleting_a_rule_keeps_the_search_of_the_rule_list(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))))
+    set_request_vars(search="second")
+    [row] = _rule_list_rows(load_config, test_edition, mock_livestatus)
+    _follow(_confirmed_link_vars(row, "Delete this rule"))
+    submit()
+
+    result = _rule_list_action(load_config, test_edition)
+
+    assert redirect_vars(result) == {
+        "mode": "mkeventd_rules",
+        "rule_pack": "pack",
+        "search": "second",
+    }
+
+
+_SAVING_IN_THE_RULE_EDITOR = pytest.mark.parametrize(
+    "button, overrides",
+    [
+        pytest.param("Edit this rule", {"rule_p_description": "edited"}, id="edit"),
+        pytest.param("Create a copy of this rule", {"rule_p_id": "copy"}, id="copy"),
+    ],
+)
+
+
+@_SAVING_IN_THE_RULE_EDITOR
+@_setup_page
+def test_saving_a_rule_in_the_rule_editor_keeps_the_search_of_the_rule_list(
+    load_config: Config,
+    test_edition: Edition,
+    mock_livestatus: MockLiveStatusConnection,
+    button: str,
+    overrides: Mapping[str, str],
+) -> None:
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))))
+    set_request_vars(search="second")
+    [row] = _rule_list_rows(load_config, test_edition, mock_livestatus)
+    _follow(_button_link_vars(row, button))
+    _submit_rule_form(load_config, test_edition, **overrides)
+
+    # The rule list connected to the sites already.
+    with mock_livestatus(expect_status_query=False):
+        result = _rule_editor(load_config, test_edition).action(load_config)
+
+    assert redirect_vars(result) == {
+        "mode": "mkeventd_rules",
+        "rule_pack": "pack",
+        "search": "second",
+    }
+
+
+@_SAVING_IN_THE_RULE_EDITOR
+@_setup_page
+def test_saving_a_rule_listed_for_another_column_keeps_the_search_of_the_rule_list(
+    load_config: Config,
+    test_edition: Edition,
+    mock_livestatus: MockLiveStatusConnection,
+    button: str,
+    overrides: Mapping[str, str],
+) -> None:
+    # Besides the rules the search finds by their ID, description or text to match, the rule list
+    # shows the ones matching it in another column, e.g. the state.
+    _save_rule_packs(
+        _rule_pack(
+            _stored(ec.Rule(id="critical")),
+            _stored(ec.Rule(id="disk", state=2)),
+            _stored(ec.Rule(id="cpu")),
+        )
+    )
+    set_request_vars(search="crit")
+    [_critical, disk] = _rule_list_rows(load_config, test_edition, mock_livestatus)
+    _follow(_button_link_vars(disk, button))
+    _submit_rule_form(load_config, test_edition, **overrides)
+
+    # The rule list connected to the sites already.
+    with mock_livestatus(expect_status_query=False):
+        result = _rule_editor(load_config, test_edition).action(load_config)
+
+    assert redirect_vars(result) == {
+        "mode": "mkeventd_rules",
+        "rule_pack": "pack",
+        "search": "crit",
+    }
+
+
+def _menu_link_vars(
+    mode: mkeventd_wato.ABCEventConsoleMode, config: Config, title: str
+) -> dict[str, str]:
+    """The query variables of the link of the entry of the page menu"""
+    [item] = [
+        entry.item
+        for dropdown in mode.page_menu(config, Breadcrumb()).dropdowns
+        for topic in dropdown.topics
+        for entry in topic.entries
+        if entry.title == title
+    ]
+    assert isinstance(item, PageMenuLink) and item.link.url is not None
+    return dict(parse_qsl(urlsplit(item.link.url).query))
+
+
+@_setup_page
+def test_adding_a_rule_keeps_the_search_of_the_rule_list(
+    load_config: Config, test_edition: Edition
+) -> None:
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="disk"))))
+    set_request_vars(rule_pack="pack", search="disk")
+    rule_list = _mode(mkeventd_wato.ModeEventConsoleRules, load_config, test_edition)
+    _follow(_menu_link_vars(rule_list, load_config, "Add rule"))
+    _submit_rule_form(load_config, test_edition, rule_p_id="new")
+
+    result = _rule_editor(load_config, test_edition).action(load_config)
+
+    assert redirect_vars(result) == {
+        "mode": "mkeventd_rules",
+        "rule_pack": "pack",
+        "search": "disk",
+    }
+
+
+@_setup_page
+def test_rule_editor_leads_back_to_the_rule_list_with_its_search(
+    load_config: Config, test_edition: Edition
+) -> None:
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="disk"))))
+    set_request_vars(mode="mkeventd_edit_rule", rule_pack="pack", edit_rule="disk", search="disk")
+
+    breadcrumb = _rule_editor(load_config, test_edition).breadcrumb()
+
+    [url] = [item.url for item in breadcrumb if item.id == "mkeventd_rules"]
+    assert url is not None
+    assert dict(parse_qsl(urlsplit(url).query)) == {
+        "mode": "mkeventd_rules",
+        "rule_pack": "pack",
+        "search": "disk",
+    }
+
+
 @pytest.mark.parametrize(
     "target",
     [
@@ -2383,11 +2583,99 @@ def test_rule_list_of_an_empty_rule_pack_says_so(
 
 
 @_setup_page
-def test_rule_search_without_a_match_says_so(load_config: Config, test_edition: Edition) -> None:
+def test_rule_search_without_a_match_says_so(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
     _save_rule_packs(_rule_pack(_stored(ec.Rule(id="rule", description="disk failed"))))
     set_request_vars(search="cpu")
 
-    assert "No rules found." in _rule_list(load_config, test_edition)
+    with _rule_hit_queries(mock_livestatus):
+        page = _rule_list(load_config, test_edition)
+
+    assert "Found no matching rows." in page
+
+
+@_setup_page
+def test_rule_search_shows_the_rules_matching_it_in_other_columns_also_without_found_rules(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="rule", state=2))))
+    set_request_vars(search="crit")
+
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+
+    assert [row["ID"].get_text() for row in rows] == ["rule"]
+
+
+@_setup_page
+def test_rule_search_shows_no_rules_for_the_rule_packs_to_move_them_to(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _save_rule_packs(
+        _rule_pack(_stored(ec.Rule(id="disk-1")), _stored(ec.Rule(id="cpu"))),
+        _rule_pack(rule_pack_id="disks"),
+    )
+    set_request_vars(search="disk")
+
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+
+    assert [row["ID"].get_text() for row in rows] == ["disk-1"]
+
+
+@_setup_page
+def test_rule_search_shows_no_rules_for_the_links_telling_their_rule_pack(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # The links to the rule editor tell the rule pack "pack".
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="packet-loss")), _stored(ec.Rule(id="cpu"))))
+    set_request_vars(search="pack")
+
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+
+    assert [row["ID"].get_text() for row in rows] == ["packet-loss"]
+
+
+@_setup_page
+def test_rule_search_shows_no_rules_for_the_html_of_their_state(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # The state is shown with tags styling it, e.g. <span class="state_rounded_fill">.
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="state-change")), _stored(ec.Rule(id="cpu"))))
+    set_request_vars(search="state")
+
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+
+    assert [row["ID"].get_text() for row in rows] == ["state-change"]
+
+
+@_setup_page
+def test_rule_search_shows_no_rules_for_the_title_of_the_link_to_their_context(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # The link to the context information has the title "Context information about this rule".
+    _save_rule_packs(
+        _rule_pack(
+            _stored(ec.Rule(id="context-switches")),
+            _stored(ec.Rule(id="cpu", docu_url="https://example.com/cpu")),
+        )
+    )
+    set_request_vars(search="context")
+
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+
+    assert [row["ID"].get_text() for row in rows] == ["context-switches"]
+
+
+@_setup_page
+def test_rule_search_shows_the_found_rules_with_text_the_page_escapes(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="disk", description="disk & cpu"))))
+    set_request_vars(search="disk & cpu")
+
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+
+    assert [row["ID"].get_text() for row in rows] == ["disk"]
 
 
 @pytest.mark.parametrize(

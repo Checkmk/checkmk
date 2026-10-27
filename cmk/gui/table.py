@@ -47,6 +47,7 @@ class CellSpec(NamedTuple):
     content: HTML
     css: CSSSpec
     colspan: int | None
+    search_text: str | None
 
 
 class TableRow(NamedTuple):
@@ -228,7 +229,13 @@ class Table:
         help_txt: str | None = None,
         colspan: int | None = None,
         sortable: bool = True,
+        search_text: str | None = None,
     ) -> None:
+        """Adds a cell to the current row
+
+        The search of the table matches its HTML, unless a search text replaces it, e.g. the text of
+        a cell styling it with tags. An empty one leaves the cell out of the search, e.g. a link
+        whose URL would match every row."""
         self._finish_previous()
         self.next_func = lambda: self._add_cell(
             title=title,
@@ -237,6 +244,7 @@ class Table:
             help_txt=help_txt,
             colspan=colspan,
             sortable=sortable,
+            search_text=search_text,
         )
 
     def _finish_previous(self) -> None:
@@ -283,6 +291,7 @@ class Table:
         help_txt: str | None,
         colspan: int | None,
         sortable: bool,
+        search_text: str | None,
     ) -> None:
         if isinstance(text, HTML):
             content = text
@@ -313,7 +322,7 @@ class Table:
 
         current_row = self.rows[-1]
         assert isinstance(current_row, TableRow)
-        current_row.cells.append(CellSpec(htmlcode, css, colspan))
+        current_row.cells.append(CellSpec(htmlcode, css, colspan, search_text))
 
     def groupheader(self, title: str) -> None:
         """Intermediate title, shown as soon as there is a following row.
@@ -737,10 +746,10 @@ def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
             if any("buttons" in css.split() for css in cell.css):
                 continue
 
-            cell_string = str(cell.content)
+            cell_string = str(cell.content) if cell.search_text is None else cell.search_text
             # The inpage search of the folder page adds href with
             # "search=searchterm" to cell.content and would always match => remove for matching
-            if "inpage_search_form" in cell.content:
+            if cell.search_text is None and "inpage_search_form" in cell.content:
                 cell_string = re.sub(
                     r"&?search(?:=|%253D)[^&\"]*",
                     "",

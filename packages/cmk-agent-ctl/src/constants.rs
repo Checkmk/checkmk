@@ -17,6 +17,10 @@ pub const UNIX_AGENT_SOCKET: &str = "/run/check-mk-agent.socket";
 pub const CMK_UPDATE_AGENT_CMD: &str = "check_mk_agent.exe";
 #[cfg(unix)]
 pub const CMK_UPDATE_AGENT_CMD: &str = "cmk-update-agent";
+/// The plugin of the Windows agent that `check_mk_agent.exe updater` runs
+/// (`kAgentUpdaterPython` in `agents/wnx`).
+#[cfg(windows)]
+pub const PYTHON_UPDATER_PLUGIN: &str = "cmk_update_agent.checkmk.py";
 
 // FILES
 pub const PRE_CONFIGURED_CONNECTIONS_FILE: &str = "pre_configured_connections.json";

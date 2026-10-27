@@ -8,6 +8,7 @@
 use crate::agent_receiver_api;
 use crate::config::UpdaterRegistration;
 use crate::constants::CMK_UPDATE_AGENT_CMD;
+use crate::environment::PathResolver;
 use crate::modes::registration::AddedConnection;
 use crate::site_spec::Protocol;
 use crate::types::Credentials;
@@ -36,8 +37,8 @@ impl PythonUpdater {
     ///
     /// `None` if the package ships no Python agent updater, for example under
     /// the rule entry that enables only the integrated updater.
-    pub fn find(client_config: &config::ClientConfig) -> Option<Self> {
-        match find_executable() {
+    pub fn find(paths: &PathResolver, client_config: &config::ClientConfig) -> Option<Self> {
+        match find_executable(paths) {
             Ok(executable) => {
                 info!("Found Python agent updater at '{executable}'");
                 Some(Self {
@@ -293,13 +294,20 @@ fn find_file_relatively(cmk_update_agent_cmd: &str) -> AnyhowResult<String> {
     Ok(cmk_update_agent_cmd.to_string())
 }
 
-fn find_executable() -> AnyhowResult<String> {
-    #[cfg(unix)]
-    return find_file_relatively(CMK_UPDATE_AGENT_CMD);
-    #[cfg(windows)]
-    // On Windows, the agent updater is invoked with `check_mk_agent.exe updater`,
-    // so the executable we need is the windows agent
-    return get_windows_agent_executable();
+#[cfg(unix)]
+fn find_executable(_paths: &PathResolver) -> AnyhowResult<String> {
+    find_file_relatively(CMK_UPDATE_AGENT_CMD)
+}
+
+/// The Python updater runs as `check_mk_agent.exe updater`. The agent exists on
+/// every Windows host, but its command `updater` fails without the plugin.
+#[cfg(windows)]
+fn find_executable(paths: &PathResolver) -> AnyhowResult<String> {
+    let plugin = &paths.python_updater_plugin_path;
+    if !plugin.exists() {
+        bail!("{plugin:?} does not exist");
+    }
+    get_windows_agent_executable()
 }
 
 #[cfg(windows)]
@@ -387,6 +395,22 @@ mod tests {
     use super::*;
     use crate::types;
     use std::ffi::OsStr;
+
+    /// CMK-39588 AC8
+    #[cfg(windows)]
+    #[test]
+    fn test_without_the_plugin_there_is_no_python_updater() {
+        let dir = tempfile::TempDir::new().unwrap();
+
+        assert!(PythonUpdater::find(
+            &PathResolver::new(crate::environment::SetupMode::Classic, dir.path()),
+            &config::ClientConfig {
+                use_proxy: false,
+                validate_api_cert: false,
+            },
+        )
+        .is_none());
+    }
 
     #[test]
     fn test_prepare_register_updater_cmd() {

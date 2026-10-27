@@ -45,6 +45,10 @@ pub struct PathResolver {
     /// Written by that step as root, read by the controller. Linux only.
     #[cfg(unix)]
     pub install_result_path: PathBuf,
+
+    /// The Python agent updater, a plugin of the Windows agent.
+    #[cfg(windows)]
+    pub python_updater_plugin_path: PathBuf,
 }
 
 impl PathResolver {
@@ -87,6 +91,10 @@ impl PathResolver {
             updater_package_dir: home_dir.join(constants::UPDATER_PACKAGE_DIR),
             #[cfg(unix)]
             install_result_path: home_dir.join(constants::INSTALL_RESULT_FILE),
+            #[cfg(windows)]
+            python_updater_plugin_path: home_dir
+                .join("plugins")
+                .join(constants::PYTHON_UPDATER_PLUGIN),
         }
     }
 

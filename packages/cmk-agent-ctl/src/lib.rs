@@ -81,7 +81,8 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
             updater::after_connection_changes(
                 &[connection],
                 &updater_registration,
-                updater::PythonUpdater::find(&config.connection_config.client_config).as_ref(),
+                updater::PythonUpdater::find(&paths, &config.connection_config.client_config)
+                    .as_ref(),
                 &registry,
             )?;
             register_update_source(
@@ -104,7 +105,8 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
             updater::after_connection_changes(
                 &[connection],
                 &updater_registration,
-                updater::PythonUpdater::find(&config.connection_config.client_config).as_ref(),
+                updater::PythonUpdater::find(&paths, &config.connection_config.client_config)
+                    .as_ref(),
                 &registry,
             )?;
             register_update_source(
@@ -135,7 +137,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
                 daemon_opts.client_opts,
                 Some(daemon_opts.reg_client_opts),
             );
-            let python_updater = updater::PythonUpdater::find(&client_config);
+            let python_updater = updater::PythonUpdater::find(&paths, &client_config);
             daemon(
                 paths,
                 registry.clone(),

@@ -2,13 +2,13 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
+from cmk.bakery.v2 import BakeryPlugin, FileGenerator, OS, Plugin, PluginConfig
 
 
 class _Config(BaseModel):
@@ -20,8 +20,7 @@ class _Config(BaseModel):
     persist_period_node_disk_usage: int | None = None
 
 
-def get_mk_docker_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Config.model_validate(conf)
+def get_mk_docker_files(config: _Config) -> FileGenerator:
     if config.deployment[0] == "do_not_deploy":
         return
 
@@ -56,7 +55,9 @@ def _get_mk_docker_config(config: _Config) -> Iterable[str]:
         yield f"persist_period_node_disk_usage: {config.persist_period_node_disk_usage}"
 
 
-register.bakery_plugin(
+bakery_plugin_mk_docker = BakeryPlugin(
     name="mk_docker",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     files_function=get_mk_docker_files,
 )

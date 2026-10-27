@@ -93,7 +93,8 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
             )
         }
         cli::Mode::RegisterNew(reg_new_opts) => {
-            let updater_registration = runtime_config.configured_updater_registration();
+            let updater_registration =
+                runtime_config.updater_registration(reg_new_opts.automatic_updates);
             let config = config::RegisterNewConfig::new(
                 config::RegistrationConnectionConfig::from_register_new_opts(
                     runtime_config,

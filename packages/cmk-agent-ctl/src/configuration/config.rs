@@ -1127,6 +1127,31 @@ mod test_registration_config {
         assert_eq!(agent_labels["cmk/hostname-simple"], "custom-name");
         assert_eq!(agent_labels["a"], "b");
     }
+
+    fn configured(updater_registration: UpdaterRegistration) -> RuntimeConfig {
+        RuntimeConfig {
+            updater_registration: Some(updater_registration),
+            ..runtime_config()
+        }
+    }
+
+    /// CMK-39588 AC2
+    #[test]
+    fn test_automatic_updates_override_the_configuration() {
+        assert_eq!(
+            configured(UpdaterRegistration::Manual).updater_registration(true),
+            UpdaterRegistration::Overwrite
+        );
+    }
+
+    /// CMK-39588 AC2
+    #[test]
+    fn test_without_automatic_updates_the_configuration_applies() {
+        assert_eq!(
+            configured(UpdaterRegistration::Keep).updater_registration(false),
+            UpdaterRegistration::Keep
+        );
+    }
 }
 
 #[cfg(test)]

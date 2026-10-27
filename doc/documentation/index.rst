@@ -21,6 +21,7 @@ Checkmk - Developer documentation
    dev-testing-flaky.rst
    dev-testing-python.rst
    dev-testing-vue.rst
+   dev-cmk-schema-manager.rst
 
 .. toctree::
    :maxdepth: 2

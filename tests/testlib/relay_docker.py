@@ -12,6 +12,8 @@ Provides:
 
 import json
 import logging
+from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import Self
 
 import docker
@@ -340,3 +342,41 @@ class DockerRelaySetup:
             except docker.errors.APIError as e:
                 logger.warning("Could not disconnect checkmk from site-relay network: %s", e)
                 raise
+
+
+@contextmanager
+def isolated_relay(
+    client: docker.DockerClient,
+    checkmk: CheckmkApp,
+    relay_image: str,
+    monitored_network: docker.models.networks.Network,
+    suffix: str,
+    *,
+    cap_drop: list[str] | None = None,
+) -> Iterator[DockerRelaySetup]:
+    """A further relay, with a site-relay network and a volume of its own.
+
+    Registered on its own, it is a relay of its own to the site: it only gets the
+    tasks of the hosts assigned to it, and cannot take any from another relay, which
+    a second daemon on that relay's volume would. The network is its own because a
+    DockerRelaySetup attaches the site to its network and detaches it on exit, which
+    on a shared one would cut off the other relay.
+    """
+    site_relay_network = client.networks.create(f"relay-e2e-site-relay-{suffix}", driver="bridge")
+    volume = client.volumes.create(f"relay-workdir-{suffix}")
+    try:
+        with DockerRelaySetup(
+            client,
+            checkmk,
+            relay_image,
+            site_relay_network,
+            monitored_network,
+            volume,
+            suffix,
+            cap_drop=cap_drop,
+        ) as relay:
+            yield relay
+    finally:
+        if is_cleanup_enabled():
+            volume.remove(force=True)
+            site_relay_network.remove()

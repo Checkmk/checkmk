@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import register, WindowsConfigEntry, WindowsConfigGenerator
+from cmk.bakery.v2 import BakeryPlugin, WindowsConfigEntry, WindowsConfigGenerator
 
 
 class _Counter(BaseModel):
@@ -19,13 +19,14 @@ class _Config(BaseModel):
     counters: Sequence[_Counter] = ()
 
 
-def get_winperf_windows_config(conf: Mapping[str, object]) -> WindowsConfigGenerator:
-    config = _Config.model_validate(conf)
+def get_winperf_windows_config(config: _Config) -> WindowsConfigGenerator:
     if counters := [{c.counter: c.section} for c in config.counters]:
         yield WindowsConfigEntry(path=["winperf", "counters"], content=counters)
 
 
-register.bakery_plugin(
+bakery_plugin_winperf = BakeryPlugin(
     name="winperf",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     windows_config_function=get_winperf_windows_config,
 )

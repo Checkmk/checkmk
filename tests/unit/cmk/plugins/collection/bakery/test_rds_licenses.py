@@ -6,7 +6,10 @@
 from pathlib import Path
 
 from cmk.bakery.v2 import OS, Plugin
-from cmk.base.plugins.bakery.rds_licenses import bakery_plugin_rds_licenses, get_rds_licenses_files
+from cmk.plugins.collection.bakery.rds_licenses import (
+    bakery_plugin_rds_licenses,
+    get_rds_licenses_files,
+)
 
 
 def test_rds_licenses_files() -> None:

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.bakery.v2 import WindowsGlobalConfigEntry
-from cmk.base.plugins.bakery.win_exe_suffixes import (
+from cmk.plugins.windows.bakery.win_exe_suffixes import (
     bakery_plugin_win_exe_suffixes,
     get_win_exe_suffixes_windows_config,
 )

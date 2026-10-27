@@ -42,12 +42,17 @@ describe('useAllServicesColumns', () => {
     })
   })
 
-  test('filters the host by name', () => {
+  test('filters the host by name and by host state in one funnel', () => {
     const host = useAllServicesColumns({ includeSelect: false, sites: SITES }).find(
       (column) => columnId(column) === 'host_name'
     )
 
-    expect(host?.meta?.filter).toEqual({ type: 'string-input', field: 'host_name' })
+    expect(host?.meta?.filter).toMatchObject({
+      type: 'string-input-with-checkbox-list',
+      field: 'host_name',
+      checkboxField: 'host_state',
+      options: [{ value: 'UP' }, { value: 'DOWN' }, { value: 'UNREACHABLE' }, { value: 'PENDING' }]
+    })
   })
 
   test('pins the host next to the service name', () => {

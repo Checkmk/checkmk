@@ -11,10 +11,10 @@ import {
   type HostServicesColumnOptions,
   useHostServicesColumns
 } from '@/monitoring/host-services/columns'
-import type { ServiceEntry } from '@/monitoring/shared/api/types'
+import type { HostState, ServiceEntry } from '@/monitoring/shared/api/types'
 import type {
   CheckboxListFilter,
-  StringInputFilter
+  StringInputWithCheckboxListFilter
 } from '@/monitoring/shared/components/filter/types'
 import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
 import { columnId } from '@/monitoring/shared/tableState/schema'
@@ -38,9 +38,16 @@ export function useAllServicesColumns({
 }: AllServicesColumnOptions): ColumnDef<ServiceEntry>[] {
   const { _t } = usei18n()
 
-  const hostNameFilter: StringInputFilter<'host_name'> = {
-    type: 'string-input',
-    field: 'host_name'
+  const hostFilter: StringInputWithCheckboxListFilter<'host_name', 'host_state'> = {
+    type: 'string-input-with-checkbox-list',
+    field: 'host_name',
+    checkboxField: 'host_state',
+    options: [
+      { value: 'UP', title: _t('UP') },
+      { value: 'DOWN', title: _t('DOWN') },
+      { value: 'UNREACHABLE', title: _t('UNREACH') },
+      { value: 'PENDING', title: _t('PENDING') }
+    ] satisfies { value: HostState; title: string }[]
   }
 
   const siteFilter: CheckboxListFilter<'site_id'> = {
@@ -57,7 +64,7 @@ export function useAllServicesColumns({
       enableHiding: false,
       minSize: 120,
       maxSize: 300,
-      meta: { filter: hostNameFilter }
+      meta: { filter: hostFilter }
     },
     {
       accessorKey: 'site_id',

@@ -6,6 +6,7 @@
 
 import functools
 import io
+import re
 import zipfile
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
@@ -125,8 +126,6 @@ def _upload_mib_file(
     paths: ec.Paths,
     source_dirs: Sequence[Path],
 ) -> str:
-    mibname = ec.MibName(filename.split(".", maxsplit=1)[0].upper())
-
     # FIXME: This is a temporary local fix that should be removed once
     # handling of file contents uses a uniformly encoded representation
     try:
@@ -135,7 +134,7 @@ def _upload_mib_file(
         content = content_bytes.decode("latin-1")
 
     msg = _validate_and_compile_mib(
-        mibname=mibname,
+        mibname=_module_name(filename, content),
         content=content,
         make_compile_mib=make_compile_mib,
         paths=paths,
@@ -145,6 +144,38 @@ def _upload_mib_file(
     with (paths.local_mibs_dir.value / filename).open("wb") as f:
         f.write(content_bytes)
     return msg
+
+
+# The definition of a MIB module starts with its name, e.g. "IF-MIB DEFINITIONS ::= BEGIN", which
+# comments may precede and interrupt. Like for the compiler, they run from "--" to the end of the
+# line, which "\r" may end, too.
+_COMMENT = re.compile(r"--[^\r\n]*")
+_MODULE_DEFINITION = re.compile(
+    r"(?:^|(?<=[\r\n]))[ \t]*([A-Za-z][-A-Za-z0-9]*)\s+(?:\{[^}]*\}\s*)?DEFINITIONS\b"
+)
+
+
+def defined_module_name(lines: Iterable[str]) -> ec.MibName | None:
+    """The name of the MIB module the lines of a MIB file define, if any
+
+    The compiler names the compiled module like that. It reads the lines only up to the definition,
+    which comes first apart from comments, so the MIB list needn't read whole files."""
+    text = ""
+    for line in lines:
+        text += _COMMENT.sub("", line)
+        if "DEFINITIONS" in line and (match := _MODULE_DEFINITION.search(text)):
+            return ec.MibName(match.group(1))
+    return None
+
+
+def _module_name(filename: str, content: str) -> ec.MibName:
+    """The name of the MIB module the content defines, by default the one of the file
+
+    The compiler tells the status of a MIB by the name in its definition, which may differ from the
+    one of its file, e.g. in case."""
+    return defined_module_name(io.StringIO(content)) or ec.MibName(
+        filename.split(".", maxsplit=1)[0].upper()
+    )
 
 
 def _validate_mib_file_name(filename: str) -> None:

@@ -3749,6 +3749,30 @@ def test_mib_list_shows_the_name_and_organization_of_the_custom_mibs(
 
 
 @_setup_page
+def test_mib_list_shows_the_organization_of_a_custom_mib_with_comments_before_its_definition(
+    load_config: Config, test_edition: Edition
+) -> None:
+    _custom_mib(
+        "test.mib",
+        "  -- defines an OBJECT IDENTIFIER\n"
+        "TEST-MIB DEFINITIONS ::= BEGIN\n"
+        "testMib MODULE-IDENTITY\n"
+        '    ORGANIZATION "Example Inc."\n'
+        "    ::= { iso 3 6 1 4 1 99999 }\n"
+        "END\n",
+    )
+
+    [row] = table_rows(
+        render_page(
+            _mode(mkeventd_wato.ModeEventConsoleMIBs, load_config, test_edition), load_config
+        ),
+        "Custom MIBs",
+    )
+
+    assert row["Organization"].get_text() == "Example Inc."
+
+
+@_setup_page
 def test_deleting_a_custom_mib_removes_it_and_its_compiled_module(
     load_config: Config, test_edition: Edition
 ) -> None:
@@ -3762,6 +3786,37 @@ def test_deleting_a_custom_mib_removes_it_and_its_compiled_module(
 
     assert (_custom_mibs(), compiled_mib.exists()) == ([], False)
     assert redirect_vars(result) == {"mode": "mkeventd_mibs"}
+
+
+@_setup_page
+def test_deleting_a_custom_mib_with_comments_before_its_definition_removes_its_compiled_module(
+    load_config: Config, test_edition: Edition
+) -> None:
+    # Uploading it names the compiled module like the definition.
+    _custom_mib("test.mib", "  -- defines an OBJECT IDENTIFIER\n" + _SELF_CONTAINED_MIB)
+    compiled_mib = _paths().compiled_mibs_dir.value / "TEST-MIB.py"
+    compiled_mib.parent.mkdir(parents=True, exist_ok=True)
+    compiled_mib.touch()
+    submit(_delete="test.mib")
+
+    _mib_list_action(load_config, test_edition)
+
+    assert not compiled_mib.exists()
+
+
+@_setup_page
+def test_deleting_a_custom_mib_keeps_the_compiled_module_of_another_mib_named_like_its_file(
+    load_config: Config, test_edition: Edition
+) -> None:
+    _custom_mib("TEST-SMI.txt", _SELF_CONTAINED_MIB)
+    other_compiled_mib = _paths().compiled_mibs_dir.value / "TEST-SMI.py"
+    other_compiled_mib.parent.mkdir(parents=True, exist_ok=True)
+    other_compiled_mib.touch()
+    submit(_delete="TEST-SMI.txt")
+
+    _mib_list_action(load_config, test_edition)
+
+    assert other_compiled_mib.exists()
 
 
 @_setup_page

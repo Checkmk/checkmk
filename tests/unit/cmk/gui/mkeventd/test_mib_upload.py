@@ -162,6 +162,37 @@ def test_uploading_a_mib_which_fails_to_compile_is_refused(paths: ec.Paths) -> N
         _upload("broken.txt", b"BROKEN DEFINITIONS ::= BEGIN nonsense", paths, compiler)
 
 
+def test_uploading_a_mib_named_otherwise_than_its_file_which_fails_to_compile_is_refused(
+    paths: ec.Paths,
+) -> None:
+    # The compiler tells the status of a MIB by the name in its definition.
+    compiler = _FakeCompiler({ec.MibName("IANAifType-MIB"): _failed("Bad grammar")})
+
+    with pytest.raises(Exception, match="Failed to compile your module: Bad grammar"):
+        _upload(
+            "iana-iftype.mib",
+            b"-- IANA ifTypes\nIANAifType-MIB DEFINITIONS ::= BEGIN nonsense",
+            paths,
+            compiler,
+        )
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        pytest.param(b"IANAifType-MIB DEFINITIONS ::= BEGIN\nEND\n", id="plain"),
+        pytest.param(b"IANAifType-MIB -- IANA ifTypes\nDEFINITIONS ::= BEGIN\nEND\n", id="comment after the name"),
+        pytest.param(b"-- IANA ifTypes\rIANAifType-MIB DEFINITIONS ::= BEGIN\rEND\r", id="lines ending with CR"),
+    ],
+)  # fmt: skip
+def test_uploading_a_mib_reports_it_by_the_name_in_its_definition(
+    content: bytes, paths: ec.Paths
+) -> None:
+    message = _upload("iana-iftype.mib", content, paths)
+
+    assert message == "MIB file IANAifType-MIB uploaded."
+
+
 @pytest.mark.parametrize(
     "file_name, content, error",
     [

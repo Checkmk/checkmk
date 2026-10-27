@@ -235,7 +235,7 @@ from .helpers import (
     rules_with_editor_vars,
     service_levels,
 )
-from .mib_upload import CompileMib, upload_mibs
+from .mib_upload import CompileMib, defined_module_name, upload_mibs
 from .permission_section import PERMISSION_SECTION_EVENT_CONSOLE
 
 
@@ -3785,7 +3785,9 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         )
         pyc_suffix = f".cpython-{sys.version_info.major}{sys.version_info.minor}.pyc"
         compiled_mibs_dir = self._paths.compiled_mibs_dir.value
-        names = [Path(filename)] if mib_name is None else [Path(filename), Path(mib_name)]
+        # The compiler names the compiled module like the definition, not like the file, which may
+        # be named like the compiled module of another MIB.
+        names = [] if mib_name is None else [Path(mib_name)]
         for path in {
             compiled_mibs_dir / p
             for f in names
@@ -3862,15 +3864,15 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         }
 
     def _parse_snmp_mib_header(self, path: Path) -> MIBInfo:
-        # read up to first "OBJECT IDENTIFIER" declaration
-        head = ""
+        # Read up to the first "OBJECT IDENTIFIER" declaration, which comes after the definition.
+        # Comments may mention "OBJECT IDENTIFIER", too.
+        header: list[str] = []
         with path.open(encoding="utf-8", errors="replace") as f:
             for line in f:
-                if line.startswith("--"):
-                    continue
-                if "OBJECT IDENTIFIER" in line:
+                header.append(line)
+                if not line.lstrip().startswith("--") and "OBJECT IDENTIFIER" in line:
                     break  # seems the header is finished
-                head += line
+        head = "".join(line for line in header if not line.lstrip().startswith("--"))
         # now try to extract some relevant information from the header
         return MIBInfo(
             size=path.stat().st_size,
@@ -3879,11 +3881,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 if (matches := re.search('ORGANIZATION[^"]+"([^"]+)"', head, re.M))
                 else ""
             ),
-            name=(
-                ec.MibName(matches.group(1))
-                if (matches := re.search(r"^\s*([A-Z0-9][A-Z0-9-]+)\s", head, re.I | re.M))
-                else None
-            ),
+            # Like the upload, which names the compiled module like that, e.g. for deleting it.
+            name=defined_module_name(header),
         )
 
 

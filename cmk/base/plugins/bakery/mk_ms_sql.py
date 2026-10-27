@@ -11,9 +11,7 @@ from typing import Literal, NamedTuple, NotRequired, TypedDict
 import yaml
 from pydantic import BaseModel
 
-from cmk.utils.password_store import extract_formspec_password, FormSpecPassword
-
-from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
+from cmk.bakery.v2 import BakeryPlugin, FileGenerator, OS, Plugin, PluginConfig, Secret
 
 
 class MsSqlSetup(NamedTuple):
@@ -39,7 +37,7 @@ OS_Setups: Sequence[MsSqlSetup] = [
 
 class _Credentials(BaseModel):
     user: str
-    password: FormSpecPassword
+    password: Secret
 
 
 _Auth = tuple[Literal["local"], None] | tuple[Literal["remote"], _Credentials]
@@ -176,8 +174,7 @@ class SqlOutput(TypedDict):
     configs: NotRequired[list[SqlMainEntry]]
 
 
-def check_get_ms_sql_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Config.model_validate(conf)
+def check_get_ms_sql_files(config: _Config) -> FileGenerator:
     if config.deployment[0] == "do_not_deploy":
         return
     for o_s in OS_Setups:
@@ -317,7 +314,7 @@ def _to_sql_auth(auth: _Auth) -> SqlAuth:
         case ("remote", credentials):
             return SqlAuth(
                 username=credentials.user,
-                password=extract_formspec_password(credentials.password),
+                password=credentials.password.revealed,
                 type="sql_server",
             )
 
@@ -345,7 +342,9 @@ def _is_allowed(conf: _MainConf, base_os: OS) -> bool:
     return conf.auth[0] != "local" or base_os is OS.WINDOWS
 
 
-register.bakery_plugin(
+bakery_plugin_mk_ms_sql = BakeryPlugin(
     name="mk_ms_sql",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     files_function=check_get_ms_sql_files,
 )

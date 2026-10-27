@@ -40,14 +40,14 @@ def test_keeps_nagvis_for_site_with_own_map(
     tmp_path: Path,
 ) -> None:
     _site(tmp_path, "CONFIG_NAGVIS='off'\n", "demo-germany.cfg", "datacenter.cfg")
-    assert _run_update(tmp_path, "2.5.0p12") == 1
+    assert _run_update(tmp_path, "2.5.0p17.ultimate") == 1
 
 
 def test_leaves_nagvis_off_for_site_with_only_demo_maps(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     _site(tmp_path, "CONFIG_NAGVIS='off'\n", "demo-germany.cfg")
-    assert _run_update(tmp_path, "2.5.0p12") == 0
+    assert _run_update(tmp_path, "2.5.0p17.ultimate") == 0
     assert "NagVis is deprecated and has been switched off" in caplog.text
 
 
@@ -55,7 +55,7 @@ def test_leaves_nagvis_alone_on_later_updates(
     tmp_path: Path,
 ) -> None:
     _site(tmp_path, "CONFIG_NAGVIS='off'\n", "datacenter.cfg")
-    assert _run_update(tmp_path, "3.0.0p1") == 0
+    assert _run_update(tmp_path, "3.0.0p1.pro") == 0
 
 
 def test_leaves_site_without_nagvis_option_alone(
@@ -63,4 +63,4 @@ def test_leaves_site_without_nagvis_option_alone(
 ) -> None:
     # Editions without NagVis, like Checkmk Cloud, have no NAGVIS option in site.conf
     _site(tmp_path, "CONFIG_CORE='cmc'\n", "datacenter.cfg")
-    assert _run_update(tmp_path, "2.5.0p12") == 0
+    assert _run_update(tmp_path, "2.5.0p17.ultimate") == 0

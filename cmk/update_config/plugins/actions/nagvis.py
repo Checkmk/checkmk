@@ -37,7 +37,8 @@ def _is_update_from_before_3_0(from_version: str | None) -> bool:
     if from_version is None:
         return False
     try:
-        base = Version.from_str(from_version).base
+        # OMD_FROM_VERSION carries the edition suffix, e.g. "2.5.0p17.ultimate"
+        base = Version.from_str(from_version.rsplit(".", 1)[0]).base
     except ValueError:
         return False
     return base is not None and base.major < 3

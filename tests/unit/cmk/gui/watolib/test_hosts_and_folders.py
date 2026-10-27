@@ -349,6 +349,26 @@ def test_write_and_read_host_attributes(attributes: HostAttributes, tree: Folder
         }
 
 
+def test_wato_info_read_returns_empty_when_wato_file_is_gone(
+    tree: FolderTree, tmp_path: Path
+) -> None:
+    wato_file = tmp_path / ".wato"
+    tree.wato_info_storage_manager.write(wato_file, {"title": "x"})
+    wato_file.unlink()
+
+    assert tree.wato_info_storage_manager.read(wato_file) == {}
+
+
+def test_wato_info_read_falls_back_to_wato_file_when_pickle_is_gone(
+    tree: FolderTree, tmp_path: Path
+) -> None:
+    wato_file = tmp_path / ".wato"
+    tree.wato_info_storage_manager.write(wato_file, {"title": "x"})
+    (tmp_path / ".wato.pkl").unlink()
+
+    assert tree.wato_info_storage_manager.read(wato_file) == {"title": "x"}
+
+
 def test_create_multiple_hosts(tree: FolderTree) -> None:
     root = tree.root_folder()
     subfolder = root.create_subfolder(

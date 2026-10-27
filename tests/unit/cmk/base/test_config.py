@@ -957,7 +957,7 @@ def test_make_tcp_fetcher_config_symmetric_agent_encryption(
             {
                 "id": "01",
                 "condition": {"host_name": [HostName("testhost2")]},
-                "value": "my-super-secret-psk",
+                "value": {"passphrase": "my-super-secret-psk"},
             }
         ],
     )

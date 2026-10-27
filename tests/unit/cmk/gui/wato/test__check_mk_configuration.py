@@ -16,6 +16,7 @@ from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
 from cmk.gui.wato._check_mk_configuration import (
     _migrate_log_levels,
     _migrate_piggybacked_host_files,
+    AgentEncryption,
     AgentPorts,
     CheckMkExitStatus,
     ConfigVariableChooseSNMPBackend,
@@ -326,3 +327,21 @@ def test_check_mk_exit_status_factory_default_is_valid() -> None:
 )
 def test_agent_ports_migration(stored: object, expected: object) -> None:
     assert AgentPorts.valuespec.transform_value(stored) == expected
+
+
+@pytest.mark.parametrize(
+    "stored, expected",
+    [
+        pytest.param("secret", {"passphrase": "secret"}, id="passphrase"),
+        pytest.param(None, {"passphrase": None}, id="no encryption"),
+        pytest.param(False, {"passphrase": None}, id="default of agents baked before"),
+        pytest.param(
+            {"passphrase": "secret", "use_regular": "enforce", "use_realtime": "enforce"},
+            {"passphrase": "secret"},
+            id="Checkmk 2.1 format",
+        ),
+        pytest.param({"passphrase": "secret"}, {"passphrase": "secret"}, id="already migrated"),
+    ],
+)
+def test_agent_encryption_migration(stored: object, expected: object) -> None:
+    assert AgentEncryption.valuespec.transform_value(stored) == expected

@@ -30,6 +30,12 @@ def make_tcp_fetcher_config(
         ruleset_matcher,
         labels_of_host,
     )
+    agent_encryption = SingleHostRulesetMatcherFirst(
+        loaded_config.agent_encryption,
+        {"passphrase": None},
+        ruleset_matcher,
+        labels_of_host,
+    )
     return TCPFetcherConfig(
         agent_port=lambda host_name: agent_ports(host_name)["port"],
         connect_timeout=SingleHostRulesetMatcherFirst(
@@ -44,12 +50,7 @@ def make_tcp_fetcher_config(
             ruleset_matcher,
             labels_of_host,
         ),
-        symmetric_agent_encryption=SingleHostRulesetMatcherFirst(
-            loaded_config.agent_encryption,
-            None,
-            ruleset_matcher,
-            labels_of_host,
-        ),
+        symmetric_agent_encryption=lambda host_name: agent_encryption(host_name)["passphrase"],
     )
 
 

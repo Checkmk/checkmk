@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from shlex import quote
 
@@ -17,18 +17,18 @@ from .bakery_api.v1 import (
 )
 
 
-def get_agent_encryption_files(conf: str | None) -> FileGenerator:
-    if not conf:
-        return  # Should not happen
+def get_agent_encryption_files(conf: Mapping[str, str | None]) -> FileGenerator:
+    if not (passphrase := conf["passphrase"]):
+        return
     yield PluginConfig(
         base_os=OS.LINUX,
-        lines=list(get_agent_encryption_lines(conf)),
+        lines=list(get_agent_encryption_lines(passphrase)),
         target=Path("encryption.cfg"),
         include_header=True,
     )
     yield PluginConfig(
         base_os=OS.SOLARIS,
-        lines=list(get_agent_encryption_lines(conf)),
+        lines=list(get_agent_encryption_lines(passphrase)),
         target=Path("encryption.cfg"),
         include_header=True,
     )
@@ -39,10 +39,10 @@ def get_agent_encryption_lines(passphrase: str) -> Iterable[str]:
     yield "ENCRYPTED=yes"
 
 
-def get_agent_encryption_windows_config(conf: str | None) -> WindowsConfigGenerator:
-    if not conf:
-        return  # Should not happen
-    yield WindowsGlobalConfigEntry(name="passphrase", content=conf)
+def get_agent_encryption_windows_config(conf: Mapping[str, str | None]) -> WindowsConfigGenerator:
+    if not (passphrase := conf["passphrase"]):
+        return
+    yield WindowsGlobalConfigEntry(name="passphrase", content=passphrase)
     yield WindowsGlobalConfigEntry(name="encrypted", content="yes")
 
 

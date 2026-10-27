@@ -5935,12 +5935,6 @@ EncryptionHandling = HostRulespec(
 def _valuespec_agent_encryption() -> Alternative:
     return Alternative(
         title=_("Symmetric encryption (Linux, Solaris, Windows)"),
-        help=_(
-            "If you cannot use the Agent Controllers encrypted TLS connections,"
-            " you can resort to the old OpenSSH based symmetric encryption (if your host system supports it)."
-            " Note that using this encryption in addition to the TLS encryption is not only useless,"
-            " but also prevents the controller from compressing the data for transport."
-        ),
         elements=[
             FixedValue(
                 title="Do not apply symmetric encryption",
@@ -5956,10 +5950,42 @@ def _valuespec_agent_encryption() -> Alternative:
     )
 
 
+def _valuespec_agent_encryption_migrated() -> Migrate[dict[str, Any]]:
+    # All keys are mandatory: merging the matching rules then yields the first matching rule.
+    return Migrate(
+        valuespec=Dictionary(
+            title=_("Symmetric encryption (Linux, Solaris, Windows)"),
+            help=_(
+                "If you cannot use the Agent Controllers encrypted TLS connections,"
+                " you can resort to the old OpenSSH based symmetric encryption (if your host system supports it)."
+                " Note that using this encryption in addition to the TLS encryption is not only useless,"
+                " but also prevents the controller from compressing the data for transport."
+            ),
+            optional_keys=False,
+            elements=[("passphrase", _valuespec_agent_encryption())],
+        ),
+        migrate=_migrate_agent_encryption,
+    )
+
+
+def _migrate_agent_encryption(value: object) -> dict[str, object]:
+    match value:
+        case dict():
+            return value
+        case str() | None:
+            return {"passphrase": value}
+        case False:
+            # Agents baked before stored False as the default.
+            return {"passphrase": None}
+        case _:
+            raise ValueError(f"Unexpected value: {value!r}")
+
+
 AgentEncryption = HostRulespec(
     group=RulespecGroupAgentCMKAgent,
+    match_type="dict",
     name="agent_encryption",
-    valuespec=_valuespec_agent_encryption,
+    valuespec=_valuespec_agent_encryption_migrated,
 )
 
 

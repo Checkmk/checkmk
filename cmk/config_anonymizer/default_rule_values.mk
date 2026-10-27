@@ -1264,7 +1264,7 @@ agent_config['zorp'] = [
 globals().setdefault('agent_encryption', [])
 
 agent_encryption = [
-{'id': 'aed26744-00ac-40d0-a890-99615f77009e', 'value': None, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'aed26744-00ac-40d0-a890-99615f77009e', 'value': {'passphrase': None}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_encryption
 
 

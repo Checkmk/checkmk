@@ -81,8 +81,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
             updater::after_connection_changes(
                 &[connection],
                 &updater_registration,
-                detect_agent_updater(),
-                &config.connection_config.client_config,
+                updater::PythonUpdater::find(&config.connection_config.client_config).as_ref(),
                 &registry,
             )?;
             register_update_source(
@@ -105,8 +104,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
             updater::after_connection_changes(
                 &[connection],
                 &updater_registration,
-                detect_agent_updater(),
-                &config.connection_config.client_config,
+                updater::PythonUpdater::find(&config.connection_config.client_config).as_ref(),
                 &registry,
             )?;
             register_update_source(
@@ -132,17 +130,19 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
         )?),
         cli::Mode::Daemon(daemon_opts) => {
             let updater_registration = runtime_config.configured_updater_registration();
+            let client_config = config::ClientConfig::new(
+                runtime_config.clone(),
+                daemon_opts.client_opts,
+                Some(daemon_opts.reg_client_opts),
+            );
+            let python_updater = updater::PythonUpdater::find(&client_config);
             daemon(
                 paths,
                 registry.clone(),
-                config::PullConfig::new(runtime_config.clone(), daemon_opts.pull_opts, registry)?,
-                config::ClientConfig::new(
-                    runtime_config,
-                    daemon_opts.client_opts,
-                    Some(daemon_opts.reg_client_opts),
-                ),
+                config::PullConfig::new(runtime_config, daemon_opts.pull_opts, registry)?,
+                client_config,
                 updater_registration,
-                detect_agent_updater(),
+                python_updater,
             )
         }
         cli::Mode::Dump => dump(),
@@ -240,41 +240,6 @@ fn register_update_source(
         source.available
     );
     updater.register_update_source(registration, source, registry)
-}
-
-/// Which agent updater this host runs.
-///
-/// Temporary: it only exists to tell the two deployments apart right now, without a bakery
-/// change, see [`detect_agent_updater`].
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum AgentUpdater {
-    /// Integrated into the controller: there is no subprocess to drive.
-    Integrated,
-    /// The Python `cmk-update-agent`, driven as a subprocess.
-    Python,
-}
-
-/// Tell whether the agent updates are handled by the controller itself rather than by the
-/// Python agent updater running as a subprocess.
-///
-/// Only a missing Python updater executable means the controller is on its own. Every other
-/// case counts as [`AgentUpdater::Python`], because that is the safe direction: a subprocess
-/// that is not there only costs a warning, while wrongly assuming the integrated updater
-/// skips the registration of an updater that nothing else registers.
-///
-/// Temporary: this is expected to be replaced by an explicit statement from the site, or to
-/// be dropped, as soon as the integrated updater is baked for.
-fn detect_agent_updater() -> AgentUpdater {
-    match updater::get_agent_updater_executable() {
-        Ok(path) => {
-            log::info!("Found Python agent updater at '{}'", path);
-            AgentUpdater::Python
-        }
-        Err(error) => {
-            log::info!("No Python agent updater executable: {:#}", error);
-            AgentUpdater::Integrated
-        }
-    }
 }
 
 /// This check is currently only useful on Unix. On Windows, the internal agent address can be passed

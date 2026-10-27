@@ -13,9 +13,7 @@ use crate::site_spec::Protocol;
 use crate::types::Credentials;
 use crate::{config, site_spec};
 use anyhow::{bail, Context, Result as AnyhowResult};
-#[cfg(unix)]
-use log::info;
-use log::warn;
+use log::{info, warn};
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::process::Command;
@@ -23,6 +21,50 @@ use std::process::Command;
 use winreg::enums::{HKEY_LOCAL_MACHINE, KEY_READ, KEY_WOW64_64KEY};
 #[cfg(windows)]
 use winreg::RegKey;
+
+/// The Python agent updater that the agent package ships.
+pub struct PythonUpdater {
+    executable: String,
+    /// For the requests to the site that its registration needs.
+    client_config: config::ClientConfig,
+}
+
+impl PythonUpdater {
+    /// Look for the Python agent updater of this host.
+    ///
+    /// # Returns
+    ///
+    /// `None` if the package ships no Python agent updater, for example under
+    /// the rule entry that enables only the integrated updater.
+    pub fn find(client_config: &config::ClientConfig) -> Option<Self> {
+        match find_executable() {
+            Ok(executable) => {
+                info!("Found Python agent updater at '{executable}'");
+                Some(Self {
+                    executable,
+                    client_config: client_config.clone(),
+                })
+            }
+            Err(error) => {
+                info!("No Python agent updater executable: {error:#}");
+                None
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+impl PythonUpdater {
+    pub fn at(executable: &str) -> Self {
+        Self {
+            executable: executable.to_string(),
+            client_config: config::ClientConfig {
+                use_proxy: false,
+                validate_api_cert: false,
+            },
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct UpdaterRegistrationInput {
@@ -89,9 +131,9 @@ fn is_updater_registered(cmk_update_agent_path: &str) -> bool {
 /// - `Overwrite`: always register.
 /// - `Manual`: do nothing.
 pub(super) fn register(
+    python_updater: &PythonUpdater,
     connection: &AddedConnection,
     updater_registration: &UpdaterRegistration,
-    client_config: &config::ClientConfig,
     registry: &config::Registry,
 ) -> AnyhowResult<()> {
     if matches!(updater_registration, UpdaterRegistration::Manual) {
@@ -101,42 +143,27 @@ pub(super) fn register(
         .retrieve_standard_connection_by_uuid(&connection.uuid)
         .with_context(|| format!("No registered connection has the UUID {}", connection.uuid))?;
     register_at(
+        python_updater,
         &site_id,
         &connection.credentials,
         updater_registration,
-        client_config,
         registry,
     )
     .with_context(|| format!("Could not register the Python agent updater for {site_id}"))
 }
 
 fn register_at(
+    python_updater: &PythonUpdater,
     site_id: &site_spec::SiteID,
     credentials: &Credentials,
     updater_registration: &UpdaterRegistration,
-    client_config: &config::ClientConfig,
     registry: &config::Registry,
 ) -> AnyhowResult<()> {
-    if matches!(updater_registration, UpdaterRegistration::Keep) {
-        let agent_updater_executable = match get_agent_updater_executable() {
-            Ok(path) => path,
-            Err(e) => {
-                warn!(
-                    "You requested to register for automatic updates, \
-                    but the agent updater is not found. \
-                    Skipping agent updater registration. ({})",
-                    e
-                );
-                return Ok(());
-            }
-        };
-
-        if is_updater_registered(&agent_updater_executable) {
-            println!(
-                "Agent updater already registered for site {site_id}. Skipping re-registration."
-            );
-            return Ok(());
-        }
+    if matches!(updater_registration, UpdaterRegistration::Keep)
+        && is_updater_registered(&python_updater.executable)
+    {
+        println!("Agent updater already registered for site {site_id}. Skipping re-registration.");
+        return Ok(());
     }
 
     // The controller stores no host names, so it asks the site. After
@@ -145,12 +172,12 @@ fn register_at(
     let hostname = get_registered_hostname(
         registry,
         &agent_receiver_api::Api {
-            use_proxy: client_config.use_proxy,
+            use_proxy: python_updater.client_config.use_proxy,
         },
         site_id,
     )?;
 
-    let protocol = site_spec::discover_protocol(site_id, client_config)?;
+    let protocol = site_spec::discover_protocol(site_id, &python_updater.client_config)?;
 
     let updater_input = UpdaterRegistrationInput {
         site_id: site_id.clone(),
@@ -159,7 +186,7 @@ fn register_at(
         protocol,
     };
 
-    register_updater_subprocess(&updater_input, registry)
+    register_updater_subprocess(&updater_input, &python_updater.executable, registry)
 }
 
 /// Retrieve the hostname for the already-registered connection.
@@ -266,13 +293,7 @@ fn find_file_relatively(cmk_update_agent_cmd: &str) -> AnyhowResult<String> {
     Ok(cmk_update_agent_cmd.to_string())
 }
 
-/// Locate the Python agent updater executable, the one driven as a subprocess.
-///
-/// # Errors
-///
-/// Returns an error if the executable is not found, which also means that this host has
-/// no Python agent updater at all.
-pub(crate) fn get_agent_updater_executable() -> AnyhowResult<String> {
+fn find_executable() -> AnyhowResult<String> {
     #[cfg(unix)]
     return find_file_relatively(CMK_UPDATE_AGENT_CMD);
     #[cfg(windows)]
@@ -294,23 +315,11 @@ fn get_windows_agent_executable() -> AnyhowResult<String> {
     Ok(raw.trim().trim_matches('"').to_string())
 }
 
-pub fn register_updater_subprocess(
+fn register_updater_subprocess(
     updater_registration_config: &UpdaterRegistrationInput,
+    agent_updater_executable: &str,
     registry: &config::Registry,
 ) -> AnyhowResult<()> {
-    let agent_updater_executable = match get_agent_updater_executable() {
-        Ok(path) => path,
-        Err(e) => {
-            warn!(
-                "You requested to register for automatic updates, \
-                   but the Agent Updater is not found. \
-                   Skipping Agent Updater registration. ({})",
-                e
-            );
-            return Ok(()); // Skip updater registration gracefully
-        }
-    };
-
     let runtime_dir = registry
         .path()
         .parent()
@@ -331,7 +340,7 @@ pub fn register_updater_subprocess(
     let result = (|| {
         let mut cmd = match _prepare_register_updater_cmd(
             updater_registration_config,
-            &agent_updater_executable,
+            agent_updater_executable,
             &password_file_path,
         ) {
             Ok(cmd) => cmd,

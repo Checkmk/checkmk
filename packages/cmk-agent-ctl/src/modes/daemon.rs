@@ -9,8 +9,7 @@ use crate::environment::PathResolver;
 use crate::misc;
 use crate::modes::{pull, push, renew_certificate};
 use crate::modes::{registration, update};
-use crate::updater;
-use crate::AgentUpdater;
+use crate::updater::{self, PythonUpdater};
 use anyhow::Result as AnyhowResult;
 use log::{error, info};
 use std::sync::mpsc;
@@ -33,7 +32,7 @@ pub fn daemon(
     pull_config: config::PullConfig,
     client_config: config::ClientConfig,
     updater_registration: config::UpdaterRegistration,
-    agent_updater: AgentUpdater,
+    python_updater: Option<PythonUpdater>,
 ) -> AnyhowResult<()> {
     register_panic_handler();
     let baked_cas = trusted_cas::load_baked_cas(&paths.trusted_cas_path);
@@ -45,7 +44,7 @@ pub fn daemon(
         &mut registry,
         &client_config,
         updater_registration,
-        agent_updater,
+        python_updater.as_ref(),
         &baked_cas,
     );
 
@@ -96,7 +95,7 @@ fn process_pre_configured_connections(
     registry: &mut config::Registry,
     client_config: &config::ClientConfig,
     updater_registration: config::UpdaterRegistration,
-    agent_updater: AgentUpdater,
+    python_updater: Option<&PythonUpdater>,
     baked_cas: &trusted_cas::BakedCAs,
 ) {
     match config::PreConfiguredConnections::load(path_pre_configured_connections) {
@@ -111,8 +110,7 @@ fn process_pre_configured_connections(
                 updater::after_connection_changes(
                     &added_connections,
                     &updater_registration,
-                    agent_updater,
-                    client_config,
+                    python_updater,
                     registry,
                 )
             }) {

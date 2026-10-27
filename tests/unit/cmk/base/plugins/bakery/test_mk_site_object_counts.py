@@ -5,13 +5,19 @@
 
 from pathlib import Path
 
-from cmk.bakery.v1 import OS, Plugin, PluginConfig
-from cmk.base.plugins.bakery.mk_site_object_counts import get_mk_site_object_counts_files
+from cmk.bakery.v2 import OS, Plugin, PluginConfig
+from cmk.base.plugins.bakery.mk_site_object_counts import (
+    bakery_plugin_mk_site_object_counts,
+    get_mk_site_object_counts_files,
+)
 
 
 def test_mk_site_object_counts_files_with_tags() -> None:
     conf = {"deployment": ("sync", None), "tags": ["prod", "test"]}
-    result = sorted(get_mk_site_object_counts_files(conf), key=repr)
+    result = sorted(
+        get_mk_site_object_counts_files(bakery_plugin_mk_site_object_counts.parameter_parser(conf)),
+        key=repr,
+    )
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("mk_site_object_counts"), interval=None),
@@ -29,7 +35,10 @@ def test_mk_site_object_counts_files_with_tags() -> None:
 
 def test_mk_site_object_counts_files_with_service_check_commands() -> None:
     conf = {"deployment": ("sync", None), "service_check_commands": ["check_mk", "check_ping"]}
-    result = sorted(get_mk_site_object_counts_files(conf), key=repr)
+    result = sorted(
+        get_mk_site_object_counts_files(bakery_plugin_mk_site_object_counts.parameter_parser(conf)),
+        key=repr,
+    )
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("mk_site_object_counts"), interval=None),
@@ -53,7 +62,10 @@ def test_mk_site_object_counts_files_with_sites() -> None:
             {"site_name": "site2", "tags": [], "service_check_commands": ["cmd2", "cmd3"]},
         ],
     }
-    result = sorted(get_mk_site_object_counts_files(conf), key=repr)
+    result = sorted(
+        get_mk_site_object_counts_files(bakery_plugin_mk_site_object_counts.parameter_parser(conf)),
+        key=repr,
+    )
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("mk_site_object_counts"), interval=None),
@@ -76,7 +88,10 @@ def test_mk_site_object_counts_files_with_sites() -> None:
 
 def test_mk_site_object_counts_files_empty_conf() -> None:
     conf: dict[str, object] = {"deployment": ("sync", None)}
-    result = sorted(get_mk_site_object_counts_files(conf), key=repr)
+    result = sorted(
+        get_mk_site_object_counts_files(bakery_plugin_mk_site_object_counts.parameter_parser(conf)),
+        key=repr,
+    )
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("mk_site_object_counts"), interval=None),
@@ -101,7 +116,10 @@ def test_mk_site_object_counts_files_all_options() -> None:
             {"site_name": "mysite", "tags": ["local_tag"], "service_check_commands": ["local_cmd"]},
         ],
     }
-    result = sorted(get_mk_site_object_counts_files(conf), key=repr)
+    result = sorted(
+        get_mk_site_object_counts_files(bakery_plugin_mk_site_object_counts.parameter_parser(conf)),
+        key=repr,
+    )
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("mk_site_object_counts"), interval=None),
@@ -125,13 +143,18 @@ def test_mk_site_object_counts_files_all_options() -> None:
 
 def test_mk_site_object_counts_do_not_deploy() -> None:
     conf: dict[str, object] = {"deployment": ("do_not_deploy", None)}
-    result = list(get_mk_site_object_counts_files(conf))
+    result = list(
+        get_mk_site_object_counts_files(bakery_plugin_mk_site_object_counts.parameter_parser(conf))
+    )
     assert result == []
 
 
 def test_mk_site_object_counts_cached_deployment() -> None:
     conf = {"deployment": ("cached", 3600.0)}
-    result = sorted(get_mk_site_object_counts_files(conf), key=repr)
+    result = sorted(
+        get_mk_site_object_counts_files(bakery_plugin_mk_site_object_counts.parameter_parser(conf)),
+        key=repr,
+    )
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("mk_site_object_counts"), interval=3600),

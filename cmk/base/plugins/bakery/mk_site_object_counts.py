@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
+from cmk.bakery.v2 import BakeryPlugin, FileGenerator, OS, Plugin, PluginConfig
 
 
 class _Site(BaseModel):
@@ -25,8 +25,7 @@ class _Config(BaseModel):
     sites: list[_Site] = []
 
 
-def get_mk_site_object_counts_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Config.model_validate(conf)
+def get_mk_site_object_counts_files(config: _Config) -> FileGenerator:
     if config.deployment[0] == "do_not_deploy":
         return
 
@@ -63,7 +62,9 @@ def _get_mk_site_object_counts_config(config: _Config) -> Iterable[str]:
         yield "SITES={}".format(" ".join(site_names))
 
 
-register.bakery_plugin(
+bakery_plugin_mk_site_object_counts = BakeryPlugin(
     name="mk_site_object_counts",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     files_function=get_mk_site_object_counts_files,
 )

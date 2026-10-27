@@ -6,7 +6,7 @@
 from pathlib import Path
 
 from cmk.bakery.v2 import OS, PluginConfig
-from cmk.base.plugins.bakery.exclude_sections_aix import (
+from cmk.plugins.aix.bakery.exclude_sections_aix import (
     bakery_plugin_exclude_sections_aix,
     get_agent_exclude_section_lines_aix,
     get_agent_exclude_sections_files_aix,

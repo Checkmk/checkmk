@@ -121,8 +121,8 @@ def _parameter_valuespec_apc_symmetra() -> Dictionary:
                         "Some UPS models report status flags for each battery pack cartridge. "
                         "A cartridge is reported with the worst state of the flags it has set. "
                         "Flags not configured here result in a WARNING state. The flag "
-                        "<i>Needs Replacement</i> follows the option "
-                        "<i>State if battery needs replacement</i>."
+                        "<i>Needs Replacement</i> and an exceeded battery lifetime reported by "
+                        "a cartridge follow the option <i>State if battery needs replacement</i>."
                     ),
                     elements={
                         "disconnected": _cartridge_flag_state(

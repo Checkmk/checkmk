@@ -88,7 +88,8 @@ class Status(TypedDict):
 
 class ParsedSection(TypedDict, total=False):
     temp: Mapping[Item, float]
-    cartridge_states: list[str]
+    # (health, status) bit strings per cartridge
+    cartridges: list[tuple[str, str]]
     status: Status
     elphase: Mapping[Item, ElPhase]
 
@@ -117,7 +118,7 @@ def parse_apc_symmetra(
         sensor_info, battery_info, cartridge_info = string_table
 
     parsed = ParsedSection(
-        cartridge_states=[row[0] for row in cartridge_info],
+        cartridges=[(health, status) for health, status in cartridge_info],
         # External sensors must be parsed independently of the battery data:
         # devices like the APC NetBotz NRM250 report sensors but no UPS data.
         temp={Item(name): float(temp) for name, temp in sensor_info},
@@ -210,12 +211,30 @@ _CARTRIDGE_FLAGS = {
 }
 _CARTRIDGE_NEEDS_REPLACEMENT_BIT = 2
 
+# Bits of upsHighPrecBatteryPackCartridgeHealth. Bit 0 (lifetime okay) is left out.
+_CARTRIDGE_HEALTH = {
+    1: "Lifetime near end",
+    2: "Lifetime exceeded",
+    3: "Lifetime near end acknowledged",
+    4: "Lifetime exceeded acknowledged",
+    5: "Measured lifetime near end",
+    6: "Measured lifetime near end acknowledged",
+}
+# Some devices report a due replacement only here, not as "Needs Replacement" flag.
+_CARTRIDGE_LIFETIME_EXCEEDED_BIT = 2
+
 
 def _cartridge_flag_state(bit: int, params: CheckParameters) -> State:
     if bit == _CARTRIDGE_NEEDS_REPLACEMENT_BIT:
         return State(params["battery_replace_state"])
     key, _label = _CARTRIDGE_FLAGS[bit]
     return State(params.get("cartridge_flag_states", {}).get(key, State.WARN.value))
+
+
+def _cartridge_health_state(bit: int, params: CheckParameters) -> State:
+    if bit == _CARTRIDGE_LIFETIME_EXCEEDED_BIT:
+        return State(params["battery_replace_state"])
+    return State.OK
 
 
 def check_apc_symmetra(params: CheckParameters, section: ParsedSection) -> CheckResult:
@@ -234,7 +253,6 @@ def check_apc_symmetra(params: CheckParameters, section: ParsedSection) -> Check
     battery_time_remain = data["time_remain"]
     calib_result = data["calib"]
     last_diag_date = data["diag_date"]
-    cartridge_states = section["cartridge_states"]
 
     alt_crit_capacity = None
     # the last_diag_date is reported as %m/%d/%Y or %y
@@ -351,16 +369,24 @@ def check_apc_symmetra(params: CheckParameters, section: ParsedSection) -> Check
             label="Time remaining",
         )
 
-    for cart_idx, bitmask in enumerate(cartridge_states):
-        if not bitmask:
+    for cart_idx, (health, status) in enumerate(section["cartridges"]):
+        if not health and not status:
             continue
 
-        set_bits = [idx for idx, bit in enumerate(bitmask) if bit == "1"]
-        if set_bits:
+        flags = [
+            (_cartridge_flag_state(idx, params), _CARTRIDGE_FLAGS[idx][1])
+            for idx, bit in enumerate(status)
+            if bit == "1"
+        ] + [
+            (_cartridge_health_state(idx, params), _CARTRIDGE_HEALTH[idx])
+            for idx, bit in enumerate(health)
+            if bit == "1" and idx in _CARTRIDGE_HEALTH
+        ]
+        if flags:
             yield Result(
-                state=State.worst(*(_cartridge_flag_state(idx, params) for idx in set_bits)),
+                state=State.worst(*(state for state, _label in flags)),
                 summary=f"Battery pack cartridge {cart_idx}: "
-                f"{', '.join(_CARTRIDGE_FLAGS[idx][1] for idx in set_bits)}",
+                f"{', '.join(label for _state, label in flags)}",
             )
         else:
             yield Result(state=State.OK, summary=f"Battery pack cartridge {cart_idx}: OK")
@@ -393,7 +419,7 @@ snmp_section_apc_symmetra = SNMPSection(
         ),
         SNMPTree(
             base=".1.3.6.1.4.1.318.1.1.1.2.3.10.2.1",
-            oids=["10"],
+            oids=["7", "10"],
         ),
     ],
     parse_function=parse_apc_symmetra,

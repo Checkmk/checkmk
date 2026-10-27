@@ -24,7 +24,7 @@ description:
 
  - last diagnostic date
 
- - battery cartridge status
+ - battery cartridge status and health
 
  You can configure {WARN} and {CRIT} levels for capacity (default: 80, 95 percent).
 
@@ -63,6 +63,10 @@ description:
  - "Needs Replacement" flag: Depending on the configured state for battery replacement (default: {WARN})
 
  - Any other flag (Disconnected, Overvoltage, Overtemperature, Firmware Mismatch, ...): Depending on the configured state for that flag (default: {WARN})
+
+ - "Lifetime exceeded" health: Depending on the configured state for battery replacement (default: {WARN})
+
+ - {OK}: Any other health information (lifetime near end, acknowledged lifetime warnings)
 
  - {OK}: No flag set
 

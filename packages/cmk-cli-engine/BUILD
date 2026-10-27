@@ -25,7 +25,6 @@ py_library(
     deps = [
         "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugin-apis:discover_plugins",
-        "//packages/cmk-trace",
     ],
 )
 
@@ -39,11 +38,6 @@ py_library(
     deps = [
         ":engine",
         "//packages/cmk-ccc:log",
-        "//packages/cmk-ccc:site",
-        "//packages/cmk-ccc:version-info",
-        "//packages/cmk-crash:crash",
-        "//packages/cmk-profiling:backend",
-        "//packages/cmk-trace",
     ],
 )
 
@@ -54,7 +48,16 @@ py_library(
     srcs = ["cmk/cli/engine/main.py"],
     imports = ["."],
     visibility = ["//visibility:public"],
-    deps = [":run"],
+    deps = [
+        ":engine",
+        ":run",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:version-info",
+        "//packages/cmk-crash:crash",
+        "//packages/cmk-plugin-apis:cli",
+        "//packages/cmk-profiling:backend",
+        "//packages/cmk-trace",
+    ],
 )
 
 py_wheel(

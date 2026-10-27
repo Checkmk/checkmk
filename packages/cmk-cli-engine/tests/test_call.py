@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from typing import Final
 
-from cmk.cli.engine.call import call
+from cmk.cli.engine.call import call, CommandTracer
 from cmk.cli.engine.commands import Command, Option, parse_sub_options
 from cmk.cli.internal import Args, CommandContext, CommandHandler, ExitCode, GlobalOptions, Options
-from cmk.trace import Context
 
 from ._logger import null_logger
 
@@ -52,14 +52,20 @@ def _command(
     )
 
 
-def _call(command: Command, argument: str = "", *, arguments: Sequence[str] = ()) -> ExitCode:
+def _call(
+    command: Command,
+    argument: str = "",
+    *,
+    arguments: Sequence[str] = (),
+    traced: CommandTracer = lambda *_args: nullcontext(),
+) -> ExitCode:
     return call(
         _CONTEXT,
         command,
         argument,
         parse_sub_options(command.sub_options, [("--flag", "")], null_logger()),
         arguments,
-        Context(),
+        traced,
     )
 
 
@@ -113,3 +119,37 @@ def test_the_context_reaches_the_handler() -> None:
     _call(_command(handler))
 
     assert [context for context, _options, _args in handler.calls] == [_CONTEXT]
+
+
+def test_the_handler_runs_inside_the_commands_trace() -> None:
+    events: list[str] = []
+
+    @contextmanager
+    def traced(*_args: object) -> Iterator[None]:
+        events.append("trace starts")
+        yield
+        events.append("trace ends")
+
+    def handler(_context: CommandContext, _options: Options, _args: Args) -> ExitCode:
+        events.append("handler")
+        return ExitCode.SUCCESS
+
+    _call(_command(handler), traced=traced)
+
+    assert events == ["trace starts", "handler", "trace ends"]
+
+
+def test_the_trace_sees_what_the_handler_is_handed() -> None:
+    seen: list[tuple[CommandContext, Command, Options, Args]] = []
+
+    def traced(
+        context: CommandContext, command: Command, options: Options, args: Args
+    ) -> nullcontext[None]:
+        seen.append((context, command, options, args))
+        return nullcontext()
+
+    command = _command(_Recorder(), argument=True, sub_options=_SUB_OPTIONS)
+
+    _call(command, "myhost", arguments=["myhost"], traced=traced)
+
+    assert seen == [(_CONTEXT, command, {"flag": True}, ["myhost"])]

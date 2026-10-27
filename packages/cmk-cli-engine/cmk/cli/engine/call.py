@@ -3,11 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk import trace
-from cmk.cli.engine.commands import Argument, Arguments, Command
-from cmk.cli.internal import CommandContext, ExitCode, Options
+from collections.abc import Callable
+from contextlib import AbstractContextManager
 
-tracer = trace.get_tracer()
+from cmk.cli.engine.commands import Argument, Arguments, Command
+from cmk.cli.internal import Args, CommandContext, ExitCode, Options
+
+type CommandTracer = Callable[
+    [CommandContext, Command, Options, Args], AbstractContextManager[None]
+]
 
 
 def call(
@@ -16,7 +20,7 @@ def call(
     arg: Argument,
     sub_options: Options,
     all_args: Arguments,
-    trace_context: trace.Context,
+    traced: CommandTracer,
 ) -> ExitCode:
 
     args: Arguments
@@ -27,12 +31,5 @@ def call(
     else:
         args = ()
 
-    with tracer.span(
-        f"command[{command.name}]",
-        attributes={
-            "cmk.base.command.name": command.name,
-            "cmk.base.command.args": repr((context.global_options, sub_options, args)),
-        },
-        context=trace_context,
-    ):
+    with traced(context, command, sub_options, args):
         return command.handler_function(context, sub_options, args)

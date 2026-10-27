@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from contextlib import nullcontext
 from pathlib import Path
 from typing import Final
 
 import pytest
 
-from cmk import trace
 from cmk.cli.engine.call import call
 from cmk.cli.engine.commands import make_command, make_option, parse_sub_options
 from cmk.cli.internal import (
@@ -106,7 +106,7 @@ def test_call_shapes_the_positional_arguments(
             command.sub_options, [("--thing", "ARG" if argument else "")], null_logger()
         ),
         ["ARG", "more"],
-        trace.extract_context_from_environment({}),
+        lambda *_args: nullcontext(),
     )
     assert exit_status == ExitCode.ERROR
     assert [list(args) for args in seen] == [expected_args]

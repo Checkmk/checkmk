@@ -7,6 +7,7 @@
 # mypy: disable-error-code="type-arg"
 
 import logging
+from contextlib import nullcontext
 from dataclasses import replace
 from pathlib import Path
 from typing import Any, Final, NoReturn, override
@@ -34,7 +35,6 @@ from cmk.cli.internal import CommandContext, ExitCode, GlobalOptions, Options
 from cmk.plugins.checkmk.cli import dump
 from cmk.plugins.checkmk.cli.dump import cli_command_dump_agent
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
-from cmk.trace import Context
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
@@ -165,7 +165,7 @@ class TestDumpAgent:
             hostname,
             {},
             [],
-            Context(),
+            lambda *_args: nullcontext(),
         )
 
         assert capsys.readouterr().out == raw_data.decode()
@@ -195,7 +195,7 @@ class TestDumpAgent:
             hostname,
             {},
             [],
-            Context(),
+            lambda *_args: nullcontext(),
         )
 
         assert exit_code == ExitCode.SUCCESS
@@ -221,7 +221,7 @@ class TestDumpAgent:
             hostname,
             {},
             [],
-            Context(),
+            lambda *_args: nullcontext(),
         )
 
         assert exit_code == ExitCode.FAILURE
@@ -335,7 +335,7 @@ class TestDumpAgentSnmpBackend:
             hostname,
             options,
             [],
-            Context(),
+            lambda *_args: nullcontext(),
         )
 
         # Open the SNMP fetcher manually to drive make_backend

@@ -7,11 +7,13 @@ import errno
 import logging
 import signal
 from collections.abc import Callable, Iterator, Sequence
+from contextlib import nullcontext
 from pathlib import Path
 from types import FrameType
 
 import pytest
 
+from cmk.cli.engine.call import CommandTracer
 from cmk.cli.engine.commands import Command, make_command
 from cmk.cli.engine.run import (
     dispatch,
@@ -187,7 +189,7 @@ def _command(handler: CommandHandler) -> Command:
 def _runtime(
     commands: Sequence[Command] = (),
     *,
-    start_tracing: Callable[[Path], None] = lambda _omd_root: None,
+    trace_command: CommandTracer = lambda *_args: nullcontext(),
     on_sigint: Callable[[int, FrameType | None], object] = signal.default_int_handler,
     enable_profiling: Callable[[], None] = lambda: None,
     write_profile: Callable[[Path], None] = lambda _path: None,
@@ -197,7 +199,7 @@ def _runtime(
 ) -> Runtime:
     return Runtime(
         discover=lambda: commands,
-        start_tracing=start_tracing,
+        trace_command=trace_command,
         on_sigint=on_sigint,
         crash_reporter_for=lambda _omd_root, _argv, _environ: FakeCrashReporter(),
         enable_profiling=enable_profiling,
@@ -361,31 +363,53 @@ def test_the_command_line_takes_the_interrupt_signal() -> None:
     assert len(handled.calls) == 1
 
 
-def test_tracing_starts_for_the_site_when_a_command_runs() -> None:
-    started = Recorder()
+class FakeCommandTracer:
+    """Stands in for the tracer that spans a command's run"""
+
+    def __init__(self) -> None:
+        self.traced: list[str] = []
+
+    def __call__(
+        self, _context: CommandContext, command: Command, _options: Options, _args: Args
+    ) -> nullcontext[None]:
+        self.traced.append(command.name)
+        return nullcontext()
+
+
+def test_a_command_runs_traced() -> None:
+    tracer = FakeCommandTracer()
 
     _run(
         ["cmk", "--demo"],
-        _runtime([_command(lambda *_args: ExitCode.SUCCESS)], start_tracing=started),
+        _runtime([_command(lambda *_args: ExitCode.SUCCESS)], trace_command=tracer),
     )
 
-    assert started.calls == [_SITE]
+    assert tracer.traced == ["demo"]
 
 
 def test_the_help_is_not_traced() -> None:
-    started = Recorder()
+    tracer = FakeCommandTracer()
 
-    _run(["cmk", "--help"], _runtime(start_tracing=started))
+    _run(["cmk", "--help"], _runtime(trace_command=tracer))
 
-    assert not started.calls
+    assert not tracer.traced
 
 
 def test_a_command_line_that_is_rejected_is_not_traced() -> None:
-    started = Recorder()
+    tracer = FakeCommandTracer()
 
-    _run(["cmk", "--nonsense"], _runtime(start_tracing=started))
+    _run(["cmk", "--nonsense"], _runtime(trace_command=tracer))
 
-    assert not started.calls
+    assert not tracer.traced
+
+
+def test_a_sub_option_argument_the_conversion_rejects_is_not_traced() -> None:
+    tracer = FakeCommandTracer()
+    command = _numbered(lambda *_args: ExitCode.SUCCESS)
+
+    _run(["cmk", "--demo", "--number", "x"], _runtime([command], trace_command=tracer))
+
+    assert not tracer.traced
 
 
 def test_verbosity_raises_the_log_level() -> None:

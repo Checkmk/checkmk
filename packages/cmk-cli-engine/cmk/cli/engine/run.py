@@ -12,13 +12,10 @@ from dataclasses import dataclass, field
 from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from types import FrameType
-from typing import Final, override, Self
+from typing import Final
 
-import cmk.ccc.version_info as cmk_version_info
-from cmk import trace
 from cmk.ccc.log import CMKFormatter
-from cmk.ccc.site import get_omd_config, omd_site
-from cmk.cli.engine.call import call
+from cmk.cli.engine.call import call, CommandTracer
 from cmk.cli.engine.commands import (
     Command,
     Commands,
@@ -31,18 +28,6 @@ from cmk.cli.engine.commands import (
     write_stdout,
 )
 from cmk.cli.internal import CommandContext, ExitCode
-from cmk.crash import (
-    ABCCrashReport,
-    BaseDetails,
-    CrashReportStore,
-    make_crash_report_base_path,
-    VersionInfo,
-)
-from cmk.profiling import backend as profiling
-from cmk.trace.export import (
-    exporter_from_config,
-    init_span_processor,
-)
 
 from .arguments import InvalidArguments, parse, ShowHelp
 
@@ -80,77 +65,8 @@ def configure_logging() -> logging.Logger:
     return logger
 
 
-def start_tracing(omd_root: Path) -> None:
-    init_span_processor(
-        trace.init_tracing(
-            service_namespace=trace.service_namespace_from_config(
-                "", omd_config := get_omd_config(omd_root)
-            ),
-            service_name="cmk",
-            service_instance_id=omd_site(),
-            extra_resource_attributes=trace.resource_attributes_from_config(omd_root),
-        ),
-        exporter_from_config(
-            exporter_log_level=logging.CRITICAL,
-            config=trace.trace_send_config(omd_config),
-        ),
-    )
-
-
-class CrashReport(ABCCrashReport[BaseDetails]):
-    @classmethod
-    @override
-    def type(cls) -> str:
-        return "base"
-
-    @classmethod
-    def from_exception(
-        cls,
-        *,
-        crash_report_base_path: Path,
-        version_info: VersionInfo,
-        argv: Sequence[str],
-        environ: Mapping[str, str],
-    ) -> Self:
-        return cls(
-            crash_report_base_path=crash_report_base_path,
-            crash_info=cls.make_crash_info(
-                version_info,
-                BaseDetails(
-                    argv=list(argv),
-                    env=dict(environ),
-                ),
-            ),
-        )
-
-    def save(self) -> None:
-        CrashReportStore().save(self)
-
-    def render(self) -> str:
-        return (
-            f"{self.crash_info['exc_type']}: {self.crash_info['exc_value']} "
-            f"- please submit a crash report! (Crash-ID: {self.ident_to_text()})"
-        )
-
-
 type CrashReporter = Callable[[], str]
 """Saves a crash report and returns the message to print instead of a traceback"""
-
-
-def saving_crash_reporter(
-    omd_root: Path, argv: Sequence[str], environ: Mapping[str, str]
-) -> CrashReporter:
-    def report() -> str:
-        crash = CrashReport.from_exception(
-            crash_report_base_path=make_crash_report_base_path(omd_root),
-            version_info=cmk_version_info.get_general_version_infos(omd_root),
-            argv=argv,
-            environ=environ,
-        )
-        crash.save()
-        return crash.render()
-
-    return report
 
 
 _LOG_FILE_OPTION: Final = Option(
@@ -166,13 +82,11 @@ class Runtime:
     """What the command line reaches for besides its arguments, injectable one by one"""
 
     discover: Callable[[], Sequence[Command]] = discover_commands
-    start_tracing: Callable[[Path], None] = start_tracing
+    trace_command: CommandTracer
     on_sigint: Callable[[int, FrameType | None], object] = signal.default_int_handler
-    crash_reporter_for: Callable[[Path, Sequence[str], Mapping[str, str]], CrashReporter] = (
-        saving_crash_reporter
-    )
-    enable_profiling: Callable[[], None] = profiling.enable
-    write_profile: Callable[[Path], None] = profiling.output_profile
+    crash_reporter_for: Callable[[Path, Sequence[str], Mapping[str, str]], CrashReporter]
+    enable_profiling: Callable[[], None]
+    write_profile: Callable[[Path], None]
     page: Callable[[str], None] = write_paged
     write: Callable[[str], None] = write_stdout
     logger: logging.Logger = field(default_factory=configure_logging)
@@ -241,7 +155,6 @@ def run(
         if isinstance(parsed, ShowHelp):
             runtime.page(commands.help())
             return ExitCode.SUCCESS
-        runtime.start_tracing(omd_root)
         try:
             sub_options = parse_sub_options(parsed.command.sub_options, parsed.options, logger)
         except ValueError as e:
@@ -255,7 +168,7 @@ def run(
             parsed.argument,
             sub_options,
             parsed.arguments,
-            trace.extract_context_from_environment(dict(environ)),
+            runtime.trace_command,
         )
 
     try:

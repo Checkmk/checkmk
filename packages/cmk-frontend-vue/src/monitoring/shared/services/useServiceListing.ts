@@ -14,6 +14,7 @@ import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/acti
 import { useRescheduleServicesAction } from '@/monitoring/shared/components/action/actions/rescheduleServices'
 import { downtimePresets } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
 import { useScheduleServiceDowntimeAction } from '@/monitoring/shared/components/action/actions/scheduleServiceDowntime'
+import { barActions } from '@/monitoring/shared/components/action/barActions'
 import type { MonitoringCommandsPayload } from '@/monitoring/shared/components/action/commandsPayload'
 import {
   type MonitoringActionRegistry,
@@ -25,8 +26,10 @@ import type { RowExportTexts } from '@/monitoring/shared/export/useRowExport'
 import type { QuickFilterConfig } from './FilterStore'
 
 export interface ServiceListing {
-  /** The commands the user may run on a service. */
+  /** The commands the user may run on a service, as buttons of the action bar. */
   permittedActions: CellAction[]
+  /** The further commands the user may run on a service, in the action bar's "More" menu. */
+  moreActions: CellAction[]
   /**
    * Whether the user may reschedule at all. What rescheduling a single service means differs per
    * service - its label, its icon and even which service the command acts on - so the row builds
@@ -58,7 +61,7 @@ export const IMMEDIATE_SERVICE_COMMAND_IDS: readonly string[] = [RESCHEDULE_ACTI
 export function useServiceListing(payload: MonitoringCommandsPayload): ServiceListing {
   const { _t, _tn } = usei18n()
 
-  const permittedActions: CellAction[] = (payload.actions ?? []).map((action) => ({
+  const permitted: CellAction[] = (payload.actions ?? []).map((action) => ({
     id: action.ident,
     label: action.title as TranslatedString,
     icon: action.icon as SimpleIcons
@@ -130,10 +133,13 @@ export function useServiceListing(payload: MonitoringCommandsPayload): ServiceLi
     )
   }
 
+  const { bar, more } = barActions(permitted, registry)
+
   return {
-    permittedActions,
-    mayReschedule: permittedActions.some((action) => action.id === RESCHEDULE_ACTION_ID),
-    mayActOnSelection: permittedActions.length > 0,
+    permittedActions: bar,
+    moreActions: more,
+    mayReschedule: permitted.some((action) => action.id === RESCHEDULE_ACTION_ID),
+    mayActOnSelection: permitted.length > 0,
     registry,
     quickFilters,
     exportTexts,

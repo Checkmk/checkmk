@@ -8,4 +8,9 @@ SERVICE_SUPPORTED_ACTIONS: tuple[str, ...] = (
     "acknowledge",
     "reschedule",
     "schedule_downtimes",
+    "remove_acknowledgments",
+    "remove_downtimes_hosts_services",
+    "send_custom_notification",
+    "add_comment",
+    "fake_check_result",
 )

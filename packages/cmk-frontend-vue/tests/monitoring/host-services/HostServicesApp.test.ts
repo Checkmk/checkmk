@@ -1318,3 +1318,22 @@ describe('export', () => {
     })
   })
 })
+
+test('offers the further service commands in the "More" menu, the missing ones disabled', async () => {
+  const user = userEvent.setup()
+  mockServices([makeApiEntry()])
+  renderApp({
+    actions: [
+      { ident: 'acknowledge', title: 'Acknowledge problems', icon: 'ack' },
+      { ident: 'not_implemented', title: 'Not implemented', icon: 'archive' }
+    ]
+  })
+
+  await user.click(await screen.findByRole('checkbox', { name: 'Select all rows' }))
+  await user.click(screen.getByRole('button', { name: 'More' }))
+
+  expect(await screen.findByRole('menuitem', { name: 'Not implemented' })).toHaveAttribute(
+    'data-disabled'
+  )
+  expect(screen.queryByRole('menuitem', { name: 'Acknowledge problems' })).not.toBeInTheDocument()
+})

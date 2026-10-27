@@ -327,6 +327,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :service="allServicesService"
         :actions="serviceListing.registry"
         :bulk-actions="serviceListing.permittedActions"
+        :more-actions="serviceListing.moreActions"
         :columns="tableColumns"
         :column-pinning="columnPinning"
         :get-row-key="rowKey"

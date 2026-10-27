@@ -6,7 +6,7 @@
 from pathlib import Path
 
 from cmk.bakery.v2 import OS, Plugin, PluginConfig, Secret
-from cmk.base.plugins.bakery.mk_sap_hana import bakery_plugin_mk_sap_hana, get_mk_sap_hana_files
+from cmk.plugins.sap_hana.bakery.mk_sap_hana import bakery_plugin_mk_sap_hana, get_mk_sap_hana_files
 
 
 def _password(secret: str) -> Secret:

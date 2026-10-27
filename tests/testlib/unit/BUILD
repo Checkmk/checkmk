@@ -7,7 +7,10 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 py_library(
     name = "unit",
     testonly = True,
-    srcs = glob(["**/*.py"]),
+    srcs = glob(
+        ["**/*.py"],
+        exclude = ["bakelet_testing.py"],
+    ),
     imports = ["../../.."],
     tags = [
         "deballast-keep=//cmk/schema_migrations:oauth",  # discovered at runtime via discover_db_migrations, not imported
@@ -55,5 +58,19 @@ py_library(
         requirement("pytest"),
         requirement("pytest-mock"),
         requirement("werkzeug"),
+    ],
+)
+
+# Runs bakelets in unit tests. Kept apart from :unit, so that the tests
+# of the plug-in families do not depend on the GUI.
+py_library(
+    name = "bakelet_testing",
+    testonly = True,
+    srcs = ["bakelet_testing.py"],
+    imports = ["../../.."],
+    visibility = ["//tests:__subpackages__"],
+    deps = [
+        "//packages/cmk-plugin-apis:bakery",
+        requirement("pytest-mock"),
     ],
 )

@@ -15,7 +15,7 @@ This document describes the current use of Docker images in development workflow
 - Tagged `<DISTRO>:<BRANCH>-latest` and `<DISTRO>:<BRANCH>-<DATE>-<GIT-SHA>`
 
 This will create a 'build image' named `local-build-image-${DISTRO}` similar to
-how `buildscripts/scripts/build-build-images.groovy` does it:
+how `buildscripts/scripts/build-build-image.groovy` does it:
 
 ```
 export NEXUS_USERNAME=frans.fuerst

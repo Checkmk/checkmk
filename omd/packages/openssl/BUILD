@@ -113,7 +113,7 @@ binreplace_version_from_flag(
     src = ":lib/libcrypto.so.3",
     # File has to be called .replaced because this produce in this format by binreplace
     out = "lib/libcrypto.so.3.replaced",
-    reg_ex = r"/(?:home|root)/.*?/openssl\.build_tmpdir/openssl/",
+    reg_ex = r"/[^\x00\s\"]*?/openssl\.build_tmpdir/openssl/",
     replace_labels = {
         "edition": "@cmk//edition",
         "version": "@cmk//version",

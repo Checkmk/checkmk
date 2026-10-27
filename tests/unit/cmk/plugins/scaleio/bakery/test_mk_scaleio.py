@@ -6,7 +6,7 @@
 from pathlib import Path
 
 from cmk.bakery.v2 import OS, Plugin, PluginConfig, Secret
-from cmk.base.plugins.bakery.mk_scaleio import bakery_plugin_mk_scaleio, get_mk_scaleio_files
+from cmk.plugins.scaleio.bakery.mk_scaleio import bakery_plugin_mk_scaleio, get_mk_scaleio_files
 
 _PASSWORD = Secret("secret123", "explicit_password", "uuid-1")
 

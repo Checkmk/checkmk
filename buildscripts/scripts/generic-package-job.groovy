@@ -26,28 +26,9 @@ void main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     def safe_branch_name = versioning.safe_branch_name();
-    def docker_tag = versioning.select_docker_tag(
-        params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
-        safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
-    );
-
-    def distro = params.DISTRO;
     def output_file = params.PACKAGE_PATH.split("/")[-1] + ".txt";
 
-    def inside_container_args = [
-        init: true,
-        privileged: true,
-        pull: true,
-        set_docker_group_id: true,
-    ];
-
     currentBuild.description = "Running ${params.PACKAGE_PATH}<br>${currentBuild.description}";
-
-    if (distro != "REFERENCE_IMAGE") {
-        inside_container_args += [
-            image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}")
-        ]
-    }
 
     dir(checkout_dir) {
         this_call_site(safe_branch_name, output_file);

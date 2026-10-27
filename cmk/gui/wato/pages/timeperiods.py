@@ -376,10 +376,10 @@ class ModeTimeperiodImportICal(WatoMode):
 
         filename, _ty, content = ical["file"]
 
-        # The import is deliberately done here and not at module level: the iCalendar libraries
-        # add about 4 MB to every process importing them, and every process loading the GUI
-        # imports this module. This way they are only loaded when an iCalendar file is imported.
-        from cmk.gui.wato.pages.timeperiods_ical import import_ical
+        # The import is deliberately done here and not at module level (TID253): the iCalendar
+        # libraries add about 4 MB to every process importing them, and every process loading the
+        # GUI imports this module. This way they are only loaded when an iCalendar file is imported.
+        from cmk.gui.wato.pages.timeperiods_ical import import_ical  # noqa: TID251
 
         ical_import = import_ical(
             content,

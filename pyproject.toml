@@ -95,17 +95,23 @@ max-complexity = 64 # TODO: This is far too much, we need to lower this!
 # them (TID253), unless the importing process always uses them.
 [tool.ruff.lint.flake8-tidy-imports]
 banned-module-level-imports = [
+  "cmk.gui.wato.pages.timeperiods_ical",
   "grpc",
+  "icalendar",
   "opentelemetry.exporter.otlp.proto.grpc",
   "pypdf",
+  "recurring_ical_events",
   "reportlab",
 ]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
+"cmk.gui.wato.pages.timeperiods_ical".msg = "It loads the iCalendar libraries, which add several MB to every process importing them"
 "grpc".msg = "It adds several MB to every process importing it"
+"icalendar".msg = "It adds several MB to every process importing it, use cmk.gui.wato.pages.timeperiods_ical"
 "opentelemetry.exporter.otlp.proto.grpc".msg = "It adds several MB to every process importing it, use cmk.trace"
 "PIL".msg = "Use the images module at the correct layer, e.g. cmk.gui.utils.images"
 "pypdf".msg = "It adds several MB to every process importing it"
+"recurring_ical_events".msg = "It adds several MB to every process importing it, use cmk.gui.wato.pages.timeperiods_ical"
 "reportlab".msg = "It adds several MB to every process importing it, use cmk.gui.pdf"
 
 [tool.ruff.lint.isort]

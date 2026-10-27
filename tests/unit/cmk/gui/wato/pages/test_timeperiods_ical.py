@@ -3,16 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Tests the iCalendar import. Not loaded by any Checkmk process, so the imports at module level do
+# not affect them.
 import datetime
 from zoneinfo import ZoneInfo
 
 import pytest
-import recurring_ical_events  # type: ignore[import-untyped,unused-ignore]
+import recurring_ical_events  # type: ignore[import-untyped,unused-ignore]  # noqa: TID251, TID253
 import time_machine
-from icalendar import Calendar
+from icalendar import Calendar  # noqa: TID251, TID253
 
 from cmk.gui.wato.pages.timeperiods import TimeperiodUsage
-from cmk.gui.wato.pages.timeperiods_ical import ICalEvent, import_ical
+from cmk.gui.wato.pages.timeperiods_ical import (  # noqa: TID251, TID253
+    ICalEvent,
+    import_ical,
+)
 
 ICAL_DATA_LIST = list[dict[str, str]]
 

@@ -16,9 +16,12 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import override
 
-import recurring_ical_events
-from icalendar import Calendar, Event
-from icalendar.prop import vDDDTypes
+# This module is the only one allowed to import the iCalendar libraries (TID251): they add several
+# MB to every process importing them. It is only loaded when an iCalendar file is imported (see
+# ModeTimeperiodImportICal), so it imports them at module level (TID253).
+import recurring_ical_events  # noqa: TID251, TID253
+from icalendar import Calendar, Event  # noqa: TID251, TID253
+from icalendar.prop import vDDDTypes  # noqa: TID251, TID253
 
 
 @dataclass(frozen=True)

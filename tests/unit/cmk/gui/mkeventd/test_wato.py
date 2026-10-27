@@ -64,6 +64,7 @@ from cmk.web.utils.flashed_messages import get_flashed_messages
 from tests.testlib.unit.fake_site import no_site_configuration
 from tests.testlib.unit.gui.web_test_app import CmkTestResponse, SetConfig, WebTestAppForCMK
 from tests.unit.cmk.gui.helpers.setup_mode_test_helper import (
+    data_table,
     end_request,
     error_messages,
     form_values,
@@ -1011,6 +1012,53 @@ def test_moving_a_rule_pack_on_a_page_showing_another_order_is_refused(
         _rule_pack_list_action(load_config, test_edition)
 
 
+@_setup_page
+def test_rule_pack_list_offers_no_moving_while_searching(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # The list shows only the rule packs the search finds, so their positions tell nothing about
+    # the positions among all of them.
+    _save_rule_packs(_rule_pack(rule_pack_id="disk-1"), _rule_pack(rule_pack_id="disk-2"))
+    set_request_vars(search="disk")
+
+    with _rule_pack_list_queries(mock_livestatus):
+        rows = table_rows(_rule_pack_list(load_config, test_edition), "Found rule packs")
+
+    assert ["Move this entry" in icon_titles(row["Actions"]) for row in rows] == [False, False]
+
+
+@_setup_page
+def test_rule_pack_list_offers_no_moving_while_searching_for_blanks(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # Unlike finding the rule packs, the list doesn't strip the search, so it shows only the rule
+    # packs with blanks.
+    _save_rule_packs(
+        _rule_pack(rule_pack_id="disk-1", title="Disk  1"),
+        _rule_pack(rule_pack_id="disk-2", title="Disk  2"),
+    )
+    set_request_vars(search="  ")
+
+    with _rule_pack_list_queries(mock_livestatus):
+        rows = table_rows(_rule_pack_list(load_config, test_edition), "Rule packs")
+
+    assert ["Move this entry" in icon_titles(row["Actions"]) for row in rows] == [False, False]
+
+
+@_setup_page
+def test_rule_pack_list_offers_no_sorting_while_searching(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # Like without a search, the list shows the rule packs in the order the EC runs them.
+    _save_rule_packs(_rule_pack(rule_pack_id="disk-1"), _rule_pack(rule_pack_id="disk-2"))
+    set_request_vars(search="disk")
+
+    with _rule_pack_list_queries(mock_livestatus):
+        table = data_table(_rule_pack_list(load_config, test_edition), "Found rule packs")
+
+    assert [th.get("title") for th in table.select("thead th") if th.get("onclick")] == []
+
+
 @pytest.mark.parametrize(
     "index", [pytest.param("2", id="behind the last one"), pytest.param("-1", id="negative")]
 )
@@ -1869,6 +1917,67 @@ def test_moving_a_rule_on_a_page_showing_another_order_is_refused(
     submit(**_drop_vars(rows[3], "2"))
 
     with pytest.raises(MKUserError, match="The rules of this rule pack changed meanwhile"):
+        _rule_list_action(load_config, test_edition)
+
+
+@_setup_page
+def test_rule_list_offers_no_moving_while_searching(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # The list shows only the rules the search finds, so their positions tell nothing about the
+    # positions among all of them.
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="disk-1")), _stored(ec.Rule(id="disk-2"))))
+    set_request_vars(search="disk")
+
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+
+    assert ["Move this entry" in icon_titles(row["Actions"]) for row in rows] == [False, False]
+
+
+@_setup_page
+def test_rule_list_offers_no_moving_while_searching_for_blanks(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # Unlike finding the rules, the list doesn't strip the search, so it shows only the rules with
+    # blanks.
+    _save_rule_packs(
+        _rule_pack(
+            _stored(ec.Rule(id="disk-1", description="Disk  1")),
+            _stored(ec.Rule(id="disk-2", description="Disk  2")),
+        )
+    )
+    set_request_vars(search="  ")
+
+    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+
+    assert ["Move this entry" in icon_titles(row["Actions"]) for row in rows] == [False, False]
+
+
+@_setup_page
+def test_rule_list_offers_no_sorting_while_searching(
+    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # Like without a search, the list shows the rules in the order the EC runs them.
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="disk-1")), _stored(ec.Rule(id="disk-2"))))
+    set_request_vars(search="disk")
+
+    with _rule_hit_queries(mock_livestatus):
+        table = data_table(_rule_list(load_config, test_edition), "Rules")
+
+    assert [th.get("title") for th in table.select("thead th") if th.get("onclick")] == []
+
+
+@pytest.mark.parametrize(
+    "search", [pytest.param("disk", id="words"), pytest.param("  ", id="blanks")]
+)
+@_setup_page
+def test_moving_a_rule_while_searching_is_refused(
+    search: str, load_config: Config, test_edition: Edition
+) -> None:
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="disk-1")), _stored(ec.Rule(id="disk-2"))))
+    submit(rule_pack="pack", search=search, _move="disk-1", _index="1")
+
+    with pytest.raises(MKUserError, match="please clear the search to move a rule."):
         _rule_list_action(load_config, test_edition)
 
 

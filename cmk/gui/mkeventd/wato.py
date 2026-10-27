@@ -82,7 +82,7 @@ from cmk.gui.search.matchers import (
     MatchItems,
 )
 from cmk.gui.site_config import enabled_sites
-from cmk.gui.table import table_element
+from cmk.gui.table import table_element, table_search_term
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites, get_event_console_site_choices
 from cmk.gui.utils.roles import UserPermissions
@@ -2152,7 +2152,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             )
             flash(_("Copied rules from central site"))
 
-        # Move rule packs, which the list offers for every one
+        # Move rule packs, which the list offers for every one unless searching
         elif request.has_var("_move"):
             from_pos = self._requested_rule_pack_position("_move")
             _verify_order(
@@ -2351,7 +2351,9 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         unique_ids = self._unique_ids()
         order = _order_digest(self._rule_pack_ids())
-        with table_element(css="ruleset", limit=0, title=title) as table:
+        searching = bool(table_search_term())
+        # Sorting by a column would show another order than the EC runs the rule packs in.
+        with table_element(css="ruleset", limit=0, title=title, sortable=False) as table:
             for nr, (rule_pack, pack_ref) in enumerate(
                 zip(self._rule_packs, RulePackRef.of(self._rule_packs), strict=True)
             ):
@@ -2373,9 +2375,12 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 # clone_url  = makeuri_contextless(request, [("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
                 # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
 
-                table.element_dragger_url(
-                    "tr", base_url=_rule_pack_action_url("_move", pack_ref, ("_order", order))
-                )
+                # With a search, the list shows only the rule packs it finds, so the position of a
+                # dragged one among them would tell nothing about the others.
+                if not searching:
+                    table.element_dragger_url(
+                        "tr", base_url=_rule_pack_action_url("_move", pack_ref, ("_order", order))
+                    )
 
                 if self._offers("_delete", type_, unique_id=unique_id):
                     delete_url = make_confirm_delete_link(
@@ -2723,6 +2728,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             return redirect(_rules_url(self._rule_pack_ref))
 
         if request.has_var("_move"):
+            _verify_not_searching()
             from_pos = self._rule_to_change("_move")
             _verify_order(
                 _rule_ids(self._rule_pack["rules"]),
@@ -2830,8 +2836,9 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         priorities = _deref(syslog_priorities)
         facilities = dict(_deref(syslog_facilities))
 
-        # Show content of the rule pack
-        with table_element(title=_("Rules"), css="ruleset", limit=0) as table:
+        # Show content of the rule pack. Sorting by a column would show another order than the EC
+        # runs the rules in.
+        with table_element(title=_("Rules"), css="ruleset", limit=0, sortable=False) as table:
             hits = _get_rule_stats_from_ec()
             simulator = (
                 EventSimulator.for_event(event, site_configs, self._edition) if event else None
@@ -2841,6 +2848,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 self._rule_packs[: self._rule_pack_nr]
             )
             order = _order_digest(_rule_ids(rules))
+            searching = bool(table_search_term())
             for nr, (rule, rule_ref) in enumerate(zip(rules, RuleRef.of(rules), strict=True)):
                 table.row(css=["matches_search"] if rule in found_rules else [])
                 delete_url = make_confirm_delete_link(
@@ -2850,7 +2858,6 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     message=_("ID: %(id_)s") % {"id_": rule["id"]},
                     suffix=rule.get("description", ""),
                 )
-                drag_url = self._rule_action_url("_move", rule_ref, ("_order", order))
                 edit_url = makeuri_contextless(
                     request, rule_editor_vars(self._rule_pack_ref, rule_ref), filename="wato.py"
                 )
@@ -2865,7 +2872,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 html.icon_button(
                     clone_url, _("Create a copy of this rule"), StaticIcon(IconNames.clone)
                 )
-                table.element_dragger_url("tr", base_url=drag_url)
+                if not searching:  # see _verify_not_searching()
+                    table.element_dragger_url(
+                        "tr", base_url=self._rule_action_url("_move", rule_ref, ("_order", order))
+                    )
                 html.icon_button(delete_url, _("Delete this rule"), StaticIcon(IconNames.delete))
 
                 table.cell("", css=["buttons"])
@@ -4046,6 +4056,21 @@ def _verify_order(ids: Iterable[str], outdated: str) -> None:
     """Refuses moving to a position of a page which showed another order, see _order_digest()"""
     if request.get_str_input_mandatory("_order") != _order_digest(ids):
         raise MKUserError(None, outdated)
+
+
+def _verify_not_searching() -> None:
+    """Refuses moving a rule on a page with a search, which the rule list doesn't offer
+
+    With a search, the rule list shows only the rules it finds, so the position of a dragged one
+    among them tells nothing about the others."""
+    if table_search_term():
+        raise MKUserError(
+            None,
+            _(
+                "The list shows only the rules the search finds, so please clear the search to "
+                "move a rule."
+            ),
+        )
 
 
 @request_memoize()

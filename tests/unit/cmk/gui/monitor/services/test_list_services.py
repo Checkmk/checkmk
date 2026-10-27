@@ -10,7 +10,7 @@ import pytest
 
 from cmk.ccc.site import SiteId
 from cmk.gui.monitor.services._api._list_services import _handle_list_all_services
-from cmk.gui.monitor.services._models import ServiceFilter
+from cmk.gui.monitor.services._models import HostState, ServiceFilter
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
@@ -31,6 +31,14 @@ def test_handle_list_all_services_returns_host_name_and_site() -> None:
 
     [entry] = response.services
     assert (entry.name, entry.host_name, entry.site_id) == ("CPU load", "web01", "heute")
+
+
+def test_handle_list_all_services_returns_the_state_of_the_host() -> None:
+    repo = FakeServicesRepository([ServiceFactory.build(host_state=HostState.UNREACHABLE)])
+
+    response = _handle_list_all_services(repo, repo.count_total())
+
+    assert [entry.host_state for entry in response.services] == ["UNREACHABLE"]
 
 
 def test_handle_list_all_services_sorts_by_host_then_service_by_default() -> None:

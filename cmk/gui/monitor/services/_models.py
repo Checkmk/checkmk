@@ -83,6 +83,7 @@ class Service:
     host_name: str
     site_id: str
     state: ServiceState
+    host_state: HostState
     acknowledged: bool
     in_downtime: bool
     notifications_enabled: bool
@@ -142,19 +143,6 @@ class Service:
             case _:
                 assert_never(self.state)
 
-
-@dataclasses.dataclass(frozen=True)
-class ServiceOverview(Service):
-    host_alias: str
-    host_state: HostState
-    host_acknowledged: bool
-    host_in_downtime: bool
-    long_output: str
-    current_attempt: int
-    max_check_attempts: int
-    # Passive services are never scheduled, so livestatus reports no next check for them.
-    next_check: UnixTimestamp | None
-
     @property
     def host_state_label(self) -> HostStateLabel:
         match self.host_state:
@@ -168,6 +156,18 @@ class ServiceOverview(Service):
                 return "PENDING"
             case _:
                 assert_never(self.host_state)
+
+
+@dataclasses.dataclass(frozen=True)
+class ServiceOverview(Service):
+    host_alias: str
+    host_acknowledged: bool
+    host_in_downtime: bool
+    long_output: str
+    current_attempt: int
+    max_check_attempts: int
+    # Passive services are never scheduled, so livestatus reports no next check for them.
+    next_check: UnixTimestamp | None
 
 
 class ServiceOptionalField(enum.StrEnum):

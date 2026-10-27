@@ -18,6 +18,7 @@ from cmk.gui.monitor.services._impl import (
     LiveStatusServicesRepository,
 )
 from cmk.gui.monitor.services._models import (
+    HostState,
     ServiceFilter,
     ServiceOptionalField,
     ServiceSort,
@@ -35,7 +36,8 @@ _UNKNOWN_HOSTNAME = "foo-server-01"
 _SERVICES_COLUMNS = (
     "description host_name state has_been_checked plugin_output acknowledged "
     "scheduled_downtime_depth notifications_enabled comments modified_attributes_list active_checks_enabled accept_passive_checks in_notification_period in_service_period in_check_period in_passive_check_period is_flapping staleness last_check "
-    "last_state_change perf_data check_command check_type cached_at cache_interval"
+    "last_state_change perf_data check_command check_type cached_at cache_interval host_state "
+    "host_has_been_checked"
 )
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"
 
@@ -260,6 +262,8 @@ def _service_row(description: str) -> dict[str, object]:
         "check_type": 0,
         "cached_at": 0,
         "cache_interval": 0,
+        "host_state": 0,
+        "host_has_been_checked": 1,
     }
 
 
@@ -456,6 +460,8 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
         "check_type": 0,
         "cached_at": 0,
         "cache_interval": 0,
+        "host_state": 0,
+        "host_has_been_checked": 1,
     }
     with expect_single_query("GET services", tables={"services": [row]}) as live:
         repo = LiveStatusHostServicesRepository(connection=live)
@@ -510,6 +516,8 @@ def test_fetch_counts_only_a_modified_setting_as_manually_disabled(
         "check_type": 0,
         "cached_at": 0,
         "cache_interval": 0,
+        "host_state": 0,
+        "host_has_been_checked": 1,
     }
     with expect_single_query("GET services", tables={"services": [row]}) as live:
         services = LiveStatusHostServicesRepository(connection=live).fetch(
@@ -563,6 +571,8 @@ def test_fetch_counts_a_service_as_checked_only_inside_both_check_periods(
         "check_type": 0,
         "cached_at": 0,
         "cache_interval": 0,
+        "host_state": 0,
+        "host_has_been_checked": 1,
     }
     with expect_single_query("GET services", tables={"services": [row]}) as live:
         services = LiveStatusHostServicesRepository(connection=live).fetch(
@@ -614,6 +624,8 @@ def test_fetch_reports_no_state_change_for_a_pending_service(
         "check_type": 0,
         "cached_at": 0,
         "cache_interval": 0,
+        "host_state": 0,
+        "host_has_been_checked": 1,
     }
     with expect_single_query("GET services", tables={"services": [row]}) as live:
         services = LiveStatusHostServicesRepository(connection=live).fetch(
@@ -626,6 +638,30 @@ def test_fetch_reports_no_state_change_for_a_pending_service(
         )
 
     assert [service.last_state_change for service in services] == [expected]
+
+
+@pytest.mark.parametrize(
+    "host_state, host_has_been_checked, expected",
+    [
+        pytest.param(1, 1, HostState.DOWN, id="checked host keeps its state"),
+        pytest.param(0, 0, HostState.PENDING, id="unchecked host is pending, not up"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_fetch_reports_the_state_of_the_host(
+    host_state: int, host_has_been_checked: int, expected: HostState
+) -> None:
+    row = {
+        **_service_row("CPU load"),
+        "host_state": host_state,
+        "host_has_been_checked": host_has_been_checked,
+    }
+    with expect_single_query("GET services", tables={"services": [row]}) as live:
+        services = LiveStatusServicesRepository(connection=live, sites=MonitorSites()).fetch(
+            limit=None, query="", sorters=[], filters=ServiceFilter(""), fields=frozenset()
+        )
+
+    assert [service.host_state for service in services] == [expected]
 
 
 @pytest.mark.usefixtures("request_context")

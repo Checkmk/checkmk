@@ -79,6 +79,7 @@ function makeApiEntry(overrides: Partial<ApiServiceEntry> = {}): ApiServiceEntry
     name: 'CPU load',
     host_name: 'web-2',
     site_id: 'remote',
+    host_state: 'UP',
     state: 'OK',
     is_flapping: false,
     stale: false,

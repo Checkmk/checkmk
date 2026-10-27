@@ -81,7 +81,12 @@ describe('ServiceExport', () => {
   })
 
   test('writes the host and the site of a service that names them', async () => {
-    const service: ServiceEntry = { ...makeService(), host_name: 'web-2', site_id: 'remote' }
+    const service: ServiceEntry = {
+      ...makeService(),
+      host_name: 'web-2',
+      site_id: 'remote',
+      host_state: 'UP'
+    }
 
     const file = new ServiceWithHostExport('all', ['host_name', 'site_id', 'name'], [service]).file(
       'csv'

@@ -28,6 +28,7 @@ from cmk.web.utils import permission_verification as permissions
 
 from .._impl import LiveStatusServicesRepository
 from .._models import (
+    HostStateLabel,
     Service,
     ServiceFilter,
     ServiceOptionalField,
@@ -54,11 +55,22 @@ _DEFAULT_FIELDS: frozenset[ServiceOptionalField] = frozenset()
 class ServiceEntry(HostServiceEntry):
     host_name: str = api_field(description="Name of the host the service runs on", example="web01")
     site_id: str = api_field(description="Site ID", example="local")
+    host_state: HostStateLabel = api_field(
+        description=(
+            "State of the host the service runs on. 'PENDING' means the host has never been checked"
+        ),
+        example="UP",
+    )
 
     @override
     @classmethod
     def from_domain(cls, service: Service) -> Self:
-        return cls._from_domain(service, host_name=service.host_name, site_id=service.site_id)
+        return cls._from_domain(
+            service,
+            host_name=service.host_name,
+            site_id=service.site_id,
+            host_state=service.host_state_label,
+        )
 
 
 @api_model

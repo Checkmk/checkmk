@@ -311,6 +311,8 @@ def _fetch_services(
             Services.check_type,
             Services.cached_at,
             Services.cache_interval,
+            Services.host_state,
+            Services.host_has_been_checked,
             *(
                 column
                 for field, columns in _OPTIONAL_COLUMNS.items()
@@ -333,6 +335,11 @@ def _fetch_services(
                         ServiceState.PENDING
                         if row["has_been_checked"] == 0
                         else ServiceState(row["state"])
+                    ),
+                    host_state=(
+                        HostState.PENDING
+                        if row["host_has_been_checked"] == 0
+                        else HostState(row["host_state"])
                     ),
                     acknowledged=bool(row["acknowledged"]),
                     in_downtime=row["scheduled_downtime_depth"] > 0,

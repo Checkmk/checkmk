@@ -533,7 +533,7 @@ test('leaves the reschedule out for a user who may not reschedule', () => {
 })
 
 function makeServiceOfHost(): ServiceEntry {
-  return { ...makeService(), host_name: 'web-2', site_id: 'remote' }
+  return { ...makeService(), host_name: 'web-2', site_id: 'remote', host_state: 'UP' }
 }
 
 function mountRowInLayout(row: HostServiceEntry, columnIds: string[]) {

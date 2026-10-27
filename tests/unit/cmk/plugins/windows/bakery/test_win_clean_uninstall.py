@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.bakery.v2 import WindowsSystemConfigEntry
-from cmk.base.plugins.bakery.win_clean_uninstall import (
+from cmk.plugins.windows.bakery.win_clean_uninstall import (
     bakery_plugin_win_clean_uninstall,
     get_win_clean_uninstall_windows_config,
 )

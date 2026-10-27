@@ -16,6 +16,7 @@ from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
 from cmk.gui.wato._check_mk_configuration import (
     _migrate_log_levels,
     _migrate_piggybacked_host_files,
+    AgentConfigOnlyFrom,
     AgentEncryption,
     AgentPorts,
     CheckMkExitStatus,
@@ -345,3 +346,23 @@ def test_agent_ports_migration(stored: object, expected: object) -> None:
 )
 def test_agent_encryption_migration(stored: object, expected: object) -> None:
     assert AgentEncryption.valuespec.transform_value(stored) == expected
+
+
+@pytest.mark.parametrize(
+    "stored, expected",
+    [
+        pytest.param(
+            ["10.0.0.1", "10.1.0.0/16"],
+            {"allowed_addresses": ["10.0.0.1", "10.1.0.0/16"]},
+            id="addresses",
+        ),
+        pytest.param([], {"allowed_addresses": []}, id="all addresses allowed"),
+        pytest.param(
+            {"allowed_addresses": ["10.0.0.1"]},
+            {"allowed_addresses": ["10.0.0.1"]},
+            id="already migrated",
+        ),
+    ],
+)
+def test_only_from_migration(stored: object, expected: object) -> None:
+    assert AgentConfigOnlyFrom.valuespec.transform_value(stored) == expected

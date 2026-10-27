@@ -25,6 +25,6 @@ def make_only_from_config(
             return None
 
         entries = matcher.get_host_values_all(host_name, ruleset, label_manager.labels_of_host)
-        return entries[0] if entries else None
+        return entries[0]["allowed_addresses"] if entries else None
 
     return only_from

@@ -861,7 +861,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('only_from', [])
 
 agent_config['only_from'] = [
-{'id': '38c51063-4b75-4e5f-a127-dd8ed3a7bc9e', 'value': [], 'condition': {}, 'options': {'disabled': False}},
+{'id': '38c51063-4b75-4e5f-a127-dd8ed3a7bc9e', 'value': {'allowed_addresses': []}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['only_from']
 
 

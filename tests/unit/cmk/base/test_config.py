@@ -1028,12 +1028,12 @@ def test_only_from(monkeypatch: MonkeyPatch, hostname: HostName, result: list[st
                 {
                     "id": "01",
                     "condition": {"host_name": [HostName("testhost2")]},
-                    "value": ["127.0.0.1"],
+                    "value": {"allowed_addresses": ["127.0.0.1"]},
                 },
                 {
                     "id": "02",
                     "condition": {"host_name": [HostName("testhost2")]},
-                    "value": ["127.0.0.2"],
+                    "value": {"allowed_addresses": ["127.0.0.2"]},
                 },
             ],
         },

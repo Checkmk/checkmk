@@ -8,9 +8,10 @@ from cmk.base.plugins.bakery.only_from import get_only_from_windows_config
 
 
 def test_only_from_windows_config() -> None:
-    conf = "192.168.1.0/24 10.0.0.1"
-    result = list(get_only_from_windows_config(conf))
+    result = list(
+        get_only_from_windows_config({"allowed_addresses": ["192.168.1.0/24", "10.0.0.1"]})
+    )
     expected = [
-        WindowsGlobalConfigEntry(name="only_from", content=conf),
+        WindowsGlobalConfigEntry(name="only_from", content=["192.168.1.0/24", "10.0.0.1"]),
     ]
     assert result == expected

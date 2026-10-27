@@ -13,7 +13,8 @@ import time
 from collections.abc import Callable
 from logging.handlers import WatchedFileHandler
 from pathlib import Path
-from typing import override
+from types import FrameType
+from typing import NoReturn, override
 
 from setproctitle import setproctitle
 
@@ -78,7 +79,13 @@ def run_with_crash_reporting(
 
     SIGTERM ends the process with exit code 0. This is only an intermediate handler until
     gunicorn run_server sets its own handler. Unexpected exceptions create a crash report."""
-    signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))  # noqa: ARG005
+    terminate_requested = threading.Event()
+
+    def handle_sigterm(_signum: int, _frame: FrameType | None) -> NoReturn:
+        terminate_requested.set()
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, handle_sigterm)
 
     try:
         run()
@@ -89,6 +96,11 @@ def run_with_crash_reporting(
     except SystemExit:
         raise
     except Exception as exc:
+        if terminate_requested.is_set():
+            # The SystemExit raised by the SIGTERM handler may surface wrapped in another
+            # exception, e.g. a SchemaError when it hits pydantic-core while building a model
+            # during plug-in registration. This is a regular shutdown, not a crash.
+            return 0
         crash_msg = crash_report_callback(exc)
         logger.exception("Unhandled exception (Crash ID: %(crash_id)s)", {"crash_id": crash_msg})
         return 1

@@ -31,6 +31,25 @@ def restore_sigterm_handler() -> Iterator[None]:
     signal.signal(signal.SIGTERM, original)
 
 
+def _terminate_while_building_model() -> None:
+    # pydantic-core wraps a SystemExit raised while it builds a model serializer in a
+    # SchemaError. This mimics the wrapping without depending on pydantic internals.
+    try:
+        signal.raise_signal(signal.SIGTERM)
+    except SystemExit as exc:
+        raise RuntimeError(f"Error building serializer: SystemExit: {exc.code}") from None
+
+
+@pytest.mark.usefixtures("restore_sigterm_handler")
+def test_sigterm_surfacing_wrapped_exits_cleanly_without_crash_report() -> None:
+    crash_reports = _CrashReports()
+
+    exit_code = run_with_crash_reporting(_terminate_while_building_model, crash_reports, _LOGGER)
+
+    assert exit_code == 0
+    assert not crash_reports.reported
+
+
 @pytest.mark.usefixtures("restore_sigterm_handler")
 def test_sigterm_exits_with_code_0() -> None:
     crash_reports = _CrashReports()

@@ -19,6 +19,7 @@ from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from itertools import count
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 from zoneinfo import ZoneInfo
 
@@ -219,6 +220,24 @@ def test_write_and_read_host_attributes(attributes: HostAttributes) -> None:
             "meta_data": host.attributes["meta_data"],
             **attributes,
         }
+
+
+def test_wato_info_read_returns_empty_when_wato_file_is_gone(tmp_path: Path) -> None:
+    storage_manager = hosts_and_folders._WATOInfoStorageManager("pickle")
+    wato_file = tmp_path / ".wato"
+    storage_manager.write(wato_file, {"title": "x"})
+    wato_file.unlink()
+
+    assert storage_manager.read(wato_file) == {}
+
+
+def test_wato_info_read_falls_back_to_wato_file_when_pickle_is_gone(tmp_path: Path) -> None:
+    storage_manager = hosts_and_folders._WATOInfoStorageManager("pickle")
+    wato_file = tmp_path / ".wato"
+    storage_manager.write(wato_file, {"title": "x"})
+    (tmp_path / ".wato.pkl").unlink()
+
+    assert storage_manager.read(wato_file) == {"title": "x"}
 
 
 def test_create_multiple_hosts() -> None:

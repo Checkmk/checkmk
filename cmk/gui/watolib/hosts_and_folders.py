@@ -764,7 +764,7 @@ class StandardWATOInfoStorage(ABCWATOInfoStorage):
 class _PickleWATOInfoStorage(ABCWATOInfoStorage):
     def read(self, file_path: Path) -> WATOFolderInfo | None:
         pickle_path = self._add_suffix(file_path)
-        if not pickle_path.exists() or not self._file_valid(pickle_path, file_path):
+        if not self._file_valid(pickle_path, file_path):
             return None
         return store.ObjectStore(
             pickle_path, serializer=store.PickleSerializer[WATOFolderInfo]()
@@ -772,11 +772,12 @@ class _PickleWATOInfoStorage(ABCWATOInfoStorage):
 
     def _file_valid(self, pickle_path: Path, file_path: Path) -> bool:
         # The experimental file must not be older than the corresponding .wato
-        # The file is also invalid if no matching .wato file exists
-        if not file_path.exists():
+        # The file is also invalid if it or the matching .wato file does not exist. The folder
+        # may be deleted concurrently, so do not check for existence before calling stat().
+        try:
+            return file_path.stat().st_mtime <= pickle_path.stat().st_mtime
+        except FileNotFoundError:
             return False
-
-        return file_path.stat().st_mtime <= pickle_path.stat().st_mtime
 
     def write(self, file_path: Path, data: WATOFolderInfo) -> None:
         pickle_store = store.ObjectStore(

@@ -11,11 +11,17 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, inject } from 'vue'
 
 import { AI_EXPLAIN_ACTION_ID } from '@/monitoring/host-services/aiExplain'
-import type { HostRef, HostServiceEntry, ServiceEntry } from '@/monitoring/shared/api/types'
+import type {
+  HostRef,
+  HostServiceEntry,
+  HostState,
+  ServiceEntry
+} from '@/monitoring/shared/api/types'
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
+import HostCell from '@/monitoring/shared/components/cell/HostCell.vue'
 import IconCell from '@/monitoring/shared/components/cell/IconCell.vue'
 import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
 import PerfometerCell from '@/monitoring/shared/components/cell/PerfometerCell.vue'
@@ -54,8 +60,10 @@ const emit = defineEmits<{
 
 const columns = inject(COLUMN_LAYOUT_KEY, null)
 
-const host = computed<HostRef | null>(() =>
-  'host_name' in props.row ? { name: props.row.host_name, site_id: props.row.site_id } : null
+const host = computed<(HostRef & { state: HostState }) | null>(() =>
+  'host_name' in props.row
+    ? { name: props.row.host_name, site_id: props.row.site_id, state: props.row.host_state }
+    : null
 )
 
 function hasColumn(columnId: string): boolean {
@@ -154,10 +162,11 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     :max-per-row="MODE_ICONS_PER_ROW"
   />
   <template v-if="host">
-    <StringCell
+    <HostCell
       v-if="hasColumn('host_name')"
       column-id="host_name"
-      :value="host.name"
+      :name="host.name"
+      :state="host.state"
       :linked-to="{ href: hostServicesPageUrl(host), target: '_top' }"
     />
     <StringCell v-if="hasColumn('site_id')" column-id="site_id" :value="host.site_id" />

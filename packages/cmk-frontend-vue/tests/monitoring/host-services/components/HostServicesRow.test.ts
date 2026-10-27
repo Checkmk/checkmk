@@ -5,7 +5,7 @@
  */
 import type { Row } from '@tanstack/vue-table'
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, within } from '@testing-library/vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { computed, defineComponent, h, provide } from 'vue'
@@ -603,4 +603,16 @@ test('renders no host cells for a service of the page host', () => {
 
   expect(container.querySelector('[data-column-id="host_name"]')).toBeNull()
   expect(container.querySelector('[data-column-id="site_id"]')).toBeNull()
+})
+
+test('shows the state of the host beside its name', () => {
+  const service: ServiceEntry = { ...makeServiceOfHost(), host_state: 'DOWN' }
+  const { container } = mountRow(service)
+
+  const hostCell = container.querySelector('[data-column-id="host_name"]') as HTMLElement
+  expect(within(hostCell).getByText('DO')).toBeInTheDocument()
+  expect(within(hostCell).getByRole('link', { name: 'web-2' })).toHaveAttribute(
+    'href',
+    expect.stringContaining('monitor_host_services.py?host=web-2&site=remote')
+  )
 })

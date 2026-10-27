@@ -41,7 +41,7 @@ def _valuespec_agent_config_fileinfo() -> ListOfStrings:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupMonitoringAgentsAgentPlugins,
-        match_type="list",
+        match_type="all",
         name=RuleGroup.AgentConfig("fileinfo"),
         valuespec=_valuespec_agent_config_fileinfo,
     )

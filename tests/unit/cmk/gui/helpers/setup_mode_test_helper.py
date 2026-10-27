@@ -8,6 +8,7 @@ from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
+from cmk.gui import hooks
 from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.http import request
@@ -50,6 +51,14 @@ def submit(**variables: str) -> None:
     transactions.ignore()
     request.set_var("_transid", "-1")
     request.set_var("_csrf_token", session.session_info.csrf_token)
+
+
+def end_request() -> None:
+    """Ends the request, e.g. the one showing a page before submitting its form
+
+    Like after a real one, the next request no longer sees what it memoized, e.g. loaded
+    configuration, but the changes made meanwhile."""
+    hooks.call("request-end")
 
 
 def _query_vars(url: str) -> dict[str, str]:

@@ -10,6 +10,8 @@
 import abc
 import ast
 import contextlib
+import copy
+import functools
 import hashlib
 import logging
 import re
@@ -51,6 +53,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
 )
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FSTuple
 from cmk.gui.form_specs.unstable.validators import id_validators, validate_ip_network
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.type_defs import RequireConfirmation
@@ -1788,8 +1791,14 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         assert isinstance(config_domain, ConfigDomainEventConsole)
         self._config_domain = config_domain
         self._paths = ec.create_paths(cmk.utils.paths.omd_root)
-        self._rule_packs = list(ec.load_rule_packs(self._paths))
         super().__init__(edition, ctx)
+
+    @functools.cached_property
+    def _rule_packs(self) -> list[ec.ECRulePack]:
+        """The rule packs, loaded only by the modes using them, e.g. not by the MIB pages
+
+        The modes of a request share them, see _load_rule_packs()."""
+        return _load_rule_packs(self._paths, self._edition)
 
     def _mib_dirs(self) -> Sequence[tuple[Path, str, bool]]:
         # ASN1 MIB source directory candidates. Non existing dirs are ok.
@@ -1903,17 +1912,6 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
                 domains=[d.ident() for d in (domains or [self._config_domain])],
             ),
             ChangeScope.sites(_get_event_console_sync_sites()),
-        )
-
-    def _get_rule_pack_to_mkp_map(self) -> dict[str, Any]:
-        return (
-            {}
-            if self._edition is Edition.COMMUNITY
-            else cmk.mkp_tool.id_to_mkp(
-                cmk.mkp_tool.Installer(cmk.utils.paths.installed_packages_dir),
-                cmk.mkp_tool.all_rule_pack_files(self._paths.mkp_rule_pack_dir.value),
-                cmk.mkp_tool.PackagePart.EC_RULE_PACKS,
-            )
         )
 
     def _vs_mkeventd_event(self) -> Dictionary:
@@ -2198,14 +2196,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             assert isinstance(rule_pack, ec.MkpRulePackProxy)
             self._rule_packs[nr] = rule_pack.get_rule_pack_spec()
             self._save_rules(config)
-            # Other rule packs with the ID may share the export.
-            if not any(
-                isinstance(other, ec.MkpRulePackProxy) and other["id"] == rule_pack["id"]
-                for other in self._rule_packs
-            ):
-                ec.remove_exported_rule_pack(
-                    self._rule_packs[nr], self._paths.mkp_rule_pack_dir.value
-                )
+            ec.remove_exported_rule_pack(self._rule_packs[nr], self._paths.mkp_rule_pack_dir.value)
             self._add_change(
                 action_name="dissolve-rule-pack",
                 text=_("Removed rule_pack %(rule_pack_id)s from MKP export")
@@ -2239,7 +2230,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             )
 
         # Update data structure after actions
-        self._rule_packs = list(ec.load_rule_packs(self._paths))
+        self._rule_packs = _load_rule_packs(self._paths, self._edition)
         return redirect(self.mode_url())
 
     def _offers(self, action: str, rule_pack_type: ec.RulePackType, *, unique_id: bool) -> bool:
@@ -2274,7 +2265,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         rule_pack = self._rule_packs[nr]
         if not self._offers(
             varname,
-            ec.RulePackType.type_of(rule_pack, self._get_rule_pack_to_mkp_map()),
+            ec.RulePackType.type_of(rule_pack, _rule_pack_to_mkp_map(self._paths, self._edition)),
             unique_id=rule_pack["id"] in self._unique_ids(),
         ):
             raise MKUserError(
@@ -2350,7 +2341,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             html.show_message(_("Found no rule packs."))
             return
 
-        id_to_mkp = self._get_rule_pack_to_mkp_map()
+        id_to_mkp = _rule_pack_to_mkp_map(self._paths, self._edition)
 
         simulator = EventSimulator.for_event(event, config.sites, self._edition) if event else None
         have_match = False
@@ -2660,7 +2651,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         if not transactions.check_transaction(request):
             return redirect(_rules_url(self._rule_pack_ref))
 
-        id_to_mkp = self._get_rule_pack_to_mkp_map()
+        id_to_mkp = _rule_pack_to_mkp_map(self._paths, self._edition)
         type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
         pending_changes = _pending_changes_for_ec(config=config, acting_user=user.id)
 
@@ -3092,7 +3083,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         if request.has_var("rule_pack"):
             self._edit_nr = self._requested_rule_pack_position("rule_pack")
             self._rule_pack = self._rule_packs[self._edit_nr]
-            id_to_mkp = self._get_rule_pack_to_mkp_map()
+            id_to_mkp = _rule_pack_to_mkp_map(self._paths, self._edition)
             self._type = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
         else:
             self._edit_nr = None
@@ -3399,7 +3390,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             with contextlib.suppress(KeyError):
                 del rule["customer"]
 
-        id_to_mkp = self._get_rule_pack_to_mkp_map()
+        id_to_mkp = _rule_pack_to_mkp_map(self._paths, self._edition)
         type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
         self._rule_pack = self._writable_rule_pack(self._rule_pack_nr, type_)
         rules = list(self._rule_pack["rules"])
@@ -4060,12 +4051,75 @@ def _verify_order(ids: Iterable[str], outdated: str) -> None:
         raise MKUserError(None, outdated)
 
 
+@request_memoize()
+def _rule_pack_to_mkp_map(
+    paths: ec.Paths, edition: Edition
+) -> Mapping[str, cmk.mkp_tool.PackageName | None]:
+    """The MKPs of the rule packs of installed MKPs, by the ID of the rule pack
+
+    It reads all MKP manifests, which several parts of a request need. No action of the Setup pages
+    of the EC installs or removes an MKP, so it stays the same for a request, and the callers share
+    it read-only."""
+    return (
+        {}
+        if edition is Edition.COMMUNITY
+        else cmk.mkp_tool.id_to_mkp(
+            cmk.mkp_tool.Installer(cmk.utils.paths.installed_packages_dir),
+            cmk.mkp_tool.all_rule_pack_files(paths.mkp_rule_pack_dir.value),
+            cmk.mkp_tool.PackagePart.EC_RULE_PACKS,
+        )
+    )
+
+
+@request_memoize()
+def _load_rule_packs(paths: ec.Paths, edition: Edition) -> list[ec.ECRulePack]:
+    """Loads the rule packs, keeping only the first one referring to an export as such
+
+    Hand-written rule packs may refer to an export several times, so may ones exported before
+    exporting a rule pack with the ID of another one was refused. They share the rules of the
+    export, so each further one becomes a rule pack with a copy of them, which the next change
+    saves. The Event Console runs the same rules either way.
+
+    Rule packs of MKPs listed several times, e.g. after resetting a modified one whose MKP was
+    installed again, stay as they are, as changes to them go into modified copies anyway.
+
+    Only the Setup pages tell exports from other rule packs and change their rules, so the other
+    users of ec.load_rule_packs() need no copies: they only read the rule packs, or dissolve the
+    proxies first. Telling exports apart needs the MKPs, which the Event Console doesn't read.
+    So binding the proxies in ec.load_rule_packs(), which it reloads with, can't make the copies:
+    Copying further proxies of MKPs would make their rule packs modified ones, and leaving out
+    further proxies would change the rules it runs. Rule packs of MKPs still share their rules,
+    see _shares_rules().
+
+    The modes of a request share the rule packs, e.g. the ones of the breadcrumb, which loads them
+    only once. An action changing them changes them for all of them."""
+    rule_packs = list(ec.load_rule_packs(paths))
+    proxy_ids = Counter(
+        rule_pack.id_ for rule_pack in rule_packs if isinstance(rule_pack, ec.MkpRulePackProxy)
+    )
+    if all(count == 1 for count in proxy_ids.values()):
+        # No two rule packs share an export, so there is no need to read all MKPs.
+        return rule_packs
+    id_to_mkp = _rule_pack_to_mkp_map(paths, edition)
+    exported_ids: set[str] = set()
+    for nr, rule_pack in enumerate(rule_packs):
+        if (
+            isinstance(rule_pack, ec.MkpRulePackProxy)
+            and ec.RulePackType.type_of(rule_pack, id_to_mkp) is ec.RulePackType.exported
+        ):
+            if rule_pack.id_ in exported_ids:
+                rule_packs[nr] = copy.deepcopy(rule_pack.get_rule_pack_spec())
+            exported_ids.add(rule_pack.id_)
+    return rule_packs
+
+
 def _shares_rules(rule_pack: ec.ECRulePack, other: ec.ECRulePack) -> bool:
     """Whether the rule packs are the same one or share their rules
 
-    Several exported rule packs with the same ID share the rules of the export, even when they are
-    bound to different copies of it."""
-    return rule_pack["rules"] is other["rules"] or (
+    Rule packs referring to the same rule pack of an MKP share its rules, also once saved, e.g. the
+    ones of an MKP listed several times. For an export, _load_rule_packs() leaves only one rule pack
+    referring to it, though."""
+    return rule_pack is other or (
         isinstance(rule_pack, ec.MkpRulePackProxy)
         and isinstance(other, ec.MkpRulePackProxy)
         and rule_pack.id_ == other.id_

@@ -64,6 +64,7 @@ from cmk.web.utils.flashed_messages import get_flashed_messages
 from tests.testlib.unit.fake_site import no_site_configuration
 from tests.testlib.unit.gui.web_test_app import CmkTestResponse, SetConfig, WebTestAppForCMK
 from tests.unit.cmk.gui.helpers.setup_mode_test_helper import (
+    end_request,
     error_messages,
     form_values,
     icon_titles,
@@ -1002,6 +1003,7 @@ def test_moving_a_rule_pack_on_a_page_showing_another_order_is_refused(
     # The position to move it to means another one once another user changed the rule packs.
     _save_rule_packs(*(_rule_pack(rule_pack_id=id_) for id_ in ["a", "b", "c", "d"]))
     rows = _rule_pack_list_rows(load_config, test_edition, mock_livestatus)
+    end_request()
     _save_rule_packs(*(_rule_pack(rule_pack_id=id_) for id_ in ["b", "c", "d"]))
     submit(**_drop_vars(rows[3], "2"))
 
@@ -1051,15 +1053,33 @@ def test_dissolving_an_exported_rule_pack_withdraws_it_from_packaging(load_confi
 
 
 @_setup_page
-def test_dissolving_one_of_several_rule_packs_sharing_an_export_keeps_it_for_the_others(
+def test_dissolving_one_of_several_rule_packs_referring_to_an_export_keeps_the_rules_of_the_others(
     load_config: Config,
 ) -> None:
-    _sharing_an_export()
+    _referring_to_one_export()
     submit(_dissolve="pack", rule_pack_occurrences="2")
 
     _commercial_rule_pack_list_action(load_config)
 
     assert _rules_per_rule_pack() == [["first", "second"], ["first", "second"], []]
+    assert not _export_file().exists()
+
+
+@_setup_page
+def test_saving_the_rule_packs_keeps_the_rule_packs_of_an_mkp_listed_twice_the_ones_of_the_mkp(
+    load_config: Config,
+) -> None:
+    # Resetting a modified rule pack of an MKP installed again lists the one of the MKP twice.
+    _save_rule_packs(
+        _packaged(_rule_pack()), ec.MkpRulePackProxy("pack"), _rule_pack(rule_pack_id="other")
+    )
+    submit(_delete="other")
+
+    _commercial_rule_pack_list_action(load_config)
+
+    assert [
+        isinstance(rule_pack, ec.MkpRulePackProxy) for rule_pack in ec.load_rule_packs(_paths())
+    ] == [True, True]
 
 
 def _rule_pack_modified_after_packaging() -> None:
@@ -1844,6 +1864,7 @@ def test_moving_a_rule_on_a_page_showing_another_order_is_refused(
     # The position to move it to means another one once another user changed the rules.
     _save_rule_packs(_rule_pack(*(_stored(ec.Rule(id=id_)) for id_ in ["a", "b", "c", "d"])))
     rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+    end_request()
     _save_rule_packs(_rule_pack(*(_stored(ec.Rule(id=id_)) for id_ in ["b", "c", "d"])))
     submit(**_drop_vars(rows[3], "2"))
 
@@ -2109,11 +2130,11 @@ def test_moving_a_rule_to_its_own_rule_pack_is_refused(
         _rule_list_action(load_config, test_edition)
 
 
-def _sharing_an_export() -> None:
-    """Saves two rule packs with the same ID sharing an export, and another rule pack
+def _referring_to_one_export() -> None:
+    """Saves two rule packs with the same ID referring to one export, and another rule pack
 
-    Hand-written rule packs may share one, so may ones exported before exporting a rule pack with
-    the ID of another one was refused."""
+    Hand-written rule packs may do so, so may ones exported before exporting a rule pack with the ID
+    of another one was refused."""
     _save_rule_packs(
         _exported(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second")))),
         ec.MkpRulePackProxy("pack"),
@@ -2122,10 +2143,37 @@ def _sharing_an_export() -> None:
 
 
 @_setup_page
-def test_moving_a_rule_to_another_rule_pack_sharing_its_export_is_refused(
+def test_moving_a_rule_to_another_rule_pack_referring_to_its_export_moves_it(
     load_config: Config, test_edition: Edition
 ) -> None:
-    _sharing_an_export()
+    _referring_to_one_export()
+    submit(
+        rule_pack="pack",
+        rule_pack_occurrences="2",
+        _move_to="yes",
+        **{"_move_to_0:second": "1/2:pack"},
+    )
+
+    _rule_list_action(load_config, test_edition)
+
+    assert _rules_per_rule_pack() == [["first"], ["second", "first", "second"], []]
+
+
+def _listing_an_mkp_twice() -> None:
+    """Saves the rule pack of an MKP listed twice, and another rule pack
+
+    Resetting a modified rule pack of an MKP installed again lists the one of the MKP twice."""
+    _save_rule_packs(
+        _packaged(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second")))),
+        ec.MkpRulePackProxy("pack"),
+        _rule_pack(rule_pack_id="other"),
+    )
+
+
+@_setup_page
+def test_moving_a_rule_to_another_listing_of_its_mkp_is_refused(load_config: Config) -> None:
+    # Both share the rules of the MKP, so the other one would have the rule twice.
+    _listing_an_mkp_twice()
     submit(
         rule_pack="pack",
         rule_pack_occurrences="2",
@@ -2134,19 +2182,17 @@ def test_moving_a_rule_to_another_rule_pack_sharing_its_export_is_refused(
     )
 
     with pytest.raises(MKUserError, match="The rule is in this rule pack already."):
-        _rule_list_action(load_config, test_edition)
-
-    assert _rules_per_rule_pack() == [["first", "second"], ["first", "second"], []]
+        _rule_list_action(load_config, Edition.PRO)
 
 
 @_setup_page
-def test_rule_list_offers_moving_a_rule_only_to_rule_packs_not_sharing_its_export(
-    load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
+def test_rule_list_offers_moving_a_rule_only_to_rule_packs_not_sharing_its_rules(
+    load_config: Config, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    _sharing_an_export()
+    _listing_an_mkp_twice()
     set_request_vars(rule_pack_occurrences="2")
 
-    rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+    rows = _rule_list_rows(load_config, Edition.PRO, mock_livestatus)
 
     assert [option.get_text() for option in rows[0]["Move to pack..."].select("option")] == [
         "",
@@ -2158,11 +2204,7 @@ def test_rule_list_offers_moving_a_rule_only_to_rule_packs_not_sharing_its_expor
 def test_rule_list_offers_no_moving_without_another_rule_pack_to_move_the_rules_to(
     load_config: Config, test_edition: Edition, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    # Like _sharing_an_export(), but without another rule pack
-    _save_rule_packs(
-        _exported(_rule_pack(_stored(ec.Rule(id="rule")))), ec.MkpRulePackProxy("pack")
-    )
-    set_request_vars(rule_pack_occurrences="2")
+    _save_rule_packs(_rule_pack(_stored(ec.Rule(id="rule"))))
 
     rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
 
@@ -2579,6 +2621,7 @@ def test_editing_a_rule_pack_with_its_button_after_another_one_was_added_edits_i
     _save_rule_packs(_rule_pack(rule_pack_id="first"), _rule_pack(rule_pack_id="second"))
     with _rule_pack_list_queries(mock_livestatus):
         rows = table_rows(_rule_pack_list(load_config, test_edition), "Rule packs")
+    end_request()
     # Another user adds a rule pack, which comes first.
     _save_rule_packs(
         _rule_pack(rule_pack_id="new"),
@@ -2729,6 +2772,7 @@ def test_saving_a_copy_of_a_rule_deleted_meanwhile_puts_the_copy_first(
     _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="original"))))
     set_request_vars(rule_pack="pack", clone_rule="original")
     _submit_rule_form(load_config, test_edition, rule_p_id="copy")
+    end_request()
     # Another user deletes the original.
     _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first"))))
 
@@ -2954,6 +2998,7 @@ def test_editing_a_rule_with_its_button_after_another_one_was_added_edits_it(
 ) -> None:
     _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))))
     rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+    end_request()
     # Another user adds a rule, which comes first.
     _save_rule_packs(
         _rule_pack(
@@ -2976,6 +3021,7 @@ def test_copying_a_rule_with_its_button_after_another_one_was_added_inserts_the_
 ) -> None:
     _save_rule_packs(_rule_pack(_stored(ec.Rule(id="first")), _stored(ec.Rule(id="second"))))
     rows = _rule_list_rows(load_config, test_edition, mock_livestatus)
+    end_request()
     # Another user adds a rule, which comes first.
     _save_rule_packs(
         _rule_pack(

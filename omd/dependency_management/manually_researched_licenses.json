@@ -85,7 +85,7 @@
   "pkg:pypi/jinja2@3.1.6": "BSD-3-Clause",
   "pkg:pypi/jira@3.10.5": "BSD-2-Clause",
   "pkg:pypi/jsonpatch@1.33": "BSD-3-Clause",
-  "pkg:pypi/jsonpointer@3.5": "BSD-3-Clause",
+  "pkg:pypi/jsonpointer@3.6": "BSD-3-Clause",
   "pkg:pypi/kiwisolver@1.5.1": "BSD-3-Clause",
   "pkg:pypi/kubernetes@36.0.3": "Apache-2.0",
   "pkg:pypi/libcst@1.9.0": "MIT AND PSF-2.0",

@@ -272,9 +272,9 @@ azure-core==1.41.0 \
     #   -c requirements.txt
     #   azure-identity
     #   azure-storage-blob
-azure-identity==1.26.0 \
-    --hash=sha256:3c60d9682b3ac01507388d474cb5a5ffbe54152a96b6cdcaa7013da9315cf186 \
-    --hash=sha256:61b4538b87df10d2d6d44b77cd5ea28a8929fd4929d58b45bf3f230f7daba02e
+azure-identity==1.27.0 \
+    --hash=sha256:6a4c50e25e8e9a47b324a95ad024897e56cb3c6241e0094e93b126a2bf71edc5 \
+    --hash=sha256:92fd2a93c0d2f777dac6c04e5fd7d5734f6643582b983544ef66b4575844e46d
     # via
     #   -c requirements.txt
     #   -r packages/cmk-backup/requirements.in
@@ -390,16 +390,16 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.43.118 \
-    --hash=sha256:ab8f3d2c622ef039338b4f228d97ea55f1abd573d84bb9b9a5ee8cb6780c0ccd \
-    --hash=sha256:c0620f799e0f0c222ba42c337b65cdbcd3da38a3121187f634d8926cbbb28a9c
+boto3==1.43.119 \
+    --hash=sha256:d1718edae48c3241d289c0ece8a515399a7242c406e35328b9685c4d24039186 \
+    --hash=sha256:e12c3b1d81713e14bd6947b7412d9d0ea49b320642d795ded1d64d6483ca6f49
     # via
     #   -c requirements.txt
     #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-plugins/requirements.in
-botocore==1.43.118 \
-    --hash=sha256:7f3f9d88cc9e847587690f82a42e3c3c292c3026c92c1e60d68a9310018e003f \
-    --hash=sha256:a45d7ae570674161e4a3542d8c68633bf7503f92d1de781ef7361b79488eda6f
+botocore==1.43.119 \
+    --hash=sha256:6026aec97914a4fa116915fd3b05af899912eff51b93fb8dff95aa228a3e761b \
+    --hash=sha256:ed11934be6e6d398ac21b7fe03778c9584368eeff8ba5371581f19bb47db0b6a
     # via
     #   -c requirements.txt
     #   -r packages/cmk-plugins/requirements.in
@@ -1702,21 +1702,21 @@ jmespath==1.1.0 \
     #   -c requirements.txt
     #   boto3
     #   botocore
-jsonpatch==1.37 \
-    --hash=sha256:04288ef93e60084bcb118101cd9d53424e627b91bb47ec5a95c02ec3795f6d23 \
-    --hash=sha256:7905646db52668a89d10945a07ca1c10337094dcf07d172ca384dccfca0b7438
+jsonpatch==1.38 \
+    --hash=sha256:46260c5df952abd4734a098f94512dc00bc38539152ac3ef069ed0475e4f5695 \
+    --hash=sha256:debc3e7bdc3d446468d64987f51a0e7a9deea42987ff90a6d1005a489b471c19
     # via
     #   -c requirements.txt
     #   redfish
-jsonpath-ng==1.13.0 \
-    --hash=sha256:da54eff64eef303b90a8491f50c607e6beb2eb4a6e66828edab948766d40c531 \
-    --hash=sha256:f58e7f88cdd2eb04a402c0d542e7d6db71909e521f4c23c62f4d2ee73266361e
+jsonpath-ng==1.14.0 \
+    --hash=sha256:748ffe4fce1a5f7f67f5414206ab4919bab99f800598de1f60df280a211d71df \
+    --hash=sha256:8c8b0b32c24421ba150621863c6a943e84861edbe6a4414261d1ad7cba7828bc
     # via
     #   -c requirements.txt
     #   redfish
-jsonpointer==3.5 \
-    --hash=sha256:81f28618a019cf1b011a6cf757439737972de1ccbeca2e1f86dfb4d661800792 \
-    --hash=sha256:8728c42f6bc07b1436af31600267bdbb1495ac5a61f31d9583ff319ecf7da09c
+jsonpointer==3.6 \
+    --hash=sha256:82e839a3ba3a9e2b54394fda8b3d276c2459d80408d06ef9a6fbc369d7544ffc \
+    --hash=sha256:a45c858f8a9e171f6b3790ed9446c9382782f6c4cb4589176813c5a553f4cfcd
     # via
     #   -c requirements.txt
     #   jsonpatch
@@ -1980,9 +1980,9 @@ libcst==1.9.0 \
     # via
     #   -c requirements.txt
     #   -r packages/cmk-shared-typing/requirements.in
-logfire-api==5.3.0 \
-    --hash=sha256:e3e4265c926dd505d7986d1970f5a4d8fb1b20fe033d2ff12b419ca7f163b533 \
-    --hash=sha256:eaa86578338c8feab4064f8bf206391554d0dc95679ca8eee27fccf722541132
+logfire-api==5.4.0 \
+    --hash=sha256:00297901da03e350bcf4ebe3d829f3617ebbe62b000e5d53d3c485223c258204 \
+    --hash=sha256:328b3fae6eaced55875339cf58521ebf13a9117bdb8be40f717f056aa62c43d3
     # via
     #   -c requirements.txt
     #   pydantic-graph
@@ -2776,9 +2776,9 @@ oauthlib==4.0.0 \
     #   -r cmk/requirements.in
     #   exchangelib
     #   requests-oauthlib
-openai==3.37.0 \
-    --hash=sha256:670bd6f699000d43a2073bcf94374a55bb133bfe5de0d084d47eb9bb9f6a8e5d \
-    --hash=sha256:d9f5b000f52397a7f9f946012744c5bc4c962eed3c100385252464c273a63e57
+openai==3.39.0 \
+    --hash=sha256:02687994f7bb6a4e80ed7796426d46c654889821ce4eb48699be15b3a425e1d3 \
+    --hash=sha256:e29bc8d9785d9a386cffa0bed1726e7f3989e096245c0c003cb29f1d4ae67e32
     # via
     #   -c requirements.txt
     #   pydantic-ai-slim

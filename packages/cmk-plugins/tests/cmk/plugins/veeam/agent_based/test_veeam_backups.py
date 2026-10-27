@@ -119,6 +119,16 @@ def test_check_veeam_backups_failed_shows_message() -> None:
     assert results[0] == Result(state=State.CRIT, summary="Status: Failed (Network error)")
 
 
+def test_message_repeating_the_result_is_not_shown_twice() -> None:
+    section = parse_veeam_backups(
+        [[_task("job", result={"result": "Success", "message": "Success"})]]
+    )
+
+    results = list(check_veeam_backups("job", PARAMS, section, now=NOW))
+
+    assert results[0] == Result(state=State.OK, summary="Status: Success")
+
+
 def test_check_veeam_backups_end_time_in_future_is_unknown() -> None:
     section = parse_veeam_backups(
         [[_task("future_backup", endTime="2999-01-21T00:29:12.473+03:00")]]

@@ -172,7 +172,7 @@ def check_veeam_backups(
 
     state = monitoring_state(task.state, task.result)
     summary = f"Status: {task.result}"
-    if task.result_message:
+    if task.result_message and task.result_message.lower() != task.result.lower():
         summary += f" ({task.result_message})"
     yield Result(state=state, summary=summary)
 

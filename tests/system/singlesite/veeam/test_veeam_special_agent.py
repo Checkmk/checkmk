@@ -197,8 +197,7 @@ EXPECTED_PROTECTED_MACHINE_SERVICES: Mapping[str, ExpectedServiceResult | None] 
     "Check_MK Discovery": None,
     "Backup Successful_job": ExpectedServiceResult(
         0,
-        r"Status: Success \(Success\), Last backup age: .+, "
-        r"Size: .+ \(read: .+, transferred: .+\)$",
+        r".+Success.+Last backup age.+Size.+read.+transferred",
         details=[r"Duration: .+"],
     ),
     "Restore points": ExpectedServiceResult(

@@ -16,6 +16,7 @@ from cmk.gui.monitor.services._api._filters import (
     ServiceBooleanCondition,
     ServiceFilterNode,
     ServiceHostNode,
+    ServiceHostStateChoiceCondition,
     ServiceLabelChoiceCondition,
     ServiceNameChoiceCondition,
     ServiceNotNode,
@@ -278,6 +279,37 @@ def test_query_builder_state_choice_pending_matches_has_been_checked_only() -> N
     )
 
     assert parse_as_livestatus_filter(condition) == "Filter: has_been_checked = 0"
+
+
+@pytest.mark.parametrize(
+    "states, expected",
+    [
+        pytest.param(
+            ["DOWN"],
+            "Filter: host_state = 1\nFilter: host_has_been_checked = 1\nAnd: 2",
+            id="a checked host in that state",
+        ),
+        pytest.param(
+            ["PENDING"],
+            "Filter: host_has_been_checked = 0",
+            id="pending host by its missing check, not by its state",
+        ),
+        pytest.param(
+            ["UP", "PENDING"],
+            "Filter: host_state = 0\nFilter: host_has_been_checked = 1\nAnd: 2\n"
+            "Filter: host_has_been_checked = 0\nOr: 2",
+            id="any of several host states",
+        ),
+    ],
+)
+def test_query_builder_host_state_choice(
+    states: list[Literal["UP", "DOWN", "UNREACHABLE", "PENDING"]], expected: str
+) -> None:
+    condition = ServiceHostStateChoiceCondition(
+        type="condition", field="host_state", op="one_of", value=states
+    )
+
+    assert parse_as_livestatus_filter(condition) == expected
 
 
 def test_query_builder_state_choice_mixes_pending_and_real_states() -> None:

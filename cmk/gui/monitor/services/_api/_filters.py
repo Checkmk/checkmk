@@ -20,7 +20,14 @@ from cmk.gui.utils.labels import encode_label_for_livestatus, Label
 from cmk.livestatus_client import lqencode, quote_dict
 from cmk.livestatus_client.expressions import LqSafe
 
-from .._models import CRASH_MARKER, ServiceFilter, ServiceState, ServiceStateLabel
+from .._models import (
+    CRASH_MARKER,
+    HostState,
+    HostStateLabel,
+    ServiceFilter,
+    ServiceState,
+    ServiceStateLabel,
+)
 from ._validators import validate_label_pairs, validate_uniqueness, validate_unix_timestamp
 
 # NOTE: these models are named with a "Service" prefix (unlike their hosts counterparts) because
@@ -72,6 +79,23 @@ class ServiceStateChoiceCondition:
         api_field(
             description="Service states to match",
             example=["OK", "WARN"],
+        )
+    )
+
+
+@api_model
+class ServiceHostStateChoiceCondition:
+    type: Literal["condition"] = api_field(
+        description="Node type discriminator", example="condition"
+    )
+    field: Literal["host_state"] = api_field(
+        description="State of the host the service runs on", example="host_state"
+    )
+    op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
+    value: Annotated[list[HostStateLabel], MinLen(1), AfterValidator(validate_uniqueness)] = (
+        api_field(
+            description="Host states to match",
+            example=["DOWN", "UNREACHABLE"],
         )
     )
 
@@ -185,6 +209,7 @@ class ServiceNameChoiceCondition:
 
 type ServiceConditionNode = (
     ServiceStateChoiceCondition
+    | ServiceHostStateChoiceCondition
     | ServiceStringCondition
     | ServiceSiteChoiceCondition
     | ServiceBooleanCondition
@@ -332,6 +357,14 @@ def _accumulate_filters(node: ServiceFilterNode, filters: list[str]) -> None:
                 case "one_of" if len(clauses) > 1:
                     filters.append(f"Or: {len(clauses)}")
 
+        case ServiceHostStateChoiceCondition():
+            host_clauses = [_host_state_choice_clause(value) for value in node.value]
+            for clause in host_clauses:
+                filters.extend(clause)
+
+            if len(host_clauses) > 1:
+                filters.append(f"Or: {len(host_clauses)}")
+
         case ServiceTimestampCondition():
             filters.append(f"Filter: {node.field} {_TIMESTAMP_OP_TO_LS[node.op]} {node.value}")
 
@@ -437,6 +470,16 @@ def _state_choice_clause(field: str, value: ServiceStateLabel) -> list[str]:
     return [
         f"Filter: {field} = {ServiceState[value]}",
         "Filter: has_been_checked = 1",
+        "And: 2",
+    ]
+
+
+def _host_state_choice_clause(value: HostStateLabel) -> list[str]:
+    if value == "PENDING":
+        return ["Filter: host_has_been_checked = 0"]
+    return [
+        f"Filter: host_state = {HostState[value]}",
+        "Filter: host_has_been_checked = 1",
         "And: 2",
     ]
 

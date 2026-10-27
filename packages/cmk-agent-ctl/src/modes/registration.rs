@@ -421,8 +421,12 @@ fn _register_pre_configured(
         client_config,
         baked_cas,
     };
+    // Keep and overwrite let the order decide which connection the Python updater
+    // is registered for. A HashMap iterates differently at every start.
+    let mut connections: Vec<_> = pre_configured_connections.connections.iter().collect();
+    connections.sort_by_key(|(site_id, _)| *site_id);
     let mut added_connections = vec![];
-    for (site_id, pre_configured_connection) in pre_configured_connections.connections.iter() {
+    for (site_id, pre_configured_connection) in connections {
         match process_pre_configured_connection(
             site_id,
             pre_configured_connection,
@@ -1176,6 +1180,44 @@ mod tests {
                 [
                     "server/pre-baked-pull-site-2",
                     "server/pre-baked-push-site-2"
+                ]
+            );
+        }
+
+        /// CMK-39588 AC6
+        #[test]
+        fn test_registrations_are_sorted_by_site_id() {
+            let mut r = registry();
+            let added_connections = _register_pre_configured(
+                &pre_configured_connections(true),
+                &config::ClientConfig {
+                    use_proxy: false,
+                    validate_api_cert: false,
+                },
+                &mut r.registry,
+                &MockRegistrationPreConfiguredImpl {
+                    is_registered_at_remote: false,
+                    expected_root_certificates: vec![String::from("root_cert")],
+                },
+                &trusted_cas::BakedCAs::new(),
+            )
+            .unwrap();
+            let site_ids: Vec<String> = added_connections
+                .iter()
+                .map(|connection| {
+                    r.registry
+                        .retrieve_standard_connection_by_uuid(&connection.uuid)
+                        .unwrap()
+                        .to_string()
+                })
+                .collect();
+            assert_eq!(
+                site_ids,
+                [
+                    "server/pre-baked-pull-site",
+                    "server/pre-baked-pull-site-2",
+                    "server/pre-baked-push-site",
+                    "server/pre-baked-push-site-2",
                 ]
             );
         }

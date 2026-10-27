@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.bakery.v2 import WindowsConfigEntry
-from cmk.base.plugins.bakery.install_python import (
+from cmk.plugins.windows.bakery.install_python import (
     bakery_plugin_install_python,
     get_agent_install_python_config,
 )

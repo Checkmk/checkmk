@@ -35,7 +35,6 @@ ALLOWED = frozenset(
         "buildscripts/scripts/test-system-agent-updates.groovy",
         "buildscripts/scripts/test-system-gui-single-node.groovy",
         "buildscripts/scripts/test-system-mk-oracle.groovy",
-        "buildscripts/scripts/test-system-otel.groovy",
         "buildscripts/scripts/test-system-relay.groovy",
         "buildscripts/scripts/test-system-singlesite-single-node.groovy",
         "buildscripts/scripts/utils/upload_artifacts.groovy",

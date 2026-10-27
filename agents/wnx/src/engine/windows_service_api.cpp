@@ -14,6 +14,7 @@
 #include "common/wtools_service.h"
 #include "tools/_kbd.h"
 #include "tools/_process.h"
+#include "wnx/agent_controller.h"
 #include "wnx/cap.h"
 #include "wnx/cfg.h"
 #include "wnx/commander.h"
@@ -606,14 +607,53 @@ std::wstring JoinParams(const std::vector<std::wstring> &params) {
 }
 }  // namespace
 
-void ReportNoUpdaterFile(const fs::path &f,
-                         const std::vector<std::wstring> &params) {
-    XLOG::l.w("Agent Updater File '{}' not found", f);
+/// The Python updater is absent and the integrated one is activated: name the
+/// way that does work on this host.
+void ReportIntegratedUpdater(const fs::path &f,
+                             const std::vector<std::wstring> &params) {
+    XLOG::l.i(
+        "Agent Updater File '{}' not found, the integrated updater is activated",
+        f);
+    const auto controller = fs::path{cfg::GetRootDir()} / cfg::files::kAgentCtl;
     XLOG::SendStringToStdio(
         fmt::format(
-            "\n\tYou must install Agent Updater Python plugin to use the updater with parameters '{}'.\n"
-            "\tTo install the plugin you may use the Bakery.\n"
-            "\tAnother possibility is copy Agent Updater file manually into the plugins directory\n",
+            "\n\tThe Agent Updater Python plugin is not installed, so the updater\n"
+            "\tcannot run with parameters '{}'.\n"
+            "\n"
+            "\tThis host updates its agent through the agent controller instead.\n"
+            "\tRegister the controller with your Checkmk site once, then drive the\n"
+            "\tupdates with it:\n"
+            "\n"
+            "\t  Connect this host to a site:\n"
+            "\t    \"{}\" register --help\n"
+            "\n"
+            "\t  Report whether a newer agent is available:\n"
+            "\t    \"{}\" update --check-only\n"
+            "\n"
+            "\t  Download the newer agent and install it:\n"
+            "\t    \"{}\" update\n",
+            wtools::ToUtf8(JoinParams(params)), controller, controller,
+            controller),
+        XLOG::Colors::white);
+}
+
+/// Neither updater is active here, which is what a host without an agent
+/// updater rule looks like. Nothing on the host can fix that.
+void ReportUpdatesDisabled(const fs::path &f,
+                           const std::vector<std::wstring> &params) {
+    XLOG::l.w("Agent Updater File '{}' not found and no updater is activated",
+              f);
+    XLOG::SendStringToStdio(
+        fmt::format(
+            "\n\tAgent updates are not configured for this host, so the updater\n"
+            "\tcannot run with parameters '{}'.\n"
+            "\n"
+            "\tNeither the Agent Updater Python plugin nor the updater built into\n"
+            "\tthe agent controller is active here.\n"
+            "\n"
+            "\tTurn updates on with the \"Agent updater (Linux, Windows, Solaris)\"\n"
+            "\trule in Setup, then bake the agent of this host and install the new\n"
+            "\tpackage.\n",
             wtools::ToUtf8(JoinParams(params))),
         XLOG::Colors::white);
 }
@@ -644,7 +684,11 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring> &params) {
 
     auto updater_file = plugins_dir / cfg::files::kAgentUpdaterPython;
     if (!fs::exists(updater_file)) {
-        ReportNoUpdaterFile(updater_file, params);
+        if (ac::IsIntegratedUpdaterActivated(ac::UpdateTomlConfigFile())) {
+            ReportIntegratedUpdater(updater_file, params);
+        } else {
+            ReportUpdatesDisabled(updater_file, params);
+        }
         return 1;
     }
 

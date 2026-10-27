@@ -162,6 +162,17 @@ export interface CheckboxListWithFlagsFilter<
   flags: BooleanFilterGroup<BF>[]
 }
 
+export interface StringInputWithCheckboxListFilter<
+  F extends FilterField = FilterField,
+  CF extends FilterField = FilterField
+> {
+  type: 'string-input-with-checkbox-list'
+  field: F
+  checkboxField: CF
+  options: FilterCheckboxOption[]
+  searchThreshold?: number
+}
+
 /**
  * Filter over the values of a field only the server knows, picked as chips
  * against one of the registered autocompleters. Its value is a single
@@ -227,6 +238,7 @@ export type ColumnFilterDefinition<F extends FilterField = FilterField> =
   | DurationFilter<F>
   | BooleanGroupFilter<F>
   | CheckboxListWithFlagsFilter<F>
+  | StringInputWithCheckboxListFilter<F>
   | AutocompleteChoiceFilter<F>
   | ColumnVisibilityFilter
   | VisualFilterColumnFilter
@@ -247,6 +259,9 @@ export function filterFields(filter: ColumnFilterDefinition): FilterField[] {
   }
   if ('flags' in filter) {
     fields.push(...filter.flags.map((flag) => flag.field))
+  }
+  if ('checkboxField' in filter) {
+    fields.push(filter.checkboxField)
   }
   return fields
 }

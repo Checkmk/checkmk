@@ -51,6 +51,7 @@ import FilterDateTimeRange from './FilterDateTimeRange.vue'
 import FilterDuration from './FilterDuration.vue'
 import FilterNumeric from './FilterNumeric.vue'
 import FilterStringInput from './FilterStringInput.vue'
+import FilterStringInputWithCheckboxList from './FilterStringInputWithCheckboxList.vue'
 import FilterVisualFilter from './FilterVisualFilter.vue'
 import type { ColumnFilterDefinition, ColumnFilterValue, SortDirection } from './types'
 
@@ -58,6 +59,7 @@ const FILTER_COMPONENTS: Record<ColumnFilterDefinition['type'], Component> = {
   'checkbox-list': FilterCheckboxList,
   'checkbox-list-with-flags': FilterCheckboxListWithFlags,
   'string-input': FilterStringInput,
+  'string-input-with-checkbox-list': FilterStringInputWithCheckboxList,
   numeric: FilterNumeric,
   'date-time-range': FilterDateTimeRange,
   duration: FilterDuration,

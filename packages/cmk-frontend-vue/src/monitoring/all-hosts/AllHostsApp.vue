@@ -74,6 +74,7 @@ const props = defineProps<MonitoringAllHostsApp>()
 
 const {
   permittedActions: hostActions,
+  moreActions: moreHostActions,
   rowActions: rowActionButtons,
   registry: actionRegistry,
   loadActionMenu
@@ -81,7 +82,7 @@ const {
 
 // Checkboxes only make sense where the selection can be acted on, so the permitted-action list
 // that decides the action bar decides the select column too.
-const mayActOnSelection = hostActions.length > 0
+const mayActOnSelection = hostActions.length + moreHostActions.length > 0
 
 // Only hosts monitored by an edition with multi-tenancy support belong to a customer.
 const showCustomer = props.edition === 'ultimatemt'
@@ -325,6 +326,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :service="hostService"
         :actions="actionRegistry"
         :bulk-actions="hostActions"
+        :more-actions="moreHostActions"
         :columns="tableColumns"
         :column-pinning="columnPinning"
         :get-row-key="rowKey"

@@ -10,6 +10,7 @@ import type { HostRef } from '@/monitoring/shared/api/types'
 import { acknowledgeDefaults } from '@/monitoring/shared/components/action/actions/acknowledge'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import { downtimePresets } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
+import { barActions } from '@/monitoring/shared/components/action/barActions'
 import type { MonitoringCommandsPayload } from '@/monitoring/shared/components/action/commandsPayload'
 import {
   type MonitoringActionRegistry,
@@ -28,8 +29,10 @@ export interface HostActionsPayload extends MonitoringCommandsPayload {
 }
 
 export interface HostActions {
-  /** The commands the user may run on a host. */
+  /** The commands the user may run on a host, as buttons of the action bar. */
   permittedActions: CellAction[]
+  /** The further commands the user may run on a host, in the action bar's "More" menu. */
+  moreActions: CellAction[]
   /** Buttons linking into Setup, their url keeping the `{host}` placeholder. */
   rowActions: CellAction[]
   registry: MonitoringActionRegistry
@@ -50,7 +53,7 @@ export const IMMEDIATE_HOST_COMMAND_IDS: readonly string[] = [RESCHEDULE_ACTION_
 
 /** The host commands, Setup links and overflow menu of every page that offers a host. */
 export function useHostActions(payload: HostActionsPayload): HostActions {
-  const permittedActions: CellAction[] = (payload.actions ?? []).map((action) => ({
+  const permitted: CellAction[] = (payload.actions ?? []).map((action) => ({
     id: action.ident,
     label: action.title as TranslatedString,
     icon: ACTION_ICON_OVERRIDES[action.ident] ?? (action.icon as SimpleIcons)
@@ -63,9 +66,7 @@ export function useHostActions(payload: HostActionsPayload): HostActions {
     url: action.url
   }))
 
-  const rowCommands = permittedActions.filter((action) =>
-    IMMEDIATE_HOST_COMMAND_IDS.includes(action.id)
-  )
+  const rowCommands = permitted.filter((action) => IMMEDIATE_HOST_COMMAND_IDS.includes(action.id))
 
   const actionMenuApi = new HostActionMenuApi()
 
@@ -101,5 +102,7 @@ export function useHostActions(payload: HostActionsPayload): HostActions {
     )
   ])
 
-  return { permittedActions, rowActions, registry, loadActionMenu }
+  const { bar, more } = barActions(permitted, registry)
+
+  return { permittedActions: bar, moreActions: more, rowActions, registry, loadActionMenu }
 }

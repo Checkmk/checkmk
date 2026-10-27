@@ -18,6 +18,7 @@ const ACTIONS: CellAction[] = [
 function mountBar(props: {
   selectedCount: number
   actions?: CellAction[]
+  moreActions?: CellAction[]
   runningActionId?: string | null
 }) {
   return render(MonitoringActionBar, {
@@ -110,4 +111,46 @@ test('offers a short selection label for narrow containers', () => {
   mountBar({ selectedCount: 3 })
 
   expect(screen.getByText('Selected: 3')).toBeInTheDocument()
+})
+
+const MORE_ACTIONS: CellAction[] = [
+  { id: 'add_comment', label: 'Add comment' as TranslatedString, icon: 'comment' },
+  {
+    id: 'remove_downtimes_hosts_services',
+    label: 'Remove downtimes' as TranslatedString,
+    icon: 'downtime',
+    disabled: true
+  }
+]
+
+test('offers no "More" menu without further actions', () => {
+  mountBar({ selectedCount: 1 })
+
+  expect(screen.queryByRole('button', { name: 'More' })).not.toBeInTheDocument()
+})
+
+test('the "More" menu emits the entry picked from it', async () => {
+  const { emitted } = mountBar({ selectedCount: 2, moreActions: MORE_ACTIONS })
+
+  await userEvent.click(screen.getByRole('button', { name: 'More' }))
+  await userEvent.click(await screen.findByRole('menuitem', { name: 'Add comment' }))
+
+  expect(emitted('action')).toEqual([[MORE_ACTIONS[0]]])
+})
+
+test('a disabled entry of the "More" menu emits nothing', async () => {
+  const { emitted } = mountBar({ selectedCount: 2, moreActions: MORE_ACTIONS })
+
+  await userEvent.click(screen.getByRole('button', { name: 'More' }))
+  await userEvent.click(await screen.findByRole('menuitem', { name: 'Remove downtimes' }))
+
+  expect(emitted('action')).toBeUndefined()
+})
+
+test('the "More" menu cannot be opened without a selection', async () => {
+  mountBar({ selectedCount: 0, moreActions: MORE_ACTIONS })
+
+  await userEvent.click(screen.getByRole('button', { name: 'More' }))
+
+  expect(screen.queryByRole('menuitem')).not.toBeInTheDocument()
 })

@@ -35,6 +35,8 @@ const props = withDefaults(
     actions: MonitoringActionRegistry<Target>
     /** Entries offered by the action bar, acting on the current row selection. */
     bulkActions?: CellAction[]
+    /** Entries of the action bar's "More" menu, acting on the selection as well. */
+    moreActions?: CellAction[]
     /** Names the rows the actions act on, e.g. "Selected hosts: 3". */
     selectionLabel: (count: number) => TranslatedString
     /** Names the action bar for screen readers, e.g. "Actions for selected hosts". */
@@ -57,7 +59,7 @@ const props = withDefaults(
      */
     immediateActionIds?: readonly string[]
   }>(),
-  { bulkActions: () => [], immediateActionIds: () => [] }
+  { bulkActions: () => [], moreActions: () => [], immediateActionIds: () => [] }
 )
 
 const emit = defineEmits<{
@@ -179,10 +181,11 @@ function onRightPaneCollapse(collapsed: boolean): void {
         />
         <div class="monitoring-split-pane__table-toolbar">
           <MonitoringActionBar
-            v-if="bulkActions.length > 0"
+            v-if="bulkActions.length + moreActions.length > 0"
             class="monitoring-split-pane__action-bar"
             :selected-count="selectedCount"
             :actions="bulkActions"
+            :more-actions="moreActions"
             :selection-label="selectionLabel(selectedCount)"
             :label="actionsLabel"
             :running-action-id="runningActionId"

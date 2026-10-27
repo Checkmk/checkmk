@@ -226,6 +226,18 @@ test('offers row selection once one action is permitted', async () => {
   expect(screen.getByRole('toolbar', { name: 'Actions for selected hosts' })).toBeInTheDocument()
 })
 
+test('offers row selection and the "More" menu for a command found only there', async () => {
+  mockHosts([makeHost()])
+  renderApp('community', {
+    actions: [
+      { ident: 'fake_check_result', title: 'Fake check results', icon: 'fake-check-result' }
+    ]
+  })
+
+  expect(await screen.findByRole('checkbox', { name: 'Select all rows' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'More' })).toBeInTheDocument()
+})
+
 /*
  * What a command's outcome does to the listing. The refresh mechanism itself is covered on the
  * service; what is covered here is which outcome arms it.

@@ -33,13 +33,17 @@ _DEMO_MAPS = frozenset(
 )
 
 
-def _is_update_from_before_3_0(from_version: str | None) -> bool:
+def _is_update_from_before_3_0(from_version: str | None, logger: Logger) -> bool:
     if from_version is None:
         return False
     try:
         # OMD_FROM_VERSION carries the edition suffix, e.g. "2.5.0p17.ultimate"
         base = Version.from_str(from_version.rsplit(".", 1)[0]).base
     except ValueError:
+        logger.warning(
+            'Cannot parse OMD_FROM_VERSION "%(version)s", skipping NagVis check',
+            {"version": from_version},
+        )
         return False
     return base is not None and base.major < 3
 
@@ -77,7 +81,7 @@ class KeepNagVisForSitesWithMaps(UpdateAction):
 
     @override
     def __call__(self, logger: Logger) -> None:
-        if not _is_update_from_before_3_0(self._from_version()):
+        if not _is_update_from_before_3_0(self._from_version(), logger):
             return
         if "CONFIG_NAGVIS" not in get_omd_config(self._omd_root):
             return

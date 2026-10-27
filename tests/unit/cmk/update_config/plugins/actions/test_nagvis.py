@@ -43,6 +43,21 @@ def test_keeps_nagvis_for_site_with_own_map(
     assert _run_update(tmp_path, "2.5.0p17.ultimate") == 1
 
 
+def test_keeps_nagvis_on_update_from_stable_daily(
+    tmp_path: Path,
+) -> None:
+    _site(tmp_path, "CONFIG_NAGVIS='off'\n", "datacenter.cfg")
+    assert _run_update(tmp_path, "2.5.0-2026.10.20.ultimate") == 1
+
+
+def test_warns_on_unparseable_from_version(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    _site(tmp_path, "CONFIG_NAGVIS='off'\n", "datacenter.cfg")
+    assert _run_update(tmp_path, "garbage.ultimate") == 0
+    assert 'Cannot parse OMD_FROM_VERSION "garbage.ultimate"' in caplog.text
+
+
 def test_leaves_nagvis_off_for_site_with_only_demo_maps(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:

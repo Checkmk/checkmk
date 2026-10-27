@@ -125,21 +125,54 @@ fn is_updater_registered(cmk_update_agent_path: &str) -> bool {
     )
 }
 
-/// Register the Python updater for `connection`, according to the configured
-/// `UpdaterRegistration` mode.
+/// Register the Python updater for one of the connections that a run
+/// registered, according to the configured `UpdaterRegistration` mode.
 ///
-/// - `Keep`: only register if the updater is not yet registered (check status first).
-/// - `Overwrite`: always register.
+/// - `Keep`: for the first connection, and only if the updater is not yet
+///   registered (check status first).
+/// - `Overwrite`: for the last connection. Each registration of the updater
+///   replaces the previous one, so the others would be overwritten anyway.
 /// - `Manual`: do nothing.
+///
+/// If a registration fails, the next connection in that order gets its turn.
+///
+/// # Errors
+///
+/// The error of the last attempt. The earlier ones are logged.
 pub(super) fn register(
+    python_updater: Option<&PythonUpdater>,
+    added_connections: &[AddedConnection],
+    updater_registration: &UpdaterRegistration,
+    registry: &config::Registry,
+) -> AnyhowResult<()> {
+    let mut candidates: Vec<&AddedConnection> = added_connections.iter().collect();
+    match updater_registration {
+        UpdaterRegistration::Keep => {}
+        UpdaterRegistration::Overwrite => candidates.reverse(),
+        UpdaterRegistration::Manual => return Ok(()),
+    }
+    let Some((last_resort, preferred)) = candidates.split_last() else {
+        return Ok(());
+    };
+    let Some(python_updater) = python_updater else {
+        info!("Agent updates are handled by the controller, skipping updater registration.");
+        return Ok(());
+    };
+    for connection in preferred {
+        match register_for(python_updater, connection, updater_registration, registry) {
+            Ok(()) => return Ok(()),
+            Err(error) => warn!("{error:#}"),
+        }
+    }
+    register_for(python_updater, last_resort, updater_registration, registry)
+}
+
+fn register_for(
     python_updater: &PythonUpdater,
     connection: &AddedConnection,
     updater_registration: &UpdaterRegistration,
     registry: &config::Registry,
 ) -> AnyhowResult<()> {
-    if matches!(updater_registration, UpdaterRegistration::Manual) {
-        return Ok(());
-    }
     let site_id = registry
         .retrieve_standard_connection_by_uuid(&connection.uuid)
         .with_context(|| format!("No registered connection has the UUID {}", connection.uuid))?;

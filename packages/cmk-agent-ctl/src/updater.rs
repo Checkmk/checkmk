@@ -46,42 +46,21 @@ pub use python_updater::PythonUpdater;
 
 /// The steps after a run that changed the registered connections.
 ///
-/// The Python updater, if the package ships one, is registered for every
-/// connection of `added_connections`. These registrations don't depend on each
-/// other, so a failing one doesn't stop the others.
-///
-/// # Errors
-///
-/// The first error. Later ones are logged.
+/// The Python updater, if the package ships one, is registered for one
+/// connection of `added_connections`, the connections that the run added, in
+/// order.
 pub fn after_connection_changes(
     added_connections: &[AddedConnection],
     updater_registration: &UpdaterRegistration,
     python_updater: Option<&PythonUpdater>,
     registry: &Registry,
 ) -> AnyhowResult<()> {
-    let mut outcome = Ok(());
-    for connection in added_connections {
-        let Some(python_updater) = python_updater else {
-            log::info!(
-                "Agent updates are handled by the controller, skipping updater registration."
-            );
-            continue;
-        };
-        let registered =
-            python_updater::register(python_updater, connection, updater_registration, registry);
-        keep_first_error(&mut outcome, registered);
-    }
-    outcome
-}
-
-fn keep_first_error(outcome: &mut AnyhowResult<()>, result: AnyhowResult<()>) {
-    if let Err(error) = result {
-        if outcome.is_ok() {
-            *outcome = Err(error);
-        } else {
-            log::error!("{error:#}");
-        }
-    }
+    python_updater::register(
+        python_updater,
+        added_connections,
+        updater_registration,
+        registry,
+    )
 }
 
 #[cfg(windows)]
@@ -125,5 +104,42 @@ mod tests {
         .unwrap_err();
 
         assert!(format!("{error:#}").contains("No registered connection has the UUID"));
+    }
+
+    /// Without the connections in the registry, every registration of the Python
+    /// updater fails at the lookup. The error names the UUID of the last attempt.
+    #[test]
+    fn test_keep_falls_back_to_the_next_connection() {
+        let (first, next) = (connection(), connection());
+        let (first_uuid, next_uuid) = (first.uuid.to_string(), next.uuid.to_string());
+        let error = after_connection_changes(
+            &[first, next],
+            &UpdaterRegistration::Keep,
+            Some(&PythonUpdater::at("cmk-update-agent")),
+            &TestRegistry::new().registry,
+        )
+        .unwrap_err();
+
+        let error = format!("{error:#}");
+        assert!(error.contains(&next_uuid));
+        assert!(!error.contains(&first_uuid));
+    }
+
+    /// See `test_keep_falls_back_to_the_next_connection`.
+    #[test]
+    fn test_overwrite_falls_back_to_the_previous_connection() {
+        let (previous, last) = (connection(), connection());
+        let (previous_uuid, last_uuid) = (previous.uuid.to_string(), last.uuid.to_string());
+        let error = after_connection_changes(
+            &[previous, last],
+            &UpdaterRegistration::Overwrite,
+            Some(&PythonUpdater::at("cmk-update-agent")),
+            &TestRegistry::new().registry,
+        )
+        .unwrap_err();
+
+        let error = format!("{error:#}");
+        assert!(error.contains(&previous_uuid));
+        assert!(!error.contains(&last_uuid));
     }
 }

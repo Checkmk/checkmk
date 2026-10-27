@@ -267,7 +267,7 @@ class ModeDiagHost(WatoMode):
             service_labels={},
             debug=config.debug,
         ):
-            case int() as agent_port, _:
+            case {"port": int() as agent_port}, _:
                 pass
 
         tcp_connect_timeout: float | None = None

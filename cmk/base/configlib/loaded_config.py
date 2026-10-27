@@ -115,7 +115,7 @@ class BaseConfig(  # type: ignore[explicit-any]
     fallback_agent_output_encoding: str = "latin-1"
     agent_config: Mapping[str, Sequence[RuleSpec]] = dataclasses.field(default_factory=dict)
     agent_port: int = 6556
-    agent_ports: Sequence[RuleSpec[int]] = dataclasses.field(default_factory=list)
+    agent_ports: Sequence[RuleSpec[Mapping[str, int]]] = dataclasses.field(default_factory=list)
     tcp_connect_timeout: float = 5.0
     tcp_connect_timeouts: Sequence[RuleSpec[float]] = dataclasses.field(default_factory=list)
     encryption_handling: Sequence[RuleSpec[Mapping[str, str]]] = dataclasses.field(

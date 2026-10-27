@@ -245,12 +245,24 @@ def test_tcp_fetcher_config_agent_ports_matching(
     ts.set_ruleset(
         "agent_ports",
         [
-            {"id": "01", "condition": {"host_folder": "/wato/level11/level22/"}, "value": 22},
-            {"id": "02", "condition": {"host_folder": "/wato/level11/"}, "value": 11},
-            {"id": "03", "condition": {"host_folder": "/wato/level1/level3/"}, "value": 3},
-            {"id": "04", "condition": {"host_folder": "/wato/level1/level2/"}, "value": 2},
-            {"id": "05", "condition": {"host_folder": "/wato/level1/"}, "value": 1},
-            {"id": "06", "condition": {}, "value": 0},
+            {
+                "id": "01",
+                "condition": {"host_folder": "/wato/level11/level22/"},
+                "value": {"port": 22},
+            },
+            {"id": "02", "condition": {"host_folder": "/wato/level11/"}, "value": {"port": 11}},
+            {
+                "id": "03",
+                "condition": {"host_folder": "/wato/level1/level3/"},
+                "value": {"port": 3},
+            },
+            {
+                "id": "04",
+                "condition": {"host_folder": "/wato/level1/level2/"},
+                "value": {"port": 2},
+            },
+            {"id": "05", "condition": {"host_folder": "/wato/level1/"}, "value": {"port": 1}},
+            {"id": "06", "condition": {}, "value": {"port": 0}},
         ],
     )
 

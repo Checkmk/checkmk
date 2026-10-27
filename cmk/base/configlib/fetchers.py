@@ -24,13 +24,14 @@ def make_tcp_fetcher_config(
     ruleset_matcher: RulesetMatcher,
     labels_of_host: Callable[[HostName], Labels],
 ) -> TCPFetcherConfig:
+    agent_ports = SingleHostRulesetMatcherFirst(
+        loaded_config.agent_ports,
+        {"port": loaded_config.agent_port},
+        ruleset_matcher,
+        labels_of_host,
+    )
     return TCPFetcherConfig(
-        agent_port=SingleHostRulesetMatcherFirst(
-            loaded_config.agent_ports,
-            loaded_config.agent_port,
-            ruleset_matcher,
-            labels_of_host,
-        ),
+        agent_port=lambda host_name: agent_ports(host_name)["port"],
         connect_timeout=SingleHostRulesetMatcherFirst(
             loaded_config.tcp_connect_timeouts,
             loaded_config.tcp_connect_timeout,

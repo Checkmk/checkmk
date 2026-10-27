@@ -1271,7 +1271,7 @@ agent_encryption = [
 globals().setdefault('agent_ports', [])
 
 agent_ports = [
-{'id': 'eb77c2e5-b767-474e-832b-08717e3eecb7', 'value': 6556, 'condition': {}, 'options': {'disabled': False, 'description': 'Example rule'}},
+{'id': 'eb77c2e5-b767-474e-832b-08717e3eecb7', 'value': {'port': 6556}, 'condition': {}, 'options': {'disabled': False, 'description': 'Example rule'}},
 ] + agent_ports
 
 

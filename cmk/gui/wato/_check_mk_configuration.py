@@ -5835,7 +5835,6 @@ def _valuespec_agent_ports() -> Integer:
         minvalue=1,
         maxvalue=65535,
         default_value=6556,
-        title=_("TCP port for connection to Checkmk agent"),
         help=_(
             "This variable allows to specify the TCP port to "
             "be used to connect to the agent on a per-host-basis. "
@@ -5843,10 +5842,33 @@ def _valuespec_agent_ports() -> Integer:
     )
 
 
+def _valuespec_agent_ports_migrated() -> Migrate[dict[str, Any]]:
+    # All keys are mandatory: merging the matching rules then yields the first matching rule.
+    return Migrate(
+        valuespec=Dictionary(
+            title=_("TCP port for connection to Checkmk agent"),
+            optional_keys=False,
+            elements=[("port", _valuespec_agent_ports())],
+        ),
+        migrate=_migrate_agent_ports,
+    )
+
+
+def _migrate_agent_ports(value: object) -> dict[str, object]:
+    match value:
+        case dict():
+            return value
+        case int():
+            return {"port": value}
+        case _:
+            raise ValueError(f"Unexpected value: {value!r}")
+
+
 AgentPorts = HostRulespec(
     group=RulespecGroupAgentCMKAgent,
+    match_type="dict",
     name="agent_ports",
-    valuespec=_valuespec_agent_ports,
+    valuespec=_valuespec_agent_ports_migrated,
 )
 
 

@@ -16,6 +16,7 @@ from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
 from cmk.gui.wato._check_mk_configuration import (
     _migrate_log_levels,
     _migrate_piggybacked_host_files,
+    AgentPorts,
     CheckMkExitStatus,
     ConfigVariableChooseSNMPBackend,
     ConfigVariableTableRowLimit,
@@ -314,3 +315,14 @@ def test_check_mk_exit_status_factory_default_is_valid() -> None:
     value = CheckMkExitStatus.factory_default
     CheckMkExitStatus.valuespec.validate_datatype(value, "")
     CheckMkExitStatus.valuespec.validate_value(value, "")
+
+
+@pytest.mark.parametrize(
+    "stored, expected",
+    [
+        pytest.param(6556, {"port": 6556}, id="port"),
+        pytest.param({"port": 6556}, {"port": 6556}, id="already migrated"),
+    ],
+)
+def test_agent_ports_migration(stored: object, expected: object) -> None:
+    assert AgentPorts.valuespec.transform_value(stored) == expected

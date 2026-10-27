@@ -8,7 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import register, WindowsConfigEntry, WindowsConfigGenerator
+from cmk.bakery.v2 import BakeryPlugin, WindowsConfigEntry, WindowsConfigGenerator
 
 
 def _path_to(entry: str) -> list[str]:
@@ -22,8 +22,7 @@ class _Config(BaseModel):
     )
 
 
-def get_agent_controller_windows_config(conf: Mapping[str, object]) -> WindowsConfigGenerator:
-    config = _Config.model_validate(conf)
+def get_agent_controller_windows_config(config: _Config) -> WindowsConfigGenerator:
     choice, runtime_opts = config.agent_ctl_enabled
     yield WindowsConfigEntry(path=_path_to("run"), content=choice == "enabled")
     if choice == "enabled" and runtime_opts:
@@ -33,7 +32,9 @@ def get_agent_controller_windows_config(conf: Mapping[str, object]) -> WindowsCo
         )
 
 
-register.bakery_plugin(
+bakery_plugin_agent_controller = BakeryPlugin(
     name="agent_controller",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     windows_config_function=get_agent_controller_windows_config,
 )

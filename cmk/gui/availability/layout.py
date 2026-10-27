@@ -414,7 +414,7 @@ def layout_timeline(
     # Render graphical representation
     # Make sure that each cell is visible, if possible
     if timeline_rows:
-        min_percentage = min(100.0 / len(timeline_rows), style == "inline" and 0.0 or 0.5)
+        min_percentage = min(100.0 / len(timeline_rows), 0.0 if style == "inline" else 0.5)
     else:
         min_percentage = 0
     rest_percentage = 100 - len(timeline_rows) * min_percentage

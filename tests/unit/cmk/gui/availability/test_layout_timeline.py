@@ -138,13 +138,11 @@ def test_a_short_span_is_widened_so_it_stays_visible() -> None:
     assert spans[1][2] == pytest.approx(0.99 + 0.5)
 
 
-@pytest.mark.xfail(strict=True, reason='`style == "inline" and 0.0 or 0.5` is always 0.5')
 def test_inline_does_not_widen_a_short_span() -> None:
     spans = _layout([_row(0, 99), _row(99, 100, "crit")], style="inline")["spans"]
     assert spans[1][2] == pytest.approx(1.0)
 
 
-@pytest.mark.xfail(strict=True, reason="widening 200 spans by 0.5 leaves no room for durations")
 def test_an_inline_timeline_with_many_state_changes_fills_the_bar() -> None:
     rows = [_row(n, n + 1, "crit" if n % 2 else "ok") for n in range(200)]
     timeline = _layout(rows, "inline", _avoptions(until=200.0))

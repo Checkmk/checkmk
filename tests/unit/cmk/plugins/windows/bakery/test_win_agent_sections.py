@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.bakery.v2 import WindowsGlobalConfigEntry
-from cmk.base.plugins.bakery.win_agent_sections import (
+from cmk.plugins.windows.bakery.win_agent_sections import (
     bakery_plugin_win_agent_sections,
     get_win_agent_sections_windows_config,
 )

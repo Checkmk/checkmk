@@ -10,7 +10,9 @@ py_library(
         "bazel_delta/errors.py",
         "bazel_delta/files.py",
         "bazel_delta/lint.py",
+        "bazel_delta/mypy.py",
         "bazel_delta/summary.py",
+        "bazel_delta/targets.py",
     ],
     imports = ["."],
 )
@@ -56,6 +58,16 @@ py_binary(
         ("lint.check", []),
     ]
 ]
+
+# `bazel run //:mypy.check -- --delta` type-checks what the changes can affect.
+py_binary(
+    name = "mypy.check",
+    srcs = ["bazel_delta/__main__.py"],
+    args = ["mypy"],
+    main = "bazel_delta/__main__.py",
+    visibility = ["//visibility:public"],
+    deps = [":bazel_delta"],
+)
 
 py_cmk_test(
     name = "unit",

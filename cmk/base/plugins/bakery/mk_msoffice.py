@@ -3,27 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
 from json import dumps
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.utils.password_store import extract_formspec_password, FormSpecPassword
-
-from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
+from cmk.bakery.v2 import BakeryPlugin, FileGenerator, OS, Plugin, PluginConfig, Secret
 
 
 class _Config(BaseModel):
     deployment: tuple[Literal["do_not_deploy", "sync"], None]
     client_id: str = ""
     tenant_id: str = ""
-    client_secret: FormSpecPassword | None = None
+    client_secret: Secret | None = None
 
 
-def get_mk_msoffice_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Config.model_validate(conf)
+def get_mk_msoffice_files(config: _Config) -> FileGenerator:
     if config.deployment[0] == "do_not_deploy":
         return
 
@@ -35,9 +31,7 @@ def get_mk_msoffice_files(conf: Mapping[str, object]) -> FileGenerator:
                 "ClientId": config.client_id,
                 "TenantId": config.tenant_id,
                 "ClientSecret": (
-                    ""
-                    if config.client_secret is None
-                    else extract_formspec_password(config.client_secret)
+                    "" if config.client_secret is None else config.client_secret.revealed
                 ),
             },
             indent=4,
@@ -47,7 +41,9 @@ def get_mk_msoffice_files(conf: Mapping[str, object]) -> FileGenerator:
     )
 
 
-register.bakery_plugin(
+bakery_plugin_mk_msoffice = BakeryPlugin(
     name="mk_msoffice",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     files_function=get_mk_msoffice_files,
 )

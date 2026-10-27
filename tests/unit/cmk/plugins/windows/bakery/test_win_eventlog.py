@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.bakery.v2 import WindowsConfigEntry
-from cmk.base.plugins.bakery.win_eventlog import (
+from cmk.plugins.windows.bakery.win_eventlog import (
     bakery_plugin_win_eventlog,
     get_win_eventlog_windows_config,
 )
@@ -69,6 +69,28 @@ def test_win_eventlog_logfiles() -> None:
             content=[
                 {"application": "warn context"},
                 {"system": "crit nocontext"},
+            ],
+        ),
+    ]
+
+
+def test_win_eventlog_logfile_names_keep_whitespace() -> None:
+    conf = {
+        "event_logs": [
+            {"log": ("named", "z z"), "severity": "warn", "context": True},
+            {"log": ("named", "test  "), "severity": "crit", "context": True},
+        ],
+    }
+    result = list(
+        get_win_eventlog_windows_config(bakery_plugin_win_eventlog.parameter_parser(conf))
+    )
+    assert result == [
+        WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
+        WindowsConfigEntry(
+            path=["logwatch", "logfile"],
+            content=[
+                {"z z": "warn context"},
+                {"test  ": "crit context"},
             ],
         ),
     ]

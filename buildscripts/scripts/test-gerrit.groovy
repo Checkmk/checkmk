@@ -139,7 +139,7 @@ void main() {
                             ];
                             break;
                         case "Package mk-oracle":
-                            relative_job_name = "${branch_base_folder}/builders/build-cmk-package-k8s";
+                            relative_job_name = "${branch_base_folder}/builders/build-cmk-package";
                             build_params = [
                                 CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
                                 COMMAND_LINE: item.COMMAND.replace("${checkout_dir}/", ""),

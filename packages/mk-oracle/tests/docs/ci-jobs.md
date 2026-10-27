@@ -26,7 +26,7 @@ flowchart TD
         TG["test-gerrit<br/>(stages.yml)"]
         WTB["winagt-test-build<br/>⇒ oracle-rocky-ci"]
         subgraph CVORA[" "]
-            PKG["'Package mk-oracle' stage<br/>build-cmk-package-k8s<br/>⇒ oracle-rocky-ci"]
+            PKG["'Package mk-oracle' stage<br/>build-cmk-package<br/>⇒ oracle-rocky-ci"]
             CVTSM["test-system-mk-oracle<br/>⇒ Docker Oracle Free"]
             CVWMO["winagt-test-mk-oracle<br/>⇒ ORACLE-WIN-CI<br/>(network + run-on-VM)"]
             CVTCM["test-component-mk-oracle<br/>⇒ oracle-rocky-ci<br/>(SSH, runs on VM)"]
@@ -68,10 +68,10 @@ flowchart TD
 
 ## Stage 1 — Gerrit CV (per change)
 
-| Job / stage                                                                    | Definition                                               | Runs                                                                                                                                           | System                    | Credentials                                       |
-| ------------------------------------------------------------------------------ | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------- |
-| `test-gerrit` → stage **Package mk-oracle** → `builders/build-cmk-package-k8s` | `buildscripts/scripts/stages.yml` + `test-gerrit.groovy` | `./run --component-tests` in the reference-image container                                                                                     | oracle-rocky-ci (network) | `CI_ORA_TEST_PASSWORD`, `CI_TEST_SQL_DB_ENDPOINT` |
-| `cv/winagt-test-build`                                                         | `winagt-test-build.groovy` → `agents/wnx run.cmd --all`  | full Windows agent build **including** the mk-oracle test suite — unit + component tests (`Build-Package` without `--build` → `run.cmd --all`) | oracle-rocky-ci (network) | `CI_ORA_TEST_PASSWORD`, `CI_TEST_SQL_DB_ENDPOINT` |
+| Job / stage                                                                | Definition                                               | Runs                                                                                                                                           | System                    | Credentials                                       |
+| -------------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------- |
+| `test-gerrit` → stage **Package mk-oracle** → `builders/build-cmk-package` | `buildscripts/scripts/stages.yml` + `test-gerrit.groovy` | `./run --component-tests` in the reference-image container                                                                                     | oracle-rocky-ci (network) | `CI_ORA_TEST_PASSWORD`, `CI_TEST_SQL_DB_ENDPOINT` |
+| `cv/winagt-test-build`                                                     | `winagt-test-build.groovy` → `agents/wnx run.cmd --all`  | full Windows agent build **including** the mk-oracle test suite — unit + component tests (`Build-Package` without `--build` → `run.cmd --all`) | oracle-rocky-ci (network) | `CI_ORA_TEST_PASSWORD`, `CI_TEST_SQL_DB_ENDPOINT` |
 
 The **Package mk-oracle** CV stage is conditional: `stages.yml` runs it only
 when the change touches `packages/mk-oracle/`, top-level `packages/` files, the

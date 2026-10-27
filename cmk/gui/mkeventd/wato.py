@@ -2151,7 +2151,6 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 pending_changes=pending_changes,
             )
             flash(_("Copied rules from central site"))
-            return redirect(self.mode_url())
 
         # Move rule packs, which the list offers for every one
         elif request.has_var("_move"):
@@ -2229,8 +2228,6 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 pending_changes=pending_changes,
             )
 
-        # Update data structure after actions
-        self._rule_packs = _load_rule_packs(self._paths, self._edition)
         return redirect(self.mode_url())
 
     def _offers(self, action: str, rule_pack_type: ec.RulePackType, *, unique_id: bool) -> bool:

@@ -17,9 +17,7 @@ function renderSharingStatus(props: {
 }
 
 function daysFromNow(days: number): Date {
-  const d = new Date()
-  d.setDate(d.getDate() + days)
-  return d
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000)
 }
 
 describe('SharingStatus', () => {

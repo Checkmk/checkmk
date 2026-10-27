@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen } from '@testing-library/vue'
+import { render, screen, waitFor } from '@testing-library/vue'
 import type {
   MonitoringAction,
   MonitoringAllHostsApp
@@ -462,4 +462,29 @@ test('posts the shown columns and the listing to the instant PDF report', async 
 
   expect(posted[0]!.cols).toBe('state,modes,name,address')
   expect(JSON.parse(posted[0]!.body!)).toMatchObject({ sort: ['name:asc'] })
+})
+
+test('adds a comment to the selected host from the "More" menu', async () => {
+  const user = userEvent.setup()
+  mockHosts([makeHost()])
+  renderApp('community', {
+    actions: [{ ident: 'add_comment', title: 'Add comment', icon: 'comment' }]
+  })
+
+  await user.click(await screen.findByRole('checkbox', { name: 'Select all rows' }))
+  await user.click(screen.getByRole('button', { name: 'More' }))
+  await user.click(await screen.findByRole('menuitem', { name: 'Add comment' }))
+  // The closing menu hands the focus back to its button first.
+  await waitFor(() => expect(screen.getByRole('button', { name: 'More' })).toHaveFocus())
+  // jsdom gives every element an empty box, which the split pane's resize handle takes as a hit,
+  // swallowing the click that would focus the field.
+  screen.getByPlaceholderText('Enter a comment…').focus()
+  await user.keyboard('Disk swap planned')
+  await user.click(screen.getByRole('button', { name: 'Add comment' }))
+
+  expect(await screen.findByText('Added comment to the selected host')).toBeInTheDocument()
+  expect(postSpy).toHaveBeenCalledWith(
+    '/domain-types/comment/collections/host',
+    expect.objectContaining({ body: expect.objectContaining({ comment: 'Disk swap planned' }) })
+  )
 })

@@ -19,6 +19,7 @@ import {
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 
 import { useAcknowledgeHostsAction } from './actions/acknowledgeHosts'
+import { useCommentHostsAction } from './actions/commentHosts'
 import { useRescheduleHostsAction } from './actions/rescheduleHosts'
 import { useScheduleHostDowntimeAction } from './actions/scheduleHostDowntime'
 import { HostActionMenuApi } from './api/actionMenu'
@@ -99,7 +100,8 @@ export function useHostActions(payload: HostActionsPayload): HostActions {
       payload.downtime_recurrences ?? [],
       downtimePresets(payload.downtime_presets),
       payload.downtime_presets_url ?? null
-    )
+    ),
+    useCommentHostsAction()
   ])
 
   const { bar, more } = barActions(permitted, registry)

@@ -12,6 +12,7 @@ export interface CommentValues {
 
 <script setup lang="ts">
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
+import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { watch } from 'vue'
 
@@ -32,7 +33,9 @@ watch(
 
 <template>
   <label class="monitoring-comment-form">
-    <span class="monitoring-comment-form__label">{{ _t('Comment') }}</span>
+    <span class="monitoring-comment-form__label"
+      >{{ _t('Comment') }}<CmkLabelRequired :show="true" space="before"
+    /></span>
     <CmkInput v-model="model.comment" field-size="large" :placeholder="_t('Enter a comment…')" />
   </label>
 </template>

@@ -40,6 +40,7 @@ import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type Component, computed, ref } from 'vue'
 
+import { useCommentHostsAction } from '@/monitoring/all-hosts/actions/commentHosts'
 import { useRescheduleHostsAction } from '@/monitoring/all-hosts/actions/rescheduleHosts'
 import { useScheduleHostDowntimeAction } from '@/monitoring/all-hosts/actions/scheduleHostDowntime'
 import ActionFormPane from '@/monitoring/shared/components/action/ActionFormPane.vue'
@@ -47,7 +48,6 @@ import type {
   DowntimePresetOption,
   DowntimeRecurrenceOption
 } from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
-import { useCommentAction } from '@/monitoring/shared/components/action/actions/comment'
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -77,7 +77,7 @@ const propState = ref(
 )
 
 const actions: Record<Exclude<FormKind, 'none'>, MonitoringAction> = {
-  comment: useCommentAction(),
+  comment: useCommentHostsAction(),
   reschedule: useRescheduleHostsAction(),
   'schedule-downtime': useScheduleHostDowntimeAction(DOWNTIME_RECURRENCES, DOWNTIME_PRESETS, '#')
 }

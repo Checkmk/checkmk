@@ -3,13 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.bakery.v1 import WindowsConfigEntry
-from cmk.base.plugins.bakery.win_eventlog import get_win_eventlog_windows_config
+from cmk.bakery.v2 import WindowsConfigEntry
+from cmk.base.plugins.bakery.win_eventlog import (
+    bakery_plugin_win_eventlog,
+    get_win_eventlog_windows_config,
+)
 
 
 def test_win_eventlog_minimal_config() -> None:
     conf: dict[str, object] = {}
-    result = list(get_win_eventlog_windows_config(conf))
+    result = list(
+        get_win_eventlog_windows_config(bakery_plugin_win_eventlog.parameter_parser(conf))
+    )
     assert result == [
         WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
     ]
@@ -17,7 +22,9 @@ def test_win_eventlog_minimal_config() -> None:
 
 def test_win_eventlog_sendall_true() -> None:
     conf = {"sendall": True}
-    result = list(get_win_eventlog_windows_config(conf))
+    result = list(
+        get_win_eventlog_windows_config(bakery_plugin_win_eventlog.parameter_parser(conf))
+    )
     assert result == [
         WindowsConfigEntry(path=["logwatch", "sendall"], content=True),
     ]
@@ -25,7 +32,9 @@ def test_win_eventlog_sendall_true() -> None:
 
 def test_win_eventlog_vista_api() -> None:
     conf = {"vista_api": True}
-    result = list(get_win_eventlog_windows_config(conf))
+    result = list(
+        get_win_eventlog_windows_config(bakery_plugin_win_eventlog.parameter_parser(conf))
+    )
     assert result == [
         WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
         WindowsConfigEntry(path=["logwatch", "vista_api"], content=True),
@@ -34,7 +43,9 @@ def test_win_eventlog_vista_api() -> None:
 
 def test_win_eventlog_skip_duplicated() -> None:
     conf = {"skip_duplicated": True}
-    result = list(get_win_eventlog_windows_config(conf))
+    result = list(
+        get_win_eventlog_windows_config(bakery_plugin_win_eventlog.parameter_parser(conf))
+    )
     assert result == [
         WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
         WindowsConfigEntry(path=["logwatch", "skip_duplicated"], content=True),
@@ -48,7 +59,9 @@ def test_win_eventlog_logfiles() -> None:
             {"log": ("named", "System"), "severity": "crit", "context": False},
         ],
     }
-    result = list(get_win_eventlog_windows_config(conf))
+    result = list(
+        get_win_eventlog_windows_config(bakery_plugin_win_eventlog.parameter_parser(conf))
+    )
     assert result == [
         WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
         WindowsConfigEntry(
@@ -67,7 +80,9 @@ def test_win_eventlog_filter_ids() -> None:
             {"log": ("named", "Application"), "include": ["100", "200"], "exclude": ["300"]},
         ],
     }
-    result = list(get_win_eventlog_windows_config(conf))
+    result = list(
+        get_win_eventlog_windows_config(bakery_plugin_win_eventlog.parameter_parser(conf))
+    )
     assert result == [
         WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
         WindowsConfigEntry(
@@ -83,7 +98,9 @@ def test_win_eventlog_filter_sources() -> None:
             {"log": ("named", "System"), "include": ["src1"], "exclude": ["src2", "src3"]},
         ],
     }
-    result = list(get_win_eventlog_windows_config(conf))
+    result = list(
+        get_win_eventlog_windows_config(bakery_plugin_win_eventlog.parameter_parser(conf))
+    )
     assert result == [
         WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
         WindowsConfigEntry(
@@ -96,11 +113,13 @@ def test_win_eventlog_filter_sources() -> None:
 def test_win_eventlog_filter_users() -> None:
     result = list(
         get_win_eventlog_windows_config(
-            {
-                "filter_users": [
-                    {"log": ("named", "Security"), "include": ["admin"], "exclude": []},
-                ],
-            }
+            bakery_plugin_win_eventlog.parameter_parser(
+                {
+                    "filter_users": [
+                        {"log": ("named", "Security"), "include": ["admin"], "exclude": []},
+                    ],
+                }
+            )
         )
     )
     assert result == [
@@ -115,7 +134,9 @@ def test_win_eventlog_filter_users() -> None:
 def test_win_eventlog_filter_without_restriction() -> None:
     # An empty list includes all or excludes no messages.
     conf = {"filter_ids": [{"log": ("all", None), "include": [], "exclude": []}]}
-    result = list(get_win_eventlog_windows_config(conf))
+    result = list(
+        get_win_eventlog_windows_config(bakery_plugin_win_eventlog.parameter_parser(conf))
+    )
     assert result == [
         WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
         WindowsConfigEntry(path=["logwatch", "filter_ids"], content=[{"*": ";;"}]),
@@ -128,7 +149,9 @@ def test_win_eventlog_cluster_mapping() -> None:
             {"name": "cluster1", "ips": ["10.0.0.1", "10.0.0.2"]},
         ],
     }
-    result = list(get_win_eventlog_windows_config(conf))
+    result = list(
+        get_win_eventlog_windows_config(bakery_plugin_win_eventlog.parameter_parser(conf))
+    )
     assert result == [
         WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
         WindowsConfigEntry(
@@ -145,7 +168,9 @@ def test_win_eventlog_text_pattern() -> None:
             {"log": ("named", "CRIT"), "pattern": ".*error.*"},
         ],
     }
-    result = list(get_win_eventlog_windows_config(conf))
+    result = list(
+        get_win_eventlog_windows_config(bakery_plugin_win_eventlog.parameter_parser(conf))
+    )
     assert result == [
         WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
         WindowsConfigEntry(
@@ -167,7 +192,9 @@ def test_win_eventlog_full_config() -> None:
         "cluster_mapping": [{"name": "mycluster", "ips": ["1.2.3.4"]}],
         "text_pattern": [{"log": ("named", "WARN"), "pattern": ".*warning.*"}],
     }
-    result = list(get_win_eventlog_windows_config(conf))
+    result = list(
+        get_win_eventlog_windows_config(bakery_plugin_win_eventlog.parameter_parser(conf))
+    )
     expected = [
         WindowsConfigEntry(path=["logwatch", "sendall"], content=True),
         WindowsConfigEntry(path=["logwatch", "vista_api"], content=True),
@@ -202,7 +229,9 @@ def test_win_eventlog_full_config() -> None:
 
 def test_win_eventlog_all_event_logs() -> None:
     conf = {"event_logs": [{"log": ("all", None), "severity": "off", "context": False}]}
-    result = list(get_win_eventlog_windows_config(conf))
+    result = list(
+        get_win_eventlog_windows_config(bakery_plugin_win_eventlog.parameter_parser(conf))
+    )
     assert result == [
         WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
         WindowsConfigEntry(path=["logwatch", "logfile"], content=[{"*": "off nocontext"}]),
@@ -221,7 +250,9 @@ def test_win_eventlog_empty_filters_are_skipped() -> None:
         "cluster_mapping": [],
         "vista_api": False,
     }
-    result = list(get_win_eventlog_windows_config(conf))
+    result = list(
+        get_win_eventlog_windows_config(bakery_plugin_win_eventlog.parameter_parser(conf))
+    )
     assert result == [
         WindowsConfigEntry(path=["logwatch", "sendall"], content=False),
         WindowsConfigEntry(path=["logwatch", "vista_api"], content=False),

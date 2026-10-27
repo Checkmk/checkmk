@@ -69,6 +69,7 @@ mod platform;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::agent_receiver_api::AgentUpdateAuthorization;
     use crate::config::test_helpers::TestRegistry;
     use crate::types::Credentials;
 
@@ -76,6 +77,7 @@ mod tests {
         AddedConnection {
             uuid: uuid::Uuid::new_v4(),
             credentials: Credentials::username_password("user", "password"),
+            agent_update_authorization: AgentUpdateAuthorization::Authorized,
         }
     }
 

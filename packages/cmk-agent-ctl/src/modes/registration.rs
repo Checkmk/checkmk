@@ -143,6 +143,7 @@ struct RegistrationResult {
     root_cert: String,
     agent_cert: String,
     connection_mode: config::ConnectionMode,
+    agent_update_authorization: agent_receiver_api::AgentUpdateAuthorization,
 }
 
 impl std::convert::From<agent_receiver_api::RegisterExistingResponse> for RegistrationResult {
@@ -151,6 +152,7 @@ impl std::convert::From<agent_receiver_api::RegisterExistingResponse> for Regist
             root_cert: register_existing_response.root_cert,
             agent_cert: register_existing_response.agent_cert,
             connection_mode: register_existing_response.connection_mode,
+            agent_update_authorization: register_existing_response.agent_update_authorization,
         }
     }
 }
@@ -239,6 +241,7 @@ impl RegistrationEndpointCall for RegistrationCallNew<'_> {
                         root_cert: reg_new_response.root_cert,
                         agent_cert: success_resp.agent_cert,
                         connection_mode: success_resp.connection_mode,
+                        agent_update_authorization: success_resp.agent_update_authorization,
                     });
                 }
             }
@@ -281,6 +284,7 @@ fn direct_registration(
     Ok(AddedConnection {
         uuid: registration_input.uuid,
         credentials: registration_input.credentials.clone(),
+        agent_update_authorization: registration_result.agent_update_authorization,
     })
 }
 
@@ -345,6 +349,7 @@ pub struct AddedConnection {
     // pass through here because the password prompt happens in the middle of the
     // registration.
     pub credentials: types::Credentials,
+    pub agent_update_authorization: agent_receiver_api::AgentUpdateAuthorization,
 }
 
 pub fn register_existing(
@@ -634,6 +639,7 @@ mod tests {
     struct MockApi {
         expect_root_cert: bool,
         expected_registration_method: Option<RegistrationMethod>,
+        agent_update_authorization: agent_receiver_api::AgentUpdateAuthorization,
     }
 
     impl agent_receiver_api::Registration for MockApi {
@@ -657,6 +663,7 @@ mod tests {
                 root_cert: String::from("root_cert"),
                 agent_cert: String::from("agent_cert"),
                 connection_mode: config::ConnectionMode::Pull,
+                agent_update_authorization: self.agent_update_authorization,
             })
         }
 
@@ -697,6 +704,7 @@ mod tests {
                 agent_receiver_api::RegisterNewOngoingResponseSuccess {
                     agent_cert: String::from("agent_cert"),
                     connection_mode: config::ConnectionMode::Push,
+                    agent_update_authorization: self.agent_update_authorization,
                 },
             ))
         }
@@ -834,6 +842,78 @@ mod tests {
     mod test_register_manual {
         use super::*;
 
+        /// CMK-39588 AC1
+        #[test]
+        fn test_register_existing_carries_the_authorization() {
+            let registration_config = registration_connection_config(vec![], None, false);
+
+            let connection = direct_registration(
+                &registration_config,
+                &prepare_registration(
+                    &registration_config,
+                    &MockInteractiveTrust {
+                        expect_server_cert_prompt: true,
+                        expect_password_prompt: true,
+                    },
+                )
+                .unwrap(),
+                &mut TestRegistry::new().registry,
+                &MockApi {
+                    expect_root_cert: false,
+                    expected_registration_method: Some(RegistrationMethod::Existing),
+                    agent_update_authorization:
+                        agent_receiver_api::AgentUpdateAuthorization::NotPermitted,
+                },
+                &RegistrationCallExisting {
+                    host_name: HOST_NAME,
+                },
+            )
+            .unwrap();
+
+            assert_eq!(
+                connection.agent_update_authorization,
+                agent_receiver_api::AgentUpdateAuthorization::NotPermitted
+            );
+        }
+
+        /// CMK-39588 AC1, AC6
+        #[test]
+        fn test_register_new_carries_the_authorization() {
+            let registration_config = registration_connection_config(
+                vec![String::from("root_certificate")],
+                Some(String::from("password")),
+                false,
+            );
+
+            let connection = direct_registration(
+                &registration_config,
+                &prepare_registration(
+                    &registration_config,
+                    &MockInteractiveTrust {
+                        expect_server_cert_prompt: false,
+                        expect_password_prompt: false,
+                    },
+                )
+                .unwrap(),
+                &mut TestRegistry::new().registry,
+                &MockApi {
+                    expect_root_cert: true,
+                    expected_registration_method: Some(RegistrationMethod::New),
+                    agent_update_authorization:
+                        agent_receiver_api::AgentUpdateAuthorization::NotPermitted,
+                },
+                &RegistrationCallNew {
+                    agent_labels: &agent_labels(),
+                },
+            )
+            .unwrap();
+
+            assert_eq!(
+                connection.agent_update_authorization,
+                agent_receiver_api::AgentUpdateAuthorization::NotPermitted
+            );
+        }
+
         #[test]
         fn test_existing() {
             let mut r = TestRegistry::new();
@@ -855,6 +935,8 @@ mod tests {
                 &MockApi {
                     expect_root_cert: false,
                     expected_registration_method: Some(RegistrationMethod::Existing),
+                    agent_update_authorization:
+                        agent_receiver_api::AgentUpdateAuthorization::Authorized,
                 },
                 &RegistrationCallExisting {
                     host_name: HOST_NAME
@@ -890,6 +972,8 @@ mod tests {
                 &MockApi {
                     expect_root_cert: true,
                     expected_registration_method: Some(RegistrationMethod::New),
+                    agent_update_authorization:
+                        agent_receiver_api::AgentUpdateAuthorization::Authorized,
                 },
                 &RegistrationCallNew {
                     agent_labels: &agent_labels()
@@ -910,6 +994,8 @@ mod tests {
                 &MockApi {
                     expect_root_cert: false,
                     expected_registration_method: Some(RegistrationMethod::Existing),
+                    agent_update_authorization:
+                        agent_receiver_api::AgentUpdateAuthorization::Authorized,
                 },
                 &MockInteractiveTrust {
                     expect_server_cert_prompt: false,
@@ -1036,6 +1122,8 @@ mod tests {
                 Ok(AddedConnection {
                     uuid,
                     credentials: types::Credentials::username_password("user", "password"),
+                    agent_update_authorization:
+                        agent_receiver_api::AgentUpdateAuthorization::Authorized,
                 })
             }
 

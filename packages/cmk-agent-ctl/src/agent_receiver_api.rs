@@ -49,11 +49,27 @@ struct RegisterExistingBody {
     host_name: String,
 }
 
+/// Whether the registration file of a UUID permits agent updates through its
+/// connection, as the site of the registration reports it.
+#[derive(Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum AgentUpdateAuthorization {
+    Authorized,
+    NotPermitted,
+    /// Also stands for a site that predates the field, and for a value that
+    /// this controller doesn't know.
+    #[default]
+    #[serde(other)]
+    Unavailable,
+}
+
 #[derive(Deserialize)]
 pub struct RegisterExistingResponse {
     pub root_cert: String,
     pub agent_cert: String,
     pub connection_mode: config::ConnectionMode,
+    #[serde(default)]
+    pub agent_update_authorization: AgentUpdateAuthorization,
 }
 
 #[serde_with::serde_as]
@@ -79,6 +95,8 @@ pub struct RegisterNewOngoingResponseDeclined {
 pub struct RegisterNewOngoingResponseSuccess {
     pub agent_cert: String,
     pub connection_mode: config::ConnectionMode,
+    #[serde(default)]
+    pub agent_update_authorization: AgentUpdateAuthorization,
 }
 
 #[derive(Deserialize)]
@@ -618,6 +636,70 @@ impl AgentUpdate for Api {
 #[cfg(test)]
 mod test_api {
     use super::*;
+
+    fn authorization_of_register_existing(field: &str) -> AgentUpdateAuthorization {
+        serde_json::from_str::<RegisterExistingResponse>(&format!(
+            r#"{{"root_cert": "root", "agent_cert": "cert", "connection_mode": "pull-agent"{field}}}"#
+        ))
+        .unwrap()
+        .agent_update_authorization
+    }
+
+    /// CMK-39588 AC1
+    #[test]
+    fn test_register_existing_response_reports_authorized() {
+        assert_eq!(
+            authorization_of_register_existing(r#", "agent_update_authorization": "authorized""#),
+            AgentUpdateAuthorization::Authorized
+        );
+    }
+
+    /// CMK-39588 AC1
+    #[test]
+    fn test_register_existing_response_reports_not_permitted() {
+        assert_eq!(
+            authorization_of_register_existing(
+                r#", "agent_update_authorization": "not_permitted""#
+            ),
+            AgentUpdateAuthorization::NotPermitted
+        );
+    }
+
+    /// CMK-39588 AC1: a site that predates the field.
+    #[test]
+    fn test_register_existing_response_without_authorization_is_unavailable() {
+        assert_eq!(
+            authorization_of_register_existing(""),
+            AgentUpdateAuthorization::Unavailable
+        );
+    }
+
+    /// CMK-39588 AC1
+    #[test]
+    fn test_register_existing_response_with_an_unknown_authorization_is_unavailable() {
+        assert_eq!(
+            authorization_of_register_existing(r#", "agent_update_authorization": "pending""#),
+            AgentUpdateAuthorization::Unavailable
+        );
+    }
+
+    /// CMK-39588 AC1, AC6
+    #[test]
+    fn test_register_new_ongoing_success_reports_the_authorization() {
+        let response = serde_json::from_str::<RegisterNewOngoingResponse>(
+            r#"{"status": "Success", "agent_cert": "cert", "connection_mode": "push-agent",
+                "agent_update_authorization": "authorized"}"#,
+        )
+        .unwrap();
+
+        let RegisterNewOngoingResponse::Success(success) = response else {
+            panic!("not a success");
+        };
+        assert_eq!(
+            success.agent_update_authorization,
+            AgentUpdateAuthorization::Authorized
+        );
+    }
 
     #[test]
     fn test_endpoint_url() {

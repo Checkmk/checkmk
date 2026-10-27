@@ -1140,6 +1140,7 @@ export const globalSettingsPagePayload = {
                 and_x_more: 'and %(count)s more'
               },
               show_toggle_all: false,
+              no_element_label: 'Enabled, no listening ports defined',
               type: 'checkbox_list_choice',
               elements: [
                 {

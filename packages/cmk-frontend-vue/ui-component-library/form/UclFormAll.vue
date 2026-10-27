@@ -482,6 +482,7 @@ function getDualListChoice(
       search_available_options: 'i18n search available options',
       and_x_more: 'i18n and_x_more'
     },
+    no_element_label: 'i18n no_element_label',
     ...options
   }
 }
@@ -512,6 +513,7 @@ function getCheckboxListChoice(
       search_available_options: 'i18n search available options',
       and_x_more: 'i18n and_x_more'
     },
+    no_element_label: 'i18n no_element_label',
     ...options
   }
 }

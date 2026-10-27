@@ -444,6 +444,9 @@ function renderMultipleChoice(
   elements: MultipleChoiceElement[],
   value: string[]
 ): VNode {
+  if (value.length === 0) {
+    return h('div', { class: 'form-readonly__multiple-choice' }, [formSpec.no_element_label])
+  }
   const nameToTitle: Record<string, string> = {}
   for (const element of elements) {
     nameToTitle[element.name] = element.title

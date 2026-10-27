@@ -31,6 +31,7 @@ from ._utils import (
     compute_validators,
     get_prefill_default,
     get_title_and_help,
+    localize,
 )
 from .validators import build_vue_validators
 
@@ -149,6 +150,7 @@ class MultipleChoiceVisitor(
                     autocompleter=autocompleter,
                     i18n=self._get_i18n(),
                     show_toggle_all=self.form_spec.show_toggle_all,
+                    no_element_label=localize(self.form_spec.no_element_label),
                 ),
                 parsed_value.fallback_value
                 if isinstance(parsed_value, InvalidValue)
@@ -163,6 +165,7 @@ class MultipleChoiceVisitor(
                 validators=build_vue_validators(compute_validators(self.form_spec)),
                 show_toggle_all=self.form_spec.show_toggle_all,
                 i18n=self._get_i18n(),
+                no_element_label=localize(self.form_spec.no_element_label),
             ),
             [] if isinstance(parsed_value, InvalidValue) else parsed_value,
         )

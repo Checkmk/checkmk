@@ -34,7 +34,8 @@ const spec: FormSpec.DualListChoice = {
     and_x_more: ''
   },
   validators: [],
-  show_toggle_all: false
+  show_toggle_all: false,
+  no_element_label: ''
 }
 
 describe('FormDualListChoice', () => {

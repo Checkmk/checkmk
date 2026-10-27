@@ -15,9 +15,10 @@ from cmk.gui.form_specs import (
     RawFrontendData,
     VisitorOptions,
 )
-from cmk.rulesets.internal.form_specs import MultipleChoiceExtended
-from cmk.rulesets.v1 import Title
+from cmk.rulesets.internal.form_specs import MultipleChoiceExtended, MultipleChoiceExtendedLayout
+from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import DefaultValue, MultipleChoice, MultipleChoiceElement
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 
 @pytest.fixture(scope="module", name="multiple_choice_spec")
@@ -171,3 +172,22 @@ def test_lazy_elements_are_resolved_on_every_visit() -> None:
     available.append("b")
 
     assert get_visitor(spec, options).to_disk(RawDiskData(["b"])) == ["b"]
+
+
+@pytest.mark.parametrize(
+    "layout", [MultipleChoiceExtendedLayout.checkbox_list, MultipleChoiceExtendedLayout.dual_list]
+)
+def test_no_element_label_is_sent_to_frontend(layout: MultipleChoiceExtendedLayout) -> None:
+    spec = MultipleChoiceExtended(
+        elements=[MultipleChoiceElement(name="foo", title=Title("foo"))],
+        layout=layout,
+        no_element_label=Label("Nothing selected"),
+    )
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
+
+    vue_spec, _vue_value = visitor.to_vue(RawDiskData([]))
+
+    assert isinstance(
+        vue_spec, shared_type_defs.CheckboxListChoice | shared_type_defs.DualListChoice
+    )
+    assert vue_spec.no_element_label == "Nothing selected"

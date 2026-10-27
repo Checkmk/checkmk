@@ -598,9 +598,12 @@
             },
             "i18n": {
               "$ref": "#/$defs/multiple_choice_i18n"
+            },
+            "no_element_label": {
+              "type": "string"
             }
           },
-          "required": ["elements", "show_toggle_all", "i18n"]
+          "required": ["elements", "show_toggle_all", "i18n", "no_element_label"]
         }
       ],
       "required": ["type"]
@@ -687,9 +690,12 @@
             },
             "i18n": {
               "$ref": "#/$defs/multiple_choice_i18n"
+            },
+            "no_element_label": {
+              "type": "string"
             }
           },
-          "required": ["type", "elements", "show_toggle_all", "i18n"]
+          "required": ["type", "elements", "show_toggle_all", "i18n", "no_element_label"]
         }
       ],
       "required": ["type"]

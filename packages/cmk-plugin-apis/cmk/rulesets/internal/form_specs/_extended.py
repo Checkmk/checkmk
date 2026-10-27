@@ -166,6 +166,7 @@ class MultipleChoiceExtended(FormSpec[Sequence[str]]):
     show_toggle_all: bool = False
     prefill: DefaultValue[Sequence[str]] = DefaultValue(())
     layout: MultipleChoiceExtendedLayout = MultipleChoiceExtendedLayout.auto
+    no_element_label: Label = Label("")
 
     def __post_init__(self) -> None:
         if isinstance(self.elements, Autocompleter) or callable(self.elements):

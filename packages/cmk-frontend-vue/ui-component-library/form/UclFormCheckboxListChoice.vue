@@ -43,7 +43,8 @@ const spec: CheckboxListChoice = {
     search_available_options: 'i18n search available options',
     autocompleter_loading: 'i18n autocompleter_loading',
     and_x_more: 'i18n and_x_more'
-  }
+  },
+  no_element_label: ''
 }
 
 const data = ref<Array<CheckboxListChoiceElement>>([

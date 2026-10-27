@@ -33,7 +33,8 @@ const spec: FormSpec.CheckboxListChoice = {
     search_selected_options: 'i18n search selected options',
     search_available_options: 'i18n search available options',
     and_x_more: 'i18n and_x_more'
-  }
+  },
+  no_element_label: ''
 }
 
 test('CmkFormCheckboxListChoice renders value', async () => {

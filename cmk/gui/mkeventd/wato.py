@@ -4223,6 +4223,7 @@ ConfigVariableEventConsole = ConfigVariable(
             ],
             title=Title("Listen for incoming messages via"),
             prefill=DefaultValue([]),
+            no_element_label=Label("Enabled, no listening ports defined"),
         ),
         title=Title("Event Console"),
         help_text=Help(

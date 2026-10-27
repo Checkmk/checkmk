@@ -27,6 +27,7 @@ const spec = ref<DualListChoice>({
     { name: 'Test_name_4', title: 'Test Name 4' }
   ] as MultipleChoiceElement[],
   show_toggle_all: true,
+  no_element_label: '',
 
   type: 'dual_list_choice',
   title: 'the Title',

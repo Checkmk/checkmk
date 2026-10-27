@@ -186,7 +186,7 @@ boolean download_hot_cache(Map args) {
     catch (Exception exc) {
         print("hot cache: Decompression failed, contact your local CI dealer and tell: ${exc}");
         // Clean-up any partial extraction - this might otherwise result in broken cache archives
-        // See https://wiki.lan.checkmk.net/spaces/DEV/pages/181605060/2026-01-07+Corrupt+hot+cache+breaks+CV
+        // See "2026-01-07 Corrupt hot cache breaks CV": https://checkmk-int.atlassian.net/wiki/x/b4VlD
         clean_caches()
         return true;
     }

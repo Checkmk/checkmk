@@ -124,7 +124,7 @@ Tests: fixture-based suites to feature- and scope-based classification
 :Owner: Moritz Kiemer
 :Old: top-level ``tests/`` suites grouped by the fixture they happen to use (``tests/integration``, ``tests/composition``, ``tests/gui_e2e``, ``tests/integration_redfish``, ...)
 :New: tests classified by *scope* (static analysis, package, integration, system level) and, within the system level, organized by *feature* rather than fixture
-:References: ``tests/system/README-test-suite-organization.md``; `Test classification and architecture <https://wiki.lan.checkmk.net/spaces/DEV/pages/209453301/Test+classification+and+architecture>`_
+:References: ``tests/system/README-test-suite-organization.md``; `Test classification and architecture <https://checkmk-int.atlassian.net/wiki/x/ro9lD>`_
 
 The historical suites are named after the machinery a test needs — ``composition`` is "everything that needs a remote site", ``gui_e2e`` is "everything that needs Playwright" — which scatters a single feature across several suites and lumps unrelated features together.
 The target layout classifies every test by scope and groups system level tests by the feature under test (``redfish``, ``otel``, ``piggyback``, ``agent bakery``, ...):

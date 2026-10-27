@@ -1,7 +1,7 @@
 # Work in progress!
 
 We're currently in the process of reorganizing the test suites.
-The full target architecture is described [here](https://wiki.lan.checkmk.net/spaces/DEV/pages/209453301/Test+classification+and+architecture).
+The full target architecture is described [here](https://checkmk-int.atlassian.net/wiki/x/ro9lD).
 
 # Desired test suite organization in a nutshell
 

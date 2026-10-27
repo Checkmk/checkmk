@@ -3,9 +3,9 @@
 Quick reference for common developer workflows. Bazel is the primary build
 system for unit tests, linting, formatting, and type checking. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for the full contribution guide and
-the [Introduction to Bazel](https:de//wiki.lan.checkmk.net/spaces/DEV/pages/131340234/Introduction+to+Bazel)
+the [Introduction to Bazel](https://checkmk-int.atlassian.net/wiki/x/6IRlD)
 wiki page for deeper background.
-See [How to run Bazel](https://wiki.lan.checkmk.net/spaces/DEV/pages/131344788/How+to+run+Bazel)
+See [How to run Bazel](https://checkmk-int.atlassian.net/wiki/x/7oRlD)
 for more in depth commands.
 
 ## Core subcommands

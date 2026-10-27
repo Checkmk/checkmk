@@ -219,7 +219,8 @@ def write_sarif_output(machine_path: str, violations: list[str]) -> None:
                             {
                                 "id": "python-extension",
                                 "shortDescription": {
-                                    "text": "See https://wiki.lan.checkmk.net/x/jStSCQ"
+                                    "text": "See https://checkmk-int.atlassian.net/wiki/x/p4hlD"
+                                    ' ("Python File Extension Warnings")'
                                 },
                             }
                         ],

@@ -6,7 +6,7 @@
 from pathlib import Path
 
 from cmk.bakery.v2 import OS, Plugin
-from cmk.base.plugins.bakery.winperf_if import bakery_plugin_winperf_if, get_winperf_if_files
+from cmk.plugins.windows.bakery.winperf_if import bakery_plugin_winperf_if, get_winperf_if_files
 
 
 def test_winperf_if_files_ps1() -> None:

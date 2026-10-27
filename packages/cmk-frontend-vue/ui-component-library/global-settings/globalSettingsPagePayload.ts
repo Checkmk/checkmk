@@ -1125,18 +1125,6 @@ export const globalSettingsPagePayload = {
               help: '',
               validators: [],
               i18n: {
-                add: 'Add >',
-                remove: '< Remove',
-                add_all: 'Add all >>',
-                remove_all: '<< Remove all',
-                available_options: 'Available options',
-                selected_options: 'Selected options',
-                selected: 'Selected',
-                no_elements_available: 'No elements available',
-                no_elements_selected: 'No elements selected',
-                autocompleter_loading: 'Loading',
-                search_available_options: 'Search available options',
-                search_selected_options: 'Search selected options',
                 and_x_more: 'and %(count)s more'
               },
               show_toggle_all: false,

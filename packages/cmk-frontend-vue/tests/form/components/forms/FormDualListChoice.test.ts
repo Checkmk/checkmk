@@ -19,18 +19,6 @@ const spec: FormSpec.DualListChoice = {
     { name: 'choice4', title: 'Choice 4' }
   ],
   i18n: {
-    add_all: '',
-    remove_all: '',
-    add: '',
-    remove: '',
-    available_options: '',
-    selected_options: '',
-    selected: '',
-    no_elements_available: '',
-    no_elements_selected: '',
-    autocompleter_loading: '',
-    search_selected_options: '',
-    search_available_options: '',
     and_x_more: ''
   },
   validators: [],

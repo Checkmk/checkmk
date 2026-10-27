@@ -34,18 +34,6 @@ const spec = ref<DualListChoice>({
   help: '',
   validators: [],
   i18n: {
-    add: '',
-    remove: '',
-    add_all: '',
-    remove_all: '',
-    available_options: '',
-    selected_options: '',
-    selected: '',
-    no_elements_available: '',
-    no_elements_selected: '',
-    autocompleter_loading: '',
-    search_available_options: '',
-    search_selected_options: '',
     and_x_more: ''
   } as DualListChoiceI18N
 })

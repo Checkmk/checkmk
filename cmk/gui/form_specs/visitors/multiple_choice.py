@@ -172,18 +172,6 @@ class MultipleChoiceVisitor(
 
     def _get_i18n(self) -> shared_type_defs.DualListChoiceI18n:
         return shared_type_defs.DualListChoiceI18n(
-            add_all=_("Add all >>"),
-            remove_all=_("<< Remove all"),
-            add=_("Add >"),
-            remove=_("< Remove"),
-            available_options=_("Available options"),
-            selected_options=_("Selected options"),
-            search_available_options=_("Search available options"),
-            search_selected_options=_("Search selected options"),
-            selected=_("Selected"),
-            no_elements_available=_("No elements available"),
-            no_elements_selected=_("No elements selected"),
-            autocompleter_loading=_("Loading"),
             and_x_more=_("and %(count)s more"),
         )
 

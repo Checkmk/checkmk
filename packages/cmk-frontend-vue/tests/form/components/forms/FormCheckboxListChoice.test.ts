@@ -20,18 +20,6 @@ const spec: FormSpec.CheckboxListChoice = {
   ],
   validators: [],
   i18n: {
-    add: 'i18n add',
-    remove: 'i18n remove',
-    add_all: 'i18n add_all',
-    remove_all: 'i18n remove_all',
-    available_options: 'i18n available_options',
-    selected_options: 'i18n selected_options',
-    selected: 'i18n selected',
-    no_elements_available: 'i18n no_elements_available',
-    no_elements_selected: 'i18n no_elements_selected',
-    autocompleter_loading: 'i18n autocompleter_loading',
-    search_selected_options: 'i18n search selected options',
-    search_available_options: 'i18n search available options',
     and_x_more: 'i18n and_x_more'
   },
   no_element_label: ''

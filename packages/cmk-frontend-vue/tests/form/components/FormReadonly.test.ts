@@ -418,18 +418,6 @@ const dualListChoiceFormSpec: FormSpec.DualListChoice = {
   help: 'fooHelp',
   show_toggle_all: true,
   i18n: {
-    add: 'add',
-    remove: 'remove',
-    add_all: 'add_all',
-    remove_all: 'remove_all',
-    available_options: 'available_options',
-    selected_options: 'selected_options',
-    selected: 'selected',
-    no_elements_available: 'no_elements_available',
-    no_elements_selected: 'no_elements_selected',
-    autocompleter_loading: 'autocompleter_loading',
-    search_available_options: 'search_available_options',
-    search_selected_options: 'search_selected_options',
     and_x_more: 'and %(count)s more'
   },
   no_element_label: 'no_element_label',

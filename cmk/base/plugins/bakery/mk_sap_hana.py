@@ -3,20 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.utils.password_store import extract_formspec_password, FormSpecPassword
-
-from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
+from cmk.bakery.v2 import BakeryPlugin, FileGenerator, OS, Plugin, PluginConfig, Secret
 
 
 class _UserAndPassword(BaseModel):
     user: str
-    password: FormSpecPassword
+    password: Secret
 
 
 _SingleCredentials = (
@@ -42,8 +40,7 @@ class _Config(BaseModel):
     runas: Literal["instance", "agent"] | None = None
 
 
-def get_mk_sap_hana_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Config.model_validate(conf)
+def get_mk_sap_hana_files(config: _Config) -> FileGenerator:
     match config.deployment:
         case ("do_not_deploy", _):
             return
@@ -86,7 +83,7 @@ def _user_and_pwd_lines(
 ) -> tuple[str, str]:
     return (
         f"USER{suffix}={credentials.user}",
-        f"PASSWORD{suffix}={extract_formspec_password(credentials.password)}",
+        f"PASSWORD{suffix}={credentials.password.revealed}",
     )
 
 
@@ -96,7 +93,7 @@ def _database_credential_fields(credentials: _SingleCredentials) -> tuple[str, s
         case ("user_password", user_and_password):
             return (
                 user_and_password.user,
-                extract_formspec_password(user_and_password.password),
+                user_and_password.password.revealed,
                 "",
             )
         case ("userstorekey", key):
@@ -112,7 +109,9 @@ def _get_sap_hana_databases(databases: Sequence[_Database]) -> str:
     return "DBS=({})".format(" ".join(entries))
 
 
-register.bakery_plugin(
+bakery_plugin_mk_sap_hana = BakeryPlugin(
     name="mk_sap_hana",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     files_function=get_mk_sap_hana_files,
 )

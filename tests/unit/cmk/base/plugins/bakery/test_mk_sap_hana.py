@@ -5,12 +5,12 @@
 
 from pathlib import Path
 
-from cmk.bakery.v1 import OS, Plugin, PluginConfig
-from cmk.base.plugins.bakery.mk_sap_hana import get_mk_sap_hana_files
+from cmk.bakery.v2 import OS, Plugin, PluginConfig, Secret
+from cmk.base.plugins.bakery.mk_sap_hana import bakery_plugin_mk_sap_hana, get_mk_sap_hana_files
 
 
-def _password(secret: str) -> tuple[str, str, tuple[str, str]]:
-    return ("cmk_postprocessed", "explicit_password", ("uuid-1", secret))
+def _password(secret: str) -> Secret:
+    return Secret(secret, "explicit_password", "uuid-1")
 
 
 def _expected(lines: list[str]) -> list[object]:
@@ -36,9 +36,9 @@ def test_mk_sap_hana_files_user_password() -> None:
         ),
         "credentials_sap_connect": ("none", None),
     }
-    assert sorted(get_mk_sap_hana_files(conf), key=repr) == _expected(
-        ["USER=peter", "PASSWORD=abc123"]
-    )
+    assert sorted(
+        get_mk_sap_hana_files(bakery_plugin_mk_sap_hana.parameter_parser(conf)), key=repr
+    ) == _expected(["USER=peter", "PASSWORD=abc123"])
 
 
 def test_mk_sap_hana_files_userstorekey() -> None:
@@ -46,7 +46,9 @@ def test_mk_sap_hana_files_userstorekey() -> None:
         "deployment": ("sync", ("userstorekey", "storekey")),
         "credentials_sap_connect": ("none", None),
     }
-    assert sorted(get_mk_sap_hana_files(conf), key=repr) == _expected(["USERSTOREKEY=storekey"])
+    assert sorted(
+        get_mk_sap_hana_files(bakery_plugin_mk_sap_hana.parameter_parser(conf)), key=repr
+    ) == _expected(["USERSTOREKEY=storekey"])
 
 
 def test_mk_sap_hana_files_userstorekey_with_runas_agent() -> None:
@@ -55,9 +57,9 @@ def test_mk_sap_hana_files_userstorekey_with_runas_agent() -> None:
         "credentials_sap_connect": ("none", None),
         "runas": "agent",
     }
-    assert sorted(get_mk_sap_hana_files(conf), key=repr) == _expected(
-        ["USERSTOREKEY=storekey", "RUNAS=agent"]
-    )
+    assert sorted(
+        get_mk_sap_hana_files(bakery_plugin_mk_sap_hana.parameter_parser(conf)), key=repr
+    ) == _expected(["USERSTOREKEY=storekey", "RUNAS=agent"])
 
 
 def test_mk_sap_hana_files_with_runas_instance() -> None:
@@ -69,9 +71,9 @@ def test_mk_sap_hana_files_with_runas_instance() -> None:
         "credentials_sap_connect": ("none", None),
         "runas": "instance",
     }
-    assert sorted(get_mk_sap_hana_files(conf), key=repr) == _expected(
-        ["USER=admin", "PASSWORD=secret", "RUNAS=instance"]
-    )
+    assert sorted(
+        get_mk_sap_hana_files(bakery_plugin_mk_sap_hana.parameter_parser(conf)), key=repr
+    ) == _expected(["USER=admin", "PASSWORD=secret", "RUNAS=instance"])
 
 
 def test_mk_sap_hana_files_databases() -> None:
@@ -104,7 +106,9 @@ def test_mk_sap_hana_files_databases() -> None:
             {"user": "peter", "password": _password("abc123")},
         ),
     }
-    assert sorted(get_mk_sap_hana_files(conf), key=repr) == _expected(
+    assert sorted(
+        get_mk_sap_hana_files(bakery_plugin_mk_sap_hana.parameter_parser(conf)), key=repr
+    ) == _expected(
         [
             "DBS=(sid1,inst1,db1,usr1,pw1, sid2,inst2,db2,,,storekey2)",
             "USER_CONNECT=peter",
@@ -114,4 +118,11 @@ def test_mk_sap_hana_files_databases() -> None:
 
 
 def test_mk_sap_hana_files_do_not_deploy() -> None:
-    assert list(get_mk_sap_hana_files({"deployment": ("do_not_deploy", None)})) == []
+    assert (
+        list(
+            get_mk_sap_hana_files(
+                bakery_plugin_mk_sap_hana.parameter_parser({"deployment": ("do_not_deploy", None)})
+            )
+        )
+        == []
+    )

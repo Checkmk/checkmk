@@ -436,9 +436,7 @@ class Table:
             table_opts["actions_visible"] = actions_visible
 
         if self.options["searchable"]:
-            search_term = request.get_str_input_mandatory("search", "")
-            # Search is always lower case -> case insensitive
-            search_term = search_term.lower()
+            search_term = table_search_term()
             if search_term:
                 request.set_var("search", search_term)
                 rows = _filter_rows(rows, search_term)
@@ -715,6 +713,14 @@ class Table:
 
             html.close_th()
         html.close_tr()
+
+
+def table_search_term() -> str:
+    """The term searchable tables show only the matching rows of, "" for none
+
+    It is lower case, as the search ignores the case. Unlike get_search_expression(), it keeps
+    blanks, so a search of blanks filters the rows, too."""
+    return request.get_str_input_mandatory("search", "").lower()
 
 
 def _filter_rows(rows: TableRows, search_term: str) -> TableRows:

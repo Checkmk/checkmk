@@ -13,7 +13,7 @@ from pytest import MonkeyPatch
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import LoggedInNobody
-from cmk.gui.table import table_element
+from cmk.gui.table import table_element, table_search_term
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.web.utils.html import HTML
 from tests.unit.cmk.gui.compare_html import compare_html
@@ -349,3 +349,24 @@ def test_a_search_which_is_no_regular_expression_finds_the_rows_containing_it() 
         written_text = "".join(output_funnel.drain())
 
     assert read_out_simple_table(written_text)[1:] == [["disk(s)full"]]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_search_term_is_the_search_in_lower_case_with_its_blanks() -> None:
+    request.set_var("search", " Disk ")
+
+    assert table_search_term() == " disk "
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_a_search_of_blanks_filters_the_rows() -> None:
+    request.set_var("search", " ")
+
+    with output_funnel.plugged():
+        with table_element(table_id="0", title="Messages", limit=100) as table:
+            for text in ["disk full", "cpu"]:
+                table.row()
+                table.cell("Text", text)
+        written_text = "".join(output_funnel.drain())
+
+    assert read_out_simple_table(written_text)[1:] == [["diskfull"]]

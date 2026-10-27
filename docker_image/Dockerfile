@@ -1,6 +1,13 @@
 # Specify the image to use as a base.
 # Make sure to adjust `DISTRO_CODENAME` if you change this.
 ARG IMAGE_CMK_BASE
+
+# Throwaway stage holding only the Checkmk package and the signing key. It is bind-mounted into
+# the install step below: its files never end up in an image layer, and that step's build cache
+# depends on these files only, not on everything else in the build context.
+FROM scratch AS package-source
+COPY *.deb Check_MK-pubkey.gpg /
+
 # hadolint ignore=DL3006
 FROM ${IMAGE_CMK_BASE}
 LABEL maintainer="feedback@checkmk.com"
@@ -80,9 +87,9 @@ ARG CMK_EDITION
 ARG DISTRO_CODENAME="jammy"
 
 # Now install the Checkmk version specific things. The Checkmk package and the signing key
-# are read from the bind-mounted build context, so they never end up in an image layer.
+# are read from the bind-mounted package-source stage, so they never end up in an image layer.
 # hadolint ignore=DL3003,DL3008,DL4006
-RUN --mount=type=bind,target=/build-context \
+RUN --mount=type=bind,from=package-source,target=/build-context \
     set -e \
     && mkdir -p /usr/share/man/man8 \
     && echo "exit 101" > /usr/sbin/policy-rc.d \

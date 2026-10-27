@@ -52,14 +52,17 @@ const gadgetTypeOptions = computed(() => ({
 
 const isGadget = computed(() => form.value.display.mode === 'gadget')
 
-const sizePlaceholder = computed(() => {
-  if (isGadget.value) {
-    return untranslated(String(GADGET_DEFAULT_SIZE))
-  }
-  return props.mapIconSize !== null && props.mapIconSize !== undefined
-    ? untranslated(String(props.mapIconSize))
-    : _t('map default')
-})
+const inheritedSize = computed(() => (isGadget.value ? GADGET_DEFAULT_SIZE : props.mapIconSize))
+const sizePlaceholder = computed(() =>
+  inheritedSize.value !== null && inheritedSize.value !== undefined
+    ? untranslated(String(inheritedSize.value))
+    : untranslated('')
+)
+// An empty size inherits. Said in words, because a bare grey number beside
+// other fields' white values reads as a disabled field.
+const sizeInherited = computed(
+  () => form.value.display.image_size === undefined || String(form.value.display.image_size) === ''
+)
 </script>
 
 <template>
@@ -81,8 +84,12 @@ const sizePlaceholder = computed(() => {
         type="number"
         min="1"
         max="512"
+        unit="px"
         :placeholder="sizePlaceholder"
       />
+      <span v-if="sizeInherited" class="maps-appearance-section__note">
+        {{ isGadget ? _t('Gadget default') : _t('Map default') }}
+      </span>
     </PropertyRow>
 
     <template v-if="isGadget">
@@ -112,3 +119,9 @@ const sizePlaceholder = computed(() => {
     </PropertyRow>
   </PropertySection>
 </template>
+
+<style scoped>
+.maps-appearance-section__note {
+  color: var(--font-color-dimmed);
+}
+</style>

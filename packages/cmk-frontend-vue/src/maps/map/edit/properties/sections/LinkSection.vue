@@ -86,13 +86,22 @@ const offersAutoUrl = computed(() => !!props.autoUrl && !form.value.url)
   min-width: 0;
 }
 
+/* A hint that can be clicked, so none of the theme's button chrome. */
 .maps-link-section__adopt {
+  height: auto;
+  margin: 0;
+  padding: 0;
   font-size: var(--font-size-small);
+  font-weight: var(--font-weight-default);
+  letter-spacing: normal;
   color: var(--font-color-dimmed);
   text-align: left;
+  background: none;
+  border: none;
 }
 
 .maps-link-section__adopt:hover {
   color: var(--font-color);
+  text-decoration: underline;
 }
 </style>

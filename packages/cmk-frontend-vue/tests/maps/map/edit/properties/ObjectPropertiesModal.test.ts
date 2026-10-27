@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor, within } from '@testing-library/vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
@@ -184,15 +184,40 @@ describe('ObjectPropertiesModal – conditional fields by object type', () => {
     // Graphs render their own embed; the icon/appearance section is hidden.
     expect(screen.queryByText('View type')).not.toBeInTheDocument()
   })
+
+  it('offers an image only the template placeholders it can fill', () => {
+    renderModal(obj({ type: 'image', hover_template: '{{name}}' }))
+
+    expect(screen.getByText('Available: {{name}}')).toBeInTheDocument()
+  })
 })
 
 describe('ObjectPropertiesModal – field names', () => {
   it('names each field by its row', () => {
-    renderModal(obj({ type: 'host', host_name: 'web01' }))
+    renderModal(
+      obj({
+        type: 'host',
+        host_name: 'web01',
+        label: { show: true, x: 0, y: 0, size: 11, color: '#fff', background: 'transparent' }
+      })
+    )
 
-    expect(screen.getByLabelText('X')).toHaveValue(40)
-    expect(screen.getByLabelText('Label text')).toBeInTheDocument()
+    expect(within(screen.getByRole('group', { name: 'Position' })).getByLabelText('X')).toHaveValue(
+      40
+    )
+    expect(within(screen.getByRole('group', { name: 'Offset' })).getByLabelText('X')).toHaveValue(0)
+    expect(screen.getByLabelText('Text')).toBeInTheDocument()
+    expect(screen.getByLabelText('Font size')).toBeInTheDocument()
     expect(screen.getByRole('checkbox', { name: 'Show label' })).toBeInTheDocument()
+  })
+
+  it('shows the label settings only while the label is shown', async () => {
+    renderModal(obj({ type: 'host', host_name: 'web01' }))
+    expect(screen.queryByLabelText('Font size')).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Show label' }))
+
+    expect(screen.getByLabelText('Font size')).toBeInTheDocument()
   })
 })
 

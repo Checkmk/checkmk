@@ -15,6 +15,7 @@ the object's type — the sections decide that for themselves.
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkBadge from 'cmk-ui-library/components/CmkBadge.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
+import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -55,7 +56,7 @@ import type { MapElement, MapViewType, ObjectState } from '@/maps/types/api'
 import type { AnchorRect } from '@/maps/utils/anchorRect'
 import { objectDeleteTitle, objectTypeLabel } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkViewUrl } from '@/maps/utils/mapNavigation'
-import { getMapElementName } from '@/maps/utils/naming'
+import { VISUAL_ONLY_TYPES, getMapElementName } from '@/maps/utils/naming'
 
 const props = defineProps<{
   object: MapElement
@@ -219,6 +220,12 @@ const autoUrl = computed((): string | null => {
 
 const objectType = computed(() => props.object.type)
 const isLine = computed(() => objectType.value === 'line')
+// A line left without a host stays a plain line, as updatesFromForm stores it.
+const stateful = computed(
+  () =>
+    !VISUAL_ONLY_TYPES.includes(boundType.value) &&
+    !(isLine.value && boundType.value === 'host' && !form.value.host_name)
+)
 const showsIdentity = computed(() => !['textbox', 'graph', 'image'].includes(objectType.value))
 const showsAppearance = computed(() => !['line', 'textbox', 'graph'].includes(objectType.value))
 const showsFilter = computed(() => leavesOutMembers(boundType.value))
@@ -323,13 +330,18 @@ function onConfirmDelete(): void {
         />
         <LinkSection v-model:form="form" :auto-url="autoUrl" />
         <FilterSection v-if="showsFilter" v-model:form="form" :is-host="boundType === 'host'" />
-        <TemplatesSection v-model:form="form" />
+        <TemplatesSection v-model:form="form" :stateful="stateful" />
       </CmkScrollContainer>
 
       <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
 
       <div class="maps-object-properties-modal__footer">
-        <CmkButton variant="danger" @click="confirmDelete = true">{{ _t('Delete') }}</CmkButton>
+        <!-- Quiet like the delete actions elsewhere in Checkmk; the
+             confirmation is where it turns red. -->
+        <CmkButton @click="confirmDelete = true">
+          <CmkIcon name="delete" variant="inline" size="small" />
+          {{ _t('Delete') }}
+        </CmkButton>
         <MapsConfirmDialog
           :open="confirmDelete"
           variant="error"

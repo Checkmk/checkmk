@@ -15,6 +15,7 @@ import useId from 'cmk-ui-library/lib/useId'
 
 defineProps<{
   label: TranslatedString
+  help?: TranslatedString | undefined
   /** Top-aligns the label for a control that is taller than one line. */
   tall?: boolean
   labelsControl?: boolean
@@ -30,9 +31,11 @@ const id = useId()
 
 <template>
   <div class="maps-property-row" :class="{ 'maps-property-row--tall': tall }">
-    <CmkLabel v-bind="labelsControl ? { for: id } : {}" class="maps-property-row__label">
-      {{ label }}
-    </CmkLabel>
+    <!-- The width sits on a wrapper: CmkLabel passes its class on to the inline
+         <label> inside it, where a width does nothing. -->
+    <div class="maps-property-row__label">
+      <CmkLabel v-bind="labelsControl ? { for: id } : {}" :help="help">{{ label }}</CmkLabel>
+    </div>
     <!-- A control the label cannot point at is named by the group around it. -->
     <div
       class="maps-property-row__control"
@@ -56,7 +59,7 @@ const id = useId()
 
 .maps-property-row__label {
   flex-shrink: 0;
-  width: 96px;
+  width: 140px;
   color: var(--font-color-dimmed);
 }
 
@@ -66,5 +69,11 @@ const id = useId()
   min-width: 0;
   align-items: center;
   gap: var(--dimension-4);
+}
+
+/* A control alone in its row takes the row, so a ``fill`` input fills it. */
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+.maps-property-row__control > :slotted(:only-child) {
+  flex: 1;
 }
 </style>

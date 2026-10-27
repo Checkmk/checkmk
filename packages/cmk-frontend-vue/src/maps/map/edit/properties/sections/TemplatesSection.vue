@@ -18,16 +18,25 @@ import type { ObjectForm } from '@/maps/map/edit/properties/objectForm'
 
 const form = defineModel<ObjectForm>('form', { required: true })
 
+const props = defineProps<{
+  /** Without a monitoring state, only the object's own name fills in. */
+  stateful: boolean
+}>()
+
 const { _t } = usei18n()
 
 // The placeholders are literal mustaches: built here so the template below
 // interpolates the sentence rather than the placeholders themselves.
 const placeholderHint = computed(() =>
-  _t(
-    'Available: {{name}}, {{state}}, {{output}}, {{host}}, {{service}}, {{address}}, {{state_type}}, {{attempts}}, {{last_check}}, {{state_duration}}, {{acknowledged}}, {{in_downtime}}, {{stale}}'
-  )
+  props.stateful
+    ? _t(
+        'Available: {{name}}, {{state}}, {{output}}, {{host}}, {{service}}, {{address}}, {{state_type}}, {{attempts}}, {{last_check}}, {{state_duration}}, {{acknowledged}}, {{in_downtime}}, {{stale}}'
+      )
+    : _t('Available: {{name}}')
 )
-const exampleTemplate = computed(() => _t('e.g. {{name}} is {{state}}'))
+const exampleTemplate = computed(() =>
+  props.stateful ? _t('e.g. {{name}} is {{state}}') : _t('e.g. {{name}}')
+)
 </script>
 
 <template>

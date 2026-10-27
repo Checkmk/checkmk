@@ -159,6 +159,7 @@ function select(name: string) {
 
 .maps-image-picker__selected-name {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   font-family: monospace;
   font-size: var(--font-size-normal);

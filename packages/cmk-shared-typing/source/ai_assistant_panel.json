@@ -4,9 +4,10 @@
   "title": "ai_assistant_panel_config",
   "properties": {
     "owner": { "type": "string" },
-    "setup": { "$ref": "#/$defs/ai_assistant_setup" }
+    "setup": { "$ref": "#/$defs/ai_assistant_setup" },
+    "model": { "type": ["string", "null"] }
   },
-  "required": ["owner", "setup"],
+  "required": ["owner", "setup", "model"],
   "$defs": {
     "ai_assistant_setup": {
       "type": "object",

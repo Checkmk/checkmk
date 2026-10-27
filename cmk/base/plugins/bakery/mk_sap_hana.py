@@ -31,9 +31,11 @@ class _Database(BaseModel):
     credentials: _SingleCredentials
 
 
+_Credentials = _SingleCredentials | tuple[Literal["databases"], Sequence[_Database]]
+
+
 class _Config(BaseModel):
-    deployment: tuple[Literal["do_not_deploy", "sync"], None]
-    credentials: _SingleCredentials | tuple[Literal["databases"], Sequence[_Database]] | None = None
+    deployment: tuple[Literal["do_not_deploy"], None] | tuple[Literal["sync"], _Credentials]
     credentials_sap_connect: (
         tuple[Literal["none"], None] | tuple[Literal["credentials"], _UserAndPassword]
     ) = ("none", None)
@@ -42,32 +44,30 @@ class _Config(BaseModel):
 
 def get_mk_sap_hana_files(conf: Mapping[str, object]) -> FileGenerator:
     config = _Config.model_validate(conf)
-    if config.deployment[0] == "do_not_deploy":
-        return
+    match config.deployment:
+        case ("do_not_deploy", _):
+            return
+        case ("sync", credentials):
+            yield Plugin(
+                base_os=OS.LINUX,
+                source=Path("mk_sap_hana"),
+            )
+            yield PluginConfig(
+                base_os=OS.LINUX,
+                lines=list(_get_mk_sap_hana_config(credentials, config)),
+                target=Path("sap_hana.cfg"),
+                include_header=True,
+            )
 
-    yield Plugin(
-        base_os=OS.LINUX,
-        source=Path("mk_sap_hana"),
-    )
 
-    yield PluginConfig(
-        base_os=OS.LINUX,
-        lines=list(_get_mk_sap_hana_config(config)),
-        target=Path("sap_hana.cfg"),
-        include_header=True,
-    )
-
-
-def _get_mk_sap_hana_config(config: _Config) -> Iterator[str]:
-    match config.credentials:
+def _get_mk_sap_hana_config(credentials: _Credentials, config: _Config) -> Iterator[str]:
+    match credentials:
         case ("databases", databases):
             yield _get_sap_hana_databases(databases)
         case ("userstorekey", key):
             yield f"USERSTOREKEY={key}"
-        case ("user_password", credentials):
-            yield from _user_and_pwd_lines(credentials)
-        case None:
-            pass
+        case ("user_password", user_and_password):
+            yield from _user_and_pwd_lines(user_and_password)
 
     match config.credentials_sap_connect:
         case ("credentials", csc):

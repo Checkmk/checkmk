@@ -94,12 +94,12 @@ def migrate(value: object) -> Mapping[str, object]:
     if "deployment" in value:
         return value
     if "credentials" not in value:
-        raise ValueError(f"Unexpected value: {value!r}")
+        # The plug-in cannot be deployed without credentials.
+        return {"deployment": ("do_not_deploy", None)}
     # Old rule ("first matching rule wins"): make all parameters explicit so that merging with
     # other rules does not change the outcome. The plug-in runs as the instance user by default.
     return {
-        "deployment": ("sync", None),
-        "credentials": migrate_credentials(value["credentials"]),
+        "deployment": ("sync", migrate_credentials(value["credentials"])),
         "credentials_sap_connect": _migrate_sap_connect(value.get("credentials_sap_connect")),
         "runas": value.get("runas", "instance"),
     }
@@ -189,6 +189,24 @@ def _database_form() -> Dictionary:
     )
 
 
+def _credentials_form() -> CascadingSingleChoice:
+    return CascadingSingleChoice(
+        title=Title("Credentials"),
+        elements=(
+            *_single_credentials_elements(),
+            CascadingSingleChoiceElement(
+                name="databases",
+                title=Title("Credentials for selected databases"),
+                parameter_form=List(
+                    title=Title("Databases"),
+                    element_template=_database_form(),
+                ),
+            ),
+        ),
+        prefill=DefaultValue("user_password"),
+    )
+
+
 def _form_spec() -> Dictionary:
     return Dictionary(
         help_text=Help(
@@ -211,7 +229,7 @@ def _form_spec() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="sync",
                             title=Title("Deploy the plug-in and run it synchronously"),
-                            parameter_form=FixedValue(value=None),
+                            parameter_form=_credentials_form(),
                         ),
                         CascadingSingleChoiceElement(
                             name="do_not_deploy",
@@ -220,24 +238,6 @@ def _form_spec() -> Dictionary:
                         ),
                     ),
                     prefill=DefaultValue("sync"),
-                ),
-            ),
-            "credentials": DictElement(
-                required=True,
-                parameter_form=CascadingSingleChoice(
-                    title=Title("Credentials"),
-                    elements=(
-                        *_single_credentials_elements(),
-                        CascadingSingleChoiceElement(
-                            name="databases",
-                            title=Title("Credentials for selected databases"),
-                            parameter_form=List(
-                                title=Title("Databases"),
-                                element_template=_database_form(),
-                            ),
-                        ),
-                    ),
-                    prefill=DefaultValue("user_password"),
                 ),
             ),
             "credentials_sap_connect": DictElement(

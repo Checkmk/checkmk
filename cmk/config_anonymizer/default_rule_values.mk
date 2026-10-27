@@ -717,7 +717,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_sap_hana', [])
 
 agent_config['mk_sap_hana'] = [
-{'id': '6c5f5be1-afa0-4543-8c74-734da02b32e6', 'value': {'deployment': ('sync', None), 'credentials': ('user_password', {'user': 'SYSTEM', 'password': ('cmk_postprocessed', 'explicit_password', ('6c5f5be1-afa0-4543-8c74-734da02b32e6', 'example_password'))}), 'credentials_sap_connect': ('none', None), 'runas': 'instance'}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '6c5f5be1-afa0-4543-8c74-734da02b32e6', 'value': {'deployment': ('sync', ('user_password', {'user': 'SYSTEM', 'password': ('cmk_postprocessed', 'explicit_password', ('6c5f5be1-afa0-4543-8c74-734da02b32e6', 'example_password'))})), 'credentials_sap_connect': ('none', None), 'runas': 'instance'}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_sap_hana']
 
 

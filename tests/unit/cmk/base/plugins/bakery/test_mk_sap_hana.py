@@ -30,8 +30,10 @@ def _expected(lines: list[str]) -> list[object]:
 
 def test_mk_sap_hana_files_user_password() -> None:
     conf = {
-        "deployment": ("sync", None),
-        "credentials": ("user_password", {"user": "peter", "password": _password("abc123")}),
+        "deployment": (
+            "sync",
+            ("user_password", {"user": "peter", "password": _password("abc123")}),
+        ),
         "credentials_sap_connect": ("none", None),
     }
     assert sorted(get_mk_sap_hana_files(conf), key=repr) == _expected(
@@ -41,8 +43,7 @@ def test_mk_sap_hana_files_user_password() -> None:
 
 def test_mk_sap_hana_files_userstorekey() -> None:
     conf = {
-        "deployment": ("sync", None),
-        "credentials": ("userstorekey", "storekey"),
+        "deployment": ("sync", ("userstorekey", "storekey")),
         "credentials_sap_connect": ("none", None),
     }
     assert sorted(get_mk_sap_hana_files(conf), key=repr) == _expected(["USERSTOREKEY=storekey"])
@@ -50,8 +51,7 @@ def test_mk_sap_hana_files_userstorekey() -> None:
 
 def test_mk_sap_hana_files_userstorekey_with_runas_agent() -> None:
     conf = {
-        "deployment": ("sync", None),
-        "credentials": ("userstorekey", "storekey"),
+        "deployment": ("sync", ("userstorekey", "storekey")),
         "credentials_sap_connect": ("none", None),
         "runas": "agent",
     }
@@ -62,8 +62,10 @@ def test_mk_sap_hana_files_userstorekey_with_runas_agent() -> None:
 
 def test_mk_sap_hana_files_with_runas_instance() -> None:
     conf = {
-        "deployment": ("sync", None),
-        "credentials": ("user_password", {"user": "admin", "password": _password("secret")}),
+        "deployment": (
+            "sync",
+            ("user_password", {"user": "admin", "password": _password("secret")}),
+        ),
         "credentials_sap_connect": ("none", None),
         "runas": "instance",
     }
@@ -74,26 +76,28 @@ def test_mk_sap_hana_files_with_runas_instance() -> None:
 
 def test_mk_sap_hana_files_databases() -> None:
     conf = {
-        "deployment": ("sync", None),
-        "credentials": (
-            "databases",
-            [
-                {
-                    "sid": "sid1",
-                    "instance": "inst1",
-                    "database": "db1",
-                    "credentials": (
-                        "user_password",
-                        {"user": "usr1", "password": _password("pw1")},
-                    ),
-                },
-                {
-                    "sid": "sid2",
-                    "instance": "inst2",
-                    "database": "db2",
-                    "credentials": ("userstorekey", "storekey2"),
-                },
-            ],
+        "deployment": (
+            "sync",
+            (
+                "databases",
+                [
+                    {
+                        "sid": "sid1",
+                        "instance": "inst1",
+                        "database": "db1",
+                        "credentials": (
+                            "user_password",
+                            {"user": "usr1", "password": _password("pw1")},
+                        ),
+                    },
+                    {
+                        "sid": "sid2",
+                        "instance": "inst2",
+                        "database": "db2",
+                        "credentials": ("userstorekey", "storekey2"),
+                    },
+                ],
+            ),
         ),
         "credentials_sap_connect": (
             "credentials",

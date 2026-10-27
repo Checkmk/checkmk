@@ -9,11 +9,10 @@ from collections.abc import Callable, Iterator, Sequence
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.utils import dateutils
 from cmk.utils.servicename import ServiceName
-from cmk.web.utils.urls import makeuri, urlencode_vars
+from cmk.web.utils.urls import HTTPVariable, urlencode_vars
 
 from .columns import availability_columns
 from .computation import cell_active, check_av_levels, history_url_of
@@ -41,6 +40,8 @@ from .type_defs import (
     AVTimeStamp,
 )
 
+MakeUri = Callable[[Sequence[HTTPVariable]], str]
+
 
 # When grouping is enabled, this function is called once for each group
 # TODO: range_title should be superfluous here
@@ -63,6 +64,7 @@ def layout_availability_table(
     group_title: str | None,
     availability_table: AVData,
     avoptions: AVOptions,
+    make_uri: MakeUri,
 ) -> AVLayoutTable:
     time_range: AVTimeRange = avoptions["range"][0]
     from_time, until_time = time_range
@@ -99,7 +101,7 @@ def layout_availability_table(
 
         # Iconbuttons with URLs
         if "omit_buttons" not in labelling:
-            urls = make_object_urls(host, service, site, time_range, what)
+            urls = make_object_urls(host, service, site, time_range, what, make_uri)
         else:
             urls = []
 
@@ -250,11 +252,11 @@ def make_object_urls(
     site: SiteId,
     time_range: AVTimeRange,
     what: AVObjectType,
+    make_uri: MakeUri,
 ) -> list[AVIconSpec]:
     urls: list[AVIconSpec] = []
     if what != "bi":
-        timeline_url = makeuri(
-            request,
+        timeline_url = make_uri(
             [
                 ("av_mode", "timeline"),
                 ("av_site", site),
@@ -263,8 +265,7 @@ def make_object_urls(
             ],
         )
     else:
-        timeline_url = makeuri(
-            request,
+        timeline_url = make_uri(
             [
                 ("av_mode", "timeline"),
                 ("av_aggr_group", host),

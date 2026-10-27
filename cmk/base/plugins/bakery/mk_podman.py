@@ -2,13 +2,13 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
+from cmk.bakery.v2 import BakeryPlugin, FileGenerator, OS, Plugin, PluginConfig
 
 PodmanSocketDetectionMethod = (
     tuple[Literal["auto"], None]
@@ -32,9 +32,8 @@ class PodmanConfig(BaseModel, frozen=True):
 
 
 def get_mk_podman_files(
-    conf: Mapping[str, object],
+    confm: PodmanConfig,
 ) -> FileGenerator:
-    confm = PodmanConfig.model_validate(conf)
     if not confm.deploy:
         return
 
@@ -65,7 +64,9 @@ def _get_mk_podman_config(conf: PodmanConfig) -> Iterable[str]:
     yield f"keep_non_zero_exit_containers: {'true' if conf.keep_non_zero_exit_containers else 'false'}"
 
 
-register.bakery_plugin(
+bakery_plugin_mk_podman = BakeryPlugin(
     name="mk_podman",
+    parameter_parser=PodmanConfig.model_validate,
+    default_parameters=None,
     files_function=get_mk_podman_files,
 )

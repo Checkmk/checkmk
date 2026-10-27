@@ -5,8 +5,8 @@
 
 from pathlib import Path
 
-from cmk.bakery.v1 import OS, Plugin, PluginConfig
-from cmk.base.plugins.bakery.mk_podman import get_mk_podman_files
+from cmk.bakery.v2 import OS, Plugin, PluginConfig
+from cmk.base.plugins.bakery.mk_podman import bakery_plugin_mk_podman, get_mk_podman_files
 
 
 def test_mk_podman_files_auto_detection() -> None:
@@ -15,7 +15,7 @@ def test_mk_podman_files_auto_detection() -> None:
         "connection_method": ("api", ("auto", None)),
         "piggyback_name_method": "nodename_name",
     }
-    result = sorted(get_mk_podman_files(conf), key=repr)
+    result = sorted(get_mk_podman_files(bakery_plugin_mk_podman.parameter_parser(conf)), key=repr)
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("mk_podman.py")),
@@ -43,7 +43,7 @@ def test_mk_podman_files_manual_sockets() -> None:
         "connection_method": ("api", ("manual", ["/run/podman/podman.sock", "/tmp/podman.sock"])),
         "piggyback_name_method": "name",
     }
-    result = sorted(get_mk_podman_files(conf), key=repr)
+    result = sorted(get_mk_podman_files(bakery_plugin_mk_podman.parameter_parser(conf)), key=repr)
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("mk_podman.py")),
@@ -71,7 +71,7 @@ def test_mk_podman_files_not_deployed() -> None:
         "deploy": False,
         "connection_method": ("api", ("auto", None)),
     }
-    result = list(get_mk_podman_files(conf))
+    result = list(get_mk_podman_files(bakery_plugin_mk_podman.parameter_parser(conf)))
     assert result == []
 
 
@@ -81,7 +81,7 @@ def test_mk_podman_files_only_root_socket() -> None:
         "connection_method": ("api", ("only_root_socket", None)),
         "piggyback_name_method": "name_id",
     }
-    result = sorted(get_mk_podman_files(conf), key=repr)
+    result = sorted(get_mk_podman_files(bakery_plugin_mk_podman.parameter_parser(conf)), key=repr)
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("mk_podman.py")),
@@ -108,7 +108,7 @@ def test_mk_podman_files_only_user_sockets() -> None:
         "deploy": True,
         "connection_method": ("api", ("only_user_sockets", None)),
     }
-    result = sorted(get_mk_podman_files(conf), key=repr)
+    result = sorted(get_mk_podman_files(bakery_plugin_mk_podman.parameter_parser(conf)), key=repr)
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("mk_podman.py")),
@@ -137,7 +137,7 @@ def test_mk_podman_files_keep_non_zero_exit_containers_false() -> None:
         "piggyback_name_method": "nodename_name",
         "keep_non_zero_exit_containers": False,
     }
-    result = sorted(get_mk_podman_files(conf), key=repr)
+    result = sorted(get_mk_podman_files(bakery_plugin_mk_podman.parameter_parser(conf)), key=repr)
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("mk_podman.py")),
@@ -165,7 +165,7 @@ def test_mk_podman_files_cli_connection_method() -> None:
         "connection_method": ("cli", None),
         "piggyback_name_method": "nodename_name",
     }
-    result = sorted(get_mk_podman_files(conf), key=repr)
+    result = sorted(get_mk_podman_files(bakery_plugin_mk_podman.parameter_parser(conf)), key=repr)
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("mk_podman.py")),

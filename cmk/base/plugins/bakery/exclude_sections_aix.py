@@ -3,20 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from pathlib import Path
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import FileGenerator, OS, PluginConfig, register
+from cmk.bakery.v2 import BakeryPlugin, FileGenerator, OS, PluginConfig
 
 
 class _Config(BaseModel):
     sections_aix: list[str] = []
 
 
-def get_agent_exclude_sections_files_aix(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Config.model_validate(conf)
+def get_agent_exclude_sections_files_aix(config: _Config) -> FileGenerator:
     if not config.sections_aix:
         return
     yield PluginConfig(
@@ -33,7 +32,9 @@ def get_agent_exclude_section_lines_aix(excluded_sections_list_aix: list[str]) -
         yield exclude_name % section_name.upper()
 
 
-register.bakery_plugin(
+bakery_plugin_exclude_sections_aix = BakeryPlugin(
     name="exclude_sections_aix",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     files_function=get_agent_exclude_sections_files_aix,
 )

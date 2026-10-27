@@ -5,8 +5,9 @@
 
 from pathlib import Path
 
-from cmk.bakery.v1 import OS, PluginConfig
+from cmk.bakery.v2 import OS, PluginConfig
 from cmk.base.plugins.bakery.exclude_sections_aix import (
+    bakery_plugin_exclude_sections_aix,
     get_agent_exclude_section_lines_aix,
     get_agent_exclude_sections_files_aix,
 )
@@ -14,7 +15,11 @@ from cmk.base.plugins.bakery.exclude_sections_aix import (
 
 def test_exclude_sections_files_aix_with_sections() -> None:
     conf = {"sections_aix": ["cpu", "mem", "df"]}
-    result = list(get_agent_exclude_sections_files_aix(conf))
+    result = list(
+        get_agent_exclude_sections_files_aix(
+            bakery_plugin_exclude_sections_aix.parameter_parser(conf)
+        )
+    )
     assert len(result) == 1
     plugin_config = result[0]
     assert isinstance(plugin_config, PluginConfig)
@@ -29,7 +34,11 @@ def test_exclude_sections_files_aix_with_sections() -> None:
 
 
 def test_exclude_sections_files_aix_no_sections() -> None:
-    result = list(get_agent_exclude_sections_files_aix({}))
+    result = list(
+        get_agent_exclude_sections_files_aix(
+            bakery_plugin_exclude_sections_aix.parameter_parser({})
+        )
+    )
     assert result == []
 
 

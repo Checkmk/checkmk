@@ -7,12 +7,19 @@ from typing import Literal
 
 import pytest
 
-from cmk.bakery.v1 import WindowsGlobalConfigEntry
-from cmk.base.plugins.bakery.win_script_async import get_win_script_async_windows_config
+from cmk.bakery.v2 import WindowsGlobalConfigEntry
+from cmk.base.plugins.bakery.win_script_async import (
+    bakery_plugin_win_script_async,
+    get_win_script_async_windows_config,
+)
 
 
 @pytest.mark.parametrize("mode", ["parallel", "sequential"])
 def test_win_script_async_windows_config(mode: Literal["sequential", "parallel"]) -> None:
-    assert list(get_win_script_async_windows_config({"mode": mode})) == [
+    assert list(
+        get_win_script_async_windows_config(
+            bakery_plugin_win_script_async.parameter_parser({"mode": mode})
+        )
+    ) == [
         WindowsGlobalConfigEntry(name="async_script_execution", content=mode),
     ]

@@ -3,24 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
 from typing import Literal
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import register, WindowsConfigGenerator, WindowsGlobalConfigEntry
+from cmk.bakery.v2 import BakeryPlugin, WindowsConfigGenerator, WindowsGlobalConfigEntry
 
 
 class _Config(BaseModel):
     mode: Literal["sequential", "parallel"]
 
 
-def get_win_script_async_windows_config(conf: Mapping[str, object]) -> WindowsConfigGenerator:
-    config = _Config.model_validate(conf)
+def get_win_script_async_windows_config(config: _Config) -> WindowsConfigGenerator:
     yield WindowsGlobalConfigEntry(name="async_script_execution", content=config.mode)
 
 
-register.bakery_plugin(
+bakery_plugin_win_script_async = BakeryPlugin(
     name="win_script_async",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     windows_config_function=get_win_script_async_windows_config,
 )

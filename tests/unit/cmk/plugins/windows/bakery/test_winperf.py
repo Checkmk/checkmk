@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.bakery.v2 import WindowsConfigEntry
-from cmk.base.plugins.bakery.winperf import bakery_plugin_winperf, get_winperf_windows_config
+from cmk.plugins.windows.bakery.winperf import bakery_plugin_winperf, get_winperf_windows_config
 
 
 def test_winperf_windows_config_with_counters() -> None:

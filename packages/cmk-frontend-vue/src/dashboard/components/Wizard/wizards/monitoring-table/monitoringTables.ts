@@ -25,7 +25,8 @@ export const OFFERED_TABLES: readonly MonitoringTableName[] = ['hosts']
 
 export function monitoringTableViews(): Record<MonitoringTableName, MonitoringTableView> {
   return {
-    hosts: { title: _t('All hosts'), infos: ['host'] }
+    hosts: { title: _t('All hosts'), infos: ['host'] },
+    services: { title: _t('All services'), infos: ['host', 'service'] }
   }
 }
 

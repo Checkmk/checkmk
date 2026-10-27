@@ -65,6 +65,7 @@ py_library(
         "//cmk/gui/graphing",
         "//cmk/gui/graphing:openapi",
         "//cmk/gui/monitor/hosts",
+        "//cmk/gui/monitor/services",
         "//cmk/gui/monitor/table_widget",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/framework:core",

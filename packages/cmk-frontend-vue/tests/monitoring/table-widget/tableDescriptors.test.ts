@@ -6,7 +6,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { columnId } from '@/monitoring/shared/tableState/schema'
-import { HostsTableDescriptor } from '@/monitoring/table-widget/tableDescriptors'
+import {
+  HostsTableDescriptor,
+  ServicesTableDescriptor
+} from '@/monitoring/table-widget/tableDescriptors'
 
 const HOST_TABLE_COLUMNS = [
   'state',
@@ -68,5 +71,62 @@ describe('HostsTableDescriptor', () => {
       .map(columnId)
 
     expect(sortable.sort()).toEqual([...SORTABLE_COLUMNS].sort())
+  })
+})
+
+const SERVICE_TABLE_COLUMNS = [
+  'state',
+  'modes',
+  'host_name',
+  'name',
+  'summary',
+  'last_state_change',
+  'last_check',
+  'labels',
+  'tags',
+  'contacts',
+  'contact_groups',
+  'groups',
+  'perfometer'
+]
+
+const SORTABLE_SERVICE_COLUMNS = [
+  'host_name',
+  'state',
+  'name',
+  'summary',
+  'last_state_change',
+  'last_check'
+]
+
+describe('ServicesTableDescriptor', () => {
+  it('offers exactly the columns the backend offers for the services table', () => {
+    const offered = new ServicesTableDescriptor().catalog().map((column) => column.id)
+
+    expect(offered).toEqual(SERVICE_TABLE_COLUMNS)
+  })
+
+  it('shows the less common columns only on request', () => {
+    const shown = new ServicesTableDescriptor()
+      .catalog()
+      .filter((column) => column.shownByDefault)
+      .map((column) => column.id)
+
+    expect(shown).toEqual(['state', 'modes', 'host_name', 'name', 'summary'])
+  })
+
+  it('renders every column the backend offers for the services table', () => {
+    const rendered = new ServicesTableDescriptor().columns(SERVICE_TABLE_COLUMNS).map(columnId)
+
+    expect(rendered).toEqual(SERVICE_TABLE_COLUMNS)
+  })
+
+  it('offers sorting on exactly the columns the backend can sort', () => {
+    const sortable = new ServicesTableDescriptor()
+      .columns(SERVICE_TABLE_COLUMNS)
+      .filter((column) => column.enableSorting !== false)
+      .map(columnId)
+
+    expect(sortable.sort()).toEqual([...SORTABLE_SERVICE_COLUMNS].sort())
   })
 })

@@ -227,7 +227,7 @@ class AlertOverviewDashletConfig(DashletConfig):
     limit_objects: NotRequired[int]
 
 
-type MonitoringTableName = Literal["hosts"]
+type MonitoringTableName = Literal["hosts", "services"]
 
 # The display options of the monitoring pages for their timestamp columns.
 type MonitoringTableDateFormat = Literal["%Y-%m-%d", "%d.%m.%Y", "%m/%d/%Y", "%d.%m.", "%m/%d"]

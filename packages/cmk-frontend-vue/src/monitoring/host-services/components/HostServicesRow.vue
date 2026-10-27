@@ -53,8 +53,15 @@ const props = withDefaults(
     loadActionMenu?: ((service: string) => Promise<CellAction[]>) | undefined
     displayOptions: DisplayOptions
     aiExplain?: boolean
+    readOnly?: boolean
   }>(),
-  { rowActions: () => [], mayReschedule: false, loadActionMenu: undefined, aiExplain: false }
+  {
+    rowActions: () => [],
+    mayReschedule: false,
+    loadActionMenu: undefined,
+    aiExplain: false,
+    readOnly: false
+  }
 )
 
 const { _t } = usei18n()
@@ -174,7 +181,7 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     v-if="hasColumn('name')"
     column-id="name"
     :value="row.name"
-    :button="true"
+    :button="!readOnly"
     @click="emit('open', row)"
   >
     <!-- Every name keeps the slot, so the names line up whether their service has graphs or not. -->
@@ -200,6 +207,7 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
       column-id="host_name"
       :name="host.name"
       :state="host.state"
+      :button="!readOnly"
       @open="emit('openHost', host)"
     />
     <StringCell v-if="hasColumn('site_id')" column-id="site_id" :value="host.site_id" />
@@ -236,7 +244,7 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     v-if="hasColumn('perfometer')"
     column-id="perfometer"
     :data="row.perfometer"
-    :button="row.perfometer !== undefined"
+    :button="!readOnly && row.perfometer !== undefined"
     @click="emit('openGraphs', row)"
   />
   <ActionsCell

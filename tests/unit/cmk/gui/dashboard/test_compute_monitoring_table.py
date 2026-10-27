@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 import re
 from collections.abc import Iterator, Sequence
 from http import HTTPStatus
@@ -233,6 +234,43 @@ def test_a_shared_dashboard_links_no_host_to_its_graphs(
     assert [row.get("graphs_link") for row in response.json["value"]["rows"]] == [None]
 
 
+def test_a_dashboard_host_filter_narrows_the_services_query(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    content = {**_CONTENT, "table": "services", "columns": ["host_name", "name"], "sort": []}
+    mock_livestatus.set_sites(["NO_SITE"])
+    mock_livestatus.add_table(
+        "services", [{"host_name": "heute", "description": "CPU", "state": 0}]
+    )
+    mock_livestatus.expect_query("GET services\nStats: state >= 0")
+    mock_livestatus.expect_query(
+        [
+            "GET services",
+            "Filter: host_name ~~ no-such-host",
+            "OrderBy: host_name asc natural",
+            "Limit: 100",
+        ],
+        match_type="loose",
+    )
+    mock_livestatus.expect_query(
+        ["GET services", "Stats: state >= 0", "Filter: host_name ~~ no-such-host"],
+        match_type="loose",
+    )
+    with mock_livestatus:
+        response = clients.DashboardClient.compute_widget(
+            "compute-monitoring-table",
+            {
+                "source": {
+                    "type": "explicit",
+                    "content": content,
+                    "context": {"hostregex": {"host_regex": "no-such-host"}},
+                }
+            },
+        )
+
+    assert response.json["value"]["unapplied_filters"] == []
+
+
 def test_an_unknown_sort_column_is_400(clients: ClientRegistry) -> None:
     response = clients.DashboardClient.compute_widget(
         "compute-monitoring-table", _body({}, sort=["no_such_column:asc"]), expect_ok=False
@@ -310,6 +348,13 @@ def test_a_monitoring_table_stored_without_display_options_shows_the_page_defaul
 @pytest.mark.usefixtures("request_context")
 def test_a_stored_hosts_table_takes_host_filters() -> None:
     assert MonitoringTableDashlet(_HOSTS_TABLE.to_internal()).infos() == ["host"]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_a_stored_services_table_takes_host_and_service_filters() -> None:
+    services_table = dataclasses.replace(_HOSTS_TABLE, table="services")
+
+    assert MonitoringTableDashlet(services_table.to_internal()).infos() == ["host", "service"]
 
 
 def test_every_monitoring_table_is_registered() -> None:

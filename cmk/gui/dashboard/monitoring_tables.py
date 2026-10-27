@@ -15,6 +15,7 @@ from cmk.gui.monitor.hosts.table import (
     HostTable,
     MonitorFolders,
 )
+from cmk.gui.monitor.services.table import SERVICE_TABLE, ServiceEntry, ServiceTable
 from cmk.gui.monitor.table_widget import TableCatalog, TableRows
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.type_defs import SingleInfos, VisualContext
@@ -42,7 +43,9 @@ def _host_row_fields(api_context: ApiContext) -> frozenset[HostOptionalField]:
     return frozenset({HostOptionalField.GRAPHS_LINK})
 
 
-MONITORING_TABLES: Final[Mapping[MonitoringTableName, MonitoringTableSpec[HostEntry]]] = {
+MONITORING_TABLES: Final[
+    Mapping[MonitoringTableName, MonitoringTableSpec[HostEntry] | MonitoringTableSpec[ServiceEntry]]
+] = {
     "hosts": MonitoringTableSpec(
         catalog=HOST_TABLE,
         infos=["host"],
@@ -52,5 +55,10 @@ MONITORING_TABLES: Final[Mapping[MonitoringTableName, MonitoringTableSpec[HostEn
             tag_groups=frozenset(group.id for group in api_context.config.tags.tag_groups),
             row_fields=_host_row_fields(api_context),
         ),
+    ),
+    "services": MonitoringTableSpec(
+        catalog=SERVICE_TABLE,
+        infos=["host", "service"],
+        source=lambda api_context: ServiceTable(api_context.config.sites),
     ),
 }

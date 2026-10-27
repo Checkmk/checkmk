@@ -18,13 +18,20 @@ from cmk.gui.monitor.shared import (
     NumericField,
     StringField,
 )
+from cmk.gui.monitor.site_scope import SiteScopedFilter
 from cmk.gui.type_defs import FilterName, VisualContext
 
-from ._api._filters import SERVICE_FILTER_NODE, ServiceFilterNode, ServiceNameListField
+from ._api._filters import (
+    scope_filter_by_site,
+    SERVICE_FILTER_NODE,
+    ServiceFilterNode,
+    ServiceNameListField,
+)
 
 type _ServiceField = (
     ServiceNameListField
     | Literal[
+        "site_id",
         "name",
         "summary",
         "state",
@@ -42,11 +49,12 @@ type _HostField = StringField | NameListField | BooleanField | NumericField | Li
 
 type _HostNestedField = NestedField[Literal["host"], _HostField]
 
-_PAGE = PageFilterModel[ServiceFilterNode, ServiceFilterNode](
-    tree=SERVICE_FILTER_NODE, check=lambda node: node
-)
+_PAGE = PageFilterModel(tree=SERVICE_FILTER_NODE, check=scope_filter_by_site)
 
 _FIELDS: Mapping[FilterName, _ServiceField | _HostNestedField] = {
+    "sites": "site_id",
+    "site": "site_id",
+    "siteopt": "site_id",
     "serviceregex": "name",
     "service": "name",
     "output": "summary",
@@ -79,5 +87,7 @@ _FIELDS: Mapping[FilterName, _ServiceField | _HostNestedField] = {
 }
 
 
-def translate_filters(context: VisualContext) -> ContextFilterTranslation[ServiceFilterNode]:
+def translate_filters(
+    context: VisualContext,
+) -> ContextFilterTranslation[SiteScopedFilter[ServiceFilterNode]]:
     return translate_context(context, _FIELDS, _PAGE)

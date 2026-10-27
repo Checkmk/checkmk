@@ -10,13 +10,16 @@ import type { Component } from 'vue'
 
 import { buildHostColumns } from '@/monitoring/all-hosts/columns'
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
-import type { HostEntry } from '@/monitoring/shared/api/types'
+import { useAllServicesColumns } from '@/monitoring/all-services/columns'
+import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
+import type { HostEntry, ServiceEntry } from '@/monitoring/shared/api/types'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
 export type MonitoringTableName = components['schemas']['MonitoringTableContent']['table']
 
 export interface MonitoringTableRows {
   hosts: HostEntry
+  services: ServiceEntry
 }
 
 export interface MonitoringTableColumn {
@@ -106,6 +109,44 @@ export class HostsTableDescriptor extends MonitoringTableDescriptor<HostEntry> {
   truncatedHint(shown: number, matched: number): string {
     const { _t } = usei18n()
     return _t('Showing %{shown} of %{matched} hosts', {
+      shown: String(shown),
+      matched: String(matched)
+    })
+  }
+}
+
+export class ServicesTableDescriptor extends MonitoringTableDescriptor<ServiceEntry> {
+  readonly rowComponent: Component = HostServicesRow
+
+  readonly columnIds = [
+    'state',
+    'modes',
+    'host_name',
+    'name',
+    'summary',
+    'last_state_change',
+    'last_check',
+    'labels',
+    'tags',
+    'contacts',
+    'contact_groups',
+    'groups',
+    'perfometer'
+  ]
+
+  protected allColumns(): ColumnDef<ServiceEntry>[] {
+    return useAllServicesColumns({ sites: [], includeSelect: false }).filter(
+      (column) => columnId(column) !== 'actions'
+    )
+  }
+
+  rowKey(row: ServiceEntry): string {
+    return `${row.site_id}:${row.host_name}:${row.name}`
+  }
+
+  truncatedHint(shown: number, matched: number): string {
+    const { _t } = usei18n()
+    return _t('Showing %{shown} of %{matched} services', {
       shown: String(shown),
       matched: String(matched)
     })

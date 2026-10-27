@@ -237,6 +237,14 @@ class ServiceSort:
         return f"{self.column.value}:{self.direction.value}"
 
 
+# All services sort by site first, wherever they are listed.
+ALL_SERVICES_DEFAULT_SORT: tuple[ServiceSort, ...] = (
+    ServiceSort(column=ServiceSortColumn.SITE_ID, direction=ServiceSortDirection.ASC),
+    ServiceSort(column=ServiceSortColumn.HOST_NAME, direction=ServiceSortDirection.ASC),
+    ServiceSort(column=ServiceSortColumn.NAME, direction=ServiceSortDirection.ASC),
+)
+
+
 @dataclasses.dataclass(frozen=True)
 class ServiceTarget:
     """A service a command is sent for, on its host's site."""

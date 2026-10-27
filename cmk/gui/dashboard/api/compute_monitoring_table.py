@@ -13,6 +13,7 @@ from cmk.gui import visuals
 from cmk.gui.dashboard.monitoring_tables import MONITORING_TABLES
 from cmk.gui.dashboard.type_defs import MonitoringTableName
 from cmk.gui.monitor.hosts.table import HostEntry
+from cmk.gui.monitor.services.table import ServiceEntry
 from cmk.gui.monitor.table_widget import InvalidSortError
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -70,7 +71,7 @@ class UnappliedFilter:
 @api_model
 class MonitoringTable:
     table: MonitoringTableName = api_field(description="The monitoring table.", example="hosts")
-    rows: list[HostEntry] = api_field(
+    rows: list[HostEntry | ServiceEntry] = api_field(
         description="The rows of the table, one per monitored object of the table's kind."
     )
     matched: int = api_field(description="The number of rows the filters select.", example=42)

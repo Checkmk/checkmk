@@ -7,7 +7,8 @@ import {
   HostsTableDescriptor,
   type MonitoringTableDescriptor,
   type MonitoringTableName,
-  type MonitoringTableRows
+  type MonitoringTableRows,
+  ServicesTableDescriptor
 } from './tableDescriptors'
 
 export type MonitoringTableDescriptors = {
@@ -16,7 +17,8 @@ export type MonitoringTableDescriptors = {
 
 export class MonitoringTableRegistry {
   private readonly descriptors: MonitoringTableDescriptors = {
-    hosts: new HostsTableDescriptor()
+    hosts: new HostsTableDescriptor(),
+    services: new ServicesTableDescriptor()
   }
 
   descriptor<K extends MonitoringTableName>(table: K): MonitoringTableDescriptors[K] {

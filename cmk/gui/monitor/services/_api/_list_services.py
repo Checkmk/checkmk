@@ -11,7 +11,8 @@ from pydantic import PlainValidator
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.monitor.hosts import customer_resolver
-from cmk.gui.monitor.site_scope import MonitorSite, MonitorSites
+from cmk.gui.monitor.site_scope import MonitorSite, MonitorSites, SiteScopedFilter
+from cmk.gui.monitor.table_widget import TableRows
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -24,10 +25,13 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
+from cmk.gui.type_defs import VisualContext
+from cmk.livestatus_client import SiteConfigurations
 from cmk.web.utils import permission_verification as permissions
 
 from .._impl import LiveStatusServicesRepository
 from .._models import (
+    ALL_SERVICES_DEFAULT_SORT,
     HostStateLabel,
     Service,
     ServiceFilter,
@@ -37,17 +41,13 @@ from .._models import (
     ServiceSortDirection,
 )
 from .._repositories import ServicesRepository
+from .._table_catalog import SERVICE_TABLE
+from ..context_filters import translate_filters
 from ._family import MONITOR_SERVICES_FAMILY
 from ._filters import parse_as_livestatus_filter, scope_filter_by_site, ServiceFilterNode
 from ._limits import DEFAULT_SERVICE_LIMIT, resolve_service_limit
 from ._list_host_services import HostServiceEntry, ServicesRequestBody
 from ._validators import parse_service_search_query, parse_service_sort_options
-
-_DEFAULT_SORT = (
-    ServiceSort(column=ServiceSortColumn.SITE_ID, direction=ServiceSortDirection.ASC),
-    ServiceSort(column=ServiceSortColumn.HOST_NAME, direction=ServiceSortDirection.ASC),
-    ServiceSort(column=ServiceSortColumn.NAME, direction=ServiceSortDirection.ASC),
-)
 
 _DEFAULT_FIELDS: frozenset[ServiceOptionalField] = frozenset()
 
@@ -130,58 +130,101 @@ def list_all_services(
     body: AllServicesRequestBody = AllServicesRequestBody(),
 ) -> ServicesResponse:
     """List the services of all hosts to be consumed by the all services monitoring page."""
-    limit = resolve_service_limit(body.limit, api_context.user)
-
-    authorized_site_ids = frozenset(api_context.user.authorized_sites(api_context.config.sites))
-    if isinstance(body.filter, ApiOmitted):
-        filter_node, site_ids = None, None
-    else:
-        filter_node, site_ids = _scope_and_check_sites(body.filter, authorized_site_ids)
-
-    customer_of = customer_resolver(sites=api_context.config.sites)
-    services_repo = LiveStatusServicesRepository(
-        connection=sites.live(),
-        sites=MonitorSites(
-            MonitorSite(id=site_id, customer=customer_of(site_id))
-            for site_id in authorized_site_ids
+    site_configs = api_context.user.authorized_sites(api_context.config.sites)
+    return ServiceTable(site_configs).list(
+        limit=resolve_service_limit(body.limit, api_context.user),
+        query="" if isinstance(body.q, ApiOmitted) else body.q,
+        sorters=ALL_SERVICES_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
+        scoped_filter=(
+            None
+            if isinstance(body.filter, ApiOmitted)
+            else _scope_and_check_sites(body.filter, frozenset(site_configs))
         ),
+        fields=_DEFAULT_FIELDS if isinstance(body.fields, ApiOmitted) else body.fields,
     )
-    total_service_count = services_repo.count_total()
 
-    # `sites.only_sites([])` can't express "query zero sites"; an empty list is falsy to it and gets
-    # treated as "no restriction" instead, i.e. every site. This happens when the filter negates
-    # every currently configured site, so it's handled here before ever calling into Livestatus.
-    if site_ids == []:
-        return ServicesResponse(
-            services=[],
-            meta=ServicesPageMeta(
-                limit=limit,
-                matched=0,
-                total=total_service_count,
-                unreachable_sites=services_repo.unreachable_sites(),
-            ),
+
+class ServiceTable:
+    """The services of every host, as All services and the monitoring table widget list them."""
+
+    def __init__(self, site_configs: SiteConfigurations) -> None:
+        self._site_ids = frozenset(site_configs)
+        customer_of = customer_resolver(sites=site_configs)
+        self._sites = MonitorSites(
+            MonitorSite(id=site_id, customer=customer_of(site_id)) for site_id in site_configs
         )
 
-    with sites.only_sites(site_ids):
-        return _handle_list_all_services(
-            services_repo,
-            total_service_count,
+    def list(
+        self,
+        *,
+        limit: int | None,
+        query: str,
+        sorters: Sequence[ServiceSort],
+        scoped_filter: SiteScopedFilter[ServiceFilterNode] | None,
+        fields: Set[ServiceOptionalField],
+    ) -> ServicesResponse:
+        filter_node, site_ids = (
+            (None, None)
+            if scoped_filter is None
+            else (scoped_filter.node, scoped_filter.site_scope(self._site_ids))
+        )
+        services_repo = LiveStatusServicesRepository(connection=sites.live(), sites=self._sites)
+        total_service_count = services_repo.count_total()
+
+        # `sites.only_sites([])` can't express "query zero sites"; an empty list is falsy to it and
+        # gets treated as "no restriction" instead, i.e. every site. This happens when the filter
+        # negates every currently configured site, so it's handled here before ever calling into
+        # Livestatus.
+        if site_ids == []:
+            return ServicesResponse(
+                services=[],
+                meta=ServicesPageMeta(
+                    limit=limit,
+                    matched=0,
+                    total=total_service_count,
+                    unreachable_sites=services_repo.unreachable_sites(),
+                ),
+            )
+
+        with sites.only_sites(site_ids):
+            return _handle_list_all_services(
+                services_repo,
+                total_service_count,
+                limit=limit,
+                query=query,
+                sorters=sorters,
+                filters=(
+                    ServiceFilter("")
+                    if filter_node is None
+                    else parse_as_livestatus_filter(filter_node)
+                ),
+                fields=fields,
+                site_ids=site_ids,
+            )
+
+    def rows(
+        self, *, columns: Sequence[str], sort: Sequence[str], limit: int, context: VisualContext
+    ) -> TableRows[ServiceEntry]:
+        translation = translate_filters(context)
+        response = self.list(
             limit=limit,
-            query="" if isinstance(body.q, ApiOmitted) else body.q,
-            sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
-            filters=(
-                ServiceFilter("")
-                if filter_node is None
-                else parse_as_livestatus_filter(filter_node)
-            ),
-            fields=_DEFAULT_FIELDS if isinstance(body.fields, ApiOmitted) else body.fields,
-            site_ids=site_ids,
+            query="",
+            sorters=SERVICE_TABLE.sorters(columns, sort),
+            scoped_filter=translation.filter,
+            fields=SERVICE_TABLE.fields(columns),
+        )
+        return TableRows(
+            rows=response.services,
+            matched=response.meta.matched,
+            total=response.meta.total,
+            unapplied_filters=translation.unapplied,
+            unreachable_sites=response.meta.unreachable_sites,
         )
 
 
 def _scope_and_check_sites(
     node: ServiceFilterNode, all_site_ids: frozenset[SiteId]
-) -> tuple[ServiceFilterNode | None, list[SiteId] | None]:
+) -> SiteScopedFilter[ServiceFilterNode]:
     try:
         scoped = scope_filter_by_site(node)
     except ValueError as exc:
@@ -189,7 +232,7 @@ def _scope_and_check_sites(
     for site_id in sorted(scoped.sites or ()):
         if site_id not in all_site_ids:
             raise _invalid_filter(f"Site {site_id!r} does not exist.")
-    return scoped.node, scoped.site_scope(all_site_ids)
+    return scoped
 
 
 def _invalid_filter(detail: str) -> RestAPIRequestGeneralException:
@@ -204,7 +247,7 @@ def _handle_list_all_services(
     *,
     limit: int | None = DEFAULT_SERVICE_LIMIT,
     query: str = "",
-    sorters: Sequence[ServiceSort] = _DEFAULT_SORT,
+    sorters: Sequence[ServiceSort] = ALL_SERVICES_DEFAULT_SORT,
     filters: ServiceFilter = ServiceFilter(""),
     fields: Set[ServiceOptionalField] = _DEFAULT_FIELDS,
     site_ids: Sequence[SiteId] | None = None,

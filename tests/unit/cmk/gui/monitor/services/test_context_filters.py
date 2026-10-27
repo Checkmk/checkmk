@@ -5,6 +5,7 @@
 
 import pytest
 
+from cmk.ccc.site import SiteId
 from cmk.gui.monitor.services._api._filters import (
     SERVICE_FILTER_NODE,
     ServiceAndNode,
@@ -16,11 +17,16 @@ from cmk.gui.monitor.services._api._filters import (
     ServiceStringCondition,
 )
 from cmk.gui.monitor.services.context_filters import translate_filters
+from cmk.gui.monitor.site_scope import SiteScopedFilter
 from cmk.gui.type_defs import VisualContext
 
 
 def _host_node(child: object) -> ServiceFilterNode:
     return SERVICE_FILTER_NODE.validate_python({"type": "host", "child": child})
+
+
+def _on_all_sites(node: ServiceFilterNode) -> SiteScopedFilter[ServiceFilterNode]:
+    return SiteScopedFilter(node=node, sites=None, exclude_sites=False)
 
 
 # fmt: off
@@ -213,7 +219,7 @@ def test_a_dashboard_filter_becomes_its_monitoring_page_condition(
 ) -> None:
     translation = translate_filters(context)
 
-    assert (translation.filter, translation.unapplied) == (expected, [])
+    assert (translation.filter, translation.unapplied) == (_on_all_sites(expected), [])
 
 
 @pytest.mark.parametrize(
@@ -251,12 +257,14 @@ def test_several_dashboard_filters_must_all_match() -> None:
         }
     )
 
-    assert translation.filter == ServiceAndNode(
-        type="and",
-        children=[
-            ServiceStringCondition(type="condition", field="name", op="contains", value="CPU"),
-            ServiceBooleanCondition(type="condition", field="acknowledged", op="eq", value=True),
-        ],
+    assert translation.filter == _on_all_sites(
+        ServiceAndNode(
+            type="and",
+            children=[
+                ServiceStringCondition(type="condition", field="name", op="contains", value="CPU"),
+                ServiceBooleanCondition(type="condition", field="acknowledged", op="eq", value=True),
+            ],
+        )
     )
 
 
@@ -268,12 +276,26 @@ def test_service_and_host_filters_must_all_match() -> None:
         }
     )
 
-    assert translation.filter == ServiceAndNode(
-        type="and",
-        children=[
-            ServiceStateChoiceCondition(type="condition", field="state", op="one_of", value=["CRIT"]),
-            _host_node({"type": "condition", "field": "state", "op": "one_of", "value": ["DOWN"]}),
-        ],
+    assert translation.filter == _on_all_sites(
+        ServiceAndNode(
+            type="and",
+            children=[
+                ServiceStateChoiceCondition(type="condition", field="state", op="one_of", value=["CRIT"]),
+                _host_node({"type": "condition", "field": "state", "op": "one_of", "value": ["DOWN"]}),
+            ],
+        )
+    )
+
+
+def test_a_site_filter_scopes_the_sites_instead_of_adding_a_condition() -> None:
+    translation = translate_filters(
+        {"siteopt": {"site": "NO_SITE"}, "service": {"service": "CPU load"}}
+    )
+
+    assert translation.filter == SiteScopedFilter(
+        node=ServiceStringCondition(type="condition", field="name", op="matches", value="^CPU\\ load$"),
+        sites=frozenset({SiteId("NO_SITE")}),
+        exclude_sites=False,
     )
 
 
@@ -281,7 +303,6 @@ def test_service_and_host_filters_must_all_match() -> None:
     "context",
     [
         pytest.param({"service_display_name": {"service_display_name": "CPU"}}, id="no equivalent"),
-        pytest.param({"siteopt": {"site": "NO_SITE"}}, id="site"),
         pytest.param({"host_ctc": {"host_ctc": "adm*"}}, id="host contact pattern"),
         pytest.param({"hostregex": {"host_regex": "web["}}, id="invalid host regex"),
         pytest.param({"servicegroups": {"servicegroups": "web*"}}, id="group pattern"),

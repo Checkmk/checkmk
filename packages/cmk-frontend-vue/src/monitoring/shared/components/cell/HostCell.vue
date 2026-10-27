@@ -9,11 +9,15 @@ import type { HostState } from '../../api/types.ts'
 import HostStateDisplay from '../HostStateDisplay.vue'
 import BaseCell from './BaseCell.vue'
 
-defineProps<{
-  name: string
-  state: HostState
-  columnId?: string | undefined
-}>()
+withDefaults(
+  defineProps<{
+    name: string
+    state: HostState
+    columnId?: string | undefined
+    button?: boolean | undefined
+  }>(),
+  { button: true }
+)
 
 const emit = defineEmits<{
   (event: 'open'): void
@@ -21,7 +25,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <BaseCell :column-id="columnId" button @click="emit('open')">
+  <BaseCell :column-id="columnId" :button="button" @click="emit('open')">
     <div class="monitoring-host-cell">
       <HostStateDisplay class="monitoring-host-cell__state" :state="state" inline />
       <span class="monitoring-host-cell__name" :title="name">{{ name }}</span>

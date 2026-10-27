@@ -16,6 +16,7 @@ import { unreachableSitesHint } from '@/monitoring/shared/unreachableSites'
 import MonitoringTableWidget from '@/monitoring/table-widget/MonitoringTableWidget.vue'
 import { WidgetTableState } from '@/monitoring/table-widget/WidgetTableState'
 import { monitoringTableRegistry } from '@/monitoring/table-widget/registry'
+import type { MonitoringTableDescriptor } from '@/monitoring/table-widget/tableDescriptors'
 
 import WidgetFigureFrame from './figures/WidgetFigureFrame.vue'
 import type { ContentProps } from './types'
@@ -28,7 +29,13 @@ const tableState = new WidgetTableState(props.content.sort)
 watch([() => props.content.sort.join(','), () => props.content.columns.join(',')], () =>
   tableState.reset(props.content.sort)
 )
-const descriptor = computed(() => monitoringTableRegistry.descriptor(props.content.table))
+// The backend computes the rows of the very table the descriptor is looked up for.
+const descriptor = computed(
+  () =>
+    monitoringTableRegistry.descriptor(props.content.table) as MonitoringTableDescriptor<
+      ComputedMonitoringTable['rows'][number]
+    >
+)
 
 const { state, retry } = useWidgetData<ComputedMonitoringTable>(
   () =>

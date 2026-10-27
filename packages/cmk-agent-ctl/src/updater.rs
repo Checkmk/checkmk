@@ -22,10 +22,14 @@
 //!
 //! [`InstallRequest`] is not one of them: it is what the controller hands to
 //! the privileged install step of Linux, which is a process of its own.
+//!
+//! The module also registers the Python updater, which the controller runs as a
+//! subprocess.
 
 mod backend;
 mod connection;
 mod install;
+mod python_updater;
 mod verification;
 #[cfg(unix)]
 pub use backend::InstallOutcome;
@@ -34,6 +38,7 @@ pub use backend::{
     UpdaterConfig, WritableUpdater,
 };
 pub use install::{InstallRequest, InstallResult, TrustAnchors};
+pub(crate) use python_updater::{get_agent_updater_executable, maybe_register_updater};
 
 #[cfg(windows)]
 mod platform;

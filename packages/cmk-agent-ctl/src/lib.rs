@@ -256,7 +256,7 @@ pub enum AgentUpdater {
 /// Temporary: this is expected to be replaced by an explicit statement from the site, or to
 /// be dropped, as soon as the integrated updater is baked for.
 fn detect_agent_updater() -> AgentUpdater {
-    match registration::get_agent_updater_executable() {
+    match updater::get_agent_updater_executable() {
         Ok(path) => {
             log::info!("Found Python agent updater at '{}'", path);
             AgentUpdater::Python

@@ -54,6 +54,7 @@ rust_library(
         "src/updater/connection.rs",
         "src/updater/install.rs",
         "src/updater/platform.rs",
+        "src/updater/python_updater.rs",
         "src/updater/verification.rs",
         ":version.rs",  # invalidates the cache
     ],

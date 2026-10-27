@@ -542,7 +542,7 @@ def layout_timeline(
             )
         )
 
-    if chaos_count > 1 and chaos_begin is not None and chaos_end is not None:
+    if chaos_count >= 4 and chaos_begin is not None and chaos_end is not None:
         spans.append(chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width))
 
     if style == "inline":

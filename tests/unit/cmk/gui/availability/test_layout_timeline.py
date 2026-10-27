@@ -161,7 +161,6 @@ def test_a_chaos_span_starts_with_its_first_tiny_span() -> None:
     assert chaos[1].startswith("4 chaotic state changes from 0 until 4 ")
 
 
-@pytest.mark.xfail(strict=True, reason="a chaos run at the end needs only 2 instead of 4 spans")
 def test_fewer_than_four_tiny_spans_at_the_end_are_no_chaos_span() -> None:
     rows = [_row(0, 9998), _row(9998, 9999, "crit"), _row(9999, 10000)]
     timeline = _layout(rows, "inline", _avoptions(until=10000.0))

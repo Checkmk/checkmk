@@ -54,7 +54,7 @@ def _valuespec_agent_config_runas() -> ListOf[tuple[str, str, str]]:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupMonitoringAgentsLinuxUnixAgent,
-        match_type="list",
+        match_type="all",
         name=RuleGroup.AgentConfig("runas"),
         valuespec=_valuespec_agent_config_runas,
     )

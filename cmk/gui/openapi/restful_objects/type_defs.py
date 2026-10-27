@@ -298,6 +298,7 @@ CmkEndpointName = Literal[
     "cmk/service_action_menu",
     "cmk/list_host_events",
     "cmk/send_custom_notification",
+    "cmk/fake_check_result",
 ]
 
 RestfulEndpointName = Literal[

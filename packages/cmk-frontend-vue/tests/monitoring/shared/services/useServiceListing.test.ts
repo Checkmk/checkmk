@@ -30,7 +30,7 @@ test('labels a selection of services', () => {
   expect(listing.countsLabel(1, 5)).toBe('Selected service: 1 | Total services: 5')
 })
 
-test('offers acknowledging, rescheduling, downtimes, comments and notifications for services', () => {
+test('offers the commands implemented for services', () => {
   const listing = useServiceListing({})
 
   expect(Object.keys(listing.registry)).toEqual([
@@ -38,7 +38,8 @@ test('offers acknowledging, rescheduling, downtimes, comments and notifications 
     'reschedule',
     'schedule_downtimes',
     'add_comment',
-    'send_custom_notification'
+    'send_custom_notification',
+    'fake_check_result'
   ])
 })
 

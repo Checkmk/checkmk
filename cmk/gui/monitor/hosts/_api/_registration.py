@@ -10,6 +10,7 @@ from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegist
 from ._action_menu import ENDPOINT_GET_HOST_ACTION_MENU
 from ._custom_notification import ENDPOINT_SEND_CUSTOM_NOTIFICATION
 from ._events import ENDPOINT_GET_HOST_EVENTS
+from ._fake_check_result import ENDPOINT_FAKE_CHECK_RESULT
 from ._family import MONITOR_HOSTS_FAMILY
 from ._host_overview import make_endpoint_get_host_overview
 from ._list_hosts import make_endpoint_list_hosts
@@ -29,3 +30,4 @@ def register_endpoints(
     versioned_endpoint_registry.register(ENDPOINT_GET_HOST_EVENTS)
     versioned_endpoint_registry.register(ENDPOINT_RESCHEDULE_CHECKS)
     versioned_endpoint_registry.register(ENDPOINT_SEND_CUSTOM_NOTIFICATION)
+    versioned_endpoint_registry.register(ENDPOINT_FAKE_CHECK_RESULT)

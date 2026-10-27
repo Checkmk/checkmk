@@ -33,3 +33,11 @@ class ServiceNotifier(Protocol):
     ) -> None:
         """Let the core send a custom notification for each target on its site."""
         ...
+
+
+class ServiceCheckResultFaker(Protocol):
+    def fake_check_result(
+        self, targets: Sequence[ServiceTarget], *, state: int, output: str
+    ) -> None:
+        """Submit a check result for each target on its site, as if its check had run."""
+        ...

@@ -22,6 +22,7 @@ from cmk.livestatus_client import (
     LivestatusClient,
     MultiSiteConnection,
     NotificationOption,
+    ProcessServiceCheckResult,
     ScheduleForcedServiceCheck,
     SendCustomServiceNotification,
 )
@@ -432,6 +433,18 @@ class LiveStatusServiceActions:
             client.command(
                 SendCustomServiceNotification(
                     HostName(target.host_name), option, author, comment, target.description
+                ),
+                SiteId(target.site_id),
+            )
+
+    def fake_check_result(
+        self, targets: Sequence[ServiceTarget], *, state: int, output: str
+    ) -> None:
+        client = LivestatusClient(self._connection)
+        for target in targets:
+            client.command(
+                ProcessServiceCheckResult(
+                    HostName(target.host_name), state, output, target.description
                 ),
                 SiteId(target.site_id),
             )

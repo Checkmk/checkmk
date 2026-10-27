@@ -33,6 +33,7 @@ from cmk.livestatus_client import (
     LivestatusClient,
     MultiSiteConnection,
     NotificationOption,
+    ProcessHostCheckResult,
     ScheduleForcedHostCheck,
     SendCustomHostNotification,
 )
@@ -534,6 +535,14 @@ class LiveStatusHostActions:
         for target in targets:
             client.command(
                 SendCustomHostNotification(HostName(target.host_name), option, author, comment),
+                SiteId(target.site_id),
+            )
+
+    def fake_check_result(self, targets: Sequence[HostTarget], *, state: int, output: str) -> None:
+        client = LivestatusClient(self._connection)
+        for target in targets:
+            client.command(
+                ProcessHostCheckResult(HostName(target.host_name), state, output),
                 SiteId(target.site_id),
             )
 

@@ -3,24 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel
 
+from cmk.bakery.v2 import BakeryPlugin, FileGenerator, OS, SystemBinary
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.utils.paths import local_agents_dir
-
-from .bakery_api.v1 import FileGenerator, OS, register, SystemBinary
 
 
 class _Config(BaseModel):
     deployment: tuple[Literal["do_not_deploy", "sync", "cached"], float | None]
 
 
-def get_win_openhardwaremonitor_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Config.model_validate(conf)
+def get_win_openhardwaremonitor_files(config: _Config) -> FileGenerator:
     if config.deployment[0] == "do_not_deploy":
         return
 
@@ -43,7 +40,9 @@ def get_win_openhardwaremonitor_files(conf: Mapping[str, object]) -> FileGenerat
     )
 
 
-register.bakery_plugin(
+bakery_plugin_win_openhardwaremonitor = BakeryPlugin(
     name="win_openhardwaremonitor",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     files_function=get_win_openhardwaremonitor_files,
 )

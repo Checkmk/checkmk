@@ -8,8 +8,9 @@ from unittest.mock import patch
 
 import pytest
 
-from cmk.bakery.v1 import OS, SystemBinary
+from cmk.bakery.v2 import OS, SystemBinary
 from cmk.base.plugins.bakery.win_openhardwaremonitor import (
+    bakery_plugin_win_openhardwaremonitor,
     get_win_openhardwaremonitor_files,
 )
 from cmk.ccc.exceptions import MKGeneralException
@@ -19,7 +20,14 @@ CONFIG_DO_NOT_DEPLOY = {"deployment": ("do_not_deploy", None)}
 
 
 def test_win_openhardwaremonitor_do_not_deploy() -> None:
-    assert list(get_win_openhardwaremonitor_files(CONFIG_DO_NOT_DEPLOY)) == []
+    assert (
+        list(
+            get_win_openhardwaremonitor_files(
+                bakery_plugin_win_openhardwaremonitor.parameter_parser(CONFIG_DO_NOT_DEPLOY)
+            )
+        )
+        == []
+    )
 
 
 def test_win_openhardwaremonitor_files_missing_raises() -> None:
@@ -27,7 +35,11 @@ def test_win_openhardwaremonitor_files_missing_raises() -> None:
         patch("cmk.base.plugins.bakery.win_openhardwaremonitor.os.path.exists", return_value=False),
         pytest.raises(MKGeneralException, match="OpenHardwareMonitor files are missing"),
     ):
-        list(get_win_openhardwaremonitor_files(CONFIG))
+        list(
+            get_win_openhardwaremonitor_files(
+                bakery_plugin_win_openhardwaremonitor.parameter_parser(CONFIG)
+            )
+        )
 
 
 def test_win_openhardwaremonitor_files_dll_missing_raises() -> None:
@@ -41,12 +53,20 @@ def test_win_openhardwaremonitor_files_dll_missing_raises() -> None:
         ),
         pytest.raises(MKGeneralException, match="OpenHardwareMonitor files are missing"),
     ):
-        list(get_win_openhardwaremonitor_files(CONFIG))
+        list(
+            get_win_openhardwaremonitor_files(
+                bakery_plugin_win_openhardwaremonitor.parameter_parser(CONFIG)
+            )
+        )
 
 
 def test_win_openhardwaremonitor_files_success() -> None:
     with patch("cmk.base.plugins.bakery.win_openhardwaremonitor.os.path.exists", return_value=True):
-        result = list(get_win_openhardwaremonitor_files(CONFIG))
+        result = list(
+            get_win_openhardwaremonitor_files(
+                bakery_plugin_win_openhardwaremonitor.parameter_parser(CONFIG)
+            )
+        )
     assert result == [
         SystemBinary(
             base_os=OS.WINDOWS,

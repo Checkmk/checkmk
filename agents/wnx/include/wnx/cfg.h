@@ -63,6 +63,9 @@ constexpr std::string_view kInstallProtocol = "install.protocol";
 constexpr const wchar_t *kAgentUpdaterPython = L"cmk_update_agent.checkmk.py";
 constexpr const wchar_t *kAgentCtl = L"cmk-agent-ctl.exe";
 constexpr const wchar_t *kAgentToml = L"cmk-agent-ctl.toml";
+// Baked by the bakery, read by the agent controller. The agent only asks it
+// whether the integrated updater is activated for this host.
+constexpr const wchar_t *kAgentUpdateToml = L"cmk-agent-ctl-update.toml";
 
 }  // namespace files
 

@@ -45,7 +45,7 @@ def test_python_module(
         data_dir=data_dir,
     )
     assert exe_output.ret_code == 1
-    assert exe_output.stdout.startswith("\r\n\tYou must install Agent Updater Python plugin")
+    assert exe_output.stdout.startswith("\r\n\tAgent updates are not configured for this host")
     copy_cmk_updater(
         repo_root / "non-free" / "packages" / "cmk-update-agent",
         data_dir / "plugins",

@@ -5,7 +5,7 @@
 
 
 from cmk.bakery.v2 import WindowsConfigEntry
-from cmk.base.plugins.bakery.win_ps import bakery_plugin_win_ps, get_win_ps_windows_config
+from cmk.plugins.windows.bakery.win_ps import bakery_plugin_win_ps, get_win_ps_windows_config
 
 
 def test_win_ps_no_wmi() -> None:
@@ -18,6 +18,14 @@ def test_win_ps_no_wmi() -> None:
 
 def test_win_ps_use_wmi_false() -> None:
     conf = {"use_wmi": False}
+    result = list(get_win_ps_windows_config(bakery_plugin_win_ps.parameter_parser(conf)))
+    assert result == [
+        WindowsConfigEntry(path=["ps", "use_wmi"], content=False),
+    ]
+
+
+def test_win_ps_full_path_without_wmi() -> None:
+    conf = {"use_wmi": False, "full_path": True}
     result = list(get_win_ps_windows_config(bakery_plugin_win_ps.parameter_parser(conf)))
     assert result == [
         WindowsConfigEntry(path=["ps", "use_wmi"], content=False),

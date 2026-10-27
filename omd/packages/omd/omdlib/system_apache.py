@@ -34,6 +34,11 @@ _CONF_HEADER = (
     "# Better do not edit manually\n"
 )
 
+_HOOK_HEADER = (
+    "# This file is managed by 'omd' and will automatically be overwritten. "
+    "Better do not edit manually\n"
+)
+
 
 class ApacheSettings(NamedTuple):
     tcp_addr: str
@@ -259,7 +264,13 @@ def _forwarded_headers_directives(forwarded_headers: str) -> str:
     )
 
 
-def _render_apache_hook(
+def _render_apache_hook(site_name: str, settings: ApacheSettings) -> str:
+    return _HOOK_HEADER + _render_proxy_config(
+        site_name, settings.tcp_addr, settings.tcp_port, settings.forwarded_headers
+    )
+
+
+def _render_proxy_config(
     site_name: str,
     apache_tcp_addr: str,
     apache_tcp_port: str,
@@ -267,8 +278,7 @@ def _render_apache_hook(
 ) -> str:
     not_started_html = _site_not_started_html(site_name)
     headers = _forwarded_headers_directives(forwarded_headers)
-    return f"""# This file is managed by 'omd' and will automatically be overwritten. Better do not edit manually
-
+    return f"""
 # Make sure that symlink /omd does not make problems
 <Directory />
   Options +FollowSymlinks
@@ -369,11 +379,7 @@ def _render_apache_hook(
 def create_apache_hook(apache_config: Path, site_name: str, settings: ApacheSettings) -> None:
     apache_config.parent.mkdir(parents=True, exist_ok=True)
     with open(apache_config, "w") as f:
-        f.write(
-            _render_apache_hook(
-                site_name, settings.tcp_addr, settings.tcp_port, settings.forwarded_headers
-            )
-        )
+        f.write(_render_apache_hook(site_name, settings))
     os.chmod(apache_config, 0o644)  # Ensure the site user can read the files created by root
 
 

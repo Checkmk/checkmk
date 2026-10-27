@@ -5,24 +5,38 @@
 
 from pathlib import Path
 
-from cmk.bakery.v1 import OS, Plugin
-from cmk.base.plugins.bakery.winperf_if import get_winperf_if_files
+from cmk.bakery.v2 import OS, Plugin
+from cmk.base.plugins.bakery.winperf_if import bakery_plugin_winperf_if, get_winperf_if_files
 
 
 def test_winperf_if_files_ps1() -> None:
-    result = list(get_winperf_if_files({"deployment": ("sync", None)}))
+    result = list(
+        get_winperf_if_files(
+            bakery_plugin_winperf_if.parameter_parser({"deployment": ("sync", None)})
+        )
+    )
     assert result == [
         Plugin(base_os=OS.WINDOWS, source=Path("windows_if.ps1"), interval=None),
     ]
 
 
 def test_winperf_if_files_bat() -> None:
-    result = list(get_winperf_if_files({"deployment": ("sync", None), "use_bat_plugin": True}))
+    result = list(
+        get_winperf_if_files(
+            bakery_plugin_winperf_if.parameter_parser(
+                {"deployment": ("sync", None), "use_bat_plugin": True}
+            )
+        )
+    )
     assert result == [
         Plugin(base_os=OS.WINDOWS, source=Path("wmic_if.bat"), interval=None),
     ]
 
 
 def test_winperf_if_files_do_not_deploy() -> None:
-    result = list(get_winperf_if_files({"deployment": ("do_not_deploy", None)}))
+    result = list(
+        get_winperf_if_files(
+            bakery_plugin_winperf_if.parameter_parser({"deployment": ("do_not_deploy", None)})
+        )
+    )
     assert result == []

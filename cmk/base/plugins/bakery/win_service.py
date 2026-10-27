@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
 from typing import Literal
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import register, WindowsConfigEntry, WindowsConfigGenerator
+from cmk.bakery.v2 import BakeryPlugin, WindowsConfigEntry, WindowsConfigGenerator
 
 
 class _Config(BaseModel):
@@ -17,8 +16,7 @@ class _Config(BaseModel):
     start_mode: Literal["auto", "delayed", "demand", "disabled"]
 
 
-def get_win_service_windows_config(conf: Mapping[str, object]) -> WindowsConfigGenerator:
-    config = _Config.model_validate(conf)
+def get_win_service_windows_config(config: _Config) -> WindowsConfigGenerator:
     yield WindowsConfigEntry(
         path=["system", "service", "restart_on_crash"], content=config.restart_on_crash
     )
@@ -26,7 +24,9 @@ def get_win_service_windows_config(conf: Mapping[str, object]) -> WindowsConfigG
     yield WindowsConfigEntry(path=["system", "service", "start_mode"], content=config.start_mode)
 
 
-register.bakery_plugin(
+bakery_plugin_win_service = BakeryPlugin(
     name="win_service",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     windows_config_function=get_win_service_windows_config,
 )

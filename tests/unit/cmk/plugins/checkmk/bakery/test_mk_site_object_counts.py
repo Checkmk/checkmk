@@ -6,7 +6,7 @@
 from pathlib import Path
 
 from cmk.bakery.v2 import OS, Plugin, PluginConfig
-from cmk.base.plugins.bakery.mk_site_object_counts import (
+from cmk.plugins.checkmk.bakery.mk_site_object_counts import (
     bakery_plugin_mk_site_object_counts,
     get_mk_site_object_counts_files,
 )

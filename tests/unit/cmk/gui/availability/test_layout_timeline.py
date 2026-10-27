@@ -167,7 +167,6 @@ def test_fewer_than_four_tiny_spans_at_the_end_are_no_chaos_span() -> None:
     assert [css for _nr, _title, _width, css in timeline["spans"]] == ["state0"]
 
 
-@pytest.mark.xfail(strict=True, reason="the trailing chaos span is added after the trailing gap")
 def test_a_chaos_span_at_the_end_comes_before_the_trailing_gap() -> None:
     tiny = [_row(n, n + 1, "crit" if n % 2 else "ok") for n in range(9990, 9994)]
     timeline = _layout([_row(0, 9990), *tiny], "inline", _avoptions(until=10000.0))
@@ -178,7 +177,6 @@ def test_a_chaos_span_at_the_end_comes_before_the_trailing_gap() -> None:
     ]
 
 
-@pytest.mark.xfail(strict=True, reason="a gap is added before the chaos run it ends")
 def test_a_chaos_span_before_a_gap_comes_before_the_gap() -> None:
     tiny = [_row(n, n + 1, "crit" if n % 2 else "ok") for n in range(4)]
     timeline = _layout([*tiny, _row(5000, 10000)], "inline", _avoptions(until=10000.0))

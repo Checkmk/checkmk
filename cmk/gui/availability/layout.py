@@ -419,8 +419,8 @@ def layout_timeline(
         min_percentage = 0
     rest_percentage = 100 - len(timeline_rows) * min_percentage
 
-    chaos_begin = None
-    chaos_end = None
+    chaos_begin: AVTimeStamp | None = None
+    chaos_end: AVTimeStamp | None = None
     chaos_count = 0
     chaos_width = 0.0
 
@@ -443,6 +443,17 @@ def layout_timeline(
         }
         return (None, title, chaos_width, "chaos")
 
+    def end_chaos_period(
+        chaos_begin: AVTimeStamp | None,
+        chaos_end: AVTimeStamp | None,
+        chaos_count: int,
+        chaos_width: float,
+    ) -> tuple[None, None, int, float]:
+        # Only output chaos phases with a certain length
+        if chaos_count >= 4 and chaos_begin is not None and chaos_end is not None:
+            spans.append(chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width))
+        return None, None, 0, 0.0
+
     current_time = from_time
     for row_nr, (row, state_id) in enumerate(timeline_rows):
         this_from_time = row["from"]
@@ -450,6 +461,9 @@ def layout_timeline(
         # If timeline span begins after timeline beginning time, add
         # unmonitored span in front
         if this_from_time > current_time:  # GAP
+            chaos_begin, chaos_end, chaos_count, chaos_width = end_chaos_period(
+                chaos_begin, chaos_end, chaos_count, chaos_width
+            )
             spans.append(
                 (
                     None,
@@ -518,18 +532,15 @@ def layout_timeline(
                 continue
 
             # Chaos period has ended? One not-small phase:
-            if chaos_begin is not None and chaos_end is not None:
-                # Only output chaos phases with a certain length
-                if chaos_count >= 4:
-                    spans.append(chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width))
-
-                chaos_begin = None
-                chaos_end = None
-                chaos_count = 0
-                chaos_width = 0
-
+            chaos_begin, chaos_end, chaos_count, chaos_width = end_chaos_period(
+                chaos_begin, chaos_end, chaos_count, chaos_width
+            )
             width += min_percentage
             spans.append((row_nr, title, width, css))
+    chaos_begin, chaos_end, chaos_count, chaos_width = end_chaos_period(
+        chaos_begin, chaos_end, chaos_count, chaos_width
+    )
+
     # If timeline span ends before the current time, fill it up with
     # unmonitored entry until end
     if avoptions["service_period"] == "honor" and current_time < until_time:  # GAP
@@ -541,9 +552,6 @@ def layout_timeline(
                 "unmonitored",
             )
         )
-
-    if chaos_count >= 4 and chaos_begin is not None and chaos_end is not None:
-        spans.append(chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width))
 
     if style == "inline":
         timeline_layout["time_choords"] = list(layout_timeline_choords(time_range))

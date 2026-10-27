@@ -202,6 +202,38 @@ fn test_migration_is_always_triggered() {
     }
 }
 
+/// CMK-39588 AC7. proxy-register needs no test: it writes no connection that
+/// could become the source.
+#[test]
+fn test_import_does_not_record_an_update_source() {
+    if agent::is_elevation_required() {
+        println!("Test is skipped, must be in elevated mode");
+        return;
+    }
+
+    let test_dir =
+        common::setup_test_dir("cmk-agent-ctl_test_import_does_not_record_an_update_source");
+    // A plain file passes the check for a writable agent socket, which import requires.
+    #[cfg(unix)]
+    fs::write(agent::linux::setup_agent_socket_path(test_dir.path()), "").unwrap();
+
+    assert_cmd::Command::new(common::controller_command_path())
+        .timeout(std::time::Duration::from_secs(5))
+        .env("DEBUG_HOME_DIR", test_dir.path())
+        .arg("import")
+        // One line, as proxy-register prints it: the import reads one line from stdin.
+        .write_stdin(concat!(
+            r#"{"agent_controller_version": "3.0.0", "connection": {"#,
+            r#""uuid": "9a2c4eb5-35f5-4bf7-82c0-e2f2c06215ea", "private_key": "private_key", "#,
+            r#""certificate": "certificate", "root_certs": ["root_cert"]}}"#,
+        ))
+        .assert()
+        .success();
+
+    assert!(test_dir.path().join("registered_connections.json").exists());
+    assert!(!test_dir.path().join("agent-update-state.json").exists());
+}
+
 fn build_status_command_with_log(
     test_dir: &tempfile::TempDir,
     with_log_file: bool,

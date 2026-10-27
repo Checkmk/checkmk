@@ -40,7 +40,7 @@ pub fn daemon(
     // baked CAs handed to the registration.
     trusted_cas::trust_baked_cas(&baked_cas, &mut registry);
     process_pre_configured_connections(
-        &paths.pre_configured_connections_path,
+        &paths,
         &mut registry,
         &client_config,
         updater_registration,
@@ -91,14 +91,14 @@ pub fn daemon(
 }
 
 fn process_pre_configured_connections(
-    path_pre_configured_connections: &std::path::Path,
+    paths: &PathResolver,
     registry: &mut config::Registry,
     client_config: &config::ClientConfig,
     updater_registration: config::UpdaterRegistration,
     python_updater: Option<&PythonUpdater>,
     baked_cas: &trusted_cas::BakedCAs,
 ) {
-    match config::PreConfiguredConnections::load(path_pre_configured_connections) {
+    match config::PreConfiguredConnections::load(&paths.pre_configured_connections_path) {
         Ok(pre_configured) => {
             if let Err(err) = registration::register_pre_configured(
                 &pre_configured,
@@ -108,6 +108,7 @@ fn process_pre_configured_connections(
             )
             .and_then(|added_connections| {
                 updater::after_connection_changes(
+                    paths,
                     &added_connections,
                     &updater_registration,
                     python_updater,
@@ -122,7 +123,7 @@ fn process_pre_configured_connections(
         }
         Err(err) => info!(
             "Could not load pre-configured connections from {:?}: {}",
-            path_pre_configured_connections,
+            paths.pre_configured_connections_path,
             misc::anyhow_error_to_human_readable(&err)
         ),
     }

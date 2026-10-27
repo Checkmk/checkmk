@@ -352,6 +352,21 @@ pub struct AddedConnection {
     pub agent_update_authorization: agent_receiver_api::AgentUpdateAuthorization,
 }
 
+#[cfg(test)]
+impl AddedConnection {
+    /// With placeholder credentials.
+    pub fn new(
+        uuid: uuid::Uuid,
+        agent_update_authorization: agent_receiver_api::AgentUpdateAuthorization,
+    ) -> Self {
+        Self {
+            uuid,
+            credentials: types::Credentials::username_password("user", "password"),
+            agent_update_authorization,
+        }
+    }
+}
+
 pub fn register_existing(
     config: &config::RegisterExistingConfig,
     registry: &mut config::Registry,
@@ -426,8 +441,9 @@ fn _register_pre_configured(
         client_config,
         baked_cas,
     };
-    // Keep and overwrite let the order decide which connection the Python updater
-    // is registered for. A HashMap iterates differently at every start.
+    // Keep and overwrite let the order decide which connection becomes the update
+    // source, and which one the Python updater is registered for. A HashMap
+    // iterates differently at every start.
     let mut connections: Vec<_> = pre_configured_connections.connections.iter().collect();
     connections.sort_by_key(|(site_id, _)| *site_id);
     let mut added_connections = vec![];
@@ -841,6 +857,64 @@ mod tests {
 
     mod test_register_manual {
         use super::*;
+
+        /// CMK-39588 AC3
+        #[test]
+        fn test_a_new_registration_with_the_site_of_the_source_becomes_the_source() {
+            use crate::config::JSONLoader;
+            use crate::environment::{PathResolver, SetupMode};
+            use crate::updater;
+
+            let dir = tempfile::TempDir::new().unwrap();
+            let paths = PathResolver::new(SetupMode::Classic, dir.path());
+            let mut r = TestRegistry::new();
+            let config = registration_connection_config(vec![], None, false);
+            let trust = MockInteractiveTrust {
+                expect_server_cert_prompt: true,
+                expect_password_prompt: true,
+            };
+            let api = MockApi {
+                expect_root_cert: false,
+                expected_registration_method: Some(RegistrationMethod::Existing),
+                agent_update_authorization:
+                    agent_receiver_api::AgentUpdateAuthorization::Authorized,
+            };
+            let call = RegistrationCallExisting {
+                host_name: HOST_NAME,
+            };
+            let register = |registry: &mut config::Registry| {
+                let connection = direct_registration(
+                    &config,
+                    &prepare_registration(&config, &trust).unwrap(),
+                    registry,
+                    &api,
+                    &call,
+                )
+                .unwrap();
+                let uuid = connection.uuid;
+                updater::after_connection_changes(
+                    &paths,
+                    &[connection],
+                    &config::UpdaterRegistration::Keep,
+                    None,
+                    registry,
+                )
+                .unwrap();
+                uuid
+            };
+
+            register(&mut r.registry);
+            let second = register(&mut r.registry);
+
+            assert_eq!(
+                updater::UpdateState::load(&paths.updater_state_path)
+                    .unwrap()
+                    .source
+                    .unwrap()
+                    .uuid,
+                second
+            );
+        }
 
         /// CMK-39588 AC1
         #[test]

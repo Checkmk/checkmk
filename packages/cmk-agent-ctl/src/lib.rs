@@ -79,17 +79,12 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
             let config = config::RegisterExistingConfig::new(runtime_config, reg_opts)?;
             let connection = registration::register_existing(&config, &mut registry)?;
             updater::after_connection_changes(
+                &paths,
                 &[connection],
                 &updater_registration,
                 updater::PythonUpdater::find(&paths, &config.connection_config.client_config)
                     .as_ref(),
                 &registry,
-            )?;
-            register_update_source(
-                &mut Updater::writable(&paths)?,
-                &mut registry,
-                &config.connection_config.site_id,
-                &updater_registration,
             )
         }
         cli::Mode::RegisterNew(reg_new_opts) => {
@@ -104,17 +99,12 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
             )?;
             let connection = registration::register_new(&config, &mut registry)?;
             updater::after_connection_changes(
+                &paths,
                 &[connection],
                 &updater_registration,
                 updater::PythonUpdater::find(&paths, &config.connection_config.client_config)
                     .as_ref(),
                 &registry,
-            )?;
-            register_update_source(
-                &mut Updater::writable(&paths)?,
-                &mut registry,
-                &config.connection_config.site_id,
-                &updater_registration,
             )
         }
         cli::Mode::ProxyRegister(reg_opts) => registration::proxy_register(
@@ -167,11 +157,23 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
         ),
         cli::Mode::Delete(delete_opts) => {
             delete(&mut registry, &delete_opts.connection)?;
-            Updater::writable(&paths)?.forget_vanished_update_source(&registry)
+            updater::after_connection_changes(
+                &paths,
+                &[],
+                &runtime_config.configured_updater_registration(),
+                None,
+                &registry,
+            )
         }
         cli::Mode::DeleteAll(delete_all_opts) => {
             delete_all(&mut registry, delete_all_opts.enable_insecure_connections)?;
-            Updater::writable(&paths)?.forget_vanished_update_source(&registry)
+            updater::after_connection_changes(
+                &paths,
+                &[],
+                &runtime_config.configured_updater_registration(),
+                None,
+                &registry,
+            )
         }
         cli::Mode::Update(update_opts) => {
             let client_config =
@@ -201,48 +203,6 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
             config::ClientConfig::new(runtime_config, renew_certificate_opts.client_opts, None),
         ),
     }
-}
-
-/// Hand the connection a registration just created to the updater.
-///
-/// The source is the connection the registry now holds for `site_id`: the
-/// registration put the UUID it generated there, and the updater talks to the
-/// site over that connection's mTLS channel.
-///
-/// # Arguments
-///
-/// * `updater` - the updater of this controller run
-/// * `registry` - the registry the registration just wrote
-/// * `site_id` - the site the registration registered this host at
-/// * `registration` - what the host is configured to do about the updater
-///
-/// # Errors
-///
-/// If the updater state cannot be written.
-fn register_update_source(
-    updater: &mut updater::WritableUpdater,
-    registry: &mut config::Registry,
-    site_id: &site_spec::SiteID,
-    registration: &config::UpdaterRegistration,
-) -> AnyhowResult<()> {
-    let Some(connection) = registry.get_connection_as_mut(site_id) else {
-        // Nothing registered means nothing to update from, so the updater keeps
-        // whatever source it had.
-        log::warn!("No registered connection to {site_id}, leaving the update source alone");
-        return Ok(());
-    };
-    let source = updater::UpdateSource {
-        uuid: connection.trust.uuid,
-        // Only the site, by answering 501, can say that it serves no agent updates.
-        available: true,
-    };
-    log::info!(
-        "Candidate update source from this registration: connection {} to {}, available: {}",
-        source.uuid,
-        site_id,
-        source.available
-    );
-    updater.register_update_source(registration, source, registry)
 }
 
 /// This check is currently only useful on Unix. On Windows, the internal agent address can be passed

@@ -210,15 +210,38 @@ pub struct PreConfiguredConnection {
     pub root_cert: String,
 }
 
-/// Controls how the agent updater registers during agent controller registration.
+/// What the registrations of a run do about the two agent updaters.
+///
+/// Both updaters follow the same rule, and each variant describes its effect
+/// on each updater separately. "First" and "last" refer to the connections
+/// that the run added, in order. `register` and `register-new` add one
+/// connection. The daemon adds one per new pre-configured connection.
+///
+/// For the integrated updater, only a connection whose registration the site
+/// authorized for agent updates counts. The update source stays only as long as
+/// the registry holds its connection.
 #[derive(Deserialize, Clone, Debug, PartialEq, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum UpdaterRegistration {
-    /// Register the updater only if it is not yet registered (check status first).
+    /// The existing registration wins.
+    ///
+    /// - Python updater: registered for the first connection, unless it is
+    ///   registered already.
+    /// - Integrated updater: the update source stays. Without a source, the
+    ///   first connection becomes the source.
     Keep,
-    /// Always register the updater, overwriting any existing registration.
+    /// The newest registration wins.
+    ///
+    /// - Python updater: registered for the last connection. This registration
+    ///   replaces an existing one.
+    /// - Integrated updater: the last connection becomes the update source. A
+    ///   run without an authorized connection leaves the source as it is.
     Overwrite,
-    /// Do not register the updater automatically.
+    /// The controller leaves the updaters alone.
+    ///
+    /// - Python updater: not registered.
+    /// - Integrated updater: no connection becomes the update source. The
+    ///   existing source stays.
     #[default]
     Manual,
 }

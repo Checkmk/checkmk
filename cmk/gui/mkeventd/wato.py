@@ -3664,7 +3664,8 @@ def _pending_changes_for_ec(*, config: Config, acting_user: UserId | None) -> Pe
 @dataclass
 class MIBInfo:
     size: int
-    name: str
+    name: ec.MibName | None
+    """The name of the MIB the file defines, unless its header tells none"""
     organization: str
 
 
@@ -3774,7 +3775,9 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         for filename in selected_custom_mibs:
             self._delete_mib(filename, custom_mibs[filename].name, pending_changes=pending_changes)
 
-    def _delete_mib(self, filename: str, mib_name: str, *, pending_changes: PendingChanges) -> None:
+    def _delete_mib(
+        self, filename: str, mib_name: ec.MibName | None, *, pending_changes: PendingChanges
+    ) -> None:
         self._add_change(
             action_name="delete-mib",
             text=_("Deleted MIB %(filename)s") % {"filename": filename},
@@ -3782,9 +3785,10 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         )
         pyc_suffix = f".cpython-{sys.version_info.major}{sys.version_info.minor}.pyc"
         compiled_mibs_dir = self._paths.compiled_mibs_dir.value
+        names = [Path(filename)] if mib_name is None else [Path(filename), Path(mib_name)]
         for path in {
             compiled_mibs_dir / p
-            for f in (Path(filename), Path(mib_name))
+            for f in names
             for p in (
                 f.with_suffix(".py"),
                 ("__pycache__" / f).with_suffix(pyc_suffix),
@@ -3846,7 +3850,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                     html.icon_button(delete_url, _("Delete this MIB"), StaticIcon(IconNames.delete))
 
                 table.cell(_("File name"), filename)
-                table.cell(_("MIB"), mib.name)
+                table.cell(_("MIB"), mib.name or "")
                 table.cell(_("Organization"), mib.organization)
                 table.cell(_("Size"), cmk.utils.render.fmt_bytes(mib.size), css=["number"])
 
@@ -3876,9 +3880,9 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 else ""
             ),
             name=(
-                matches.group(1)
+                ec.MibName(matches.group(1))
                 if (matches := re.search(r"^\s*([A-Z0-9][A-Z0-9-]+)\s", head, re.I | re.M))
-                else ""
+                else None
             ),
         )
 

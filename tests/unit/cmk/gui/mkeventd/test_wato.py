@@ -3765,6 +3765,19 @@ def test_deleting_a_custom_mib_removes_it_and_its_compiled_module(
 
 
 @_setup_page
+def test_deleting_a_custom_mib_whose_header_names_no_mib_removes_it(
+    load_config: Config, test_edition: Edition
+) -> None:
+    # E.g. a file put into the directory of the custom MIBs by hand
+    _custom_mib("notes.mib", "-- nothing but a comment\n")
+    submit(_delete="notes.mib")
+
+    _mib_list_action(load_config, test_edition)
+
+    assert _custom_mibs() == []
+
+
+@_setup_page
 def test_deleting_a_mib_which_is_no_custom_one_is_ignored(
     load_config: Config, test_edition: Edition
 ) -> None:

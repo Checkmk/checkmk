@@ -8,7 +8,7 @@ from typing import Literal
 import pytest
 
 from cmk.bakery.v2 import WindowsGlobalConfigEntry
-from cmk.base.plugins.bakery.win_script_async import (
+from cmk.plugins.windows.bakery.win_script_async import (
     bakery_plugin_win_script_async,
     get_win_script_async_windows_config,
 )

@@ -55,8 +55,6 @@ void main() {
     inside_container(
         image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
         ulimit_nofile: 1024,
-        set_docker_group_id: true,
-        privileged: true,
     ) {
         dir("${checkout_dir}") {
             stage("setversion") {

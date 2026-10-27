@@ -234,6 +234,15 @@ class ServiceSort:
 
 
 @dataclasses.dataclass(frozen=True)
+class ServiceTarget:
+    """A service a command is sent for, on its host's site."""
+
+    site_id: str
+    host_name: str
+    description: str
+
+
+@dataclasses.dataclass(frozen=True)
 class RescheduleTarget:
     """A single service check to be forcibly rescheduled at a specific time."""
 

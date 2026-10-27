@@ -20,6 +20,7 @@ import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell
 
 import { useAcknowledgeHostsAction } from './actions/acknowledgeHosts'
 import { useCommentHostsAction } from './actions/commentHosts'
+import { useNotifyHostsAction } from './actions/notifyHosts'
 import { useRescheduleHostsAction } from './actions/rescheduleHosts'
 import { useScheduleHostDowntimeAction } from './actions/scheduleHostDowntime'
 import { HostActionMenuApi } from './api/actionMenu'
@@ -101,7 +102,8 @@ export function useHostActions(payload: HostActionsPayload): HostActions {
       downtimePresets(payload.downtime_presets),
       payload.downtime_presets_url ?? null
     ),
-    useCommentHostsAction()
+    useCommentHostsAction(),
+    useNotifyHostsAction()
   ])
 
   const { bar, more } = barActions(permitted, registry)

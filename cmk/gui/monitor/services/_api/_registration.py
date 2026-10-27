@@ -8,6 +8,7 @@ from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 
 from ._action_menu import ENDPOINT_GET_SERVICE_ACTION_MENU
+from ._custom_notification import ENDPOINT_SEND_CUSTOM_NOTIFICATION
 from ._family import MONITOR_SERVICES_FAMILY
 from ._list_host_services import ENDPOINT_LIST_HOST_SERVICES
 from ._list_services import ENDPOINT_LIST_ALL_SERVICES
@@ -27,3 +28,4 @@ def register_endpoints(
     versioned_endpoint_registry.register(make_endpoint_get_service_overview(setup_folders))
     versioned_endpoint_registry.register(ENDPOINT_GET_SERVICE_ACTION_MENU)
     versioned_endpoint_registry.register(ENDPOINT_RESCHEDULE_CHECKS)
+    versioned_endpoint_registry.register(ENDPOINT_SEND_CUSTOM_NOTIFICATION)

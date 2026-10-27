@@ -11,6 +11,7 @@ import type { ServiceRef, ServiceState } from '@/monitoring/shared/api/types'
 import { acknowledgeDefaults } from '@/monitoring/shared/components/action/actions/acknowledge'
 import { useAcknowledgeServicesAction } from '@/monitoring/shared/components/action/actions/acknowledgeServices'
 import { useCommentServicesAction } from '@/monitoring/shared/components/action/actions/commentServices'
+import { useNotifyServicesAction } from '@/monitoring/shared/components/action/actions/notifyServices'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import { useRescheduleServicesAction } from '@/monitoring/shared/components/action/actions/rescheduleServices'
 import { downtimePresets } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
@@ -82,7 +83,8 @@ export function useServiceListing(payload: MonitoringCommandsPayload): ServiceLi
       downtimePresets(payload.downtime_presets),
       payload.downtime_presets_url ?? null
     ),
-    useCommentServicesAction()
+    useCommentServicesAction(),
+    useNotifyServicesAction()
   ])
 
   const quickFilters: QuickFilterConfig[] = [

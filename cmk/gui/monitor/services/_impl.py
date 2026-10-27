@@ -15,12 +15,15 @@ from typing import cast
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.monitor.site_scope import MonitorSites
 from cmk.livestatus_client import (
     LivestatusClient,
     MultiSiteConnection,
+    NotificationOption,
     ScheduleForcedServiceCheck,
+    SendCustomServiceNotification,
 )
 from cmk.livestatus_client.expressions import And, NothingExpression, Or, QueryExpression
 from cmk.livestatus_client.queries import detailed_connection, Query
@@ -41,6 +44,7 @@ from ._models import (
     ServiceSort,
     ServiceSortColumn,
     ServiceState,
+    ServiceTarget,
 )
 from ._sorting import service_sorter
 
@@ -406,6 +410,28 @@ class LiveStatusServiceActions:
                     host_name=HostName(target.host_name),
                     description=target.description,
                     check_time=target.check_time,
+                ),
+                SiteId(target.site_id),
+            )
+
+    def send_custom_notification(
+        self,
+        targets: Sequence[ServiceTarget],
+        *,
+        author: UserId,
+        comment: str,
+        forced: bool,
+        broadcast: bool,
+    ) -> None:
+        client = LivestatusClient(self._connection)
+        option = NotificationOption(
+            NotificationOption.FORCED.value * forced
+            + NotificationOption.BROADCAST.value * broadcast
+        )
+        for target in targets:
+            client.command(
+                SendCustomServiceNotification(
+                    HostName(target.host_name), option, author, comment, target.description
                 ),
                 SiteId(target.site_id),
             )

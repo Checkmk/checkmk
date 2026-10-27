@@ -236,6 +236,14 @@ class HostSort:
 
 
 @dataclasses.dataclass(frozen=True)
+class HostTarget:
+    """A host a command is sent for, on its site."""
+
+    site_id: str
+    host_name: str
+
+
+@dataclasses.dataclass(frozen=True)
 class RescheduleTarget:
     """A single host check to be forcibly rescheduled at a specific time."""
 

@@ -15,6 +15,7 @@ from typing import cast
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
@@ -31,7 +32,9 @@ from cmk.gui.utils.host_relations import (
 from cmk.livestatus_client import (
     LivestatusClient,
     MultiSiteConnection,
+    NotificationOption,
     ScheduleForcedHostCheck,
+    SendCustomHostNotification,
 )
 from cmk.livestatus_client.expressions import And, NothingExpression, Or, QueryExpression
 from cmk.livestatus_client.queries import detailed_connection, Query, ResultRow
@@ -50,6 +53,7 @@ from ._models import (
     HostOptionalField,
     HostSort,
     HostSortColumn,
+    HostTarget,
     MAX_RESOLVED_RELATIONS,
     RelatedHost,
     RelatedHostHealth,
@@ -510,6 +514,26 @@ class LiveStatusHostActions:
                     host_name=HostName(target.host_name),
                     check_time=target.check_time,
                 ),
+                SiteId(target.site_id),
+            )
+
+    def send_custom_notification(
+        self,
+        targets: Sequence[HostTarget],
+        *,
+        author: UserId,
+        comment: str,
+        forced: bool,
+        broadcast: bool,
+    ) -> None:
+        client = LivestatusClient(self._connection)
+        option = NotificationOption(
+            NotificationOption.FORCED.value * forced
+            + NotificationOption.BROADCAST.value * broadcast
+        )
+        for target in targets:
+            client.command(
+                SendCustomHostNotification(HostName(target.host_name), option, author, comment),
                 SiteId(target.site_id),
             )
 

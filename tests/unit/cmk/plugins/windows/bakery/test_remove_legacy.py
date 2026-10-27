@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.bakery.v2 import WindowsGlobalConfigEntry
-from cmk.base.plugins.bakery.remove_legacy import (
+from cmk.plugins.windows.bakery.remove_legacy import (
     bakery_plugin_remove_legacy,
     get_remove_legacy_windows_config,
 )

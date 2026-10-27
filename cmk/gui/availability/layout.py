@@ -510,7 +510,7 @@ def layout_timeline(
             # If the width is very small then we group several phases into
             # one single "chaos period".
             if style == "inline" and width < 0.05:
-                if not chaos_begin:
+                if chaos_begin is None:
                     chaos_begin = row["from"]
                 chaos_width += width
                 chaos_count += 1
@@ -518,7 +518,7 @@ def layout_timeline(
                 continue
 
             # Chaos period has ended? One not-small phase:
-            if chaos_begin and chaos_end:
+            if chaos_begin is not None and chaos_end is not None:
                 # Only output chaos phases with a certain length
                 if chaos_count >= 4:
                     spans.append(chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width))
@@ -542,7 +542,7 @@ def layout_timeline(
             )
         )
 
-    if chaos_count > 1 and chaos_begin and chaos_end:
+    if chaos_count > 1 and chaos_begin is not None and chaos_end is not None:
         spans.append(chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width))
 
     if style == "inline":

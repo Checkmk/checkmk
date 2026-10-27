@@ -155,7 +155,6 @@ def test_inline_collapses_four_tiny_spans_into_one_chaos_span() -> None:
     assert [css for _nr, _title, _width, css in timeline["spans"]] == ["chaos", "state0"]
 
 
-@pytest.mark.xfail(strict=True, reason="`if not chaos_begin` treats timestamp 0 as unset")
 def test_a_chaos_span_starts_with_its_first_tiny_span() -> None:
     tiny = [_row(n, n + 1, "crit" if n % 2 else "ok") for n in range(4)]
     [chaos, _ok] = _layout([*tiny, _row(4, 10000)], "inline", _avoptions(until=10000.0))["spans"]

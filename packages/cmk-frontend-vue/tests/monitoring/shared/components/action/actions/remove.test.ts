@@ -7,8 +7,10 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { beforeEach, expect, test, vi } from 'vitest'
 
 import { useRemoveHostAcknowledgementsAction } from '@/monitoring/all-hosts/actions/removeHostAcknowledgements'
+import { useRemoveHostDowntimesAction } from '@/monitoring/all-hosts/actions/removeHostDowntimes'
 import { rowsToActOn } from '@/monitoring/shared/components/action/actions/remove'
 import { useRemoveServiceAcknowledgementsAction } from '@/monitoring/shared/components/action/actions/removeServiceAcknowledgements'
+import { useRemoveServiceDowntimesAction } from '@/monitoring/shared/components/action/actions/removeServiceDowntimes'
 
 const HOST = { name: 'db-1', site_id: 'local' }
 
@@ -27,6 +29,21 @@ test('says the acknowledgement of the selected host was removed', async () => {
   expect(await useRemoveHostAcknowledgementsAction().perform([HOST], {})).toEqual({
     variant: 'success',
     message: 'Removed acknowledgement of the selected host'
+  })
+})
+
+test('says the downtimes of the selected services were removed', async () => {
+  expect(
+    await useRemoveServiceDowntimesAction().perform(
+      [
+        { host: HOST, description: 'CPU load' },
+        { host: HOST, description: 'Memory' }
+      ],
+      {}
+    )
+  ).toEqual({
+    variant: 'success',
+    message: 'Removed downtimes of the selected services'
   })
 })
 
@@ -55,6 +72,13 @@ test('asks to confirm the acknowledgements it removes', () => {
   expect(confirm?.submitLabel(1)).toBe('Remove acknowledgements')
 })
 
+test('asks to confirm the downtimes it removes', () => {
+  const { confirm } = useRemoveHostDowntimesAction()
+
+  expect(confirm?.detail(3)).toBe('Downtimes: 3')
+  expect(confirm?.submitLabel(1)).toBe('Remove downtimes')
+})
+
 const ROWS = [
   { name: 'acked', modes: [{ id: 'acknowledged' }] },
   { name: 'down', modes: [{ id: 'downtime' }, { id: 'comments' }] },
@@ -63,6 +87,9 @@ const ROWS = [
 
 test('a removal acts only on the rows having something to remove', () => {
   expect(rowsToActOn(ROWS, 'remove_acknowledgments').map((row) => row.name)).toEqual(['acked'])
+  expect(rowsToActOn(ROWS, 'remove_downtimes_hosts_services').map((row) => row.name)).toEqual([
+    'down'
+  ])
 })
 
 test('any other action acts on all rows', () => {

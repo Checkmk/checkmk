@@ -40,7 +40,8 @@ test('offers the commands implemented for services', () => {
     'add_comment',
     'send_custom_notification',
     'fake_check_result',
-    'remove_acknowledgments'
+    'remove_acknowledgments',
+    'remove_downtimes_hosts_services'
   ])
 })
 

@@ -14,6 +14,7 @@ import { useCommentServicesAction } from '@/monitoring/shared/components/action/
 import { useFakeServiceCheckResultsAction } from '@/monitoring/shared/components/action/actions/fakeServiceCheckResults'
 import { useNotifyServicesAction } from '@/monitoring/shared/components/action/actions/notifyServices'
 import { useRemoveServiceAcknowledgementsAction } from '@/monitoring/shared/components/action/actions/removeServiceAcknowledgements'
+import { useRemoveServiceDowntimesAction } from '@/monitoring/shared/components/action/actions/removeServiceDowntimes'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import { useRescheduleServicesAction } from '@/monitoring/shared/components/action/actions/rescheduleServices'
 import { downtimePresets } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
@@ -88,7 +89,8 @@ export function useServiceListing(payload: MonitoringCommandsPayload): ServiceLi
     useCommentServicesAction(),
     useNotifyServicesAction(),
     useFakeServiceCheckResultsAction(),
-    useRemoveServiceAcknowledgementsAction()
+    useRemoveServiceAcknowledgementsAction(),
+    useRemoveServiceDowntimesAction()
   ])
 
   const quickFilters: QuickFilterConfig[] = [

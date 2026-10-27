@@ -5,11 +5,11 @@
  */
 import type { ServiceRef } from '@/monitoring/shared/api/types'
 
-/** A Livestatus filter matching every host whose `name` is one of `hostNames`. */
-export function hostNameQuery(hostNames: string[]) {
+/** A Livestatus filter matching every host whose `column` is one of `hostNames`. */
+export function hostNameQuery(hostNames: string[], column: string = 'name') {
   return {
     op: 'or' as const,
-    expr: hostNames.map((name) => ({ op: '=' as const, left: 'name', right: name }))
+    expr: hostNames.map((name) => ({ op: '=' as const, left: column, right: name }))
   }
 }
 
@@ -29,17 +29,22 @@ function descriptionsByHostName(services: ServiceRef[]): Map<string, string[]> {
  *
  * Services are matched by host name and description only: the acknowledge and downtime queries
  * have no site column, so a host name found on several sites matches the services of each.
+ * The downtimes table names the description column `service_description`.
  */
-export function serviceQuery(services: ServiceRef[]) {
+export function serviceQuery(services: ServiceRef[], descriptionColumn: string = 'description') {
   const queries = [...descriptionsByHostName(services)].map(([hostName, descriptions]) =>
-    serviceDescriptionQuery(hostName, descriptions)
+    serviceDescriptionQuery(hostName, descriptions, descriptionColumn)
   )
   const [single, ...others] = queries
   return single !== undefined && others.length === 0 ? single : { op: 'or' as const, expr: queries }
 }
 
 /** A Livestatus filter matching the named services of a single host. */
-function serviceDescriptionQuery(hostName: string, serviceDescriptions: string[]) {
+function serviceDescriptionQuery(
+  hostName: string,
+  serviceDescriptions: string[],
+  descriptionColumn: string
+) {
   return {
     op: 'and' as const,
     expr: [
@@ -48,7 +53,7 @@ function serviceDescriptionQuery(hostName: string, serviceDescriptions: string[]
         op: 'or' as const,
         expr: serviceDescriptions.map((description) => ({
           op: '=' as const,
-          left: 'description',
+          left: descriptionColumn,
           right: description
         }))
       }

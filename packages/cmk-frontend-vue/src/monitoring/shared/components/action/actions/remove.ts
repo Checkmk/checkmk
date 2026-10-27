@@ -10,6 +10,7 @@ import type { MonitoringAction } from '../types'
 import { commandFailed } from './feedback'
 
 export const REMOVE_ACK_ACTION_ID = 'remove_acknowledgments'
+export const REMOVE_DOWNTIMES_ACTION_ID = 'remove_downtimes_hosts_services'
 
 export interface RemoveKindConfig<Target> {
   remove(targets: Target[]): Promise<void>
@@ -54,9 +55,28 @@ export function createRemoveAcknowledgementsAction<Target>(
   )
 }
 
+/** Removes the downtimes of the targets, which the page narrows to ones in downtime. */
+export function createRemoveDowntimesAction<Target>(
+  config: RemoveKindConfig<Target>
+): MonitoringAction<Record<string, never>, Target> {
+  const { _t } = usei18n()
+  return createRemoveAction(
+    {
+      id: REMOVE_DOWNTIMES_ACTION_ID,
+      title: _t('Remove downtimes'),
+      confirm: {
+        detail: (count) => _t('Downtimes: %{count}', { count }),
+        submitLabel: () => _t('Remove downtimes')
+      }
+    },
+    config
+  )
+}
+
 /** The mode a row shows while it has something for the removal to remove. */
 const REMOVED_MODE: Readonly<Record<string, string>> = {
-  [REMOVE_ACK_ACTION_ID]: 'acknowledged'
+  [REMOVE_ACK_ACTION_ID]: 'acknowledged',
+  [REMOVE_DOWNTIMES_ACTION_ID]: 'downtime'
 }
 
 /** Narrows the rows a removal acts on to those having something to remove; others keep all. */

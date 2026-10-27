@@ -23,6 +23,7 @@ import { useCommentHostsAction } from './actions/commentHosts'
 import { useFakeHostCheckResultsAction } from './actions/fakeHostCheckResults'
 import { useNotifyHostsAction } from './actions/notifyHosts'
 import { useRemoveHostAcknowledgementsAction } from './actions/removeHostAcknowledgements'
+import { useRemoveHostDowntimesAction } from './actions/removeHostDowntimes'
 import { useRescheduleHostsAction } from './actions/rescheduleHosts'
 import { useScheduleHostDowntimeAction } from './actions/scheduleHostDowntime'
 import { HostActionMenuApi } from './api/actionMenu'
@@ -107,7 +108,8 @@ export function useHostActions(payload: HostActionsPayload): HostActions {
     useCommentHostsAction(),
     useNotifyHostsAction(),
     useFakeHostCheckResultsAction(),
-    useRemoveHostAcknowledgementsAction()
+    useRemoveHostAcknowledgementsAction(),
+    useRemoveHostDowntimesAction()
   ])
 
   const { bar, more } = barActions(permitted, registry)

@@ -1337,3 +1337,46 @@ test('offers the further service commands in the "More" menu, the missing ones d
   )
   expect(screen.queryByRole('menuitem', { name: 'Acknowledge problems' })).not.toBeInTheDocument()
 })
+
+test('removes the downtime of the selected service after confirming it', async () => {
+  const user = userEvent.setup()
+  mockServices([
+    {
+      ...makeApiEntry(),
+      modes: [{ id: 'downtime', icon_name: 'downtime', link: '', title: 'In downtime' }]
+    }
+  ])
+  renderApp({
+    actions: [
+      {
+        ident: 'remove_downtimes_hosts_services',
+        title: 'Remove downtimes',
+        icon: 'downtime'
+      }
+    ]
+  })
+
+  await user.click(await screen.findByRole('checkbox', { name: 'Select all rows' }))
+  await user.click(screen.getByRole('button', { name: 'More' }))
+  await user.click(await screen.findByRole('menuitem', { name: 'Remove downtimes' }))
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Downtimes: 1')
+  await user.click(screen.getByRole('button', { name: 'Remove downtimes' }))
+
+  expect(await screen.findByText('Removed downtime of the selected service')).toBeInTheDocument()
+  expect(postSpy).toHaveBeenCalledWith(
+    '/domain-types/downtime/actions/delete/invoke',
+    expect.objectContaining({
+      body: {
+        delete_type: 'query',
+        query: {
+          op: 'and',
+          expr: [
+            { op: '=', left: 'host_name', right: 'web-1' },
+            { op: 'or', expr: [{ op: '=', left: 'service_description', right: 'CPU load' }] }
+          ]
+        }
+      }
+    })
+  )
+})

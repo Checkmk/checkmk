@@ -111,3 +111,36 @@ export class ScheduleDowntimeApi {
     )
   }
 }
+
+export class RemoveDowntimeApi {
+  /** Removes the downtimes of the hosts themselves, not those of their services. */
+  public async removeHostDowntimes(hostNames: string[]): Promise<void> {
+    unwrap(
+      await defaultClient.POST('/domain-types/downtime/actions/delete/invoke', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body: {
+          delete_type: 'query',
+          query: {
+            op: 'and',
+            expr: [
+              { op: '=', left: 'is_service', right: '0' },
+              hostNameQuery(hostNames, 'host_name')
+            ]
+          }
+        }
+      })
+    )
+  }
+
+  public async removeServiceDowntimes(services: ServiceRef[]): Promise<void> {
+    unwrap(
+      await defaultClient.POST('/domain-types/downtime/actions/delete/invoke', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body: {
+          delete_type: 'query',
+          query: serviceQuery(services, 'service_description')
+        }
+      })
+    )
+  }
+}

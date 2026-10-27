@@ -73,7 +73,6 @@ SOURCES_SPECIAL_DATACLASSES = [
     "legacy_frontend_hooks.json",
     "maps_states.json",
     "profiling_flamegraph.json",
-    "service_graphs.json",
     "unit_format.json",
 ]
 

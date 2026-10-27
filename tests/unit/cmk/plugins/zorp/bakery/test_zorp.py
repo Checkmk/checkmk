@@ -6,7 +6,7 @@
 from pathlib import Path
 
 from cmk.bakery.v2 import OS, Plugin
-from cmk.base.plugins.bakery.zorp import bakery_plugin_zorp, get_zorp_files
+from cmk.plugins.zorp.bakery.zorp import bakery_plugin_zorp, get_zorp_files
 
 
 def test_zorp_files_do_not_deploy() -> None:

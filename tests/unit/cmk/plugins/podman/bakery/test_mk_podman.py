@@ -6,7 +6,7 @@
 from pathlib import Path
 
 from cmk.bakery.v2 import OS, Plugin, PluginConfig
-from cmk.base.plugins.bakery.mk_podman import bakery_plugin_mk_podman, get_mk_podman_files
+from cmk.plugins.podman.bakery.mk_podman import bakery_plugin_mk_podman, get_mk_podman_files
 
 
 def test_mk_podman_files_auto_detection() -> None:

@@ -26,7 +26,8 @@ def _make(name: str) -> tuple[str, ...]:
 def _fake_run(outputs: Mapping[tuple[str, ...], str]) -> RunCaptured:
     """Returns the output given for a command, fails for any other command."""
 
-    def run(command: Sequence[str]) -> str:
+    def run(command: Sequence[str], stdin: str = "") -> str:
+        assert not stdin, "none of these commands reads stdin"
         if (output := outputs.get(tuple(command))) is None:
             raise DeltaError(f"{' '.join(command)} failed")
         return output

@@ -5,24 +5,29 @@
 """The files a --delta option covers."""
 
 import subprocess
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from enum import StrEnum
 from pathlib import Path
+from typing import Protocol
 
 from bazel_delta.errors import DeltaError
 
-# Runs a command in the workspace and returns its stdout, raises DeltaError if it fails.
-type RunCaptured = Callable[[Sequence[str]], str]
+
+class RunCaptured(Protocol):
+    """Runs a command in the workspace and returns its stdout, raises DeltaError if it fails."""
+
+    def __call__(self, command: Sequence[str], stdin: str = "") -> str: ...
 
 
 def run_captured_in(workspace: Path) -> RunCaptured:
-    def run(command: Sequence[str]) -> str:
+    def run(command: Sequence[str], stdin: str = "") -> str:
         try:
             return subprocess.run(
                 command,
                 cwd=workspace,
                 check=True,
                 capture_output=True,
+                input=stdin,
                 text=True,
             ).stdout
         except (OSError, subprocess.CalledProcessError) as e:

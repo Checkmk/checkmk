@@ -582,6 +582,17 @@ alias(
 )
 
 alias(
+    name = "lint",
+    actual = "//bazel/tools/delta:lint",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "lint.check",
+    actual = "//bazel/tools/delta:lint.check",
+)
+
+alias(
     name = "buildifier",
     actual = "//bazel/tools:buildifier",
 )

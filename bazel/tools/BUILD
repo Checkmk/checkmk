@@ -12,6 +12,7 @@ load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_cons
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
+load("//bazel/tools:starlark_files.bzl", "STARLARK_EXCLUDED", "STARLARK_NAMES")
 
 exports_files(
     [
@@ -185,18 +186,11 @@ py_binary(
             "set -e",
             'REPO_PATH="${BUILD_WORKSPACE_DIRECTORY:-.}"',
             'find "$REPO_PATH" -type f \\',
-            '    \\! -path "${REPO_PATH}/*/build/*" \\',
-            '    \\! -path "${REPO_PATH}/container_shadow_workspace_local/*" \\',
-            '    \\! -path "${REPO_PATH}/.docker_workspace/*" \\',
-            '    \\! -path "${REPO_PATH}/tests/qa-test-data/*" \\',
-            '    \\! -path "${REPO_PATH}/.cache/*" \\',
-            '    \\! -path "${REPO_PATH}/bazel/registry/*" \\',
-            '    \\! -path "${REPO_PATH}/bazel/thirdparty/*" \\',
-            '    \\! -path "${REPO_PATH}/.bazelbsp/*" \\',
-            '    \\( -name "*.bzl" -o -name "*.sky" -o -name BUILD.bazel -o -name BUILD \\',
-            '    -o -name "*.BUILD" -o -name "BUILD.*.bazel" -o -name "BUILD.*.oss" \\',
-            '    -o -name "MODULE.bazel" -o -name WORKSPACE -o -name WORKSPACE.bazel \\',
-            '    -o -name WORKSPACE.oss -o -name "WORKSPACE.*.bazel" -o -name "WORKSPACE.*.oss" \\) \\',
+        ] + [
+            '    \\! -path "${REPO_PATH}/%s" \\' % pattern
+            for pattern in STARLARK_EXCLUDED
+        ] + [
+            "    \\( %s \\) \\" % " -o ".join(['-name "%s"' % pattern for pattern in STARLARK_NAMES]),
             '    -print | xargs "$BUILD_WORKSPACE_DIRECTORY/{buildifier_bin}" {buildifier_args} \\',
             '    -config="$BUILD_WORKSPACE_DIRECTORY/{config}" "$@"',
             "",

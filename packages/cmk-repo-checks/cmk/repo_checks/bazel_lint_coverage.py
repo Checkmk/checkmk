@@ -96,7 +96,8 @@ SHELL_SHEBANG: Final = re.compile(rb"^#!\s*(\S*/)?(env\s+(-\S+\s+)*)?(ba|da|k)?s
 SHELL: Final = _linted_by_rule_kinds("shell", (".sh",), ("sh_binary", "sh_library", "sh_test"))
 
 # The rule kinds and tags mirror the aspects in bazel/tools/aspects.bzl and
-# their defaults in aspect_rules_lint.
+# their defaults in aspect_rules_lint, as _LINTED_RULES in
+# bazel/tools/delta/bazel_delta/lint.py does for `bazel run //:lint -- --delta`.
 FILE_CLASSES: Final = (
     SHELL,
     FileClass(

@@ -74,34 +74,46 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
     log::info!("Updater {}", updater.summary());
     match cli.mode {
         cli::Mode::Register(reg_opts) => {
+            let updater_registration =
+                runtime_config.updater_registration(reg_opts.automatic_updates);
             let config = config::RegisterExistingConfig::new(runtime_config, reg_opts)?;
-            registration::register_existing(&config, &mut registry, detect_agent_updater())?;
+            let connection = registration::register_existing(&config, &mut registry)?;
+            updater::after_connection_changes(
+                &[connection],
+                &updater_registration,
+                detect_agent_updater(),
+                &config.connection_config.client_config,
+                &registry,
+            )?;
             register_update_source(
                 &mut Updater::writable(&paths)?,
                 &mut registry,
                 &config.connection_config.site_id,
-                &config.updater_registration,
+                &updater_registration,
             )
         }
         cli::Mode::RegisterNew(reg_new_opts) => {
-            let updater_registration = runtime_config
-                .updater_registration
-                .clone()
-                .unwrap_or_default();
+            let updater_registration = runtime_config.configured_updater_registration();
             let config = config::RegisterNewConfig::new(
                 config::RegistrationConnectionConfig::from_register_new_opts(
                     runtime_config,
                     reg_new_opts.connection_opts,
                 )?,
                 reg_new_opts.agent_labels_raw.into_iter().collect(),
-                updater_registration,
             )?;
-            registration::register_new(&config, &mut registry, detect_agent_updater())?;
+            let connection = registration::register_new(&config, &mut registry)?;
+            updater::after_connection_changes(
+                &[connection],
+                &updater_registration,
+                detect_agent_updater(),
+                &config.connection_config.client_config,
+                &registry,
+            )?;
             register_update_source(
                 &mut Updater::writable(&paths)?,
                 &mut registry,
                 &config.connection_config.site_id,
-                &config.updater_registration,
+                &updater_registration,
             )
         }
         cli::Mode::ProxyRegister(reg_opts) => registration::proxy_register(
@@ -119,10 +131,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
             registry,
         )?),
         cli::Mode::Daemon(daemon_opts) => {
-            let updater_registration = runtime_config
-                .updater_registration
-                .clone()
-                .unwrap_or_default();
+            let updater_registration = runtime_config.configured_updater_registration();
             daemon(
                 paths,
                 registry.clone(),

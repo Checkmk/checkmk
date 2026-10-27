@@ -3,9 +3,6 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::certs::trusted_cas;
-use crate::config::UpdaterRegistration;
-use crate::updater::maybe_register_updater;
-use crate::AgentUpdater;
 use crate::{
     agent_receiver_api::{self, RegistrationStatusV2},
     certs, config, misc, site_spec, types, version,
@@ -255,7 +252,7 @@ fn direct_registration(
     registry: &mut config::Registry,
     agent_rec_api: &impl agent_receiver_api::Registration,
     endpoint_call: &impl RegistrationEndpointCall,
-) -> AnyhowResult<()> {
+) -> AnyhowResult<AddedConnection> {
     let registration_result = endpoint_call.call(
         &site_spec::make_site_url(&config.site_id, &config.receiver_port)?,
         registration_input,
@@ -281,7 +278,10 @@ fn direct_registration(
 
     registry.save()?;
 
-    Ok(())
+    Ok(AddedConnection {
+        uuid: registration_input.uuid,
+        credentials: registration_input.credentials.clone(),
+    })
 }
 
 fn proxy_registration(
@@ -333,13 +333,26 @@ pub struct ProxyPullData {
 
 impl config::JSONLoader for ProxyPullData {}
 
+/// A connection that a registration added to the registry.
+///
+/// Apart from the UUID, which identifies the connection in the registry, it
+/// holds only what the registry doesn't.
+pub struct AddedConnection {
+    pub uuid: uuid::Uuid,
+    /// The credentials the registration used, including a password typed at the
+    /// prompt.
+    // TODO(au): Read the credentials before the registration starts. They only
+    // pass through here because the password prompt happens in the middle of the
+    // registration.
+    pub credentials: types::Credentials,
+}
+
 pub fn register_existing(
     config: &config::RegisterExistingConfig,
     registry: &mut config::Registry,
-    agent_updater: AgentUpdater,
-) -> AnyhowResult<()> {
+) -> AnyhowResult<AddedConnection> {
     let registration_input = prepare_registration(&config.connection_config, &InteractiveTrust {})?;
-    direct_registration(
+    let connection = direct_registration(
         &config.connection_config,
         &registration_input,
         registry,
@@ -351,35 +364,21 @@ pub fn register_existing(
         },
     )?;
     println!("Registration complete.");
-    if matches!(agent_updater, AgentUpdater::Integrated) {
-        info!("Agent updates are handled by the controller, skipping updater registration.");
-        return Ok(());
-    }
-
-    maybe_register_updater(
-        &config.updater_registration,
-        &registration_input.credentials,
-        &config.connection_config,
-        &config.host_name,
-        registry,
-    )?;
-    Ok(())
+    Ok(connection)
 }
 
 pub fn register_new(
     config: &config::RegisterNewConfig,
     registry: &mut config::Registry,
-    agent_updater: AgentUpdater,
-) -> AnyhowResult<()> {
+) -> AnyhowResult<AddedConnection> {
     let registration_input = prepare_registration(&config.connection_config, &InteractiveTrust {})?;
-    let agent_rec_api = &agent_receiver_api::Api {
-        use_proxy: config.connection_config.client_config.use_proxy,
-    };
-    direct_registration(
+    let connection = direct_registration(
         &config.connection_config,
         &registration_input,
         registry,
-        agent_rec_api,
+        &agent_receiver_api::Api {
+            use_proxy: config.connection_config.client_config.use_proxy,
+        },
         &RegistrationCallNew {
             agent_labels: &config.agent_labels,
         },
@@ -387,42 +386,25 @@ pub fn register_new(
     println!(
         "Registration complete. It may take few minutes until the newly created host and its services are visible in the site."
     );
-    if matches!(agent_updater, AgentUpdater::Integrated) {
-        info!("Agent updates are handled by the controller, skipping updater registration.");
-        return Ok(());
-    }
-
-    if matches!(config.updater_registration, UpdaterRegistration::Manual) {
-        return Ok(());
-    }
-
-    // Look up the assigned hostname from the site after registration
-    let hostname = get_registered_hostname(registry, agent_rec_api, &config.connection_config)?;
-
-    maybe_register_updater(
-        &config.updater_registration,
-        &registration_input.credentials,
-        &config.connection_config,
-        &hostname,
-        registry,
-    )
+    Ok(connection)
 }
 
+/// Register the pre-configured connections that are not registered yet.
+///
+/// # Returns
+///
+/// The connections that were added.
 pub fn register_pre_configured(
     pre_configured_connections: &config::PreConfiguredConnections,
     client_config: &config::ClientConfig,
     registry: &mut config::Registry,
-    updater_registration: UpdaterRegistration,
-    agent_updater: AgentUpdater,
     baked_cas: &trusted_cas::BakedCAs,
-) -> AnyhowResult<()> {
+) -> AnyhowResult<Vec<AddedConnection>> {
     _register_pre_configured(
         pre_configured_connections,
         client_config,
         registry,
         &RegistrationPreConfiguredImpl {},
-        updater_registration,
-        agent_updater,
         baked_cas,
     )
 }
@@ -432,30 +414,29 @@ fn _register_pre_configured(
     client_config: &config::ClientConfig,
     registry: &mut config::Registry,
     registration_pre_configured: &impl RegistrationPreConfigured,
-    updater_registration: UpdaterRegistration,
-    agent_updater: AgentUpdater,
     baked_cas: &trusted_cas::BakedCAs,
-) -> AnyhowResult<()> {
+) -> AnyhowResult<Vec<AddedConnection>> {
     let context = PreConfiguredContext {
         agent_labels: &pre_configured_connections.agent_labels,
         client_config,
-        updater_registration: &updater_registration,
         baked_cas,
-        agent_updater,
     };
+    let mut added_connections = vec![];
     for (site_id, pre_configured_connection) in pre_configured_connections.connections.iter() {
-        if let Err(error) = process_pre_configured_connection(
+        match process_pre_configured_connection(
             site_id,
             pre_configured_connection,
             &context,
             registry,
             registration_pre_configured,
         ) {
-            error!(
+            Ok(Some(connection)) => added_connections.push(connection),
+            Ok(None) => {}
+            Err(error) => error!(
                 "Error while processing connection {}: {}",
                 site_id,
                 misc::anyhow_error_to_human_readable(&error)
-            )
+            ),
         }
     }
 
@@ -473,7 +454,8 @@ fn _register_pre_configured(
 
     registry
         .save()
-        .context("Failed to save registered connections")
+        .context("Failed to save registered connections")?;
+    Ok(added_connections)
 }
 
 trait RegistrationPreConfigured {
@@ -481,8 +463,7 @@ trait RegistrationPreConfigured {
         &self,
         config: &config::RegisterNewConfig,
         registry: &mut config::Registry,
-        agent_updater: AgentUpdater,
-    ) -> AnyhowResult<()>;
+    ) -> AnyhowResult<AddedConnection>;
 
     fn registration_status_v2(
         &self,
@@ -499,9 +480,8 @@ impl RegistrationPreConfigured for RegistrationPreConfiguredImpl {
         &self,
         config: &config::RegisterNewConfig,
         registry: &mut config::Registry,
-        agent_updater: AgentUpdater,
-    ) -> AnyhowResult<()> {
-        register_new(config, registry, agent_updater)
+    ) -> AnyhowResult<AddedConnection> {
+        register_new(config, registry)
     }
 
     fn registration_status_v2(
@@ -524,9 +504,7 @@ impl RegistrationPreConfigured for RegistrationPreConfiguredImpl {
 struct PreConfiguredContext<'a> {
     agent_labels: &'a types::AgentLabels,
     client_config: &'a config::ClientConfig,
-    updater_registration: &'a UpdaterRegistration,
     baked_cas: &'a trusted_cas::BakedCAs,
-    agent_updater: AgentUpdater,
 }
 
 fn process_pre_configured_connection(
@@ -535,7 +513,7 @@ fn process_pre_configured_connection(
     context: &PreConfiguredContext,
     registry: &mut config::Registry,
     registration_pre_configured: &impl RegistrationPreConfigured,
-) -> AnyhowResult<()> {
+) -> AnyhowResult<Option<AddedConnection>> {
     let client_config = context.client_config;
     let receiver_port = match pre_configured.port {
         Some(receiver_port) => receiver_port,
@@ -556,7 +534,7 @@ fn process_pre_configured_connection(
             )?,
             agent_receiver_api::RegistrationStatusV2Response::Registered(..)
         ) {
-            return Ok(());
+            return Ok(None);
         }
     }
 
@@ -586,13 +564,12 @@ fn process_pre_configured_connection(
             client_config: client_config.clone(),
         },
         context.agent_labels.clone(),
-        context.updater_registration.clone(),
     )?;
 
-    registration_pre_configured.register(&registration_config, registry, context.agent_updater)?;
+    let connection = registration_pre_configured.register(&registration_config, registry)?;
     info!("Registered new connection {}", site_id);
 
-    Ok(())
+    Ok(Some(connection))
 }
 
 fn delete_vanished_connections<'a>(
@@ -620,37 +597,6 @@ pub fn proxy_register(config: &config::RegisterExistingConfig) -> AnyhowResult<(
         },
         &InteractiveTrust {},
     )
-}
-
-/// Retrieve the hostname for the already-registered connection.
-/// Used to supply the hostname to the updater registration.
-fn get_registered_hostname(
-    registry: &mut config::Registry,
-    agent_rec_api: &impl agent_receiver_api::RegistrationStatusV2,
-    connection_config: &config::RegistrationConnectionConfig,
-) -> AnyhowResult<String> {
-    let site_url =
-        site_spec::make_site_url(&connection_config.site_id, &connection_config.receiver_port)?;
-
-    let connection = match registry.get_connection_as_mut(&connection_config.site_id) {
-        Some(conn) => conn,
-        None => {
-            bail!(
-                "Cannot get registered connection for site {}. Skipping updater registration.",
-                connection_config.site_id
-            );
-        }
-    };
-
-    let response = agent_rec_api.registration_status_v2(&site_url, &connection.trust)?;
-
-    match response {
-        agent_receiver_api::RegistrationStatusV2Response::Registered(r) => Ok(r.hostname),
-        _ => bail!(
-            "Cannot get hostname from registration status response for site {}. Skipping updater registration.",
-            connection_config.site_id
-        ),
-    }
 }
 
 #[cfg(test)]
@@ -956,7 +902,6 @@ mod tests {
                 &config::RegisterExistingConfig {
                     connection_config: registration_connection_config(vec![], None, true),
                     host_name: String::from(HOST_NAME),
-                    updater_registration: UpdaterRegistration::Manual,
                 },
                 &MockApi {
                     expect_root_cert: false,
@@ -1055,8 +1000,7 @@ mod tests {
                 &self,
                 config: &config::RegisterNewConfig,
                 registry: &mut config::Registry,
-                _agent_updater: AgentUpdater,
-            ) -> AnyhowResult<()> {
+            ) -> AnyhowResult<AddedConnection> {
                 assert!(config.connection_config.password.is_some());
                 assert_eq!(
                     config.connection_config.root_certificates,
@@ -1064,6 +1008,7 @@ mod tests {
                 );
                 assert!(!config.connection_config.trust_server_cert);
                 assert_eq!(config.agent_labels.get("key").unwrap(), "value");
+                let uuid = uuid::Uuid::new_v4();
                 registry.register_connection(
                     std::collections::HashMap::from([
                         ("server/pre-baked-pull-site", config::ConnectionMode::Pull),
@@ -1076,7 +1021,7 @@ mod tests {
                     &config.connection_config.site_id,
                     config::TrustedConnectionWithRemote {
                         trust: config::TrustedConnection {
-                            uuid: uuid::Uuid::new_v4(),
+                            uuid,
                             private_key: String::from("private_key"),
                             certificate: String::from("certificate"),
                             root_certs: vec![String::from("root_cert")],
@@ -1084,7 +1029,10 @@ mod tests {
                         receiver_port: config.connection_config.receiver_port,
                     },
                 );
-                Ok(())
+                Ok(AddedConnection {
+                    uuid,
+                    credentials: types::Credentials::username_password("user", "password"),
+                })
             }
 
             fn registration_status_v2(
@@ -1190,12 +1138,46 @@ mod tests {
                     is_registered_at_remote: true,
                     expected_root_certificates: vec![String::from("root_cert")],
                 },
-                UpdaterRegistration::Manual,
-                AgentUpdater::Python,
                 &trusted_cas::BakedCAs::new(),
             )
             .is_ok());
             test_registry_after_registration(true, &mut r.registry)
+        }
+
+        #[test]
+        fn test_only_the_added_connections_are_returned() {
+            let mut r = registry();
+            let added_connections = _register_pre_configured(
+                &pre_configured_connections(true),
+                &config::ClientConfig {
+                    use_proxy: false,
+                    validate_api_cert: false,
+                },
+                &mut r.registry,
+                &MockRegistrationPreConfiguredImpl {
+                    is_registered_at_remote: true,
+                    expected_root_certificates: vec![String::from("root_cert")],
+                },
+                &trusted_cas::BakedCAs::new(),
+            )
+            .unwrap();
+            let mut site_ids: Vec<String> = added_connections
+                .iter()
+                .map(|connection| {
+                    r.registry
+                        .retrieve_standard_connection_by_uuid(&connection.uuid)
+                        .unwrap()
+                        .to_string()
+                })
+                .collect();
+            site_ids.sort();
+            assert_eq!(
+                site_ids,
+                [
+                    "server/pre-baked-pull-site-2",
+                    "server/pre-baked-push-site-2"
+                ]
+            );
         }
 
         #[test]
@@ -1212,8 +1194,6 @@ mod tests {
                     is_registered_at_remote: true,
                     expected_root_certificates: vec![String::from("root_cert")],
                 },
-                UpdaterRegistration::Manual,
-                AgentUpdater::Python,
                 &trusted_cas::BakedCAs::new(),
             )
             .is_ok());
@@ -1255,8 +1235,6 @@ mod tests {
                     is_registered_at_remote: true,
                     expected_root_certificates: vec![String::from("root_cert")],
                 },
-                UpdaterRegistration::Manual,
-                AgentUpdater::Python,
                 &trusted_cas::BakedCAs::new(),
             )
             .is_ok());
@@ -1291,8 +1269,6 @@ mod tests {
                         String::from("upcoming_site_ca"),
                     ],
                 },
-                UpdaterRegistration::Manual,
-                AgentUpdater::Python,
                 &trusted_cas::BakedCAs::from(
                     [
                         "pre-baked-pull-site",
@@ -1327,8 +1303,6 @@ mod tests {
                     is_registered_at_remote: false,
                     expected_root_certificates: vec![String::from("root_cert")],
                 },
-                UpdaterRegistration::Manual,
-                AgentUpdater::Python,
                 &trusted_cas::BakedCAs::new(),
             )
             .is_ok());
@@ -1338,11 +1312,11 @@ mod tests {
             // registered --> re-registration
             for site_id in pre_configured_connections.connections.keys() {
                 if let Some(connection_before_registration) =
-                    registry_before_registration.get(site_id)
+                    registry_before_registration.get_connection(site_id)
                 {
                     assert_ne!(
                         connection_before_registration.trust.uuid,
-                        r.registry.get(site_id).unwrap().trust.uuid
+                        r.registry.get_connection(site_id).unwrap().trust.uuid
                     );
                 }
             }

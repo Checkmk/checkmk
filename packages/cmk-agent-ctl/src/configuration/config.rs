@@ -58,7 +58,6 @@ pub fn tmp_path_for_atomical_save(path: &Path) -> PathBuf {
 pub struct RegisterExistingConfig {
     pub connection_config: RegistrationConnectionConfig,
     pub host_name: String,
-    pub updater_registration: UpdaterRegistration,
 }
 
 impl RegisterExistingConfig {
@@ -66,22 +65,12 @@ impl RegisterExistingConfig {
         runtime_config: RuntimeConfig,
         register_opts: cli::RegisterOpts,
     ) -> AnyhowResult<Self> {
-        // CLI --automatic-updates flag uses "overwrite" semantics (explicit user intent).
-        let updater_registration = if register_opts.automatic_updates {
-            UpdaterRegistration::Overwrite
-        } else {
-            runtime_config
-                .updater_registration
-                .clone()
-                .unwrap_or_default()
-        };
         Ok(Self {
             connection_config: RegistrationConnectionConfig::from_register_opts(
                 runtime_config,
                 register_opts.connection_opts,
             )?,
             host_name: register_opts.hostname,
-            updater_registration,
         })
     }
 }
@@ -89,19 +78,16 @@ impl RegisterExistingConfig {
 pub struct RegisterNewConfig {
     pub connection_config: RegistrationConnectionConfig,
     pub agent_labels: types::AgentLabels,
-    pub updater_registration: UpdaterRegistration,
 }
 
 impl RegisterNewConfig {
     pub fn new(
         connection_config: RegistrationConnectionConfig,
         agent_labels: types::AgentLabels,
-        updater_registration: UpdaterRegistration,
     ) -> AnyhowResult<Self> {
         Ok(Self {
             connection_config,
             agent_labels: Self::enrich_with_automatic_agent_labels(agent_labels)?,
-            updater_registration,
         })
     }
 
@@ -252,7 +238,26 @@ pub struct RuntimeConfig {
     validate_api_cert: Option<bool>,
 
     #[serde(default)]
-    pub updater_registration: Option<UpdaterRegistration>,
+    updater_registration: Option<UpdaterRegistration>,
+}
+
+impl RuntimeConfig {
+    /// The Registration option as `cmk-agent-ctl.toml` configures it.
+    pub fn configured_updater_registration(&self) -> UpdaterRegistration {
+        self.updater_registration.clone().unwrap_or_default()
+    }
+
+    /// The Registration option of a registration command.
+    ///
+    /// `--automatic-updates` states the intent of the user explicitly, so it
+    /// overrides the configuration with "overwrite".
+    pub fn updater_registration(&self, automatic_updates: bool) -> UpdaterRegistration {
+        if automatic_updates {
+            UpdaterRegistration::Overwrite
+        } else {
+            self.configured_updater_registration()
+        }
+    }
 }
 
 impl TOMLLoader for RuntimeConfig {}
@@ -463,6 +468,16 @@ impl Registry {
             .pull
             .keys()
             .chain(self.connections.push.keys())
+    }
+
+    pub fn get_connection(
+        &self,
+        site_id: &site_spec::SiteID,
+    ) -> Option<&TrustedConnectionWithRemote> {
+        self.connections
+            .pull
+            .get(site_id)
+            .or_else(|| self.connections.push.get(site_id))
     }
 
     pub fn get_connection_as_mut(
@@ -983,15 +998,6 @@ pub mod test_helpers {
             Self::from(uuid::Uuid::from_str(s).unwrap())
         }
     }
-
-    impl Registry {
-        pub fn get(&self, site_id: &site_spec::SiteID) -> Option<&TrustedConnectionWithRemote> {
-            self.connections
-                .pull
-                .get(site_id)
-                .or_else(|| self.connections.push.get(site_id))
-        }
-    }
 }
 
 #[cfg(test)]
@@ -1087,7 +1093,6 @@ mod test_registration_config {
             )
             .unwrap(),
             types::AgentLabels::new(),
-            UpdaterRegistration::Manual,
         )
         .unwrap()
         .agent_labels;
@@ -1112,7 +1117,6 @@ mod test_registration_config {
                 ),
                 (String::from("a"), String::from("b")),
             ]),
-            UpdaterRegistration::Manual,
         )
         .unwrap()
         .agent_labels;

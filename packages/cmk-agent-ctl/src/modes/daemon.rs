@@ -9,6 +9,7 @@ use crate::environment::PathResolver;
 use crate::misc;
 use crate::modes::{pull, push, renew_certificate};
 use crate::modes::{registration, update};
+use crate::updater;
 use crate::AgentUpdater;
 use anyhow::Result as AnyhowResult;
 use log::{error, info};
@@ -104,10 +105,17 @@ fn process_pre_configured_connections(
                 &pre_configured,
                 client_config,
                 registry,
-                updater_registration,
-                agent_updater,
                 baked_cas,
-            ) {
+            )
+            .and_then(|added_connections| {
+                updater::after_connection_changes(
+                    &added_connections,
+                    &updater_registration,
+                    agent_updater,
+                    client_config,
+                    registry,
+                )
+            }) {
                 error!(
                     "Error while processing pre-configured connections: {}",
                     misc::anyhow_error_to_human_readable(&err)

@@ -5,14 +5,14 @@
 //! The registration of the Python agent updater, which the controller runs as a
 //! subprocess after its own registration (CMK-18329).
 
+use crate::agent_receiver_api;
 use crate::config::UpdaterRegistration;
 use crate::constants::CMK_UPDATE_AGENT_CMD;
+use crate::modes::registration::AddedConnection;
 use crate::site_spec::Protocol;
 use crate::types::Credentials;
 use crate::{config, site_spec};
-#[cfg(unix)]
-use anyhow::bail;
-use anyhow::{Context, Result as AnyhowResult};
+use anyhow::{bail, Context, Result as AnyhowResult};
 #[cfg(unix)]
 use log::info;
 use log::warn;
@@ -82,32 +82,41 @@ fn is_updater_registered(cmk_update_agent_path: &str) -> bool {
     )
 }
 
-/// Perform updater registration according to the configured `UpdaterRegistration` mode.
+/// Register the Python updater for `connection`, according to the configured
+/// `UpdaterRegistration` mode.
 ///
 /// - `Keep`: only register if the updater is not yet registered (check status first).
 /// - `Overwrite`: always register.
 /// - `Manual`: do nothing.
-pub(crate) fn maybe_register_updater(
+pub(super) fn register(
+    connection: &AddedConnection,
     updater_registration: &UpdaterRegistration,
-    credentials: &Credentials,
-    connection_config: &config::RegistrationConnectionConfig,
-    hostname: &str,
-    registry: &mut config::Registry,
+    client_config: &config::ClientConfig,
+    registry: &config::Registry,
 ) -> AnyhowResult<()> {
     if matches!(updater_registration, UpdaterRegistration::Manual) {
         return Ok(());
     }
+    let site_id = registry
+        .retrieve_standard_connection_by_uuid(&connection.uuid)
+        .with_context(|| format!("No registered connection has the UUID {}", connection.uuid))?;
+    register_at(
+        &site_id,
+        &connection.credentials,
+        updater_registration,
+        client_config,
+        registry,
+    )
+    .with_context(|| format!("Could not register the Python agent updater for {site_id}"))
+}
 
-    let protocol =
-        site_spec::discover_protocol(&connection_config.site_id, &connection_config.client_config)?;
-
-    let updater_input = UpdaterRegistrationInput {
-        site_id: connection_config.site_id.clone(),
-        credentials: credentials.clone(),
-        hostname: hostname.to_string(),
-        protocol,
-    };
-
+fn register_at(
+    site_id: &site_spec::SiteID,
+    credentials: &Credentials,
+    updater_registration: &UpdaterRegistration,
+    client_config: &config::ClientConfig,
+    registry: &config::Registry,
+) -> AnyhowResult<()> {
     if matches!(updater_registration, UpdaterRegistration::Keep) {
         let agent_updater_executable = match get_agent_updater_executable() {
             Ok(path) => path,
@@ -124,14 +133,62 @@ pub(crate) fn maybe_register_updater(
 
         if is_updater_registered(&agent_updater_executable) {
             println!(
-                "Agent updater already registered for site {}. Skipping re-registration.",
-                connection_config.site_id
+                "Agent updater already registered for site {site_id}. Skipping re-registration."
             );
             return Ok(());
         }
     }
 
+    // The controller stores no host names, so it asks the site. After
+    // `register`, the host name is known already. The additional request is
+    // the price for a step that doesn't depend on the registration command.
+    let hostname = get_registered_hostname(
+        registry,
+        &agent_receiver_api::Api {
+            use_proxy: client_config.use_proxy,
+        },
+        site_id,
+    )?;
+
+    let protocol = site_spec::discover_protocol(site_id, client_config)?;
+
+    let updater_input = UpdaterRegistrationInput {
+        site_id: site_id.clone(),
+        credentials: credentials.clone(),
+        hostname,
+        protocol,
+    };
+
     register_updater_subprocess(&updater_input, registry)
+}
+
+/// Retrieve the hostname for the already-registered connection.
+/// Used to supply the hostname to the updater registration.
+fn get_registered_hostname(
+    registry: &config::Registry,
+    agent_rec_api: &impl agent_receiver_api::RegistrationStatusV2,
+    site_id: &site_spec::SiteID,
+) -> AnyhowResult<String> {
+    let connection = match registry.get_connection(site_id) {
+        Some(conn) => conn,
+        None => {
+            bail!(
+                "Cannot get registered connection for site {}. Skipping updater registration.",
+                site_id
+            );
+        }
+    };
+
+    let site_url = site_spec::make_site_url(site_id, &connection.receiver_port)?;
+    let response = agent_rec_api.registration_status_v2(&site_url, &connection.trust)?;
+
+    match response {
+        agent_receiver_api::RegistrationStatusV2Response::Registered(r) => Ok(r.hostname),
+        _ => bail!(
+            "Cannot get hostname from registration status response for site {}. Skipping updater registration.",
+            site_id
+        ),
+    }
 }
 
 fn _prepare_register_updater_cmd(
@@ -239,7 +296,7 @@ fn get_windows_agent_executable() -> AnyhowResult<String> {
 
 pub fn register_updater_subprocess(
     updater_registration_config: &UpdaterRegistrationInput,
-    registry: &mut config::Registry,
+    registry: &config::Registry,
 ) -> AnyhowResult<()> {
     let agent_updater_executable = match get_agent_updater_executable() {
         Ok(path) => path,

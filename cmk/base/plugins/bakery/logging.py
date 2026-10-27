@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from typing import Literal
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import register, WindowsConfigEntry
+from cmk.bakery.v2 import BakeryPlugin, WindowsConfigEntry
 
 
 class _Config(BaseModel):
@@ -18,8 +18,7 @@ class _Config(BaseModel):
     log_to_windbg: bool | None = None
 
 
-def get_logging_windows_config(conf: Mapping[str, object]) -> Iterator[WindowsConfigEntry]:
-    config = _Config.model_validate(conf)
+def get_logging_windows_config(config: _Config) -> Iterator[WindowsConfigEntry]:
     if config.logging_level is not None:
         yield WindowsConfigEntry(path=["global", "logging", "debug"], content=config.logging_level)
     if config.max_log_file_count is not None:
@@ -34,7 +33,9 @@ def get_logging_windows_config(conf: Mapping[str, object]) -> Iterator[WindowsCo
         yield WindowsConfigEntry(path=["global", "logging", "windbg"], content=config.log_to_windbg)
 
 
-register.bakery_plugin(
+bakery_plugin_logging = BakeryPlugin(
     name="logging",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     windows_config_function=get_logging_windows_config,
 )

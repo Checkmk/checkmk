@@ -17,6 +17,7 @@ load("@aspect_rules_lint//format:formatter_binary.bzl", "CHECK_FLAGS", "FIX_FLAG
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 
 _FORMAT_SH = Label("@aspect_rules_lint//format/private:format.sh")
+_DELTA = Label("//bazel/tools/delta")
 _LANGUAGES = {to_attribute_name(language): language for language in TOOLS}
 
 # The dialects that format.sh formats with the tool of the base language.
@@ -90,8 +91,9 @@ def format_dispatch(name, languages, fix_target, visibility):
         sh_binary(
             name = target,
             srcs = [Label(":format_dispatch.sh")],
-            data = [table, _FORMAT_SH] + {tool: None for tool in tools.values()}.keys(),
+            data = [table, _FORMAT_SH, _DELTA] + {tool: None for tool in tools.values()}.keys(),
             env = {
+                "DELTA": "$(rlocationpath {})".format(_DELTA),
                 "FORMAT_CACHE": ".format_cache/{}/{}".format(native.package_name(), target),
                 "FORMAT_FIX_TARGET": fix_target,
                 "FORMAT_LANGS": "$(rlocationpath :{})".format(table),

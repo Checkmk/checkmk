@@ -314,6 +314,7 @@ _VALID_PROVIDER_OPTIONS = {
     "prompt_cache": "five_minutes",
     "rounds_per_turn": 50,
     "output_tokens_per_reply": 32768,
+    "compaction_percentage": 80.0,
 }
 
 CHECKBOX_CASES: list[Case] = [
@@ -725,16 +726,20 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
             "prompt_cache": "five_minutes",
             "rounds_per_turn": 50,
             "output_tokens_per_reply": 32768,
+            "compaction_percentage": 80.0,
         },
         "anthropic.base_url": NoSaveableDefault(),
+        "anthropic.context_window_tokens": NoSaveableDefault(),
         "openai": {
             "model": NoSaveableDefault(),
             "credential": NoSaveableDefault(),
             "prompt_cache": "five_minutes",
             "rounds_per_turn": 50,
             "output_tokens_per_reply": 32768,
+            "compaction_percentage": 80.0,
         },
         "openai.base_url": NoSaveableDefault(),
+        "openai.context_window_tokens": NoSaveableDefault(),
     },
     "auth_by_http_header": {
         "[enable]": "X-Remote-User",
@@ -1615,6 +1620,8 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
                     "prompt_cache": "off",
                     "rounds_per_turn": 7,
                     "output_tokens_per_reply": 20000,
+                    "context_window_tokens": 200000,
+                    "compaction_percentage": 50.0,
                 },
             ),
         ),
@@ -1629,6 +1636,7 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
                     "prompt_cache": "one_hour",
                     "rounds_per_turn": 50,
                     "output_tokens_per_reply": 32768,
+                    "compaction_percentage": 80.0,
                 },
             ),
         ),
@@ -1676,6 +1684,25 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
                 },
             ),
             exception=MKGeneralException,
+        ),
+        CaseFail(
+            "missing-compaction-percentage",
+            (
+                "anthropic",
+                {k: v for k, v in _VALID_PROVIDER_OPTIONS.items() if k != "compaction_percentage"},
+            ),
+        ),
+        CaseFail(
+            "compaction-percentage-below-minimum",
+            ("anthropic", {**_VALID_PROVIDER_OPTIONS, "compaction_percentage": 0.5}),
+        ),
+        CaseFail(
+            "compaction-percentage-above-maximum",
+            ("anthropic", {**_VALID_PROVIDER_OPTIONS, "compaction_percentage": 100.5}),
+        ),
+        CaseFail(
+            "context-window-below-minimum",
+            ("anthropic", {**_VALID_PROVIDER_OPTIONS, "context_window_tokens": 0}),
         ),
         CaseFail(
             "missing-prompt-cache",

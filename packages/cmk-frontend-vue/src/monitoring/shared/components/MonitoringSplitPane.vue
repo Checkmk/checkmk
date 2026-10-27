@@ -5,12 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts" generic="T, Target">
 import type { ColumnDef, ColumnPinningState, RowSelectionState } from '@tanstack/vue-table'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkSplitPane from 'cmk-ui-library/components/CmkSplitPane.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import ColumnPicker from '@/monitoring/shared/components/ColumnPicker.vue'
 import MonitoringEmptyState from '@/monitoring/shared/components/MonitoringEmptyState.vue'
@@ -70,6 +71,8 @@ const { _t } = usei18n()
 
 const rowSelection = ref<RowSelectionState>({})
 const runningActionId = ref<string | null>(null)
+/** The action awaiting confirmation in the alert above the table. */
+const confirmingActionId = ref<string | null>(null)
 const displayOptionsOpen = ref(false)
 
 const selectableKeys = computed<string[]>(() =>
@@ -93,6 +96,52 @@ function targetsFor(actionId: string): Target[] {
     : rows.map((row) => props.getActionTarget(row))
 }
 
+const noTargetsFeedback: ActionFeedbackResult = {
+  variant: 'error',
+  message: _t('This action cannot be performed on any of the selected rows.')
+}
+
+const confirmation = computed(() => {
+  const id = confirmingActionId.value
+  const action = id === null ? undefined : props.actions[id]
+  const count = id === null ? 0 : targetsFor(id).length
+  return (
+    action?.confirm && {
+      title: action.title,
+      // Both lines are translated on their own; the alert keeps the line break.
+      text: `${props.countsLabel(selectedCount.value, props.service.total.value)}\n${action.confirm.detail(count)}` as TranslatedString,
+      submitLabel: action.confirm.submitLabel(count)
+    }
+  )
+})
+
+watch(selectedCount, (count) => {
+  if (count === 0) {
+    confirmingActionId.value = null
+  }
+})
+
+async function onConfirm(): Promise<void> {
+  const id = confirmingActionId.value
+  const action = id === null ? undefined : props.actions[id]
+  confirmingActionId.value = null
+  if (id === null || !action) {
+    return
+  }
+  // The selection may have changed while the confirmation was shown.
+  const targets = targetsFor(id)
+  if (targets.length === 0) {
+    applyFeedback(noTargetsFeedback)
+    return
+  }
+  runningActionId.value = id
+  try {
+    onFeedback(await action.perform(targets, action.defaultValues()))
+  } finally {
+    runningActionId.value = null
+  }
+}
+
 const isNarrowed = computed(
   () =>
     props.service.filters.activeFilterCount > 0 || props.service.committedSearchQuery.value !== ''
@@ -110,10 +159,7 @@ async function onBulkAction(action: CellAction): Promise<void> {
   }
   const targets = targetsFor(action.id)
   if (targets.length === 0) {
-    applyFeedback({
-      variant: 'error',
-      message: _t('This action cannot be performed on any of the selected rows.')
-    })
+    applyFeedback(noTargetsFeedback)
     return
   }
   if (props.immediateActionIds.includes(action.id) && selectedCount.value === 1) {
@@ -126,6 +172,12 @@ async function onBulkAction(action: CellAction): Promise<void> {
     return
   }
   displayOptionsOpen.value = false
+  if (registered.confirm) {
+    closeAction()
+    confirmingActionId.value = action.id
+    return
+  }
+  confirmingActionId.value = null
   openAction(action.id)
 }
 
@@ -178,6 +230,19 @@ function onRightPaneCollapse(collapsed: boolean): void {
           v-model:open="feedbackOpen"
           class="monitoring-split-pane__feedback"
           :feedback="feedback"
+        />
+        <CmkAlert
+          v-if="confirmation"
+          class="monitoring-split-pane__confirmation"
+          variant="warning"
+          :heading="confirmation.title"
+          :text="confirmation.text"
+          :main-button="{ title: confirmation.submitLabel, onclick: onConfirm }"
+          :optional-button="{
+            title: _t('Cancel'),
+            icon: 'cancel',
+            onclick: () => (confirmingActionId = null)
+          }"
         />
         <div class="monitoring-split-pane__table-toolbar">
           <MonitoringActionBar
@@ -295,6 +360,15 @@ function onRightPaneCollapse(collapsed: boolean): void {
 .monitoring-split-pane__feedback {
   flex: 0 0 auto;
   margin: 0 0 var(--spacing);
+}
+
+.monitoring-split-pane__confirmation {
+  flex: 0 0 auto;
+  margin: 0 0 var(--spacing);
+
+  :deep(.cmk-alert__body) {
+    white-space: pre-line;
+  }
 }
 
 .monitoring-split-pane__table-toolbar {

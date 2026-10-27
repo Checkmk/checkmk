@@ -488,3 +488,58 @@ test('adds a comment to the selected host from the "More" menu', async () => {
     expect.objectContaining({ body: expect.objectContaining({ comment: 'Disk swap planned' }) })
   )
 })
+
+const ACKNOWLEDGED = {
+  id: 'acknowledged' as const,
+  icon_name: 'ack',
+  link: '',
+  title: 'Acknowledged'
+}
+
+test('removes the acknowledgement of the selected host after confirming it', async () => {
+  const user = userEvent.setup()
+  mockHosts([makeHost({ modes: [ACKNOWLEDGED] }), makeHost({ name: 'web-2' })])
+  renderApp('community', {
+    actions: [{ ident: 'remove_acknowledgments', title: 'Remove acknowledgements', icon: 'ack' }]
+  })
+
+  await user.click(await screen.findByRole('checkbox', { name: 'Select all rows' }))
+  await user.click(screen.getByRole('button', { name: 'More' }))
+  await user.click(await screen.findByRole('menuitem', { name: 'Remove acknowledgements' }))
+
+  const alert = await screen.findByRole('alert')
+  expect(alert).toHaveTextContent('Selected hosts: 2 | Total hosts: 2')
+  expect(alert).toHaveTextContent('Acknowledgements: 1')
+  await user.click(screen.getByRole('button', { name: 'Remove acknowledgements' }))
+
+  expect(
+    await screen.findByText('Removed acknowledgement of the selected host')
+  ).toBeInTheDocument()
+  expect(postSpy).toHaveBeenCalledWith(
+    '/domain-types/acknowledge/actions/delete/invoke',
+    expect.objectContaining({
+      body: expect.objectContaining({
+        query: { op: 'or', expr: [{ op: '=', left: 'name', right: 'web-1' }] }
+      })
+    })
+  )
+})
+
+test('cancelling the confirmation removes nothing', async () => {
+  const user = userEvent.setup()
+  mockHosts([makeHost({ modes: [ACKNOWLEDGED] })])
+  renderApp('community', {
+    actions: [{ ident: 'remove_acknowledgments', title: 'Remove acknowledgements', icon: 'ack' }]
+  })
+
+  await user.click(await screen.findByRole('checkbox', { name: 'Select all rows' }))
+  await user.click(screen.getByRole('button', { name: 'More' }))
+  await user.click(await screen.findByRole('menuitem', { name: 'Remove acknowledgements' }))
+  await user.click(await screen.findByRole('button', { name: 'Cancel' }))
+
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  expect(postSpy).not.toHaveBeenCalledWith(
+    '/domain-types/acknowledge/actions/delete/invoke',
+    expect.anything()
+  )
+})

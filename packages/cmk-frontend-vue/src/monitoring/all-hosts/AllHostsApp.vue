@@ -35,6 +35,7 @@ import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import MonitoringToolbar from '../shared/components/MonitoringToolbar.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
+import { rowsToActOn } from '../shared/components/action/actions/remove'
 import { InstantReport } from '../shared/export/instantReport'
 import { useRowExport } from '../shared/export/useRowExport'
 import { buildFilterUrlSchema } from '../shared/filterState/schema'
@@ -215,6 +216,10 @@ function hostRef(row: HostEntry): HostRef {
   return { site_id: row.site_id, name: row.name }
 }
 
+function hostActionTargets(rows: HostEntry[], actionId: string): HostRef[] {
+  return rowsToActOn(rows, actionId).map(hostRef)
+}
+
 function hostSelectionLabel(count: number): TranslatedString {
   return _tn('Selected host: %{count}', 'Selected hosts: %{count}', count, { count })
 }
@@ -331,6 +336,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :column-pinning="columnPinning"
         :get-row-key="rowKey"
         :get-action-target="hostRef"
+        :get-action-targets="hostActionTargets"
         :immediate-action-ids="IMMEDIATE_HOST_COMMAND_IDS"
         :selection-label="hostSelectionLabel"
         :actions-label="_t('Actions for selected hosts')"

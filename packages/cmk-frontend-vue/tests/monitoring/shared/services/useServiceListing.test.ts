@@ -39,7 +39,8 @@ test('offers the commands implemented for services', () => {
     'schedule_downtimes',
     'add_comment',
     'send_custom_notification',
-    'fake_check_result'
+    'fake_check_result',
+    'remove_acknowledgments'
   ])
 })
 

@@ -31,6 +31,7 @@ import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTab
 import MonitoringToolbar from '@/monitoring/shared/components/MonitoringToolbar.vue'
 import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '@/monitoring/shared/components/action/ActionFeedback.vue'
+import { rowsToActOn } from '@/monitoring/shared/components/action/actions/remove'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
@@ -283,7 +284,7 @@ function serviceRef(row: ServiceEntry): ServiceRef {
 
 function serviceActionTargets(rows: ServiceEntry[], actionId: string): ServiceRef[] {
   if (actionId !== RESCHEDULE_ACTION_ID) {
-    return rows.map(serviceRef)
+    return rowsToActOn(rows, actionId).map(serviceRef)
   }
   const targets = new Map<string, ServiceRef>()
   for (const row of rows) {

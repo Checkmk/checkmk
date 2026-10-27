@@ -53,6 +53,24 @@ export class AcknowledgeApi {
     )
   }
 
+  public async removeHostAcknowledgements(hostNames: string[]): Promise<void> {
+    unwrap(
+      await client.POST('/domain-types/acknowledge/actions/delete/invoke', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body: { acknowledge_type: 'host_by_query', query: hostNameQuery(hostNames) }
+      })
+    )
+  }
+
+  public async removeServiceAcknowledgements(services: ServiceRef[]): Promise<void> {
+    unwrap(
+      await client.POST('/domain-types/acknowledge/actions/delete/invoke', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body: { acknowledge_type: 'service_by_query', query: serviceQuery(services) }
+      })
+    )
+  }
+
   private commonFields(options: AcknowledgeOptions) {
     return {
       comment: options.comment,

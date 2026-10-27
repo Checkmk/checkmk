@@ -47,6 +47,7 @@ import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import MonitoringToolbar from '../shared/components/MonitoringToolbar.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
+import { rowsToActOn } from '../shared/components/action/actions/remove'
 import { RESCHEDULE_ACTION_ID } from '../shared/components/action/actions/reschedule'
 import { InstantReport } from '../shared/export/instantReport'
 import { useRowExport } from '../shared/export/useRowExport'
@@ -378,7 +379,7 @@ function serviceRef(row: HostServiceEntry): ServiceRef {
 // service, and a service that cannot be rescheduled at all is left out.
 function serviceActionTargets(rows: HostServiceEntry[], actionId: string): ServiceRef[] {
   if (actionId !== RESCHEDULE_ACTION_ID) {
-    return rows.map(serviceRef)
+    return rowsToActOn(rows, actionId).map(serviceRef)
   }
   return [...new Set(rows.flatMap((row) => row.reschedule?.target ?? []))].map(serviceOfHost)
 }

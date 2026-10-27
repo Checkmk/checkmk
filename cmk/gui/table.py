@@ -331,7 +331,19 @@ class Table:
         self.next_header = title
 
     def element_dragger_url(self, dragging_tag: str, base_url: str) -> None:
+        """Adds a handle to drag the row to another position, which the URL gets as "_index"
+
+        The position counts the shown rows, so a table showing only the rows its search finds gets
+        a disabled handle telling to clear the search. Sorting the rows by a column would show them
+        in another order, so the table offers no sorting, also while searching."""
         self.options["sortable"] = False
+        if self.options["searchable"] and table_search_term():
+            html.static_icon(
+                StaticIcon(IconNames.drag),
+                title=_("Clear the search to move this entry"),
+                css_classes=["element_dragger", "disabled"],
+            )
+            return
         html.write_html(
             html.render_element_dragger(
                 dragging_tag,

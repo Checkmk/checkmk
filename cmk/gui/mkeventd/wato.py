@@ -2348,9 +2348,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         unique_ids = self._unique_ids()
         order = _order_digest(self._rule_pack_ids())
-        searching = bool(table_search_term())
-        # Sorting by a column would show another order than the EC runs the rule packs in.
-        with table_element(css="ruleset", limit=0, title=title, sortable=False) as table:
+        with table_element(css="ruleset", limit=0, title=title) as table:
             for nr, (rule_pack, pack_ref) in enumerate(
                 zip(self._rule_packs, RulePackRef.of(self._rule_packs), strict=True)
             ):
@@ -2375,12 +2373,9 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 # clone_url  = makeuri_contextless(request, [("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
                 # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
 
-                # With a search, the list shows only the rule packs it finds, so the position of a
-                # dragged one among them would tell nothing about the others.
-                if not searching:
-                    table.element_dragger_url(
-                        "tr", base_url=_rule_pack_action_url("_move", pack_ref, ("_order", order))
-                    )
+                table.element_dragger_url(
+                    "tr", base_url=_rule_pack_action_url("_move", pack_ref, ("_order", order))
+                )
 
                 if self._offers("_delete", type_, unique_id=unique_id):
                     delete_url = make_confirm_delete_link(
@@ -2846,9 +2841,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         priorities = _deref(syslog_priorities)
         facilities = dict(_deref(syslog_facilities))
 
-        # Show content of the rule pack. Sorting by a column would show another order than the EC
-        # runs the rules in.
-        with table_element(title=_("Rules"), css="ruleset", limit=0, sortable=False) as table:
+        # Show content of the rule pack
+        with table_element(title=_("Rules"), css="ruleset", limit=0) as table:
             hits = _get_rule_stats_from_ec()
             simulator = (
                 EventSimulator.for_event(event, site_configs, self._edition) if event else None
@@ -2858,7 +2852,6 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 self._rule_packs[: self._rule_pack_nr]
             )
             order = _order_digest(_rule_ids(rules))
-            searching = bool(table_search_term())
             search_vars = _search_vars(self._search_expression())
             for nr, (rule, rule_ref) in enumerate(zip(rules, RuleRef.of(rules), strict=True)):
                 # Besides the found rules, the table shows the ones matching the search in other
@@ -2891,10 +2884,9 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 html.icon_button(
                     clone_url, _("Create a copy of this rule"), StaticIcon(IconNames.clone)
                 )
-                if not searching:  # see _verify_not_searching()
-                    table.element_dragger_url(
-                        "tr", base_url=self._rule_action_url("_move", rule_ref, ("_order", order))
-                    )
+                table.element_dragger_url(
+                    "tr", base_url=self._rule_action_url("_move", rule_ref, ("_order", order))
+                )
                 html.icon_button(delete_url, _("Delete this rule"), StaticIcon(IconNames.delete))
 
                 table.cell("", css=["buttons"])

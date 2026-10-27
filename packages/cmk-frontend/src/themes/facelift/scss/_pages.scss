@@ -1349,6 +1349,10 @@ a.element_dragger {
   }
 }
 
+.element_dragger.disabled {
+  opacity: $inactive-opacity;
+}
+
 .dragging {
   cursor: move;
   background-color: $dragging-bg-color;

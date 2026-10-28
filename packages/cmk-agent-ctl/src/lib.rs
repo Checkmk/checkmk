@@ -151,6 +151,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
                 },
                 registry.clone(),
             )?,
+            &updater,
             config::ClientConfig::new(runtime_config, status_opts.client_opts, None),
             status_opts.json,
             !status_opts.no_query_remote,

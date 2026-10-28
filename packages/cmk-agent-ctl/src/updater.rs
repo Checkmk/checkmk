@@ -18,7 +18,8 @@
 //!   controller.
 //!
 //! [`Updater`] loads the three of them together and is the entry point of the
-//! updater: [`Updater::handle_update_cycle`].
+//! updater: [`Updater::handle_update_cycle`]. [`section::AgentUpdates`] is what
+//! the three of them look like to the monitoring site.
 //!
 //! [`InstallRequest`] is not one of them: it is what the controller hands to
 //! the privileged install step of Linux, which is a process of its own.
@@ -31,6 +32,7 @@ mod backend;
 mod connection;
 mod install;
 mod python_updater;
+pub mod section;
 mod source;
 mod verification;
 use crate::config::{Registry, UpdaterRegistration};

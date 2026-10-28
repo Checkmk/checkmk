@@ -12,6 +12,7 @@ use super::connection;
 use super::install;
 #[cfg(windows)]
 use super::platform::parse_key_value;
+use super::section;
 use super::source;
 use super::verification;
 use crate::agent_receiver_api;
@@ -1397,6 +1398,52 @@ impl Updater {
     pub fn last_error(&self) -> Option<&str> {
         self.state.last_error.as_deref()
     }
+
+    /// The `agent_updates` entry of `cmk-agent-ctl status --json`.
+    ///
+    /// # Arguments
+    ///
+    /// * `registry` - resolves the UUID of the recorded update source to the
+    ///   connection carrying it, which is where the receiver URL comes from
+    ///
+    /// # Returns
+    ///
+    /// `None` when no updater configuration is deployed
+    ///
+    /// A configuration that failed to load yields an entry carrying the load
+    /// error. TD(4.6) carries the entry "whenever integrated updates are
+    /// configured" and settles no case for one that does not load, so this is
+    /// ours. It follows TD(4.9): a failure of the integrated updater has to
+    /// stay visible. Omitting the entry would let the check report the Python
+    /// updater as healthy while the integrated one is broken.
+    pub fn agent_updates(&self, registry: &Registry) -> Option<section::AgentUpdates> {
+        let config_error = match &self.config {
+            ConfigState::Absent => return None,
+            ConfigState::Broken(error) => Some(format!("{error:#}")),
+            ConfigState::Loaded(_) => None,
+        };
+        Some(section::AgentUpdates::new(
+            &self.state,
+            self.agent_info.as_ref(),
+            self.signature_keys(),
+            self.update_url(registry),
+            config_error.as_deref(),
+        ))
+    }
+
+    /// The receiver URL of the recorded update source.
+    ///
+    /// # Returns
+    ///
+    /// `None` when no source is recorded yet, when the registry no longer
+    /// holds its connection, or when the site address cannot be assembled.
+    fn update_url(&self, registry: &Registry) -> Option<String> {
+        let source = self.state.source.as_ref()?;
+        let selected = connection::select(registry, source.uuid)?;
+        site_spec::make_site_url(selected.site_id, &selected.connection.receiver_port)
+            .ok()
+            .map(String::from)
+    }
 }
 
 /// Write `contents` to `path`, restricted to `mode` from the moment the file
@@ -2279,6 +2326,82 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_last_error_of_a_state_without_one() {
         assert_eq!(updater(some_config(), some_agent_info()).last_error(), None);
+    }
+
+    /// No configuration means the check keeps reading
+    /// `cmk_update_agent_status`, so the entry has to be absent rather than
+    /// empty.
+    #[test]
+    fn test_agent_updates_are_absent_without_a_configuration() {
+        let registry = registry_with_one_connection();
+
+        assert!(updater(None, some_agent_info())
+            .agent_updates(&registry.registry)
+            .is_none());
+    }
+
+    #[test]
+    fn test_agent_updates_of_a_configured_host() {
+        let registry = registry_with_one_connection();
+
+        let entry = entry_of(
+            updater_with_source(some_config(), some_agent_info()),
+            &registry,
+        );
+
+        assert_eq!(entry["aghash"], INSTALLED_HASH);
+        assert_eq!(entry["update_url"], "https://server:8000/site");
+        assert_eq!(entry["error"], serde_json::Value::Null);
+    }
+
+    #[test]
+    fn test_agent_updates_of_a_broken_configuration_carry_the_load_error() {
+        let registry = registry_with_one_connection();
+        let updater = Updater {
+            config: ConfigState::Broken(Error::msg("no valid TOML")),
+            ..updater_with_source(None, some_agent_info())
+        };
+
+        let entry = entry_of(updater, &registry);
+
+        assert_eq!(entry["error"], "no valid TOML");
+        assert_eq!(entry["aghash"], INSTALLED_HASH);
+    }
+
+    #[test]
+    fn test_agent_updates_report_the_configuration_error_before_the_cycle_error() {
+        let registry = registry_with_one_connection();
+        let updater = Updater {
+            config: ConfigState::Broken(Error::msg("no valid TOML")),
+            state: UpdateState {
+                last_error: Some(String::from("receiver unreachable")),
+                ..UpdateState::default()
+            },
+            ..updater(None, some_agent_info())
+        };
+
+        assert_eq!(
+            entry_of(updater, &registry)["error"],
+            "no valid TOML\nreceiver unreachable"
+        );
+    }
+
+    /// The source is resolved through the registry on every call, so a
+    /// connection that was deleted leaves no URL behind.
+    #[test]
+    fn test_agent_updates_without_the_connection_of_the_source() {
+        let registry = TestRegistry::new();
+
+        let entry = entry_of(
+            updater_with_source(some_config(), some_agent_info()),
+            &registry,
+        );
+
+        assert_eq!(entry["update_url"], serde_json::Value::Null);
+    }
+
+    fn entry_of(updater: Updater, registry: &TestRegistry) -> serde_json::Value {
+        serde_json::to_value(updater.agent_updates(&registry.registry).unwrap()).unwrap()
     }
 
     fn some_config() -> Option<UpdaterConfig> {

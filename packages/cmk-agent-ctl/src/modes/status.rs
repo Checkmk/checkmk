@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::updater::{section, Updater};
 use crate::{agent_receiver_api, certs, config, site_spec, version};
 use anyhow::{Context, Result as AnyhowResult};
 use log::debug;
@@ -94,6 +95,11 @@ struct Status {
     ip_allowlist: Vec<String>,
     allow_legacy_pull: bool,
     connections: Vec<ConnectionStatus>,
+
+    /// If `None` then `serde` attribute drops `agent_updates` from
+    /// the status output instead of writing it as `null`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    agent_updates: Option<section::AgentUpdates>,
 }
 
 impl CertInfo {
@@ -306,6 +312,7 @@ impl Status {
     fn from(
         registry: &config::Registry,
         pull_config: &config::PullConfig,
+        updater: &Updater,
         agent_rec_api: &Option<impl agent_receiver_api::RegistrationStatusV2>,
     ) -> Status {
         let mut conn_stats = Vec::new();
@@ -336,6 +343,7 @@ impl Status {
             ip_allowlist: pull_config.allowed_ip.to_vec(),
             allow_legacy_pull: pull_config.allow_legacy_pull(),
             connections: conn_stats,
+            agent_updates: updater.agent_updates(registry),
         }
     }
 
@@ -356,7 +364,7 @@ impl std::fmt::Display for Status {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "Version: {}\nAgent socket: {}\nIP allowlist: {}{}{}",
+            "Version: {}\nAgent socket: {}\nIP allowlist: {}{}{}{}",
             self.version,
             match self.agent_socket_operational {
                 true => String::from("operational"),
@@ -369,6 +377,10 @@ impl std::fmt::Display for Status {
             match self.allow_legacy_pull {
                 true => "\nLegacy mode: enabled",
                 false => "",
+            },
+            match &self.agent_updates {
+                Some(agent_updates) => format!("\nAgent updates:\n\t{agent_updates}"),
+                None => String::from("\nAgent updates: not configured"),
             },
             if self.connections.is_empty() {
                 String::from("\nNo connections")
@@ -386,22 +398,24 @@ impl std::fmt::Display for Status {
     }
 }
 
-fn mark_problematic(to_mark: &(impl std::fmt::Display + ?Sized)) -> String {
+pub(crate) fn mark_problematic(to_mark: &(impl std::fmt::Display + ?Sized)) -> String {
     format!("{to_mark} (!!)")
 }
 
 fn _status(
     registry: &config::Registry,
     pull_config: &config::PullConfig,
+    updater: &Updater,
     json: bool,
     agent_rec_api: &Option<impl agent_receiver_api::RegistrationStatusV2>,
 ) -> AnyhowResult<String> {
-    Status::from(registry, pull_config, agent_rec_api).to_string(json)
+    Status::from(registry, pull_config, updater, agent_rec_api).to_string(json)
 }
 
 pub fn status(
     registry: &config::Registry,
     pull_config: &config::PullConfig,
+    updater: &Updater,
     client_config: config::ClientConfig,
     json: bool,
     query_remote: bool,
@@ -412,6 +426,7 @@ pub fn status(
         _status(
             registry,
             pull_config,
+            updater,
             json,
             &match query_remote {
                 true => Some(agent_receiver_api::Api {
@@ -757,6 +772,7 @@ mod test_status {
                     )),
                 },
             ],
+            agent_updates: None,
         }
     }
 
@@ -766,7 +782,8 @@ mod test_status {
             build_status().to_string(false).unwrap(),
             "Version: 1.0.0\n\
              Agent socket: operational\n\
-             IP allowlist: 192.168.1.13 [::1]\n\n\n\
+             IP allowlist: 192.168.1.13 [::1]\n\
+             Agent updates: not configured\n\n\n\
              Connection: localhost/site\n\
              \tUUID: 50611369-7a42-4c0b-927e-9a14330401fe\n\
              \tLocal:\n\
@@ -807,6 +824,7 @@ mod test_status {
                 ip_allowlist: vec![],
                 allow_legacy_pull: true,
                 connections: vec![],
+                agent_updates: None,
             }
             .to_string(false)
             .unwrap(),
@@ -814,8 +832,17 @@ mod test_status {
              Agent socket: inoperational (!!)\n\
              IP allowlist: any\n\
              Legacy mode: enabled\n\
+             Agent updates: not configured\n\
              No connections"
         );
+    }
+
+    #[test]
+    fn test_status_json_without_update_configuration() {
+        let json: serde_json::Value =
+            serde_json::from_str(&build_status().to_string(true).unwrap()).unwrap();
+
+        assert!(json.get("agent_updates").is_none());
     }
 
     struct MockApi {}
@@ -844,6 +871,8 @@ mod test_status {
             "server/push-site",
             "99f56bbc-5965-4b34-bc70-1959ad1d32d6",
         );
+        // An empty directory -> no updater configuration
+        let home = tempfile::tempdir().unwrap();
 
         assert_eq!(
             _status(
@@ -858,6 +887,10 @@ mod test_status {
                     r.registry.clone()
                 )
                 .unwrap(),
+                &Updater::new(&crate::environment::PathResolver::new(
+                    crate::environment::SetupMode::Classic,
+                    home.path()
+                )),
                 false,
                 &Some(MockApi {}),
             )
@@ -865,7 +898,8 @@ mod test_status {
             format!(
                 "Version: {}\n\
                  Agent socket: {}\n\
-                 IP allowlist: any\n\n\n\
+                 IP allowlist: any\n\
+                 Agent updates: not configured\n\n\n\
                  Connection: server/push-site\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\

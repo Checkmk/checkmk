@@ -2,8 +2,14 @@
 common --registry="file:///%workspace%/bazel/thirdparty"
 common --registry=https://bcr.bazel.build
 
-# Add git hash to workspace status
-build --workspace_status_command=bazel/tools/workspace_status.sh
+# Add git hash to workspace status. Not on Windows: Bazel runs it through cmd.exe there,
+# which hands the .sh to the shell file association. In the non-interactive session of
+# the Jenkins agent that leaves an unanswerable "How do you want to open this file?"
+# dialog (OpenWith.exe) behind per build, until the desktop heap is exhausted. The script
+# never produced output there. Platform configs are expanded among the 'common' options,
+# so a plain 'build' line here would override a 'build:windows' reset.
+build:linux --workspace_status_command=bazel/tools/workspace_status.sh
+build:macos --workspace_status_command=bazel/tools/workspace_status.sh
 
 # Add mirrors for certain download URLs
 common --downloader_config=bazel_downloader.cfg

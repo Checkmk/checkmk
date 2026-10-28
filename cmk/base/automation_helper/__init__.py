@@ -6,6 +6,7 @@
 """Launches automation helper application for processing automation commands."""
 
 import os
+from typing import Final
 
 from setproctitle import setproctitle
 
@@ -26,6 +27,9 @@ from ._server import run as run_server
 from ._tracer import configure_tracer
 from ._watcher import run as run_watcher
 
+# A hung Redis must not block the helper forever. redis-py 8 uses the same default.
+_REDIS_TIMEOUT: Final = 5.0
+
 
 def main() -> int:
     try:
@@ -42,7 +46,7 @@ def main() -> int:
 
         configure_logger(log_directory)
 
-        cache = Cache.setup(client=get_redis_client())
+        cache = Cache.setup(client=get_redis_client(timeout=_REDIS_TIMEOUT))
         config = config_from_disk_or_default_config(
             omd_root=omd_root,
             run_directory=run_directory,

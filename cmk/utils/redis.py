@@ -23,10 +23,14 @@ from cmk.utils.paths import omd_root
 QueryData = TypeVar("QueryData")
 
 
-def get_redis_client() -> Redis[str]:
+def get_redis_client(*, timeout: float | None = None) -> Redis[str]:
     """Builds a ready-to-use Redis client instance
 
     Note: Use the returing object as context manager to ensure proper cleanup.
+
+    Args:
+        timeout: Seconds to wait for connecting and for each socket operation.
+            None waits forever.
     """
     if not redis_enabled():
         raise RuntimeError("Redis currently explicitly disabled")
@@ -35,6 +39,8 @@ def get_redis_client() -> Redis[str]:
         db=0,
         encoding="utf-8",
         decode_responses=True,
+        socket_timeout=timeout,
+        socket_connect_timeout=timeout,
     )
 
 

@@ -10,11 +10,11 @@ load("//agents/modules/windows:python_msis.bzl", "PYTHON_MSI_FEATURES")
 # touch; regenerate it with //agents/modules/windows:refresh_msi_pins.  Its keys are
 # PYTHON_MSI_FEATURES, each naming the @python_msi_<key> repo declared below.
 _MSI_SHA256 = {
-    "core": "507599467fafc5e8783961bd76db6e5a206d58bc968f06728c8a3865fc7337af",
-    "exe": "fa39afc12c0778464273167046d7755c93902ecbc2293682724fdb7023f07cca",
-    "lib": "ee15c9b1cd71465a60f7a37cf0528e0446398ff94020c0075514c43ab0655d3f",
-    "pip": "90b1bdae0804309e2b1f71df1652a7551121c6f1095a0c99b4f6eb8d739ab070",
-    "ucrt": "c0dc366e60851d85ea7341672b3041b5faf808149280476f961c7054828421e7",
+    "core": "592af28b25b8142111b3600c82792f778ffb522b12768170a205fb90e40c72e8",
+    "exe": "985e3ce8b3f0a432fdadfa5aacac506635816c5d24a36fd6222b9e390da279d5",
+    "lib": "7d047ae8b57857e33c3827fe77b052297e61bdab6b3fd4fecd343c3c30e3a8ff",
+    "pip": "c735e5c194e517ddf182a29d3b22fe61948cb09268aa6c064351a3ff69b30cb3",
+    "ucrt": "a314817b93e1f66a79c4228a48d699523ce129d8ddfae6e7dd84e77fe88072c3",
 }
 
 def _repos_impl(_mctx):

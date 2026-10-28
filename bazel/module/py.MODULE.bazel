@@ -1,10 +1,10 @@
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.single_version_platform_override(
     platform = "x86_64-unknown-linux-gnu",
-    python_version = "3.13.14",
-    sha256 = "31ebbb024fecb446d7f25a5b59ca1d4955597ca3f5b4b76f55b30a8987eb61c9",
+    python_version = "3.13.18",
+    sha256 = "126343c54daff4068efc1ac269518d0cc202d57857794948103dd1454e8881be",
     urls = [
-        "https://github.com/astral-sh/python-build-standalone/releases/download/20260610/cpython-3.13.14+20260610-x86_64-unknown-linux-gnu-install_only.tar.gz",
+        "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.13.18+20261026-x86_64-unknown-linux-gnu-install_only.tar.gz",
     ],
 )
 
@@ -14,10 +14,10 @@ python.single_version_platform_override(
 # must agree -- guarded by tests/code_quality/test_windows_python_version.py.
 python.single_version_platform_override(
     platform = "x86_64-pc-windows-msvc",
-    python_version = "3.13.14",
-    sha256 = "9a77f87ec431f16e79fc7e90d9115edf187d18b64100b6f6c27189f419fd79be",
+    python_version = "3.13.18",
+    sha256 = "ebe90cc1dce2dd2d7afa1f0aa9b6c269c7c0174aeabdc6a801381602b7283424",
     urls = [
-        "https://github.com/astral-sh/python-build-standalone/releases/download/20260610/cpython-3.13.14+20260610-x86_64-pc-windows-msvc-install_only.tar.gz",
+        "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.13.18+20261026-x86_64-pc-windows-msvc-install_only.tar.gz",
     ],
 )
 python.defaults(python_version = "3.13")

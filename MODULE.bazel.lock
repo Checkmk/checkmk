@@ -375,7 +375,7 @@
     },
     "//bazel/extensions:python_cab_repositories.bzl%repos": {
       "general": {
-        "bzlTransitiveDigest": "Xhc7/FFpL22tlKa8MtAMmxJvtPYwDXqwjKxGYiP1/1E=",
+        "bzlTransitiveDigest": "cyjqYHhwTv3VcB0OJtmCHhN/63St93zdntpfVq8e+NM=",
         "usagesDigest": "fEM6cB4g0MZpAh1UyMDhjyj4X6uEQ1d76ZFjA/osKq4=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -397,10 +397,10 @@
             "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
             "attributes": {
               "downloaded_file_path": "ucrt.msi",
-              "sha256": "c0dc366e60851d85ea7341672b3041b5faf808149280476f961c7054828421e7",
+              "sha256": "a314817b93e1f66a79c4228a48d699523ce129d8ddfae6e7dd84e77fe88072c3",
               "urls": [
-                "https://www.python.org/ftp/python/3.13.16/amd64/ucrt.msi",
-                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.13.16-amd64-ucrt.msi"
+                "https://www.python.org/ftp/python/3.13.17/amd64/ucrt.msi",
+                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.13.17-amd64-ucrt.msi"
               ]
             }
           },
@@ -408,10 +408,10 @@
             "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
             "attributes": {
               "downloaded_file_path": "core.msi",
-              "sha256": "507599467fafc5e8783961bd76db6e5a206d58bc968f06728c8a3865fc7337af",
+              "sha256": "592af28b25b8142111b3600c82792f778ffb522b12768170a205fb90e40c72e8",
               "urls": [
-                "https://www.python.org/ftp/python/3.13.16/amd64/core.msi",
-                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.13.16-amd64-core.msi"
+                "https://www.python.org/ftp/python/3.13.17/amd64/core.msi",
+                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.13.17-amd64-core.msi"
               ]
             }
           },
@@ -419,10 +419,10 @@
             "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
             "attributes": {
               "downloaded_file_path": "exe.msi",
-              "sha256": "fa39afc12c0778464273167046d7755c93902ecbc2293682724fdb7023f07cca",
+              "sha256": "985e3ce8b3f0a432fdadfa5aacac506635816c5d24a36fd6222b9e390da279d5",
               "urls": [
-                "https://www.python.org/ftp/python/3.13.16/amd64/exe.msi",
-                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.13.16-amd64-exe.msi"
+                "https://www.python.org/ftp/python/3.13.17/amd64/exe.msi",
+                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.13.17-amd64-exe.msi"
               ]
             }
           },
@@ -430,10 +430,10 @@
             "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
             "attributes": {
               "downloaded_file_path": "lib.msi",
-              "sha256": "ee15c9b1cd71465a60f7a37cf0528e0446398ff94020c0075514c43ab0655d3f",
+              "sha256": "7d047ae8b57857e33c3827fe77b052297e61bdab6b3fd4fecd343c3c30e3a8ff",
               "urls": [
-                "https://www.python.org/ftp/python/3.13.16/amd64/lib.msi",
-                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.13.16-amd64-lib.msi"
+                "https://www.python.org/ftp/python/3.13.17/amd64/lib.msi",
+                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.13.17-amd64-lib.msi"
               ]
             }
           },
@@ -441,10 +441,10 @@
             "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
             "attributes": {
               "downloaded_file_path": "pip.msi",
-              "sha256": "90b1bdae0804309e2b1f71df1652a7551121c6f1095a0c99b4f6eb8d739ab070",
+              "sha256": "c735e5c194e517ddf182a29d3b22fe61948cb09268aa6c064351a3ff69b30cb3",
               "urls": [
-                "https://www.python.org/ftp/python/3.13.16/amd64/pip.msi",
-                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.13.16-amd64-pip.msi"
+                "https://www.python.org/ftp/python/3.13.17/amd64/pip.msi",
+                "https://artifacts.lan.tribe29.com/repository/upstream-archives/python-3.13.17-amd64-pip.msi"
               ]
             }
           }

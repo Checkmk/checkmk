@@ -84,6 +84,12 @@ class _DummyAutomationEngineSystemExit:
         raise SystemExit(1)
 
 
+_INACTIVE_RELOADER_CONFIG = ReloaderConfig(
+    active=False,
+    poll_interval=1.0,
+    cooldown_interval=5.0,
+)
+
 _EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
     name="dummy", args=[], stdin="", log_level=logging.INFO
 ).model_dump()
@@ -232,6 +238,30 @@ def test_automation_reloads_if_necessary(mocker: MockerFixture, cache: Cache) ->
     mock_clear_caches_before_each_call.assert_called_once()
 
 
+def test_automation_retries_failed_reload(mocker: MockerFixture, cache: Cache) -> None:
+    mock_reload_config = mocker.MagicMock(side_effect=[None, RuntimeError("failed reload"), None])
+    with _make_test_client(
+        _DummyAutomationEngineSuccess(),
+        cache,
+        mock_reload_config,
+        lambda: None,
+        reloader_config=_INACTIVE_RELOADER_CONFIG,
+    ) as client:
+        cache.store_last_detected_change(time.time())
+        with pytest.raises(RuntimeError):
+            client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
+        resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
+
+    assert (
+        AutomationResponse.model_validate(resp.json()).serialized_result_or_error_code
+        == "dummy_serialized"
+    )
+    assert (
+        # once at application startup, then by both automations
+        mock_reload_config.call_count == 3
+    ), "The failed reload counts as loaded"
+
+
 def test_health_check(cache: Cache) -> None:
     with _make_test_client(
         _DummyAutomationEngineSuccess(),
@@ -249,8 +279,9 @@ def test_health_check(cache: Cache) -> None:
 async def test_reloader_single_change(mocker: MockerFixture, cache: Cache) -> None:
     mock_reload_callback = mocker.MagicMock()
     state = _State(
-        last_reload_at=1,
         automation_or_reload_lock=asyncio.Lock(),
+        reload_config=mock_reload_callback,
+        last_reload_at=1,
     )
     mock_delay_state = _MockDelayState(
         call_counter=0,
@@ -265,7 +296,6 @@ async def test_reloader_single_change(mocker: MockerFixture, cache: Cache) -> No
                 cooldown_interval=0.0,
             ),
             cache=cache,
-            reload_callback=mock_reload_callback,
             state=state,
             delayer_factory=lambda delay: _mock_delay(mock_delay_state, delay),
         )
@@ -290,8 +320,9 @@ async def test_reloader_single_change(mocker: MockerFixture, cache: Cache) -> No
 async def test_reloader_two_changes(mocker: MockerFixture, cache: Cache) -> None:
     mock_reload_callback = mocker.MagicMock()
     state = _State(
-        last_reload_at=1,
         automation_or_reload_lock=asyncio.Lock(),
+        reload_config=mock_reload_callback,
+        last_reload_at=1,
     )
     mock_delay_state = _MockDelayState(
         call_counter=0,
@@ -306,7 +337,6 @@ async def test_reloader_two_changes(mocker: MockerFixture, cache: Cache) -> None
                 cooldown_interval=5.0,
             ),
             cache=cache,
-            reload_callback=mock_reload_callback,
             state=state,
             delayer_factory=lambda delay: _mock_delay(mock_delay_state, delay),
         )
@@ -339,8 +369,9 @@ async def test_reloader_takes_state_into_account(mocker: MockerFixture, cache: C
     mock_reload_callback = mocker.MagicMock()
     lock = _LockWithCounter()
     state = _State(
-        last_reload_at=1,
         automation_or_reload_lock=lock,
+        reload_config=mock_reload_callback,
+        last_reload_at=1,
     )
     mock_delay_state = _MockDelayState(
         call_counter=0,
@@ -355,7 +386,6 @@ async def test_reloader_takes_state_into_account(mocker: MockerFixture, cache: C
                 cooldown_interval=0.0,
             ),
             cache=cache,
-            reload_callback=mock_reload_callback,
             state=state,
             delayer_factory=lambda delay: _mock_delay(mock_delay_state, delay),
         )

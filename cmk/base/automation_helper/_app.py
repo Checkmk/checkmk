@@ -49,7 +49,14 @@ class AutomationEngine(Protocol):
 @dataclass
 class _State:
     automation_or_reload_lock: asyncio.Lock
+    reload_config: Callable[[], None]
     last_reload_at: float
+
+    def load(self) -> None:
+        # Do not yet set `self.last_reload_at`. We don't know if we succeed.
+        time_right_before_reload = time.time()
+        self.reload_config()
+        self.last_reload_at = time_right_before_reload
 
 
 @dataclass(frozen=True)
@@ -57,7 +64,6 @@ class _ApplicationDependencies:
     automation_engine: AutomationEngine
     changes_cache: Cache
     reloader_config: ReloaderConfig
-    reload_config: Callable[[], None]
     clear_caches_before_each_call: Callable[[], None]
     state: _State
 
@@ -95,10 +101,10 @@ def make_application(
         automation_engine=engine,
         changes_cache=cache,
         reloader_config=reloader_config,
-        reload_config=reload_config,
         clear_caches_before_each_call=clear_caches_before_each_call,
         state=_State(
             automation_or_reload_lock=asyncio.Lock(),
+            reload_config=reload_config,
             last_reload_at=0,
         ),
     )
@@ -119,16 +125,14 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         handler.setFormatter(Formatter("%(asctime)s %(message)s"))
 
     dependencies: _ApplicationDependencies = app.state.dependencies
-    dependencies.state.last_reload_at = time.time()
     config.load_all_plugins(local_checks_dir=paths.local_checks_dir, checks_dir=paths.checks_dir)
     tty.reinit()
-    dependencies.reload_config()
+    dependencies.state.load()
 
     reloader_task = asyncio.create_task(
         _reloader_task(
             config=dependencies.reloader_config,
             cache=dependencies.changes_cache,
-            reload_callback=dependencies.reload_config,
             state=dependencies.state,
         )
         if dependencies.reloader_config.active
@@ -143,7 +147,6 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 async def _reloader_task(
     config: ReloaderConfig,
     cache: Cache,
-    reload_callback: Callable[[], None],
     state: _State,
     delayer_factory: Callable[[float], Awaitable[None]] = asyncio.sleep,
 ) -> None:
@@ -171,8 +174,7 @@ async def _reloader_task(
                         break
 
                     LOGGER.info("[reloader] Triggering reload")
-                    state.last_reload_at = time.time()
-                    reload_callback()
+                    state.load()
                     break
 
             else:
@@ -203,7 +205,6 @@ async def _automation_endpoint(request: Request, payload: AutomationPayload) -> 
             payload,
             dependencies.automation_engine,
             dependencies.changes_cache,
-            dependencies.reload_config,
             dependencies.clear_caches_before_each_call,
             dependencies.state,
         )
@@ -213,7 +214,6 @@ def _execute_automation_endpoint(
     payload: AutomationPayload,
     engine: AutomationEngine,
     cache: Cache,
-    reload_config: Callable[[], None],
     clear_caches_before_each_call: Callable[[], None],
     state: _State,
 ) -> AutomationResponse:
@@ -223,8 +223,7 @@ def _execute_automation_endpoint(
         payload.args,
     )
     if cache.reload_required(state.last_reload_at):
-        state.last_reload_at = time.time()
-        reload_config()
+        state.load()
         LOGGER.warning("[automation] configurations were reloaded due to a stale state.")
 
     buffer_stdout = io.StringIO()

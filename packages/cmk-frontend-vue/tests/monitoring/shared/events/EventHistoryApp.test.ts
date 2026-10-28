@@ -8,8 +8,8 @@ import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { afterAll, beforeAll, expect, test } from 'vitest'
 import { nextTick } from 'vue'
 
-import EventHistoryApp from '@/monitoring/events/EventHistoryApp.vue'
-import type { EventEntry, EventsResponse } from '@/monitoring/events/api'
+import EventHistoryApp from '@/monitoring/shared/events/EventHistoryApp.vue'
+import type { EventEntry, EventsResponse } from '@/monitoring/shared/events/api'
 
 // MonitoringTable virtualizes off its own wrapper, which jsdom measures as zero-sized;
 // without a height no row would be rendered at all.

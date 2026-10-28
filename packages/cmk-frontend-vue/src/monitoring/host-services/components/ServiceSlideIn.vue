@@ -18,8 +18,6 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, markRaw, onUnmounted, ref, watch } from 'vue'
 
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
-import EventHistoryApp from '@/monitoring/events/EventHistoryApp.vue'
-import { fetchEvents } from '@/monitoring/events/api'
 import { ServiceGraphsApi } from '@/monitoring/host-services/api/graphs'
 import { HostServicesApi } from '@/monitoring/host-services/api/services'
 import type {
@@ -37,6 +35,8 @@ import type { MonitoringActionRegistry } from '@/monitoring/shared/components/ac
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 import SlideInActions from '@/monitoring/shared/components/slide-in/SlideInActions.vue'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
+import EventHistoryApp from '@/monitoring/shared/events/EventHistoryApp.vue'
+import { fetchEvents } from '@/monitoring/shared/events/api'
 import { useSlideInActions } from '@/monitoring/shared/services/useSlideInActions'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 

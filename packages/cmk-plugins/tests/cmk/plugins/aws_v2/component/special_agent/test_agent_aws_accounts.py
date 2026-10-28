@@ -15,10 +15,13 @@ from cmk.testlib.aws_v2.fake_sts import (
     AssumeRoleCall,
     DENIED_ACCOUNT,
     FakeSts,
+    HUB_ACCOUNT,
     LIST_ROLE,
     MANAGEMENT_ACCOUNT,
     NO_LIST_KEY_ID,
     NOT_ENABLED_REGION,
+    ROLE,
+    ROLE_ACCOUNT,
     SCP_DENIED_ACCOUNT,
     SignedRequest,
     temporary_key_id,
@@ -292,3 +295,34 @@ def test_organization_without_an_account_to_monitor_is_a_run_error(
         {"status", "reason"},
         "error",
     )
+
+
+SINGLE_ACCOUNT_ARGS = [
+    arg for arg in LOGIN_ARGS if arg not in ("--spoke-role-name", "CheckmkMonitoring")
+]
+
+
+def test_single_account_gets_its_own_host(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert _hosts(fake_sts, monkeypatch, capsys, SINGLE_ACCOUNT_ARGS) == {None, HUB_ACCOUNT}
+
+
+def test_single_account_leaves_only_the_agent_info_on_the_rule_host(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
+    agent_aws_main(parse_arguments(SINGLE_ACCOUNT_ARGS))
+
+    assert _sections_by_host(capsys.readouterr().out)[None] == [
+        "<<<aws_v2_agent_info:sep(0)>>>",
+        f'{{"status": "ok", "account": "{HUB_ACCOUNT}"}}',
+    ]
+
+
+def test_assumed_role_account_gets_its_own_host(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    args = [*SINGLE_ACCOUNT_ARGS, "--assume-role", "--role-arn", ROLE]
+
+    assert _hosts(fake_sts, monkeypatch, capsys, args) == {None, ROLE_ACCOUNT}

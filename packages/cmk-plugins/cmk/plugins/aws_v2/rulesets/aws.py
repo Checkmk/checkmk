@@ -400,7 +400,8 @@ def _accounts() -> Mapping[str, DictElement]:
             parameter_form=CascadingSingleChoice(
                 title=Title("Accounts"),
                 help_text=Help(
-                    "<b>Single account:</b> monitor the account these credentials belong to.<br>"
+                    "<b>Single account:</b> monitor the account these credentials belong to. "
+                    "Its data goes to a piggyback host named after its account ID.<br>"
                     "<b>Explicit list of account IDs:</b> monitor several accounts with this one "
                     "rule. Every listed account needs a role with the same name that these "
                     "credentials may assume. The data of each account goes to a piggyback host "

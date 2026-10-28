@@ -814,7 +814,7 @@ def agent_aws_main(args: argparse.Namespace) -> int:
             account_run = _run_account(
                 args,
                 account,
-                aws_config.for_account(account.id, host=account.host),
+                aws_config.for_account(account.id, host=account.id),
                 global_services,
                 regional_services,
                 use_cache,

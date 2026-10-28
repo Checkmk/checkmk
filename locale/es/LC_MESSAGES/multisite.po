@@ -8785,7 +8785,10 @@ msgstr "El secreto de la automatización de las cuentas de las máquinas"
 
 #, python-format
 msgid ""
-"Automation user %s has stored secret with %d dangerous permission(s): %s"
+"Automation user %(user_id)s has a stored secret and %(count)d dangerous "
+"permission(s): %(permissions)s. If no Checkmk feature reads the secret, "
+"disable 'Store the secret in cleartext' and generate a new secret. "
+"Otherwise, assign a role without these permissions."
 msgstr ""
 
 #, fuzzy
@@ -65684,6 +65687,18 @@ msgstr ""
 "<tt>var/log/web.log</tt>. Además de esto, los errores se muestran aquí."
 
 msgid ""
+"Since 2.4.0 (Werk #17344), the secret of an automation user is only stored "
+"in cleartext if <i>Store the secret in cleartext</i> is enabled. A stored "
+"secret can be read by anyone with access to the site files or backups. "
+"Together with permissions that allow running arbitrary code, this gives full "
+"control over the site.<br>External tools and scripts do not need a stored "
+"secret, they keep the secret themselves. Only Checkmk features that read the "
+"secret from the site need it, e.g. the agent auto-registration rule or the "
+"special agent for BI aggregations. These users only need the permissions of "
+"that feature, not the role administrator."
+msgstr ""
+
+msgid ""
 "Since Checkmk 1.6 it is possible to encrypt the TCP Livestatus connections "
 "using SSL. This is enabled by default for sites that enable Livestatus via "
 "TCP with 1.6 or newer. Sites that already have this option enabled keep the "
@@ -71712,6 +71727,11 @@ msgstr ""
 "tercera columna es opcional y puede contener datos de rendimiento."
 
 msgid ""
+"The SSH key pair cannot be restored because your session changed since this "
+"page was opened. Please open this page again and repeat your changes."
+msgstr ""
+
+msgid ""
 "The Setup configuration can be set to read only mode for all users that are "
 "not permitted to ignore the read only mode. All users that are permitted to "
 "set the read only can disable it again when another permitted user enabled "
@@ -75103,6 +75123,16 @@ msgid ""
 msgstr ""
 
 msgid ""
+"The previously entered password cannot be restored because your session "
+"changed since this page was opened. Please enter the password again."
+msgstr ""
+
+msgid ""
+"The previously uploaded file cannot be restored because your session changed "
+"since this page was opened. Please upload the file again."
+msgstr ""
+
+msgid ""
 "The problems above might be caused by missing caches. Please trigger a "
 "rescan."
 msgstr ""
@@ -75221,6 +75251,11 @@ msgstr ""
 "El informe se utiliza en el planificador de informes. Primero tiene que "
 "eliminar todas las programaciones que hacen referencia a este informe para "
 "poder eliminar el informe."
+
+#, python-format
+msgid ""
+"The report location %(path)s is outside of the report archive of %(owner)s"
+msgstr ""
 
 #, fuzzy
 msgid "The report you are trying to preview has no valid file name"
@@ -93227,12 +93262,6 @@ msgstr "Utilizar los estados del dispositivo"
 #, fuzzy
 msgid "Wireless ethernet statuses"
 msgstr "ignorar el estado"
-
-msgid ""
-"With 2.4.0 (Werk #17344) it was made optional to store the secret of an "
-"automation user. We do not recommend to store the secret for automation "
-"users with high privileges."
-msgstr ""
 
 msgid ""
 "With ServiceNow you can create different types of management issues, "

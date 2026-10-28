@@ -27,6 +27,7 @@ import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
 import PerfometerCell from '@/monitoring/shared/components/cell/PerfometerCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
+import GraphsLink from '@/monitoring/shared/components/graphs/GraphsLink.vue'
 import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
@@ -35,6 +36,8 @@ import type { DisplayOptions } from '@/monitoring/shared/types'
 const props = withDefaults(
   defineProps<{
     row: HostServiceEntry | ServiceEntry
+    /** The host the service runs on, to preview the graphs of. */
+    serviceHost: HostRef
     tableRow: Row<HostServiceEntry>
     // Always-visible inline buttons; their url may contain a {service} placeholder resolved per row.
     rowActions?: CellAction[]
@@ -167,7 +170,17 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     :value="row.name"
     :button="true"
     @click="emit('open', row)"
-  />
+  >
+    <!-- Every name keeps the slot, so the names line up whether their service has graphs or not. -->
+    <template #aside>
+      <GraphsLink
+        v-if="row.graphs_link !== undefined"
+        :host="serviceHost"
+        :service="row.name"
+        :href="row.graphs_link"
+      />
+    </template>
+  </StringCell>
   <StringCell
     v-if="hasColumn('summary')"
     column-id="summary"

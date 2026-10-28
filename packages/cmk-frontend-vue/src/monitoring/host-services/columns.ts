@@ -47,6 +47,17 @@ export function visibleServiceFields(visibility: VisibilityState): ServiceOption
   return OPTIONAL_FIELD_COLUMNS.filter((field) => visibility[field] !== false)
 }
 
+/** Fields every row reads, whichever columns the table shows, for the graphs beside its name. */
+const ROW_FIELDS = ['graphs_link'] as const satisfies readonly ServiceOptionalField[]
+
+/**
+ * The service optional fields the table asks the API for: those of the columns it shows, and
+ * those every row reads.
+ */
+export function requestedServiceFields(visibility: VisibilityState): ServiceOptionalField[] {
+  return [...visibleServiceFields(visibility), ...ROW_FIELDS]
+}
+
 const ACTION_BUTTON_WIDTH = 25
 const ACTIONS_MENU_WIDTH = 50
 

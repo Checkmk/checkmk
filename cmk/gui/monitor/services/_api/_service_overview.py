@@ -113,8 +113,11 @@ class ServiceOverviewResponse:
         ),
         example="wato.py?mode=inventory&host=web-server-01",
     )
-    legacy_service_graphs_link: str = api_field(
-        description="URL to the legacy view holding this service's graphs",
+    legacy_service_graphs_link: str | None = api_field(
+        description=(
+            "URL to the legacy view holding this service's graphs. Null when the core has recorded "
+            "no time series for the service, so it has no graphs."
+        ),
         example=(
             "view.py?view_name=service_graphs&site=local&host=web-server-01&service=CPU+utilization"
         ),
@@ -197,7 +200,9 @@ class ServiceOverviewResponse:
             legacy_service_discovery_link=(
                 service_discovery_link(service) if may_run_discovery else None
             ),
-            legacy_service_graphs_link=service_view_link("service_graphs", service),
+            legacy_service_graphs_link=(
+                service_view_link("service_graphs", service) if service.has_graphs else None
+            ),
             contact_groups=read(service.contact_groups, "contact_groups"),
             summary=service.summary,
             long_output=service.long_output,

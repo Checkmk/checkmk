@@ -108,7 +108,8 @@ const highlightStyle = computed<CSSProperties>(() =>
       'monitoring-base-cell--first-pinned-right': columnInfo?.isFirstPinnedRight,
       'monitoring-base-cell--button': button === true,
       'monitoring-base-cell--vertical-middle': verticalAlign === 'middle',
-      'monitoring-base-cell--no-wrap': noWrap === true
+      'monitoring-base-cell--no-wrap': noWrap === true,
+      'monitoring-base-cell--with-aside': slots.aside !== undefined
     }"
     :style="pinnedStyle"
   >
@@ -161,6 +162,9 @@ const highlightStyle = computed<CSSProperties>(() =>
         :href="linkedTo.href"
         :target="linkedTo.target"
       />
+    </div>
+    <div v-if="slots.aside" class="monitoring-base-cell__aside">
+      <slot name="aside" />
     </div>
   </td>
 </template>
@@ -268,6 +272,27 @@ const highlightStyle = computed<CSSProperties>(() =>
 
 .monitoring-base-cell--button {
   position: relative;
+}
+
+/* The aside keeps a slot of its own on the right, so the content (and the button's hover icon)
+   never runs under it. It sits above the button's click area, to be clicked on its own. */
+.monitoring-base-cell--with-aside {
+  --monitoring-base-cell-aside-width: calc(var(--dimension-6) + 2 * var(--dimension-3));
+
+  position: relative;
+  padding-right: var(--monitoring-base-cell-aside-width);
+
+  .monitoring-base-cell__aside {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--monitoring-base-cell-aside-width);
+    height: 31px;
+  }
 }
 
 .monitoring-base-cell--vertical-middle {

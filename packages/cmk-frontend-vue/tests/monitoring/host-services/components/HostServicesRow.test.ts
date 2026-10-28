@@ -11,7 +11,7 @@ import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { computed, defineComponent, h, provide } from 'vue'
 
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
-import type { HostServiceEntry, ServiceEntry } from '@/monitoring/shared/api/types'
+import type { HostRef, HostServiceEntry, ServiceEntry } from '@/monitoring/shared/api/types'
 import {
   COLUMN_LAYOUT_KEY,
   type ColumnLayoutInfo
@@ -21,6 +21,8 @@ import type { DisplayOptions } from '@/monitoring/shared/types'
 // 'abs' keeps assertions comparable to plain `renderDateAndTime`, independent of how old
 // a fixture's timestamp happens to be relative to the real clock the test runs under.
 const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
+
+const HOST: HostRef = { site_id: 'local', name: 'web-server-01' }
 
 function reschedulesItself(name: string) {
   return {
@@ -64,7 +66,13 @@ function mountRow(
         return h('table', [
           h('tbody', [
             h('tr', [
-              h(HostServicesRow, { row, tableRow, displayOptions: DISPLAY_OPTIONS, ...extraProps })
+              h(HostServicesRow, {
+                serviceHost: HOST,
+                row,
+                tableRow,
+                displayOptions: DISPLAY_OPTIONS,
+                ...extraProps
+              })
             ])
           ])
         ])
@@ -214,6 +222,7 @@ test('emits a picked command with the service it acts on', async () => {
           h('tbody', [
             h('tr', [
               h(HostServicesRow, {
+                serviceHost: HOST,
                 row: makeService({ name: 'Memory' }),
                 tableRow: makeTableRow(),
                 displayOptions: DISPLAY_OPTIONS,
@@ -335,6 +344,24 @@ test('the perfometer asks for the graphs of its service', async () => {
   await userEvent.click(container.querySelector('td[data-column-id="perfometer"] button')!)
 
   expect(openGraphs).toHaveBeenCalledWith(service)
+})
+
+test('links a service with graphs to its graphs page, beside its name', () => {
+  const graphsLink =
+    'view.py?view_name=service_graphs&site=local&host=web-server-01&service=CPU+load'
+  const { container } = mountRow(makeService({ name: 'CPU load', graphs_link: graphsLink }))
+
+  const link = screen.getByRole('link', { name: 'Show the graphs of service CPU load' })
+  expect(link).toHaveAttribute('href', graphsLink)
+  expect(container.querySelector('td[data-column-id="name"]')).toContainElement(link)
+})
+
+test('offers no graphs link for a service without graphs', () => {
+  mountRow(makeService({ name: 'CPU load' }))
+
+  expect(
+    screen.queryByRole('link', { name: 'Show the graphs of service CPU load' })
+  ).not.toBeInTheDocument()
 })
 
 test('a service without a perfometer leaves its cell unclickable', () => {
@@ -557,7 +584,12 @@ function mountRowInLayout(row: HostServiceEntry, columnIds: string[]) {
         return h('table', [
           h('tbody', [
             h('tr', [
-              h(HostServicesRow, { row, tableRow: makeTableRow(), displayOptions: DISPLAY_OPTIONS })
+              h(HostServicesRow, {
+                row,
+                serviceHost: HOST,
+                tableRow: makeTableRow(),
+                displayOptions: DISPLAY_OPTIONS
+              })
             ])
           ])
         ])

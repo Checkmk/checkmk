@@ -21,6 +21,7 @@ const SERVICES_PATH = '/monitor/services'
 const EXPORT_EVENT = 'cmk-monitoring-export'
 const ACTION_MENU_PATH = '/monitor/hosts/{hostname}/service/action_menu'
 const OVERVIEW_PATH = '/monitor/hosts/{hostname}/service'
+const DISCOVER_GRAPHS_PATH = '/domain-types/graph/actions/discover_template_graphs/invoke'
 
 const RESCHEDULE: MonitoringAction = {
   ident: 'reschedule',
@@ -64,6 +65,13 @@ afterEach(() => {
 function mockServices(services: ApiServiceEntry[]): void {
   postSpy.mockImplementation((path: string, init: unknown) => {
     servicesPost(path, init)
+    if (path === DISCOVER_GRAPHS_PATH) {
+      return Promise.resolve({
+        data: { graphs: [], no_data_message: null },
+        error: undefined,
+        response: new Response()
+      }) as never
+    }
     return Promise.resolve({
       data: {
         services,
@@ -120,7 +128,7 @@ test('lists the services of every host sorted by site, host and service by defau
       body: {
         limit: 1000,
         sort: ['site_id:asc', 'host_name:asc', 'name:asc'],
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -160,7 +168,9 @@ test('requests the services by host name alone on a click of the Host header', a
 
   expect(servicesPost).toHaveBeenLastCalledWith(
     SERVICES_PATH,
-    expect.objectContaining({ body: { limit: 1000, sort: ['host_name:asc'], fields: [] } })
+    expect.objectContaining({
+      body: { limit: 1000, sort: ['host_name:asc'], fields: ['graphs_link'] }
+    })
   )
 })
 
@@ -272,6 +282,31 @@ describe('with the rows laid out', () => {
 
     await vi.waitUntil(() => requestedFor(OVERVIEW_PATH, 'web-2', 'remote'))
     expect(requestedFor(OVERVIEW_PATH, 'web-1', 'local')).toBe(false)
+  })
+
+  function graphsDiscoveredFor(hostName: string, siteId: string): boolean {
+    return servicesPost.mock.calls.some(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ([calledPath, init]: [string, any]) =>
+        calledPath === DISCOVER_GRAPHS_PATH &&
+        init.body.hostname === hostName &&
+        init.body.site === siteId
+    )
+  }
+
+  test('previews the graphs of a row from its own host and site', async () => {
+    mockServices(
+      SAME_NAMED_SERVICES_ON_TWO_HOSTS().map((service) => ({ ...service, graphs_link: 'view.py' }))
+    )
+    renderApp()
+
+    const links = await screen.findAllByRole('link', {
+      name: 'Show the graphs of service CPU load'
+    })
+    await userEvent.hover(links[1]!)
+
+    await vi.waitUntil(() => graphsDiscoveredFor('web-2', 'remote'))
+    expect(graphsDiscoveredFor('web-1', 'local')).toBe(false)
   })
 
   test('reloads the slide-in for a service of the same name on another host', async () => {

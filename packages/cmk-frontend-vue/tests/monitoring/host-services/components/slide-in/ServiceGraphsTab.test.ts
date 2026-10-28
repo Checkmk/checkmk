@@ -6,11 +6,11 @@
 import { render, screen } from '@testing-library/vue'
 import { expect, test } from 'vitest'
 
-import type { DiscoveredGraph } from '@/monitoring/host-services/api/graphs'
 import ServiceGraphsTab, {
   type ServiceGraphs,
-  toTimeSeriesGraph
+  toPanelGraph
 } from '@/monitoring/host-services/components/slide-in/ServiceGraphsTab.vue'
+import type { DiscoveredGraph } from '@/monitoring/shared/api/graphs'
 
 const GRAPHS_LINK = 'view.py?view_name=service_graphs&site=local&host=web-1&service=CPU+load'
 
@@ -72,6 +72,12 @@ test('the tab links to the graph page of the same host and service', () => {
   )
 })
 
+test('a service without recorded graphs offers no link to the graph page', () => {
+  mountTab({ graphsLink: null })
+
+  expect(screen.queryByRole('link', { name: /Explore all service graphs/ })).not.toBeInTheDocument()
+})
+
 test('the link out leaves the frame the listing renders in, as every other one does', () => {
   mountTab({ graphs: [makeShell()] })
 
@@ -95,15 +101,10 @@ test('a service without graphs names no time window', () => {
   expect(screen.queryByText(/Initially showing the last/)).not.toBeInTheDocument()
 })
 
-test('a discovered shell is dressed as the graph the renderer takes', () => {
-  const graph = toTimeSeriesGraph(makeShell(), 640)
-
-  expect(graph.internal).toBe('{"graphs":[]}')
-  expect(graph.options.name).toBe('cpu_utilization')
-  expect(graph.options.header).toEqual({ title: 'CPU utilization', show_graph_time: true })
-  expect(graph.size.width).toBe(640)
+test('a graph in the panel takes the width of the panel', () => {
+  expect(toPanelGraph(makeShell(), 640).size.width).toBe(640)
 })
 
 test('a graph in the panel can be pinned like on the graph page', () => {
-  expect(toTimeSeriesGraph(makeShell(), 640).interaction.pin).toBe('enabled')
+  expect(toPanelGraph(makeShell(), 640).interaction.pin).toBe('enabled')
 })

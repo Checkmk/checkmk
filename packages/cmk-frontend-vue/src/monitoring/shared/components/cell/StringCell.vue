@@ -71,6 +71,9 @@ function measureCut(event: MouseEvent): void {
         <template v-else>{{ display }}</template>
       </span>
     </template>
+    <template v-if="$slots.aside" #aside>
+      <slot name="aside" />
+    </template>
   </BaseCell>
 </template>
 

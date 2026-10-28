@@ -22,7 +22,7 @@ import {
 } from '@/monitoring/shared/services/MonitoringService'
 
 import type { HostServicesApi, HostServicesQueryParams } from '../api/services'
-import { visibleServiceFields } from '../columns'
+import { requestedServiceFields } from '../columns'
 import { ServiceExport, type ServiceExportColumn } from '../export/serviceExport'
 
 export interface HostServicesServiceOptions extends MonitoringServiceOptions<HostServiceEntry> {
@@ -72,7 +72,7 @@ export class HostServicesService extends MonitoringService<HostServiceEntry> {
         this.host,
         {
           ...this.listingParams(),
-          fields: visibleServiceFields(this.columnVisibility.value)
+          fields: requestedServiceFields(this.columnVisibility.value)
         },
         signal
       ),

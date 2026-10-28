@@ -100,6 +100,9 @@ class Service:
     last_state_change: UnixTimestamp | None
     perf_data: str
     check_command: str
+    # Whether the core has recorded time series for this service, which is what its graphs show -
+    # None when the caller did not ask.
+    has_graphs: bool | None
     # The raw livestatus column, unlike ``active_checks_manually_disabled`` above, which says only
     # whether active checks were switched off by hand.
     active_checks_enabled: bool
@@ -178,6 +181,7 @@ class ServiceOptionalField(enum.StrEnum):
     CONTACTS = "contacts"
     CONTACT_GROUPS = "contact_groups"
     GROUPS = "groups"
+    GRAPHS_LINK = "graphs_link"
 
     @classmethod
     def options(cls) -> str:

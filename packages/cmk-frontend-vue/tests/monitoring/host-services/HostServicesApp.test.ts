@@ -202,7 +202,7 @@ test('requests the services sorted by name ascending on the first click of the S
       body: {
         limit: 1000,
         sort: ['name:asc'],
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -221,7 +221,7 @@ test('requests a descending sort first for the State column', async () => {
       body: {
         limit: 1000,
         sort: ['state:desc'],
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -240,7 +240,7 @@ test('requests the services matching a submitted search query', async () => {
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, q: 'CPU', fields: [] }
+      body: { limit: 1000, q: 'CPU', fields: ['graphs_link'] }
     })
   )
 })
@@ -274,7 +274,7 @@ test('requests services whose name contains the typed filter text', async () => 
       body: {
         limit: 1000,
         filter: { type: 'condition', field: 'name', op: 'contains', value: 'cpu' },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -297,7 +297,7 @@ test('clearing the name filter restores the full, unfiltered list', async () => 
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: [] }
+      body: { limit: 1000, fields: ['graphs_link'] }
     })
   )
 })
@@ -317,7 +317,7 @@ test('requests services whose summary contains the typed filter text', async () 
       body: {
         limit: 1000,
         filter: { type: 'condition', field: 'summary', op: 'contains', value: 'timeout' },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -340,7 +340,7 @@ test('clearing the summary filter restores the full, unfiltered list', async () 
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: [] }
+      body: { limit: 1000, fields: ['graphs_link'] }
     })
   )
 })
@@ -375,7 +375,7 @@ test('requests services that are not acknowledged and not in downtime', async ()
             { type: 'condition', field: 'acknowledged', op: 'eq', value: false }
           ]
         },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -402,7 +402,7 @@ test('clearing the mode filter restores the full, unfiltered list', async () => 
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: [] }
+      body: { limit: 1000, fields: ['graphs_link'] }
     })
   )
 })
@@ -426,7 +426,7 @@ test('activating the unhandled-problems quick filter requests the WARN/CRIT/UNKN
             { type: 'condition', field: 'in_downtime', op: 'eq', value: false }
           ]
         },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -443,7 +443,7 @@ test('clicking the unhandled-problems chip again turns it back off', async () =>
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: [] }
+      body: { limit: 1000, fields: ['graphs_link'] }
     })
   )
 })
@@ -458,7 +458,7 @@ test('resetting all filters also turns off the unhandled-problems chip', async (
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: [] }
+      body: { limit: 1000, fields: ['graphs_link'] }
     })
   )
 })
@@ -504,7 +504,7 @@ test('resetting all filters restores the full, unfiltered list', async () => {
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: [] }
+      body: { limit: 1000, fields: ['graphs_link'] }
     })
   )
 })
@@ -527,7 +527,7 @@ test('requests only the states the URL a link arrived on names', async () => {
       body: {
         limit: 1000,
         filter: { type: 'condition', field: 'state', op: 'one_of', value: ['CRIT'] },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -577,7 +577,7 @@ test('requests services in a picked state that are also flapping', async () => {
             { type: 'condition', field: 'is_flapping', op: 'eq', value: true }
           ]
         },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -604,7 +604,7 @@ test('clearing the state filter also clears its flapping/stale flags', async () 
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: [] }
+      body: { limit: 1000, fields: ['graphs_link'] }
     })
   )
 })
@@ -701,7 +701,7 @@ test('sorts by the column the URL a link arrived on names', async () => {
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, sort: ['state:desc'], fields: [] }
+      body: { limit: 1000, sort: ['state:desc'], fields: ['graphs_link'] }
     })
   )
   expect(screen.getByRole('columnheader', { name: 'State' })).toHaveAttribute(
@@ -728,7 +728,7 @@ test('shows the columns the URL a link arrived on names, and asks for their fiel
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: ['labels'] }
+      body: { limit: 1000, fields: ['labels', 'graphs_link'] }
     })
   )
 })
@@ -766,7 +766,7 @@ test('falls back to the default ordering when the URL names an unsortable column
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: [] }
+      body: { limit: 1000, fields: ['graphs_link'] }
     })
   )
   expect(new URLSearchParams(window.location.search).get('sort')).toBeNull()
@@ -809,7 +809,7 @@ test('requests services whose last state change is younger than the entered age'
             (value: number) => value >= before - 5 * 60 && value <= after - 5 * 60
           )
         },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -851,7 +851,7 @@ test('requests services whose last state change is at or after the picked instan
           op: 'gte',
           value: picked
         },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -904,7 +904,7 @@ test('a range picked as instants keeps filtering once the ages show as ages', as
           op: 'gte',
           value: expect.toSatisfy((value: number) => Math.abs(value - picked) <= 2)
         },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )

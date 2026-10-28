@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import type { CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 
-import type { DiscoveredGraph } from '@/monitoring/host-services/api/graphs'
+import { type DiscoveredGraph, toTimeSeriesGraph } from '@/monitoring/shared/api/graphs'
 
 export interface ServiceGraphs {
   graphs: DiscoveredGraph[]
@@ -14,8 +14,8 @@ export interface ServiceGraphs {
   noDataMessage: string | null
   /** Why the graphs of the service cannot be built, in the backend's words. Null when they can. */
   errorMessage: string | null
-  /** The legacy page holding the same graphs. */
-  graphsLink: string
+  /** The legacy page holding the same graphs. Null when the service has none. */
+  graphsLink: string | null
 }
 
 const PANEL_GRAPH_HEIGHT = 300
@@ -29,27 +29,17 @@ const PANEL_INTERACTION: CmkTimeSeriesGraph['interaction'] = {
   pin: 'enabled'
 }
 
-export function toTimeSeriesGraph(shell: DiscoveredGraph, width: number): CmkTimeSeriesGraph {
-  return {
-    size: { width, height: PANEL_GRAPH_HEIGHT, mode: 'resizable' },
-    options: {
-      header: { title: shell.title, show_graph_time: true },
-      name: shell.name,
-      x_axis: null,
-      y_axis: shell.y_axis,
-      font_size_pt: 8
-    },
-    interaction: PANEL_INTERACTION,
-    internal: shell.internal,
-    add_to: null,
-    time_range: null
-  }
+export function toPanelGraph(graph: DiscoveredGraph, width: number): CmkTimeSeriesGraph {
+  return toTimeSeriesGraph(
+    graph,
+    { width, height: PANEL_GRAPH_HEIGHT, mode: 'resizable' },
+    PANEL_INTERACTION
+  )
 }
 </script>
 
 <script setup lang="ts">
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
-import CmkHtml from 'cmk-ui-library/components/CmkHtml.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
@@ -59,6 +49,7 @@ import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, onMounted, ref } from 'vue'
 
 import { GraphGroup } from '@/graphing'
+import GraphsNoData from '@/monitoring/shared/components/graphs/GraphsNoData.vue'
 
 const props = defineProps<{ data: ServiceGraphs }>()
 
@@ -100,7 +91,7 @@ const windowInfo = computed(() =>
 const graphHeight = PANEL_GRAPH_HEIGHT
 
 const graphs = computed(() =>
-  props.data.graphs.map((shell) => toTimeSeriesGraph(shell, containerWidth.value))
+  props.data.graphs.map((graph) => toPanelGraph(graph, containerWidth.value))
 )
 </script>
 
@@ -110,7 +101,12 @@ const graphs = computed(() =>
       <CmkParagraph v-if="graphs.length > 0" class="monitoring-service-graphs-tab__window-info">
         {{ windowInfo }}
       </CmkParagraph>
-      <CmkLink class="monitoring-service-graphs-tab__link" :href="data.graphsLink" target="_top">
+      <CmkLink
+        v-if="data.graphsLink !== null"
+        class="monitoring-service-graphs-tab__link"
+        :href="data.graphsLink"
+        target="_top"
+      >
         <CmkIcon name="graph" size="small" />
         {{ _t('Explore all service graphs') }}
       </CmkLink>
@@ -121,10 +117,7 @@ const graphs = computed(() =>
       :text="untranslated(data.errorMessage)"
     />
     <div v-else-if="graphs.length === 0" class="monitoring-service-graphs-tab__empty">
-      <CmkParagraph v-if="data.noDataMessage === null">
-        {{ _t('Checkmk has no graphs for this service.') }}
-      </CmkParagraph>
-      <CmkHtml v-else :html="data.noDataMessage" />
+      <GraphsNoData subject="service" :message="data.noDataMessage" />
     </div>
     <GraphGroup
       v-else-if="containerWidth > 0"

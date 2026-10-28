@@ -6,7 +6,7 @@
 import type { ColumnDef } from '@tanstack/vue-table'
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 
-import { visibleServiceFields } from '@/monitoring/host-services/columns'
+import { requestedServiceFields } from '@/monitoring/host-services/columns'
 import { ServiceWithHostExport } from '@/monitoring/host-services/export/serviceExport'
 import type { ServiceEntry } from '@/monitoring/shared/api/types'
 import { RowExport } from '@/monitoring/shared/export/rowExport'
@@ -50,7 +50,7 @@ export class AllServicesService extends MonitoringService<ServiceEntry> {
         sort: this.sortState.value,
         searchQuery: this.appliedSearchQuery.value,
         filter: this.filterState.value,
-        fields: visibleServiceFields(this.columnVisibility.value)
+        fields: requestedServiceFields(this.columnVisibility.value)
       },
       signal
     )

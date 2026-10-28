@@ -10,6 +10,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { buildHostColumns } from '@/monitoring/all-hosts/columns'
 import {
   buildHostServicesColumnPinning,
+  requestedServiceFields,
   uncapNameWithoutSummary,
   useHostServicesColumns,
   visibleServiceFields
@@ -84,6 +85,10 @@ test('a column the user shows asks for its field again', () => {
   expect(
     visibleServiceFields({ labels: false, tags: false, contacts: false, groups: false })
   ).toEqual(['contact_groups'])
+})
+
+test('every row asks for its graphs link, whichever columns are shown', () => {
+  expect(requestedServiceFields(makeService().columnVisibility.value)).toEqual(['graphs_link'])
 })
 
 test('the state column reads as the one in the hosts listing', () => {

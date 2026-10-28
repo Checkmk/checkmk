@@ -29,6 +29,7 @@ from cmk.gui.monitor.services.table import (
     HostServicesTable,
     InvalidServiceFilterError,
 )
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.gui.setup_git_test_helper import (
     init_setup_git_repo,
@@ -87,6 +88,28 @@ def test_handle_list_services_pending_state_round_trips() -> None:
 
     state_by_name = {service.name: service.state for service in response.services}
     assert state_by_name == {"Pending service": "PENDING", "Checked service": "OK"}
+
+
+def test_handle_list_services_links_a_service_with_graphs_to_its_graphs_page() -> None:
+    services = [
+        ServiceFactory.build(
+            name="CPU load", host_name=KNOWN_HOSTNAME, site_id=_SITE_ID, has_graphs=True
+        )
+    ]
+    services_repo = get_fake_host_services_repository(services=services)
+    response = _handle_list_services(services_repo, hostname=KNOWN_HOSTNAME, site_id=_SITE_ID)
+
+    assert [service.graphs_link for service in response.services] == [
+        f"view.py?view_name=service_graphs&site={_SITE_ID}&host={KNOWN_HOSTNAME}&service=CPU+load"
+    ]
+
+
+def test_handle_list_services_omits_the_graphs_link_of_a_service_without_graphs() -> None:
+    services = [ServiceFactory.build(name="CPU load", has_graphs=False)]
+    services_repo = get_fake_host_services_repository(services=services)
+    response = _handle_list_services(services_repo, hostname=KNOWN_HOSTNAME, site_id=_SITE_ID)
+
+    assert [service.graphs_link for service in response.services] == [ApiOmitted()]
 
 
 def test_handle_list_services_meta_round_trips_hostname_and_site() -> None:

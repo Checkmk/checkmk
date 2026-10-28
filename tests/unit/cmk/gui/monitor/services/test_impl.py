@@ -162,6 +162,22 @@ def test_fetch_reads_the_service_groups_when_asked_for() -> None:
         )
 
 
+def test_fetch_reads_whether_there_are_graphs_when_asked_for() -> None:
+    with expect_single_query(
+        f"GET services\nColumns: {_SERVICES_COLUMNS} pnpgraph_present\n"
+        f"Filter: host_name = {_UNKNOWN_HOSTNAME}\n{_DEFAULT_ORDER_BY}",
+        match_type="ellipsis",
+    ) as live:
+        LiveStatusHostServicesRepository(connection=live).fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=None,
+            query="",
+            sorters=[],
+            filters=ServiceFilter(""),
+            fields=frozenset({ServiceOptionalField.GRAPHS_LINK}),
+        )
+
+
 def test_count_matched_query_shape() -> None:
     with expect_single_query(
         f"GET services\nStats: state >= 0\n"
@@ -664,6 +680,48 @@ def test_fetch_reports_the_state_of_the_host(
     assert [service.host_state for service in services] == [expected]
 
 
+@pytest.mark.parametrize(
+    "pnpgraph_present, expected",
+    [
+        pytest.param(1, True, id="time series recorded"),
+        pytest.param(0, False, id="no time series"),
+        pytest.param(-1, False, id="unknown whether there are time series"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_fetch_offers_graphs_only_for_a_service_with_recorded_time_series(
+    pnpgraph_present: int, expected: bool
+) -> None:
+    row = {**_service_row("CPU load"), "pnpgraph_present": pnpgraph_present}
+    with expect_single_query("GET services", tables={"services": [row]}) as live:
+        services = LiveStatusHostServicesRepository(connection=live).fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=None,
+            query="",
+            sorters=[],
+            filters=ServiceFilter(""),
+            fields=frozenset({ServiceOptionalField.GRAPHS_LINK}),
+        )
+
+    assert [service.has_graphs for service in services] == [expected]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_fetch_leaves_the_graphs_unread_when_not_asked_for() -> None:
+    row = {**_service_row("CPU load"), "pnpgraph_present": 1}
+    with expect_single_query("GET services", tables={"services": [row]}) as live:
+        services = LiveStatusHostServicesRepository(connection=live).fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=None,
+            query="",
+            sorters=[],
+            filters=ServiceFilter(""),
+            fields=frozenset(),
+        )
+
+    assert [service.has_graphs for service in services] == [None]
+
+
 @pytest.mark.usefixtures("request_context")
 def test_get_overview_puts_each_detail_of_the_long_output_on_its_own_line(
     mock_livestatus: MockLiveStatusConnection,
@@ -704,6 +762,7 @@ def test_get_overview_puts_each_detail_of_the_long_output_on_its_own_line(
         "label_sources": {},
         "perf_data": "",
         "check_command": "check_mk-df",
+        "pnpgraph_present": 1,
         "check_type": 0,
         "cached_at": 0,
         "cache_interval": 0,

@@ -41,6 +41,22 @@ def test_handle_list_all_services_returns_the_state_of_the_host() -> None:
     assert [entry.host_state for entry in response.services] == ["UNREACHABLE"]
 
 
+def test_handle_list_all_services_links_each_service_to_the_graphs_on_its_own_host() -> None:
+    repo = FakeServicesRepository(
+        [
+            ServiceFactory.build(name="CPU", host_name="web01", site_id="heute", has_graphs=True),
+            ServiceFactory.build(name="CPU", host_name="db01", site_id="remote", has_graphs=True),
+        ]
+    )
+
+    response = _handle_list_all_services(repo, repo.count_total())
+
+    assert [entry.graphs_link for entry in response.services] == [
+        "view.py?view_name=service_graphs&site=heute&host=web01&service=CPU",
+        "view.py?view_name=service_graphs&site=remote&host=db01&service=CPU",
+    ]
+
+
 def test_handle_list_all_services_sorts_by_site_then_host_then_service_by_default() -> None:
     repo = FakeServicesRepository(
         [

@@ -60,6 +60,7 @@ from ._limits import (
 from ._modes import build_service_modes_by_id, ServiceModeInfo
 from ._perfometer import ServicePerfometer
 from ._reschedule_offer import build_reschedule_offer, ServiceRescheduleOffer
+from ._urls import service_view_link_by_id
 from ._validators import parse_service_search_query, parse_service_sort_options
 
 # Requesting no sorter is not the same as requesting no order: the repository reads an empty list
@@ -144,6 +145,14 @@ class HostServiceEntry:
         ),
         default_factory=ApiOmitted,
     )
+    graphs_link: str | ApiOmitted = api_field(
+        description=(
+            "Link to the page with the graphs of this service. Omitted when the service has none, "
+            "or when not asked for."
+        ),
+        example="view.py?view_name=service_graphs&site=local&host=web-server-01&service=CPU+load",
+        default_factory=ApiOmitted,
+    )
     reschedule: ServiceRescheduleOffer | ApiOmitted = api_field(
         description=(
             "What rescheduling this service does. Omitted for users who may not reschedule."
@@ -184,6 +193,14 @@ class HostServiceEntry:
                 service_name=service.name,
             )
             or ApiOmitted(),
+            graphs_link=service_view_link_by_id(
+                "service_graphs",
+                site_id=service.site_id,
+                hostname=service.host_name,
+                service_name=service.name,
+            )
+            if service.has_graphs
+            else ApiOmitted(),
             reschedule=build_reschedule_offer(service) or ApiOmitted(),
         )
 

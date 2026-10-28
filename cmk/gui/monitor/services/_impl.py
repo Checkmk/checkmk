@@ -122,6 +122,7 @@ class LiveStatusHostServicesRepository:
                 Services.label_sources,
                 Services.perf_data,
                 Services.check_command,
+                Services.pnpgraph_present,
                 Services.check_type,
                 Services.cached_at,
                 Services.cache_interval,
@@ -147,6 +148,7 @@ class LiveStatusHostServicesRepository:
             last_state_change=int(row["last_state_change"]) or None,
             perf_data=row["perf_data"],
             check_command=row["check_command"],
+            has_graphs=row["pnpgraph_present"] == 1,
             active_checks_enabled=bool(row["active_checks_enabled"]),
             check_type=CheckType(row["check_type"]),
             cached_at=int(row["cached_at"]) or None,
@@ -361,6 +363,9 @@ def _fetch_services(
                     last_state_change=int(row["last_state_change"]) or None,
                     perf_data=row["perf_data"],
                     check_command=row["check_command"],
+                    has_graphs=(
+                        row["pnpgraph_present"] == 1 if "pnpgraph_present" in row else None
+                    ),
                     active_checks_enabled=bool(row["active_checks_enabled"]),
                     check_type=CheckType(row["check_type"]),
                     cached_at=int(row["cached_at"]) or None,
@@ -405,6 +410,7 @@ _OPTIONAL_COLUMNS: Mapping[ServiceOptionalField, tuple[Column, ...]] = {
     ServiceOptionalField.CONTACTS: (Services.contacts,),
     ServiceOptionalField.CONTACT_GROUPS: (Services.contact_groups,),
     ServiceOptionalField.GROUPS: (Services.groups,),
+    ServiceOptionalField.GRAPHS_LINK: (Services.pnpgraph_present,),
 }
 
 

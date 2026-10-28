@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from http import HTTPStatus
 
 import pytest
@@ -1055,6 +1055,61 @@ class TestMonitorHostServices:
 
         assert "perfometer" not in resp.json["services"][0]
 
+    def test_service_with_recorded_time_series_links_to_its_graphs(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", [{"name": _HOSTNAME}])
+        mock_livestatus.add_table(
+            "services",
+            [
+                {
+                    "description": "CPU load",
+                    "host_name": _HOSTNAME,
+                    "state": 0,
+                    "has_been_checked": 1,
+                    "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "comments": [],
+                    "modified_attributes_list": [],
+                    "active_checks_enabled": 1,
+                    "accept_passive_checks": 1,
+                    "in_notification_period": 1,
+                    "in_service_period": 1,
+                    "in_check_period": 1,
+                    "in_passive_check_period": 1,
+                    "is_flapping": 0,
+                    "staleness": 0.0,
+                    "last_check": time.time() - 30,
+                    "last_state_change": time.time(),
+                    "perf_data": "",
+                    "labels": {},
+                    "label_sources": {},
+                    "tags": {},
+                    "check_command": "check_mk-test",
+                    "pnpgraph_present": 1,
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
+                }
+            ],
+        )
+        _expect_list_services_queries(mock_livestatus, extra_columns="pnpgraph_present")
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_host_services(
+                hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, fields=["graphs_link"]
+            )
+
+        assert resp.json["services"][0]["graphs_link"] == (
+            f"view.py?view_name=service_graphs&site={_SITE_ID}&host={_HOSTNAME}&service=CPU+load"
+        )
+
     @pytest.mark.usefixtures("registered_perfometer")
     def test_performance_data_matching_no_perfometer_is_omitted(
         self,
@@ -1511,6 +1566,7 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "pnpgraph_present": 1,
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
@@ -1631,6 +1687,7 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "pnpgraph_present": 0,
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
@@ -1695,10 +1752,12 @@ class TestMonitorServiceOverview:
         mock_livestatus: MockLiveStatusConnection,
         field: str = "legacy_service_parameters_link",
         service_name: str | None = None,
+        row_overrides: Mapping[str, object] | None = None,
     ) -> str | None:
         service_name = service_name or _SERVICE_DESCRIPTION
         mock_livestatus.add_table(
-            "services", [{**_OVERVIEW_SERVICE_ROW, "description": service_name}]
+            "services",
+            [{**_OVERVIEW_SERVICE_ROW, "description": service_name, **(row_overrides or {})}],
         )
         mock_livestatus.expect_query(
             [
@@ -1716,6 +1775,21 @@ class TestMonitorServiceOverview:
             )
         link: str | None = resp.json[field]
         return link
+
+    def test_no_graphs_link_for_a_service_without_recorded_time_series(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        assert (
+            self._get_overview_link(
+                clients,
+                mock_livestatus,
+                field="legacy_service_graphs_link",
+                row_overrides={"pnpgraph_present": 0},
+            )
+            is None
+        )
 
     @pytest.mark.usefixtures("suppress_remote_automation_calls")
     def test_links_parameters_of_a_host_setup_grants(
@@ -1824,6 +1898,7 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "pnpgraph_present": 0,
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
@@ -1894,6 +1969,7 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "pnpgraph_present": 0,
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
@@ -1965,6 +2041,7 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "pnpgraph_present": 0,
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
@@ -2297,6 +2374,7 @@ _OVERVIEW_SERVICE_ROW = {
     "description": _SERVICE_DESCRIPTION,
     "perf_data": "",
     "check_command": "check_mk-test",
+    "pnpgraph_present": 0,
     "check_type": 0,
     "cached_at": 0,
     "cache_interval": 0,
@@ -2341,7 +2419,7 @@ _SERVICE_OVERVIEW_COLUMNS = (
     "host_has_been_checked host_acknowledged host_scheduled_downtime_depth contact_groups "
     "long_plugin_output "
     "current_attempt max_check_attempts next_check tags labels label_sources perf_data "
-    "check_command check_type cached_at cache_interval"
+    "check_command pnpgraph_present check_type cached_at cache_interval"
 )
 _LIMIT = 1000
 _SERVICES_COLUMNS = (

@@ -18,8 +18,8 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, markRaw, onUnmounted, ref, watch } from 'vue'
 
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
-import { ServiceGraphsApi } from '@/monitoring/host-services/api/graphs'
 import { HostServicesApi } from '@/monitoring/host-services/api/services'
+import { GraphsApi } from '@/monitoring/shared/api/graphs'
 import type {
   HostRef,
   HostServiceEntry,
@@ -82,7 +82,7 @@ const emit = defineEmits<{
 const { _t } = usei18n()
 
 const servicesApi = new HostServicesApi()
-const graphsApi = new ServiceGraphsApi()
+const graphsApi = new GraphsApi()
 
 const open = computed(() => props.service !== null)
 

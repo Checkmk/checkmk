@@ -458,6 +458,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       >
         <template #row="{ row, tableRow, onCommand }">
           <HostServicesRow
+            :service-host="host"
             :row="row"
             :table-row="tableRow"
             :row-actions="rowActionButtons"

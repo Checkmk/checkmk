@@ -12,7 +12,6 @@
 import abc
 import enum
 import json
-import re
 import time
 from collections.abc import Collection, Generator, Iterator, Mapping, Sequence
 from copy import deepcopy
@@ -95,6 +94,7 @@ from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, Users
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes, UserAttribute
+from cmk.gui.utils.regex import compile_search_pattern
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.time import timezone_utc_offset_str
@@ -4069,9 +4069,7 @@ class ModeNotificationParametersOverview(WatoMode):
         self,
         all_parameters: NotificationParameterSpecs,
     ) -> Generator[Rule]:
-        search_term = request.get_str_input("search", "")
-        search_term = search_term.lower() if search_term else ""
-        match_regex = re.compile(search_term, re.IGNORECASE)
+        match_regex = compile_search_pattern(request.get_str_input("search", "") or "")
         for script_name, title in notification_script_choices():
             if not match_regex.search(title):
                 continue

@@ -335,3 +335,17 @@ def test_table_cubical(
     # Assert data correctness
     assert len(data) <= limit, f"Wrong number of rows: Got {len(data)}, should be <= {limit}"
     assert data == rows[:limit], f"Incorrect data: {data}\n\nVS\n{rows[:limit]}"
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_a_search_which_is_no_regular_expression_finds_the_rows_containing_it() -> None:
+    request.set_var("search", "disk(")
+
+    with output_funnel.plugged():
+        with table_element(table_id="0", title="Messages", limit=100) as table:
+            for text in ["disk(s) full", "cpu"]:
+                table.row()
+                table.cell("Text", text)
+        written_text = "".join(output_funnel.drain())
+
+    assert read_out_simple_table(written_text)[1:] == [["disk(s)full"]]

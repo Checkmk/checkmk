@@ -172,6 +172,16 @@ copy_file(
     allow_symlink = False,
 )
 
+copy_file(
+    name = "main_elements",
+    src = select({
+        "@cmk//edition:community": "src/mainElements.community.ts",
+        "//conditions:default": "src/nonfree/mainElements.ts",
+    }),
+    out = "src/mainElements.ts",
+    allow_symlink = False,
+)
+
 vue_library(
     name = "demo_vue",
     srcs = glob(["ui-component-library/**/*.vue"]) + [":tsconfig"],
@@ -274,6 +284,7 @@ VITE_SRCS = [
     ":src_vue",
     ":src_css",
     ":nav_sidebar_elements",
+    ":main_elements",
     ":node_modules/@tanstack",
     ":node_modules/@testing-library",
     ":node_modules/@tsconfig",

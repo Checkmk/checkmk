@@ -6,7 +6,8 @@
     "env.d.ts",
     "src/**/*",
     "src/**/*.vue",
-    "../../bazel-bin/packages/cmk-frontend-vue/src/navSidebarElements.ts"
+    "../../bazel-bin/packages/cmk-frontend-vue/src/navSidebarElements.ts",
+    "../../bazel-bin/packages/cmk-frontend-vue/src/mainElements.ts"
   ],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {

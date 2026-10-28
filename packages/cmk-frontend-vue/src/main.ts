@@ -32,6 +32,7 @@ import GlobalSettingsApp from './global-settings/GlobalSettingsApp.vue'
 import { GlobalTimePickerApp } from './graphing/GlobalTimePicker'
 import GraphGroup from './graphing/components/GraphGroup.vue'
 import CustomGraphDesignerApp from './graphing/designer/CustomGraphDesignerApp.vue'
+import mainElements from './mainElements'
 import AlertWizardApp from './mode-alerts/AlertWizardApp.vue'
 import CustomServicesWizardApp from './mode-custom-services/CustomServicesWizardApp.vue'
 import ModeCreateOAuth2ConnectionApp from './mode-oauth2-connection/ModeCreateOAuth2ConnectionApp.vue'
@@ -110,3 +111,4 @@ defineCmkComponent('cmk-graph-group', GraphGroup)
 defineCmkComponent('cmk-custom-graph-designer', CustomGraphDesignerApp)
 
 defineCmkElements(profilingElements)
+defineCmkElements(mainElements)

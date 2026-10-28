@@ -195,6 +195,7 @@ def _inventory_rule(
 @pytest.fixture(name="veeam_monitoring_via_special_agent", scope="module")
 def _set_up_veeam_monitoring_via_special_agent(
     site: Site,
+    veeam_account: VeeamAccount,
     backup_server_host: None,  # noqa: ARG001  # Needed for the setup
     protected_machine_host: None,  # noqa: ARG001  # Needed for the setup
     special_agent_rule: None,  # noqa: ARG001  # Needed for the setup
@@ -206,7 +207,17 @@ def _set_up_veeam_monitoring_via_special_agent(
     inventory.
     """
     logger.info("Run service discovery on both hosts and activate the changes")
-    site.openapi.service_discovery.run_discovery_and_wait_for_completion(BACKUP_SERVER_HOST_NAME)
+    if not veeam_account.can_read_all_sections:
+        # A tabula rasa skips a host whose data source reports a warning, as the automatic
+        # discovery does, so accept the services found despite the warnings.
+        site.openapi.service_discovery.run_discovery_and_wait_for_completion(
+            BACKUP_SERVER_HOST_NAME, mode="refresh"
+        )
+        site.openapi.service_discovery.run_discovery(BACKUP_SERVER_HOST_NAME, mode="fix_all")
+    else:
+        site.openapi.service_discovery.run_discovery_and_wait_for_completion(
+            BACKUP_SERVER_HOST_NAME
+        )
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(
         PROTECTED_MACHINE_HOST_NAME
     )

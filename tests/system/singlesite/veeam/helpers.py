@@ -20,3 +20,6 @@ class VeeamAccount:
     """The environment variable holding the user's password on a real server."""
     recording_file: Path
     """The responses the mocked server replays, recorded as this user."""
+    can_read_all_sections: bool = True
+    """Whether the user's role may read all sections. If not, the special agent reports
+    each section it was denied as a warning."""

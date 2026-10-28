@@ -3,14 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable, Mapping
 from typing import override
 
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.http import Request
+from cmk.gui.logged_in import user
 from cmk.gui.monitor.hosts.page_url import all_hosts_url
 from cmk.gui.monitor.hosts.search_filters import host_search_filter
 from cmk.gui.monitor.services.page_url import all_services_url
 from cmk.gui.monitor.services.search_filters import service_search_filter
+from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.search.spec import (
     parse,
@@ -30,14 +33,28 @@ _QUERY_VAR = "q"
 
 
 class MonitorRouterPage(Page):
+    def __init__(self, setup_folders: SetupFolderSource) -> None:
+        self._setup_folders = setup_folders
+
     @override
     def page(self, ctx: PageContext) -> None:
         query = ctx.request.get_str_input_mandatory(_QUERY_VAR, "")
-        raise HTTPRedirect(route(ctx.request, query, ctx.config.tags))
+        raise HTTPRedirect(
+            route(
+                ctx.request,
+                query,
+                ctx.config.tags,
+                lambda: self._setup_folders(ctx.config, user).all_titles(),
+            )
+        )
 
 
-def route(request: Request, query: str, tags: TagConfig) -> str:
+def route(
+    request: Request, query: str, tags: TagConfig, folders: Callable[[], Mapping[str, str]]
+) -> str:
     """Builds a monitoring URL based on the result of the query.
+
+    ``folders`` are Setup's folder titles by path, only asked for when the query names a folder.
 
     Raises:
         MKUserError: if the query is invalid or no page can filter on it yet.
@@ -50,7 +67,7 @@ def route(request: Request, query: str, tags: TagConfig) -> str:
             return all_hosts_url(request, search=spec.text)
         if _searches_services(spec):
             return all_services_url(request, filter_node=service_search_filter(spec))
-        return all_hosts_url(request, filter_node=host_search_filter(spec, tags))
+        return all_hosts_url(request, filter_node=host_search_filter(spec, tags, folders))
     except (SearchParseError, UnsupportedSearchError) as e:
         raise MKUserError(_QUERY_VAR, str(e)) from e
 

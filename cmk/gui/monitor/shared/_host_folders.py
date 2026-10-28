@@ -9,7 +9,8 @@ Livestatus has no folder column: a host's folder is only implied by ``filename``
 Setup writes per folder below ``/wato``. The titles are Setup's, so they are passed in.
 """
 
-from collections.abc import Mapping
+import re
+from collections.abc import Iterable, Mapping
 
 
 def folder_matching_filters(value: str, titles: Mapping[str, str]) -> list[str]:
@@ -40,8 +41,33 @@ def folder_matching_filters(value: str, titles: Mapping[str, str]) -> list[str]:
 
 def folder_files_matching(value: str, titles: Mapping[str, str]) -> list[str]:
     """The files of the folders whose title carries ``value``, in a settled order."""
+    return [_filename_of(path) for path in folders_titled(value, titles)]
+
+
+def folders_titled(value: str, titles: Mapping[str, str]) -> list[str]:
+    """The paths of the folders whose title carries ``value``, in a settled order."""
     needle = value.lower()
-    return [_filename_of(path) for path, title in sorted(titles.items()) if needle in title.lower()]
+    return [path for path, title in sorted(titles.items()) if needle in title.lower()]
+
+
+def folders_below(patterns: Iterable[str], titles: Mapping[str, str]) -> list[str]:
+    """The paths of the folders below any of ``patterns``, in a settled order.
+
+    A pattern is a folder path as the global search takes it: matched case-insensitively from the
+    start of the path, with ``*`` as a wildcard, and its last part may continue - like the legacy
+    quicksearch, which asks Livestatus for ``^/wato/<pattern>[^/]*/``.
+
+        >>> folders_below(["linux"], {"linux": "", "linux/web": "", "linux10": "", "win": ""})
+        ['linux', 'linux/web', 'linux10']
+
+        >>> folders_below(["*/web"], {"linux": "", "linux/web": "", "win/web": ""})
+        ['linux/web', 'win/web']
+    """
+    regexes = [
+        re.compile(".*".join(re.escape(part) for part in pattern.split("*")) + "[^/]*/", re.I)
+        for pattern in patterns
+    ]
+    return [path for path in sorted(titles) if any(r.match(f"{path}/") for r in regexes)]
 
 
 def _filename_of(path: str) -> str:

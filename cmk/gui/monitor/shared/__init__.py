@@ -33,7 +33,12 @@ from ._host_filters import (
     TimestampOp,
     validate_host_columns_only,
 )
-from ._host_folders import folder_files_matching, folder_matching_filters
+from ._host_folders import (
+    folder_files_matching,
+    folder_matching_filters,
+    folders_below,
+    folders_titled,
+)
 from ._host_state import HostState, HostStateLabel
 from ._validators import validate_label_pairs, validate_uniqueness, validate_unix_timestamp
 
@@ -47,6 +52,8 @@ __all__ = [
     "FolderCondition",
     "folder_files_matching",
     "folder_matching_filters",
+    "folders_below",
+    "folders_titled",
     "HostState",
     "HostStateLabel",
     "LabelChoiceCondition",

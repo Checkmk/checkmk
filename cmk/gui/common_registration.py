@@ -266,7 +266,7 @@ def register(
         monitoring_teleport_target,
         FolderReader,
     )
-    monitor_router_registration.register(page_registry)
+    monitor_router_registration.register(page_registry, FolderReader)
     crash_reporting.register(
         page_registry,
         data_source_registry,

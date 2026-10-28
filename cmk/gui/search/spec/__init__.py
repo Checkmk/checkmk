@@ -50,9 +50,16 @@ Matching
       The pattern is checked like any other regex input in the GUI: it must compile in Python
       and must not use look-arounds. This is best effort: livestatus matches with re2, so a
       pattern only re2 rejects (e.g. a backreference) still fails in the query.
-    * ``hf:``, ``sf:``: the value is a folder path, not a regular expression. It matches literally
-      except for ``*``, which is a wildcard, and is case-insensitive. It matches the folders whose
-      path starts with it, including their subfolders. Leading and trailing ``/`` are ignored.
+    * ``hf:``, ``sf:``: the value is a Setup folder path, not a regular expression and not a
+      folder title. It matches literally except for ``*``, which is a wildcard, and is
+      case-insensitive. It matches the folders whose path starts with it, including their
+      subfolders, so ``hf:linux`` finds ``linux``, ``linux/web`` and ``linux10``. Leading and
+      trailing ``/`` are ignored. The monitoring pages filter folders by title, so the caller turns
+      the path into the title of one of the folders it matches, and only if that title matches
+      exactly these folders too (``hf:dc_muc`` becomes "Data center Munich" if no other folder
+      title carries that text). A path no single title can stand for is rejected. Hosts without a
+      Setup folder, i.e. hosts not managed via Setup or managed by a remote site's Setup, are never
+      found by folder.
     * ``hg:``, ``sg:``: a group name, matched exactly and case-sensitive, or a name prefix ending
       in ``*``: ``hg:linux*`` finds the hosts in a group whose name starts with ``linux``. Not a
       regular expression, as the pages filter groups by name. A ``*`` anywhere else is literal, a
@@ -83,13 +90,17 @@ Errors (``SearchParseError``)
 
 Errors (``UnsupportedSearchError``)
     Raised by the callers, not by ``parse``: a valid spec that the page it is routed to can't
-    filter on, e.g. a service term on All hosts or a tag unknown to the tag config.
+    filter on, e.g. a service term on All hosts, a tag unknown to the tag config or a folder path
+    that matches no folder or that no single folder title can stand for.
 
 Differences to the legacy quicksearch
     * ``hg:`` and ``sg:`` match group names, not regular expressions. Alone, the legacy
       quicksearch matches them as a regular expression against the names of the groups, combined
       with other prefixes it matches them exactly, as here.
     * Any number of ``tg:`` terms is allowed, the legacy quicksearch allows at most three.
+    * ``hf:`` and ``sf:`` only find the folders the user may see in Setup, and only if one folder
+      title stands for them. The legacy quicksearch matches the path against the hosts' config
+      files, so it also finds the hosts of a remote site's own Setup.
     * Nothing is dropped silently. The legacy quicksearch ignores text before the first prefix,
       unknown service states and empty folders, and treats an unknown prefix as part of the value.
     * A query without prefix does not follow the quicksearch search order (neither the

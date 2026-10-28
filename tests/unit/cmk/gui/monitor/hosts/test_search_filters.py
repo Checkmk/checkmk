@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from typing import Literal
 
 import pytest
@@ -11,6 +12,7 @@ from cmk.gui.monitor.hosts.search_filters import host_search_filter
 from cmk.gui.monitor.shared import (
     AndNode,
     FilterNode,
+    FolderCondition,
     LabelChoiceCondition,
     NameChoiceCondition,
     StringCondition,
@@ -40,10 +42,20 @@ _TAGS = TagConfig.from_config(
 )
 
 
-def _filter(query: str) -> FilterNode:
+_FOLDERS = {
+    "": "Main",
+    "dc_muc": "Data center Munich",
+    "dc_muc/rack1": "Data center Munich / Rack 1",
+    "dc_muc/rack10": "Data center Munich / Rack 10",
+    "linux": "Linux servers",
+    "linux10": "Linux 10",
+}
+
+
+def _filter(query: str, folders: Mapping[str, str] = _FOLDERS) -> FilterNode:
     spec = parse(query)
     assert isinstance(spec, PrefixedSearch)
-    return host_search_filter(spec, _TAGS)
+    return host_search_filter(spec, _TAGS, lambda: folders)
 
 
 def _contains(field: StringField, value: str) -> StringCondition:
@@ -137,8 +149,53 @@ def test_labels_or_tags_are_one_condition_with_every_pair(query: str, expected: 
         pytest.param("tg:pro*", "Please specify the tag group", id="tag-prefix-without-group"),
         pytest.param("s:cpu", "can only be searched by", id="service"),
         pytest.param("h:web s:cpu", "can only be searched by", id="host-and-service"),
+        pytest.param("hf:dc_ber", 'No folder matches "dc_ber"', id="unknown-folder"),
+        pytest.param(
+            "hf:linux", "Linux servers, Linux 10", id="folder-path-matching-several-titles"
+        ),
+        pytest.param(
+            "hf:dc_muc hf:linux", "cannot be shown as one folder title", id="several-folders"
+        ),
     ],
 )
 def test_spec_all_hosts_cannot_filter_on_is_rejected(query: str, message: str) -> None:
     with pytest.raises(UnsupportedSearchError, match=message):
         _filter(query)
+
+
+def test_rejected_folder_path_names_only_the_first_folder_titles() -> None:
+    folders = {f"rack{n}": f"Rack {n:02}" for n in range(1, 8)}
+
+    with pytest.raises(UnsupportedSearchError) as error:
+        _filter("hf:rack", folders)
+
+    assert "(Rack 01, Rack 02, Rack 03, Rack 04, Rack 05, ...)" in str(error.value)
+
+
+def _folder(title: str) -> FolderCondition:
+    return FolderCondition(type="condition", field="folder", op="contains", value=title)
+
+
+@pytest.mark.parametrize(
+    "query, title",
+    [
+        pytest.param("hf:dc_muc", "Data center Munich", id="folder-with-subfolders"),
+        pytest.param("hf:/DC_MUC/", "Data center Munich", id="case-and-slashes"),
+        pytest.param("hf:dc_muc/rack1", "Data center Munich / Rack 1", id="path-prefix"),
+        pytest.param("hf:*/rack1", "Data center Munich / Rack 1", id="wildcard"),
+        pytest.param("hf:dc_muc hf:dc_muc/rack1", "Data center Munich", id="folder-and-subfolder"),
+    ],
+)
+def test_folder_path_becomes_the_title_selecting_the_same_folders(query: str, title: str) -> None:
+    # "dc_muc/rack1" also matches "dc_muc/rack10", as does the title of rack1.
+    assert _filter(query) == _folder(title)
+
+
+def test_folders_are_only_read_for_a_folder_path() -> None:
+    spec = parse("h:web")
+    assert isinstance(spec, PrefixedSearch)
+
+    def unused() -> Mapping[str, str]:
+        raise AssertionError("the spec has no folder")
+
+    assert host_search_filter(spec, _TAGS, unused) == _contains("name", "web")

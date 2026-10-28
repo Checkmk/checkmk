@@ -47,6 +47,7 @@ function makeHostsResponse(hosts: HostEntry[], meta: Partial<HostsPageMeta> = {}
       matched: hosts.length,
       total: hosts.length,
       fields: [],
+      unreachable_sites: [],
       ...meta
     }
   }

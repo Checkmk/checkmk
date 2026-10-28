@@ -19,6 +19,18 @@ test('offers a short count for narrow containers', () => {
   expect(screen.getByText('Total: 5151')).toBeInTheDocument()
 })
 
+test('says the total covers only the reachable sites', () => {
+  render(MonitoringTotalCount, { props: { total: 5151, partial: true } })
+
+  expect(screen.getByText('Total rows of reachable sites: 5151')).toBeInTheDocument()
+})
+
+test('marks the short count as partial when some sites cannot be reached', () => {
+  render(MonitoringTotalCount, { props: { total: 5151, partial: true } })
+
+  expect(screen.getByText('Total (partial): 5151')).toBeInTheDocument()
+})
+
 test('shows nothing when there are no rows at all', () => {
   const { container } = render(MonitoringTotalCount, { props: { total: 0 } })
 

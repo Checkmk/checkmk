@@ -284,6 +284,13 @@ class HostsPageMeta:
         description="Applied optional fields.",
         example=["address", "num_services"],
     )
+    unreachable_sites: list[str] = api_field(
+        description=(
+            "IDs of the sites that could not be reached. Their hosts are missing from the hosts, "
+            "'matched' and 'total'."
+        ),
+        example=["remote_1"],
+    )
 
 
 @api_model
@@ -455,7 +462,13 @@ class HostTable:
         if site_ids == []:
             return HostsResponse(
                 hosts=[],
-                meta=HostsPageMeta(limit=limit, matched=0, total=total_host_count, fields=fields),
+                meta=HostsPageMeta(
+                    limit=limit,
+                    matched=0,
+                    total=total_host_count,
+                    fields=fields,
+                    unreachable_sites=host_repo.unreachable_sites(),
+                ),
             )
 
         # Like the total count above, and for the same reason: what a host is related to does not
@@ -544,6 +557,7 @@ def _handle_list_hosts(
             matched=matched_host_count,
             total=total_host_count,
             fields=fields,
+            unreachable_sites=host_repo.unreachable_sites(),
         ),
     )
 

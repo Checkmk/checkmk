@@ -447,6 +447,11 @@ class LiveStatusHostRepository:
         )
         return self._count_hosts(extra_lines=[*query_filter, *_split_filter_lines(filters)])
 
+    def unreachable_sites(self) -> list[str]:
+        # Unlike `unavailable_sites`, told to every reader: the classic views do the same, and
+        # without it a missing site reads as hosts that do not exist.
+        return sorted(self._connection.dead_sites())
+
     def _count_hosts(self, *, extra_lines: Sequence[str] = ()) -> int:
         # A ``Stats`` count on the hosts table. Runs under the connection's ``AuthUser`` filter, so a
         # user without "see all" counts only the hosts they may see. The count is the trailing column

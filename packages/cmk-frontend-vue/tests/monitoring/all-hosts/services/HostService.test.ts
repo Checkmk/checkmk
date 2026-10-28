@@ -14,7 +14,7 @@ import { RowsNotLoadedError } from '@/monitoring/shared/services/MonitoringServi
 import { makeKeyShortcutService } from '../../shared/services/testHelpers'
 
 function makeHostsResponse(hosts: HostEntry[], matched: number, total: number): HostsResponse {
-  return { hosts, meta: { limit: 1000, matched, total, fields: [] } }
+  return { hosts, meta: { limit: 1000, matched, total, fields: [], unreachable_sites: [] } }
 }
 
 function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {

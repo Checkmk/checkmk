@@ -122,6 +122,9 @@ def get_fake_host_repository(
             # Not implementing this as we don't need to test a fake implementation of this.
             return self.count_total()
 
+        def unreachable_sites(self) -> list[str]:
+            return []
+
     return HostFakeRepository()
 
 

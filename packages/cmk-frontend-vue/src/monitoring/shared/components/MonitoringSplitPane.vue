@@ -29,6 +29,7 @@ import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell
 import { ACTION_PANE_MIN_WIDTH } from '@/monitoring/shared/constants'
 import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 import { useMonitoringActions } from '@/monitoring/shared/services/useMonitoringActions'
+import { unreachableSitesHeading, unreachableSitesHint } from '@/monitoring/shared/unreachableSites'
 
 const props = withDefaults(
   defineProps<{
@@ -147,6 +148,14 @@ const isNarrowed = computed(
     props.service.filters.activeFilterCount > 0 || props.service.committedSearchQuery.value !== ''
 )
 
+const hasUnreachableSites = computed(() => props.service.unreachableSites.value.length > 0)
+const unreachableSitesTitle = computed(() =>
+  unreachableSitesHeading(props.service.unreachableSites.value)
+)
+const unreachableSitesText = computed(() =>
+  unreachableSitesHint(props.service.unreachableSites.value)
+)
+
 function onFeedback(result: ActionFeedbackResult): void {
   applyFeedback(result)
   emit('performed', result)
@@ -232,6 +241,13 @@ function onRightPaneCollapse(collapsed: boolean): void {
           :feedback="feedback"
         />
         <CmkAlert
+          v-if="hasUnreachableSites"
+          class="monitoring-split-pane__unreachable-sites"
+          variant="warning"
+          :heading="unreachableSitesTitle"
+          :text="unreachableSitesText"
+        />
+        <CmkAlert
           v-if="confirmation"
           class="monitoring-split-pane__confirmation"
           variant="warning"
@@ -258,7 +274,7 @@ function onRightPaneCollapse(collapsed: boolean): void {
           />
           <div class="monitoring-split-pane__table-toolbar-end">
             <div class="monitoring-split-pane__table-toolbar-stats">
-              <MonitoringTotalCount :total="service.total.value" />
+              <MonitoringTotalCount :total="service.total.value" :partial="hasUnreachableSites" />
               <MonitoringLimitSelector />
             </div>
             <div class="monitoring-split-pane__table-toolbar-controls">
@@ -357,7 +373,8 @@ function onRightPaneCollapse(collapsed: boolean): void {
   margin: var(--spacing-half) 0 var(--spacing);
 }
 
-.monitoring-split-pane__feedback {
+.monitoring-split-pane__feedback,
+.monitoring-split-pane__unreachable-sites {
   flex: 0 0 auto;
   margin: 0 0 var(--spacing);
 }

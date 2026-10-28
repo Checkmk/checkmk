@@ -58,6 +58,8 @@ export interface PagedResponse<T> {
     offset?: number
     /** Highest offset the backend serves. Absent for listings that do not page. */
     maxOffset?: number
+    /** Sites that could not be reached; their rows are missing from the items and the counts. */
+    unreachable_sites?: string[]
   }
 }
 
@@ -209,6 +211,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
   readonly items: Ref<T[]> = shallowRef<T[]>([])
   readonly matched: Ref<number> = ref(0)
   readonly total: Ref<number> = ref(0)
+  readonly unreachableSites: Ref<string[]> = shallowRef<string[]>([])
 
   readonly offeredLimits: RequestedLimit[]
   readonly requestedLimit: Ref<RequestedLimit>
@@ -713,6 +716,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
       this.items.value = response.items
       this.matched.value = response.meta.matched
       this.total.value = response.meta.total
+      this.unreachableSites.value = response.meta.unreachable_sites ?? []
       // A paging backend reports which page it actually served; trust it over the
       // requested offset, which it may have clamped.
       if (response.meta.offset !== undefined) {

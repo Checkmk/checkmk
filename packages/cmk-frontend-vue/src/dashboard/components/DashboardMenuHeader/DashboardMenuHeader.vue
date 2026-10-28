@@ -290,6 +290,8 @@ const copyInternalDashboardLink = async (): Promise<void> => {
             {{ _t('Cancel') }}
           </MenuButton>
 
+          <div class="db-menu-header__separator" />
+
           <MenuButton :disabled="isInteractionDisabled" @click="handleAddWidget">
             <CmkIcon name="plus" />
             {{ _t('Add widget') }}
@@ -331,13 +333,14 @@ const copyInternalDashboardLink = async (): Promise<void> => {
   gap: var(--dimension-4);
   flex: 1 1 auto;
   min-width: 0;
+  min-height: 96px;
 }
 
 .db-menu-header__right {
   display: flex;
   align-items: center;
   padding-top: var(--dimension-8);
-  gap: var(--dimension-3);
+  gap: var(--dimension-4);
   flex: 0 0 auto;
 }
 
@@ -354,7 +357,7 @@ const copyInternalDashboardLink = async (): Promise<void> => {
 .db-menu-header__separator {
   align-self: stretch;
   width: var(--dimension-1);
-  padding: 0 var(--dimension-5) 0 var(--dimension-4);
+  padding: 0 var(--dimension-5) 0 var(--dimension-5);
   background-color: var(--color-mid-grey-60);
   background-clip: content-box;
 }

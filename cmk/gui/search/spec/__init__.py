@@ -44,15 +44,19 @@ Combining
       the monitor menu entries. Which of these fields a page filters on is up to the caller.
 
 Matching
-    * ``h:``, ``al:``, ``ad:``, ``hg:``, ``s:``, ``sg:`` and a query without prefix: the value
-      is a regular expression that matches anywhere in the field (unanchored), case-insensitive.
-      As in the dropdown, every ``*`` becomes ``.*``, so ``web*`` and ``*web`` work as globs.
+    * ``h:``, ``al:``, ``ad:``, ``s:`` and a query without prefix: the value is a regular
+      expression that matches anywhere in the field (unanchored), case-insensitive. As in the
+      dropdown, every ``*`` becomes ``.*``, so ``web*`` and ``*web`` work as globs.
       The pattern is checked like any other regex input in the GUI: it must compile in Python
       and must not use look-arounds. This is best effort: livestatus matches with re2, so a
       pattern only re2 rejects (e.g. a backreference) still fails in the query.
     * ``hf:``, ``sf:``: the value is a folder path, not a regular expression. It matches literally
       except for ``*``, which is a wildcard, and is case-insensitive. It matches the folders whose
       path starts with it, including their subfolders. Leading and trailing ``/`` are ignored.
+    * ``hg:``, ``sg:``: a group name, matched exactly and case-sensitive, or a name prefix ending
+      in ``*``: ``hg:linux*`` finds the hosts in a group whose name starts with ``linux``. Not a
+      regular expression, as the pages filter groups by name. A ``*`` anywhere else is literal, a
+      value that is just ``*`` is an error.
     * ``hl:``, ``sl:``: ``key:value``, split at the first ``:``, matched exactly (except for a
       trailing ``*``, see below) and case-sensitive. Whitespace around that ``:`` is ignored, also
       for ``tg:``, so ``hl:os : linux`` equals ``hl:os:linux``. Or just a key prefix ending in
@@ -73,10 +77,13 @@ Matching
 Errors (``SearchParseError``)
     An empty query, an unknown prefix, a prefix without value, text before the first prefix, an
     invalid regular expression and an invalid value for a prefix (label that is neither
-    ``key:value`` nor a key prefix, a key, tag group, value or tag that is just ``*``, unknown
-    service state, empty folder).
+    ``key:value`` nor a key prefix, a group, key, tag group, value or tag that is just ``*``,
+    unknown service state, empty folder).
 
 Differences to the legacy quicksearch
+    * ``hg:`` and ``sg:`` match group names, not regular expressions. Alone, the legacy
+      quicksearch matches them as a regular expression against the names of the groups, combined
+      with other prefixes it matches them exactly, as here.
     * Any number of ``tg:`` terms is allowed, the legacy quicksearch allows at most three.
     * Nothing is dropped silently. The legacy quicksearch ignores text before the first prefix,
       unknown service states and empty folders, and treats an unknown prefix as part of the value.

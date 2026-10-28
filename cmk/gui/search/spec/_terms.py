@@ -26,7 +26,7 @@ class HostAddress:
 
 @dataclass(frozen=True)
 class HostGroup:
-    pattern: str
+    name: str
 
 
 @dataclass(frozen=True)
@@ -55,7 +55,7 @@ class ServiceName:
 
 @dataclass(frozen=True)
 class ServiceGroup:
-    pattern: str
+    name: str
 
 
 @dataclass(frozen=True)

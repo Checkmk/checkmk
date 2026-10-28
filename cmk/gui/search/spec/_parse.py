@@ -133,6 +133,11 @@ def _folder(value: str) -> str:
     return path
 
 
+def _group(value: str) -> str:
+    _reject_bare_wildcard(value, value, example="linux*")
+    return value
+
+
 def _key_value(value: str) -> tuple[str, str | None]:
     key, sep, label_value = (part.strip() for part in value.partition(":"))
     if not sep and key.endswith("*"):
@@ -167,7 +172,7 @@ def _host_tag(value: str) -> HostTag:
 
 
 def _reject_bare_wildcard(value: str, matched: str, *, example: str) -> None:
-    # A label key, value or tag can only be matched by prefix, not "any".
+    # A group, label key, value or tag can only be matched by prefix, not "any".
     if matched == "*":
         raise SearchParseError(
             _('"%(value)s": a "*" matches by prefix and needs text before it, e.g. "%(example)s".')
@@ -217,12 +222,12 @@ _TERM_PARSERS: dict[str, Callable[[str], Sequence[Term]]] = {
     "h": lambda value: [HostName(pattern=_regex(value))],
     "al": lambda value: [HostAlias(pattern=_regex(value))],
     "ad": lambda value: [HostAddress(pattern=_regex(value))],
-    "hg": lambda value: [HostGroup(pattern=_regex(value))],
+    "hg": lambda value: [HostGroup(name=_group(value))],
     "hl": lambda value: [HostLabel(*_key_value(value))],
     "tg": lambda value: [_host_tag(value)],
     "hf": lambda value: [HostFolder(path=_folder(value))],
     "s": lambda value: [ServiceName(pattern=_regex(value))],
-    "sg": lambda value: [ServiceGroup(pattern=_regex(value))],
+    "sg": lambda value: [ServiceGroup(name=_group(value))],
     "st": _service_states,
     "sl": lambda value: [ServiceLabel(*_key_value(value))],
     "sf": lambda value: [ServiceFolder(path=_folder(value))],

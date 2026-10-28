@@ -18,12 +18,14 @@ from cmk.gui.monitor.shared import (
     FilterNode,
     LabelChoiceCondition,
     LabelField,
+    NameChoiceCondition,
     StringCondition,
     StringField,
 )
 from cmk.gui.search.spec import (
     HostAddress,
     HostAlias,
+    HostGroup,
     HostLabel,
     HostName,
     HostTag,
@@ -78,13 +80,25 @@ def _condition(clause: Sequence[Term]) -> FilterNode:
             return _contains("alias", clause)
         case [HostAddress(), *_]:
             return _contains("address", clause)
+        case [HostGroup(), *_]:
+            return NameChoiceCondition(
+                type="condition",
+                field="groups",
+                op="one_of",
+                value=list(
+                    dict.fromkeys(term.name for term in clause if isinstance(term, HostGroup))
+                ),
+            )
         case [HostTag(tag=tag)]:
             raise UnsupportedSearchError(
                 _('Please specify the tag group, e.g. "tg:criticality:%(tag)s".') % {"tag": tag}
             )
         case _:
             raise UnsupportedSearchError(
-                _("All hosts can only be searched by host name, alias, address, label and tag.")
+                _(
+                    "All hosts can only be searched by host name, alias, address, group, label"
+                    " and tag."
+                )
             )
 
 

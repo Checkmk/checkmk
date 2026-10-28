@@ -44,9 +44,10 @@ def test_control_character_in_query_without_prefix_goes_to_search_box_as_space(
         pytest.param("hl:cmk/aws*", id="label-key-prefix"),
         pytest.param("hl:os:lin* hl:os:lin*", id="repeated-label"),
         pytest.param("tg:dc:fra tg:os:lin*", id="tags"),
+        pytest.param("hg:linux hg:web*", id="host-groups"),
     ],
 )
-def test_label_or_tag_query_goes_to_a_filter_the_page_accepts(query: str) -> None:
+def test_label_tag_or_group_query_goes_to_a_filter_the_page_accepts(query: str) -> None:
     # all_hosts_url() validates the tree against the page's filter model.
     assert route(Request(create_environ()), query).startswith("monitor_all_hosts.py?filter=")
 

@@ -12,6 +12,7 @@ from cmk.gui.monitor.shared import (
     AndNode,
     FilterNode,
     LabelChoiceCondition,
+    NameChoiceCondition,
     StringCondition,
     StringField,
 )
@@ -32,6 +33,10 @@ def _all_of(field: Literal["labels", "tags"], *pairs: str) -> LabelChoiceConditi
     return LabelChoiceCondition(type="condition", field=field, op="all_of", value=list(pairs))
 
 
+def _groups(*names: str) -> NameChoiceCondition:
+    return NameChoiceCondition(type="condition", field="groups", op="one_of", value=list(names))
+
+
 @pytest.mark.parametrize(
     "query, expected",
     [
@@ -44,6 +49,9 @@ def _all_of(field: Literal["labels", "tags"], *pairs: str) -> LabelChoiceConditi
         pytest.param("hl:os:lin*", _all_of("labels", "os:lin*"), id="hl-prefix"),
         pytest.param("hl:cmk/aws*", _all_of("labels", "cmk/aws*"), id="hl-key-prefix"),
         pytest.param("tg:os:lin*", _all_of("tags", "os:lin*"), id="tg-prefix"),
+        pytest.param("hg:linux", _groups("linux"), id="hg"),
+        pytest.param("hg:linux hg:web*", _groups("linux", "web*"), id="hg-or-ed"),
+        pytest.param("hg:linux hg:linux", _groups("linux"), id="hg-repeated"),
     ],
 )
 def test_clause_becomes_one_condition(query: str, expected: FilterNode) -> None:
@@ -90,7 +98,6 @@ def test_labels_or_tags_are_one_condition_with_every_pair(query: str, expected: 
         pytest.param("tg:prod", "Please specify the tag group", id="tag-without-group"),
         pytest.param("s:cpu", "can only be searched by", id="service"),
         pytest.param("h:web s:cpu", "can only be searched by", id="host-and-service"),
-        pytest.param("hg:linux", "can only be searched by", id="host-group"),
     ],
 )
 def test_spec_all_hosts_cannot_filter_on_is_rejected(query: str, message: str) -> None:

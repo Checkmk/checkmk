@@ -32,12 +32,12 @@ from cmk.gui.search.spec import (
         pytest.param("h:web", HostName(pattern="web"), id="h"),
         pytest.param("al:Web Server", HostAlias(pattern="Web Server"), id="al"),
         pytest.param("ad:10.0.", HostAddress(pattern="10.0."), id="ad"),
-        pytest.param("hg:linux", HostGroup(pattern="linux"), id="hg"),
+        pytest.param("hg:linux", HostGroup(name="linux"), id="hg"),
         pytest.param("hl:os:linux", HostLabel(key="os", value="linux"), id="hl"),
         pytest.param("tg:criticality:prod", HostTag(group="criticality", tag="prod"), id="tg"),
         pytest.param("hf:linux", HostFolder(path="linux"), id="hf"),
         pytest.param("s:CPU load", ServiceName(pattern="CPU load"), id="s"),
-        pytest.param("sg:web", ServiceGroup(pattern="web"), id="sg"),
+        pytest.param("sg:web", ServiceGroup(name="web"), id="sg"),
         pytest.param("st:crit", ServiceState(state="crit"), id="st"),
         pytest.param("sl:os:linux", ServiceLabel(key="os", value="linux"), id="sl"),
         pytest.param("sf:linux", ServiceFolder(path="linux"), id="sf"),
@@ -153,6 +153,19 @@ def test_label_key_prefix_matches_any_value(query: str, expected: Term) -> None:
     assert parse(query) == PrefixedSearch(clauses=((expected,),))
 
 
+@pytest.mark.parametrize(
+    "query, expected",
+    [
+        pytest.param("hg:linux*", HostGroup(name="linux*"), id="hg-prefix"),
+        pytest.param("sg:web*", ServiceGroup(name="web*"), id="sg-prefix"),
+        pytest.param("hg:^lin.x", HostGroup(name="^lin.x"), id="no-regex"),
+        pytest.param("hg:*linux", HostGroup(name="*linux"), id="leading-star-is-literal"),
+    ],
+)
+def test_group_is_a_name_or_name_prefix(query: str, expected: Term) -> None:
+    assert parse(query) == PrefixedSearch(clauses=((expected,),))
+
+
 def test_label_value_keeps_further_colons() -> None:
     assert parse("hl:os:windows:95") == PrefixedSearch(
         clauses=((HostLabel(key="os", value="windows:95"),),)
@@ -251,6 +264,8 @@ def test_invalid_regex_is_rejected(query: str, message: str) -> None:
         pytest.param("sl:os: *", "needs text before it", id="service-label-value-only-star"),
         pytest.param("tg:os:*", "needs text before it", id="tag-only-star"),
         pytest.param("tg:*", "needs text before it", id="tag-without-group-only-star"),
+        pytest.param("hg:*", "needs text before it", id="host-group-only-star"),
+        pytest.param("sg:*", "needs text before it", id="service-group-only-star"),
         pytest.param("st:broken", "Unknown service state", id="unknown-state"),
         pytest.param("st:warn|", "empty service state", id="empty-state"),
         pytest.param("st:warn||crit", "empty service state", id="empty-state-between"),

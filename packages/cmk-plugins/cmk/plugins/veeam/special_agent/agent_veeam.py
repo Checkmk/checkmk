@@ -33,6 +33,7 @@ from cmk.server_side_programs.v1 import (
     HostnameValidationAdapter,
     report_agent_crashes,
     Storage,
+    vcrtrace,
 )
 
 AGENT = "veeam"
@@ -125,6 +126,16 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog=prog, description=description)
 
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument(
+        "--vcrtrace",
+        default=False,
+        action=vcrtrace(
+            filter_headers=[("Authorization", None)],
+            filter_post_data_parameters=[("password", None), ("refresh_token", None)],
+        ),
+        help="WARNING: the token response is recorded unfiltered, so the trace file "
+        "contains a live access token and refresh token. Treat it as a credential.",
+    )
     parser.add_argument("--user", required=True, help="Veeam user name")
     parser_add_secret_option(
         parser, long=f"--{PASSWORD_OPTION}", required=True, help="Password of the Veeam user"

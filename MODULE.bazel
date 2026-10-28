@@ -38,7 +38,7 @@ single_version_override(
 )
 
 # TODO: how to sync this with the PYTHON_VERSION in package_versions.bzl?
-PYTHON_VERSION = "3.12.11"
+PYTHON_VERSION = "3.12.16"
 
 # TODO: Duplicate from bazel_variables.bzl. won't be needed anymore when all omd packages are loaded via MODULE.bazel
 UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
@@ -46,15 +46,15 @@ UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-arc
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.single_version_platform_override(
     platform = "x86_64-unknown-linux-gnu",
-    python_version = "3.12.11",
-    sha256 = "9cd19efa875ae61d358b5dfeebc72035dd6fd11870943869394d2d7534675e28",
+    python_version = "3.12.16",
+    sha256 = "6a79e922e50006b601f29e688407659da1c2b86ebcd4e9c7254cf234be8b89de",
     urls = [
-        "https://github.com/astral-sh/python-build-standalone/releases/download/20250604/cpython-3.12.11+20250604-x86_64-unknown-linux-gnu-install_only.tar.gz",
+        "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.12.16+20261026-x86_64-unknown-linux-gnu-install_only.tar.gz",
     ],
 )
 python.toolchain(
     is_default = True,
-    python_version = "3.12.11",
+    python_version = "3.12.16",
 )
 
 bazel_dep(name = "rules_mypy", version = "0.17.0")

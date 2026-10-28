@@ -98,9 +98,9 @@ fi
 if ! getent passwd "$CMK_SITE_ID" >/dev/null; then
     useradd -u 1000 -d "/omd/sites/$CMK_SITE_ID" -c "OMD site $CMK_SITE_ID" -g "$CMK_SITE_ID" -G omd -s /bin/bash "$CMK_SITE_ID"
 fi
-if [ ! -f "/omd/apache/$CMK_SITE_ID.conf" ]; then
-    echo "Include /omd/sites/$CMK_SITE_ID/etc/apache/mode.conf" >"/omd/apache/$CMK_SITE_ID.conf"
-fi
+# No system Apache serves the site in the container, so the hook omd writes for
+# it does not apply. Replace it, so it is not checked against the site settings.
+echo "Include /omd/sites/$CMK_SITE_ID/etc/apache/mode.conf" >"/omd/apache/$CMK_SITE_ID.conf"
 
 # In case the version symlink is dangling we are in an update situation: The
 # volume was previously attached to a container with another Checkmk version.
@@ -111,9 +111,6 @@ if [ ! -e "/omd/sites/$CMK_SITE_ID/version" ]; then
     exec_hook pre-update
     create_system_apache_config
     omd -f update --conflict=install "$CMK_SITE_ID"
-    # Even if the system apache hook is not needed in containerized Checkmk, we
-    # still create it for consistency
-    omd update-apache-config "$CMK_SITE_ID"
     exec_hook post-update
 fi
 

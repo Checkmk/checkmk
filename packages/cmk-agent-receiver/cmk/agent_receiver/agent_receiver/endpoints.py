@@ -359,6 +359,9 @@ def _store_agent_data(
     ) as temp_file:
         try:
             temp_file.write(decompressed_data)
+            # Until the close, the data may still be in the write buffer. The fetcher reads the
+            # file as soon as the rename makes it visible.
+            temp_file.close()
             os.rename(temp_file.name, target_dir / "agent_output")
         finally:
             Path(temp_file.name).unlink(missing_ok=True)

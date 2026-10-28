@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import io
+import os
 import stat
 import zlib
 from collections.abc import MutableMapping
@@ -712,6 +713,37 @@ def test_agent_data_success(
     assert file_path.read_text() == "mock file"
 
     assert response.status_code == HTTPStatus.NO_CONTENT
+
+
+@pytest.mark.usefixtures("symlink_push_host")
+@pytest.mark.parametrize("size", [10_000, 100_000])
+def test_agent_data_is_complete_when_it_becomes_visible(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+    client: TestClient,
+    uuid: UUID4,
+    agent_data_headers: MutableMapping[str, str],
+    size: int,
+) -> None:
+    """CMK-41491: The fetcher may read agent_output right after the rename."""
+    payload = b"x" * size
+    file_path = tmp_path / "push-agent" / "hostname" / "agent_output"
+    visible_sizes = []
+    rename = os.rename
+
+    def rename_and_record_visible_size(src: str, dst: str) -> None:
+        rename(src, dst)
+        visible_sizes.append(file_path.stat().st_size)
+
+    monkeypatch.setattr(os, "rename", rename_and_record_visible_size)
+
+    client.post(
+        f"/agent_data/{uuid}",
+        headers=agent_data_headers,
+        files={"monitoring_data": ("filename", io.BytesIO(compress(payload)))},
+    )
+
+    assert visible_sizes == [size]
 
 
 @pytest.fixture(name="registration_status_headers")

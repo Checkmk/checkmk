@@ -128,9 +128,20 @@ if (`$LASTEXITCODE -ne 0) { exit 2 }
 # Hand the directory back to the account that created it
 icacls '$runtime_path' /grant '*${current_user_sid}:(OI)(CI)F' /T /C | Out-Null
 "@ | Set-Content -Path $admin_script -Encoding utf8
-    $proc = Start-Process pwsh -ArgumentList "-NoProfile -File `"$admin_script`"" -Verb RunAs -Wait -PassThru -WindowStyle Hidden
-    if ($proc.ExitCode -ne 0) {
-        Write-Error "FAIL: elevated check script exited with code $($proc.ExitCode) (2 = icacls restrict failed)"
+    $principal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
+    if ($principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
+        # Already elevated (always the case in CI): run it directly. -Verb RunAs
+        # goes through ShellExecute, which in the non-interactive session of
+        # the Jenkins agent is suspected to exhaust the desktop heap.
+        & pwsh -NoProfile -File $admin_script
+        $admin_exit_code = $LASTEXITCODE
+    }
+    else {
+        $proc = Start-Process pwsh -ArgumentList "-NoProfile -File `"$admin_script`"" -Verb RunAs -Wait -PassThru -WindowStyle Hidden
+        $admin_exit_code = $proc.ExitCode
+    }
+    if ($admin_exit_code -ne 0) {
+        Write-Error "FAIL: elevated check script exited with code $admin_exit_code (2 = icacls restrict failed)"
     }
 
     # Missing output file means the elevated run never executed the binary —

@@ -11,10 +11,18 @@ from cmk.gui.i18n import _
 from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm
 
 
+def compile_search_pattern(pattern: str) -> re.Pattern[str]:
+    try:
+        return re.compile(pattern, re.IGNORECASE)
+    except (re.error, OverflowError, ValueError, RecursionError):
+        # e.g. "foo(", which is searched for literally then
+        return re.compile(re.escape(pattern), re.IGNORECASE)
+
+
 def validate_regex(value: str, varname: str | None) -> None:
     try:
         re.compile(value)
-    except re.error:
+    except (re.error, OverflowError, ValueError, RecursionError):
         raise MKUserError(
             varname,
             _(

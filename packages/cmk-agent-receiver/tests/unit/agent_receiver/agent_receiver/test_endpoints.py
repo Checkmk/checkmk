@@ -77,7 +77,7 @@ def test_register_existing_ok(
     uuid: UUID4,
     serialized_csr: str,
 ) -> None:
-    def rest_api_register_mock(*_args: object, **_kwargs: object) -> RegisterResponse:
+    async def rest_api_register_mock(*_args: object, **_kwargs: object) -> RegisterResponse:
         _symlink_push_host(get_config(), tmp_path, uuid)
         return RegisterResponse(connection_mode=ConnectionMode.PULL)
 
@@ -103,7 +103,7 @@ def test_register_existing_ok(
     }
 
 
-def _register_permitting_updates_at_the_site(tmp_path: Path, uuid: UUID4) -> RegisterResponse:
+async def _register_permitting_updates_at_the_site(tmp_path: Path, uuid: UUID4) -> RegisterResponse:
     config = get_config()
     _symlink_push_host(config, tmp_path, uuid)
     config.registrations_dir.mkdir(parents=True, exist_ok=True)

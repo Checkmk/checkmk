@@ -28,7 +28,6 @@ py_cmk_test(
         requirement("pytest-socket"),
         requirement("pytest-random-order"),
         requirement("pytest-mock"),
-        requirement("requests"),
         requirement("starlette"),
         requirement("time-machine"),
         requirement("python-dateutil"),

@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from enum import Enum
 from http import HTTPStatus
 from typing import Concatenate
 from urllib.parse import quote
 
-import requests
+import httpx2
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
 from pydantic import BaseModel, UUID4, ValidationError
@@ -62,48 +62,59 @@ def _credentials_to_rest_api_auth(credentials: HTTPBasicCredentials) -> str:
     return f"Bearer {credentials.username} {credentials.password}"
 
 
-def _forward_get(
+async def _request(
+    method: str,
+    url: str,
+    headers: dict[str, str],
+    json_body: dict[str, object] | None = None,
+    timeout: int = 30,
+) -> httpx2.Response:
+    async with httpx2.AsyncClient(timeout=timeout) as client:
+        return await client.request(method, url, headers=headers, json=json_body)
+
+
+async def _forward_get(
     endpoint: str,
     credentials: HTTPBasicCredentials,
-) -> requests.Response:
-    return requests.get(
+) -> httpx2.Response:
+    return await _request(
+        "GET",
         f"{_local_rest_api_url()}/{endpoint}",
         headers={
             "Authorization": _credentials_to_rest_api_auth(credentials),
         },
-        timeout=30,
     )
 
 
-def _forward_put(
+async def _forward_put(
     endpoint: str,
     credentials: HTTPBasicCredentials,
     json_body: dict[str, object],
-) -> requests.Response:
-    return requests.put(
+) -> httpx2.Response:
+    return await _request(
+        "PUT",
         f"{_local_rest_api_url()}/{endpoint}",
         headers={
             "Authorization": _credentials_to_rest_api_auth(credentials),
             "Accept": "application/json",
         },
-        json=json_body,
-        timeout=30,
+        json_body=json_body,
     )
 
 
-def _forward_put_token(
+async def _forward_put_token(
     endpoint: str,
     token: str,
     json_body: dict[str, object],
-) -> requests.Response:
-    return requests.put(
+) -> httpx2.Response:
+    return await _request(
+        "PUT",
         f"{_local_internal_rest_api_url()}/{endpoint}",
         headers={
             "Authorization": f"CMK-TOKEN {token}",
             "Accept": "application/json",
         },
-        json=json_body,
-        timeout=30,
+        json_body=json_body,
     )
 
 
@@ -118,35 +129,36 @@ the site cuts a silent request after its own Timeout of 120.
 """
 
 
-def _forward_post_internal(
+async def _forward_post_internal(
     endpoint: str,
     site_internal_secret: B64SiteInternalSecret,
     json_body: dict[str, object],
     accept: str,
     timeout: int = 30,
-) -> requests.Response:
-    return requests.post(
+) -> httpx2.Response:
+    return await _request(
+        "POST",
         f"{_local_internal_rest_api_url()}/{endpoint}",
         headers={
             "Authorization": f"InternalToken {site_internal_secret}",
             "Accept": accept,
         },
-        json=json_body,
+        json_body=json_body,
         timeout=timeout,
     )
 
 
 def log_http_exception[**TEndpointParams, TEndpointReturn](
-    endpoint_call: Callable[TEndpointParams, TEndpointReturn],
-) -> Callable[Concatenate[str, TEndpointParams], TEndpointReturn]:
-    def wrapper(
+    endpoint_call: Callable[TEndpointParams, Awaitable[TEndpointReturn]],
+) -> Callable[Concatenate[str, TEndpointParams], Awaitable[TEndpointReturn]]:
+    async def wrapper(
         log_text: str,
         /,
         *args: TEndpointParams.args,
         **kwargs: TEndpointParams.kwargs,
     ) -> TEndpointReturn:
         try:
-            return endpoint_call(*args, **kwargs)
+            return await endpoint_call(*args, **kwargs)
         except HTTPException as http_excpt:
             logger.error(
                 "%(log_text)s. Error message: %(detail)s",
@@ -162,15 +174,15 @@ class ControllerCertSettings(BaseModel, frozen=True):
 
 
 @log_http_exception
-def controller_certificate_settings(
+async def controller_certificate_settings(
     site_internal_secret: B64SiteInternalSecret,
 ) -> ControllerCertSettings:
-    response = requests.get(
+    response = await _request(
+        "GET",
         f"{_local_rest_api_url()}/agent_controller_certificates_settings",
         headers={
             "Authorization": f"InternalToken {site_internal_secret}",
         },
-        timeout=30,
     )
     _verify_response(response, HTTPStatus.OK)
     return ControllerCertSettings.model_validate(response.json())
@@ -181,12 +193,12 @@ class RegisterResponse(BaseModel, frozen=True):
 
 
 @log_http_exception
-def register(
+async def register(
     credentials: HTTPBasicCredentials,
     uuid: UUID4,
     host_name: str,
 ) -> RegisterResponse:
-    response = _forward_put(
+    response = await _forward_put(
         f"objects/host_config_internal/{_url_encode_hostname(host_name)}/actions/register/invoke",
         credentials,
         {
@@ -204,12 +216,12 @@ def register(
 
 
 @log_http_exception
-def register_token(
+async def register_token(
     token: str,
     uuid: UUID4,
     host_name: str,
 ) -> RegisterResponse:
-    response = _forward_put_token(
+    response = await _forward_put_token(
         f"objects/host_config_internal/{_url_encode_hostname(host_name)}/actions/register_via_token/invoke",
         token,
         {
@@ -249,8 +261,8 @@ def _url_encode_hostname(host_name: str) -> str:
 
 
 @log_http_exception
-def cmk_edition(credentials: HTTPBasicCredentials) -> CMKEdition:
-    response = _forward_get(
+async def cmk_edition(credentials: HTTPBasicCredentials) -> CMKEdition:
+    response = await _forward_get(
         "version",
         credentials,
     )
@@ -259,13 +271,13 @@ def cmk_edition(credentials: HTTPBasicCredentials) -> CMKEdition:
 
 
 @log_http_exception
-def deployment_status(
+async def deployment_status(
     site_internal_secret: B64SiteInternalSecret,
     host_name: str,
     uuid: UUID4,
     status_request: UpdateStatusRequest,
 ) -> UpdateStatusResponse:
-    response = _forward_post_internal(
+    response = await _forward_post_internal(
         f"objects/agent_deployment_internal/{_url_encode_hostname(host_name)}/actions/status/invoke",
         site_internal_secret,
         {**status_request.model_dump(exclude_none=True), "uuid": str(uuid)},
@@ -276,13 +288,13 @@ def deployment_status(
 
 
 @log_http_exception
-def deployment_download(
+async def deployment_download(
     site_internal_secret: B64SiteInternalSecret,
     host_name: str,
     uuid: UUID4,
     download_request: DownloadRequest,
 ) -> bytes:
-    response = _forward_post_internal(
+    response = await _forward_post_internal(
         f"objects/agent_deployment_internal/{_url_encode_hostname(host_name)}/actions/download/invoke",
         site_internal_secret,
         {**download_request.model_dump(), "uuid": str(uuid)},
@@ -293,7 +305,7 @@ def deployment_download(
     return response.content
 
 
-def _verify_agent_update_response(response: requests.Response) -> None:
+def _verify_agent_update_response(response: httpx2.Response) -> None:
     if response.status_code == HTTPStatus.NOT_FOUND and _matched_no_endpoint(response):
         raise HTTPException(
             status_code=HTTPStatus.NOT_IMPLEMENTED,
@@ -302,7 +314,7 @@ def _verify_agent_update_response(response: requests.Response) -> None:
     _verify_response(response, HTTPStatus.OK)
 
 
-def _matched_no_endpoint(response: requests.Response) -> bool:
+def _matched_no_endpoint(response: httpx2.Response) -> bool:
     # The REST API titles a URL that matches no endpoint with the bare status phrase, which is
     # what a Community site answers, as it has no agent deployment endpoints. The endpoints give
     # their own 404s a title of their own.
@@ -314,7 +326,7 @@ def _matched_no_endpoint(response: requests.Response) -> bool:
 
 
 def _verify_response(
-    response: requests.Response,
+    response: httpx2.Response,
     expected_status_code: HTTPStatus,
 ) -> None:
     if response.status_code != expected_status_code:

@@ -28,6 +28,7 @@ class Response(BaseModel):
     status: int
     body: str | None = None
     headers: Mapping[str, str] = Field(default_factory=dict)
+    fixedDelayMilliseconds: int | None = None
 
 
 class WMapping(BaseModel):

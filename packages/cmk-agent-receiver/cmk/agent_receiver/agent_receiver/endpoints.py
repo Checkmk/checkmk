@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import asyncio
 import os
 import tempfile
-from concurrent.futures import ThreadPoolExecutor
-from functools import cache, partial
+from functools import cache
 from http import HTTPStatus
 from pathlib import Path
 from typing import Annotated, assert_never
@@ -98,13 +96,14 @@ def _validate_uuid_against_csr(uuid: UUID4, csr_field: CsrField) -> None:
         )
 
 
-def _sign_agent_csr(uuid: UUID4, csr_field: CsrField) -> Certificate:
+async def _sign_agent_csr(uuid: UUID4, csr_field: CsrField) -> Certificate:
+    settings = await controller_certificate_settings(
+        f"uuid={uuid} Querying agent controller certificate settings failed",
+        internal_credentials(),
+    )
     return sign_csr(
         csr_field.csr,
-        controller_certificate_settings(
-            f"uuid={uuid} Querying agent controller certificate settings failed",
-            internal_credentials(),
-        ).lifetime_in_months,
+        settings.lifetime_in_months,
         agent_root_ca(),
         get_config().agents_issued_certificates_path,
     )
@@ -155,12 +154,9 @@ async def register_existing(
     _validate_uuid_against_csr(registration_body.uuid, registration_body.csr)
     root_cert = _pem_serizialized_site_root_cert()
     agent_cert = serialize_to_pem(
-        _sign_agent_csr(
-            registration_body.uuid,
-            registration_body.csr,
-        )
+        await _sign_agent_csr(registration_body.uuid, registration_body.csr)
     )
-    register_response = register(
+    register_response = await register(
         f"uuid={registration_body.uuid} Registration failed",
         credentials,
         registration_body.uuid,
@@ -190,12 +186,9 @@ async def register_existing_token(
     _validate_uuid_against_csr(registration_body.uuid, registration_body.csr)
     root_cert = _pem_serizialized_site_root_cert()
     agent_cert = serialize_to_pem(
-        _sign_agent_csr(
-            registration_body.uuid,
-            registration_body.csr,
-        )
+        await _sign_agent_csr(registration_body.uuid, registration_body.csr)
     )
-    register_response = register_token(
+    register_response = await register_token(
         f"uuid={registration_body.uuid} Registration failed",
         token,
         registration_body.uuid,
@@ -222,7 +215,7 @@ async def register_new(
     credentials: HTTPBasicCredentials = Depends(security),
     registration_body: RegisterNewBody,
 ) -> RegisterNewResponse:
-    _validate_is_allowed(credentials, registration_body.uuid)
+    await _validate_is_allowed(credentials, registration_body.uuid)
     _validate_uuid_against_csr(registration_body.uuid, registration_body.csr)
 
     root_cert = _pem_serizialized_site_root_cert()
@@ -234,10 +227,7 @@ async def register_new(
             username=credentials.username,
             agent_labels=registration_body.agent_labels,
             agent_cert=serialize_to_pem(
-                _sign_agent_csr(
-                    registration_body.uuid,
-                    registration_body.csr,
-                )
+                await _sign_agent_csr(registration_body.uuid, registration_body.csr)
             ),
         ),
     ).write()
@@ -265,7 +255,7 @@ async def register_new_ongoing(
     | RegisterNewOngoingResponseDeclined
     | RegisterNewOngoingResponseSuccess
 ):
-    _validate_is_allowed(credentials, uuid)
+    await _validate_is_allowed(credentials, uuid)
 
     try:
         r4r = R4R.read(uuid)
@@ -329,9 +319,11 @@ async def register_new_ongoing(
     assert_never(r4r.status)
 
 
-def _validate_is_allowed(credentials: HTTPBasicCredentials, uuid: UUID4) -> None:
+async def _validate_is_allowed(credentials: HTTPBasicCredentials, uuid: UUID4) -> None:
+    # The edition is not cached: querying it with the credentials of the request is what
+    # authenticates them.
     if not (
-        edition := cmk_edition(
+        edition := await cmk_edition(
             f"uuid={uuid} Querying Checkmk edition failed",
             credentials,
         )
@@ -511,7 +503,7 @@ async def renew_certificate(
             detail="Host is not registered",
         ) from e
 
-    agent_cert = _sign_agent_csr(uuid, cert_renewal_body.csr)
+    agent_cert = await _sign_agent_csr(uuid, cert_renewal_body.csr)
 
     logger.info(
         "uuid=%(uuid)s Certificate renewal succeeded",
@@ -521,13 +513,6 @@ async def renew_certificate(
     return RenewCertResponse(
         agent_cert=serialize_to_pem(agent_cert),
     )
-
-
-@cache
-def _agent_update_executor() -> ThreadPoolExecutor:
-    # Own threads: waiting for a slow site would otherwise block the event loop, or use up the
-    # thread pool in which the mTLS check of every other request runs.
-    return ThreadPoolExecutor(max_workers=10, thread_name_prefix="agent-update")
 
 
 def _registered_host(uuid: UUID4) -> RegisteredHost:
@@ -555,16 +540,12 @@ async def agent_update_status(
     status_request: UpdateStatusRequest,
 ) -> UpdateStatusResponse:
     host = _registered_host(uuid)
-    return await asyncio.get_running_loop().run_in_executor(
-        _agent_update_executor(),
-        partial(
-            deployment_status,
-            f"uuid={uuid} Querying the agent update status failed",
-            internal_credentials(),
-            host.name,
-            uuid,
-            status_request,
-        ),
+    return await deployment_status(
+        f"uuid={uuid} Querying the agent update status failed",
+        internal_credentials(),
+        host.name,
+        uuid,
+        status_request,
     )
 
 
@@ -579,16 +560,12 @@ async def agent_update_agent(
     download_request: DownloadRequest,
 ) -> Response:
     host = _registered_host(uuid)
-    package = await asyncio.get_running_loop().run_in_executor(
-        _agent_update_executor(),
-        partial(
-            deployment_download,
-            f"uuid={uuid} Downloading the agent package failed",
-            internal_credentials(),
-            host.name,
-            uuid,
-            download_request,
-        ),
+    package = await deployment_download(
+        f"uuid={uuid} Downloading the agent package failed",
+        internal_credentials(),
+        host.name,
+        uuid,
+        download_request,
     )
     logger.info(
         "uuid=%(uuid)s Agent package %(aghash)s sent",

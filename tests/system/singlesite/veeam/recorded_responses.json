@@ -1293,6 +1293,1622 @@
         }
       }
     },
+    "/api/v1/jobs": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "backupMode": "FileLevel",
+            "description": "Created by Powershell at 10/16/2026 6:02:42 AM.",
+            "computers": [
+              {
+                "type": "ProtectionGroup",
+                "id": "d566bdcd-20e7-4b18-9daa-c16504bf6de8",
+                "name": "PG-Windows-Test",
+                "path": "ProtectionGroup:PG-Windows-Test",
+                "protectionGroupId": "d566bdcd-20e7-4b18-9daa-c16504bf6de8",
+                "platform": "Agent"
+              }
+            ],
+            "files": {
+              "backupOS": false,
+              "personalFiles": {
+                "backupPersonalFiles": false,
+                "includes": {
+                  "desktop": true,
+                  "documents": true,
+                  "pictures": true,
+                  "video": true,
+                  "music": true,
+                  "favorites": true,
+                  "downloads": true,
+                  "appData": false,
+                  "other": true
+                },
+                "excludes": {
+                  "roamingProfiles": true
+                }
+              },
+              "customFiles": ["C:\\cmk-agent-policy-test"],
+              "advancedSettings": {
+                "includeMasks": [],
+                "excludeMasks": [],
+                "excludeOneDrive": false
+              }
+            },
+            "storage": {
+              "destination": {
+                "backupServerName": "EC2AMAZ-C4O89E0",
+                "backupRepositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+                "backupCache": {
+                  "type": "Automatic",
+                  "sizeUnit": "GB",
+                  "isEnabled": false,
+                  "localPath": "",
+                  "sizeLimit": 10
+                },
+                "destinationType": "BackupRepository"
+              },
+              "retentionPolicy": {
+                "type": "Days",
+                "quantity": 7
+              },
+              "gfsPolicy": {
+                "isEnabled": false,
+                "weekly": {
+                  "desiredTime": "Sunday",
+                  "isEnabled": false,
+                  "keepForNumberOfWeeks": 1
+                },
+                "monthly": {
+                  "desiredTime": "First",
+                  "isEnabled": false,
+                  "keepForNumberOfMonths": 1
+                },
+                "yearly": {
+                  "desiredTime": "January",
+                  "isEnabled": false,
+                  "keepForNumberOfYears": 1
+                }
+              },
+              "advancedSettings": {
+                "synthenticFulls": {
+                  "isEnabled": true,
+                  "weekly": {
+                    "isEnabled": true,
+                    "days": ["Saturday"]
+                  },
+                  "monthly": {
+                    "dayOfWeek": "Monday",
+                    "dayNumberInMonth": "First",
+                    "isEnabled": false,
+                    "dayOfMonth": 1,
+                    "months": [
+                      "January",
+                      "February",
+                      "March",
+                      "April",
+                      "May",
+                      "June",
+                      "July",
+                      "August",
+                      "September",
+                      "October",
+                      "November",
+                      "December"
+                    ],
+                    "isLastDayOfMonth": false
+                  }
+                },
+                "activeFulls": {
+                  "isEnabled": false,
+                  "weekly": {
+                    "isEnabled": true,
+                    "days": ["Saturday"]
+                  },
+                  "monthly": {
+                    "dayOfWeek": "Monday",
+                    "dayNumberInMonth": "First",
+                    "isEnabled": false,
+                    "dayOfMonth": 1,
+                    "months": [
+                      "January",
+                      "February",
+                      "March",
+                      "April",
+                      "May",
+                      "June",
+                      "July",
+                      "August",
+                      "September",
+                      "October",
+                      "November",
+                      "December"
+                    ],
+                    "isLastDayOfMonth": false
+                  }
+                },
+                "fullBackupMaintenance": {
+                  "RemoveData": {
+                    "isEnabled": false,
+                    "afterDays": 30
+                  },
+                  "defragmentAndCompact": {
+                    "isEnabled": false,
+                    "weekly": {
+                      "isEnabled": false,
+                      "days": ["Saturday"]
+                    },
+                    "monthly": {
+                      "dayOfWeek": "Saturday",
+                      "dayNumberInMonth": "Last",
+                      "isEnabled": true,
+                      "dayOfMonth": 1,
+                      "months": [
+                        "January",
+                        "February",
+                        "March",
+                        "April",
+                        "May",
+                        "June",
+                        "July",
+                        "August",
+                        "September",
+                        "October",
+                        "November",
+                        "December"
+                      ],
+                      "isLastDayOfMonth": false
+                    }
+                  }
+                },
+                "storageData": {
+                  "compressionLevel": "Optimal",
+                  "storageOptimization": "1MB",
+                  "encryption": {
+                    "encryptionType": "ByUserPassword",
+                    "isEnabled": false
+                  }
+                },
+                "notifications": {
+                  "sendSNMPNotifications": false,
+                  "emailNotifications": {
+                    "isEnabled": false
+                  }
+                }
+              }
+            },
+            "guestProcessing": {
+              "appAwareProcessing": {
+                "isEnabled": false
+              },
+              "guestFSIndexing": {
+                "isEnabled": false,
+                "indexingSettings": [
+                  {
+                    "machineObject": {
+                      "type": "ProtectionGroup",
+                      "id": "d566bdcd-20e7-4b18-9daa-c16504bf6de8",
+                      "name": "PG-Windows-Test",
+                      "path": "ProtectionGroup:PG-Windows-Test",
+                      "protectionGroupId": "d566bdcd-20e7-4b18-9daa-c16504bf6de8",
+                      "platform": "Agent"
+                    },
+                    "indexing": {
+                      "guestFSIndexingMode": "IndexAllExcept",
+                      "indexingList": [
+                        "/cdrom",
+                        "/dev",
+                        "/lost+found",
+                        "/media",
+                        "/mnt",
+                        "/proc",
+                        "/tmp"
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "schedule": {
+              "monthly": {
+                "dayOfWeek": "Saturday",
+                "dayNumberInMonth": "Fourth",
+                "isEnabled": false,
+                "localTime": "22:00",
+                "months": [
+                  "January",
+                  "February",
+                  "March",
+                  "April",
+                  "May",
+                  "June",
+                  "July",
+                  "August",
+                  "September",
+                  "October",
+                  "November",
+                  "December"
+                ],
+                "isLastDayOfMonth": false
+              },
+              "periodically": {
+                "periodicallyKind": "Hours",
+                "isEnabled": false,
+                "frequency": 1,
+                "backupWindow": {
+                  "days": [
+                    {
+                      "day": "Sunday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Monday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Tuesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Wednesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Thursday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Friday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Saturday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    }
+                  ]
+                },
+                "startTimeWithinAnHour": 0
+              },
+              "continuously": {
+                "isEnabled": false,
+                "backupWindow": {
+                  "days": [
+                    {
+                      "day": "Sunday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Monday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Tuesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Wednesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Thursday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Friday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Saturday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    }
+                  ]
+                }
+              },
+              "retry": {
+                "isEnabled": true,
+                "retryCount": 3,
+                "awaitMinutes": 10
+              },
+              "backupWindow": {
+                "isEnabled": false,
+                "backupWindow": {
+                  "days": [
+                    {
+                      "day": "Sunday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Monday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Tuesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Wednesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Thursday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Friday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Saturday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    }
+                  ]
+                }
+              },
+              "runAutomatically": false,
+              "daily": {
+                "dailyKind": "Everyday",
+                "isEnabled": false,
+                "localTime": "22:00",
+                "days": [
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday",
+                  "Saturday",
+                  "Sunday"
+                ]
+              }
+            },
+            "type": "WindowsAgentBackupServerPolicy",
+            "id": "fc1d7216-1ef6-460d-b131-d0b9f0baf37e",
+            "name": "Disabled Windows AP",
+            "isDisabled": true
+          },
+          {
+            "backupMode": "EntireComputer",
+            "description": "Created by .\\Administrator at 10/23/2026 12:48 PM.",
+            "computers": [
+              {
+                "type": "LinuxComputer",
+                "id": "f57cc991-2048-45df-a6df-cdafe026e436",
+                "name": "ip-172-31-26-65",
+                "path": "ProtectionGroup:PG-Linux-Test;LinuxComputer:ip-172-31-26-65",
+                "parentObjectId": "d9cbedfa-07c5-486b-b729-8df889e59985",
+                "protectionGroupId": "d9cbedfa-07c5-486b-b729-8df889e59985",
+                "platform": "Agent"
+              }
+            ],
+            "storage": {
+              "destination": {
+                "backupServerName": "EC2AMAZ-C4O89E0",
+                "backupRepositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+                "destinationType": "BackupRepository"
+              },
+              "retentionPolicy": {
+                "type": "Days",
+                "quantity": 7
+              },
+              "gfsPolicy": {
+                "isEnabled": false,
+                "weekly": {
+                  "desiredTime": "Sunday",
+                  "isEnabled": false,
+                  "keepForNumberOfWeeks": 1
+                },
+                "monthly": {
+                  "desiredTime": "First",
+                  "isEnabled": false,
+                  "keepForNumberOfMonths": 1
+                },
+                "yearly": {
+                  "desiredTime": "January",
+                  "isEnabled": false,
+                  "keepForNumberOfYears": 1
+                }
+              },
+              "advancedSettings": {
+                "synthenticFulls": {
+                  "isEnabled": true,
+                  "weekly": {
+                    "isEnabled": true,
+                    "days": ["Saturday"]
+                  },
+                  "monthly": {
+                    "dayOfWeek": "Monday",
+                    "dayNumberInMonth": "First",
+                    "isEnabled": false,
+                    "dayOfMonth": 1,
+                    "months": [
+                      "January",
+                      "February",
+                      "March",
+                      "April",
+                      "May",
+                      "June",
+                      "July",
+                      "August",
+                      "September",
+                      "October",
+                      "November",
+                      "December"
+                    ],
+                    "isLastDayOfMonth": false
+                  }
+                },
+                "activeFulls": {
+                  "isEnabled": false,
+                  "weekly": {
+                    "isEnabled": true,
+                    "days": ["Saturday"]
+                  },
+                  "monthly": {
+                    "dayOfWeek": "Monday",
+                    "dayNumberInMonth": "OnDay",
+                    "isEnabled": false,
+                    "dayOfMonth": 1,
+                    "months": [
+                      "January",
+                      "February",
+                      "March",
+                      "April",
+                      "May",
+                      "June",
+                      "July",
+                      "August",
+                      "September",
+                      "October",
+                      "November",
+                      "December"
+                    ],
+                    "isLastDayOfMonth": false
+                  }
+                },
+                "fullBackupMaintenance": {
+                  "RemoveData": {
+                    "isEnabled": false,
+                    "afterDays": 30
+                  },
+                  "defragmentAndCompact": {
+                    "isEnabled": false,
+                    "weekly": {
+                      "isEnabled": false,
+                      "days": ["Saturday"]
+                    },
+                    "monthly": {
+                      "dayOfWeek": "Saturday",
+                      "dayNumberInMonth": "Last",
+                      "isEnabled": true,
+                      "dayOfMonth": 1,
+                      "months": [
+                        "January",
+                        "February",
+                        "March",
+                        "April",
+                        "May",
+                        "June",
+                        "July",
+                        "August",
+                        "September",
+                        "October",
+                        "November",
+                        "December"
+                      ],
+                      "isLastDayOfMonth": false
+                    }
+                  }
+                },
+                "storageData": {
+                  "compressionLevel": "Optimal",
+                  "storageOptimization": "1MB",
+                  "encryption": {
+                    "encryptionType": "ByUserPassword",
+                    "isEnabled": false
+                  }
+                },
+                "notifications": {
+                  "sendSNMPNotifications": false,
+                  "emailNotifications": {
+                    "isEnabled": false
+                  }
+                }
+              }
+            },
+            "guestProcessing": {
+              "appAwareProcessing": {
+                "isEnabled": false
+              },
+              "guestFSIndexing": {
+                "isEnabled": false,
+                "indexingSettings": [
+                  {
+                    "machineObject": {
+                      "type": "LinuxComputer",
+                      "id": "f57cc991-2048-45df-a6df-cdafe026e436",
+                      "name": "ip-172-31-26-65",
+                      "path": "ProtectionGroup:PG-Linux-Test;LinuxComputer:ip-172-31-26-65",
+                      "parentObjectId": "d9cbedfa-07c5-486b-b729-8df889e59985",
+                      "protectionGroupId": "d9cbedfa-07c5-486b-b729-8df889e59985",
+                      "platform": "Agent"
+                    },
+                    "indexing": {
+                      "guestFSIndexingMode": "IndexAllExcept",
+                      "indexingList": [
+                        "/cdrom",
+                        "/dev",
+                        "/lost+found",
+                        "/media",
+                        "/mnt",
+                        "/proc",
+                        "/tmp"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "guestCredentials": {
+                "useProtectionGroupCredentials": true,
+                "credentialsPerMachine": [
+                  {
+                    "credentialsId": "00000000-0000-0000-0000-000000000000",
+                    "machineObject": {
+                      "type": "LinuxComputer",
+                      "id": "f57cc991-2048-45df-a6df-cdafe026e436",
+                      "name": "ip-172-31-26-65",
+                      "path": "ProtectionGroup:PG-Linux-Test;LinuxComputer:ip-172-31-26-65",
+                      "parentObjectId": "d9cbedfa-07c5-486b-b729-8df889e59985",
+                      "protectionGroupId": "d9cbedfa-07c5-486b-b729-8df889e59985",
+                      "platform": "Agent"
+                    },
+                    "default": true
+                  }
+                ]
+              }
+            },
+            "schedule": {
+              "monthly": {
+                "dayOfWeek": "Sunday",
+                "dayNumberInMonth": "OnDay",
+                "isEnabled": false,
+                "localTime": "22:00",
+                "dayOfMonth": 1,
+                "months": [
+                  "January",
+                  "February",
+                  "March",
+                  "April",
+                  "May",
+                  "June",
+                  "July",
+                  "August",
+                  "September",
+                  "October",
+                  "November",
+                  "December"
+                ],
+                "isLastDayOfMonth": false
+              },
+              "periodically": {
+                "periodicallyKind": "Hours",
+                "isEnabled": false,
+                "frequency": 1,
+                "backupWindow": {
+                  "days": [
+                    {
+                      "day": "Sunday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Monday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Tuesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Wednesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Thursday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Friday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Saturday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    }
+                  ]
+                },
+                "startTimeWithinAnHour": 0
+              },
+              "continuously": {
+                "isEnabled": false,
+                "backupWindow": {
+                  "days": [
+                    {
+                      "day": "Sunday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Monday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Tuesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Wednesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Thursday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Friday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Saturday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    }
+                  ]
+                }
+              },
+              "retry": {
+                "isEnabled": true,
+                "retryCount": 3,
+                "awaitMinutes": 10
+              },
+              "runAutomatically": false,
+              "daily": {
+                "dailyKind": "Everyday",
+                "isEnabled": true,
+                "localTime": "22:00",
+                "days": [
+                  "Sunday",
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday",
+                  "Saturday"
+                ]
+              }
+            },
+            "type": "LinuxAgentBackupServerPolicy",
+            "id": "b50355ba-17ea-4123-9a7d-40071f91aa99",
+            "name": "Failing job",
+            "isDisabled": false
+          },
+          {
+            "description": "Created by .\\Administrator at 10/2/2026 10:47 AM.",
+            "isHighPriority": false,
+            "objects": [
+              {
+                "fileServerId": "e8ae7e5c-444c-4ea9-a09b-98ae59e426bb",
+                "path": "\\\\EC2AMAZ-C4O89E0\\TestData",
+                "inclusionMask": [],
+                "exclusionMask": ["\\.snapshot", "\\~snapshot"]
+              },
+              {
+                "fileServerId": "1ee7ecc0-ad0d-420c-9a77-a5893d04b1c8",
+                "path": "\\\\EC2AMAZ-C4O89E0\\TestData2",
+                "inclusionMask": [],
+                "exclusionMask": ["\\.snapshot", "\\~snapshot"]
+              },
+              {
+                "fileServerId": "491d8774-276a-41f7-aabf-21a1792f42d5",
+                "path": "\\\\EC2AMAZ-C4O89E0\\TestData3",
+                "inclusionMask": [],
+                "exclusionMask": ["\\.snapshot", "\\~snapshot"]
+              },
+              {
+                "fileServerId": "86be91a5-771b-4b61-8bda-14bc91ff59a4",
+                "path": "\\\\EC2AMAZ-C4O89E0\\TestData4",
+                "inclusionMask": [],
+                "exclusionMask": ["\\.snapshot", "\\~snapshot"]
+              }
+            ],
+            "backupRepository": {
+              "backupRepositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+              "sourceBackupId": "dbf21667-8ec7-4c2b-a17d-a910aaabf484",
+              "retentionPolicy": {
+                "type": "Days",
+                "quantity": 3
+              },
+              "advancedSettings": {
+                "fileVersions": {
+                  "versionRetentionType": "None"
+                },
+                "aclHandling": {
+                  "backupMode": "FoldersOnly"
+                },
+                "storageData": {
+                  "compressionLevel": "Optimal",
+                  "encryption": {
+                    "encryptionType": "ByUserPassword",
+                    "isEnabled": false
+                  }
+                },
+                "backupHealth": {
+                  "isEnabled": false,
+                  "weekly": {
+                    "isEnabled": false,
+                    "days": ["Saturday"]
+                  },
+                  "monthly": {
+                    "dayOfWeek": "Saturday",
+                    "dayNumberInMonth": "Last",
+                    "isEnabled": true,
+                    "dayOfMonth": 1,
+                    "months": [
+                      "January",
+                      "February",
+                      "March",
+                      "April",
+                      "May",
+                      "June",
+                      "July",
+                      "August",
+                      "September",
+                      "October",
+                      "November",
+                      "December"
+                    ],
+                    "isLastDayOfMonth": false
+                  }
+                },
+                "scripts": {
+                  "periodicityType": "BackupSessions",
+                  "preCommand": {
+                    "isEnabled": false,
+                    "command": ""
+                  },
+                  "postCommand": {
+                    "isEnabled": false,
+                    "command": ""
+                  },
+                  "runScriptEvery": 1,
+                  "dayOfWeek": ["Saturday"]
+                },
+                "notifications": {
+                  "sendSNMPNotifications": false,
+                  "emailNotifications": {
+                    "isEnabled": false
+                  },
+                  "triggerIssueJobWarning": false,
+                  "triggerAttributeIssueJobWarning": false
+                }
+              }
+            },
+            "archiveRepository": {
+              "archiveRecentFileVersions": false,
+              "archivePreviousFileVersions": false
+            },
+            "secondaryTargets": [],
+            "schedule": {
+              "monthly": {
+                "dayOfWeek": "Saturday",
+                "dayNumberInMonth": "Fourth",
+                "isEnabled": false,
+                "localTime": "22:00",
+                "months": [
+                  "January",
+                  "February",
+                  "March",
+                  "April",
+                  "May",
+                  "June",
+                  "July",
+                  "August",
+                  "September",
+                  "October",
+                  "November",
+                  "December"
+                ],
+                "isLastDayOfMonth": false
+              },
+              "periodically": {
+                "periodicallyKind": "Hours",
+                "isEnabled": false,
+                "frequency": 1,
+                "backupWindow": {
+                  "days": [
+                    {
+                      "day": "Sunday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Monday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Tuesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Wednesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Thursday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Friday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Saturday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    }
+                  ]
+                },
+                "startTimeWithinAnHour": 0
+              },
+              "continuously": {
+                "isEnabled": false,
+                "backupWindow": {
+                  "days": [
+                    {
+                      "day": "Sunday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Monday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Tuesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Wednesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Thursday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Friday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Saturday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    }
+                  ]
+                }
+              },
+              "afterThisJob": {
+                "isEnabled": false
+              },
+              "retry": {
+                "isEnabled": true,
+                "retryCount": 3,
+                "awaitMinutes": 10
+              },
+              "backupWindow": {
+                "isEnabled": false,
+                "backupWindow": {
+                  "days": [
+                    {
+                      "day": "Sunday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Monday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Tuesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Wednesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Thursday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Friday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Saturday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    }
+                  ]
+                }
+              },
+              "runAutomatically": true,
+              "daily": {
+                "dailyKind": "Everyday",
+                "isEnabled": true,
+                "localTime": "23:00",
+                "days": [
+                  "Sunday",
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday",
+                  "Saturday"
+                ]
+              }
+            },
+            "type": "FileBackup",
+            "id": "7a597775-1100-4f22-8c74-24eae6da8921",
+            "name": "File Backup Job",
+            "isDisabled": false
+          },
+          {
+            "description": "Created by .\\Administrator at 10/26/2026 3:13 PM.",
+            "isHighPriority": false,
+            "objects": [
+              {
+                "fileServerId": "86be91a5-771b-4b61-8bda-14bc91ff59a4",
+                "path": "\\\\EC2AMAZ-C4O89E0\\TestData4",
+                "inclusionMask": [],
+                "exclusionMask": ["\\.snapshot", "\\~snapshot"]
+              }
+            ],
+            "backupRepository": {
+              "backupRepositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+              "retentionPolicy": {
+                "type": "Days",
+                "quantity": 28
+              },
+              "advancedSettings": {
+                "fileVersions": {
+                  "versionRetentionType": "None"
+                },
+                "aclHandling": {
+                  "backupMode": "FoldersOnly"
+                },
+                "storageData": {
+                  "compressionLevel": "Optimal",
+                  "encryption": {
+                    "encryptionType": "ByUserPassword",
+                    "isEnabled": false
+                  }
+                },
+                "backupHealth": {
+                  "isEnabled": false,
+                  "weekly": {
+                    "isEnabled": false,
+                    "days": ["Saturday"]
+                  },
+                  "monthly": {
+                    "dayOfWeek": "Saturday",
+                    "dayNumberInMonth": "Last",
+                    "isEnabled": true,
+                    "dayOfMonth": 1,
+                    "months": [
+                      "January",
+                      "February",
+                      "March",
+                      "April",
+                      "May",
+                      "June",
+                      "July",
+                      "August",
+                      "September",
+                      "October",
+                      "November",
+                      "December"
+                    ],
+                    "isLastDayOfMonth": false
+                  }
+                },
+                "scripts": {
+                  "periodicityType": "BackupSessions",
+                  "preCommand": {
+                    "isEnabled": false,
+                    "command": ""
+                  },
+                  "postCommand": {
+                    "isEnabled": false,
+                    "command": ""
+                  },
+                  "runScriptEvery": 1,
+                  "dayOfWeek": ["Saturday"]
+                },
+                "notifications": {
+                  "sendSNMPNotifications": false,
+                  "emailNotifications": {
+                    "isEnabled": false
+                  },
+                  "triggerIssueJobWarning": false,
+                  "triggerAttributeIssueJobWarning": false
+                }
+              }
+            },
+            "archiveRepository": {
+              "archiveRecentFileVersions": false,
+              "archivePreviousFileVersions": false
+            },
+            "secondaryTargets": [],
+            "schedule": {
+              "monthly": {
+                "dayOfWeek": "Saturday",
+                "dayNumberInMonth": "Fourth",
+                "isEnabled": false,
+                "localTime": "22:00",
+                "months": [
+                  "January",
+                  "February",
+                  "March",
+                  "April",
+                  "May",
+                  "June",
+                  "July",
+                  "August",
+                  "September",
+                  "October",
+                  "November",
+                  "December"
+                ],
+                "isLastDayOfMonth": false
+              },
+              "periodically": {
+                "periodicallyKind": "Hours",
+                "isEnabled": false,
+                "frequency": 1,
+                "backupWindow": {
+                  "days": [
+                    {
+                      "day": "Sunday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Monday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Tuesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Wednesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Thursday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Friday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Saturday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    }
+                  ]
+                },
+                "startTimeWithinAnHour": 0
+              },
+              "continuously": {
+                "isEnabled": false,
+                "backupWindow": {
+                  "days": [
+                    {
+                      "day": "Sunday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Monday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Tuesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Wednesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Thursday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Friday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Saturday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    }
+                  ]
+                }
+              },
+              "afterThisJob": {
+                "isEnabled": false
+              },
+              "retry": {
+                "isEnabled": true,
+                "retryCount": 3,
+                "awaitMinutes": 10
+              },
+              "backupWindow": {
+                "isEnabled": false,
+                "backupWindow": {
+                  "days": [
+                    {
+                      "day": "Sunday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Monday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Tuesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Wednesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Thursday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Friday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Saturday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    }
+                  ]
+                }
+              },
+              "runAutomatically": false,
+              "daily": {
+                "dailyKind": "Everyday",
+                "isEnabled": true,
+                "localTime": "22:00",
+                "days": [
+                  "Sunday",
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday",
+                  "Saturday"
+                ]
+              }
+            },
+            "type": "FileBackup",
+            "id": "1d532d6b-ad90-403e-889b-f9b9b31cfe6c",
+            "name": "Never run job",
+            "isDisabled": false
+          },
+          {
+            "agentType": "Server",
+            "backupMode": "EntireComputer",
+            "description": "Created by .\\Administrator at 10/23/2026 1:15 PM.",
+            "isHighPriority": false,
+            "computers": [
+              {
+                "type": "LinuxComputer",
+                "id": "f57cc991-2048-45df-a6df-cdafe026e436",
+                "name": "ip-172-31-26-65",
+                "path": "ProtectionGroup:PG-Linux-Test;LinuxComputer:ip-172-31-26-65",
+                "parentObjectId": "d9cbedfa-07c5-486b-b729-8df889e59985",
+                "protectionGroupId": "d9cbedfa-07c5-486b-b729-8df889e59985",
+                "platform": "Agent"
+              }
+            ],
+            "storage": {
+              "backupRepositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+              "retentionPolicy": {
+                "type": "Days",
+                "quantity": 1
+              },
+              "gfsPolicy": {
+                "isEnabled": false,
+                "weekly": {
+                  "desiredTime": "Sunday",
+                  "isEnabled": false,
+                  "keepForNumberOfWeeks": 1
+                },
+                "monthly": {
+                  "desiredTime": "First",
+                  "isEnabled": false,
+                  "keepForNumberOfMonths": 1
+                },
+                "yearly": {
+                  "desiredTime": "January",
+                  "isEnabled": false,
+                  "keepForNumberOfYears": 1
+                }
+              },
+              "advancedSettings": {
+                "synthenticFulls": {
+                  "isEnabled": true,
+                  "weekly": {
+                    "isEnabled": true,
+                    "days": ["Saturday"]
+                  },
+                  "monthly": {
+                    "dayOfWeek": "Monday",
+                    "dayNumberInMonth": "First",
+                    "isEnabled": false,
+                    "dayOfMonth": 1,
+                    "months": [
+                      "January",
+                      "February",
+                      "March",
+                      "April",
+                      "May",
+                      "June",
+                      "July",
+                      "August",
+                      "September",
+                      "October",
+                      "November",
+                      "December"
+                    ],
+                    "isLastDayOfMonth": false
+                  }
+                },
+                "activeFulls": {
+                  "isEnabled": false,
+                  "weekly": {
+                    "isEnabled": true,
+                    "days": ["Saturday"]
+                  },
+                  "monthly": {
+                    "dayOfWeek": "Monday",
+                    "dayNumberInMonth": "First",
+                    "isEnabled": false,
+                    "dayOfMonth": 1,
+                    "months": [
+                      "January",
+                      "February",
+                      "March",
+                      "April",
+                      "May",
+                      "June",
+                      "July",
+                      "August",
+                      "September",
+                      "October",
+                      "November",
+                      "December"
+                    ],
+                    "isLastDayOfMonth": false
+                  }
+                },
+                "backupHealth": {
+                  "isEnabled": false,
+                  "weekly": {
+                    "isEnabled": false,
+                    "days": ["Saturday"],
+                    "localTime": "05:00:00"
+                  },
+                  "monthly": {
+                    "dayOfWeek": "Saturday",
+                    "dayNumberInMonth": "Last",
+                    "isEnabled": true,
+                    "dayOfMonth": 1,
+                    "months": [
+                      "January",
+                      "February",
+                      "March",
+                      "April",
+                      "May",
+                      "June",
+                      "July",
+                      "August",
+                      "September",
+                      "October",
+                      "November",
+                      "December"
+                    ],
+                    "localTime": "05:00:00",
+                    "isLastDayOfMonth": false
+                  }
+                },
+                "fullBackupMaintenance": {
+                  "RemoveData": {
+                    "isEnabled": false,
+                    "afterDays": 30
+                  },
+                  "defragmentAndCompact": {
+                    "isEnabled": false,
+                    "weekly": {
+                      "isEnabled": false,
+                      "days": ["Saturday"]
+                    },
+                    "monthly": {
+                      "dayOfWeek": "Saturday",
+                      "dayNumberInMonth": "Last",
+                      "isEnabled": true,
+                      "dayOfMonth": 1,
+                      "months": [
+                        "January",
+                        "February",
+                        "March",
+                        "April",
+                        "May",
+                        "June",
+                        "July",
+                        "August",
+                        "September",
+                        "October",
+                        "November",
+                        "December"
+                      ],
+                      "isLastDayOfMonth": false
+                    }
+                  }
+                },
+                "storageData": {
+                  "compressionLevel": "Optimal",
+                  "storageOptimization": "1MB",
+                  "encryption": {
+                    "encryptionType": "ByUserPassword",
+                    "isEnabled": false
+                  }
+                },
+                "notifications": {
+                  "sendSNMPNotifications": false,
+                  "emailNotifications": {
+                    "isEnabled": false
+                  }
+                },
+                "scripts": {
+                  "periodicityType": "BackupSessions",
+                  "preCommand": {
+                    "isEnabled": false,
+                    "command": ""
+                  },
+                  "postCommand": {
+                    "isEnabled": false,
+                    "command": ""
+                  },
+                  "runScriptEvery": 1,
+                  "dayOfWeek": ["Saturday"]
+                }
+              }
+            },
+            "guestProcessing": {
+              "appAwareProcessing": {
+                "isEnabled": false
+              },
+              "guestFSIndexing": {
+                "isEnabled": false,
+                "indexingSettings": [
+                  {
+                    "machineObject": {
+                      "type": "LinuxComputer",
+                      "id": "f57cc991-2048-45df-a6df-cdafe026e436",
+                      "name": "ip-172-31-26-65",
+                      "path": "ProtectionGroup:PG-Linux-Test;LinuxComputer:ip-172-31-26-65",
+                      "parentObjectId": "d9cbedfa-07c5-486b-b729-8df889e59985",
+                      "protectionGroupId": "d9cbedfa-07c5-486b-b729-8df889e59985",
+                      "platform": "Agent"
+                    },
+                    "indexing": {
+                      "guestFSIndexingMode": "IndexAllExcept",
+                      "indexingList": [
+                        "/cdrom",
+                        "/dev",
+                        "/lost+found",
+                        "/media",
+                        "/mnt",
+                        "/proc",
+                        "/tmp"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "guestCredentials": {
+                "useProtectionGroupCredentials": true,
+                "credentialsPerMachine": [
+                  {
+                    "credentialsId": "00000000-0000-0000-0000-000000000000",
+                    "machineObject": {
+                      "type": "LinuxComputer",
+                      "id": "f57cc991-2048-45df-a6df-cdafe026e436",
+                      "name": "ip-172-31-26-65",
+                      "path": "ProtectionGroup:PG-Linux-Test;LinuxComputer:ip-172-31-26-65",
+                      "parentObjectId": "d9cbedfa-07c5-486b-b729-8df889e59985",
+                      "protectionGroupId": "d9cbedfa-07c5-486b-b729-8df889e59985",
+                      "platform": "Agent"
+                    },
+                    "default": true
+                  }
+                ]
+              }
+            },
+            "schedule": {
+              "monthly": {
+                "dayOfWeek": "Sunday",
+                "dayNumberInMonth": "OnDay",
+                "isEnabled": false,
+                "localTime": "22:00",
+                "dayOfMonth": 1,
+                "months": [
+                  "January",
+                  "February",
+                  "March",
+                  "April",
+                  "May",
+                  "June",
+                  "July",
+                  "August",
+                  "September",
+                  "October",
+                  "November",
+                  "December"
+                ],
+                "isLastDayOfMonth": false
+              },
+              "periodically": {
+                "periodicallyKind": "Hours",
+                "isEnabled": false,
+                "frequency": 1,
+                "backupWindow": {
+                  "days": [
+                    {
+                      "day": "Sunday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Monday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Tuesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Wednesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Thursday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Friday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Saturday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    }
+                  ]
+                },
+                "startTimeWithinAnHour": 0
+              },
+              "continuously": {
+                "isEnabled": false,
+                "backupWindow": {
+                  "days": [
+                    {
+                      "day": "Sunday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Monday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Tuesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Wednesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Thursday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Friday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Saturday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    }
+                  ]
+                }
+              },
+              "afterThisJob": {
+                "isEnabled": false
+              },
+              "retry": {
+                "isEnabled": true,
+                "retryCount": 3,
+                "awaitMinutes": 10
+              },
+              "backupWindow": {
+                "isEnabled": false,
+                "backupWindow": {
+                  "days": [
+                    {
+                      "day": "Sunday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Monday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Tuesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Wednesday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Thursday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Friday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    },
+                    {
+                      "day": "Saturday",
+                      "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                    }
+                  ]
+                }
+              },
+              "runAutomatically": true,
+              "daily": {
+                "dailyKind": "Everyday",
+                "isEnabled": true,
+                "localTime": "22:00",
+                "days": [
+                  "Sunday",
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday",
+                  "Saturday"
+                ]
+              }
+            },
+            "type": "LinuxAgentBackup",
+            "id": "1ec37ede-04cd-44e0-9def-d54fb9c36ebc",
+            "name": "Successful job",
+            "isDisabled": false
+          }
+        ],
+        "pagination": {
+          "total": 5,
+          "count": 5,
+          "skip": 0,
+          "limit": 500
+        }
+      }
+    },
     "/api/v1/jobs/states": {
       "status": 200,
       "body": {

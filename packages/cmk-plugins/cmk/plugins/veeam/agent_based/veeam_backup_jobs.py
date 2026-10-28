@@ -28,10 +28,12 @@ from cmk.plugins.veeam.lib import parse_dotnet_timespan_seconds, parse_iso8601_e
 
 @dataclass(frozen=True, kw_only=True)
 class BackupJob:
-    """Mirrors the VBR REST API's JobStateModel (GET /api/v1/jobs/states)."""
+    """Mirrors the VBR REST API's JobStateModel (GET /api/v1/jobs/states), plus
+    `isDisabled` of its JobModel (GET /api/v1/jobs), which the special agent adds."""
 
     job_type: str
     status: str
+    is_disabled: bool
     last_run: float | None
     last_result: str
     next_run: float | None
@@ -70,6 +72,7 @@ def parse_veeam_backup_jobs(string_table: StringTable) -> Section:
         section[sanitize_name(job_dict["name"])] = BackupJob(
             job_type=job_dict["type"],
             status=job_dict["status"],
+            is_disabled=job_dict["isDisabled"],
             last_run=parse_iso8601_epoch(last_run) if last_run is not None else None,
             last_result=job_dict["lastResult"],
             next_run=parse_iso8601_epoch(next_run) if next_run is not None else None,
@@ -83,7 +86,7 @@ def parse_veeam_backup_jobs(string_table: StringTable) -> Section:
 
 def discovery_veeam_backup_jobs(params: DiscoveryParams, section: Section) -> DiscoveryResult:
     for item, job in section.items():
-        if params["discover_disabled"] or job.status != "Disabled":
+        if params["discover_disabled"] or not job.is_disabled:
             yield Service(item=item)
 
 
@@ -112,18 +115,22 @@ def check_veeam_backup_jobs(
     if (job := section.get(item)) is None:
         return
 
-    status = f"Status: {job.status}, " if job.status in ("Running", "Disabled") else ""
-    is_disabled = job.status == "Disabled"
+    if job.is_disabled:
+        status = "Status: Disabled, "
+    elif job.status == "Running":
+        status = "Status: Running, "
+    else:
+        status = ""
     if job.last_run is None:
         yield Result(
-            state=State(params["disabled_state"]) if is_disabled else State.OK,
+            state=State(params["disabled_state"]) if job.is_disabled else State.OK,
             summary=f"{status}No run has happened yet",
         )
     else:
         yield Result(
             state=(
                 State(params["disabled_state"])
-                if is_disabled
+                if job.is_disabled
                 else monitoring_state(job.last_result)
             ),
             summary=f"{status}Result: {job.last_result}",
@@ -134,7 +141,7 @@ def check_veeam_backup_jobs(
             yield from check_levels(
                 age,
                 # The state of a disabled job is set by disabled_state alone
-                levels_upper=None if is_disabled else params["age"],
+                levels_upper=None if job.is_disabled else params["age"],
                 metric_name="veeam_backup_job_age",
                 render_func=render.timespan,
                 label="Time since last run",
@@ -148,7 +155,8 @@ def check_veeam_backup_jobs(
         yield Result(state=State.OK, notice=f"Duration: {render.timespan(job.duration)}")
         yield Metric("backup_duration", job.duration)
 
-    if job.next_run is not None:
+    # Veeam keeps reporting the last scheduled run of a disabled job
+    if job.next_run is not None and not job.is_disabled:
         yield Result(state=State.OK, notice=f"Next run: {render.datetime(job.next_run)}")
 
     if job.repository_name is not None:

@@ -15,7 +15,7 @@ import json
 import logging
 import sys
 import time
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, UTC
 from http import HTTPStatus
@@ -485,6 +485,39 @@ class _SessionProgress(_ApiItem):
     transferred_size: int | None = None
 
 
+class _Job(_ApiItem):
+    """An item of GET /api/v1/jobs."""
+
+    id: str
+    is_disabled: bool
+
+
+def _disabled_job_ids(client: VeeamClient) -> frozenset[str]:
+    """The ids of the jobs that are disabled in Veeam.
+
+    `status` in GET /api/v1/jobs/states is only "Disabled" for agent policies; a disabled
+    agent backup or file backup job stays "Stopped". `isDisabled` in GET /api/v1/jobs is
+    set for every job type.
+    """
+    return frozenset(
+        job.id for job in _parse_items(_Job, client.get_all("/api/v1/jobs")) if job.is_disabled
+    )
+
+
+def fetch_backup_jobs(client: VeeamClient, name: str) -> Fetched:
+    """GET /api/v1/jobs/states, one job per line, each with `isDisabled` added (see
+    `_disabled_job_ids`)."""
+    disabled_ids = _disabled_job_ids(client)
+    return Fetched(
+        own=f"<<<{name}:sep(0)>>>\n"
+        + "".join(
+            f"{json.dumps({**item, 'isDisabled': item.get('id') in disabled_ids})}\n"
+            for item in client.get_all("/api/v1/jobs/states")
+            if isinstance(item, dict)
+        )
+    )
+
+
 class _JobState(_ApiItem):
     """An item of GET /api/v1/jobs/states."""
 
@@ -750,12 +783,14 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
 
 def _job_sessions_and_window(
     jobs: Sequence[_JobState],
+    disabled_ids: Container[str],
 ) -> tuple[dict[str, tuple[str, str]], str | None]:
     """Builds `sessionId -> (job id, job name)` from each job's current session,
     plus the earliest `lastRun` (the taskSessions window's lower bound).
 
-    Disabled jobs are excluded, like the old plug-in; a schedule-disabled job is
-    still included. Jobs that never ran don't affect the window.
+    Disabled jobs (`disabled_ids`) are excluded, like the old plug-in; a
+    schedule-disabled job is still included. Jobs that never ran don't affect the
+    window.
 
     TODO: a rarely-run job drags the window back every cycle; cap it (e.g. 30
     days) if that becomes a real problem.
@@ -763,7 +798,7 @@ def _job_sessions_and_window(
     session_to_job: dict[str, tuple[str, str]] = {}
     last_runs: list[float] = []
     for job in jobs:
-        if job.status == "Disabled":
+        if job.id in disabled_ids:
             continue
         if job.session_id is not None:
             session_to_job[job.session_id] = (job.id, job.name)
@@ -986,7 +1021,7 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     client-side instead.
     """
     jobs = _parse_items(_JobState, client.get_all("/api/v1/jobs/states"))
-    session_to_job, created_after = _job_sessions_and_window(jobs)
+    session_to_job, created_after = _job_sessions_and_window(jobs, _disabled_job_ids(client))
     progress_by_job_id = {
         job.id: job.session_progress for job in jobs if job.session_progress is not None
     }
@@ -1079,7 +1114,7 @@ def write_sections(client: VeeamClient, sections: Sequence[Section]) -> None:
 SECTIONS: Sequence[Section] = (
     ("veeam_server_info", fetch_object("/api/v1/serverInfo")),
     ("veeam_license", fetch_object("/api/v1/license")),
-    ("veeam_backup_jobs", fetch_list("/api/v1/jobs/states")),
+    ("veeam_backup_jobs", fetch_backup_jobs),
     ("veeam_backups", fetch_backups),
     ("veeam_replicas", fetch_list("/api/v1/replicas")),
     ("veeam_protection_groups", fetch_list("/api/v1/agents/protectionGroups")),

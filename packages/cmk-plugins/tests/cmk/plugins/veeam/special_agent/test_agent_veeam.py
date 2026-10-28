@@ -6,7 +6,7 @@
 import json
 import logging
 import socket
-from collections.abc import Iterator
+from collections.abc import Container, Iterator
 from http import HTTPStatus
 from pathlib import Path
 from urllib.parse import parse_qs, quote
@@ -20,6 +20,7 @@ from cmk.password_store.v1 import Secret
 from cmk.plugins.veeam.special_agent.agent_veeam import (
     BACKUP_OBJECTS_STORAGE_KEY,
     create_session,
+    fetch_backup_jobs,
     fetch_backups,
     fetch_list,
     fetch_object,
@@ -1282,10 +1283,26 @@ def _task(**overrides: object) -> dict[str, object]:
 def _mock_jobs(
     api: responses.RequestsMock,
     jobs: list[dict[str, object]],
+    disabled_ids: Container[object] = (),
 ) -> None:
     api.get(
         f"{URL}/api/v1/jobs/states?skip=0",
         json={"data": jobs, "pagination": {"total": len(jobs)}},
+    )
+    api.get(
+        f"{URL}/api/v1/jobs?skip=0",
+        json={
+            "data": [
+                {
+                    "id": job["id"],
+                    "name": job["name"],
+                    "type": "Backup",
+                    "isDisabled": job["id"] in disabled_ids,
+                }
+                for job in jobs
+            ],
+            "pagination": {"total": len(jobs)},
+        },
     )
 
 
@@ -1397,14 +1414,16 @@ def test_fetch_backups_ignores_disabled_jobs(
         api,
         [
             _job(),
+            # A disabled agent backup or file backup job keeps the status "Stopped"
             _job(
                 id="job-id-2",
                 name="Disabled_VM_Backup",
-                status="Disabled",
+                status="Stopped",
                 sessionId="session-2",
                 lastRun="2026-09-01T00:00:00+00:00",
             ),
         ],
+        disabled_ids={"job-id-2"},
     )
     _mock_session_and_objects(api, "session-1", ["vm-1"])
     # The window starts at the enabled job's last run, not at the disabled job's.
@@ -1908,6 +1927,30 @@ def test_fetch_backups_only_caches_a_session_once_it_has_stopped(
     assert record["result"] == {"result": "Success"}
 
 
+def test_fetch_backup_jobs_adds_whether_the_job_is_disabled(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _mock_jobs(
+        api,
+        [
+            _job(status="Stopped"),
+            _job(id="job-id-2", name="Disabled_Agent_Backup", status="Stopped"),
+        ],
+        disabled_ids={"job-id-2"},
+    )
+
+    write_sections(_client(_auth(storage), storage), [("veeam_backup_jobs", fetch_backup_jobs)])
+
+    header, *lines = capsys.readouterr().out.splitlines()
+    assert header == "<<<veeam_backup_jobs:sep(0)>>>"
+    assert [(job["name"], job["isDisabled"]) for job in map(json.loads, lines)] == [
+        ("Daily_VM_Backup", False),
+        ("Disabled_Agent_Backup", True),
+    ]
+
+
 def test_sections_sharing_a_list_endpoint_fetch_it_once_per_run(
     api: responses.RequestsMock,
     storage: Storage,
@@ -1919,7 +1962,7 @@ def test_sections_sharing_a_list_endpoint_fetch_it_once_per_run(
     write_sections(
         _client(_auth(storage), storage),
         [
-            ("veeam_backup_jobs", fetch_list("/api/v1/jobs/states")),
+            ("veeam_backup_jobs", fetch_backup_jobs),
             ("veeam_backups", fetch_backups),
         ],
     )
@@ -2179,7 +2222,7 @@ def test_main_fetches_only_the_selected_sections(
     api: responses.RequestsMock, capsys: pytest.CaptureFixture[str]
 ) -> None:
     api.post(TOKEN_URL, json=_token("first"))
-    api.get(f"{URL}/api/v1/jobs/states", json={"data": [], "pagination": {"total": 0}})
+    _mock_jobs(api, [])
 
     exit_code = main([*_MINIMAL_ARGV, "--sections", "veeam_backup_jobs", "veeam.example.com"])
 

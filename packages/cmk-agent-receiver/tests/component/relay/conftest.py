@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import os
 import pathlib
 from collections.abc import Iterator
 
@@ -20,6 +21,10 @@ from cmk.testlib.agent_receiver.builder import AgentReceiverConfigBuilder, Agent
 from cmk.testlib.agent_receiver.native_wiremock import run_wiremock
 from cmk.testlib.agent_receiver.site_mock import SiteMock, User
 from cmk.testlib.agent_receiver.wiremock import Wiremock
+
+# Runfiles never hold the hermetic Python's stdlib bytecode, so without
+# this every subprocess recompiles all its imports on startup.
+os.environ["PYTHONPYCACHEPREFIX"] = str(pathlib.Path(os.environ["TEST_TMPDIR"]) / "pycache")
 
 
 @pytest.fixture()

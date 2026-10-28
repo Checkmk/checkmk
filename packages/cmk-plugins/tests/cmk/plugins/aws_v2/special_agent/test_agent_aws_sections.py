@@ -17,6 +17,7 @@ import pytest
 
 from cmk.plugins.aws_v2.special_agent.config import AWSConfig, NamingConvention
 from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
+from cmk.plugins.aws_v2.special_agent.labels import AwsResource
 from cmk.plugins.aws_v2.special_agent.runner import (
     AWSSectionsGeneric,
     AWSSectionsUSEast,
@@ -318,3 +319,98 @@ def test_run_writes_only_into_the_given_output(capsys: pytest.CaptureFixture[str
         "",
         ["<<<<333333333333>>>>", "<<<aws_v2_exceptions>>>", "AWSSectionsGeneric: No exceptions"],
     )
+
+
+def _metadata_by_host(output: str) -> dict[str, object]:
+    """The metadata section of each host."""
+    metadata: dict[str, object] = {}
+    host = ""
+    lines = output.splitlines()
+    for index, line in enumerate(lines):
+        if line.startswith("<<<<"):
+            host = line[4:-4]
+        elif line == "<<<aws_v2_metadata:sep(0)>>>":
+            metadata[host] = json.loads(lines[index + 1])
+    return metadata
+
+
+def test_account_host_gets_the_account_metadata() -> None:
+    output = io.StringIO()
+    sections = AWSSectionsGeneric(
+        hostname="",
+        session=mock.Mock(),
+        account_id="test-account",
+        output=output,
+        account_name="production",
+    )
+
+    sections.run()
+
+    assert _metadata_by_host(output.getvalue()) == {
+        "test-account": {
+            "cloud_provider": "AWS",
+            "account_id": "test-account",
+            "account_name": "production",
+            "entity": "account",
+            "name": "production",
+            "resource_id": "test-account",
+        }
+    }
+
+
+def _bucket_result(resource: AwsResource) -> AWSSectionResult:
+    return AWSSectionResult(TargetHost("bucket-host"), [{}], resource)
+
+
+def test_resource_host_gets_the_account_and_resource_metadata() -> None:
+    output = io.StringIO()
+    sections = AWSSectionsGeneric(
+        hostname="", session=mock.Mock(), account_id="test-account", output=output
+    )
+    bucket = AwsResource(
+        service="s3", name="bucket", resource_id="bucket", region="eu-central-1", tags={"a:b": "c"}
+    )
+
+    sections._write_host_metadata(  # noqa: SLF001
+        {("s3", 1606382471.693873, 300.0): [_bucket_result(bucket)]}
+    )
+
+    assert _metadata_by_host(output.getvalue())["bucket-host"] == {
+        "cloud_provider": "AWS",
+        "account_id": "test-account",
+        "entity": "resource",
+        "service": "s3",
+        "name": "bucket",
+        "resource_id": "bucket",
+        "region": "eu-central-1",
+        "tags": {"a:b": "c"},
+    }
+
+
+@pytest.mark.parametrize(
+    "section_names",
+    [
+        pytest.param(("s3", "s3_requests"), id="known resource first"),
+        pytest.param(("s3_requests", "s3"), id="known resource last"),
+    ],
+)
+def test_resource_known_only_by_its_service_does_not_hide_the_known_resource(
+    section_names: tuple[str, str],
+) -> None:
+    output = io.StringIO()
+    sections = AWSSectionsGeneric(
+        hostname="", session=mock.Mock(), account_id="test-account", output=output
+    )
+    known, by_service = section_names
+    results: Results = {
+        (known, 1606382471.693873, 300.0): [
+            _bucket_result(AwsResource(service="s3", name="bucket", resource_id="id"))
+        ],
+        # The cached metrics of this section outlived the bucket in the summary.
+        (by_service, 1606382471.693873, 300.0): [_bucket_result(AwsResource(service="s3"))],
+    }
+
+    sections._write_host_metadata(results)  # noqa: SLF001
+
+    metadata = _metadata_by_host(output.getvalue())["bucket-host"]
+    assert isinstance(metadata, dict) and metadata["resource_id"] == "id"

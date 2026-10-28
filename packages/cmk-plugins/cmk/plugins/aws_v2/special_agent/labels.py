@@ -55,3 +55,14 @@ class AwsResource:
                 f"cmk/aws/tag/{key}": value for key, value in ensure_valid_labels(self.tags).items()
             },
         }
+
+    def metadata(self) -> Mapping[str, object]:
+        """The inventory data of the host of the resource. The tags stay as AWS has them."""
+        return {
+            "entity": "resource",
+            "service": self.service,
+            **({} if self.name is None else {"name": self.name}),
+            **({} if self.resource_id is None else {"resource_id": self.resource_id}),
+            **({} if self.region is None else {"region": self.region}),
+            "tags": dict(self.tags),
+        }

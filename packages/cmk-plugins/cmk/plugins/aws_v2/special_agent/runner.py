@@ -29,6 +29,7 @@ from .config import (
 )
 from .credentials import CLIENT_LOCK
 from .hosts import TargetHost
+from .labels import AwsResource
 from .sections.aws_lambda import (
     LambdaCloudwatch,
     LambdaCloudwatchInsights,
@@ -327,6 +328,7 @@ class AWSSections(abc.ABC):
 
         self._write_exceptions(exceptions)
         self._write_host_labels(results)
+        self._write_host_metadata(results)
         self._write_section_results(results)
 
     def _collect_static_host_labels(self) -> Mapping[str, str]:
@@ -380,6 +382,52 @@ class AWSSections(abc.ABC):
         for hostname, host_labels in piggyback_host_labels.items():
             self._write(
                 f"<<<<{hostname}>>>>\n<<<labels:sep(0)>>>\n{json.dumps(host_labels)}\n<<<<>>>>\n"
+            )
+
+    def _collect_account_metadata(self) -> Mapping[str, object]:
+        """Inventory data that every host gets regardless of type"""
+        return {
+            "cloud_provider": "AWS",
+            "account_id": self.account_id,
+            **({"account_name": self._account_name} if self._account_name else {}),
+        }
+
+    def _collect_piggyback_host_resources(
+        self, results: Results
+    ) -> Mapping[TargetHost, AwsResource]:
+        """The resource of each piggyback host that stands for one"""
+        resources: dict[TargetHost, AwsResource] = {}
+        for result in results.values():
+            for row in result:
+                host = row.piggyback_hostname
+                if (
+                    not self._is_piggyback_host_result(row)
+                    or host == self._account_host
+                    or row.resource is None
+                ):
+                    continue
+                # A resource that is gone from its summary is known only by its service.
+                if (known := resources.get(host)) is None or known.resource_id is None:
+                    resources[host] = row.resource
+        return resources
+
+    def _write_host_metadata(self, results: Results) -> None:
+        account_metadata = self._collect_account_metadata()
+        # Each run of the account, one per region, writes the same account host data.
+        self._write_to_host(
+            self._account_host,
+            _metadata_section(
+                {
+                    **account_metadata,
+                    "entity": "account",
+                    **({"name": self._account_name} if self._account_name else {}),
+                    "resource_id": self.account_id,
+                }
+            ),
+        )
+        for host, resource in self._collect_piggyback_host_resources(results).items():
+            self._write_to_host(
+                host, _metadata_section({**account_metadata, **resource.metadata()})
             )
 
     def _safe_exception(self, exception: Exception) -> str:
@@ -446,6 +494,10 @@ class AWSSections(abc.ABC):
                 else self._account_host,
                 f"{section_header}{json.dumps(row.content, default=datetime_serializer)}\n",
             )
+
+
+def _metadata_section(metadata: Mapping[str, object]) -> str:
+    return f"<<<aws_v2_metadata:sep(0)>>>\n{json.dumps(metadata)}\n"
 
 
 class AWSSectionsUSEast(AWSSections):

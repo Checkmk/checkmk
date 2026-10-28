@@ -200,6 +200,16 @@ _KNOWN_ATTRIBUTES_KEY_ORDERS = {
         "tenant_id",
         "tenant_name",
     ],
+    ("software", "applications", "aws", "metadata"): [
+        "cloud_provider",
+        "entity",
+        "name",
+        "service",
+        "resource_id",
+        "account_id",
+        "account_name",
+        "region",
+    ],
 }
 
 _KNOWN_COLUMNS_KEY_ORDERS = {
@@ -591,6 +601,7 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
         "altered",
         "monq",
     ],
+    ("software", "applications", "aws", "tags"): ["name", "value"],
     ("software", "applications", "azure", "application_gateways", "rules", "listeners"): [
         "application_gateway",
         "rule",

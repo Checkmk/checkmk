@@ -46,3 +46,22 @@ def test_resource_with_data_needs_its_id(
 ) -> None:
     with pytest.raises(ValueError):
         AwsResource(service="s3", name=name, region=region, tags=tags)
+
+
+def test_resource_metadata_keeps_the_tags_as_aws_has_them() -> None:
+    metadata = AwsResource(
+        service="s3",
+        name="bucket",
+        resource_id="bucket",
+        region="eu-central-1",
+        tags={"a:b": "", "c": "d:e"},
+    ).metadata()
+
+    assert metadata == {
+        "entity": "resource",
+        "service": "s3",
+        "name": "bucket",
+        "resource_id": "bucket",
+        "region": "eu-central-1",
+        "tags": {"a:b": "", "c": "d:e"},
+    }

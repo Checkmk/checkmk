@@ -29,7 +29,39 @@ $argWin = $false
 $argSkipSqlTest = $false
 
 $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+
+# Diagnostics for CI nodes whose agent session breaks (vswhere 0x80070583 or
+# 0x80070008, suspected desktop heap exhaustion): log whether COM activation
+# via vswhere still works, the latest "desktop heap allocation failed" event
+# (Win32k 243) and the USER objects held by this account's processes.
+# Never throws, so it cannot fail the build.
+function Write-SessionHealth([string]$step) {
+    try {
+        $vs = & $vswhere -latest -property installationVersion 2>&1 | Out-String
+        $com = if ($LASTEXITCODE -eq 0) { "ok" } else { "FAILED($LASTEXITCODE): $($vs.Trim())" }
+        $heap_event = Get-WinEvent -FilterHashtable @{LogName = 'System'; ProviderName = 'Win32k'; Id = 243 } -MaxEvents 1 -ErrorAction SilentlyContinue
+        $last_243 = if ($heap_event) { $heap_event.TimeCreated.ToString("s") } else { "none" }
+        if (-not ("Wnx.Gui" -as [type])) {
+            Add-Type -Namespace Wnx -Name Gui -MemberDefinition '[DllImport("user32.dll")] public static extern uint GetGuiResources(IntPtr h, uint flags);'
+        }
+        $me = [Security.Principal.WindowsIdentity]::GetCurrent().Name
+        $procs = Get-Process -IncludeUserName -ErrorAction SilentlyContinue | Where-Object UserName -eq $me
+        $usage = foreach ($p in $procs) {
+            try { [pscustomobject]@{ Name = $p.ProcessName; User = [Wnx.Gui]::GetGuiResources($p.Handle, 1) } } catch {}
+        }
+        $total = ($usage | Measure-Object User -Sum).Sum
+        $top = ($usage | Group-Object Name | ForEach-Object {
+                [pscustomobject]@{ Name = "$($_.Count)x$($_.Name)"; User = ($_.Group | Measure-Object User -Sum).Sum }
+            } | Sort-Object User -Descending | Select-Object -First 5 | ForEach-Object { "$($_.Name)=$($_.User)" }) -join " "
+        Write-Host "session-health [$step]: vswhere=$com last_win32k_243=$last_243 procs=$(@($procs).Count) user_objects=$total top: $top" -Fore Cyan
+    }
+    catch {
+        Write-Host "session-health [$step]: diagnostics failed: $_" -Fore Yellow
+    }
+}
+
 if (Test-Path $vswhere) {
+    Write-SessionHealth "startup"
     $msbuild_exe = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
     # vswhere reports failures (e.g. 0x80070583, broken VS installer) on
     # stdout: validate we really got an existing MSBuild.exe, not error text.
@@ -756,18 +788,24 @@ try {
         $build_arg = ""
     }
 
+    Write-SessionHealth "after agent"
     Build-Package $argCtl "cmk-agent-ctl" "Controller" $build_arg
+    Write-SessionHealth "after controller"
     if ($argSkipSqlTest -ne $true) {
         Build-Package $argSql "mk-sql" "MK-SQL" $build_arg
+        Write-SessionHealth "after mk-sql"
         Build-Package $argOracle "mk-oracle" "mk-oracle"  $build_arg
     }
     else {
         Build-Package $argSql "mk-sql" "MK-SQL" --build
+        Write-SessionHealth "after mk-sql"
         Build-Package $argOracle "mk-oracle" "mk-oracle" --build
     }
+    Write-SessionHealth "after mk-oracle"
     Build-Ext
 
     Start-UnitTests
+    Write-SessionHealth "after unit tests"
 
     # SIGNING
     Invoke-TestSigning $usbip_exe

@@ -90,6 +90,7 @@ py_test(
     deps = [
         ":__test__",
         ":cmk-livestatus-client",
+        ":py_livestatus",
         requirement("pytest"),
     ],
 )

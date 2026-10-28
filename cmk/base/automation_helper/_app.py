@@ -5,6 +5,7 @@
 
 import asyncio
 import io
+import math
 import sys
 import time
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator
@@ -52,11 +53,22 @@ class _State:
     reload_config: Callable[[], None]
     last_reload_at: float
 
-    def load(self) -> None:
+    def load(self, *, continue_on_error: bool) -> None:
         # Do not yet set `self.last_reload_at`. We don't know if we succeed.
         time_right_before_reload = time.time()
-        self.reload_config()
-        self.last_reload_at = time_right_before_reload
+        try:
+            self.reload_config()
+            self.last_reload_at = time_right_before_reload
+        except (Exception, SystemExit) as e:
+            LOGGER.error("Error reloading configuration: %s", _reload_error_cause(e), exc_info=e)
+            if not continue_on_error:
+                raise
+
+
+def _reload_error_cause(error: BaseException) -> BaseException:
+    # `config.load()` turns an error in a config file into `sys.exit(1)`, raised while
+    # handling that error.
+    return error.__context__ if isinstance(error, SystemExit) and error.__context__ else error
 
 
 @dataclass(frozen=True)
@@ -69,7 +81,7 @@ class _ApplicationDependencies:
 
 
 class HealthCheckResponse(BaseModel, frozen=True):
-    last_reload_at: float
+    last_reload_at: float | None  # None until the configuration was loaded successfully
 
 
 def make_application(
@@ -105,7 +117,8 @@ def make_application(
         state=_State(
             automation_or_reload_lock=asyncio.Lock(),
             reload_config=reload_config,
-            last_reload_at=0,
+            # Until a load succeeds, every automation reloads first and reports the error.
+            last_reload_at=float("-inf"),
         ),
     )
 
@@ -127,7 +140,9 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     dependencies: _ApplicationDependencies = app.state.dependencies
     config.load_all_plugins(local_checks_dir=paths.local_checks_dir, checks_dir=paths.checks_dir)
     tty.reinit()
-    dependencies.state.load()
+    # Continue on error. The automations retry and report the error. The reloader tries once
+    # more, then again on each newer change.
+    dependencies.state.load(continue_on_error=True)
 
     reloader_task = asyncio.create_task(
         _reloader_task(
@@ -151,8 +166,12 @@ async def _reloader_task(
     delayer_factory: Callable[[float], Awaitable[None]] = asyncio.sleep,
 ) -> None:
     LOGGER.info("[reloader] Operational")
+    # After a failed reload, retry only for a newer change instead of every cooldown. Meanwhile,
+    # the automations retry and report the error.
+    last_attempted_change = float("-inf")
     while True:
-        if (cached_last_change := _retrieve_last_change(cache)) < state.last_reload_at:
+        cached_last_change = _retrieve_last_change(cache)
+        if cached_last_change < state.last_reload_at or cached_last_change <= last_attempted_change:
             await delayer_factory(config.poll_interval)
             continue
 
@@ -174,7 +193,10 @@ async def _reloader_task(
                         break
 
                     LOGGER.info("[reloader] Triggering reload")
-                    state.load()
+                    # Do not let the reloader fail (and stop).
+                    state.load(continue_on_error=True)
+                    # Read before the load, so a change recorded during the load counts as newer.
+                    last_attempted_change = cached_last_change
                     break
 
             else:
@@ -223,7 +245,14 @@ def _execute_automation_endpoint(
         payload.args,
     )
     if cache.reload_required(state.last_reload_at):
-        state.load()
+        try:
+            state.load(continue_on_error=False)
+        except (Exception, SystemExit) as e:
+            return AutomationResponse(
+                serialized_result_or_error_code=AutomationError.UNKNOWN_ERROR,
+                stdout="",
+                stderr=f"Error reloading configuration: {_reload_error_cause(e)}",
+            )
         LOGGER.warning("[automation] configurations were reloaded due to a stale state.")
 
     buffer_stdout = io.StringIO()
@@ -302,4 +331,7 @@ def _redirect_stdin(stream: io.StringIO) -> Iterator[None]:
 
 async def _health_endpoint(request: Request) -> HealthCheckResponse:
     dependencies: _ApplicationDependencies = request.app.state.dependencies
-    return HealthCheckResponse(last_reload_at=dependencies.state.last_reload_at)
+    last_reload_at = dependencies.state.last_reload_at
+    return HealthCheckResponse(
+        last_reload_at=None if math.isinf(last_reload_at) else last_reload_at
+    )

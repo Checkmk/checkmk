@@ -35,9 +35,7 @@ from ._helper_query_automation_helper import AutomationMode, HealthMode
 
 def test_config_reloading_without_reloader(site: Site) -> None:
     with _disable_automation_helper_reloader_and_set_worker_count_to_one(site):
-        current_last_reload_timestamp = HealthCheckResponse.model_validate_json(
-            _query_automation_helper(site, HealthMode().model_dump_json())
-        ).last_reload_at
+        current_last_reload_timestamp = _query_last_reload_at(site)
         with _fake_config_file(site):
             _query_automation_helper(
                 site,
@@ -51,12 +49,7 @@ def test_config_reloading_without_reloader(site: Site) -> None:
                     )
                 ).model_dump_json(),
             )
-            assert (
-                HealthCheckResponse.model_validate_json(
-                    _query_automation_helper(site, HealthMode().model_dump_json())
-                ).last_reload_at
-                > current_last_reload_timestamp
-            )
+            assert _query_last_reload_at(site) > current_last_reload_timestamp
 
 
 def test_config_reloading_with_reloader(site: Site) -> None:
@@ -65,17 +58,10 @@ def test_config_reloading_with_reloader(site: Site) -> None:
         run_directory=Path(),
         log_directory=Path(),
     ).reloader_config
-    current_last_reload_timestamp = HealthCheckResponse.model_validate_json(
-        _query_automation_helper(site, HealthMode().model_dump_json())
-    ).last_reload_at
+    current_last_reload_timestamp = _query_last_reload_at(site)
     with _fake_config_file(site):
         wait_until(
-            lambda: (
-                HealthCheckResponse.model_validate_json(
-                    _query_automation_helper(site, HealthMode().model_dump_json())
-                ).last_reload_at
-                > current_last_reload_timestamp
-            ),
+            lambda: _query_last_reload_at(site) > current_last_reload_timestamp,
             timeout=reloader_configuration.poll_interval
             + reloader_configuration.cooldown_interval
             + 2,
@@ -201,6 +187,15 @@ def _query_automation_helper(site: Site, serialized_input: str) -> str:
     return site.python_helper("_helper_query_automation_helper.py").check_output(
         input_=serialized_input
     )
+
+
+def _query_last_reload_at(site: Site) -> float:
+    last_reload_at = HealthCheckResponse.model_validate_json(
+        _query_automation_helper(site, HealthMode().model_dump_json())
+    ).last_reload_at
+    if last_reload_at is None:
+        raise AssertionError("The automation helper never loaded the configuration successfully")
+    return last_reload_at
 
 
 def _query_analyse_service(site: Site, args: Sequence[str]) -> AnalyseServiceResult:

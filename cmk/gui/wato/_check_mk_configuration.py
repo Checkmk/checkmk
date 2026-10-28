@@ -5910,47 +5910,27 @@ EncryptionHandling = HostRulespec(
 )
 
 
-def _migrate_encryption_settings(p: Mapping[str, Any]) -> str | None:
-    """
-    >>> _migrate_encryption_settings({}) is None
-    True
-    >>> _migrate_encryption_settings({'use_realtime': 'enforce'}) is None
-    True
-    >>> _migrate_encryption_settings({'passphrase': 'this-must-be-for-rtc-only'}) is None
-    True
-    >>> _migrate_encryption_settings({'passphrase': 'this-is-also-for-the-agent', 'use_regular': 'disable', 'use_realtime': 'enforce'})
-    'this-is-also-for-the-agent'
-
-    """
-    if p is None or isinstance(p, str):  # type: ignore[redundant-expr, unreachable]
-        return p  # type: ignore[unreachable]
-    return p["passphrase"] if "use_regular" in p else None
-
-
-def _valuespec_agent_encryption() -> Migrate:
-    return Migrate(
-        migrate=_migrate_encryption_settings,
-        valuespec=Alternative(
-            title=_("Symmetric encryption (Linux, Solaris, Windows)"),
-            help=_(
-                "If you cannot use the Agent Controllers encrypted TLS connections,"
-                " you can resort to the old OpenSSH based symmetric encryption (if your host system supports it)."
-                " Note that using this encryption in addition to the TLS encryption is not only useless,"
-                " but also prevents the controller from compressing the data for transport."
-            ),
-            elements=[
-                FixedValue(
-                    title="Do not apply symmetric encryption",
-                    value=None,
-                    totext="",
-                ),
-                PasswordSpec(
-                    title="Configure shared secret and apply symmetric encryption",
-                    pwlen=16,
-                    allow_empty=False,
-                ),
-            ],
+def _valuespec_agent_encryption() -> Alternative:
+    return Alternative(
+        title=_("Symmetric encryption (Linux, Solaris, Windows)"),
+        help=_(
+            "If you cannot use the Agent Controllers encrypted TLS connections,"
+            " you can resort to the old OpenSSH based symmetric encryption (if your host system supports it)."
+            " Note that using this encryption in addition to the TLS encryption is not only useless,"
+            " but also prevents the controller from compressing the data for transport."
         ),
+        elements=[
+            FixedValue(
+                title="Do not apply symmetric encryption",
+                value=None,
+                totext="",
+            ),
+            PasswordSpec(
+                title="Configure shared secret and apply symmetric encryption",
+                pwlen=16,
+                allow_empty=False,
+            ),
+        ],
     )
 
 

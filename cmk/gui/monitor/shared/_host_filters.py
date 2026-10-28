@@ -197,7 +197,8 @@ class LabelChoiceCondition:
             "when it carries every pair, with 'one_of' when it carries any one of them. The "
             "first colon separates the two halves, so a value may contain "
             "colons. A trailing '*' matches by prefix: 'key:va*' takes every value of that key "
-            "starting with 'va', 'ke*' every key starting with 'ke', whatever its value."
+            "starting with 'va', 'key:*' any value of exactly that key, 'ke*' every key starting "
+            "with 'ke', whatever its value."
         ),
         example=["cmk/os_family:linux"],
     )
@@ -341,6 +342,8 @@ def _label_choice_filters(field: str, pairs: list[str], column_prefix: str) -> l
             lines.append(
                 f"Filter: {column_prefix}{column} ~ {lqencode(_anchored(key.removesuffix(_WILDCARD)))}"
             )
+        elif value == _WILDCARD:
+            lines.append(f"Filter: {column_prefix}{_LABEL_NAME_COLUMNS[field]} >= {lqencode(key)}")
         elif value.endswith(_WILDCARD):
             lines.append(
                 f"Filter: {lqencode(column_prefix + field)} ~ {lqencode(quote_dict(key))} "

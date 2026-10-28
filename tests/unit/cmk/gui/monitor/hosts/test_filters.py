@@ -400,6 +400,39 @@ def test_query_builder_tag_key_prefix_matches_its_own_names_column() -> None:
     assert parse_as_livestatus_filter(condition) == "Filter: tag_names ~ ^crit"
 
 
+def test_query_builder_label_any_value_matches_the_key_in_the_names_column() -> None:
+    condition = LabelChoiceCondition(
+        type="condition", field="labels", op="all_of", value=["cmk/os_family:*"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: label_names >= cmk/os_family"
+
+
+def test_query_builder_tag_any_value_matches_the_group_in_the_names_column() -> None:
+    condition = LabelChoiceCondition(
+        type="condition", field="tags", op="all_of", value=["criticality:*"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: tag_names >= criticality"
+
+
+@pytest.mark.parametrize(
+    "pair",
+    [
+        pytest.param("*", id="only-star"),
+        pytest.param(":*", id="any-value-without-key"),
+        pytest.param("os:", id="key-without-value"),
+    ],
+)
+def test_label_choice_condition_rejects_an_incomplete_pair(pair: str) -> None:
+    payload = {"type": "condition", "field": "labels", "op": "all_of", "value": [pair]}
+
+    with pytest.raises(ValidationError):
+        TypeAdapter(FilterNode).validate_python(  # astrein: disable=pydantic-type-adapter
+            payload, strict=False
+        )
+
+
 def test_query_builder_label_choice_prefix_is_a_literal_not_a_pattern() -> None:
     condition = LabelChoiceCondition(
         type="condition", field="labels", op="all_of", value=["cmk/os_family:a.b*"]

@@ -16,7 +16,7 @@ def validate_uniqueness[T](values: Sequence[T]) -> Sequence[T]:
 
 
 def validate_label_pairs(values: Sequence[str]) -> Sequence[str]:
-    """A pair, or a prefix of one: 'key:value', 'key:val*' or 'ke*'."""
+    """A pair, or a prefix of one: 'key:value', 'key:val*', 'key:*' or 'ke*'."""
     for value in values:
         key, separator, label_value = value.partition(":")
         if not key:
@@ -25,8 +25,8 @@ def validate_label_pairs(values: Sequence[str]) -> Sequence[str]:
             if not key.endswith("*") or key == "*":
                 raise ValueError(f"Expected a 'key:value' pair or a 'key*' prefix, got {value!r}.")
             continue
-        if not label_value or label_value == "*":
-            raise ValueError(f"Expected a value after the colon, got {value!r}.")
+        if not label_value:
+            raise ValueError(f"Expected a value or '*' after the colon, got {value!r}.")
     return values
 
 

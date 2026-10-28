@@ -231,6 +231,7 @@ def show_comments(params: Mapping[str, Any]) -> Response:
     output_empty=True,
     update_config_generation=False,
     permissions_required=RW_PERMISSIONS,
+    blacklist_in=["swagger-ui"],
 )
 def create_host_comment(params: Mapping[str, Any]) -> Response:
     """Create a host comment"""
@@ -285,6 +286,7 @@ def create_host_comment(params: Mapping[str, Any]) -> Response:
     output_empty=True,
     update_config_generation=False,
     permissions_required=RW_PERMISSIONS,
+    blacklist_in=["swagger-ui"],
 )
 def create_service_comment(params: Mapping[str, Any]) -> Response:
     """Create a service comment"""

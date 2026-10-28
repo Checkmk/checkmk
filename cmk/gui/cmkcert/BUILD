@@ -10,6 +10,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/gui:app",
         "//cmk/gui:config",
         "//cmk/gui/wato:base",
         "//cmk/gui/watolib",
@@ -19,7 +20,6 @@ py_library(
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
-        "//packages/cmk-licensing",
         requirement("cryptography"),
         requirement("python-dateutil"),
     ],

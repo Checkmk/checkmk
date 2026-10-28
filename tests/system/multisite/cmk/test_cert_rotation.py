@@ -65,15 +65,18 @@ def test_rotate_central_site_ca(central_site: Site) -> None:
     )
     assert central_site.openapi.changes.get_pending(), "Expected pending changes after CA rotation"
 
-    central_site.openapi.changes.activate_and_wait_for_completion(sites=[central_site.id])
+    central_site.openapi.changes.activate_and_wait_for_completion()
     central_site.check_output(["cmk-cert", "rotate", "site-ca", "--finalize"])
+    # services such as the agent-receiver only load the new site certificate on restart
+    central_site.stop()
+    central_site.start()
 
     assert old_fingerprint != _read_fingerprint(central_site, Path("etc/ssl/ca.pem")), (
         "Central site CA certificate fingerprint did not change"
     )
     assert old_site_cert_fingerprint != _read_fingerprint(
         central_site, Path(f"etc/ssl/sites/{central_site.id}.pem")
-    ), "Remote site site certificate fingerprint did not change"
+    ), "Central site certificate fingerprint did not change"
 
 
 def _get_trusted_ca_certs(site: Site) -> list[str]:
@@ -121,12 +124,12 @@ def test_rotate_remote_site_ca(central_site: Site, remote_site: Site) -> None:
 
     # - activate changes and finalize rotation -
     #
-    central_site.openapi.changes.activate_and_wait_for_completion(
-        sites=[central_site.id, remote_site.id]
-    )
+    central_site.openapi.changes.activate_and_wait_for_completion()
     central_site.check_output(
         ["cmk-cert", "rotate", "site-ca", "--remote-site", remote_site.id, "--finalize"]
     )
+    remote_site.stop()
+    remote_site.start()
 
     assert old_ca_fingerprint != _read_fingerprint(remote_site, Path("etc/ssl/ca.pem")), (
         "Remote site CA certificate fingerprint did not change"

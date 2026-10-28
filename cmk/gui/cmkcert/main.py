@@ -19,7 +19,7 @@ from typing import Literal
 
 import cmk.utils.paths
 from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.version import Edition, edition
+from cmk.ccc.version import edition
 from cmk.crypto.certificate import serial_number_string
 from cmk.crypto.issued_certificates import IssuedCertificatesComponent
 from cmk.utils.certs import (
@@ -269,20 +269,6 @@ def _run_init(
             )
 
 
-def _register_licensing_handlers(edition_: Edition) -> None:
-    if edition_ is Edition.COMMUNITY:
-        from cmk.licensing.registry import register_community_licensing_handler
-
-        register_community_licensing_handler()
-        return
-
-    from cmk.licensing.nonfree.registry import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
-        register_non_community_licensing_handler,
-    )
-
-    register_non_community_licensing_handler()
-
-
 def _run_rotate(
     omd_root: Path,
     site_id: SiteId,
@@ -292,8 +278,10 @@ def _run_rotate(
     ca_pem: Path | None = None,
     force: bool = False,
 ) -> None:
-    # Remote automations verify the license state of the central site
-    _register_licensing_handlers(edition(omd_root))
+    # Pending changes need the config domains, remote automations the licensing handlers
+    from cmk.gui import main_modules
+
+    main_modules.register(edition(omd_root), debug=False)
 
     if (
         site_id == omd_site()

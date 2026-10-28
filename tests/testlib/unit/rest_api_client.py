@@ -5315,6 +5315,13 @@ class AlertClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def delete(self, configuration_name: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{configuration_name}",
+            expect_ok=expect_ok,
+        )
+
 
 class PagetypeTopicClient(RestApiClient):
     domain: DomainType = "pagetype_topic"

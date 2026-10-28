@@ -64,12 +64,23 @@ For GUI tests that live under `nonfree/`, use the explicit targets:
 ```console
 $ bazel test //tests/unit/cmk/gui/nonfree/pro:all
 $ bazel test //tests/unit/cmk/gui/nonfree/ultimate:all
-$ bazel test //tests/integration/edition_scope/...
 ```
 
 Available editions: `community`, `pro`, `ultimate`, `ultimatemt`, `cloud`.
 
-### Integration, composition, and GUI E2E tests
+### Integration tests
+
+```console
+# All integration tests
+$ tests/run_tests.sh test-integration
+
+# Tests of everything an edition ships
+$ bazel test //tests/integration/edition_scope/...
+$ bazel test //tests/integration/plugin_invariants/...
+$ bazel test //tests/integration/plugin_consistency/...
+```
+
+### System tests
 
 These still use Make:
 

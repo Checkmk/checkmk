@@ -50,6 +50,18 @@ Where tests live
   Playwright". The directories ``singlesite``, ``multisite``, ``gui``,
   ``gui_crawl``, ``update`` and ``plugins`` are transitional. Do not add new
   suites there; move tests out into feature directories when you can.
+* **Integration tests that load everything an edition ships** (no site) come
+  in three kinds, each in its own directory below ``tests/integration/``:
+
+  * ``edition_scope/``: snapshots of what an edition contains ("is this
+    feature in this edition"). One target per edition.
+  * ``plugin_invariants/``: a property every single plug-in (or other shipped
+    element) must have on its own. If it holds for all editions combined, it
+    holds for each, so the tests run once against all editions (and once for
+    community, which has no non-free code).
+  * ``plugin_consistency/``: whether the shipped set is complete and its
+    cross-references resolve (every section is consumed, a dashboard's metric
+    exists). This depends on the edition, so the tests run per edition.
 
 Other kinds of tests
 ====================
@@ -92,7 +104,9 @@ Editions
 * **System tests test features, not editions.** There are no "Pro tests", only
   "DCD tests". Every system suite runs once per edition and declares the
   feature it tests; the framework decides whether to run or skip it.
-* **Artifact tests are the one edition-specific kind.**
+* **Artifact tests and edition scope tests are the edition-specific kinds.**
+  They check that a build, or the code an edition loads, contains the expected
+  files or features.
 
 Free and non-free code
 ======================

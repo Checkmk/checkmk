@@ -11,6 +11,16 @@ common:linux --experimental_disk_cache_gc_max_size=100G
 # shared mount in /etc/ci.bazelrc.
 common:linux --repo_contents_cache=~/.cache/bazel/repo_contents_cache
 
+# rules_python points every stdlib __pycache__ of the hermetic Python at a directory created when
+# the toolchain is fetched, by default under /tmp/rules_python_pycache. Once /tmp is cleaned the
+# links dangle, Python silently skips writing bytecode, and every Python process of every test
+# recompiles the stdlib on startup. A relative path is resolved inside the toolchain repo, so the
+# cache lives and dies with the fetched toolchain. rules_python's own BUILD globs don't cover it.
+# TODO: Drop this once rules_python is bumped to a release containing the upstream fix
+# https://github.com/bazel-contrib/rules_python/pull/4233, which defaults to $XDG_CACHE_HOME or
+# ~/.cache/rules_python_pycache instead of /tmp.
+common --repo_env=RULES_PYTHON_PYCACHE_DIR=pycache
+
 # Remote cache, its endpoint and credentials come from remote.bazelrc
 common --remote_cache_compression
 # send pings after this time of no read operations on the connection, but only if there is at least one pending gRPC call

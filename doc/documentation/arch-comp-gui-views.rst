@@ -99,6 +99,15 @@ Interfaces
     (``cmk/gui/monitor/services/_pages/_monitor_all_services.py``) and
     ``monitor_host_services``
     (``cmk/gui/monitor/services/_pages/_monitor_host_services.py``).
+  * The router ``monitor_search`` (``cmk/gui/monitor/router``): it renders
+    nothing itself, but parses a query of the global search with
+    ``cmk.gui.search.spec`` and redirects to the monitoring page that can
+    show it, with the query turned into the page's filters. A query without
+    prefix and an invalid one go to the search box of "All hosts" as typed.
+    One that no page can filter on yet goes to the legacy search of the
+    classic views (``search_open.py``) and is logged by its prefixes and the
+    reason, not by its values; this keeps ``search_open.py`` needed as a
+    fallback until the pages can filter on every prefix.
 
 * Internal REST endpoints below ``/monitor/`` (see the *Checkmk Internal*
   documentation of the REST API).
@@ -138,6 +147,14 @@ Coexistence
 -----------
 
 The classic views offer a link to the new pages and the new pages a link back.
+
+The global search (``packages/cmk-frontend-vue/src/unified-search``) is an
+entry point into the monitoring pages, too: pressing Enter with the
+monitoring or "all" search selected opens ``monitor_search.py`` with the
+query, and the router picks the page. A query no monitoring page can filter
+on yet goes on to the legacy search of the classic views (``search_open.py``),
+which the sidebar snapin "Quick search" still opens directly. There is no
+setting to switch back yet.
 
 Risks and technical debts
 =========================

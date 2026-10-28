@@ -53,18 +53,18 @@ describe('UnifiedSearchHeader Enter-to-filter', () => {
     Object.defineProperty(window, 'location', { configurable: true, value: originalLocation })
   })
 
-  test('navigates to search_open.py with the query when Enter is pressed in monitoring search', async () => {
+  test('navigates to monitor_search.py with the query when Enter is pressed in monitoring search', async () => {
     const input = renderHeader('monitoring')
 
     await fireEvent.update(input, 'cpu load')
     await fireEvent.keyDown(input, { key: 'Enter' })
 
-    expect(new URL(assignedHref, 'http://localhost/').pathname).toBe('/search_open.py')
+    expect(new URL(assignedHref, 'http://localhost/').pathname).toBe('/monitor_search.py')
     expect(searchQueryOf(assignedHref)).toBe('cpu load')
   })
 
   test.each(['h:a&b', 'foo#bar', 'h:web+', 'h:%41'])(
-    'passes the query %s unaltered to search_open.py',
+    'passes the query %s unaltered to monitor_search.py',
     async (query) => {
       const input = renderHeader('monitoring')
 
@@ -93,7 +93,7 @@ describe('UnifiedSearchHeader Enter-to-filter', () => {
     await fireEvent.update(input, 'disk usage')
     await fireEvent.keyDown(input, { key: 'Enter' })
 
-    expect(new URL(assignedHref, 'http://localhost/').pathname).toBe('/search_open.py')
+    expect(new URL(assignedHref, 'http://localhost/').pathname).toBe('/monitor_search.py')
     expect(searchQueryOf(assignedHref)).toBe('disk usage')
   })
 

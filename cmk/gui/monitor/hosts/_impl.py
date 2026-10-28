@@ -198,6 +198,9 @@ class LiveStatusHostRepository:
                         in_check_period=bool(row["in_check_period"]),
                         is_flapping=bool(row["is_flapping"]),
                         stale=row["staleness"] >= active_config.staleness_threshold,
+                        has_graphs=(
+                            row["pnpgraph_present"] == 1 if "pnpgraph_present" in row else None
+                        ),
                         last_check=_timestamp(row.get("last_check")),
                         last_state_change=_timestamp(row.get("last_state_change")),
                         folder=(
@@ -717,6 +720,7 @@ _OPTIONAL_COLUMNS: Mapping[HostOptionalField, tuple[Column, ...]] = {
     HostOptionalField.CONTACT_GROUPS: (Hosts.contact_groups,),
     HostOptionalField.GROUPS: (Hosts.groups,),
     HostOptionalField.SETUP_ACCESS: (Hosts.filename,),
+    HostOptionalField.GRAPHS_LINK: (Hosts.pnpgraph_present,),
 }
 
 # The optional field a sort column needs read, or ``None`` when every query reads it anyway.

@@ -18,6 +18,7 @@ import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
 import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
+import GraphsLink from '@/monitoring/shared/components/graphs/GraphsLink.vue'
 import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
@@ -140,7 +141,14 @@ const lastStateChange = computed(() =>
     :value="row.name"
     :button="!readOnly"
     @click="emit('open', row)"
-  />
+  >
+    <!-- Every name keeps the slot, so the names line up whether their host has graphs or not.
+         A read-only row, as on a dashboard, opens nothing from its name, and a shared dashboard
+         could not load the preview. -->
+    <template v-if="!readOnly" #aside>
+      <GraphsLink v-if="row.graphs_link !== undefined" :host="hostRef" :href="row.graphs_link" />
+    </template>
+  </StringCell>
   <NumberCell
     v-if="hasColumn('num_relations')"
     column-id="num_relations"

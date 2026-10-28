@@ -144,7 +144,8 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
       }
     }
   ],
-  rowFields: rowActionButtons.length > 0 ? ['setup_access'] : []
+  // Every row offers its graphs from the host name, whichever columns are shown.
+  rowFields: ['graphs_link', ...(rowActionButtons.length > 0 ? (['setup_access'] as const) : [])]
 })
 
 const modeColumnSize = useModeColumnWidth(() => hostService.items.value)

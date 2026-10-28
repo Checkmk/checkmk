@@ -146,6 +146,9 @@ class Host:
     """Whether the host has relations beyond the ones in `relations`, i.e. the list was cut."""
     setup_access: bool | None = None
     """Whether the user may open the host in Setup - None when the caller did not ask."""
+    has_graphs: bool | None = None
+    """Whether the core has recorded time series for the host, which is what its graphs show -
+    None when the caller did not ask."""
 
     @property
     def state_label(self) -> HostStateLabel:
@@ -171,6 +174,7 @@ class HostOptionalField(enum.StrEnum):
     CONTACT_GROUPS = "contact_groups"
     GROUPS = "groups"
     SETUP_ACCESS = "setup_access"
+    GRAPHS_LINK = "graphs_link"
 
     @classmethod
     def options(cls) -> str:

@@ -86,7 +86,7 @@ function renderApp(
  * app asks the API for - which is where an edition-gated column can go wrong.
  */
 test.each(['community', 'ultimatemt'] as const)(
-  'asks only for the fields of its shown columns on %s',
+  'asks only for the fields of its shown columns and the graphs of its rows on %s',
   async (edition) => {
     mockHosts([makeHost()])
     renderApp(edition)
@@ -101,7 +101,8 @@ test.each(['community', 'ultimatemt'] as const)(
       'num_services_warn',
       'num_services_crit',
       'num_services_unknown',
-      'num_services_pending'
+      'num_services_pending',
+      'graphs_link'
     ])
   }
 )

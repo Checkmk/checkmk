@@ -4,8 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { Row } from '@tanstack/vue-table'
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
+import client from 'cmk-ui-library/lib/rest-api-client/client'
+import { afterEach, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import { buildHostColumns } from '@/monitoring/all-hosts/columns'
@@ -52,6 +55,7 @@ function makeTableRow(overrides: Partial<Row<HostEntry>> = {}): Row<HostEntry> {
 }
 
 interface RowActionProps {
+  readOnly?: boolean
   rowActions?: CellAction[]
   loadActionMenu?: () => Promise<CellAction[]>
 }
@@ -97,6 +101,54 @@ test('repeats no ip address on hover that the cell shows in full', async () => {
   await fireEvent.mouseEnter(screen.getByText('fe80::1'))
 
   expect(screen.queryByTitle('fe80::1')).not.toBeInTheDocument()
+})
+
+const GRAPHS_LINK = 'view.py?view_name=host_graphs&site=local&host=web-1'
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
+test('links a host with graphs to its graphs page, beside its name', () => {
+  const { container } = mountRow(makeHost({ graphs_link: GRAPHS_LINK }))
+
+  const link = screen.getByRole('link', { name: 'Show the graphs of host web-1' })
+  expect(link).toHaveAttribute('href', GRAPHS_LINK)
+  expect(container.querySelector('td[data-column-id="name"]')).toContainElement(link)
+})
+
+test('offers no graphs link for a host without graphs', () => {
+  mountRow(makeHost())
+
+  expect(
+    screen.queryByRole('link', { name: 'Show the graphs of host web-1' })
+  ).not.toBeInTheDocument()
+})
+
+test('offers no graphs link on a read-only row, which opens nothing from its name', () => {
+  mountRow(makeHost({ graphs_link: GRAPHS_LINK }), makeTableRow(), { readOnly: true })
+
+  expect(
+    screen.queryByRole('link', { name: 'Show the graphs of host web-1' })
+  ).not.toBeInTheDocument()
+})
+
+test('previews the graphs of the host itself, from its own site', async () => {
+  const post = vi.spyOn(client, 'POST').mockResolvedValue({
+    data: { graphs: [], no_data_message: null },
+    response: new Response(null, { status: 200 })
+  } as never)
+  mountRow(makeHost({ site_id: 'remote', graphs_link: GRAPHS_LINK }))
+
+  await userEvent.hover(screen.getByRole('link', { name: 'Show the graphs of host web-1' }))
+
+  await vi.waitUntil(() => post.mock.calls.length > 0)
+  expect(post).toHaveBeenCalledWith(
+    '/domain-types/graph/actions/discover_template_graphs/invoke',
+    expect.objectContaining({
+      body: { hostname: 'web-1', service_description: '_HOST_', site: 'remote', graph_id: null }
+    })
+  )
 })
 
 test('renders alias, folder and formatted timestamps in their cells', () => {

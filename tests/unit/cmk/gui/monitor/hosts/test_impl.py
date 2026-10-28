@@ -344,6 +344,48 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
 
 
 @pytest.mark.parametrize(
+    "pnpgraph_present, expected",
+    [
+        pytest.param(1, True, id="time series recorded"),
+        pytest.param(0, False, id="no time series"),
+        pytest.param(-1, False, id="unknown whether there are time series"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_fetch_offers_graphs_only_for_a_host_with_recorded_time_series(
+    pnpgraph_present: int, expected: bool
+) -> None:
+    row = _host_row(pnpgraph_present=pnpgraph_present)
+    with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
+        hosts = LiveStatusHostRepository(connection=live).fetch(
+            limit=None,
+            query="",
+            sorters=[],
+            filters=HostFilter(""),
+            fields=frozenset({HostOptionalField.GRAPHS_LINK}),
+            visible_relations=None,
+        )
+
+    assert [host.has_graphs for host in hosts] == [expected]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_fetch_leaves_the_graphs_unread_when_not_asked_for() -> None:
+    row = _host_row(pnpgraph_present=1)
+    with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
+        hosts = LiveStatusHostRepository(connection=live).fetch(
+            limit=None,
+            query="",
+            sorters=[],
+            filters=HostFilter(""),
+            fields=frozenset(),
+            visible_relations=None,
+        )
+
+    assert [host.has_graphs for host in hosts] == [None]
+
+
+@pytest.mark.parametrize(
     "active_checks_enabled, modified_attributes_list, expected",
     [
         pytest.param(0, ["active_checks_enabled"], True, id="a user switched them off"),

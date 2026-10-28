@@ -69,6 +69,36 @@ def test_handle_list_hosts_pending_state_round_trips() -> None:
     assert state_by_name == {"pending-host": "PENDING", "checked-host": "UP"}
 
 
+def test_handle_list_hosts_links_a_host_with_graphs_to_its_graphs_page() -> None:
+    hosts = [HostFactory.build(name="web-1", site_id="local", has_graphs=True)]
+    host_repo = get_fake_host_repository(hosts=hosts)
+    response = _handle_list_hosts(
+        host_repo, host_repo.count_total(), fields=frozenset({HostOptionalField.GRAPHS_LINK})
+    )
+
+    assert [host.graphs_link for host in response.hosts] == [
+        "view.py?view_name=host_graphs&site=local&host=web-1"
+    ]
+
+
+def test_handle_list_hosts_omits_the_graphs_link_of_a_host_without_graphs() -> None:
+    hosts = [HostFactory.build(has_graphs=False)]
+    host_repo = get_fake_host_repository(hosts=hosts)
+    response = _handle_list_hosts(
+        host_repo, host_repo.count_total(), fields=frozenset({HostOptionalField.GRAPHS_LINK})
+    )
+
+    assert [host.graphs_link for host in response.hosts] == [ApiOmitted()]
+
+
+def test_handle_list_hosts_omits_the_graphs_link_when_not_asked_for() -> None:
+    hosts = [HostFactory.build(has_graphs=True)]
+    host_repo = get_fake_host_repository(hosts=hosts)
+    response = _handle_list_hosts(host_repo, host_repo.count_total(), fields=frozenset())
+
+    assert [host.graphs_link for host in response.hosts] == [ApiOmitted()]
+
+
 @pytest.mark.usefixtures("with_admin_login")
 def test_list_hosts_does_not_commit_the_setup_git_repo(
     aut_user_auth_wsgi_app: WebTestAppForCMK,

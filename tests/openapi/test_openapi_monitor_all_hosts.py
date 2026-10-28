@@ -528,6 +528,29 @@ class TestMonitorHostsFilters:
 
         assert resp.json["hosts"][0]["state"] == "PENDING"
 
+    def test_host_with_recorded_time_series_links_to_its_graphs(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", [{**_HOSTS[0], "pnpgraph_present": 1}])
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_host_columns('graphs_link')}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT, fields=["graphs_link"])
+
+        assert resp.json["hosts"][0]["graphs_link"] == (
+            "view.py?view_name=host_graphs&site=NO_SITE&host=heute"
+        )
+
     def test_hosts_filtered_by_folder(
         self,
         clients: ClientRegistry,
@@ -1481,6 +1504,7 @@ _HOSTS = [
         "in_check_period": 1,
         "is_flapping": 0,
         "staleness": 0.0,
+        "pnpgraph_present": 0,
         "last_check": 1700000000,
         "last_state_change": 1700000060,
         "filename": "/wato/hosts.mk",
@@ -1515,6 +1539,7 @@ _HOSTS = [
         "in_check_period": 1,
         "is_flapping": 0,
         "staleness": 0.0,
+        "pnpgraph_present": 0,
         "last_check": 1700000100,
         "last_state_change": 1700000160,
         "filename": "/wato/network/hosts.mk",
@@ -1549,6 +1574,7 @@ _HOSTS = [
         "in_check_period": 1,
         "is_flapping": 0,
         "staleness": 0.0,
+        "pnpgraph_present": 0,
         "last_check": 1700000200,
         "last_state_change": 1700000260,
         # Not managed via Setup, e.g. added directly to the monitoring core.
@@ -1629,6 +1655,7 @@ _OPTIONAL_COLUMNS = {
     "tags": "tags",
     "contacts": "contacts",
     "contact_groups": "contact_groups",
+    "graphs_link": "pnpgraph_present",
 }
 _DEFAULT_FIELDS = (
     "address",

@@ -202,6 +202,14 @@ class HostEntry:
         description="URL to legacy host status view",
         example="view.py?view_name=hoststatus&host=web-server-01&site=local",
     )
+    graphs_link: str | ApiOmitted = api_field(
+        description=(
+            "Link to the page with the graphs of this host. Omitted when the host has none, or "
+            "when not asked for."
+        ),
+        example="view.py?view_name=host_graphs&site=local&host=web-server-01",
+        default_factory=ApiOmitted,
+    )
     num_relations: int | ApiOmitted = api_field(
         description=(
             "Number of hosts related to this host via the Setup 'Relations' feature (management "
@@ -270,6 +278,10 @@ class HostEntry:
             customer=ApiOmitted() if customer is None else customer,
             modes=build_host_modes(host) or ApiOmitted(),
             legacy_host_status_link=host_view_link("hoststatus", host),
+            graphs_link=included(
+                HostOptionalField.GRAPHS_LINK,
+                host_view_link("host_graphs", host) if host.has_graphs else None,
+            ),
             num_relations=included(HostOptionalField.NUM_RELATIONS, host.num_relations),
             setup_access=included(HostOptionalField.SETUP_ACCESS, host.setup_access),
         )

@@ -568,6 +568,33 @@ def test_broken_gui_extension_without_its_file_goes_to_the_package_managers() ->
     ]
 
 
+def test_deprecated_rule_set_message() -> None:
+    problem = _ACTestResultProblemUnsorted(
+        ident="A text",
+        notification_category=_NotificationCategory.rule_sets,
+        _ac_test_results={
+            SiteId("site_id"): [
+                ACTestResult(
+                    ACResultState.WARN,
+                    "A text",
+                    "ACTestDeprecatedRuleSets",
+                    "deprecations",
+                    "Title",
+                    "Help",
+                    SiteId("site_id"),
+                    None,
+                ),
+            ],
+        },
+    )
+    assert (
+        '<div class="warning">These rules work in Checkmk 2.3.0, but not after the update to the'
+        " next major version.</div><p>Migrate the rules to the successor of the rule set or"
+        " remove them before the update. The Werk which deprecated the rule set describes its"
+        " successor.</p>"
+    ) in str(problem.html("2.3.0"))
+
+
 _PACKAGE_WITH_GUI_PLUGIN = Manifest(
     title="Package",
     name=PackageName("package"),
@@ -1173,7 +1200,8 @@ def test_render_problem_shows_the_box(state: ACResultState, box_html: str) -> No
                             sent_messages=[],
                         ),
                     ],
-                    content="<h2>A text</h2><p>This configuration has no effect in the "
+                    content='<h2>A text</h2><div class="warning">These rules have no effect in'
+                    " Checkmk 2.3.0.</div><p>This configuration has no effect in the "
                     "current installation. It may be associated with an older "
                     "version of Checkmk or an unused extension package, in which "
                     "case it can be safely removed. Alternatively, it might belong "

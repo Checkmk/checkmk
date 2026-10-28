@@ -340,21 +340,19 @@ class _ACTestResultProblemUnsorted(_ACTestResultProblem):
     def _create_title(self) -> str:
         return self.ident
 
-    @property
-    def _is_unknown_check_params_rule_set_problem(self) -> bool:
-        return all(
-            r.test_id == "ACTestUnknownCheckParameterRuleSets"
-            for rs in self._ac_test_results.values()
-            for r in rs
-        )
+    def _is_problem_of(self, test_id: str) -> bool:
+        return all(r.test_id == test_id for rs in self._ac_test_results.values() for r in rs)
 
     @override
     def _create_error_box_message(self, version: str, state: ACResultState) -> str:
-        return (
-            ""
-            if self._is_unknown_check_params_rule_set_problem
-            else super()._create_error_box_message(version, state)
-        )
+        if self._is_problem_of("ACTestUnknownCheckParameterRuleSets"):
+            return _("These rules have no effect in Checkmk %(version)s.") % {"version": version}
+        if self._is_problem_of("ACTestDeprecatedRuleSets"):
+            return _(
+                "These rules work in Checkmk %(version)s, but not after the update to the next"
+                " major version."
+            ) % {"version": version}
+        return super()._create_error_box_message(version, state)
 
     @override
     def _create_info(self, version: str) -> str:
@@ -362,7 +360,7 @@ class _ACTestResultProblemUnsorted(_ACTestResultProblem):
 
     @override
     def _create_recommendation(self) -> HTML | str:
-        if self._is_unknown_check_params_rule_set_problem:
+        if self._is_problem_of("ACTestUnknownCheckParameterRuleSets"):
             return HTMLWriter.render_p(
                 _(
                     "This configuration has no effect in the current installation. It may be"
@@ -381,6 +379,11 @@ class _ACTestResultProblemUnsorted(_ACTestResultProblem):
                         ),
                     )
                 },
+            )
+        if self._is_problem_of("ACTestDeprecatedRuleSets"):
+            return _(
+                "Migrate the rules to the successor of the rule set or remove them before the"
+                " update. The Werk which deprecated the rule set describes its successor."
             )
         return _("We highly recommend solving this issue already in your installation.")
 

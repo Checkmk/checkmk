@@ -2485,6 +2485,7 @@ class SiteFactory:
         update: bool = False,
         update_conflict_mode: str = "install",
         enforce_english_gui: bool = True,
+        ignore_bakery_crashes: bool = False,
     ) -> None:
         self._package = package
         self._base_ident = prefix if prefix is not None else "s_%s_" % self.version.branch[:6]
@@ -2493,6 +2494,7 @@ class SiteFactory:
         self._update = update
         self._update_conflict_mode = update_conflict_mode
         self._enforce_english_gui = enforce_english_gui
+        self._ignore_bakery_crashes = ignore_bakery_crashes
 
     @property
     def sites(self) -> Mapping[str, Site]:
@@ -3127,7 +3129,7 @@ class SiteFactory:
             if save_results:
                 site.save_results()
             if report_crashes:
-                site.report_crashes()
+                site.report_crashes(ignore_bakery_crashes=self._ignore_bakery_crashes)
             if auto_cleanup and cleanup_site:
                 logger.info('Dropping site "%(site_id)s" (CLEANUP=1)', {"site_id": site.id})
                 site.stop()
@@ -3231,6 +3233,7 @@ def get_site_factory(
     prefix: str,
     package: CMKPackageInfo | None = None,
     fallback_branch: str | Callable[[], str] | None = None,
+    ignore_bakery_crashes: bool = False,
 ) -> SiteFactory:
     """retrieves a correctly parameterized SiteFactory object
 
@@ -3256,6 +3259,7 @@ def get_site_factory(
     return SiteFactory(
         package=package_info,
         prefix=prefix,
+        ignore_bakery_crashes=ignore_bakery_crashes,
     )
 
 

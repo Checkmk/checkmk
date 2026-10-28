@@ -51,6 +51,7 @@ from tests.system.gui.testlib.playwright.pom.setup.hosts import AddHost, SetupHo
 from tests.system.gui.testlib.playwright.pom.setup.licensing import Licensing
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils2 import is_cleanup_enabled, run
+from tests.testlib.pytest_helpers import faked_artifacts
 from tests.testlib.pytest_helpers.registration import register_pytest_plugins
 from tests.testlib.system.edition_setup import edition_setup
 from tests.testlib.system.emails import EmailManager
@@ -97,9 +98,12 @@ graphing_fixtures = [
 
 
 @pytest.fixture(name="site_factory", scope="session")
-def _site_factory() -> SiteFactory:
+def _site_factory(pytestconfig: pytest.Config) -> SiteFactory:
     """Return the site factory object."""
-    return get_site_factory(prefix="gui_e2e_")
+    return get_site_factory(
+        prefix="gui_e2e_",
+        ignore_bakery_crashes=faked_artifacts.package_contains_faked_artifacts(pytestconfig),
+    )
 
 
 @pytest.fixture(name="test_site", scope="session")

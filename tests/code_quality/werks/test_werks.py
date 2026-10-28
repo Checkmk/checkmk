@@ -333,7 +333,7 @@ def _has_no_impact(description: str) -> bool:
 def _assert_git_tags_available() -> None:
     # By the time writing, we had more than 700 tags in the git repo
     assert len(_existing_git_tags()) > 700, (
-        "The amount of found git tags looks suspicous low. Please check if there is an issue with your checkout"
+        "The amount of found git tags looks suspiciously low. Please check if there is an issue with your checkout"
     )
 
 

@@ -17,7 +17,7 @@ def message_broker_running(
     remote_site: Site,
     remote_site_2: Site,
 ) -> Iterator[None]:
-    # Note: the messsage broker can only be started indirectly.
+    # Note: the message broker can only be started indirectly.
     # It will start once it sees that it'll be needed by the piggyback hub:
     with (
         central_site.omd_config("PIGGYBACK_HUB", "on"),

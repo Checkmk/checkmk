@@ -33,7 +33,7 @@ class EmptyDashboard(CustomDashboard):
 
     @property
     def add_widget_buttons_container(self) -> Locator:
-        """Locator property for the region to add a new widget in an empty dashboad."""
+        """Locator property for the region to add a new widget in an empty dashboard."""
         return self.main_area.locator().get_by_role("region", name="Add widget")
 
     def _get_button_to_add_widget_by_type(self, wizard_class: type[BaseWidgetWizard]) -> Locator:

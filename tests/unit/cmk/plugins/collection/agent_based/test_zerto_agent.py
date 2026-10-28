@@ -26,6 +26,6 @@ def test_check_errors() -> None:
 
 
 def test_check_ok() -> None:
-    results = list(check(parse([["Initializtion OK"]])))
+    results = list(check(parse([["Initialization OK"]])))
     assert len(results) == 1
     assert results[0] == Result(state=State.OK, summary="Agent started without problem")

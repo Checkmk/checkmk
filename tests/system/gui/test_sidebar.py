@@ -109,7 +109,7 @@ def test_global_searchbar_sanity_check(dashboard_page: MainDashboard) -> None:
         ]
     )
 
-    # validated keyboard iteraction
+    # validated keyboard interaction
     # TODO: keyboard interaction with searchbar is broken!
     # dashboard_page.press_keyboard(Keys.ArrowDown)
     # dashboard_page.press_keyboard(Keys.ArrowDown)

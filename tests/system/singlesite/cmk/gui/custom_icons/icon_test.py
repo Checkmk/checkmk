@@ -21,7 +21,7 @@ def existing_facelift_icon() -> bool:
 
 
 def existing_image_icon() -> bool:
-    # cookie.png exsists as a dynamic icon (it's not themed, and it does not fit the checkmk styleguide)
+    # cookie.png exists as a dynamic icon (it's not themed, and it does not fit the checkmk styleguide)
     try:
         validate_icon(("cookie.png", "", b""), "smth")
     except MKUserError:

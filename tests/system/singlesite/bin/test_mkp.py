@@ -58,7 +58,7 @@ def test_mkp_install_with_legacy_lib_file(site: Site) -> None:
 
         # We don't have the legacy structure:
         assert not site.file_exists(Path("local/lib/check_mk"))
-        # But file refering to the old structure should be there:
+        # But file referring to the old structure should be there:
         assert "check_mk/myfile.py" in _lib_files_of_mkp(site, manifest.name)
         # And we can still install the package:
         with _enabled_mkp(site, manifest.name):

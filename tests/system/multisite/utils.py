@@ -74,7 +74,7 @@ def enable_rabbitmq_tracing(*sites: Site) -> None:
     - therefore:
         1. This should be called, if needed, after every RabbitMQ restart
         2. there should be NO NEED to disable tracing; it's basically disabled automatically
-           when RAbbitMQ is restarted; disabling it only adds incerased risk of flakes.
+           when RAbbitMQ is restarted; disabling it only adds increased risk of flakes.
     """
     for site in sites:
         site.run(["cmk-monitor-broker", "--enable_tracing"])

@@ -344,7 +344,9 @@ class VeeamAuth(requests.auth.AuthBase):
             if exc.status == HTTPStatus.UNAUTHORIZED:
                 raise TerminateAgent(
                     f"Authentication at the Veeam REST API failed for user '{self._user}': "
-                    f"{exc.message}. Check the user name and password"
+                    f"{exc.message}. Check the user name and password. After repeated "
+                    "failed logins, Veeam may lock the user and then reject even the correct "
+                    "password until the user is unlocked"
                 ) from exc
             raise TerminateAgent(
                 f"Login at the Veeam REST API failed with HTTP {exc.status}: {exc.message}"

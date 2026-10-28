@@ -2058,7 +2058,7 @@ def test_wrong_credentials_are_reported(api: responses.RequestsMock, storage: St
         json={"errorCode": "AccessDenied", "message": "Authentication failed"},
     )
 
-    with pytest.raises(TerminateAgent, match="Check the user name and password"):
+    with pytest.raises(TerminateAgent, match="Check the user name and password.*may lock the user"):
         _auth(storage).authenticate()
 
 

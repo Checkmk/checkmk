@@ -25,10 +25,6 @@ _query_site() {
     site_lib() {
         printf "/omd/versions/%s/lib" "$(realpath "/omd/sites/${1}/version" | sed 's|.*/||')"
     }
-    # LD_LIBRARY_PATH is set inline (not exported) as a per-subprocess override pointing to the
-    # queried site's own lib directory. This is required for backward compatibility with older
-    # installed site versions whose unixcat binary may lack RPATH and cannot locate its shared
-    # libraries otherwise. Do not remove until all supported older versions have RPATH set.
     echo -e "${2}" | LD_LIBRARY_PATH="$(site_lib "${1}"):${LD_LIBRARY_PATH}" waitmax 3 "$(site_cmd "${1}" unixcat)" "/omd/sites/${1}/tmp/run/live"
 }
 

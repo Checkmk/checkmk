@@ -4,7 +4,7 @@ export OMD_SITE=###SITE###
 export OMD_ROOT=###ROOT###
 
 PATH=$OMD_ROOT/local/bin:$OMD_ROOT/bin:$OMD_ROOT/local/lib/perl5/bin:$PATH
-export LD_LIBRARY_PATH=$OMD_ROOT/local/lib
+export LD_LIBRARY_PATH=$OMD_ROOT/local/lib:$OMD_ROOT/lib
 
 # export special agent / active check environment
 export PASSWORD_STORE_SECRET_FILE="${OMD_ROOT}/etc/password_store.secret"

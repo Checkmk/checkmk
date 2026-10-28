@@ -40,6 +40,38 @@ pkg_files(
     prefix = "bin",
 )
 
+# SUP-10161: our openssl is incompatible with some system executables on various sles15sp*
+# SUP-26565: Getting an exception error when baking agent almalinux-9+
+# SUP-26879: Wrap other tools commonly used by users that require linking to the system openssl
+# etc.
+WRAPPED_EXECUTABLES = [
+    "curl",
+    "dig",
+    "host",
+    "nc",
+    "nmap",
+    "nslookup",
+    "pdftoppm",
+    "php",
+    "php-cgi",
+    "php5",
+    "php5-cgi",
+    "resolvectl",
+    "rpmbuild",
+    "scp",
+    "ssh",
+    "systemctl",
+    "zypper",
+]
+
+[pkg_files(
+    name = "wrapper_" + executable,
+    srcs = ["use_system_openssl"],
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "bin",
+    renames = {"use_system_openssl": executable},
+) for executable in WRAPPED_EXECUTABLES]
+
 genrule(
     name = "omd_man_gz",
     srcs = ["omd.8"],
@@ -352,7 +384,10 @@ pkg_tar(
         ":omdlib_pkg",
         ":skel",
         ":xinetd_link",
-    ],
+    ] + select({
+        "@cmk//distro:incompatible-openssl": ["wrapper_" + executable for executable in WRAPPED_EXECUTABLES],
+        "//conditions:default": [],
+    }),
     stamp = 1,
     visibility = ["//omd:__pkg__"],
 )
@@ -362,5 +397,6 @@ sh_library(
     name = "shell_scripts",
     srcs = [
         "omd.init",
+        "use_system_openssl",
     ],
 )

@@ -10,10 +10,10 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { h as createElement, defineComponent, markRaw } from 'vue'
 
+import type { HostEntry, HostOverview } from '@/monitoring/shared/api/types'
 import HostSlideIn, {
   type HostSlideInSubject
-} from '@/monitoring/all-hosts/components/HostSlideIn.vue'
-import type { HostEntry, HostOverview } from '@/monitoring/shared/api/types'
+} from '@/monitoring/shared/components/HostSlideIn.vue'
 import type { ActionFeedback } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import { ACK_ACTION_ID } from '@/monitoring/shared/components/action/actions/acknowledge'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'

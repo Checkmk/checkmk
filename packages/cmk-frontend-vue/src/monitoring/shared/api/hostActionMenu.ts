@@ -5,7 +5,7 @@
  */
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import type { ActionMenuItem, HostRef } from '../../shared/api/types'
+import type { ActionMenuItem, HostRef } from './types'
 
 export class HostActionMenuApi {
   public async fetchActionMenu(host: HostRef): Promise<ActionMenuItem[]> {

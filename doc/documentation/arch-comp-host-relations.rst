@@ -389,9 +389,10 @@ Monitoring GUI:
   models in ``_models.py``, the sort column in ``_sorting.py``, the REST fields
   in ``_api/``, and the check whether the column is shown at all in
   ``_pages/``, which asks Livestatus directly.
-* ``packages/cmk-frontend-vue/src/monitoring/all-hosts/``: The relations column
-  and the related host cards in the slide-in
-  (``components/slide-in/HostRelationsSection.vue``).
+* ``packages/cmk-frontend-vue/src/monitoring/all-hosts/``: The relations
+  column.
+* ``packages/cmk-frontend-vue/src/monitoring/shared/``: The related host cards
+  in the host slide-in (``components/slide-in/HostRelationsSection.vue``).
 * ``cmk/gui/nonfree/pro/reporting/_element/_host_table.py``: The relations
   column of the host table in PDF reports. Its column and the queried field
   come from ``ALL_HOSTS_TABLE`` in ``cmk/gui/monitor/hosts/_table_catalog.py``.
@@ -830,8 +831,9 @@ Testing
   snapshot of a remote site contains ``relations.mk``.
 * ``tests/unit/cmk/config_anonymizer/test_hosts.py``: Anonymizing the related
   host names.
-* ``packages/cmk-frontend-vue/tests/mode-host-relation-detection/`` and
-  ``packages/cmk-frontend-vue/tests/monitoring/all-hosts/``: The Vue parts.
+* ``packages/cmk-frontend-vue/tests/mode-host-relation-detection/``,
+  ``packages/cmk-frontend-vue/tests/monitoring/all-hosts/`` and
+  ``packages/cmk-frontend-vue/tests/monitoring/shared/``: The Vue parts.
 
 Security considerations
 =======================

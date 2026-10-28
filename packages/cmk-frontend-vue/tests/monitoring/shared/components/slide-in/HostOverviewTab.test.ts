@@ -5,8 +5,8 @@
  */
 import { render, screen } from '@testing-library/vue'
 
-import HostOverviewTab from '@/monitoring/all-hosts/components/slide-in/HostOverviewTab.vue'
 import type { HostOverview } from '@/monitoring/shared/api/types'
+import HostOverviewTab from '@/monitoring/shared/components/slide-in/HostOverviewTab.vue'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }

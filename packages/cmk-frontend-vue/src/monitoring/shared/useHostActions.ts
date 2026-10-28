@@ -6,10 +6,19 @@
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
+import { HostActionMenuApi } from '@/monitoring/shared/api/hostActionMenu'
 import type { HostRef } from '@/monitoring/shared/api/types'
 import { acknowledgeDefaults } from '@/monitoring/shared/components/action/actions/acknowledge'
+import { useAcknowledgeHostsAction } from '@/monitoring/shared/components/action/actions/acknowledgeHosts'
+import { useCommentHostsAction } from '@/monitoring/shared/components/action/actions/commentHosts'
+import { useFakeHostCheckResultsAction } from '@/monitoring/shared/components/action/actions/fakeHostCheckResults'
+import { useNotifyHostsAction } from '@/monitoring/shared/components/action/actions/notifyHosts'
+import { useRemoveHostAcknowledgementsAction } from '@/monitoring/shared/components/action/actions/removeHostAcknowledgements'
+import { useRemoveHostDowntimesAction } from '@/monitoring/shared/components/action/actions/removeHostDowntimes'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
+import { useRescheduleHostsAction } from '@/monitoring/shared/components/action/actions/rescheduleHosts'
 import { downtimePresets } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
+import { useScheduleHostDowntimeAction } from '@/monitoring/shared/components/action/actions/scheduleHostDowntime'
 import { barActions } from '@/monitoring/shared/components/action/barActions'
 import type { MonitoringCommandsPayload } from '@/monitoring/shared/components/action/commandsPayload'
 import {
@@ -17,16 +26,6 @@ import {
   createActionRegistry
 } from '@/monitoring/shared/components/action/registry'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
-
-import { useAcknowledgeHostsAction } from './actions/acknowledgeHosts'
-import { useCommentHostsAction } from './actions/commentHosts'
-import { useFakeHostCheckResultsAction } from './actions/fakeHostCheckResults'
-import { useNotifyHostsAction } from './actions/notifyHosts'
-import { useRemoveHostAcknowledgementsAction } from './actions/removeHostAcknowledgements'
-import { useRemoveHostDowntimesAction } from './actions/removeHostDowntimes'
-import { useRescheduleHostsAction } from './actions/rescheduleHosts'
-import { useScheduleHostDowntimeAction } from './actions/scheduleHostDowntime'
-import { HostActionMenuApi } from './api/actionMenu'
 
 /** What a page sends about the host commands and the Setup links it offers. */
 export interface HostActionsPayload extends MonitoringCommandsPayload {

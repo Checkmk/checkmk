@@ -16,6 +16,7 @@ import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } fr
 import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostEntry, HostRef, HostState } from '@/monitoring/shared/api/types'
 import DisplayOptionsPane from '@/monitoring/shared/components/DisplayOptionsPane.vue'
+import HostSlideIn from '@/monitoring/shared/components/HostSlideIn.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
@@ -25,8 +26,10 @@ import {
   readDisplayOptionsFromUrl,
   seedDisplayOptions
 } from '@/monitoring/shared/displayOptionsState/urlState'
+import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
 import { filterTimestampsAsShown } from '@/monitoring/shared/timestampFilters'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
+import { IMMEDIATE_HOST_COMMAND_IDS, useHostActions } from '@/monitoring/shared/useHostActions'
 
 import MonitoringExportFeedback from '../shared/components/MonitoringExportFeedback.vue'
 import MonitoringHeaderActions from '../shared/components/MonitoringHeaderActions.vue'
@@ -59,10 +62,7 @@ import { useFallbackKeys } from '../shared/useFallbackKeys'
 import { useTypeToFocus } from '../shared/useTypeToFocus'
 import { buildHostColumnPinning, buildHostColumns } from './columns'
 import HostRow from './components/HostRow.vue'
-import HostSlideIn from './components/HostSlideIn.vue'
 import { HostService } from './services/HostService'
-import { HOST_TAB_OVERVIEW } from './slideInTabs'
-import { IMMEDIATE_HOST_COMMAND_IDS, useHostActions } from './useHostActions'
 
 const { _t, _tn } = usei18n()
 

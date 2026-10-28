@@ -14,11 +14,6 @@ import { useKeyboardHints } from 'cmk-ui-library/lib/keyboardHelp'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
 import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
-import HostSlideIn, {
-  type HostSlideInSubject
-} from '@/monitoring/all-hosts/components/HostSlideIn.vue'
-import { HOST_TAB_OVERVIEW } from '@/monitoring/all-hosts/slideInTabs'
-import { useHostActions } from '@/monitoring/all-hosts/useHostActions'
 import { ServiceActionMenuApi } from '@/monitoring/host-services/api/actionMenu'
 import { uncapNameWithoutSummary } from '@/monitoring/host-services/columns'
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
@@ -27,6 +22,9 @@ import ServiceSlideIn, {
 } from '@/monitoring/host-services/components/ServiceSlideIn.vue'
 import type { HostRef, ServiceEntry, ServiceRef } from '@/monitoring/shared/api/types'
 import DisplayOptionsPane from '@/monitoring/shared/components/DisplayOptionsPane.vue'
+import HostSlideIn, {
+  type HostSlideInSubject
+} from '@/monitoring/shared/components/HostSlideIn.vue'
 import MonitoringExportFeedback from '@/monitoring/shared/components/MonitoringExportFeedback.vue'
 import MonitoringHeaderActions from '@/monitoring/shared/components/MonitoringHeaderActions.vue'
 import MonitoringLegacyViewButton from '@/monitoring/shared/components/MonitoringLegacyViewButton.vue'
@@ -49,6 +47,7 @@ import {
 import { useRowExport } from '@/monitoring/shared/export/useRowExport'
 import { buildFilterUrlSchema } from '@/monitoring/shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '@/monitoring/shared/filterState/urlState'
+import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
 import { tableKeyboardHints } from '@/monitoring/shared/keyboardHints'
 import {
   buildColumnStorageKey,
@@ -73,6 +72,7 @@ import {
 import { useUrlSync } from '@/monitoring/shared/urlState/useUrlSync'
 import { useContextMenuKey } from '@/monitoring/shared/useContextMenuKey'
 import { useFallbackKeys } from '@/monitoring/shared/useFallbackKeys'
+import { useHostActions } from '@/monitoring/shared/useHostActions'
 import { useTypeToFocus } from '@/monitoring/shared/useTypeToFocus'
 
 import { AllServicesApi } from './api/services'

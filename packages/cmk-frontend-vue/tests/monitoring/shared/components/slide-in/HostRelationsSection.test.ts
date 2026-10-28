@@ -7,8 +7,8 @@ import userEvent from '@testing-library/user-event'
 import { render, screen, within } from '@testing-library/vue'
 import { nextTick } from 'vue'
 
-import HostRelationsSection from '@/monitoring/all-hosts/components/slide-in/HostRelationsSection.vue'
 import type { HostOverview } from '@/monitoring/shared/api/types'
+import HostRelationsSection from '@/monitoring/shared/components/slide-in/HostRelationsSection.vue'
 
 type Relation = HostOverview['relations'][number]
 type RelationHealth = NonNullable<Relation['health']>

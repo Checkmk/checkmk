@@ -6,7 +6,7 @@
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { beforeEach, expect, test, vi } from 'vitest'
 
-import { useCommentHostsAction } from '@/monitoring/all-hosts/actions/commentHosts'
+import { useCommentHostsAction } from '@/monitoring/shared/components/action/actions/commentHosts'
 import { useCommentServicesAction } from '@/monitoring/shared/components/action/actions/commentServices'
 
 const HOST = { name: 'db-1', site_id: 'local' }

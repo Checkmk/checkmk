@@ -6,8 +6,8 @@
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { beforeEach, expect, test, vi } from 'vitest'
 
-import { useAcknowledgeHostsAction } from '@/monitoring/all-hosts/actions/acknowledgeHosts'
 import type { HostRef } from '@/monitoring/shared/api/types'
+import { useAcknowledgeHostsAction } from '@/monitoring/shared/components/action/actions/acknowledgeHosts'
 
 const NO_LINKS = { presetsUrl: null, notificationRulesUrl: null }
 const DEFAULTS = { sticky: false, persistent: false, notify: true, expireSeconds: 3600 }

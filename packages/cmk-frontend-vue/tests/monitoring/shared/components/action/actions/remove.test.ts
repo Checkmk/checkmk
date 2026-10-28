@@ -6,9 +6,9 @@
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { beforeEach, expect, test, vi } from 'vitest'
 
-import { useRemoveHostAcknowledgementsAction } from '@/monitoring/all-hosts/actions/removeHostAcknowledgements'
-import { useRemoveHostDowntimesAction } from '@/monitoring/all-hosts/actions/removeHostDowntimes'
 import { rowsToActOn } from '@/monitoring/shared/components/action/actions/remove'
+import { useRemoveHostAcknowledgementsAction } from '@/monitoring/shared/components/action/actions/removeHostAcknowledgements'
+import { useRemoveHostDowntimesAction } from '@/monitoring/shared/components/action/actions/removeHostDowntimes'
 import { useRemoveServiceAcknowledgementsAction } from '@/monitoring/shared/components/action/actions/removeServiceAcknowledgements'
 import { useRemoveServiceDowntimesAction } from '@/monitoring/shared/components/action/actions/removeServiceDowntimes'
 

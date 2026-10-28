@@ -24,6 +24,7 @@ import type {
 } from '@/monitoring/shared/api/types'
 import DisplayOptionsPane from '@/monitoring/shared/components/DisplayOptionsPane.vue'
 import HostHeader from '@/monitoring/shared/components/HostHeader.vue'
+import HostSlideIn from '@/monitoring/shared/components/HostSlideIn.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
@@ -34,12 +35,11 @@ import {
   readDisplayOptionsFromUrl,
   seedDisplayOptions
 } from '@/monitoring/shared/displayOptionsState/urlState'
+import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
 import { filterTimestampsAsShown } from '@/monitoring/shared/timestampFilters'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
+import { useHostActions } from '@/monitoring/shared/useHostActions'
 
-import HostSlideIn from '../all-hosts/components/HostSlideIn.vue'
-import { HOST_TAB_OVERVIEW } from '../all-hosts/slideInTabs'
-import { useHostActions } from '../all-hosts/useHostActions'
 import MonitoringExportFeedback from '../shared/components/MonitoringExportFeedback.vue'
 import MonitoringHeaderActions from '../shared/components/MonitoringHeaderActions.vue'
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'

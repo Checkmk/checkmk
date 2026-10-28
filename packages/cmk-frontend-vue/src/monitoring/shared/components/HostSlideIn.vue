@@ -27,7 +27,6 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, markRaw, onUnmounted, ref, watch } from 'vue'
 
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
-import { HOST_TAB_OVERVIEW } from '@/monitoring/all-hosts/slideInTabs'
 import EventHistoryApp from '@/monitoring/events/EventHistoryApp.vue'
 import { fetchEvents } from '@/monitoring/events/api'
 import { HostApi } from '@/monitoring/shared/api/hosts'
@@ -41,6 +40,7 @@ import type { MonitoringActionRegistry } from '@/monitoring/shared/components/ac
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import SlideInActions from '@/monitoring/shared/components/slide-in/SlideInActions.vue'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
+import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
 import { useSlideInActions } from '@/monitoring/shared/services/useSlideInActions'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 

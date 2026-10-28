@@ -9,10 +9,10 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { ref } from 'vue'
 
-import { useNotifyHostsAction } from '@/monitoring/all-hosts/actions/notifyHosts'
 import CustomNotificationForm, {
   type CustomNotificationValues
 } from '@/monitoring/shared/components/action/actions/CustomNotificationForm.vue'
+import { useNotifyHostsAction } from '@/monitoring/shared/components/action/actions/notifyHosts'
 import { useNotifyServicesAction } from '@/monitoring/shared/components/action/actions/notifyServices'
 
 const HOST = { name: 'db-1', site_id: 'local' }

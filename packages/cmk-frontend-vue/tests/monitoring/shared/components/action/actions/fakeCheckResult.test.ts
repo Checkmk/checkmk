@@ -9,10 +9,10 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { ref } from 'vue'
 
-import { useFakeHostCheckResultsAction } from '@/monitoring/all-hosts/actions/fakeHostCheckResults'
 import FakeCheckResultForm, {
   type FakeCheckResultValues
 } from '@/monitoring/shared/components/action/actions/FakeCheckResultForm.vue'
+import { useFakeHostCheckResultsAction } from '@/monitoring/shared/components/action/actions/fakeHostCheckResults'
 import { useFakeServiceCheckResultsAction } from '@/monitoring/shared/components/action/actions/fakeServiceCheckResults'
 
 const HOST = { name: 'db-1', site_id: 'local' }

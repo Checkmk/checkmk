@@ -815,6 +815,7 @@ class ServiceDependsOn:
         | tuple[str, Sequence[str], Sequence[str]]
         | tuple[str, Sequence[str], Sequence[str], dict[str, object]]
     ]
+    debug: bool
 
     def __call__(self, hostname: HostName, servicedesc: ServiceName) -> list[ServiceName]:
         """Return a list of services this service depends on"""
@@ -834,7 +835,7 @@ class ServiceDependsOn:
                 )
             if tuple_rulesets.hosttags_match_taglist(
                 self.tag_list(hostname), tags
-            ) and tuple_rulesets.in_extraconf_hostlist(hostlist, hostname):
+            ) and tuple_rulesets.in_extraconf_hostlist(hostlist, hostname, debug=self.debug):
                 for pattern in patternlist:
                     if matchobject := regex(pattern).search(servicedesc):
                         try:

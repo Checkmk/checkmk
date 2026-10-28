@@ -103,6 +103,7 @@ def _mode_check(
         config.ServiceDependsOn(
             tag_list=loading_result.host_tags.tag_list,
             service_dependencies=loaded_config.service_dependencies,
+            debug=global_options.debug,
         ),
         options,
         args,

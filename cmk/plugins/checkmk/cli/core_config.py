@@ -9,7 +9,6 @@ import sys
 from collections.abc import Callable
 from pathlib import Path
 
-import cmk.ccc.debug
 import cmk.ccc.site
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -124,6 +123,7 @@ def _mode_dump_nagios_config(
         service_depends_on=config.ServiceDependsOn(
             tag_list=loading_result.host_tags.tag_list,
             service_dependencies=loading_result.loaded_config.service_dependencies,
+            debug=global_options.debug,
         ),
         timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
         get_relay_id=lambda host_name: config.get_relay_id(label_manager.labels_of_host(host_name)),
@@ -132,9 +132,6 @@ def _mode_dump_nagios_config(
 
 
 def _run_dump_nagios_config(context: CommandContext, options: Options, args: Args) -> ExitCode:
-    if context.global_options.debug:
-        # creating the core config reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_dump_nagios_config(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -260,6 +257,7 @@ def _mode_update(
                 service_depends_on=config.ServiceDependsOn(
                     tag_list=loading_result.host_tags.tag_list,
                     service_dependencies=loading_result.loaded_config.service_dependencies,
+                    debug=global_options.debug,
                 ),
                 duplicates=sorted(
                     hosts_config.duplicates(
@@ -288,9 +286,6 @@ def _mode_update(
 
 
 def _run_update(context: CommandContext, options: Options, args: Args) -> ExitCode:
-    if context.global_options.debug:
-        # creating the core config reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_update(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -388,6 +383,7 @@ def _mode_restart(
         service_depends_on=config.ServiceDependsOn(
             tag_list=loading_result.host_tags.tag_list,
             service_dependencies=loaded_config.service_dependencies,
+            debug=global_options.debug,
         ),
         duplicates=sorted(
             hosts_config.duplicates(
@@ -410,9 +406,6 @@ def _mode_restart(
 
 
 def _run_restart(context: CommandContext, options: Options, args: Args) -> ExitCode:
-    if context.global_options.debug:
-        # creating the core config reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_restart(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -511,6 +504,7 @@ def _mode_reload(
         service_depends_on=config.ServiceDependsOn(
             tag_list=loading_result.host_tags.tag_list,
             service_dependencies=loaded_config.service_dependencies,
+            debug=global_options.debug,
         ),
         duplicates=sorted(
             hosts_config.duplicates(
@@ -533,9 +527,6 @@ def _mode_reload(
 
 
 def _run_reload(context: CommandContext, options: Options, args: Args) -> ExitCode:
-    if context.global_options.debug:
-        # creating the core config reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_reload(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

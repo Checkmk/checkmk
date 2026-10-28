@@ -1930,6 +1930,7 @@ def test_service_depends_on_unknown_host() -> None:
     service_depends_on = config.ServiceDependsOn(
         tag_list=lambda hn: (),  # noqa: ARG005
         service_dependencies=(),
+        debug=True,
     )
     assert not service_depends_on(HostName("test-host"), "svc")
 
@@ -1943,6 +1944,7 @@ def test_service_depends_on() -> None:
             ("dep2-%s", [], config.ALL_HOSTS, ["svc1-(.*)"], {}),
             ("dep-disabled", [], config.ALL_HOSTS, ["svc1"], {"disabled": True}),
         ],
+        debug=True,
     )
 
     assert not service_depends_on(test_host, "svc2")

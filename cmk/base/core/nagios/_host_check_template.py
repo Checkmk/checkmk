@@ -141,6 +141,7 @@ def main() -> int:
             config.ServiceDependsOn(
                 tag_list=loading_result.host_tags.tag_list,
                 service_dependencies=loading_result.loaded_config.service_dependencies,
+                debug=debug,
             ),
             {},
             [CONFIG.hostname],

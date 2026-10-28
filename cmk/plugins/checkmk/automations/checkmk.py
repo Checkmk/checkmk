@@ -1367,6 +1367,7 @@ def _execute_autodiscovery(
         service_depends_on=config.ServiceDependsOn(
             tag_list=env.host_tags.tag_list,
             service_dependencies=env.loaded_config.service_dependencies,
+            debug=cmk.ccc.debug.enabled(),
         ),
         duplicates=sorted(
             hosts_config.duplicates(
@@ -1566,6 +1567,7 @@ class AutomationRenameHosts:
                         service_depends_on=config.ServiceDependsOn(
                             tag_list=env.host_tags.tag_list,
                             service_dependencies=env.loaded_config.service_dependencies,
+                            debug=cmk.ccc.debug.enabled(),
                         ),
                         notify_relay=_make_configured_notify_relay(bool(env.loaded_config.relays)),
                         licensing_handler_factory=state.app.licensing_handler_factory,
@@ -2461,6 +2463,7 @@ class AutomationRestart:
             service_depends_on=config.ServiceDependsOn(
                 tag_list=env.host_tags.tag_list,
                 service_dependencies=env.loaded_config.service_dependencies,
+                debug=cmk.ccc.debug.enabled(),
             ),
             notify_relay=_make_configured_notify_relay(bool(env.loaded_config.relays)),
             licensing_handler_factory=state.app.licensing_handler_factory,

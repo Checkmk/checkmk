@@ -143,6 +143,24 @@ class TestAWSHostLabelSections:
                 ],
                 id="piggyback_ec2_label",
             ),
+            pytest.param(
+                {
+                    ("wafv2_web_acl", 1606382471.693873, 38582.763184): [
+                        AWSSectionResult(
+                            piggyback_hostname=TargetHost("test-web-acl"), content=[{}]
+                        )
+                    ],
+                },
+                [
+                    "<<<labels:sep(0)>>>",
+                    '{"cmk/aws/account": "test-account"}',
+                    "<<<<test-web-acl>>>>",
+                    "<<<labels:sep(0)>>>",
+                    '{"cmk/aws/account": "test-account"}',
+                    "<<<<>>>>",
+                ],
+                id="piggyback_host_without_labels_of_its_own",
+            ),
         ],
     )
     def test_label_section_header(  # type: ignore[misc]
@@ -205,6 +223,23 @@ def test_account_host_keeps_resource_piggyback_hosts(capsys: pytest.CaptureFixtu
     _account_host_sections()._write_section_results(results)  # noqa: SLF001
 
     assert capsys.readouterr().out.splitlines()[0] == "<<<<10.0.0.1-eu-central-1-i-1>>>>"
+
+
+def test_account_host_gets_its_labels_once(capsys: pytest.CaptureFixture[str]) -> None:
+    results: Results = {
+        ("ec2_limits", 1606382471.693873, 300.0): [
+            AWSSectionResult(piggyback_hostname=TargetHost("333333333333"), content=[{}])
+        ],
+    }
+
+    _account_host_sections()._write_host_labels(results)  # noqa: SLF001
+
+    assert capsys.readouterr().out.splitlines() == [
+        "<<<<333333333333>>>>",
+        "<<<labels:sep(0)>>>",
+        '{"cmk/aws/account": "333333333333"}',
+        "<<<<>>>>",
+    ]
 
 
 def test_account_host_receives_the_labels(capsys: pytest.CaptureFixture[str]) -> None:

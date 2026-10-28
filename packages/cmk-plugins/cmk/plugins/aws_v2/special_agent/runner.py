@@ -341,12 +341,16 @@ class AWSSections(abc.ABC):
     def _collect_piggyback_host_labels(
         self, results: Results, static_labels: Mapping[str, str]
     ) -> Mapping[str, Mapping[str, str]]:
-        """Labels dependent on the type of piggyback host"""
+        """The static labels for every piggyback host, plus the labels of its type"""
         host_labels: dict[str, dict[str, str]] = defaultdict(lambda: {**static_labels})
         for result in results.values():
             for row in result:
-                if self._is_piggyback_host_result(row) and row.piggyback_host_labels:
-                    host_labels[str(row.piggyback_hostname)].update(row.piggyback_host_labels)
+                # The account host gets its labels together with the account's own data.
+                if (
+                    self._is_piggyback_host_result(row)
+                    and row.piggyback_hostname != self._account_host
+                ):
+                    host_labels[str(row.piggyback_hostname)].update(row.piggyback_host_labels or {})
         return host_labels
 
     @staticmethod

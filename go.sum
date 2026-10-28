@@ -182,6 +182,8 @@ github.com/envoyproxy/go-control-plane/envoy v1.37.0 h1:u3riX6BoYRfF4Dr7dwSOroNf
 github.com/envoyproxy/go-control-plane/envoy v1.37.0/go.mod h1:DReE9MMrmecPy+YvQOAOHNYMALuowAnbjjEMkkWOi6A=
 github.com/envoyproxy/protoc-gen-validate v1.3.3 h1:MVQghNeW+LZcmXe7SY1V36Z+WFMDjpqGAGacLe2T0ds=
 github.com/envoyproxy/protoc-gen-validate v1.3.3/go.mod h1:TsndJ/ngyIdQRhMcVVGDDHINPLWB7C82oDArY51KfB0=
+github.com/expr-lang/expr v1.17.8 h1:W1loDTT+0PQf5YteHSTpju2qfUfNoBt4yw9+wOEU9VM=
+github.com/expr-lang/expr v1.17.8/go.mod h1:8/vRC7+7HBzESEqt5kKpYXxrxkr31SaO8r40VO/1IT4=
 github.com/facette/natsort v0.0.0-20181210072756-2cd4dd1e2dcb h1:IT4JYU7k4ikYg1SCxNI1/Tieq/NFvh6dzLdgi7eu0tM=
 github.com/facette/natsort v0.0.0-20181210072756-2cd4dd1e2dcb/go.mod h1:bH6Xx7IW64qjjJq8M2u4dxNaBiDfKK+z/3eGDpXEQhc=
 github.com/fatih/color v1.13.0/go.mod h1:kLAiJbzzSOZDVNGyDpeOxJ47H46qBXwg5ILebYFFOfk=
@@ -552,6 +554,8 @@ github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/prometh
 github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/prometheusremotewrite v0.161.0/go.mod h1:PVHpWXPFEK2goC8JfFei+RCtD42uCOJdbhb0Cmk4yEA=
 github.com/open-telemetry/opentelemetry-collector-contrib/processor/deltatocumulativeprocessor v0.161.0 h1:bYUABbq88fNxnjNPENZ3Aj4dIprzOmSu11IZL+lANP4=
 github.com/open-telemetry/opentelemetry-collector-contrib/processor/deltatocumulativeprocessor v0.161.0/go.mod h1:jYIFdS1B5+baIUCBxuz3dK1ikArU75exmpwZPdPPMAM=
+github.com/open-telemetry/opentelemetry-collector-contrib/processor/filterprocessor v0.161.0 h1:erwenyPDCfPCrPYK0+Nt3jVIXbefeEQVUxWe3uxI0Qk=
+github.com/open-telemetry/opentelemetry-collector-contrib/processor/filterprocessor v0.161.0/go.mod h1:VedHnyexFXcZPVyhKvORzTOPOEgRLSJ29Cbz4lKi3gA=
 github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.161.0 h1:trw0NiCSXg6nuTLRyvMvwkQVNlb8iNHKSxLk1NR59Yc=
 github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.161.0/go.mod h1:+Rk5vMGQZx1QmkzQEtyD8mparUunbAO9hZDYn1r+Bos=
 github.com/open-telemetry/opentelemetry-collector-contrib/processor/transformprocessor v0.161.0 h1:+3EYRW10jX66lb6oTwmNVjnbIIWPsvA0uaGrzpSGjzQ=

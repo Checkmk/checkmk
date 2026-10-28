@@ -30,6 +30,9 @@ from .mock_vbr import Credentials, RECORDING_FILE, replaying
 
 logger = logging.getLogger(__name__)
 
+# Temporary skip the tests on Cloud as it is not supported yet
+pytestmark = pytest.mark.skip_if_edition("cloud")
+
 # The password the mock accepts. A real server's password comes from the environment.
 ADMIN_PASS = "mock-veeam-password"
 

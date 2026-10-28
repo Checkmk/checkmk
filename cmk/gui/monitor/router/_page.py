@@ -11,6 +11,7 @@ from cmk.gui.monitor.hosts.page_url import all_hosts_url
 from cmk.gui.monitor.hosts.search_filters import host_search_filter, UnsupportedSearchError
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.search.spec import parse, SearchParseError, UnprefixedSearch
+from cmk.ruleset_matcher.tags import TagConfig
 
 _QUERY_VAR = "q"
 
@@ -19,10 +20,10 @@ class MonitorRouterPage(Page):
     @override
     def page(self, ctx: PageContext) -> None:
         query = ctx.request.get_str_input_mandatory(_QUERY_VAR, "")
-        raise HTTPRedirect(route(ctx.request, query))
+        raise HTTPRedirect(route(ctx.request, query, ctx.config.tags))
 
 
-def route(request: Request, query: str) -> str:
+def route(request: Request, query: str, tags: TagConfig) -> str:
     """Builds a monitoring URL based on the result of the query.
 
     Raises:
@@ -34,6 +35,6 @@ def route(request: Request, query: str) -> str:
             # As typed, with control characters as spaces: the page turns "*" into ".*" itself,
             # but drops control characters, which would join the words.
             return all_hosts_url(request, search=spec.text)
-        return all_hosts_url(request, filter_node=host_search_filter(spec))
+        return all_hosts_url(request, filter_node=host_search_filter(spec, tags))
     except (SearchParseError, UnsupportedSearchError) as e:
         raise MKUserError(_QUERY_VAR, str(e)) from e

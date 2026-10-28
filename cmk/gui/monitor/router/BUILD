@@ -13,5 +13,6 @@ py_library(
         "//cmk/gui:page_toolkit",
         "//cmk/gui/monitor/hosts",
         "//cmk/gui/search/spec",
+        "//packages/cmk-ruleset-matcher",
     ],
 )

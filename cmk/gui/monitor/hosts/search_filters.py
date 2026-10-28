@@ -32,14 +32,17 @@ from cmk.gui.search.spec import (
     PrefixedSearch,
     Term,
 )
+from cmk.ruleset_matcher.tags import TagConfig
 
 
 class UnsupportedSearchError(ValueError):
     """Raised when All hosts can't filter on a search spec."""
 
 
-def host_search_filter(spec: PrefixedSearch) -> FilterNode:
+def host_search_filter(spec: PrefixedSearch, tags: TagConfig) -> FilterNode:
     """The All hosts filter tree for the spec
+
+    A tag given without its group is resolved to its group via the tag config.
 
     Raises:
         UnsupportedSearchError: if All hosts can't filter on the spec.
@@ -52,9 +55,9 @@ def host_search_filter(spec: PrefixedSearch) -> FilterNode:
             case [HostLabel(key=key, value=value)]:
                 field: LabelField = "labels"
                 pair = key if value is None else f"{key}:{value}"
-            case [HostTag(group=str(group), tag=tag)]:
+            case [HostTag(group=group, tag=tag)]:
                 field = "tags"
-                pair = f"{group}:{tag}"
+                pair = f"{group or _tag_group(tag, tags)}:{tag}"
             case _:
                 conditions.append(_condition(clause))
                 continue
@@ -89,10 +92,6 @@ def _condition(clause: Sequence[Term]) -> FilterNode:
                     dict.fromkeys(term.name for term in clause if isinstance(term, HostGroup))
                 ),
             )
-        case [HostTag(tag=tag)]:
-            raise UnsupportedSearchError(
-                _('Please specify the tag group, e.g. "tg:criticality:%(tag)s".') % {"tag": tag}
-            )
         case _:
             raise UnsupportedSearchError(
                 _(
@@ -100,6 +99,30 @@ def _condition(clause: Sequence[Term]) -> FilterNode:
                     " and tag."
                 )
             )
+
+
+def _tag_group(tag: str, tags: TagConfig) -> str:
+    if tag.endswith("*"):
+        raise UnsupportedSearchError(
+            _('Please specify the tag group of "%(tag)s", e.g. "tg:criticality:%(tag)s".')
+            % {"tag": tag}
+        )
+    groups = [
+        str(group.id)
+        for group in tags.get_tag_groups()
+        if any(grouped_tag.id == tag for grouped_tag in group.tags)
+    ] + [str(aux_tag.id) for aux_tag in tags.get_aux_tags() if aux_tag.id == tag]
+    if not groups:
+        raise UnsupportedSearchError(_('Unknown host tag "%(tag)s".') % {"tag": tag})
+    if len(groups) > 1:
+        raise UnsupportedSearchError(
+            _(
+                'The host tag "%(tag)s" is in several tag groups: %(groups)s. Please specify'
+                ' one, e.g. "tg:%(group)s:%(tag)s".'
+            )
+            % {"tag": tag, "groups": ", ".join(groups), "group": groups[0]}
+        )
+    return groups[0]
 
 
 def _contains(field: StringField, clause: Sequence[Term]) -> StringCondition:

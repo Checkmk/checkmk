@@ -17,11 +17,14 @@ from cmk.gui.pages import PageContext
 from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import TransactionManager
+from cmk.ruleset_matcher.tags import TagConfig
 from cmk.web.context import SessionInfoProtocol, SessionUserProtocol
 
 
 def test_query_without_prefix_goes_to_all_hosts_search_box_as_typed() -> None:
-    assert route(Request(create_environ()), "  web*  ") == "monitor_all_hosts.py?q=web%2A"
+    assert (
+        route(Request(create_environ()), "  web*  ", TagConfig()) == "monitor_all_hosts.py?q=web%2A"
+    )
 
 
 @pytest.mark.parametrize(
@@ -34,7 +37,9 @@ def test_query_without_prefix_goes_to_all_hosts_search_box_as_typed() -> None:
 def test_control_character_in_query_without_prefix_goes_to_search_box_as_space(
     query: str,
 ) -> None:
-    assert route(Request(create_environ()), query) == "monitor_all_hosts.py?q=web+server"
+    assert (
+        route(Request(create_environ()), query, TagConfig()) == "monitor_all_hosts.py?q=web+server"
+    )
 
 
 @pytest.mark.parametrize(
@@ -49,11 +54,13 @@ def test_control_character_in_query_without_prefix_goes_to_search_box_as_space(
 )
 def test_label_tag_or_group_query_goes_to_a_filter_the_page_accepts(query: str) -> None:
     # all_hosts_url() validates the tree against the page's filter model.
-    assert route(Request(create_environ()), query).startswith("monitor_all_hosts.py?filter=")
+    assert route(Request(create_environ()), query, TagConfig()).startswith(
+        "monitor_all_hosts.py?filter="
+    )
 
 
 def test_host_query_goes_to_all_hosts_filter() -> None:
-    parts = urlsplit(route(Request(create_environ()), "h:web"))
+    parts = urlsplit(route(Request(create_environ()), "h:web", TagConfig()))
 
     assert parts.path == "monitor_all_hosts.py"
     assert {name: json.loads(value) for name, [value] in parse_qs(parts.query).items()} == {
@@ -72,7 +79,7 @@ def test_host_query_goes_to_all_hosts_filter() -> None:
 )
 def test_query_that_cannot_be_shown_is_rejected(query: str, message: str) -> None:
     with pytest.raises(MKUserError, match=message):
-        route(Request(create_environ()), query)
+        route(Request(create_environ()), query, TagConfig())
 
 
 def test_page_redirects_to_the_url_of_the_query() -> None:
@@ -88,7 +95,7 @@ def test_page_redirects_to_the_url_of_the_query() -> None:
     with pytest.raises(HTTPRedirect) as redirect:
         MonitorRouterPage().page(ctx)
 
-    assert redirect.value.url == route(page_request, "h:web")
+    assert redirect.value.url == route(page_request, "h:web", TagConfig())
 
 
 class _UnusedSession:

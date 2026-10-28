@@ -43,23 +43,25 @@ pkg_files(
 # SUP-10161: our openssl is incompatible with some system executables on various sles15sp*
 # SUP-26565: Getting an exception error when baking agent almalinux-9+
 # SUP-26879: Wrap other tools commonly used by users that require linking to the system openssl
+# SUP-30799: ssh-keygen fails with "OpenSSL version mismatch" on Ubuntu 22.04 (e.g. the Docker image)
 # etc.
 WRAPPED_EXECUTABLES = [
     "curl",
     "dig",
     "host",
+    "journalctl",
     "nc",
     "nmap",
     "nslookup",
     "pdftoppm",
     "php",
     "php-cgi",
-    "php5",
-    "php5-cgi",
     "resolvectl",
+    "rpm",
     "rpmbuild",
     "scp",
     "ssh",
+    "ssh-keygen",
     "systemctl",
     "zypper",
 ]

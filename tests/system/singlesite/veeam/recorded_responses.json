@@ -3386,41 +3386,7 @@
         "initiatedBy": ".\\Administrator"
       }
     },
-    "/api/v1/sessions/aee005b7-50a2-47ca-a20f-a3ce1a369103": {
-      "status": 404,
-      "body": {
-        "errorCode": "NotFound",
-        "message": "Not found",
-        "title": "Not found",
-        "status": 404,
-        "instance": "https://3.70.18.72:9419/api/v1/sessions/aee005b7-50a2-47ca-a20f-a3ce1a369103"
-      }
-    },
-    "/api/v1/sessions/de69b51c-1b67-44e1-9cf3-67734b07c1a6": {
-      "status": 200,
-      "body": {
-        "sessionType": "AgentBackup",
-        "state": "Stopped",
-        "platformName": "LinuxPhysical",
-        "id": "de69b51c-1b67-44e1-9cf3-67734b07c1a6",
-        "name": "Succsessful job",
-        "jobId": "1ec37ede-04cd-44e0-9def-d54fb9c36ebc",
-        "creationTime": "2026-10-26T08:57:31.919511+00:00",
-        "endTime": "2026-10-26T09:04:03.864878+00:00",
-        "progressPercent": 100,
-        "result": {
-          "result": "Success",
-          "message": "Success",
-          "isCanceled": false
-        },
-        "resourceId": "eb6898ce-fe98-4ad7-9a4d-32caef5fc645",
-        "resourceReference": "/api/v1/backups/eb6898ce-fe98-4ad7-9a4d-32caef5fc645",
-        "usn": 79695,
-        "platformId": "00000000-0000-0000-0000-000000000000",
-        "initiatedBy": "SYSTEM"
-      }
-    },
-    "/api/v1/taskSessions": {
+    "/api/v1/sessions/4a34cf92-fa76-452e-9337-75b7a9061353/taskSessions": {
       "status": 200,
       "body": {
         "data": [
@@ -3531,92 +3497,57 @@
             "sessionId": "4a34cf92-fa76-452e-9337-75b7a9061353",
             "creationTime": "2026-10-27T11:02:14.74216",
             "endTime": "2026-10-27T11:02:56.237565"
-          },
-          {
-            "algorithm": "None",
-            "state": "Stopped",
-            "name": "63.179.4.165",
-            "repositoryId": "00000000-0000-0000-0000-000000000000",
-            "usn": 85230,
-            "result": {
-              "result": "Failed",
-              "message": "Unable to install backup agent: failed to connect to 63.179.4.165 Error: Connection attempt timed out.",
-              "isCanceled": false
-            },
-            "progress": {
-              "bottleneck": "NotDefined",
-              "duration": "00:00:00",
-              "processingRate": "N/A",
-              "processedSize": 0,
-              "readSize": 0,
-              "transferredSize": 0,
-              "progressPercent": 100
-            },
-            "type": "Backup",
-            "sessionType": "AgentDiscovery",
-            "id": "2f79695a-f8c2-4426-a8c4-8ce7769442a6",
-            "sessionId": "ef655030-92c4-4cd8-8663-c16c5877b59d",
-            "creationTime": "2026-10-27T11:00:40.890698",
-            "endTime": "2026-10-27T11:00:41.008169"
-          },
-          {
-            "algorithm": "None",
-            "state": "Stopped",
-            "name": "63.179.4.165",
-            "repositoryId": "00000000-0000-0000-0000-000000000000",
-            "usn": 85153,
-            "result": {
-              "result": "Failed",
-              "message": "Unable to install backup agent: failed to connect to 63.179.4.165 Error: Connection attempt timed out.",
-              "isCanceled": false
-            },
-            "progress": {
-              "bottleneck": "NotDefined",
-              "duration": "00:00:00",
-              "processingRate": "N/A",
-              "processedSize": 0,
-              "readSize": 0,
-              "transferredSize": 0,
-              "progressPercent": 100
-            },
-            "type": "Backup",
-            "sessionType": "AgentDiscovery",
-            "id": "ba2b2ef1-c10d-4e21-86b3-f2a70d3c4fc9",
-            "sessionId": "09bfc573-dcb2-4e80-bbb5-32ca3f73c964",
-            "creationTime": "2026-10-27T10:59:18.495485",
-            "endTime": "2026-10-27T10:59:18.601399"
-          },
-          {
-            "algorithm": "None",
-            "state": "Stopped",
-            "name": "63.179.4.165",
-            "repositoryId": "00000000-0000-0000-0000-000000000000",
-            "usn": 84896,
-            "result": {
-              "result": "Failed",
-              "message": "Unable to install backup agent: failed to connect to 63.179.4.165 Error: Connection attempt timed out.",
-              "isCanceled": false
-            },
-            "progress": {
-              "bottleneck": "NotDefined",
-              "duration": "00:00:00",
-              "processingRate": "N/A",
-              "processedSize": 0,
-              "readSize": 0,
-              "transferredSize": 0,
-              "progressPercent": 100
-            },
-            "type": "Backup",
-            "sessionType": "AgentDiscovery",
-            "id": "02c20365-c49d-4d8d-bfd7-ccde3ddeb84c",
-            "sessionId": "0a293dc4-9c88-4139-959f-070d4b84b42d",
-            "creationTime": "2026-10-27T10:12:18.065685",
-            "endTime": "2026-10-27T10:12:18.184413"
           }
         ],
         "pagination": {
-          "total": 7,
-          "count": 7,
+          "total": 4,
+          "count": 4,
+          "skip": 0,
+          "limit": 200
+        }
+      }
+    },
+    "/api/v1/sessions/aee005b7-50a2-47ca-a20f-a3ce1a369103": {
+      "status": 404,
+      "body": {
+        "errorCode": "NotFound",
+        "message": "Not found",
+        "title": "Not found",
+        "status": 404,
+        "instance": "https://3.70.18.72:9419/api/v1/sessions/aee005b7-50a2-47ca-a20f-a3ce1a369103"
+      }
+    },
+    "/api/v1/sessions/de69b51c-1b67-44e1-9cf3-67734b07c1a6": {
+      "status": 200,
+      "body": {
+        "sessionType": "AgentBackup",
+        "state": "Stopped",
+        "platformName": "LinuxPhysical",
+        "id": "de69b51c-1b67-44e1-9cf3-67734b07c1a6",
+        "name": "Succsessful job",
+        "jobId": "1ec37ede-04cd-44e0-9def-d54fb9c36ebc",
+        "creationTime": "2026-10-26T08:57:31.919511+00:00",
+        "endTime": "2026-10-26T09:04:03.864878+00:00",
+        "progressPercent": 100,
+        "result": {
+          "result": "Success",
+          "message": "Success",
+          "isCanceled": false
+        },
+        "resourceId": "eb6898ce-fe98-4ad7-9a4d-32caef5fc645",
+        "resourceReference": "/api/v1/backups/eb6898ce-fe98-4ad7-9a4d-32caef5fc645",
+        "usn": 79695,
+        "platformId": "00000000-0000-0000-0000-000000000000",
+        "initiatedBy": "SYSTEM"
+      }
+    },
+    "/api/v1/sessions/de69b51c-1b67-44e1-9cf3-67734b07c1a6/taskSessions": {
+      "status": 200,
+      "body": {
+        "data": [],
+        "pagination": {
+          "total": 0,
+          "count": 0,
           "skip": 0,
           "limit": 200
         }

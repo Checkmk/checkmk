@@ -17,10 +17,8 @@ import sys
 import time
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from datetime import datetime, UTC
 from http import HTTPStatus
 from typing import override
-from urllib.parse import quote
 
 import requests
 import requests.auth
@@ -527,7 +525,6 @@ class _JobState(_ApiItem):
     name: str
     status: str
     session_id: str | None = None
-    last_run: str | None = None
     session_progress: _SessionProgress | None = None
 
 
@@ -783,33 +780,20 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
     return _fetch
 
 
-def _job_sessions_and_window(
+def _job_sessions(
     jobs: Sequence[_JobState],
     disabled_ids: Container[str],
-) -> tuple[dict[str, tuple[str, str]], str | None]:
-    """Builds `sessionId -> (job id, job name)` from each job's current session,
-    plus the earliest `lastRun` (the taskSessions window's lower bound).
+) -> dict[str, tuple[str, str]]:
+    """Builds `sessionId -> (job id, job name)` from each job's current session.
 
     Disabled jobs (`disabled_ids`) are excluded, like the old plug-in; a
-    schedule-disabled job is still included. Jobs that never ran don't affect the
-    window.
-
-    TODO: a rarely-run job drags the window back every cycle; cap it (e.g. 30
-    days) if that becomes a real problem.
+    schedule-disabled job is still included.
     """
-    session_to_job: dict[str, tuple[str, str]] = {}
-    last_runs: list[float] = []
-    for job in jobs:
-        if job.id in disabled_ids:
-            continue
-        if job.session_id is not None:
-            session_to_job[job.session_id] = (job.id, job.name)
-        if job.last_run is not None and (epoch := parse_iso8601_epoch(job.last_run)) is not None:
-            last_runs.append(epoch)
-
-    if not last_runs:
-        return session_to_job, None
-    return session_to_job, datetime.fromtimestamp(min(last_runs), tz=UTC).isoformat()
+    return {
+        job.session_id: (job.id, job.name)
+        for job in jobs
+        if job.id not in disabled_ids and job.session_id is not None
+    }
 
 
 def _task_creation_epoch(task: Mapping[str, object]) -> float:
@@ -886,7 +870,7 @@ def _resolve_job_object_names(
     """Maps job ID -> its current session's object name(s), via
     GET /api/v1/sessions/{sessionId} -> resourceId -> GET /api/v1/backups/{id}/objects.
 
-    Iterates `session_to_job` (built by `_job_sessions_and_window`) rather than the
+    Iterates `session_to_job` (built by `_job_sessions`) rather than the
     raw job list, so disabled/malformed jobs are filtered in one place only.
 
     Same identity as /api/v1/restorePoints and the old plug-in (e.g.
@@ -1009,21 +993,20 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     back to its own session (`_session_fallback_task`); a multi-object job in
     that case is just left without data.
 
-    A task's job is resolved by matching its `sessionId` against each job's
-    current session (from /api/v1/jobs/states), not via a third endpoint. A task
-    whose session isn't any job's current one is dropped; its piggyback host just
-    keeps showing its last known state via normal staleness handling.
+    Only the tasks of each job's current session (from /api/v1/jobs/states) are
+    fetched, via /api/v1/sessions/{id}/taskSessions, and only for jobs whose
+    objects resolved. This costs one request per job however long ago it last ran;
+    a time window over /api/v1/taskSessions would reach back to the least recently
+    run job and pull everything since. A task session lookup that 404s/400s leaves
+    that job without tasks (a single-object job still falls back to its session).
 
-    /api/v1/taskSessions is windowed with `createdAfterFilter` (earliest job
-    `lastRun`) rather than fetched in full, to avoid pulling the server's entire
-    history every run.
-
-    `sessionTypeFilter=BackupJob` isn't used: on VBR 13.0.3.63 it silently
-    matches nothing even for matching records, so `sessionType` is filtered
-    client-side instead.
+    /api/v1/jobs/states also lists jobs that aren't backup jobs, e.g. backup copy
+    jobs, whose sessions hold tasks of their own `sessionType`. These are dropped
+    client-side: `sessionTypeFilter=BackupJob` isn't used, as on VBR 13.0.3.63 it
+    silently matches nothing even for matching records.
     """
     jobs = _parse_items(_JobState, client.get_all("/api/v1/jobs/states"))
-    session_to_job, created_after = _job_sessions_and_window(jobs, _disabled_job_ids(client))
+    session_to_job = _job_sessions(jobs, _disabled_job_ids(client))
     progress_by_job_id = {
         job.id: job.session_progress for job in jobs if job.session_progress is not None
     }
@@ -1033,22 +1016,24 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
 
     newest: dict[tuple[str, str], Mapping[str, object]] = {}
 
-    if created_after is not None:
-        tasks = client.get_all(
-            "/api/v1/taskSessions",
-            extra_params=f"&typeFilter=Backup&createdAfterFilter={quote(created_after)}",
-        )
+    for session_id, (job_id, job_name) in session_to_job.items():
+        if job_id not in job_objects:
+            continue
+        try:
+            tasks = client.get_all(
+                f"/api/v1/sessions/{session_id}/taskSessions", extra_params="&typeFilter=Backup"
+            )
+        except TerminateAgent as exc:
+            if _is_skippable(exc):
+                continue
+            raise
 
+        resolved_names = job_objects[job_id].names
         for task in tasks:
             if not isinstance(task, dict) or not isinstance(task_name := task.get("name"), str):
                 continue
             if task.get("sessionType") != "BackupJob":
                 continue
-            session_id = task.get("sessionId")
-            if not isinstance(session_id, str) or (job := session_to_job.get(session_id)) is None:
-                continue
-            job_id, job_name = job
-            resolved_names = job_objects[job_id].names if job_id in job_objects else []
             if len(resolved_names) == 1:
                 object_name = resolved_names[0]
             elif task_name in resolved_names:
@@ -1065,7 +1050,7 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
             if current is None or _task_creation_epoch(task) >= _task_creation_epoch(current):
                 newest[key] = {**task, "jobName": job_name}
 
-    # Single-object jobs that /api/v1/taskSessions has no task for at all (e.g. the
+    # Single-object jobs whose session has no task at all (e.g. the
     # Linux/Windows Agent Backup gap) fall back to the job's own session: with only
     # one object, the job's result already *is* that object's result.
     for job_id, job_obj in job_objects.items():

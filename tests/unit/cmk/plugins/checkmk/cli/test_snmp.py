@@ -9,20 +9,22 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.cli.internal import CommandContext, ExitCode, GlobalOptions
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.plugins.checkmk.cli.snmp import cli_command_snmptranslate, cli_command_snmpwalk
 
 
-def _context(*, debug_mode: bool = False) -> CommandContext:
-    return CommandContext(
+def _context(*, debug_mode: bool = False) -> CLICommandContext:
+    return CLICommandContext(
         omd_root=Path("/nonexistent"),
-        global_options=GlobalOptions(debug=debug_mode),
+        global_options=CLIGlobalOptions(debug=debug_mode),
         logger=logging.getLogger(__name__),
     )
 
 
 def test_a_missing_walk_name_exits_three() -> None:
-    assert cli_command_snmptranslate.handler_function(_context(), {}, [""]) == ExitCode.UNKNOWN
+    assert cli_command_snmptranslate.handler_function(_context(), {}, [""]) == CLIExitCode.UNKNOWN
 
 
 def test_a_missing_walk_name_is_logged(caplog: pytest.LogCaptureFixture) -> None:
@@ -42,7 +44,7 @@ def test_oids_and_extra_oids_together_exit_three() -> None:
         cli_command_snmpwalk.handler_function(
             _context(), {"oid": ("1.3",), "extraoid": ("1.4",)}, []
         )
-        == ExitCode.UNKNOWN
+        == CLIExitCode.UNKNOWN
     )
 
 

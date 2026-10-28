@@ -8,23 +8,21 @@ import sys
 from pathlib import Path
 
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
-from cmk.cli.internal import (
-    Args,
-    CLICommand,
-    CLIOption,
-    CommandContext,
-    ExitCode,
-    GlobalOptions,
-    Options,
-)
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Options
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.licensing.basics.finder import blocked_feature_files
 from cmk.utils.paths import omd_root
 
 
 def _mode_man(
-    _omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
+    _omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+) -> CLIExitCode:
     from cmk.utils import man_pages
 
     man_page_path_map = man_pages.make_man_page_path_map(
@@ -34,7 +32,7 @@ def _mode_man(
     )
     if not args:
         man_pages.print_man_page_table(man_page_path_map)
-        return ExitCode.SUCCESS
+        return CLIExitCode.SUCCESS
 
     if (man_page_path := man_page_path_map.get(args[0])) is None:
         raise MKBailOut(f"No manpage for {args[0]}. Sorry.")
@@ -53,20 +51,20 @@ def _mode_man(
         rendered = renderer(man_page).render_page()
     except Exception as exc:
         sys.stdout.write(f"ERROR: Invalid check manpage {args[0]}: {exc}\n")
-        return ExitCode.SUCCESS
+        return CLIExitCode.SUCCESS
 
     man_pages.write_output(rendered)
-    return ExitCode.SUCCESS
+    return CLIExitCode.SUCCESS
 
 
-def _run_man(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_man(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_man(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_man = CLICommand(
@@ -97,8 +95,8 @@ cli_command_man = CLICommand(
 
 
 def _mode_browse_man(
-    _omd_root: Path, global_options: GlobalOptions, _options: Options, _args: Args
-) -> ExitCode:
+    _omd_root: Path, global_options: CLIGlobalOptions, _options: Options, _args: CLIArgs
+) -> CLIExitCode:
     from cmk.utils import man_pages
 
     man_pages.print_man_page_browser(
@@ -109,17 +107,17 @@ def _mode_browse_man(
             debug=global_options.debug,
         )
     )
-    return ExitCode.SUCCESS
+    return CLIExitCode.SUCCESS
 
 
-def _run_browse_man(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_browse_man(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_browse_man(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_browse_man = CLICommand(

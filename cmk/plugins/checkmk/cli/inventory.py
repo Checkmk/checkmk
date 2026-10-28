@@ -57,15 +57,13 @@ from cmk.checkengine.plugins import InventoryPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.cli.engine.commands import option_names, option_string
-from cmk.cli.internal import (
-    Args,
-    CLICommand,
-    CLIOption,
-    CommandContext,
-    ExitCode,
-    GlobalOptions,
-    Options,
-)
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Options
 from cmk.inventory.paths import InventoryPaths
 from cmk.inventory.store import InventoryStore
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
@@ -109,8 +107,8 @@ def _inventory_options(parsed: Mapping[str, object]) -> InventoryOptions:
 
 
 def _mode_inventory(
-    omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args
-) -> ExitCode:
+    omd_root: Path, global_options: CLIGlobalOptions, parsed: Options, args: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(parsed)
     options = _inventory_options(parsed)
@@ -330,10 +328,10 @@ def _mode_inventory(
                 section.section_error("%s" % e)
             finally:
                 cmk.ccc.cleanup.cleanup_globals()
-        return ExitCode.SUCCESS
+        return CLIExitCode.SUCCESS
 
 
-def _run_inventory(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_inventory(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
     if context.global_options.debug:
         # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -343,7 +341,7 @@ def _run_inventory(context: CommandContext, options: Options, args: Args) -> Exi
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_inventory = CLICommand(
@@ -378,8 +376,8 @@ cli_command_inventory = CLICommand(
 
 
 def _mode_inventorize_marked_hosts(
-    omd_root: Path, global_options: GlobalOptions, options: Options, _args: Args
-) -> ExitCode:
+    omd_root: Path, global_options: CLIGlobalOptions, options: Options, _args: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
     file_cache_options = handle_fetcher_options(options)
@@ -390,7 +388,7 @@ def _mode_inventorize_marked_hosts(
 
     if not (queue := AutoQueue(InventoryPaths(cmk.utils.paths.omd_root).auto_dir)):
         console.verbose("Autoinventory: No hosts marked by inventory check")
-        return ExitCode.SUCCESS
+        return CLIExitCode.SUCCESS
 
     # We do not resolve the `latest` link here, as any given serial might be removed by the core.
     latest_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
@@ -508,7 +506,7 @@ def _mode_inventorize_marked_hosts(
 
     if queue.oldest() is None:
         console.verbose("Autoinventory: No hosts marked by inventory check")
-        return ExitCode.SUCCESS
+        return CLIExitCode.SUCCESS
 
     console.verbose("Autoinventory: Inventorize all hosts marked by inventory check:")
     try:
@@ -560,12 +558,12 @@ def _mode_inventorize_marked_hosts(
                 )
     except (MKTimeout, TimeoutError) as exc:
         console.verbose_no_lf(str(exc))
-    return ExitCode.SUCCESS
+    return CLIExitCode.SUCCESS
 
 
 def _run_inventorize_marked_hosts(
-    context: CommandContext, options: Options, args: Args
-) -> ExitCode:
+    context: CLICommandContext, options: Options, args: CLIArgs
+) -> CLIExitCode:
     if context.global_options.debug:
         # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -577,7 +575,7 @@ def _run_inventorize_marked_hosts(
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_inventorize_marked_hosts = CLICommand(

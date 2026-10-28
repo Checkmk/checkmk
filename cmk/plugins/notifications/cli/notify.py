@@ -29,15 +29,13 @@ from cmk.ccc import version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, raise_mkterminate_on_sigint
 from cmk.ccc.version import Edition
 from cmk.ccc.version import edition as edition_of_site
-from cmk.cli.internal import (
-    Args,
-    CLICommand,
-    CLIOption,
-    CommandContext,
-    ExitCode,
-    GlobalOptions,
-    Options,
-)
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Options
 from cmk.utils import timeperiod
 from cmk.utils.http_proxy_config import make_http_proxy_getter
 
@@ -48,19 +46,19 @@ def _notify_flags(parsed: Mapping[str, object]) -> dict[str, bool]:
     return dict.fromkeys(parsed, True)
 
 
-def _notification_exit_code(returncode: object) -> ExitCode:
+def _notification_exit_code(returncode: object) -> CLIExitCode:
     match returncode:
         case None | 0:
-            return ExitCode.SUCCESS
+            return CLIExitCode.SUCCESS
         case 1:
-            return ExitCode.FAILURE
+            return CLIExitCode.FAILURE
         case _:
-            return ExitCode.ERROR
+            return CLIExitCode.ERROR
 
 
 def _mode_notify(
-    omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args
-) -> ExitCode:
+    omd_root: Path, global_options: CLIGlobalOptions, parsed: Options, args: CLIArgs
+) -> CLIExitCode:
     options = _notify_flags(parsed)
     edition = edition_of_site(omd_root)
     community_edition = edition is Edition.COMMUNITY
@@ -96,20 +94,20 @@ def _mode_notify(
     return _notification_exit_code(exit_status)
 
 
-def _run_notify(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_notify(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_notify(context.omd_root, context.global_options, options, args)
     except MKTerminate:
         context.logger.error("<Interrupted>")  # noqa: TRY400
-        return ExitCode.INTERRUPTED
+        return CLIExitCode.INTERRUPTED
     except MKGeneralException as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
-def _do_notify_via_automation(options: dict[str, bool], args: list[str]) -> ExitCode:
+def _do_notify_via_automation(options: dict[str, bool], args: list[str]) -> CLIExitCode:
     log_to_stdout = False
     if options.get("log-to-stdout"):
         args.insert(0, "--log-to-stdout")
@@ -128,16 +126,16 @@ def _do_notify_via_automation(options: dict[str, bool], args: list[str]) -> Exit
             "The automation-helper service is required for the notification spooler. "
             "Please make sure all site services are started."
         )
-        return ExitCode.FAILURE
+        return CLIExitCode.FAILURE
     except Exception:
         logger.exception("Error running automation call 'notify'")
-        return ExitCode.FAILURE
+        return CLIExitCode.FAILURE
 
     try:
         data = ast.literal_eval(result.output)
     except SyntaxError, ValueError, TypeError:
         logger.exception("Could not parse automation result %(output)r", {"output": result.output})
-        return ExitCode.ERROR
+        return CLIExitCode.ERROR
 
     if isinstance(data, dict):
         if log_to_stdout:
@@ -146,7 +144,7 @@ def _do_notify_via_automation(options: dict[str, bool], args: list[str]) -> Exit
         return _notification_exit_code(data.get("exit_code"))
 
     logger.error("Unexpected automation result format: %(data)r", {"data": data})
-    return ExitCode.ERROR
+    return CLIExitCode.ERROR
 
 
 cli_command_notify = CLICommand(

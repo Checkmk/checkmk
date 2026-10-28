@@ -10,14 +10,18 @@ from typing import Final
 
 from cmk.cli.engine.call import call, CommandTracer
 from cmk.cli.engine.commands import Command, Option, parse_sub_options
-from cmk.cli.internal import Args, CommandContext, CommandHandler, ExitCode, GlobalOptions, Options
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import CommandHandler, Options
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 
 from ._logger import null_logger
 
 # The engine only hands this through to the command's handler.
-_CONTEXT: Final = CommandContext(
+_CONTEXT: Final = CLICommandContext(
     omd_root=Path("/omd/sites/mysite"),
-    global_options=GlobalOptions(verbosity=2),
+    global_options=CLIGlobalOptions(verbosity=2),
     logger=null_logger(),
 )
 
@@ -25,11 +29,11 @@ _SUB_OPTIONS: Final = [Option(long_option="flag", short_help="a flag")]
 
 
 class _Recorder:
-    def __init__(self, exit_code: ExitCode = ExitCode.SUCCESS) -> None:
-        self.calls: list[tuple[CommandContext, Options, Args]] = []
+    def __init__(self, exit_code: CLIExitCode = CLIExitCode.SUCCESS) -> None:
+        self.calls: list[tuple[CLICommandContext, Options, CLIArgs]] = []
         self._exit_code = exit_code
 
-    def __call__(self, context: CommandContext, options: Options, args: Args) -> ExitCode:
+    def __call__(self, context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
         self.calls.append((context, options, args))
         return self._exit_code
 
@@ -58,7 +62,7 @@ def _call(
     *,
     arguments: Sequence[str] = (),
     traced: CommandTracer = lambda *_args: nullcontext(),
-) -> ExitCode:
+) -> CLIExitCode:
     return call(
         _CONTEXT,
         command,
@@ -70,7 +74,7 @@ def _call(
 
 
 def test_a_command_returns_its_handlers_exit_code() -> None:
-    assert _call(_command(_Recorder(exit_code=ExitCode.ERROR))) == ExitCode.ERROR
+    assert _call(_command(_Recorder(exit_code=CLIExitCode.ERROR))) == CLIExitCode.ERROR
 
 
 def test_a_command_without_argument_receives_no_arguments() -> None:
@@ -130,9 +134,9 @@ def test_the_handler_runs_inside_the_commands_trace() -> None:
         yield
         events.append("trace ends")
 
-    def handler(_context: CommandContext, _options: Options, _args: Args) -> ExitCode:
+    def handler(_context: CLICommandContext, _options: Options, _args: CLIArgs) -> CLIExitCode:
         events.append("handler")
-        return ExitCode.SUCCESS
+        return CLIExitCode.SUCCESS
 
     _call(_command(handler), traced=traced)
 
@@ -140,10 +144,10 @@ def test_the_handler_runs_inside_the_commands_trace() -> None:
 
 
 def test_the_trace_sees_what_the_handler_is_handed() -> None:
-    seen: list[tuple[CommandContext, Command, Options, Args]] = []
+    seen: list[tuple[CLICommandContext, Command, Options, CLIArgs]] = []
 
     def traced(
-        context: CommandContext, command: Command, options: Options, args: Args
+        context: CLICommandContext, command: Command, options: Options, args: CLIArgs
     ) -> nullcontext[None]:
         seen.append((context, command, options, args))
         return nullcontext()

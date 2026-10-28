@@ -31,7 +31,10 @@ from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.sources._sources import SNMPSource
 from cmk.cli.engine.call import call
 from cmk.cli.engine.commands import make_command
-from cmk.cli.internal import CommandContext, ExitCode, GlobalOptions, Options
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Options
 from cmk.plugins.checkmk.cli import dump
 from cmk.plugins.checkmk.cli.dump import cli_command_dump_agent
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
@@ -156,9 +159,9 @@ class TestDumpAgent:
         _patch_fetcher_trigger(monkeypatch, raw_data)
 
         call(
-            CommandContext(
+            CLICommandContext(
                 omd_root=_OMD_ROOT,
-                global_options=GlobalOptions(),
+                global_options=CLIGlobalOptions(),
                 logger=logging.getLogger(__name__),
             ),
             make_command(cli_command_dump_agent),
@@ -186,9 +189,9 @@ class TestDumpAgent:
         )
 
         exit_code = call(
-            CommandContext(
+            CLICommandContext(
                 omd_root=_OMD_ROOT,
-                global_options=GlobalOptions(),
+                global_options=CLIGlobalOptions(),
                 logger=logging.getLogger(__name__),
             ),
             make_command(cli_command_dump_agent),
@@ -198,7 +201,7 @@ class TestDumpAgent:
             lambda *_args: nullcontext(),
         )
 
-        assert exit_code == ExitCode.SUCCESS
+        assert exit_code == CLIExitCode.SUCCESS
         assert capsys.readouterr().err == "WARNING [agent]: Success, Section foo denied\n"
 
     @pytest.mark.usefixtures("scenario")
@@ -212,9 +215,9 @@ class TestDumpAgent:
         _patch_fetcher_trigger(monkeypatch, Exception("Something broke"))
 
         exit_code = call(
-            CommandContext(
+            CLICommandContext(
                 omd_root=_OMD_ROOT,
-                global_options=GlobalOptions(),
+                global_options=CLIGlobalOptions(),
                 logger=logging.getLogger(__name__),
             ),
             make_command(cli_command_dump_agent),
@@ -224,7 +227,7 @@ class TestDumpAgent:
             lambda *_args: nullcontext(),
         )
 
-        assert exit_code == ExitCode.FAILURE
+        assert exit_code == CLIExitCode.FAILURE
         assert capsys.readouterr().err == "ERROR [agent]: Something broke\n"
 
 
@@ -326,9 +329,9 @@ class TestDumpAgentSnmpBackend:
 
         _patch_fetcher_trigger(monkeypatch, b"")
         call(
-            CommandContext(
+            CLICommandContext(
                 omd_root=_OMD_ROOT,
-                global_options=GlobalOptions(),
+                global_options=CLIGlobalOptions(),
                 logger=logging.getLogger(__name__),
             ),
             make_command(cli_command_dump_agent),

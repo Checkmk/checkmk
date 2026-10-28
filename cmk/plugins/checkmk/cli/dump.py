@@ -43,7 +43,12 @@ from cmk.checkengine.parser import make_parser, NO_SELECTION, parse_raw_data, Se
 from cmk.checkengine.source_builder import SourceBuilder
 from cmk.checkengine.summarize import summarize
 from cmk.cli.engine.commands import write_stdout
-from cmk.cli.internal import Args, CLICommand, CommandContext, ExitCode, GlobalOptions, Options
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Options
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import ExecutableFinder, load_secrets_file
 from cmk.utils import ip_lookup, timeperiod
@@ -62,8 +67,8 @@ from cmk.utils.log import console
 
 
 def _mode_dump_agent(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
+    omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
     raw_host_name = args[0]
@@ -274,10 +279,10 @@ def _mode_dump_agent(
         for err in errors:
             console.error(err, file=sys.stderr)
 
-        return ExitCode.FAILURE if errors else ExitCode.SUCCESS
+        return CLIExitCode.FAILURE if errors else CLIExitCode.SUCCESS
 
 
-def _run_dump_agent(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_dump_agent(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
     if context.global_options.debug:
         # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -287,7 +292,7 @@ def _run_dump_agent(context: CommandContext, options: Options, args: Args) -> Ex
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_dump_agent = CLICommand(
@@ -320,8 +325,8 @@ cli_command_dump_agent = CLICommand(
 
 
 def _mode_dump_hosts(
-    _omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
+    _omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+) -> CLIExitCode:
     fake_dns = fake_dns_address(options)
     hostlist: Iterable[HostName] = host_addresses(args)
     logger = logging.getLogger("cmk.base.modes")  # this might go nowhere.
@@ -388,10 +393,10 @@ def _mode_dump_hosts(
                 ).get,
                 debug=global_options.debug,
             )
-        return ExitCode.SUCCESS
+        return CLIExitCode.SUCCESS
 
 
-def _run_dump_hosts(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_dump_hosts(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
     if context.global_options.debug:
         # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -401,7 +406,7 @@ def _run_dump_hosts(context: CommandContext, options: Options, args: Args) -> Ex
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_dump = CLICommand(

@@ -89,7 +89,8 @@ from cmk.checkengine.submitters import get_submitter
 from cmk.checkengine.summarize import SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.cli.engine.commands import option_string
-from cmk.cli.internal import CLIOption, ExitCode
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Option as CLIOption
 from cmk.inventory.label_picker import InventorizedHostLabelsStore, LabelPickerConfig, pick_labels
 from cmk.inventory.paths import InventoryPaths
 from cmk.inventory.store import InventoryStore, make_meta
@@ -162,16 +163,16 @@ def host_addresses(raw_host_addresses: Sequence[str]) -> Sequence[HostAddress]:
     return [host_address(raw_host_address) for raw_host_address in raw_host_addresses]
 
 
-def state_exit_code(state: ServiceState) -> ExitCode:
+def state_exit_code(state: ServiceState) -> CLIExitCode:
     match state:
         case 0:
-            return ExitCode.SUCCESS
+            return CLIExitCode.SUCCESS
         case 1:
-            return ExitCode.FAILURE
+            return CLIExitCode.FAILURE
         case 2:
-            return ExitCode.ERROR
+            return CLIExitCode.ERROR
         case _:
-            return ExitCode.UNKNOWN
+            return CLIExitCode.UNKNOWN
 
 
 def mandatory_ip_lookup(

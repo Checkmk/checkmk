@@ -25,7 +25,12 @@ from cmk.base.modes.check_mk import (
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.store import activation_lock
-from cmk.cli.internal import Args, CLICommand, CommandContext, ExitCode, GlobalOptions, Options
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Options
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import config_warnings, ip_lookup, timeperiod
@@ -43,8 +48,8 @@ from cmk.utils.log import console
 
 
 def _mode_dump_nagios_config(
-    omd_root: Path, global_options: GlobalOptions, options: Options, raw_host_names: Args
-) -> ExitCode:
+    omd_root: Path, global_options: CLIGlobalOptions, options: Options, raw_host_names: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
     args = host_addresses(raw_host_names)
@@ -128,17 +133,19 @@ def _mode_dump_nagios_config(
         timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
         get_relay_id=lambda host_name: config.get_relay_id(label_manager.labels_of_host(host_name)),
     )
-    return ExitCode.SUCCESS
+    return CLIExitCode.SUCCESS
 
 
-def _run_dump_nagios_config(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_dump_nagios_config(
+    context: CLICommandContext, options: Options, args: CLIArgs
+) -> CLIExitCode:
     try:
         return _mode_dump_nagios_config(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_nagios_config = CLICommand(
@@ -198,8 +205,8 @@ def _make_configured_notify_relay(
 
 
 def _mode_update(
-    omd_root: Path, global_options: GlobalOptions, options: Options, _args: Args
-) -> ExitCode:
+    omd_root: Path, global_options: CLIGlobalOptions, options: Options, _args: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
     plugins = load_checks(debug=global_options.debug)
@@ -278,21 +285,21 @@ def _mode_update(
         console.error(f"Configuration Error: {e}", file=sys.stderr)
         if global_options.debug:
             raise
-        return ExitCode.FAILURE
+        return CLIExitCode.FAILURE
 
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
-    return ExitCode.SUCCESS
+    return CLIExitCode.SUCCESS
 
 
-def _run_update(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_update(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_update(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_update = CLICommand(
@@ -325,8 +332,8 @@ cli_command_update = CLICommand(
 
 
 def _mode_restart(
-    omd_root: Path, global_options: GlobalOptions, options: Options, raw_host_names: Args
-) -> ExitCode:
+    omd_root: Path, global_options: CLIGlobalOptions, options: Options, raw_host_names: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
     args = host_addresses(raw_host_names)
@@ -402,17 +409,17 @@ def _mode_restart(
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
-    return ExitCode.SUCCESS
+    return CLIExitCode.SUCCESS
 
 
-def _run_restart(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_restart(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_restart(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_restart = CLICommand(
@@ -446,8 +453,8 @@ cli_command_restart = CLICommand(
 
 
 def _mode_reload(
-    omd_root: Path, global_options: GlobalOptions, options: Options, raw_host_names: Args
-) -> ExitCode:
+    omd_root: Path, global_options: CLIGlobalOptions, options: Options, raw_host_names: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
     args = host_addresses(raw_host_names)
@@ -523,17 +530,17 @@ def _mode_reload(
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
-    return ExitCode.SUCCESS
+    return CLIExitCode.SUCCESS
 
 
-def _run_reload(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_reload(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_reload(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_reload = CLICommand(

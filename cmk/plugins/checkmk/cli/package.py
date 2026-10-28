@@ -6,14 +6,20 @@
 
 import sys
 
-from cmk.cli.internal import Args, CLICommand, CommandContext, ExitCode, Options
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Options
 
 _DEPRECATION_MSG = "This command is no longer supported. Please use `mkp%s` instead."
 
 
-def _fail_with_deprecation_msg(_context: CommandContext, _options: Options, argv: Args) -> ExitCode:
+def _fail_with_deprecation_msg(
+    _context: CLICommandContext, _options: Options, argv: CLIArgs
+) -> CLIExitCode:
     sys.stdout.write(_DEPRECATION_MSG % " ".join(("", *argv)) + "\n")
-    return ExitCode.FAILURE
+    return CLIExitCode.FAILURE
 
 
 cli_command_package = CLICommand(

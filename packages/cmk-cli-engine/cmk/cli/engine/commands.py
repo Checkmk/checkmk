@@ -16,13 +16,11 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from typing import Final, override
 
-from cmk.cli.internal import (
-    CLICommand,
-    CLIOption,
-    CommandHandler,
-    entry_point_prefixes,
-    GlobalOptions,
-)
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandHandler
+from cmk.cli.internal import entry_point_prefixes as cli_entry_point_prefixes
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Option as CLIOption
 from cmk.discover_plugins import discover_all_plugins, PluginGroup
 
 OptionSpec = str
@@ -345,7 +343,7 @@ def general_options() -> Sequence[Option]:
     return [_VERBOSE_OPTION, _DEBUG_OPTION, _PROFILE_OPTION]
 
 
-def parse_general_options(all_opts: Options) -> GlobalOptions:
+def parse_general_options(all_opts: Options) -> CLIGlobalOptions:
     """Collect the general options from the parsed command line"""
     verbosity = 0
     debug = False
@@ -357,13 +355,13 @@ def parse_general_options(all_opts: Options) -> GlobalOptions:
             debug = True
         elif option in _PROFILE_OPTION.options():
             profile = True
-    return GlobalOptions(verbosity=verbosity, debug=debug, profile=profile)
+    return CLIGlobalOptions(verbosity=verbosity, debug=debug, profile=profile)
 
 
 def discover_commands() -> Sequence[Command]:
     discovered = discover_all_plugins(
         PluginGroup.CLI,
-        entry_point_prefixes(),
+        cli_entry_point_prefixes(),
         skip_wrong_types=False,
         raise_errors=True,
     )

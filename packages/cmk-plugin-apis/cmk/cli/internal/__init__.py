@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Internal CLI API: the ``CLICommand`` plug-in type, its ``CLIOption`` and the discovery prefix.
+"""Internal CLI API: the ``Command`` plug-in type, its ``Option`` and the discovery prefix.
 
 This is the ``internal`` variant of the per-domain command line API (see the
 plugin discovery reference in ``cmk.discover_plugins``). It is not exposed to
@@ -109,8 +109,8 @@ def _validate_argument_declaration(
 
 
 @dataclass(frozen=True, kw_only=True)
-class CLIOption:
-    """A sub-option of a :class:`CLICommand`, handed to the command's handler as part of its options.
+class Option:
+    """A sub-option of a :class:`Command`, handed to the command's handler as part of its options.
 
     An option can either
     a) have an argument (with ``repeat``, every value is collected),
@@ -138,7 +138,7 @@ class CLIOption:
 
 
 @dataclass(frozen=True, kw_only=True)
-class CLICommand:
+class Command:
     """A command of the ``cmk`` command line, selected via ``--<long_option>``.
 
     Example:
@@ -147,7 +147,7 @@ class CLICommand:
     >>> def greet(context: CommandContext, options: Options, args: Args) -> ExitCode:
     ...     print("Hello", ", ".join(args))
     ...     return ExitCode.SUCCESS
-    >>> cli_command_greet = CLICommand(
+    >>> cli_command_greet = Command(
     ...     long_option="greet",
     ...     handler_function=greet,
     ...     short_help="Greet the given names",
@@ -165,7 +165,7 @@ class CLICommand:
     argument_descr: str | None = None
     argument_optional: bool = False
     long_help: Sequence[str] | None = None
-    sub_options: Sequence[CLIOption] = ()
+    sub_options: Sequence[Option] = ()
 
     @property
     def name(self) -> str:
@@ -180,7 +180,7 @@ class CLICommand:
         )
 
 
-def entry_point_prefixes() -> Mapping[type[CLICommand], str]:
+def entry_point_prefixes() -> Mapping[type[Command], str]:
     """Return the types of plug-ins and their respective prefixes that can be discovered by Checkmk.
 
     Example:
@@ -188,15 +188,15 @@ def entry_point_prefixes() -> Mapping[type[CLICommand], str]:
 
     >>> for plugin_type, prefix in entry_point_prefixes().items():
     ...     print(f'{prefix}... = {plugin_type.__name__}(...)')
-    cli_command_... = CLICommand(...)
+    cli_command_... = Command(...)
     """
-    return {CLICommand: "cli_command_"}
+    return {Command: "cli_command_"}
 
 
 __all__ = [
     "Args",
-    "CLICommand",
-    "CLIOption",
+    "Command",
+    "Option",
     "CommandContext",
     "CommandHandler",
     "entry_point_prefixes",

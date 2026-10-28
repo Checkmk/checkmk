@@ -27,7 +27,8 @@ from cmk.cli.engine.commands import (
     write_paged,
     write_stdout,
 )
-from cmk.cli.internal import CommandContext, ExitCode
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
 
 from .arguments import InvalidArguments, parse, ShowHelp
 
@@ -93,32 +94,32 @@ class Runtime:
 
 
 def dispatch(
-    command: Callable[[], ExitCode],
+    command: Callable[[], CLIExitCode],
     logger: logging.Logger,
     crash_reporter: CrashReporter,
     debug: bool,
-) -> ExitCode:
+) -> CLIExitCode:
     """Run the command, mapping what it raises to the exit status it earns"""
     try:
         return command()
 
     except KeyboardInterrupt:
         logger.error("<Interrupted>")  # noqa: TRY400
-        return ExitCode.INTERRUPTED
+        return CLIExitCode.INTERRUPTED
 
     except OSError as e:
         if e.errno == errno.EPIPE:
-            return ExitCode.BROKEN_PIPE
+            return CLIExitCode.BROKEN_PIPE
         if debug:
             raise
         logger.error(crash_reporter())  # noqa: TRY400
-        return ExitCode.FAILURE
+        return CLIExitCode.FAILURE
 
     except Exception:
         if debug:
             raise
         logger.error(crash_reporter())  # noqa: TRY400
-        return ExitCode.FAILURE
+        return CLIExitCode.FAILURE
 
 
 def run(
@@ -137,7 +138,7 @@ def run(
     parsed = parse(commands, argv)
     if isinstance(parsed, InvalidArguments):
         runtime.write(parsed.message)
-        return ExitCode.UNKNOWN.value
+        return CLIExitCode.UNKNOWN.value
 
     for option, argument in parsed.options:
         if option.lstrip("-") == _LOG_FILE_OPTION.long_option:
@@ -151,19 +152,19 @@ def run(
 
     logger = runtime.logger.getChild("base")
 
-    def command() -> ExitCode:
+    def command() -> CLIExitCode:
         if isinstance(parsed, ShowHelp):
             runtime.page(commands.help())
-            return ExitCode.SUCCESS
+            return CLIExitCode.SUCCESS
         try:
             sub_options = parse_sub_options(parsed.command.sub_options, parsed.options, logger)
         except ValueError as e:
             logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if global_options.debug:
                 raise
-            return ExitCode.UNKNOWN
+            return CLIExitCode.UNKNOWN
         return call(
-            CommandContext(omd_root=omd_root, global_options=global_options, logger=logger),
+            CLICommandContext(omd_root=omd_root, global_options=global_options, logger=logger),
             parsed.command,
             parsed.argument,
             sub_options,

@@ -16,12 +16,14 @@ from cmk.cli.engine.commands import (
     Option,
     parse_sub_options,
 )
-from cmk.cli.internal import Args, CommandContext, Options
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Options
 
 from ._logger import null_logger
 
 
-def _unreachable(_context: CommandContext, _options: Options, _args: Args) -> NoReturn:
+def _unreachable(_context: CLICommandContext, _options: Options, _args: CLIArgs) -> NoReturn:
     raise AssertionError("parsing must not run the command")
 
 

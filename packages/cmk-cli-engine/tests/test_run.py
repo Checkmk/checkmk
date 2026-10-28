@@ -22,15 +22,12 @@ from cmk.cli.engine.run import (
     run,
     Runtime,
 )
-from cmk.cli.internal import (
-    Args,
-    CLICommand,
-    CLIOption,
-    CommandContext,
-    CommandHandler,
-    ExitCode,
-    Options,
-)
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import CommandHandler, Options
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Option as CLIOption
 
 from ._logger import null_logger
 
@@ -60,29 +57,29 @@ class Recorder:
         self.calls.append(args[0] if len(args) == 1 else args)
 
 
-def _raising(exception: BaseException) -> Callable[[], ExitCode]:
-    def command() -> ExitCode:
+def _raising(exception: BaseException) -> Callable[[], CLIExitCode]:
+    def command() -> CLIExitCode:
         raise exception
 
     return command
 
 
 def _dispatch(
-    command: Callable[[], ExitCode], reporter: FakeCrashReporter | None = None
-) -> ExitCode:
+    command: Callable[[], CLIExitCode], reporter: FakeCrashReporter | None = None
+) -> CLIExitCode:
     return dispatch(command, null_logger(), reporter or FakeCrashReporter(), debug=False)
 
 
 def test_the_exit_status_of_a_command_that_succeeds_is_its_own() -> None:
-    assert _dispatch(lambda: ExitCode.ERROR) == ExitCode.ERROR
+    assert _dispatch(lambda: CLIExitCode.ERROR) == CLIExitCode.ERROR
 
 
 def test_an_interrupted_command_exits_as_interrupted() -> None:
-    assert _dispatch(_raising(KeyboardInterrupt())) == ExitCode.INTERRUPTED
+    assert _dispatch(_raising(KeyboardInterrupt())) == CLIExitCode.INTERRUPTED
 
 
 def test_a_broken_pipe_exits_as_broken_pipe() -> None:
-    assert _dispatch(_raising(OSError(errno.EPIPE, "broken pipe"))) == ExitCode.BROKEN_PIPE
+    assert _dispatch(_raising(OSError(errno.EPIPE, "broken pipe"))) == CLIExitCode.BROKEN_PIPE
 
 
 def test_a_broken_pipe_is_no_crash() -> None:
@@ -94,7 +91,7 @@ def test_a_broken_pipe_is_no_crash() -> None:
 
 
 def test_any_other_os_error_exits_one() -> None:
-    assert _dispatch(_raising(OSError(errno.EACCES, "denied"))) == ExitCode.FAILURE
+    assert _dispatch(_raising(OSError(errno.EACCES, "denied"))) == CLIExitCode.FAILURE
 
 
 def test_an_os_error_that_is_no_broken_pipe_is_reported() -> None:
@@ -106,7 +103,7 @@ def test_an_os_error_that_is_no_broken_pipe_is_reported() -> None:
 
 
 def test_an_unexpected_exception_exits_one() -> None:
-    assert _dispatch(_raising(ValueError("unexpected"))) == ExitCode.FAILURE
+    assert _dispatch(_raising(ValueError("unexpected"))) == CLIExitCode.FAILURE
 
 
 def test_an_unexpected_exception_is_reported() -> None:
@@ -240,9 +237,9 @@ def _numbered(handler: CommandHandler) -> Command:
 def test_a_sub_option_reaches_the_command_converted() -> None:
     seen: list[Options] = []
 
-    def remember(_context: CommandContext, sub: Options, _args: Args) -> ExitCode:
+    def remember(_context: CLICommandContext, sub: Options, _args: CLIArgs) -> CLIExitCode:
         seen.append(sub)
-        return ExitCode.SUCCESS
+        return CLIExitCode.SUCCESS
 
     _run(["cmk", "--demo", "--number", "5"], _runtime([_numbered(remember)]))
 
@@ -250,11 +247,11 @@ def test_a_sub_option_reaches_the_command_converted() -> None:
 
 
 def test_a_command_reports_its_own_exit_status() -> None:
-    assert _run(["cmk", "--demo"], _runtime([_command(lambda *_args: ExitCode.ERROR)])) == 2
+    assert _run(["cmk", "--demo"], _runtime([_command(lambda *_args: CLIExitCode.ERROR)])) == 2
 
 
 def test_a_sub_option_argument_the_conversion_rejects_exits_three() -> None:
-    command = _numbered(lambda *_args: ExitCode.SUCCESS)
+    command = _numbered(lambda *_args: CLIExitCode.SUCCESS)
 
     assert _run(["cmk", "--demo", "--number", "x"], _runtime([command])) == 3
 
@@ -263,7 +260,7 @@ def test_a_sub_option_argument_the_conversion_rejects_is_logged(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     runtime = _runtime(
-        [_numbered(lambda *_args: ExitCode.SUCCESS)], logger=logging.getLogger("cmk.test")
+        [_numbered(lambda *_args: CLIExitCode.SUCCESS)], logger=logging.getLogger("cmk.test")
     )
 
     with caplog.at_level(logging.ERROR):
@@ -273,7 +270,7 @@ def test_a_sub_option_argument_the_conversion_rejects_is_logged(
 
 
 def test_a_sub_option_argument_the_conversion_rejects_is_raised_through_under_debug() -> None:
-    runtime = _runtime([_numbered(lambda *_args: ExitCode.SUCCESS)])
+    runtime = _runtime([_numbered(lambda *_args: CLIExitCode.SUCCESS)])
 
     with pytest.raises(ValueError, match="--number: Invalid argument"):
         _run(["cmk", "--debug", "--demo", "--number", "x"], runtime)
@@ -282,9 +279,9 @@ def test_a_sub_option_argument_the_conversion_rejects_is_raised_through_under_de
 def test_a_command_is_handed_the_site_root() -> None:
     seen: list[Path] = []
 
-    def remember(context: CommandContext, _sub: Options, _args: Args) -> ExitCode:
+    def remember(context: CLICommandContext, _sub: Options, _args: CLIArgs) -> CLIExitCode:
         seen.append(context.omd_root)
-        return ExitCode.SUCCESS
+        return CLIExitCode.SUCCESS
 
     _run(["cmk", "--demo"], _runtime([_command(remember)]))
 
@@ -294,9 +291,9 @@ def test_a_command_is_handed_the_site_root() -> None:
 def test_a_command_reports_through_the_engines_logger() -> None:
     seen: list[logging.Logger] = []
 
-    def remember(context: CommandContext, _sub: Options, _args: Args) -> ExitCode:
+    def remember(context: CLICommandContext, _sub: Options, _args: CLIArgs) -> CLIExitCode:
         seen.append(context.logger)
-        return ExitCode.SUCCESS
+        return CLIExitCode.SUCCESS
 
     logger = logging.getLogger("cmk.test")
     _run(["cmk", "--demo"], _runtime([_command(remember)], logger=logger))
@@ -331,7 +328,7 @@ def test_the_help_is_paged() -> None:
 def test_the_help_names_the_commands_there_are() -> None:
     paged = Recorder()
 
-    _run(["cmk", "--help"], _runtime([_command(lambda *_args: ExitCode.SUCCESS)], page=paged))
+    _run(["cmk", "--help"], _runtime([_command(lambda *_args: CLIExitCode.SUCCESS)], page=paged))
 
     assert "--demo" in str(paged.calls[0])
 
@@ -345,9 +342,9 @@ def _ignored_sigint() -> Iterator[None]:
         signal.signal(signal.SIGINT, previous)
 
 
-def _interrupting(_context: CommandContext, _sub: Options, _args: Args) -> ExitCode:
+def _interrupting(_context: CLICommandContext, _sub: Options, _args: CLIArgs) -> CLIExitCode:
     signal.raise_signal(signal.SIGINT)
-    return ExitCode.SUCCESS
+    return CLIExitCode.SUCCESS
 
 
 @pytest.mark.usefixtures("ignored_sigint")
@@ -370,7 +367,7 @@ class FakeCommandTracer:
         self.traced: list[str] = []
 
     def __call__(
-        self, _context: CommandContext, command: Command, _options: Options, _args: Args
+        self, _context: CLICommandContext, command: Command, _options: Options, _args: CLIArgs
     ) -> nullcontext[None]:
         self.traced.append(command.name)
         return nullcontext()
@@ -381,7 +378,7 @@ def test_a_command_runs_traced() -> None:
 
     _run(
         ["cmk", "--demo"],
-        _runtime([_command(lambda *_args: ExitCode.SUCCESS)], trace_command=tracer),
+        _runtime([_command(lambda *_args: CLIExitCode.SUCCESS)], trace_command=tracer),
     )
 
     assert tracer.traced == ["demo"]
@@ -405,7 +402,7 @@ def test_a_command_line_that_is_rejected_is_not_traced() -> None:
 
 def test_a_sub_option_argument_the_conversion_rejects_is_not_traced() -> None:
     tracer = FakeCommandTracer()
-    command = _numbered(lambda *_args: ExitCode.SUCCESS)
+    command = _numbered(lambda *_args: CLIExitCode.SUCCESS)
 
     _run(["cmk", "--demo", "--number", "x"], _runtime([command], trace_command=tracer))
 
@@ -448,5 +445,5 @@ def test_the_profile_is_written_even_when_the_command_raises() -> None:
     assert len(written.calls) == 1
 
 
-def _failing(_context: CommandContext, _sub_options: Options, _args: Args) -> ExitCode:
+def _failing(_context: CLICommandContext, _sub_options: Options, _args: CLIArgs) -> CLIExitCode:
     raise ValueError("no such host")

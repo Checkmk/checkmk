@@ -22,7 +22,12 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.checkengine.discovery import remove_autochecks_of_host
 from cmk.cli.engine.commands import write_stdout
-from cmk.cli.internal import Args, CLICommand, CommandContext, ExitCode, GlobalOptions, Options
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Options
 from cmk.inventory.paths import InventoryPaths
 from cmk.piggyback import backend as piggyback_backend
 from cmk.utils import ip_lookup
@@ -39,8 +44,8 @@ from cmk.utils import ip_lookup
 
 
 def _mode_update_dns_cache(
-    _omd_root: Path, global_options: GlobalOptions, options: Options, _args: Args
-) -> ExitCode:
+    _omd_root: Path, global_options: CLIGlobalOptions, options: Options, _args: CLIArgs
+) -> CLIExitCode:
     fake_dns = fake_dns_address(options)
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     config_cache = loading_result.config_cache
@@ -56,17 +61,19 @@ def _mode_update_dns_cache(
         lookup_ip_address=(ip_lookup.make_lookup_ip_address(ip_lookup_config)),
         debug=global_options.debug,
     )
-    return ExitCode.SUCCESS
+    return CLIExitCode.SUCCESS
 
 
-def _run_update_dns_cache(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_update_dns_cache(
+    context: CLICommandContext, options: Options, args: CLIArgs
+) -> CLIExitCode:
     try:
         return _mode_update_dns_cache(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_update_dns_cache = CLICommand(
@@ -89,8 +96,8 @@ cli_command_update_dns_cache = CLICommand(
 
 
 def _mode_cleanup_piggyback(
-    _omd_root: Path, global_options: GlobalOptions, _options: Options, _args: Args
-) -> ExitCode:
+    _omd_root: Path, global_options: CLIGlobalOptions, _options: Options, _args: CLIArgs
+) -> CLIExitCode:
     loaded_config = config.load(validate_hosts=True, debug=global_options.debug).loaded_config
     piggyback_backend.cleanup_piggyback_files(
         now=time.time(),
@@ -98,17 +105,19 @@ def _mode_cleanup_piggyback(
         all_configured_rule_values=(r["value"] for r in loaded_config.piggybacked_host_files),
         omd_root=cmk.utils.paths.omd_root,
     )
-    return ExitCode.SUCCESS
+    return CLIExitCode.SUCCESS
 
 
-def _run_cleanup_piggyback(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_cleanup_piggyback(
+    context: CLICommandContext, options: Options, args: CLIArgs
+) -> CLIExitCode:
     try:
         return _mode_cleanup_piggyback(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_cleanup_piggyback = CLICommand(
@@ -130,8 +139,8 @@ cli_command_cleanup_piggyback = CLICommand(
 
 
 def _mode_flush(
-    _omd_root: Path, global_options: GlobalOptions, _options: Options, args: Args
-) -> ExitCode:
+    _omd_root: Path, global_options: CLIGlobalOptions, _options: Options, args: CLIArgs
+) -> CLIExitCode:
     hosts = host_addresses(args)
     plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
@@ -229,17 +238,17 @@ def _mode_flush(
             write_stdout("(nothing)")
 
         write_stdout(tty.normal + "\n")
-    return ExitCode.SUCCESS
+    return CLIExitCode.SUCCESS
 
 
-def _run_flush(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_flush(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_flush(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_flush = CLICommand(

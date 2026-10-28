@@ -35,15 +35,13 @@ from cmk.checkengine.snmplib import (
     walk_all_contexts_for_export,
 )
 from cmk.cli.engine.commands import option_strings
-from cmk.cli.internal import (
-    Args,
-    CLICommand,
-    CLIOption,
-    CommandContext,
-    ExitCode,
-    GlobalOptions,
-    Options,
-)
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Options
 from cmk.utils import ip_lookup
 from cmk.utils.log import console
 
@@ -64,8 +62,8 @@ def _make_local_mibs_dir(omd_root: Path) -> Path:
 
 
 def _mode_snmptranslate(
-    _omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
-) -> ExitCode:
+    _omd_root: Path, _global_options: CLIGlobalOptions, _options: Options, args: CLIArgs
+) -> CLIExitCode:
     walk_filename = args[0]
     if not walk_filename:
         raise MKGeneralException("Please provide the name of a SNMP walk file")
@@ -114,17 +112,17 @@ def _mode_snmptranslate(
         sys.stdout.buffer.write(b" --> ")
         sys.stdout.buffer.write(element_translated.strip())
         sys.stdout.buffer.write(b"\n")
-    return ExitCode.SUCCESS
+    return CLIExitCode.SUCCESS
 
 
-def _run_snmptranslate(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_snmptranslate(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_snmptranslate(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_snmptranslate = CLICommand(
@@ -216,8 +214,8 @@ def _make_backend(snmp_config: SNMPHostConfig) -> SNMPBackend:
 
 
 def _mode_snmpwalk(
-    _omd_root: Path, global_options: GlobalOptions, options: Options, hostnames: Args
-) -> ExitCode:
+    _omd_root: Path, global_options: CLIGlobalOptions, options: Options, hostnames: CLIArgs
+) -> CLIExitCode:
     fake_dns = fake_dns_address(options)
     oids = option_strings(options, "oid")
     extra_oids = option_strings(options, "extraoid")
@@ -259,17 +257,17 @@ def _mode_snmpwalk(
             backend=_make_backend(snmp_config),
             debug=global_options.debug,
         )
-    return ExitCode.SUCCESS
+    return CLIExitCode.SUCCESS
 
 
-def _run_snmpwalk(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_snmpwalk(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_snmpwalk(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_snmpwalk = CLICommand(
@@ -324,8 +322,8 @@ cli_command_snmpwalk = CLICommand(
 
 
 def _mode_snmpget(
-    _omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
+    _omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+) -> CLIExitCode:
     fake_dns = fake_dns_address(options)
     if not args:
         raise MKBailOut("You need to specify an OID.")
@@ -373,10 +371,10 @@ def _mode_snmpget(
             oid, single_oid_cache={}, backend=backend, debug=global_options.debug
         )
         sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")
-    return ExitCode.SUCCESS
+    return CLIExitCode.SUCCESS
 
 
-def _run_snmpget(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_snmpget(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
     if context.global_options.debug:
         # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -386,7 +384,7 @@ def _run_snmpget(context: CommandContext, options: Options, args: Args) -> ExitC
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_snmpget = CLICommand(

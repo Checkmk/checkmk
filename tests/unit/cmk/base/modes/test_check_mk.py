@@ -10,7 +10,7 @@ import pytest
 from cmk.base.modes.check_mk import fake_dns_address, mandatory_ip_lookup, state_exit_code
 from cmk.ccc.exceptions import MKBailOut
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.cli.internal import ExitCode
+from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.utils import ip_lookup
 
 
@@ -30,16 +30,16 @@ def test_an_invalid_fake_dns_address_is_refused() -> None:
 @pytest.mark.parametrize(
     ["state", "expected"],
     [
-        (0, ExitCode.SUCCESS),
-        (1, ExitCode.FAILURE),
-        (2, ExitCode.ERROR),
-        (3, ExitCode.UNKNOWN),
-        (4, ExitCode.UNKNOWN),
-        (-1, ExitCode.UNKNOWN),
-        (127, ExitCode.UNKNOWN),
+        (0, CLIExitCode.SUCCESS),
+        (1, CLIExitCode.FAILURE),
+        (2, CLIExitCode.ERROR),
+        (3, CLIExitCode.UNKNOWN),
+        (4, CLIExitCode.UNKNOWN),
+        (-1, CLIExitCode.UNKNOWN),
+        (127, CLIExitCode.UNKNOWN),
     ],
 )
-def test_a_state_exits_with_its_monitoring_meaning(state: int, expected: ExitCode) -> None:
+def test_a_state_exits_with_its_monitoring_meaning(state: int, expected: CLIExitCode) -> None:
     assert state_exit_code(state) == expected
 
 

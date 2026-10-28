@@ -11,15 +11,13 @@ import pytest
 
 from cmk.cli.engine.call import call
 from cmk.cli.engine.commands import make_command, make_option, parse_sub_options
-from cmk.cli.internal import (
-    Args,
-    CLICommand,
-    CLIOption,
-    CommandContext,
-    ExitCode,
-    GlobalOptions,
-    Options,
-)
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Options
 
 from ._logger import null_logger
 
@@ -27,8 +25,8 @@ from ._logger import null_logger
 _OMD_ROOT: Final = Path("/omd/sites/mysite")
 
 
-def _handler(_context: CommandContext, _options: Options, _args: Args) -> ExitCode:
-    return ExitCode.SUCCESS
+def _handler(_context: CLICommandContext, _options: Options, _args: CLIArgs) -> CLIExitCode:
+    return CLIExitCode.SUCCESS
 
 
 def test_make_option_keeps_deprecated_long_options() -> None:
@@ -82,11 +80,11 @@ def test_make_command_parses_sub_options_with_conversion() -> None:
 def test_call_shapes_the_positional_arguments(
     argument: bool, argument_optional: bool, expected_args: list[str]
 ) -> None:
-    seen: list[Args] = []
+    seen: list[CLIArgs] = []
 
-    def _record(_context: CommandContext, _options: Options, args: Args) -> ExitCode:
+    def _record(_context: CLICommandContext, _options: Options, args: CLIArgs) -> CLIExitCode:
         seen.append(args)
-        return ExitCode.ERROR
+        return CLIExitCode.ERROR
 
     command = make_command(
         CLICommand(
@@ -99,7 +97,9 @@ def test_call_shapes_the_positional_arguments(
         )
     )
     exit_status = call(
-        CommandContext(omd_root=_OMD_ROOT, global_options=GlobalOptions(), logger=null_logger()),
+        CLICommandContext(
+            omd_root=_OMD_ROOT, global_options=CLIGlobalOptions(), logger=null_logger()
+        ),
         command,
         "ARG" if argument else "",
         parse_sub_options(
@@ -108,5 +108,5 @@ def test_call_shapes_the_positional_arguments(
         ["ARG", "more"],
         lambda *_args: nullcontext(),
     )
-    assert exit_status == ExitCode.ERROR
+    assert exit_status == CLIExitCode.ERROR
     assert [list(args) for args in seen] == [expected_args]

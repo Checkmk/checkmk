@@ -5,23 +5,21 @@
 
 import pytest
 
-from cmk.cli.internal import (
-    Args,
-    CLICommand,
-    CLIOption,
-    CommandContext,
-    entry_point_prefixes,
-    ExitCode,
-    Options,
-)
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import entry_point_prefixes as cli_entry_point_prefixes
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Options
 
 
 def test_entry_point_prefixes() -> None:
-    assert entry_point_prefixes() == {CLICommand: "cli_command_"}
+    assert cli_entry_point_prefixes() == {CLICommand: "cli_command_"}
 
 
-def _print_version(_context: CommandContext, _options: Options, _args: Args) -> ExitCode:
-    return ExitCode.SUCCESS
+def _print_version(_context: CLICommandContext, _options: Options, _args: CLIArgs) -> CLIExitCode:
+    return CLIExitCode.SUCCESS
 
 
 def test_command_is_named_after_its_long_option() -> None:

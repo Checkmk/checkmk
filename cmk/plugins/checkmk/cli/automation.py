@@ -16,32 +16,30 @@ from cmk import trace
 from cmk.automations.engine import AutomationError
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout
 from cmk.cli.engine.commands import option_string
-from cmk.cli.internal import (
-    Args,
-    CLICommand,
-    CLIOption,
-    CommandContext,
-    ExitCode,
-    GlobalOptions,
-    Options,
-)
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Options
 from cmk.profiling import backend as profiling
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer()
 
 
-def _automation_error_exit_code(error: AutomationError) -> ExitCode:
+def _automation_error_exit_code(error: AutomationError) -> CLIExitCode:
     match error:
         case AutomationError.KNOWN_ERROR:
-            return ExitCode.FAILURE
+            return CLIExitCode.FAILURE
         case AutomationError.UNKNOWN_ERROR:
-            return ExitCode.ERROR
+            return CLIExitCode.ERROR
 
 
 def _mode_automation(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
+    omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+) -> CLIExitCode:
     from cmk.automations.engine import Automations, discover_automations
     from cmk.automations.internal import AutomationID
     from cmk.base import config
@@ -90,10 +88,10 @@ def _mode_automation(
         with suppress(IOError):
             sys.stdout.write(result.serialize(for_cmk_version) + "\n")
             sys.stdout.flush()
-        return ExitCode.SUCCESS
+        return CLIExitCode.SUCCESS
 
 
-def _run_automation(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_automation(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
     if context.global_options.debug:
         # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -103,7 +101,7 @@ def _run_automation(context: CommandContext, options: Options, args: Args) -> Ex
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 def _for_cmk_version(options: Options) -> str:

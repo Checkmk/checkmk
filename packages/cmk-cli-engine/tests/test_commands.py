@@ -24,7 +24,7 @@ from cmk.cli.engine.commands import (
     parse_sub_options,
     write_paged,
 )
-from cmk.cli.internal import GlobalOptions
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 
 from ._logger import null_logger
 
@@ -149,15 +149,15 @@ def test_collected_values_that_are_not_strings_are_rejected() -> None:
 
 
 def test_a_general_flag_is_collected() -> None:
-    assert parse_general_options([("--debug", "")]) == GlobalOptions(debug=True)
+    assert parse_general_options([("--debug", "")]) == CLIGlobalOptions(debug=True)
 
 
 def test_the_verbosity_counts_the_short_and_long_spelling_alike() -> None:
-    assert parse_general_options([("-v", ""), ("--verbose", "")]) == GlobalOptions(verbosity=2)
+    assert parse_general_options([("-v", ""), ("--verbose", "")]) == CLIGlobalOptions(verbosity=2)
 
 
 def test_an_option_that_is_not_a_general_one_is_left_alone() -> None:
-    assert parse_general_options([("--flag", "")]) == GlobalOptions()
+    assert parse_general_options([("--flag", "")]) == CLIGlobalOptions()
 
 
 def _never(*_args: object, **_kwargs: object) -> NoReturn:

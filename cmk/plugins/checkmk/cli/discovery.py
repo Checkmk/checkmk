@@ -74,15 +74,13 @@ from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.cli.engine.commands import option_count, option_names, option_string
-from cmk.cli.internal import (
-    Args,
-    CLICommand,
-    CLIOption,
-    CommandContext,
-    ExitCode,
-    GlobalOptions,
-    Options,
-)
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Options
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import ip_lookup
@@ -107,8 +105,8 @@ def _write_active_check_result(check_result: ActiveCheckResult) -> ServiceState:
 
 
 def _mode_check_discovery(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> ExitCode:
+    omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
     raw_host_name = args[0]
@@ -324,7 +322,9 @@ def _mode_check_discovery(
         )
 
 
-def _run_check_discovery(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_check_discovery(
+    context: CLICommandContext, options: Options, args: CLIArgs
+) -> CLIExitCode:
     if context.global_options.debug:
         # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -334,7 +334,7 @@ def _run_check_discovery(context: CommandContext, options: Options, args: Args) 
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_check_discovery = CLICommand(
@@ -407,8 +407,8 @@ def _preprocess_hostnames(
 
 
 def _mode_discover(
-    omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args
-) -> ExitCode:
+    omd_root: Path, global_options: CLIGlobalOptions, parsed: Options, args: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(parsed)
     options = _discovery_options(parsed)
@@ -626,10 +626,10 @@ def _mode_discover(
             )
             any_failed |= not succeeded
 
-        return ExitCode.FAILURE if any_failed else ExitCode.SUCCESS
+        return CLIExitCode.FAILURE if any_failed else CLIExitCode.SUCCESS
 
 
-def _run_discover(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_discover(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
     if context.global_options.debug:
         # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -639,7 +639,7 @@ def _run_discover(context: CommandContext, options: Options, args: Args) -> Exit
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_discover = CLICommand(

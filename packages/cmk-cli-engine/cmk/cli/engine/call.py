@@ -7,21 +7,24 @@ from collections.abc import Callable
 from contextlib import AbstractContextManager
 
 from cmk.cli.engine.commands import Argument, Arguments, Command
-from cmk.cli.internal import Args, CommandContext, ExitCode, Options
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Options
 
 type CommandTracer = Callable[
-    [CommandContext, Command, Options, Args], AbstractContextManager[None]
+    [CLICommandContext, Command, Options, CLIArgs], AbstractContextManager[None]
 ]
 
 
 def call(
-    context: CommandContext,
+    context: CLICommandContext,
     command: Command,
     arg: Argument,
     sub_options: Options,
     all_args: Arguments,
     traced: CommandTracer,
-) -> ExitCode:
+) -> CLIExitCode:
 
     args: Arguments
     if command.argument and not command.argument_optional:

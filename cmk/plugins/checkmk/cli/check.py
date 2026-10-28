@@ -29,15 +29,13 @@ from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.cli.engine.commands import option_names, option_string
-from cmk.cli.internal import (
-    Args,
-    CLICommand,
-    CLIOption,
-    CommandContext,
-    ExitCode,
-    GlobalOptions,
-    Options,
-)
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Options
 from cmk.server_side_calls_backend import load_secrets_file
 
 # .
@@ -77,8 +75,8 @@ def _checking_options(parsed: Mapping[str, object]) -> CheckingOptions:
 
 
 def _mode_check(
-    omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args
-) -> ExitCode:
+    omd_root: Path, global_options: CLIGlobalOptions, parsed: Options, args: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(parsed)
     options = _checking_options(parsed)
@@ -123,7 +121,7 @@ def _mode_check(
     return state_exit_code(state)
 
 
-def _run_check(context: CommandContext, options: Options, args: Args) -> ExitCode:
+def _run_check(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
     if context.global_options.debug:
         # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -133,7 +131,7 @@ def _run_check(context: CommandContext, options: Options, args: Args) -> ExitCod
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
             raise
-        return ExitCode.UNKNOWN
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_check = CLICommand(

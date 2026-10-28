@@ -15,7 +15,9 @@ import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.cli.engine.commands import Command
-from cmk.cli.internal import Args, CommandContext, Options
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Options
 from cmk.crash import (
     ABCCrashReport,
     BaseDetails,
@@ -87,7 +89,7 @@ def saving_crash_reporter(
 def tracing(environ: Mapping[str, str]) -> CommandTracer:
     @contextmanager
     def traced(
-        context: CommandContext, command: Command, options: Options, args: Args
+        context: CLICommandContext, command: Command, options: Options, args: CLIArgs
     ) -> Iterator[None]:
         init_span_processor(
             trace.init_tracing(

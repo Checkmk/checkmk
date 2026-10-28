@@ -8,14 +8,16 @@ from pathlib import Path
 
 import pytest
 
-from cmk.cli.internal import CommandContext, ExitCode, GlobalOptions
+from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.plugins.checkmk.cli.localize import cli_command_localize
 
 
-def _context() -> CommandContext:
-    return CommandContext(
+def _context() -> CLICommandContext:
+    return CLICommandContext(
         omd_root=Path("/nonexistent"),
-        global_options=GlobalOptions(),
+        global_options=CLIGlobalOptions(),
         logger=logging.getLogger(__name__),
     )
 
@@ -24,4 +26,4 @@ def _context() -> CommandContext:
     "args", [[], ["frobnicate", "de"]], ids=["without a command", "with an unknown command"]
 )
 def test_a_wrong_invocation_fails(args: list[str]) -> None:
-    assert cli_command_localize.handler_function(_context(), {}, args) == ExitCode.FAILURE
+    assert cli_command_localize.handler_function(_context(), {}, args) == CLIExitCode.FAILURE

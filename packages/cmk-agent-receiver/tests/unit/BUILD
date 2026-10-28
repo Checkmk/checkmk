@@ -16,6 +16,8 @@ py_cmk_test(
         # CMK-36295
         "-W",
         "ignore::starlette.exceptions.StarletteDeprecationWarning",
+        "-o",
+        "asyncio_default_fixture_loop_scope=function",
     ],
     deps = [
         ":unit_testlib",

@@ -4,15 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import gettext
 import traceback
 
 import pytest
 from werkzeug.test import create_environ
 
+from cmk.gui.ctx_stack import set_global_var
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import _collect_stylesheets, html
 from cmk.gui.http import Request
+from cmk.gui.i18n import Translation
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
@@ -108,33 +111,40 @@ def test_add_manual_link() -> None:
 
 
 @pytest.mark.usefixtures("request_context", "patch_theme")
-def test_add_manual_link_localized(monkeypatch: pytest.MonkeyPatch) -> None:
-    with monkeypatch.context() as m:
-        m.setattr(user, "language", lambda: "de")
-        assert compare_html(
-            html.render_help("[welcome|Welcome]"),
-            HTML.without_escaping(
-                '<div style="display:none;" class="help"><div class="info_icon"><cmk-static-icon '
-                'class="icon" data="{&quot;icon&quot;: &quot;info&quot;}"></cmk-static-icon></div><div '
-                'class="help_text"><a href="https://docs.checkmk.com/master/de/welcome.html" '
-                'target="_blank">Welcome</a></div></div>'
-            ),
-        )
+def test_add_manual_link_localized() -> None:
+    set_global_var("translation", Translation(gettext.NullTranslations(), "de", {}))
+
+    rendered = html.render_help("[welcome|Welcome]")
+
+    assert compare_html(
+        rendered,
+        HTML.without_escaping(
+            '<div style="display:none;" class="help"><div class="info_icon"><cmk-static-icon '
+            'class="icon" data="{&quot;icon&quot;: &quot;info&quot;}"></cmk-static-icon></div><div '
+            'class="help_text"><a href="https://docs.checkmk.com/master/de/welcome.html" '
+            'target="_blank">Welcome</a></div></div>'
+        ),
+    )
+    assert "/de/welcome.html?" in str(rendered)
 
 
 @pytest.mark.usefixtures("request_context", "patch_theme")
-def test_add_manual_link_anchor(monkeypatch: pytest.MonkeyPatch) -> None:
-    with monkeypatch.context() as m:
-        m.setattr(user, "language", lambda: "de")
-        assert compare_html(
-            html.render_help("[graphing#rrds|RRDs]"),
-            HTML.without_escaping(
-                '<div style="display:none;" class="help"><div class="info_icon"><cmk-static-icon '
-                'class="icon" data="{&quot;icon&quot;: &quot;info&quot;}"></cmk-static-icon></div><div '
-                'class="help_text"><a href="https://docs.checkmk.com/master/de/graphing.html#rrds" '
-                'target="_blank">RRDs</a></div></div>'
-            ),
-        )
+def test_add_manual_link_anchor() -> None:
+    set_global_var("translation", Translation(gettext.NullTranslations(), "de", {}))
+
+    rendered = html.render_help("[graphing#rrds|RRDs]")
+
+    assert compare_html(
+        rendered,
+        HTML.without_escaping(
+            '<div style="display:none;" class="help"><div class="info_icon"><cmk-static-icon '
+            'class="icon" data="{&quot;icon&quot;: &quot;info&quot;}"></cmk-static-icon></div><div '
+            'class="help_text"><a href="https://docs.checkmk.com/master/de/graphing.html#rrds" '
+            'target="_blank">RRDs</a></div></div>'
+        ),
+    )
+    assert "/de/graphing.html?" in str(rendered)
+    assert '#rrds"' in str(rendered)
 
 
 @pytest.mark.usefixtures("request_context")

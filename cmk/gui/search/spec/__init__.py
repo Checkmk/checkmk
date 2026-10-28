@@ -81,6 +81,10 @@ Errors (``SearchParseError``)
     ``key:value`` nor a key prefix, a group, key, tag group or tag without group that is just
     ``*``, unknown service state, empty folder).
 
+Errors (``UnsupportedSearchError``)
+    Raised by the callers, not by ``parse``: a valid spec that the page it is routed to can't
+    filter on, e.g. a service term on All hosts or a tag unknown to the tag config.
+
 Differences to the legacy quicksearch
     * ``hg:`` and ``sg:`` match group names, not regular expressions. Alone, the legacy
       quicksearch matches them as a regular expression against the names of the groups, combined
@@ -112,6 +116,7 @@ from ._terms import (
     ServiceStateName,
     Term,
     UnprefixedSearch,
+    UnsupportedSearchError,
 )
 
 __all__ = [
@@ -134,4 +139,5 @@ __all__ = [
     "ServiceStateName",
     "Term",
     "UnprefixedSearch",
+    "UnsupportedSearchError",
 ]

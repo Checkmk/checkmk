@@ -7,7 +7,7 @@ from typing import Literal
 
 import pytest
 
-from cmk.gui.monitor.hosts.search_filters import host_search_filter, UnsupportedSearchError
+from cmk.gui.monitor.hosts.search_filters import host_search_filter
 from cmk.gui.monitor.shared import (
     AndNode,
     FilterNode,
@@ -16,7 +16,7 @@ from cmk.gui.monitor.shared import (
     StringCondition,
     StringField,
 )
-from cmk.gui.search.spec import parse, PrefixedSearch
+from cmk.gui.search.spec import parse, PrefixedSearch, UnsupportedSearchError
 from cmk.ruleset_matcher.tags import TagConfig, TagGroupID, TagGroupSpec, TagID
 
 

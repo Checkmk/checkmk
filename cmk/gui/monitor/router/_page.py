@@ -8,9 +8,22 @@ from typing import override
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.http import Request
 from cmk.gui.monitor.hosts.page_url import all_hosts_url
-from cmk.gui.monitor.hosts.search_filters import host_search_filter, UnsupportedSearchError
+from cmk.gui.monitor.hosts.search_filters import host_search_filter
+from cmk.gui.monitor.services.page_url import all_services_url
+from cmk.gui.monitor.services.search_filters import service_search_filter
 from cmk.gui.pages import Page, PageContext
-from cmk.gui.search.spec import parse, SearchParseError, UnprefixedSearch
+from cmk.gui.search.spec import (
+    parse,
+    PrefixedSearch,
+    SearchParseError,
+    ServiceFolder,
+    ServiceGroup,
+    ServiceLabel,
+    ServiceName,
+    ServiceState,
+    UnprefixedSearch,
+    UnsupportedSearchError,
+)
 from cmk.ruleset_matcher.tags import TagConfig
 
 _QUERY_VAR = "q"
@@ -35,6 +48,16 @@ def route(request: Request, query: str, tags: TagConfig) -> str:
             # As typed, with control characters as spaces: the page turns "*" into ".*" itself,
             # but drops control characters, which would join the words.
             return all_hosts_url(request, search=spec.text)
+        if _searches_services(spec):
+            return all_services_url(request, filter_node=service_search_filter(spec))
         return all_hosts_url(request, filter_node=host_search_filter(spec, tags))
     except (SearchParseError, UnsupportedSearchError) as e:
         raise MKUserError(_QUERY_VAR, str(e)) from e
+
+
+def _searches_services(spec: PrefixedSearch) -> bool:
+    return any(
+        isinstance(term, ServiceName | ServiceGroup | ServiceState | ServiceLabel | ServiceFolder)
+        for clause in spec.clauses
+        for term in clause
+    )

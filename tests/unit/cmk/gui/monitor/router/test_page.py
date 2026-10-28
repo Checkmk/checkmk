@@ -70,13 +70,35 @@ def test_host_query_goes_to_all_hosts_filter() -> None:
     }
 
 
+def test_service_query_goes_to_all_services_filter() -> None:
+    parts = urlsplit(route(Request(create_environ()), "s:cpu", TagConfig()))
+
+    assert parts.path == "monitor_all_services.py"
+    assert {name: json.loads(value) for name, [value] in parse_qs(parts.query).items()} == {
+        "filter": {"type": "condition", "field": "name", "op": "contains", "value": "cpu"}
+    }
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param("h:web s:cpu", id="host-and-service"),
+        pytest.param("st:warn|crit sl:os:* sg:web*", id="state-label-and-group"),
+    ],
+)
+def test_service_query_goes_to_a_filter_all_services_accepts(query: str) -> None:
+    assert route(Request(create_environ()), query, TagConfig()).startswith(
+        "monitor_all_services.py?filter="
+    )
+
+
 @pytest.mark.parametrize(
     "query, message",
     [
         pytest.param("", "enter a search term", id="empty"),
         pytest.param("x:web", "Unknown search prefix", id="invalid"),
         pytest.param("tg:*", "needs text before it", id="tag-without-group-only-star"),
-        pytest.param("s:cpu", "can only be searched by", id="no-page-for-it"),
+        pytest.param("s:cpu al:web", "can only be searched by", id="no-page-for-it"),
     ],
 )
 def test_query_that_cannot_be_shown_is_rejected(query: str, message: str) -> None:

@@ -116,3 +116,7 @@ class UnprefixedSearch:
 
 
 type SearchSpec = PrefixedSearch | UnprefixedSearch
+
+
+class UnsupportedSearchError(ValueError):
+    """Raised when a page can't filter on a search spec, e.g. All hosts on a service term."""

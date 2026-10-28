@@ -31,12 +31,9 @@ from cmk.gui.search.spec import (
     HostTag,
     PrefixedSearch,
     Term,
+    UnsupportedSearchError,
 )
 from cmk.ruleset_matcher.tags import TagConfig
-
-
-class UnsupportedSearchError(ValueError):
-    """Raised when All hosts can't filter on a search spec."""
 
 
 def host_search_filter(spec: PrefixedSearch, tags: TagConfig) -> FilterNode:

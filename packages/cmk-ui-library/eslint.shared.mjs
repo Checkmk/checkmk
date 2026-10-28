@@ -220,9 +220,9 @@ export function checkmkVueTestConfig(packageDir) {
               name: 'msw',
               importNames: ['http'],
               message:
-                "Use restApiHttp or openApiHttp from 'cmk-ui-library/vitest.msw', whose " +
-                'handlers are typed by the OpenAPI schema. For a URL without one, use ' +
-                'untypedHttp from there.'
+                "Use restApiHttp from 'cmk-ui-library/vitest.msw' for the Checkmk REST API, " +
+                'or createOpenApiHttp from there for another OpenAPI schema. For a URL ' +
+                'without a schema, use untypedHttp from there.'
             }
           ],
           patterns: [...RESTRICTED_IMPORT_PATTERNS]

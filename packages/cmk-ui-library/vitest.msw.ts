@@ -6,9 +6,10 @@
 import type { paths as RestApiPaths } from 'cmk-shared-typing/typescript/openapi_internal'
 import { http } from 'msw'
 import { setupServer } from 'msw/node'
-import { type AnyApiSpec, type OpenApiHttpHandlers, createOpenApiHttp } from 'openapi-msw'
+import { createOpenApiHttp } from 'openapi-msw'
 import { afterAll, afterEach, beforeAll } from 'vitest'
 
+export { createOpenApiHttp }
 export type { ResponseResolver } from 'openapi-msw'
 
 /**
@@ -28,10 +29,6 @@ export function useMswServer(
   return server
 }
 
-export function openApiHttp<Paths extends AnyApiSpec>(baseUrl: string): OpenApiHttpHandlers<Paths> {
-  return createOpenApiHttp<Paths>({ baseUrl })
-}
-
-export const restApiHttp = openApiHttp<RestApiPaths>('*/api/internal')
+export const restApiHttp = createOpenApiHttp<RestApiPaths>({ baseUrl: '*/api/internal' })
 
 export const untypedHttp = http

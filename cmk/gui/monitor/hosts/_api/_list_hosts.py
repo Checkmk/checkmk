@@ -34,7 +34,7 @@ from cmk.web.utils import permission_verification as permissions
 from .._customer import customer_resolver
 from .._exceptions import InvalidFilterError
 from .._folder import MonitorFolders
-from .._impl import LiveStatusHostRepository
+from .._impl import LiveStatusHostRepository, SEARCHED_FIELDS
 from .._models import (
     Host,
     HostFilter,
@@ -492,6 +492,19 @@ class HostTable:
                 customer_of=self._customer_of,
                 visible_relations=visible_relations,
             )
+
+    def only_host(self, *, query: str, filter_node: FilterNode | None) -> HostEntry | None:
+        """The host All hosts would list alone for the search box and the filter, else None."""
+        response = self.list(
+            limit=2,
+            query=query,
+            sorters=DEFAULT_HOST_SORT,
+            scoped_filter=(
+                None if filter_node is None else scope_filter_to_sites(filter_node, self._site_ids)
+            ),
+            fields=SEARCHED_FIELDS,
+        )
+        return response.hosts[0] if response.meta.matched == 1 and response.hosts else None
 
     def rows(
         self, *, columns: Sequence[str], sort: Sequence[str], limit: int, context: VisualContext

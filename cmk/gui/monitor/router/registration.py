@@ -6,8 +6,12 @@
 from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.pages import PageEndpoint, PageRegistry
 
-from ._page import MonitorRouterPage
+from ._page import livestatus_only_host, MonitorRouterPage
 
 
 def register(page_registry: PageRegistry, setup_folders: SetupFolderSource) -> None:
-    page_registry.register(PageEndpoint("monitor_search", MonitorRouterPage(setup_folders)))
+    page_registry.register(
+        PageEndpoint(
+            "monitor_search", MonitorRouterPage(setup_folders, livestatus_only_host(setup_folders))
+        )
+    )

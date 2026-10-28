@@ -107,15 +107,22 @@ Interfaces
     One that no page can filter on yet goes to the legacy search of the
     classic views (``search_open.py``) and is logged by its prefixes and the
     reason, not by its values; this keeps ``search_open.py`` needed as a
-    fallback until the pages can filter on every prefix.
+    fallback until the pages can filter on every prefix. Before it redirects
+    a host search (with or without prefix), it asks Livestatus through
+    ``HostTable.only_host`` of ``cmk.gui.monitor.hosts.table`` whether
+    "All hosts" would list a single host for it; if so, it opens "Services
+    of host" for that host with the host panel open instead.
 
 * Internal REST endpoints below ``/monitor/`` (see the *Checkmk Internal*
   documentation of the REST API).
 * ``cmk.gui.monitor.hosts.table``: the supported entry point for server-side
-  consumers that query hosts, such as the dashboards and the PDF reports.
-  Other components use only this module, not the package internals. It
-  offers ``HostTable`` (with ``list`` and ``parse_filter``), the column
-  catalogs ``ALL_HOSTS_TABLE`` and ``HOST_TABLE``, ``HostEntry``,
+  consumers that query hosts, such as the dashboards, the PDF reports and
+  the router ``monitor_search``. Other components use only this module, not
+  the package internals. It offers ``HostTable`` (with ``list``,
+  ``parse_filter`` and ``only_host``, the single host a listing finds, if
+  any), ``FilterNode``, the filter tree ``only_host`` takes,
+  ``MonitorFolders``, the column catalogs ``ALL_HOSTS_TABLE`` and
+  ``HOST_TABLE``, ``HostEntry``,
   ``HOST_LISTING`` (which validates a request body of the internal REST
   endpoint that lists hosts with the endpoint's own model) and
   ``ALL_HOSTS_PERMISSION``, the permission the page "All hosts" needs. The

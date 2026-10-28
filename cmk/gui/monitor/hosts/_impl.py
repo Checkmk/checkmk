@@ -644,6 +644,11 @@ _SEARCHED_FIELDS: Mapping[HostOptionalField, Callable[[str], QueryExpression]] =
 }
 
 
+SEARCHED_FIELDS: frozenset[HostOptionalField] = frozenset(
+    {*_SEARCHED_FIELDS, HostOptionalField.FOLDER}
+)
+
+
 def _build_query_filter(
     query: str,
     fields: Set[HostOptionalField],

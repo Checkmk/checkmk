@@ -312,3 +312,70 @@ def test_a_filter_tree_from_the_page_url_parses_into_site_scoped_filter_nodes(
 def test_an_invalid_filter_tree_is_rejected_as_invalid_filter(raw: str) -> None:
     with pytest.raises(InvalidFilterError):
         _host_table().parse_filter(raw)
+
+
+def _listed_host(name: str, *, alias: str = "", address: str = "") -> dict[str, object]:
+    return {
+        "name": name,
+        "alias": alias or name,
+        "address": address or "127.0.0.1",
+        "state": 0,
+        "has_been_checked": 1,
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "is_flapping": 0,
+        "staleness": 0.0,
+        "filename": "",
+        "labels": {},
+        "label_sources": {},
+        "label_names": [],
+        "label_values": [],
+        "tags": {},
+        "tag_names": [],
+        "tag_values": [],
+        "contacts": [],
+        "contact_groups": [],
+        "groups": [],
+    }
+
+
+def _only_host_named(
+    mock_livestatus: MockLiveStatusConnection, hosts: list[dict[str, object]], search: str
+) -> str | None:
+    mock_livestatus.add_table("hosts", hosts)
+    mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
+    mock_livestatus.expect_query(["GET hosts"], match_type="loose")
+    mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
+    with mock_livestatus:
+        host = _host_table().only_host(query=search, filter_node=None)
+    return None if host is None else host.name
+
+
+def test_only_host_is_the_single_host_the_search_finds(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    assert (
+        _only_host_named(mock_livestatus, [_listed_host("web01"), _listed_host("db01")], "web")
+        == "web01"
+    )
+
+
+@pytest.mark.parametrize(
+    "other_host",
+    [
+        pytest.param(_listed_host("proxy01", alias="web proxy"), id="by-alias"),
+        pytest.param(_listed_host("proxy01", address="web.example.com"), id="by-address"),
+    ],
+)
+def test_only_host_is_none_when_the_search_finds_another_host_by_a_searched_column(
+    mock_livestatus: MockLiveStatusConnection, other_host: dict[str, object]
+) -> None:
+    assert _only_host_named(mock_livestatus, [_listed_host("web01"), other_host], "web") is None

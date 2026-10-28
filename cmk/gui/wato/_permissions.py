@@ -78,6 +78,21 @@ def register(
     permission_registry.register(
         Permission(
             section=PERMISSION_SECTION_WATO,
+            name="see_pending_changes",
+            title=_l("See pending changes"),
+            description=_l(
+                "Allows listing the pending changes through the REST API without the "
+                "permission to activate them. Users who may activate changes can always list "
+                "them. The GUI shows pending changes to every user with access to Setup, "
+                "regardless of this permission."
+            ),
+            defaults=["admin", "user"],
+        )
+    )
+
+    permission_registry.register(
+        Permission(
+            section=PERMISSION_SECTION_WATO,
             name="activateforeign",
             title=_l("Activate foreign changes"),
             description=_l(

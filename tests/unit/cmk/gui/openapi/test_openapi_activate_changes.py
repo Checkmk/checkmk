@@ -121,6 +121,50 @@ def test_list_pending_changes(clients: ClientRegistry) -> None:
     assert "actions/activate-changes/invoke" in resp.json["links"][0]["href"]
 
 
+def _log_in_with_admin_role_lacking(clients: ClientRegistry, *permissions: str) -> None:
+    clients.UserRole.clone(body={"role_id": "admin", "new_role_id": "restricted"})
+    clients.UserRole.edit(
+        role_id="restricted",
+        body={"new_permissions": dict.fromkeys(permissions, "no")},
+    )
+    clients.User.create(
+        username="restricted",
+        fullname="restricted",
+        roles=["restricted"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+    clients.ActivateChanges.set_credentials("restricted", "supersecretish")
+
+
+@pytest.mark.parametrize(
+    "lacking",
+    [
+        pytest.param("wato.activate", id="without activate"),
+        pytest.param("wato.see_pending_changes", id="without see_pending_changes"),
+    ],
+)
+def test_role_with_either_permission_lists_pending_changes(
+    clients: ClientRegistry, lacking: str
+) -> None:
+    clients.HostConfig.create(host_name="foobar", folder="/")
+    _log_in_with_admin_role_lacking(clients, lacking)
+
+    resp = clients.ActivateChanges.list_pending_changes()
+
+    assert any("foobar" in change["text"] for change in resp.json["value"])
+
+
+def test_role_without_either_permission_cannot_list_pending_changes(
+    clients: ClientRegistry,
+) -> None:
+    clients.HostConfig.create(host_name="foobar", folder="/")
+    _log_in_with_admin_role_lacking(clients, "wato.activate", "wato.see_pending_changes")
+
+    resp = clients.ActivateChanges.list_pending_changes(expect_ok=False)
+
+    resp.assert_status_code(403)
+
+
 def test_list_activate_changes_invalid_etag(clients: ClientRegistry) -> None:
     clients.HostConfig.create(host_name="foobar", folder="/")
     resp = clients.ActivateChanges.activate_changes(

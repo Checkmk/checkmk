@@ -94,7 +94,7 @@ def test_openapi_groups(
         resp,
         ".../update",
         params=json.dumps(update_group),
-        headers={"If-Match": "foo bar", "Accept": "application/json"},
+        headers={"If-Match": '"foo bar"', "Accept": "application/json"},
         status=412,
         content_type="application/json",
     )

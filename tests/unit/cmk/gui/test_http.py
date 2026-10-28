@@ -6,7 +6,6 @@
 import io
 import time
 from collections.abc import Iterator
-from contextlib import nullcontext
 from email.utils import formatdate
 
 import pytest
@@ -15,15 +14,22 @@ from pytest import MonkeyPatch
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.test import create_environ
 
-from tests.unit.cmk.web_test_app import WebTestAppForCMK
-
 from cmk.gui import http
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.utils.script_helpers import application_and_request_context
 
 global_request = request
-MAX_FORM_SIZE = 200  # MBs, as seen in cmk.gui.http::Request.max_form_memory_size
+# The limit enforced by cmk.gui.http.Request.max_form_memory_size. It applies to
+# each text field of a multipart form, not to the form as a whole.
+MAX_FORM_SIZE = 200 * 1024 * 1024  # 200 MiB
+# A stand-in limit used to exercise the boundary logic without allocating hundreds
+# of MiB of payload. The real limit is monkeypatched down to this value by the
+# small_form_size_limit fixture. Keep it well above werkzeug's 64 KiB multipart
+# read chunk: when the whole body fits into a single chunk, werkzeug counts the
+# part headers and the boundary against the limit, too, so a field of exactly the
+# limit would be rejected.
+TEST_FORM_SIZE = 1024 * 1024  # 1 MiB
 
 RequestContextFixture = Iterator[None]
 
@@ -378,34 +384,42 @@ def test_response_del_cookie(monkeypatch: MonkeyPatch) -> None:
     )
 
 
-@pytest.mark.parametrize(
-    ["size_mb", "error"],
-    [
-        pytest.param(1024 * 1024 * (MAX_FORM_SIZE - 1), False, id="under_limit"),
-        pytest.param(1024 * 1024 * MAX_FORM_SIZE, True, id="at_limit"),
-        pytest.param(1024 * 1024 * (MAX_FORM_SIZE + 1), True, id="over_limit"),
-    ],
-)
-def test_response_413_form_size_limit(
-    wsgi_app: WebTestAppForCMK,
-    patch_theme: None,
-    size_mb: int,
-    error: bool,
-) -> None:
-    """Validate the maximum form size remains under the defined limits.
+@pytest.fixture()
+def small_form_size_limit(monkeypatch: MonkeyPatch) -> None:
+    """Shrink the real limit (200 MiB) so that the boundary can be exercised with
+    MiB-sized payloads instead of allocating hundreds of MiB."""
+    # Guard the assumed default so this stays in sync with the production limit.
+    assert http.Request.max_form_memory_size == MAX_FORM_SIZE
+    monkeypatch.setattr(http.Request, "max_form_memory_size", TEST_FORM_SIZE)
 
-    Args:
-        wsgi_app (WebTestAppForCMK): wsgi client of the flask application.
-        patch_theme (None): patch frontend configuration for unit testing.
-        size_mb (int): size of data added to the form.
-        error (bool): whether an error is raised or not.
-    """
-    content = "a" * size_mb
-    with pytest.raises(RequestEntityTooLarge) if error else nullcontext():
-        wsgi_app.post(
-            "/NO_SITE/check_mk/login.py",
-            data={"_username": content},
+
+# The following tests deliberately pin werkzeug's semantics of the limit, acting
+# as a canary for library upgrades changing them. werkzeug 3.1.9 was such an
+# upgrade: since then, application/x-www-form-urlencoded bodies are not checked
+# at all, only the text fields of multipart forms are.
+def _multipart_request(field_value: str) -> http.Request:
+    return http.Request(
+        create_environ(
+            method="POST", data={"field": field_value}, content_type="multipart/form-data"
         )
+    )
+
+
+@pytest.mark.usefixtures("small_form_size_limit")
+def test_multipart_text_field_at_form_size_limit_is_accepted() -> None:
+    req = _multipart_request("a" * TEST_FORM_SIZE)
+
+    field = req.var("field")
+
+    assert field is not None and len(field) == TEST_FORM_SIZE
+
+
+@pytest.mark.usefixtures("small_form_size_limit")
+def test_multipart_text_field_over_form_size_limit_is_rejected() -> None:
+    req = _multipart_request("a" * (TEST_FORM_SIZE + 1))
+
+    with pytest.raises(RequestEntityTooLarge):
+        req.var("field")
 
 
 # User IDs in Checkmk may contain non ascii characters. When they need to be encoded,

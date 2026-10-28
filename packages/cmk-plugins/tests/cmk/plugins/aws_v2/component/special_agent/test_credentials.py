@@ -25,6 +25,7 @@ from cmk.testlib.aws_v2.fake_sts import (
     LIST_ROLE,
     MANAGEMENT_ACCOUNT,
     NO_LIST_KEY_ID,
+    ORGANIZATION_ACCOUNT_NAMES,
     ROLE,
     ROLE_ACCOUNT,
     temporary_key_id,
@@ -140,6 +141,18 @@ def test_spoke_external_id_reaches_every_assume_role_call(fake_sts: FakeSts) -> 
 
 
 @pytest.mark.usefixtures("fake_sts")
+def test_listed_spoke_accounts_have_no_name() -> None:
+    credentials = AwsCredentials(
+        HubCredentials(AccessKey("AKIAHUB", "secret")), "us-east-1", None, SPOKES
+    )
+
+    assert [
+        credentials.open_account(account_id).name
+        for account_id in credentials.monitored_account_ids()
+    ] == [None, None]
+
+
+@pytest.mark.usefixtures("fake_sts")
 def test_denied_spoke_role_names_its_account() -> None:
     with pytest.raises(AwsAccessError, match=DENIED_ACCOUNT):
         _spoke_accounts(SpokeAccounts(["333333333333", DENIED_ACCOUNT], "CheckmkMonitoring"))
@@ -196,6 +209,16 @@ def test_organization_mode_reads_every_page_of_the_account_list() -> None:
 @pytest.mark.usefixtures("fake_sts")
 def test_organization_mode_monitors_only_the_active_accounts() -> None:
     assert _organization_account_ids(Organization()) == ACTIVE_ORGANIZATION_ACCOUNTS
+
+
+@pytest.mark.usefixtures("fake_sts")
+def test_organization_accounts_have_their_names_from_the_account_list() -> None:
+    credentials = _organization(Organization())
+
+    assert {
+        account.id: account.name
+        for account in map(credentials.open_account, credentials.monitored_account_ids())
+    } == ORGANIZATION_ACCOUNT_NAMES
 
 
 @pytest.mark.usefixtures("fake_sts")

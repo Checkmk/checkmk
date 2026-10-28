@@ -229,6 +229,7 @@ class AWSSections(abc.ABC):
         debug: bool = False,
         config: botocore.config.Config | None = None,
         output: TextIO | None = None,
+        account_name: str | None = None,
     ) -> None:
         self._hostname = hostname
         # Where the agent output goes. None is sys.stdout at the time of writing.
@@ -243,6 +244,7 @@ class AWSSections(abc.ABC):
         self._sections: list[AWSSection] = []
         self.config = config
         self.account_id = account_id
+        self._account_name = account_name
         # The sections that a service control policy kept from running. They are no error:
         # the organization chose to deny them.
         self.denied_by_scp: list[str] = []
@@ -336,7 +338,10 @@ class AWSSections(abc.ABC):
 
     def _collect_static_host_labels(self) -> Mapping[str, str]:
         """Labels every host will be labelled with regardless of type"""
-        return {"cmk/aws/account": self.account_id}
+        return {
+            "cmk/aws/account": self.account_id,
+            **({"cmk/aws/account_name": self._account_name} if self._account_name else {}),
+        }
 
     def _collect_account_host_labels(self) -> Mapping[str, str]:
         """Labels of the host that stands for the account"""

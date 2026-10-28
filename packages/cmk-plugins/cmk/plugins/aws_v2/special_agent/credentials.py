@@ -157,6 +157,8 @@ def _is_active(account: Mapping[str, str]) -> bool:
 class AwsAccount:
     id: str
     session: boto3.session.Session
+    # Only ListAccounts tells the name, so only the accounts of an organization have one.
+    name: str | None = None
 
 
 class AwsCredentials:
@@ -193,6 +195,7 @@ class AwsCredentials:
         self._client_config = client_config
         self._session: boto3.session.Session | None = None
         self._account_id: str | None = None
+        self._account_names: dict[str, str] = {}
 
     def session(self) -> boto3.session.Session:
         """The login (hub) session, built on first use and then reused.
@@ -262,6 +265,10 @@ class AwsCredentials:
             raise AwsAccessError(
                 f"Cannot list the accounts in the organization: {describe_credential_failure(e)}"
             )
+        # open_account() gives each account its name from here.
+        self._account_names = {
+            account["Id"]: account["Name"] for account in accounts if account.get("Name")
+        }
         return [
             account["Id"]
             for account in accounts
@@ -294,4 +301,4 @@ class AwsCredentials:
             )
         except Exception as e:
             raise AwsAccessError(f"Account {account_id}: {describe_credential_failure(e)}")
-        return AwsAccount(assumed_account_id, session)
+        return AwsAccount(assumed_account_id, session, name=self._account_names.get(account_id))

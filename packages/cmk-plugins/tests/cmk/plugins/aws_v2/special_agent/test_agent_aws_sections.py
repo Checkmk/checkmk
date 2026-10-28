@@ -202,6 +202,30 @@ class TestAWSHostLabelSections:
         assert section_stdout.strip().split("\n") == expected_lines
 
 
+def test_account_name_labels_the_hosts_of_the_resources(capsys: pytest.CaptureFixture[str]) -> None:
+    sections = AWSSectionsGeneric(
+        hostname="", session=mock.Mock(), account_id="test-account", account_name="production"
+    )
+    results: Results = {
+        ("ec2", 1606382471.693873, 38582.763184): [
+            AWSSectionResult(
+                piggyback_hostname=TargetHost("test-piggyback"),
+                content=[{}],
+                piggyback_host_labels={"cmk/aws/test-key": "test-value"},
+            )
+        ],
+    }
+
+    sections._write_host_labels(results)  # noqa: SLF001
+
+    lines = capsys.readouterr().out.splitlines()
+    assert json.loads(lines[lines.index("<<<<test-piggyback>>>>") + 2]) == {
+        "cmk/aws/account": "test-account",
+        "cmk/aws/account_name": "production",
+        "cmk/aws/test-key": "test-value",
+    }
+
+
 def _account_host_sections() -> AWSSectionsUSEast:
     config = AWSConfig(
         "aws-org", Args(), ([], []), NamingConvention.ip_region_instance

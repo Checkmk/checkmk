@@ -43,17 +43,36 @@ MANAGEMENT_ACCOUNT = "888888888888"
 LIST_ROLE = f"arn:aws:iam::{MANAGEMENT_ACCOUNT}:role/CheckmkAccountList"
 NO_LIST_KEY_ID = "AKIANOLIST"
 
+ORGANIZATION_ACCOUNT_NAMES = {
+    MANAGEMENT_ACCOUNT: "management",
+    "333333333333": "production",
+    "444444444444": "staging",
+}
 ORGANIZATION_PAGES = [
     [
-        {"Id": MANAGEMENT_ACCOUNT, "State": "ACTIVE", "Status": "ACTIVE"},
-        {"Id": "333333333333", "State": "ACTIVE", "Status": "ACTIVE"},
-        {"Id": "666666666666", "State": "SUSPENDED", "Status": "SUSPENDED"},
+        {
+            "Id": MANAGEMENT_ACCOUNT,
+            "Name": ORGANIZATION_ACCOUNT_NAMES[MANAGEMENT_ACCOUNT],
+            "State": "ACTIVE",
+            "Status": "ACTIVE",
+        },
+        {
+            "Id": "333333333333",
+            "Name": ORGANIZATION_ACCOUNT_NAMES["333333333333"],
+            "State": "ACTIVE",
+            "Status": "ACTIVE",
+        },
+        {"Id": "666666666666", "Name": "suspended", "State": "SUSPENDED", "Status": "SUSPENDED"},
     ],
     [
         # An answer from before AWS added State.
-        {"Id": "444444444444", "Status": "ACTIVE"},
+        {
+            "Id": "444444444444",
+            "Name": ORGANIZATION_ACCOUNT_NAMES["444444444444"],
+            "Status": "ACTIVE",
+        },
         # State wins over the deprecated Status.
-        {"Id": "777777777777", "State": "CLOSED", "Status": "ACTIVE"},
+        {"Id": "777777777777", "Name": "closed", "State": "CLOSED", "Status": "ACTIVE"},
     ],
 ]
 ACTIVE_ORGANIZATION_ACCOUNTS = [MANAGEMENT_ACCOUNT, "333333333333", "444444444444"]

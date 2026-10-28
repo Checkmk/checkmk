@@ -21,6 +21,7 @@ from cmk.testlib.aws_v2.fake_sts import (
     MANAGEMENT_ACCOUNT,
     NO_LIST_KEY_ID,
     NOT_ENABLED_REGION,
+    ORGANIZATION_ACCOUNT_NAMES,
     ROLE,
     ROLE_ACCOUNT,
     SCP_DENIED_ACCOUNT,
@@ -271,6 +272,20 @@ def test_organization_mode_gives_every_active_account_its_own_host(
     hosts = _hosts(fake_sts, monkeypatch, capsys, [*LOGIN_ARGS, "--organization"])
 
     assert hosts == {None, *ACTIVE_ORGANIZATION_ACCOUNTS}
+
+
+def test_organization_mode_labels_every_account_host_with_its_name(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
+    agent_aws_main(parse_arguments([*LOGIN_ARGS, "--organization"]))
+
+    names = {
+        host: json.loads(lines[lines.index("<<<labels:sep(0)>>>") + 1])["cmk/aws/account_name"]
+        for host, lines in _sections_by_host(capsys.readouterr().out).items()
+        if host is not None
+    }
+    assert names == ORGANIZATION_ACCOUNT_NAMES
 
 
 def test_excluded_account_of_the_organization_gets_no_host(

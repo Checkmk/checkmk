@@ -798,6 +798,7 @@ def _run_region(
             debug=args.debug,
             config=client_config,
             output=output,
+            account_name=account.name,
         )
         sections.init_sections(services, region, account_config, s3_limits_distributor)
         sections.run(use_cache=use_cache)

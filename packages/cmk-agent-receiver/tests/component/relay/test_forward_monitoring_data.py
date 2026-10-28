@@ -29,6 +29,7 @@ from cmk.testlib.agent_receiver.clients import (
     RelayRegistrationClient,
 )
 from cmk.testlib.agent_receiver.mock_socket import (
+    create_busy_socket,
     create_crashy_socket,
     create_non_listening_socket,
     create_socket,
@@ -160,6 +161,27 @@ def test_forward_monitoring_data_with_delay(
         response = relay.forward_monitoring_data(monitoring_data)
         assert response.status_code == HTTPStatus.NO_CONTENT, response.text
         connection_data = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + delay + 1)
+        assert_monitoring_data_payload(connection_data.data, payload)
+
+
+def test_forward_monitoring_data_waits_for_a_free_slot_in_the_backlog(
+    socket_path: str,
+    relay_id: str,
+    relay_config: RelayConfig,
+    test_client: TestClient,
+    site: SiteMock,
+) -> None:
+    """The core accepts one waiting connection at a time; a full backlog must not lose the result."""
+    payload = b"monitoring payload"
+    monitoring_data = create_monitoring_data(relay_config.serial, payload)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(relay_config)
+
+    # Without waiting, the hand-over fails on its first connect, well within this time.
+    with create_busy_socket(socket_path=socket_path, busy_for=0.2) as ms:
+        response = relay.forward_monitoring_data(monitoring_data)
+        assert response.status_code == HTTPStatus.NO_CONTENT, response.text
+        connection_data = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT)
         assert_monitoring_data_payload(connection_data.data, payload)
 
 

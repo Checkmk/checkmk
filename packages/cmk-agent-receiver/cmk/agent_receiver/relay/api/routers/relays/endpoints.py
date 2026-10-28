@@ -157,7 +157,7 @@ async def forward_monitoring_data(
     Forward monitoring data to CMC for a specific relay and host.
     """
     try:
-        handler.process(
+        await handler.process(
             relay_id=RelayID(relay_id),
             payload=monitoring_data.payload,
             host=monitoring_data.host,

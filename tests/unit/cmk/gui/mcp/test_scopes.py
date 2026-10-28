@@ -38,6 +38,7 @@ _READ_ONLY_TOOL_ENDPOINTS = [
     ("list_structure", "get", "/domain-types/host_tag_group/collections/all"),
     ("list_structure", "post", "/domain-types/host/collections/all"),
     ("list_structure", "post", "/domain-types/service/collections/all"),
+    ("get_pending_changes", "get", "/domain-types/activation_run/collections/pending_changes"),
 ]
 
 
@@ -74,11 +75,9 @@ def test_read_scope_satisfies_the_endpoints_of_a_read_only_tool(
         )
 
 
-@pytest.mark.usefixtures("load_plugins")
-def test_read_scope_cannot_change_groups_or_tags() -> None:
-    without = sorted(READ_PERMISSIONS - {"wato.groups", "wato.hosttags"})
-
-    writable = [
+def _writes_opened_to_the_read_scope_by(permissions: set[str]) -> list[str]:
+    without = sorted(READ_PERMISSIONS - permissions)
+    return [
         f"{method.upper()} {path}"
         for method, path, required in _registered_endpoints()
         if method != "get"
@@ -87,4 +86,16 @@ def test_read_scope_cannot_change_groups_or_tags() -> None:
         and not required.validate(without)
     ]
 
+
+@pytest.mark.usefixtures("load_plugins")
+def test_read_scope_cannot_change_groups_or_tags() -> None:
+    writable = _writes_opened_to_the_read_scope_by({"wato.groups", "wato.hosttags"})
+
     assert not writable, f"the read scope would permit changing groups or tags via {writable}"
+
+
+@pytest.mark.usefixtures("load_plugins")
+def test_read_scope_gains_no_write_from_seeing_pending_changes() -> None:
+    writable = _writes_opened_to_the_read_scope_by({"wato.see_pending_changes"})
+
+    assert not writable, f"the read scope would permit writes via {writable}"

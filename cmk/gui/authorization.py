@@ -31,6 +31,7 @@ READ_PERMISSIONS: Final[frozenset[str]] = frozenset(
         # list_structure
         "wato.groups",
         "wato.hosttags",
+        "wato.see_pending_changes",
     }
 )
 

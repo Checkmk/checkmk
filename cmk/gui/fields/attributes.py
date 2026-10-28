@@ -9,6 +9,7 @@ from collections.abc import Mapping
 
 from marshmallow import ValidationError
 from marshmallow.decorators import post_load, pre_dump, validates_schema
+from marshmallow.exceptions import SCHEMA
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.tags import TagGroupID
@@ -533,7 +534,6 @@ class NetworkScan(BaseSchema):
             "This user needs the permission to add new hosts to this folder."
         ),
         required=False,
-        validate=_active_users,
     )
     tag_criticality = String(
         description=(
@@ -545,21 +545,65 @@ class NetworkScan(BaseSchema):
     )
     translate_names = Nested(TranslateNames)
 
-    @validates_schema
-    def validate_tag_criticality(self, data: dict[str, typing.Any], **kwargs: typing.Any) -> None:
-        tag_criticality = load_tag_group(TagGroupID("criticality"))
-        if tag_criticality is None:
-            if "tag_criticality" in data:
-                raise ValidationError(
-                    "Tag group criticality does not exist. tag_criticality must be omitted."
-                )
-        else:
-            if "tag_criticality" not in data:
-                raise ValidationError("tag_criticality must be specified")
-            if (value := data["tag_criticality"]) not in (t.id for t in tag_criticality.tags):
-                raise ValidationError(
-                    f"tag_criticality value {value!r} is not defined for criticality tag group"
-                )
+
+def _validate_tag_criticality(network_scan: Mapping[str, typing.Any]) -> None:
+    tag_criticality = load_tag_group(TagGroupID("criticality"))
+    if tag_criticality is None:
+        if "tag_criticality" in network_scan:
+            raise ValidationError(
+                "Tag group criticality does not exist. tag_criticality must be omitted."
+            )
+    else:
+        if "tag_criticality" not in network_scan:
+            raise ValidationError("tag_criticality must be specified")
+        if (value := network_scan["tag_criticality"]) not in (t.id for t in tag_criticality.tags):
+            raise ValidationError(
+                f"tag_criticality value {value!r} is not defined for criticality tag group"
+            )
+
+
+def _validate_network_scan_references(network_scan: Mapping[str, typing.Any]) -> None:
+    if "run_as" in network_scan:
+        try:
+            _active_users(network_scan["run_as"])
+        except ValidationError as exc:
+            raise ValidationError({"run_as": exc.messages}) from exc
+
+    try:
+        _validate_tag_criticality(network_scan)
+    except ValidationError as exc:
+        raise ValidationError({SCHEMA: exc.messages}) from exc
+
+
+class NetworkScanField(Nested):
+    """The network scan settings of a folder.
+
+    The run_as user may be deleted and the criticality tag group may be added or removed after
+    the folder was saved. Both are therefore only checked on settings sent to the REST API, so
+    that a folder with outdated settings can still be shown.
+    """
+
+    def __init__(self, **kwargs: typing.Any) -> None:
+        super().__init__(NetworkScan, **kwargs)
+
+    def _deserialize(
+        self,
+        value: typing.Any,
+        attr: str | None,
+        data: Mapping[str, typing.Any] | None = None,
+        partial: bool | typing.Sequence[str] | typing.AbstractSet[str] | None = None,
+        **kwargs: typing.Any,
+    ) -> typing.Any:
+        network_scan = super()._deserialize(value, attr, data, partial=partial, **kwargs)
+        if not self._is_outbound():
+            _validate_network_scan_references(network_scan)
+        return network_scan
+
+    def _is_outbound(self) -> bool:
+        # cmk.fields.Nested shadows marshmallow's context property with an empty dict of its
+        # own, so the direction is read from the parent schema, where MultiNested sets it.
+        parent_context = getattr(self.parent, "context", None) or {}
+        return parent_context.get("direction") == "outbound"
 
 
 class NetworkScanResultState(String):

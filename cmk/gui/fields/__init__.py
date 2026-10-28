@@ -24,6 +24,7 @@ from cmk.gui.fields.attributes import (
     LockedBy,
     MetaData,
     NetworkScan,
+    NetworkScanField,
     NetworkScanResult,
     SNMPCredentials,
 )
@@ -97,6 +98,7 @@ __all__ = [
     "missing_",
     "NetworkPortNumber",
     "NetworkScan",
+    "NetworkScanField",
     "NetworkScanResult",
     "PasswordStoreIDField",
     "LDAPConnectionID",

@@ -506,6 +506,93 @@ def test_openapi_show_folder_with_network_scan_result(
     }
 
 
+def _network_scan(run_as: str) -> dict[str, object]:
+    return {
+        "addresses": [{"type": "explicit_addresses", "addresses": ["192.168.10.53"]}],
+        "time_allowed": [{"start": "00:00:00", "end": "23:59:00"}],
+        "run_as": run_as,
+    }
+
+
+def test_list_folders_shows_network_scan_whose_run_as_user_was_deleted(
+    clients: ClientRegistry,
+) -> None:
+    clients.User.create(username="scanner", fullname="Scanner")
+    clients.Folder.create(
+        title="Scanned",
+        parent="~",
+        folder_name="scanned",
+        attributes={"network_scan": _network_scan(run_as="scanner")},
+    )
+    clients.User.delete("scanner")
+
+    resp = clients.Folder.get_all(recursive=True)
+
+    folders = {folder["id"]: folder for folder in resp.json["value"]}
+    assert folders["~scanned"]["extensions"]["attributes"]["network_scan"]["run_as"] == "scanner"
+
+
+def test_update_folder_rejects_network_scan_with_unknown_run_as_user(
+    clients: ClientRegistry,
+) -> None:
+    clients.Folder.create(title="Scanned", parent="~", folder_name="scanned")
+
+    resp = clients.Folder.edit(
+        "~scanned",
+        update_attributes={"network_scan": _network_scan(run_as="nobody")},
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+    assert resp.json["fields"]["update_attributes"]["network_scan"]["run_as"] == [
+        "User 'nobody' is not known."
+    ]
+
+
+@pytest.mark.usefixtures("suppress_spec_generation_in_background")
+def test_list_folders_shows_network_scan_saved_before_criticality_tag_group_existed(
+    clients: ClientRegistry,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    with_automation_user: tuple[UserId, str],
+) -> None:
+    user, _ = with_automation_user
+    clients.Folder.create(
+        title="Scanned",
+        parent="~",
+        folder_name="scanned",
+        attributes={"network_scan": _network_scan(run_as=user)},
+    )
+    _create_criticality_tag(aut_user_auth_wsgi_app)
+
+    resp = clients.Folder.get_all(recursive=True, expect_ok=False)
+
+    resp.assert_status_code(200)
+
+
+@pytest.mark.usefixtures("suppress_spec_generation_in_background")
+def test_create_folder_rejects_network_scan_without_tag_criticality_when_tag_group_exists(
+    clients: ClientRegistry,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    with_automation_user: tuple[UserId, str],
+) -> None:
+    user, _ = with_automation_user
+    _create_criticality_tag(aut_user_auth_wsgi_app)
+
+    resp = clients.Folder.create(
+        title="Scanned",
+        parent="~",
+        folder_name="scanned",
+        attributes={"network_scan": _network_scan(run_as=user)},
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+    assert (
+        "tag_criticality must be specified"
+        in resp.json["fields"]["attributes"]["network_scan"]["_schema"]
+    )
+
+
 def test_openapi_show_hosts_on_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",

@@ -621,8 +621,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> gui_fields.Field:
-        return fields.Nested(
-            gui_fields.NetworkScan,
+        return gui_fields.NetworkScanField(
             description=(
                 "Configuration for automatic network scan. Pings will be"
                 "sent to each IP address in the configured ranges to check"

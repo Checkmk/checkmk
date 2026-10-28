@@ -26,6 +26,18 @@ class TestCheckmkRedisClient:
         )
 
 
+def test_client_waits_for_redis_without_timeout_by_default() -> None:
+    connection_kwargs = get_redis_client().connection_pool.connection_kwargs
+    assert connection_kwargs.get("socket_timeout") is None
+    assert connection_kwargs.get("socket_connect_timeout") is None
+
+
+def test_client_times_out_after_requested_timeout() -> None:
+    connection_kwargs = get_redis_client(timeout=5.0).connection_pool.connection_kwargs
+    assert connection_kwargs["socket_timeout"] == 5.0
+    assert connection_kwargs["socket_connect_timeout"] == 5.0
+
+
 def test_get_redis_client_raises_when_disabled() -> None:
     with disable_redis(), pytest.raises(RuntimeError):
         get_redis_client()

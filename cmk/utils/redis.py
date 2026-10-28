@@ -23,10 +23,14 @@ from cmk.utils.paths import omd_root
 QueryData = TypeVar("QueryData")
 
 
-def get_redis_client() -> Redis:
+def get_redis_client(*, timeout: float | None = None) -> Redis:
     """Builds a ready-to-use Redis client instance
 
     Note: Use the returing object as context manager to ensure proper cleanup.
+
+    Args:
+        timeout: Seconds to wait for connecting and for each socket operation.
+            None waits forever.
     """
     if not redis_enabled():
         raise RuntimeError("Redis currently explicitly disabled")
@@ -35,6 +39,8 @@ def get_redis_client() -> Redis:
         db=0,
         encoding="utf-8",
         decode_responses=True,
+        socket_timeout=timeout,
+        socket_connect_timeout=timeout,
     )
 
 
@@ -43,8 +49,9 @@ def redis_server_reachable(client: Redis) -> bool:
 
     A timeout counts as unreachable, too: redis is single threaded, so a
     client blocking it with a long running script or scan makes it miss the
-    five second socket timeout redis-py defaults to. Callers of this fall
-    back to computing their answers without redis, which beats failing.
+    socket timeout of `client`, if it has one. Without one, this waits until
+    redis answers. Callers of this fall back to computing their answers
+    without redis, which beats failing.
     """
     try:
         client.ping()

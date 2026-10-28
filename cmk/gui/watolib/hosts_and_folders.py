@@ -998,9 +998,9 @@ def degrade_to_cache_miss[T](tree: FolderTree, query: Callable[[], T]) -> T | No
         a) "omd reload" does not execute a graceful reload of redis but stop/start
         b) MKP changes reload redis, the ui-job-scheduler and the automation helper concurrently
 
-    2. Redis is up but does not answer within the five second socket timeout
-        redis-py defaults to, because another client keeps the single threaded
-        server busy.
+    2. Redis is up but does not answer within the socket timeout of the client,
+        if it has one, because another client keeps the single threaded server
+        busy.
 
     Since the redis cache is mainly used to improve the performance, answer the query
     like a cache miss and let the caller compute the answer from disk. That is the same

@@ -13,6 +13,7 @@ import signal
 import sys
 from collections.abc import Callable
 from pathlib import Path
+from typing import Final
 
 from setproctitle import setproctitle
 
@@ -41,6 +42,9 @@ from ._watcher import run as run_watcher
 
 _RELATIVE_RUN_DIRECTORY = Path("tmp", "run")
 _RELATIVE_LOG_DIRECTORY = Path("var", "log", "automation-helper")
+
+# A hung Redis must not block the helper forever. redis-py 8 uses the same default.
+_REDIS_TIMEOUT: Final = 5.0
 
 
 def main() -> int:
@@ -84,7 +88,7 @@ def _main() -> int:
 
         with run_watcher(
             config.watcher_config,
-            Cache.setup(client=get_redis_client()),
+            Cache.setup(client=get_redis_client(timeout=_REDIS_TIMEOUT)),
         ):
             try:
                 run_server(
@@ -122,7 +126,7 @@ def _application():
 
     return make_application(
         engine=make_app(cmk_version.edition(omd_root)).automations,
-        cache=Cache.setup(client=get_redis_client()),
+        cache=Cache.setup(client=get_redis_client(timeout=_REDIS_TIMEOUT)),
         reloader_config=config.reloader_config,
         reload_config=_reload_automation_config,
         clear_caches_before_each_call=_clear_caches_before_each_call,

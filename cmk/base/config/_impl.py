@@ -1325,6 +1325,7 @@ class ConfigCache:
             ),
             is_cmc=self._loaded_config.monitoring_core == "cmc",
             uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
+            debug=self._debug,
         )
 
     def summary_config(self, host_name: HostName, source_id: str) -> SummaryConfig:

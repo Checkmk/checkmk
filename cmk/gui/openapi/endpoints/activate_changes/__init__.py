@@ -82,6 +82,10 @@ PERMISSIONS = permissions.AllPerm(
     ]
 )
 
+LIST_PENDING_CHANGES_PERMISSIONS = permissions.AnyPerm(
+    [permissions.Perm("wato.activate"), permissions.Perm("wato.see_pending_changes")]
+)
+
 
 @Endpoint(
     constructors.domain_type_action_href("activation_run", "activate-changes"),
@@ -329,12 +333,14 @@ def list_activations(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     "cmk/pending-activation-changes",
     method="get",
     etag="output",
-    permissions_required=PERMISSIONS,
+    permissions_required=LIST_PENDING_CHANGES_PERMISSIONS,
     response_schema=PendingChangesCollection,
 )
 def list_pending_changes(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show all pending changes"""
-    user.need_permission("wato.activate")
+    # Activating needs this listing's ETag, so wato.activate alone must keep it readable.
+    if not user.may("wato.activate"):
+        user.need_permission("wato.see_pending_changes")
 
     pending_changes = get_pending_changes(list(active_config.sites))
     response = serve_json(

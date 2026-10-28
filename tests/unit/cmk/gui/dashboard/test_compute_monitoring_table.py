@@ -130,6 +130,21 @@ def test_a_dashboard_filter_for_another_object_type_is_ignored(
     assert response.json["value"]["unapplied_filters"] == []
 
 
+def test_a_site_that_does_not_answer_is_reported(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    mock_livestatus.set_sites(["NO_SITE", "remote"])
+    mock_livestatus.add_table("hosts", [])
+    mock_livestatus.make_site_unreachable("remote")
+    mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
+    mock_livestatus.expect_query(["GET hosts"], match_type="loose")
+
+    with mock_livestatus:
+        response = clients.DashboardClient.compute_widget("compute-monitoring-table", _body({}))
+
+    assert response.json["value"]["unreachable_sites"] == ["remote"]
+
+
 def test_an_unknown_sort_column_is_400(clients: ClientRegistry) -> None:
     response = clients.DashboardClient.compute_widget(
         "compute-monitoring-table", _body({}, sort=["no_such_column:asc"]), expect_ok=False

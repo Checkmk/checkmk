@@ -81,6 +81,13 @@ class MonitoringTable:
             "rows than these filters would select."
         )
     )
+    unreachable_sites: list[str] = api_field(
+        description=(
+            "IDs of the sites that could not be reached. Their rows are missing from the rows, "
+            "'matched' and 'total'."
+        ),
+        example=["remote_1"],
+    )
 
 
 class _MonitoringTableComputation:
@@ -117,6 +124,7 @@ class _MonitoringTableComputation:
                 UnappliedFilter(id=name, title=self._filter_title(name))
                 for name in computed.unapplied_filters
             ],
+            unreachable_sites=list(computed.unreachable_sites),
         )
 
     def _context_for_infos(self) -> VisualContext:

@@ -106,3 +106,4 @@ class TableRows[R]:
     matched: int
     total: int
     unapplied_filters: Sequence[FilterName]
+    unreachable_sites: Sequence[str]

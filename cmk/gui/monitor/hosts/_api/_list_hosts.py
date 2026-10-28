@@ -509,6 +509,7 @@ class HostTable:
             matched=response.meta.matched,
             total=response.meta.total,
             unapplied_filters=translation.unapplied,
+            unreachable_sites=response.meta.unreachable_sites,
         )
 
 

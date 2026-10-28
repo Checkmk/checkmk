@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, watch } from 'vue'
 
@@ -11,6 +12,7 @@ import { useWidgetData } from '@/dashboard/composables/useWidgetData'
 import { useWidgetSource } from '@/dashboard/composables/useWidgetSource'
 import type { ComputedMonitoringTable, MonitoringTableContent } from '@/dashboard/types/widget'
 import { dashboardAPI } from '@/dashboard/utils'
+import { unreachableSitesHint } from '@/monitoring/shared/unreachableSites'
 import MonitoringTableWidget from '@/monitoring/table-widget/MonitoringTableWidget.vue'
 import { WidgetTableState } from '@/monitoring/table-widget/WidgetTableState'
 import { monitoringTableRegistry } from '@/monitoring/table-widget/registry'
@@ -69,6 +71,12 @@ function truncatedHint(value: ComputedMonitoringTable): string {
         @click.capture="blockLinksInPreview"
         @auxclick.capture="blockLinksInPreview"
       >
+        <CmkAlert
+          v-if="value.unreachable_sites.length > 0"
+          class="db-content-monitoring-table__unreachable"
+          variant="warning"
+          :text="unreachableSitesHint(value.unreachable_sites)"
+        />
         <p
           v-if="value.unapplied_filters.length > 0"
           class="db-content-monitoring-table__unapplied"
@@ -102,8 +110,12 @@ function truncatedHint(value: ComputedMonitoringTable): string {
   min-height: 0;
 }
 
+.db-content-monitoring-table__unreachable,
 .db-content-monitoring-table__unapplied {
   margin: 0 0 var(--dimension-3);
+}
+
+.db-content-monitoring-table__unapplied {
   color: var(--font-color-dimmed);
 }
 

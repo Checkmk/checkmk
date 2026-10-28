@@ -44,7 +44,8 @@ const VALUE: ComputedMonitoringTable = {
   ],
   matched: 1,
   total: 1,
-  unapplied_filters: []
+  unapplied_filters: [],
+  unreachable_sites: []
 }
 
 const CMK_TOKEN = '0:the-token'
@@ -186,6 +187,16 @@ describe('DashboardContentMonitoringTable', () => {
     await rerender(makeContentProps(CONTENT, { tick: 1 }))
 
     await waitFor(() => expect(requests).toHaveLength(2))
+  })
+
+  it('names the sites that cannot be reached', async () => {
+    value = { ...VALUE, unreachable_sites: ['remote_1'] }
+
+    await renderWidget()
+
+    expect(
+      await screen.findByText('No data could be retrieved from site remote_1.')
+    ).toBeInTheDocument()
   })
 
   it('names the dashboard filters it cannot apply', async () => {

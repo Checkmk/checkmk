@@ -182,6 +182,23 @@ describe('with the rows laid out', () => {
     )
   })
 
+  test('lays out the cells of each row under the headers of their columns', async () => {
+    mockServices([makeApiEntry()])
+    renderApp()
+    await screen.findByRole('link', { name: 'web-2' })
+
+    const headers = screen.getAllByRole('columnheader')
+    const cells = [...screen.getAllByRole('row')[1]!.querySelectorAll('[data-column-id]')]
+    const cellUnder = (header: string) =>
+      cells[headers.indexOf(screen.getByRole('columnheader', { name: header }))]
+
+    expect(cells).toHaveLength(headers.length)
+    expect(cellUnder('Service')).toHaveAttribute('data-column-id', 'name')
+    expect(cellUnder('Summary')).toHaveAttribute('data-column-id', 'summary')
+    expect(cellUnder('Host')).toHaveAttribute('data-column-id', 'host_name')
+    expect(cellUnder('Site')).toHaveAttribute('data-column-id', 'site_id')
+  })
+
   function requestedFor(path: string, hostName: string, siteId: string): boolean {
     return getSpy.mock.calls.some(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

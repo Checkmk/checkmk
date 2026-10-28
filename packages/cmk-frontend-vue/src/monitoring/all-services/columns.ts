@@ -27,7 +27,7 @@ export function buildAllServicesColumnPinning({
   includeSelect
 }: HostServicesColumnOptions): ColumnPinningState {
   return {
-    left: [...(includeSelect ? ['select'] : []), 'state', MODE_COLUMN_ID, 'host_name', 'name'],
+    left: [...(includeSelect ? ['select'] : []), 'state', MODE_COLUMN_ID, 'name'],
     right: ['actions']
   }
 }
@@ -56,27 +56,31 @@ export function useAllServicesColumns({
     options: sites.map((site) => ({ value: site.id, title: site.alias }))
   }
 
-  const hostColumns: ColumnDef<ServiceEntry>[] = [
-    {
-      accessorKey: 'host_name',
-      header: _t('Host'),
-      sortDescFirst: false,
-      enableHiding: false,
-      minSize: 120,
-      maxSize: 300,
-      meta: { filter: hostFilter }
-    },
-    {
-      accessorKey: 'site_id',
-      header: _t('Site'),
-      sortDescFirst: false,
-      minSize: 100,
-      maxSize: 300,
-      meta: { filter: siteFilter }
-    }
-  ]
+  const hostColumn: ColumnDef<ServiceEntry> = {
+    accessorKey: 'host_name',
+    header: _t('Host'),
+    sortDescFirst: false,
+    enableHiding: false,
+    minSize: 120,
+    maxSize: 300,
+    meta: { filter: hostFilter }
+  }
+
+  const siteColumn: ColumnDef<ServiceEntry> = {
+    accessorKey: 'site_id',
+    header: _t('Site'),
+    sortDescFirst: false,
+    minSize: 100,
+    maxSize: 300,
+    meta: { filter: siteFilter }
+  }
 
   const serviceColumns = useHostServicesColumns<ServiceEntry>(options)
-  const nameIndex = serviceColumns.findIndex((column) => columnId(column) === 'name')
-  return [...serviceColumns.slice(0, nameIndex), ...hostColumns, ...serviceColumns.slice(nameIndex)]
+  const summaryIndex = serviceColumns.findIndex((column) => columnId(column) === 'summary')
+  return [
+    ...serviceColumns.slice(0, summaryIndex + 1),
+    hostColumn,
+    siteColumn,
+    ...serviceColumns.slice(summaryIndex + 1)
+  ]
 }

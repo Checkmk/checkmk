@@ -161,16 +161,6 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     :icons="row.modes ?? []"
     :max-per-row="MODE_ICONS_PER_ROW"
   />
-  <template v-if="host">
-    <HostCell
-      v-if="hasColumn('host_name')"
-      column-id="host_name"
-      :name="host.name"
-      :state="host.state"
-      :linked-to="{ href: hostServicesPageUrl(host), target: '_top' }"
-    />
-    <StringCell v-if="hasColumn('site_id')" column-id="site_id" :value="host.site_id" />
-  </template>
   <StringCell
     v-if="hasColumn('name')"
     column-id="name"
@@ -185,6 +175,16 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     state-markers
     title-only-when-cut
   />
+  <template v-if="host">
+    <HostCell
+      v-if="hasColumn('host_name')"
+      column-id="host_name"
+      :name="host.name"
+      :state="host.state"
+      :linked-to="{ href: hostServicesPageUrl(host), target: '_top' }"
+    />
+    <StringCell v-if="hasColumn('site_id')" column-id="site_id" :value="host.site_id" />
+  </template>
   <StringCell
     v-if="hasColumn('last_state_change')"
     column-id="last_state_change"

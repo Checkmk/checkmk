@@ -570,14 +570,15 @@ function renderedColumnIds(container: Element): (string | null)[] {
   return Array.from(container.querySelectorAll('td')).map((td) => td.getAttribute('data-column-id'))
 }
 
-test('renders the host and site of a service that names its host, before the service', () => {
+test('renders the host and site of a row that names its host after the summary', () => {
   const { container } = mountRow(makeServiceOfHost())
 
   const cells = renderedColumnIds(container)
-  expect(cells.slice(cells.indexOf('host_name'), cells.indexOf('name') + 1)).toEqual([
+  expect(cells.slice(cells.indexOf('name'), cells.indexOf('site_id') + 1)).toEqual([
+    'name',
+    'summary',
     'host_name',
-    'site_id',
-    'name'
+    'site_id'
   ])
   expect(screen.getByRole('link', { name: 'web-2' })).toHaveAttribute(
     'href',
@@ -593,9 +594,14 @@ test('renders no host cells in a layout without the host and site columns', () =
 })
 
 test('renders only the site cell in a layout without the host column', () => {
-  const { container } = mountRowInLayout(makeServiceOfHost(), ['state', 'site_id', 'name'])
+  const { container } = mountRowInLayout(makeServiceOfHost(), [
+    'state',
+    'name',
+    'summary',
+    'site_id'
+  ])
 
-  expect(renderedColumnIds(container)).toEqual(['state', 'site_id', 'name'])
+  expect(renderedColumnIds(container)).toEqual(['state', 'name', 'summary', 'site_id'])
 })
 
 test('renders no host cells for a service of the page host', () => {

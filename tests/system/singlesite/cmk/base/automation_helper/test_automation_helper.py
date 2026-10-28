@@ -8,6 +8,7 @@ import subprocess
 from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -32,6 +33,8 @@ from cmk.base.automation_helper._config import (
 
 from ._helper_query_automation_helper import AutomationMode, HealthMode
 
+_FAIL_ONCE_MARKER: Final = "tmp/aut_helper_fail_once"
+
 
 def test_config_reloading_without_reloader(site: Site) -> None:
     with _disable_automation_helper_reloader_and_set_worker_count_to_one(site):
@@ -53,19 +56,36 @@ def test_config_reloading_without_reloader(site: Site) -> None:
 
 
 def test_config_reloading_with_reloader(site: Site) -> None:
-    reloader_configuration = default_config(
-        omd_root=Path(),
-        run_directory=Path(),
-        log_directory=Path(),
-    ).reloader_config
     current_last_reload_timestamp = _query_last_reload_at(site)
     with _fake_config_file(site):
         wait_until(
             lambda: _query_last_reload_at(site) > current_last_reload_timestamp,
-            timeout=reloader_configuration.poll_interval
-            + reloader_configuration.cooldown_interval
-            + 2,
+            timeout=_reload_timeout(),
         )
+
+
+def test_config_reloading_after_failed_reload(site: Site) -> None:
+    reload_timeout = _reload_timeout()
+    # One worker, so that every query reaches the worker whose reload failed.
+    with _set_automation_helper_worker_count_to_one(site):
+        last_reload_before_failure = _query_last_reload_at(site)
+        with _config_file_failing_to_load_once(site):
+            wait_until(lambda: not site.file_exists(_FAIL_ONCE_MARKER), timeout=reload_timeout)
+            # The marker goes in the middle of the load. The load blocks the worker's event loop,
+            # so /health answers only after the failed load.
+            last_reload_after_failure = _query_last_reload_at(site)
+
+            # The reloader retries a failed reload only on a newer change.
+            with _fake_config_file(site):
+                wait_until(
+                    lambda: _query_last_reload_at(site) > last_reload_after_failure,
+                    timeout=reload_timeout,
+                )
+
+    # Checked last, so that lost watches fail at the change above.
+    assert (
+        last_reload_after_failure == last_reload_before_failure
+    ), "The failed reload counts as loaded, or the worker restarted"
 
 
 def test_standard_workflow_involving_automations(site: Site) -> None:
@@ -114,6 +134,15 @@ def test_two_subsequent_automations_involving_ruleset_matcher_same_ruleset_diffe
         if fs_rule_id is not None:
             site.openapi.rules.delete(fs_rule_id)
             site.activate_changes_and_wait_for_core_reload()
+
+
+def _reload_timeout() -> float:
+    reloader_configuration = default_config(
+        omd_root=Path(),
+        run_directory=Path(),
+        log_directory=Path(),
+    ).reloader_config
+    return reloader_configuration.poll_interval + reloader_configuration.cooldown_interval + 2
 
 
 @contextmanager
@@ -181,6 +210,26 @@ def _fake_config_file(site: Site) -> Generator[None]:
         yield
     finally:
         site.delete_file("etc/check_mk/conf.d/aut_helper_reload_trigger.mk")
+
+
+@contextmanager
+def _config_file_failing_to_load_once(site: Site) -> Generator[None]:
+    marker = site.path(_FAIL_ONCE_MARKER)
+    site.write_file(_FAIL_ONCE_MARKER, "")
+    # Fail in the automation helper only, so that no other process takes the marker.
+    site.write_file(
+        "etc/check_mk/conf.d/aut_helper_fail_once.mk",
+        f"""import os, sys
+if sys.argv[0].endswith("cmk-automation-helper") and os.path.exists("{marker}"):
+    os.remove("{marker}")
+    raise Exception("simulated config load failure")
+""",
+    )
+    try:
+        yield
+    finally:
+        site.delete_file("etc/check_mk/conf.d/aut_helper_fail_once.mk")
+        site.delete_file(_FAIL_ONCE_MARKER)
 
 
 def _query_automation_helper(site: Site, serialized_input: str) -> str:

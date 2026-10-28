@@ -42,8 +42,6 @@ from collections.abc import Iterator
 from typing import override
 from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 
-import pyprof2calltree
-
 from cmk.web.utils.urls import is_truthy_query_value
 
 P = typing.ParamSpec("P")
@@ -91,7 +89,6 @@ def _sanitize_query_string(query_string: str) -> str:
 @dataclasses.dataclass
 class ProfileSetting:
     mode: typing.Literal[True, False, "enable_by_var"]
-    cachegrind_file: pathlib.Path
     profile_file: pathlib.Path
     accumulate: bool = False  # reset on every request, or accumulate over multiple requests
 
@@ -291,9 +288,6 @@ class ProfilingMiddleware(abc.ABC):
 
         self._profiler.dump_stats(str(profile_file))
         stats = pstats.Stats(self._profiler)
-        conv = pyprof2calltree.CalltreeConverter(stats)
-        with open(setting.cachegrind_file, "w") as grind:
-            conv.output(grind)
 
         # Also save to the multi-profile store so the request shows up in the GUI.
         # Not gated by ``profiling_options.enabled``: cProfile already ran, so

@@ -57,7 +57,6 @@ def test_profile_switcher_under_various_settings(
         environ = werkzeug.test.create_environ(url, method="GET")
         profile_setting = ProfileSetting(
             mode=active_config.profile,  # type: ignore[arg-type]
-            cachegrind_file=pathlib.Path(".") / "multisite.cachegrind",
             profile_file=pathlib.Path(".") / "multisite.profile",
             accumulate=False,
         )
@@ -92,7 +91,6 @@ def test_a_profiled_request_waits_for_the_running_requests(tmp_path: pathlib.Pat
 
     setting = ProfileSetting(
         mode="enable_by_var",
-        cachegrind_file=tmp_path / "multisite.cachegrind",
         profile_file=tmp_path / "multisite.profile",
     )
     middleware = DirectWrappingProfilingMiddleware(

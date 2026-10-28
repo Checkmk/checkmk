@@ -638,8 +638,8 @@ def _form_spec_profile(context: GlobalSettingsContext) -> SingleChoiceExtended[b
             "Retention is controlled by the <b>Profiling options</b> setting in Developer Tools. "
             "Profiles are also included in Support Diagnostics dumps when the "
             "Performance Profiles option is selected. "
-            "In addition, <tt>multisite.profile</tt> and <tt>multisite.cachegrind</tt> "
-            "are written to <tt>%(var_dir)s</tt> for use with external tools like KCachegrind. "
+            "In addition, the profile of the latest request is written to "
+            "<tt>%(var_dir)s/multisite.profile</tt>. "
             "When enabled by request, the profiling mode is enabled by providing the HTTP "
             "variable <tt>_profile</tt> in the query parameters."
         )

@@ -7965,9 +7965,6 @@
             "https://files.pythonhosted.org/packages/03/29/5c99ad4d9c3d942d3cf0439d633b98e2723757ec863d6f287ffd85465368/pypdf-6.21.3.tar.gz": "sha256:11e1ca6d6cc8ca322558a3a974078d5ebc0f3a2104b8e673eee25621ee97abd8",
             "https://files.pythonhosted.org/packages/50/e2/84ba4c41a3ceb69de4f4066a784eb34ecbf97e3a315152e17d7ea17ef499/pypdf-6.21.3-py3-none-any.whl": "sha256:c8ca4d9a360dbd5d4b9bb7a8389e2a9ae6a106bee722b496f918040ba2daa17e"
           },
-          "pyprof2calltree": {
-            "https://files.pythonhosted.org/packages/ca/2a/e9a76261183b4b5e059a6625d7aae0bcb0a77622bc767d4497148ce2e218/pyprof2calltree-1.4.5.tar.gz": "sha256:a635672ff31677486350b2be9a823ef92f740e6354a6aeda8fa4a8a3768e8f2f"
-          },
           "pysaml2": {
             "https://files.pythonhosted.org/packages/3c/38/3f26d8b6e211dfe95dedb8c0c1072ad7781f1c33176a32b4f11c97268d79/pysaml2-7.5.5.tar.gz": "sha256:bd1c3f3667807de61d70d8e5cf32618719d9dc1b91a6d16a291ef7a1eaa52fff",
             "https://files.pythonhosted.org/packages/e6/1a/a0ec7b91ca71dd2c8baf5f48a1f590040f7e62c115c875e906f506c75f31/pysaml2-7.5.5-py3-none-any.whl": "sha256:c64cfd6c0348c53da1768538733c55ec15b23d1cc0e942564ea546515b45a199"

@@ -24,7 +24,6 @@ DEBUG = False
 def load_default_config() -> ProfileSetting:
     return ProfileSetting(
         mode="enable_by_var",
-        cachegrind_file=paths.var_dir / "multisite.cachegrind",
         profile_file=paths.var_dir / "multisite.profile",
         accumulate=False,
     )
@@ -41,7 +40,6 @@ def load_actual_config() -> ProfileSetting:
     # NOTE: Importing the module and not the function to enable mock-ability.
     return ProfileSetting(
         mode=single_global_setting.load_profiling_mode(),
-        cachegrind_file=paths.var_dir / "multisite.cachegrind",
         profile_file=paths.var_dir / "multisite.profile",
         accumulate=False,
     )

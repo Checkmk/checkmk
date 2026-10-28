@@ -3891,11 +3891,6 @@ pypdf==6.21.3 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-pyprof2calltree==1.4.5 \
-    --hash=sha256:a635672ff31677486350b2be9a823ef92f740e6354a6aeda8fa4a8a3768e8f2f
-    # via
-    #   -c requirements.txt
-    #   -r packages/cmk-wsgi/requirements.in
 pysaml2==7.5.5 \
     --hash=sha256:bd1c3f3667807de61d70d8e5cf32618719d9dc1b91a6d16a291ef7a1eaa52fff \
     --hash=sha256:c64cfd6c0348c53da1768538733c55ec15b23d1cc0e942564ea546515b45a199

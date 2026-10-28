@@ -85,7 +85,11 @@ class PageAutomationLogin(AjaxPage):
     When the page method is execute a remote (central) site has successfully
     logged in using valid credentials of an administrative user. The login is
     done be exchanging a login secret. If such a secret is not yet present it
-    is created on the fly."""
+    is created on the fly.
+
+    The requests of this login must stay recognized by is_site_login(): it lets
+    them through the post-auth gates (e.g. the trial mode selection). The gates
+    are off on most development sites, so a mismatch goes unnoticed there."""
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.

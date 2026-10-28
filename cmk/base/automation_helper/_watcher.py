@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
+import os
 import time
 from collections.abc import Generator, Sequence
 
@@ -29,6 +30,7 @@ InotifyBuffer.delay = 0.0
 @contextlib.contextmanager
 def run(config: WatcherConfig, cache: Cache) -> Generator[None]:
     LOGGER.info("[watcher] Initializing")
+    owner_pid = os.getpid()
     observer = InotifyObserver(generate_full_events=True)
     for schedule in config.schedules:
         handler = _AutomationWatcherHandler(
@@ -48,10 +50,14 @@ def run(config: WatcherConfig, cache: Cache) -> Generator[None]:
     except Exception as err:
         LOGGER.error("[watcher] Error while starting observer", exc_info=err)
     finally:
-        LOGGER.info("[watcher] Shutting down")
-        observer.stop()
-        observer.join()
-        LOGGER.info("[watcher] Shutdown complete")
+        # A process forked inside this block (e.g. a gunicorn worker) inherits the block, and
+        # leaves it when it exits through SystemExit. It must not stop the observer: it shares
+        # the inotify instance with us, so stopping would remove our watches.
+        if os.getpid() == owner_pid:
+            LOGGER.info("[watcher] Shutting down")
+            observer.stop()
+            observer.join()
+            LOGGER.info("[watcher] Shutdown complete")
 
 
 class _AutomationWatcherHandler(PatternMatchingEventHandler):

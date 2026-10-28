@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import os
 from pathlib import Path
 from typing import ContextManager, Final
 
@@ -194,6 +195,33 @@ def test_observer_also_handles_txt_files(
     )
 
 
+# gunicorn forks its workers from the process running the observer threads in the same way.
+@pytest.mark.filterwarnings("ignore:This process .* is multi-threaded:DeprecationWarning")
+def test_observer_keeps_watching_after_forked_child_exits(
+    cache: Cache,
+    observer: ContextManager,
+    target_mk_file: Path,
+) -> None:
+    parent_pid = os.getpid()
+    last_change_reference = cache.get_last_detected_change()
+    change_detected = False
+
+    try:
+        with observer:
+            if (child_pid := os.fork()) == 0:
+                # Leave the inherited block the way a worker exiting through SystemExit does.
+                raise SystemExit(1)
+            os.waitpid(child_pid, 0)
+            target_mk_file.touch()
+            # run() swallows exceptions raised in its block, so assert after leaving it.
+            change_detected = _last_change_timestamp_increments(cache, last_change_reference)
+    finally:
+        if os.getpid() != parent_pid:
+            os._exit(0)
+
+    assert change_detected, "The observer stopped noticing changes after a forked child exited"
+
+
 @pytest.mark.parametrize(
     "event, output",
     [
@@ -340,6 +368,18 @@ def test_automation_watcher_logging_directories_ignored(
         file_watcher_handler.dispatch(event)
     assert cache.get_last_detected_change() == last_change_reference
     assert not caplog.text
+
+
+def _last_change_timestamp_increments(cache: Cache, reference_timestamp: float) -> bool:
+    try:
+        wait_until(
+            lambda: cache.get_last_detected_change() > reference_timestamp,
+            timeout=5,
+            interval=0.05,
+        )
+    except TimeoutError:
+        return False
+    return True
 
 
 def _wait_for_last_change_timestamp_to_increment(

@@ -3,17 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import posixpath
 import re
 import sys
 import xml.etree.ElementTree as ET
 from collections.abc import Iterable, Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from itertools import chain
 from pathlib import Path
 
 
 @dataclass(frozen=True)
-class MypyErrorLine:
+class TypeErrorLine:
     file: str
     line: int
     column: int
@@ -25,15 +26,21 @@ MYPY_ERROR_RE = re.compile(
     r"^(?P<file>[^:]+):(?P<line>\d+):(?P<column>\d+): (?P<kind>error|note|warning): (?P<msg>.*)$"
 )
 
-STDOUT_SUFFIX = ".mypy_stdout"
+TSC_ERROR_RE = re.compile(
+    r"^(?:(?P<file>.+)\((?P<line>\d+),(?P<column>\d+)\): )?(?P<kind>error|warning|message) (?P<msg>TS\d+: .*)$"
+)
+
+MYPY_SUFFIX = ".mypy_stdout"
+
+VUE_TSC_SUFFIX = "_vue_tsc.log"
 
 
-def parse_mypy_output(lines: Iterable[str]) -> Iterator[MypyErrorLine]:
+def parse_mypy_output(lines: Iterable[str]) -> Iterator[TypeErrorLine]:
     """Parse mypy output"""
     for line in lines:
         m = MYPY_ERROR_RE.match(line)
         if m:
-            yield MypyErrorLine(
+            yield TypeErrorLine(
                 file=m.group("file"),
                 line=int(m.group("line")),
                 column=int(m.group("column")),
@@ -42,14 +49,51 @@ def parse_mypy_output(lines: Iterable[str]) -> Iterator[MypyErrorLine]:
             )
 
 
-def target_name_from_path(path: Path, bin_root: Path) -> str:
-    """Strip bin_root and extension."""
-    assert path.name.endswith(STDOUT_SUFFIX)
-    return path.relative_to(bin_root).as_posix()[: -len(STDOUT_SUFFIX)]
+def parse_tsc_output(lines: Iterable[str], package: str) -> Iterator[TypeErrorLine]:
+    """Parse vue-tsc output, whose paths are relative to the package and
+    whose diagnostics of the whole project have no location"""
+    error: TypeErrorLine | None = None
+    for line in lines:
+        if error and line.startswith(" "):
+            error = replace(error, message=f"{error.message}\n{line}")
+            continue
+        if error:
+            yield error
+            error = None
+        if m := TSC_ERROR_RE.match(line):
+            error = TypeErrorLine(
+                file=posixpath.normpath(posixpath.join(package, m.group("file") or "")),
+                line=int(m.group("line") or 0),
+                column=int(m.group("column") or 0),
+                kind=m.group("kind"),
+                message=m.group("msg"),
+            )
+    if error:
+        yield error
+
+
+def target_name_from_path(path: Path, bin_root: Path, suffix: str) -> str:
+    """Strip bin_root and suffix."""
+    assert path.name.endswith(suffix)
+    return path.relative_to(bin_root).as_posix()[: -len(suffix)]
+
+
+def errors_per_target(bin_root: Path) -> Iterator[tuple[str, Iterator[TypeErrorLine]]]:
+    for path in sorted(
+        p for p in bin_root.rglob("*") if p.name.endswith((MYPY_SUFFIX, VUE_TSC_SUFFIX))
+    ):
+        lines = path.read_text(errors="replace").splitlines()
+        if path.name.endswith(MYPY_SUFFIX):
+            yield target_name_from_path(path, bin_root, MYPY_SUFFIX), parse_mypy_output(lines)
+        else:
+            yield (
+                target_name_from_path(path, bin_root, VUE_TSC_SUFFIX),
+                parse_tsc_output(lines, path.parent.relative_to(bin_root).as_posix()),
+            )
 
 
 def make_testsuite(
-    target_name: str, errors: Iterator[MypyErrorLine]
+    target_name: str, errors: Iterator[TypeErrorLine]
 ) -> tuple[ET.Element, int, int]:
     """
     Create one <testsuite> per Bazel target, with per-error testcases.
@@ -121,12 +165,7 @@ def main() -> None:
     total_tests = 0
     total_failures = 0
 
-    stdout_files = sorted(bin_root.rglob(f"*{STDOUT_SUFFIX}"))
-
-    for path in stdout_files:
-        with path.open(errors="replace") as f:
-            errors = parse_mypy_output(f.readlines())
-        target = target_name_from_path(path, bin_root)
+    for target, errors in errors_per_target(bin_root):
         suite, tests, failures = make_testsuite(target, errors)
         testsuites.append(suite)
         total_tests += tests

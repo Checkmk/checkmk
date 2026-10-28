@@ -151,7 +151,7 @@ run_lint() {
 }
 
 run_tsc() {
-    bazel test :app_type_check_test :type-check-node :ucl_type_check_test :tests_type_check_test
+    bazel test :app_type_check :type-check-node :ucl_type_check :tests_type_check
 }
 
 run_format() {

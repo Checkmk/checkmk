@@ -1,7 +1,6 @@
 """vue_library: a vue-tsc project plus a stylelint filegroup of its styles."""
 
 load("@aspect_rules_js//js:defs.bzl", "js_library")
-load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("//bazel/rules:css_library.bzl", "css_library")
 load("//bazel/rules:vue_tsc.bzl", "vue_tsconfig", "vue_type_check")
 
@@ -39,14 +38,8 @@ def _vue_library_impl(name, visibility, srcs, tsconfig, tags, target_compatible_
         target_compatible_with = target_compatible_with,
     )
 
-    build_test(
-        name = name + "_type_check_test",
-        targets = [":" + name + "_type_check"],
-        tags = tags or [],
-    )
-
 vue_library = macro(
-    doc = "A js_library checked by stylelint in its `.vue`, `.css` and `.scss` sources and by vue-tsc, which reads linked vue packages as their declarations: a type error fails the build of `<name>_type_check`, and so `<name>_type_check_test`. `target_compatible_with` applies to `<name>_type_check` only.",
+    doc = "A js_library checked by stylelint in its `.vue`, `.css` and `.scss` sources and by vue-tsc, which reads linked vue packages as their declarations: a type error fails the build of `<name>_type_check`. `target_compatible_with` applies to `<name>_type_check` only.",
     implementation = _vue_library_impl,
     inherit_attrs = js_library,
     attrs = {

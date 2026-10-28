@@ -12,7 +12,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 ## Development
 
 ```sh
-# everything (cmk-ui-library_type_check_test, tests_type_check_test, unit-test)
+# everything (cmk-ui-library_type_check, tests_type_check, unit-test)
 bazel test //packages/cmk-ui-library:all
 
 # individually

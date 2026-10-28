@@ -107,7 +107,7 @@ function renderApp(overrides: Partial<MonitoringAllServicesApp> = {}) {
   })
 }
 
-test('lists the services of every host from the all services endpoint', async () => {
+test('lists the services of every host sorted by site, host and service by default', async () => {
   mockServices([makeApiEntry()])
   renderApp()
 
@@ -115,7 +115,13 @@ test('lists the services of every host from the all services endpoint', async ()
 
   expect(servicesPost).toHaveBeenLastCalledWith(
     SERVICES_PATH,
-    expect.objectContaining({ body: { limit: 1000, fields: [] } })
+    expect.objectContaining({
+      body: {
+        limit: 1000,
+        sort: ['site_id:asc', 'host_name:asc', 'name:asc'],
+        fields: []
+      }
+    })
   )
 })
 
@@ -144,7 +150,7 @@ test('hides the site column by default without a remote site', async () => {
   expect(screen.queryByRole('columnheader', { name: 'Site' })).not.toBeInTheDocument()
 })
 
-test('requests the services sorted by host name on a click of the Host header', async () => {
+test('requests the services by host name descending on a click of the ascending Host header', async () => {
   mockServices([makeApiEntry()])
   renderApp()
   await screen.findByRole('button', { name: 'Host' })
@@ -153,7 +159,7 @@ test('requests the services sorted by host name on a click of the Host header', 
 
   expect(servicesPost).toHaveBeenLastCalledWith(
     SERVICES_PATH,
-    expect.objectContaining({ body: { limit: 1000, sort: ['host_name:asc'], fields: [] } })
+    expect.objectContaining({ body: { limit: 1000, sort: ['host_name:desc'], fields: [] } })
   )
 })
 

@@ -41,21 +41,23 @@ def test_handle_list_all_services_returns_the_state_of_the_host() -> None:
     assert [entry.host_state for entry in response.services] == ["UNREACHABLE"]
 
 
-def test_handle_list_all_services_sorts_by_host_then_service_by_default() -> None:
+def test_handle_list_all_services_sorts_by_site_then_host_then_service_by_default() -> None:
     repo = FakeServicesRepository(
         [
-            ServiceFactory.build(host_name="web10", name="CPU"),
-            ServiceFactory.build(host_name="web9", name="Memory"),
-            ServiceFactory.build(host_name="web9", name="CPU"),
+            ServiceFactory.build(site_id="remote", host_name="db1", name="CPU"),
+            ServiceFactory.build(site_id="central", host_name="web10", name="CPU"),
+            ServiceFactory.build(site_id="central", host_name="web9", name="Memory"),
+            ServiceFactory.build(site_id="central", host_name="web9", name="CPU"),
         ]
     )
 
     response = _handle_list_all_services(repo, repo.count_total())
 
-    assert [(s.host_name, s.name) for s in response.services] == [
-        ("web9", "CPU"),
-        ("web9", "Memory"),
-        ("web10", "CPU"),
+    assert [(s.site_id, s.host_name, s.name) for s in response.services] == [
+        ("central", "web9", "CPU"),
+        ("central", "web9", "Memory"),
+        ("central", "web10", "CPU"),
+        ("remote", "db1", "CPU"),
     ]
 
 

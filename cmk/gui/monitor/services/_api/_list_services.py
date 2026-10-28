@@ -44,6 +44,7 @@ from ._list_host_services import HostServiceEntry, ServicesRequestBody
 from ._validators import parse_service_search_query, parse_service_sort_options
 
 _DEFAULT_SORT = (
+    ServiceSort(column=ServiceSortColumn.SITE_ID, direction=ServiceSortDirection.ASC),
     ServiceSort(column=ServiceSortColumn.HOST_NAME, direction=ServiceSortDirection.ASC),
     ServiceSort(column=ServiceSortColumn.NAME, direction=ServiceSortDirection.ASC),
 )
@@ -104,7 +105,7 @@ class AllServicesRequestBody(ServicesRequestBody):
             f"Allowed columns: {ServiceSortColumn.options()}. "
             f"Allowed directions: {ServiceSortDirection.options()}. "
             "Multiple values define a multi-column sort applied in the given order; a column must "
-            "not be repeated. Omit to sort by host name, then service name."
+            "not be repeated. Omit to sort by site, then host name, then service name."
         ),
         example="host_name:asc",
         default_factory=ApiOmitted,

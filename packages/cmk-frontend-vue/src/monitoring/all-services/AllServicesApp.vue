@@ -115,7 +115,12 @@ const columnPinning = buildAllServicesColumnPinning({
 const schema = buildTableStateSchema({
   columns,
   limitTiers: props.limit_tiers,
-  mayRemoveLimit: props.may_ignore_hard_limit ?? false
+  mayRemoveLimit: props.may_ignore_hard_limit ?? false,
+  defaultSort: [
+    { id: 'site_id', desc: false },
+    { id: 'host_name', desc: false },
+    { id: 'name', desc: false }
+  ]
 })
 const initialState = readTableStateFromUrl(window.location.search, schema)
 

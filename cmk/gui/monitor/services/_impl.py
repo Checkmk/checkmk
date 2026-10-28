@@ -480,8 +480,8 @@ def _build_primary_sort(sorters: Sequence[ServiceSort]) -> str:
     own services get in the default order can be expressed in an ``OrderBy``, so both are applied by
     the Python re-sort afterwards. In the default order, a host with more services than the limit
     whose names all sort before "Check_MK" would therefore lose those rows, same as in the legacy
-    view. The same holds for every multi-column order, e.g. the All services default of host name,
-    then service name: when the limit cuts through a host, that host keeps whichever of its
+    view. The same holds for every multi-column order, e.g. the All services default of site, host
+    name, then service name: when the limit cuts through a host, that host keeps whichever of its
     services the core returned first, not its first ones by name.
 
     A sorter without a livestatus column, like the site, is skipped: the first sorter that has one

@@ -26,7 +26,14 @@ function makeServicesResponse(
 ): HostServicesResponse {
   return {
     services,
-    meta: { hostname: HOST.name, site_id: HOST.site_id, limit: DEFAULT_BATCH_SIZE, matched, total }
+    meta: {
+      hostname: HOST.name,
+      site_id: HOST.site_id,
+      limit: DEFAULT_BATCH_SIZE,
+      matched,
+      total,
+      unreachable_sites: []
+    }
   }
 }
 

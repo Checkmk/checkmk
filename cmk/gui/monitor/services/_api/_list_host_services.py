@@ -195,6 +195,13 @@ class HostServicesPageMeta:
     limit: int | None = api_field(description="Applied row limit.", example=1000)
     matched: int = api_field(description="Total matched services", example=42)
     total: int = api_field(description="Total number of services", example=1234)
+    unreachable_sites: list[str] = api_field(
+        description=(
+            "Holds the host's site when it could not be reached. The services and counts are empty "
+            "then."
+        ),
+        example=[],
+    )
 
 
 @api_model
@@ -357,7 +364,10 @@ def _handle_list_services(
     filters: ServiceFilter = ServiceFilter(""),
     fields: Set[ServiceOptionalField] = _DEFAULT_FIELDS,
 ) -> HostServicesResponse:
-    if not host_services_repo.host_exists(hostname):
+    if (
+        not host_services_repo.host_exists(hostname)
+        and site_id not in host_services_repo.unavailable_sites()
+    ):
         raise HostNotFoundError(f"The host {hostname!r} was not found on site {site_id!r}")
 
     services = host_services_repo.fetch(
@@ -372,6 +382,9 @@ def _handle_list_services(
         )
     else:
         matched_service_count = total_service_count
+    # Asked again after reading, as the site may fail during the reads. Only the host's site
+    # counts: the connection's dead sites span the whole request.
+    site_unreachable = site_id in host_services_repo.unreachable_sites()
 
     return HostServicesResponse(
         services=[HostServiceEntry.from_domain(service) for service in services],
@@ -381,6 +394,7 @@ def _handle_list_services(
             limit=limit,
             matched=matched_service_count,
             total=total_service_count,
+            unreachable_sites=[site_id] if site_unreachable else [],
         ),
     )
 

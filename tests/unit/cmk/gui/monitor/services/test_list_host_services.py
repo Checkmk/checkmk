@@ -228,6 +228,39 @@ def test_list_host_services_of_an_unknown_host_answers_404_with_a_plain_detail(
 
 
 @pytest.mark.usefixtures("with_admin_login")
+def test_list_host_services_names_the_site_of_the_host_when_it_does_not_answer(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.make_site_unreachable("NO_SITE")
+
+    with mock_livestatus:
+        resp = aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/internal/monitor/hosts/heute/services?site_id=NO_SITE",
+            params=json.dumps({}),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=HTTPStatus.OK,
+        )
+
+    assert resp.json["meta"]["unreachable_sites"] == ["NO_SITE"]
+
+
+def test_list_host_services_answers_404_on_a_dead_site_to_a_reader_who_does_not_see_all_hosts(
+    logged_in_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.make_site_unreachable("NO_SITE")
+
+    with mock_livestatus:
+        logged_in_wsgi_app.post(
+            "/NO_SITE/check_mk/api/internal/monitor/hosts/heute/services?site_id=NO_SITE",
+            params=json.dumps({}),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=HTTPStatus.NOT_FOUND,
+        )
+
+
+@pytest.mark.usefixtures("with_admin_login")
 def test_list_host_services_does_not_commit_the_setup_git_repo(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,

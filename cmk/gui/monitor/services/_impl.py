@@ -17,6 +17,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
+from cmk.gui.monitor.hosts import reader_unavailable_sites
 from cmk.gui.monitor.site_scope import MonitorSites
 from cmk.livestatus_client import (
     LivestatusClient,
@@ -51,8 +52,14 @@ from ._sorting import service_sorter
 
 
 class LiveStatusHostServicesRepository:
-    def __init__(self, *, connection: MultiSiteConnection) -> None:
+    def __init__(
+        self,
+        *,
+        connection: MultiSiteConnection,
+        read_unavailable_sites: Callable[[], frozenset[str]] = reader_unavailable_sites,
+    ) -> None:
         self._connection = connection
+        self._read_unavailable_sites = read_unavailable_sites
 
     def host_exists(self, hostname: str) -> bool:
         q = Query([Hosts.name], Hosts.name == hostname, extra_headers=["Limit: 1"])
@@ -206,6 +213,12 @@ class LiveStatusHostServicesRepository:
             filters,
         )
 
+    def unreachable_sites(self) -> list[str]:
+        return sorted(self._connection.dead_sites())
+
+    def unavailable_sites(self) -> frozenset[str]:
+        return self._read_unavailable_sites()
+
 
 class LiveStatusServicesRepository:
     def __init__(self, *, connection: MultiSiteConnection, sites: MonitorSites) -> None:
@@ -239,6 +252,9 @@ class LiveStatusServicesRepository:
         return _count_services(
             self._connection, self._search_filter(_sanitize_query(query), fields), filters
         )
+
+    def unreachable_sites(self) -> list[str]:
+        return sorted(self._connection.dead_sites())
 
     def _search_filter(self, query: str, fields: Set[ServiceOptionalField]) -> QueryExpression:
         if not query:

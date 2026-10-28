@@ -90,6 +90,24 @@ def test_handle_list_all_services_counts_the_matches_when_narrowed(
 
 
 @pytest.mark.usefixtures("with_admin_login")
+def test_list_all_services_names_a_remote_site_that_does_not_answer(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table("services", [])
+    mock_livestatus.make_site_unreachable("remote")
+    mock_livestatus.expect_query(["GET services", "Stats: state >= 0"], match_type="loose")
+    mock_livestatus.expect_query(["GET services"], match_type="loose")
+
+    with mock_livestatus:
+        resp = aut_user_auth_wsgi_app.post(
+            _URL, params=json.dumps({}), headers=_HEADERS, status=HTTPStatus.OK
+        )
+
+    assert resp.json["meta"]["unreachable_sites"] == ["remote"]
+
+
+@pytest.mark.usefixtures("with_admin_login")
 def test_list_all_services_returns_nothing_when_the_filter_excludes_every_site(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,

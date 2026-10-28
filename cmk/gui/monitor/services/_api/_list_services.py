@@ -66,6 +66,13 @@ class ServicesPageMeta:
     limit: int | None = api_field(description="Applied row limit.", example=1000)
     matched: int = api_field(description="Total matched services", example=42)
     total: int = api_field(description="Total number of services", example=1234)
+    unreachable_sites: list[str] = api_field(
+        description=(
+            "IDs of the sites that could not be reached. Their services are missing from the "
+            "services, 'matched' and 'total'."
+        ),
+        example=["remote_1"],
+    )
 
 
 @api_model
@@ -133,7 +140,12 @@ def list_all_services(
     if site_ids == []:
         return ServicesResponse(
             services=[],
-            meta=ServicesPageMeta(limit=limit, matched=0, total=total_service_count),
+            meta=ServicesPageMeta(
+                limit=limit,
+                matched=0,
+                total=total_service_count,
+                unreachable_sites=services_repo.unreachable_sites(),
+            ),
         )
 
     with sites.only_sites(site_ids):
@@ -201,7 +213,10 @@ def _handle_list_all_services(
     return ServicesResponse(
         services=[ServiceEntry.from_domain(service) for service in services],
         meta=ServicesPageMeta(
-            limit=limit, matched=matched_service_count, total=total_service_count
+            limit=limit,
+            matched=matched_service_count,
+            total=total_service_count,
+            unreachable_sites=services_repo.unreachable_sites(),
         ),
     )
 

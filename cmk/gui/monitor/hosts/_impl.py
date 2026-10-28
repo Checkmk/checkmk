@@ -90,6 +90,11 @@ def unavailable_sites(site_states: SiteStates, *, sees_all: bool) -> frozenset[s
     )
 
 
+def reader_unavailable_sites() -> frozenset[str]:
+    """:func:`unavailable_sites` for the logged-in reader."""
+    return unavailable_sites(_site_states(), sees_all=user.may("general.see_all"))
+
+
 class LiveStatusHostRepository:
     def __init__(
         self,
@@ -97,9 +102,7 @@ class LiveStatusHostRepository:
         connection: MultiSiteConnection,
         folders: MonitorFolders | None = None,
         sites: MonitorSites | None = None,
-        read_unavailable_sites: Callable[[], frozenset[str]] = lambda: unavailable_sites(
-            _site_states(), sees_all=user.may("general.see_all")
-        ),
+        read_unavailable_sites: Callable[[], frozenset[str]] = reader_unavailable_sites,
     ) -> None:
         self._connection = connection
         # A folder is shown and searched by its Setup title, which Livestatus does not have. A

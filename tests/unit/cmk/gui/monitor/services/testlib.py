@@ -101,6 +101,12 @@ def get_fake_host_services_repository(
             # this.
             return len([s for s in self._services if query.lower() in s.name.lower()])
 
+        def unreachable_sites(self) -> list[str]:
+            return []
+
+        def unavailable_sites(self) -> frozenset[str]:
+            return frozenset()
+
     return HostServicesFakeRepository()
 
 
@@ -133,6 +139,9 @@ class FakeServicesRepository:
     ) -> int:
         self.count_matched_calls += 1
         return len(self._matching(query)) if self._matched is None else self._matched
+
+    def unreachable_sites(self) -> list[str]:
+        return []
 
     def _matching(self, query: str) -> list[Service]:
         return [s for s in self._services if query.lower() in f"{s.host_name} {s.name}".lower()]

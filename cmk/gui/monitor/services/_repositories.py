@@ -59,6 +59,18 @@ class HostServicesRepository(Protocol):
         """Count the services of a host matching the given criteria."""
         ...
 
+    def unreachable_sites(self) -> list[str]:
+        """The sites that could not be reached so far, sorted by ID.
+
+        Their services are missing from every result read, so ask after reading.
+        """
+        ...
+
+    def unavailable_sites(self) -> frozenset[str]:
+        """The sites on which a host is unknown rather than missing, as far as the reader may
+        learn it: the rule of ``unavailable_sites`` in the hosts module."""
+        ...
+
 
 class ServicesRepository(Protocol):
     def fetch(
@@ -81,4 +93,11 @@ class ServicesRepository(Protocol):
         self, *, query: str, filters: ServiceFilter, fields: Set[ServiceOptionalField]
     ) -> int:
         """Count the services of every host matching the given criteria."""
+        ...
+
+    def unreachable_sites(self) -> list[str]:
+        """The sites that could not be reached so far, sorted by ID.
+
+        Their services are missing from every result read, so ask after reading.
+        """
         ...

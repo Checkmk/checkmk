@@ -509,6 +509,7 @@ class TestMonitorHostServices:
                 "limit": _LIMIT,
                 "matched": 1,
                 "total": 1,
+                "unreachable_sites": [],
             },
         }
 

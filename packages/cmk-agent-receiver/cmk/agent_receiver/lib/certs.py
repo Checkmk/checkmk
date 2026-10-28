@@ -7,6 +7,7 @@ from functools import cache
 from pathlib import Path
 from uuid import UUID
 
+import anyio
 from dateutil.relativedelta import relativedelta
 
 from cmk.agent_receiver.lib.config import get_config
@@ -27,10 +28,10 @@ def site_root_certificate() -> Certificate:
     return Certificate.load_pem(CertificatePEM(config.site_ca_path.read_bytes()))
 
 
-def is_revoked(crl_path: Path, serial_number: int) -> bool:
+async def is_revoked(crl_path: Path, serial_number: int) -> bool:
     try:
         # Read on every call, so that a revocation takes effect without a restart.
-        crl_pem = crl_path.read_bytes()
+        crl_pem = await anyio.Path(crl_path).read_bytes()
     except FileNotFoundError:
         return False  # a CA that never revoked a certificate has no list
     return CertificateRevocationList.load_pem(CertificateRevocationListPEM(crl_pem)).is_revoked(

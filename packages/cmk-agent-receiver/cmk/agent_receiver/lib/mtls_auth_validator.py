@@ -97,7 +97,7 @@ def mtls_authorization_dependency(
         async def receive_data(uuid: str): ...
     """
 
-    def _mtls_authorization_check(
+    async def _mtls_authorization_check(
         path_uuid: Annotated[str, Path(alias=path_alias)],
         header_uuid: Annotated[str | None, Header(alias=INJECTED_UUID_HEADER)] = None,
         header_issuer_cn: Annotated[str | None, Header(alias=INJECTED_ISSUER_HEADER)] = None,
@@ -137,7 +137,7 @@ def mtls_authorization_dependency(
                     f"(issuer: {header_issuer_cn!r}, expected: {expected!r})"
                 ),
             )
-        if is_revoked(_crl_path_of(expected_ca), int(header_serial, 16)):
+        if await is_revoked(_crl_path_of(expected_ca), int(header_serial, 16)):
             logger.warning(
                 "uuid=%(uuid)s Rejected mTLS request: the %(expected_ca)s CA revoked the "
                 "certificate with serial number %(serial)s",

@@ -211,6 +211,7 @@ anyio==4.15.1 \
     --hash=sha256:6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101 \
     --hash=sha256:9f28306018cbd6d329e64a36d58256edff76dd996fe423bc957326e578b82a94
     # via
+    #   -r packages/cmk-agent-receiver/requirements.in
     #   anthropic
     #   google-genai
     #   httpx

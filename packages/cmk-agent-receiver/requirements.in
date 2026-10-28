@@ -1,3 +1,4 @@
+anyio
 fastapi
 gunicorn
 h11

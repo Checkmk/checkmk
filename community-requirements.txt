@@ -211,6 +211,7 @@ anyio==4.15.1 \
     --hash=sha256:9f28306018cbd6d329e64a36d58256edff76dd996fe423bc957326e578b82a94
     # via
     #   -c requirements.txt
+    #   -r packages/cmk-agent-receiver/requirements.in
     #   httpx
     #   httpx2
     #   starlette

@@ -4,12 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Generator
+from collections.abc import Callable, Generator
+from unittest.mock import Mock
 
 import pytest
+import redis
 from fakeredis import FakeRedis
 
-from cmk.base.automation_helper._cache import Cache
+from cmk.base.automation_helper._cache import Cache, CacheError
 
 
 @pytest.fixture(name="cache")
@@ -31,3 +33,20 @@ def test_get_last_change_detected_unset(cache: Cache) -> None:
 def test_reload_required(cache: Cache) -> None:
     cache.store_last_detected_change(1.0)
     assert cache.reload_required(0.0)
+
+
+@pytest.mark.parametrize(
+    "access",
+    [
+        pytest.param(lambda cache: cache.store_last_detected_change(1.0), id="store"),
+        pytest.param(lambda cache: cache.get_last_detected_change(), id="get"),
+    ],
+)
+def test_redis_timeout_raises_cache_error(access: Callable[[Cache], object]) -> None:
+    client = Mock(spec=redis.Redis)
+    client.set.side_effect = client.get.side_effect = redis.exceptions.TimeoutError(
+        "Timeout reading from socket"
+    )
+
+    with pytest.raises(CacheError):
+        access(Cache.setup(client=client))

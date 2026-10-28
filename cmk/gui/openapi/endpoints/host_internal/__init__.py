@@ -33,6 +33,7 @@ from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.agent_registration import (
     link_uuid_of_existing_host,
+    uuid_links_locked,
     UUIDAlreadyLinkedError,
     UUIDOfOpenRequestError,
 )
@@ -103,6 +104,10 @@ permission_registry.register(
     ],
     request_schema=RegisterHostRequest,
     response_schema=HostConnectionMode,
+    # The registration changes the UUID links, not the Setup configuration. It takes the lock of
+    # the UUID links, so that it does not wait for long running Setup actions.
+    skip_locking=True,
+    update_config_generation=False,
     permissions_required=permissions.AllPerm(
         [
             permissions.AnyPerm(
@@ -131,9 +136,14 @@ permission_registry.register(
 def register_host(params: Mapping[str, Any]) -> Response:
     """Register an existing host, ie. link it to a UUID"""
     host_name = params["host_name"]
-    host = _verified_host(make_folder_tree(active_config), host_name)
-    connection_mode = connection_mode_from_host_config(host.effective_attributes())
-    _link_registration(host, params["body"]["uuid"], connection_mode)
+    # A host rename renames the host and then moves the UUID links under this lock. Loading the
+    # host under this lock either finds the old name, and the rename moves the new link
+    # afterwards, or does not find the host any more. The UUID is never linked to a name that
+    # the rename has already moved away from.
+    with uuid_links_locked():
+        host = _verified_host(make_folder_tree(active_config), host_name)
+        connection_mode = connection_mode_from_host_config(host.effective_attributes())
+        _link_registration(host, params["body"]["uuid"], connection_mode)
     return serve_json({"connection_mode": connection_mode.value})
 
 

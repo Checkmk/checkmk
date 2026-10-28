@@ -110,6 +110,7 @@ from cmk.gui.utils.roles import (
     UserPermissionSerializableConfig,
 )
 from cmk.gui.watolib import backup_snapshots
+from cmk.gui.watolib.agent_registration import uuid_links_locked
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
@@ -3420,7 +3421,8 @@ def _update_links_for_agent_receiver(tree: FolderTree) -> None:
         registrations_dir=paths.registrations_dir,
     )
 
-    uuid_link_manager.update_links(collect_all_hosts(tree))
+    with uuid_links_locked():
+        uuid_link_manager.update_links(collect_all_hosts(tree))
 
 
 def serialize_domain_requests(domain_requests: DomainRequests) -> str:

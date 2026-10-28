@@ -12,6 +12,7 @@ from cmk.gui.openapi.api_endpoints.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -32,6 +33,7 @@ from cmk.gui.token_auth import (
 )
 from cmk.gui.watolib.agent_registration import (
     link_uuid_of_existing_host,
+    uuid_links_locked,
     UUIDAlreadyLinkedError,
     UUIDOfOpenRequestError,
 )
@@ -86,8 +88,12 @@ def register_host_via_token_v1(
         )
     connection_mode = api_context.token.details.connection_mode
     try:
-        with get_token_store().agent_registration_use(
-            api_context.token.token_id, "host_registration", datetime.now(UTC)
+        # Lock before the use of the token, like the configuration lock (see agent_registration_use)
+        with (
+            uuid_links_locked(),
+            get_token_store().agent_registration_use(
+                api_context.token.token_id, "host_registration", datetime.now(UTC)
+            ),
         ):
             link_uuid_of_existing_host(
                 host_name,
@@ -133,6 +139,9 @@ ENDPOINT_REGISTER_HOST_VIA_TOKEN = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(),
     doc=EndpointDoc(family=HOST_CONFIG_FAMILY.name, group="Checkmk Internal"),
+    # The registration changes the UUID links, not the Setup configuration. It takes the lock of
+    # the UUID links, so that it does not wait for long running Setup actions.
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={
         APIVersion.INTERNAL: EndpointHandler(
             handler=register_host_via_token_v1, additional_status_codes=[HTTPStatus.CONFLICT]

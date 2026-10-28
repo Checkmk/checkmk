@@ -222,9 +222,10 @@ class TokenStore:
         release the lock of the store before the block ends. Keep the block short, because every
         write to the token store waits until the block ends.
 
-        A caller that needs the configuration lock of Setup must take that lock before calling
-        this method, never in the block. Otherwise two processes can take the configuration lock
-        and the lock of the token store in opposite order and block each other.
+        A caller that needs the configuration lock of Setup or the lock of the UUID links must
+        take that lock before calling this method, never in the block. Otherwise two processes
+        can take these locks in opposite order and block each other. See uuid_links_locked in
+        cmk.gui.watolib.agent_registration for the order of the three locks.
 
         Raises UnknownToken, TokenExpired, TokenRevoked, TokenTypeError or TokenUseAlreadyConsumed
         before the block runs.

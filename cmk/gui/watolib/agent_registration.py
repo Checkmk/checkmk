@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import override
 from uuid import UUID
@@ -12,6 +13,7 @@ from uuid import UUID
 from pydantic import ValidationError
 
 import cmk.utils.paths
+from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import Config
@@ -114,29 +116,52 @@ class UUIDOfOpenRequestRefusedEvent(SecurityEvent):
 def link_uuid_of_existing_host(
     host_name: HostName, uuid: UUID, *, push_configured: bool, registration: UUIDRegistration
 ) -> None:
-    """Called by the REST endpoints of the registration of an existing host. The REST framework
-    holds the configuration lock of the site while the checks read the UUID links of the site and
-    the requests in requests-for-registration/NEW and PENDING."""
-    verify_uuid_is_not_linked(uuid, host_name=host_name)
-    if any(
-        get_r4r_filepath(request_dir, uuid).exists()
-        for request_dir in (cmk.utils.paths.r4r_new_dir, cmk.utils.paths.r4r_pending_dir)
-    ):
-        log_security_event(UUIDOfOpenRequestRefusedEvent(host_name=host_name, uuid=uuid))
-        raise UUIDOfOpenRequestError(
-            f"The UUID {uuid} belongs to an open request of the automatic registration."
+    """Called by the REST endpoints of the registration of an existing host. The checks read the
+    UUID links of the site and the requests in requests-for-registration/NEW and PENDING under
+    the lock of the UUID links."""
+    with uuid_links_locked():
+        verify_uuid_is_not_linked(uuid, host_name=host_name)
+        if any(
+            get_r4r_filepath(request_dir, uuid).exists()
+            for request_dir in (cmk.utils.paths.r4r_new_dir, cmk.utils.paths.r4r_pending_dir)
+        ):
+            log_security_event(UUIDOfOpenRequestRefusedEvent(host_name=host_name, uuid=uuid))
+            raise UUIDOfOpenRequestError(
+                f"The UUID {uuid} belongs to an open request of the automatic registration."
+            )
+        link_uuid_of_registration(
+            host_name, uuid, push_configured=push_configured, registration=registration
         )
-    link_uuid_of_registration(
-        host_name, uuid, push_configured=push_configured, registration=registration
-    )
 
 
 def link_uuid_of_registration(
     host_name: HostName, uuid: UUID, *, push_configured: bool, registration: UUIDRegistration
 ) -> None:
-    _uuid_link_manager().link_registration(
-        host_name, uuid, push_configured=push_configured, registration=registration
-    )
+    with uuid_links_locked():
+        _uuid_link_manager().link_registration(
+            host_name, uuid, push_configured=push_configured, registration=registration
+        )
+
+
+@contextmanager
+def uuid_links_locked() -> Iterator[None]:
+    """Lock the UUID links of the site and the requests for registration
+
+    The registration of an existing host takes only this lock, not the configuration lock of
+    Setup. It does not change the Setup configuration and must not wait for long running Setup
+    actions such as a bulk discovery. The lock can be nested.
+
+    Three locks meet here. Take them in this order and never in the opposite direction, otherwise
+    two processes can block each other:
+
+    1. the configuration lock of Setup
+    2. this lock
+    3. the lock of the token store (see TokenStore.agent_registration_use)
+
+    Code that holds the configuration lock takes this lock inside it. Code that holds this lock
+    does not take the configuration lock."""
+    with store.locked(cmk.utils.paths.uuid_links_lockfile):
+        yield
 
 
 def verify_uuid_is_not_linked(uuid: UUID, *, host_name: HostName | None) -> None:
@@ -176,4 +201,5 @@ def _uuid_link_manager() -> UUIDLinkManager:
 
 
 def _remove_tls_registration(host_names: Sequence[HostName]) -> None:
-    _uuid_link_manager().unlink(host_names)
+    with uuid_links_locked():
+        _uuid_link_manager().unlink(host_names)

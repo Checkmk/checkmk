@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-16 05:06+0000\n"
+"PO-Revision-Date: 2026-10-27 06:06+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -999,9 +999,8 @@ msgstr "(イベントコンソールに通知を送信しないでください)"
 msgid "(edit presets)"
 msgstr "(プリセットを編集する)"
 
-#, fuzzy
 msgid "(empty)"
-msgstr "空の"
+msgstr "(空)"
 
 msgid "(finished)"
 msgstr "(終了しました)"
@@ -1121,9 +1120,8 @@ msgstr ",経過キャッシュ寿命: %s"
 msgid ", errors occurred"
 msgstr "、エラーが発生しました"
 
-#, fuzzy
 msgid ", first match drops the message"
-msgstr ",最初の一致はこのルールパックをスキップします"
+msgstr ", 最初の一致でメッセージが削除される"
 
 msgid ", first match is a cancelling match"
 msgstr "、最初の一致ははキャンセルした一致です"
@@ -1187,9 +1185,8 @@ msgstr "1つの変更"
 msgid "1 host"
 msgstr "1 ホスト"
 
-#, fuzzy
 msgid "1 hour"
-msgstr "時間"
+msgstr "1時間"
 
 msgid "1 row"
 msgstr "1行"
@@ -3231,7 +3228,7 @@ msgstr "変更を中止します。"
 
 #, fuzzy
 msgid "Aborted"
-msgstr "警告"
+msgstr "中止"
 
 #, python-format
 msgid ""
@@ -5834,7 +5831,7 @@ msgid "Alerts"
 msgstr "アラート"
 
 msgid "Alerts for items scheduled for deletion"
-msgstr ""
+msgstr "削除予定の項目に対するアラート"
 
 msgid "Algorithm"
 msgstr "アルゴリズム"
@@ -7620,9 +7617,8 @@ msgstr "連絡先グループへのサービスの割り当て"
 msgid "Assignment of services to service groups"
 msgstr "サービスグループへのサービスの割り当て"
 
-#, fuzzy
 msgid "Assistant instructions"
-msgstr "持続的接続"
+msgstr "アシスタントの操作手順"
 
 #, python-format
 msgid ""
@@ -8185,10 +8181,11 @@ msgstr "マシンアカウントの自動化の秘密"
 
 #, python-format
 msgid ""
-"Automation user %s has stored secret with %d dangerous permission(s): %s"
+"Automation user %(user_id)s has a stored secret and %(count)d dangerous "
+"permission(s): %(permissions)s. If no Checkmk feature reads the secret, "
+"disable 'Store the secret in cleartext' and generate a new secret. "
+"Otherwise, assign a role without these permissions."
 msgstr ""
-"オートメーションユーザーの%sが、%dという危険な権限を持つシークレットを保存し"
-"ています。: %s"
 
 msgid "Automation user authentication via HTTP parameters"
 msgstr "HTTPパラメータによるユーザー認証の自動化"
@@ -11757,7 +11754,7 @@ msgstr "クイックセットアップで管理されているルールの条件
 
 #, python-format
 msgid "Cannot compile the rule: %(error)s"
-msgstr ""
+msgstr "ルールをコンパイルできません：%(error)s"
 
 msgid ""
 "Cannot compute forecast based on the current data. You can either wait until "
@@ -11940,11 +11937,11 @@ msgstr ""
 
 #, python-format
 msgid "Cannot look up the time periods: %(error)s"
-msgstr ""
+msgstr "期間を検索できません：%(error)s"
 
 #, python-format
 msgid "Cannot match the rule: %(error)s"
-msgstr ""
+msgstr "ルールに一致しません：%(error)s"
 
 #, python-format
 msgid ""
@@ -61183,6 +61180,18 @@ msgstr ""
 "て、エラーがここに表示されます。"
 
 msgid ""
+"Since 2.4.0 (Werk #17344), the secret of an automation user is only stored "
+"in cleartext if <i>Store the secret in cleartext</i> is enabled. A stored "
+"secret can be read by anyone with access to the site files or backups. "
+"Together with permissions that allow running arbitrary code, this gives full "
+"control over the site.<br>External tools and scripts do not need a stored "
+"secret, they keep the secret themselves. Only Checkmk features that read the "
+"secret from the site need it, e.g. the agent auto-registration rule or the "
+"special agent for BI aggregations. These users only need the permissions of "
+"that feature, not the role administrator."
+msgstr ""
+
+msgid ""
 "Since Checkmk 1.6 it is possible to encrypt the TCP Livestatus connections "
 "using SSL. This is enabled by default for sites that enable Livestatus via "
 "TCP with 1.6 or newer. Sites that already have this option enabled keep the "
@@ -66913,6 +66922,11 @@ msgstr ""
 "す。3番目の列はオプションであり、パフォーマンスデータを含めることができます。"
 
 msgid ""
+"The SSH key pair cannot be restored because your session changed since this "
+"page was opened. Please open this page again and repeat your changes."
+msgstr ""
+
+msgid ""
 "The Setup configuration can be set to read only mode for all users that are "
 "not permitted to ignore the read only mode. All users that are permitted to "
 "set the read only can disable it again when another permitted user enabled "
@@ -70284,6 +70298,16 @@ msgstr ""
 "た：「<b> %s </b>」。"
 
 msgid ""
+"The previously entered password cannot be restored because your session "
+"changed since this page was opened. Please enter the password again."
+msgstr ""
+
+msgid ""
+"The previously uploaded file cannot be restored because your session changed "
+"since this page was opened. Please upload the file again."
+msgstr ""
+
+msgid ""
 "The problems above might be caused by missing caches. Please trigger a "
 "rescan."
 msgstr ""
@@ -70407,6 +70431,11 @@ msgstr ""
 "レポートは、レポートスケジューラで使用されます。レポートを削除できるようにす"
 "るには、最初にこのレポートを参照しているすべてのスケジュールを削除する必要が"
 "あります。"
+
+#, python-format
+msgid ""
+"The report location %(path)s is outside of the report archive of %(owner)s"
+msgstr ""
 
 #, fuzzy
 msgid "The report you are trying to preview has no valid file name"
@@ -87339,15 +87368,6 @@ msgid "Wireless ethernet statuses"
 msgstr "状態を無視する"
 
 msgid ""
-"With 2.4.0 (Werk #17344) it was made optional to store the secret of an "
-"automation user. We do not recommend to store the secret for automation "
-"users with high privileges."
-msgstr ""
-"バージョン2.4.0（Werk #17344）では、自動化ユーザーのシークレットを保存するか"
-"どうかがオプションとなりました。高権限を持つ自動化ユーザーのシークレットを保"
-"存することは推奨しません。"
-
-msgid ""
 "With ServiceNow you can create different types of management issues, "
 "currently supported are indicents and cases."
 msgstr ""
@@ -97993,6 +98013,22 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#, python-format
+#~ msgid ""
+#~ "Automation user %s has stored secret with %d dangerous permission(s): %s"
+#~ msgstr ""
+#~ "オートメーションユーザーの%sが、%dという危険な権限を持つシークレットを保存"
+#~ "しています。: %s"
+
+#~ msgid ""
+#~ "With 2.4.0 (Werk #17344) it was made optional to store the secret of an "
+#~ "automation user. We do not recommend to store the secret for automation "
+#~ "users with high privileges."
+#~ msgstr ""
+#~ "バージョン2.4.0（Werk #17344）では、自動化ユーザーのシークレットを保存する"
+#~ "かどうかがオプションとなりました。高権限を持つ自動化ユーザーのシークレット"
+#~ "を保存することは推奨しません。"
 
 #~ msgid "Source Path"
 #~ msgstr "ソースパス"

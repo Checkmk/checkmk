@@ -26,7 +26,7 @@
 #
 # Fields:
 #   prefix:     path prefix for first-match-wins matching (include trailing /)
-#   category:   one of: python, cpp, rust, vue, frontend, config, data
+#   category:   one of: python, cpp, rust, go, vue, frontend, config, data
 #   extensions:  list of file extensions to match (omit for "all files")
 
 # Agent-side Rust binaries (rust_binary, no install spec)
@@ -150,6 +150,17 @@ package_target = "//omd/non-free/packages/cmc:helpers"
 needs_version_flag = true
 output_basename = "icmpsender"
 post_install = ["setcap_net_raw"]
+
+[[package]]
+name = "deploy_otelcol"
+package_target = "//non-free/packages/otel-collector:otelcol_bin"
+output_basename = "otelcol"
+
+# Shares the otelcol package target, which leaves the config specs with it.
+[[package]]
+name = "deploy_cleanup_otel_collector_files"
+package_target = "//non-free/packages/otel-collector:otelcol_bin"
+output_basename = "cmk-cleanup-otel-collector-files.py"
 
 # =============================================================================
 # Service restart overrides

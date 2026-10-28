@@ -79,6 +79,7 @@ class ChangeCategory(StrEnum):
     PYTHON = "python"
     CPP = "cpp"
     RUST = "rust"
+    GO = "go"
     VUE = "vue"
     FRONTEND = "frontend"
     CONFIG = "config"

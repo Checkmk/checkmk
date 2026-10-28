@@ -76,9 +76,9 @@ def _make_mock_run(
 class TestChangeCategory:
     """Tests for the ChangeCategory enum."""
 
-    def test_has_11_members(self) -> None:
-        """ChangeCategory has exactly 11 members."""
-        assert len(ChangeCategory) == 11
+    def test_has_12_members(self) -> None:
+        """ChangeCategory has exactly 12 members."""
+        assert len(ChangeCategory) == 12
 
     def test_all_members_present(self) -> None:
         """All expected members exist."""
@@ -86,6 +86,7 @@ class TestChangeCategory:
             "PYTHON",
             "CPP",
             "RUST",
+            "GO",
             "VUE",
             "FRONTEND",
             "CONFIG",

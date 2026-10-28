@@ -83,6 +83,11 @@ class TestGetBazelQueryableFiles:
         result = _get_bazel_queryable_files(cs)
         assert result == ["packages/check-cert/src/main.rs"]
 
+    def test_extracts_go_files(self) -> None:
+        cs = _make_changeset(GO=("non-free/packages/otel-collector/components.go",))
+        result = _get_bazel_queryable_files(cs)
+        assert result == ["non-free/packages/otel-collector/components.go"]
+
     def test_extracts_cpp_files(self) -> None:
         cs = _make_changeset(CPP=("packages/neb/src/NebCore.cc",))
         result = _get_bazel_queryable_files(cs)
@@ -179,16 +184,15 @@ class TestGetBuildFilePackages:
             "//packages/neb/...",
         ]
 
-    def test_global_overrides_packages(self) -> None:
-        """MODULE.bazel change returns //... even with specific BUILD files."""
+    def test_global_keeps_packages(self) -> None:
         cs = _make_changeset(
             BUILD=(
-                "MODULE.bazel",
-                "packages/check-cert/BUILD",
+                "bazel/module/gazelle/go.MODULE.bazel",
+                "non-free/packages/otel-collector/BUILD",
             )
         )
         result = _get_build_file_packages(cs)
-        assert result == ["//..."]
+        assert result == ["//...", "//non-free/packages/otel-collector/..."]
 
 
 # ---------------------------------------------------------------------------
@@ -251,6 +255,24 @@ class TestResolveBazelTargets:
         assert not result.is_empty
         assert result.files_queried == 1
         assert "packages/check-cert" in result.targets[0].package
+
+    def test_go_files_resolve_to_their_spec(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setattr(
+            "cmk.dev_deploy.execution.bazel_resolver.get_install_specs",
+            lambda: (
+                _make_install_spec(
+                    "non-free/packages/otel-collector",
+                    "//non-free/packages/otel-collector:otelcol_bin",
+                ),
+            ),
+        )
+
+        cs = _make_changeset(GO=("non-free/packages/otel-collector/components.go",))
+        result = resolve_bazel_targets(cs, tmp_path)
+
+        assert [t.package for t in result.targets] == ["non-free/packages/otel-collector"]
 
     def test_manifest_resolution_needs_no_subprocess(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path

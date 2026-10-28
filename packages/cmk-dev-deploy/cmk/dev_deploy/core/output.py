@@ -455,6 +455,7 @@ _CATEGORY_LABELS: MappingProxyType[ChangeCategory, str] = MappingProxyType(
         ChangeCategory.PYTHON: "Python",
         ChangeCategory.CPP: "C++",
         ChangeCategory.RUST: "Rust",
+        ChangeCategory.GO: "Go",
         ChangeCategory.VUE: "Vue/TypeScript",
         ChangeCategory.FRONTEND: "Frontend (legacy)",
         ChangeCategory.CONFIG: "Config/Scripts",

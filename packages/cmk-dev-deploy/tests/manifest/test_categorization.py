@@ -88,6 +88,11 @@ class TestExtensionsToCategory:
 
         assert _extensions_to_category(frozenset({".rs"})) == ChangeCategory.RUST
 
+    def test_go_extensions(self) -> None:
+        from cmk.dev_deploy.manifest.update import _extensions_to_category
+
+        assert _extensions_to_category(frozenset({".go", ".yaml"})) == ChangeCategory.GO
+
     def test_cpp_extensions(self) -> None:
         from cmk.dev_deploy.manifest.update import _extensions_to_category
 

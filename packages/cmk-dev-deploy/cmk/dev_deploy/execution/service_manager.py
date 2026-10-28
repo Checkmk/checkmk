@@ -31,6 +31,7 @@ DEPLOYER_CATEGORIES: MappingProxyType[str, frozenset[ChangeCategory]] = MappingP
             {
                 ChangeCategory.CPP,
                 ChangeCategory.RUST,
+                ChangeCategory.GO,
                 ChangeCategory.VUE,
                 ChangeCategory.FRONTEND,
             }

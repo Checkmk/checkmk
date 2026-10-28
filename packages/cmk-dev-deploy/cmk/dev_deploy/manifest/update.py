@@ -73,6 +73,7 @@ _CONFIG_METHOD_RULES: MappingProxyType[str, str] = MappingProxyType(
 # of file extensions found in a Bazel target's source files.
 _EXTENSION_CATEGORY_PRIORITY: tuple[tuple[frozenset[str], ChangeCategory], ...] = (
     (frozenset({".rs"}), ChangeCategory.RUST),
+    (frozenset({".go"}), ChangeCategory.GO),
     (frozenset({".cc", ".h", ".hpp", ".proto"}), ChangeCategory.CPP),
     (frozenset({".vue"}), ChangeCategory.VUE),
     (frozenset({".js", ".ts", ".tsx", ".css", ".scss"}), ChangeCategory.FRONTEND),

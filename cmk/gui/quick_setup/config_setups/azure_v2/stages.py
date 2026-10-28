@@ -7,6 +7,7 @@
 
 from collections.abc import Mapping, Sequence
 
+from cmk.ccc.site import SiteId
 from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable.predefined import (
@@ -44,16 +45,26 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Text,
     Widget,
 )
+from cmk.gui.watolib.configuration_bundle_store import BundleId
+from cmk.gui.watolib.configuration_bundles import CreateRule
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.plugins.azure_v2.rulesets import (  # astrein: disable=module-layers  # TODO: acceptable?
     azure,
 )
 from cmk.ruleset_matcher.definition import RuleGroup
+from cmk.ruleset_matcher.matcher import RuleConditionsSpec
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary
 
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
 PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")
 PREV_BUTTON_LABEL = _("Back")
+
+# Every host with data from the special agent gets this label from the section azure_v2_labels.
+_AZURE_HOST_LABEL = "cmk/cloud:azure"
+
+# "OpenTelemetry data routing via identity labels", see cmk/plugins/otel/rulesets/data_routing.py
+_METRICS_IDENTITY_ROUTING_RULESET = "metrics_identity_routing"
 
 
 FIRST_LEVEL_DICT_TITLES: dict[str, Title] = {
@@ -321,11 +332,42 @@ def action(
                 custom_collect_params=azure_collect_params,
                 progress_logger=progress_logger,
                 tree=ctx.tree,
+                additional_rules=_otel_routing_rules,
             )
         case QuickSetupActionMode.EDIT:
             raise ValueError("Edit mode not supported")
         case _:
             raise ValueError(f"Unknown mode {mode}")
+
+
+def _otel_routing_rules(
+    params: Mapping[str, object], bundle_id: BundleId, site_id: SiteId, folder: Folder
+) -> Sequence[CreateRule]:
+    """The rule that assigns the OpenTelemetry metrics to the Azure hosts by their identity
+    labels."""
+    if not _otel_enabled(params):
+        return ()
+    return [
+        complete.create_bundle_rule(
+            params={"filters": ("all_identity_labels", None)},
+            host_path=folder.path(),
+            rulespec_name=_METRICS_IDENTITY_ROUTING_RULESET,
+            condition=RuleConditionsSpec(
+                host_tags={},
+                host_label_groups=[("and", [("and", _AZURE_HOST_LABEL)])],
+                host_folder=folder.path(),
+            ),
+            bundle_id=bundle_id,
+            site_id=site_id,
+            description="OpenTelemetry data routing",
+        )
+    ]
+
+
+def _otel_enabled(params: Mapping[str, object]) -> bool:
+    """The key is present only when the checkbox for the OpenTelemetry resource types is
+    enabled."""
+    return "otel_resource_types" in params
 
 
 def azure_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:

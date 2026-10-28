@@ -30,8 +30,9 @@ from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.cli.engine.commands import option_names, option_string
 from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
@@ -121,7 +122,7 @@ def _mode_check(
     return state_exit_code(state)
 
 
-def _run_check(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_check(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     if context.global_options.debug:
         # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -135,31 +136,30 @@ def _run_check(context: CLICommandContext, options: Options, args: CLIArgs) -> C
 
 
 cli_command_check = CLICommand(
-    long_option="check",
+    name="check",
+    long="check",
     handler_function=_run_check,
-    argument=True,
-    argument_descr="HOST [IPADDRESS]",
-    argument_optional=True,
+    arguments=CLIArguments("HOST [IPADDRESS]", optional=True),
     sub_options=[
         *FETCHER_OPTIONS,
         SNMP_BACKEND_OPTION,
         CLIOption(
-            long_option="no-submit",
-            short_option="n",
-            short_help="Do not submit results to core, do not save counters",
+            long="no-submit",
+            short="n",
+            help="Do not submit results to core, do not save counters",
         ),
         CLIOption(
-            long_option="perfdata",
-            short_option="p",
-            short_help="Also show performance data (use with -v)",
+            long="perfdata",
+            short="p",
+            help="Also show performance data (use with -v)",
         ),
         option_sections,
         get_plugins_option(CheckPluginName),
         option_detect_plugins,
         FAKE_DNS_OPTION,
     ],
-    short_help="Check all services on the given HOST",
-    long_help=[
+    help="Check all services on the given HOST",
+    description=[
         (
             "Execute all checks on the given HOST. Optionally you can specify "
             "a second argument, the IPADDRESS. If you don't set this, the "

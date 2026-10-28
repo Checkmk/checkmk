@@ -26,8 +26,9 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.store import activation_lock
 from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Options
@@ -136,9 +137,7 @@ def _mode_dump_nagios_config(
     return CLIExitCode.SUCCESS
 
 
-def _run_dump_nagios_config(
-    context: CLICommandContext, options: Options, args: CLIArgs
-) -> CLIExitCode:
+def _run_dump_nagios_config(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_dump_nagios_config(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -149,15 +148,14 @@ def _run_dump_nagios_config(
 
 
 cli_command_nagios_config = CLICommand(
-    long_option="nagios-config",
-    short_option="N",
+    name="nagios_config",
+    long="nagios-config",
+    short="N",
     handler_function=_run_dump_nagios_config,
-    argument=True,
-    argument_descr="HOST1 HOST2...",
-    argument_optional=True,
+    arguments=CLIArguments("HOST1 HOST2...", optional=True),
     sub_options=[FAKE_DNS_OPTION],
-    short_help="Output Nagios configuration",
-    long_help=[
+    help="Output Nagios configuration",
+    description=[
         (
             "Outputs the Nagios configuration. You may optionally add a list "
             "of hosts. In that case the configuration is generated only for "
@@ -292,7 +290,7 @@ def _mode_update(
     return CLIExitCode.SUCCESS
 
 
-def _run_update(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_update(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_update(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -303,12 +301,13 @@ def _run_update(context: CLICommandContext, options: Options, args: CLIArgs) -> 
 
 
 cli_command_update = CLICommand(
-    long_option="update",
-    short_option="U",
+    name="update",
+    long="update",
+    short="U",
     handler_function=_run_update,
     sub_options=[FAKE_DNS_OPTION],
-    short_help="Create core config",
-    long_help=[
+    help="Create core config",
+    description=[
         (
             "Updates the core configuration based on the current Checkmk "
             "configuration. When using the Nagios core, the precompiled host "
@@ -412,7 +411,7 @@ def _mode_restart(
     return CLIExitCode.SUCCESS
 
 
-def _run_restart(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_restart(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_restart(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -423,15 +422,14 @@ def _run_restart(context: CLICommandContext, options: Options, args: CLIArgs) ->
 
 
 cli_command_restart = CLICommand(
-    long_option="restart",
-    short_option="R",
+    name="restart",
+    long="restart",
+    short="R",
     handler_function=_run_restart,
-    argument=True,
-    argument_descr="[HostA, HostB]",
-    argument_optional=True,
+    arguments=CLIArguments("[HostA, HostB]", optional=True),
     sub_options=[FAKE_DNS_OPTION],
-    short_help="Create core config + core restart",
-    long_help=[
+    help="Create core config + core restart",
+    description=[
         (
             "You may add host names as additional arguments. This enables the incremental "
             "activate mechanism, only compiling these host names and using cached data for all "
@@ -533,7 +531,7 @@ def _mode_reload(
     return CLIExitCode.SUCCESS
 
 
-def _run_reload(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_reload(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_reload(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -544,15 +542,14 @@ def _run_reload(context: CLICommandContext, options: Options, args: CLIArgs) -> 
 
 
 cli_command_reload = CLICommand(
-    long_option="reload",
-    short_option="O",
+    name="reload",
+    long="reload",
+    short="O",
     handler_function=_run_reload,
-    argument=True,
-    argument_descr="[HostA, HostB]",
-    argument_optional=True,
+    arguments=CLIArguments("[HostA, HostB]", optional=True),
     sub_options=[FAKE_DNS_OPTION],
-    short_help="Create core config + core reload",
-    long_help=[
+    help="Create core config + core reload",
+    description=[
         (
             "You may add host names as additional arguments. This enables the incremental "
             "activate mechanism, only compiling these host names and using cached data for all "

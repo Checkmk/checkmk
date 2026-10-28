@@ -9,14 +9,14 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.plugins.checkmk.cli.snmp import cli_command_snmptranslate, cli_command_snmpwalk
 
 
-def _context(*, debug_mode: bool = False) -> CLICommandContext:
-    return CLICommandContext(
+def _context(*, debug_mode: bool = False) -> CLIContext:
+    return CLIContext(
         omd_root=Path("/nonexistent"),
         global_options=CLIGlobalOptions(debug=debug_mode),
         logger=logging.getLogger(__name__),

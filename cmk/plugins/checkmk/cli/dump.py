@@ -44,8 +44,9 @@ from cmk.checkengine.source_builder import SourceBuilder
 from cmk.checkengine.summarize import summarize
 from cmk.cli.engine.commands import write_stdout
 from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Options
@@ -282,7 +283,7 @@ def _mode_dump_agent(
         return CLIExitCode.FAILURE if errors else CLIExitCode.SUCCESS
 
 
-def _run_dump_agent(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_dump_agent(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     if context.global_options.debug:
         # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -296,14 +297,14 @@ def _run_dump_agent(context: CLICommandContext, options: Options, args: CLIArgs)
 
 
 cli_command_dump_agent = CLICommand(
-    long_option="dump-agent",
-    short_option="d",
+    name="dump_agent",
+    long="dump-agent",
+    short="d",
     handler_function=_run_dump_agent,
-    argument=True,
-    argument_descr="HOSTNAME|ADDRESS",
+    arguments=CLIArguments("HOSTNAME|ADDRESS"),
     sub_options=[*FETCHER_OPTIONS[:3], SNMP_BACKEND_OPTION, FAKE_DNS_OPTION],
-    short_help="Show raw information from agent",
-    long_help=[
+    help="Show raw information from agent",
+    description=[
         (
             "Shows the raw information received from the given host. For regular "
             "hosts it shows the agent output plus possible piggyback information. "
@@ -396,7 +397,7 @@ def _mode_dump_hosts(
         return CLIExitCode.SUCCESS
 
 
-def _run_dump_hosts(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_dump_hosts(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     if context.global_options.debug:
         # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -410,15 +411,14 @@ def _run_dump_hosts(context: CLICommandContext, options: Options, args: CLIArgs)
 
 
 cli_command_dump = CLICommand(
-    long_option="dump",
-    short_option="D",
+    name="dump",
+    long="dump",
+    short="D",
     handler_function=_run_dump_hosts,
-    argument=True,
-    argument_descr="H1 H2...",
-    argument_optional=True,
+    arguments=CLIArguments("H1 H2...", optional=True),
     sub_options=[FAKE_DNS_OPTION],
-    short_help="Dump info about all or some hosts",
-    long_help=[
+    help="Dump info about all or some hosts",
+    description=[
         (
             "Dumps out the complete configuration and information "
             "about one, several or all hosts. It shows all services, hostgroups, "

@@ -17,8 +17,9 @@ from cmk.automations.engine import AutomationError
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout
 from cmk.cli.engine.commands import option_string
 from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
@@ -91,7 +92,7 @@ def _mode_automation(
         return CLIExitCode.SUCCESS
 
 
-def _run_automation(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_automation(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     if context.global_options.debug:
         # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -116,18 +117,16 @@ def _for_cmk_version(options: Options) -> str:
 
 
 cli_command_automation = CLICommand(
-    long_option="automation",
+    name="automation",
+    long="automation",
     handler_function=_run_automation,
-    argument=True,
-    argument_descr="COMMAND...",
-    argument_optional=True,
-    short_help="Internal helper to invoke Check_MK actions",
+    arguments=CLIArguments("COMMAND...", optional=True),
+    help="Internal helper to invoke Check_MK actions",
     sub_options=[
         CLIOption(
-            long_option="for-cmk-version",
-            argument=True,
-            argument_descr="VERSION",
-            short_help=(
+            long="for-cmk-version",
+            argument="VERSION",
+            help=(
                 "Serialize the result for a site running this Checkmk version"
                 " (default: the version of this site)"
             ),

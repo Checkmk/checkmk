@@ -9,8 +9,9 @@ from pathlib import Path
 
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
@@ -57,7 +58,7 @@ def _mode_man(
     return CLIExitCode.SUCCESS
 
 
-def _run_man(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_man(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_man(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -68,23 +69,21 @@ def _run_man(context: CLICommandContext, options: Options, args: CLIArgs) -> CLI
 
 
 cli_command_man = CLICommand(
-    long_option="man",
-    short_option="M",
+    name="man",
+    long="man",
+    short="M",
     handler_function=_run_man,
-    argument=True,
-    argument_descr="CHECKTYPE",
-    argument_optional=True,
+    arguments=CLIArguments("CHECKTYPE", optional=True),
     sub_options=[
         CLIOption(
-            long_option="renderer",
-            short_option="r",
-            argument=True,
-            argument_descr="RENDERER",
-            short_help="Use the given renderer: 'console' or 'nowiki'. Defaults to 'console'.",
+            long="renderer",
+            short="r",
+            argument="RENDERER",
+            help="Use the given renderer: 'console' or 'nowiki'. Defaults to 'console'.",
         ),
     ],
-    short_help="Show manpage for check CHECKTYPE",
-    long_help=[
+    help="Show manpage for check CHECKTYPE",
+    description=[
         (
             "Shows documentation about a check type. If /usr/bin/less is "
             "available it is used as pager. Exit by pressing Q. "
@@ -110,7 +109,7 @@ def _mode_browse_man(
     return CLIExitCode.SUCCESS
 
 
-def _run_browse_man(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_browse_man(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_browse_man(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
@@ -121,8 +120,9 @@ def _run_browse_man(context: CLICommandContext, options: Options, args: CLIArgs)
 
 
 cli_command_browse_man = CLICommand(
-    long_option="browse-man",
-    short_option="m",
+    name="browse_man",
+    long="browse-man",
+    short="m",
     handler_function=_run_browse_man,
-    short_help="Open interactive manpage browser",
+    help="Open interactive manpage browser",
 )

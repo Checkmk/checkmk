@@ -7,41 +7,25 @@ import pytest
 
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import entry_point_prefixes as cli_entry_point_prefixes
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options
 
 
 def test_entry_point_prefixes() -> None:
     assert cli_entry_point_prefixes() == {CLICommand: "cli_command_"}
 
 
-def _print_version(_context: CLICommandContext, _options: Options, _args: CLIArgs) -> CLIExitCode:
+def _handler(_context: CLIContext, _request: object, _args: CLIArgs) -> CLIExitCode:
     return CLIExitCode.SUCCESS
 
 
-def test_command_is_named_after_its_long_option() -> None:
-    command = CLICommand(
-        long_option="version",
-        handler_function=_print_version,
-        short_help="Print the version",
-    )
-    assert command.name == "version"
+def test_a_command_name_must_be_an_identifier() -> None:
+    with pytest.raises(ValueError, match="identifier"):
+        CLICommand(name="bake-agents", long="bake-agents", help="Bake", handler_function=_handler)
 
 
-def test_option_argument_requires_description() -> None:
-    with pytest.raises(ValueError, match="argument description"):
-        CLIOption(long_option="cache", short_help="Use cache", argument=True)
-
-
-def test_option_repeat_allows_argument() -> None:
-    option = CLIOption(
-        long_option="oid",
-        short_help="Walk on this OID",
-        argument=True,
-        argument_descr="A",
-        repeat=True,
-    )
-    assert option.repeat
+def test_an_option_without_argument_parses_none() -> None:
+    with pytest.raises(ValueError, match="does not take"):
+        CLIOption(long="cache", help="Use the cache", parse=int)

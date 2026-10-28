@@ -45,12 +45,12 @@ from cmk.plugins.checkmk.cli.snmp import cli_command_snmpget, cli_command_snmpwa
         cli_command_snmpwalk,
         cli_command_snmpget,
     ],
-    ids=lambda command: command.long_option,
+    ids=lambda command: command.long,
 )
 def test_a_command_looking_up_addresses_takes_fake_dns(command: CLICommand) -> None:
     parsed = parse(
         Commands(plugins=[make_command(command)], general_options=general_options()),
-        ["cmk", "--fake-dns", "1.2.3.4", f"--{command.long_option}", "myhost"],
+        ["cmk", "--fake-dns", "1.2.3.4", f"--{command.long}", "myhost"],
     )
 
     assert isinstance(parsed, RunCommand)

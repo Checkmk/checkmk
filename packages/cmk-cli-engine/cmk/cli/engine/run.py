@@ -27,7 +27,7 @@ from cmk.cli.engine.commands import (
     write_paged,
     write_stdout,
 )
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 
 from .arguments import InvalidArguments, parse, ShowHelp
@@ -164,7 +164,7 @@ def run(
                 raise
             return CLIExitCode.UNKNOWN
         return call(
-            CLICommandContext(omd_root=omd_root, global_options=global_options, logger=logger),
+            CLIContext(omd_root=omd_root, global_options=global_options, logger=logger),
             parsed.command,
             parsed.argument,
             sub_options,

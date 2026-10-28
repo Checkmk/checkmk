@@ -30,8 +30,9 @@ from cmk.ccc.exceptions import MKGeneralException, MKTerminate, raise_mkterminat
 from cmk.ccc.version import Edition
 from cmk.ccc.version import edition as edition_of_site
 from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
@@ -94,7 +95,7 @@ def _mode_notify(
     return _notification_exit_code(exit_status)
 
 
-def _run_notify(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_notify(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_notify(context.omd_root, context.global_options, options, args)
     except MKTerminate:
@@ -148,20 +149,19 @@ def _do_notify_via_automation(options: dict[str, bool], args: list[str]) -> CLIE
 
 
 cli_command_notify = CLICommand(
-    long_option="notify",
+    name="notify",
+    long="notify",
     handler_function=_run_notify,
-    argument=True,
-    argument_descr="MODE",
-    argument_optional=True,
+    arguments=CLIArguments("MODE", optional=True),
     sub_options=[
         CLIOption(
-            long_option="log-to-stdout",
-            short_help="Also write log messages to console",
+            long="log-to-stdout",
+            help="Also write log messages to console",
         ),
         CLIOption(
-            long_option="keepalive",
-            short_help="Execute in keepalive mode (Commercial editions only)",
+            long="keepalive",
+            help="Execute in keepalive mode (Commercial editions only)",
         ),
     ],
-    short_help="Used to send notifications from core",
+    help="Used to send notifications from core",
 )

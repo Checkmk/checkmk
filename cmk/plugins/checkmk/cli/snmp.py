@@ -36,8 +36,9 @@ from cmk.checkengine.snmplib import (
 )
 from cmk.cli.engine.commands import option_strings
 from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
@@ -115,7 +116,7 @@ def _mode_snmptranslate(
     return CLIExitCode.SUCCESS
 
 
-def _run_snmptranslate(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_snmptranslate(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_snmptranslate(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
@@ -126,12 +127,12 @@ def _run_snmptranslate(context: CLICommandContext, options: Options, args: CLIAr
 
 
 cli_command_snmptranslate = CLICommand(
-    long_option="snmptranslate",
+    name="snmptranslate",
+    long="snmptranslate",
     handler_function=_run_snmptranslate,
-    argument=True,
-    argument_descr="HOST",
-    short_help="Do snmptranslate on walk",
-    long_help=[
+    arguments=CLIArguments("HOST"),
+    help="Do snmptranslate on walk",
+    description=[
         (
             "Does not contact the host again, but reuses the hosts walk from the directory "
             f"{cmk.utils.paths.snmpwalks_dir}. You can add further MIBs to the directory "
@@ -260,7 +261,7 @@ def _mode_snmpwalk(
     return CLIExitCode.SUCCESS
 
 
-def _run_snmpwalk(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_snmpwalk(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_snmpwalk(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -271,34 +272,31 @@ def _run_snmpwalk(context: CLICommandContext, options: Options, args: CLIArgs) -
 
 
 cli_command_snmpwalk = CLICommand(
-    long_option="snmpwalk",
+    name="snmpwalk",
+    long="snmpwalk",
     handler_function=_run_snmpwalk,
-    argument=True,
-    argument_descr="HOST1 HOST2...",
-    argument_optional=True,
+    arguments=CLIArguments("HOST1 HOST2...", optional=True),
     sub_options=[
         SNMP_BACKEND_OPTION,
         CLIOption(
-            long_option="extraoid",
-            argument=True,
-            argument_descr="A",
+            long="extraoid",
+            argument="A",
             repeat=True,
-            short_help="Walk also on this OID, in addition to mib-2 and "
+            help="Walk also on this OID, in addition to mib-2 and "
             "enterprises. You can specify this option multiple "
             "times.",
         ),
         CLIOption(
-            long_option="oid",
-            argument=True,
-            argument_descr="A",
+            long="oid",
+            argument="A",
             repeat=True,
-            short_help="Walk on this OID instead of mib-2 and enterprises. "
+            help="Walk on this OID instead of mib-2 and enterprises. "
             "You can specify this option multiple times.",
         ),
         FAKE_DNS_OPTION,
     ],
-    short_help="Do snmpwalk on one or more hosts",
-    long_help=[
+    help="Do snmpwalk on one or more hosts",
+    description=[
         "Does a complete snmpwalk for the specified hosts both "
         "on the standard MIB and the enterprises MIB and stores the "
         "result in the directory '%s'. Use the option --oid one or several "
@@ -374,7 +372,7 @@ def _mode_snmpget(
     return CLIExitCode.SUCCESS
 
 
-def _run_snmpget(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_snmpget(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     if context.global_options.debug:
         # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -388,14 +386,13 @@ def _run_snmpget(context: CLICommandContext, options: Options, args: CLIArgs) ->
 
 
 cli_command_snmpget = CLICommand(
-    long_option="snmpget",
+    name="snmpget",
+    long="snmpget",
     handler_function=_run_snmpget,
-    argument=True,
-    argument_descr="OID [HOST1 HOST2...]",
-    argument_optional=True,
+    arguments=CLIArguments("OID [HOST1 HOST2...]", optional=True),
     sub_options=[SNMP_BACKEND_OPTION, FAKE_DNS_OPTION],
-    short_help="Fetch single OID from one or multiple hosts",
-    long_help=[
+    help="Fetch single OID from one or multiple hosts",
+    description=[
         (
             "Does a snmpget on the given OID on one or multiple hosts. In case "
             "no host is given, all known SNMP hosts are queried."

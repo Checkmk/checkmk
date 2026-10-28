@@ -16,7 +16,7 @@ from cmk.automations.internal import AutomationID
 from cmk.ccc.exceptions import MKBailOut
 from cmk.cli.engine.arguments import parse, RunCommand
 from cmk.cli.engine.commands import Commands, general_options, make_command, parse_sub_options
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.plugins.checkmk.cli.automation import _automation_error_exit_code, cli_command_automation
@@ -44,8 +44,8 @@ def test_the_version_of_a_subprocess_automation_reaches_the_cli() -> None:
     assert parsed.arguments == ["service-discovery-preview", "myhost"]
 
 
-def _context(global_options: CLIGlobalOptions) -> CLICommandContext:
-    return CLICommandContext(
+def _context(global_options: CLIGlobalOptions) -> CLIContext:
+    return CLIContext(
         omd_root=Path("/nonexistent"),
         global_options=global_options,
         logger=logging.getLogger(__name__),
@@ -76,9 +76,7 @@ def test_an_invalid_version_is_reported_through_the_context_logger() -> None:
     logger.handlers = [recorded]
 
     cli_command_automation.handler_function(
-        CLICommandContext(
-            omd_root=Path("/nonexistent"), global_options=CLIGlobalOptions(), logger=logger
-        ),
+        CLIContext(omd_root=Path("/nonexistent"), global_options=CLIGlobalOptions(), logger=logger),
         {"for-cmk-version": "foo"},
         ["restart"],
     )

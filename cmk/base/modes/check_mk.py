@@ -231,42 +231,40 @@ def handle_fetcher_options(
 
 FETCHER_OPTIONS: Final = [
     CLIOption(
-        long_option="cache",
-        short_help="Read info from data source cache files when existent, even when it "
+        long="cache",
+        help="Read info from data source cache files when existent, even when it "
         "is outdated. Only contact the data sources when the cache file "
         "is absent",
     ),
     CLIOption(
-        long_option="no-cache",
-        short_help="Never use cached information",
+        long="no-cache",
+        help="Never use cached information",
     ),
     CLIOption(
-        long_option="no-tcp",
-        short_help="Only use cache files. Skip hosts without cache files.",
+        long="no-tcp",
+        help="Only use cache files. Skip hosts without cache files.",
     ),
     CLIOption(
-        long_option="usewalk",
-        short_help="Use snmpwalk stored with --snmpwalk",
+        long="usewalk",
+        help="Use snmpwalk stored with --snmpwalk",
     ),
 ]
 
 SNMP_BACKEND_OPTION: Final = CLIOption(
-    long_option="snmp-backend",
-    short_help="Override default SNMP backend",
-    argument=True,
-    argument_descr="inline|classic|stored-walk",
+    long="snmp-backend",
+    help="Override default SNMP backend",
+    argument="inline|classic|stored-walk",
 )
 
 FAKE_DNS_OPTION: Final = CLIOption(
-    long_option="fake-dns",
-    short_help="Fake IP addresses of all hosts to be IP. This prevents DNS lookups.",
-    argument=True,
-    argument_descr="IP",
+    long="fake-dns",
+    help="Fake IP addresses of all hosts to be IP. This prevents DNS lookups.",
+    argument="IP",
 )
 
 
 def fake_dns_address(options: Mapping[str, object]) -> HostAddress | None:
-    raw_address = option_string(options, FAKE_DNS_OPTION.long_option)
+    raw_address = option_string(options, FAKE_DNS_OPTION.long)
     return None if raw_address is None else host_address(raw_address)
 
 
@@ -275,14 +273,13 @@ def _convert_sections_argument(arg: str) -> set[SectionName]:
 
 
 option_sections = CLIOption(
-    long_option="detect-sections",
-    short_help=(
+    long="detect-sections",
+    help=(
         "Comma separated list of sections. The provided sections (but no more) will be"
         " available (skipping SNMP detection)"
     ),
-    argument=True,
-    argument_descr="S",
-    argument_conv=_convert_sections_argument,
+    argument="S",
+    parse=_convert_sections_argument,
 )
 
 
@@ -293,11 +290,10 @@ def get_plugins_option[TName: (str, CheckPluginName, InventoryPluginName, Sectio
         return {type_(n) for n in arg.split(",") if n}
 
     return CLIOption(
-        long_option="plugins",
-        short_help="Restrict discovery, checking or inventory to these plugins",
-        argument=True,
-        argument_descr="P",
-        argument_conv=_convert_plugins_argument,
+        long="plugins",
+        help="Restrict discovery, checking or inventory to these plugins",
+        argument="P",
+        parse=_convert_plugins_argument,
     )
 
 
@@ -306,12 +302,11 @@ def _convert_detect_plugins_argument(arg: str) -> set[str]:
 
 
 option_detect_plugins = CLIOption(
-    long_option="detect-plugins",
-    deprecated_long_options=frozenset({"checks"}),
-    short_help="Same as '--plugins', but implies a best efford guess for --detect-sections",
-    argument=True,
-    argument_descr="P",
-    argument_conv=_convert_detect_plugins_argument,
+    long="detect-plugins",
+    deprecated_names=frozenset({"checks"}),
+    help="Same as '--plugins', but implies a best efford guess for --detect-sections",
+    argument="P",
+    parse=_convert_detect_plugins_argument,
 )
 
 

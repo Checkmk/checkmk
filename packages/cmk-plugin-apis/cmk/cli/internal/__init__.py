@@ -75,7 +75,7 @@ class GlobalOptions:
 
 
 @dataclass(frozen=True, kw_only=True)
-class CommandContext:
+class Context:
     """What the engine hands every command besides its own options and arguments.
 
     A command that needs more of the runtime than that builds it itself, e.g.
@@ -89,23 +89,18 @@ class CommandContext:
     """Where the command reports what the engine would report, e.g. its errors"""
 
 
-type CommandHandler = Callable[[CommandContext, Options, Args], ExitCode]
+type CommandHandler = Callable[[Context, Options, Args], ExitCode]
 """The signature of a command's handler; it returns the exit status."""
 
 
-def _validate_argument_declaration(
-    *,
-    argument: bool,
-    argument_descr: str | None,
-    argument_optional: bool,
-    argument_conv: Callable[[str], object] | None = None,
-) -> None:
-    if (argument_descr is not None) != argument:
-        raise ValueError("an argument description is required if and only if there is an argument")
-    if argument_conv is not None and not argument:
-        raise ValueError("a conversion function requires an argument")
-    if argument_optional and not argument:
-        raise ValueError("an optional argument requires an argument")
+@dataclass(frozen=True)
+class Arguments:
+    """The positional arguments of a :class:`Command`"""
+
+    placeholder: str
+    """What the help shows in their place, e.g. ``"HOST"`` or ``"HOST1 HOST2..."``"""
+    optional: bool = False
+    """Whether the command takes any number of arguments, none included, instead of exactly one"""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -118,66 +113,54 @@ class Option:
     c) have no argument (its presence is passed as ``True``).
     """
 
-    long_option: str
-    short_help: str
-    short_option: str | None = None
-    argument: bool = False
-    argument_descr: str | None = None
-    argument_conv: Callable[[str], object] | None = None
+    long: str
+    help: str
+    short: str | None = None
+    argument: str | None = None
+    """What the help shows in the argument's place; ``None`` for an option without argument"""
+    parse: Callable[[str], object] | None = None
     argument_optional: bool = False
     repeat: bool = False
-    deprecated_long_options: frozenset[str] = frozenset()
+    deprecated_names: frozenset[str] = frozenset()
 
     def __post_init__(self) -> None:
-        _validate_argument_declaration(
-            argument=self.argument,
-            argument_descr=self.argument_descr,
-            argument_conv=self.argument_conv,
-            argument_optional=self.argument_optional,
-        )
+        if self.argument is None and (self.parse is not None or self.argument_optional):
+            raise ValueError(f"--{self.long} parses or makes optional an argument it does not take")
 
 
 @dataclass(frozen=True, kw_only=True)
 class Command:
-    """A command of the ``cmk`` command line, selected via ``--<long_option>``.
+    """A command of the ``cmk`` command line, selected via ``--<long>``.
 
     Example:
     ********
 
-    >>> def greet(context: CommandContext, options: Options, args: Args) -> ExitCode:
+    >>> def greet(context: Context, options: Options, args: Args) -> ExitCode:
     ...     print("Hello", ", ".join(args))
     ...     return ExitCode.SUCCESS
     >>> cli_command_greet = Command(
-    ...     long_option="greet",
+    ...     name="greet",
+    ...     long="greet",
     ...     handler_function=greet,
-    ...     short_help="Greet the given names",
-    ...     argument=True,
-    ...     argument_descr="NAME...",
-    ...     argument_optional=True,
+    ...     help="Greet the given names",
+    ...     arguments=Arguments("NAME...", optional=True),
     ... )
     """
 
-    long_option: str
+    name: str
+    """The name under which the command is registered, a Python identifier"""
+    long: str
+    """The long option that selects the command"""
     handler_function: CommandHandler
-    short_help: str
-    short_option: str | None = None
-    argument: bool = False
-    argument_descr: str | None = None
-    argument_optional: bool = False
-    long_help: Sequence[str] | None = None
+    help: str
+    short: str | None = None
+    arguments: Arguments | None = None
+    description: Sequence[str] | None = None
     sub_options: Sequence[Option] = ()
 
-    @property
-    def name(self) -> str:
-        """The name under which the command is registered: its long option"""
-        return self.long_option
-
     def __post_init__(self) -> None:
-        _validate_argument_declaration(
-            argument=self.argument,
-            argument_descr=self.argument_descr,
-            argument_optional=self.argument_optional,
-        )
+        if not self.name.isidentifier():
+            raise ValueError(f"{self.name!r} is not an identifier")
 
 
 def entry_point_prefixes() -> Mapping[type[Command], str]:
@@ -195,9 +178,10 @@ def entry_point_prefixes() -> Mapping[type[Command], str]:
 
 __all__ = [
     "Args",
+    "Arguments",
     "Command",
     "Option",
-    "CommandContext",
+    "Context",
     "CommandHandler",
     "entry_point_prefixes",
     "ExitCode",

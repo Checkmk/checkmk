@@ -17,13 +17,13 @@ from cmk.cli.engine.commands import (
     parse_sub_options,
 )
 from cmk.cli.internal import Args as CLIArgs
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import Options
 
 from ._logger import null_logger
 
 
-def _unreachable(_context: CLICommandContext, _options: Options, _args: CLIArgs) -> NoReturn:
+def _unreachable(_context: CLIContext, _options: Options, _args: CLIArgs) -> NoReturn:
     raise AssertionError("parsing must not run the command")
 
 
@@ -32,6 +32,7 @@ _COMMAND_ARGUMENT: Final = "myhost"
 _ARGUMENT_EVERY_CONVERSION_ACCEPTS: Final = "inline"
 
 _PLAIN: Final = Command(
+    name="plain",
     long_option="plain",
     short_option="p",
     handler_function=_unreachable,
@@ -39,12 +40,14 @@ _PLAIN: Final = Command(
 )
 
 _OTHER_PLAIN: Final = Command(
+    name="other_plain",
     long_option="other-plain",
     handler_function=_unreachable,
     short_help="takes no argument either",
 )
 
 _WITH_ARGUMENT: Final = Command(
+    name="with_argument",
     long_option="with-argument",
     handler_function=_unreachable,
     argument=True,
@@ -55,6 +58,7 @@ _WITH_ARGUMENT: Final = Command(
 # The engine runs this one when the command line names no command at all, so the
 # name is not free to choose.
 _CHECK: Final = Command(
+    name="check",
     long_option="check",
     short_option="c",
     handler_function=_unreachable,

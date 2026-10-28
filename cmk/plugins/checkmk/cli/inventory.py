@@ -58,8 +58,9 @@ from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.cli.engine.commands import option_names, option_string
 from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
@@ -331,7 +332,7 @@ def _mode_inventory(
         return CLIExitCode.SUCCESS
 
 
-def _run_inventory(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_inventory(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     if context.global_options.debug:
         # the store reads cmk.ccc.debug
         cmk.ccc.debug.enable()
@@ -345,27 +346,26 @@ def _run_inventory(context: CLICommandContext, options: Options, args: CLIArgs) 
 
 
 cli_command_inventory = CLICommand(
-    long_option="inventory",
-    short_option="i",
+    name="inventory",
+    long="inventory",
+    short="i",
     handler_function=_run_inventory,
-    argument=True,
-    argument_descr="HOST1 HOST2...",
-    argument_optional=True,
+    arguments=CLIArguments("HOST1 HOST2...", optional=True),
     sub_options=[
         *FETCHER_OPTIONS,
         SNMP_BACKEND_OPTION,
         CLIOption(
-            long_option="force",
-            short_option="f",
-            short_help="Use cached agent data even if it's outdated.",
+            long="force",
+            short="f",
+            help="Use cached agent data even if it's outdated.",
         ),
         option_sections,
         get_plugins_option(InventoryPluginName),
         option_detect_plugins,
         FAKE_DNS_OPTION,
     ],
-    short_help="Do a HW/SW Inventory on some or all hosts",
-    long_help=[
+    help="Do a HW/SW Inventory on some or all hosts",
+    description=[
         (
             "Does a HW/SW Inventory for all, one or several "
             "hosts. If you add the option -f, --force then persisted sections "
@@ -562,7 +562,7 @@ def _mode_inventorize_marked_hosts(
 
 
 def _run_inventorize_marked_hosts(
-    context: CLICommandContext, options: Options, args: CLIArgs
+    context: CLIContext, options: Options, args: CLIArgs
 ) -> CLIExitCode:
     if context.global_options.debug:
         # the store reads cmk.ccc.debug
@@ -579,11 +579,12 @@ def _run_inventorize_marked_hosts(
 
 
 cli_command_inventorize_marked_hosts = CLICommand(
-    long_option="inventorize-marked-hosts",
+    name="inventorize_marked_hosts",
+    long="inventorize-marked-hosts",
     handler_function=_run_inventorize_marked_hosts,
     sub_options=[*FETCHER_OPTIONS, SNMP_BACKEND_OPTION, FAKE_DNS_OPTION],
-    short_help="Run inventory for hosts which previously had no tree data",
-    long_help=[
+    help="Run inventory for hosts which previously had no tree data",
+    description=[
         "Run actual service HW/SW Inventory on all hosts that had no tree data",
         "in the previous run",
     ],

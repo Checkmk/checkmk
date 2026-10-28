@@ -33,8 +33,9 @@ from cmk.cli.engine.commands import (
     write_stdout,
 )
 from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
@@ -108,7 +109,7 @@ def _mode_list_hosts(
     return CLIExitCode.SUCCESS
 
 
-def _run_list_hosts(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_list_hosts(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_list_hosts(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
@@ -119,24 +120,23 @@ def _run_list_hosts(context: CLICommandContext, options: Options, args: CLIArgs)
 
 
 cli_command_list_hosts = CLICommand(
-    long_option="list-hosts",
-    short_option="l",
+    name="list_hosts",
+    long="list-hosts",
+    short="l",
     handler_function=_run_list_hosts,
-    argument=True,
-    argument_descr="G1 G2...",
-    argument_optional=True,
+    arguments=CLIArguments("G1 G2...", optional=True),
     sub_options=[
         CLIOption(
-            long_option="all-sites",
-            short_help="Include hosts of foreign sites",
+            long="all-sites",
+            help="Include hosts of foreign sites",
         ),
         CLIOption(
-            long_option="include-offline",
-            short_help="Include offline hosts",
+            long="include-offline",
+            help="Include offline hosts",
         ),
     ],
-    short_help="Print list of all hosts or members of host groups",
-    long_help=[
+    help="Print list of all hosts or members of host groups",
+    description=[
         (
             "Called without argument lists all hosts. You may "
             "specify one or more host groups to restrict the output to hosts "
@@ -187,7 +187,7 @@ def _mode_list_tag(
     return CLIExitCode.SUCCESS
 
 
-def _run_list_tag(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_list_tag(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_list_tag(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
@@ -198,13 +198,12 @@ def _run_list_tag(context: CLICommandContext, options: Options, args: CLIArgs) -
 
 
 cli_command_list_tag = CLICommand(
-    long_option="list-tag",
+    name="list_tag",
+    long="list-tag",
     handler_function=_run_list_tag,
-    argument=True,
-    argument_descr="TAG1 TAG2...",
-    argument_optional=True,
-    short_help="List hosts having certain tags",
-    long_help=["Prints all hosts that have all of the specified tags at once."],
+    arguments=CLIArguments("TAG1 TAG2...", optional=True),
+    help="List hosts having certain tags",
+    description=["Prints all hosts that have all of the specified tags at once."],
 )
 
 
@@ -308,7 +307,7 @@ def _mode_list_checks(
     return CLIExitCode.SUCCESS
 
 
-def _run_list_checks(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_list_checks(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_list_checks(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
@@ -319,8 +318,9 @@ def _run_list_checks(context: CLICommandContext, options: Options, args: CLIArgs
 
 
 cli_command_list_checks = CLICommand(
-    long_option="list-checks",
-    short_option="L",
+    name="list_checks",
+    long="list-checks",
+    short="L",
     handler_function=_run_list_checks,
-    short_help="List all available Check_MK checks",
+    help="List all available Check_MK checks",
 )

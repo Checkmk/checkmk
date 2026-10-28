@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.version import Edition
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.plugins.notifications.cli.notify import _notification_exit_code, cli_command_notify
@@ -23,7 +23,7 @@ def test_spool_file_of_commercial_site_fails_without_automation_helper(
 
     assert (
         cli_command_notify.handler_function(
-            CLICommandContext(
+            CLIContext(
                 omd_root=tmp_path,
                 global_options=CLIGlobalOptions(),
                 logger=logging.getLogger(__name__),

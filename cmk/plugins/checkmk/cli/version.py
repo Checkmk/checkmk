@@ -11,12 +11,12 @@ from cmk.cli.engine.commands import (
 )
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Options
 
 
-def _mode_version(context: CLICommandContext, _options: Options, _args: CLIArgs) -> CLIExitCode:
+def _mode_version(context: CLIContext, _options: Options, _args: CLIArgs) -> CLIExitCode:
     write_stdout(
         """This is %s version %s
 Copyright (C) 2009 Checkmk GmbH
@@ -46,8 +46,9 @@ Copyright (C) 2009 Checkmk GmbH
 
 
 cli_command_version = CLICommand(
-    long_option="version",
-    short_option="V",
+    name="version",
+    long="version",
+    short="V",
     handler_function=_mode_version,
-    short_help="Print the version of Checkmk",
+    help="Print the version of Checkmk",
 )

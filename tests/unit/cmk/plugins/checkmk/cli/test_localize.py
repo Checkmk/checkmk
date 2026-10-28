@@ -8,14 +8,14 @@ from pathlib import Path
 
 import pytest
 
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.plugins.checkmk.cli.localize import cli_command_localize
 
 
-def _context() -> CLICommandContext:
-    return CLICommandContext(
+def _context() -> CLIContext:
+    return CLIContext(
         omd_root=Path("/nonexistent"),
         global_options=CLIGlobalOptions(),
         logger=logging.getLogger(__name__),

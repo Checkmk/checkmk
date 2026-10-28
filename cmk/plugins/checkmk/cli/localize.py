@@ -13,8 +13,9 @@ import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKException
 from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Options
 from cmk.utils.log import VERBOSE
@@ -35,18 +36,17 @@ class LocalizeException(MKException):
 domain = "multisite"
 
 
-def _mode_localize(_context: CLICommandContext, _options: Options, args: CLIArgs) -> CLIExitCode:
+def _mode_localize(_context: CLIContext, _options: Options, args: CLIArgs) -> CLIExitCode:
     return do_localize(list(args))
 
 
 cli_command_localize = CLICommand(
-    long_option="localize",
+    name="localize",
+    long="localize",
     handler_function=_mode_localize,
-    argument=True,
-    argument_descr="COMMAND",
-    argument_optional=True,
-    short_help="Do localization operations",
-    long_help=[
+    arguments=CLIArguments("COMMAND", optional=True),
+    help="Do localization operations",
+    description=[
         (
             "Brings you into localization mode. You can create "
             "and/or improve the localization of Check_MKs GUI. "

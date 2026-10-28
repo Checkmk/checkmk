@@ -24,8 +24,8 @@ from cmk.cli.engine.run import (
 )
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandContext as CLICommandContext
 from cmk.cli.internal import CommandHandler, Options
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Option as CLIOption
 
@@ -179,7 +179,7 @@ def test_file_logging_replaces_the_handlers_it_finds(tmp_path: Path) -> None:
 
 def _command(handler: CommandHandler) -> Command:
     return make_command(
-        CLICommand(long_option="demo", handler_function=handler, short_help="Demonstrate")
+        CLICommand(name="demo", long="demo", handler_function=handler, help="Demonstrate")
     )
 
 
@@ -218,16 +218,16 @@ def _run(argv: Sequence[str], runtime: Runtime) -> int:
 def _numbered(handler: CommandHandler) -> Command:
     return make_command(
         CLICommand(
-            long_option="demo",
+            name="demo",
+            long="demo",
             handler_function=handler,
-            short_help="Demonstrate",
+            help="Demonstrate",
             sub_options=[
                 CLIOption(
-                    long_option="number",
-                    short_help="A number",
-                    argument=True,
-                    argument_descr="N",
-                    argument_conv=int,
+                    long="number",
+                    help="A number",
+                    argument="N",
+                    parse=int,
                 )
             ],
         )
@@ -237,7 +237,7 @@ def _numbered(handler: CommandHandler) -> Command:
 def test_a_sub_option_reaches_the_command_converted() -> None:
     seen: list[Options] = []
 
-    def remember(_context: CLICommandContext, sub: Options, _args: CLIArgs) -> CLIExitCode:
+    def remember(_context: CLIContext, sub: Options, _args: CLIArgs) -> CLIExitCode:
         seen.append(sub)
         return CLIExitCode.SUCCESS
 
@@ -279,7 +279,7 @@ def test_a_sub_option_argument_the_conversion_rejects_is_raised_through_under_de
 def test_a_command_is_handed_the_site_root() -> None:
     seen: list[Path] = []
 
-    def remember(context: CLICommandContext, _sub: Options, _args: CLIArgs) -> CLIExitCode:
+    def remember(context: CLIContext, _sub: Options, _args: CLIArgs) -> CLIExitCode:
         seen.append(context.omd_root)
         return CLIExitCode.SUCCESS
 
@@ -291,7 +291,7 @@ def test_a_command_is_handed_the_site_root() -> None:
 def test_a_command_reports_through_the_engines_logger() -> None:
     seen: list[logging.Logger] = []
 
-    def remember(context: CLICommandContext, _sub: Options, _args: CLIArgs) -> CLIExitCode:
+    def remember(context: CLIContext, _sub: Options, _args: CLIArgs) -> CLIExitCode:
         seen.append(context.logger)
         return CLIExitCode.SUCCESS
 
@@ -342,7 +342,7 @@ def _ignored_sigint() -> Iterator[None]:
         signal.signal(signal.SIGINT, previous)
 
 
-def _interrupting(_context: CLICommandContext, _sub: Options, _args: CLIArgs) -> CLIExitCode:
+def _interrupting(_context: CLIContext, _sub: Options, _args: CLIArgs) -> CLIExitCode:
     signal.raise_signal(signal.SIGINT)
     return CLIExitCode.SUCCESS
 
@@ -367,7 +367,7 @@ class FakeCommandTracer:
         self.traced: list[str] = []
 
     def __call__(
-        self, _context: CLICommandContext, command: Command, _options: Options, _args: CLIArgs
+        self, _context: CLIContext, command: Command, _options: Options, _args: CLIArgs
     ) -> nullcontext[None]:
         self.traced.append(command.name)
         return nullcontext()
@@ -445,5 +445,5 @@ def test_the_profile_is_written_even_when_the_command_raises() -> None:
     assert len(written.calls) == 1
 
 
-def _failing(_context: CLICommandContext, _sub_options: Options, _args: CLIArgs) -> CLIExitCode:
+def _failing(_context: CLIContext, _sub_options: Options, _args: CLIArgs) -> CLIExitCode:
     raise ValueError("no such host")

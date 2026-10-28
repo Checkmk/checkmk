@@ -31,7 +31,7 @@ from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.sources._sources import SNMPSource
 from cmk.cli.engine.call import call
 from cmk.cli.engine.commands import make_command
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Options
@@ -159,7 +159,7 @@ class TestDumpAgent:
         _patch_fetcher_trigger(monkeypatch, raw_data)
 
         call(
-            CLICommandContext(
+            CLIContext(
                 omd_root=_OMD_ROOT,
                 global_options=CLIGlobalOptions(),
                 logger=logging.getLogger(__name__),
@@ -189,7 +189,7 @@ class TestDumpAgent:
         )
 
         exit_code = call(
-            CLICommandContext(
+            CLIContext(
                 omd_root=_OMD_ROOT,
                 global_options=CLIGlobalOptions(),
                 logger=logging.getLogger(__name__),
@@ -215,7 +215,7 @@ class TestDumpAgent:
         _patch_fetcher_trigger(monkeypatch, Exception("Something broke"))
 
         exit_code = call(
-            CLICommandContext(
+            CLIContext(
                 omd_root=_OMD_ROOT,
                 global_options=CLIGlobalOptions(),
                 logger=logging.getLogger(__name__),
@@ -329,7 +329,7 @@ class TestDumpAgentSnmpBackend:
 
         _patch_fetcher_trigger(monkeypatch, b"")
         call(
-            CLICommandContext(
+            CLIContext(
                 omd_root=_OMD_ROOT,
                 global_options=CLIGlobalOptions(),
                 logger=logging.getLogger(__name__),

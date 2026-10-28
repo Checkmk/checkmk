@@ -11,15 +11,15 @@ from typing import Final
 from cmk.cli.engine.call import call, CommandTracer
 from cmk.cli.engine.commands import Command, Option, parse_sub_options
 from cmk.cli.internal import Args as CLIArgs
-from cmk.cli.internal import CommandContext as CLICommandContext
 from cmk.cli.internal import CommandHandler, Options
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 
 from ._logger import null_logger
 
 # The engine only hands this through to the command's handler.
-_CONTEXT: Final = CLICommandContext(
+_CONTEXT: Final = CLIContext(
     omd_root=Path("/omd/sites/mysite"),
     global_options=CLIGlobalOptions(verbosity=2),
     logger=null_logger(),
@@ -30,10 +30,10 @@ _SUB_OPTIONS: Final = [Option(long_option="flag", short_help="a flag")]
 
 class _Recorder:
     def __init__(self, exit_code: CLIExitCode = CLIExitCode.SUCCESS) -> None:
-        self.calls: list[tuple[CLICommandContext, Options, CLIArgs]] = []
+        self.calls: list[tuple[CLIContext, Options, CLIArgs]] = []
         self._exit_code = exit_code
 
-    def __call__(self, context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+    def __call__(self, context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
         self.calls.append((context, options, args))
         return self._exit_code
 
@@ -46,6 +46,7 @@ def _command(
     sub_options: Sequence[Option] = (),
 ) -> Command:
     return Command(
+        name="test_command",
         long_option="test-command",
         handler_function=handler,
         short_help="a command under test",
@@ -134,7 +135,7 @@ def test_the_handler_runs_inside_the_commands_trace() -> None:
         yield
         events.append("trace ends")
 
-    def handler(_context: CLICommandContext, _options: Options, _args: CLIArgs) -> CLIExitCode:
+    def handler(_context: CLIContext, _options: Options, _args: CLIArgs) -> CLIExitCode:
         events.append("handler")
         return CLIExitCode.SUCCESS
 
@@ -144,10 +145,10 @@ def test_the_handler_runs_inside_the_commands_trace() -> None:
 
 
 def test_the_trace_sees_what_the_handler_is_handed() -> None:
-    seen: list[tuple[CLICommandContext, Command, Options, CLIArgs]] = []
+    seen: list[tuple[CLIContext, Command, Options, CLIArgs]] = []
 
     def traced(
-        context: CLICommandContext, command: Command, options: Options, args: CLIArgs
+        context: CLIContext, command: Command, options: Options, args: CLIArgs
     ) -> nullcontext[None]:
         seen.append((context, command, options, args))
         return nullcontext()

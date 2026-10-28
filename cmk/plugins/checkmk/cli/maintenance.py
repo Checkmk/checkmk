@@ -23,8 +23,9 @@ from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.checkengine.discovery import remove_autochecks_of_host
 from cmk.cli.engine.commands import write_stdout
 from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandContext as CLICommandContext
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Options
@@ -64,9 +65,7 @@ def _mode_update_dns_cache(
     return CLIExitCode.SUCCESS
 
 
-def _run_update_dns_cache(
-    context: CLICommandContext, options: Options, args: CLIArgs
-) -> CLIExitCode:
+def _run_update_dns_cache(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_update_dns_cache(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -77,10 +76,11 @@ def _run_update_dns_cache(
 
 
 cli_command_update_dns_cache = CLICommand(
-    long_option="update-dns-cache",
+    name="update_dns_cache",
+    long="update-dns-cache",
     handler_function=_run_update_dns_cache,
     sub_options=[FAKE_DNS_OPTION],
-    short_help="Update IP address lookup cache",
+    help="Update IP address lookup cache",
 )
 
 
@@ -108,9 +108,7 @@ def _mode_cleanup_piggyback(
     return CLIExitCode.SUCCESS
 
 
-def _run_cleanup_piggyback(
-    context: CLICommandContext, options: Options, args: CLIArgs
-) -> CLIExitCode:
+def _run_cleanup_piggyback(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_cleanup_piggyback(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
@@ -121,9 +119,10 @@ def _run_cleanup_piggyback(
 
 
 cli_command_cleanup_piggyback = CLICommand(
-    long_option="cleanup-piggyback",
+    name="cleanup_piggyback",
+    long="cleanup-piggyback",
     handler_function=_run_cleanup_piggyback,
-    short_help="Cleanup outdated piggyback files",
+    help="Cleanup outdated piggyback files",
 )
 
 
@@ -241,7 +240,7 @@ def _mode_flush(
     return CLIExitCode.SUCCESS
 
 
-def _run_flush(context: CLICommandContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_flush(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_flush(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -252,13 +251,12 @@ def _run_flush(context: CLICommandContext, options: Options, args: CLIArgs) -> C
 
 
 cli_command_flush = CLICommand(
-    long_option="flush",
+    name="flush",
+    long="flush",
     handler_function=_run_flush,
-    argument=True,
-    argument_descr="HOST1 HOST2...",
-    argument_optional=True,
-    short_help="Flush all data of some or all hosts",
-    long_help=[
+    arguments=CLIArguments("HOST1 HOST2...", optional=True),
+    help="Flush all data of some or all hosts",
+    description=[
         (
             "Deletes all runtime data belonging to a host. This includes "
             "the inventorized checks, the state of performance counters, "

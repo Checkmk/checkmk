@@ -166,6 +166,7 @@ def _never(*_args: object, **_kwargs: object) -> NoReturn:
 
 def _command(long_option: str, short_option: str | None = None) -> Command:
     return Command(
+        name=long_option,
         long_option=long_option,
         short_option=short_option,
         handler_function=_never,

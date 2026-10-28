@@ -7,8 +7,8 @@ from dataclasses import asdict
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.monitor.services.page_url import host_services_url
 from cmk.shared_typing.monitoring.page_link_button import MonitoringPageLinkButton
-from cmk.web.utils.urls import makeuri_contextless
 
 _LEGACY_VIEW_NAME = "host"
 
@@ -26,11 +26,7 @@ class HostServicesLinkButton:
             "cmk-monitoring-page-link-button",
             data=asdict(
                 MonitoringPageLinkButton(
-                    url=makeuri_contextless(
-                        request,
-                        [("host", host_name), ("site", site_id)],
-                        filename="monitor_host_services.py",
-                    ),
+                    url=host_services_url(request, host_name=host_name, site_id=site_id),
                     title=_('Try the new "Services of host" view'),
                     teleport_target=self._teleport_target,
                 )

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from urllib.parse import urlencode
+
 from cmk.gui.http import Request
 from cmk.web.utils.urls import makeuri_contextless
 
@@ -21,3 +23,18 @@ def all_services_url(request: Request, *, filter_node: ServiceFilterNode) -> str
     return makeuri_contextless(
         request, [("filter", filter_json)], filename="monitor_all_services.py"
     )
+
+
+def host_services_url(
+    request: Request, *, host_name: str, site_id: str, open_host_panel: bool = False
+) -> str:
+    """Builds Services of host for one host, optionally with its host panel opened.
+
+    The panel is named in the fragment by the keys HOST_SLIDE_IN in HostServicesApp.vue reads.
+    """
+    url = makeuri_contextless(
+        request, [("host", host_name), ("site", site_id)], filename="monitor_host_services.py"
+    )
+    if not open_host_panel:
+        return url
+    return f"{url}#{urlencode({'host': host_name, 'site': site_id})}"

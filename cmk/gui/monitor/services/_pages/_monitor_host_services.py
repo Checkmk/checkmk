@@ -36,6 +36,7 @@ from cmk.gui.monitor.services._ai_explain import ai_explain
 from cmk.gui.monitor.services._api._limits import LIMIT_TIERS
 from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
 from cmk.gui.monitor.services._supported_actions import SERVICE_SUPPORTED_ACTIONS
+from cmk.gui.monitor.services.page_url import host_services_url
 from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
@@ -274,11 +275,7 @@ def _make_breadcrumb(
     breadcrumb.append(
         BreadcrumbItem(
             title=_("Services of host"),
-            url=makeuri_contextless(
-                ctx.request,
-                [("host", hostname), ("site", site_id)],
-                filename="monitor_host_services.py",
-            ),
+            url=host_services_url(ctx.request, host_name=hostname, site_id=site_id),
             id="monitor_host_services",
         )
     )

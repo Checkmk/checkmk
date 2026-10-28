@@ -14,6 +14,7 @@ from cmk.gui.search.spec import (
     HostName,
     HostTag,
     parse,
+    prefix_of,
     PrefixedSearch,
     SearchParseError,
     ServiceFolder,
@@ -305,3 +306,32 @@ def test_word_with_colon_that_is_not_prefix_shaped_is_part_of_the_value() -> Non
     assert parse("al:web note: rack 4") == PrefixedSearch(
         clauses=((HostAlias(pattern="web note: rack 4"),),)
     )
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param(query, id=query.split(":")[0])
+        for query in (
+            "h:web",
+            "al:web",
+            "ad:10.0.0.1",
+            "hg:linux",
+            "hl:os:linux",
+            "tg:prod",
+            "hf:linux",
+            "s:cpu",
+            "sg:web",
+            "st:warn",
+            "sl:os:linux",
+            "sf:linux",
+        )
+    ],
+)
+def test_prefix_of_a_term_is_the_prefix_it_was_given_with(query: str) -> None:
+    spec = parse(query)
+    assert isinstance(spec, PrefixedSearch)
+
+    assert [prefix_of(term) for clause in spec.clauses for term in clause] == [
+        query.split(":", maxsplit=1)[0]
+    ]

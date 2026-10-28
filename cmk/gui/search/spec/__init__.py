@@ -108,7 +108,7 @@ Differences to the legacy quicksearch
       the dropdown, which fills several result groups, while the spec selects one page.
 """
 
-from ._parse import parse, SearchParseError
+from ._parse import parse, prefix_of, SearchParseError
 from ._terms import (
     HostAddress,
     HostAlias,
@@ -139,6 +139,7 @@ __all__ = [
     "HostName",
     "HostTag",
     "parse",
+    "prefix_of",
     "PrefixedSearch",
     "SearchParseError",
     "SearchSpec",

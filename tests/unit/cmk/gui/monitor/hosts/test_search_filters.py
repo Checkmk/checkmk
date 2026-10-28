@@ -163,6 +163,24 @@ def test_spec_all_hosts_cannot_filter_on_is_rejected(query: str, message: str) -
         _filter(query)
 
 
+@pytest.mark.parametrize(
+    "query, reason",
+    [
+        pytest.param("h:web s:cpu", "All hosts has no filter for s:", id="service"),
+        pytest.param("tg:unknown", "unknown tag", id="unknown-tag"),
+        pytest.param("tg:shared", "tag in several groups", id="tag-in-several-groups"),
+        pytest.param("tg:pro*", "tag prefix without group", id="tag-prefix-without-group"),
+        pytest.param("hf:dc_ber", "unknown folder", id="unknown-folder"),
+        pytest.param("hf:linux", "folders without one title", id="folders-without-one-title"),
+    ],
+)
+def test_rejection_reason_leaves_out_the_values_of_the_query(query: str, reason: str) -> None:
+    with pytest.raises(UnsupportedSearchError) as error:
+        _filter(query)
+
+    assert error.value.reason == reason
+
+
 def test_rejected_folder_path_names_only_the_first_folder_titles() -> None:
     folders = {f"rack{n}": f"Rack {n:02}" for n in range(1, 8)}
 

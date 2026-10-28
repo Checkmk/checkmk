@@ -103,3 +103,17 @@ def test_clauses_are_top_level_and_conditions(
 def test_spec_all_services_cannot_filter_on_is_rejected(query: str) -> None:
     with pytest.raises(UnsupportedSearchError, match="can only be searched by"):
         _filter(query)
+
+
+@pytest.mark.parametrize(
+    "query, reason",
+    [
+        pytest.param("s:cpu al:web", "All services has no filter for al:", id="host-alias"),
+        pytest.param("sf:linux", "All services has no filter for sf:", id="service-folder"),
+    ],
+)
+def test_rejection_reason_names_the_prefix_without_its_value(query: str, reason: str) -> None:
+    with pytest.raises(UnsupportedSearchError) as error:
+        _filter(query)
+
+    assert error.value.reason == reason

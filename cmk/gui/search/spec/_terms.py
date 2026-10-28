@@ -119,4 +119,11 @@ type SearchSpec = PrefixedSearch | UnprefixedSearch
 
 
 class UnsupportedSearchError(ValueError):
-    """Raised when a page can't filter on a search spec, e.g. All hosts on a service term."""
+    """Raised when a page can't filter on a search spec, e.g. All hosts on a service term.
+
+    ``reason`` says why in fixed words, without the values of the query, so it can be logged.
+    """
+
+    def __init__(self, message: str, *, reason: str) -> None:
+        super().__init__(message)
+        self.reason = reason

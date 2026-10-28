@@ -39,6 +39,7 @@ from cmk.gui.search.spec import (
     HostLabel,
     HostName,
     HostTag,
+    prefix_of,
     PrefixedSearch,
     Term,
     UnsupportedSearchError,
@@ -119,14 +120,17 @@ def _condition(clause: Sequence[Term], folders: Callable[[], Mapping[str, str]])
                 _(
                     "All hosts can only be searched by host name, alias, address, group, label,"
                     " tag and folder."
-                )
+                ),
+                reason=f"All hosts has no filter for {prefix_of(clause[0])}:",
             )
 
 
 def _folder_title(paths: Sequence[str], titles: Mapping[str, str]) -> str:
     named = ", ".join(f'"{path}"' for path in paths)
     if not (wanted := folders_below(paths, titles)):
-        raise UnsupportedSearchError(_("No folder matches %(paths)s.") % {"paths": named})
+        raise UnsupportedSearchError(
+            _("No folder matches %(paths)s.") % {"paths": named}, reason="unknown folder"
+        )
     wanted_titles = [titles[path].lower() for path in wanted]
     candidates = (
         titles[path]
@@ -144,7 +148,8 @@ def _folder_title(paths: Sequence[str], titles: Mapping[str, str]) -> str:
             "The folders matching %(paths)s (%(titles)s) cannot be shown as one folder title."
             " Please give a more specific folder path."
         )
-        % {"paths": named, "titles": ", ".join(shown)}
+        % {"paths": named, "titles": ", ".join(shown)},
+        reason="folders without one title",
     )
 
 
@@ -152,7 +157,8 @@ def _tag_group(tag: str, tags: TagConfig) -> str:
     if tag.endswith("*"):
         raise UnsupportedSearchError(
             _('Please specify the tag group of "%(tag)s", e.g. "tg:criticality:%(tag)s".')
-            % {"tag": tag}
+            % {"tag": tag},
+            reason="tag prefix without group",
         )
     groups = [
         str(group.id)
@@ -160,14 +166,17 @@ def _tag_group(tag: str, tags: TagConfig) -> str:
         if any(grouped_tag.id == tag for grouped_tag in group.tags)
     ] + [str(aux_tag.id) for aux_tag in tags.get_aux_tags() if aux_tag.id == tag]
     if not groups:
-        raise UnsupportedSearchError(_('Unknown host tag "%(tag)s".') % {"tag": tag})
+        raise UnsupportedSearchError(
+            _('Unknown host tag "%(tag)s".') % {"tag": tag}, reason="unknown tag"
+        )
     if len(groups) > 1:
         raise UnsupportedSearchError(
             _(
                 'The host tag "%(tag)s" is in several tag groups: %(groups)s. Please specify'
                 ' one, e.g. "tg:%(group)s:%(tag)s".'
             )
-            % {"tag": tag, "groups": ", ".join(groups), "group": groups[0]}
+            % {"tag": tag, "groups": ", ".join(groups), "group": groups[0]},
+            reason="tag in several groups",
         )
     return groups[0]
 

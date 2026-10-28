@@ -216,6 +216,26 @@ def _service_states(value: str) -> Sequence[ServiceState]:
     return states
 
 
+def prefix_of(term: Term) -> str:
+    """The prefix ``term`` is given with, without the ``:``."""
+    return _PREFIXES[type(term)]
+
+
+_PREFIXES: dict[type[Term], str] = {
+    HostName: "h",
+    HostAlias: "al",
+    HostAddress: "ad",
+    HostGroup: "hg",
+    HostLabel: "hl",
+    HostTag: "tg",
+    HostFolder: "hf",
+    ServiceName: "s",
+    ServiceGroup: "sg",
+    ServiceState: "st",
+    ServiceLabel: "sl",
+    ServiceFolder: "sf",
+}
+
 _TERM_PARSERS: dict[str, Callable[[str], Sequence[Term]]] = {
     "h": lambda value: [HostName(pattern=_regex(value))],
     "al": lambda value: [HostAlias(pattern=_regex(value))],

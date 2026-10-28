@@ -16,6 +16,7 @@ from typing import Literal
 from cmk.gui.i18n import _
 from cmk.gui.search.spec import (
     HostName,
+    prefix_of,
     PrefixedSearch,
     ServiceGroup,
     ServiceLabel,
@@ -102,7 +103,8 @@ def _condition(clause: Sequence[Term]) -> ServiceFilterNode:
                 _(
                     "All services can only be searched by host name, service name, state, label"
                     " and group."
-                )
+                ),
+                reason=f"All services has no filter for {prefix_of(clause[0])}:",
             )
 
 

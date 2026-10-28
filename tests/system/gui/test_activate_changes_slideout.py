@@ -35,8 +35,9 @@ def test_activate_changes_slideout_one_change(
         slideout.no_pending_changes_text,
         "The 'No pending changes on your site(s).' text is not visible!",
     ).to_be_visible()
-    expect(slideout.info_text, "The info banner is not visible!").to_be_visible()
-    slideout.info_close_btn.click()
+    # The info banner shows only until it is dismissed, which an earlier test may have done.
+    if slideout.info_text.is_visible():
+        slideout.info_close_btn.click()
     slideout.close()
     host_details = HostDetails(
         name="delete_me",

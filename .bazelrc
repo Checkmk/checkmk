@@ -14,8 +14,14 @@
 # value option wins, repeatable options keep the order.  Today only the startup --host_jvm_args
 # span files (performance.rc, then correctness.rc); keep that order when moving things around.
 
-# Add git hash to workspace status
-build --workspace_status_command=bazel/tools/workspace_status.sh
+# Add git hash to workspace status. Not on Windows: Bazel runs it through cmd.exe there,
+# which hands the .sh to the shell file association. In the non-interactive session of
+# the Jenkins agent that leaves an unanswerable "How do you want to open this file?"
+# dialog (OpenWith.exe) behind per build, until the desktop heap is exhausted. The script
+# never produced output there. Platform configs are expanded among the 'common' options,
+# so a plain 'build' line here would override a 'build:windows' reset.
+build:linux --workspace_status_command=bazel/tools/workspace_status.sh
+build:macos --workspace_status_command=bazel/tools/workspace_status.sh
 
 # default/common bazel args for all commands supporting it
 common --experimental_ui_max_stdouterr_bytes=10000000

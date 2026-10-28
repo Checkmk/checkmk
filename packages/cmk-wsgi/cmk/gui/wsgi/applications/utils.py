@@ -14,6 +14,7 @@ import cmk.gui.userdb
 from cmk import trace
 from cmk.ccc.site import url_prefix
 from cmk.gui import login, pages
+from cmk.gui.auth import is_site_login
 from cmk.gui.config import Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
@@ -112,9 +113,16 @@ def ensure_authentication(handler: pages.PageHandler) -> Callable[[PageContext],
 
             # Feature gates (e.g. the trial mode selection) may take over the
             # GUI of interactive users once the session is fully established.
+            # At the same time they should not interfere with the login process
+            # itself.
+            # When establishing central to remote connection in a distributed
+            # setup, the central site will briefly impersonate a site admin to
+            # obtain its own permanent credentials.
+            is_central_site_credential_exchange = is_site_login()
             if (
                 session.session_info.session_state == "logged_in"
                 and not session.user.automation_user
+                and not is_central_site_credential_exchange
                 and (
                     gate_url := post_auth_gate_redirect_url(
                         ctx.config, requested_file_name(request)

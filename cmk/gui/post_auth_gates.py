@@ -11,8 +11,8 @@ itself needs (:attr:`PostAuthGate.allowed_page_names`).
 
 The registry is consulted by ``ensure_authentication()`` only for interactive,
 fully logged-in (``"logged_in"`` session state), non-automation GUI sessions.
-The REST API, ``noauth:`` pages, site-internal logins and automation users
-never pass through it.
+The REST API, ``noauth:`` pages, site-internal logins, site logins of a
+central site (``is_site_login()``) and automation users never pass through it.
 """
 
 from collections.abc import Callable

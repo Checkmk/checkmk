@@ -965,10 +965,10 @@ ConfigVariableStartURL = ConfigVariable(
     primary_domain=ConfigDomainGUI,
     ident="start_url",
     form_spec=lambda context: fs.String(  # noqa: ARG005
-        title=Title("Start URL to display in main frame"),
+        title=Title("Start URL"),
         help_text=Help(
             "When you point your browser to the Checkmk GUI, usually the dashboard "
-            "is shown in the main (right) frame. You can replace this with any other "
+            "is shown. You can replace this with any other "
             "URL you like here."
         ),
         field_size=fs.FieldSize.LARGE,

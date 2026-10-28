@@ -303,7 +303,7 @@ class Bookmarks(SidebarSnapin):
     def description(cls) -> str:
         return _(
             "A simple and yet practical snap-in allowing to create "
-            "bookmarks to views and other content in the main frame"
+            "bookmarks to views and other pages"
         )
 
     @override

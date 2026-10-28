@@ -853,7 +853,7 @@ class LDAPSyncPluginsRequest(BaseSchema):
     )
     start_url = fields.Nested(
         LDAPSyncPluginAttrubuteSelector,
-        description="The start URL to display in main frame.",
+        description="The start URL.",
         load_default={"state": "disabled"},
     )
     temperature_unit = fields.Nested(

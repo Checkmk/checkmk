@@ -323,10 +323,10 @@ class GeneralConfig:
     # Show mode to use
     show_mode: str = "default_show_less"
 
-    # URL for start page in main frame (welcome page)
+    # URL for start page (welcome page)
     start_url: str = "dashboard.py"
 
-    # Page heading for main frame set
+    # Page heading
     page_heading: str = "Checkmk %s"
 
     # Default for login screen customization; hiding the version as it can be a security vulnerability

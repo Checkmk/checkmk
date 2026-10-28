@@ -199,7 +199,7 @@ class StartURLUserAttribute(UserAttribute):
     def valuespec(self) -> ValueSpec:
         return MigrateNotUpdated(
             valuespec=Alternative(
-                title=_("Start URL to display in main frame"),
+                title=_("Start URL"),
                 orientation="horizontal",
                 elements=[
                     FixedValue(
@@ -240,7 +240,7 @@ class StartURLUserAttribute(UserAttribute):
                         title=_("Custom start URL"),
                         help=_(
                             "When you point your browser to the Checkmk GUI, usually the dashboard "
-                            "is shown in the main (right) frame. You can replace this with any other "
+                            "is shown. You can replace this with any other "
                             "URL you like here."
                         ),
                         size=80,

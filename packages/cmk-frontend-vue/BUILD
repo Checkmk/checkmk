@@ -150,6 +150,7 @@ SRCS = [
     ":node_modules/marked",
     ":node_modules/msw",
     ":node_modules/openapi-fetch",
+    ":node_modules/openapi-msw",
     ":node_modules/radix-vue",
     ":node_modules/reka-ui",
     ":node_modules/rollup",

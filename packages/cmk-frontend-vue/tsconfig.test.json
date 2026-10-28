@@ -9,6 +9,11 @@
       "@/*": ["./src/*"],
       "@demo/*": ["./demo/*"],
       "@tests/*": ["./tests/*"],
+      // openapi-msw only declares its types in "exports", which "node" resolution does not read
+      "openapi-msw": [
+        "./node_modules/openapi-msw/dist/exports/main.d.ts",
+        "../../bazel-bin/packages/cmk-frontend-vue/node_modules/openapi-msw/dist/exports/main.d.ts"
+      ],
       "*": ["./node_modules/*", "../../bazel-bin/packages/cmk-frontend-vue/node_modules/*"]
     }
   }

@@ -43,6 +43,7 @@
     "chai": "^5.2.0",
     "msw": "^2.7.3",
     "npm-run-all2": "^7.0.2",
+    "openapi-msw": "^2.1.0",
     "prettier": "^3.5.3",
     "rollup": "*",
     "sass-embedded": "^1.86.3",

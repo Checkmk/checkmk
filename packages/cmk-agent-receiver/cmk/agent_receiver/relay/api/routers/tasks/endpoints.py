@@ -51,7 +51,7 @@ from cmk.relay_protocols import tasks as tasks_protocol
 router = fastapi.APIRouter()
 
 
-def _accepted_config_encoding(
+async def _accepted_config_encoding(
     # Plain str: an encoding added in a later relay must not make the endpoints reject it.
     header: Annotated[
         str | None, fastapi.Header(alias=tasks_protocol.HEADERS.CONFIG_ENCODING)

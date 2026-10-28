@@ -8,7 +8,7 @@ from typing import Annotated
 import fastapi
 from fastapi import Header
 
-from cmk.agent_receiver.lib.config import Config, get_config
+from cmk.agent_receiver.lib.config import Config, config_dependency
 from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_UUID_HEADER
 from cmk.agent_receiver.relay.api.dependencies.relays_repository import get_relays_repository
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
@@ -27,8 +27,8 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import Tas
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 
 
-def get_tasks_repository(
-    config: Annotated[Config, fastapi.Depends(get_config)],
+async def get_tasks_repository(
+    config: Annotated[Config, fastapi.Depends(config_dependency)],
 ) -> TasksRepository:
     return TasksRepository(
         ttl_seconds=config.task_ttl,
@@ -36,7 +36,7 @@ def get_tasks_repository(
     )
 
 
-def get_config_task_factory(
+async def get_config_task_factory(
     tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
     relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
 ) -> ConfigTaskFactory:
@@ -46,7 +46,7 @@ def get_config_task_factory(
     )
 
 
-def get_relay_tasks_handler(
+async def get_relay_tasks_handler(
     tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
     config_task_factory: Annotated[ConfigTaskFactory, fastapi.Depends(get_config_task_factory)],
 ) -> GetRelayTasksHandler:
@@ -73,7 +73,7 @@ def get_create_task_handler(
     )
 
 
-def get_update_task_handler(
+async def get_update_task_handler(
     tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
 ) -> UpdateTaskHandler:
     return UpdateTaskHandler(
@@ -89,7 +89,7 @@ def get_activate_config_handler(
     )
 
 
-def get_version_handler() -> GetVersionHandler:
+async def get_version_handler() -> GetVersionHandler:
     return GetVersionHandler()
 
 

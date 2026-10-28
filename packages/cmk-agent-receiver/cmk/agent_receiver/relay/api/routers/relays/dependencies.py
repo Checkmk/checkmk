@@ -9,7 +9,7 @@ from typing import Annotated
 
 import fastapi
 
-from cmk.agent_receiver.lib.config import Config, get_config
+from cmk.agent_receiver.lib.config import Config, config_dependency
 from cmk.agent_receiver.relay.api.dependencies.relays_repository import (
     get_relays_repository,
 )
@@ -41,8 +41,8 @@ def get_relay_status_handler(
     return GetRelayStatusHandler(relays_repository=relays_repository)
 
 
-def get_forward_monitoring_data_handler(
-    config: Annotated[Config, fastapi.Depends(get_config)],
+async def get_forward_monitoring_data_handler(
+    config: Annotated[Config, fastapi.Depends(config_dependency)],
 ) -> ForwardMonitoringDataHandler:
     return ForwardMonitoringDataHandler(
         data_socket=config.raw_data_socket, socket_timeout=config.socket_timeout
@@ -57,7 +57,7 @@ def get_crash_extraction_executor() -> concurrent.futures.ThreadPoolExecutor:
 
 
 def get_store_crash_report_handler(
-    config: Annotated[Config, fastapi.Depends(get_config)],
+    config: Annotated[Config, fastapi.Depends(config_dependency)],
     executor: Annotated[
         concurrent.futures.Executor, fastapi.Depends(get_crash_extraction_executor)
     ],

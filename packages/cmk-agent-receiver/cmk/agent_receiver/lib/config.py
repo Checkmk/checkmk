@@ -149,3 +149,8 @@ class Config(BaseModel):
 @cache
 def get_config() -> Config:
     return Config.load()
+
+
+async def config_dependency() -> Config:
+    # FastAPI runs a sync dependency in its threadpool on every request.
+    return get_config()

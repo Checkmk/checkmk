@@ -26,8 +26,6 @@ from urllib.parse import parse_qsl
 
 from tests.testlib.system.mock_server import MockEndpoint, MockMethod, MockResponse, MockServer
 
-RECORDING_FILE = Path(__file__).parent / "recorded_responses.json"
-
 TOKEN_PATH = "/api/oauth2/token"
 _ACCESS_TOKEN = "mock-access-token"
 _REFRESH_TOKEN = "mock-refresh-token"

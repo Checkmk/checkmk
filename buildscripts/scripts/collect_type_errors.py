@@ -109,7 +109,7 @@ def make_testsuite(
 
 def main() -> None:
     if len(sys.argv) != 2:
-        sys.stderr.write("usage: mypy2junit.py <bazel-out/k8-fastbuild/bin>\n")
+        sys.stderr.write("usage: collect_type_errors.py <bazel-out/k8-fastbuild/bin>\n")
         sys.exit(2)
 
     bin_root = Path(sys.argv[1]).resolve()

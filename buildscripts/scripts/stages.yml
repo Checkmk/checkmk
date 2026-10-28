@@ -314,7 +314,7 @@ STAGES:
       RESULT_CHECK_TYPE: "SARIF"
       RESULT_CHECK_FILE_PATTERN: "results/results.sarif"
 
-    - NAME: "Type repository with mypy"
+    - NAME: "Type repository"
       COMMAND: |
           set +e
           ./buildscripts/scripts/bazel_mypy.sh
@@ -323,14 +323,14 @@ STAGES:
           bazel \
              --run_under="cd $PWD &&" \
              run \
-             //buildscripts/scripts:collect_mypy \
+             //buildscripts/scripts:collect_type_errors \
              -- \
              bazel-out/k8-fastbuild/bin \
-             > results/mypy-results.xml
+             > results/type-results.xml
           exit $exit_code
       TEXT_ON_SKIP: "unconditional"
       RESULT_CHECK_TYPE: "JUNIT"
-      RESULT_CHECK_FILE_PATTERN: "results/mypy-results.xml"
+      RESULT_CHECK_FILE_PATTERN: "results/type-results.xml"
 
     - NAME: "Enforced relay build"
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_REQUIREMENTS,CHANGED_BAZEL_MODULES,CHANGED_BAZEL_FILES,CHANGED_MAKEFILE

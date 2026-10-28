@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
-from collect_mypy import main
+from collect_type_errors import main
 
 MYPY_OUTPUT = """\
 cmk/foo.py:12:5: error: Incompatible return value type  [return-value]
@@ -20,7 +20,7 @@ Found 1 error in 1 file (checked 3 source files)
 
 
 def _run(argv: Sequence[str], monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(sys, "argv", ["collect_mypy.py", *argv])
+    monkeypatch.setattr(sys, "argv", ["collect_type_errors.py", *argv])
     main()
 
 

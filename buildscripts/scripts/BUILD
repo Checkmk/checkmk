@@ -90,13 +90,13 @@ py_binary(
 )
 
 py_library(
-    name = "collect_mypy_lib",
-    srcs = ["collect_mypy.py"],
+    name = "collect_type_errors_lib",
+    srcs = ["collect_type_errors.py"],
 )
 
 py_binary(
-    name = "collect_mypy",
-    srcs = [":collect_mypy_lib"],
+    name = "collect_type_errors",
+    srcs = [":collect_type_errors_lib"],
     tags = ["manual"],
 )
 
@@ -150,8 +150,8 @@ py_cmk_test(
         ":check_no_privileged_containers",
         ":check_no_remote_cache_tags",
         ":check_thirdparty_modules",
-        ":collect_mypy_lib",
         ":collect_rust_tests_lib",
+        ":collect_type_errors_lib",
         ":get_distros",
         ":lib",
         ":publish_cloud_images",

@@ -49,7 +49,7 @@ custom_links_guest: list[CustomLinkSpec] = [
         "Add-ons",
         True,
         [
-            ("NagVis", "../nagvis/", "icon_nagvis.png", "main"),
+            ("NagVis", "../nagvis/", "icon_nagvis.png", "_self"),
         ],
     ),
 ]

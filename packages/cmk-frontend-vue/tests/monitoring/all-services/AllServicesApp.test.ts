@@ -126,6 +126,16 @@ test('shows the site of each service by default when there is a remote site', as
   expect(await screen.findByRole('columnheader', { name: 'Site' })).toBeInTheDocument()
 })
 
+test('hides the state age, check age and Perf-O-Meter columns by default', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  expect(await screen.findByRole('columnheader', { name: 'Summary' })).toBeInTheDocument()
+  for (const name of ['State age', 'Check age', 'Perf-O-Meter']) {
+    expect(screen.queryByRole('columnheader', { name })).not.toBeInTheDocument()
+  }
+})
+
 test('hides the site column by default without a remote site', async () => {
   mockServices([makeApiEntry()])
   renderApp({ sites: [{ id: 'local', alias: 'Local site' }] })

@@ -23,6 +23,12 @@ export interface AllServicesColumnOptions extends HostServicesColumnOptions {
   sites: readonly Site[]
 }
 
+const HIDDEN_BY_DEFAULT: ReadonlySet<string> = new Set<keyof ServiceEntry>([
+  'last_state_change',
+  'last_check',
+  'perfometer'
+])
+
 export function buildAllServicesColumnPinning({
   includeSelect
 }: HostServicesColumnOptions): ColumnPinningState {
@@ -75,7 +81,11 @@ export function useAllServicesColumns({
     meta: { filter: siteFilter, hidden: sites.length < 2 }
   }
 
-  const serviceColumns = useHostServicesColumns<ServiceEntry>(options)
+  const serviceColumns = useHostServicesColumns<ServiceEntry>(options).map((column) =>
+    HIDDEN_BY_DEFAULT.has(columnId(column) ?? '')
+      ? { ...column, meta: { ...column.meta, hidden: true } }
+      : column
+  )
   const summaryIndex = serviceColumns.findIndex((column) => columnId(column) === 'summary')
   return [
     ...serviceColumns.slice(0, summaryIndex + 1),

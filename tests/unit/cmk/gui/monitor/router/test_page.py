@@ -47,6 +47,8 @@ def test_control_character_in_query_without_prefix_goes_to_search_box_as_space(
     [
         pytest.param("hl:os:linux", id="label"),
         pytest.param("hl:cmk/aws*", id="label-key-prefix"),
+        pytest.param("hl:os:*", id="label-any-value"),
+        pytest.param("tg:os:*", id="tag-any-of-group"),
         pytest.param("hl:os:lin* hl:os:lin*", id="repeated-label"),
         pytest.param("tg:dc:fra tg:os:lin*", id="tags"),
         pytest.param("hg:linux hg:web*", id="host-groups"),
@@ -73,7 +75,7 @@ def test_host_query_goes_to_all_hosts_filter() -> None:
     [
         pytest.param("", "enter a search term", id="empty"),
         pytest.param("x:web", "Unknown search prefix", id="invalid"),
-        pytest.param("hl:os:*", "needs text before it", id="label-value-only-star"),
+        pytest.param("tg:*", "needs text before it", id="tag-without-group-only-star"),
         pytest.param("s:cpu", "can only be searched by", id="no-page-for-it"),
     ],
 )

@@ -152,7 +152,6 @@ def _key_value(value: str) -> tuple[str, str | None]:
             % {"value": value}
         )
     _reject_wildcard_key(value, key)
-    _reject_bare_wildcard(value, label_value, example="os:lin*")
     return key, label_value
 
 
@@ -167,12 +166,11 @@ def _host_tag(value: str) -> HostTag:
             % {"value": value}
         )
     _reject_wildcard_key(value, group)
-    _reject_bare_wildcard(value, tag, example="os:lin*")
     return HostTag(group=group, tag=tag)
 
 
 def _reject_bare_wildcard(value: str, matched: str, *, example: str) -> None:
-    # A group, label key, value or tag can only be matched by prefix, not "any".
+    # A group, label key or a tag without group can only be matched by prefix, not "any".
     if matched == "*":
         raise SearchParseError(
             _('"%(value)s": a "*" matches by prefix and needs text before it, e.g. "%(example)s".')

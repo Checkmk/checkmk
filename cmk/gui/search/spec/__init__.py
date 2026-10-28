@@ -68,17 +68,18 @@ Matching
       case-sensitive.
     * ``hl:``, ``sl:``, ``tg:``: a trailing ``*`` in the value or tag matches by prefix, so
       ``hl:os:lin*`` finds ``os:linux`` and ``tg:os:lin*`` finds the tags of group ``os``
-      starting with ``lin``. It is kept as it is in the term, not turned into a regex. A ``*``
-      anywhere else is literal, ``hl:os:l*x`` matches the value ``l*x``. A key, tag group, value
-      or tag that is just ``*`` is an error, there is no way to match any of them (yet).
+      starting with ``lin``. A value or tag that is just ``*`` matches any value of exactly that
+      key or any tag of exactly that group: ``hl:os:*``, ``tg:os:*``. It is kept as it is in the
+      term, not turned into a regex. A ``*`` anywhere else is literal, ``hl:os:l*x`` matches the
+      value ``l*x``. A key, tag group or tag without group that is just ``*`` is an error.
     * ``st:``: one of ``ok``, ``warn``, ``crit``, ``unkn``, ``pend``, case-insensitive. Several
       states can be given as ``warn|crit`` or ``(warn|crit)``, which equals ``st:warn st:crit``.
 
 Errors (``SearchParseError``)
     An empty query, an unknown prefix, a prefix without value, text before the first prefix, an
     invalid regular expression and an invalid value for a prefix (label that is neither
-    ``key:value`` nor a key prefix, a group, key, tag group, value or tag that is just ``*``,
-    unknown service state, empty folder).
+    ``key:value`` nor a key prefix, a group, key, tag group or tag without group that is just
+    ``*``, unknown service state, empty folder).
 
 Differences to the legacy quicksearch
     * ``hg:`` and ``sg:`` match group names, not regular expressions. Alone, the legacy

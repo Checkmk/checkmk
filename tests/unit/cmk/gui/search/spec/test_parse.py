@@ -145,6 +145,18 @@ def test_trailing_star_of_label_or_tag_is_kept_as_prefix_match(query: str, expec
 @pytest.mark.parametrize(
     "query, expected",
     [
+        pytest.param("hl:os:*", HostLabel(key="os", value="*"), id="hl"),
+        pytest.param("sl:os: *", ServiceLabel(key="os", value="*"), id="sl"),
+        pytest.param("tg:os:*", HostTag(group="os", tag="*"), id="tg"),
+    ],
+)
+def test_star_as_value_or_tag_matches_any_of_the_key_or_group(query: str, expected: Term) -> None:
+    assert parse(query) == PrefixedSearch(clauses=((expected,),))
+
+
+@pytest.mark.parametrize(
+    "query, expected",
+    [
         pytest.param("hl:cmk/aws*", HostLabel(key="cmk/aws*", value=None), id="hl"),
         pytest.param("sl:cmk/aws*", ServiceLabel(key="cmk/aws*", value=None), id="sl"),
     ],
@@ -257,12 +269,9 @@ def test_invalid_regex_is_rejected(query: str, message: str) -> None:
         pytest.param("hl:os:", "not a label", id="label-without-value"),
         pytest.param("tg::prod", "not a host tag", id="tag-without-group"),
         pytest.param("tg:group:", "not a host tag", id="tag-without-tag"),
-        pytest.param("hl:os:*", "needs text before it", id="label-value-only-star"),
         pytest.param("hl:*", 'e.g. "cmk/aws\\*"', id="label-key-only-star"),
         pytest.param("hl:*:linux", "cannot stand for any", id="label-key-star-with-value"),
         pytest.param("tg:*:prod", "cannot stand for any", id="tag-group-star"),
-        pytest.param("sl:os: *", "needs text before it", id="service-label-value-only-star"),
-        pytest.param("tg:os:*", "needs text before it", id="tag-only-star"),
         pytest.param("tg:*", "needs text before it", id="tag-without-group-only-star"),
         pytest.param("hg:*", "needs text before it", id="host-group-only-star"),
         pytest.param("sg:*", "needs text before it", id="service-group-only-star"),

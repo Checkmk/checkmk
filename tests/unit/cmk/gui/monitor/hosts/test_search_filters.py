@@ -70,6 +70,8 @@ def _groups(*names: str) -> NameChoiceCondition:
         pytest.param("hl:os:lin*", _all_of("labels", "os:lin*"), id="hl-prefix"),
         pytest.param("hl:cmk/aws*", _all_of("labels", "cmk/aws*"), id="hl-key-prefix"),
         pytest.param("tg:os:lin*", _all_of("tags", "os:lin*"), id="tg-prefix"),
+        pytest.param("hl:os:*", _all_of("labels", "os:*"), id="hl-any-value"),
+        pytest.param("tg:os:*", _all_of("tags", "os:*"), id="tg-any-tag"),
         pytest.param("hg:linux", _groups("linux"), id="hg"),
         pytest.param("hg:linux hg:web*", _groups("linux", "web*"), id="hg-or-ed"),
         pytest.param("hg:linux hg:linux", _groups("linux"), id="hg-repeated"),

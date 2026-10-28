@@ -12,8 +12,12 @@ describe('stateRank', () => {
     expect(stateRank('DOWN')).toBeGreaterThan(stateRank('UNREACHABLE'))
     expect(stateRank('UNREACHABLE')).toBeGreaterThan(stateRank('CRITICAL'))
     expect(stateRank('CRITICAL')).toBeGreaterThan(stateRank('WARNING'))
-    expect(stateRank('WARNING')).toBeGreaterThan(stateRank('UNKNOWN'))
-    expect(stateRank('UNKNOWN')).toBeGreaterThan(stateRank('OK'))
+    expect(stateRank('WARNING')).toBeGreaterThan(stateRank('OK'))
+  })
+
+  it('ranks UNKNOWN between WARNING and CRITICAL, as Checkmk does', () => {
+    expect(stateRank('CRITICAL')).toBeGreaterThan(stateRank('UNKNOWN'))
+    expect(stateRank('UNKNOWN')).toBeGreaterThan(stateRank('WARNING'))
   })
 })
 

@@ -40,4 +40,27 @@ describe('createFlowNodeModel', () => {
     })
     expect(state.output).toBe('3 hosts (1 up, 1 down, 0 unreachable, 1 pending)')
   })
+
+  it('takes an unknown service as worse than a warning one', () => {
+    const topo = aTopologyNode({
+      name: 'web-01',
+      state: 'UP',
+      services_summary: { ok: 0, warning: 2, critical: 0, unknown: 1, pending: 0 }
+    })
+    const model = createFlowNodeModel({
+      nodes: () => [topo],
+      connectionId: () => null,
+      worstHostIds: () => new Set()
+    })
+    const host: FNode = {
+      id: 'web-01',
+      state: 'UP',
+      output: '',
+      bfsLevel: 0,
+      nodeType: 'host',
+      topo
+    }
+
+    expect(model.worstServiceState(host)).toBe('UNKNOWN')
+  })
 })

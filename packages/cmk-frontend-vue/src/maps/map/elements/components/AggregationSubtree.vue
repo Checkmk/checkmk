@@ -8,7 +8,7 @@ import { type HierarchyNode, tree as d3Tree, hierarchy } from 'd3-hierarchy'
 import { computed } from 'vue'
 
 import type { AggregationNode, MapElement, ObjectState } from '@/maps/types/api'
-import { BI_STATE_FULL_LABEL } from '@/maps/utils/aggregationTree'
+import { BI_STATE_FULL_LABEL, biStateRank } from '@/maps/utils/aggregationTree'
 import { resolveCheckmkUrl } from '@/maps/utils/deploymentBase'
 import { buildCheckmkUrl, openUrl } from '@/maps/utils/mapNavigation'
 import { newMapElement, newObjectState } from '@/maps/utils/model'
@@ -176,12 +176,9 @@ const worstPath = computed<Set<HierarchyNode<AggregationNode>>>(() => {
       problemLeaves.push(n)
     }
   })
-  problemLeaves.sort((a, b) => {
-    if (a.data.state !== b.data.state) {
-      return b.data.state - a.data.state
-    }
-    return b.depth - a.depth // deeper wins as a tie-break
-  })
+  problemLeaves.sort(
+    (a, b) => biStateRank(b.data.state) - biStateRank(a.data.state) || b.depth - a.depth
+  )
   const worst = problemLeaves[0]
   if (worst === undefined) {
     return new Set()

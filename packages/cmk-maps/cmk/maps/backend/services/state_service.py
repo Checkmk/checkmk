@@ -953,10 +953,10 @@ def _combined_state_from_summary(host_state: str, summary: ServicesSummary | Non
     rank = SEVERITY_RANK.get(host_state, 0)
     if summary.critical and rank < SEVERITY_RANK["CRITICAL"]:
         return "CRITICAL"
-    if summary.warning and rank < SEVERITY_RANK["WARNING"]:
-        return "WARNING"
     if summary.unknown and rank < SEVERITY_RANK["UNKNOWN"]:
         return "UNKNOWN"
+    if summary.warning and rank < SEVERITY_RANK["WARNING"]:
+        return "WARNING"
     return host_state
 
 

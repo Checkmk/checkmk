@@ -68,6 +68,7 @@ def test_combined_state_takes_worst_of_host_and_services() -> None:
     assert combined("UP", ServicesSummary(critical=1)) == "CRITICAL"
     assert combined("UP", ServicesSummary(warning=2)) == "WARNING"
     assert combined("UP", ServicesSummary(unknown=1)) == "UNKNOWN"
+    assert combined("UP", ServicesSummary(warning=2, unknown=1)) == "UNKNOWN"
     assert combined("DOWN", ServicesSummary(critical=1)) == "DOWN"
     assert combined("UNREACHABLE", ServicesSummary(critical=1)) == "UNREACHABLE"
     # All-OK services leave the host state untouched.

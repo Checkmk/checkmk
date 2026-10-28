@@ -13,6 +13,7 @@ import {
   BI_STATE_FULL_LABEL,
   BI_STATE_LABEL as BI_STATE_LABEL_MAP,
   BI_STATE_TONE,
+  biStateRank,
   walkAggregationLeavesWithPath
 } from '@/maps/utils/aggregationTree'
 import { buildCheckmkSetupUrl } from '@/maps/utils/mapNavigation'
@@ -44,9 +45,6 @@ export interface AggregationSummary {
 }
 
 type AggregationView = 'summary' | 'details'
-
-// The BI severity ordering, CRIT > WARN > UNKN > OK, for the "worst leaf" sort.
-const BI_SEVERITY_ORDER: readonly number[] = [2, 1, 3, 0]
 
 function _aggregationRow(node: AggregationNode, path: string[]): AggregationLeafRow {
   const fullPath = [...path, node.name]
@@ -174,9 +172,7 @@ export function useAggregationDetail(options: AggregationDetailOptions) {
 
     const chips = biStateCounts(_t, _countByState(leaves))
 
-    const sorted = [...leaves].sort(
-      (a, b) => BI_SEVERITY_ORDER.indexOf(a.state) - BI_SEVERITY_ORDER.indexOf(b.state)
-    )
+    const sorted = [...leaves].sort((a, b) => biStateRank(b.state) - biStateRank(a.state))
     const worst = sorted.find((l) => l.state > 0) ?? null
     const worstPath = worst ? worst.path.join(' › ') : null
     const worstOutput = worst?.output || null

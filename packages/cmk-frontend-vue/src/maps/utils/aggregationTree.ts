@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { AggregationNode, MonitoringState } from '@/maps/types/api'
+import { stateRank } from '@/maps/utils/stateColors'
 
 export const BI_STATE_LABEL: Record<number, string> = {
   0: 'OK',
@@ -19,6 +20,11 @@ export const BI_STATE_FULL_LABEL: Record<number, MonitoringState> = {
   1: 'WARNING',
   2: 'CRITICAL',
   3: 'UNKNOWN'
+}
+
+/** A BI state's severity on Checkmk's ladder; the state code itself ranks UNKNOWN above CRIT. */
+export function biStateRank(state: number): number {
+  return stateRank(BI_STATE_FULL_LABEL[state])
 }
 
 export const BI_STATE_TONE: Record<number, 'ok' | 'warn' | 'crit' | 'unknown'> = {

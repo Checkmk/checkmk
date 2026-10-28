@@ -27,8 +27,8 @@ const SAMPLE_SIZE = 5
  */
 const CROWDED_LEAF_COUNT = 50
 
-/** The four BI states in the order the preview lists them: problems first. */
-const STATE_ORDER = [2, 1, 3, 0]
+/** The four BI states in the order the slide-in counts them, as Checkmk's summary bars do. */
+const STATE_ORDER = [0, 1, 2, 3]
 
 export interface StateCount {
   key: string

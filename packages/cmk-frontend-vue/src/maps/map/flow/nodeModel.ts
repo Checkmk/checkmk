@@ -23,7 +23,12 @@ import { serviceNameOf } from '@/maps/map/flow/nodeIds'
 import type { CmdMarker, FNode } from '@/maps/map/flow/nodes'
 import type { MapElement, ObjectState, ServicesSummary, TopologyNode } from '@/maps/types/api'
 import { newObjectState } from '@/maps/utils/model'
-import { ACKNOWLEDGED_COLOR, DOWNTIME_COLOR, stateColorVar } from '@/maps/utils/stateColors'
+import {
+  ACKNOWLEDGED_COLOR,
+  DOWNTIME_COLOR,
+  stateColorVar,
+  stateRank
+} from '@/maps/utils/stateColors'
 
 /**
  * The ``_t`` a component hands to a helper. Gettext extraction only sees literal
@@ -50,16 +55,13 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
     if (!s) {
       return null
     }
-    if (s.critical > 0) {
-      return 'CRITICAL'
-    }
-    if (s.warning > 0) {
-      return 'WARNING'
-    }
-    if (s.unknown > 0) {
-      return 'UNKNOWN'
-    }
-    return null
+    const problems: [string, number][] = [
+      ['CRITICAL', s.critical],
+      ['WARNING', s.warning],
+      ['UNKNOWN', s.unknown]
+    ]
+    const present = problems.filter(([, count]) => count > 0).map(([state]) => state)
+    return present.sort((a, b) => stateRank(b) - stateRank(a))[0] ?? null
   }
 
   function hostHalo(d: FNode): { stroke: string; width: number } {

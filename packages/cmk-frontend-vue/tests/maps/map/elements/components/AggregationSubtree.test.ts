@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render } from '@testing-library/vue'
+import { fireEvent, render, within } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
@@ -12,10 +12,8 @@ import type { AggregationNode, MapElement, ObjectState } from '@/maps/types/api'
 
 import { anAggregationNode } from '../../../support/fixtures'
 
-// The subtree is pure SVG geometry: its nodes are unlabeled <g> groups without
-// an accessible representation (no role/aria-label — see the report on the
-// missing keyboard path), so all structural assertions stay container-scoped
-// DOM queries.
+// The assertions read SVG geometry and strokes, which have no accessible
+// representation, so they stay container-scoped DOM queries.
 
 const WORST_PATH_COLOR = 'var(--interactive-guide)'
 
@@ -72,6 +70,18 @@ describe('AggregationSubtree worst-path highlight', () => {
       (l) => l.getAttribute('stroke') === WORST_PATH_COLOR
     )
     expect(worstLinks).toHaveLength(1)
+  })
+
+  it('leads to a critical leaf rather than an unknown one, as BI ranks them', () => {
+    const container = renderTree(agg('root', [leaf('unknown', 3), leaf('crit', 2)]))
+    const strokeOf = (name: string) =>
+      within(container as HTMLElement)
+        .getByRole('button', { name: new RegExp(`^${name}`) })
+        .querySelector('circle')
+        ?.getAttribute('stroke')
+
+    expect(strokeOf('crit')).toBe(WORST_PATH_COLOR)
+    expect(strokeOf('unknown')).not.toBe(WORST_PATH_COLOR)
   })
 
   it('has no highlight when every leaf is OK', () => {

@@ -14,7 +14,7 @@ from cmk.maps.shared.states import (
 # The combined SEVERITY_RANK must preserve the worst-state order within each
 # scale, so max(states, key=SEVERITY_RANK.get) picks the same winner per scale.
 _HOST_STATES = ["PENDING", "UP", "UNREACHABLE", "DOWN"]  # worst last
-_SERVICE_STATES = ["PENDING", "OK", "UNKNOWN", "WARNING", "CRITICAL"]  # worst last
+_SERVICE_STATES = ["PENDING", "OK", "WARNING", "UNKNOWN", "CRITICAL"]  # worst last
 
 
 def test_state_maps_are_the_livestatus_tokens() -> None:
@@ -23,8 +23,7 @@ def test_state_maps_are_the_livestatus_tokens() -> None:
 
 
 def test_severity_rank_orders_worst_state_highest() -> None:
-    assert severity_rank("CRITICAL") > severity_rank("WARNING")
-    assert severity_rank("WARNING") > severity_rank("UNKNOWN")
+    assert severity_rank("CRITICAL") > severity_rank("UNKNOWN") > severity_rank("WARNING")
     assert severity_rank("DOWN") > severity_rank("UP")
     assert severity_rank("DOWN") > severity_rank("UNREACHABLE") > severity_rank("CRITICAL")
     assert severity_rank("OK") == severity_rank("UP") == 0

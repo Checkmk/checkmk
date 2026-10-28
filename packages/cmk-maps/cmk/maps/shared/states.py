@@ -42,13 +42,14 @@ def state_token(state: int, has_been_checked: bool, states: Mapping[int, str]) -
 # on a single ladder. Host problems outrank service problems, as in NagVis: a host
 # that is gone is what the map has to show, its services' states are a
 # consequence. Within each scale the order stays, so a host-only or service-only
-# set picks the same winner as on its own scale.
+# set picks the same winner as on its own scale. UNKNOWN ranks above WARNING, as
+# in Checkmk's views, BI and ``worst_service_state``.
 SEVERITY_RANK: Final[dict[str, int]] = {
     "PENDING": -1,
     "UP": 0,
     "OK": 0,
-    "UNKNOWN": 1,
-    "WARNING": 2,
+    "WARNING": 1,
+    "UNKNOWN": 2,
     "CRITICAL": 3,
     "UNREACHABLE": 4,
     "DOWN": 5,

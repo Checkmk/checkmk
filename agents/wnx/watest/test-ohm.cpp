@@ -3,10 +3,12 @@
 //
 #include "pch.h"
 
+#include <chrono>
 #include <filesystem>
 
 #include "common/cfg_info.h"
 #include "providers/ohm.h"
+#include "tools/_misc.h"
 #include "tools/_process.h"
 #include "watest/test_tools.h"
 #include "wnx/cfg.h"
@@ -39,6 +41,14 @@ std::vector<DWORD> OhmPids() {
 }
 
 constexpr auto kOhmSettleTimeout = std::chrono::seconds{5};
+
+// OHM's first start after boot is slow: before it registers its WMI
+// namespace it reads the SMBIOS tables from root\WMI, and the first query
+// there keeps the WMI service busy for 10 to 20 s. Its sensors appear
+// about half a minute after the start, later on a loaded machine, hence
+// the generous deadline.
+constexpr auto kOhmDataTimeout = std::chrono::seconds{120};
+constexpr auto kOhmPollInterval = std::chrono::milliseconds{500};
 
 // OHM process starts and kills are asynchronous, so asserting on the
 // process count right after either is a race (the lifecycle tests below
@@ -95,27 +105,23 @@ TEST(SectionProviderOhm, ReadDataComponent) {
 
     OhmProvider ohm(provider::kOhm, ',');
     std::string out;
-    for (auto i = 0; i < 100; ++i) {
+    int polls = 0;
+    const auto start = std::chrono::steady_clock::now();
+    while (true) {
         out = ohm.generateContent(section::kUseEmbeddedName, true);
-        if (!out.empty()) {
+        ++polls;
+        if (!out.empty() ||
+            std::chrono::steady_clock::now() - start >= kOhmDataTimeout) {
             break;
         }
         XLOG::SendStringToStdio(".", XLOG::Colors::yellow);
-        if (i == 50) {
-            XLOG::SendStringToStdio(" reset OHM ", XLOG::Colors::red);
-            oprocess.stop();
-            XLOG::SendStringToStdio(".", XLOG::Colors::red);
-            srv::ServiceProcessor::resetOhm();
-            XLOG::SendStringToStdio(".", XLOG::Colors::red);
-            wtools::KillProcess(L"Openhardwaremonitorcli.exe", 1);
-            XLOG::SendStringToStdio(".", XLOG::Colors::red);
-            oprocess.start(ohm_exe.wstring());
-            XLOG::SendStringToStdio(".", XLOG::Colors::red);
-        }
-        ::Sleep(200);
+        tools::sleep(kOhmPollInterval);
     }
     XLOG::SendStringToStdio("\n", XLOG::Colors::yellow);
-    ASSERT_TRUE(!out.empty());
+    const auto waited = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::steady_clock::now() - start);
+    ASSERT_FALSE(out.empty()) << "no OHM data after polling for "
+                              << waited.count() << " s (" << polls << " polls)";
     // testing output
     auto table = tools::SplitString(out, "\n");
 

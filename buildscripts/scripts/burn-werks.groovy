@@ -3,7 +3,7 @@
 /// file: burn-werks.groovy
 
 /// Burns the release version into all werks without a version after a release
-/// and pushes the result to review on the corresponding version branch.
+/// and pushes the result to review on the release branch and the corresponding version branch.
 /// Has to be executed after the final release tag has been created,
 /// with CUSTOM_GIT_REF set to that tag, e.g. v2.4.0p12
 
@@ -119,7 +119,7 @@ void main() {
 
                         sh("git push origin '${picked_commits[0]}:refs/for/${target_branches[0]}%${push_options.join(",")}'");
 
-                        // Further branches (master) are cherry-picked by Gerrit instead of a second `git push`:
+                        // Further branches (version branch, master) are cherry-picked by Gerrit instead of a second `git push`:
                         // Gerrit advertises the open change pushed above as `.have`, so git would omit the objects
                         // both picks share, which Gerrit then rejects ("Missing tree" / "Missing blob").
                         def change_id = sh(
@@ -168,9 +168,11 @@ void withGerritHttpCredentials(Closure body) {
     }
 }
 
-/// Returns the branches to burn the werks on: the version branch and for the first release of a new version
-/// branch (e.g. v2.6.0b1) also master, as master contains the same werks. It is the first release if there is
-/// no other release tag of this version yet. Release candidates and the +security duplicates don't count.
+/// Returns the branches to burn the werks on: the release branch, the version branch and for the first release
+/// of a new version branch (e.g. v2.6.0b1) also master, as master contains the same werks. It is the first release
+/// if there is no other release tag of this version yet. Release candidates and the +security duplicates don't count.
+/// The release branch comes first, the burn commit is created on top of its release tag. It needs the burned
+/// versions, as sec-release and hotfix branches of the next version are created from it (CMK-41312).
 List<String> burn_target_branches(String branch_version, String version_without_meta_data) {
     def release_tags = [];
     withGerritHttpCredentials {
@@ -181,7 +183,10 @@ List<String> burn_target_branches(String branch_version, String version_without_
         }
     }
     def first_release_of_branch = (release_tags == ["v${version_without_meta_data}".toString()]);
-    def target_branches = [branch_version] + (first_release_of_branch ? ["master"] : []);
+    def target_branches = (
+        ["release/${version_without_meta_data}".toString(), branch_version]
+        + (first_release_of_branch ? ["master"] : [])
+    );
     print("Release tags of ${branch_version}: ${release_tags}");
     print("First release of ${branch_version}: ${first_release_of_branch}, burning the werks on: ${target_branches}");
     return target_branches;

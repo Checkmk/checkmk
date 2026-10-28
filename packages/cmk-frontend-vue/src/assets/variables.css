@@ -28,6 +28,11 @@
   --popup-dialog-info: var(--color-light-blue-50);
   --border-color-purple: rgb(105 102 229);
   --background-color-ai: var(--color-purple-60);
+  --status-color-success: var(--color-corporate-green-80);
+  --status-color-warning: var(--color-yellow-60);
+  --status-color-error: var(--color-dark-red-60);
+  --status-color-unknown: var(--color-orange-70);
+  --status-color-pending-subtle: var(--color-mist-grey-80);
 
   /* Fonts */
   --font-size-xxlarge: 18px;

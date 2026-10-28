@@ -179,7 +179,15 @@ class DockerRelaySetup:
         relay_volume: docker.models.volumes.Volume,
         suffix: str,
         cap_drop: list[str] | None = None,
+        registration_token: str | None = None,
+        cert_fingerprint: str | None = None,
     ) -> None:
+        """Register and start the daemon.
+
+        Registers with the site's user and password unless *registration_token* is
+        given, and trusts the receiver's certificate blindly unless *cert_fingerprint*
+        (SHA-256, hex) pins it.
+        """
         self._client = client
         self._checkmk = checkmk
         self._relay_image = relay_image
@@ -188,6 +196,8 @@ class DockerRelaySetup:
         self._relay_monitored_network = monitored_network
         self._relay_volume = relay_volume
         self._cap_drop = cap_drop
+        self._registration_token = registration_token
+        self._cert_fingerprint = cert_fingerprint
 
         self._site_ip = self._attach_checkmk_to_network()
         self._relay_alias = f"relay-{self._suffix}"
@@ -233,22 +243,31 @@ class DockerRelaySetup:
         """
         logger.info("Registering relay '%s' with site at %s", self._relay_alias, self._site_ip)
         # cmk-relay's `register` has no --password flag: it reads the password from
-        # stdin when not attached to a TTY (see cmk.relay.app._prompt_for_password).
-        # Feed it via a piped shell command, passing the secret through the environment
-        # rather than argv.
+        # stdin when not attached to a TTY (see cmk.relay.app._prompt_for_password), as
+        # --token-stdin reads the token. Either secret is fed via a piped shell command,
+        # passed through the environment rather than argv.
+        if self._registration_token is None:
+            auth_args, secret = f"--user {self._checkmk.username}", self._checkmk.password
+        else:
+            auth_args, secret = "--token-stdin", self._registration_token
+        trust_args = (
+            "--trust-cert"
+            if self._cert_fingerprint is None
+            else f"--cert-fingerprint {self._cert_fingerprint}"
+        )
         register_cmd = (
-            'printf "%s" "$CMK_RELAY_PASSWORD" | cmk-relay register'
+            'printf "%s" "$CMK_RELAY_SECRET" | cmk-relay register'
             f" --server {self._site_ip}:{self._checkmk.agent_receiver_port}"
             f" --site {self._checkmk.site_id}"
-            f" --user {self._checkmk.username}"
+            f" {auth_args}"
             f" --relay-alias {self._relay_alias}"
-            " --trust-cert --log-level debug"
+            f" {trust_args} --log-level debug"
         )
         container = self._client.containers.run(
             self._relay_image,
             entrypoint=["/bin/bash", "-c"],
             command=[register_cmd],
-            environment={"CMK_RELAY_PASSWORD": self._checkmk.password},
+            environment={"CMK_RELAY_SECRET": secret},
             volumes=self._volume_mount(),
             network=self._site_relay_network.name,
             detach=True,
@@ -353,6 +372,8 @@ def isolated_relay(
     suffix: str,
     *,
     cap_drop: list[str] | None = None,
+    registration_token: str | None = None,
+    cert_fingerprint: str | None = None,
 ) -> Iterator[DockerRelaySetup]:
     """A further relay, with a site-relay network and a volume of its own.
 
@@ -374,6 +395,8 @@ def isolated_relay(
             volume,
             suffix,
             cap_drop=cap_drop,
+            registration_token=registration_token,
+            cert_fingerprint=cert_fingerprint,
         ) as relay:
             yield relay
     finally:

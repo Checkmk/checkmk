@@ -1,5 +1,7 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
@@ -502,6 +504,35 @@ py_wheel(
 build_test(
     name = "build_test",
     targets = ["wheel"],
+)
+
+# The plugin APIs must not depend on any other Checkmk package, only on
+# third-party requirements. List all first-party targets outside of this
+# package that end up in the wheel; the test asserts that there are none.
+genquery(
+    name = "first_party_deps",
+    expression = " except ".join([
+        "filter('^//', deps(//packages/cmk-plugin-apis:wheel))",
+        "filter('^//packages/cmk-plugin-apis[:/]', deps(//packages/cmk-plugin-apis:wheel))",
+    ]),
+    opts = [
+        "--noimplicit_deps",
+        "--notool_deps",
+    ],
+    scope = [":wheel"],
+)
+
+write_file(
+    name = "no_first_party_deps",
+    out = "no_first_party_deps.txt",
+    content = [],
+)
+
+diff_test(
+    name = "first_party_deps_test",
+    failure_message = "cmk-plugin-apis must not depend on other Checkmk packages",
+    file1 = ":first_party_deps",
+    file2 = ":no_first_party_deps",
 )
 
 filegroup(

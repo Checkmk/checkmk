@@ -122,6 +122,56 @@ def test_test_failure_uses_test_log_and_attempt_duration(
     assert system_out.text == "assertion failed\n"
 
 
+def test_colored_build_stderr_is_reported_as_plain_text(tmp_path: Path) -> None:
+    stderr_file = tmp_path / "stderr.txt"
+    stderr_file.write_text("\x1b[0m\x1b[1m\x1b[38;5;9merror[E0308]\x1b[0m: mismatched types\n")
+    _write_bep(
+        tmp_path / "bep.json",
+        [
+            {
+                "id": {"targetCompleted": {"label": "//pkg:crate"}},
+                "completed": {"success": False},
+                "children": [_action_id("//pkg:crate", "libcrate.rlib")],
+            },
+            {
+                "id": _action_id("//pkg:crate", "libcrate.rlib"),
+                "action": {"stderr": {"uri": stderr_file.as_uri()}},
+            },
+        ],
+    )
+    output_dir = tmp_path / "out"
+
+    main([str(tmp_path / "bep.json"), str(output_dir)])
+
+    system_out = _suite(output_dir, "pkg_crate").find("system-out")
+    assert system_out is not None
+    assert system_out.text == "error[E0308]: mismatched types"
+
+
+def test_only_xml_invalid_characters_are_dropped_from_test_log(tmp_path: Path) -> None:
+    test_log = tmp_path / "test.log"
+    test_log.write_text("\x00progress\x08\x0b\ufffe\tdone: \u00fcber \U0001f680\n")
+    _write_bep(
+        tmp_path / "bep.json",
+        [
+            {
+                "id": {"testResult": {"label": "//pkg:unit"}},
+                "testResult": {
+                    "status": "FAILED",
+                    "testActionOutput": [{"name": "test.log", "uri": test_log.as_uri()}],
+                },
+            },
+        ],
+    )
+    output_dir = tmp_path / "out"
+
+    main([str(tmp_path / "bep.json"), str(output_dir)])
+
+    system_out = _suite(output_dir, "pkg_unit").find("system-out")
+    assert system_out is not None
+    assert system_out.text == "progress\tdone: \u00fcber \U0001f680\n"
+
+
 def test_defaults_apply_when_details_are_missing(tmp_path: Path) -> None:
     _write_bep(
         tmp_path / "bep.json",

@@ -221,6 +221,10 @@ defineProps<CmkTagProps>()
   color: var(--black);
 }
 
+.cmk-tag--variant-fill.cmk-tag--color-label {
+  color: var(--black);
+}
+
 body[data-theme='facelift'] {
   .cmk-tag--color-default {
     --tag-color: var(--font-color);

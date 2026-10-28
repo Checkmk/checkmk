@@ -2,6 +2,33 @@ set noparent  # don't inherit owners information from parent folders
 
 file:/component_owners/plugin_apis/OWNERS_DEFINITION
 
+# The internal APIs come without stability guarantee and are owned by the
+# component owning the respective backend.
+per-file **/agent_based/internal/**=file:/component_owners/check_and_discovery_engine/OWNERS_DEFINITION
+per-file **/agent_based/internal/**=set noparent
+per-file **/automations/internal/**=file:/component_owners/automation_engine/OWNERS_DEFINITION
+per-file **/automations/internal/**=set noparent
+per-file **/bakery/internal/**=file:/component_owners/agent_bakery_updater/OWNERS_DEFINITION
+per-file **/bakery/internal/**=set noparent
+per-file **/cli/internal/**=file:/component_owners/cmk_cli/OWNERS_DEFINITION
+per-file **/cli/internal/**=set noparent
+per-file **/dcd_connector_parameters/internal/**=file:/component_owners/dynamic_host_management/OWNERS_DEFINITION
+per-file **/dcd_connector_parameters/internal/**=set noparent
+per-file **/dcd_connectors/internal/**=file:/component_owners/dynamic_host_management/OWNERS_DEFINITION
+per-file **/dcd_connectors/internal/**=set noparent
+per-file **/diagnostics/internal/**=file:/component_owners/diagnostics/OWNERS_DEFINITION
+per-file **/diagnostics/internal/**=set noparent
+per-file **/licensing/internal/**=file:/component_owners/licensing/OWNERS_DEFINITION
+per-file **/licensing/internal/**=set noparent
+per-file **/post_rename_site/internal/**=file:/component_owners/site_management_omd/OWNERS_DEFINITION
+per-file **/post_rename_site/internal/**=set noparent
+per-file **/rulesets/internal/**=file:/component_owners/ui_setup/OWNERS_DEFINITION
+per-file **/rulesets/internal/**=set noparent
+per-file **/server_side_calls/internal/**=file:/component_owners/check_and_discovery_engine/OWNERS_DEFINITION
+per-file **/server_side_calls/internal/**=set noparent
+per-file **/update_config/internal/**=file:/component_owners/site_management_omd/OWNERS_DEFINITION
+per-file **/update_config/internal/**=set noparent
+
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
 #  - consider a `per-file <PATH>=set noparent` line for each `per-file` rule

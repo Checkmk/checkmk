@@ -25,7 +25,7 @@ Double arrows carry work both ways: results from the helpers, and the new config
 
 The daemon's loop is ``asyncio.run(_daemon(...))`` in ``daemon.py``; its root task is the main loop described in the next section.
 Every subcommand enters through ``cmk.relay.app:main``.
-``rotate-certs``, ``submit-crashes`` and ``debug`` each run their own short ``asyncio.run(...)`` and exit; ``register``, ``version`` and ``cert-info`` are plain synchronous code.
+``rotate-certs``, ``submit-crashes`` and ``debug`` each run their own short ``asyncio.run(...)`` and exit; ``register``, ``version``, ``cert-info`` and ``check-connection`` are plain synchronous code.
 
 
 How work flows

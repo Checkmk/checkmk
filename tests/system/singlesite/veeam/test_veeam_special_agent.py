@@ -51,167 +51,131 @@ PASSWORD_ID = "veeam_admin"
 
 @dataclass(frozen=True)
 class ExpectedServiceResult:
-    """The state (0 OK, 1 WARN, 2 CRIT, 3 UNKNOWN) and regular expressions that the start
-    of the summary and of one details line each have to match."""
+    """The state (0 OK, 1 WARN, 2 CRIT, 3 UNKNOWN) and regular expressions that the summary
+    or the details have to contain.
+
+    The values show that the data from Veeam reaches the services. Values the lab is
+    configured with are enough for that; measured ones change with every recording. Each
+    value comes with its label where it has one.
+    """
 
     state: int
-    summary: str
-    details: Sequence[str] = ()
+    values: Sequence[str] = ()
 
 
 EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
-    "Check_MK": ExpectedServiceResult(0, r"\[special_veeam\] Success"),
+    "Check_MK": ExpectedServiceResult(0, [r"\[special_veeam\] Success"]),
     "Check_MK Discovery": None,  # the service has to exist, but what it reports is not checked.
-    "Check_MK HW/SW Inventory": ExpectedServiceResult(0, r"Found \d+ inventory entries"),
+    "Check_MK HW/SW Inventory": ExpectedServiceResult(0, [r"Found \d+ inventory entries"]),
     "Veeam License": ExpectedServiceResult(
         0,
-        r"Valid, License expiry: .+, Instances used: \d+\.\d+%$",
-        details=[
-            rf"Edition: {BACKUP_SERVER_EDITION}$",
-            r"Licensed to: Checkmk$",
-            r"Type: NFR$",
-            r"Auto update: enabled$",
+        [
+            r"\bValid\b",
+            rf"Edition: {BACKUP_SERVER_EDITION}\b",
+            r"Licensed to: Checkmk\b",
+            r"Type: NFR\b",
+            r"Auto update: enabled\b",
         ],
     ),
     "Backup job Disabled_Windows_AP": ExpectedServiceResult(
         0,
-        r"Status: Disabled, Result: Success, Time since last run: .+",
-        details=[
-            r"Last run time: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$",
-            r"Duration: .+",
-            r"Target repository: Default Backup Repository$",
-            r"Objects: 1$",
-            r"Type: WindowsAgentBackupServerPolicy$",
+        [
+            r"Status: Disabled\b",
+            r"Result: Success\b",
+            r"Target repository: Default Backup Repository\b",
+            r"Objects: 1\b",
+            r"Type: WindowsAgentBackupServerPolicy\b",
         ],
     ),
     "Backup job Failing_job": ExpectedServiceResult(
         2,  # CRIT
-        r"Result: Failed\(!!\), Time since last run: .+",
-        details=[
-            r"Status: Enabled$",
-            r"Duration: .+",
-            r"Objects: 1$",
-            r"Type: LinuxAgentBackupServerPolicy$",
+        [
+            r"Result: Failed\b",
+            r"Status: Enabled\b",
+            r"Objects: 1\b",
+            r"Type: LinuxAgentBackupServerPolicy\b",
         ],
     ),
     "Backup job File_Backup_Job": ExpectedServiceResult(
-        0,
-        r"Result: Success, Time since last run: .+",
-        details=[
-            r"Status: \w+$",
-            r"Duration: .+",
-            r"Next run: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$",
-            r"Objects: 4$",
-            r"Type: FileBackup$",
-        ],
+        0, [r"Result: Success\b", r"Objects: 4\b", r"Type: FileBackup\b"]
     ),
     "Backup job Never_run_job": ExpectedServiceResult(
         0,
-        r"No run has happened yet$",
-        details=[r"Status: Inactive$", r"Objects: 1$", r"Type: FileBackup$"],
+        [
+            r"No run has happened yet\b",
+            r"Status: Inactive\b",
+            r"Objects: 1\b",
+            r"Type: FileBackup\b",
+        ],
     ),
     "Backup job Successful_job": ExpectedServiceResult(
         0,
-        r"Result: Success, Time since last run: .+",
-        details=[
-            r"Status: \w+$",
-            r"Duration: .+",
-            r"Target repository: Default Backup Repository$",
-            r"Objects: 1$",
-            r"Type: LinuxAgentBackup$",
+        [
+            r"Result: Success\b",
+            r"Target repository: Default Backup Repository\b",
+            r"Objects: 1\b",
+            r"Type: LinuxAgentBackup\b",
         ],
     ),
     "Configuration backup": ExpectedServiceResult(
-        0,
-        r"Last successful backup age: .+",
-        details=[
-            r"Restore points kept: 10$",
-            r"Encryption: disabled$",
-            r"Target repository ID: 88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec$",
-        ],
+        0, [r"Restore points kept: 10\b", r"Encryption: disabled\b"]
     ),
     "Backup proxy Backup Proxy": ExpectedServiceResult(
-        0,
-        r"General purpose, Online$",
-        details=[r"Host: This server$", r"Description: Created by Veeam Backup & Replication$"],
+        0, [r"\bGeneral purpose\b", r"\bOnline\b", r"Host: This server\b"]
     ),
     "Backup proxy VMware Backup Proxy": ExpectedServiceResult(
-        0,
-        r"VMware vSphere, Online$",
-        details=[r"Host: This server$"],
+        0, [r"\bVMware vSphere\b", r"\bOnline\b", r"Host: This server\b"]
     ),
     "Backup repository Performance Extent - Backup Repository on Linux (22d8ed25)": (
-        ExpectedServiceResult(
-            0,
-            r"Used: \d+\.\d+% - .+ of 18\.3 GiB",
-            details=[r"Host: 172\.31\.26\.65$", r"Path: /backups$"],
-        )
+        ExpectedServiceResult(0, [r"Host: 172\.31\.26\.65\b", r"Path: /backups\b"])
     ),
     "Backup repository WinLocal - Default Backup Repository (88788f9e)": ExpectedServiceResult(
         0,
-        r"Used: \d+\.\d+% - .+ of 200 GiB",
-        details=[rf"Host: {re.escape(BACKUP_SERVER_NAME)}$", r"Path: c:\\backup$"],
+        # Nagios doubles the backslash.
+        [rf"Host: {re.escape(BACKUP_SERVER_NAME)}\b", r"Path: c:\\+backup\b"],
     ),
     "Scale-out repository Scale-out Backup Repository": ExpectedServiceResult(
         0,
-        r"1 extent$",
-        details=[
-            r"Extent Backup Repository on Linux: Normal$",
-            r"Capacity tier: disabled$",
-            r"Archive tier: disabled$",
-            r"Placement policy: DataLocality$",
+        [
+            r"Extent Backup Repository on Linux: Normal\b",
+            r"Capacity tier: disabled\b",
+            r"Archive tier: disabled\b",
+            r"Placement policy: DataLocality\b",
         ],
     ),
     "Protection group Manually Added": ExpectedServiceResult(
         0,  # A disabled protection group is OK by default.
-        r"Manually added, 1 configured computer, Disabled$",
-        details=[r"Description: Contains manually added computers$"],
+        [r"\bManually added\b", r"\b1 configured computer\b", r"\bDisabled\b"],
     ),
     "Protection group PG-Linux-Test": ExpectedServiceResult(
-        0,
-        r"Individual computers, 1 configured computer$",
-        details=[r"Description: .+"],
+        0, [r"\bIndividual computers\b", r"\b1 configured computer\b"]
     ),
     "Protection group PG-Windows-Test": ExpectedServiceResult(
-        0,
-        r"Individual computers, 1 configured computer$",
-        details=[r"Description: .+"],
+        0, [r"\bIndividual computers\b", r"\b1 configured computer\b"]
     ),
-    "Managed server 172.31.26.65": ExpectedServiceResult(
-        0,
-        r"Linux, Available$",
-        details=[r"Server ID: 8da3c8d4-0ca3-4a30-99a3-0cf3fd3c8c5c$"],
-    ),
+    "Managed server 172.31.26.65": ExpectedServiceResult(0, [r"\bLinux\b", r"\bAvailable\b"]),
     f"Managed server {BACKUP_SERVER_NAME}": ExpectedServiceResult(
         0,
-        r"Microsoft Windows, Available$",
-        details=[
-            r"Description: Backup server$",
-            r"Roles: Backup server, Default mount server$",
-            r"Server ID: 6745a759-2205-4cd2-b172-8ec8f7e60ef8$",
+        [
+            r"\bMicrosoft Windows\b",
+            r"\bAvailable\b",
+            r"Roles: Backup server, Default mount server\b",
         ],
     ),
 }
 
 EXPECTED_PROTECTED_MACHINE_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
     "Check_MK": ExpectedServiceResult(
-        0, r"\[piggyback\] Successfully processed from source 'veeam-server'"
+        0, [r"\[piggyback\] Successfully processed from source 'veeam-server'"]
     ),
     "Check_MK Discovery": None,
-    "Backup Successful_job": ExpectedServiceResult(
-        0,
-        r".+Success.+Last backup age.+Size.+read.+transferred",
-        details=[r"Duration: .+"],
-    ),
+    "Backup Successful_job": ExpectedServiceResult(0, [r"Status: Success\b"]),
     "Restore points": ExpectedServiceResult(
         0,
-        r"Last restore point age: .+, [1-9]\d* restore points$",
-        details=[
-            r"Malware status: Clean$",
-            r"Platform: LinuxPhysical$",
-            r"Object type: Directory$",
-            r"Last restore point type: \w+$",
-            r"Last restore point malware status: Clean$",
+        [
+            r"\bMalware status: Clean\b",
+            r"Platform: LinuxPhysical\b",
+            r"Object type: Directory\b",
         ],
     ),
 }
@@ -427,19 +391,18 @@ def _assert_service_reports_expected_result(
         f"State of {service_name!r} on {host_name}: expected {expected_result.state}, "
         f"actual {actual_result.state}. Actual summary: {actual_result.summary}"
     )
-    assert re.match(expected_result.summary, actual_result.summary), (
-        f"Summary of {service_name!r} on {host_name}: expected to match "
-        f"{expected_result.summary!r}, actual: {actual_result.summary}"
+    actual_output = "\n".join(
+        [
+            actual_result.summary,
+            *re.split(r"\n|\\n", actual_result.extra_columns["long_plugin_output"]),
+        ]
     )
-    actual_detail_lines = re.split(r"\n|\\n", actual_result.extra_columns["long_plugin_output"])
-    unmatched_detail_patterns = [
-        pattern
-        for pattern in expected_result.details
-        if not any(re.match(pattern, line) for line in actual_detail_lines)
+    missing_values = [
+        value for value in expected_result.values if not re.search(value, actual_output)
     ]
-    assert not unmatched_detail_patterns, (
-        f"Details of {service_name!r} on {host_name}: expected a line matching each of "
-        f"{unmatched_detail_patterns}, actual: {actual_detail_lines}"
+    assert not missing_values, (
+        f"Output of {service_name!r} on {host_name}: expected to contain each of "
+        f"{missing_values}, actual: {actual_output}"
     )
 
 

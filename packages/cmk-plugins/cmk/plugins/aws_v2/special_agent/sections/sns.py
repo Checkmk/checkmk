@@ -61,9 +61,10 @@ class SNSTopic:
         return f"{self.topic_name} [{self.region}]"
 
     @staticmethod
-    def topic_name_from_item_id(item_id: str) -> str:
+    def host_resource_from_item_id(item_id: str) -> hosts.SNSTopic:
         # A topic name has no spaces, so the name ends before the first space.
-        return item_id.split(" ", 1)[0]
+        topic_name, region = item_id.split(" ", 1)
+        return hosts.SNSTopic(name=topic_name, region=region.strip("[]"))
 
 
 class SNSTopicsFetcher:
@@ -450,8 +451,9 @@ class SNSTopicCloudwatch(AWSSection):
         rows: Sequence[Mapping[str, object]],
         topic: Mapping[str, Any] | None,
     ) -> AWSSectionResult:
-        topic_name = SNSTopic.topic_name_from_item_id(item_id)
-        host = self._target_host(hosts.SNSTopic(topic_name))
+        resource = SNSTopic.host_resource_from_item_id(item_id)
+        topic_name = resource.name
+        host = self._target_host(resource)
         if topic is None:
             # The topic is gone from the summary since its metrics were cached.
             return AWSSectionResult(host, rows, {"cmk/aws/service": "sns"})

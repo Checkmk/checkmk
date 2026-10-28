@@ -115,13 +115,19 @@ def test_ec2_instance_without_a_name_has_no_host(
         pytest.param(WAFV2WebACL("acl", "CloudFront"), "acl_CloudFront", id="cloudfront web acl"),
         pytest.param(GlacierVault("vault"), "vault", id="glacier vault"),
         pytest.param(S3Bucket("bucket"), "bucket", id="s3 bucket"),
-        pytest.param(SNSTopic("topic"), "topic", id="sns topic"),
+        pytest.param(SNSTopic("topic", "eu-central-1"), "topic_eu-central-1", id="sns topic"),
         pytest.param(LambdaFunction("function"), "function", id="lambda function"),
         pytest.param(ECSCluster("cluster"), "cluster", id="ecs cluster"),
     ],
 )
 def test_resource_goes_to_a_host_of_its_own(resource: PiggybackResource, expected: str) -> None:
     assert target_host(resource, DEFAULT_NAMING) == expected
+
+
+def test_sns_topics_with_the_same_name_in_two_regions_go_to_two_hosts() -> None:
+    assert target_host(SNSTopic("topic", "eu-central-1"), DEFAULT_NAMING) != target_host(
+        SNSTopic("topic", "us-east-1"), DEFAULT_NAMING
+    )
 
 
 def test_ebs_attachment_goes_to_the_host_of_its_monitored_instance() -> None:

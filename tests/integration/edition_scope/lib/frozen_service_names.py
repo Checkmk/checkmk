@@ -348,7 +348,7 @@ FROZEN_SERVICE_NAMES: Final[Mapping[str, str]] = {
     "aws_v2_s3_requests_traffic_stats": "AWS/S3 Traffic Stats %s",
     "aws_v2_s3_summary": "AWS/S3 Summary",
     "aws_v2_sns_limits": "AWS/SNS Limits %s",
-    "aws_v2_sns_notification": "AWS/SNS %s Message Number",
+    "aws_v2_sns_notification": "AWS/SNS Messages",
     "aws_v2_sns_sms_spend": "AWS/SNS %s SMS Spend",
     "aws_v2_sns_sms_success_rate": "AWS/SNS %s SMS Success Rate",
     "aws_v2_sns_summary": "AWS/SNS Summary",

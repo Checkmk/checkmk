@@ -119,6 +119,7 @@ class RDSInstance:
 @dataclass(frozen=True)
 class SNSTopic:
     name: str
+    region: str
 
 
 @dataclass(frozen=True)
@@ -279,7 +280,7 @@ def _rds_instance_host(instance: RDSInstance) -> TargetHost:
 
 
 def _sns_topic_host(topic: SNSTopic) -> TargetHost:
-    return TargetHost(topic.name)
+    return _hostname_from_name_and_region(topic.name, topic.region)
 
 
 def _lambda_function_host(function: LambdaFunction) -> TargetHost:

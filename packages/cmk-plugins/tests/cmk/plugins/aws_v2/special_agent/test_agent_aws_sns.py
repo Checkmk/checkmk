@@ -337,11 +337,11 @@ def test_agent_aws_sns_puts_each_topic_on_its_own_host(get_sns_sections: SNSSect
         result.piggyback_hostname: {row["Label"] for row in result.content}
         for result in sns_topic_results
     } == {
-        "TopicName-0": {"TopicName-0 [eu-west-1]"},
-        "TopicName-1": {"TopicName-1 [eu-west-1]"},
-        "TopicName-2": {"TopicName-2 [eu-west-1]"},
-        "TopicName-3.fifo": {"TopicName-3.fifo [eu-west-1]"},
-        "TopicName-4.fifo": {"TopicName-4.fifo [eu-west-1]"},
+        "TopicName-0_eu-west-1": {"TopicName-0 [eu-west-1]"},
+        "TopicName-1_eu-west-1": {"TopicName-1 [eu-west-1]"},
+        "TopicName-2_eu-west-1": {"TopicName-2 [eu-west-1]"},
+        "TopicName-3.fifo_eu-west-1": {"TopicName-3.fifo [eu-west-1]"},
+        "TopicName-4.fifo_eu-west-1": {"TopicName-4.fifo [eu-west-1]"},
     }
 
 
@@ -361,7 +361,7 @@ def test_agent_aws_sns_topic_hosts_get_the_resource_labels(get_sns_sections: SNS
     assert {
         result.piggyback_hostname: result.piggyback_host_labels for result in sns_topic_results
     } == {
-        topic: {
+        f"{topic}_eu-west-1": {
             "cmk/aws/service": "sns",
             "cmk/aws/name": topic,
             "cmk/aws/resource_id": topic,

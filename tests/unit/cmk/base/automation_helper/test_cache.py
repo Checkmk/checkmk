@@ -5,14 +5,15 @@
 
 import dataclasses
 import time
-from collections.abc import Generator
-from unittest.mock import MagicMock
+from collections.abc import Callable, Generator
+from unittest.mock import MagicMock, Mock
 
 import pytest
+import redis
 from fakeredis import FakeRedis
 from redis.exceptions import ConnectionError as RedisConnectionError
 
-from cmk.base.automation_helper._cache import Cache
+from cmk.base.automation_helper._cache import Cache, CacheError
 
 
 @pytest.fixture(name="cache")
@@ -42,3 +43,20 @@ def test_reload_required_returns_true_on_cache_error(cache: Cache) -> None:
     broken_client.get.side_effect = RedisConnectionError()
     failing_cache = dataclasses.replace(cache, _client=broken_client)
     assert failing_cache.reload_required(0.0) is True
+
+
+@pytest.mark.parametrize(
+    "access",
+    [
+        pytest.param(lambda cache: cache.store_last_detected_change(1.0), id="store"),
+        pytest.param(lambda cache: cache.get_last_detected_change(), id="get"),
+    ],
+)
+def test_redis_timeout_raises_cache_error(access: Callable[[Cache], object]) -> None:
+    client = Mock(spec=redis.Redis)
+    client.set.side_effect = client.get.side_effect = redis.exceptions.TimeoutError(
+        "Timeout reading from socket"
+    )
+
+    with pytest.raises(CacheError):
+        access(Cache.setup(client=client))

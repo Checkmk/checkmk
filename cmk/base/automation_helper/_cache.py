@@ -8,7 +8,7 @@ from collections.abc import Awaitable
 from typing import Final, Self
 
 import redis
-from redis.exceptions import ConnectionError
+from redis.exceptions import RedisError
 
 from cmk.base.automation_helper._log import LOGGER
 
@@ -26,26 +26,24 @@ class Cache:
     def store_last_detected_change(self, time: float) -> None:
         try:
             self._client.set(LAST_DETECTED_CHANGE_TOPIC, time)
-        except ConnectionError as err:
-            raise CacheError(
-                "Redis unavailable: Failed to store timestamp of detected change."
-            ) from err
+        except RedisError as err:
+            raise CacheError("Redis error: Failed to store timestamp of detected change.") from err
 
     def get_last_detected_change(self) -> float:
         try:
             last = self._client.get(LAST_DETECTED_CHANGE_TOPIC)
             assert not isinstance(last, Awaitable)
             return float(last or 0.0)  # type: ignore[unreachable]
-        except ConnectionError as err:
+        except RedisError as err:
             raise CacheError(
-                "Redis unavailable: Failed to retrieve timestamp of last detected change."
+                "Redis error: Failed to retrieve timestamp of last detected change."
             ) from err
 
     def reload_required(self, last_reload: float) -> bool:
         try:
             return last_reload < self.get_last_detected_change()
         except CacheError:
-            LOGGER.warning("[cache] Redis unavailable, assuming reload required")
+            LOGGER.warning("[cache] Redis error, assuming reload required")
             return True
 
 

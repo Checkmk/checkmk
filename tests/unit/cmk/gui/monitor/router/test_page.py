@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import logging
 from collections.abc import Mapping
 from urllib.parse import parse_qs, urlsplit
 
@@ -11,7 +12,7 @@ import pytest
 from werkzeug.test import create_environ
 
 from cmk.gui.config import Config
-from cmk.gui.exceptions import HTTPRedirect, MKUserError
+from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.http import Request
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.monitor.router import MonitorRouterPage, route
@@ -127,17 +128,52 @@ def test_service_query_goes_to_a_filter_all_services_accepts(query: str) -> None
 
 
 @pytest.mark.parametrize(
-    "query, message",
+    "query",
     [
-        pytest.param("", "enter a search term", id="empty"),
-        pytest.param("x:web", "Unknown search prefix", id="invalid"),
-        pytest.param("tg:*", "needs text before it", id="tag-without-group-only-star"),
-        pytest.param("s:cpu al:web", "can only be searched by", id="no-page-for-it"),
+        pytest.param("x:web", id="unknown-prefix"),
+        pytest.param("h:(web", id="invalid-regex"),
     ],
 )
-def test_query_that_cannot_be_shown_is_rejected(query: str, message: str) -> None:
-    with pytest.raises(MKUserError, match=message):
-        route(Request(create_environ()), query, TagConfig(), _no_folders)
+def test_invalid_query_goes_to_all_hosts_search_box_as_typed(query: str) -> None:
+    parts = urlsplit(route(Request(create_environ()), f" {query} ", TagConfig(), _no_folders))
+
+    assert parts.path == "monitor_all_hosts.py"
+    assert parse_qs(parts.query) == {"q": [query]}
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param("s:cpu al:web", id="no-page-for-it"),
+        pytest.param("tg:unknown", id="unknown-tag"),
+    ],
+)
+def test_query_no_page_can_filter_on_goes_to_legacy_search_as_typed(query: str) -> None:
+    parts = urlsplit(route(Request(create_environ()), f" {query} ", TagConfig(), _no_folders))
+
+    assert parts.path == "search_open.py"
+    assert parse_qs(parts.query) == {"q": [query]}
+
+
+def test_query_no_page_can_filter_on_is_logged_by_prefix_and_reason(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with caplog.at_level(logging.WARNING):
+        route(Request(create_environ()), "s:cpu al:secret-host", TagConfig(), _no_folders)
+
+    assert [record.getMessage() for record in caplog.records] == [
+        (
+            "Global search: no monitoring page can show a query with the prefixes s:, al:"
+            " (All services has no filter for al:)"
+        )
+    ]
+
+
+def test_invalid_query_is_not_logged(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.WARNING):
+        route(Request(create_environ()), "x:web", TagConfig(), _no_folders)
+
+    assert not caplog.records
 
 
 def test_page_redirects_to_the_url_of_the_query() -> None:

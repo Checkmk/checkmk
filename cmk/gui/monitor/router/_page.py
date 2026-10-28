@@ -6,8 +6,9 @@
 from collections.abc import Callable, Mapping
 from typing import override
 
-from cmk.gui.exceptions import HTTPRedirect, MKUserError
+from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.http import Request
+from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.monitor.hosts.page_url import all_hosts_url
 from cmk.gui.monitor.hosts.search_filters import host_search_filter
@@ -17,6 +18,7 @@ from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.search.spec import (
     parse,
+    prefix_of,
     PrefixedSearch,
     SearchParseError,
     ServiceFolder,
@@ -28,6 +30,7 @@ from cmk.gui.search.spec import (
     UnsupportedSearchError,
 )
 from cmk.ruleset_matcher.tags import TagConfig
+from cmk.web.utils.urls import makeuri_contextless
 
 _QUERY_VAR = "q"
 
@@ -56,20 +59,37 @@ def route(
 
     ``folders`` are Setup's folder titles by path, only asked for when the query names a folder.
 
-    Raises:
-        MKUserError: if the query is invalid or no page can filter on it yet.
+    An invalid query goes to the search box of All hosts as typed: the page is where the user sees
+    the query and corrects it. A query no page can filter on yet goes to the legacy search
+    ``search_open.py``, which still shows it as before, and is logged by its prefixes and the
+    reason, not by its values.
     """
     try:
         spec = parse(query)
-        if isinstance(spec, UnprefixedSearch):
-            # As typed, with control characters as spaces: the page turns "*" into ".*" itself,
-            # but drops control characters, which would join the words.
-            return all_hosts_url(request, search=spec.text)
+    except SearchParseError:
+        return all_hosts_url(request, search=query.strip())
+    if isinstance(spec, UnprefixedSearch):
+        # As typed, with control characters as spaces: the page turns "*" into ".*" itself,
+        # but drops control characters, which would join the words.
+        return all_hosts_url(request, search=spec.text)
+    try:
         if _searches_services(spec):
             return all_services_url(request, filter_node=service_search_filter(spec))
         return all_hosts_url(request, filter_node=host_search_filter(spec, tags, folders))
-    except (SearchParseError, UnsupportedSearchError) as e:
-        raise MKUserError(_QUERY_VAR, str(e)) from e
+    except UnsupportedSearchError as e:
+        logger.warning(
+            "Global search: no monitoring page can show a query with the prefixes %(prefixes)s"
+            " (%(reason)s)",
+            {
+                "prefixes": ", ".join(
+                    dict.fromkeys(f"{prefix_of(clause[0])}:" for clause in spec.clauses)
+                ),
+                "reason": e.reason,
+            },
+        )
+        return makeuri_contextless(
+            request, [(_QUERY_VAR, query.strip())], filename="search_open.py"
+        )
 
 
 def _searches_services(spec: PrefixedSearch) -> bool:

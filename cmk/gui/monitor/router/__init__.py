@@ -9,7 +9,8 @@
 * A query with host prefixes goes to the column filters of All hosts.
 * A query with service prefixes goes to the column filters of All services.
 
-What no page can filter on yet is rejected, as is an invalid query.
+An invalid query goes to the search box of All hosts as typed. One no page can filter on yet
+goes to the legacy search ``search_open.py`` and is logged by its prefixes and the reason.
 """
 
 from ._page import MonitorRouterPage, route

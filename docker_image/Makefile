@@ -4,6 +4,6 @@
 
 include ../defines.make
 
-needed-packages: ../omd/distros/UBUNTU_22.04.mk
+needed-packages: ../omd/distros/UBUNTU_24.04.mk
 	echo -e '.PHONY: needed-packages\nneeded-packages:\n\t@echo \$$(OS_PACKAGES) > needed-packages\n' | \
-	    make -f - -f ../omd/distros/UBUNTU_22.04.mk --no-print-directory needed-packages
+	    make -f - -f ../omd/distros/UBUNTU_24.04.mk --no-print-directory needed-packages

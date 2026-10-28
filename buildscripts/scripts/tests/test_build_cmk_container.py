@@ -150,7 +150,7 @@ def test_run_cmd_can_tolerate_failure(script: ModuleType) -> None:
 def test_needed_packages_collects_os_packages_lines(script: ModuleType, tmp_path: Path) -> None:
     mk_file = tmp_path / "distro.mk"
     mk_file.write_text(
-        "DISTRO_CODE = jammy\nOS_PACKAGES += libcap2 # capabilities\nOS_PACKAGES += curl\n"
+        "DISTRO_CODE = noble\nOS_PACKAGES += libcap2 # capabilities\nOS_PACKAGES += curl\n"
     )
 
     script.needed_packages(str(mk_file), str(tmp_path / "needed"))
@@ -372,7 +372,7 @@ def _write_source_artifacts(source_path: Path, architecture: str) -> None:
         content = b"FROM scratch\n"
         dockerfile.size = len(content)
         archive.addfile(dockerfile, io.BytesIO(content))
-    (source_path / f"check-mk-pro-2.4.0p1_0.jammy_{architecture}.deb").write_bytes(b"deb")
+    (source_path / f"check-mk-pro-2.4.0p1_0.noble_{architecture}.deb").write_bytes(b"deb")
 
 
 @pytest.mark.usefixtures("docker_cli")
@@ -385,7 +385,7 @@ def test_build_image_prepares_context_and_tags_result(
     source_path = tmp_path / "download"
     _write_source_artifacts(source_path, architecture)
     (tmp_path / "omd/distros").mkdir(parents=True)
-    (tmp_path / "omd/distros/UBUNTU_22.04.mk").write_text("OS_PACKAGES += libcap2\n")
+    (tmp_path / "omd/distros/UBUNTU_24.04.mk").write_text("OS_PACKAGES += libcap2\n")
     docker_client.images.add("checkmk/check-mk-pro:2.4.0p1")
 
     script.build_image(_args(source_path=str(source_path)), "", "checkmk", "2.4.0p1")
@@ -393,7 +393,7 @@ def test_build_image_prepares_context_and_tags_result(
     assert (source_path / "check-mk-pro-docker-2.4.0p1.tar.gz").exists()
     docker_path = Path(script.tmp_path) / "check-mk-pro-2.4.0p1/docker_image"
     assert (docker_path / "needed-packages").read_text() == "libcap2"
-    assert (docker_path / f"check-mk-pro-2.4.0p1_0.jammy_{architecture}.deb").exists()
+    assert (docker_path / f"check-mk-pro-2.4.0p1_0.noble_{architecture}.deb").exists()
     assert docker_client.images.images[-1].tags[-1] == "checkmk/check-mk-pro:2.4.0-daily"
 
 

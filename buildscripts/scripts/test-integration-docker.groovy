@@ -35,7 +35,7 @@ void main() {
     // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
     // this is save on master as there are no tags/versions built other than daily
     def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
-    def distro = "ubuntu-22.04";
+    def distro = "ubuntu-24.04";
     def make_target = "test-docker-docker";
     def package_dir = "${checkout_dir}/downloaded_packages_for_docker_tests";
     def relative_job_name = "${branch_base_folder}/builders/trigger-cmk-distro-package";

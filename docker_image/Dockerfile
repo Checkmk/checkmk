@@ -52,13 +52,20 @@ COPY needed-packages /needed-packages
 # Also ensure that we apply the latest updates. The base image might not always
 # be up-to-date, especially when they are pinned in our build environment.
 #
+# The base image's "ubuntu" user is removed to keep uid/gid 1000 free for the site user, see
+# docker-entrypoint.sh.
+#
+# systemd-standalone-sysusers satisfies cron's sysusers dependency, which apt would otherwise
+# resolve with the full systemd. With systemctl present, the agent package sets up its systemd
+# socket instead of the xinetd service that docker-entrypoint.sh starts.
+#
 # hadolint ignore=SC2046,DL3008
 RUN set -e \
     && echo "exit 101" > /usr/sbin/policy-rc.d \
     && chmod +x /usr/sbin/policy-rc.d \
     && export DEBIAN_FRONTEND=noninteractive \
-    && cp /etc/apt/sources.list /etc/apt/sources.list.bak \
-    && sed -i "s|http://.*.ubuntu.com/ubuntu|http://apt.lan.checkmk.net/ubuntu|g" /etc/apt/sources.list \
+    && cp /etc/apt/sources.list.d/ubuntu.sources /etc/apt/ubuntu.sources.bak \
+    && sed -i "s|http://.*.ubuntu.com/ubuntu|http://apt.lan.checkmk.net/ubuntu|g" /etc/apt/sources.list.d/ubuntu.sources \
     && apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
@@ -70,21 +77,22 @@ RUN set -e \
         gnupg2 \
         openssh-client \
         iputils-ping \
-        dpkg-sig \
         net-tools \
         git \
+        systemd-standalone-sysusers \
         $(cat needed-packages) \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \
     && rm -rf /var/lib/apt/lists/* \
     && rm needed-packages \
-    && mv /etc/apt/sources.list.bak /etc/apt/sources.list
+    && mv /etc/apt/ubuntu.sources.bak /etc/apt/sources.list.d/ubuntu.sources \
+    && if getent passwd ubuntu >/dev/null; then userdel --remove ubuntu; fi
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)
 ARG CMK_VERSION="3.0.0b1"
 ARG CMK_EDITION
 # Distro codename is used to find the corresponding .deb package
-ARG DISTRO_CODENAME="jammy"
+ARG DISTRO_CODENAME="noble"
 
 # Now install the Checkmk version specific things. The Checkmk package and the signing key
 # are read from the bind-mounted package-source stage, so they never end up in an image layer.

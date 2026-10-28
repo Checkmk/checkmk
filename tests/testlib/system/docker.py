@@ -53,7 +53,7 @@ logger = logging.getLogger()
 
 build_path = repo_path() / "docker_image"
 image_prefix = "docker-tests"
-DISTRO_CODENAME: Final = "jammy"  # ubuntu-22.04
+DISTRO_CODENAME: Final = "noble"  # ubuntu-24.04
 cse_config_root = Path("/tmp/cmk-docker-test/cse-config-volume")
 
 

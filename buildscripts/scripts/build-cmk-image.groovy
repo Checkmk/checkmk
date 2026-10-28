@@ -146,7 +146,7 @@ void main() {
                         CUSTOM_GIT_REF: effective_git_ref,
                         VERSION: params.VERSION,
                         EDITION: params.EDITION,
-                        DISTRO: "ubuntu-22.04",
+                        DISTRO: "ubuntu-24.04",
                         DISABLE_CACHE: disable_cache,
                         FAKE_ARTIFACTS: fake_artifacts,
                     ],

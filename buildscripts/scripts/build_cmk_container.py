@@ -508,7 +508,7 @@ def build_image(
     docker_image_archive = f"check-mk-{args.edition}-docker-{args.version}.tar.gz"
     pkg_name = f"check-mk-{args.edition}-{args.version}"
     architecture = run_cmd(cmd=["dpkg", "--print-architecture"]).stdout.strip()
-    pkg_file = f"{pkg_name}_0.jammy_{architecture}.deb"
+    pkg_file = f"{pkg_name}_0.noble_{architecture}.deb"
 
     LOG.debug("docker_path: %(docker_path)s", {"docker_path": docker_path})
     LOG.debug(
@@ -532,7 +532,7 @@ def build_image(
     if version_tag is None:
         raise Exception("Required VERSION_TAG is not set.")
     needed_packages(
-        mk_file="omd/distros/UBUNTU_22.04.mk", output_file=f"{docker_path}/needed-packages"
+        mk_file="omd/distros/UBUNTU_24.04.mk", output_file=f"{docker_path}/needed-packages"
     )
 
     build_tar_gz(

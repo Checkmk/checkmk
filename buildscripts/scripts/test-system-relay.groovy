@@ -66,7 +66,7 @@ void main() {
     def version = params.VERSION;
 
     def download_dir = "downloaded_packages_for_docker_tests/${cmk_version_rc_aware}";
-    def package_distro = "ubuntu-22.04";
+    def package_distro = "ubuntu-24.04";
     def make_target = "test-system-relay";
 
     def setup_values = single_tests.common_prepare(

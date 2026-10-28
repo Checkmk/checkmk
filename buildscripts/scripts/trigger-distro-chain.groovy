@@ -53,7 +53,7 @@ void main() {
 
     def builders_base_folder = "${branch_base_folder}/builders";
     def distros_component_mk_oracle_test = ["almalinux-8"];
-    def distros_container_integration_test = ["ubuntu-22.04"];
+    def distros_container_integration_test = ["ubuntu-24.04"];
     def distros_system_agent_update_test = ["ubuntu-24.04", "almalinux-10"];
     def edition_base_folder = "${branch_base_folder}/nightly-${edition}";
 

@@ -13,7 +13,7 @@ common: &common
 
 # A reduced set of distros for the daily builds
 # Containing only the latest version of each supported OS
-# ubuntu-22.04 is used as internal base image
+# ubuntu-24.04 is used as base of the Docker image
 daily_reduced: &daily_reduced
     - "almalinux-10"
     - "debian-13"

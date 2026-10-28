@@ -30,6 +30,7 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.regex import compile_search_pattern
 from cmk.gui.utils.rendering import set_inpage_search_result_info
 from cmk.gui.utils.urls import makeuri, requested_file_name
 
@@ -672,7 +673,7 @@ class Table:
 
 def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
     filtered_rows: TableRows = []
-    match_regex = re.compile(search_term, re.IGNORECASE)
+    match_regex = compile_search_pattern(search_term)
 
     for row in rows:
         if isinstance(row, GroupHeader) or row.fixed:

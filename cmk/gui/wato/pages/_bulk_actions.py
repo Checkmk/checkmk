@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import re
 from collections.abc import Callable, Sequence
 
 from cmk.utils.hostaddress import HostName
@@ -13,6 +12,7 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config
+from cmk.gui.utils.regex import compile_search_pattern
 from cmk.gui.watolib.hosts_and_folders import Folder, Host, SearchFolder
 
 
@@ -40,7 +40,7 @@ def _search_text_matches(
     host: Host,
     search_text: str,
 ) -> bool:
-    match_regex = re.compile(search_text, re.IGNORECASE)
+    match_regex = compile_search_pattern(search_text)
     for pattern in [
         host.name(),
         str(host.effective_attributes()),

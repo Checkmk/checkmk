@@ -49,7 +49,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
-from cmk.gui.utils.regex import validate_regex
+from cmk.gui.utils.regex import compile_search_pattern, validate_regex
 from cmk.gui.utils.rendering import set_inpage_search_result_info
 from cmk.gui.utils.sort import natural_sort
 from cmk.gui.utils.transaction_manager import transactions
@@ -776,7 +776,7 @@ class ModeFolder(WatoMode):
             )  # This won't hurt even if there are no visible subfolders
 
             if (searched_folder := request.var("search")) is not None:
-                match_regex = re.compile(searched_folder.lower(), re.IGNORECASE)
+                match_regex = compile_search_pattern(searched_folder)
                 search_results = 0
 
             subfolders_dict = {

@@ -72,7 +72,7 @@ export function useAllServicesColumns({
     sortDescFirst: false,
     minSize: 100,
     maxSize: 300,
-    meta: { filter: siteFilter }
+    meta: { filter: siteFilter, hidden: sites.length < 2 }
   }
 
   const serviceColumns = useHostServicesColumns<ServiceEntry>(options)

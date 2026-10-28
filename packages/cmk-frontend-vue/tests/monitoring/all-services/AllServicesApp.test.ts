@@ -119,11 +119,19 @@ test('lists the services of every host from the all services endpoint', async ()
   )
 })
 
-test('shows the site of each service by default', async () => {
+test('shows the site of each service by default when there is a remote site', async () => {
   mockServices([makeApiEntry()])
   renderApp()
 
   expect(await screen.findByRole('columnheader', { name: 'Site' })).toBeInTheDocument()
+})
+
+test('hides the site column by default without a remote site', async () => {
+  mockServices([makeApiEntry()])
+  renderApp({ sites: [{ id: 'local', alias: 'Local site' }] })
+
+  expect(await screen.findByRole('columnheader', { name: 'Host' })).toBeInTheDocument()
+  expect(screen.queryByRole('columnheader', { name: 'Site' })).not.toBeInTheDocument()
 })
 
 test('requests the services sorted by host name on a click of the Host header', async () => {

@@ -1221,6 +1221,7 @@ class TestMonitorHostOverview:
             "tags": {"criticality": "prod"},
             "labels": {"cmk/os_family": {"value": "linux", "source": "discovered"}},
             "legacy_host_status_link": "view.py?view_name=hoststatus&site=NO_SITE&host=heute",
+            "setup_access": False,
             "relations": [],
             "more_relations": False,
         }

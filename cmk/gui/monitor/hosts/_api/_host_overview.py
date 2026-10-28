@@ -196,6 +196,10 @@ class HostOverviewResponse:
         description="URL to legacy host status view",
         example="view.py?view_name=hoststatus&host=web-server-01&site=local",
     )
+    setup_access: bool = api_field(
+        description="Whether the user may open the host in Setup",
+        example=True,
+    )
     relations: list[RelatedHostInfo] = api_field(
         description=(
             "The hosts this host is related to via the Setup 'Relations' feature, in the order "
@@ -249,6 +253,7 @@ class HostOverviewResponse:
             tags=read(host.tags, "tags"),
             labels=read(host.labels, "labels"),
             legacy_host_status_link=host_view_link("hoststatus", host),
+            setup_access=read(host.setup_access, "setup_access"),
             relations=[RelatedHostInfo.from_domain(related) for related in host.relations],
             more_relations=host.more_relations,
         )

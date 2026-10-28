@@ -3,6 +3,22 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
+<script lang="ts">
+import type { HostEntry, HostRef } from '@/monitoring/shared/api/types'
+
+/**
+ * The host to detail: its reference, plus what the opening page already knows of it. The rest
+ * comes from the overview the slide-in loads.
+ */
+export type HostSlideInSubject = HostRef &
+  Partial<
+    Pick<
+      HostEntry,
+      'state' | 'stale' | 'is_flapping' | 'modes' | 'legacy_host_status_link' | 'setup_access'
+    >
+  >
+</script>
+
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
@@ -15,7 +31,7 @@ import { HOST_TAB_OVERVIEW } from '@/monitoring/all-hosts/slideInTabs'
 import EventHistoryApp from '@/monitoring/events/EventHistoryApp.vue'
 import { fetchEvents } from '@/monitoring/events/api'
 import { HostApi } from '@/monitoring/shared/api/hosts'
-import type { HostEntry, HostOverview, HostRef } from '@/monitoring/shared/api/types'
+import type { HostOverview } from '@/monitoring/shared/api/types'
 import HostHeader, { type HostHeaderSubject } from '@/monitoring/shared/components/HostHeader.vue'
 import ActionFeedback, {
   type ActionFeedback as ActionFeedbackResult
@@ -34,7 +50,7 @@ import HostOverviewTab from './slide-in/HostOverviewTab.vue'
 const props = withDefaults(
   defineProps<{
     /** The host to detail. `null` keeps the slide-in closed. */
-    host: HostEntry | null
+    host: HostSlideInSubject | null
     actions: MonitoringActionRegistry
     /** Row action buttons carrying the `{host}` placeholder, resolved here per host. */
     rowActions?: CellAction[]
@@ -102,7 +118,17 @@ const displayHost = computed<HostHeaderSubject | null>(() => {
   }
   const loaded = overview.value
   if (!loaded) {
-    return props.host
+    const { state } = props.host
+    return state === undefined
+      ? null
+      : {
+          name: props.host.name,
+          site_id: props.host.site_id,
+          state,
+          is_flapping: props.host.is_flapping ?? false,
+          stale: props.host.stale ?? false,
+          modes: props.host.modes ?? []
+        }
   }
   return {
     name: props.host.name,
@@ -173,22 +199,22 @@ const inlineActions = computed<CellAction[]>(() => {
   if (!host) {
     return []
   }
-  const statusAction: CellAction = {
-    id: 'show_status',
-    label: _t('Show host state'),
-    icon: 'folder',
-    url: host.legacy_host_status_link
-  }
+  const statusLink = overview.value?.legacy_host_status_link ?? host.legacy_host_status_link
+  const statusActions: CellAction[] =
+    statusLink === undefined
+      ? []
+      : [{ id: 'show_status', label: _t('Show host state'), icon: 'folder', url: statusLink }]
+  const setupAccess = overview.value?.setup_access ?? host.setup_access ?? false
   const labels: Record<string, CellAction['label']> = {
     edit: _t('Edit host properties'),
     parameters: _t('Show host parameters')
   }
-  const resolved = (host.setup_access ? props.rowActions : []).map((action) => ({
+  const resolved = (setupAccess ? props.rowActions : []).map((action) => ({
     ...action,
     label: labels[action.id] ?? action.label,
     url: action.url?.replace('{host}', encodeURIComponent(host.name))
   }))
-  return [statusAction, ...resolved]
+  return [...statusActions, ...resolved]
 })
 
 const actionMenuLoader = computed<(() => Promise<CellAction[]>) | undefined>(() => {

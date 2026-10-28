@@ -7,27 +7,24 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { HostState } from '../../api/types.ts'
 import HostStateDisplay from '../HostStateDisplay.vue'
-import BaseCell, { type CellLink } from './BaseCell.vue'
+import BaseCell from './BaseCell.vue'
 
 defineProps<{
   name: string
   state: HostState
-  linkedTo: CellLink
   columnId?: string | undefined
+}>()
+
+const emit = defineEmits<{
+  (event: 'open'): void
 }>()
 </script>
 
 <template>
-  <BaseCell :column-id="columnId">
+  <BaseCell :column-id="columnId" button @click="emit('open')">
     <div class="monitoring-host-cell">
       <HostStateDisplay class="monitoring-host-cell__state" :state="state" inline />
-      <a
-        class="monitoring-host-cell__name"
-        :href="linkedTo.href"
-        :target="linkedTo.target"
-        :title="name"
-        >{{ name }}</a
-      >
+      <span class="monitoring-host-cell__name" :title="name">{{ name }}</span>
     </div>
   </BaseCell>
 </template>
@@ -50,11 +47,5 @@ defineProps<{
   min-width: 0;
   overflow: hidden;
   overflow-wrap: anywhere;
-  color: var(--font-color);
-  text-decoration: underline;
-
-  &:hover {
-    text-decoration: none;
-  }
 }
 </style>

@@ -14,6 +14,11 @@ import { useKeyboardHints } from 'cmk-ui-library/lib/keyboardHelp'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
 import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
+import HostSlideIn, {
+  type HostSlideInSubject
+} from '@/monitoring/all-hosts/components/HostSlideIn.vue'
+import { HOST_TAB_OVERVIEW } from '@/monitoring/all-hosts/slideInTabs'
+import { useHostActions } from '@/monitoring/all-hosts/useHostActions'
 import { ServiceActionMenuApi } from '@/monitoring/host-services/api/actionMenu'
 import { uncapNameWithoutSummary } from '@/monitoring/host-services/columns'
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
@@ -59,6 +64,7 @@ import { readTableStateFromUrl, tableStateWriter } from '@/monitoring/shared/tab
 import { filterTimestampsAsShown } from '@/monitoring/shared/timestampFilters'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import {
+  type SlideInListing,
   type SlideInUrlDescriptor,
   exactPattern,
   readSlideInFromHash,
@@ -206,7 +212,8 @@ function loadSlideInActionMenu(service: string): Promise<CellAction[]> {
   return loadActionMenu(slideInHost.value, service)
 }
 
-function openSlideIn(service: ServiceEntry): void {
+function openServiceSlideIn(service: ServiceEntry): void {
+  closeHostSlideIn()
   if (slideInService.value === null) {
     allServicesService.beginAutoPause()
   }
@@ -215,14 +222,38 @@ function openSlideIn(service: ServiceEntry): void {
 
 function openServiceGraphs(service: ServiceEntry): void {
   slideInTabId.value = SERVICE_GRAPHS_TAB_ID
-  openSlideIn(service)
+  openServiceSlideIn(service)
 }
 
-function closeSlideIn(): void {
+function closeServiceSlideIn(): void {
   if (slideInService.value !== null) {
     allServicesService.endAutoPause()
   }
   slideInService.value = null
+}
+
+const hostActions = useHostActions({
+  ...props,
+  actions: props.host_actions ?? [],
+  row_actions: props.host_row_actions ?? []
+})
+const slideInHostEntry = ref<HostSlideInSubject | null>(null)
+const hostSlideInTabId = ref<string | undefined>(undefined)
+
+function openHostSlideIn(entry: HostSlideInSubject): void {
+  closeServiceSlideIn()
+  if (slideInHostEntry.value === null) {
+    allServicesService.beginAutoPause()
+  }
+  slideInHostEntry.value = entry
+}
+
+function closeHostSlideIn(): void {
+  if (slideInHostEntry.value !== null) {
+    allServicesService.endAutoPause()
+  }
+  slideInHostEntry.value = null
+  hostSlideInTabId.value = undefined
 }
 
 const SERVICE_SLIDE_IN: SlideInUrlDescriptor<ServiceEntry, ServiceRef> = {
@@ -268,6 +299,28 @@ const SERVICE_SLIDE_IN: SlideInUrlDescriptor<ServiceEntry, ServiceRef> = {
   }
 }
 
+const HOST_SLIDE_IN: SlideInUrlDescriptor<HostSlideInSubject, HostRef> = {
+  keys: ['slide_in_host', 'slide_in_site'],
+  tabKey: 'host_tab',
+  defaultTabId: HOST_TAB_OVERVIEW,
+  encode: (entry) => ({ slide_in_host: entry.name, slide_in_site: entry.site_id }),
+  decode: (params) => {
+    const name = params['slide_in_host']
+    const siteId = params['slide_in_site']
+    return name === undefined || name === '' || siteId === undefined || siteId === ''
+      ? null
+      : { name, site_id: siteId }
+  },
+  matches: (entry, identity) => entry.name === identity.name && entry.site_id === identity.site_id,
+  load: (identity) => Promise.resolve({ name: identity.name, site_id: identity.site_id })
+}
+
+const hostListing: SlideInListing<HostSlideInSubject> = {
+  hasLoaded: allServicesService.hasLoaded,
+  items: computed<HostSlideInSubject[]>(() => []),
+  revealRow: () => {}
+}
+
 useUrlSync([
   tableStateWriter(allServicesService, schema),
   filterStateWriter(allServicesService),
@@ -278,8 +331,17 @@ useUrlSync([
     current: slideInService,
     tabId: slideInTabId,
     initial: readSlideInFromHash(SERVICE_SLIDE_IN, window.location.hash),
-    open: openSlideIn,
-    close: closeSlideIn
+    open: openServiceSlideIn,
+    close: closeServiceSlideIn
+  }),
+  slideInWriter({
+    descriptor: HOST_SLIDE_IN,
+    service: hostListing,
+    current: slideInHostEntry,
+    tabId: hostSlideInTabId,
+    initial: readSlideInFromHash(HOST_SLIDE_IN, window.location.hash),
+    open: openHostSlideIn,
+    close: closeHostSlideIn
   })
 ])
 
@@ -352,8 +414,9 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
             :may-reschedule="serviceListing.mayReschedule"
             :load-action-menu="(service: string) => loadActionMenu(hostOf(row), service)"
             :display-options="displayOptions"
-            @open="openSlideIn(row)"
+            @open="openServiceSlideIn(row)"
             @open-graphs="openServiceGraphs(row)"
+            @open-host="openHostSlideIn"
             @command="
               (command) =>
                 onCommand({
@@ -385,7 +448,18 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :actions="serviceListing.registry"
         :permitted-actions="serviceListing.permittedActions"
         :load-action-menu="loadSlideInActionMenu"
-        @close="closeSlideIn"
+        @close="closeServiceSlideIn"
+        @performed="onActionPerformed"
+      />
+      <HostSlideIn
+        v-model:active-tab-id="hostSlideInTabId"
+        :display-options="displayOptions"
+        :host="slideInHostEntry"
+        :actions="hostActions.registry"
+        :row-actions="hostActions.rowActions"
+        :permitted-actions="hostActions.permittedActions"
+        :load-action-menu="hostActions.loadActionMenu"
+        @close="closeHostSlideIn"
         @performed="onActionPerformed"
       />
       <TypeToFocusIndicator

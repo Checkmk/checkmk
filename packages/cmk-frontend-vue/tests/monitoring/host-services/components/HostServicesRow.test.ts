@@ -580,11 +580,20 @@ test('renders the host and site of a row that names its host after the summary',
     'host_name',
     'site_id'
   ])
-  expect(screen.getByRole('link', { name: 'web-2' })).toHaveAttribute(
-    'href',
-    expect.stringContaining('monitor_host_services.py?host=web-2&site=remote')
-  )
+  expect(screen.getByText('web-2')).toBeInTheDocument()
   expect(screen.getByText('remote')).toBeInTheDocument()
+})
+
+test('opens the host on a click anywhere in its cell, its state included', async () => {
+  const openHost = vi.fn()
+  const { container } = mountRow(makeServiceOfHost(), makeTableRow(), { onOpenHost: openHost })
+  const hostCell = container.querySelector('[data-column-id="host_name"]') as HTMLElement
+
+  await userEvent.click(within(hostCell).getByText('UP'))
+  await userEvent.click(within(hostCell).getByText('web-2'))
+
+  expect(openHost).toHaveBeenCalledTimes(2)
+  expect(openHost).toHaveBeenLastCalledWith({ name: 'web-2', site_id: 'remote', state: 'UP' })
 })
 
 test('renders no host cells in a layout without the host and site columns', () => {
@@ -617,8 +626,5 @@ test('shows the state of the host beside its name', () => {
 
   const hostCell = container.querySelector('[data-column-id="host_name"]') as HTMLElement
   expect(within(hostCell).getByText('DO')).toBeInTheDocument()
-  expect(within(hostCell).getByRole('link', { name: 'web-2' })).toHaveAttribute(
-    'href',
-    expect.stringContaining('monitor_host_services.py?host=web-2&site=remote')
-  )
+  expect(within(hostCell).getByText('web-2')).toBeInTheDocument()
 })

@@ -29,7 +29,6 @@ import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
-import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
@@ -54,6 +53,7 @@ const { _t } = usei18n()
 const emit = defineEmits<{
   (event: 'open', service: HostServiceEntry): void
   (event: 'openGraphs', service: HostServiceEntry): void
+  (event: 'openHost', host: HostRef & { state: HostState }): void
   (event: 'command', payload: { id: string; target: string }): void
   (event: 'explain', service: HostServiceEntry): void
 }>()
@@ -181,7 +181,7 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
       column-id="host_name"
       :name="host.name"
       :state="host.state"
-      :linked-to="{ href: hostServicesPageUrl(host), target: '_top' }"
+      @open="emit('openHost', host)"
     />
     <StringCell v-if="hasColumn('site_id')" column-id="site_id" :value="host.site_id" />
   </template>

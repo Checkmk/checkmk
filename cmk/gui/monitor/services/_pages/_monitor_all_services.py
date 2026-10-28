@@ -20,6 +20,8 @@ from cmk.gui.monitor.command import (
     downtime_presets,
     downtime_presets_url,
     DowntimeRecurrences,
+    host_setup_links,
+    HOST_SUPPORTED_ACTIONS,
     MonitorCommands,
     notification_rules_url,
 )
@@ -41,6 +43,7 @@ from cmk.shared_typing.monitoring.all_services import (
     MonitoringAction,
     MonitoringAllServicesApp,
     MonitoringPageLinkButton,
+    RowAction,
     Site,
 )
 from cmk.utils import paths
@@ -133,6 +136,18 @@ class MonitorAllServicesPage(Page):
                         for command in self._commands.permitted_actions(
                             user, "service", SERVICE_SUPPORTED_ACTIONS
                         )
+                    ],
+                    host_actions=[
+                        MonitoringAction(
+                            ident=command.ident, title=str(command.title), icon=command.icon
+                        )
+                        for command in self._commands.permitted_actions(
+                            user, "host", HOST_SUPPORTED_ACTIONS
+                        )
+                    ],
+                    host_row_actions=[
+                        RowAction(ident=link.ident, title=link.title, icon=link.icon, url=link.url)
+                        for link in host_setup_links(ctx.config, user)
                     ],
                     downtime_recurrences=[
                         DowntimeRecurrence(recur=recurrence.recur, title=recurrence.title)

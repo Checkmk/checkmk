@@ -11,6 +11,7 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import AllServicesApp from '@/monitoring/all-services/AllServicesApp.vue'
+import type { HostEntry } from '@/monitoring/shared/api/types'
 
 type MonitoringAction = NonNullable<MonitoringAllServicesApp['actions']>[number]
 
@@ -196,20 +197,10 @@ describe('with the rows laid out', () => {
     }
   })
 
-  test('links the host of each service to its Services of host page', async () => {
-    mockServices([makeApiEntry()])
-    renderApp()
-
-    expect(await screen.findByRole('link', { name: 'web-2' })).toHaveAttribute(
-      'href',
-      expect.stringContaining('monitor_host_services.py?host=web-2&site=remote')
-    )
-  })
-
   test('lays out the cells of each row under the headers of their columns', async () => {
     mockServices([makeApiEntry()])
     renderApp()
-    await screen.findByRole('link', { name: 'web-2' })
+    await screen.findByText('web-2')
 
     const headers = screen.getAllByRole('columnheader')
     const cells = [...screen.getAllByRole('row')[1]!.querySelectorAll('[data-column-id]')]
@@ -307,6 +298,86 @@ describe('with the rows laid out', () => {
       'remote',
       'CPU load'
     ])
+  })
+
+  const HOST: HostEntry = {
+    name: 'web-2',
+    state: 'DOWN',
+    is_flapping: false,
+    stale: false,
+    site_id: 'remote',
+    address: '10.0.0.2',
+    num_services: 1,
+    num_services_ok: 1,
+    num_services_warn: 0,
+    num_services_crit: 0,
+    num_services_unknown: 0,
+    num_services_pending: 0,
+    legacy_host_status_link: 'view.py?view_name=hoststatus&site=remote&host=web-2',
+    num_relations: 0
+  }
+
+  function mockServicesAndHost(): ReturnType<typeof vi.fn> {
+    const hostsPost = vi.fn()
+    postSpy.mockImplementation((path: string, init: unknown) => {
+      if (path === '/monitor/hosts') {
+        hostsPost(init)
+        return Promise.resolve({
+          data: { hosts: [HOST], meta: { limit: 1, matched: 1, total: 1, fields: [] } },
+          error: undefined,
+          response: new Response()
+        }) as never
+      }
+      return Promise.resolve({
+        data: {
+          services: [makeApiEntry({ host_name: 'web-2', site_id: 'remote' })],
+          meta: { limit: 1000, matched: 1, total: 1 }
+        },
+        error: undefined,
+        response: new Response()
+      }) as never
+    })
+    return hostsPost
+  }
+
+  test('opens the host slide-in of the row without fetching the host again', async () => {
+    const hostsPost = mockServicesAndHost()
+    renderApp({
+      host_actions: [{ ident: 'reschedule', title: 'Reschedule host check', icon: 'reload' }]
+    })
+
+    await userEvent.click(await screen.findByText('web-2'))
+
+    expect(await screen.findByRole('button', { name: 'Reschedule host check' })).toBeInTheDocument()
+    expect(hostsPost).not.toHaveBeenCalled()
+  })
+
+  test('names the host it shows in the URL fragment apart from a service', async () => {
+    mockServicesAndHost()
+    renderApp()
+
+    await userEvent.click(await screen.findByText('web-2'))
+    await screen.findByText('Host details')
+
+    const fragment = new URLSearchParams(window.location.hash.slice(1))
+    expect([fragment.get('slide_in_host'), fragment.get('slide_in_site')]).toEqual([
+      'web-2',
+      'remote'
+    ])
+    expect(fragment.has('host')).toBe(false)
+  })
+
+  test('opens the host slide-in from a link naming its host', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/monitor_all_services.py#slide_in_host=web-2&slide_in_site=remote'
+    )
+    const hostsPost = mockServicesAndHost()
+    renderApp()
+
+    expect(await screen.findByText('Host details')).toBeInTheDocument()
+    expect(hostsPost).not.toHaveBeenCalled()
   })
 })
 

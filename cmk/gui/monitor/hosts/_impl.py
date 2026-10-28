@@ -308,6 +308,7 @@ class LiveStatusHostRepository:
             # The overview does not expose contacts, so its query does not read them.
             contacts=[],
             labels=HostLabelValue.by_label(row["labels"], row["label_sources"]),
+            setup_access=self._setup_access(row["name"], row["filename"]),
             relations=relations,
             more_relations=more_relations,
         )

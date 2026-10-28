@@ -10,7 +10,9 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { h as createElement, defineComponent, markRaw } from 'vue'
 
-import HostSlideIn from '@/monitoring/all-hosts/components/HostSlideIn.vue'
+import HostSlideIn, {
+  type HostSlideInSubject
+} from '@/monitoring/all-hosts/components/HostSlideIn.vue'
 import type { HostEntry, HostOverview } from '@/monitoring/shared/api/types'
 import type { ActionFeedback } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import { ACK_ACTION_ID } from '@/monitoring/shared/components/action/actions/acknowledge'
@@ -78,6 +80,7 @@ function makeHostOverview(overrides: Partial<HostOverview> = {}): HostOverview {
     last_check: 0,
     last_state_change: 0,
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=host-1',
+    setup_access: false,
     relations: [],
     more_relations: false,
     ...overrides
@@ -120,7 +123,7 @@ const EDIT_HOST: CellAction = {
 
 function renderSlideIn(
   actions: MonitoringActionRegistry,
-  host: HostEntry | null = makeHost(),
+  host: HostSlideInSubject | null = makeHost(),
   permittedActions: CellAction[] = PERMITTED_ACTIONS,
   rowActions: CellAction[] = []
 ) {
@@ -332,6 +335,23 @@ describe('HostSlideIn', () => {
       expect(screen.queryByRole('link', { name: 'Edit host properties' }) !== null).toBe(shown)
     }
   )
+
+  it('takes the status and Setup links of a host given by reference from its overview', async () => {
+    vi.spyOn(client, 'GET').mockResolvedValue({
+      data: makeHostOverview({ setup_access: true }),
+      error: undefined,
+      response: new Response()
+    } as never)
+    renderSlideIn(
+      makeRegistry(vi.fn()),
+      { name: 'host-1', site_id: 'local', state: 'UP' },
+      [],
+      [EDIT_HOST]
+    )
+
+    expect(await screen.findByRole('link', { name: 'Edit host properties' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Show host state' })).toBeInTheDocument()
+  })
 
   it('leaves out a permitted action this page cannot perform', async () => {
     renderSlideIn(makeRegistry(vi.fn()), makeHost(), [

@@ -22,6 +22,18 @@
     },
     "export_event": {
       "type": "string"
+    },
+    "host_actions": {
+      "description": "The commands the user may run on a host, offered in the host slide-in.",
+      "type": "array",
+      "items": { "$ref": "monitoring/_base.json#/$defs/monitoring_action" },
+      "default": []
+    },
+    "host_row_actions": {
+      "description": "Setup links of a host, offered in the host slide-in.",
+      "type": "array",
+      "items": { "$ref": "monitoring/_base.json#/$defs/row_action" },
+      "default": []
     }
   },
   "required": ["user_id", "site", "sites", "edition", "export_event"]

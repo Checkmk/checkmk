@@ -982,3 +982,32 @@ def test_fetch_leaves_setup_access_unread_unless_asked_for() -> None:
 
     assert host.setup_access is None
     assert setup.asked == []
+
+
+@pytest.mark.parametrize(
+    "filename, expected",
+    [
+        pytest.param("/wato/web_dmz/hosts.mk", True, id="readable in its folder"),
+        pytest.param("/wato/network/hosts.mk", False, id="restricted in its folder"),
+    ],
+)
+def test_get_overview_asks_setup_whether_the_host_may_be_opened_in_its_folder(
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    mock_livestatus: MockLiveStatusConnection,
+    filename: str,
+    expected: bool,
+) -> None:
+    setup = _SetupHostAccess(frozenset({("board", "web_dmz")}))
+    mock_livestatus.add_table("hosts", [{**_overview_row("board", []), "filename": filename}])
+    mock_livestatus.expect_query(
+        ["GET hosts", "Filter: name = board"], match_type="loose", sites=["NO_SITE"]
+    )
+
+    with mock_livestatus(expect_status_query=True):
+        host = LiveStatusHostRepository(
+            connection=sites.live(),
+            folders=setup.folders(),
+            read_unavailable_sites=frozenset,
+        ).get_overview(hostname="board", site_id="NO_SITE")
+
+    assert host.setup_access is expected

@@ -24,6 +24,7 @@ from unittest.mock import MagicMock
 import httpx2
 import pytest
 from fake_connection import FakeConnection
+from fake_links import FakeLinkGui
 from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
 from starlette.types import Message
@@ -195,7 +196,7 @@ def test_broadcast_loop_exits_immediately_without_subscribers() -> None:
     # No subscriber → the while guard is false on entry, the loop returns at once
     # and the finally block cleans up (no lingering task registration).
     map_key = states._map_key("alice", "b1")  # noqa: SLF001
-    asyncio.run(states._broadcast_loop(map_key))  # noqa: SLF001
+    asyncio.run(states._broadcast_loop(map_key, FakeLinkGui()))  # noqa: SLF001
     assert map_key not in states._broadcast_tasks  # noqa: SLF001
 
 
@@ -227,7 +228,7 @@ def test_broadcast_loop_survives_and_continues_after_a_failing_tick(
     monkeypatch.setattr(asyncio, "sleep", _fake_sleep)
 
     # Must not propagate the tick's RuntimeError, and must keep looping past it.
-    asyncio.run(states._broadcast_loop(map_key))  # noqa: SLF001
+    asyncio.run(states._broadcast_loop(map_key, FakeLinkGui()))  # noqa: SLF001
 
     assert calls["n"] == 2  # a failing tick did not kill the loop; it ran again
     assert map_key not in states._broadcast_tasks  # noqa: SLF001
@@ -267,7 +268,7 @@ def test_broadcast_loop_newcomer_gets_full_established_gets_delta(
         manager.unsubscribe(map_key, newcomer)
 
     monkeypatch.setattr(asyncio, "sleep", _fake_sleep)
-    asyncio.run(states._broadcast_loop(map_key))  # noqa: SLF001
+    asyncio.run(states._broadcast_loop(map_key, FakeLinkGui()))  # noqa: SLF001
 
     est_event = established.queue.get_nowait()
     new_event = newcomer.queue.get_nowait()

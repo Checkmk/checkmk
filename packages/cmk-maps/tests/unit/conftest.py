@@ -66,6 +66,7 @@ def _clear_map_caches() -> Iterator[None]:
     a map registered by one route test cannot bleed into the next."""
     yield
     map_service._CACHE.clear()  # noqa: SLF001
+    map_service._LINKED.clear()  # noqa: SLF001
     state_service._state_snapshots.clear()  # noqa: SLF001
     state_service._timing_snapshots.clear()  # noqa: SLF001
     state_service._folder_tree_snapshots.clear()  # noqa: SLF001

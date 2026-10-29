@@ -93,6 +93,66 @@ def test_access_is_reserved_for_the_site(
     resp.assert_status_code(HTTPStatus.UNAUTHORIZED)
 
 
+def _link_targets(resp_json: dict[str, list[dict[str, str]]]) -> dict[str, tuple[str, bool]]:
+    return {t["name"]: (t["owner"], "config_b64" in t) for t in resp_json["targets"]}
+
+
+def test_link_targets_are_the_maps_the_user_sees_with_their_config(
+    clients: ClientRegistry, with_user: tuple[UserId, str]
+) -> None:
+    clients.Maps.create(
+        config=_map("shared"), visibility={"publish": "all", "hide_in_monitor_menu": False}
+    )
+    clients.Maps.create(config=_map("private"))
+    resp = clients.Maps.resolve_link_targets(
+        {"user_id": with_user[0], "names": ["shared", "private", "all_hosts", "missing"]},
+        headers=_internal_token(),
+    )
+    automation_user = clients.Maps.get("shared").json["extensions"]["owner"]
+    assert _link_targets(resp.json) == {"shared": (automation_user, True), "all_hosts": ("", True)}
+
+
+def test_a_link_target_the_daemon_holds_comes_without_its_config(
+    clients: ClientRegistry, with_user: tuple[UserId, str]
+) -> None:
+    resp = clients.Maps.resolve_link_targets(
+        {
+            "user_id": with_user[0],
+            "names": ["all_hosts"],
+            "cached": [{"owner": "", "name": "all_hosts"}],
+        },
+        headers=_internal_token(),
+    )
+    assert _link_targets(resp.json) == {"all_hosts": ("", False)}
+
+
+@pytest.mark.usefixtures("with_automation_user")
+def test_link_targets_without_a_user_are_built_in_maps_only(clients: ClientRegistry) -> None:
+    clients.Maps.create(
+        config=_map("floor"), visibility={"publish": "all", "hide_in_monitor_menu": False}
+    )
+    resp = clients.Maps.resolve_link_targets(
+        {"names": ["floor", "all_hosts"]}, headers=_internal_token()
+    )
+    assert _link_targets(resp.json) == {"all_hosts": ("", True)}
+
+
+def test_link_targets_of_a_user_who_is_gone_are_none(clients: ClientRegistry) -> None:
+    resp = clients.Maps.resolve_link_targets(
+        {"user_id": "gone", "names": ["all_hosts"]}, headers=_internal_token()
+    )
+    assert resp.json == {"targets": []}
+
+
+def test_link_targets_are_reserved_for_the_site(
+    clients: ClientRegistry, with_user: tuple[UserId, str]
+) -> None:
+    resp = clients.Maps.resolve_link_targets(
+        {"user_id": with_user[0], "names": ["all_hosts"]}, expect_ok=False
+    )
+    resp.assert_status_code(HTTPStatus.UNAUTHORIZED)
+
+
 @pytest.mark.usefixtures("request_context")
 def test_force_check_reschedules_the_host(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection

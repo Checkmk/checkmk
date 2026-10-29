@@ -415,12 +415,16 @@ def resolve_map_link_titles(
     return titles
 
 
-def serialize_map(page: MapPage, *, can_edit: bool, can_delete: bool) -> MapObject:
-    cfg = page.config
+def resolved_spec(page: MapPage) -> dict[str, object]:
     # Fold the authoritative pagetype name into the config, so a stored spec
     # whose ``name`` drifted from the pagetype key (a clone/rename/migration)
     # can't be signed — and thus relayed to the daemon — under a foreign map name.
-    spec = {**dict(cfg.map_spec), "name": cfg.name}
+    return {**dict(page.config.map_spec), "name": page.config.name}
+
+
+def serialize_map(page: MapPage, *, can_edit: bool, can_delete: bool) -> MapObject:
+    cfg = page.config
+    spec = resolved_spec(page)
     # Sign the resolved config so the SPA can relay {config_b64, sig} to the Maps
     # daemon's register endpoint (verified there against the owner the GUI names for the map) — the
     # same bytes the daemon renders.

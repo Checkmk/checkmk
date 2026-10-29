@@ -51,6 +51,7 @@ from cmk.maps.backend.schemas.stream import (
 )
 from cmk.maps.backend.schemas.topology import TopologyNode
 from cmk.maps.backend.services import map_service, settings_service, state_service
+from cmk.maps.backend.services.map_service import LinkSource
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +175,7 @@ async def _push_topology_to(
     manager.push(map_key, targets, MAP_EVENTS.encode(msg))
 
 
-async def _broadcast_loop(map_key: str) -> None:
+async def _broadcast_loop(map_key: str, links: LinkSource) -> None:
     """Fetch states once per interval and push to all subscribers.
 
     With CHECKMK_OMD_ROOT, subscribers are grouped by auth_user and each group
@@ -219,6 +220,8 @@ async def _broadcast_loop(map_key: str) -> None:
                             cfg,
                             auth_user=auth_user,
                             folder_scope=rep.folder_scope,
+                            map_owner=owner,
+                            links=links,
                         )
                         to_send, removed_ids, is_full, timing = state_service.compute_states_delta(
                             map_key, group_key, states.states
@@ -294,6 +297,7 @@ _RADAR_FILTERS: set[str] = {"hostgroup", "servicegroup", "all_hosts", "all_servi
 @router.get("/maps/{name}/states", response_model=MapStates)
 async def get_map_states(
     name: MapName,
+    auth: GuiAuthDep,
     current_user: Principal = Depends(rate_limited_map_read),
     radar_filter: str | None = None,
     radar_filter_value: str | None = None,
@@ -351,6 +355,8 @@ async def get_map_states(
         cfg,
         auth_user=auth_user,
         folder_scope=folder_scope,
+        map_owner=current_user.map_key_owner,
+        links=auth,
     )
     return Response(content=states.model_dump_json(), media_type="application/json")
 
@@ -578,7 +584,7 @@ async def _subscribe_to_stream(
         # on a fresh Subscriber), and the broadcast loop sends it a full built from
         # the same fetch — re-fulling only this client, not the whole group.
         if map_key not in _broadcast_tasks or _broadcast_tasks[map_key].done():
-            _broadcast_tasks[map_key] = asyncio.create_task(_broadcast_loop(map_key))
+            _broadcast_tasks[map_key] = asyncio.create_task(_broadcast_loop(map_key, auth))
 
         # First-paint topology for Flow Maps so the client doesn't wait a full
         # broadcast tick before the initial render. ``store=False`` keeps the shared

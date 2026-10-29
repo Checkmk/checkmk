@@ -26,6 +26,7 @@ from cmk.gui.openapi.framework.model.converter import (
 from cmk.maps.gui._cfg_import import MAX_CFG_BYTES
 from cmk.maps.gui._commands import MapCommandVerb
 from cmk.maps.gui._images import MAX_BACKGROUND_BYTES, MAX_ICON_BYTES
+from cmk.maps.shared.map_links import CACHED_MAP_REFS_MAX, LINKED_MAPS_MAX
 from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
 
 # A site the caller may see. ``should_be_authorized`` rather than ``should_exist``
@@ -33,6 +34,10 @@ from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
 # 18994) -- this is a monitoring endpoint.
 type AnnotatedSiteId = Annotated[
     SiteId, TypedPlainValidator(str, SiteIdConverter.should_be_authorized)
+]
+
+type AnnotatedMapName = Annotated[
+    str, Field(pattern=MAP_NAME_PATTERN, max_length=MAP_NAME_MAX_LENGTH)
 ]
 
 # The SPA truncates deep BI trees for rendering; the server caps too so a crafted
@@ -205,6 +210,33 @@ class MapsAccessRequest:
         description="The user the daemon identified from their GUI session.",
         example="cmkadmin",
     )
-    name: Annotated[str, Field(pattern=MAP_NAME_PATTERN, max_length=MAP_NAME_MAX_LENGTH)] = (
-        api_field(description="The name of the map the user opened.", example="datacenter-muc")
+    name: AnnotatedMapName = api_field(
+        description="The name of the map the user opened.", example="datacenter-muc"
+    )
+
+
+@api_model
+class MapsMapRef:
+    owner: str = api_field(description="The owner of the map, empty for a built-in map.")
+    name: AnnotatedMapName = api_field(description="The name of the map.")
+
+
+@api_model
+class MapsLinkTargetsRequest:
+    user_id: Annotated[str, TypedPlainValidator(str, UserConverter.valid_user_id)] | ApiOmitted = (
+        api_field(
+            description=(
+                "The user whose view of the names counts, who may no longer exist. "
+                "Absent for built-in maps only."
+            ),
+            default_factory=ApiOmitted,
+            example="cmkadmin",
+        )
+    )
+    names: Annotated[list[AnnotatedMapName], Field(max_length=LINKED_MAPS_MAX)] = api_field(
+        description="The map names the links give.", example=["datacenter-muc"]
+    )
+    cached: Annotated[list[MapsMapRef], Field(max_length=CACHED_MAP_REFS_MAX)] = api_field(
+        description="The maps the daemon holds already, which come without their config.",
+        default_factory=list,
     )

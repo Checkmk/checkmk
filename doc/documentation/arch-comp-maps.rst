@@ -321,6 +321,12 @@ OpenAPI types, not from hand-written copies.
      - **Only for the daemon** (site-internal secret, no session). Which map a
        user sees under a name, and its owner. See `Authentication`_.
    * - POST
+     - ``domain-types/maps_link_targets/actions/resolve/invoke``
+     - **Only for the daemon** (site-internal secret, no session). Which maps
+       the names of map links mean to a user, or among the built-in maps, with
+       the signed config of each the daemon does not hold. See
+       `Map configs in the daemon`_.
+   * - POST
      - ``domain-types/maps_command/actions/run/invoke``
      - Monitoring commands Checkmk's REST API has no endpoint for. See
        `Monitoring commands`_.
@@ -683,8 +689,10 @@ reads the session cookie from each request and asks the GUI about it:
 * ``maps_access/resolve`` answers which map the user sees under a name, and its
   owner, with the same pagetype logic as the GUI. A name the user sees no map
   under is answered with 404.
+* ``maps_link_targets/resolve`` answers the same for the names of map links,
+  see `Map configs in the daemon`_.
 
-Both endpoints accept only the site-internal secret. If the GUI cannot be asked
+These endpoints accept only the site-internal secret. If the GUI cannot be asked
 or gives an unexpected answer, the daemon answers 503 and does not cache it.
 
 The daemon keeps the identity per session (keyed by a hash of the cookie) and the
@@ -789,8 +797,17 @@ subscriber gets a full state once; everybody else receives changes only. A
 subscriber whose queue (64 messages) overflows is disconnected and reconnects
 with a fresh full state.
 
-**Map links.** A map object that links to another map is resolved by name among
-the registered configs. The linked states are fetched under the viewer's
+**Map links.** A map object that links to another map names it without an
+owner. For a viewer restricted to their contact groups, the link means the map
+the GUI resolves that name to for them, the one the link opens. For a viewer
+who sees all monitoring data, it means the map the linking map's owner sees
+under that name, so those viewers keep sharing one fetch; a link of a built-in
+map means a built-in map. A name the user sees no map under stays pending. The
+daemon asks the GUI for the names of a fetch together and keeps each answer per
+user for 60 seconds. A linked map nobody has opened since the daemon started
+comes with its signed config, which the daemon keeps apart from the opened maps
+and fetches again after five minutes, so links resolve after a restart too and
+follow saves of that map. The linked states are fetched under the viewer's
 AuthUser.
 
 Handling untrusted input

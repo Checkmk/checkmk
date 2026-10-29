@@ -12,8 +12,13 @@ persistence lives entirely in the GUI.
 """
 
 import threading
+import time
 from collections import OrderedDict
+from collections.abc import Mapping, Sequence
+from collections.abc import Set as AbstractSet
+from typing import Protocol
 
+from cmk.maps.backend.core.auth import LinkTarget
 from cmk.maps.backend.schemas.map import MapConfig
 
 # Keyed by (owner, name): maps are per-user visuals, so two users can each own a
@@ -45,17 +50,59 @@ def register_map(owner: str, cfg: MapConfig) -> None:
 
 
 def get_map(owner: str, name: str) -> MapConfig | None:
+    """The map registered under exactly this owner."""
     with _CACHE_GUARD:
         cached = _CACHE.get((owner, name))
         if cached is not None:
             _CACHE.move_to_end((owner, name))
-        if cached is None and not owner:
-            # Name-only fallback ONLY for the owner-less nested map-link roll-up
-            # (state_service passes owner=""). A request that carries a real owner
-            # must match exactly, so a user can never pull another user's
-            # (possibly private) map config by guessing its name.
-            for (_cached_owner, cached_name), cfg in _CACHE.items():
-                if cached_name == name:
-                    cached = cfg
-                    break
     return cached.model_copy(deep=True) if cached is not None else None
+
+
+# Maps fetched only because a link names them. Kept apart, so they never push a
+# map someone has open out of the cache, and fetched again after a while, so a
+# change that reached no open view reaches the links too.
+_LINKED_FOR = 300.0
+_LINKED: OrderedDict[tuple[str, str], tuple[float, MapConfig]] = OrderedDict()
+
+
+class LinkSource(Protocol):
+    async def link_targets(
+        self,
+        as_user: str,
+        names: Sequence[str],
+        held: AbstractSet[tuple[str, str]],
+        *,
+        now: float,
+    ) -> Mapping[str, LinkTarget]: ...
+
+
+async def find_link_targets(
+    source: LinkSource, as_user: str, names: Sequence[str]
+) -> dict[str, tuple[str, MapConfig]]:
+    """The maps ``as_user`` sees under the names map links give, by name.
+
+    A link names its target without an owner and means the map the user would
+    open under that name. A target the daemon does not hold is fetched.
+    """
+    wanted = set(names)
+    now = time.monotonic()
+    with _CACHE_GUARD:
+        held = {key for key in _CACHE if key[1] in wanted}
+        held.update(
+            key
+            for key, (fetched_at, _cfg) in _LINKED.items()
+            if key[1] in wanted and now - fetched_at < _LINKED_FOR
+        )
+    found: dict[str, tuple[str, MapConfig]] = {}
+    for name, target in (await source.link_targets(as_user, names, held, now=now)).items():
+        key = (target.owner, name)
+        with _CACHE_GUARD:
+            if target.config is not None:
+                _LINKED[key] = (now, target.config)
+                _LINKED.move_to_end(key)
+                while len(_LINKED) > _CACHE_MAX_ENTRIES:
+                    _LINKED.popitem(last=False)
+            cfg = _CACHE.get(key) or _LINKED.get(key, (0.0, None))[1]
+        if cfg is not None:
+            found[name] = (target.owner, cfg.model_copy(deep=True))
+    return found

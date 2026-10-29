@@ -23,6 +23,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fake_connection import FakeConnection
+from fake_links import FakeLinkGui
 
 from cmk.maps.backend.connections.base import FolderTreeData
 from cmk.maps.backend.schemas.map import (
@@ -101,7 +102,7 @@ def test_get_map_states_no_connection(monkeypatch: pytest.MonkeyPatch) -> None:
         ],
         connection_id="missing",
     )
-    result = asyncio.run(get_map_states(map_cfg))
+    result = asyncio.run(get_map_states(map_cfg, map_owner=""))
     assert result.connection_ok is False
     assert all(s.state == "PENDING" for s in result.states)
     assert len(result.states) == 2
@@ -115,7 +116,7 @@ def test_get_map_states_with_connection(
     mock_connection.get_hosts_states = AsyncMock(return_value={"srv1": host_state})
 
     map_cfg = _map([_obj("h1", "host", host_name="srv1")])
-    result = asyncio.run(get_map_states(map_cfg))
+    result = asyncio.run(get_map_states(map_cfg, map_owner=""))
 
     assert result.connection_ok is True
     assert result.states[0].state == "UP"
@@ -131,7 +132,7 @@ def test_get_map_states_batch_exception_yields_pending(
     mock_connection.is_available = AsyncMock(return_value=True)
 
     map_cfg = _map([_obj("h1", "host", host_name="srv1")])
-    result = asyncio.run(get_map_states(map_cfg))
+    result = asyncio.run(get_map_states(map_cfg, map_owner=""))
 
     assert result.connection_ok is False
     assert result.states[0].state == "PENDING"
@@ -147,7 +148,7 @@ def test_get_map_states_overdue_checks_keep_the_connection_up(
     )
     mock_connection.is_available = AsyncMock(return_value=False)
 
-    result = asyncio.run(get_map_states(_map([_obj("h1", "host", host_name="srv1")])))
+    result = asyncio.run(get_map_states(_map([_obj("h1", "host", host_name="srv1")]), map_owner=""))
 
     assert result.connection_ok is True
     assert result.states[0].stale is True
@@ -167,7 +168,7 @@ def test_get_map_states_names_the_sites_that_stopped_answering(
         objects=[],
     )
 
-    assert asyncio.run(get_map_states(cfg)).dead_sites == ["remote"]
+    assert asyncio.run(get_map_states(cfg, map_owner="")).dead_sites == ["remote"]
 
 
 def test_get_map_states_non_monitoring_objects(
@@ -178,7 +179,7 @@ def test_get_map_states_non_monitoring_objects(
 
     # textbox and image are non-monitoring → connection_ok comes from is_available.
     map_cfg = _map([_obj("t1", "textbox"), _obj("i1", "image")])
-    result = asyncio.run(get_map_states(map_cfg))
+    result = asyncio.run(get_map_states(map_cfg, map_owner=""))
     assert result.connection_ok is True
     assert all(s.state == "PENDING" for s in result.states)
 
@@ -198,13 +199,13 @@ def test_map_link_aggregates_nested_map_states(
     leaf = _map([_obj("link_to_inner", "map", map_name="inner")], name="leaf")
     outer = _map([_obj("link_to_leaf", "map", map_name="leaf")], name="outer")
 
-    maps = {"inner": inner, "leaf": leaf, "outer": outer}
-    monkeypatch.setattr(map_service, "get_map", lambda _owner, name="": maps.get(name))
+    for cfg in (inner, leaf, outer):
+        map_service.register_map("alice", cfg)
     mock_connection.get_hosts_states = AsyncMock(
         return_value={"srv-crit": ObjectState(object_id="h_inner", type="host", state="DOWN")}
     )
 
-    result = asyncio.run(get_map_states(outer))
+    result = asyncio.run(get_map_states(outer, map_owner="alice", links=FakeLinkGui()))
     by_id = {s.object_id: s for s in result.states}
     assert by_id["link_to_leaf"].state == "DOWN"
 
@@ -217,12 +218,73 @@ def test_map_link_handles_cycle_without_recursion(
 
     a = _map([_obj("a_to_b", "map", map_name="b")], name="a")
     b = _map([_obj("b_to_a", "map", map_name="a")], name="b")
-    monkeypatch.setattr(map_service, "get_map", lambda _owner, name="": {"a": a, "b": b}.get(name))
+    map_service.register_map("alice", a)
+    map_service.register_map("alice", b)
     mock_connection.is_available = AsyncMock(return_value=True)
 
-    result = asyncio.run(get_map_states(a))
+    result = asyncio.run(get_map_states(a, map_owner="alice", links=FakeLinkGui()))
     by_id = {s.object_id: s for s in result.states}
     assert by_id["a_to_b"].state == "PENDING"
+
+
+def _down_host_connection(mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"srv": ObjectState(object_id="h", type="host", state="DOWN")}
+    )
+
+
+_LINKED = _map([_obj("h", "host", host_name="srv")], name="net")
+_LINKING = _map([_obj("to_net", "map", map_name="net")], name="root")
+
+
+def test_a_restricted_viewer_follows_a_link_to_the_map_they_see(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _down_host_connection(mock_connection, monkeypatch)
+    gui = FakeLinkGui({("bob", "net"): ("carol", _LINKED)})
+
+    result = asyncio.run(get_map_states(_LINKING, auth_user="bob", map_owner="alice", links=gui))
+
+    assert [(s.object_id, s.state) for s in result.states] == [("to_net", "DOWN")]
+    assert gui.asked == [("bob", ["net"])]
+
+
+def test_a_see_all_viewer_follows_a_link_to_the_map_its_owner_sees(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _down_host_connection(mock_connection, monkeypatch)
+    gui = FakeLinkGui({("alice", "net"): ("carol", _LINKED)})
+
+    result = asyncio.run(get_map_states(_LINKING, map_owner="alice", links=gui))
+
+    assert [(s.object_id, s.state) for s in result.states] == [("to_net", "DOWN")]
+    assert gui.asked == [("alice", ["net"])]
+
+
+def test_a_link_to_a_map_the_viewer_does_not_see_stays_pending(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _down_host_connection(mock_connection, monkeypatch)
+    map_service.register_map("alice", _LINKED)
+    gui = FakeLinkGui({("alice", "net"): ("alice", _LINKED)})
+
+    result = asyncio.run(get_map_states(_LINKING, auth_user="bob", map_owner="alice", links=gui))
+
+    assert [(s.object_id, s.state) for s in result.states] == [("to_net", "PENDING")]
+
+
+def test_a_linked_map_nobody_opened_is_fetched_once_and_never_opened(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _down_host_connection(mock_connection, monkeypatch)
+    gui = FakeLinkGui({("alice", "net"): ("carol", _LINKED)})
+
+    asyncio.run(get_map_states(_LINKING, map_owner="alice", links=gui))
+    asyncio.run(get_map_states(_LINKING, map_owner="alice", links=gui))
+
+    assert gui.held == [set(), {("carol", "net")}]
+    assert map_service.get_map("carol", "net") is None
 
 
 # ---------------------------------------------------------------------------
@@ -257,7 +319,7 @@ def test_per_object_connection_override_routes_to_other_connection(
         ],
         connection_id="primary",
     )
-    result = asyncio.run(get_map_states(map_cfg))
+    result = asyncio.run(get_map_states(map_cfg, map_owner=""))
     by_id = {s.object_id: s for s in result.states}
     assert by_id["local"].state == "UP"
     assert by_id["remote"].state == "DOWN"
@@ -275,7 +337,7 @@ def test_per_object_connection_override_unregistered_yields_pending(
         [_obj("orphan", "host", host_name="anywhere", connection_id="ghost")],
         connection_id="primary",
     )
-    result = asyncio.run(get_map_states(map_cfg))
+    result = asyncio.run(get_map_states(map_cfg, map_owner=""))
     by_id = {s.object_id: s for s in result.states}
     assert by_id["orphan"].state == "PENDING"
     assert by_id["orphan"].stale is True
@@ -311,7 +373,7 @@ def test_worldmap_auto_source_inflates_geo_hosts(
         view=WorldmapView(auto_source="all_hosts"),
         objects=[],
     )
-    result = asyncio.run(get_map_states(cfg))
+    result = asyncio.run(get_map_states(cfg, map_owner=""))
     by_id = {s.object_id: s for s in result.states}
     assert by_id["auto:ham-srv1"].state == "UP"
     assert by_id["auto:muc-srv1"].state == "DOWN"
@@ -337,7 +399,7 @@ def test_worldmap_auto_source_folds_service_states_into_hosts(
         view=WorldmapView(auto_source="all_hosts"),
         objects=[],
     )
-    result = asyncio.run(get_map_states(cfg))
+    result = asyncio.run(get_map_states(cfg, map_owner=""))
     by_id = {s.object_id: s for s in result.states}
     assert by_id["auto:lei-srv1"].state == "CRITICAL"
     # The fold changes the state, not what else is known about the host.
@@ -365,7 +427,7 @@ def test_worldmap_auto_source_keeps_a_pending_host_with_ok_services_pending(
         view=WorldmapView(auto_source="all_hosts"),
         objects=[],
     )
-    result = asyncio.run(get_map_states(cfg))
+    result = asyncio.run(get_map_states(cfg, map_owner=""))
     by_id = {s.object_id: s for s in result.states}
     assert by_id["auto:kie-srv1"].state == "PENDING"
 
@@ -389,7 +451,7 @@ def test_worldmap_auto_source_skips_persisted_duplicates(
         view=WorldmapView(auto_source="all_hosts"),
         objects=[MapElement(id="manual_srv1", type="host", host_name="srv1", lat=10, lng=20)],
     )
-    result = asyncio.run(get_map_states(cfg))
+    result = asyncio.run(get_map_states(cfg, map_owner=""))
     ids = {s.object_id for s in result.states}
     assert "manual_srv1" in ids
     assert "auto:srv1" not in ids
@@ -439,7 +501,7 @@ def test_static_bundle_suppresses_markers_and_folds_services(
             )
         ],
     )
-    result = asyncio.run(get_map_states(cfg))
+    result = asyncio.run(get_map_states(cfg, map_owner=""))
     by_id = {s.object_id: s for s in result.states}
     assert by_id["bundle1"].state == "CRITICAL"
     assert "auto:srv1" not in by_id
@@ -486,7 +548,7 @@ def test_location_bundle_matches_hosts_at_coordinate(
             )
         ],
     )
-    result = asyncio.run(get_map_states(cfg))
+    result = asyncio.run(get_map_states(cfg, map_owner=""))
     by_id = {s.object_id for s in result.states}
     assert "loc1" in by_id
     assert "auto:srv1" not in by_id
@@ -529,7 +591,7 @@ def test_location_bundle_without_auto_source_uses_baseline(
             )
         ],
     )
-    result = asyncio.run(get_map_states(cfg))
+    result = asyncio.run(get_map_states(cfg, map_owner=""))
     assert "loc1" in {s.object_id for s in result.states}
     mock_connection.get_dyngroup_state.assert_awaited_once()
     called_filter = mock_connection.get_dyngroup_state.await_args.args[1]
@@ -561,7 +623,7 @@ def test_presentation_map_resolves_bound_data_elements(
     )
     map_cfg = MapConfig(name="pres", alias="P", connection_id="mock", view=view)
 
-    result = asyncio.run(get_map_states(map_cfg))
+    result = asyncio.run(get_map_states(map_cfg, map_owner=""))
     by_id = {s.object_id: s for s in result.states}
     assert by_id["data1"].state == "UP"
     # A monitoring-bound shape (weathermap-style link) resolves like a data element.
@@ -598,7 +660,7 @@ def test_presentation_map_resolves_group_bindings(
     )
     map_cfg = MapConfig(name="pres", alias="P", connection_id="mock", view=view)
 
-    result = asyncio.run(get_map_states(map_cfg))
+    result = asyncio.run(get_map_states(map_cfg, map_owner=""))
     by_id = {s.object_id: s for s in result.states}
     assert by_id["legacy"].state == "UP"
     assert by_id["hg"].state == "WARNING"
@@ -624,7 +686,7 @@ def test_presentation_auto_host_tile_names_the_host_it_was_bound_to(
     view = PresentationView(elements=[DataElement(id="tile", kind="data", auto_host=True)])
     map_cfg = MapConfig(name="pres", alias="P", connection_id="mock", view=view)
 
-    result = asyncio.run(get_map_states(map_cfg))
+    result = asyncio.run(get_map_states(map_cfg, map_owner=""))
 
     assert {s.object_id: s.host_name for s in result.states} == {"tile": "heute"}
 
@@ -683,7 +745,7 @@ def test_hostgroup_counts_its_services_only_where_asked(
         ]
     )
 
-    result = asyncio.run(get_map_states(map_cfg))
+    result = asyncio.run(get_map_states(map_cfg, map_owner=""))
 
     assert result.states[0].state == expected
     mock_connection.get_hostgroup_states.assert_awaited_once_with(
@@ -705,7 +767,7 @@ def test_hostgroup_with_a_down_host_shows_down_over_a_critical_service(
     )
     map_cfg = _map([_obj("hg", "hostgroup", group_name="web", recognize_services=True)])
 
-    result = asyncio.run(get_map_states(map_cfg))
+    result = asyncio.run(get_map_states(map_cfg, map_owner=""))
 
     assert result.states[0].state == "DOWN"
 
@@ -730,7 +792,7 @@ def test_host_group_leaves_out_the_members_whose_state_is_excluded(
         ]
     )
 
-    asyncio.run(get_map_states(map_cfg))
+    asyncio.run(get_map_states(map_cfg, map_owner=""))
 
     mock_connection.get_hostgroup_states.assert_awaited_once_with(
         "web", only_hard=False, with_services=False, exclude="^db-"
@@ -752,7 +814,7 @@ def test_host_counts_only_the_services_it_does_not_leave_out(
     )
     map_cfg = _map([_obj("h", host_name="web01", recognize_services=True, exclude_members="^CPU")])
 
-    result = asyncio.run(get_map_states(map_cfg))
+    result = asyncio.run(get_map_states(map_cfg, map_owner=""))
 
     assert result.states[0].state == "UP"
     assert result.states[0].services_summary == ServicesSummary(ok=3)
@@ -774,7 +836,7 @@ def test_graph_counts_every_service_of_its_host(
     )
     map_cfg = _map([_obj("g", "graph", host_name="web01", exclude_members="^CPU")])
 
-    result = asyncio.run(get_map_states(map_cfg))
+    result = asyncio.run(get_map_states(map_cfg, map_owner=""))
 
     assert result.states[0].services_summary == ServicesSummary(ok=3, critical=1)
 
@@ -795,7 +857,7 @@ def test_host_whose_excluded_services_cannot_be_read_is_stale(
         [_obj("h", host_name="web01", recognize_services=True, exclude_members="^Backup")]
     )
 
-    state = asyncio.run(get_map_states(map_cfg)).states[0]
+    state = asyncio.run(get_map_states(map_cfg, map_owner="")).states[0]
 
     assert state.state == "UP"
     assert state.stale is True
@@ -819,7 +881,7 @@ def test_dynamic_host_group_counts_its_services_only_where_asked(
         ]
     )
 
-    result = asyncio.run(get_map_states(map_cfg))
+    result = asyncio.run(get_map_states(map_cfg, map_owner=""))
 
     assert {s.object_id: s.state for s in result.states} == {"hosts": "UP", "services": "WARNING"}
     mock_connection.get_dyngroup_state.assert_any_await(
@@ -854,7 +916,7 @@ def test_line_shows_the_state_of_its_host_group(
         ]
     )
 
-    result = asyncio.run(get_map_states(map_cfg))
+    result = asyncio.run(get_map_states(map_cfg, map_owner=""))
 
     assert (result.states[0].object_id, result.states[0].state) == ("l1", "CRITICAL")
 
@@ -864,13 +926,13 @@ def test_line_shows_the_worst_state_of_its_map(
 ) -> None:
     monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
     inner = _map([_obj("h_inner", "host", host_name="srv-down")], name="inner")
-    monkeypatch.setattr(map_service, "get_map", lambda _owner, name="": {"inner": inner}.get(name))
+    map_service.register_map("alice", inner)
     mock_connection.get_hosts_states = AsyncMock(
         return_value={"srv-down": ObjectState(object_id="h_inner", type="host", state="DOWN")}
     )
     outer = _map([_obj("l1", "line", line_object_type="map", map_name="inner")], name="outer")
 
-    result = asyncio.run(get_map_states(outer))
+    result = asyncio.run(get_map_states(outer, map_owner="alice", links=FakeLinkGui()))
 
     assert {s.object_id: s.state for s in result.states}["l1"] == "DOWN"
 
@@ -896,7 +958,7 @@ def test_line_without_object_type_shows_its_host_or_service(
         return_value={("web01", "CPU"): ObjectState(object_id="x", type="service", state="WARNING")}
     )
 
-    result = asyncio.run(get_map_states(_map([_obj("l1", "line", **binding)])))
+    result = asyncio.run(get_map_states(_map([_obj("l1", "line", **binding)]), map_owner=""))
 
     assert result.states[0].state == expected
 
@@ -906,7 +968,7 @@ def test_line_bound_to_nothing_stays_a_line(
 ) -> None:
     monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
 
-    result = asyncio.run(get_map_states(_map([_obj("l1", "line", x2=10, y2=10)])))
+    result = asyncio.run(get_map_states(_map([_obj("l1", "line", x2=10, y2=10)]), map_owner=""))
 
     assert (result.states[0].type, result.states[0].state) == ("line", "PENDING")
 
@@ -1301,7 +1363,7 @@ def test_conn(monkeypatch: pytest.MonkeyPatch) -> FakeConnection:
 
 
 def test_foldertree_builds_tree_with_empty_folders(test_conn: FakeConnection) -> None:  # noqa: ARG001
-    result = asyncio.run(get_map_states(_folder_map()))
+    result = asyncio.run(get_map_states(_folder_map(), map_owner=""))
     tree = result.folder_tree
     assert tree is not None and tree.path == ""
     muc = _find_node(tree, "datacenters/muc")
@@ -1315,7 +1377,7 @@ def test_foldertree_builds_tree_with_empty_folders(test_conn: FakeConnection) ->
 
 
 def test_foldertree_severity_counts_bubble_by_host_state(test_conn: FakeConnection) -> None:  # noqa: ARG001
-    result = asyncio.run(get_map_states(_folder_map()))
+    result = asyncio.run(get_map_states(_folder_map(), map_owner=""))
     tree = result.folder_tree
     assert tree is not None
     dc = _find_node(tree, "datacenters")
@@ -1329,7 +1391,7 @@ def test_foldertree_severity_counts_bubble_by_host_state(test_conn: FakeConnecti
 
 
 def test_foldertree_hide_empty_folders(test_conn: FakeConnection) -> None:  # noqa: ARG001
-    result = asyncio.run(get_map_states(_folder_map({"show_empty_folders": False})))
+    result = asyncio.run(get_map_states(_folder_map({"show_empty_folders": False}), map_owner=""))
     tree = result.folder_tree
     assert tree is not None
     assert _find_node(tree, "staging") is None
@@ -1371,7 +1433,7 @@ def test_foldertree_prunes_unpermitted_empty_folders(
         )
 
     monkeypatch.setattr(test_conn, "get_folder_tree", _fake_folder_tree)
-    result = asyncio.run(get_map_states(_folder_map({"show_empty_folders": True})))
+    result = asyncio.run(get_map_states(_folder_map({"show_empty_folders": True}), map_owner=""))
     tree = result.folder_tree
     assert tree is not None
     # Empty + not permitted → hidden, even though show_empty_folders is on.
@@ -1384,7 +1446,7 @@ def test_foldertree_prunes_unpermitted_empty_folders(
 
 
 def test_foldertree_sites_filter(test_conn: FakeConnection) -> None:  # noqa: ARG001
-    result = asyncio.run(get_map_states(_folder_map({"sites": ["central"]})))
+    result = asyncio.run(get_map_states(_folder_map({"sites": ["central"]}), map_owner=""))
     tree = result.folder_tree
     assert tree is not None
     # Frankfurt only had a remote_fra host → no longer populated.
@@ -1407,7 +1469,7 @@ def test_foldertree_sites_filter(test_conn: FakeConnection) -> None:  # noqa: AR
 
 
 def test_foldertree_root_scoping(test_conn: FakeConnection) -> None:  # noqa: ARG001
-    result = asyncio.run(get_map_states(_folder_map({"root_folder": "network"})))
+    result = asyncio.run(get_map_states(_folder_map({"root_folder": "network"}), map_owner=""))
     tree = result.folder_tree
     assert tree is not None and tree.path == "network"
     # Subtree only — datacenters not reachable from this root.
@@ -1416,7 +1478,7 @@ def test_foldertree_root_scoping(test_conn: FakeConnection) -> None:  # noqa: AR
 
 def test_foldertree_show_services_is_not_eager(test_conn: FakeConnection) -> None:  # noqa: ARG001
     # show_services must NOT materialise service leaves into the SSE tree.
-    result = asyncio.run(get_map_states(_folder_map({"show_services": True})))
+    result = asyncio.run(get_map_states(_folder_map({"show_services": True}), map_owner=""))
     assert result.folder_tree is not None
     host = _find_node(result.folder_tree, "datacenters/muc/localhost")
     assert host is not None and host.kind == "host"
@@ -1424,7 +1486,7 @@ def test_foldertree_show_services_is_not_eager(test_conn: FakeConnection) -> Non
 
 
 def test_foldertree_no_services_by_default(test_conn: FakeConnection) -> None:  # noqa: ARG001
-    result = asyncio.run(get_map_states(_folder_map()))
+    result = asyncio.run(get_map_states(_folder_map(), map_owner=""))
     assert result.folder_tree is not None
     host = _find_node(result.folder_tree, "datacenters/muc/localhost")
     assert host is not None and not host.children

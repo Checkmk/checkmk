@@ -42,6 +42,8 @@ from cmk.maps.backend.schemas.topology import (
     TopologyNode,
     TopologyTiming,
 )
+from cmk.maps.backend.services import map_service
+from cmk.maps.backend.services.map_service import LinkSource
 from cmk.maps.backend.services.settings_service import get_daemon_runtime
 from cmk.maps.shared.map_payload import ObjectType
 from cmk.maps.shared.states import CRITICAL_STATES, SEVERITY_RANK, severity_rank
@@ -77,6 +79,15 @@ _MONITORING_TYPES: frozenset[str] = frozenset({"host", "service", "hostgroup", "
 # parent map's status pill.
 _MAP_AGGREGATION_TYPES: frozenset[str] = _MONITORING_TYPES | {"map", "aggregation"}
 
+
+@dataclass
+class _LinkCache:
+    # Asks which maps the names of links mean; without it no link resolves.
+    source: LinkSource | None = None
+    # Per (user resolving it, linked name): the owner and config linked to.
+    targets: dict[tuple[str, str], tuple[str, MapConfig] | None] = field(default_factory=dict)
+
+
 if TYPE_CHECKING:
     from cmk.maps.backend.connections.base import ConnectionBase
 
@@ -105,6 +116,9 @@ async def get_map_states(
     cfg: MapConfig,
     auth_user: str | None = None,
     folder_scope: FolderScope | None = None,
+    *,
+    map_owner: str,
+    links: LinkSource | None = None,
 ) -> MapStates:
     """Fetch current states for all objects in a map.
 
@@ -138,8 +152,12 @@ async def get_map_states(
         # Livestatus host filter only for non-see-all monitoring users.
         if auth_user is not None:
             async with connection.with_auth_user(auth_user):
-                return await _execute_map_states(cfg, connection, auth_user=auth_user)
-        return await _execute_map_states(cfg, connection, auth_user=auth_user)
+                return await _execute_map_states(
+                    cfg, connection, auth_user=auth_user, map_owner=map_owner, links=links
+                )
+        return await _execute_map_states(
+            cfg, connection, auth_user=auth_user, map_owner=map_owner, links=links
+        )
 
     async with connection.with_folder_scope(folder_scope):
         return await _run()
@@ -166,6 +184,8 @@ async def _execute_map_states(
     cfg: MapConfig,
     connection: ConnectionBase,
     auth_user: str | None = None,
+    map_owner: str = "",
+    links: LinkSource | None = None,
 ) -> MapStates:
     """Inner state-fetch implementation; must be called with auth context already set."""
     if cfg.view.type == "radar":
@@ -188,6 +208,8 @@ async def _execute_map_states(
         default_connection=connection,
         default_connection_id=cfg.connection_id,
         auth_user=auth_user,
+        map_owner=map_owner,
+        map_cfg_cache=_LinkCache(source=links),
         visited_maps=frozenset({cfg.name}),
     )
     states = list(state_map.values())
@@ -301,7 +323,8 @@ async def _states_for_objects(
     default_connection: ConnectionBase,
     default_connection_id: str,
     auth_user: str | None = None,
-    map_cfg_cache: dict[str, MapConfig | None] | None = None,
+    map_owner: str = "",
+    map_cfg_cache: _LinkCache | None = None,
     visited_maps: frozenset[str] = frozenset(),
 ) -> dict[str, ObjectState]:
     """Run the batched state fetch once per distinct connection, then merge.
@@ -313,7 +336,7 @@ async def _states_for_objects(
     cross-connection split adds round-trips, which run in parallel.
     """
     if map_cfg_cache is None:
-        map_cfg_cache = {}
+        map_cfg_cache = _LinkCache()
 
     groups: dict[str, list[MapElement]] = {}
     for obj in objects:
@@ -331,6 +354,7 @@ async def _states_for_objects(
             conn,
             group_objs,
             auth_user=auth_user,
+            map_owner=map_owner,
             map_cfg_cache=map_cfg_cache,
             _visited_maps=visited_maps,
         )
@@ -580,7 +604,8 @@ async def _resolve_individual_states(
 async def _resolve_map_link_states(
     map_objects: list[MapElement],
     auth_user: str | None,
-    map_cfg_cache: dict[str, MapConfig | None],
+    map_owner: str,
+    map_cfg_cache: _LinkCache,
     visited_maps: frozenset[str],
     results: dict[str, ObjectState],
 ) -> None:
@@ -588,18 +613,27 @@ async def _resolve_map_link_states(
     references, recursing into nested maps while guarding against cycles."""
     if not map_objects:
         return
-    from cmk.maps.backend.services import map_service
+
+    # A user restricted in what they see follows a link to the map they see under
+    # its name; for everyone else it means what it means to the linking map's owner.
+    as_user = map_owner if auth_user is None else auth_user
+    names = list(dict.fromkeys(o.map_name for o in map_objects if o.map_name))
+    new = [name for name in names if (as_user, name) not in map_cfg_cache.targets]
+    found = (
+        await map_service.find_link_targets(map_cfg_cache.source, as_user, new)
+        if new and map_cfg_cache.source is not None
+        else {}
+    )
+    for map_name in new:
+        map_cfg_cache.targets[(as_user, map_name)] = found.get(map_name)
 
     # Load each unique referenced map once (avoid N reads for N map-link objects).
     map_states: dict[str, dict[str, ObjectState]] = {}
-    for map_name in {o.map_name for o in map_objects if o.map_name}:
-        if map_name not in map_cfg_cache:
-            # Nested map-link: referenced by name only (no owner). get_map's
-            # name fallback resolves it against any registered owner.
-            map_cfg_cache[map_name] = map_service.get_map("", map_name)
-        ref_cfg = map_cfg_cache[map_name]
-        if ref_cfg is None:
+    for map_name in names:
+        target = map_cfg_cache.targets[(as_user, map_name)]
+        if target is None:
             continue
+        ref_owner, ref_cfg = target
         ref_backend = get_connection(ref_cfg.connection_id)
         if ref_backend is None:
             continue
@@ -618,6 +652,7 @@ async def _resolve_map_link_states(
                 default_connection=ref_backend,
                 default_connection_id=ref_cfg.connection_id,
                 auth_user=auth_user,
+                map_owner=ref_owner,
                 map_cfg_cache=map_cfg_cache,
                 visited_maps=child_visited,
             )
@@ -644,7 +679,8 @@ async def _get_map_states_batched(
     connection: ConnectionBase,
     objects: list[MapElement],
     auth_user: str | None = None,
-    map_cfg_cache: dict[str, MapConfig | None] | None = None,
+    map_owner: str = "",
+    map_cfg_cache: _LinkCache | None = None,
     _visited_maps: frozenset[str] | None = None,
 ) -> dict[str, ObjectState]:
     """Fetch states for all map objects using batch queries where supported.
@@ -654,7 +690,7 @@ async def _get_map_states_batched(
     The helpers run in sequence because the host helper's output feeds the
     service-summary/recognize-services enrichment.
 
-    ``map_cfg_cache`` memoises ``map_service.get_map`` across the full
+    ``map_cfg_cache`` memoises ``map_service.find_link_targets`` across the full
     map-link recursion so a map referenced by several sibling or nested maps
     loads only once. The cache stores ``None`` for not-found maps to avoid
     retrying missing names.
@@ -664,7 +700,7 @@ async def _get_map_states_batched(
     maps without infinite-looping on cycles.
     """
     if map_cfg_cache is None:
-        map_cfg_cache = {}
+        map_cfg_cache = _LinkCache()
     if _visited_maps is None:
         _visited_maps = frozenset()
 
@@ -677,6 +713,7 @@ async def _get_map_states_batched(
     await _resolve_map_link_states(
         bins.map_objects,
         auth_user=auth_user,
+        map_owner=map_owner,
         map_cfg_cache=map_cfg_cache,
         visited_maps=_visited_maps,
         results=results,

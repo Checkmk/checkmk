@@ -11,15 +11,23 @@ pinned as well as what it makes of the answers.
 import asyncio
 import json
 from http import HTTPStatus
+from pathlib import Path
 
 import httpx2
+import pytest
 
+from cmk.crypto.secrets import Secret
 from cmk.fastapi.gui_session import GuiLoopback, IDENTITY_TTL, Rejected, Unavailable
-from cmk.maps.backend.core.auth import Forbidden, GuiAuth, NoMap, Principal
+from cmk.maps.backend.core.auth import Forbidden, GuiAuth, LinkTarget, NoMap, Principal
+from cmk.maps.backend.schemas.map import MapConfig
+from cmk.maps.shared.map_links import CACHED_MAP_REFS_MAX
+from cmk.maps.shared.map_signature import sign_config
 
 _COOKIE = "jdoe:4f1c2b1e-0d7a-4a3b-9a55-8d9d7c3a2b10:9c1e0000"
 _IDENTIFY = "/domain-types/gui_session/actions/identify/invoke"
 _ACCESS = "/domain-types/maps_access/actions/resolve/invoke"
+_LINK_TARGETS = "/domain-types/maps_link_targets/actions/resolve/invoke"
+_SECRET = Secret(b"0123456789abcdef0123456789abcdef")
 
 _ALL_PERMISSIONS = {
     "maps.use": True,
@@ -181,3 +189,105 @@ def test_an_odd_map_answer_is_no_verdict() -> None:
     owner = asyncio.run(_auth(gui).map_owner(Principal(name="jdoe"), "dc1", now=0.0))
 
     assert isinstance(owner, Unavailable)
+
+
+@pytest.fixture
+def _site_secret(site_secret_file: Path) -> None:
+    site_secret_file.write_bytes(_SECRET.reveal())
+
+
+def _targets(*targets: dict[str, str]) -> httpx2.Response:
+    return httpx2.Response(HTTPStatus.OK, json={"targets": list(targets)})
+
+
+def _signed_target(owner: str, name: str) -> dict[str, str]:
+    signed = sign_config({"name": name}, _SECRET.hmac, owner=owner)
+    return {"name": name, "owner": owner, **signed}
+
+
+@pytest.mark.usefixtures("_site_secret")
+def test_a_link_target_comes_with_the_config_the_gui_signed() -> None:
+    gui = _GUI({_LINK_TARGETS: _targets(_signed_target("carol", "net"))})
+
+    targets = asyncio.run(_auth(gui).link_targets("jdoe", ["net", "gone"], set(), now=0.0))
+
+    assert gui.requests == [
+        (_LINK_TARGETS, {"names": ["net", "gone"], "cached": [], "user_id": "jdoe"})
+    ]
+    assert targets == {"net": LinkTarget("carol", MapConfig(name="net"))}
+
+
+@pytest.mark.usefixtures("_site_secret")
+def test_a_link_target_signed_for_another_owner_is_left_out() -> None:
+    forged = {**_signed_target("carol", "net"), "owner": "jdoe"}
+    gui = _GUI({_LINK_TARGETS: _targets(forged)})
+
+    assert asyncio.run(_auth(gui).link_targets("jdoe", ["net"], set(), now=0.0)) == {}
+
+
+def test_the_empty_user_asks_for_built_in_maps_only() -> None:
+    gui = _GUI({_LINK_TARGETS: _targets({"name": "net", "owner": ""})})
+
+    targets = asyncio.run(_auth(gui).link_targets("", ["net"], {("", "net")}, now=0.0))
+
+    assert gui.requests == [
+        (_LINK_TARGETS, {"names": ["net"], "cached": [{"owner": "", "name": "net"}]})
+    ]
+    assert targets == {"net": LinkTarget("")}
+
+
+@pytest.mark.usefixtures("_site_secret")
+def test_more_held_maps_than_the_gui_takes_are_left_out_of_the_question() -> None:
+    held = {(f"user{i}", "net") for i in range(CACHED_MAP_REFS_MAX + 1)}
+    gui = _GUI({_LINK_TARGETS: _targets(_signed_target("carol", "net"))})
+
+    targets = asyncio.run(_auth(gui).link_targets("jdoe", ["net"], held, now=0.0))
+
+    [(_path, body)] = gui.requests
+    assert isinstance(body, dict) and len(body["cached"]) == CACHED_MAP_REFS_MAX
+    assert targets == {"net": LinkTarget("carol", MapConfig(name="net"))}
+
+
+def test_link_targets_are_kept_per_user_while_the_daemon_holds_them() -> None:
+    gui = _GUI({_LINK_TARGETS: _targets({"name": "net", "owner": "carol"})})
+    auth = _auth(gui)
+    held = {("carol", "net")}
+
+    async def _ask() -> None:
+        await auth.link_targets("jdoe", ["net", "gone"], held, now=0.0)
+        await auth.link_targets("jdoe", ["net", "gone"], held, now=1.0)
+        await auth.link_targets("jdoe", ["net"], set(), now=1.0)
+        await auth.link_targets("hdoe", ["net"], held, now=1.0)
+        await auth.link_targets("jdoe", ["net"], held, now=1.0 + IDENTITY_TTL)
+
+    asyncio.run(_ask())
+
+    cached = [{"owner": "carol", "name": "net"}]
+    assert [body for _path, body in gui.requests] == [
+        {"names": ["net", "gone"], "cached": cached, "user_id": "jdoe"},
+        {"names": ["net"], "cached": [], "user_id": "jdoe"},
+        {"names": ["net"], "cached": cached, "user_id": "hdoe"},
+        {"names": ["net"], "cached": cached, "user_id": "jdoe"},
+    ]
+
+
+def test_link_targets_without_an_answer_resolve_to_no_map_for_a_while() -> None:
+    gui = _GUI({_LINK_TARGETS: httpx2.Response(HTTPStatus.SERVICE_UNAVAILABLE)})
+    auth = _auth(gui)
+
+    async def _ask_at(*times: float) -> list[dict[str, LinkTarget]]:
+        return [await auth.link_targets("jdoe", ["net"], set(), now=now) for now in times]
+
+    assert asyncio.run(_ask_at(0.0, 1.0, 10.0)) == [{}, {}, {}]
+    assert len(gui.requests) == 2
+
+
+@pytest.mark.parametrize("name", ["Data Center", "net\n"])
+def test_a_name_no_map_can_have_is_not_asked_about(name: str) -> None:
+    gui = _GUI({_LINK_TARGETS: _targets()})
+
+    asyncio.run(_auth(gui).link_targets("jdoe", [name, "net"], set(), now=0.0))
+
+    assert [body for _path, body in gui.requests] == [
+        {"names": ["net"], "cached": [], "user_id": "jdoe"}
+    ]

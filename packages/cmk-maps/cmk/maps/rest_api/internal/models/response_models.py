@@ -563,3 +563,26 @@ class MapsCfgImportResponse:
     warnings: list[str] = api_field(
         description="What the importer had to guess, in the operator's words.", example=[]
     )
+
+
+@api_model
+class MapsLinkTarget:
+    name: str = api_field(description="The name the link gives.", example="datacenter-muc")
+    owner: str = api_field(
+        description="The owner of the map the user sees under the name, empty for a built-in map.",
+        example="cmkadmin",
+    )
+    config_b64: str | ApiOmitted = api_field(
+        description="The signed map config, absent for a map the daemon holds already.",
+        default_factory=ApiOmitted,
+    )
+    sig: str | ApiOmitted = api_field(
+        description="The signature of ``config_b64``.", default_factory=ApiOmitted
+    )
+
+
+@api_model
+class MapsLinkTargetsResponse:
+    targets: list[MapsLinkTarget] = api_field(
+        description="The maps the user sees under the names. A name they see no map under is absent."
+    )

@@ -7,10 +7,10 @@
 The daemon runs behind the site Apache and handles no users, sessions or
 passwords of its own. The browser sends the GUI session cookie with every
 request. The daemon asks the GUI of its site who is behind it and which of the
-permissions Maps needs they hold (``gui_session/identify``), and which map a name
-means for that user (``maps_access/resolve``). It keeps the first answer per
-session and the second per user for :data:`~cmk.fastapi.gui_session.IDENTITY_TTL`
-seconds.
+permissions Maps needs they hold (``gui_session/identify``), which map a name
+means for that user (``maps_access/resolve``), and which maps the names of map
+links mean (``maps_link_targets/resolve``). It keeps the first answer per session
+and the others per user for :data:`~cmk.fastapi.gui_session.IDENTITY_TTL` seconds.
 
 The map config a viewer relays is signed by the GUI and verified here against
 the owner the GUI named, see :mod:`cmk.maps.shared.map_signature`.
@@ -19,10 +19,13 @@ the owner the GUI named, see :mod:`cmk.maps.shared.map_signature`.
 import dataclasses
 import functools
 import hmac
+import logging
+from collections.abc import Sequence
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass, field
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from cmk.fastapi.gui_session import (
     GuiLoopback,
@@ -33,7 +36,10 @@ from cmk.fastapi.gui_session import (
     Unavailable,
     unavailable,
 )
+from cmk.maps.backend.schemas.map import MapConfig
+from cmk.maps.shared.map_links import CACHED_MAP_REFS_MAX
 from cmk.maps.shared.map_signature import HmacFn, InvalidSignature, verify_config
+from cmk.maps.shared.validators import is_valid_map_name
 from cmk.utils import paths
 
 __all__ = [
@@ -59,6 +65,10 @@ _PERMISSIONS: Final = (
 )
 
 _ACCESS_PATH: Final = "domain-types/maps_access/actions/resolve/invoke"
+_LINK_TARGETS_PATH: Final = "domain-types/maps_link_targets/actions/resolve/invoke"
+_LINK_RETRY_AFTER: Final = 10.0
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -126,6 +136,29 @@ class _AccessAnswer(BaseModel):
     owner: str | None = None
 
 
+class _LinkTarget(BaseModel):
+    model_config = ConfigDict(strict=True)
+
+    name: str
+    owner: str
+    config_b64: str | None = None
+    sig: str | None = None
+
+
+class _LinkTargetsAnswer(BaseModel):
+    model_config = ConfigDict(strict=True)
+
+    targets: list[_LinkTarget]
+
+
+@dataclass(frozen=True, slots=True)
+class LinkTarget:
+    """The map a link's name means. ``config`` is ``None`` for a map the daemon holds."""
+
+    owner: str
+    config: MapConfig | None = None
+
+
 def _principal(identity: Identity) -> Principal:
     return Principal(
         name=identity.user_id,
@@ -148,6 +181,9 @@ class GuiAuth:
         self._gui = gui
         self._principals = IdentityCache[Principal](IDENTITY_TTL)
         self._owners = IdentityCache[str | NoMap](IDENTITY_TTL)
+        self._link_owners = IdentityCache[str | NoMap](IDENTITY_TTL)
+        # A GUI that gave no answer is not asked again on every state fetch.
+        self._links_unanswered = IdentityCache[bool](_LINK_RETRY_AFTER)
 
     async def principal(
         self, session_cookie: str, *, now: float
@@ -186,6 +222,77 @@ class GuiAuth:
         owner = NoMap() if resolved.owner is None else resolved.owner
         self._owners.put(key, owner, now=now)
         return owner
+
+    async def link_targets(
+        self,
+        as_user: str,
+        names: Sequence[str],
+        held: AbstractSet[tuple[str, str]],
+        *,
+        now: float,
+    ) -> dict[str, LinkTarget]:
+        """The maps ``as_user`` sees under the names of map links, the empty user
+        seeing built-in maps only.
+
+        ``held`` are the maps the daemon holds; any other comes with its config. A
+        name without an answer of the GUI resolves to no map until the next fetch.
+        """
+        targets: dict[str, LinkTarget] = {}
+        ask = []
+        # A name no map can have would fail the question for all the others.
+        for name in filter(is_valid_map_name, names):
+            match self._link_owners.get(f"{as_user}\n{name}", now=now):
+                case None:
+                    ask.append(name)
+                case NoMap():
+                    pass
+                case str() as owner if (owner, name) in held:
+                    targets[name] = LinkTarget(owner)
+                case _:
+                    ask.append(name)
+        if not ask or self._links_unanswered.get(as_user, now=now):
+            return targets
+        asked = set(ask)
+        body: dict[str, object] = {
+            "names": ask,
+            "cached": [{"owner": o, "name": n} for o, n in held if n in asked][
+                :CACHED_MAP_REFS_MAX
+            ],
+        }
+        if as_user:
+            body["user_id"] = as_user
+        answer = await self._gui.post(
+            "map link targets", _LINK_TARGETS_PATH, body, _LinkTargetsAnswer
+        )
+        if not isinstance(answer, _LinkTargetsAnswer):
+            self._links_unanswered.put(as_user, True, now=now)
+            return targets
+        found = {t.name: t for t in answer.targets if t.name in asked}
+        for name in ask:
+            target = found.get(name)
+            resolved = None if target is None else _usable_target(target, held)
+            if resolved is None:
+                self._link_owners.put(f"{as_user}\n{name}", NoMap(), now=now)
+            else:
+                self._link_owners.put(f"{as_user}\n{name}", resolved.owner, now=now)
+                targets[name] = resolved
+        return targets
+
+
+def _usable_target(target: _LinkTarget, held: AbstractSet[tuple[str, str]]) -> LinkTarget | None:
+    if target.config_b64 is None or target.sig is None:
+        return LinkTarget(target.owner) if (target.owner, target.name) in held else None
+    try:
+        cfg = MapConfig.model_validate(
+            verify_map_config(target.config_b64, target.sig, owner=target.owner)
+        )
+    except (InvalidSignature, ValidationError) as exc:
+        logger.debug(
+            "A map link's target %(map)s cannot be used: %(error)s",
+            {"map": target.name, "error": exc},
+        )
+        return None
+    return LinkTarget(target.owner, cfg) if cfg.name == target.name else None
 
 
 # ``LocalSecret.regenerate`` always writes 32 bytes; anything else is a rewrite in progress.

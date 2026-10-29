@@ -35,7 +35,8 @@ system and form engine directly). There is no separate frontend artifact here.
 The daemon performs no login, session or password handling of its own. Every
 request carries the GUI session cookie, and `cmk.maps.backend.core.auth` asks
 the GUI of the site who is behind it (`gui_session/identify`) and which map a
-name means for that user (`maps_access/resolve`). The map configs the browser
+name means for that user (`maps_access/resolve`), also for the names of map
+links (`maps_link_targets/resolve`). The map configs the browser
 relays are signed by `cmk.maps.gui` with the site-internal secret; the format
 is pinned by `tests/unit/cmk/gui/maps/test_map_signature_contract.py`.
 

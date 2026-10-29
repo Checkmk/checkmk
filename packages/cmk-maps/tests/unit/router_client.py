@@ -7,17 +7,19 @@
 from collections.abc import Awaitable, Callable
 from typing import Protocol
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.testclient import TestClient
 
 from cmk.maps.backend.core.auth import GuiAuth, Principal
 
 # A dependency the route tests resolve to a fixed value instead: the user from the
 # session (``deps.get_current_user``), the owner the GUI names for a map
-# (``deps.get_map_owner``), or a guard chained onto the user
-# (``deps.rate_limited_read``, ``deps.require_connection_read``).
+# (``deps.get_map_owner``), a guard chained onto the user
+# (``deps.rate_limited_read``, ``deps.require_connection_read``), or the GUI asked
+# about map links (``deps.get_gui_auth``).
 type AuthDependency = (
-    Callable[[str, GuiAuth], Awaitable[Principal]]
+    Callable[[Request], GuiAuth]
+    | Callable[[str, GuiAuth], Awaitable[Principal]]
     | Callable[[str, GuiAuth, Principal], Awaitable[str | None]]
     | Callable[[Principal], Awaitable[Principal]]
 )

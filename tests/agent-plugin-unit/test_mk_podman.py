@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import (  # noqa: UP035  # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
     Mapping,
     Optional,
+    Sequence,
 )
 from unittest.mock import MagicMock, patch
 
@@ -21,7 +22,45 @@ from agents.plugins.mk_podman import (
     get_piggyback_host,
     get_socket_owner,
     PiggybackNameMethod,
+    run_podman_command,
 )
+
+
+@pytest.mark.parametrize(
+    "login_shell, expected_cmd",
+    [
+        pytest.param(
+            "/usr/sbin/nologin",
+            ["su", "-s", "/bin/sh", "-l", "--", "podman", "-c", "podman ps"],
+            id="nologin not in /etc/shells -> force /bin/sh",
+        ),
+        pytest.param(
+            "/bin/false",
+            ["su", "-s", "/bin/sh", "-l", "--", "podman", "-c", "podman ps"],
+            id="false not in /etc/shells -> force /bin/sh",
+        ),
+        pytest.param(
+            "/bin/bash",
+            ["su", "-l", "--", "podman", "-c", "podman ps"],
+            id="bash in /etc/shells -> keep login shell",
+        ),
+        pytest.param(
+            "",
+            ["su", "-l", "--", "podman", "-c", "podman ps"],
+            id="empty login shell defaults to /bin/sh -> keep login shell",
+        ),
+    ],
+)
+def test_run_podman_command_su_shell(login_shell: str, expected_cmd: Sequence[str]) -> None:
+    completed = MagicMock(returncode=0, stdout="[]")
+
+    with patch("os.geteuid", return_value=0):
+        with patch("pwd.getpwnam", return_value=MagicMock(pw_shell=login_shell)):
+            with patch("pathlib.Path.read_text", return_value="# comment\n/bin/sh\n/bin/bash\n"):
+                with patch("subprocess.run", return_value=completed) as run:
+                    run_podman_command(["ps"], run_as_user="podman")
+
+    assert run.call_args.args[0] == expected_cmd
 
 
 def test_get_socket_owner_returns_username() -> None:

@@ -220,6 +220,7 @@ PRO_WHEELS = COMMUNITY_WHEELS + [
     "//non-free/packages/cmk-ai-control-plane:wheel",
     "//non-free/packages/cmk-bakery:wheel",
     "//non-free/packages/cmk-check-engine-nonfree:wheel",
+    "//non-free/packages/cmk-check-engine-nonfree:wheel-rtc",
     "//non-free/packages/cmk-core-helpers:wheel",
     "//non-free/packages/cmk-data-backend:wheel",
     "//non-free/packages/cmk-dcd:wheel",

@@ -378,6 +378,28 @@ def test_uuid_link_manager_keeps_the_record_when_it_renames_the_host() -> None:
     assert _uuid_link_manager().registration(uuid) == _REGISTRATION
 
 
+def test_uuid_link_manager_replaces_the_record_of_a_linked_uuid_with_a_migration() -> None:
+    """CMK-39584: a migration replaces the record of a linked UUID, with no subject, and keeps
+    the link"""
+    uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
+    _uuid_link_manager().link_registration(
+        HostName("my-hostname"), uuid, push_configured=False, registration=_REGISTRATION
+    )
+    migration = UUIDRegistration(
+        agent_updates_permitted=True,
+        subject="",
+        registration_route=RegistrationRoute.MIGRATION,
+        registered_at=1760000000.0,
+    )
+
+    _uuid_link_manager().record_registration(uuid, migration)
+
+    assert (
+        _uuid_link_manager().linked_host_name(uuid),
+        _uuid_link_manager().registration(uuid),
+    ) == (HostName("my-hostname"), migration)
+
+
 def test_uuid_link_manager_keeps_the_record_when_the_link_target_changes() -> None:
     """CMK-39504 AC5"""
     uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")

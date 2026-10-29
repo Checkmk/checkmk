@@ -39,6 +39,7 @@ class RegistrationRoute(enum.StrEnum):
     REGISTER = "register"
     REGISTER_VIA_TOKEN = "register_via_token"
     REGISTER_NEW = "register_new"
+    MIGRATION = "migration"
 
 
 class UUIDRegistration(BaseModel, frozen=True):
@@ -46,6 +47,7 @@ class UUIDRegistration(BaseModel, frozen=True):
 
     agent_updates_permitted: bool | None
     subject: str
+    """Empty after a migration, because the registration of the Python updater recorded no user"""
     registration_route: RegistrationRoute
     registered_at: float = Field(default_factory=time.time)
 
@@ -133,12 +135,16 @@ class UUIDLinkManager:
         The record lasts as long as the link of the UUID. A rename of the host and a change of
         the link target keep it.
         """
+        self.record_registration(uuid, registration)
+        self.create_link(hostname, uuid, push_configured=push_configured)
+
+    def record_registration(self, uuid: UUID, registration: UUIDRegistration) -> None:
+        """Replace the record of a UUID and leave its link as it is"""
         self.registrations_dir.mkdir(parents=True, exist_ok=True)
         path = self._registration_file(uuid)
         new_path = path.with_name(f".{path.name}.new")
         new_path.write_text(registration.model_dump_json())
         new_path.rename(path)
-        self.create_link(hostname, uuid, push_configured=push_configured)
 
     def create_link(self, hostname: HostName, uuid: UUID, *, push_configured: bool) -> None:
         """Create a link for encryption or push agent

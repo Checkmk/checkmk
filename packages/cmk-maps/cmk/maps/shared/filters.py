@@ -20,20 +20,22 @@ wraps it to re-raise ``MKUserError`` for its request context.
 import re
 from typing import Final, Literal
 
-# Only the safe filter-combinator headers may appear — anything else (Stats:,
-# Columns:, OutputFormat:, GET, AuthUser:, …) would change the query semantics
-# or exfiltrate data.
-SAFE_FILTER_LINE_RE: Final = re.compile(r"^(?:Filter|And|Or|Negate): .+$")
+# Only the filter-combinator headers may appear; any other header (Stats:,
+# Columns:, OutputFormat:, GET, AuthUser:, …) would change the query.
+# Livestatus, and so NagVis, needs no space after the colon.
+_FILTER_LINE_RE: Final = re.compile(r"(Filter|And|Or|Negate):\s*(.*)")
 
-# ``splitlines()`` covers every real line terminator but not NUL, and ``.+``
-# matches one — so a NUL would survive into the query. It cannot forge a header,
-# but the C++ Livestatus side need not treat it as an ordinary byte.
+# ``splitlines()`` covers every real line terminator but not NUL, and ``.``
+# matches one, so control characters are refused here.
 _CONTROL_CHARS: Final = re.compile(r"[\x00-\x08\x0e-\x1f\x7f]")
 
 # Everything ``splitlines()`` breaks on, plus the control bytes above.
 _LINE_BREAKING: Final = re.compile(r"[\x00-\x1f\x7f\x85\u2028\u2029]")
 
 MEMBER_PATTERN_MAX_LENGTH: Final = 1024
+
+# Six levels stay near 0.1 s on Livestatus for any filter up to 64 KiB.
+FILTER_NESTING_MAX: Final = 6
 
 ExcludedMembers = Literal["host_services", "hosts", "services"]
 
@@ -52,10 +54,55 @@ def normalize_object_filter(value: str) -> str:
     """
     if _CONTROL_CHARS.search(value):
         raise ValueError("object_filter must not contain control characters")
-    lines = [ln.strip() for ln in value.replace("\\n", "\n").splitlines() if ln.strip()]
-    if not lines or not all(SAFE_FILTER_LINE_RE.fullmatch(ln) for ln in lines):
+    lines = [
+        _normalized_filter_line(ln.strip())
+        for ln in value.replace("\\n", "\n").splitlines()
+        if ln.strip()
+    ]
+    if not lines:
         raise ValueError("object_filter must be one or more 'Filter: …' lines")
+    if _nesting(lines) > FILTER_NESTING_MAX:
+        raise ValueError(
+            f"object_filter nests And:, Or: and Negate: deeper than {FILTER_NESTING_MAX} levels"
+        )
     return "\n".join(lines) + "\n"
+
+
+def _nesting(lines: list[str]) -> int:
+    """How deep the combinators nest, counting a level where the operator changes.
+
+    Livestatus merges an ``And:`` into an ``And:`` (and an ``Or:`` into an
+    ``Or:``), so only a change of operator counts as a level. A malformed stack
+    is left to the write check.
+    """
+    stack: list[tuple[str, int]] = []
+    for line in lines:
+        header, _, argument = line.partition(":")
+        if header == "Filter":
+            stack.append(("", 0))
+        elif header == "Negate":
+            if stack:
+                stack.append(("Negate", stack.pop()[1] + 1))
+        else:
+            count = min(int(argument), len(stack))
+            children = [stack.pop() for _ in range(count)]
+            stack.append((header, max((d + (op != header) for op, d in children), default=0)))
+    return max((d for _, d in stack), default=0)
+
+
+def _normalized_filter_line(line: str) -> str:
+    if (match := _FILTER_LINE_RE.fullmatch(line)) is None:
+        raise ValueError("object_filter must be one or more 'Filter: …' lines")
+    header, argument = match.groups()
+    if header == "Negate":
+        # Livestatus refuses an argument here.
+        return "Negate:"
+    if not argument:
+        raise ValueError(f"'{header}:' needs an argument")
+    # Not ``str.isdigit()``: it takes digits Livestatus does not, like "²".
+    if header in ("And", "Or") and not re.fullmatch(r"[0-9]+", argument):
+        raise ValueError(f"'{header}:' needs the number of lines it combines")
+    return f"{header}: {argument}"
 
 
 def validate_member_pattern(value: str) -> str:

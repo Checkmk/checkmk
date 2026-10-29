@@ -375,6 +375,24 @@ def test_a_dynamic_group_keeps_its_service_counting(
     assert obj.get("recognize_services") == group.get("recognize_services")
 
 
+def test_a_dynamic_group_maps_cannot_load_is_left_out_of_its_board(
+    admin: UserId, caplog: pytest.LogCaptureFixture
+) -> None:
+    # Seven levels where the operator changes: one past what Maps loads.
+    nested = "Filter: name ~ a\n" + "Filter: name ~ b\nAnd: 2\nNegate:\n" * 4
+    map_spec = _complete_map(
+        objects=[
+            _complete_object(id="kept", **_DYNGROUP),
+            _complete_object(id="deep", type="dyngroup", object_filter=nested),
+        ]
+    )
+
+    objects = _objects(_migrated(admin, "deep", map_spec).config.map_spec)
+
+    assert [obj["id"] for obj in objects] == ["kept"]
+    assert "without 1 object(s)" in caplog.text
+
+
 def test_member_patterns_orbvis_never_applied_are_dropped(admin: UserId) -> None:
     # OrbVis asked for state names; Maps would read them as a pattern on names.
     map_spec = _complete_map(

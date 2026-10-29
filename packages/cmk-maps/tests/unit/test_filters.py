@@ -9,6 +9,7 @@ import pytest
 from cmk.maps.shared.filters import (
     excluded_members_filter,
     ExcludedMembers,
+    FILTER_NESTING_MAX,
     normalize_object_filter,
     validate_member_pattern,
 )
@@ -31,7 +32,7 @@ def test_keeps_a_literal_backslash_r_inside_one_line() -> None:
 
 
 def test_rejects_control_characters() -> None:
-    # A NUL survives both splitlines() and the ``.+`` of the header regex, so it
+    # A NUL survives both splitlines() and the ``.*`` of the header regex, so it
     # would otherwise reach Livestatus inside an otherwise well-formed line.
     with pytest.raises(ValueError):
         normalize_object_filter("Filter: a\x00Stats: state = 0")
@@ -41,6 +42,18 @@ def test_accepts_combinator_headers() -> None:
     assert (
         normalize_object_filter("Filter: a\\nFilter: b\\nOr: 2") == "Filter: a\nFilter: b\nOr: 2\n"
     )
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        pytest.param("Filter: a\\nNegate:", "Filter: a\nNegate:\n", id="negate"),
+        pytest.param("Filter: a\\nNegate: 1", "Filter: a\nNegate:\n", id="negate-argument"),
+        pytest.param("Filter:a\\nFilter:b\\nOr:2", "Filter: a\nFilter: b\nOr: 2\n", id="no-space"),
+    ],
+)
+def test_accepts_filters_as_livestatus_reads_them(value: str, expected: str) -> None:
+    assert normalize_object_filter(value) == expected
 
 
 @pytest.mark.parametrize(
@@ -62,11 +75,46 @@ def test_accepts_combinator_headers() -> None:
         pytest.param("Filter: a\x1cStats: state = 0", id="file-separator"),
         pytest.param("Stats: state = 0", id="bare-stats"),
         pytest.param("GET hosts", id="bare-get"),
+        pytest.param("Filter:", id="filter-without-argument"),
+        pytest.param("Filter: a\\nOr:", id="or-without-count"),
+        pytest.param("Filter: a\\nFilter: b\\nOr: two", id="or-without-a-number"),
+        pytest.param("Filter: a\\nFilter: b\\nOr: ²", id="or-with-a-non-ascii-digit"),
+        pytest.param("filter: name = a", id="lowercase"),
         pytest.param("", id="empty"),
     ],
 )
 def test_rejects_injected_headers(value: str) -> None:
     with pytest.raises(ValueError):
+        normalize_object_filter(value)
+
+
+def _alternating(levels: int) -> str:
+    return "Filter: a\n" + "".join(
+        f"Filter: b\n{'Or' if i % 2 else 'And'}: 2\n" for i in range(levels)
+    )
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(_alternating(FILTER_NESTING_MAX), id="alternating-to-the-limit"),
+        pytest.param("Filter: a\n" + "Filter: b\nOr: 2\n" * 500, id="one-operator-merges"),
+        pytest.param("".join(f"Filter: a{i}\n" for i in range(500)) + "Or: 500", id="flat"),
+    ],
+)
+def test_accepts_a_filter_livestatus_runs_quickly(value: str) -> None:
+    normalize_object_filter(value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(_alternating(FILTER_NESTING_MAX + 1), id="alternating"),
+        pytest.param("Filter: a\n" + "Filter: b\nAnd: 2\nNegate:\n" * 4, id="negate-adds-a-level"),
+    ],
+)
+def test_rejects_a_filter_nested_deeper_than_livestatus_runs_quickly(value: str) -> None:
+    with pytest.raises(ValueError, match="deeper"):
         normalize_object_filter(value)
 
 

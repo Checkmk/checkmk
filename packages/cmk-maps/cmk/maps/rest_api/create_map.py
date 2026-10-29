@@ -32,6 +32,7 @@ from cmk.maps.rest_api.utils import (
     RW_PERMISSIONS,
     serialize_map,
     spec_from_map,
+    validate_object_filters,
     validate_visibility,
 )
 from cmk.maps.shared.validators import is_valid_map_name
@@ -59,6 +60,8 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
             title="Invalid map name",
             detail="A map name may only contain letters, digits, underscore and hyphen.",
         )
+    spec = spec_from_map(body.config)
+    validate_object_filters(spec, {})
     if not isinstance(body.visibility, ApiOmitted):
         validate_visibility(body.visibility)
         requested = public_request_from_visibility(body.visibility)
@@ -73,7 +76,7 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
         created = create_map(
             user_id,
             name,
-            spec_from_map(body.config),
+            spec,
             _authorized_public(requested),
             hidden,
         )

@@ -33,6 +33,7 @@ from cmk.maps.rest_api.utils import (
     RW_PERMISSIONS,
     serialize_map,
     spec_from_map,
+    validate_object_filters,
     validate_visibility,
 )
 
@@ -90,6 +91,8 @@ def update_map_v1(
         target_owner = user_id
     if api_context.etag.enabled:
         api_context.etag.verify(map_etag(page))
+    spec = spec_from_map(body.config)
+    validate_object_filters(spec, page.config.map_spec)
 
     # Preserve the stored visibility of the written instance when the request
     # omits it (routine autosaves), so an edit never silently resets sharing;
@@ -110,7 +113,7 @@ def update_map_v1(
         else body.visibility.hide_in_monitor_menu
     )
     try:
-        save_map(target_owner, name, spec_from_map(body.config), public, hidden)
+        save_map(target_owner, name, spec, public, hidden)
     except MKGeneralException as exc:
         # A failed store write (disk full, unwritable profile) would otherwise
         # surface as an uncaught 500 with a crash report; answer a clean error.

@@ -320,6 +320,53 @@ def test_publish_without_targets_returns_400(clients: ClientRegistry, scope: str
     ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
+def _dyngroup_map(object_filter: str, *, alias: str = "Map1") -> dict[str, object]:
+    return _map(
+        "map1",
+        alias=alias,
+        objects=[
+            _host_object(
+                "d1",
+                obj_type="dyngroup",
+                binding={"object_types": "host", "object_filter": object_filter},
+            )
+        ],
+    )
+
+
+def test_a_filter_livestatus_would_refuse_is_refused(clients: ClientRegistry) -> None:
+    clients.Maps.create(
+        config=_dyngroup_map("Filter: description ~ CPU\n"), expect_ok=False
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
+def test_a_refused_filter_names_its_object(clients: ClientRegistry) -> None:
+    clients.Maps.create(config=_dyngroup_map("Filter: name ~ web\n"))
+
+    resp = clients.Maps.edit(
+        "map1", config=_dyngroup_map("Filter: nme ~ web\n"), etag="star", expect_ok=False
+    )
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert "Object 'd1'" in resp.json["detail"]
+
+
+def test_a_filter_the_map_already_had_is_not_checked_again(
+    clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    clients.Maps.create(config=_dyngroup_map("Filter: name ~ web\n"))
+
+    def _column_dropped(*_: object) -> None:
+        raise ValueError("unknown column 'name'")
+
+    # As if a later Checkmk version had dropped the column the stored filter names.
+    monkeypatch.setattr(utils, "check_object_filter", _column_dropped)
+
+    clients.Maps.edit(
+        "map1", config=_dyngroup_map("Filter: name ~ web\n", alias="Moved"), etag="star"
+    )
+
+
 def test_object_rejects_null_for_non_nullable_line_fields(clients: ClientRegistry) -> None:
     # ``line_perfdata_label``/``line_weather_color`` are non-nullable in the daemon
     # map schema; the REST mirror must not advertise them as nullable (an explicit

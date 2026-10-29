@@ -23,6 +23,7 @@ from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
 from cmk.gui.type_defs import VisualPublic
 from cmk.maps.gui._capabilities import sign_map_config
+from cmk.maps.gui._filter_check import check_object_filter
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import get_permitted_map, rotation_pools_of
 from cmk.maps.gui.type_defs import MapName
@@ -38,6 +39,7 @@ from cmk.maps.rest_api.models.response_models import (
     MapObject,
     MapVisibility,
 )
+from cmk.maps.shared.filters import normalize_object_filter
 from cmk.maps.shared.map_payload import (
     BackgroundPosition,
     BackgroundStyle,
@@ -293,6 +295,42 @@ def visibility_from_public(public: VisualPublic | None, hidden: bool) -> MapVisi
     if isinstance(public, tuple) and public[0] in ("contact_groups", "sites"):
         return MapVisibility(publish=public[0], groups=list(public[1]), hide_in_monitor_menu=hidden)
     return MapVisibility(publish="private", hide_in_monitor_menu=hidden)
+
+
+def validate_object_filters(spec: Mapping[str, object], stored: Mapping[str, object]) -> None:
+    """Reject a Livestatus filter the map did not have before that Livestatus would refuse.
+
+    A filter it had is left alone, so a map whose filter names a column a later
+    Checkmk version dropped can still be saved.
+    """
+    kept = {(_normalized(f), t) for _, f, t in _object_filters(stored)}
+    for where, object_filter, object_types in _object_filters(spec):
+        if (object_filter, object_types) in kept:
+            continue
+        try:
+            check_object_filter(object_filter, object_types)
+        except ValueError as e:
+            raise RestAPIRequestGeneralException(
+                status=HTTPStatus.BAD_REQUEST,
+                title="Invalid Livestatus filter",
+                detail=f"{where}: {e}",
+            ) from e
+
+
+def _normalized(object_filter: str) -> str:
+    # Stored by another path or version, it may be spelled other than the REST model stores it.
+    try:
+        return normalize_object_filter(object_filter)
+    except ValueError:
+        return object_filter
+
+
+def _object_filters(spec: Mapping[str, object]) -> Iterator[tuple[str, str, str | None]]:
+    """Each Livestatus filter of a flat ``map_spec``: where it is, it, and what it queries."""
+    objects = spec.get("objects")
+    for obj in map(_sub_mapping, objects if isinstance(objects, list) else []):
+        if isinstance(object_filter := obj.get("object_filter"), str):
+            yield f"Object {obj.get('id')!r}", object_filter, _opt_str(obj.get("object_types"))
 
 
 def validate_visibility(visibility: MapVisibility) -> None:

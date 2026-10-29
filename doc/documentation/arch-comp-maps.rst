@@ -884,9 +884,14 @@ Livestatus queries
   bundles are dropped if they contain a newline or backslash. The GUI builds
   its queries with Checkmk's query expression builder. Dynamic groups accept
   only ``Filter:``, ``And:``, ``Or:`` and ``Negate:`` lines without control
-  characters (tab is allowed). A query every federation site refuses fails,
-  and the sites stay connected. The same query for the same user is sent again
-  after 30 seconds at the earliest.
+  characters (tab is allowed), nesting at most six levels where the operator
+  changes. Saving a map through the REST API also checks each filter the map did
+  not have before: each combining line must find the lines it combines, and
+  each ``Filter:`` line's column and operator must exist in the table it
+  queries. A filter the map already had is not checked again, so a map saved by
+  another Checkmk version still loads and saves. A query every federation site
+  refuses fails, and the sites stay connected. The same query for the same user
+  is sent again after 30 seconds at the earliest.
 
 Stored data and secrets
 -----------------------

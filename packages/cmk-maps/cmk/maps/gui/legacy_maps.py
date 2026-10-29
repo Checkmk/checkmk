@@ -30,6 +30,7 @@ from cmk.maps.gui._image_security import (
     safe_image_stem,
 )
 from cmk.maps.gui._images import import_background, import_icon
+from cmk.maps.shared.filters import normalize_object_filter
 from cmk.maps.shared.geo import bounded_view
 from cmk.maps.shared.map_compat import (
     accept_legacy_backend_id,
@@ -106,6 +107,32 @@ def _dict_objects(spec: Mapping[str, object]) -> Iterator[dict[str, object]]:
     for obj in objects if isinstance(objects, list) else []:
         if isinstance(obj, dict):
             yield obj
+
+
+def drop_unloadable_filters(board: dict[str, object]) -> int:
+    """Leave out the objects whose Livestatus filter Maps would not load, counting them.
+
+    One such object would otherwise keep the whole board from being migrated.
+    """
+    objects = board.get("objects")
+    if not isinstance(objects, list):
+        return 0
+    kept = [obj for obj in objects if not isinstance(obj, dict) or _loads(obj.get("object_filter"))]
+    board["objects"] = kept
+    return len(objects) - len(kept)
+
+
+def _loads(object_filter: object) -> bool:
+    # A blank filter is no filter; anything else must normalize.
+    if not object_filter or isinstance(object_filter, str) and not object_filter.strip():
+        return True
+    if not isinstance(object_filter, str):
+        return False
+    try:
+        normalize_object_filter(object_filter)
+    except ValueError:
+        return False
+    return True
 
 
 def used_connections(spec: Mapping[str, object]) -> set[str]:

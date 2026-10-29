@@ -33,6 +33,7 @@ from cmk.maps.gui._images import delete_background_files
 from cmk.maps.gui.legacy_maps import (
     copy_legacy_background,
     copy_legacy_icons,
+    drop_unloadable_filters,
     foreign_connections,
     is_demo_map,
     is_hidden_map,
@@ -132,6 +133,7 @@ def _prepare_maps(
                 logger.info("OrbVis demo board %(board)r is not migrated.", {"board": board})
                 maps.outcomes[board] = "skipped"
                 continue
+            dropped = drop_unloadable_filters(data)
             if not icons_copied:
                 # Checked first: a failing board is retried on every update and must not
                 # copy the library and repeat its warnings each time.
@@ -157,6 +159,12 @@ def _prepare_maps(
             delete_background_files(maps.admin, name)
             continue
         migrated[board] = name
+        if dropped:
+            logger.warning(
+                "OrbVis board %(board)r is migrated without %(count)d object(s) whose "
+                "Livestatus filter Maps cannot load.",
+                {"board": board, "count": dropped},
+            )
         if used_foreign := sorted(used_connections(spec) & foreign):
             logger.warning(
                 "OrbVis board %(board)r uses the OrbVis connection(s) %(ids)s; add a "

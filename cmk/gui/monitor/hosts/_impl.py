@@ -19,6 +19,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
+from cmk.gui.monitor.command import ModifiableAttribute
 from cmk.gui.monitor.shared import folder_files_matching, HostState
 from cmk.gui.monitor.site_scope import MonitorSites
 from cmk.gui.sites import SiteStates
@@ -30,6 +31,14 @@ from cmk.gui.utils.host_relations import (
     reverse_direction,
 )
 from cmk.livestatus_client import (
+    ChangeHostModifiedAttributes,
+    Command,
+    DisableHostCheck,
+    DisableHostNotifications,
+    DisablePassiveHostChecks,
+    EnableHostCheck,
+    EnableHostNotifications,
+    EnablePassiveHostChecks,
     LivestatusClient,
     MultiSiteConnection,
     NotificationOption,
@@ -557,6 +566,31 @@ class LiveStatusHostActions:
                 ProcessHostCheckResult(HostName(target.host_name), state, output),
                 SiteId(target.site_id),
             )
+
+    def toggle_attribute(
+        self, targets: Sequence[HostTarget], attribute: ModifiableAttribute, *, enabled: bool
+    ) -> None:
+        command = _HOST_ATTRIBUTE_COMMANDS[attribute][enabled]
+        client = LivestatusClient(self._connection)
+        for target in targets:
+            client.command(command(HostName(target.host_name)), SiteId(target.site_id))
+
+    def reset_modified_attributes(self, targets: Sequence[HostTarget]) -> None:
+        client = LivestatusClient(self._connection)
+        for target in targets:
+            client.command(
+                ChangeHostModifiedAttributes(HostName(target.host_name), 0), SiteId(target.site_id)
+            )
+
+
+# The command disabling an attribute, then the one enabling it, indexed by `enabled`.
+_HOST_ATTRIBUTE_COMMANDS: Mapping[
+    ModifiableAttribute, tuple[Callable[[HostName], Command], ...]
+] = {
+    ModifiableAttribute.NOTIFICATIONS: (DisableHostNotifications, EnableHostNotifications),
+    ModifiableAttribute.ACTIVE_CHECKS: (DisableHostCheck, EnableHostCheck),
+    ModifiableAttribute.PASSIVE_CHECKS: (DisablePassiveHostChecks, EnablePassiveHostChecks),
+}
 
 
 def _known_relations(raw: str | None) -> list[ResolvedRelation]:

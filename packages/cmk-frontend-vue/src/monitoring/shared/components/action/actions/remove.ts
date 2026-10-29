@@ -4,45 +4,19 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import type { MonitoringAction } from '../types'
-import { commandFailed } from './feedback'
+import { type ConfirmedKindConfig, createConfirmedAction } from './confirmed'
 
 export const REMOVE_ACK_ACTION_ID = 'remove_acknowledgments'
 export const REMOVE_DOWNTIMES_ACTION_ID = 'remove_downtimes_hosts_services'
 
-export interface RemoveKindConfig<Target> {
-  remove(targets: Target[]): Promise<void>
-  successMessage(count: number): TranslatedString
-  errorHeading: TranslatedString
-}
-
-function createRemoveAction<Target>(
-  base: Pick<MonitoringAction<Record<string, never>, Target>, 'id' | 'title' | 'confirm'>,
-  config: RemoveKindConfig<Target>
-): MonitoringAction<Record<string, never>, Target> {
-  return {
-    ...base,
-    submitLabel: base.title,
-    defaultValues: () => ({}),
-    perform: async (targets: Target[]) => {
-      try {
-        await config.remove(targets)
-        return { variant: 'success', message: config.successMessage(targets.length) }
-      } catch {
-        return commandFailed(config.errorHeading)
-      }
-    }
-  }
-}
-
 /** Removes the acknowledgements of the targets, which the page narrows to acknowledged ones. */
 export function createRemoveAcknowledgementsAction<Target>(
-  config: RemoveKindConfig<Target>
+  config: ConfirmedKindConfig<Target>
 ): MonitoringAction<Record<string, never>, Target> {
   const { _t } = usei18n()
-  return createRemoveAction(
+  return createConfirmedAction(
     {
       id: REMOVE_ACK_ACTION_ID,
       title: _t('Remove acknowledgements'),
@@ -57,10 +31,10 @@ export function createRemoveAcknowledgementsAction<Target>(
 
 /** Removes the downtimes of the targets, which the page narrows to ones in downtime. */
 export function createRemoveDowntimesAction<Target>(
-  config: RemoveKindConfig<Target>
+  config: ConfirmedKindConfig<Target>
 ): MonitoringAction<Record<string, never>, Target> {
   const { _t } = usei18n()
-  return createRemoveAction(
+  return createConfirmedAction(
     {
       id: REMOVE_DOWNTIMES_ACTION_ID,
       title: _t('Remove downtimes'),

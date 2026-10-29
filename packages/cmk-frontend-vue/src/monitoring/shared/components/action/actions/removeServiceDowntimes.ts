@@ -18,7 +18,7 @@ export function useRemoveServiceDowntimesAction(): MonitoringAction<
   const api = new RemoveDowntimeApi()
 
   return createRemoveDowntimesAction<ServiceRef>({
-    remove: (targets) => api.removeServiceDowntimes(targets),
+    run: (targets) => api.removeServiceDowntimes(targets),
     successMessage: (count) =>
       _tn(
         'Removed downtime of the selected service',

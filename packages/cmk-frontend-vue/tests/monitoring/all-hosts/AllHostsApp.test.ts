@@ -490,6 +490,41 @@ test('adds a comment to the selected host from the "More" menu', async () => {
   )
 })
 
+test('disables the notifications of the selected host from the "More" menu', async () => {
+  const user = userEvent.setup()
+  mockHosts([makeHost()])
+  renderApp('community', {
+    actions: [
+      { ident: 'notifications', title: 'Enable/disable notifications', icon: 'notifications' }
+    ]
+  })
+
+  await user.click(await screen.findByRole('checkbox', { name: 'Select all rows' }))
+  await user.click(screen.getByRole('button', { name: 'More' }))
+  await user.click(await screen.findByRole('menuitem', { name: 'Enable/disable notifications' }))
+  await user.click(await screen.findByRole('radio', { name: 'Disable' }))
+  postSpy.mockResolvedValueOnce({
+    data: { modified: 1 },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  } as never)
+  await user.click(screen.getByRole('button', { name: 'Confirm' }))
+
+  expect(
+    await screen.findByText('Disabled notifications for the selected host')
+  ).toBeInTheDocument()
+  expect(postSpy).toHaveBeenCalledWith(
+    '/monitor/hosts/actions/toggle_attribute',
+    expect.objectContaining({
+      body: {
+        hosts: [{ site_id: 'local', name: 'web-1' }],
+        attribute: 'notifications',
+        enabled: false
+      }
+    })
+  )
+})
+
 const ACKNOWLEDGED = {
   id: 'acknowledged' as const,
   icon_name: 'ack',

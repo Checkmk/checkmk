@@ -18,7 +18,7 @@ export function useRemoveServiceAcknowledgementsAction(): MonitoringAction<
   const api = new AcknowledgeApi()
 
   return createRemoveAcknowledgementsAction<ServiceRef>({
-    remove: (targets) => api.removeServiceAcknowledgements(targets),
+    run: (targets) => api.removeServiceAcknowledgements(targets),
     successMessage: (count) =>
       _tn(
         'Removed acknowledgement of the selected service',

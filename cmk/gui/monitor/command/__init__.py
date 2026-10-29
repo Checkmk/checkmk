@@ -8,6 +8,7 @@ from ._downtime import downtime_recurrences, DowntimeRecurrence, DowntimeRecurre
 from ._fake_check_result import fake_check_output
 from ._host import host_setup_links, HOST_SUPPORTED_ACTIONS, HostSetupLink
 from ._legacy import LegacyCommand, LegacyCommandSource
+from ._modified_attributes import ATTRIBUTE_PERMISSIONS, ModifiableAttribute
 from ._presets import (
     acknowledge_defaults,
     AcknowledgeDefaults,
@@ -26,6 +27,7 @@ __all__ = [
     "acknowledge_defaults",
     "acknowledge_presets_url",
     "AcknowledgeDefaults",
+    "ATTRIBUTE_PERMISSIONS",
     "downtime_presets",
     "downtime_presets_url",
     "downtime_recurrences",
@@ -38,6 +40,7 @@ __all__ = [
     "HostSetupLink",
     "LegacyCommand",
     "LegacyCommandSource",
+    "ModifiableAttribute",
     "monitor_command_registry",
     "monitor_commands",
     "MonitorCommand",

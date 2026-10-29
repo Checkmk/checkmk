@@ -17,8 +17,10 @@ import { useRemoveHostAcknowledgementsAction } from '@/monitoring/shared/compone
 import { useRemoveHostDowntimesAction } from '@/monitoring/shared/components/action/actions/removeHostDowntimes'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import { useRescheduleHostsAction } from '@/monitoring/shared/components/action/actions/rescheduleHosts'
+import { useResetHostModifiedAttributesAction } from '@/monitoring/shared/components/action/actions/resetHostModifiedAttributes'
 import { downtimePresets } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
 import { useScheduleHostDowntimeAction } from '@/monitoring/shared/components/action/actions/scheduleHostDowntime'
+import { useToggleHostAttributesActions } from '@/monitoring/shared/components/action/actions/toggleHostAttributes'
 import { barActions } from '@/monitoring/shared/components/action/barActions'
 import type { MonitoringCommandsPayload } from '@/monitoring/shared/components/action/commandsPayload'
 import {
@@ -108,7 +110,9 @@ export function useHostActions(payload: HostActionsPayload): HostActions {
     useNotifyHostsAction(),
     useFakeHostCheckResultsAction(),
     useRemoveHostAcknowledgementsAction(),
-    useRemoveHostDowntimesAction()
+    useRemoveHostDowntimesAction(),
+    ...useToggleHostAttributesActions(),
+    useResetHostModifiedAttributesAction()
   ])
 
   const { bar, more } = barActions(permitted, registry)

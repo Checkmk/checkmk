@@ -15,7 +15,7 @@ export function useRemoveHostDowntimesAction(): MonitoringAction<Record<string, 
   const api = new RemoveDowntimeApi()
 
   return createRemoveDowntimesAction<HostRef>({
-    remove: (targets) => api.removeHostDowntimes(targets.map((target) => target.name)),
+    run: (targets) => api.removeHostDowntimes(targets.map((target) => target.name)),
     successMessage: (count) =>
       _tn(
         'Removed downtime of the selected host',

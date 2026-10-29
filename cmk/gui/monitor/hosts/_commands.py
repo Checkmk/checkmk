@@ -11,6 +11,7 @@ from collections.abc import Sequence
 from typing import Protocol
 
 from cmk.ccc.user import UserId
+from cmk.gui.monitor.command import ModifiableAttribute
 
 from ._models import HostTarget, RescheduleTarget
 
@@ -38,4 +39,16 @@ class HostNotifier(Protocol):
 class HostCheckResultFaker(Protocol):
     def fake_check_result(self, targets: Sequence[HostTarget], *, state: int, output: str) -> None:
         """Submit a check result for each target on its site, as if its check had run."""
+        ...
+
+
+class HostAttributeModifier(Protocol):
+    def toggle_attribute(
+        self, targets: Sequence[HostTarget], attribute: ModifiableAttribute, *, enabled: bool
+    ) -> None:
+        """Enable or disable the attribute for each target on its site."""
+        ...
+
+    def reset_modified_attributes(self, targets: Sequence[HostTarget]) -> None:
+        """Undo what such toggles changed for each target, back to its configuration."""
         ...

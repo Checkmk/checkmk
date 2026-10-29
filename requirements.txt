@@ -200,11 +200,10 @@ annotated-types==0.8.0 \
     #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-telemetry/requirements.in
     #   pydantic
-anthropic==1.17.0 \
-    --hash=sha256:ccb98b85e1a14f81cf1e2ba348393f341f342bad9e07e014f96c9b69f853aaa7 \
-    --hash=sha256:dcf77a74dde89a9fd12405fca798b012725a107f7c9488454234a74e275c2163
+anthropic==2.3.0 \
+    --hash=sha256:aa6a3984f9276f307933d42dc6f58b6efc821a5ecafbc8d1bb5993a066767622 \
+    --hash=sha256:edfdea1e3fa7b3ce25df1511953408b2f03bfa61eb6f6268f766101a9e18ad53
     # via
-    #   -c constraints.txt
     #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   pydantic-ai-slim

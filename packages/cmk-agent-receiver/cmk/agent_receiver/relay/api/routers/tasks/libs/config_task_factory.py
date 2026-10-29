@@ -62,28 +62,29 @@ class ConfigTaskFactory:
         The number of actually created task might be lower than the number of the relays,
         because some relays might already have existing pending tasks for the current serial value.
         """
-        relay_ids = self.relay_config_repository.relay_ids()
-        return self._create(relay_ids)
+        serial = retrieve_config_serial()
+        relay_ids = self.relay_config_repository.relay_ids(serial)
+        return self._create(relay_ids, serial)
 
-    def create_for_relay(self, relay_id: RelayID) -> ConfigTaskCreationResult:
+    def create_for_relay(self, relay_id: RelayID, serial: Serial) -> ConfigTaskCreationResult:
         """
         Creates a relay config task for the specified relay.
-        If the relay has already a pending relay for the current serial value, the function
+        If the relay has already a pending relay for the serial value, the function
         does nothing and returns ConfigTaskAlreadyExists.
         If the relay does not have a configuration folder created yet, the function
         does nothing and returns ConfigTaskSkipped.
         """
-        if not self.relay_config_repository.has_config(relay_id):
+        if not self.relay_config_repository.has_config(relay_id, serial):
             logger.debug(
                 "Skipping config task creation for relay %(relay_id)s", {"relay_id": relay_id}
             )
             return ConfigTaskSkipped(relay_id)
-        return self._create([relay_id])[0]
+        return self._create([relay_id], serial)[0]
 
-    def _create(self, relay_ids: Iterable[RelayID]) -> tuple[ConfigTaskCreationResult, ...]:
-        # Retrieve shared configuration once for all relays
+    def _create(
+        self, relay_ids: Iterable[RelayID], serial: Serial
+    ) -> tuple[ConfigTaskCreationResult, ...]:
         now = datetime.now(UTC)
-        serial = retrieve_config_serial()
         config = get_config()
 
         return tuple(

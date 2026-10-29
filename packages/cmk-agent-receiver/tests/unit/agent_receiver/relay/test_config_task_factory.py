@@ -70,7 +70,7 @@ def test_create_task_for_single_chosen_relay_when_no_pending_task(
     relay_id_1, relay_id_2, relay_id_3 = cf.relay_ids
 
     # Create tasks for chosen relay: relay_id_2
-    _ = config_task_factory.create_for_relay(relay_id_2)
+    _ = config_task_factory.create_for_relay(relay_id_2, cf.serial)
 
     # assert no tasks are created for the other relays
 
@@ -113,7 +113,7 @@ def test_create_task_for_single_chosen_relay_when_pending_task(
     tasks_repository.store_task(relay_id_2, stored_task)
 
     # ...then we cannot create tasks for chosen relay: relay_id_2
-    creation_result = config_task_factory.create_for_relay(relay_id_2)
+    creation_result = config_task_factory.create_for_relay(relay_id_2, cf.serial)
     assert isinstance(creation_result, ConfigTaskAlreadyExists)
 
     # assert no tasks are created for the other relays
@@ -129,6 +129,24 @@ def test_create_task_for_single_chosen_relay_when_pending_task(
 
     assert len(tasks_for_relay_2) == 1
     assert tasks_for_relay_2[0] == stored_task
+
+
+def test_create_task_for_relay_from_requested_activation(
+    config_task_factory: ConfigTaskFactory,
+    tasks_repository: TasksRepository,
+    site_context: Config,
+) -> None:
+    """A newer activation without the relay does not hide the requested one."""
+    activation = generate_relay_config(site_context.omd_root, count=1)
+    (relay_id,) = activation.relay_ids
+    _ = generate_relay_config(site_context.omd_root)
+
+    result = config_task_factory.create_for_relay(relay_id, activation.serial)
+
+    assert isinstance(result, ConfigTaskCreated)
+    (task,) = tasks_repository.get_tasks(relay_id)
+    assert isinstance(task.spec, RelayConfigSpec)
+    assert_config_tar(activation, relay_id, task.spec.tar_data)
 
 
 def test_create_task_for_single_relay_skipped_when_config_not_applied(
@@ -150,7 +168,7 @@ def test_create_task_for_single_relay_skipped_when_config_not_applied(
 
     # Create a minimal config folder to establish the serial
     # Use a relay ID that won't conflict with other tests
-    _ = generate_relay_config(site_context.omd_root, [])
+    cf = generate_relay_config(site_context.omd_root, [])
 
     # Use a relay ID that has NO config folder
     # This simulates calling create_for_relay for a relay that hasn't been configured yet
@@ -159,7 +177,7 @@ def test_create_task_for_single_relay_skipped_when_config_not_applied(
     # Capture logs at DEBUG level
     with caplog.at_level(logging.DEBUG, logger="agent-receiver"):
         # When creating a task for a relay without config applied
-        creation_result = config_task_factory.create_for_relay(relay_id_without_config)
+        creation_result = config_task_factory.create_for_relay(relay_id_without_config, cf.serial)
 
     # Then it should be skipped
     assert isinstance(creation_result, ConfigTaskSkipped)
@@ -238,7 +256,8 @@ def test_create_task_fails_when_tar_creation_raises_exception(
     but tar creation fails due to an exception (e.g., file system error).
     """
 
-    (relay_id,) = generate_relay_config(site_context.omd_root, count=1).relay_ids
+    cf = generate_relay_config(site_context.omd_root, count=1)
+    (relay_id,) = cf.relay_ids
 
     # Mock create_tar to raise an exception
     with patch(
@@ -247,7 +266,7 @@ def test_create_task_fails_when_tar_creation_raises_exception(
         mock_create_tar.side_effect = OSError("Permission denied")
 
         # When creating a task and tar creation fails
-        creation_result = config_task_factory.create_for_relay(relay_id)
+        creation_result = config_task_factory.create_for_relay(relay_id, cf.serial)
 
         # Then it should return ConfigTaskCreationFailed
         assert isinstance(creation_result, ConfigTaskCreationFailed)

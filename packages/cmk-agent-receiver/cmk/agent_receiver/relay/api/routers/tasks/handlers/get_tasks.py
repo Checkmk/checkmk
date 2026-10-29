@@ -30,7 +30,7 @@ class GetRelayTasksHandler:
     ) -> list[RelayTask]:
         current_serial = retrieve_config_serial()
         if relay_serial is not None and relay_serial != current_serial:
-            _ = self.config_task_factory.create_for_relay(relay_id)
+            _ = self.config_task_factory.create_for_relay(relay_id, current_serial)
 
         return self._get_tasks(relay_id, status)
 

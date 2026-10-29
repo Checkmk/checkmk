@@ -41,47 +41,6 @@ from cmk.profiling.backend import ProfilingOptions
 from cmk.ruleset_matcher.tags import TagConfigSpec
 from cmk.utils import paths
 
-CustomLinkSpec = tuple[str, bool, list[tuple[str, str, str | None, str]]]
-
-# Links for everyone
-custom_links_guest: list[CustomLinkSpec] = [
-    (
-        "Add-ons",
-        True,
-        [
-            ("NagVis", "../nagvis/", "icon_nagvis.png", "_self"),
-        ],
-    ),
-]
-
-# The members of the role 'user' get the same links as the guests
-# but some in addition
-custom_links_user: list[CustomLinkSpec] = [
-    (
-        "Open Source Components",
-        False,
-        [
-            ("CheckMK", "https://checkmk.com", None, "_blank"),
-            ("Nagios", "https://www.nagios.org/", None, "_blank"),
-            ("NagVis", "https://nagvis.org/", None, "_blank"),
-            ("RRDTool", "https://oss.oetiker.ch/rrdtool/", None, "_blank"),
-        ],
-    )
-]
-
-# The admins yet get further links
-custom_links_admin: list[CustomLinkSpec] = [
-    (
-        "Support",
-        False,
-        [
-            ("CheckMK", "https://checkmk.com/", None, "_blank"),
-            ("CheckMK Mailinglists", "https://checkmk.com/community.php", None, "_blank"),
-            ("CheckMK Exchange", "https://checkmk.com/check_mk-exchange.php", None, "_blank"),
-        ],
-    )
-]
-
 
 def make_default_user_profile() -> UserSpec:
     return UserSpec(
@@ -279,20 +238,9 @@ class GeneralConfig:
         }
     )
 
-    #   ____          _                    _     _       _
-    #  / ___|   _ ___| |_ ___  _ __ ___   | |   (_)_ __ | | _____
-    # | |  | | | / __| __/ _ \| '_ ` _ \  | |   | | '_ \| |/ / __|
-    # | |__| |_| \__ \ || (_) | | | | | | | |___| | | | |   <\__ \
-    #  \____\__,_|___/\__\___/|_| |_| |_| |_____|_|_| |_|_|\_\___/
-    #
-
-    # TODO: Improve type below, see cmk.gui.plugins.sidebar.custom_links
-    custom_links: dict[str, list[CustomLinkSpec]] = field(
-        default_factory=lambda: {
-            "guest": custom_links_guest,
-            "user": custom_links_guest + custom_links_user,
-            "admin": custom_links_guest + custom_links_user + custom_links_admin,
-        }
+    # Deprecated. Kept for compatibility.
+    custom_links: dict[str, list] = field(
+        default_factory=lambda: {"guest": [], "user": [], "admin": []}
     )
 
     #  __     __         _

@@ -28,7 +28,7 @@ from .config import (
     LOGGER,
 )
 from .credentials import CLIENT_LOCK
-from .hosts import AccountScope, SOURCE_HOST, target_host, TargetHost
+from .hosts import TargetHost
 from .sections.aws_lambda import (
     LambdaCloudwatch,
     LambdaCloudwatchInsights,
@@ -235,8 +235,8 @@ class AWSSections(abc.ABC):
         self._hostname = hostname
         # Where the agent output goes. None is sys.stdout at the time of writing.
         self._output = output
-        # The host of the labels and exceptions of the account. init_sections sets it.
-        self._account_host: TargetHost | None = SOURCE_HOST
+        # The host of the labels and exceptions of the account. See AWSConfig.for_account.
+        self._account_host = TargetHost(account_id)
         self._session = session
         # None until init_sections runs. boto3 then falls back to the session's own
         # region, which is what happened before the region moved onto the client.
@@ -260,7 +260,6 @@ class AWSSections(abc.ABC):
         # below lands in it. One session serves all regions; the client decides where it
         # talks to.
         self._region = region
-        self._account_host = target_host(AccountScope(), config.host_naming)
         self._build_sections(services, region, config, s3_limits_distributor)
 
     @abc.abstractmethod
@@ -343,7 +342,7 @@ class AWSSections(abc.ABC):
 
     def _is_piggyback_host_result(self, section_result: AWSSectionResult) -> bool:
         # "" guards against an empty host name in the AWS data or in older cache files.
-        return section_result.piggyback_hostname not in {SOURCE_HOST, "", self._hostname}
+        return section_result.piggyback_hostname not in {"", self._hostname}
 
     def _collect_piggyback_host_labels(
         self, results: Results, static_labels: Mapping[str, str]
@@ -363,8 +362,8 @@ class AWSSections(abc.ABC):
     def _write(self, content: str) -> None:
         (self._output or sys.stdout).write(content)
 
-    def _write_to_host(self, host: TargetHost | None, content: str) -> None:
-        self._write(content if host is SOURCE_HOST else f"<<<<{host}>>>>\n{content}<<<<>>>>\n")
+    def _write_to_host(self, host: TargetHost, content: str) -> None:
+        self._write(f"<<<<{host}>>>>\n{content}<<<<>>>>\n")
 
     def _write_host_labels(self, results: Results) -> None:
         static_host_labels = self._collect_static_host_labels()
@@ -435,8 +434,8 @@ class AWSSections(abc.ABC):
 
         for row in result:
             self._write_to_host(
-                # The source host, an empty name and a host named like the rule host
-                # mean the data of the account.
+                # An empty name and a host named like the rule host mean the data of the
+                # account.
                 row.piggyback_hostname
                 if self._is_piggyback_host_result(row)
                 else self._account_host,

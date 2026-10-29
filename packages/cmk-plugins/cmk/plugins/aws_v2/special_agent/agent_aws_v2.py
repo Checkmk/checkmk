@@ -902,7 +902,7 @@ def _start_account(
     except AwsAccessError as ae:
         return account_id, ae
 
-    account_config = settings.aws_config.for_account(account.id, host=account.id)
+    account_config = settings.aws_config.for_account(account.id)
     # Collects the S3 limits across the regions of this account, so it must not be
     # shared with other accounts.
     s3_limits_distributor = ResultDistributorS3Limits(regions[0] if regions else None)

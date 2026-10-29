@@ -20,11 +20,13 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
-from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
+from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 from cmk.plugins.aws_v2.special_agent.sections.cloudfront import CloudFront, CloudFrontSummary
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 
 from .agent_aws_fake_clients import FakeCloudwatchClient
+
+ACCOUNT_HOST = TargetHost("123456789012")
 
 PIGGYBACK_HOSTNAME = "giordano-dev-cmk.s3.us-east-1.amazonaws.com"
 
@@ -328,7 +330,7 @@ def test_agent_aws_cloudfront_summary(
     if found_distributions:
         assert len(cloudfront_summary_results) == 1
         cloudfront_summary_result = cloudfront_summary_results[0]
-        assert cloudfront_summary_result.piggyback_hostname is SOURCE_HOST
+        assert cloudfront_summary_result.piggyback_hostname == ACCOUNT_HOST
         assert [e["Id"] for e in cloudfront_summary_result.content] == found_distributions
     else:
         assert len(cloudfront_summary_results) == 0
@@ -356,7 +358,7 @@ def test_agent_aws_cloudfront(
         assert cloudfront_result.piggyback_hostname == (
             PIGGYBACK_HOSTNAME
             if host_assignment is CloudFrontHostAssignment.origin_domain
-            else SOURCE_HOST
+            else ACCOUNT_HOST
         )
         assert {e["Label"] for e in cloudfront_result.content} == set(found_distributions)
         # We are retrieving 6 metrics for each CloudFront distribution

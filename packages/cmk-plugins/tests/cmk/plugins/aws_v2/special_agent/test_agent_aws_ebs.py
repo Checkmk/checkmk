@@ -17,7 +17,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
-from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
+from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.ebs import EBS, EBSLimits, EBSSummary
 from cmk.plugins.aws_v2.special_agent.sections.ec2 import EC2Summary
@@ -29,6 +29,8 @@ from .agent_aws_fake_clients import (
     EC2DescribeVolumeStatusIB,
     FakeCloudwatchClient,
 )
+
+ACCOUNT_HOST = TargetHost("123456789012")
 
 
 class FakeEC2Client:
@@ -102,7 +104,6 @@ class EBSSections(Protocol):
         tags: OverallTags,
         tag_import: TagsOption = TagsImportPatternOption.import_all,
         ec2_client: FakeEC2Client | None = None,
-        account_host: str | None = None,
     ) -> EBSectionsOut: ...
 
 
@@ -113,12 +114,11 @@ def get_ebs_sections() -> EBSSections:
         tags: OverallTags,
         tag_import: TagsOption = TagsImportPatternOption.import_all,
         ec2_client: FakeEC2Client | None = None,
-        account_host: str | None = None,
     ) -> EBSectionsOut:
         region = "region"
         config = AWSConfig(
             "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
-        ).for_account("123456789012", host=account_host)
+        ).for_account("123456789012")
         config.add_single_service_config("ebs_names", names)
         config.add_service_tags("ebs_tags", tags)
         config.add_single_service_config("ec2_names", None)
@@ -175,7 +175,7 @@ def test_agent_aws_ebs_limits(
     assert len(ebs_limits_results) == 1
 
     ebs_limits_result = ebs_limits_results[0]
-    assert ebs_limits_result.piggyback_hostname is SOURCE_HOST
+    assert ebs_limits_result.piggyback_hostname == ACCOUNT_HOST
     assert len(ebs_limits_result.content) == 10
 
     for limit in ebs_limits_result.content:
@@ -276,11 +276,11 @@ def test_agent_aws_ebs_without_limits(get_ebs_sections: EBSSections) -> None:
         pytest.param(
             "VolumeId-0", "PrivateIpAddress-0-region-InstanceId-0", id="monitored instance"
         ),
-        pytest.param("VolumeId-2", SOURCE_HOST, id="instance not monitored"),
+        pytest.param("VolumeId-2", ACCOUNT_HOST, id="instance not monitored"),
     ],
 )
 def test_agent_aws_ebs_volume_goes_to_its_instance_host_if_the_instance_is_monitored(
-    get_ebs_sections: EBSSections, volume_id: str, expected_host: str | None
+    get_ebs_sections: EBSSections, volume_id: str, expected_host: str
 ) -> None:
     ec2_summary, _ebs_limits, ebs_summary, _ebs = get_ebs_sections(None, (None, None))
     ec2_summary.run()
@@ -295,19 +295,10 @@ def test_agent_aws_ebs_volume_goes_to_its_instance_host_if_the_instance_is_monit
     assert host_by_volume[volume_id] == expected_host
 
 
-@pytest.mark.parametrize(
-    ("account_host", "expected_host"),
-    [
-        pytest.param(None, SOURCE_HOST, id="rule host"),
-        pytest.param("123456789012", "123456789012", id="listed account"),
-    ],
-)
 def test_agent_aws_ebs_metrics_of_an_unmonitored_instance_keep_the_empty_label(
-    get_ebs_sections: EBSSections, account_host: str | None, expected_host: str | None
+    get_ebs_sections: EBSSections,
 ) -> None:
-    ec2_summary, _ebs_limits, ebs_summary, ebs = get_ebs_sections(
-        None, (None, None), account_host=account_host
-    )
+    ec2_summary, _ebs_limits, ebs_summary, ebs = get_ebs_sections(None, (None, None))
     ec2_summary.run()
     ebs_summary.run()
 
@@ -316,7 +307,7 @@ def test_agent_aws_ebs_metrics_of_an_unmonitored_instance_keep_the_empty_label(
     assert {
         row["Label"]
         for result in ebs_results
-        if result.piggyback_hostname == expected_host
+        if result.piggyback_hostname == ACCOUNT_HOST
         for row in result.content
     } == {""}
 

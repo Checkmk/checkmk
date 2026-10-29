@@ -17,7 +17,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
-from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
+from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.glacier import (
     Glacier,
@@ -26,6 +26,8 @@ from cmk.plugins.aws_v2.special_agent.sections.glacier import (
 )
 
 from .agent_aws_fake_clients import GlacierListTagsInstancesIB, GlacierListVaultsIB
+
+ACCOUNT_HOST = TargetHost("123456789012")
 
 
 class FakeGlacierClient:
@@ -114,7 +116,7 @@ def test_agent_aws_glacier_limits(
     assert glacier_limits.name == "glacier_limits"
 
     glacier_limits_result = glacier_limits_results[0]
-    assert glacier_limits_result.piggyback_hostname is SOURCE_HOST
+    assert glacier_limits_result.piggyback_hostname == ACCOUNT_HOST
     assert len(glacier_limits_results) == 1
 
     glacier_limits_content = glacier_limits_result.content[0]
@@ -140,7 +142,7 @@ def test_agent_aws_glacier_summary(
     if amount_vaults:
         assert len(glacier_results) == 1
         glacier_result = glacier_results[0]
-        assert glacier_result.piggyback_hostname is SOURCE_HOST
+        assert glacier_result.piggyback_hostname == ACCOUNT_HOST
         assert len(glacier_result.content) == amount_vaults
         assert "Tagging" in glacier_result.content[0]
     else:
@@ -162,7 +164,7 @@ def test_agent_aws_glacier_summary_without_limits(
     if amount_vaults:
         assert len(glacier_results) == 1
         glacier_result = glacier_results[0]
-        assert glacier_result.piggyback_hostname is SOURCE_HOST
+        assert glacier_result.piggyback_hostname == ACCOUNT_HOST
         assert len(glacier_result.content) == amount_vaults
         assert "Tagging" in glacier_result.content[0]
     else:

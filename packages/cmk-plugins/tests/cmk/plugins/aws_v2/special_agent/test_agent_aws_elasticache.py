@@ -19,7 +19,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
-from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
+from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 from cmk.plugins.aws_v2.special_agent.sections.core import (
     AWSComputedContent,
     AWSRegionLimit,
@@ -34,6 +34,8 @@ from cmk.plugins.aws_v2.special_agent.sections.elasticache import (
 )
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient
+
+ACCOUNT_HOST = TargetHost("123456789012")
 
 CLUSTERS_RESPONSE1: Final[Sequence[Mapping[str, object]]] = [
     {
@@ -769,7 +771,7 @@ def test_agent_aws_elasticache_summary_and_limits_stay_on_the_account_host(
 
     results = [*elasticache_limits.run().results, *elasticache_summary.run().results]
 
-    assert {result.piggyback_hostname for result in results} == {SOURCE_HOST}
+    assert {result.piggyback_hostname for result in results} == {ACCOUNT_HOST}
 
 
 @pytest.mark.parametrize(

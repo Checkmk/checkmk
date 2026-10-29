@@ -284,7 +284,7 @@ class EBSSummary(AWSSection):
             v["InstanceId"]: k for k, v in col_instances.items()
         }
 
-        content_by_piggyback_hosts: dict[hosts.TargetHost | None, list[str]] = {}
+        content_by_piggyback_hosts: dict[hosts.TargetHost, list[str]] = {}
         for vol in raw_content.content.values():
             vol["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(vol.get("Tags", []))
 
@@ -395,14 +395,14 @@ class EBS(AWSSectionCloudwatch):
             return ""
         return host
 
-    def _host_of_metric_label(self, label: str) -> hosts.TargetHost | None:
+    def _host_of_metric_label(self, label: str) -> hosts.TargetHost:
         return self._target_host(hosts.EBSAttachment(hosts.TargetHost(label) if label else None))
 
     @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-        content_by_piggyback_hosts: dict[hosts.TargetHost | None, list[str]] = {}
+        content_by_piggyback_hosts: dict[hosts.TargetHost, list[str]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(
                 self._host_of_metric_label(row["Label"]), []

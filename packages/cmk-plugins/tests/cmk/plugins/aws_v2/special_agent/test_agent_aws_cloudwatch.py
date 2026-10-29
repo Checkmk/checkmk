@@ -10,7 +10,7 @@ from collections.abc import Callable
 import pytest
 
 from cmk.plugins.aws_v2.special_agent.config import AWSConfig, NamingConvention
-from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
+from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 from cmk.plugins.aws_v2.special_agent.sections.cloudwatch import (
     CloudwatchAlarms,
     CloudwatchAlarmsLimits,
@@ -18,6 +18,8 @@ from cmk.plugins.aws_v2.special_agent.sections.cloudwatch import (
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 
 from .agent_aws_fake_clients import FakeCloudwatchClient
+
+ACCOUNT_HOST = TargetHost("123456789012")
 
 CreateCloudwatchAlarmSections = Callable[
     [object | None], tuple[CloudwatchAlarmsLimits, CloudwatchAlarms]
@@ -80,7 +82,7 @@ def test_agent_aws_cloudwatch_alarms_limits(
 
     assert len(cloudwatch_alarms_limits_results) == 1
     cloudwatch_alarms_limits_result = cloudwatch_alarms_limits_results[0]
-    assert cloudwatch_alarms_limits_result.piggyback_hostname is SOURCE_HOST
+    assert cloudwatch_alarms_limits_result.piggyback_hostname == ACCOUNT_HOST
 
     assert len(cloudwatch_alarms_limits_result.content) == 1
     cloudwatch_alarms_limits_content = cloudwatch_alarms_limits_result.content[0]
@@ -106,7 +108,7 @@ def test_agent_aws_cloudwatch_alarms(
 
     assert len(cloudwatch_alarms_results) == 1
     cloudwatch_alarms_result = cloudwatch_alarms_results[0]
-    assert cloudwatch_alarms_result.piggyback_hostname is SOURCE_HOST
+    assert cloudwatch_alarms_result.piggyback_hostname == ACCOUNT_HOST
     assert len(cloudwatch_alarms_result.content) == amount_alarms
 
 
@@ -125,5 +127,5 @@ def test_agent_aws_cloudwatch_alarms_without_limits(
 
     assert len(cloudwatch_alarms_results) == 1
     cloudwatch_alarms_result = cloudwatch_alarms_results[0]
-    assert cloudwatch_alarms_result.piggyback_hostname is SOURCE_HOST
+    assert cloudwatch_alarms_result.piggyback_hostname == ACCOUNT_HOST
     assert len(cloudwatch_alarms_result.content) == amount_alarms

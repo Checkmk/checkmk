@@ -29,17 +29,20 @@ from cmk.plugins.aws_v2.special_agent.hosts import (
     RDSInstance,
     S3Bucket,
     SNSTopic,
-    SOURCE_HOST,
     target_host,
     TargetHost,
     WAFV2WebACL,
 )
 
 DEFAULT_NAMING = HostNaming(
-    ec2=NamingConvention.ip_region_instance, cloudfront=CloudFrontHostAssignment.account
+    ec2=NamingConvention.ip_region_instance,
+    cloudfront=CloudFrontHostAssignment.account,
+    account="333333333333",
 )
 DOMAIN_HOST_NAMING = HostNaming(
-    ec2=NamingConvention.ip_region_instance, cloudfront=CloudFrontHostAssignment.origin_domain
+    ec2=NamingConvention.ip_region_instance,
+    cloudfront=CloudFrontHostAssignment.origin_domain,
+    account="333333333333",
 )
 
 INSTANCE = {
@@ -127,21 +130,6 @@ def test_ebs_attachment_goes_to_the_host_of_its_monitored_instance() -> None:
     assert target_host(attachment, DEFAULT_NAMING) == "instance-host"
 
 
-@pytest.mark.parametrize(
-    "resource",
-    [
-        pytest.param(AccountScope(), id="account"),
-        pytest.param(EBSAttachment(None), id="ebs attached to unmonitored instance"),
-        pytest.param(
-            CloudFrontDistribution("E2RAYOVSSL6ZM3", "origin.example.com"),
-            id="cloudfront assigned to aws host",
-        ),
-    ],
-)
-def test_resource_goes_to_the_source_host(resource: HostedResource) -> None:
-    assert target_host(resource, DEFAULT_NAMING) is SOURCE_HOST
-
-
 def test_cloudfront_distribution_goes_to_its_origin_domain_host_when_assigned() -> None:
     distribution = CloudFrontDistribution("E2RAYOVSSL6ZM3", "origin.example.com")
 
@@ -160,12 +148,12 @@ def test_cloudfront_distribution_goes_to_its_own_host_when_assigned() -> None:
 @pytest.mark.parametrize(
     "origin_domain", [pytest.param(None, id="none"), pytest.param("", id="empty")]
 )
-def test_cloudfront_distribution_without_origin_goes_to_the_source_host(
+def test_cloudfront_distribution_without_origin_goes_to_the_account_host(
     origin_domain: str | None,
 ) -> None:
     distribution = CloudFrontDistribution("E2RAYOVSSL6ZM3", origin_domain)
 
-    assert target_host(distribution, DOMAIN_HOST_NAMING) is SOURCE_HOST
+    assert target_host(distribution, DOMAIN_HOST_NAMING) == "333333333333"
 
 
 @pytest.mark.parametrize(
@@ -189,7 +177,7 @@ def test_cloudfront_distribution_without_origin_goes_to_the_source_host(
         ),
     ],
 )
-def test_account_data_goes_to_the_account_host_of_a_listed_account(
+def test_account_data_goes_to_the_account_host(
     resource: HostedResource, cloudfront: CloudFrontHostAssignment
 ) -> None:
     naming = HostNaming(

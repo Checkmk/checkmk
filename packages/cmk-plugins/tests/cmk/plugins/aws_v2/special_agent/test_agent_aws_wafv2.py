@@ -17,7 +17,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
-from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
+from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.wafv2 import (
     _get_wafv2_web_acls,
@@ -32,6 +32,8 @@ from .agent_aws_fake_clients import (
     WAFV2ListOperationIB,
     WAFV2ListTagsForResourceIB,
 )
+
+ACCOUNT_HOST = TargetHost("123456789012")
 
 
 class FakeWAFV2Client:
@@ -242,7 +244,7 @@ def _test_limits(wafv2_sections: Wafv2Sections) -> None:
     assert wafv2_limits.name == "wafv2_limits"
 
     for result in wafv2_limits_results:
-        if result.piggyback_hostname is SOURCE_HOST:
+        if result.piggyback_hostname == ACCOUNT_HOST:
             assert len(result.content) == 4
         else:
             assert len(result.content) == 1
@@ -271,7 +273,7 @@ def _test_summary(
     if found_instances:
         assert len(wafv2_summary_results) == 1
         wafv2_summary_results = wafv2_summary_results[0]
-        assert wafv2_summary_results.piggyback_hostname is SOURCE_HOST
+        assert wafv2_summary_results.piggyback_hostname == ACCOUNT_HOST
         assert len(wafv2_summary_results.content) == len(found_instances)
 
     else:
@@ -312,7 +314,7 @@ def _test_web_acl(wafv2_sections: Wafv2Sections, found_instances: Sequence[str])
     assert len(wafv2_web_acl_results) == len(found_instances)
 
     for result in wafv2_web_acl_results:
-        assert result.piggyback_hostname is not SOURCE_HOST
+        assert result.piggyback_hostname != ACCOUNT_HOST
         assert len(result.content) == 2
 
 

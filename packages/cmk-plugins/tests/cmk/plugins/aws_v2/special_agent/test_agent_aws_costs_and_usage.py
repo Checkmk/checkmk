@@ -7,10 +7,12 @@
 from argparse import Namespace as Args
 
 from cmk.plugins.aws_v2.special_agent.config import AWSConfig, NamingConvention
-from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
+from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 from cmk.plugins.aws_v2.special_agent.sections.costs_and_usage import CostsAndUsage
 
 from .agent_aws_fake_clients import CEGetCostsAndUsageIB
+
+ACCOUNT_HOST = TargetHost("123456789012")
 
 
 class FakeCEClient:
@@ -43,4 +45,4 @@ def test_agent_aws_costs_and_usage() -> None:
     assert ce.name == "costs_and_usage"
     assert len(ce_results) == 1
     ce_result = ce_results[0]
-    assert ce_result.piggyback_hostname is SOURCE_HOST
+    assert ce_result.piggyback_hostname == ACCOUNT_HOST

@@ -17,7 +17,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
-from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
+from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.rds import (
     ON_INSTANCE_HOST,
@@ -33,6 +33,8 @@ from .agent_aws_fake_clients import (
     RDSDescribeDBInstancesIB,
     RDSListTagsForResourceIB,
 )
+
+ACCOUNT_HOST = TargetHost("123456789012")
 
 
 class DBInstanceNotFoundFault(Exception):
@@ -191,7 +193,7 @@ def test_agent_aws_rds_limits(
     assert len(rds_limits_results) == 1
 
     rds_limits_result = rds_limits_results[0]
-    assert rds_limits_result.piggyback_hostname is SOURCE_HOST
+    assert rds_limits_result.piggyback_hostname == ACCOUNT_HOST
     assert len(rds_limits_result.content) == 15
 
 
@@ -209,7 +211,7 @@ def test_agent_aws_rds_summary(
     assert rds_summary.period == 600
     assert rds_summary.name == "rds_summary"
 
-    account_results = [r for r in rds_summary_results if r.piggyback_hostname is SOURCE_HOST]
+    account_results = [r for r in rds_summary_results if r.piggyback_hostname == ACCOUNT_HOST]
     if found_instances:
         assert len(account_results) == 1
         assert len(account_results[0].content) == len(found_instances)
@@ -273,7 +275,7 @@ def test_agent_aws_rds_summary_reaches_each_instance_host_with_only_its_instance
             for instance in result.content
         ]
         for result in rds_summary_results
-        if result.piggyback_hostname
+        if result.piggyback_hostname != ACCOUNT_HOST
     } == {
         "DBInstanceIdentifier-0": [("DBInstanceIdentifier-0", True)],
         "DBInstanceIdentifier-1": [("DBInstanceIdentifier-1", True)],
@@ -288,7 +290,7 @@ def test_agent_aws_rds_summary_on_the_account_host_has_no_instance_host_marker(
 
     rds_summary_results = rds_summary.run().results
 
-    account_instances = [r for r in rds_summary_results if r.piggyback_hostname is SOURCE_HOST][
+    account_instances = [r for r in rds_summary_results if r.piggyback_hostname == ACCOUNT_HOST][
         0
     ].content
     assert [ON_INSTANCE_HOST in instance for instance in account_instances] == [False] * 3
@@ -327,5 +329,5 @@ def test_agent_aws_rds_instance_hosts_get_the_service_label(
     assert {
         result.piggyback_hostname: result.piggyback_host_labels
         for result in results
-        if result.piggyback_hostname
+        if result.piggyback_hostname != ACCOUNT_HOST
     } == {f"DBInstanceIdentifier-{i}": {"cmk/aws/service": "rds"} for i in range(3)}

@@ -20,7 +20,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
-from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
+from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 from cmk.plugins.aws_v2.special_agent.runner import _create_lamdba_sections
 from cmk.plugins.aws_v2.special_agent.sections.aws_lambda import (
     LambdaCloudwatch,
@@ -39,6 +39,8 @@ from .agent_aws_fake_clients import (
     LambdaListProvisionedConcurrencyConfigsIB,
     LambdaListTagsInstancesIB,
 )
+
+ACCOUNT_HOST = TargetHost("123456789012")
 
 
 class PaginatorListFunctions:
@@ -422,7 +424,7 @@ def test_agent_aws_lambda_region_limits_go_to_the_account_and_each_function_host
         result.piggyback_hostname: [limit.key for limit in result.content] for result in results
     } == {
         host: ["total_code_size", "concurrent_executions", "unreserved_concurrent_executions"]
-        for host in (SOURCE_HOST, "FunctionName-0", "FunctionName-1")
+        for host in (ACCOUNT_HOST, "FunctionName-0", "FunctionName-1")
     }
 
 

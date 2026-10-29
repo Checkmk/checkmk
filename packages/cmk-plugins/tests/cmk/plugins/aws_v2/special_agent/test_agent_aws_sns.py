@@ -18,7 +18,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
-from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
+from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 from cmk.plugins.aws_v2.special_agent.sections.core import AWSRegionLimit, ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.sns import (
     SNS,
@@ -30,6 +30,8 @@ from cmk.plugins.aws_v2.special_agent.sections.sns import (
 )
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, SNSListSubscriptionsIB, SNSListTopicsIB
+
+ACCOUNT_HOST = TargetHost("123456789012")
 
 ALL_TOPICS = {
     "TopicName-0 [eu-west-1]",
@@ -237,7 +239,7 @@ def test_agent_aws_sns(
     if found_services_name:
         assert len(sns_summary_results) == 1
         sns_summary_result = sns_summary_results[0]
-        assert sns_summary_result.piggyback_hostname is SOURCE_HOST
+        assert sns_summary_result.piggyback_hostname == ACCOUNT_HOST
         assert {e["ItemId"] for e in sns_summary_result.content} == set(found_services_name)
     else:
         assert len(sns_summary_results) == 0
@@ -284,7 +286,7 @@ def perform_agent_aws_sns_cloudwatch_test(
     if found_services_name:
         assert len(sns_results) == 1
         sns_result = sns_results[0]
-        assert sns_result.piggyback_hostname is SOURCE_HOST
+        assert sns_result.piggyback_hostname == ACCOUNT_HOST
         assert {e["Label"] for e in sns_result.content} == set(found_services_name)
         assert len(sns_result.content) == metrics_per_topic * len(found_services_name)
     else:

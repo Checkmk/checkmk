@@ -18,7 +18,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
-from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
+from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 
 # Needed to monkeypatch NOW in the s3 module
 from cmk.plugins.aws_v2.special_agent.sections import s3 as s3_module
@@ -32,6 +32,8 @@ from cmk.plugins.aws_v2.special_agent.sections.s3 import (
 )
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, S3BucketTaggingIB, S3ListBucketsIB
+
+ACCOUNT_HOST = TargetHost("123456789012")
 
 
 class FakeS3Client:
@@ -150,7 +152,7 @@ def test_agent_aws_s3_limits(
     assert len(s3_limits_results) == 1
 
     s3_limits_result = s3_limits_results[0]
-    assert s3_limits_result.piggyback_hostname is SOURCE_HOST
+    assert s3_limits_result.piggyback_hostname == ACCOUNT_HOST
     assert len(s3_limits_result.content) == 1
 
     s3_limits_content = s3_limits_result.content[0]
@@ -176,7 +178,7 @@ def test_agent_aws_s3_summary(
     if amount_buckets:
         assert len(s3_summary_results) == 1
         s3_summary_result = s3_summary_results[0]
-        assert s3_summary_result.piggyback_hostname is SOURCE_HOST
+        assert s3_summary_result.piggyback_hostname == ACCOUNT_HOST
         assert len(s3_summary_result.content) == amount_buckets
     else:
         assert not s3_summary_results
@@ -198,7 +200,7 @@ def test_agent_aws_s3(
     if amount_buckets:
         assert len(s3_results) == 1
         s3_result = s3_results[0]
-        assert s3_result.piggyback_hostname is SOURCE_HOST
+        assert s3_result.piggyback_hostname == ACCOUNT_HOST
 
         # Y (len results) == 4 (metrics) * X (buckets)
         assert len(s3_result.content) == 4 * amount_buckets
@@ -250,7 +252,7 @@ def test_agent_aws_s3_summary_without_limits(
     if amount_buckets:
         assert len(s3_summary_results) == 1
         s3_summary_result = s3_summary_results[0]
-        assert s3_summary_result.piggyback_hostname is SOURCE_HOST
+        assert s3_summary_result.piggyback_hostname == ACCOUNT_HOST
         assert len(s3_summary_result.content) == amount_buckets
         assert "Tagging" in s3_summary_result.content[0]
     else:
@@ -273,7 +275,7 @@ def test_agent_aws_s3_without_limits(
     if amount_buckets:
         assert len(s3_results) == 1
         s3_result = s3_results[0]
-        assert s3_result.piggyback_hostname is SOURCE_HOST
+        assert s3_result.piggyback_hostname == ACCOUNT_HOST
 
         # Y (len results) == 4 (metrics) * X (buckets)
         assert len(s3_result.content) == 4 * amount_buckets

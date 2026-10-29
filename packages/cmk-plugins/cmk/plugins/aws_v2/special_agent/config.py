@@ -90,7 +90,8 @@ class HostNaming:
     ec2: NamingConvention
     cloudfront: CloudFrontHostAssignment
     account: str | None = None
-    """The piggyback host for the data of the account, or None if it has none of its own."""
+    """The piggyback host for the data of the account. None until the config is scoped to
+    an account."""
 
 
 class TagsImportPatternOption(Enum):
@@ -124,15 +125,14 @@ class AWSConfig:
         self.tags_option = tags_option
         self.account_id: str | None = None
 
-    def for_account(self, account_id: str, host: str | None = None) -> Self:
+    def for_account(self, account_id: str) -> Self:
         """The same rule settings, scoped to one AWS account. Sections need this scope.
 
-        host is the piggyback host for the data of the account, or None if it has none of
-        its own.
+        The data of the account goes to a piggyback host named like the account ID.
         """
         account_config = copy.deepcopy(self)
         account_config.account_id = account_id
-        account_config.host_naming = replace(self.host_naming, account=host)
+        account_config.host_naming = replace(self.host_naming, account=account_id)
         return account_config
 
     def add_service_tags(self, tags_key: str, tags: OverallTags) -> None:

@@ -10,7 +10,6 @@ from collections.abc import Sequence
 from contextlib import suppress
 from pathlib import Path
 
-import cmk.ccc.debug
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.base import config
@@ -179,7 +178,7 @@ def _inventory_as_check(
     hostname: HostName,
     plugins: AgentBasedPlugins,
 ) -> ServiceState:
-    loading_result = config.load(validate_hosts=True, debug=cmk.ccc.debug.enabled())
+    loading_result = config.load(validate_hosts=True, debug=False)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -232,7 +231,7 @@ def _inventory_as_check(
                     caching_config=make_parsed_snmp_fetch_intervals_config(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
-                    debug=cmk.ccc.debug.enabled(),
+                    debug=False,
                 ),
             ),
             plugins=plugins,
@@ -262,7 +261,7 @@ def _inventory_as_check(
                 ),
                 secrets=secrets,
             ),
-            debug=cmk.ccc.debug.enabled(),
+            debug=False,
         )
         parser = CMKParser(
             config.make_parser_config(
@@ -273,7 +272,7 @@ def _inventory_as_check(
             ),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
-            debug=cmk.ccc.debug.enabled(),
+            debug=False,
         )
         summarizer = CMKSummarizer(
             hostname,
@@ -290,7 +289,7 @@ def _inventory_as_check(
             snmp_backend=config_cache.get_snmp_backend(hostname),
             keepalive=False,
             get_agent_output=lambda: recording_fetcher.serialized(hostname),
-            debug=cmk.ccc.debug.enabled(),
+            debug=False,
         )
         check_results: Sequence[ActiveCheckResult] = []
         with error_handler:
@@ -319,7 +318,7 @@ def _inventory_as_check(
                     inventorized_host_labels_dir=cmk.utils.paths.inventorized_host_labels_dir,
                     discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
                     autodiscovery_dir=cmk.utils.paths.autodiscovery_dir,
-                    debug=cmk.ccc.debug.enabled(),
+                    debug=False,
                 )
             check_results = [
                 *check_results,
@@ -342,7 +341,7 @@ def _inventory_as_check(
 
 
 def load_checks() -> AgentBasedPlugins:
-    plugins = load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
+    plugins = load_all_plugins(raise_errors=False)
     for error_msg in plugins.errors:
         logger.error(error_msg)
     return plugins

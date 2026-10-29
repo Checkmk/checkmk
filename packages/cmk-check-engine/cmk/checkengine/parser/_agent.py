@@ -569,6 +569,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
             lambda valid_until, now: valid_until < now,
             now=now,
             keep_outdated=self.keep_outdated,
+            debug=self.debug,
         )
         return HostSections[AgentRawDataSection](
             new_sections,

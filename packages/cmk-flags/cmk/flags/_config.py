@@ -67,19 +67,6 @@ class ExperimentalFlagConfig(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="ignore")
 
-    exp_trial_mode_selection: Annotated[
-        bool,
-        experimental_field(
-            description=(
-                "Ask admins on their next visit whether this site is used as a trial "
-                "or with an existing license. The selection workflow is not yet complete."
-            ),
-            remove_ticket="CMK-37562",
-            remove_after="3.1.0",
-            owner="giordano.tomassorri@checkmk.com",
-        ),
-    ] = False
-
     exp_ai_assistant: Annotated[
         bool,
         experimental_field(

@@ -32,11 +32,11 @@ def _experimental_flags_config_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
 @pytest.mark.usefixtures("request_context", "_experimental_flags_config_dir")
 def test_removes_flags_that_no_longer_exist(tmp_path: Path, filename: str) -> None:
     config_file = tmp_path / filename
-    config_file.write_text('{"already_removed_flag": true, "exp_trial_mode_selection": true}')
+    config_file.write_text('{"already_removed_flag": true, "exp_ai_assistant": true}')
 
     update_action_registry["experimental_flags"](LOGGER)
 
-    assert json.loads(config_file.read_text()) == {"exp_trial_mode_selection": True}
+    assert json.loads(config_file.read_text()) == {"exp_ai_assistant": True}
 
 
 @pytest.mark.usefixtures("request_context", "_experimental_flags_config_dir")

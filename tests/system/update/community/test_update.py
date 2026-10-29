@@ -55,18 +55,14 @@ def test_update(test_setup: tuple[Site, TypeCMKEdition, bool, str]) -> None:
         )
         from tests.testlib.system.licensing.trial_mode import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
             read_trial_start,
-            trial_mode_selection_enabled,
         )
 
-        with trial_mode_selection_enabled(base_site):
-            # The site stores the trial start in whole seconds.
-            upgrade_started = datetime.now(tz=UTC).replace(microsecond=0)
-            target_site = update_site(
-                base_site, get_target_package(target_edition), interactive_mode
-            )
+        # The site stores the trial start in whole seconds.
+        upgrade_started = datetime.now(tz=UTC).replace(microsecond=0)
+        target_site = update_site(base_site, get_target_package(target_edition), interactive_mode)
 
-            assert read_license_state(target_site) is LicenseState.PENDING_SELECTION
-            assert upgrade_started <= read_trial_start(target_site) <= datetime.now(tz=UTC)
+        assert read_license_state(target_site) is LicenseState.PENDING_SELECTION
+        assert upgrade_started <= read_trial_start(target_site) <= datetime.now(tz=UTC)
 
     bulk_discover_and_schedule(target_site, hostname)
 

@@ -22,6 +22,7 @@ def test_community() -> None:
         azure_extended=LicenseFlag(enabled=False),
         agent_registration=LicenseFlag(enabled=False),
         synthetic_monitoring=LicenseFlag(enabled=False),
+        real_time_checks=LicenseFlag(enabled=False),
     )
 
 
@@ -36,12 +37,13 @@ def test_pro() -> None:
         azure_extended=LicenseFlag(enabled=False),
         agent_registration=LicenseFlag(enabled=False),
         synthetic_monitoring=LicenseFlag(enabled=False),
+        real_time_checks=LicenseFlag(enabled=True),
     )
 
 
 @pytest.mark.parametrize(
     "edition",
-    [e for e in Edition if e not in [Edition.COMMUNITY, Edition.PRO]],
+    [Edition.ULTIMATE, Edition.ULTIMATEMT],
 )
 def test_commercial(edition: Edition) -> None:
     assert get_license_options(Path(), edition) == LicenseOptions(
@@ -54,4 +56,20 @@ def test_commercial(edition: Edition) -> None:
         azure_extended=LicenseFlag(enabled=True),
         agent_registration=LicenseFlag(enabled=True),
         synthetic_monitoring=LicenseFlag(enabled=True),
+        real_time_checks=LicenseFlag(enabled=True),
+    )
+
+
+def test_cloud() -> None:
+    assert get_license_options(Path(), Edition.CLOUD) == LicenseOptions(
+        bakery=LicenseFlag(enabled=True),
+        telemetry=LicenseFlag(enabled=True),
+        otel_collector=LicenseFlag(enabled=True),
+        relay=LicenseFlag(enabled=True),
+        aws_extended=LicenseFlag(enabled=True),
+        gcp_extended=LicenseFlag(enabled=True),
+        azure_extended=LicenseFlag(enabled=True),
+        agent_registration=LicenseFlag(enabled=True),
+        synthetic_monitoring=LicenseFlag(enabled=True),
+        real_time_checks=LicenseFlag(enabled=False),
     )

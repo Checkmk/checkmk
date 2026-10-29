@@ -28,6 +28,7 @@ class OptionName(StrEnum):
     AZURE_EXTENDED = auto()
     AGENT_REGISTRATION = auto()
     SYNTHETIC_MONITORING = auto()
+    REAL_TIME_CHECKS = auto()
 
 
 @dataclass(frozen=True)
@@ -41,6 +42,7 @@ class LicenseOptions:
     azure_extended: LicenseFlag
     agent_registration: LicenseFlag
     synthetic_monitoring: LicenseFlag
+    real_time_checks: LicenseFlag
 
     def get_flag(self, name: OptionName) -> LicenseFlag:
         match name:
@@ -62,6 +64,8 @@ class LicenseOptions:
                 return self.agent_registration
             case OptionName.SYNTHETIC_MONITORING:
                 return self.synthetic_monitoring
+            case OptionName.REAL_TIME_CHECKS:
+                return self.real_time_checks
 
     def disabled(self) -> set[str]:
         return {f.name for f in fields(self) if not getattr(self, f.name).enabled}
@@ -87,6 +91,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 azure_extended=LicenseFlag(enabled=False),
                 agent_registration=LicenseFlag(enabled=False),
                 synthetic_monitoring=LicenseFlag(enabled=False),
+                real_time_checks=LicenseFlag(enabled=False),
             )
 
         case Edition.PRO:
@@ -107,6 +112,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 azure_extended=LicenseFlag(enabled=True),
                 agent_registration=LicenseFlag(enabled=True),
                 synthetic_monitoring=LicenseFlag(enabled=True),
+                real_time_checks=LicenseFlag(enabled=True),
             )
 
         case Edition.ULTIMATEMT:
@@ -120,9 +126,11 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 azure_extended=LicenseFlag(enabled=True),
                 agent_registration=LicenseFlag(enabled=True),
                 synthetic_monitoring=LicenseFlag(enabled=True),
+                real_time_checks=LicenseFlag(enabled=True),
             )
 
         case Edition.CLOUD:
+            # Cloud runs no real-time checks.
             return LicenseOptions(
                 bakery=LicenseFlag(enabled=True),
                 telemetry=LicenseFlag(enabled=True),
@@ -133,6 +141,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 azure_extended=LicenseFlag(enabled=True),
                 agent_registration=LicenseFlag(enabled=True),
                 synthetic_monitoring=LicenseFlag(enabled=True),
+                real_time_checks=LicenseFlag(enabled=False),
             )
 
 
@@ -147,4 +156,5 @@ def _make_pro_options() -> LicenseOptions:
         azure_extended=LicenseFlag(enabled=False),
         agent_registration=LicenseFlag(enabled=False),
         synthetic_monitoring=LicenseFlag(enabled=False),
+        real_time_checks=LicenseFlag(enabled=True),
     )

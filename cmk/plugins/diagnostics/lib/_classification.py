@@ -357,6 +357,12 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="Basic UI configuration.",
         encryption=CheckmkFileEncryption.none,
     ),
+    "multisite.d/agent_registration.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="Contains the Agent registration rules.",
+        encryption=CheckmkFileEncryption.none,
+    ),
     "multisite.d/licensing_settings.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_LICENSING,
@@ -381,12 +387,6 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         components=[],
         sensitivity=CheckmkFileSensitivity.sensitive,
         description="Distributed monitoring configuration.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "multisite.d/wato/agent_registration.mk": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity.sensitive,
-        description="Contains the Agent registration rules.",
         encryption=CheckmkFileEncryption.none,
     ),
     "multisite.d/wato/agent_signature_keys.mk": CheckmkFileInfo(
@@ -425,12 +425,6 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="Contains GUI related contact group properties.",
         encryption=CheckmkFileEncryption.none,
     ),
-    "multisite.d/wato/sites.mk": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity.sensitive,
-        description="Contains the configuration of the distributed monitoring.",
-        encryption=CheckmkFileEncryption.none,
-    ),
     "multisite.d/wato/users.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
@@ -445,13 +439,13 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="Contains GUI related user properties.",
         encryption=CheckmkFileEncryption.none,
     ),
-    "otel_collector.d/otel_collector_prom_scrape.mk": CheckmkFileInfo(
+    "otel_collector.d/wato/otel_collector_prom_scrape.mk": CheckmkFileInfo(
         components=[],
         sensitivity=CheckmkFileSensitivity.sensitive,
         description="Configuration of the Open Telemetry Prometheus scraper.",
         encryption=CheckmkFileEncryption.none,
     ),
-    "otel_collector.d/otel_collector_receivers.mk": CheckmkFileInfo(
+    "otel_collector.d/wato/otel_collector_receivers.mk": CheckmkFileInfo(
         components=[],
         sensitivity=CheckmkFileSensitivity.sensitive,
         description="Configuration of the Open Telemetry receiver.",

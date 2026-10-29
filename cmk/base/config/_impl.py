@@ -614,7 +614,7 @@ class LoadingResult:
 
 def load(validate_hosts: bool, *, debug: bool) -> LoadingResult:
     with exit_on_config_file_load_error(debug=debug):
-        raw_config = load_raw_config()
+        raw_config = load_raw_config(debug=debug)
 
     loading_result = perform_post_config_loading_actions(
         raw_config,

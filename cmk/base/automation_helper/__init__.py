@@ -116,4 +116,4 @@ def _application() -> FastAPI:
 
 def _reload_automation_config() -> Mapping[str, object]:
     with config.exit_on_config_file_load_error(debug=False):
-        return config.load_raw_config()
+        return config.load_raw_config(debug=False)

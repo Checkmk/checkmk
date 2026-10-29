@@ -643,7 +643,7 @@ class AnonHostsStorage(StandardHostsStorage):
         )
 
     @override
-    def _read(self, file_path: Path) -> str:
+    def _read(self, file_path: Path, *, debug: bool) -> str:
         raise NotImplementedError
 
 

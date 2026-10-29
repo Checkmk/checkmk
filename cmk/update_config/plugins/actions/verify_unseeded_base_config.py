@@ -47,7 +47,7 @@ class UnseededConfigFindings:
     """The files that load, and the variables they end up with a different value for"""
 
 
-def check_config_files() -> UnseededConfigFindings:
+def check_config_files(*, debug: bool) -> UnseededConfigFindings:
     """Load each base config file on its own, with and without the predefined defaults
 
     Every file must define what it extends, even if another file defines it.
@@ -57,13 +57,13 @@ def check_config_files() -> UnseededConfigFindings:
     relying_on_defaults: list[tuple[Path, Sequence[str]]] = []
     for path in get_config_file_paths(with_conf_d=True):
         try:
-            unseeded = load_raw_config(config_files=[path], context_factory=dict)
+            unseeded = load_raw_config(config_files=[path], context_factory=dict, debug=debug)
         except ConfigFileLoadError as e:
             unloadable.append((e.path, e.__cause__ or e))
             continue
 
         try:
-            seeded = load_raw_config(config_files=[path])
+            seeded = load_raw_config(config_files=[path], debug=debug)
         except ConfigFileLoadError:
             continue  # fails entirely anyway, nothing to compare
 
@@ -79,7 +79,7 @@ class VerifyUnseededBaseConfig(UpdateAction):
 
     @override
     def __call__(self, logger: Logger, *, debug: bool) -> None:
-        findings = check_config_files()
+        findings = check_config_files(debug=debug)
         if findings.unloadable:
             _warn_unloadable(logger, findings.unloadable)
         if findings.relying_on_defaults:

@@ -2860,7 +2860,7 @@ def _write_hosts_mk(folder: Path, host_name: HostName) -> None:
 def test_load_raw_config_tracks_the_folder_of_a_written_hosts_mk(wato_folder: Path) -> None:
     _write_hosts_mk(wato_folder, HostName("host1"))
 
-    raw_config = config.load_raw_config()
+    raw_config = config.load_raw_config(debug=True)
 
     assert raw_config["all_hosts"] == ["host1"]
     assert raw_config["host_paths"] == {"host1": "/wato/hosts.mk"}
@@ -2870,7 +2870,7 @@ def test_load_raw_config_executes_only_the_given_files(wato_folder: Path) -> Non
     (wato_folder / "groups.mk").write_text("define_hostgroups.update({'a': 'A'})\n")
     (wato_folder / "other.mk").write_text("define_servicegroups.update({'b': 'B'})\n")
 
-    raw_config = config.load_raw_config(config_files=[wato_folder / "groups.mk"])
+    raw_config = config.load_raw_config(config_files=[wato_folder / "groups.mk"], debug=True)
 
     assert raw_config["define_hostgroups"] == {"a": "A"}
     assert raw_config["define_servicegroups"] == {}
@@ -2880,7 +2880,7 @@ def test_load_raw_config_raises_on_an_unreadable_config_file(main_mk: Path) -> N
     main_mk.write_text("raise ValueError('broken')\n")
 
     with pytest.raises(config.ConfigFileLoadError) as excinfo:
-        config.load_raw_config(config_files=[main_mk])
+        config.load_raw_config(config_files=[main_mk], debug=True)
 
     assert excinfo.value.path == main_mk
     assert isinstance(excinfo.value.__cause__, ValueError)
@@ -2914,8 +2914,8 @@ def test_load_raw_config_into_an_empty_context(wato_folder: Path) -> None:
     )
     store.save_to_mk_file(wato_folder / "groups.mk", key="define_hostgroups", value={"a": "A"})
 
-    seeded = config.load_raw_config()
-    unseeded = config.load_raw_config(context_factory=dict)
+    seeded = config.load_raw_config(debug=True)
+    unseeded = config.load_raw_config(context_factory=dict, debug=True)
 
     assert unseeded == {k: v for k, v in seeded.items() if k in unseeded}
     assert unseeded["host_paths"] == {"host1": "/wato/hosts.mk"}
@@ -2927,7 +2927,7 @@ def test_load_raw_config_into_an_empty_context_fails_on_legacy_config_files(main
     main_mk.write_text("define_hostgroups.update({'linux': 'Linux'})\n")
 
     with pytest.raises(config.ConfigFileLoadError) as excinfo:
-        config.load_raw_config(config_files=[main_mk], context_factory=dict)
+        config.load_raw_config(config_files=[main_mk], context_factory=dict, debug=True)
 
     assert isinstance(excinfo.value.__cause__, NameError)
 
@@ -2935,7 +2935,7 @@ def test_load_raw_config_into_an_empty_context_fails_on_legacy_config_files(main
 def test_load_raw_config_seeds_legacy_config_files_by_default(main_mk: Path) -> None:
     main_mk.write_text("define_hostgroups.update({'linux': 'Linux'})\n")
 
-    raw_config = config.load_raw_config(config_files=[main_mk])
+    raw_config = config.load_raw_config(config_files=[main_mk], debug=True)
 
     assert raw_config["define_hostgroups"] == {"linux": "Linux"}
 

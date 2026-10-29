@@ -136,9 +136,9 @@ def test_pickled_hosts_apply_to_an_empty_namespace(tmp_path: Path) -> None:
     loaders = get_host_storage_loaders(StorageFormat.PICKLE)
 
     seeded = get_hosts_file_variables()
-    apply_hosts_file_to_object(path, loaders, seeded)
+    apply_hosts_file_to_object(path, loaders, seeded, debug=True)
     unseeded: dict[str, object] = {}
-    apply_hosts_file_to_object(path, loaders, unseeded)
+    apply_hosts_file_to_object(path, loaders, unseeded, debug=True)
 
     assert unseeded["all_hosts"] == ["host1"]
     assert unseeded["extra_host_conf"] == {"_CUSTOM": [("value", ["host1"])]}
@@ -154,7 +154,9 @@ def test_pickled_hosts_extend_the_predefined_objects(tmp_path: Path) -> None:
     variables = get_hosts_file_variables()
     all_hosts, extra_host_conf = variables["all_hosts"], variables["extra_host_conf"]
 
-    apply_hosts_file_to_object(path, get_host_storage_loaders(StorageFormat.PICKLE), variables)
+    apply_hosts_file_to_object(
+        path, get_host_storage_loaders(StorageFormat.PICKLE), variables, debug=True
+    )
 
     assert variables["all_hosts"] is all_hosts
     assert variables["extra_host_conf"] is extra_host_conf
@@ -167,9 +169,9 @@ def test_written_hosts_mk_loads_into_an_empty_namespace(tmp_path: Path) -> None:
     loaders = get_host_storage_loaders(StorageFormat.STANDARD)
 
     seeded = get_hosts_file_variables()
-    apply_hosts_file_to_object(path, loaders, seeded)
+    apply_hosts_file_to_object(path, loaders, seeded, debug=True)
     unseeded: dict[str, object] = {}
-    apply_hosts_file_to_object(path, loaders, unseeded)
+    apply_hosts_file_to_object(path, loaders, unseeded, debug=True)
 
     assert unseeded["all_hosts"] == ["host1"]
     assert unseeded["host_contactgroups"] == seeded["host_contactgroups"]
@@ -199,3 +201,10 @@ def test_written_hosts_mk_ends_each_update_with_a_blank_line(tmp_path: Path) -> 
     content = path.with_suffix(".mk").read_text()
 
     assert "management_snmp_credentials.update({'host1': 'public'})\n\n" in content
+
+
+def test_unreadable_hosts_file_reraises_in_debug_mode(tmp_path: Path) -> None:
+    (tmp_path / "hosts.pkl").mkdir()
+
+    with pytest.raises(IsADirectoryError):
+        PickleHostsStorage().read(tmp_path / "hosts", debug=True)

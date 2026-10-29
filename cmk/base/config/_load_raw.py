@@ -123,6 +123,7 @@ def load_raw_config(
     *,
     config_files: Iterable[Path] | None = None,
     context_factory: Callable[[], dict[str, object]] = get_legacy_default_base_config,
+    debug: bool,
 ) -> Mapping[str, object]:
     """Execute the config files into a namespace
 
@@ -175,7 +176,7 @@ def load_raw_config(
 
             if path.name == "hosts.mk":
                 apply_hosts_file_to_object(
-                    path.with_suffix(""), host_storage_loaders, target_context
+                    path.with_suffix(""), host_storage_loaders, target_context, debug=debug
                 )
             else:
                 _load_config_file(path, target_context)

@@ -583,6 +583,23 @@ def test_container_stats_error_other_than_not_found_fails_the_fetcher(
         fetch_containers(_context())
 
 
+def test_failing_first_container_stats_call_stops_the_fetcher_before_the_others(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_recorded_containers(api, statuses={"NutanixManagementShare": HTTPStatus.FORBIDDEN})
+    # The stats of the other containers are what must not be fetched
+    api.assert_all_requests_are_fired = False
+
+    with pytest.raises(PrismV4Error):
+        fetch_containers(_context())
+
+    assert [
+        (call.request.url or "").split("?")[0]
+        for call in api.calls
+        if CONTAINER_STATS_PATH in (call.request.url or "")
+    ] == [v4_url(f"{CONTAINER_STATS_PATH}/17aa3706-6394-405c-ae6a-964d9cb64aa2")]
+
+
 def test_stats_of_no_container_found_fails_the_fetcher(api: responses.RequestsMock) -> None:
     _serve_recorded_containers(
         api, statuses=dict.fromkeys(RECORDED_CONTAINERS.values(), HTTPStatus.NOT_FOUND)

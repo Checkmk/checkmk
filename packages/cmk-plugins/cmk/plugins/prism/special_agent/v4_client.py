@@ -19,6 +19,7 @@ from urllib3.exceptions import ReadTimeoutError
 from urllib3.util.retry import Retry
 
 from cmk.plugins.prism.special_agent.session import new_session
+from cmk.plugins.prism.special_agent.v4_rate_limits import endpoint_of, RateLimits
 
 LOGGER = logging.getLogger(__name__)
 
@@ -27,17 +28,28 @@ type QueryParams = Mapping[str, str | int]
 
 PAGE_LIMIT = 100
 ATTEMPTS = 4
+RETRY_AFTER_MAX = 5
+
+
+class _RetryWithout429(Retry):
+    """Retry retries a 429 with Retry-After even if it isn't in status_forcelist. A 429 is
+    retried by PrismV4Client._send instead, so the other calls to the endpoint wait too."""
+
+    RETRY_AFTER_STATUS_CODES = Retry.RETRY_AFTER_STATUS_CODES - {HTTPStatus.TOO_MANY_REQUESTS}
+
+
 # Only status codes are retried: a timeout is not, so a call can't overrun its share of the
-# time budget. Worst case per call: its share of the remaining budget plus 3 x 5 s waiting.
-RETRY = Retry(
+# time budget. Worst case per call: its share of the remaining budget plus 3 x 5 s waiting for
+# the Retry-After of a 503. A 429 is retried by PrismV4Client._send, within the time budget.
+RETRY = _RetryWithout429(
     total=ATTEMPTS - 1,
     connect=0,
     read=0,
-    status_forcelist=(408, 429, 503, 504),
+    status_forcelist=(408, 503, 504),
     allowed_methods=("GET",),
     backoff_factor=0.5,
     backoff_max=4,
-    retry_after_max=5,
+    retry_after_max=RETRY_AFTER_MAX,
 )
 
 
@@ -137,6 +149,15 @@ def _describe(error: requests.exceptions.RequestException) -> str:
             return type(error).__name__
 
 
+def _retry_after(response: requests.Response) -> float | None:
+    """Retry-After in seconds, capped like the retries of RETRY"""
+    try:
+        seconds = float(response.headers["Retry-After"])
+    except KeyError, ValueError:
+        return None
+    return min(max(seconds, 0.0), RETRY_AFTER_MAX)
+
+
 def _iso(timestamp: datetime) -> str:
     return timestamp.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -149,7 +170,7 @@ def _with_stats_timestamp(select: Sequence[str]) -> Sequence[str]:
 
 
 class PrismV4Client:
-    """Owns everything about talking to the API: session, retries, paging and
+    """Owns everything about talking to the API: session, retries, rate limits, paging and
     the time budget. All failures are raised as PrismV4Error."""
 
     def __init__(
@@ -161,6 +182,9 @@ class PrismV4Client:
         timeout: int,
         deadline: float,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
+        rate_limits: RateLimits | None = None,
+        # The clock of the deadline
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._session = new_session(base_url, cert_check, RETRY)
         # HostnameValidationAdapter overrides the Host header, so the session's cookie jar
@@ -175,6 +199,8 @@ class PrismV4Client:
         self._timeout = timeout
         self._deadline = deadline
         self._now = now
+        self._clock = clock
+        self._rate_limits = RateLimits(clock=clock) if rate_limits is None else rate_limits
 
     def get(self, path: str, params: QueryParams | None = None) -> JsonObject:
         try:
@@ -213,20 +239,46 @@ class PrismV4Client:
     def _send(
         self, url: str, params: QueryParams | None, cookies: Mapping[str, str]
     ) -> requests.Response:
-        if (remaining := self._deadline - time.monotonic()) <= 0:
-            raise PrismV4Error("the time budget of this agent run is used up")
-        return self._session.get(
-            url,
-            params=params,
-            auth=None if cookies else self._basic_auth,
-            headers={"Cookie": "; ".join(f"{k}={v}" for k, v in cookies.items())}
-            if cookies
-            else None,
-            # All attempts of a retried call share what is left of the time budget
-            timeout=min(self._timeout, remaining / ATTEMPTS),
-            # Pass `verify` explicitly, otherwise REQUESTS_CA_BUNDLE would override it.
-            verify=self._verify,
-        )
+        endpoint = endpoint_of(url)
+        if not self._rate_limits.acquire(endpoint, self._deadline):
+            raise PrismV4Error("the rate limit leaves no time in the budget of this agent run")
+        response = self._send_once(endpoint, url, params, cookies)
+        for _ in range(ATTEMPTS - 1):
+            if response.status_code != HTTPStatus.TOO_MANY_REQUESTS:
+                break
+            self._rate_limits.back_off(endpoint, _retry_after(response))
+            if not self._rate_limits.acquire(endpoint, self._deadline):
+                # The refusal tells more than the time budget it would overrun
+                break
+            response = self._send_once(endpoint, url, params, cookies)
+        return response
+
+    def _send_once(
+        self, endpoint: str, url: str, params: QueryParams | None, cookies: Mapping[str, str]
+    ) -> requests.Response:
+        """Send a call acquired from the rate limits"""
+        response: requests.Response | None = None
+        try:
+            if (remaining := self._deadline - self._clock()) <= 0:
+                raise PrismV4Error("the time budget of this agent run is used up")
+            response = self._session.get(
+                url,
+                params=params,
+                auth=None if cookies else self._basic_auth,
+                headers={"Cookie": "; ".join(f"{k}={v}" for k, v in cookies.items())}
+                if cookies
+                else None,
+                # All attempts of a retried call share what is left of the time budget
+                timeout=min(self._timeout, remaining / ATTEMPTS),
+                # Pass `verify` explicitly, otherwise REQUESTS_CA_BUNDLE would override it.
+                verify=self._verify,
+            )
+        finally:
+            # Whatever went wrong, the calls waiting for this one must not wait forever
+            if response is None:
+                self._rate_limits.release(endpoint)
+        self._rate_limits.update(endpoint, response.headers, response.ok)
+        return response
 
     def list_all(self, path: str, params: QueryParams | None = None) -> list[JsonObject]:
         """Follow the pages of a list call as long as the API links a next one"""

@@ -19,6 +19,19 @@ BASIC_AUTH = "Basic " + base64.b64encode(f"{USERNAME}:{PASSWORD}".encode()).deco
 type Matcher = Callable[[PreparedRequest], tuple[bool, str]]
 
 
+class FakeClock:
+    """A clock for RateLimits that moves on only when told to sleep"""
+
+    def __init__(self) -> None:
+        self.now = 100.0
+
+    def __call__(self) -> float:
+        return self.now
+
+    def sleep(self, seconds: float) -> None:
+        self.now += seconds
+
+
 def v4_url(path: str) -> str:
     return f"{BASE_URL}/api/{path}"
 

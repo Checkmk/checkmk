@@ -2,7 +2,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 from datetime import datetime, timedelta, UTC
 from http import HTTPStatus
 
@@ -14,9 +13,11 @@ from urllib3 import HTTPSConnectionPool
 from urllib3.exceptions import ReadTimeoutError
 
 from cmk.plugins.prism.special_agent.v4_client import PrismV4Client, PrismV4Error
+from cmk.plugins.prism.special_agent.v4_rate_limits import endpoint_of, RateLimits
 
 from .v4_testing import (
     BASE_URL,
+    FakeClock,
     LIMIT_TOO_LARGE,
     LOGIN_REJECTED,
     page,
@@ -46,15 +47,22 @@ def _vms(count: int) -> list[dict[str, str]]:
     return [{"extId": f"vm{i}"} for i in range(count)]
 
 
-def _client(cert_check: bool | str = True, deadline: float | None = None) -> PrismV4Client:
+def _client(
+    cert_check: bool | str = True,
+    deadline: float | None = None,
+    clock: FakeClock | None = None,
+) -> PrismV4Client:
+    clock = FakeClock() if clock is None else clock
     return PrismV4Client(
         BASE_URL,
         USERNAME,
         PASSWORD,
         cert_check,
         timeout=10,
-        deadline=time.monotonic() + 60 if deadline is None else deadline,
+        deadline=clock.now + 60 if deadline is None else deadline,
         now=lambda: NOW,
+        rate_limits=RateLimits(clock=clock, sleep=clock.sleep),
+        clock=clock,
     )
 
 
@@ -194,19 +202,67 @@ def test_rate_limited_call_is_retried(api: responses.RequestsMock) -> None:
     assert _client().get(VMS_PATH) == {"retried": True}
 
 
+def test_rate_limited_call_waits_for_retry_after(api: responses.RequestsMock) -> None:
+    api.get(v4_url(VMS_PATH), status=HTTPStatus.TOO_MANY_REQUESTS, headers={"Retry-After": "2"})
+    api.get(v4_url(VMS_PATH), json={})
+    clock = FakeClock()
+
+    _client(clock=clock).get(VMS_PATH)
+
+    assert clock.now == 102.0
+
+
 def test_persistent_rate_limit_raises(api: responses.RequestsMock) -> None:
     api.get(v4_url(VMS_PATH), status=HTTPStatus.TOO_MANY_REQUESTS)
 
-    with pytest.raises(
-        PrismV4Error, match=r"gave up after 4 attempts \(too many 429 error responses\)"
-    ):
+    with pytest.raises(PrismV4Error, match=f"^{VMS_PATH}: HTTP 429 ") as error:
         _client().get(VMS_PATH)
+
+    assert (error.value.status, len(api.calls)) == (HTTPStatus.TOO_MANY_REQUESTS, 4)
+
+
+def test_rate_limited_call_without_time_to_retry_reports_the_refusal(
+    api: responses.RequestsMock,
+) -> None:
+    api.get(v4_url(VMS_PATH), status=HTTPStatus.TOO_MANY_REQUESTS, headers={"Retry-After": "5"})
+    clock = FakeClock()
+
+    with pytest.raises(PrismV4Error, match=f"^{VMS_PATH}: HTTP 429 ") as error:
+        _client(deadline=clock.now + 3, clock=clock).get(VMS_PATH)
+
+    assert (error.value.status, len(api.calls), clock.now) == (
+        HTTPStatus.TOO_MANY_REQUESTS,
+        1,
+        100.0,
+    )
+
+
+def test_rate_limit_that_outlasts_the_time_budget_fails_at_once(
+    api: responses.RequestsMock,
+) -> None:
+    api.get(
+        v4_url(VMS_PATH),
+        json={},
+        headers={
+            "x-api-ratelimit-limit": "7",
+            "x-api-ratelimit-remaining": "0",
+            "x-api-ratelimit-refresh-period-seconds": "60",
+        },
+    )
+    clock = FakeClock()
+    client = _client(deadline=clock.now + 40, clock=clock)
+    client.get(VMS_PATH)
+
+    with pytest.raises(PrismV4Error, match="rate limit leaves no time"):
+        client.get(VMS_PATH)
+
+    assert (len(api.calls), clock.now) == (1, 100.0)
 
 
 @pytest.mark.usefixtures("api")
 def test_used_up_time_budget_raises_without_a_request() -> None:
     with pytest.raises(PrismV4Error, match="time budget"):
-        _client(deadline=time.monotonic() - 1).get(VMS_PATH)
+        _client(deadline=FakeClock().now - 1).get(VMS_PATH)
 
 
 def test_list_all_follows_the_next_link(api: responses.RequestsMock) -> None:
@@ -286,3 +342,57 @@ def test_vm_stats_always_select_the_sample_timestamp(api: responses.RequestsMock
     )
 
     assert stats == [{"extId": "vm1", "stats": []}]
+
+
+def test_client_keeps_to_the_rate_limit_a_response_reports(api: responses.RequestsMock) -> None:
+    api.get(
+        v4_url(VMS_PATH),
+        json={},
+        headers={
+            "x-api-ratelimit-limit": "7",
+            "x-api-ratelimit-remaining": "6",
+            "x-api-ratelimit-refresh-period-seconds": "1",
+        },
+    )
+    clock = FakeClock()
+    limits = RateLimits(clock=clock, sleep=clock.sleep)
+    client = PrismV4Client(
+        BASE_URL,
+        USERNAME,
+        PASSWORD,
+        True,
+        timeout=10,
+        deadline=clock.now + 60,
+        rate_limits=limits,
+        clock=clock,
+    )
+
+    client.get(VMS_PATH)
+
+    # The call above was the first of 7 in the window, the 8th has to wait
+    assert [limits.reserve(endpoint_of(v4_url(VMS_PATH))) for _ in range(7)] == [
+        *[0.0] * 6,
+        1.0,
+    ]
+
+
+def test_call_that_fails_unexpectedly_does_not_hold_up_the_next(
+    api: responses.RequestsMock,
+) -> None:
+    api.get(v4_url(VMS_PATH), body=ValueError("unexpected"))
+    clock = FakeClock()
+    limits = RateLimits(clock=clock, sleep=clock.sleep)
+    client = PrismV4Client(
+        BASE_URL,
+        USERNAME,
+        PASSWORD,
+        True,
+        timeout=10,
+        deadline=clock.now + 60,
+        rate_limits=limits,
+        clock=clock,
+    )
+    with pytest.raises(ValueError):
+        client.get(VMS_PATH)
+
+    assert limits.reserve(endpoint_of(v4_url(VMS_PATH))) == 0.0

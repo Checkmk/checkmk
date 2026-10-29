@@ -44,8 +44,9 @@ ALERTS_QUERY = {
 }
 
 # The Checkmk service timeout (60 s by default) is shared with the other data sources. A call
-# started just before the end of the budget can wait up to 15 s for Retry-After on top
-# (see v4_client.RETRY): 40 s + 15 s = 55 s.
+# started just before the end of the budget can wait up to 15 s for the Retry-After of a 503
+# on top (see v4_client.RETRY): 40 s + 15 s = 55 s. Waiting for the rate limits, also after a
+# 429, ends with the budget.
 TIME_BUDGET = timedelta(seconds=40)
 MAX_WORKERS = 4
 
@@ -200,10 +201,38 @@ def _fitting_containers(
     return containers
 
 
+# The rate limits of the client set the pace, this only bounds the calls in flight: together
+# with the threads of the other fetchers it stays within the 10 connections requests keeps
+# open per host, and still reaches 10 calls per second at 0.6 s per call
+STATS_WORKERS = 6
+
+
+def _container_stats(
+    context: FetchContext, container: StorageContainer
+) -> StorageContainerStats | None:
+    """None if the container was deleted since it was listed"""
+    try:
+        return StorageContainerStats.model_validate(
+            context.client.entity_stats(
+                f"{CONTAINER_STATS_PATH}/{container.container_ext_id}",
+                window=CONTAINER_STATS_WINDOW,
+                sampling_interval=CONTAINER_STATS_SAMPLING,
+            )
+        )
+    except PrismV4Error as e:
+        # Any other error concerns all containers, so the whole fetcher reports it once
+        if e.status != HTTPStatus.NOT_FOUND:
+            raise
+        LOGGER.info(
+            "container %(name)s no longer exists: %(error)s",
+            {"name": container.name, "error": e},
+        )
+        return None
+
+
 def fetch_containers(context: FetchContext) -> Sequence[Section]:
     """A container that is gone, doesn't fit the model or has no usage stats is left out,
     the others are reported"""
-    by_cluster: dict[str, list[dict[str, object]]] = {}
     containers = _fitting_containers(
         context.client.list_all(
             CONTAINERS_PATH,
@@ -215,27 +244,27 @@ def fetch_containers(context: FetchContext) -> Sequence[Section]:
         ),
         context.messages,
     )
-    gone = 0
-    for container in containers:
-        try:
-            stats = StorageContainerStats.model_validate(
-                context.client.entity_stats(
-                    f"{CONTAINER_STATS_PATH}/{container.container_ext_id}",
-                    window=CONTAINER_STATS_WINDOW,
-                    sampling_interval=CONTAINER_STATS_SAMPLING,
-                )
-            )
-        except PrismV4Error as e:
-            # Any other error concerns all containers, so the whole fetcher reports it once
-            if e.status != HTTPStatus.NOT_FOUND:
-                raise
-            # Deleted since it was listed: left out without a warning, like a container the
-            # legacy API no longer lists
-            LOGGER.info(
-                "container %(name)s no longer exists: %(error)s",
-                {"name": container.name, "error": e},
-            )
-            gone += 1
+    if not containers:
+        return []
+    # The first call goes alone: it learns the rate limit, and if it fails, the others would
+    # fail the same way one after another
+    first_stats = _container_stats(context, containers[0])
+    pool = ThreadPoolExecutor(max_workers=STATS_WORKERS)
+    try:
+        futures = [
+            pool.submit(_container_stats, context, container) for container in containers[1:]
+        ]
+        all_stats = [first_stats, *(future.result() for future in futures)]
+    finally:
+        # After an error, the calls not started yet would only fail the same way
+        pool.shutdown(cancel_futures=True)
+    if all(stats is None for stats in all_stats):
+        # Deletions don't hit every container at once, the stats endpoint itself is missing
+        raise PrismV4Error("Prism Central returned 404 for the stats of every storage container")
+
+    by_cluster: dict[str, list[dict[str, object]]] = {}
+    for container, stats in zip(containers, all_stats, strict=True):
+        if stats is None:
             continue
         if not stats.has_usage:
             context.messages.add_info(
@@ -250,9 +279,6 @@ def fetch_containers(context: FetchContext) -> Sequence[Section]:
                 stats=stats,
             ).to_section()
         )
-    if containers and gone == len(containers):
-        # Deletions don't hit every container at once, the stats endpoint itself is missing
-        raise PrismV4Error("Prism Central returned 404 for the stats of every storage container")
     return [
         Section("prism_containers_v2", cluster_containers, context.routing.host_for(cluster_id))
         for cluster_id, cluster_containers in by_cluster.items()

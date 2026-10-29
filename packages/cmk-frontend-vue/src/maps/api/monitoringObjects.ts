@@ -10,7 +10,6 @@
  * All of it is resolved by the GUI, not the daemon — these run inside a Checkmk
  * request with the caller's own permissions, which is what makes an
  * auth-scoped ``sites.live()`` (and, for BI, Checkmk's own BIManager) available.
- * They ride the GUI session, so no ticket is involved.
  */
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 

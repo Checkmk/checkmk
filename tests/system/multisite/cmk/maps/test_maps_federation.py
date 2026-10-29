@@ -34,7 +34,6 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-import requests
 
 from tests.testlib.common.utils import wait_until
 from tests.testlib.system.site import Site
@@ -104,20 +103,9 @@ def _maps_url(site: Site, path: str) -> str:
     return site.url_for_path(f"/{site.id}/check_mk/maps{path}")
 
 
-def _maps_ticket(site: Site, web: CMKWebSession) -> str:
-    """Mint a signed daemon ticket from the logged-in GUI session."""
-    ticket = web.get(
-        f"/{site.id}/check_mk/api/internal/domain-types/maps_ticket/collections/all"
-    ).json()["ticket"]
-    assert ticket
-    return str(ticket)
-
-
 def _first_connection_id(central_site: Site, web: CMKWebSession) -> str:
-    response = requests.get(
-        _maps_url(central_site, "/api/v1/connections"),
-        headers={"X-Maps-Ticket": _maps_ticket(central_site, web)},
-        timeout=_HTTP_TIMEOUT,
+    response = web.session.get(
+        _maps_url(central_site, "/api/v1/connections"), timeout=_HTTP_TIMEOUT
     )
     response.raise_for_status()
     connections = response.json()
@@ -128,9 +116,8 @@ def _first_connection_id(central_site: Site, web: CMKWebSession) -> str:
 def _topology_nodes(
     central_site: Site, web: CMKWebSession, connection_id: str
 ) -> list[dict[str, object]]:
-    response = requests.get(
+    response = web.session.get(
         _maps_url(central_site, f"/api/v1/connections/{connection_id}/topology"),
-        headers={"X-Maps-Ticket": _maps_ticket(central_site, web)},
         timeout=_HTTP_TIMEOUT,
     )
     response.raise_for_status()

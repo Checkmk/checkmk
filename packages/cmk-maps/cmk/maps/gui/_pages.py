@@ -7,7 +7,7 @@
 Maps ships as the ``cmk-maps`` web component inside the shared cmk-frontend-vue
 bundle (loaded by ``make_header``); this page mounts it. Everything the SPA then
 calls is a REST endpoint — map CRUD the official ``cmk.maps.rest_api``, the
-ticket handshake and the rest the internal family in
+session capabilities and the rest the internal family in
 ``cmk.maps.rest_api.internal``.
 """
 
@@ -39,6 +39,7 @@ from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import VisualPublic
 from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermissions
+from cmk.maps.gui._capabilities import publishable_contact_groups, publishable_sites
 from cmk.maps.gui._images import seed_builtin_images
 from cmk.maps.gui._page_menu import (
     images_breadcrumb,
@@ -49,7 +50,6 @@ from cmk.maps.gui._page_menu import (
 )
 from cmk.maps.gui._settings import map_object_defaults, MapListView, tile_csp_sources
 from cmk.maps.gui._settings_page import SETTINGS_URL
-from cmk.maps.gui._tickets import _publishable_contact_groups, _publishable_sites
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import get_permitted_map
 from cmk.shared_typing.maps import (
@@ -121,7 +121,7 @@ class ShowMapsPage(Page):
         # and pushing the mount point off-screen; the SPA fills the wrapper.
         html.open_div(class_="maps-app--embed")
         # Only what the page itself decides or the SPA cannot fetch goes in as a
-        # prop; the SPA fetches everything it shows (the ticket, the map and the
+        # prop; the SPA fetches everything it shows (the capabilities, the map and the
         # listing, the authoring defaults). Hydrating any of that would be a
         # second data-assembly path to keep in step with those, and its
         # optionality would reach every consumer of the values.
@@ -282,9 +282,9 @@ def _authorized_public(requested: object) -> VisualPublic:
         scope = requested[0]
         names = [str(n) for n in requested[1]]
         if scope == "contact_groups":
-            allowed = {g["id"] for g in _publishable_contact_groups(user)}
+            allowed = {g["id"] for g in publishable_contact_groups(user)}
         else:
-            allowed = {s["id"] for s in _publishable_sites(user)}
+            allowed = {s["id"] for s in publishable_sites(user)}
         permitted = [n for n in names if n in allowed]
         # Publishing to none of the allowed scopes is effectively private.
         if not permitted:

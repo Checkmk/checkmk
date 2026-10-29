@@ -31,11 +31,8 @@ export function resolveAssetBase(): string {
   return new URL('maps/', window.location.href).href
 }
 
-/** URL of the daemon's event stream for one map, carrying the stream credential. */
-export function resolveStreamUrl(mapName: string, streamToken: string): string {
-  const url = new URL(`${resolveDaemonBase()}/api/v1/sse/maps/${encodeURIComponent(mapName)}`)
-  url.searchParams.set('token', streamToken)
-  return url.href
+export function resolveStreamUrl(mapName: string): string {
+  return new URL(`${resolveDaemonBase()}/api/v1/sse/maps/${encodeURIComponent(mapName)}`).href
 }
 
 /**

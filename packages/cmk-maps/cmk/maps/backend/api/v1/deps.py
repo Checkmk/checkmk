@@ -2,101 +2,120 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Shared FastAPI dependencies — Checkmk-native ticket authentication.
+"""Shared FastAPI dependencies — authentication by the GUI session.
 
-Every normal call carries the full-capability API ticket in the ``X-Maps-Ticket``
-header (a dedicated header because the site Apache claims ``Authorization`` for
-its own HTTP Basic auth). The SSE endpoint instead carries a reduced-capability
-stream token as a ``?token=`` query parameter, because ``EventSource`` cannot set
-headers. The two are bound to different audiences (see
-:mod:`cmk.maps.shared.ticket`): the header path requires the API audience
-and the SSE path the stream audience, so a URL stream token — which can leak into
-access logs — is rejected on every REST endpoint and can neither drive the API
-nor escalate privilege. Both are minted by ``cmk.maps.gui`` for the logged-in
-Checkmk user and validated here against the shared site-internal secret; the
-resulting :class:`Principal` carries the user's pre-resolved capabilities, so the
-daemon performs no further RBAC lookups of its own.
+Every request, the event stream included, carries the GUI session cookie the
+browser sends to the site anyway. :class:`~cmk.maps.backend.core.auth.GuiAuth`
+asks the GUI who is behind it and, for a request about a map, which map the name
+means for that user.
 """
+
+import time
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 
-from cmk.maps.backend.core.auth import (
-    InvalidTicket,
-    Principal,
-    validate_stream_ticket,
-    validate_ticket,
-)
+from cmk.fastapi.gui_session import Rejected, SessionCookie, Unavailable
+from cmk.maps.backend.api.v1.types import MapName
+from cmk.maps.backend.core.auth import Forbidden, GuiAuth, NoMap, Principal
 from cmk.maps.backend.core.ratelimit import rest_read_limiter
 from cmk.maps.backend.schemas.map import MapConfig
 from cmk.maps.backend.services import map_service
 
 __all__ = [
+    "GuiAuthDep",
     "Principal",
+    "SessionCookieDep",
     "can_configure",
     "can_create_map",
-    "can_run_command",
     "get_current_user",
-    "principal_from_token",
+    "get_gui_auth",
+    "get_map_owner",
+    "get_map_viewer",
+    "rate_limited_map_read",
     "rate_limited_read",
     "registered_map",
     "require_connection_read",
     "resolve_auth_user",
 ]
 
-_TICKET_HEADER = "X-Maps-Ticket"
-_TICKET_PREFIX = "MapsTicket "
+session_cookie = SessionCookie()
+
+SessionCookieDep = Annotated[str, Depends(session_cookie)]
 
 
-def _extract_ticket(request: Request) -> str:
-    # Primary channel: a dedicated header. The SPA is served behind the site
-    # Apache, whose default config claims the Authorization header for HTTP
-    # Basic auth — so the ticket travels in its own header to avoid the clash.
-    ticket = request.headers.get(_TICKET_HEADER)
-    if ticket:
-        return ticket.strip()
-    # Fallback: Authorization: MapsTicket <token> (sites without Basic auth).
-    header = request.headers.get("Authorization", "")
-    if header.startswith(_TICKET_PREFIX):
-        return header[len(_TICKET_PREFIX) :].strip()
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Missing Maps ticket",
-    )
+def get_gui_auth(request: Request) -> GuiAuth:
+    """What the lifespan set up to ask the GUI about a session."""
+    auth: GuiAuth = request.app.state.gui_auth
+    return auth
 
 
-async def get_current_user(request: Request) -> Principal:
-    """Validate the request's ticket and return the authenticated principal."""
-    token = _extract_ticket(request)
-    try:
-        return validate_ticket(token)
-    except InvalidTicket as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Maps ticket",
-        ) from exc
+GuiAuthDep = Annotated[GuiAuth, Depends(get_gui_auth)]
 
 
-def principal_from_token(token: str) -> Principal | None:
-    """Validate the reduced-capability stream token from the SSE ``?token=`` param.
+def _user_verdict(result: Principal | Rejected | Forbidden | Unavailable) -> Principal:
+    match result:
+        case Principal():
+            return result
+        case Rejected():
+            raise session_cookie.make_not_authenticated_error()
+        case Forbidden():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Maps access required"
+            )
+        case Unavailable():
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Authentication is not available right now",
+            )
 
-    Requires the stream audience, so an API ticket presented here is rejected.
-    Returns ``None`` (not a raised 401) so the SSE handler can fail the stream
-    cleanly.
-    """
-    try:
-        return validate_stream_ticket(token)
-    except InvalidTicket:
-        return None
+
+def _map_verdict(result: str | NoMap | Unavailable, name: str) -> str | None:
+    match result:
+        case str():
+            return result
+        case NoMap():
+            return None
+        case Unavailable():
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Cannot resolve map '{name}' right now",
+            )
 
 
-async def rate_limited_read(current_user: Principal = Depends(get_current_user)) -> Principal:
+async def get_current_user(cookie: SessionCookieDep, auth: GuiAuthDep) -> Principal:
+    """The user behind the request's GUI session, or the refusal of the request."""
+    return _user_verdict(await auth.principal(cookie, now=time.monotonic()))
+
+
+async def get_map_owner(
+    name: MapName,
+    auth: GuiAuthDep,
+    current_user: Principal = Depends(get_current_user),
+) -> str | None:
+    """The owner of the map the user sees under ``name``, ``None`` if they see none."""
+    return _map_verdict(await auth.map_owner(current_user, name, now=time.monotonic()), name)
+
+
+async def get_map_viewer(
+    name: MapName,
+    current_user: Principal = Depends(get_current_user),
+    owner: str | None = Depends(get_map_owner),
+) -> Principal:
+    """The user, viewing the map they see under ``name``, or 404."""
+    if owner is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Map '{name}' not found")
+    return current_user.viewing(owner, name)
+
+
+def _rate_limited(user: Principal) -> Principal:
     """Guard the expensive Livestatus readers with a per-user budget.
 
-    Keyed by the authenticated ticket identity (not IP), so a valid ticket can't
-    drive unbounded topology / metric-history / search load, and one user's
-    flood can't lock out another. See ``rest_read_limiter`` for the budget.
+    Keyed by the authenticated identity (not IP), so a valid session can't drive
+    unbounded topology / metric-history / search load, and one user's flood can't
+    lock out another. See ``rest_read_limiter`` for the budget.
     """
-    key = current_user.name
+    key = user.name
     if rest_read_limiter.is_blocked(key):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -104,11 +123,23 @@ async def rate_limited_read(current_user: Principal = Depends(get_current_user))
             headers={"Retry-After": str(int(rest_read_limiter.retry_after(key)) + 1)},
         )
     rest_read_limiter.record(key)
-    return current_user
+    return user
+
+
+async def rate_limited_read(current_user: Principal = Depends(get_current_user)) -> Principal:
+    return _rate_limited(current_user)
+
+
+async def rate_limited_map_read(
+    # Before the viewer: resolving the map asks the GUI, which the budget is there to spare.
+    _budget: Principal = Depends(rate_limited_read),
+    viewer: Principal = Depends(get_map_viewer),
+) -> Principal:
+    return viewer
 
 
 # ---------------------------------------------------------------------------
-# Capability predicates (operate purely on the baked-in ticket capabilities)
+# Capability predicates
 # ---------------------------------------------------------------------------
 
 
@@ -121,10 +152,6 @@ def can_create_map(principal: Principal) -> bool:
     """Register unsigned editor previews and read the connection list — Checkmk's
     ``general.edit_map`` (per-map edit rights are enforced by the GUI on save)."""
     return principal.may_edit
-
-
-def can_run_command(principal: Principal, action: str) -> bool:
-    return principal.may_run_command(action)
 
 
 def resolve_auth_user(principal: Principal) -> str | None:
@@ -152,14 +179,10 @@ async def require_connection_read(current_user: Principal = Depends(get_current_
 
 
 def registered_map(user: Principal, name: str) -> MapConfig:
-    """Resolve the viewed map's config under its REAL owner, or 404.
+    """Resolve the viewed map's config under its real owner, or 404.
 
-    Keyed by ``map_key_owner`` (the map's real owner for a map-scoped ticket,
-    else the caller), so all viewers of a published map resolve the one config
-    registered under it. A map-scoped ticket must match the requested map, so a
-    ticket for one map can't be used to reach another."""
-    if user.map_name is not None and name != user.map_name:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Map '{name}' not found")
+    Keyed by ``map_key_owner`` (the map's owner, as the GUI named it), so all
+    viewers of a published map resolve the one config registered under it."""
     cfg = map_service.get_map(user.map_key_owner, name)
     if cfg is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Map '{name}' not found")

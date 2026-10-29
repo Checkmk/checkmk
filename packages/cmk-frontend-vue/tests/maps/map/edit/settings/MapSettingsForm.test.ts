@@ -8,13 +8,13 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { type PropType, defineComponent, h } from 'vue'
 
-import type { MapsCapabilities } from '@/maps/api/ticket'
+import type { MapsCapabilities } from '@/maps/api/session'
 import MapSettingsForm from '@/maps/map/edit/settings/MapSettingsForm.vue'
 import { NavigationService } from '@/maps/services/NavigationService'
 import type { MapConfig, MapRead } from '@/maps/types/api'
 
 import { aMap, newMapView } from '../../../support/fixtures'
-import { aTicket, fakeMapsServices, provideServices } from '../../../support/services'
+import { aSession, fakeMapsServices, provideServices } from '../../../support/services'
 
 // The map metadata FormSpec is a whole vendored renderer; this form only
 // orchestrates it (wires v-model:data, gates Save on dirtiness, forwards the
@@ -56,9 +56,6 @@ let deleteMap: ReturnType<typeof vi.spyOn>
 const capabilities: MapsCapabilities = {
   may_edit: true,
   configure: true,
-  see_all: true,
-  folder_see_all: true,
-  contact_groups: [],
   publish_all: true,
   publish_to_groups: true,
   publish_to_foreign_groups: false,
@@ -174,7 +171,7 @@ async function editForm(user: ReturnType<typeof userEvent.setup>) {
 }
 
 beforeEach(async () => {
-  services = fakeMapsServices({}, aTicket({ capabilities }))
+  services = fakeMapsServices({}, aSession({ capabilities }))
   saveMapMetadata = vi.spyOn(services.maps, 'saveMapMetadata').mockResolvedValue(savedMap)
   deleteMap = vi.spyOn(services.maps, 'deleteMap').mockResolvedValue(undefined)
   vi.mocked(services.apis.formSchemas.fetch).mockResolvedValue({

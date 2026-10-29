@@ -8,14 +8,14 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
-import type { CommandVerb } from '@/maps/api/ticket'
+import type { CommandVerb } from '@/maps/api/session'
 import FlowMapView from '@/maps/map/flow/FlowMapView.vue'
 import type { MapElement, TopologyNode } from '@/maps/types/api'
 import { newMapView } from '@/maps/utils/model'
 
 import { aMap, aTopologyNode } from '../../support/fixtures'
 import {
-  aTicket,
+  aSession,
   fakeMapsServices,
   fullCapabilities,
   provideServices
@@ -84,7 +84,7 @@ function renderWithTopology() {
 
 /** The same map, opened by an operator with the given command permissions. */
 async function renderAsCommander(commands: CommandVerb[] = BULK_COMMANDS) {
-  const services = fakeMapsServices({}, aTicket({ capabilities: fullCapabilities({ commands }) }))
+  const services = fakeMapsServices({}, aSession({ capabilities: fullCapabilities({ commands }) }))
   await services.auth.init()
   openFlowMap(services)
   const { global: provided } = provideServices(services)
@@ -294,7 +294,7 @@ describe('FlowMapView', () => {
   it('sends no command from a kiosk, whatever the operator may otherwise do', async () => {
     const services = fakeMapsServices(
       {},
-      aTicket({ capabilities: fullCapabilities({ commands: BULK_COMMANDS }) })
+      aSession({ capabilities: fullCapabilities({ commands: BULK_COMMANDS }) })
     )
     await services.auth.init()
     openFlowMap(services)

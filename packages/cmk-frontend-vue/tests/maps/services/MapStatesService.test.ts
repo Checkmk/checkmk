@@ -5,7 +5,7 @@
  */
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 
 import type { ConnectionsApi } from '@/maps/api/connections'
 import type { SignedMap } from '@/maps/api/mapConfig'
@@ -104,11 +104,7 @@ function newService(
     fetchAggregationTree: vi.fn().mockResolvedValue({ tree: null, connection_ok: true }),
     ...objectOverrides
   }
-  const auth = {
-    setStreamMap: vi.fn().mockResolvedValue(undefined),
-    streamToken: computed(() => 'maps-stream-token' as string | null),
-    refresh: session.refresh ?? vi.fn().mockResolvedValue(true)
-  }
+  const auth = { refresh: session.refresh ?? vi.fn().mockResolvedValue(true) }
   const service = new MapStatesService(statesApi, connections, objects, auth, {
     currentMap: ref(map),
     getSignedMap: session.getSignedMap ?? vi.fn().mockResolvedValue(freshlySigned)
@@ -285,19 +281,20 @@ describe('MapStatesService — topology update', () => {
   })
 })
 
-describe('MapStatesService — stream credential', () => {
+describe('MapStatesService — stream URL', () => {
   beforeEach(() => {
     FakeEventSource.instances = []
     vi.stubGlobal('EventSource', FakeEventSource)
   })
 
-  it('passes the reduced-scope stream token as the SSE token query parameter', async () => {
+  // The browser sends the session cookie with the stream request, so a URL that
+  // can reach an access log carries no credential.
+  it('opens the stream of the map without a credential in the URL', async () => {
     const store = newService()
     await store.connectToMap('b')
-    const es = FakeEventSource.instances[0]!
-    // The SSE URL must carry the dedicated stream token, never the full API ticket.
-    expect(es.url).toContain('token=maps-stream-token')
-    expect(es.url).not.toContain('token=maps-ticket')
+    const url = new URL(FakeEventSource.instances[0]!.url)
+    expect(url.pathname).toMatch(/\/maps\/api\/v1\/sse\/maps\/b$/)
+    expect(url.search).toBe('')
   })
 })
 
@@ -447,7 +444,7 @@ describe('MapStatesService — hidden tab', () => {
     setHidden(false)
     await vi.advanceTimersByTimeAsync(0)
     expect(FakeEventSource.instances).toHaveLength(2)
-    expect(FakeEventSource.instances[1]!.url).toContain('token=maps-stream-token')
+    expect(FakeEventSource.instances[1]!.url).toMatch(/\/api\/v1\/sse\/maps\/b$/)
     store.disconnect()
   })
 
@@ -473,19 +470,6 @@ describe('MapStatesService — hidden tab', () => {
 
     setHidden(false)
     await vi.advanceTimersByTimeAsync(0)
-    expect(FakeEventSource.instances).toHaveLength(1)
-    store.disconnect()
-  })
-
-  it('does not reopen a paused stream when the credential rotates', async () => {
-    const store = newService()
-    await store.connectToMap('b')
-    setHidden(true)
-    await vi.advanceTimersByTimeAsync(5_000)
-
-    store.reconnectStream()
-    await vi.advanceTimersByTimeAsync(0)
-
     expect(FakeEventSource.instances).toHaveLength(1)
     store.disconnect()
   })
@@ -538,15 +522,14 @@ describe('MapStatesService — a daemon that lost the map', () => {
     await store.refresh()
 
     expect(getSignedMap).toHaveBeenCalledWith('b')
-    expect(register).toHaveBeenLastCalledWith(freshlySigned)
+    expect(register).toHaveBeenLastCalledWith('b', freshlySigned)
     expect(store.connected.value).toBe(true)
   })
 
-  // A site start rotates the secret every ticket is checked against.
-  it('takes a new ticket before registering again when the old one is refused', async () => {
+  it('checks the session instead of registering again when the daemon refuses it', async () => {
     const register = vi.fn().mockResolvedValue(undefined)
     const fetchStates = vi.fn().mockResolvedValue(emptyStates)
-    const refresh = vi.fn().mockResolvedValue(true)
+    const refresh = vi.fn().mockResolvedValue(false)
     const store = newService(null, {}, { register, fetchStates }, { refresh })
     await store.connectToMap('b', signed)
     fetchStates.mockRejectedValueOnce(failure(401))
@@ -554,25 +537,8 @@ describe('MapStatesService — a daemon that lost the map', () => {
     await store.refresh()
 
     expect(refresh).toHaveBeenCalledTimes(1)
-    expect(register).toHaveBeenLastCalledWith(freshlySigned)
-    expect(store.connected.value).toBe(true)
-  })
-
-  it('does not register a map that was left while the ticket was renewed', async () => {
-    const register = vi.fn().mockResolvedValue(undefined)
-    const fetchStates = vi.fn().mockResolvedValue(emptyStates)
-    const refresh = vi.fn()
-    const store = newService(null, {}, { register, fetchStates }, { refresh })
-    refresh.mockImplementation(async () => {
-      store.disconnect()
-      return true
-    })
-    await store.connectToMap('b', signed)
-    fetchStates.mockRejectedValueOnce(failure(401))
-
-    await store.refresh()
-
     expect(register).toHaveBeenCalledTimes(1)
+    expect(store.connected.value).toBe(false)
   })
 
   it('does not register again for a failure that is not about the map', async () => {
@@ -592,25 +558,11 @@ describe('MapStatesService — a daemon that lost the map', () => {
     const fetchStates = vi.fn().mockResolvedValue(emptyStates)
     const store = newService(null, {}, { fetchStates })
     await store.connectToMap('b', signed)
-    fetchStates.mockRejectedValueOnce(failure(401))
+    fetchStates.mockRejectedValueOnce(failure(404))
 
     FakeEventSource.instances[0]!.failToOpen()
 
     await vi.waitFor(() => expect(FakeEventSource.instances).toHaveLength(2))
     expect(store.streamAvailable.value).toBe(true)
-  })
-
-  it('leaves a stream blocked on its way to the polling', async () => {
-    const fetchStates = vi.fn().mockResolvedValue(emptyStates)
-    const store = newService(null, {}, { fetchStates })
-    await store.connectToMap('b', signed)
-
-    FakeEventSource.instances[0]!.failToOpen()
-    await vi.waitFor(() => expect(fetchStates).toHaveBeenCalledTimes(2))
-    store.reconnectStream()
-    await new Promise((resolve) => setTimeout(resolve, 10))
-
-    expect(FakeEventSource.instances).toHaveLength(1)
-    expect(store.streamAvailable.value).toBe(false)
   })
 })

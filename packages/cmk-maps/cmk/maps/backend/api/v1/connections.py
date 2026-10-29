@@ -86,10 +86,7 @@ async def list_backends(
 # sites.live()), which means they only reach the site's own configured
 # (distributed) sites — a map object on an *external* connection (a foreign
 # Checkmk reached over TCP+automation, not part of this site's distributed
-# setup) is command read-only for the first release. The ticket still carries
-# the user's permitted command verbs (Principal.commands) as a pre-authorized
-# capability, so a daemon-side command relay for external connections can be
-# added later without a ticket-contract change.
+# setup) is command read-only for the first release.
 
 
 # Worst first, as Checkmk ranks the states; PENDING sits above OK so a flapping

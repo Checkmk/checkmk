@@ -45,7 +45,7 @@ from cmk.livestatus_client.expressions import And
 from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.livestatus_client.tables.services import Services
-from cmk.maps.gui._tickets import COMMAND_ACTION_PERMISSIONS
+from cmk.maps.gui._capabilities import COMMAND_ACTION_PERMISSIONS
 
 # The part of ``CommandVerb`` that is run here; the rest goes to the REST API.
 # TODO: These belong into Checkmk's Monitor endpoint family (``cmk.gui.monitor``),
@@ -154,7 +154,7 @@ def run_map_command(command: MapCommand) -> None:
 
     # Authorize before issuing ANY command, the same way for every verb: the
     # views' command gate, then the per-verb permission (from the same map the
-    # ticket capabilities derive from) for the *capability*, then the visibility
+    # SPA's command capabilities derive from) for the *capability*, then the visibility
     # check for the *object*.
     user.need_permission("general.act")
     user.need_permission(COMMAND_ACTION_PERMISSIONS[command.action])

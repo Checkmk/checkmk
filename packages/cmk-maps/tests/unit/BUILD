@@ -15,9 +15,11 @@ py_cmk_test(
     deps = [
         "//cmk/utils:paths",
         "//packages/cmk-crypto",
+        "//packages/cmk-fastapi",
         "//packages/cmk-maps:backend",
         requirement("fastapi"),
         requirement("httpx"),
+        requirement("httpx2"),
         requirement("python-multipart"),
         requirement("starlette"),
     ],

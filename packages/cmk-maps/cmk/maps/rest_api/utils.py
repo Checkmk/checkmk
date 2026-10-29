@@ -22,7 +22,7 @@ from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
 from cmk.gui.type_defs import VisualPublic
-from cmk.maps.gui._tickets import sign_map_config
+from cmk.maps.gui._capabilities import sign_map_config
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import get_permitted_map, rotation_pools_of
 from cmk.maps.gui.type_defs import MapName
@@ -422,7 +422,7 @@ def serialize_map(page: MapPage, *, can_edit: bool, can_delete: bool) -> MapObje
     # can't be signed — and thus relayed to the daemon — under a foreign map name.
     spec = {**dict(cfg.map_spec), "name": cfg.name}
     # Sign the resolved config so the SPA can relay {config_b64, sig} to the Maps
-    # daemon's register endpoint (verified there against the ticket's owner) — the
+    # daemon's register endpoint (verified there against the owner the GUI names for the map) — the
     # same bytes the daemon renders.
     signed = sign_map_config(spec, owner=str(cfg.owner))
     return MapObject(

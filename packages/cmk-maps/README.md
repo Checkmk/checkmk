@@ -33,10 +33,11 @@ system and form engine directly). There is no separate frontend artifact here.
 ## Authentication
 
 The daemon performs no login, session or password handling of its own. Every
-request is authenticated by a signed ticket minted by `cmk.maps.gui` and
-verified in `cmk.maps.backend.core.auth` using the site-internal secret. The
-GUI↔daemon ticket contract is pinned by
-`tests/unit/cmk/gui/maps/test_ticket_contract.py`.
+request carries the GUI session cookie, and `cmk.maps.backend.core.auth` asks
+the GUI of the site who is behind it (`gui_session/identify`) and which map a
+name means for that user (`maps_access/resolve`). The map configs the browser
+relays are signed by `cmk.maps.gui` with the site-internal secret; the format
+is pinned by `tests/unit/cmk/gui/maps/test_map_signature_contract.py`.
 
 ## Built-in icons
 

@@ -10,7 +10,7 @@
 These run against a real site and guard the first-release blockers that unit
 tests can't see: that the daemon is actually wired into OMD (config hook + init
 script), starts, is reachable through the Apache reverse proxy, and that the
-GUI↔daemon signed-ticket handshake works end to end.
+daemon accepts the GUI session end to end.
 
 Maps ships in every edition (including cloud).
 """
@@ -39,38 +39,29 @@ def _maps_url(site: Site, path: str) -> str:
     return site.url_for_path(f"/{site.id}/check_mk/maps{path}")
 
 
-def _maps_ticket(site: Site) -> str:
-    """Mint a signed daemon ticket through the internal REST API, as the SPA does on boot.
+def _gui_session(web: CMKWebSession) -> requests.Session:
+    """The browser session of the ``web`` fixture, whose cookie the daemon authenticates.
 
-    Minted as the automation user: on cloud the GUI session of the ``web`` fixture is not
-    logged in, and the endpoint answers any authenticated caller holding ``maps.use``."""
-    response = site.openapi.get(
-        "domain-types/maps_ticket/collections/all", api_version=APIVersion.INTERNAL
-    )
-    response.raise_for_status()
-    ticket = response.json()["ticket"]
-    assert ticket
-    return str(ticket)
+    On cloud the fixture does not log in. Asking for a GUI page there signs in
+    through the OAuth mock, see ``CMKWebSession.is_logged_in``."""
+    if web.get_auth_cookie() is None:
+        web.get("maps.py", allow_redirect_to_login=True)
+    assert web.get_auth_cookie() is not None
+    return web.session
 
 
-def _first_connection_id(site: Site) -> str:
+def _first_connection_id(site: Site, web: CMKWebSession) -> str:
     """The id of the site's (built-in) local Livestatus connection."""
-    response = requests.get(
-        _maps_url(site, "/api/v1/connections"),
-        headers={"X-Maps-Ticket": _maps_ticket(site)},
-        timeout=_TIMEOUT,
-    )
+    response = _gui_session(web).get(_maps_url(site, "/api/v1/connections"), timeout=_TIMEOUT)
     response.raise_for_status()
     connections = response.json()
     assert connections, "no Maps connection registered on the site"
     return str(connections[0]["id"])
 
 
-def _topology_nodes(site: Site, connection_id: str) -> list[dict[str, object]]:
-    response = requests.get(
-        _maps_url(site, f"/api/v1/connections/{connection_id}/topology"),
-        headers={"X-Maps-Ticket": _maps_ticket(site)},
-        timeout=_TIMEOUT,
+def _topology_nodes(site: Site, web: CMKWebSession, connection_id: str) -> list[dict[str, object]]:
+    response = _gui_session(web).get(
+        _maps_url(site, f"/api/v1/connections/{connection_id}/topology"), timeout=_TIMEOUT
     )
     response.raise_for_status()
     return list(response.json())
@@ -132,20 +123,16 @@ def test_maps_daemon_survives_reload(site: Site, maps_on: None) -> None:
     assert health.json() == {"status": "ok"}
 
 
-def test_maps_api_rejects_request_without_ticket(site: Site, maps_on: None) -> None:
+def test_maps_api_rejects_request_without_session(site: Site, maps_on: None) -> None:
     # The /check_mk/maps prefix inherits /check_mk's exemption from the site's
-    # Basic-auth realm; the daemon authenticates the signed ticket itself, so an
+    # Basic-auth realm; the daemon authenticates the GUI session itself, so an
     # API call without one must be rejected rather than served anonymously.
     response = requests.get(_maps_url(site, "/api/v1/connections"), timeout=_TIMEOUT)
     assert response.status_code == HTTPStatus.UNAUTHORIZED
 
 
-def test_maps_ticket_handshake_end_to_end(site: Site, maps_on: None) -> None:
-    response = requests.get(
-        _maps_url(site, "/api/v1/connections"),
-        headers={"X-Maps-Ticket": _maps_ticket(site)},
-        timeout=_TIMEOUT,
-    )
+def test_maps_daemon_accepts_the_gui_session(site: Site, web: CMKWebSession, maps_on: None) -> None:
+    response = _gui_session(web).get(_maps_url(site, "/api/v1/connections"), timeout=_TIMEOUT)
     assert response.status_code == HTTPStatus.OK
     assert isinstance(response.json(), list)
 
@@ -167,16 +154,18 @@ def _monitored_host(site: Site, maps_on: None) -> Iterator[str]:
         site.openapi.changes.activate_and_wait_for_completion()
 
 
-def test_maps_daemon_topology_includes_monitored_host(site: Site, monitored_host: str) -> None:
+def test_maps_daemon_topology_includes_monitored_host(
+    site: Site, web: CMKWebSession, monitored_host: str
+) -> None:
     # The daemon fans a Livestatus query out over the connection and returns the
     # site's hosts as topology nodes. The host we just activated must show up,
     # tagged with the site it is monitored by. Wait past the daemon's topology
     # cache TTL so a pre-activation (empty) cache entry can expire and rebuild.
-    connection_id = _first_connection_id(site)
+    connection_id = _first_connection_id(site, web)
     wait_until(
         lambda: any(
             node.get("name") == monitored_host and node.get("site_id") == site.id
-            for node in _topology_nodes(site, connection_id)
+            for node in _topology_nodes(site, web, connection_id)
         ),
         timeout=60,
         interval=3,
@@ -184,14 +173,15 @@ def test_maps_daemon_topology_includes_monitored_host(site: Site, monitored_host
     )
 
 
-def test_maps_daemon_object_details_for_host(site: Site, monitored_host: str) -> None:
+def test_maps_daemon_object_details_for_host(
+    site: Site, web: CMKWebSession, monitored_host: str
+) -> None:
     # The detail drawer fetches per-object details on demand (off the state
     # stream). The daemon must answer with the host's own row.
-    connection_id = _first_connection_id(site)
-    response = requests.get(
+    connection_id = _first_connection_id(site, web)
+    response = _gui_session(web).get(
         _maps_url(site, f"/api/v1/connections/{connection_id}/object-details"),
         params={"type": "host", "host": monitored_host},
-        headers={"X-Maps-Ticket": _maps_ticket(site)},
         timeout=_TIMEOUT,
     )
     assert response.status_code == HTTPStatus.OK
@@ -200,16 +190,17 @@ def test_maps_daemon_object_details_for_host(site: Site, monitored_host: str) ->
     assert body["host_name"] == monitored_host
 
 
-def test_maps_daemon_metric_history_through_proxy(site: Site, monitored_host: str) -> None:
+def test_maps_daemon_metric_history_through_proxy(
+    site: Site, web: CMKWebSession, monitored_host: str
+) -> None:
     # The metric-history endpoint drives the Livestatus rrddata path end to end
-    # (proxy → ticket auth → connection → rrddata). A freshly created host may not
+    # (proxy → session auth → connection → rrddata). A freshly created host may not
     # have RRDs yet, so the point is the wiring: a well-formed 200 with the
     # series/titles envelope, not that data already exists.
-    connection_id = _first_connection_id(site)
-    response = requests.get(
+    connection_id = _first_connection_id(site, web)
+    response = _gui_session(web).get(
         _maps_url(site, f"/api/v1/connections/{connection_id}/metric-history"),
         params={"host": monitored_host, "service": "PING", "minutes": "60"},
-        headers={"X-Maps-Ticket": _maps_ticket(site)},
         timeout=_TIMEOUT,
     )
     assert response.status_code == HTTPStatus.OK

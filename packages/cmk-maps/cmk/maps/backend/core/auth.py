@@ -2,72 +2,80 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Checkmk-native request authentication for the Maps backend daemon.
+"""Authenticates a request to the Maps daemon by the GUI session it carries.
 
-The daemon runs behind the site Apache as a reverse proxy and does NOT manage
-users, sessions or passwords itself. The Checkmk GUI (``cmk.maps.gui``) — which
-has the full session / RBAC / 2FA context — mints a short-lived signed *ticket*
-for the logged-in user, and the daemon merely validates it against the shared
-site-internal secret. There is no login, JWT or password store in the daemon.
+The daemon runs behind the site Apache and handles no users, sessions or
+passwords of its own. The browser sends the GUI session cookie with every
+request. The daemon asks the GUI of its site who is behind it and which of the
+permissions Maps needs they hold (``gui_session/identify``), and which map a name
+means for that user (``maps_access/resolve``). It keeps the first answer per
+session and the second per user for :data:`~cmk.fastapi.gui_session.IDENTITY_TTL`
+seconds.
 
-The ticket/map-config wire format lives in :mod:`cmk.maps.shared.ticket`, which
-the minting side (``cmk.maps.gui._tickets``) imports too — so the byte-for-byte
-token format is owned in one place. This module adds the daemon's concerns on
-top: caching the site-internal secret and turning the validated claims into a
-:class:`Principal`. The HMAC key is the site-internal secret in
-``etc/site_internal.secret``, which the GUI reads through
-:class:`~cmk.utils.local_secrets.SiteInternalSecret`.
+The map config a viewer relays is signed by the GUI and verified here against
+the owner the GUI named, see :mod:`cmk.maps.shared.map_signature`.
 """
 
+import dataclasses
 import functools
 import hmac
 from dataclasses import dataclass, field
+from typing import Final
 
-from cmk.maps.shared.ticket import (
-    decode_ticket,
-    HmacFn,
-    InvalidTicket,
-    STREAM_TICKET_AUDIENCE,
-    TICKET_AUDIENCE,
-    verify_config,
+from pydantic import BaseModel, ConfigDict
+
+from cmk.fastapi.gui_session import (
+    GuiLoopback,
+    Identity,
+    IDENTITY_TTL,
+    IdentityCache,
+    Rejected,
+    Unavailable,
+    unavailable,
 )
+from cmk.maps.shared.map_signature import HmacFn, InvalidSignature, verify_config
 from cmk.utils import paths
 
 __all__ = [
-    "InvalidTicket",
+    "Forbidden",
+    "GuiAuth",
+    "InvalidSignature",
+    "NoMap",
     "Principal",
-    "validate_stream_ticket",
-    "validate_ticket",
     "verify_map_config",
 ]
+
+_USE_PERMISSION: Final = "maps.use"
+_EDIT_PERMISSION: Final = "general.edit_map"
+_CONFIGURE_PERMISSION: Final = "maps.configure"
+_SEE_ALL_PERMISSION: Final = "general.see_all"
+_SEE_ALL_FOLDERS_PERMISSION: Final = "wato.see_all_folders"
+_PERMISSIONS: Final = (
+    _USE_PERMISSION,
+    _EDIT_PERMISSION,
+    _CONFIGURE_PERMISSION,
+    _SEE_ALL_PERMISSION,
+    _SEE_ALL_FOLDERS_PERMISSION,
+)
+
+_ACCESS_PATH: Final = "domain-types/maps_access/actions/resolve/invoke"
 
 
 @dataclass(frozen=True)
 class Principal:
-    """The authenticated Checkmk user behind a request, as carried by a ticket.
+    """The Checkmk user behind a request, with what the daemon needs to know of them.
 
-    Capabilities are baked in by the GUI at mint time (it evaluates ``user.may``
-    with the full RBAC context); the daemon never re-derives them and keeps no
-    permission store of its own.
-
-    Per-map view/edit authorization is deliberately NOT done here. The GUI holds
-    the pagetype + RBAC context and is the single authority: it only hands the
-    SPA maps the user may see (``get_permitted_map``) and re-checks edit on save
-    (``general.edit_map`` in the map REST endpoints). Every Livestatus query the daemon
-    runs is additionally bound to the user's contact-group scope (``auth_user``),
-    so a map the user registers can never surface monitoring data beyond that
-    scope. The daemon therefore carries only what it genuinely needs: the
-    Livestatus auth scope, the allowed command verbs, and ``configure`` /
-    ``may_edit`` (Checkmk's ``general.edit_map``). The daemon's only mutating
-    endpoint is ``POST /register`` (guarded by ticket authentication plus its own
-    signed-config / map-ownership checks); ``configure`` / ``may_edit`` today
-    only broaden read access to the connection list (``require_connection_read``).
-    They are carried in the ticket so a future daemon write endpoint can gate on
-    them without a ticket-contract change.
+    Per-map view/edit authorization is NOT done by the daemon. The GUI holds the
+    pagetype + RBAC context and is the single authority: it names the map a user
+    sees under a name (``map_owner``), and re-checks edit on save. Every
+    Livestatus query the daemon runs is additionally bound to the user's
+    contact-group scope (``auth_user``).
     """
 
     name: str
+    # ``general.edit_map``: register unsigned editor previews, read the connection list.
     may_edit: bool = False
+    # ``maps.configure``: read the full connection details.
     configure: bool = False
     # ``see_all`` bypasses Livestatus contact-group filtering (general.see_all / admin).
     see_all: bool = False
@@ -75,22 +83,14 @@ class Principal:
     # (wato.see_all_folders); ``contact_groups`` scopes folder reads otherwise.
     folder_see_all: bool = False
     contact_groups: frozenset[str] = field(default_factory=frozenset)
-    # The command verbs the GUI pre-authorized for this user at ticket-mint time
-    # (``cmk.maps.gui._tickets``). Commands currently execute GUI-side, so no
-    # daemon endpoint consumes this yet; it is the forward-looking pre-auth
-    # capability for a future daemon command relay (external-connection commands),
-    # carried in the ticket so adding that path needs no ticket-contract change.
-    commands: frozenset[str] = field(default_factory=frozenset)
-    # Map-scoped ticket: the GUI resolved the map the user opened
-    # (``get_permitted_map``) and baked its REAL ``(owner, name)`` in, so the
-    # daemon keys its shared broadcast loop by the map's true owner (not the
-    # viewer) without trusting a client value. ``None`` for the map-list /
-    # global phase before a map is opened (falls back to ``name``).
+    # The map the request is about, as the GUI resolved its name for this user, so
+    # the daemon keys its shared broadcast loop by the map's true owner (not the
+    # viewer). ``None`` for requests about no map in particular.
     map_owner: str | None = None
     map_name: str | None = None
 
-    def may_run_command(self, action: str) -> bool:
-        return action in self.commands
+    def viewing(self, owner: str, name: str) -> Principal:
+        return dataclasses.replace(self, map_owner=owner, map_name=name)
 
     @property
     def auth_user(self) -> str | None:
@@ -100,45 +100,92 @@ class Principal:
     @property
     def map_key_owner(self) -> str:
         """The map owner the daemon keys the shared broadcast loop / map cache
-        by: the ticket's map owner when map-scoped (so every viewer of a
+        by: the map's owner for a request about a map (so every viewer of a
         published map shares one loop), else the caller's own namespace.
 
         A built-in map's owner is the empty string (``UserId.builtin()``), which
-        is a real, map-scoped owner — the GUI signs its config under ``""`` and
-        keys the shared loop by it. Test ``map_owner is not None`` rather than
-        truthiness so that empty owner survives: ``map_owner or self.name`` would
-        collapse it to the caller, and the daemon would then verify the config
-        signature against the wrong owner and reject every built-in map."""
+        is a real owner — the GUI signs its config under ``""`` and keys the
+        shared loop by it. Test ``map_owner is not None`` rather than truthiness
+        so that empty owner survives."""
         return self.map_owner if self.map_owner is not None else self.name
 
 
-def _principal_from_caps(name: str, caps: dict[str, object], map_claim: object = None) -> Principal:
-    def _flag(key: str) -> bool:
-        return bool(caps.get(key, False))
+@dataclass(frozen=True, slots=True)
+class Forbidden:
+    """The session is fine, but the user may not use Maps."""
 
-    def _names(key: str) -> frozenset[str]:
-        raw = caps.get(key, [])
-        return frozenset(str(n) for n in raw) if isinstance(raw, list) else frozenset()
 
-    map_owner: str | None = None
-    map_name: str | None = None
-    if isinstance(map_claim, dict):
-        owner = map_claim.get("owner")
-        bname = map_claim.get("name")
-        if isinstance(owner, str) and isinstance(bname, str):
-            map_owner, map_name = owner, bname
+@dataclass(frozen=True, slots=True)
+class NoMap:
+    """The user sees no map of that name."""
 
+
+class _AccessAnswer(BaseModel):
+    model_config = ConfigDict(strict=True)
+
+    owner: str | None = None
+
+
+def _principal(identity: Identity) -> Principal:
     return Principal(
-        name=name,
-        may_edit=_flag("may_edit"),
-        configure=_flag("configure"),
-        see_all=_flag("see_all"),
-        folder_see_all=_flag("folder_see_all"),
-        contact_groups=_names("contact_groups"),
-        commands=_names("commands"),
-        map_owner=map_owner,
-        map_name=map_name,
+        name=identity.user_id,
+        may_edit=identity.permissions[_EDIT_PERMISSION],
+        configure=identity.permissions[_CONFIGURE_PERMISSION],
+        see_all=identity.permissions[_SEE_ALL_PERMISSION],
+        folder_see_all=identity.permissions[_SEE_ALL_FOLDERS_PERMISSION],
+        contact_groups=frozenset(identity.contact_groups),
     )
+
+
+class GuiAuth:
+    """What the GUI of the site said about a session, kept for a limited time.
+
+    A refused session and a user without Maps are asked about again, so they
+    get in as soon as the GUI lets them.
+    """
+
+    def __init__(self, gui: GuiLoopback) -> None:
+        self._gui = gui
+        self._principals = IdentityCache[Principal](IDENTITY_TTL)
+        self._owners = IdentityCache[str | NoMap](IDENTITY_TTL)
+
+    async def principal(
+        self, session_cookie: str, *, now: float
+    ) -> Principal | Rejected | Forbidden | Unavailable:
+        if (principal := self._principals.get(session_cookie, now=now)) is not None:
+            return principal
+        match await self._gui.identify(
+            session_cookie, required_permissions=_PERMISSIONS, include_contact_groups=True
+        ):
+            case Identity() as identity:
+                if not identity.permissions[_USE_PERMISSION]:
+                    return Forbidden()
+                principal = _principal(identity)
+                self._principals.put(session_cookie, principal, now=now)
+                return principal
+            case other:
+                return other
+
+    async def map_owner(
+        self, user: Principal, name: str, *, now: float
+    ) -> str | NoMap | Unavailable:
+        """The owner of the map ``user`` sees under ``name``."""
+        # The answer depends on the user, not the session, so all their sessions share it.
+        # A map name holds no newline, so the key of one user and map cannot be another's.
+        key = f"{user.name}\n{name}"
+        if (owner := self._owners.get(key, now=now)) is not None:
+            return owner
+        resolved = await self._gui.post(
+            "map access", _ACCESS_PATH, {"user_id": user.name, "name": name}, _AccessAnswer
+        )
+        if isinstance(resolved, Rejected):
+            # The endpoint judges no session, so it has no reason to say this.
+            return unavailable("map access", "status 400, error invalid_grant")
+        if isinstance(resolved, Unavailable):
+            return resolved
+        owner = NoMap() if resolved.owner is None else resolved.owner
+        self._owners.put(key, owner, now=now)
+        return owner
 
 
 # ``LocalSecret.regenerate`` always writes 32 bytes; anything else is a rewrite in progress.
@@ -152,15 +199,15 @@ def _site_hmac_for_file(_key: tuple[int, int, int]) -> HmacFn:
     try:
         value = paths.site_internal_secret_file.read_bytes()
     except OSError as exc:
-        raise InvalidTicket("site-internal secret is not readable") from exc
+        raise InvalidSignature("site-internal secret is not readable") from exc
     if len(value) != _SITE_SECRET_SIZE:
-        raise InvalidTicket("site-internal secret is being rotated")
+        raise InvalidSignature("site-internal secret is being rotated")
     # Same HMAC-SHA256 as ``cmk.crypto.secrets.Secret.hmac``, which the GUI signs with.
     return functools.partial(hmac.digest, value, digest="sha256")
 
 
 def _site_hmac() -> HmacFn:
-    """HMAC with the site-internal secret, cached across routes and SSE ticks until the file changes.
+    """HMAC with the site-internal secret, cached until the file changes.
 
     Keyed on inode, mtime and size: omd truncates and rewrites the file in place,
     usually within one coarse mtime tick.
@@ -168,57 +215,16 @@ def _site_hmac() -> HmacFn:
     try:
         st = paths.site_internal_secret_file.stat()
     except OSError as exc:
-        raise InvalidTicket("site-internal secret is not readable") from exc
+        raise InvalidSignature("site-internal secret is not readable") from exc
     return _site_hmac_for_file((st.st_ino, st.st_mtime_ns, st.st_size))
-
-
-def _principal_from_claims(data: dict[str, object]) -> Principal:
-    sub = data.get("sub")
-    caps = data.get("caps", {})
-    if not isinstance(sub, str) or not sub or not isinstance(caps, dict):
-        # An empty ``sub`` would make ``map_key_owner`` fall back to "" and hit
-        # the owner-less name-only lookup in ``map_service.get_map`` — reading
-        # the first matching map of ANY owner. The GUI never mints an empty sub;
-        # reject it defensively so a future minting bug can't open that path.
-        raise InvalidTicket("ticket payload has unexpected shape")
-
-    return _principal_from_caps(sub, caps, data.get("map"))
-
-
-def validate_ticket(token: str, *, now: float | None = None) -> Principal:
-    """Validate a signed API ticket (the ``X-Maps-Ticket`` header) → :class:`Principal`.
-
-    The wire format (signature, audience, version, expiry) is checked by
-    :func:`cmk.maps.shared.ticket.decode_ticket`; here we only interpret the
-    daemon-relevant claims. The API audience is required, so a URL stream token
-    presented in the header is rejected. Raises :class:`InvalidTicket` on any
-    structural, signature, audience or expiry problem.
-    """
-    data = decode_ticket(token, _site_hmac(), audience=TICKET_AUDIENCE, now=now)
-    return _principal_from_claims(data)
-
-
-def validate_stream_ticket(token: str, *, now: float | None = None) -> Principal:
-    """Validate a signed SSE stream token (the ``?token=`` query param) → :class:`Principal`.
-
-    Same wire check as :func:`validate_ticket`, but the stream audience is
-    required — so the reduced-capability URL token is accepted ONLY on the SSE
-    endpoint, and an API ticket presented as ``?token=`` is rejected. The token
-    carries only the read/scope caps; the daemon's SSE path consumes nothing more.
-    """
-    data = decode_ticket(token, _site_hmac(), audience=STREAM_TICKET_AUDIENCE, now=now)
-    return _principal_from_claims(data)
 
 
 def verify_map_config(config_b64: str, sig: str, *, owner: str) -> dict[str, object]:
     """Verify a GUI-signed map config and return the parsed JSON object.
 
-    Delegates the signature check to :func:`cmk.maps.shared.ticket.verify_config`:
-    the GUI resolved the config from the pagetype store and signed the exact
-    bytes (with the map owner folded in), and we verify the same bytes against
-    ``owner`` — the ticket's ``map_key_owner`` — so a viewer can't substitute a
-    tampered config, nor relay a config signed for a foreign owner, for a shared
-    broadcast loop. Raises :class:`InvalidTicket` on any decode, signature or
-    JSON problem.
+    ``owner`` is the owner the GUI named for the map, so a viewer can't
+    substitute a tampered config, nor relay a config signed for a foreign owner,
+    for a shared broadcast loop. Raises :class:`InvalidSignature` on any decode,
+    signature or JSON problem.
     """
     return verify_config(config_b64, sig, _site_hmac(), owner=owner)

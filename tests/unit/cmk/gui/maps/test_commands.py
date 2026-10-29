@@ -29,10 +29,9 @@ from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.livestatus_client import DisableHostCheck, EnableServiceNotifications
 from cmk.maps.gui import _commands
+from cmk.maps.gui._capabilities import COMMAND_ACTION_PERMISSIONS, CommandVerb, gather_capabilities
 from cmk.maps.gui._commands import MapCommand, MapCommandVerb
-from cmk.maps.gui._tickets import COMMAND_ACTION_PERMISSIONS, gather_capabilities
 from cmk.maps.rest_api.internal.models.request_models import MapsCommandRequest
-from cmk.maps.shared.ticket import CommandVerb
 
 _MODULE = "cmk.maps.gui._commands"
 
@@ -98,8 +97,8 @@ def test_invalid_host_name_is_rejected() -> None:
         _parse_request(action="force_check", host_name="bad name")
 
 
-def test_the_ticket_grants_exactly_the_verbs_the_permissions_map_gates() -> None:
-    """The ticket must not grant a verb nothing authorises, or hide one.
+def test_the_spa_is_offered_exactly_the_verbs_the_permissions_map_gates() -> None:
+    """The SPA must not be offered a verb nothing authorises, or miss one.
 
     ``COMMAND_ACTION_PERMISSIONS`` is where a verb is mapped to its Checkmk
     permission; the ``CommandVerb`` literal is what the generated OpenAPI (and
@@ -114,7 +113,7 @@ def test_a_verb_the_rest_api_offers_is_rejected() -> None:
         _parse_request(action="acknowledge", host_name=HostName("h1"))
 
 
-def test_the_ticket_grants_no_command_without_the_command_gate(
+def test_no_command_is_offered_without_the_command_gate(
     request_context: None,  # noqa: ARG001
     with_user: tuple[UserId, str],
 ) -> None:

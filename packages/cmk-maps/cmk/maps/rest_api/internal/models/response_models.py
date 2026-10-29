@@ -12,10 +12,10 @@ here surfaces as a type error in the SPA rather than at runtime.
 from typing import Literal
 
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
+from cmk.maps.gui._capabilities import CommandVerb
 from cmk.maps.gui._settings import MapListView, RenderMode
 from cmk.maps.shared.map_payload import LineStyle
 from cmk.maps.shared.states import BIStateName
-from cmk.maps.shared.ticket import CommandVerb
 
 # Mirrors the ``UnitFormat`` enums in cmk-shared-typing, so the generated
 # TypeScript lines up with the SPA's own unit-format types instead of widening
@@ -440,20 +440,11 @@ class MapsChoice:
 
 
 @api_model
-class MapsTicketCapabilities:
-    """What the ticket's holder may do, resolved once by the GUI.
-
-    The daemon reads the same set out of the signed ticket, so the SPA and the
-    daemon never disagree about a caller's rights.
-    """
+class MapsCapabilities:
+    """What the user may do in Maps, which decides what the SPA offers."""
 
     may_edit: bool = api_field(description="May create and edit own maps.")
     configure: bool = api_field(description="May administer Maps (images, settings).")
-    see_all: bool = api_field(description="Bypasses the Livestatus contact-group scope.")
-    folder_see_all: bool = api_field(description="Bypasses the Setup-folder read scope.")
-    contact_groups: list[str] = api_field(
-        description="The caller's contact groups.", example=["all"]
-    )
     publish_all: bool = api_field(description="May publish a map to all users.")
     publish_to_groups: bool = api_field(description="May publish a map to contact groups.")
     publish_to_foreign_groups: bool = api_field(
@@ -472,25 +463,26 @@ class MapsTicketCapabilities:
 
 
 @api_model
-class MapsTicketResponse:
-    ticket: str = api_field(
-        description="The signed, short-lived credential the daemon accepts.", example="eyJ0…"
-    )
-    stream_token: str | ApiOmitted = api_field(
-        description=(
-            "Reduced-capability, map-bound token for the event-stream URL. Present "
-            "only for a map-scoped ticket -- the map list opens no stream."
-        ),
-        default_factory=ApiOmitted,
-        example="eyJ0…",
-    )
+class MapsSessionResponse:
     user_id: str = api_field(description="The logged-in Checkmk user.", example="cmkadmin")
     language: str | None = api_field(
         description="The user's language, null when they follow the site default.",
         example="en",
     )
-    capabilities: MapsTicketCapabilities = api_field(
-        description="What this ticket grants, resolved from the user's permissions."
+    capabilities: MapsCapabilities = api_field(
+        description="What the user may do, resolved from their permissions."
+    )
+
+
+@api_model
+class MapsAccessResponse:
+    owner: str | ApiOmitted = api_field(
+        description=(
+            "The owner of the map the user sees under the name. The owner of a built-in "
+            "map is empty. Absent if the user sees no map of that name."
+        ),
+        default_factory=ApiOmitted,
+        example="cmkadmin",
     )
 
 

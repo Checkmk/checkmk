@@ -14,7 +14,7 @@ import type { MapListView, MapRead } from '@/maps/types/api'
 
 import { aListedMap } from '../support/fixtures'
 import { triggerPageMenu } from '../support/pageMenu'
-import { aTicket, fakeMapsServices, fullCapabilities, provideServices } from '../support/services'
+import { aSession, fakeMapsServices, fullCapabilities, provideServices } from '../support/services'
 
 function listed(name: string, over: Partial<MapRead> = {}): MapRead {
   return aListedMap({ name, alias: name, ...over })
@@ -29,7 +29,7 @@ async function renderHome(
     layout = 'cards'
   }: { capabilities?: ReturnType<typeof fullCapabilities>; layout?: MapListView } = {}
 ) {
-  services = fakeMapsServices({}, aTicket({ user_id: 'me', capabilities }))
+  services = fakeMapsServices({}, aSession({ user_id: 'me', capabilities }))
   await services.auth.init()
   vi.spyOn(services.maps, 'fetchMaps').mockImplementation(async () => {
     services.maps.maps.value = maps

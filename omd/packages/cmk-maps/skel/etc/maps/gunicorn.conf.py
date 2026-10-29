@@ -21,7 +21,7 @@ log_dir.mkdir(parents=True, exist_ok=True)
 
 # Bind to a Unix socket under tmp/run: the site Apache reverse-proxies
 # /<site>/check_mk/maps/api to it (no TCP port to template), and requests are
-# authenticated by the Maps ticket.
+# authenticated by the GUI session cookie.
 bind = f"unix:{omd_root}/tmp/run/maps.sock"
 
 # uvicorn ASGI worker: the app is async (SSE, httpx). gunicorn owns the process

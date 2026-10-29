@@ -18,10 +18,15 @@ from pydantic import Field
 from cmk.ccc.site import SiteId
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
-from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
+from cmk.gui.openapi.framework.model.converter import (
+    SiteIdConverter,
+    TypedPlainValidator,
+    UserConverter,
+)
 from cmk.maps.gui._cfg_import import MAX_CFG_BYTES
 from cmk.maps.gui._commands import MapCommandVerb
 from cmk.maps.gui._images import MAX_BACKGROUND_BYTES, MAX_ICON_BYTES
+from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
 
 # A site the caller may see. ``should_be_authorized`` rather than ``should_exist``
 # so a restricted user cannot enumerate the sites they may not see (werks 18993,
@@ -191,4 +196,15 @@ class MapsCommandRequest:
         ),
         default_factory=ApiOmitted,
         example="heute",
+    )
+
+
+@api_model
+class MapsAccessRequest:
+    user_id: Annotated[str, TypedPlainValidator(str, UserConverter.active)] = api_field(
+        description="The user the daemon identified from their GUI session.",
+        example="cmkadmin",
+    )
+    name: Annotated[str, Field(pattern=MAP_NAME_PATTERN, max_length=MAP_NAME_MAX_LENGTH)] = (
+        api_field(description="The name of the map the user opened.", example="datacenter-muc")
     )

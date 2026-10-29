@@ -16,6 +16,7 @@ from starlette.middleware.body_limit import RequestBodyLimitMiddleware
 from starlette.types import Lifespan
 
 from cmk.fastapi import FastAPI
+from cmk.fastapi.request_shape import RequestShapeMiddleware
 from cmk.maps.backend.api.v1 import (
     connections,
     maps,
@@ -25,9 +26,11 @@ from cmk.maps.backend.core.middleware import SecurityHeadersMiddleware
 from cmk.maps.backend.core.version import APP_VERSION
 
 # Apache's LimitRequestBody does not cover the proxied /maps/api path, and the
-# body is read before the ticket check, so the daemon bounds it itself. The only
+# body is read before the session check, so the daemon bounds it itself. The only
 # body it accepts is a map config (at most 5000 objects, no inline images).
 MAX_REQUEST_BODY_BYTES = 16 * 1024 * 1024
+
+_HEALTH_PATH = "/api/health"
 
 
 def create_app(*, lifespan: Lifespan[FastAPI] | None = None) -> FastAPI:
@@ -43,7 +46,7 @@ def create_app(*, lifespan: Lifespan[FastAPI] | None = None) -> FastAPI:
         description="REST API for Checkmk Maps — monitoring visualization",
         lifespan=lifespan,
         # No interactive docs / OpenAPI schema. The site Apache exempts the whole
-        # /maps prefix from Basic auth (Satisfy any) and per-route ticket auth only
+        # /maps prefix from Basic auth (Satisfy any) and per-route session auth only
         # guards /api/v1/*, so docs_url/openapi_url would expose the full API schema
         # anonymously. The SPA is the only client and needs no served docs; disabling
         # them also keeps the strict CSP (default-src 'none'; sandbox) honest — the
@@ -55,6 +58,7 @@ def create_app(*, lifespan: Lifespan[FastAPI] | None = None) -> FastAPI:
     )
 
     app.add_middleware(RequestBodyLimitMiddleware, max_body_size=MAX_REQUEST_BODY_BYTES)
+    app.add_middleware(RequestShapeMiddleware, exempt_paths=frozenset({_HEALTH_PATH}))
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(GZipMiddleware, minimum_size=1024)
 
@@ -62,7 +66,7 @@ def create_app(*, lifespan: Lifespan[FastAPI] | None = None) -> FastAPI:
     app.include_router(states.router, prefix="/api/v1", tags=["states"])
     app.include_router(connections.router, prefix="/api/v1/connections", tags=["connections"])
 
-    @app.get("/api/health")
+    @app.get(_HEALTH_PATH)
     async def health_check() -> dict[str, str]:
         # Reachable anonymously (the /maps prefix is Basic-auth-exempt), so keep it a
         # bare liveness probe — no version or other build detail for an unauth caller.

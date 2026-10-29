@@ -26,10 +26,10 @@ describe('deployment base', () => {
     )
   })
 
-  it('carries the stream credential in the stream URL and escapes the map name', () => {
+  it('escapes the map name in the stream URL', () => {
     servedAt('http://mon.example/heute/check_mk/maps.py')
-    expect(resolveStreamUrl('dc 1', 'tok/en')).toBe(
-      'http://mon.example/heute/check_mk/maps/api/v1/sse/maps/dc%201?token=tok%2Fen'
+    expect(resolveStreamUrl('dc 1')).toBe(
+      'http://mon.example/heute/check_mk/maps/api/v1/sse/maps/dc%201'
     )
   })
 })

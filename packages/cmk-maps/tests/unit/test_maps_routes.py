@@ -28,37 +28,48 @@ from cmk.maps.backend.services import map_service, state_service
 ADMIN_PRINCIPAL = Principal(name="admin", may_edit=True, configure=True, see_all=True)
 
 
-@pytest.fixture
-def client(router_client: RouterClientFactory) -> TestClient:
+def _client(
+    router_client: RouterClientFactory, user: Principal, *, owner: str | None
+) -> TestClient:
+    """A client for ``user``, to whom the GUI names ``owner`` for every map name."""
     return router_client(
         maps.router,
         "/api/v1/maps",
-        overrides={deps.get_current_user: ADMIN_PRINCIPAL},
+        overrides={deps.get_current_user: user, deps.get_map_owner: owner},
     )
 
 
-def test_register_unsigned_own_returns_204(client: TestClient) -> None:
-    # An unbound ticket (no map claim) may register an unsigned config for its
-    # own namespace — the editor-preview path.
+def test_register_unsigned_own_map_returns_204(router_client: RouterClientFactory) -> None:
+    client = _client(router_client, ADMIN_PRINCIPAL, owner=ADMIN_PRINCIPAL.name)
     resp = client.post(
-        "/api/v1/maps/register",
+        "/api/v1/maps/streamed/register",
         json={"config": {"name": "streamed", "alias": "Streamed"}},
     )
     assert resp.status_code == HTTPStatus.NO_CONTENT
     assert map_service.get_map(ADMIN_PRINCIPAL.name, "streamed") is not None
 
 
-def test_register_unsigned_foreign_rejected(router_client: RouterClientFactory) -> None:
-    # A ticket scoped to someone else's map may NOT push an unsigned config —
-    # that path is own-map only, so a viewer can't poison a foreign shared loop.
-    foreign = Principal(name="bob", map_owner="alice", map_name="shared")
-    client = router_client(maps.router, "/api/v1/maps", overrides={deps.get_current_user: foreign})
+def test_register_unsigned_for_a_map_the_user_does_not_see_is_404(
+    router_client: RouterClientFactory,
+) -> None:
+    client = _client(router_client, ADMIN_PRINCIPAL, owner=None)
     resp = client.post(
-        "/api/v1/maps/register",
+        "/api/v1/maps/gone/register",
+        json={"config": {"name": "gone", "alias": "Gone"}},
+    )
+    assert resp.status_code == HTTPStatus.NOT_FOUND
+    assert map_service.get_map(ADMIN_PRINCIPAL.name, "gone") is None
+
+
+def test_register_unsigned_foreign_rejected(router_client: RouterClientFactory) -> None:
+    client = _client(router_client, Principal(name="bob", may_edit=True), owner="alice")
+    resp = client.post(
+        "/api/v1/maps/shared/register",
         json={"config": {"name": "shared", "alias": "Shared"}},
     )
     assert resp.status_code == HTTPStatus.FORBIDDEN
     assert map_service.get_map("alice", "shared") is None
+    assert map_service.get_map("bob", "shared") is None
 
 
 def test_register_unsigned_without_edit_grant_rejected(
@@ -66,10 +77,9 @@ def test_register_unsigned_without_edit_grant_rejected(
 ) -> None:
     # The unsigned path is the editor preview, so it needs the edit grant. A
     # read-only user must not be able to hand the daemon a config to poll.
-    viewer = Principal(name="carol", may_edit=False)
-    client = router_client(maps.router, "/api/v1/maps", overrides={deps.get_current_user: viewer})
+    client = _client(router_client, Principal(name="carol", may_edit=False), owner="carol")
     resp = client.post(
-        "/api/v1/maps/register",
+        "/api/v1/maps/unowned/register",
         json={"config": {"name": "unowned", "alias": "Unowned"}},
     )
     assert resp.status_code == HTTPStatus.FORBIDDEN
@@ -77,27 +87,33 @@ def test_register_unsigned_without_edit_grant_rejected(
 
 
 def test_register_unsigned_name_mismatch_rejected(router_client: RouterClientFactory) -> None:
-    # A map-scoped ticket may only register an unsigned preview for the map it
-    # is bound to — a config carrying a different name is rejected, so a ticket for
-    # one of the caller's maps can't register a preview under another name in their
-    # own namespace (mirrors the signed path's name check).
-    scoped = Principal(name="alice", map_owner="alice", map_name="mine")
-    client = router_client(maps.router, "/api/v1/maps", overrides={deps.get_current_user: scoped})
+    client = _client(router_client, Principal(name="alice", may_edit=True), owner="alice")
     resp = client.post(
-        "/api/v1/maps/register",
+        "/api/v1/maps/mine/register",
         json={"config": {"name": "other", "alias": "Other"}},
     )
     assert resp.status_code == HTTPStatus.FORBIDDEN
     assert map_service.get_map("alice", "other") is None
 
 
-def test_register_missing_config_is_422(client: TestClient) -> None:
-    resp = client.post("/api/v1/maps/register", json={})
+def test_register_missing_config_is_422(router_client: RouterClientFactory) -> None:
+    client = _client(router_client, ADMIN_PRINCIPAL, owner=None)
+    resp = client.post("/api/v1/maps/streamed/register", json={})
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
+def test_register_signed_for_a_map_the_user_does_not_see_is_404(
+    router_client: RouterClientFactory,
+) -> None:
+    client = _client(router_client, ADMIN_PRINCIPAL, owner=None)
+    resp = client.post(
+        "/api/v1/maps/secret/register", json={"config_b64": "irrelevant", "sig": "irrelevant"}
+    )
+    assert resp.status_code == HTTPStatus.NOT_FOUND
+
+
 def test_register_signed_invalid_config_is_422_not_500(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
+    router_client: RouterClientFactory, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # The GUI store can persist a value this schema rejects (e.g. an object_filter
     # without a ``Filter:`` header). When that map is later signed and registered,
@@ -112,8 +128,9 @@ def test_register_signed_invalid_config_is_422_not_500(
             "objects": [{"id": "dg", "type": "dyngroup", "object_filter": "host_name ~ srv"}],
         },
     )
+    client = _client(router_client, ADMIN_PRINCIPAL, owner="admin")
     resp = client.post(
-        "/api/v1/maps/register", json={"config_b64": "irrelevant", "sig": "irrelevant"}
+        "/api/v1/maps/streamed/register", json={"config_b64": "irrelevant", "sig": "irrelevant"}
     )
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
@@ -154,10 +171,10 @@ def test_auto_objects_scopes_geo_query_to_auth_user(
     state_service.register_connection("spy", spy)
     scoped = Principal(name="bob", may_edit=True, see_all=False)  # auth_user == "bob"
     map_service.register_map(
-        scoped.map_key_owner,
+        "bob",
         MapConfig(name="world", connection_id="spy", view=WorldmapView(auto_source="all_hosts")),
     )
-    client = router_client(maps.router, "/api/v1/maps", overrides={deps.get_current_user: scoped})
+    client = _client(router_client, scoped, owner="bob")
     try:
         resp = client.get("/api/v1/maps/world/auto-objects")
         assert resp.status_code == HTTPStatus.OK
@@ -166,15 +183,14 @@ def test_auto_objects_scopes_geo_query_to_auth_user(
         state_service.unregister_connection("spy")
 
 
-def test_auto_objects_refuses_a_ticket_scoped_to_another_map(
+def test_auto_objects_is_404_for_a_map_the_user_does_not_see(
     router_client: RouterClientFactory,
 ) -> None:
-    viewer = Principal(name="bob", map_owner="alice", map_name="europe")
     map_service.register_map(
         "alice",
         MapConfig(name="world", connection_id="live_1", view=WorldmapView(auto_source="all_hosts")),
     )
-    client = router_client(maps.router, "/api/v1/maps", overrides={deps.get_current_user: viewer})
+    client = _client(router_client, Principal(name="bob"), owner=None)
 
     resp = client.get("/api/v1/maps/world/auto-objects")
 

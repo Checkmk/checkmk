@@ -35,9 +35,6 @@ class SecurityHeadersMiddleware:
                 headers += [
                     (b"x-content-type-options", b"nosniff"),
                     (b"x-frame-options", b"SAMEORIGIN"),
-                    # no-referrer (not strict-origin-when-cross-origin) so the
-                    # stream token carried in ``?token=`` on SSE URLs
-                    # never leaks via the Referer header to same-origin assets.
                     (b"referrer-policy", b"no-referrer"),
                     (b"x-xss-protection", b"1; mode=block"),
                     (b"content-security-policy", _CONTENT_SECURITY_POLICY),

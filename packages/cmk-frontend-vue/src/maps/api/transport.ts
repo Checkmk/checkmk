@@ -7,28 +7,16 @@
  * The Maps daemon's client.
  *
  * The other server the SPA talks to is Checkmk itself, reached through the
- * shared ``lib/rest-api-client`` and its generated types — imported where it is
- * used, because it needs no wiring. The daemon client does: it carries the
- * caller's ticket.
+ * shared ``lib/rest-api-client`` and its generated types. Both are reached with
+ * the GUI session cookie the browser sends anyway.
  */
 import type { paths } from 'cmk-shared-typing/typescript/maps_openapi'
-import {
-  type FastApiAuth,
-  type FastApiClient,
-  createFastApiClient
-} from 'cmk-ui-library/lib/fastapi-client/client'
+import { type FastApiClient, createFastApiClient } from 'cmk-ui-library/lib/fastapi-client/client'
 
 import { resolveDaemonBase } from '@/maps/utils/deploymentBase'
 
 export type MapsDaemonClient = FastApiClient<paths>
 
-/**
- * A client for the Maps daemon.
- *
- * Created per app rather than imported as a module singleton: it carries the
- * caller's credential through the auth hook, and that is owned by a service with
- * the app's lifetime, not by the module.
- */
-export function createMapsDaemonClient(auth: FastApiAuth): MapsDaemonClient {
-  return createFastApiClient<paths>({ baseUrl: resolveDaemonBase(), auth })
+export function createMapsDaemonClient(): MapsDaemonClient {
+  return createFastApiClient<paths>({ baseUrl: resolveDaemonBase() })
 }

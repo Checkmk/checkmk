@@ -8,7 +8,7 @@ The Maps daemon (``cmk.maps.backend``) and the GUI (``cmk.maps.gui``) both turn
 Livestatus integer states into the string tokens the SPA renders, and both rank
 those tokens by severity for worst-state roll-ups. Neither component may import
 the other (module-layer boundary), so this shared vocabulary lives in
-``cmk.maps.shared`` — the same seam as ``cmk.maps.shared.ticket`` /
+``cmk.maps.shared`` — the same seam as ``cmk.maps.shared.map_signature`` /
 ``cmk.maps.shared.config_vars``. Keeping the tokens here means the wire vocabulary
 (which the frontend also renders) can't drift by a stray edit on one side.
 

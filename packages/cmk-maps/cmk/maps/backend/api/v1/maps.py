@@ -24,11 +24,13 @@ from cmk.maps.backend.api.v1.connections import auth_user_scope
 from cmk.maps.backend.api.v1.deps import (
     can_create_map,
     get_current_user,
+    get_map_owner,
+    get_map_viewer,
     registered_map,
     resolve_auth_user,
 )
 from cmk.maps.backend.api.v1.types import MapName
-from cmk.maps.backend.core.auth import InvalidTicket, Principal, verify_map_config
+from cmk.maps.backend.core.auth import InvalidSignature, Principal, verify_map_config
 from cmk.maps.backend.schemas.map import (
     MapConfig,
     MapElement,
@@ -49,8 +51,8 @@ class RegisterRequest(BaseModel):
 
     Editor path — an unsigned ``config``: live preview of a user's OWN map with
     unsaved edits (the GUI can't sign what isn't stored yet). Only accepted when
-    the ticket is unbound or scoped to the caller's own map, and always keyed
-    under the caller, so it can never poison a foreign map's shared loop.
+    the name means the caller's own map for them, and always keyed under the
+    caller, so it can never poison a foreign map's shared loop.
     """
 
     config_b64: str | None = None
@@ -58,22 +60,29 @@ class RegisterRequest(BaseModel):
     config: MapConfig | None = None
 
 
-@router.post("/register", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/{name}/register", status_code=status.HTTP_204_NO_CONTENT)
 async def register_map(
-    body: RegisterRequest, current_user: Principal = Depends(get_current_user)
+    name: MapName,
+    body: RegisterRequest,
+    current_user: Principal = Depends(get_current_user),
+    owner: str | None = Depends(get_map_owner),
 ) -> None:
     """Cache the map the caller opened so its live state can be streamed.
 
-    The config is keyed by the map's real owner (``map_key_owner`` — from the
-    signed ticket, never a client value), so every viewer of a published map
-    shares one Livestatus poll. States stay bounded by each caller's own
-    contact-group scope, so registering only controls *which* objects are
-    queried, not what they may see.
+    The config is keyed by the map's real owner, as the GUI names it for the
+    caller, never a client value. So every viewer of a published map shares one
+    Livestatus poll. States stay bounded by each caller's own contact-group
+    scope, so registering only controls *which* objects are queried, not what
+    they may see.
     """
     if body.config_b64 is not None and body.sig is not None:
+        if owner is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Map '{name}' not found"
+            )
         try:
-            raw = verify_map_config(body.config_b64, body.sig, owner=current_user.map_key_owner)
-        except InvalidTicket as exc:
+            raw = verify_map_config(body.config_b64, body.sig, owner=owner)
+        except InvalidSignature as exc:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Invalid map signature"
             ) from exc
@@ -86,11 +95,11 @@ async def register_map(
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid map config"
             ) from exc
-        # A map-scoped ticket must match the config it carries, so a signed blob
-        # for one map can't be relayed under another map's key.
-        if current_user.map_name is not None and cfg.name != current_user.map_name:
+        # The owner was resolved for ``name``, so a signed blob for another map of
+        # the same owner can't be relayed under this name.
+        if cfg.name != name:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Map name mismatch")
-        map_service.register_map(current_user.map_key_owner, cfg)
+        map_service.register_map(owner, cfg)
         return
     if body.config is not None:
         # Without the edit grant a read-only user could have the daemon poll an
@@ -101,19 +110,22 @@ async def register_map(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Editing maps is not allowed",
             )
+        # Every read of the map needs a map the GUI names, so a preview without one
+        # could never be streamed.
+        if owner is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Map '{name}' not found"
+            )
         # Unsigned config is an own-map editor preview only — reject it for a
-        # ticket scoped to someone else's map.
-        if current_user.map_owner not in (None, current_user.name):
+        # name that means someone else's map for the caller.
+        if owner != current_user.name:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Unsigned config not allowed for a foreign map",
             )
-        # A map-scoped ticket must match the config it carries — mirror the
-        # signed path's name check so a ticket for one of the caller's maps can't
-        # register a preview under a different name in their namespace.
-        if current_user.map_name is not None and body.config.name != current_user.map_name:
+        if body.config.name != name:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Map name mismatch")
-        map_service.register_map(current_user.map_key_owner, body.config)
+        map_service.register_map(current_user.name, body.config)
         return
     raise HTTPException(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Missing map config"
@@ -122,7 +134,7 @@ async def register_map(
 
 @router.get("/{name}/auto-objects", response_model=list[MapElement])
 async def get_auto_objects(
-    name: MapName, current_user: Principal = Depends(get_current_user)
+    name: MapName, current_user: Principal = Depends(get_map_viewer)
 ) -> list[MapElement]:
     """Return objects synthesised from a worldmap automap source.
 

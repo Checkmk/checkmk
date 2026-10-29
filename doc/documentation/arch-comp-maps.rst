@@ -30,7 +30,7 @@ Maps is split into five parts. The Python code lives in one package,
    * - **GUI integration** (``cmk.maps.gui``)
      - Everything that needs Checkmk's application logic: storing maps,
        permissions, the settings page, monitoring commands, BI, metric
-       display, image uploads, and minting the tickets the daemon accepts.
+       display, image uploads, and telling the daemon who may see which map.
    * - **REST API** (``cmk.maps.rest_api``)
      - The HTTP endpoints the SPA uses to talk to the GUI integration: a public
        ``map`` family (create, read, update, delete maps) and an internal family
@@ -40,7 +40,7 @@ Maps is split into five parts. The Python code lives in one package,
        Livestatus and streams them to the browsers that show a map. It has no
        write access to monitoring and imports no GUI code.
    * - **Shared layer** (``cmk.maps.shared``)
-     - Plain Python both the GUI and the daemon import: the ticket protocol,
+     - Plain Python both the GUI and the daemon import: the map-config signature,
        config-variable names, URL/colour/asset validators, the map vocabulary
        with its defaults and the shims for earlier spellings, row extractors,
        state and severity tables, the geo resolver, the Livestatus filter
@@ -53,7 +53,7 @@ Who should read what
 * Developers find the internal structure under `Architecture`_ and the
   interfaces with every endpoint under `Interfaces`_.
 * Security reviews and penetration tests start with `Security concept`_. It
-  lists the actors, trust boundaries, tokens, permissions, stored data, limits
+  lists the actors, trust boundaries, authentication, permissions, stored data, limits
   and the anonymous surface.
 
 Glossary
@@ -69,14 +69,8 @@ Built-in map
   ``infrastructure``, ``monitoring_folders``, ``noc_wall``). Owner is the
   empty built-in user.
 Session
-  The normal Checkmk GUI login (session cookie). The SPA uses it for all calls
-  to the GUI and the REST API.
-Maps ticket
-  A short-lived token the GUI signs for the logged-in user. The daemon accepts
-  nothing else. It carries the user name and a set of capabilities.
-Stream token
-  A second, reduced ticket used only for the live state stream (SSE), because
-  the browser's ``EventSource`` cannot send headers.
+  The normal Checkmk GUI login (session cookie ``auth_<site>``). The browser
+  sends it with every call, to the GUI, the REST API and the daemon.
 AuthUser
   The Livestatus header that makes Livestatus return only the hosts and
   services the named user is a contact for. It is the security boundary for
@@ -113,10 +107,12 @@ The browser talks to three applications behind the site Apache: the GUI page
 images from the site and map tiles directly from the configured tile servers.
 The GUI decides *who may see which map*; the daemon only delivers *live
 states*, and Livestatus filters them per user (users with ``general.see_all``
-see everything). The GUI and the daemon never call each other. They share only
-the site-internal secret, with which the GUI signs tickets and map configs and
-the daemon verifies them, and the files under ``etc/check_mk/maps.d/``, which
-the GUI writes and the daemon reads.
+see everything). The daemon asks the GUI of its site, over the loopback with the
+site-internal secret, who is behind a session and which map a name means for
+that user. The GUI never calls the daemon. Besides that, they share the
+site-internal secret, with which the GUI signs map configs and the daemon
+verifies them, and the files under ``etc/check_mk/maps.d/``, which the GUI
+writes and the daemon reads.
 
 .. uml::
 
@@ -139,7 +135,7 @@ the GUI writes and the daemon reads.
     spa ..> apache
     apache ..> pages : check_mk/maps.py\n(session)
     apache ..> rest : check_mk/api/{internal,unstable}/…\n(session)
-    apache ..> sock : check_mk/maps/api/…\n(Maps ticket)
+    apache ..> sock : check_mk/maps/api/…\n(session)
     apache ..> files : check_mk/maps/{images,backgrounds}\n(static, no login)
     pages ..> gui
     rest ..> gui : data providers
@@ -147,10 +143,11 @@ the GUI writes and the daemon reads.
     gui ..> mapstore : read/write maps
     gui ..> files : uploads
     gui ..> mapsd : settings, folder\npermissions, site specs
-    gui ..> secret : sign tickets\nand map configs
+    gui ..> secret : sign map configs
     gui ..> livestatus : commands, lookups\n(sites.live())
     gui ..> bi : BIManager
-    daemon ..> secret : verify
+    daemon ..> secret : verify,\nauthenticate to the GUI
+    daemon ..> rest : identify session,\nresolve map access
     daemon ..> mapsd : read
     daemon ..> livestatus : AuthUser per query\n(none for see_all users)
 
@@ -225,12 +222,12 @@ the GUI session, as ordinary Checkmk REST endpoints.
 * **BI aggregations** are resolved in the GUI with Checkmk's own
   ``cmk.gui.bi.bi_manager.BIManager``. The daemon does not touch BI; it skips
   ``aggregation`` objects in the state stream.
-* **Monitoring commands** run with the user's session, never with a Maps
-  ticket. The daemon has no write path into monitoring.
+* **Monitoring commands** run in the GUI, never in the daemon. The daemon has
+  no write path into monitoring.
 
 Consequently the daemon needs no ``cmk.gui`` imports and holds no user
-database, no map store and no permission logic of its own. Everything it needs
-to know about the user is baked into the ticket.
+database, no map store and no permission logic of its own. It asks the GUI
+for everything it needs to know about the user.
 
 Interfaces
 ==========
@@ -315,9 +312,14 @@ OpenAPI types, not from hand-written copies.
      - Path
      - Checks and behaviour
    * - GET
-     - ``domain-types/maps_ticket/collections/all[?name=]``
-     - Mints the Maps ticket. With ``name`` of a map the user may open, it also
-       mints the stream token for that map. See `Authentication`_.
+     - ``domain-types/maps_session/collections/all``
+     - The user, their language and what the SPA may offer them (edit,
+       configure, commands, publish scopes with the contact groups and sites to
+       publish to).
+   * - POST
+     - ``domain-types/maps_access/actions/resolve/invoke``
+     - **Only for the daemon** (site-internal secret, no session). Which map a
+       user sees under a name, and its owner. See `Authentication`_.
    * - POST
      - ``domain-types/maps_command/actions/run/invoke``
      - Monitoring commands Checkmk's REST API has no endpoint for. See
@@ -384,10 +386,8 @@ Maps daemon
 
 The site Apache forwards ``check_mk/maps/api`` to the daemon's Unix socket
 (``ProxyPass … flushpackets=on retry=0 timeout=3600``). The SPA uses the shared
-``lib/fastapi-client``. Except for ``health``, every route needs a Maps ticket,
-sent in the ``X-Maps-Ticket`` header (``Authorization: MapsTicket <ticket>`` is
-accepted as well). The SSE route accepts only the stream token, in the
-``?token=`` query parameter.
+``lib/fastapi-client``. Except for ``health``, every route needs the GUI
+session cookie, see `Authentication`_.
 
 .. list-table::
    :header-rows: 1
@@ -400,7 +400,7 @@ accepted as well). The SSE route accepts only the stream token, in the
      - ``health``
      - **No authentication.** Returns ``{"status":"ok"}``.
    * - POST
-     - ``v1/maps/register``
+     - ``v1/maps/{name}/register``
      - Hands the daemon a map config to stream. See
        `Map configs in the daemon`_.
    * - GET
@@ -417,7 +417,7 @@ accepted as well). The SSE route accepts only the stream token, in the
      - ``v1/maps/{name}/folder-search``
      - Service search in a folder-tree map.
    * - GET
-     - ``v1/sse/maps/{name}?token=``
+     - ``v1/sse/maps/{name}``
      - The live state stream (SSE).
    * - GET
      - ``v1/connections``
@@ -433,10 +433,10 @@ accepted as well). The SSE route accepts only the stream token, in the
      - ``v1/connections/{id}/object-details``
      - Long output, groups, labels, comments and downtimes of one object.
 
-Map names in paths must match ``[a-zA-Z0-9_-]{1,100}``. For a ticket bound to a
-map (see `Authentication`_), the ``states``, ``folder-*`` and SSE routes must
-name that map. The
-daemon serves no OpenAPI schema, no ``/docs`` and no ``/redoc``.
+Map names in paths must match ``[a-zA-Z0-9_-]{1,100}``. The routes below
+``v1/maps/{name}`` and the SSE route serve only a map the GUI says the user
+sees under that name. The daemon serves no OpenAPI schema, no ``/docs`` and no
+``/redoc``.
 
 Static files
 ------------
@@ -457,7 +457,7 @@ Monitoring commands
 -------------------
 
 Commands always run with the user's GUI session and Checkmk's own permission
-checks. The Maps ticket cannot trigger them.
+checks. The daemon cannot trigger them.
 
 * **Acknowledge, remove acknowledgement, schedule downtime, add comment** use
   Checkmk's regular REST endpoints (``domain-types/acknowledge``,
@@ -484,8 +484,8 @@ checks. The Maps ticket cannot trigger them.
   the local site. These verbs should move to Checkmk's REST API once it offers
   them.
 
-The ticket also lists the commands the user may run, but only so that the SPA
-can hide menu entries. The daemon ignores this list.
+The ``maps_session`` endpoint lists the commands the user may run, but only so
+that the SPA can hide menu entries.
 
 BI aggregations
 ---------------
@@ -576,9 +576,9 @@ What Maps promises
   they are a contact for (or of all of them with ``general.see_all``). The map
   configuration itself, including the object names the author placed, is
   visible to everyone the map is published to.
-* A Maps ticket or stream token never grants more than its user already has in
-  the GUI. A leaked stream token grants read access to one map for at most five
-  minutes (plus up to 30 s on a stream that is already open).
+* The daemon never grants more than the user's GUI session grants. A logout or
+  a permission change takes effect in the daemon within 60 s, and on an open
+  stream within 90 s.
 * Monitoring data (plug-in output, aliases, labels, …) is data, not markup: a
   monitored host cannot inject active content into a map.
 * The daemon cannot change monitoring or configuration. Commands run only with
@@ -597,7 +597,7 @@ Actors and default permissions
    * - ``maps.use``
      - admin, user, guest
      - Open Maps at all; required by ``maps.py``, every Maps REST endpoint and
-       for minting tickets.
+       the daemon.
    * - ``maps.configure``
      - admin
      - Maps settings (view: with ``wato.use``; save: also ``wato.edit``),
@@ -648,19 +648,21 @@ Trust boundaries
 ----------------
 
 1. **Browser → site Apache.** Everything from the browser is untrusted. The GUI
-   checks the session and permissions; the daemon checks the ticket.
-2. **GUI → daemon (via the browser).** The GUI and the daemon never talk
-   directly. The GUI signs tickets and map configs with
-   ``etc/site_internal.secret``; the browser carries them to the daemon, which
-   verifies the signature. The browser can therefore replay what it received,
-   but cannot alter it.
+   checks the session and permissions; the daemon has the GUI check them.
+2. **Daemon → GUI.** The daemon calls the internal REST API of its own site
+   over the loopback, with the site-internal secret. Proxy settings of the
+   environment are ignored, so the secret does not leave the site. The GUI
+   signs map configs with ``etc/site_internal.secret``; the browser carries
+   them to the daemon, which verifies the signature against the owner the GUI
+   names. The browser can therefore replay a config it received, but cannot
+   alter it.
 3. **Daemon → Livestatus.** Livestatus enforces contact-group visibility for
-   every query that carries ``AuthUser``. The daemon adds it from the verified
-   ticket, never from request parameters.
+   every query that carries ``AuthUser``. The daemon adds it from the user the
+   GUI named for the session, never from request parameters.
 4. **Monitored host → browser.** Host-controlled text reaches the SPA and is
    escaped before it is placed into any HTML template.
 5. **Local socket.** ``tmp/run/maps.sock`` is mode 0660 (site user and group).
-   The daemon still requires a ticket on every call except ``health``.
+   The daemon still requires a session on every call except ``health``.
 
 Authentication
 --------------
@@ -671,53 +673,31 @@ There is no separate CSRF token for REST calls. Endpoints with a body require
 bodyless POSTs (``delete-background``) rely on ``SameSite=Lax`` alone.
 
 **The daemon** does no login, session or password handling of its own. It
-accepts two token types, both minted by ``GET …/maps_ticket/collections/all``:
+reads the session cookie from each request and asks the GUI about it:
 
-.. list-table::
-   :header-rows: 1
-   :widths: 22 39 39
+* ``gui_session/identify`` (the endpoint the AI Control Plane uses too) answers
+  who is behind the session, which of the permissions the daemon asks for they
+  hold (``maps.use``, ``general.edit_map``, ``maps.configure``,
+  ``general.see_all``, ``wato.see_all_folders``) and their contact groups. A
+  refused session is answered with 401, a user without ``maps.use`` with 403.
+* ``maps_access/resolve`` answers which map the user sees under a name, and its
+  owner, with the same pagetype logic as the GUI. A name the user sees no map
+  under is answered with 404.
 
-   * -
-     - Maps ticket
-     - Stream token
-   * - Used for
-     - All daemon REST routes
-     - Only the SSE route
-   * - Sent as
-     - ``X-Maps-Ticket`` header (``Authorization: MapsTicket …`` also
-       accepted)
-     - ``?token=`` query parameter
-   * - Audience (``aud``)
-     - ``maps-ticket``
-     - ``maps-stream``
-   * - Capabilities
-     - All (see below)
-     - Only ``see_all``, ``folder_see_all``, ``contact_groups``
-   * - Bound to a map
-     - Only if minted with ``?name=`` of a map the user may open
-     - Always (only minted in that case)
-   * - Lifetime
-     - 300 s
-     - 300 s
+Both endpoints accept only the site-internal secret. If the GUI cannot be asked
+or gives an unexpected answer, the daemon answers 503 and does not cache it.
 
-Both are ``base64url(canonical JSON).base64url(HMAC-SHA256)``, keyed with
-``etc/site_internal.secret`` and compared in constant time. The payload holds
-``aud``, ``v`` (1), ``sub`` (user name), ``exp``, ``caps`` and optionally
-``map`` (owner and name). The daemon rejects a wrong audience, a wrong version,
-an expired or missing ``exp``, and an empty ``sub``, so the stream token is
-refused on every REST route and the ticket on the SSE route.
+The daemon keeps the identity per session (keyed by a hash of the cookie) and the
+map owner per user and map, each for at most 60 s. So a logout, a permission change or a user deletion takes effect
+in the daemon within 60 s. An open SSE stream asks again every 30 s and ends
+when the session is refused, the user no longer sees the map, or the map's
+owner or the user's scope changed. Without an answer of the GUI the stream stays
+open and asks again next time.
 
-The SPA keeps both tokens in memory only (no browser storage) and re-mints them
-every 240 s, on every map switch and at start. If minting fails with 401/403
-(session expired), it redirects to the login page. The daemon re-checks the stream token of an open stream on every
-wake-up and ends the stream at most 30 s after the token expired.
-
-There is no nonce and no revocation list: a captured token can be replayed
-until it expires, and a permission change or user deletion takes effect when
-the current token expires (at most 5 minutes, plus up to 30 s on an open
-stream). Rotating the secret invalidates
-all tokens at once; the daemon picks up the new secret by file modification
-time. If the secret file is missing, the crypto helper creates it.
+The daemon refuses every request whose ``Sec-Fetch-Site`` is not
+``same-origin``, and a request body that is not ``application/json``, like the
+AI Control Plane. A cross-site page can therefore not make the browser call the
+daemon with the user's session; ``health`` is exempt.
 
 Authorization
 -------------
@@ -735,8 +715,8 @@ logic, not by Maps:
 * On create and update, the requested visibility is clamped to what the
   editing user may publish.
 
-**Which capabilities a ticket carries** is derived from the user's permissions
-when it is minted:
+**What the daemon knows about a user** comes from ``identify``; what the SPA
+offers comes from ``maps_session``:
 
 .. list-table::
    :header-rows: 1
@@ -744,7 +724,7 @@ when it is minted:
 
    * - Capability
      - From permission
-     - Used by the daemon for
+     - Used for
    * - ``see_all``
      - ``general.see_all``
      - Querying without AuthUser
@@ -762,13 +742,13 @@ when it is minted:
      - Full connection details
    * - ``commands``
      - ``general.act`` + ``action.*``
-     - Nothing (SPA menu only)
+     - SPA menu only (``maps_session``)
    * - ``publish_*``, ``all_contact_groups``, ``all_sites``
      - publish permissions
-     - Nothing (SPA dialogs only)
+     - SPA dialogs only (``maps_session``)
 
 **Which hosts and services a user sees** is decided by Livestatus. Every
-daemon query carries ``AuthUser: <ticket sub>``, with two exceptions:
+daemon query carries ``AuthUser: <user of the session>``, with two exceptions:
 
 * Users with ``general.see_all`` are queried without AuthUser, as in the rest of
   the GUI.
@@ -776,7 +756,7 @@ daemon query carries ``AuthUser: <ticket sub>``, with two exceptions:
   without AuthUser to keep connections warm. Its results are discarded, never
   sent to a client.
 
-The ticket's contact groups are not used for Livestatus; they only scope the
+The user's contact groups are not used for Livestatus; they only scope the
 Setup folder skeleton of folder-tree maps.
 
 The ``connections/{id}/…`` routes accept any configured connection ID; access
@@ -788,20 +768,18 @@ Map configs in the daemon
 -------------------------
 
 The daemon stores no maps. Before opening a stream, the SPA registers the map's
-config with ``POST v1/maps/register``. The daemon keeps registered configs in
+config with ``POST v1/maps/{name}/register``. The daemon keeps registered configs in
 memory (LRU, 1024 entries), keyed by the map's owner and name.
 
 * **Signed config** (the normal case): the GUI signs a domain prefix
   (``maps-map-config:v2:``), the owner and the canonical config JSON (which
-  contains the name). The daemon checks the signature against the owner from
-  the ticket's ``map`` claim (or the caller, if the ticket is not bound to a
-  map), and, for a bound ticket, that the config's name equals the ticket's map
-  name. So a viewer can neither
-  modify a config nor file one signed for another owner or map under a shared
-  key.
-* **Unsigned config** (editor preview): accepted only with ``may_edit``, only in
-  the caller's own namespace, and only for the map the ticket is bound to (if
-  any). It lets the editor preview unsaved changes.
+  contains the name). The daemon checks the signature against the owner the
+  GUI names for the map in the path, and that the config's name is that name.
+  So a viewer can neither modify a config nor file one signed for another owner
+  or map under a shared key.
+* **Unsigned config** (editor preview): accepted only with ``may_edit`` and only
+  if the name means the caller's own map to the GUI. It lets the editor preview
+  unsaved changes.
 
 **Shared poll loop.** All viewers of the same map (same owner and name) share
 one broadcast loop. On each tick the loop groups its subscribers by AuthUser
@@ -924,7 +902,8 @@ Stored data and secrets
      - Livestatus addresses of all enabled sites, no secrets. Not replicated.
    * - ``etc/site_internal.secret``
      - site
-     - The HMAC key for tickets and map configs (0600).
+     - The HMAC key for map configs, and how the daemon authenticates to the
+       GUI (0600).
    * - ``var/check_mk/passwords_merged``
      - Checkmk
      - Read by the daemon for connection secrets taken from the password
@@ -967,7 +946,7 @@ Limits
    * - Uploads
      - 2 MB (library images), 10 MB (backgrounds), 5 MB (NagVis ``.cfg``)
 
-The rate and stream limits are kept in the daemon's memory, per ticket user
+The rate and stream limits are kept in the daemon's memory, per user
 (the 40 streams per site), and answered with HTTP 429. Too many objects are
 rejected with 422 on register; the upload and import limits are checked by the
 GUI (400). The map cache evicts silently.
@@ -1000,14 +979,9 @@ Logs, traces and crash reports
 ------------------------------
 
 * The daemon writes ``var/log/maps/access.log`` and ``var/log/maps/error.log``.
-* **The site Apache logs the full request line**, so the SSE stream token ends
-  up in ``var/log/apache/access_log`` and ``var/log/apache/stats``, in
-  ``omd backup`` archives, and, depending on its log configuration, in the
-  access log of the system Apache in front of the site. That is why the stream token is read-only, bound to one map and
-  short-lived.
 * Tracing (OpenTelemetry via ``cmk.trace``, service name ``cmk-maps``) excludes
-  the SSE route, so the token does not end up in spans. Other routes export
-  their URL, including host and service names in query parameters.
+  the SSE route. Other routes export their URL, including host and service
+  names in query parameters.
 * Unhandled exceptions become Checkmk crash reports in
   ``var/check_mk/crashes/maps/``. They contain the local variables of the
   innermost frame; values with sensitive-looking names are redacted.
@@ -1019,15 +993,15 @@ With the site's default cookie authentication (``MULTISITE_COOKIE_AUTH=on``),
 Apache lets every request under ``/<site>/check_mk`` through without Basic auth
 and leaves authentication to the application. For Maps this means:
 
-* ``check_mk/maps/api/health`` answers without a ticket; all other daemon routes
-  answer 401 without one (404/405 for unknown paths).
+* ``check_mk/maps/api/health`` answers without a session; all other daemon
+  routes answer 401 without one (404/405 for unknown paths).
 * ``check_mk/maps/images/<file>`` is readable without login (no directory
   listing). Library file names are guessable.
 * ``check_mk/maps/backgrounds/<file>`` is readable without login by anyone who
   knows the URL. The URL stays valid until the background is replaced or
   removed or the map is deleted. Browsers cache images for about a month.
 
-Everything else needs a GUI session or a ticket. Switching the daemon off
+Everything else needs a GUI session. Switching the daemon off
 (``omd config set MAPS off``) stops the daemon only; the Apache configuration,
 the static files and the GUI pages stay in place.
 
@@ -1049,26 +1023,22 @@ Opening a map
     spa -> gui : GET maps.py (session)
     spa -> gui : GET objects/map/{name}
     gui --> spa : map + signed config
-    spa -> gui : GET maps_ticket/collections/all?name={name}
-    gui --> spa : ticket + stream token (5 min)
-    spa -> daemon : POST v1/maps/register (X-Maps-Ticket, signed config)
-    daemon -> daemon : verify ticket and signature,\ncache config under (owner, name)
-    spa -> daemon : GET v1/maps/{name}/states (X-Maps-Ticket)
+    spa -> daemon : POST v1/maps/{name}/register (session, signed config)
+    daemon -> gui : identify session, resolve map access\n(site-internal secret, cached 60 s)
+    daemon -> daemon : verify signature against the owner,\ncache config under (owner, name)
+    spa -> daemon : GET v1/maps/{name}/states (session)
     daemon -> ls : query with the user's AuthUser
     daemon --> spa : full state
-    spa -> daemon : GET v1/sse/maps/{name}?token=…
+    spa -> daemon : GET v1/sse/maps/{name} (session)
     loop every refresh interval
         daemon -> ls : one query per subscriber group
         daemon --> spa : full state for new subscribers,\nchanges for everyone else
     end
-    loop every 240 s
-        spa -> gui : re-mint ticket + stream token
-        spa -> daemon : reconnect stream
+    loop every 30 s
+        daemon -> gui : identify session, resolve map access\n(when the cached answer expired)
     end
 
-The diagram shows a map opened from the map list. When a map is opened directly
-by URL, the SPA mints the map-bound ticket first, at start, and then fetches the
-map. A subscriber group is all viewers with the same AuthUser (for folder-tree
+A subscriber group is all viewers with the same AuthUser (for folder-tree
 maps also the same folder scope); users with ``general.see_all`` are queried
 without AuthUser.
 

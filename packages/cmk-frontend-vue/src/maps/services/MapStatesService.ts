@@ -8,7 +8,7 @@ import { CmkApiError } from 'cmk-ui-library/lib/error'
 import type { FastApiEvent } from 'cmk-ui-library/lib/fastapi-client/client'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { type EventStream, createEventStream } from 'cmk-ui-library/lib/sse/eventStream'
-import { type Ref, type ShallowRef, markRaw, ref, shallowRef, triggerRef, watch } from 'vue'
+import { type Ref, type ShallowRef, markRaw, ref, shallowRef, triggerRef } from 'vue'
 
 import type { ConnectionsApi } from '@/maps/api/connections'
 import type { MapStatesApi, RadarOverride } from '@/maps/api/mapStates'
@@ -213,8 +213,8 @@ export class MapStatesService {
   /**
    * How the open map was last handed to the daemon, to hand it over again. The
    * daemon keeps registrations in memory only, so after a restart it no longer
-   * knows the map; and a site start rotates the secret that every ticket and
-   * every signed config is checked against.
+   * knows the map; and a site start rotates the secret that every signed config
+   * is checked against.
    */
   private registration: (() => Promise<void>) | null = null
   private folderTreeIndex = new Map<string, FolderTreeNode>()
@@ -234,28 +234,17 @@ export class MapStatesService {
       MonitoringObjectsApi,
       'fetchAggregationStates' | 'fetchAggregationTree'
     >,
-    private readonly auth: Pick<MapsAuthService, 'setStreamMap' | 'streamToken' | 'refresh'>,
+    private readonly auth: Pick<MapsAuthService, 'refresh'>,
     private readonly maps: Pick<MapService, 'currentMap' | 'getSignedMap'>
-  ) {
-    // The ticket is re-minted every few minutes and the stream token rotates
-    // with it. A long-open map would keep the stale one in its URL until the
-    // daemon rejected it, so re-point the stream as soon as a new one arrives.
-    // The polling fallback reads its credential per request, so only an open
-    // stream needs this.
-    watch(this.auth.streamToken, (token, previous) => {
-      if (token && previous && token !== previous) {
-        this.reconnectStream()
-      }
-    })
-  }
+  ) {}
 
   public getState(objectId: string): ObjectState | undefined {
     return this.states.value[objectId]
   }
 
   /**
-   * Binds to a map: scopes the ticket to it, hands the daemon the signed config,
-   * loads the first states and opens the stream.
+   * Binds to a map: hands the daemon the signed config, loads the first states
+   * and opens the stream.
    */
   public connectToMap(
     mapName: string,
@@ -286,17 +275,14 @@ export class MapStatesService {
       // What the last map's daemon said is not news about this one.
       this.lastUpdate.value = null
       this.deadSites.value = []
-      // Re-scope the ticket before anything talks to the daemon, so registering
-      // and the stream URL carry a map-scoped token whose baked-in owner lets the
-      // daemon share one broadcast loop across the map's viewers.
-      await this.auth.setStreamMap(mapName)
       this.currentMap = mapName
       this.initialLoad.value = true
       try {
         if (signed) {
           // Signed afresh for a later hand-over: the key may have rotated by then.
-          this.registration = async () => this.api.register(await this.maps.getSignedMap(mapName))
-          await this.api.register(signed)
+          this.registration = async () =>
+            this.api.register(mapName, await this.maps.getSignedMap(mapName))
+          await this.api.register(mapName, signed)
         }
         await this.refresh()
         // Resolve aggregations now that the map's objects are loaded, then keep
@@ -421,8 +407,7 @@ export class MapStatesService {
   }
 
   /**
-   * The map's states, handing the map over again to a daemon that lost it (404)
-   * or no longer takes the ticket (401, after a site start rotated the secret).
+   * The map's states, handing the map over again to a daemon that lost it (404).
    */
   private async fetchStates(mapName: string): Promise<MapStates> {
     const fetch = () =>
@@ -432,20 +417,16 @@ export class MapStatesService {
     try {
       return await fetch()
     } catch (e: unknown) {
-      if (
-        !registration ||
-        !(e instanceof CmkApiError && (e.statusCode === 401 || e.statusCode === 404))
-      ) {
+      if (e instanceof CmkApiError && e.statusCode === 401) {
+        // The session ended elsewhere: the auth service sends the SPA to the login.
+        await this.auth.refresh()
+        throw e
+      }
+      if (!registration || !(e instanceof CmkApiError && e.statusCode === 404)) {
         throw e
       }
       // Another map, or a newer config of this one, was handed over meanwhile.
       const superseded = () => this.registration !== registration
-      if (e.statusCode === 401) {
-        await this.auth.refresh()
-        if (superseded()) {
-          throw e
-        }
-      }
       await registration()
       if (superseded()) {
         throw e
@@ -459,9 +440,8 @@ export class MapStatesService {
   }
 
   /**
-   * The stream fell back to polling on the credential the restarted daemon
-   * refused, and a new credential only re-points a live stream: reopen it now
-   * rather than at the next re-probe.
+   * The stream fell back to polling while the restarted daemon did not know the
+   * map: reopen it now rather than at the next re-probe.
    */
   private restartStream(): void {
     if (!this.paused && this.stream?.isPolling()) {
@@ -585,30 +565,9 @@ export class MapStatesService {
     this.metricValues.value[objectId] = {}
   }
 
-  /**
-   * Re-points the open stream at a freshly minted credential.
-   *
-   * The stream token rotates with the ticket, and a long-open map would otherwise
-   * keep the stale one in its URL until the daemon rejects it.
-   */
-  public reconnectStream(): void {
-    if (this.paused) {
-      return
-    }
-    void this.stream?.reconnect()
-  }
-
   private async openStream(mapName: string): Promise<void> {
     this.stream = createEventStream<MapEvent>({
-      url: () => {
-        const token = this.auth.streamToken.value
-        if (!token) {
-          // No stream credential (a transient re-mint failure kept the API
-          // ticket): let the caller's fallback carry the map until one arrives.
-          throw new Error('No Maps stream token available')
-        }
-        return resolveStreamUrl(mapName, token)
-      },
+      url: () => resolveStreamUrl(mapName),
       handlers: {
         state_update: (msg) => this.applyStateUpdate(msg),
         topology_update: (msg) => this.applyTopologyUpdate(msg)

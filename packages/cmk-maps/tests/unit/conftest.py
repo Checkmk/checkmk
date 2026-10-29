@@ -14,7 +14,6 @@ from fastapi.testclient import TestClient
 from router_client import AuthDependency, RouterClientFactory
 
 from cmk.maps.backend.connections.base import ConnectionBase
-from cmk.maps.backend.core.auth import Principal
 from cmk.maps.backend.core.ratelimit import rest_read_limiter, ws_connect_limiter
 from cmk.maps.backend.services import map_service, state_service
 from cmk.utils import paths
@@ -35,9 +34,9 @@ def router_client() -> Iterator[RouterClientFactory]:
 
     This skips the daemon's heavy module-level ``lifespan`` (which requires a
     real Livestatus connection) and isolates the router under test. Pass
-    ``overrides`` mapping each guard dependency (e.g. ``deps.get_current_user``)
-    to the :class:`Principal` it should resolve to, so the per-route auth can be
-    set to admin / scoped / view-only without minting real tickets.
+    ``overrides`` mapping each guard dependency (e.g. ``deps.get_current_user``,
+    ``deps.get_map_owner``) to what it should resolve to, so the per-route auth
+    can be set to admin / scoped / view-only without asking a GUI.
     """
     clients: list[TestClient] = []
 
@@ -45,12 +44,12 @@ def router_client() -> Iterator[RouterClientFactory]:
         router: APIRouter,
         prefix: str,
         *,
-        overrides: dict[AuthDependency, Principal] | None = None,
+        overrides: dict[AuthDependency, object] | None = None,
     ) -> TestClient:
         app = FastAPI()
         app.include_router(router, prefix=prefix)
-        for dependency, principal in (overrides or {}).items():
-            app.dependency_overrides[dependency] = lambda principal=principal: principal
+        for dependency, value in (overrides or {}).items():
+            app.dependency_overrides[dependency] = lambda value=value: value
         client = TestClient(app, raise_server_exceptions=True)
         clients.append(client)
         return client

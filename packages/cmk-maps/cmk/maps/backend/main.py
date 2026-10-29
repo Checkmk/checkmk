@@ -12,9 +12,9 @@ through the factory instead.
 
 In-tree the daemon runs inside the OMD site behind the site Apache. It performs
 no login, session or password handling of its own: requests are authenticated by
-a signed ticket minted by ``cmk.maps.gui`` (see :mod:`cmk.maps.backend.core.auth`).
-There is no SQLite database, CORS or CSRF layer — ticket auth is not ambient, so
-cross-origin forgery does not apply.
+the GUI session cookie, which the daemon has the GUI check (see
+:mod:`cmk.maps.backend.core.auth`). The browser sends that cookie with a request
+another site makes it send, too, so such requests are refused before routing.
 """
 
 import asyncio
@@ -32,7 +32,9 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from cmk import trace
 from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import get_omd_config, omd_site
+from cmk.fastapi.gui_session import GuiLoopback, loopback_http_client
 from cmk.maps.backend.app import create_app
+from cmk.maps.backend.core.auth import GuiAuth
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.core.crash import create_crash_report
 from cmk.maps.backend.core.version import APP_VERSION
@@ -79,7 +81,7 @@ def _init_tracing() -> None:
 
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     _init_logging()
 
     logger.info(
@@ -108,7 +110,9 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
     warmup_task = asyncio.create_task(connection_service.warmup_loop())
     try:
-        yield
+        async with loopback_http_client(Path(settings.checkmk_omd_root)) as http:
+            app.state.gui_auth = GuiAuth(GuiLoopback(http))
+            yield
     finally:
         logger.info("Shutting down Checkmk Maps backend.")
         warmup_task.cancel()
@@ -143,9 +147,5 @@ async def _handle_unhandled_exception(request: Request, exc: Exception) -> JSONR
     )
 
 
-# Exclude the SSE stream from tracing: it authenticates via a ``?token=`` query
-# parameter (EventSource can't set headers), which the HTTP instrumentation would
-# otherwise record verbatim into the span's ``http.url`` and export off-box — a
-# replayable-credential leak. A span over a long-lived stream is of little value
-# anyway.
+# A span over a long-lived stream is of little value.
 FastAPIInstrumentor.instrument_app(app, excluded_urls="sse/maps")

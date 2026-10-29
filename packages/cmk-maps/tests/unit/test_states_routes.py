@@ -7,7 +7,7 @@
 The per-(map, auth_user) *delta* computation is covered by
 ``test_state_service_resolution.py``; what was untested is the layer that drives
 it: the shared broadcast loop, its error resilience, the map-key isolation, and
-the connect-time auth on the ``?token=`` SSE endpoint. Those are the parts that
+the session checks of the SSE endpoint. Those are the parts that
 run unattended and, if they regress, silently freeze or cross-wire live maps.
 
 Async coroutines are driven with ``asyncio.run`` (no asyncio plugin in this
@@ -16,54 +16,88 @@ target); the loop is bounded by unsubscribing the sole subscriber from a patched
 """
 
 import asyncio
-import hashlib
-import hmac
 import json
-import time
 from collections.abc import Callable, Iterator
 from http import HTTPStatus
-from pathlib import Path
 from unittest.mock import MagicMock
 
+import httpx2
 import pytest
 from fake_connection import FakeConnection
 from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
 from starlette.types import Message
 
+from cmk.fastapi.gui_session import GuiLoopback
 from cmk.fastapi.sse import SentEvent
 from cmk.maps.backend.api.v1 import deps, states
 from cmk.maps.backend.app import create_app
-from cmk.maps.backend.core.auth import Principal
+from cmk.maps.backend.core.auth import GuiAuth, Principal
 from cmk.maps.backend.core.ratelimit import sse_stream_limiter, ws_connect_limiter
-from cmk.maps.backend.core.sse import manager
+from cmk.maps.backend.core.sse import manager, Subscriber
 from cmk.maps.backend.schemas.map import FlowView, MapConfig
 from cmk.maps.backend.schemas.state import MapStates, ObjectState, ObjectTiming
 from cmk.maps.backend.schemas.stream import StreamMessage
 from cmk.maps.backend.services import map_service, settings_service, state_service
 from cmk.maps.backend.services.settings_service import get_daemon_runtime
-from cmk.maps.shared.ticket import (
-    encode_ticket,
-    MapClaim,
-    STREAM_TICKET_AUDIENCE,
-    StreamCapabilities,
-)
 
-pytestmark = pytest.mark.usefixtures("_shared_secret", "_clear_stream_state")
+pytestmark = pytest.mark.usefixtures("_clear_stream_state")
 
-_KEY = b"0123456789abcdef0123456789abcdef"
-_STREAM_CAPS = StreamCapabilities(see_all=False, folder_see_all=False, contact_groups=[])
-_MAP_CLAIM = MapClaim(owner="alice", name="b1")
-
-
-class _FakeSecret:
-    def hmac(self, msg: bytes) -> bytes:
-        return hmac.new(_KEY, msg, hashlib.sha256).digest()
+_SITE = "heute"
+_PERMISSIONS = {
+    "maps.use": True,
+    "general.edit_map": False,
+    "maps.configure": False,
+    "general.see_all": False,
+    "wato.see_all_folders": False,
+}
 
 
-@pytest.fixture
-def _shared_secret(site_secret_file: Path) -> None:
-    site_secret_file.write_bytes(_KEY)
+class _GUI:
+    """A GUI to which the session cookie is the user's name, and every map is alice's.
+
+    A session can be logged out, and a map unpublished, while a stream is open.
+    """
+
+    def __init__(self) -> None:
+        self.logged_out: set[str] = set()
+        self.unpublished: set[str] = set()
+        self.down = False
+
+    def handle(self, request: httpx2.Request) -> httpx2.Response:
+        if self.down:
+            return httpx2.Response(HTTPStatus.SERVICE_UNAVAILABLE)
+        body = json.loads(request.content)
+        if request.url.path.endswith("/identify/invoke"):
+            if body["session_cookie"] in {"forged", *self.logged_out}:
+                return httpx2.Response(
+                    HTTPStatus.BAD_REQUEST,
+                    json={"title": "t", "status": 400, "ext": {"error": "invalid_grant"}},
+                )
+            return httpx2.Response(
+                HTTPStatus.OK,
+                json={
+                    "user_id": body["session_cookie"],
+                    "permissions": _PERMISSIONS,
+                    "contact_groups": [],
+                },
+            )
+        if body["name"] in self.unpublished:
+            return httpx2.Response(HTTPStatus.OK, json={})
+        return httpx2.Response(HTTPStatus.OK, json={"owner": "alice"})
+
+    def auth(self) -> GuiAuth:
+        return GuiAuth(
+            GuiLoopback(
+                httpx2.AsyncClient(
+                    base_url="http://gui", transport=httpx2.MockTransport(self.handle)
+                )
+            )
+        )
+
+
+def _session(user: str) -> dict[str, str]:
+    return {"Cookie": f"auth_{_SITE}={user}"}
 
 
 @pytest.fixture
@@ -135,7 +169,7 @@ def test_the_api_description_names_each_event_with_the_schema_of_its_data() -> N
 
 
 # --------------------------------------------------------------------------- #
-# registered_map — resolution + map-scoped ticket binding
+# registered_map — resolution
 # --------------------------------------------------------------------------- #
 
 
@@ -148,16 +182,6 @@ def test_registered_map_returns_registered_config() -> None:
 def test_registered_map_missing_map_is_404() -> None:
     with pytest.raises(HTTPException) as exc:
         deps.registered_map(Principal(name="alice"), "absent")
-    assert exc.value.status_code == HTTPStatus.NOT_FOUND
-
-
-def test_registered_map_map_scoped_ticket_rejects_other_map() -> None:
-    # A ticket minted for one map must not be usable to stream another, even if
-    # that other map exists under the same resolved owner.
-    map_service.register_map("alice", MapConfig(name="other"))
-    scoped = Principal(name="alice", map_owner="alice", map_name="shared")
-    with pytest.raises(HTTPException) as exc:
-        deps.registered_map(scoped, "other")
     assert exc.value.status_code == HTTPStatus.NOT_FOUND
 
 
@@ -288,9 +312,16 @@ def test_pushed_topology_is_queued_as_a_topology_update_event() -> None:
 
 
 @pytest.fixture
-def app() -> FastAPI:
+def gui() -> _GUI:
+    return _GUI()
+
+
+@pytest.fixture
+def app(gui: _GUI, monkeypatch: pytest.MonkeyPatch) -> FastAPI:
+    monkeypatch.setenv("OMD_SITE", _SITE)
     app = FastAPI()
     app.include_router(states.router, prefix="/api/v1")
+    app.state.gui_auth = gui.auth()
     return app
 
 
@@ -300,43 +331,57 @@ def client(app: FastAPI) -> Iterator[TestClient]:
         yield test_client
 
 
-@pytest.mark.parametrize("query", ["", "?token=not-a-valid-ticket"])
-def test_sse_endpoint_rejects_a_missing_or_invalid_token(client: TestClient, query: str) -> None:
-    resp = client.get(f"/api/v1/sse/maps/b1{query}")
+@pytest.mark.parametrize(
+    "headers", [pytest.param({}, id="no cookie"), pytest.param(_session("forged"), id="refused")]
+)
+def test_sse_endpoint_rejects_a_missing_or_refused_session(
+    client: TestClient, headers: dict[str, str]
+) -> None:
+    resp = client.get("/api/v1/sse/maps/b1", headers=headers)
     assert resp.status_code == HTTPStatus.UNAUTHORIZED
 
 
-def _stream_token(user: str) -> str:
-    return encode_ticket(
-        {"sub": user, "exp": int(time.time()) + 300, "caps": _STREAM_CAPS, "map": _MAP_CLAIM},
-        _FakeSecret().hmac,
-        audience=STREAM_TICKET_AUDIENCE,
-    )
+def test_sse_endpoint_refuses_a_map_the_user_does_not_see(client: TestClient, gui: _GUI) -> None:
+    map_service.register_map("alice", MapConfig(name="b1"))
+    gui.unpublished.add("b1")
+
+    resp = client.get("/api/v1/sse/maps/b1", headers=_session("bob"))
+
+    assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 def test_sse_connect_limit_is_per_user(client: TestClient) -> None:
     # Every client reaches the daemon from the same proxy address, so the budget
     # has to follow the user: one user's reconnect storm must not lock out others.
-    alice, bob = _stream_token("alice"), _stream_token("bob")
     for _ in range(ws_connect_limiter._max):  # noqa: SLF001
-        assert client.get(f"/api/v1/sse/maps/b1?token={alice}").status_code == HTTPStatus.NOT_FOUND
+        assert (
+            client.get("/api/v1/sse/maps/b1", headers=_session("alice")).status_code
+            == HTTPStatus.NOT_FOUND
+        )
     assert (
-        client.get(f"/api/v1/sse/maps/b1?token={alice}").status_code == HTTPStatus.TOO_MANY_REQUESTS
+        client.get("/api/v1/sse/maps/b1", headers=_session("alice")).status_code
+        == HTTPStatus.TOO_MANY_REQUESTS
     )
-    assert client.get(f"/api/v1/sse/maps/b1?token={bob}").status_code == HTTPStatus.NOT_FOUND
-
-
-def test_sse_invalid_tokens_do_not_count_toward_the_limit(client: TestClient) -> None:
-    for _ in range(ws_connect_limiter._max):  # noqa: SLF001
-        assert client.get("/api/v1/sse/maps/b1?token=forged").status_code == HTTPStatus.UNAUTHORIZED
     assert (
-        client.get(f"/api/v1/sse/maps/b1?token={_stream_token('alice')}").status_code
+        client.get("/api/v1/sse/maps/b1", headers=_session("bob")).status_code
+        == HTTPStatus.NOT_FOUND
+    )
+
+
+def test_sse_refused_sessions_do_not_count_toward_the_limit(client: TestClient) -> None:
+    for _ in range(ws_connect_limiter._max):  # noqa: SLF001
+        assert (
+            client.get("/api/v1/sse/maps/b1", headers=_session("forged")).status_code
+            == HTTPStatus.UNAUTHORIZED
+        )
+    assert (
+        client.get("/api/v1/sse/maps/b1", headers=_session("alice")).status_code
         == HTTPStatus.NOT_FOUND
     )
 
 
 def test_sse_rejects_when_the_concurrent_stream_cap_is_reached(client: TestClient) -> None:
-    # A held stream pins an Apache worker until its ticket expires, so past the
+    # A held stream pins an Apache worker for as long as it is open, so past the
     # per-user cap a further connect for a real map is refused before it opens.
     map_service.register_map("alice", MapConfig(name="b1"))
     held = 0
@@ -344,12 +389,57 @@ def test_sse_rejects_when_the_concurrent_stream_cap_is_reached(client: TestClien
         while sse_stream_limiter.try_acquire("alice"):
             held += 1
         assert (
-            client.get(f"/api/v1/sse/maps/b1?token={_stream_token('alice')}").status_code
+            client.get("/api/v1/sse/maps/b1", headers=_session("alice")).status_code
             == HTTPStatus.TOO_MANY_REQUESTS
         )
     finally:
         for _ in range(held):
             sse_stream_limiter.release("alice")
+
+
+def _subscription(gui: _GUI, user: str) -> states.StreamSubscription:
+    return states.StreamSubscription(
+        subscriber=MagicMock(spec=Subscriber),
+        name="b1",
+        user=Principal(name=user).viewing("alice", "b1"),
+        auth=gui.auth(),
+        session_cookie=user,
+    )
+
+
+def _still_holds(subscription: states.StreamSubscription) -> bool:
+    return asyncio.run(states.session_still_holds(subscription))
+
+
+def test_an_open_stream_holds_while_the_session_does(gui: _GUI) -> None:
+    assert _still_holds(_subscription(gui, "alice"))
+
+
+def test_an_open_stream_ends_once_its_user_logged_out(gui: _GUI) -> None:
+    gui.logged_out.add("alice")
+    assert not _still_holds(_subscription(gui, "alice"))
+
+
+def test_an_open_stream_ends_once_its_map_is_gone_for_the_user(gui: _GUI) -> None:
+    gui.unpublished.add("b1")
+    assert not _still_holds(_subscription(gui, "alice"))
+
+
+def test_an_open_stream_ends_once_the_scope_of_its_user_changed(gui: _GUI) -> None:
+    subscription = _subscription(gui, "alice")
+    with_more_scope = states.StreamSubscription(
+        subscriber=subscription.subscriber,
+        name=subscription.name,
+        user=Principal(name="alice", see_all=True).viewing("alice", "b1"),
+        auth=subscription.auth,
+        session_cookie=subscription.session_cookie,
+    )
+    assert not _still_holds(with_more_scope)
+
+
+def test_an_open_stream_goes_on_without_a_verdict_of_the_gui(gui: _GUI) -> None:
+    gui.down = True
+    assert _still_holds(_subscription(gui, "alice"))
 
 
 # --------------------------------------------------------------------------- #
@@ -359,7 +449,7 @@ def test_sse_rejects_when_the_concurrent_stream_cap_is_reached(client: TestClien
 
 async def _stream_map_b1(
     app: FastAPI,
-    token: str,
+    user: str,
     *,
     leave_after_events: int | None = None,
     on_event: Callable[[], None] = lambda: None,
@@ -395,8 +485,8 @@ async def _stream_map_b1(
         "path": "/api/v1/sse/maps/b1",
         "raw_path": b"/api/v1/sse/maps/b1",
         "root_path": "",
-        "query_string": f"token={token}".encode(),
-        "headers": [],
+        "query_string": b"",
+        "headers": [(b"cookie", f"auth_{_SITE}={user}".encode())],
         "client": ("testclient", 50000),
         "server": ("testserver", 80),
     }
@@ -408,7 +498,7 @@ async def _stream_map_b1(
 def test_sse_sends_each_message_as_an_event_with_its_name_and_data(app: FastAPI) -> None:
     map_service.register_map("alice", MapConfig(name="b1", view=FlowView()))
 
-    received = asyncio.run(_stream_map_b1(app, _stream_token("alice"), leave_after_events=2))
+    received = asyncio.run(_stream_map_b1(app, "alice", leave_after_events=2))
 
     events = [
         dict(line.split(": ", 1) for line in frame.splitlines())
@@ -436,7 +526,7 @@ def test_sse_releases_the_subscriber_and_stream_slot_when_the_client_leaves(
     map_service.register_map("alice", MapConfig(name="b1"))
     free_slots = _free_stream_slots("alice")
 
-    asyncio.run(_stream_map_b1(app, _stream_token("alice"), leave_after_events=leave_after_events))
+    asyncio.run(_stream_map_b1(app, "alice", leave_after_events=leave_after_events))
 
     assert (
         manager.get_subscriber_count(states._map_key("alice", "b1")),  # noqa: SLF001
@@ -459,9 +549,7 @@ def test_sse_releases_the_subscriber_and_stream_slot_when_the_subscriber_overflo
     map_service.register_map("alice", MapConfig(name="b1"))
     free_slots = _free_stream_slots("alice")
 
-    asyncio.run(
-        _stream_map_b1(app, _stream_token("alice"), on_event=_overflow_the_subscribers_of_b1)
-    )
+    asyncio.run(_stream_map_b1(app, "alice", on_event=_overflow_the_subscribers_of_b1))
 
     assert (
         manager.get_subscriber_count(states._map_key("alice", "b1")),  # noqa: SLF001

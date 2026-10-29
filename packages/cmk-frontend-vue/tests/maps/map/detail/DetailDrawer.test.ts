@@ -8,14 +8,14 @@ import { render, screen, waitFor, within } from '@testing-library/vue'
 import type { MapsCommandSettings } from 'cmk-shared-typing/typescript/maps'
 import { describe, expect, it, vi } from 'vitest'
 
-import type { CommandVerb } from '@/maps/api/ticket'
+import type { CommandVerb } from '@/maps/api/session'
 import DetailDrawer from '@/maps/map/detail/DetailDrawer.vue'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 
 import { aState, anObject } from '../../support/fixtures'
 import {
   aCommandSettings,
-  aTicket,
+  aSession,
   fakeMapsServices,
   fullCapabilities,
   provideServices
@@ -75,7 +75,7 @@ async function renderDrawer(
   commands: CommandVerb[] = ALL_COMMANDS,
   settings: MapsCommandSettings = aCommandSettings()
 ) {
-  const services = fakeMapsServices({}, aTicket({ capabilities: fullCapabilities({ commands }) }))
+  const services = fakeMapsServices({}, aSession({ capabilities: fullCapabilities({ commands }) }))
   await services.auth.init()
   const { global: provided } = provideServices(services, settings)
   const utils = render(DetailDrawer, {

@@ -15,7 +15,7 @@ Checkmk applies to a whole group in one call, and says how many it reaches.
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
-import type { CommandVerb } from '@/maps/api/ticket'
+import type { CommandVerb } from '@/maps/api/session'
 import { OBJECT_ACTION_IDS as ACTIONS } from '@/maps/map/commands/useObjectActions'
 import type { ObjectState } from '@/maps/types/api'
 import ActionFeedback, {

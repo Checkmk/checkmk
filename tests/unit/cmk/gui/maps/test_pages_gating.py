@@ -13,8 +13,8 @@ delegate to: built-ins are read-only, own maps need the create/edit permission,
 foreign maps need the explicit "edit/delete foreign maps" permissions.
 ``_authorized_public`` decides who may publish a map (and to which groups/sites).
 The client cannot be trusted to self-limit, so these must clamp server-side.
-``gather_capabilities`` resolves the per-user flags baked into a ticket — the UI
-only shows what they permit.
+``gather_capabilities`` resolves the per-user flags the SPA gets — the UI only
+shows what they permit.
 """
 
 import pytest
@@ -25,8 +25,8 @@ from cmk.gui.logged_in import user as global_user
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.maps.gui import store
+from cmk.maps.gui._capabilities import gather_capabilities
 from cmk.maps.gui._pages import _authorized_public, _require_visible_map
-from cmk.maps.gui._tickets import gather_capabilities
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.type_defs import map_config_from_spec
 

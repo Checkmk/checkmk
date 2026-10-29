@@ -22,7 +22,7 @@ import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTab
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
-import type { CommandVerb } from '@/maps/api/ticket'
+import type { CommandVerb } from '@/maps/api/session'
 import ObjectActionModal from '@/maps/map/commands/ObjectActionModal.vue'
 import { useObjectActions } from '@/maps/map/commands/useObjectActions'
 import { useMetricInfo } from '@/maps/map/composables/useMetricInfo'

@@ -13,7 +13,7 @@ import type { FolderTreeNode } from '@/maps/types/api'
 
 import { aFolderNode } from '../../support/fixtures'
 import {
-  aTicket,
+  aSession,
   fakeMapsServices,
   fullCapabilities,
   provideServices
@@ -35,7 +35,7 @@ function aRackOf(...hosts: string[]): FolderTreeNode {
 async function renderModal(folder: FolderTreeNode): Promise<MapsApis['commands']> {
   const services = fakeMapsServices(
     {},
-    aTicket({ capabilities: fullCapabilities({ commands: ['acknowledge'] }) })
+    aSession({ capabilities: fullCapabilities({ commands: ['acknowledge'] }) })
   )
   await services.auth.init()
   render(FolderBulkActionModal, { ...provideServices(services), props: { folder } })

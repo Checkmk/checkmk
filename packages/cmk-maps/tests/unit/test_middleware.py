@@ -7,8 +7,9 @@
 The daemon serves only JSON/SSE behind the site proxy, so every response must
 carry the hardening headers (nosniff, frame/referrer policy, and the strict
 CSP). These are pinned here so a future refactor cannot silently drop one.
-Request bodies are bounded before the ticket check, because the proxied path
-has no Apache body limit.
+Request bodies are bounded before the session check, because the proxied path
+has no Apache body limit. A request the browser marks as sent by another site
+is refused before it reaches a route.
 """
 
 import asyncio
@@ -25,6 +26,8 @@ from starlette.types import Receive, Scope, Send
 from cmk.maps.backend.app import create_app, MAX_REQUEST_BODY_BYTES
 from cmk.maps.backend.core.middleware import _CONTENT_SECURITY_POLICY, SecurityHeadersMiddleware
 
+_JSON = {"Content-Type": "application/json"}
+
 
 @pytest.fixture(name="client")
 def _client() -> TestClient:
@@ -40,7 +43,6 @@ def test_all_security_headers_present(client: TestClient) -> None:
     assert resp.status_code == HTTPStatus.OK
     assert resp.headers["x-content-type-options"] == "nosniff"
     assert resp.headers["x-frame-options"] == "SAMEORIGIN"
-    # no-referrer so the signed ticket in ``?token=`` never leaks via Referer.
     assert resp.headers["referrer-policy"] == "no-referrer"
     assert resp.headers["x-xss-protection"] == "1; mode=block"
 
@@ -84,7 +86,11 @@ def test_non_http_scope_passes_through_untouched() -> None:
 def test_oversized_body_is_refused_before_authentication() -> None:
     client = TestClient(create_app())
 
-    resp = client.post("/api/v1/maps/register", content=b"x" * (MAX_REQUEST_BODY_BYTES + 1))
+    resp = client.post(
+        "/api/v1/maps/m/register",
+        content=b"x" * (MAX_REQUEST_BODY_BYTES + 1),
+        headers=_JSON,
+    )
 
     assert resp.status_code == HTTPStatus.REQUEST_ENTITY_TOO_LARGE
 
@@ -93,7 +99,27 @@ def test_chunked_oversized_body_is_refused() -> None:
     client = TestClient(create_app())
     chunk = b"x" * (MAX_REQUEST_BODY_BYTES // 2 + 1)
 
-    resp = client.post("/api/v1/maps/register", content=iter([chunk, chunk]))
+    resp = client.post("/api/v1/maps/m/register", content=iter([chunk, chunk]), headers=_JSON)
 
     assert "content-length" not in resp.request.headers
     assert resp.status_code == HTTPStatus.REQUEST_ENTITY_TOO_LARGE
+
+
+def test_a_request_from_another_site_is_refused_before_authentication() -> None:
+    client = TestClient(create_app())
+
+    resp = client.post(
+        "/api/v1/maps/m/register",
+        json={"config": {"name": "m"}},
+        headers={"Sec-Fetch-Site": "cross-site"},
+    )
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_the_health_check_answers_another_site() -> None:
+    client = TestClient(create_app())
+
+    resp = client.get("/api/health", headers={"Sec-Fetch-Site": "cross-site"})
+
+    assert resp.status_code == HTTPStatus.OK

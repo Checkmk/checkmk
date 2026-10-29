@@ -56,9 +56,8 @@ onUnmounted(() => {
 
 const { auth, settings, nav } = services
 
-// Scoped to the initially opened map, so the map view's own re-mint is a no-op;
-// a lost session bounces to the Checkmk login from inside the service.
-void auth.init(nav.state.view === 'map' ? nav.state.name : null)
+// A lost session bounces to the Checkmk login from inside the service.
+void auth.init()
 void settings.load()
 
 const VIEWS: Record<NavState['view'], Component> = {

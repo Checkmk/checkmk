@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Capability predicates that gate every Maps API request.
 
-The daemon does no RBAC of its own — it trusts the capabilities baked into the
-ticket by the GUI. These predicates translate that ``Principal`` into the
+The daemon does no RBAC of its own — it trusts what the GUI said about the
+user's session. These predicates translate that ``Principal`` into the
 allow/deny decisions the routers and guard dependencies enforce.
 """
 
@@ -18,7 +18,6 @@ from fastapi import HTTPException
 from cmk.maps.backend.api.v1.deps import (
     can_configure,
     can_create_map,
-    can_run_command,
     rate_limited_read,
     resolve_auth_user,
 )
@@ -38,12 +37,6 @@ def test_create_map_follows_may_edit() -> None:
     assert not can_create_map(Principal(name="a", may_edit=False))
 
 
-def test_run_command_checks_baked_in_command_set() -> None:
-    p = Principal(name="a", commands=frozenset({"acknowledge"}))
-    assert can_run_command(p, "acknowledge")
-    assert not can_run_command(p, "schedule_downtime")
-
-
 def test_resolve_auth_user_scopes_unless_see_all() -> None:
     # see_all (admin / general.see_all) bypasses Livestatus contact-group scoping.
     assert resolve_auth_user(Principal(name="alice", see_all=True)) is None
@@ -56,7 +49,7 @@ def test_rate_limited_read_allows_within_budget() -> None:
 
 
 def test_rate_limited_read_blocks_after_budget() -> None:
-    # A valid ticket must not be able to drive unbounded Livestatus load: once
+    # A valid session must not be able to drive unbounded Livestatus load: once
     # the per-user budget is spent, the expensive readers answer 429.
     user = Principal(name="heavy")
     for _ in range(rest_read_limiter._max):  # noqa: SLF001
@@ -67,7 +60,7 @@ def test_rate_limited_read_blocks_after_budget() -> None:
 
 
 def test_rate_limited_read_is_per_user() -> None:
-    # One user's flood must not lock out another (keyed by ticket identity).
+    # One user's flood must not lock out another (keyed by the user).
     heavy = Principal(name="floods")
     for _ in range(rest_read_limiter._max):  # noqa: SLF001
         rest_read_limiter.record(heavy.name)

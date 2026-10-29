@@ -35,9 +35,7 @@ const server = useMswServer(
 )
 
 function newService(): ConnectionsService {
-  return new ConnectionsService(
-    new ConnectionsApi(createMapsDaemonClient({ headers: () => undefined }))
-  )
+  return new ConnectionsService(new ConnectionsApi(createMapsDaemonClient()))
 }
 
 describe('ConnectionsService', () => {

@@ -14,8 +14,10 @@ from http import HTTPStatus
 
 import pytest
 
+from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.utils.local_secrets import SiteInternalSecret
 from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
@@ -40,14 +42,55 @@ def _map(name: str, **overrides: object) -> dict[str, object]:
     }
 
 
-def test_ticket_carries_the_capabilities(clients: ClientRegistry) -> None:
-    resp = clients.Maps.get_ticket()
-    assert resp.json["ticket"]
+def _internal_token() -> dict[str, str]:
+    """The Authorization header the Maps daemon sends."""
+    return {"Authorization": f"InternalToken {SiteInternalSecret().secret.b64_str}"}
+
+
+def test_session_carries_the_capabilities(
+    clients: ClientRegistry, with_automation_user: tuple[UserId, str]
+) -> None:
+    resp = clients.Maps.get_session()
+    assert resp.json["user_id"] == with_automation_user[0]
     assert "force_check" in resp.json["capabilities"]["commands"]
 
 
-def test_ticket_for_an_open_map_carries_a_stream_token(clients: ClientRegistry) -> None:
-    assert clients.Maps.get_ticket(name="all_hosts").json["stream_token"]
+def test_access_names_the_empty_owner_of_a_built_in_map(
+    clients: ClientRegistry, with_user: tuple[UserId, str]
+) -> None:
+    resp = clients.Maps.resolve_access(
+        {"user_id": with_user[0], "name": "all_hosts"}, headers=_internal_token()
+    )
+    assert resp.json == {"owner": ""}
+
+
+def test_access_names_the_owner_of_an_own_map(
+    clients: ClientRegistry, with_automation_user: tuple[UserId, str]
+) -> None:
+    clients.Maps.create(config=_map("floor"))
+    resp = clients.Maps.resolve_access(
+        {"user_id": with_automation_user[0], "name": "floor"}, headers=_internal_token()
+    )
+    assert resp.json == {"owner": with_automation_user[0]}
+
+
+def test_access_names_no_owner_for_a_private_map_of_someone_else(
+    clients: ClientRegistry, with_user: tuple[UserId, str]
+) -> None:
+    clients.Maps.create(config=_map("floor"))
+    resp = clients.Maps.resolve_access(
+        {"user_id": with_user[0], "name": "floor"}, headers=_internal_token()
+    )
+    assert resp.json == {}
+
+
+def test_access_is_reserved_for_the_site(
+    clients: ClientRegistry, with_user: tuple[UserId, str]
+) -> None:
+    resp = clients.Maps.resolve_access(
+        {"user_id": with_user[0], "name": "all_hosts"}, expect_ok=False
+    )
+    resp.assert_status_code(HTTPStatus.UNAUTHORIZED)
 
 
 @pytest.mark.usefixtures("request_context")

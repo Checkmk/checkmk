@@ -6,6 +6,7 @@
 
 import asyncio
 import logging
+import time
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from typing import cast, Literal
@@ -13,17 +14,21 @@ from typing import cast, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from fastapi.sse import EventSourceResponse
 
+from cmk.fastapi.gui_session import Unavailable
 from cmk.fastapi.sse import EventStream, SentEvent
 from cmk.maps.backend.api.v1.connections import auth_user_scope, build_topology_response
 from cmk.maps.backend.api.v1.deps import (
-    principal_from_token,
-    rate_limited_read,
+    get_current_user,
+    get_map_viewer,
+    GuiAuthDep,
+    rate_limited_map_read,
     registered_map,
     resolve_auth_user,
+    SessionCookieDep,
 )
 from cmk.maps.backend.api.v1.types import MapName
 from cmk.maps.backend.connections.base import ServiceMatchRow, ServiceRow
-from cmk.maps.backend.core.auth import Principal
+from cmk.maps.backend.core.auth import GuiAuth, Principal
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.core.ratelimit import sse_stream_limiter, ws_connect_limiter
 from cmk.maps.backend.core.sse import manager, Subscriber
@@ -62,8 +67,9 @@ _broadcast_tasks: dict[str, asyncio.Task[None]] = {}
 # dying/recovering must reach clients even when no node-level delta exists.
 _dead_sites_snapshots: dict[tuple[str, str | None], list[str]] = {}
 
-# The longest an idle stream outlives its ticket.
-_TICKET_RECHECK_INTERVAL = 30.0
+# How often an open stream asks whether its session still holds. The answer is
+# cached, so the GUI is asked again only once it has expired.
+_SESSION_RECHECK_INTERVAL = 30.0
 
 
 async def _fetch_topology_for_user(
@@ -288,7 +294,7 @@ _RADAR_FILTERS: set[str] = {"hostgroup", "servicegroup", "all_hosts", "all_servi
 @router.get("/maps/{name}/states", response_model=MapStates)
 async def get_map_states(
     name: MapName,
-    current_user: Principal = Depends(rate_limited_read),
+    current_user: Principal = Depends(rate_limited_map_read),
     radar_filter: str | None = None,
     radar_filter_value: str | None = None,
     ft_override: bool = False,
@@ -353,7 +359,7 @@ async def get_map_states(
 async def get_folder_host_services(
     name: MapName,
     host: str = Query(..., description="Host name to fetch services for"),
-    current_user: Principal = Depends(rate_limited_read),
+    current_user: Principal = Depends(rate_limited_map_read),
 ) -> list[FolderHostService]:
     """Lazily fetch a single host's services for a foldertree map.
 
@@ -411,7 +417,7 @@ async def folder_service_search(
     s: list[str] = Query(default_factory=list, description="Service-name substrings (AND)"),
     h: list[str] = Query(default_factory=list, description="Host-name substrings (AND)"),
     q: list[str] = Query(default_factory=list, description="Bare substrings (host OR service)"),
-    current_user: Principal = Depends(rate_limited_read),
+    current_user: Principal = Depends(rate_limited_map_read),
 ) -> FolderServiceSearchResult:
     """Server-side service search for a foldertree map.
 
@@ -491,34 +497,58 @@ async def folder_service_search(
 
 
 @dataclass(frozen=True)
-class _StreamSubscription:
+class StreamSubscription:
     subscriber: Subscriber
-    token: str
+    name: str
+    user: Principal
+    auth: GuiAuth
+    session_cookie: str
+
+
+async def session_still_holds(subscription: StreamSubscription) -> bool:
+    """Whether the session still gets the user, with the scope, the stream started with.
+
+    Without a verdict of the GUI the stream goes on and asks again next time:
+    closing it would only make the browser reconnect against the same GUI.
+    """
+    now = time.monotonic()
+    match await subscription.auth.principal(subscription.session_cookie, now=now):
+        case Principal() as current:
+            pass
+        case Unavailable():
+            return True
+        case _:
+            return False
+    match await subscription.auth.map_owner(current, subscription.name, now=now):
+        case str() as owner:
+            return current.viewing(owner, subscription.name) == subscription.user
+        case Unavailable():
+            return True
+        case _:
+            return False
+
+
+async def _connect_budget(current_user: Principal = Depends(get_current_user)) -> Principal:
+    # Keyed by the user: behind the site's proxies every client arrives from the
+    # same address, so an IP key would share one budget site-wide.
+    if ws_connect_limiter.is_blocked(current_user.name):
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limited")
+    ws_connect_limiter.record(current_user.name)
+    return current_user
 
 
 async def _subscribe_to_stream(
     name: MapName,
-    # Optional so a missing token fails as 401 like every other route, not as a
-    # 422 that hands an unauthenticated caller the parameter schema.
-    token: str | None = Query(
-        None, description="Stream ticket or access token (EventSource can't set headers)"
-    ),
-) -> AsyncIterator[_StreamSubscription]:
-    if not token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    user = principal_from_token(token)
-    if user is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    # Keyed by the ticket identity: behind the site's proxies every client
-    # arrives from the same address, so an IP key would share one budget site-wide.
-    if ws_connect_limiter.is_blocked(user.name):
-        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limited")
-    ws_connect_limiter.record(user.name)
-
-    # Owner = the map's REAL owner from the signed ticket (map_key_owner), never
-    # a client value — so all viewers of a published map share one broadcast loop,
+    cookie: SessionCookieDep,
+    auth: GuiAuthDep,
+    # Before the viewer: resolving the map asks the GUI, which the budget is there to spare.
+    _budget: Principal = Depends(_connect_budget),
+    user: Principal = Depends(get_map_viewer),
+) -> AsyncIterator[StreamSubscription]:
+    # Owner = the map's REAL owner as the GUI named it for the user, never a
+    # client value — so all viewers of a published map share one broadcast loop,
     # while a private map stays in its owner's namespace and no user can address
-    # another's stream. Falls back to the caller for an unbound ticket.
+    # another's stream.
     cfg = registered_map(user, name)
     owner = user.map_key_owner
     map_key = _map_key(owner, name)
@@ -557,7 +587,9 @@ async def _subscribe_to_stream(
         if cfg.view.type == "flow":
             await _push_topology_to(cfg, map_key, auth_user, [sub], force_full=True, store=False)
 
-        yield _StreamSubscription(subscriber=sub, token=token)
+        yield StreamSubscription(
+            subscriber=sub, name=name, user=user, auth=auth, session_cookie=cookie
+        )
     finally:
         manager.unsubscribe(map_key, sub)
         sse_stream_limiter.release(user.name)
@@ -570,15 +602,16 @@ async def _subscribe_to_stream(
 )
 async def sse_map_states(
     request: Request,
-    subscription: _StreamSubscription = Depends(_subscribe_to_stream),
+    subscription: StreamSubscription = Depends(_subscribe_to_stream),
 ) -> AsyncIterator[SentEvent[StreamMessage]]:
     """SSE endpoint streaming state + topology updates for a map.
 
-    Authentication: ``?token=`` query parameter (EventSource cannot set custom
-    headers). The frontend obtains a short-lived stream ticket from the GUI and
-    passes it here; the daemon validates it against the site-internal secret.
+    Authenticated by the GUI session cookie like every other request. The
+    session is checked again while the stream is open, so a stream ends soon
+    after its user logged out, was locked, or lost the map.
     """
     sub = subscription.subscriber
+    next_check = time.monotonic() + _SESSION_RECHECK_INTERVAL
     while True:
         if await request.is_disconnected():
             break
@@ -588,13 +621,14 @@ async def sse_map_states(
         # gets a full resend as a new subscriber.
         if sub.overflowed:
             break
-        # The ticket is only validated at connect; without this the loop
-        # would stream forever with frozen capabilities. Close the stream once
-        # it expires — the client reconnects with a freshly minted ticket.
-        if principal_from_token(subscription.token) is None:
-            break
+        if time.monotonic() >= next_check:
+            # A changed scope ends the stream too: the browser reconnects and
+            # joins the subscriber group of the new one.
+            if not await session_still_holds(subscription):
+                break
+            next_check = time.monotonic() + _SESSION_RECHECK_INTERVAL
         try:
-            event = await asyncio.wait_for(sub.queue.get(), timeout=_TICKET_RECHECK_INTERVAL)
+            event = await asyncio.wait_for(sub.queue.get(), timeout=_SESSION_RECHECK_INTERVAL)
         except TimeoutError:
             continue
         yield event

@@ -23,8 +23,8 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
+from cmk.maps.gui._capabilities import COMMAND_ACTION_PERMISSIONS
 from cmk.maps.gui._commands import MapCommand, MapCommandVerb, run_map_command
-from cmk.maps.gui._tickets import COMMAND_ACTION_PERMISSIONS
 from cmk.maps.rest_api.internal.endpoint_family import MAPS_INTERNAL_FAMILY
 from cmk.maps.rest_api.internal.models.request_models import MapsCommandRequest
 from cmk.maps.rest_api.utils import LIVESTATUS_PERMISSIONS, NO_CONFIG_CHANGE

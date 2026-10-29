@@ -13,7 +13,7 @@ import type { MapRead } from '@/maps/types/api'
 
 import { aConnection, aListedMap, newMapView } from '../../support/fixtures'
 import {
-  aTicket,
+  aSession,
   fakeMapsServices,
   fullCapabilities,
   provideServices
@@ -28,7 +28,7 @@ async function renderTable(
   capabilities = fullCapabilities(),
   connectionIds = ['live_1', 'live_2']
 ) {
-  const services = fakeMapsServices({}, aTicket({ user_id: 'me', capabilities }))
+  const services = fakeMapsServices({}, aSession({ user_id: 'me', capabilities }))
   await services.auth.init()
   services.connections.connections.value = connectionIds.map((id) => aConnection(id))
   return render(MapListTable, {

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
+from cmk.maps.rest_api.internal.access import ENDPOINT_RESOLVE_ACCESS
 from cmk.maps.rest_api.internal.aggregations import (
     ENDPOINT_LIST_AGGREGATIONS,
     ENDPOINT_SHOW_AGGREGATION_STATES,
@@ -35,8 +36,8 @@ from cmk.maps.rest_api.internal.object_lookups import (
     ENDPOINT_SHOW_HOST_GEO,
     ENDPOINT_SHOW_PERF_METRICS,
 )
+from cmk.maps.rest_api.internal.session import ENDPOINT_SHOW_SESSION
 from cmk.maps.rest_api.internal.settings import ENDPOINT_SHOW_AUTHORING_SETTINGS
-from cmk.maps.rest_api.internal.tickets import ENDPOINT_SHOW_TICKET
 
 
 def register(
@@ -61,7 +62,8 @@ def register(
     versioned_endpoint_registry.register(ENDPOINT_DELETE_IMAGE)
     versioned_endpoint_registry.register(ENDPOINT_UPLOAD_BACKGROUND)
     versioned_endpoint_registry.register(ENDPOINT_DELETE_BACKGROUND)
-    versioned_endpoint_registry.register(ENDPOINT_SHOW_TICKET)
+    versioned_endpoint_registry.register(ENDPOINT_SHOW_SESSION)
+    versioned_endpoint_registry.register(ENDPOINT_RESOLVE_ACCESS)
     versioned_endpoint_registry.register(ENDPOINT_RUN_COMMAND)
     versioned_endpoint_registry.register(ENDPOINT_SHOW_FORM_SCHEMA)
     versioned_endpoint_registry.register(ENDPOINT_PARSE_FORM)

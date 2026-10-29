@@ -106,7 +106,7 @@ class ConcurrencyLimiter:
 ws_connect_limiter = RateLimiter(max_calls=30, window_seconds=60)
 
 # Concurrently held SSE streams. Each stream pins one of the site Apache's
-# prefork workers (MaxClients 64) until its ticket expires, so the handshake rate
+# prefork workers (MaxClients 64) for as long as it is open, so the handshake rate
 # cap above is not enough on its own — a client can hold far more streams than the
 # pool absorbs. Cap them per user (a real client shows one map per visible tab and
 # closes hidden ones) and site-wide, keeping the total well under MaxClients so
@@ -115,7 +115,7 @@ sse_stream_limiter = ConcurrencyLimiter(max_per_key=6, max_total=40)
 
 # Per-authenticated-user budget for the expensive Livestatus readers (topology,
 # metric-history, object-details, folder search/host-services, map states).
-# Keyed by the ticket identity, so one user's flood can't lock out another. 240/min
+# Keyed by the authenticated user, so one user's flood can't lock out another. 240/min
 # (4/s sustained) is far above any real UI's paint+hover+search cadence and only
 # trips on a scripted load loop driving repeated full-topology / bulk fetches.
 rest_read_limiter = RateLimiter(max_calls=240, window_seconds=60)

@@ -24,7 +24,7 @@ import { MapConfigApi } from '@/maps/api/mapConfig'
 import { MapStatesApi } from '@/maps/api/mapStates'
 import { MetricInfoApi } from '@/maps/api/metricInfo'
 import { MonitoringObjectsApi } from '@/maps/api/monitoringObjects'
-import { TicketApi } from '@/maps/api/ticket'
+import { SessionApi } from '@/maps/api/session'
 import { createMapsDaemonClient } from '@/maps/api/transport'
 import { AuthoringSettingsService } from '@/maps/services/AuthoringSettingsService'
 import { ConnectionsService } from '@/maps/services/ConnectionsService'
@@ -68,13 +68,11 @@ export const MAPS_SERVICES: InjectionKey<MapsServices> = Symbol('mapsServices')
 /**
  * Builds the services and wires them together.
  *
- * This is the one place that knows the composition: the auth service supplies
- * the daemon transport's credential hook, so no api module and no component
- * handles a ticket.
+ * This is the one place that knows the composition.
  */
 export function createMapsServices(): MapsServices {
-  const auth = new MapsAuthService(new TicketApi())
-  const daemon = createMapsDaemonClient({ headers: () => auth.daemonHeaders() })
+  const auth = new MapsAuthService(new SessionApi())
+  const daemon = createMapsDaemonClient()
 
   const mapConfig = new MapConfigApi()
   const mapStates = new MapStatesApi(daemon)

@@ -12,8 +12,8 @@
  * internal one, which fires them through Checkmk's command layer over the
  * configured sites, with real permissions and explicit site scoping.
  *
- * All of it rides the GUI session, not the maps ticket: the daemon owns live
- * state and never writes to monitoring.
+ * All of it goes to the GUI, not the daemon: the daemon owns live state and
+ * never writes to monitoring.
  */
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client, { createClient, unwrap } from 'cmk-ui-library/lib/rest-api-client/client'

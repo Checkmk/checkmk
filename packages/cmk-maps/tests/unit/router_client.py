@@ -7,16 +7,19 @@
 from collections.abc import Awaitable, Callable
 from typing import Protocol
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 from fastapi.testclient import TestClient
 
-from cmk.maps.backend.core.auth import Principal
+from cmk.maps.backend.core.auth import GuiAuth, Principal
 
-# A guard dependency is either ticket-authenticating off the request
-# (``deps.get_current_user``) or chained onto the principal it resolved
+# A dependency the route tests resolve to a fixed value instead: the user from the
+# session (``deps.get_current_user``), the owner the GUI names for a map
+# (``deps.get_map_owner``), or a guard chained onto the user
 # (``deps.rate_limited_read``, ``deps.require_connection_read``).
-AuthDependency = (
-    Callable[[Request], Awaitable[Principal]] | Callable[[Principal], Awaitable[Principal]]
+type AuthDependency = (
+    Callable[[str, GuiAuth], Awaitable[Principal]]
+    | Callable[[str, GuiAuth, Principal], Awaitable[str | None]]
+    | Callable[[Principal], Awaitable[Principal]]
 )
 
 
@@ -28,5 +31,5 @@ class RouterClientFactory(Protocol):
         router: APIRouter,
         prefix: str,
         *,
-        overrides: dict[AuthDependency, Principal] | None = None,
+        overrides: dict[AuthDependency, object] | None = None,
     ) -> TestClient: ...

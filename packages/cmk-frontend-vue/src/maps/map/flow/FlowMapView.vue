@@ -27,7 +27,7 @@ import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 
-import type { CommandVerb } from '@/maps/api/ticket'
+import type { CommandVerb } from '@/maps/api/session'
 import BulkAckModal from '@/maps/map/commands/BulkAckModal.vue'
 import BulkDowntimeModal from '@/maps/map/commands/BulkDowntimeModal.vue'
 import { commandTargetsOf, fanOutCommand } from '@/maps/map/commands/fanOutCommand'

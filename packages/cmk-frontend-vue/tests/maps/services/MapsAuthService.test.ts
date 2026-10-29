@@ -4,19 +4,17 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CmkApiError } from 'cmk-ui-library/lib/error'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
-import { HttpResponse, http } from 'msw'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { TicketApi } from '@/maps/api/ticket'
+import { SessionApi } from '@/maps/api/session'
 import { MapsAuthService } from '@/maps/services/MapsAuthService'
 
-import { fullCapabilities } from '../support/services'
+import { aSession, fullCapabilities } from '../support/services'
 
-// The handshake goes through the session-authenticated internal REST endpoint.
-// Simulating that boundary with msw runs the real transport, so URL building and
-// the 401 -> hand off to the login are covered too.
+// Simulating the session endpoint with msw runs the real transport, so URL
+// building and the 401 -> hand off to the login are covered too.
 
 const sampleCaps = fullCapabilities({
   may_edit: false,
@@ -24,22 +22,16 @@ const sampleCaps = fullCapabilities({
   commands: ['acknowledge', 'schedule_downtime']
 })
 
-const sampleTicket = {
-  ticket: 'tkt-abc',
-  stream_token: 'stream-abc',
-  user_id: 'cmkadmin',
-  language: 'en',
-  capabilities: sampleCaps
-}
+const sampleSession = aSession({ capabilities: sampleCaps })
 
-const TICKET_ENDPOINT = '*/api/internal/domain-types/maps_ticket/collections/all'
+const SESSION_ENDPOINT = '/domain-types/maps_session/collections/all'
 
-let ticketCalls: number
+let sessionCalls: number
 
 const server = useMswServer(
-  http.get(TICKET_ENDPOINT, () => {
-    ticketCalls += 1
-    return HttpResponse.json(sampleTicket)
+  restApiHttp.get(SESSION_ENDPOINT, ({ response }) => {
+    sessionCalls += 1
+    return response(200).json(sampleSession)
   })
 )
 
@@ -47,7 +39,7 @@ const originalLocation = window.location
 let assignMock: ReturnType<typeof vi.fn>
 
 beforeEach(() => {
-  ticketCalls = 0
+  sessionCalls = 0
   assignMock = vi.fn()
   Object.defineProperty(window, 'location', {
     configurable: true,
@@ -56,21 +48,20 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  vi.useRealTimers()
   Object.defineProperty(window, 'location', { configurable: true, value: originalLocation })
 })
 
 function newService(): MapsAuthService {
-  return new MapsAuthService(new TicketApi())
+  return new MapsAuthService(new SessionApi())
 }
 
 describe('MapsAuthService', () => {
   it('starts without a session', () => {
-    const auth = newService()
-    expect(auth.user.value).toBeNull()
-    expect(auth.daemonHeaders()).toBeUndefined()
+    expect(newService().user.value).toBeNull()
   })
 
-  it('mints a ticket and derives the user from its capabilities', async () => {
+  it('derives the user from the capabilities of the session', async () => {
     const auth = newService()
 
     expect(await auth.refresh()).toBe(true)
@@ -82,16 +73,7 @@ describe('MapsAuthService', () => {
     expect(auth.canCreateMaps.value).toBe(false)
   })
 
-  it('hands the daemon transport the ticket, and the stream its own token', async () => {
-    const auth = newService()
-    await auth.refresh()
-    // The credential only ever leaves through the hook, never as a value a
-    // component could pass on.
-    expect(auth.daemonHeaders()).toEqual({ 'X-Maps-Ticket': 'tkt-abc' })
-    expect(auth.streamToken.value).toBe('stream-abc')
-  })
-
-  it('reports the commands the ticket allows', async () => {
+  it('reports the commands the user may send', async () => {
     const auth = newService()
     await auth.refresh()
     expect(auth.mayCommand('acknowledge')).toBe(true)
@@ -99,50 +81,84 @@ describe('MapsAuthService', () => {
   })
 
   it('bounces to the Checkmk login when the session is gone', async () => {
-    // A dead session answers 401, which is what sends the SPA to the login.
-    server.use(
-      http.get(TICKET_ENDPOINT, () =>
-        HttpResponse.json({ title: 'Unauthorized', detail: 'no session' }, { status: 401 })
-      )
-    )
     const auth = newService()
     await auth.refresh()
+    // A dead session answers 401, which is what sends the SPA to the login.
+    server.use(
+      restApiHttp.get(SESSION_ENDPOINT, ({ response }) =>
+        response.untyped(
+          HttpResponse.json({ title: 'Unauthorized', detail: 'no session' }, { status: 401 })
+        )
+      )
+    )
 
     expect(await auth.refresh()).toBe(false)
     expect(auth.user.value).toBeNull()
-    expect(auth.daemonHeaders()).toBeUndefined()
     expect(assignMock).toHaveBeenCalledWith(expect.stringContaining('/login.py?_origtarget='))
   })
 
-  it('keeps the ticket on a transient failure so the next tick can retry', async () => {
+  it('keeps the session on a transient failure', async () => {
     const auth = newService()
     await auth.refresh()
-    // The retry is logged, which is part of the behaviour under test.
+    // The failure is logged, which is part of the behaviour under test.
     vi.spyOn(console, 'warn').mockImplementation(() => {})
-    server.use(http.get(TICKET_ENDPOINT, () => HttpResponse.error()))
+    server.use(
+      restApiHttp.get(SESSION_ENDPOINT, ({ response }) => response.untyped(HttpResponse.error()))
+    )
 
     expect(await auth.refresh()).toBe(false)
 
     // A network blip must not brick the SPA until a reload.
-    expect(auth.daemonHeaders()).toEqual({ 'X-Maps-Ticket': 'tkt-abc' })
+    expect(auth.user.value?.user_id).toBe('cmkadmin')
     expect(assignMock).not.toHaveBeenCalled()
   })
 
-  it('mints exactly once however often init is awaited', async () => {
+  it('fetches the session exactly once however often init is awaited', async () => {
     const auth = newService()
     await auth.init()
     await auth.init()
-    expect(ticketCalls).toBe(1)
+    expect(sessionCalls).toBe(1)
     expect(auth.user.value).not.toBeNull()
   })
 
-  it('re-mints when the stream is scoped to another map', async () => {
+  it('fetches the session again while the SPA runs', async () => {
+    // Only the interval, so the session request itself runs as usual.
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
     const auth = newService()
-    await auth.init('dc1')
-    await auth.setStreamMap('dc1')
-    expect(ticketCalls).toBe(1)
-    await auth.setStreamMap('dc2')
-    expect(ticketCalls).toBe(2)
+    await auth.init()
+
+    vi.advanceTimersByTime(240_000)
+
+    await vi.waitFor(() => expect(sessionCalls).toBe(2))
+    auth.dispose()
+  })
+
+  it('fetches the session again after a transient failure', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    server.use(
+      restApiHttp.get(SESSION_ENDPOINT, ({ response }) => response.untyped(HttpResponse.error()), {
+        once: true
+      })
+    )
+    const auth = newService()
+    expect(await auth.refresh()).toBe(false)
+
+    vi.advanceTimersByTime(240_000)
+
+    await vi.waitFor(() => expect(auth.user.value?.user_id).toBe('cmkadmin'))
+    auth.dispose()
+  })
+
+  it('stops fetching the session once disposed', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+    const auth = newService()
+    await auth.init()
+    auth.dispose()
+
+    vi.advanceTimersByTime(240_000)
+
+    expect(sessionCalls).toBe(1)
   })
 
   it('clears the session and redirects on logout', async () => {
@@ -152,12 +168,15 @@ describe('MapsAuthService', () => {
     auth.logout()
 
     expect(auth.user.value).toBeNull()
-    expect(auth.daemonHeaders()).toBeUndefined()
     expect(assignMock).toHaveBeenCalledWith(expect.stringContaining('/logout.py'))
   })
 
   it('surfaces an unexpected failure as a status-carrying error', async () => {
-    server.use(http.get(TICKET_ENDPOINT, () => new HttpResponse(null, { status: 500 })))
-    await expect(new TicketApi().fetchTicket()).rejects.toBeInstanceOf(CmkApiError)
+    server.use(
+      restApiHttp.get(SESSION_ENDPOINT, ({ response }) =>
+        response.untyped(new HttpResponse(null, { status: 500 }))
+      )
+    )
+    await expect(new SessionApi().fetchSession()).rejects.toBeInstanceOf(CmkApiError)
   })
 })

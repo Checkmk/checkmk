@@ -10,14 +10,14 @@
 Checkmk Python integration for the Maps daemon.
 
 Exposes the bits of Checkmk the daemon needs without a GUI request context:
-the SETUP folder-scope derived from a ticket Principal, the monitoring core,
+the SETUP folder-scope derived from a Principal, the monitoring core,
 and ``.mk`` file reading. The daemon runs under the site interpreter
 (``bin/gunicorn``), so its dependencies resolve through the regular
 site-packages — no ``sys.path`` tinkering.
 
-Authorization is NOT done here: the GUI bakes every permission decision into
-the signed ticket (see ``cmk.maps.backend.core.auth.Principal``), so the
-daemon never reads ``roles.mk`` / ``users.mk`` itself.
+Authorization is NOT done here: the daemon asks the GUI for every permission
+decision (see ``cmk.maps.backend.core.auth``), so it never reads ``roles.mk`` /
+``users.mk`` itself.
 """
 
 import logging
@@ -113,7 +113,7 @@ def get_monitoring_core() -> MonitoringCore | None:
 def resolve_folder_scope(principal: Principal) -> FolderScope:
     """The SETUP-folder read visibility for a principal (see :class:`FolderScope`).
 
-    Derived purely from the capabilities the GUI baked into the ticket
+    Derived purely from what the GUI said about the user
     (``wato.see_all_folders`` → ``folder_see_all`` and the user's contact
     groups); the daemon performs no Checkmk user-DB lookup of its own.
     """

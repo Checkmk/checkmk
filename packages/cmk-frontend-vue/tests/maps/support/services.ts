@@ -25,8 +25,8 @@ import { MapConfigApi } from '@/maps/api/mapConfig'
 import { MapStatesApi } from '@/maps/api/mapStates'
 import { MetricInfoApi } from '@/maps/api/metricInfo'
 import { MonitoringObjectsApi } from '@/maps/api/monitoringObjects'
-import { TicketApi } from '@/maps/api/ticket'
-import type { MapsCapabilities, MapsTicket } from '@/maps/api/ticket'
+import { SessionApi } from '@/maps/api/session'
+import type { MapsCapabilities, MapsSession } from '@/maps/api/session'
 import { createMapsDaemonClient } from '@/maps/api/transport'
 import { MAP_LIST_LAYOUT } from '@/maps/home/composables/useMapListViewMode'
 import { MAPS_COMMAND_SETTINGS } from '@/maps/map/commands/commandSettings'
@@ -45,9 +45,6 @@ export function fullCapabilities(overrides: Partial<MapsCapabilities> = {}): Map
   return {
     may_edit: true,
     configure: true,
-    see_all: true,
-    folder_see_all: true,
-    contact_groups: [],
     publish_all: true,
     publish_to_groups: true,
     publish_to_foreign_groups: true,
@@ -59,10 +56,8 @@ export function fullCapabilities(overrides: Partial<MapsCapabilities> = {}): Map
   }
 }
 
-export function aTicket(overrides: Partial<MapsTicket> = {}): MapsTicket {
+export function aSession(overrides: Partial<MapsSession> = {}): MapsSession {
   return {
-    ticket: 'test-ticket',
-    stream_token: 'test-stream-token',
     user_id: 'cmkadmin',
     language: 'en',
     capabilities: fullCapabilities(),
@@ -111,17 +106,17 @@ function stubApi<T extends object>(api: T, results: ApiResults<T>): T {
  * A full set of services on stubbed apis. Override individual ones per case; the
  * apis are plain vitest mocks, so a case can also re-point a single call.
  *
- * ``ticket`` is what the handshake returns — pass one to give the session
+ * ``session`` is what the session endpoint returns — pass one to give the user
  * particular capabilities.
  */
 export function fakeMapsServices(
   overrides: Partial<Omit<MapsServices, 'apis'>> & { apis?: Partial<MapsApis> } = {},
-  ticket: MapsTicket = aTicket()
+  session: MapsSession = aSession()
 ): MapsServices {
   // A real client, so the apis are constructed as they are in the app; every
   // method that would use it is stubbed, so nothing leaves the test.
-  const daemon = createMapsDaemonClient({ headers: () => undefined })
-  const ticketApi = stubApi(new TicketApi(), { fetchTicket: ticket })
+  const daemon = createMapsDaemonClient()
+  const sessionApi = stubApi(new SessionApi(), { fetchSession: session })
   const mapConfig = stubApi(new MapConfigApi(), { list: [] })
   const mapStates = stubApi(new MapStatesApi(daemon), {
     fetchAutoObjects: [],
@@ -140,7 +135,7 @@ export function fakeMapsServices(
     fetchAggregationTree: { tree: null, connection_ok: true },
     fetchHostGeo: null
   })
-  const auth = new MapsAuthService(ticketApi)
+  const auth = new MapsAuthService(sessionApi)
   const settings = new AuthoringSettingsService(stubApi(new AuthoringSettingsApi(), {}))
   // The tile source as the site answers it at boot -- without one a geo map
   // deliberately draws no tiles at all.

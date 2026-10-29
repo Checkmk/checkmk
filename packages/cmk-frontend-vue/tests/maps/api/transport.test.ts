@@ -9,17 +9,10 @@ import { HttpResponse, http } from 'msw'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { ImagesApi } from '@/maps/api/images'
-import { TicketApi, checkmkLoginUrl, checkmkLogoutUrl } from '@/maps/api/ticket'
+import { SessionApi, checkmkLoginUrl, checkmkLogoutUrl } from '@/maps/api/session'
 
 import { type SeenRequest, snapshot } from '../support/http'
-import { fullCapabilities } from '../support/services'
-
-const sampleTicket = {
-  ticket: 'tkt',
-  user_id: 'cmkadmin',
-  language: 'en',
-  capabilities: fullCapabilities()
-}
+import { aSession } from '../support/services'
 
 const server = useMswServer()
 
@@ -46,27 +39,22 @@ describe('handing off to the Checkmk GUI', () => {
 // API, at api/internal relative to the page (/api/internal under jsdom). These
 // assert the HTTP shape the SPA depends on.
 describe('the internal REST transport', () => {
-  it('scopes the ticket handshake to the open map', async () => {
-    const seen: SeenRequest[] = []
+  it('fetches the session from the internal REST API', async () => {
+    const session = aSession()
     server.use(
-      http.get('*/api/internal/domain-types/maps_ticket/collections/all', async ({ request }) => {
-        seen.push(await snapshot(request))
-        return HttpResponse.json(sampleTicket)
-      })
+      http.get('*/api/internal/domain-types/maps_session/collections/all', () =>
+        HttpResponse.json(session)
+      )
     )
 
-    const ticket = await new TicketApi().fetchTicket('My Map')
-
-    expect(seen).toHaveLength(1)
-    expect(seen[0]!.url.searchParams.get('name')).toBe('My Map')
-    expect(ticket).toEqual(sampleTicket)
+    expect(await new SessionApi().fetchSession()).toEqual(session)
   })
 
   // A session that ended answers 401, which is what makes the auth service hand
   // off to the Checkmk login instead of retrying.
   it('reports a lost session as a 401', async () => {
     server.use(
-      http.get('*/api/internal/domain-types/maps_ticket/collections/all', () =>
+      http.get('*/api/internal/domain-types/maps_session/collections/all', () =>
         HttpResponse.json(
           { title: 'Unauthorized', detail: 'You are not authorized' },
           { status: 401 }
@@ -74,7 +62,7 @@ describe('the internal REST transport', () => {
       )
     )
 
-    await expect(new TicketApi().fetchTicket()).rejects.toMatchObject({
+    await expect(new SessionApi().fetchSession()).rejects.toMatchObject({
       name: 'CmkApiError',
       statusCode: 401,
       message: 'Unauthorized: You are not authorized'

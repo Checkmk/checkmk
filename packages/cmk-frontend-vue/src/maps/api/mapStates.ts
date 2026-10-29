@@ -36,11 +36,12 @@ export class MapStatesApi {
   /**
    * Hands the daemon the GUI-signed map so its state and stream paths can resolve
    * it. The daemon verifies the signature and keys its shared loop by the map's
-   * real owner (from the ticket), so all viewers of a published map share one
-   * poll and none can substitute a tampered config.
+   * real owner (as the GUI names it for the user), so all viewers of a published
+   * map share one poll and none can substitute a tampered config.
    */
-  public async register(signed: { config_b64: string; sig: string }): Promise<void> {
-    await this.client.POST('/api/v1/maps/register', {
+  public async register(name: string, signed: { config_b64: string; sig: string }): Promise<void> {
+    await this.client.POST('/api/v1/maps/{name}/register', {
+      params: { path: { name } },
       body: { config_b64: signed.config_b64, sig: signed.sig }
     })
   }
@@ -48,11 +49,14 @@ export class MapStatesApi {
   /**
    * Registers the caller's own map with unsaved edits, for the editor preview.
    * The config is not stored yet, so the GUI cannot sign it; the daemon accepts
-   * it unsigned only for an own ticket and keys it under the caller, where it can
-   * never poison a foreign map's shared loop.
+   * it unsigned only for a name that means the caller's own map, and keys it
+   * under the caller, where it can never poison a foreign map's shared loop.
    */
   public async registerEdit(map: MapConfig): Promise<void> {
-    await this.client.POST('/api/v1/maps/register', { body: { config: daemonConfig(map) } })
+    await this.client.POST('/api/v1/maps/{name}/register', {
+      params: { path: { name: map.name } },
+      body: { config: daemonConfig(map) }
+    })
   }
 
   public async fetchStates(

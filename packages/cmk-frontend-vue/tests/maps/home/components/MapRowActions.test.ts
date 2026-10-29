@@ -14,7 +14,7 @@ import type { MapRead } from '@/maps/types/api'
 
 import { aListedMap, newMapView } from '../../support/fixtures'
 import {
-  aTicket,
+  aSession,
   fakeMapsServices,
   fullCapabilities,
   provideServices
@@ -34,7 +34,7 @@ async function renderActions(
 ) {
   loaded = []
   const nav = new NavigationService((url) => loaded.push(url))
-  const services = fakeMapsServices({ nav }, aTicket({ capabilities }))
+  const services = fakeMapsServices({ nav }, aSession({ capabilities }))
   await services.auth.init()
   return render(MapRowActions, { ...provideServices(services), props: { map, variant } })
 }

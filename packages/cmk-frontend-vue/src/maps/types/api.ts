@@ -259,7 +259,6 @@ export type ServiceNode = Daemon['ServiceNode']
 export type TopologyNode = Daemon['TopologyNode']
 export type MapStates = Daemon['MapStates']
 
-// The current user, distilled from the Checkmk session ticket.
 // Only attributes Checkmk actually provides for the logged-in user are kept; the
 // standalone notions (numeric id, active flag, password state, role/permission
 // lists, separate cmk_* mirrors) are gone — read everything from Checkmk.

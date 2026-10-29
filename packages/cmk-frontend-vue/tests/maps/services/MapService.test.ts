@@ -163,10 +163,7 @@ beforeEach(() => {
 })
 
 function newService(): MapService {
-  return new MapService(
-    new MapConfigApi(),
-    new MapStatesApi(createMapsDaemonClient({ headers: () => undefined }))
-  )
+  return new MapService(new MapConfigApi(), new MapStatesApi(createMapsDaemonClient()))
 }
 
 describe('MapService', () => {

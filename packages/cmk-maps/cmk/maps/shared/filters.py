@@ -11,7 +11,7 @@ sanitise identically — otherwise an escaped newline could smuggle in
 ``Stats:``/``Columns:``/``GET`` headers that change the query semantics or
 exfiltrate data. Neither component may import the other (module-layer
 boundary), so the allowlist lives here in ``cmk.maps.shared`` — the same seam as
-``cmk.maps.shared.states`` / ``cmk.maps.shared.ticket``.
+``cmk.maps.shared.states`` / ``cmk.maps.shared.map_signature``.
 
 The check itself is transport-neutral and raises ``ValueError``; the GUI
 wraps it to re-raise ``MKUserError`` for its request context.

@@ -13,8 +13,8 @@ py_cmk_test(
         "//cmk/gui/openapi/spec/spec_generator",
         "//cmk/gui/sidebar",
         "//packages/cmk-livestatus-client",
-        # Cross-component dep: the ticket-contract test validates a GUI-minted
-        # ticket with the daemon's real validator to pin the wire format.
+        # Cross-component dep: the signature-contract test verifies a GUI-signed
+        # map config with the daemon's real verifier to pin the wire format.
         "//packages/cmk-maps:backend",
         "//packages/cmk-maps:gui",
         # The map-domain REST endpoints, exercised by test_rest_api_spec.

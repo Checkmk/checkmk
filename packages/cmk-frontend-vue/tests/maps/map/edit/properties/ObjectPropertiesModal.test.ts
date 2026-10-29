@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor, within } from '@testing-library/vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import ObjectPropertiesModal from '@/maps/map/edit/properties/ObjectPropertiesModal.vue'
@@ -62,12 +62,6 @@ function renderModal(object: MapElement, extraProps: Record<string, unknown> = {
     global: mapsGlobal(stubs)
   })
 }
-
-beforeEach(() => {
-  // The auth store reads this at creation; a present token keeps requireToken()
-  // from throwing when the mounted autocomplete/metric loads fire.
-  sessionStorage.setItem('maps_access_token', 'test-token')
-})
 
 describe('ObjectPropertiesModal – conditional fields by object type', () => {
   it('shows the monitoring-object fields for a host (hostname + both host toggles)', () => {

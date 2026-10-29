@@ -2360,11 +2360,20 @@ class MapsClient(RestApiClient):
             f"/objects/maps_image/{name}/actions/usage/invoke", None, expect_ok
         )
 
-    def get_ticket(self, name: str | None = None, expect_ok: bool = True) -> Response:
+    def get_session(self, expect_ok: bool = True) -> Response:
+        return self._internal_get("/domain-types/maps_session/collections/all", None, expect_ok)
+
+    def resolve_access(
+        self,
+        body: dict[str, Any],
+        headers: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
         return self.request(
-            "get",
-            url="/domain-types/maps_ticket/collections/all",
-            query_params=None if name is None else {"name": name},
+            "post",
+            url="/domain-types/maps_access/actions/resolve/invoke",
+            body=body,
+            headers=dict(headers) if headers else None,
             expect_ok=expect_ok,
             api_version=APIVersion.INTERNAL,
         )

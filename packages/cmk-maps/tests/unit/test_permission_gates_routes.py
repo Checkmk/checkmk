@@ -6,7 +6,7 @@
 
 The pure capability predicates are unit-tested in ``test_deps.py``; here we mount
 a tiny route behind each guard and assert the 200/403 decision at the request
-layer, plus the real ``get_current_user`` 401 path for a missing ticket.
+layer, plus the real ``get_current_user`` 401 path for a missing session cookie.
 """
 
 from collections.abc import Awaitable, Callable
@@ -22,8 +22,8 @@ from cmk.maps.backend.core.auth import Principal
 _Guard = Callable[[Principal], Awaitable[Principal]]
 
 # The daemon's only capability guard. ``configure`` and ``may_edit`` themselves
-# gate no route directly (the sole mutating endpoint, ``POST /register``, is
-# ticket-authenticated with its own ownership checks); both merely broaden
+# gate no route directly (the sole mutating endpoint, ``POST /register``, has
+# its own ownership checks); both merely broaden
 # read access to the connection list, which this guard admits.
 _GUARDS: dict[str, _Guard] = {
     "connection-read": deps.require_connection_read,
@@ -73,9 +73,10 @@ def test_guard_forbids_view_only_principal() -> None:
     assert resp.status_code == HTTPStatus.FORBIDDEN
 
 
-def test_guard_rejects_missing_ticket_with_401() -> None:
-    # No auth override: the real get_current_user runs and there is no ticket
-    # header, so the request is rejected before the capability check.
+def test_guard_rejects_missing_session_cookie_with_401(monkeypatch: pytest.MonkeyPatch) -> None:
+    # No auth override: the real get_current_user runs and there is no session
+    # cookie, so the request is rejected before the GUI is asked.
+    monkeypatch.setenv("OMD_SITE", "heute")
     app = _guarded_app(_GUARDS["connection-read"])
     with TestClient(app) as client:
         resp = client.get("/probe")

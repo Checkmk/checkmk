@@ -79,6 +79,26 @@ Implementation specifics beyond what those RFCs mandate:
   The whole server answers 404 unless the MCP server is enabled for the site (``enabled=mcp_registration.mcp_server_enabled``, wired per edition in each edition's ``registration.py``).
   No other feature needs it yet.
 
+Refreshing tokens
+-----------------
+
+The token endpoint issues a refresh token with the access token.
+To get a new access token, a client POSTs a form with ``grant_type=refresh_token``, ``refresh_token`` and ``client_id`` (`RFC 6749 <https://www.rfc-editor.org/rfc/rfc6749>`_ section 6).
+Refresh tokens are single use, so clients must follow these rules or lose their session:
+
+* Every response, including a refresh, carries a new ``refresh_token``.
+  Store it and discard the old one.
+* Refresh from a single place.
+  Presenting a refresh token that was already used ends the session.
+  That includes two concurrent refreshes with the same token, and retrying with the old token after a lost response.
+* Treat ``invalid_grant`` as "the session is gone": send the user through the browser authorization again.
+* Time the next refresh by ``expires_in`` in the response, not by a fixed interval.
+  Near the end of the session it is shorter than the usual access token lifetime.
+
+A session ends when its refresh token goes unused for the refresh token lifetime (default 30 days), and at the latest when the session lifetime is reached (default one year), however actively it is used.
+The access token lifetime defaults to 48 hours.
+An admin sets all three under *Global settings*, "OAuth sessions"; the settings apply to every OAuth client.
+
 Deployment view
 ================
 

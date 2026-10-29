@@ -566,3 +566,23 @@ describe('MapStatesService — a daemon that lost the map', () => {
     expect(store.streamAvailable.value).toBe(true)
   })
 })
+
+describe('MapStatesService — saved settings', () => {
+  beforeEach(() => {
+    FakeEventSource.instances = []
+    vi.stubGlobal('EventSource', FakeEventSource)
+  })
+
+  // The daemon takes a preview only of the caller's own map.
+  it('registers the saved map signed, not as a preview', async () => {
+    const register = vi.fn().mockResolvedValue(undefined)
+    const getSignedMap = vi.fn().mockResolvedValue(freshlySigned)
+    const store = newService(null, {}, { register }, { getSignedMap })
+    await store.connectToMap('b', { config_b64: 'x', sig: 'y' })
+
+    await store.reregisterSavedWithIndicator()
+
+    expect(getSignedMap).toHaveBeenCalledWith('b')
+    expect(register).toHaveBeenLastCalledWith('b', freshlySigned)
+  })
+})

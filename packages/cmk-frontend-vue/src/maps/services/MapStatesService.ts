@@ -280,8 +280,7 @@ export class MapStatesService {
       try {
         if (signed) {
           // Signed afresh for a later hand-over: the key may have rotated by then.
-          this.registration = async () =>
-            this.api.register(mapName, await this.maps.getSignedMap(mapName))
+          this.registration = this.signedRegistration(mapName)
           await this.api.register(mapName, signed)
         }
         await this.refresh()
@@ -312,11 +311,19 @@ export class MapStatesService {
     if (!this.currentMap || map.name !== this.currentMap) {
       return
     }
-    this.registration = () => this.api.registerEdit(map)
-    await this.registration()
+    await this.applyRegistration(() => this.api.registerEdit(map))
+  }
+
+  private signedRegistration(mapName: string): () => Promise<void> {
+    return async () => this.api.register(mapName, await this.maps.getSignedMap(mapName))
+  }
+
+  private async applyRegistration(registration: () => Promise<void>): Promise<void> {
+    this.registration = registration
+    await registration()
     await this.refresh()
-    // The edit may have added or removed aggregation objects; resolve now rather
-    // than waiting for the next interval tick.
+    // The new config may have added or removed aggregation objects; resolve now
+    // rather than waiting for the next interval tick.
     void this.refreshAggregations()
   }
 
@@ -459,10 +466,20 @@ export class MapStatesService {
     void this.stream?.connect()
   }
 
-  public async reregisterWithIndicator(map: MapConfig): Promise<void> {
+  /**
+   * Re-registers the saved map, signed, after its settings were saved.
+   *
+   * Unlike an editor preview this works for an admin who saved someone else's
+   * map: the daemon takes unsigned config only for the caller's own maps.
+   */
+  public async reregisterSavedWithIndicator(): Promise<void> {
+    const mapName = this.currentMap
+    if (!mapName) {
+      return
+    }
     this.initialLoad.value = true
     try {
-      await this.reregister(map)
+      await this.applyRegistration(this.signedRegistration(mapName))
     } finally {
       this.initialLoad.value = false
     }

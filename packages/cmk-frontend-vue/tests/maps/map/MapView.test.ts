@@ -520,7 +520,7 @@ describe('MapView – saving the settings', () => {
 
   it('loads the hosts of a new automap source once the map is registered again', async () => {
     let registered: () => void = () => {}
-    vi.mocked(services.apis.mapStates.registerEdit).mockReturnValue(
+    vi.mocked(services.apis.mapStates.register).mockReturnValue(
       new Promise((resolve) => (registered = resolve))
     )
     vi.mocked(services.apis.mapStates.fetchAutoObjects).mockResolvedValue([])
@@ -534,7 +534,7 @@ describe('MapView – saving the settings', () => {
   })
 
   it('settles the hosts as failed when registering again fails', async () => {
-    vi.mocked(services.apis.mapStates.registerEdit).mockRejectedValue(new Error('down'))
+    vi.mocked(services.apis.mapStates.register).mockRejectedValue(new Error('down'))
 
     await saveSettings()
 

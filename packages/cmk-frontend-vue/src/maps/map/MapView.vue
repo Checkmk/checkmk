@@ -747,7 +747,7 @@ async function onSettingsUpdated() {
   // As on a connect, a failed register still settles the auto-source hosts.
   let registered = true
   try {
-    await statesStore.reregisterWithIndicator(map)
+    await statesStore.reregisterSavedWithIndicator()
   } catch (e) {
     toast.error(errorText(e, _t('Live update failed')))
     registered = false

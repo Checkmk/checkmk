@@ -8,9 +8,9 @@ import type { ColumnDef, RowSelectionState } from '@tanstack/vue-table'
 import type { TitleMacroGroup } from 'cmk-shared-typing/typescript/custom_graph_designer'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import { CmkAddDropdown } from 'cmk-ui-library/components/CmkDropdown'
-import TruncateText from 'cmk-ui-library/components/CmkDropdown/TruncateText.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
+import CmkTruncateText from 'cmk-ui-library/components/CmkTruncateText.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -403,7 +403,7 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
             no-wrap
             class="graphing-metrics-table__display-name"
           >
-            <TruncateText
+            <CmkTruncateText
               :text="untranslated(resolvedTitles.get(row.id) ?? row.title)"
               :suffix-count="10"
             />

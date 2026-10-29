@@ -5,8 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { ColumnDef } from '@tanstack/vue-table'
-import TruncateText from 'cmk-ui-library/components/CmkDropdown/TruncateText.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
+import CmkTruncateText from 'cmk-ui-library/components/CmkTruncateText.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
@@ -190,7 +190,7 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
           no-wrap
           class="graphing-appearance-table__title"
         >
-          <TruncateText
+          <CmkTruncateText
             :text="untranslated(resolvedTitles.get(row.id) ?? row.title)"
             :suffix-count="10"
           />
@@ -203,7 +203,7 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
           :expanded="isExpanded(row)"
           @update:expanded="expandedRows = { ...expandedRows, [row.id]: $event }"
         >
-          <TruncateText
+          <CmkTruncateText
             :text="untranslated(resolvedTitles.get(row.id) ?? row.title)"
             :suffix-count="10"
           />
@@ -259,7 +259,10 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
                 }
               "
             >
-              <TruncateText :text="untranslated(entry.metric.metadata.title)" :suffix-count="10" />
+              <CmkTruncateText
+                :text="untranslated(entry.metric.metadata.title)"
+                :suffix-count="10"
+              />
             </CollapsibleCell>
             <BaseCell
               v-else
@@ -268,7 +271,10 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
               no-wrap
               class="graphing-appearance-table__title"
             >
-              <TruncateText :text="untranslated(entry.metric.metadata.title)" :suffix-count="10" />
+              <CmkTruncateText
+                :text="untranslated(entry.metric.metadata.title)"
+                :suffix-count="10"
+              />
             </BaseCell>
             <td :colspan="2" />
             <StatsCells :stats="entry.stats" />

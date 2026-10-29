@@ -27,9 +27,9 @@ import { immediateWatch } from 'cmk-ui-library/lib/watch'
 import { PopoverAnchor, PopoverContent, PopoverPortal, PopoverRoot } from 'reka-ui'
 import { computed, nextTick, ref, useSlots, useTemplateRef } from 'vue'
 
+import CmkTruncateText from '../CmkTruncateText.vue'
 import CmkInlineValidation from '../user-input/CmkInlineValidation.vue'
 import CmkDropdownButton, { type ButtonVariants } from './CmkDropdownButton.vue'
-import TruncateText from './TruncateText.vue'
 
 const { _t } = usei18n()
 useWidgetKeys(_t('Dropdown'), [{ combo: ['Alt', 'ArrowDown'], description: _t('Open') }])
@@ -388,7 +388,7 @@ const group = computed<ButtonVariants['group']>(() => {
         <CmkLoading />
       </template>
       <span v-if="!callbackFilteredLoading && buttonLabel" style="display: contents"
-        ><TruncateText :text="buttonLabel" /></span
+        ><CmkTruncateText :text="buttonLabel" /></span
       ><CmkLabelRequired
         :show="required && selectedOption instanceof NoSelection"
         :space="'before'" />

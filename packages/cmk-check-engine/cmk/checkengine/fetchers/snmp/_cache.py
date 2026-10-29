@@ -41,7 +41,7 @@ class WalkCache(MutableMapping[tuple[str, str, bool], SNMPRowInfo]):
         self._path = walk_cache
 
     def _read_row(self, path: Path) -> SNMPRowInfo:
-        return store.load_object_from_file(path, default=None)
+        return store.load_object_from_file_explicit(path, default=None, debug=False)
 
     def _write_row(self, path: Path, rowinfo: SNMPRowInfo) -> None:
         return store.save_object_to_file(path, rowinfo, pprint_value=False)

@@ -662,6 +662,40 @@ def test_get_information_does_not_persist_storage_with_error_entry(
     assert "<<<redfish_storage:sep(0)>>>" in capsys.readouterr().out
 
 
+def test_get_information_leaves_out_drives_of_storage_that_cannot_be_fetched(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    tree = _device_tree()
+    tree[_STORAGE] = [_response(404)]
+
+    _run(_agent(tree))
+
+    out = capsys.readouterr().out
+    assert "<<<redfish_storage:sep(0)>>>" in out
+    assert "<<<redfish_drives" not in out
+
+
+def test_get_information_does_not_persist_drives_next_to_storage_that_cannot_be_fetched(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    tree = _device_tree()
+    tree["/redfish/v1/Systems/1/Storage"] = [
+        _response(
+            200,
+            {
+                "@odata.type": "#StorageCollection.StorageCollection",
+                "Members@odata.count": 2,
+                "Members": [{"@odata.id": _STORAGE}, {"@odata.id": f"{_STORAGE}-2"}],
+            },
+        )
+    ]
+    tree[f"{_STORAGE}-2"] = [_response(404)]
+
+    _run(_agent(tree))
+
+    assert "<<<redfish_drives:sep(0)>>>" in capsys.readouterr().out
+
+
 def test_get_information_does_not_persist_section_from_cache(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -691,6 +725,43 @@ def test_get_information_leaves_out_unavailable_firmware_inventory(
     assert "<<<redfish_firmwareinventory" not in out
 
 
+def test_get_information_leaves_out_firmware_inventory_that_cannot_be_fetched(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    tree = _device_tree()
+    tree[_FIRMWARE] = [_response(500)]
+
+    _run(_agent(tree))
+
+    out = capsys.readouterr().out
+    assert "<<<redfish_storage:sep(0):persist(" in out
+    assert "<<<redfish_firmwareinventory" not in out
+
+
+def test_get_information_leaves_out_expanded_firmware_inventory_that_cannot_be_fetched(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    tree = _device_tree()
+    tree["/redfish/v1"] = [
+        _response(
+            200,
+            {
+                "Vendor": "Dell",
+                "Systems": {"@odata.id": "/redfish/v1/Systems"},
+                "Chassis": {"@odata.id": "/redfish/v1/Chassis"},
+                "UpdateService": {"@odata.id": "/redfish/v1/UpdateService"},
+            },
+        )
+    ]
+    tree[f"{_FIRMWARE}?$expand=*($levels=1)"] = [_response(500)]
+
+    _run(_agent(tree))
+
+    out = capsys.readouterr().out
+    assert "<<<redfish_storage:sep(0):persist(" in out
+    assert "<<<redfish_firmwareinventory" not in out
+
+
 def test_get_information_retries_unavailable_systems(capsys: pytest.CaptureFixture[str]) -> None:
     tree = _device_tree()
     tree["/redfish/v1/Systems"].insert(0, _response(503))
@@ -702,9 +773,8 @@ def test_get_information_retries_unavailable_systems(capsys: pytest.CaptureFixtu
     assert "<<<redfish_system:sep(0)>>>" in capsys.readouterr().out
 
 
-def test_get_information_keeps_systems_next_to_an_unavailable_one(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
+def _two_systems_tree() -> dict[str, list[mock.Mock | Exception]]:
+    """Systems/2 is temporarily unavailable"""
     tree = _device_tree()
     tree["/redfish/v1/Systems"] = [
         _response(
@@ -718,10 +788,40 @@ def test_get_information_keeps_systems_next_to_an_unavailable_one(
         )
     ]
     tree["/redfish/v1/Systems/2"] = [_response(503)]
+    return tree
+
+
+def test_get_information_keeps_systems_next_to_an_unavailable_one(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    tree = _two_systems_tree()
 
     _run(_agent(tree))
 
-    assert "<<<redfish_storage:sep(0):persist(" in capsys.readouterr().out
+    assert '"Id": "DE07A000"' in capsys.readouterr().out
+
+
+def test_get_information_does_not_persist_sections_next_to_an_unavailable_system(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    tree = _two_systems_tree()
+
+    _run(_agent(tree))
+
+    assert "<<<redfish_storage:sep(0)>>>" in capsys.readouterr().out
+
+
+def test_get_information_leaves_out_sections_an_unavailable_system_may_supply(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    tree = _two_systems_tree()
+    tree["/redfish/v1/Systems/1"] = [_response(200, {"Id": "1"})]
+
+    _run(_agent(tree))
+
+    out = capsys.readouterr().out
+    assert "<<<redfish_system:sep(0)>>>" in out
+    assert "<<<redfish_storage" not in out
 
 
 def test_get_information_aborts_on_unavailable_systems_without_retries() -> None:
@@ -738,6 +838,148 @@ def test_get_information_aborts_on_unavailable_chassis_collection() -> None:
 
     with pytest.raises(agent_redfish.TemporarilyUnavailable):
         _run(_agent(tree))
+
+
+def _two_chassis_tree(second: mock.Mock) -> dict[str, list[mock.Mock | Exception]]:
+    tree = _device_tree()
+    tree["/redfish/v1/Chassis"] = [
+        _response(
+            200,
+            {
+                "Members": [
+                    {"@odata.id": "/redfish/v1/Chassis/1"},
+                    {"@odata.id": "/redfish/v1/Chassis/2"},
+                ]
+            },
+        )
+    ]
+    tree["/redfish/v1/Chassis/1"] = [
+        _response(200, {"Id": "1", "Power": {"@odata.id": "/redfish/v1/Chassis/1/Power"}})
+    ]
+    tree["/redfish/v1/Chassis/1/Power"] = [_response(200, {"Id": "Power-1"})]
+    tree["/redfish/v1/Chassis/2"] = [second]
+    return tree
+
+
+def test_get_information_skips_unavailable_chassis_member(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    redfishobj = _agent(_two_chassis_tree(_response(400, _ILO_NOT_READY)))
+    redfishobj.sections = {"Storage", "Drives", "Power"}
+
+    _run(redfishobj)
+
+    assert '"Id": "Power-1"' in capsys.readouterr().out
+
+
+def test_get_information_does_not_persist_sections_next_to_a_skipped_chassis(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    redfishobj = _agent(_two_chassis_tree(_response(400, _ILO_NOT_READY)))
+    redfishobj.sections = {"Storage", "Drives", "Power"}
+
+    _run(redfishobj)
+
+    assert "<<<redfish_power:sep(0)>>>" in capsys.readouterr().out
+
+
+def test_get_information_leaves_out_power_a_skipped_chassis_may_supply(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    tree = _two_chassis_tree(_response(400, _ILO_NOT_READY))
+    tree["/redfish/v1/Chassis/1"] = [_response(200, {"Id": "1"})]
+    redfishobj = _agent(tree)
+    redfishobj.sections = {"Storage", "Drives", "Power"}
+
+    _run(redfishobj)
+
+    out = capsys.readouterr().out
+    assert "<<<redfish_chassis:sep(0)>>>" in out
+    assert "<<<redfish_power" not in out
+
+
+def test_get_information_leaves_out_sections_of_a_chassis_that_cannot_be_fetched(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    tree = _device_tree()
+    tree["/redfish/v1/Chassis"] = [
+        _response(200, {"Members": [{"@odata.id": "/redfish/v1/Chassis/1"}]})
+    ]
+    tree["/redfish/v1/Chassis/1"] = [_response(404)]
+    redfishobj = _agent(tree)
+    redfishobj.sections = {"Storage", "Drives", "Power"}
+
+    _run(redfishobj)
+
+    out = capsys.readouterr().out
+    assert "<<<redfish_chassis:sep(0)>>>" in out
+    assert "<<<redfish_power" not in out
+
+
+def test_get_information_aborts_if_no_chassis_member_is_usable() -> None:
+    tree = _two_chassis_tree(_response(400, _ILO_NOT_READY))
+    tree["/redfish/v1/Chassis/1"] = [_response(404)]
+
+    with pytest.raises(agent_redfish.TemporarilyUnavailable):
+        _run(_agent(tree))
+
+
+def _hp_device_tree(second_manager: mock.Mock) -> dict[str, list[mock.Mock | Exception]]:
+    """An iLO 4: vendor "Hp" fetches the Managers collection without $expand"""
+    smart_storage = "/redfish/v1/Systems/1/SmartStorage"
+    tree = _device_tree()
+    tree["/redfish/v1"] = [
+        _response(
+            200,
+            {
+                "Oem": {"Hp": {}},
+                "Managers": {"@odata.id": "/redfish/v1/Managers"},
+                "Systems": {"@odata.id": "/redfish/v1/Systems"},
+                "Chassis": {"@odata.id": "/redfish/v1/Chassis"},
+            },
+        )
+    ]
+    tree["/redfish/v1/Managers"] = [
+        _response(
+            200,
+            {
+                "Members": [
+                    {"@odata.id": "/redfish/v1/Managers/1"},
+                    {"@odata.id": "/redfish/v1/Managers/2"},
+                ]
+            },
+        )
+    ]
+    tree["/redfish/v1/Managers/1"] = [
+        _response(200, {"Oem": {"Hp": {}}, "FirmwareVersion": "iLO 4 v2.80"})
+    ]
+    tree["/redfish/v1/Managers/2"] = [second_manager]
+    tree["/redfish/v1/Systems/1"] = [
+        _response(
+            200,
+            {"Id": "1", "Oem": {"Hp": {"Links": {"SmartStorage": {"@odata.id": smart_storage}}}}},
+        )
+    ]
+    tree[smart_storage] = [
+        _response(
+            200,
+            {"Links": {"ArrayControllers": {"@odata.id": f"{smart_storage}/ArrayControllers"}}},
+        )
+    ]
+    tree[f"{smart_storage}/ArrayControllers"] = [_response(200, {"Id": "Controller-0"})]
+    return tree
+
+
+def test_get_information_skips_unavailable_manager_member(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    redfishobj = _agent(_hp_device_tree(_response(400, _ILO_NOT_READY)))
+    redfishobj.sections = {"SmartStorage", "ArrayControllers"}
+
+    _run(redfishobj)
+
+    # the HP specific SmartStorage is only fetched if the available manager identifies the model
+    assert '"Id": "Controller-0"' in capsys.readouterr().out
 
 
 def test_get_information_leaves_out_unavailable_hpe_smartstorage_and_its_drives(

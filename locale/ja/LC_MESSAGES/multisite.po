@@ -51021,6 +51021,10 @@ msgstr "使用率"
 msgid "Percentile"
 msgstr "パーセンタイル"
 
+#, fuzzy, python-format
+msgid "Percentile %d"
+msgstr "パーセンタイル"
+
 msgid ""
 "Percentile for a single metric is calculated across the displayed time "
 "range. Percentile applied to a group of metrics is calculated at each time "
@@ -61836,7 +61840,8 @@ msgid ""
 "Some UPS models report status flags for each battery pack cartridge. A "
 "cartridge is reported with the worst state of the flags it has set. Flags "
 "not configured here result in a WARNING state. The flag <i>Needs "
-"Replacement</i> follows the option <i>State if battery needs replacement</i>."
+"Replacement</i> and an exceeded battery lifetime reported by a cartridge "
+"follow the option <i>State if battery needs replacement</i>."
 msgstr ""
 
 msgid ""

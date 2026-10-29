@@ -119,95 +119,111 @@ class OAuthTokenPage(Page):
             _error("unsupported_grant_type")
             return None
 
-        # redirect_uri is deliberately not required here: OAuth 2.1
-        # (section 10.2) removed it from the token request; it is only
-        # enforced against the stored record if the client sends one.
-        code = form.get("code")
-        if not code or not form.get("client_id"):
-            _error("invalid_request")
-            return None
+        _redeem_authorization_code(
+            form.get("code"),
+            form.get("client_id"),
+            form.get("code_verifier"),
+            form.get("redirect_uri"),
+            form.get("resource"),
+        )
+        return None
 
-        # Absent and malformed count the same: the syntax check runs before
-        # the code is consumed, so a bad request never burns a code.
-        code_verifier = form.get("code_verifier")
-        if code_verifier is None or _CODE_VERIFIER_RE.fullmatch(code_verifier) is None:
-            _error("invalid_request")
-            return None
 
-        # The GETDEL behind consume() burns the code on this first touch, so
-        # even concurrent redemption attempts yield at most one success.
-        try:
-            record = AuthCodeStore().consume(code)
-        except Exception:
-            # Deliberately also catches the GUI request timeout (MKTimeout):
-            # the client should get the OAuth-level error response.
-            # RFC 6749 section 5.2 defines no server_error code for the token
-            # endpoint (unlike the authorize side), so a plain 500. The
-            # security event only carries a static reason; the cause goes to
-            # the log.
-            logger.exception("failed to redeem OAuth authorization code")
-            log_security_event(
-                OAuthTokenFailureEvent(
-                    reason="failed to redeem authorization code",
-                    client_id=form.get("client_id"),
-                    remote_ip=request.remote_ip,
-                )
+def _redeem_authorization_code(
+    code: str | None,
+    client_id: str | None,
+    code_verifier: str | None,
+    redirect_uri: str | None,
+    resource: str | None,
+) -> None:
+    """RFC 6749 section 4.1.3: exchange an authorization code for tokens."""
+    # redirect_uri is deliberately not required here: OAuth 2.1
+    # (section 10.2) removed it from the token request; it is only
+    # enforced against the stored record if the client sends one.
+    if not code or not client_id:
+        _error("invalid_request")
+        return
+
+    # Absent and malformed count the same: the syntax check runs before
+    # the code is consumed, so a bad request never burns a code.
+    if code_verifier is None or _CODE_VERIFIER_RE.fullmatch(code_verifier) is None:
+        _error("invalid_request")
+        return
+
+    # The GETDEL behind consume() burns the code on this first touch, so
+    # even concurrent redemption attempts yield at most one success.
+    try:
+        record = AuthCodeStore().consume(code)
+    except Exception:
+        # Deliberately also catches the GUI request timeout (MKTimeout):
+        # the client should get the OAuth-level error response.
+        # RFC 6749 section 5.2 defines no server_error code for the token
+        # endpoint (unlike the authorize side), so a plain 500. The
+        # security event only carries a static reason; the cause goes to
+        # the log.
+        logger.exception("failed to redeem OAuth authorization code")
+        log_security_event(
+            OAuthTokenFailureEvent(
+                reason="failed to redeem authorization code",
+                client_id=client_id,
+                remote_ip=request.remote_ip,
             )
-            response.status_code = http_client.INTERNAL_SERVER_ERROR
-            return None
-        if record is None:
-            _error("invalid_grant")
-            return None
+        )
+        response.status_code = http_client.INTERNAL_SERVER_ERROR
+        return
+    if record is None:
+        _error("invalid_grant")
+        return
 
-        if not _matches_challenge(code_verifier, record.code_challenge):
-            # The code is already burned at this point, so a wrong verifier
-            # costs the presenter the code: each code allows exactly one
-            # verification attempt.
-            _error("invalid_grant")
-            return None
+    if not _matches_challenge(code_verifier, record.code_challenge):
+        # The code is already burned at this point, so a wrong verifier
+        # costs the presenter the code: each code allows exactly one
+        # verification attempt.
+        _error("invalid_grant")
+        return
 
-        if form.get("client_id") != record.client_id:
-            # RFC 6749 section 4.1.3: the code must have been issued to the
-            # client presenting it.
-            _error("invalid_grant")
-            return None
+    if client_id != record.client_id:
+        # RFC 6749 section 4.1.3: the code must have been issued to the
+        # client presenting it.
+        _error("invalid_grant")
+        return
 
-        # redirect_uri and resource are enforced only if sent: OAuth 2.1
-        # (section 10.2) removed redirect_uri from the token request but
-        # requires servers to keep verifying it for OAuth 2.0 clients that
-        # still send it; resource follows the same if-sent rule (RFC 8707).
-        if (redirect_uri := form.get("redirect_uri")) and redirect_uri != record.redirect_uri:
-            _error("invalid_grant")
-            return None
-        if (resource := form.get("resource")) and resource != record.resource:
-            _error("invalid_grant")
-            return None
+    # redirect_uri and resource are enforced only if sent: OAuth 2.1
+    # (section 10.2) removed redirect_uri from the token request but
+    # requires servers to keep verifying it for OAuth 2.0 clients that
+    # still send it; resource follows the same if-sent rule (RFC 8707).
+    if redirect_uri and redirect_uri != record.redirect_uri:
+        _error("invalid_grant")
+        return
+    if resource and resource != record.resource:
+        _error("invalid_grant")
+        return
 
-        # We assume that parse_scopes will be fine here, as we serialized the previously parsed
-        # scopes into the AuthCodeStore ourselves. If it still goes wrong it's not a user error.
-        granted_scopes = parse_scopes(record.scope)
+    # We assume that parse_scopes will be fine here, as we serialized the previously parsed
+    # scopes into the AuthCodeStore ourselves. If it still goes wrong it's not a user error.
+    granted_scopes = parse_scopes(record.scope)
 
-        with get_token_store() as store:
-            match store.issue_token(
-                UserId(record.user_id),
-                expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL,
-                resource=record.resource,
-                scope=granted_scopes,
-                client_id=record.client_id,
-            ):
-                case Error(UnknownClient()):
-                    # The client was deleted after the code was issued. Its grants
-                    # died with it (tokens.client_id is ON DELETE CASCADE), so the
-                    # code must not become a token either.
-                    _error("invalid_grant")
-                    return None
-                case OK(access_token):
-                    response.set_content_type("application/json")
-                    response.set_data(
-                        OAuthTokenResponse(
-                            access_token=access_token, scope=format_scopes(granted_scopes)
-                        ).model_dump_json()
-                    )
-                    return None
-                case _:
-                    assert False
+    with get_token_store() as store:
+        match store.issue_token(
+            UserId(record.user_id),
+            expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL,
+            resource=record.resource,
+            scope=granted_scopes,
+            client_id=record.client_id,
+        ):
+            case Error(UnknownClient()):
+                # The client was deleted after the code was issued. Its grants
+                # died with it (tokens.client_id is ON DELETE CASCADE), so the
+                # code must not become a token either.
+                _error("invalid_grant")
+                return
+            case OK(access_token):
+                response.set_content_type("application/json")
+                response.set_data(
+                    OAuthTokenResponse(
+                        access_token=access_token, scope=format_scopes(granted_scopes)
+                    ).model_dump_json()
+                )
+                return
+            case _:
+                assert False

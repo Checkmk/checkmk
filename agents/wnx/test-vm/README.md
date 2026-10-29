@@ -46,17 +46,37 @@ Tests should not depend on the internet; nothing enforces that.
 
 ## Exploring the test VM
 
-`core-vm` resumes the VM a test would get, after the same checks a test makes, and
-switches your terminal to PowerShell on its serial console, as the Administrator:
+`winvm` starts the VM a test would get, after the same checks a test makes, and works
+with it. It is in `bazel_env` (`bazel run //bazel/tools:bazel_env`); in a checkout
+without that, `bazel run //agents/wnx/test-vm:winvm -- ARGS` does the same.
+
+```
+winvm start                    # PowerShell in this terminal; exit ends the VM
+winvm start --headless         # in the background; prints the VM's ID
+winvm list                     # ID, age, worktree, log
+winvm put LOCAL [REMOTE]       # into C:\ by default, or into a guest directory
+winvm get REMOTE [LOCAL]       # into the working directory by default
+winvm exec -- Get-Service qemu-ga
+winvm stop [--all]             # ends the VM, or all of yours
+```
+
+`winvm start` runs `core-vm` through Bazel in the checkout of the working directory:
 
 ```
 bazel run --config=test-vm //agents/wnx/test-vm:core-vm
 ```
 
-The VM is saved with that PowerShell already logged in, in SAC's first `cmd` channel
-(`Cmd0001`, see "Reaching a guest"), so its prompt shows about a second after the resume.
-`exit` ends that PowerShell and `core-vm` with it (Ctrl-] does the same for a PowerShell
-that hangs). The VM's disk layer goes with it: the next start is the saved state again.
+so the first start after a change to the image or the VM state builds the state, a few
+minutes. `winvm` itself needs neither the image nor `--config=test-vm`.
+
+### The shell
+
+`winvm start` (or `core-vm`) switches your terminal to PowerShell on the VM's serial
+console, as the Administrator. The VM is saved with that PowerShell already logged in,
+in SAC's first `cmd` channel (`Cmd0001`, see "Reaching a guest"), so its prompt shows
+about a second after the resume. `exit` ends that PowerShell and the VM with it (Ctrl-]
+does the same for a PowerShell that hangs). The VM's disk layer goes with it: the next
+start is the saved state again.
 
 The session's console host lays out its screen for your terminal's size, and is switched
 to again when the terminal is resized, so that it redraws for the new size. SAC drops
@@ -64,6 +84,41 @@ the ESC that cursor keys start with, so the shell sends the arrow keys, Home, En
 Delete as control keys that the session's PSReadLine binds to them (Ctrl+P, N, F, B, A,
 E and D; `KEY_BINDINGS` in `qemu_windows/console.py`). Output comes at serial speed: a
 full listing of `C:\Windows\system32` takes about 10 s.
+
+### Without a terminal
+
+`winvm start --headless` runs `core-vm -- --no-shell` in the background, in a session of
+its own, and returns once its VM runs, printing its ID alone. While Bazel fetches the
+image or builds the VM state it says so and waits as long as that takes (Ctrl-C stops
+the start); once `core-vm` runs, its VM is due within 5 minutes. `core-vm`'s output goes
+to a log in the registry directory (`start-<token>.log`, which `winvm list` names): it
+outlives the VM, so it still tells why a VM ended, for a day, and `winvm start` shows the
+end of a failed start's log. For an agent:
+
+```
+id=$(winvm start --headless)
+winvm exec --vm "$id" -- '(Get-CimInstance Win32_OperatingSystem).Caption'
+winvm stop --vm "$id"
+```
+
+## Working with running test VMs
+
+Every `core-vm` registers its VM for `winvm` under a short ID (`vm1`, `vm2`, ...), in
+`$XDG_RUNTIME_DIR/qemu-windows` (`vm_registry.py`); `winvm start --headless` finds its
+own by a token it hands `core-vm`. `--vm ID` picks the VM and may be left out while only
+one runs.
+
+Guest paths start with their drive and take `/` or `\` (`C:/Program Files/x.log`).
+`put`, `get` and `exec` go through the guest agent as LocalSystem, one command at a time
+per VM; `exec` runs in `C:\`, reads the output back as a file (the agent's own output
+capture runs at about 8 KB/s) and exits with the script's exit code. They work on a VM
+whose shell is open too, from another terminal.
+
+`winvm completion bash|zsh|nu` prints the completion script, which also completes
+guest paths after `get` and `put LOCAL` by listing the guest directory:
+`eval "$(winvm completion bash)"` in bash, and in nushell
+`winvm completion nu | save -f ~/.config/nushell/winvm-completions.nu` and
+`use winvm-completions.nu *` (a module named `winvm` cannot export the `winvm` extern).
 
 ## What is in the image
 

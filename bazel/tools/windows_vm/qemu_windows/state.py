@@ -9,7 +9,7 @@ size (machine.argv), the QEMU build and the host CPU it was saved with.
 """
 
 import contextlib
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from datetime import date, timedelta
 from pathlib import Path
@@ -113,3 +113,26 @@ def resume(saved: SavedVm, workdir: Path) -> Iterator[tuple[Qemu, Guest]]:
             guest.wait_ready(60)
             guest.set_clock()
             yield vm, guest
+
+
+@contextlib.contextmanager
+def resume_from_env(env: Mapping[str, str], workdir: Path) -> Iterator[tuple[Qemu, Guest]]:
+    """check() and resume() for the saved VM that the QEMU_WINDOWS_*
+    variables of a test describe (test_vm_env() in
+    agents/wnx/test-vm/image.bzl)."""
+    saved = SavedVm.of(
+        qemu=Path(env["QEMU_WINDOWS_QEMU"]),
+        qemu_img=Path(env["QEMU_WINDOWS_QEMU_IMG"]),
+        bios=Path(env["QEMU_WINDOWS_FIRMWARE"]),
+        image=Path(env["QEMU_WINDOWS_IMAGE"]),
+        disk=Path(env["QEMU_WINDOWS_STATE_DISK"]),
+        state=Path(env["QEMU_WINDOWS_STATE"]),
+        size=machine.Size(int(env["QEMU_WINDOWS_CPUS"]), int(env["QEMU_WINDOWS_MEMORY_MIB"])),
+    )
+    check(
+        saved,
+        Path(env["QEMU_WINDOWS_CPU_FINGERPRINT"]),
+        date.fromisoformat(env["QEMU_WINDOWS_EXPIRES"]),
+    )
+    with resume(saved, workdir) as (vm, guest):
+        yield vm, guest

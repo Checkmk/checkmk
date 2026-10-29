@@ -102,6 +102,7 @@ bazel_env(
         "psign": "@psign",
         "uv": "@multitool//tools/uv",
         "genhtml": "@lcov//:genhtml",
+        "winvm": "//agents/wnx/test-vm:winvm",
     },
 )
 

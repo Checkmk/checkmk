@@ -174,7 +174,7 @@ void main() {
                 );
             } else if (distro == "reference-image") {
                 // use the a few moments earlier built image
-                def reference_distro = "ubuntu-22.04";
+                def reference_distro = "ubuntu-24.04";
                 def tag_name = "testing-${reference_distro}-checkmk-${safe_branch_name}:latest-with-docker${tag_suffix}";
                 image_name = "${reference_distro}:${safe_branch_name}-latest";
                 distro_base_image_id = "${docker_registry_no_http}/${image_name}";
@@ -189,7 +189,7 @@ void main() {
                 );
             } else if (distro == "testing-image") {
                 // use the a few moments earlier built image
-                def testing_distro = "ubuntu-22.04";
+                def testing_distro = "ubuntu-24.04";
                 def tag_name = "testing-${testing_distro}-checkmk-${safe_branch_name}";
                 image_name = "${testing_distro}:${safe_branch_name}-latest";
                 distro_base_image_id = "${docker_registry_no_http}/${image_name}";

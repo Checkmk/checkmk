@@ -49,7 +49,7 @@ ENV \
 # cmake is required to install iwyu
 # git is required to use tests and install iwyu
 # gpg is required to use installation scripts
-# libaio1 is required by mk-oracle component testing
+# libaio1t64 (libaio.so.1t64) is required by mk-oracle component testing
 # lsb-release is required to use installation scripts
 # libenchant-2-dev is required to build the software architecture due to sphinxcontrib.spelling
 # make is required for installations
@@ -63,7 +63,7 @@ RUN apt-get update && \
         curl \
         git \
         gpg \
-        libaio1 \
+        libaio1t64 \
         lsb-release \
         libenchant-2-dev \
         make \

@@ -25,7 +25,7 @@ RUN apt-get install -y \
     msitools \
     wget \
     tree  \
-    libaio1
+    libaio1t64
 
 # Despite files needed for builds might already be available in build images
 # copy them again, in case they changed

@@ -31,7 +31,8 @@ import logging
 import subprocess
 import sys
 from collections.abc import Container, Sequence
-from datetime import date, timedelta
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Final
 
@@ -56,6 +57,13 @@ _WERK_CLASSES: Final = frozenset({Class.FIX})
 # Cap on how many missing ids we spell out; the count is what matters for an
 # alert, the sample is just for a quick eyeball.
 _MAX_REPORTED: Final = 25
+
+
+@dataclass(frozen=True)
+class ExpectedWerk:
+    werk_id: int
+    # The committer time of the commit that added the werk, i.e. the Gerrit submit.
+    merged: datetime
 
 
 def _parse_date(value: str) -> date:
@@ -94,22 +102,22 @@ def parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def expected_werk_ids(
+def expected_werks(
     repo: Path, allowed_classes: Container[Class], *, since: date | None, until: date | None
-) -> set[int]:
-    """werk_ids the pusher would record for werk-add commits on HEAD.
+) -> dict[int, ExpectedWerk]:
+    """Werks the pusher would record for werk-add commits on HEAD, keyed by werk_id.
 
     Mirrors ``push.build_row``'s gate exactly: a werk-add event counts only if
     the werk still exists under ``.werks`` at HEAD and its class is allowed.
     ``until`` excludes the just-merged tail the nightly push hasn't reached yet.
     """
     werks_index = {w.id: w for w in load_raw_files(repo / ".werks")}
-    ids: set[int] = set()
+    expected: dict[int, ExpectedWerk] = {}
     for event in walk.walk_werk_adds(repo, since=since, until=until):
         werk = werks_index.get(event.werk_id)
         if werk is not None and werk.class_ in allowed_classes:
-            ids.add(werk.id)
-    return ids
+            expected[werk.id] = ExpectedWerk(werk_id=werk.id, merged=event.commit.commit_time)
+    return expected
 
 
 def recorded_werk_ids(db: MetabasePostgres, branch: str) -> set[int]:
@@ -129,12 +137,16 @@ def find_gap(
     *,
     since: date | None,
     until: date | None,
-) -> list[int]:
-    """Return sorted werk_ids present in git history but missing from the DB."""
-    expected = expected_werk_ids(repo, allowed_classes, since=since, until=until)
+) -> list[ExpectedWerk]:
+    """Return the werks present in git history but missing from the DB, sorted by werk_id."""
+    expected = expected_werks(repo, allowed_classes, since=since, until=until)
     with MetabasePostgres.from_env() as db:
         recorded = recorded_werk_ids(db, branch)
-    return sorted(expected - recorded)
+    return [expected[werk_id] for werk_id in sorted(expected.keys() - recorded)]
+
+
+def _format_missing(werk: ExpectedWerk) -> str:
+    return f"  {werk.werk_id}  merged {werk.merged:%Y-%m-%d}"
 
 
 def _report_config_error(message: str) -> None:
@@ -179,13 +191,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         logger.error(
             "GAP: %d %s-werk(s) in git history are missing from %s for branch %s. "
             "Run `tests/run_tests.sh qa-metrics-change-quality-full` to backfill. "
-            "Missing werk_ids (first %d): %s",
+            "Missing werks (first %d):\n%s",
             len(missing),
             class_label,
             CHANGE_TESTED.name,
             branch,
             min(len(missing), _MAX_REPORTED),
-            missing[:_MAX_REPORTED],
+            "\n".join(_format_missing(werk) for werk in missing[:_MAX_REPORTED]),
         )
         return 1
 

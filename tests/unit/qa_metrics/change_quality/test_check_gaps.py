@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import logging
 import subprocess
 from collections.abc import Callable
+from datetime import datetime, UTC
 from types import SimpleNamespace
 
 import psycopg
@@ -15,6 +17,8 @@ from psycopg import errors as psycopg_errors
 from cmk.werks.flavor.cmk.models import Class
 from tests.qa_metrics.change_quality import check_gaps, walk
 from tests.qa_metrics.db import MetabasePostgres
+
+_MERGED = datetime(2026, 10, 24, 15, 30, tzinfo=UTC)
 
 
 class _FakeCursor:
@@ -70,7 +74,10 @@ def _wire(
         walk,
         "walk_werk_adds",
         lambda _r, since=None, until=None: iter(  # noqa: ARG005
-            [SimpleNamespace(werk_id=wid) for wid, _cls in git_werks]
+            [
+                SimpleNamespace(werk_id=wid, commit=SimpleNamespace(commit_time=_MERGED))
+                for wid, _cls in git_werks
+            ]
         ),
     )
     monkeypatch.setattr(MetabasePostgres, "from_env", classmethod(from_env))
@@ -99,6 +106,20 @@ def test_main_exit_1_on_gap(monkeypatch: pytest.MonkeyPatch) -> None:
         from_env=_db_returning([1]),
     )
     assert check_gaps.main(["--repo", "/repo"]) == 1
+
+
+def test_main_reports_merged_date_of_missing_werks(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    _wire(
+        monkeypatch,
+        git_werks=[(1, Class.FIX), (2, Class.FIX)],
+        from_env=_db_returning([1]),
+    )
+    with caplog.at_level(logging.ERROR):
+        check_gaps.main(["--repo", "/repo"])
+    assert "  2  merged 2026-10-24" in caplog.text
+    assert "  1  merged" not in caplog.text
 
 
 def test_main_ignores_non_fix_werks(monkeypatch: pytest.MonkeyPatch) -> None:

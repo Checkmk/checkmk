@@ -16,7 +16,11 @@ from uuid import UUID
 from cmk.ccc import store
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.licensing.basics.paths import get_verification_response_file_path
-from cmk.licensing.basics.protocol_version import CURRENT_VERIFICATION_RESPONSE_VERSION
+from cmk.licensing.basics.protocol_version import (
+    AllowedVerificationResponseVersions,
+    CURRENT_VERIFICATION_RESPONSE_VERSION,
+    parse_verification_response_version,
+)
 
 
 class InvalidVerificationResponse(ValueError):
@@ -115,52 +119,15 @@ def load_plain_verification_response(omd_root: Path) -> PlainVerificationRespons
 
     try:
         raw = json.loads(raw_dump.decode("utf-8"))
-        return parse(parse_protocol_version(raw), raw)
+        return parse_plain_verification_response(parse_verification_response_version(raw), raw)
     except json.decoder.JSONDecodeError as e:
         raise InvalidVerificationResponse(f"Failed to load verification response: {e}") from e
     except (TypeError, ValueError, KeyError) as e:
         raise InvalidVerificationResponse(f"Failed to parse verification response: {e}") from e
 
 
-def parse_protocol_version(
-    raw: object,
-) -> Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1", "3.2"]:
-    if not isinstance(raw, dict):
-        raise TypeError(raw)
-    if not isinstance(raw_protocol_version := raw.get("VERSION"), str):
-        raise TypeError(raw_protocol_version)
-    match raw_protocol_version:
-        case "1.0":
-            return "1.0"
-        case "1.1":
-            return "1.1"
-        case "1.2":
-            return "1.2"
-        case "1.3":
-            return "1.3"
-        case "1.4":
-            return "1.4"
-        case "1.5":
-            return "1.5"
-        case "2.0":
-            return "2.0"
-        case "2.1":
-            return "2.1"
-        case "3.0":
-            return "3.0"
-        case "3.1":
-            return "3.1"
-        case "3.2":
-            return "3.2"
-        case other:
-            raise ValueError(f"Unknown protocol version: {other!r}")
-
-
-def parse(
-    protocol_version: Literal[
-        "1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1", "3.2"
-    ],
-    raw: object,
+def parse_plain_verification_response(
+    protocol_version: AllowedVerificationResponseVersions, raw: object
 ) -> PlainVerificationResponse:
     match protocol_version:
         case "1.0" | "1.1" | "1.2" | "1.3" | "1.4" | "1.5":

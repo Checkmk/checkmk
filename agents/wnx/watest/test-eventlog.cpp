@@ -11,7 +11,6 @@
 #include "eventlog/eventlogvista.h"
 #include "providers/logwatch_event_details.h"
 #include "tools/_misc.h"
-#include "tools/_raii.h"
 #include "watest/test_tools.h"
 #include "wnx/cfg.h"
 #include "wnx/cfg_engine.h"
@@ -36,10 +35,6 @@ const std::vector<tst::EventRecordData> &ApplicationLogData() {
     return application_log_data;
 }
 
-namespace {
-constexpr const wchar_t *kOwnSource = L"watest";
-}  // namespace
-
 /// For the tests that read the real Application log. They need a crit-level
 /// record there, which a long-lived machine has but a fresh Windows may not:
 /// write one only then, so that other machines' logs stay untouched.
@@ -54,16 +49,12 @@ protected:
             return;
         }
 
-        auto *source = ::RegisterEventSourceW(nullptr, kOwnSource);
-        ASSERT_NE(source, nullptr);
-        ON_OUT_OF_SCOPE(::DeregisterEventSource(source));
-        const std::wstring message =
-            L"watest EventLogApplicationTest record, written by the test "
-            L"itself so that the Application log has error-level content to "
-            L"read";
-        const wchar_t *strings[] = {message.c_str()};
-        ASSERT_TRUE(::ReportEventW(source, EVENTLOG_ERROR_TYPE, 0, 100, nullptr,
-                                   1, 0, strings, nullptr));
+        ASSERT_EQ(tst::WriteApplicationLogRecord(
+                      EVENTLOG_ERROR_TYPE, nullptr,
+                      L"watest EventLogApplicationTest record, written by the "
+                      L"test itself so that the Application log has "
+                      L"error-level content to read"),
+                  ERROR_SUCCESS);
 
         // Look for our own source: other programs may write to the
         // Application log meanwhile.
@@ -74,7 +65,7 @@ protected:
                 if (!record) {
                     return false;
                 }
-                if (record->source() == kOwnSource) {
+                if (record->source() == tst::kOwnEventSource) {
                     return true;
                 }
             }

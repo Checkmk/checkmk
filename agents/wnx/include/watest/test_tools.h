@@ -263,6 +263,15 @@ bool WaitForSuccessSilent(std::chrono::milliseconds ms,
 bool WaitForSuccessIndicate(std::chrono::milliseconds ms,
                             const std::function<bool()> &predicat);
 
+/// Source of the records that tests write to the real Application log.
+constexpr const wchar_t *kOwnEventSource = L"watest";
+
+/// Writes a record of type (EVENTLOG_*_TYPE) from kOwnEventSource to the
+/// Application log, recorded by the user with the given SID, or by no user if
+/// it is null. Returns ERROR_SUCCESS or the Win32 error.
+DWORD WriteApplicationLogRecord(WORD type, PSID sid,
+                                const std::wstring &message);
+
 /// Usage:
 ///     FirewallOpener fwo
 class FirewallOpener {

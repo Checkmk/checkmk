@@ -28,7 +28,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import assert_never, cast, Literal, NewType, Self, TypedDict
 
-import cmk.ccc.debug
 from cmk.ccc import tty
 from cmk.ccc.hostaddress import HostName
 from cmk.utils.log import console
@@ -134,8 +133,6 @@ def _parse_cmc_rrd_info(info_file_path: Path) -> RRDInfo:
         return info
 
     except Exception as e:
-        if cmk.ccc.debug.enabled():
-            raise
         raise Exception(f"Invalid RRD info file {info_file_path}: {e}")
 
 
@@ -258,8 +255,6 @@ class RRDConverter:
             self._convert_pnp_rrds(config, existing_rrds, split=split)
             self._convert_cmc_rrds(config, existing_rrds)
         except Exception as e:
-            if cmk.ccc.debug.enabled():
-                raise
             console.verbose(f"  HOST: {self._hostname}", file=sys.stderr)
             console.error(f"      {tty.red}{tty.bold}ERROR: {e}{tty.normal}", file=sys.stderr)
 
@@ -564,8 +559,6 @@ class RRDConverter:
                     f"..{tty.green}{tty.bold}converted{tty.normal}, {_render_rrd_size(old_size)} -> {_render_rrd_size(new_size)}"
                 )
             except Exception:
-                if cmk.ccc.debug.enabled():
-                    raise
                 console.verbose(f"..{tty.red}{tty.bold}failed{tty.normal}")
 
     def _convert_pnp_rrd(
@@ -588,8 +581,6 @@ class RRDConverter:
                 return None  # DS not contained in old RRD
 
         except Exception as e:
-            if cmk.ccc.debug.enabled():
-                raise
             raise Exception(f"Existing RRD {old_rrd_path} is incompatible: {e}")
 
         # Beware: we use /opt/omd always because of bug in rrdcached
@@ -611,9 +602,6 @@ class RRDConverter:
         try:
             self._rrd_interface.create(*args)
         except Exception as e:
-            if cmk.ccc.debug.enabled():
-                console.error(f"COMMAND: rrdtool create {' '.join(args)}", file=sys.stderr)
-                raise
             raise Exception(f"Error on running rrdtool create {' '.join(args)}: {e}")
         return True
 
@@ -767,8 +755,6 @@ class RRDCreator:
                     del job_queue[0]
 
         except Exception:
-            if cmk.ccc.debug.enabled():
-                raise
             create_crash_report(self._omd_root)
             self._queue_rrd_helper_response(
                 f"Check_MK RRD creator failed: {traceback.format_exc()}"
@@ -791,8 +777,6 @@ class RRDCreator:
         except OSError as exc:
             self._queue_rrd_helper_response(f"Error creating RRD: {exc.strerror}")
         except Exception as e:
-            if cmk.ccc.debug.enabled():
-                raise
             create_crash_report(self._omd_root)
             self._queue_rrd_helper_response(
                 f"Error creating RRD for {spec}: {str(e) or traceback.format_exc()}"

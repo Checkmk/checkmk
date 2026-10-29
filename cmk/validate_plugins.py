@@ -14,9 +14,9 @@ from argparse import ArgumentParser
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import assert_never
 
+import cmk.ccc.debug
 from cmk.agent_based import v2 as agent_based_v2
 from cmk.agent_based import v3_unstable as agent_based_v3_unstable
-from cmk.ccc import debug
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import edition
 from cmk.checkengine.plugin_backend import (  # astrein: disable=module-layers
@@ -102,8 +102,10 @@ def to_result(step: ValidationStep, errors: Sequence[str]) -> ActiveCheckResult:
     )
 
 
-def _validate_agent_based_plugin_loading() -> tuple[AgentBasedPlugins, ActiveCheckResult]:
-    plugins = load_all_plugins(raise_errors=debug.enabled())
+def _validate_agent_based_plugin_loading(
+    *, debug: bool
+) -> tuple[AgentBasedPlugins, ActiveCheckResult]:
+    plugins = load_all_plugins(raise_errors=debug)
     return plugins, to_result(ValidationStep.AGENT_BASED_PLUGINS, plugins.errors)
 
 
@@ -135,7 +137,7 @@ def _validate_rule_spec_loading() -> ActiveCheckResult:
     return to_result(ValidationStep.RULE_SPECS, errors)
 
 
-def _validate_rule_spec_form_creation() -> ActiveCheckResult:
+def _validate_rule_spec_form_creation(*, debug: bool) -> ActiveCheckResult:
     if not os.environ.get("OMD_SITE"):
         return ActiveCheckResult(
             state=1,
@@ -152,7 +154,7 @@ def _validate_rule_spec_form_creation() -> ActiveCheckResult:
                 except FormSpecNotImplementedError:
                     _ = loaded_rule_spec.valuespec
             except Exception as e:
-                if debug.enabled():
+                if debug:
                     raise e
                 errors.append(f"{type(loaded_rule_spec).__name__} '{loaded_rule_spec.name}': {e}")
     return to_result(ValidationStep.RULE_SPEC_FORMS, errors)
@@ -165,6 +167,7 @@ def _validate_agent_based_plugin_v2_ruleset_ref(
     fallback_rule_group: Callable[[str | None], str] | None = None,
     ruleset_ref_attr: str,
     default_params_attr: str,
+    debug: bool,
 ) -> str | None:
     if (ruleset_ref := getattr(plugin, ruleset_ref_attr)) is None:
         return None
@@ -203,7 +206,7 @@ def _validate_agent_based_plugin_v2_ruleset_ref(
             rule_spec.valuespec.validate_datatype(params, "")
             rule_spec.valuespec.validate_value(params, "")
     except Exception as e:
-        if debug.enabled():
+        if debug:
             raise e
         return (
             f"Default parameters '{default_params_attr}' specified by {type(plugin).__name__} "
@@ -212,7 +215,7 @@ def _validate_agent_based_plugin_v2_ruleset_ref(
     return None
 
 
-def _validate_referenced_rule_spec() -> ActiveCheckResult:
+def _validate_referenced_rule_spec(*, debug: bool) -> ActiveCheckResult:
     if not os.environ.get("OMD_SITE"):
         return ActiveCheckResult(
             state=1,
@@ -240,6 +243,7 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
                             rule_group=RuleGroup.DiscoveryParameters,
                             ruleset_ref_attr="discovery_ruleset_name",
                             default_params_attr="discovery_default_parameters",
+                            debug=debug,
                         )
                     ) is not None:
                         errors.append(error)
@@ -250,6 +254,7 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
                             fallback_rule_group=RuleGroup.StaticChecks,
                             ruleset_ref_attr="check_ruleset_name",
                             default_params_attr="check_default_parameters",
+                            debug=debug,
                         )
                     ) is not None:
                         errors.append(error)
@@ -260,6 +265,7 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
                             rule_group=RuleGroup.InvParameters,
                             ruleset_ref_attr="inventory_ruleset_name",
                             default_params_attr="inventory_default_parameters",
+                            debug=debug,
                         )
                     ) is not None:
                         errors.append(error)
@@ -275,6 +281,7 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
                             rule_group=RuleGroup.DiscoveryParameters,
                             ruleset_ref_attr="host_label_ruleset_name",
                             default_params_attr="host_label_default_parameters",
+                            debug=debug,
                         )
                     ) is not None:
                         errors.append(error)
@@ -388,16 +395,16 @@ def _validate_rule_spec_usage(plugins: AgentBasedPlugins) -> ActiveCheckResult:
     return to_result(ValidationStep.RULE_SPEC_USED, errors)
 
 
-def validate_plugins() -> ActiveCheckResult:
+def validate_plugins(*, debug: bool) -> ActiveCheckResult:
     main_modules.register(edition(paths.omd_root))
-    plugins, loading_subresult = _validate_agent_based_plugin_loading()
+    plugins, loading_subresult = _validate_agent_based_plugin_loading(debug=debug)
     sub_results = [
         loading_subresult,
         _validate_active_checks_loading(),
         _validate_special_agent_loading(),
         _validate_rule_spec_loading(),
-        _validate_rule_spec_form_creation(),
-        _validate_referenced_rule_spec(),
+        _validate_rule_spec_form_creation(debug=debug),
+        _validate_referenced_rule_spec(debug=debug),
         _validate_rule_spec_usage(plugins),
     ]
     return ActiveCheckResult.from_subresults(*sub_results)
@@ -414,9 +421,9 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.debug:
-        debug.enable()
+        cmk.ccc.debug.enable()
 
-    validation_result = validate_plugins()
+    validation_result = validate_plugins(debug=args.debug)
 
     sys.stdout.write(f"{validation_result.as_text()}\n")
     return validation_result.state

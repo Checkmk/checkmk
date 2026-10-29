@@ -74,7 +74,7 @@ class MainModuleOAuthTokens(ABCMainModule):
     @property
     @override
     def title(self) -> str:
-        return _("OAuth access tokens")
+        return _("OAuth sessions")
 
     @property
     @override
@@ -89,7 +89,7 @@ class MainModuleOAuthTokens(ABCMainModule):
     @property
     @override
     def description(self) -> str:
-        return _("View and revoke OAuth access tokens issued to users.")
+        return _("View and revoke OAuth sessions issued to users.")
 
     @property
     @override

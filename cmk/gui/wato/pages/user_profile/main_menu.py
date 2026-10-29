@@ -169,7 +169,7 @@ def default_user_menu_topics(
         entries.append(
             NavItemTopicEntry(
                 id="oauth_tokens",
-                title=_("OAuth access tokens"),
+                title=_("OAuth sessions"),
                 url="user_oauth_tokens.py",
                 icon=DefaultIcon(id=IconNames.passwords),
                 sort_index=35,

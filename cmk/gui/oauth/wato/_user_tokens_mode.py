@@ -11,13 +11,13 @@ from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.oauth.token.token_store import get_token_store
+from cmk.gui.oauth.token.token_store import get_token_store, TokenStore
 from cmk.gui.oauth.wato._token_table import (
     bulk_revoke_page_menu_topics,
     load_clients_by_id,
+    remove_grants_from_request,
+    render_grant_summary_cells,
     render_selection_checkbox_cell,
-    render_token_summary_cells,
-    revoke_tokens_from_request,
 )
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown
 from cmk.gui.table import table_element
@@ -49,22 +49,22 @@ class ModeOAuthTokens(WatoMode[object]):
 
     @override
     def title(self) -> str:
-        return _("OAuth access tokens")
+        return _("OAuth sessions")
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         topics = bulk_revoke_page_menu_topics(
             self.name(),
             _(
-                "The applications using the selected tokens will no longer be"
-                " able to access the API with them."
+                "The applications using the selected sessions will no longer be"
+                " able to access the API."
             ),
         )
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
                     name=self.name(),
-                    title=_("Tokens"),
+                    title=_("Sessions"),
                     topics=topics,
                 ),
             ],
@@ -76,7 +76,7 @@ class ModeOAuthTokens(WatoMode[object]):
         check_csrf_token(session, request, i18n=_)
         if not transactions.check_transaction(request):
             return redirect(self.mode_url())
-        revoke_tokens_from_request(request, user_id=None)
+        remove_grants_from_request(request, TokenStore.revoke_any_grants)
         return redirect(self.mode_url())
 
     @override
@@ -84,14 +84,14 @@ class ModeOAuthTokens(WatoMode[object]):
         # Read before emitting any HTML, so an unusable store shows as an error
         # message instead of a half-rendered table.
         with get_token_store() as store:
-            tokens = store.list_all()
+            grants = store.list_all_usable_grants()
         clients = load_clients_by_id()
 
         with html.form_context("bulk_revoke_form", method="POST"):
             with table_element("oauth_user_tokens", limit=config.table_row_limit) as table:
-                for token in tokens:
+                for grant in grants:
                     table.row()
-                    render_selection_checkbox_cell(table, token.token_hash)
+                    render_selection_checkbox_cell(table, grant.grant_id)
 
                     table.cell(_("Actions"), css=["buttons"])
                     delete_url = make_confirm_delete_link(
@@ -99,20 +99,20 @@ class ModeOAuthTokens(WatoMode[object]):
                         url=makeactionuri_contextless(
                             request,
                             transactions.get(),
-                            [("mode", self.name()), ("_delete", token.token_hash)],
+                            [("mode", self.name()), ("_delete", grant.grant_id)],
                             filename="wato.py",
                         ),
-                        title=_("Revoke access token"),
-                        suffix=token.user_id,
+                        title=_("Remove session"),
+                        suffix=grant.user_id,
                         message=_(
-                            "The application using this token will no longer be able to"
-                            " access the API with it."
+                            "The application using this session will no longer be able to"
+                            " access the API."
                         ),
                     )
                     html.icon_button(
-                        delete_url, _("Revoke this access token"), StaticIcon(IconNames.delete)
+                        delete_url, _("Remove this session"), StaticIcon(IconNames.delete)
                     )
 
-                    table.cell(_("User"), token.user_id)
-                    render_token_summary_cells(table, token, clients)
+                    table.cell(_("User"), grant.user_id)
+                    render_grant_summary_cells(table, grant, clients)
             html.hidden_fields()

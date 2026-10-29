@@ -6,30 +6,33 @@
 from datetime import datetime, timedelta, UTC
 
 from cmk.ccc.user import UserId
-from cmk.gui.oauth.token.token_store import get_token_store
+from cmk.gui.oauth.token.token_store import get_token_store, IssuedTokens
 from cmk.gui.scopes import DEFAULT_SCOPE
 
 
-def _issue_token(user_id: UserId, client_id: str) -> str:
+def _start_grant(user_id: UserId, client_id: str) -> IssuedTokens:
+    now = datetime.now(UTC)
     with get_token_store() as store:
-        token = store.issue_token(
+        issued = store.start_grant(
             user_id,
-            expires_at=datetime.now(UTC) + timedelta(minutes=60),
             resource=None,
             scope=DEFAULT_SCOPE,
             client_id=client_id,
+            expires_at=now + timedelta(days=365),
+            refresh_token_expires_at=now + timedelta(days=30),
+            access_token_expires_at=now + timedelta(hours=48),
         )
-    assert token.is_ok()
-    return token.ok.access
+    assert issued.is_ok()
+    return issued.ok
 
 
-def _token_hash(token: str) -> str:
+def _grant_id(issued: IssuedTokens) -> str:
     with get_token_store() as store:
-        record = store.get_by_token(token)
+        record = store.get_refresh_token(issued.refresh)
     assert record is not None
-    return record.token_hash
+    return record.grant.grant_id
 
 
-def _is_token_alive(token: str) -> bool:
+def _is_session_alive(issued: IssuedTokens) -> bool:
     with get_token_store() as store:
-        return store.get_by_token(token) is not None
+        return store.get_refresh_token(issued.refresh) is not None

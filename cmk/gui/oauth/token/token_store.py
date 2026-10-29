@@ -199,17 +199,6 @@ class TokenStore:
 
         return _row_to_record(row)
 
-    def list_by_user(self, user_id: UserId) -> list[TokenRecord]:
-        rows = self._connection.execute(
-            """
-            SELECT token_hash, user_id, issued_at, expires_at, resource, scope, client_id, grant_id
-            FROM tokens
-            WHERE user_id = ?
-            """,
-            (user_id,),
-        ).fetchall()
-        return [record for row in rows if (record := _row_to_record(row)) is not None]
-
     def list_all(self) -> list[TokenRecord]:
         rows = self._connection.execute(
             """
@@ -219,30 +208,6 @@ class TokenStore:
             """
         ).fetchall()
         return [record for row in rows if (record := _row_to_record(row)) is not None]
-
-    def revoke(self, token_hashes: Collection[str], *, user_id: UserId | None = None) -> int:
-        """Delete the given tokens, and return how many were actually deleted.
-
-        user_id, if given, scopes the deletion to that user's own tokens -- the
-        authorization check for the self-service page, independent of whatever
-        the caller already filtered the displayed list by.
-        """
-        unique_hashes = set(token_hashes)
-        if not unique_hashes:
-            return 0
-
-        with write_transaction(self._connection):
-            if user_id is None:
-                cursor = self._connection.executemany(
-                    "DELETE FROM tokens WHERE token_hash = ?",
-                    [(token_hash,) for token_hash in unique_hashes],
-                )
-            else:
-                cursor = self._connection.executemany(
-                    "DELETE FROM tokens WHERE token_hash = ? AND user_id = ?",
-                    [(token_hash, user_id) for token_hash in unique_hashes],
-                )
-        return cursor.rowcount
 
     def start_grant(
         self,
@@ -357,6 +322,76 @@ class TokenStore:
         with write_transaction(self._connection):
             self._connection.execute("DELETE FROM grants WHERE grant_id = ?", (grant_id,))
 
+    def list_usable_grants(self, user_id: UserId) -> list[GrantRecord]:
+        """The user's grants a client can still use, newest first.
+
+        A grant is usable while it has an unexpired, unrotated refresh token
+        or an unexpired access token. Tokens never outlive their grant, so
+        this also leaves out grants past their end before they are purged.
+        """
+        return self._list_usable_grants(user_id)
+
+    def list_all_usable_grants(self) -> list[GrantRecord]:
+        """The usable grants of every user, newest first."""
+        return self._list_usable_grants(None)
+
+    def _list_usable_grants(self, user_id: UserId | None) -> list[GrantRecord]:
+        rows = self._connection.execute(
+            f"""
+            SELECT
+                grant_id, user_id, client_id, resource, scope, created_at,
+                expires_at AS grant_expires_at
+            FROM grants
+            WHERE {"user_id = :user_id AND" if user_id is not None else ""}
+                (
+                    EXISTS (
+                        SELECT 1 FROM refresh_tokens
+                        WHERE grant_id = grants.grant_id
+                            AND rotated_at IS NULL AND expires_at > :now
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM tokens
+                        WHERE grant_id = grants.grant_id AND expires_at > :now
+                    )
+                )
+            ORDER BY created_at DESC
+            """,  # nosec B608
+            {"now": int(_utc_now().timestamp())}
+            | ({"user_id": user_id} if user_id is not None else {}),
+        ).fetchall()
+        return [grant for row in rows if (grant := _row_to_grant(row)) is not None]
+
+    def revoke_grants(self, grant_ids: Collection[str], user_id: UserId) -> int:
+        """End the given grants of the user, and return how many were actually deleted.
+
+        Scoping the deletion to the user is the authorization check for the
+        self-service page, independent of whatever the caller already filtered
+        the displayed list by.
+        """
+        unique_ids = set(grant_ids)
+        if not unique_ids:
+            return 0
+
+        with write_transaction(self._connection):
+            cursor = self._connection.executemany(
+                "DELETE FROM grants WHERE grant_id = ? AND user_id = ?",
+                [(grant_id, user_id) for grant_id in unique_ids],
+            )
+        return cursor.rowcount
+
+    def revoke_any_grants(self, grant_ids: Collection[str]) -> int:
+        """End the given grants whoever owns them, and return how many were deleted."""
+        unique_ids = set(grant_ids)
+        if not unique_ids:
+            return 0
+
+        with write_transaction(self._connection):
+            cursor = self._connection.executemany(
+                "DELETE FROM grants WHERE grant_id = ?",
+                [(grant_id,) for grant_id in unique_ids],
+            )
+        return cursor.rowcount
+
     def get_refresh_token(self, refresh_token: str) -> RefreshTokenRecord | None:
         try:
             token_hash = _refresh_token_hash(refresh_token)
@@ -377,28 +412,15 @@ class TokenStore:
         if row is None:
             return None
 
-        try:
-            scope = parse_scopes(row["scope"] or "")
-        except InvalidScopeError:
-            logger.warning(
-                "Refusing OAuth grant of user %(user_id)s: stored scope %(scope)r is not usable",
-                {"user_id": row["user_id"], "scope": row["scope"]},
-            )
+        grant = _row_to_grant(row)
+        if grant is None:
             return None
 
         return RefreshTokenRecord(
             issued_at=_from_timestamp(row["issued_at"]),
             expires_at=_from_timestamp(row["expires_at"]),
             rotated_at=_optional_from_timestamp(row["rotated_at"]),
-            grant=GrantRecord(
-                grant_id=row["grant_id"],
-                user_id=UserId(row["user_id"]),
-                client_id=row["client_id"],
-                resource=row["resource"],
-                scope=scope,
-                created_at=_from_timestamp(row["created_at"]),
-                expires_at=_from_timestamp(row["grant_expires_at"]),
-            ),
+            grant=grant,
         )
 
     def _issue_for_grant(
@@ -480,6 +502,28 @@ def _row_to_record(row: sqlite3.Row) -> TokenRecord | None:
         scope=scope,
         client_id=row["client_id"],
         grant_id=row["grant_id"],
+    )
+
+
+def _row_to_grant(row: sqlite3.Row) -> GrantRecord | None:
+    """The row as a record, or None if its scope is not one we could have written."""
+    try:
+        scope = parse_scopes(row["scope"] or "")
+    except InvalidScopeError:
+        logger.warning(
+            "Refusing OAuth grant of user %(user_id)s: stored scope %(scope)r is not usable",
+            {"user_id": row["user_id"], "scope": row["scope"]},
+        )
+        return None
+
+    return GrantRecord(
+        grant_id=row["grant_id"],
+        user_id=UserId(row["user_id"]),
+        client_id=row["client_id"],
+        resource=row["resource"],
+        scope=scope,
+        created_at=_from_timestamp(row["created_at"]),
+        expires_at=_from_timestamp(row["grant_expires_at"]),
     )
 
 

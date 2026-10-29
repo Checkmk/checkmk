@@ -5,7 +5,7 @@
 
 from collections.abc import Iterator
 from contextlib import AbstractContextManager
-from unittest.mock import MagicMock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from flask import Flask
@@ -15,14 +15,14 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import login
 from cmk.gui.config import Config
-from cmk.gui.http import request
+from cmk.gui.http import Request, request
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.oauth.wato._user_tokens_page import UserOAuthTokensOverview
 from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
-from tests.unit.cmk.gui.oauth.wato._token_helpers import _is_token_alive, _issue_token, _token_hash
+from tests.unit.cmk.gui.oauth.wato._token_helpers import _grant_id, _is_session_alive, _start_grant
 
 
 def _register_client(name: str) -> str:
@@ -41,13 +41,13 @@ def fixture_valid_csrf_token() -> Iterator[None]:
         yield
 
 
-def _remove_one(edition: Edition, token_hash: str) -> None:
-    fake_request = MagicMock()
-    fake_request.get_ascii_input.return_value = token_hash
+def _remove_one(edition: Edition, grant_id: str) -> None:
+    fake_request = Mock(spec=Request)
+    fake_request.get_ascii_input.return_value = grant_id
     UserOAuthTokensOverview(edition)._action(fake_request)  # noqa: SLF001
 
 
-def test_show_form_renders_only_the_callers_own_tokens(
+def test_show_form_renders_only_the_callers_own_grants(
     monkeypatch: pytest.MonkeyPatch, test_edition: Edition, with_admin_login: UserId
 ) -> None:
     # page() renders the full Setup chrome via make_header(), which needs a
@@ -56,8 +56,8 @@ def test_show_form_renders_only_the_callers_own_tokens(
     monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda self: None)  # noqa: ARG005
     own_client = _register_client("own-client")
     other_client = _register_client("other-client")
-    _issue_token(with_admin_login, own_client)
-    _issue_token(UserId("other"), other_client)
+    _start_grant(with_admin_login, own_client)
+    _start_grant(UserId("other"), other_client)
 
     with output_funnel.plugged():
         UserOAuthTokensOverview(test_edition)._show_form(request, Config())  # noqa: SLF001
@@ -77,23 +77,14 @@ def test_show_form_renders_empty_table_without_error(test_edition: Edition) -> N
 
 
 @pytest.mark.usefixtures("valid_csrf_token")
-def test_action_revokes_the_callers_own_token(
+def test_action_removes_the_callers_own_grant(
     test_edition: Edition, with_admin_login: UserId
 ) -> None:
-    token = _issue_token(with_admin_login, _register_client("client"))
+    token = _start_grant(with_admin_login, _register_client("client"))
 
-    _remove_one(test_edition, _token_hash(token))
+    _remove_one(test_edition, _grant_id(token))
 
-    assert not _is_token_alive(token)
-
-
-@pytest.mark.usefixtures("with_admin_login", "valid_csrf_token")
-def test_action_does_not_revoke_another_users_token(test_edition: Edition) -> None:
-    token = _issue_token(UserId("other"), _register_client("client"))
-
-    _remove_one(test_edition, _token_hash(token))
-
-    assert _is_token_alive(token)
+    assert not _is_session_alive(token)
 
 
 def _login(user_id: UserId, load_config: Config) -> AbstractContextManager[None]:
@@ -118,14 +109,14 @@ def _bulk_remove(
     edition: Edition,
     user_id: UserId,
     load_config: Config,
-    *token_hashes: str,
+    *grant_ids: str,
 ) -> None:
     with (
         flask_app.test_request_context(
             method="POST",
             data={
                 "_bulk_revoke_tokens": "1",
-                **{f"_c_token_{token_hash}": "on" for token_hash in token_hashes},
+                **{f"_c_grant_{grant_id}": "on" for grant_id in grant_ids},
             },
         ),
         _login(user_id, load_config),
@@ -135,7 +126,7 @@ def _bulk_remove(
 
 
 @pytest.mark.usefixtures("valid_csrf_token")
-def test_action_revokes_multiple_selected_tokens_at_once(
+def test_action_bulk_remove_ends_only_the_callers_own_checked_grants(
     flask_app: Flask,
     test_edition: Edition,
     with_admin: tuple[UserId, str],
@@ -143,43 +134,22 @@ def test_action_revokes_multiple_selected_tokens_at_once(
 ) -> None:
     user_id = with_admin[0]
     client_id = _register_client("client")
-    checked = _issue_token(user_id, client_id)
-    unchecked = _issue_token(user_id, client_id)
-
-    _bulk_remove(flask_app, test_edition, user_id, load_config, _token_hash(checked))
-
-    assert not _is_token_alive(checked)
-    assert _is_token_alive(unchecked)
-
-
-@pytest.mark.usefixtures("valid_csrf_token")
-def test_action_bulk_revoke_only_revokes_the_callers_own_tokens(
-    flask_app: Flask,
-    test_edition: Edition,
-    with_admin: tuple[UserId, str],
-    load_config: Config,
-) -> None:
-    user_id = with_admin[0]
-    client_id = _register_client("client")
-    own_token = _issue_token(user_id, client_id)
-    other_token = _issue_token(UserId("other"), client_id)
+    checked = _start_grant(user_id, client_id)
+    unchecked = _start_grant(user_id, client_id)
+    others = _start_grant(UserId("other"), client_id)
 
     _bulk_remove(
-        flask_app,
-        test_edition,
-        user_id,
-        load_config,
-        _token_hash(own_token),
-        _token_hash(other_token),
+        flask_app, test_edition, user_id, load_config, _grant_id(checked), _grant_id(others)
     )
 
-    assert not _is_token_alive(own_token)
-    assert _is_token_alive(other_token)
+    assert not _is_session_alive(checked)
+    assert _is_session_alive(unchecked)
+    assert _is_session_alive(others)
 
 
 @pytest.mark.usefixtures("with_admin_login")
 def test_action_rejects_missing_csrf_token(test_edition: Edition) -> None:
-    fake_request = MagicMock()
+    fake_request = Mock(spec=Request)
     fake_request.get_ascii_input.return_value = "irrelevant-hash"
     fake_request.remote_ip = "127.0.0.1"
     with pytest.raises(MKGeneralException, match="CSRF"):

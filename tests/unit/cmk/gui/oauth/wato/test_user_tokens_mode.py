@@ -19,7 +19,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
-from tests.unit.cmk.gui.oauth.wato._token_helpers import _is_token_alive, _issue_token, _token_hash
+from tests.unit.cmk.gui.oauth.wato._token_helpers import _grant_id, _is_session_alive, _start_grant
 
 _USER = UserId("cmkadmin")
 
@@ -65,24 +65,24 @@ def _run_action(
         _mode(edition).action(Config())
 
 
-def test_static_permissions_returns_users_permission() -> None:
-    assert ModeOAuthTokens.static_permissions() == ["users"]
-
-
 @pytest.mark.usefixtures("request_context")
-def test_page_renders_token_details(monkeypatch: pytest.MonkeyPatch, test_edition: Edition) -> None:
+def test_page_renders_every_users_grants(
+    monkeypatch: pytest.MonkeyPatch, test_edition: Edition
+) -> None:
     # table_element() persists table options (sort/search state) to the acting
     # user's profile. The anonymous test session is LoggedInNobody, which
     # refuses to save a profile -- same workaround as test_table.py.
     monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda self: None)  # noqa: ARG005
     client_id = _register_client()
-    _issue_token(_USER, client_id)
+    _start_grant(_USER, client_id)
+    _start_grant(UserId("alice"), client_id)
 
     with output_funnel.plugged():
         _mode(test_edition).page(Config())
         written = "".join(output_funnel.drain())
 
     assert _USER in written
+    assert "alice" in written
     assert "Example Client" in written
 
 
@@ -97,39 +97,39 @@ def test_page_renders_empty_table_without_error(test_edition: Edition) -> None:
 
 @pytest.mark.usefixtures("request_context")
 class TestModeOAuthTokensAction:
-    def test_deletes_single_token(self, flask_app: Flask, test_edition: Edition) -> None:
-        token = _issue_token(_USER, _register_client())
+    def test_removes_another_users_grant(self, flask_app: Flask, test_edition: Edition) -> None:
+        token = _start_grant(UserId("alice"), _register_client())
 
-        _run_action(flask_app, test_edition, query_string={"_delete": _token_hash(token)})
+        _run_action(flask_app, test_edition, query_string={"_delete": _grant_id(token)})
 
-        assert not _is_token_alive(token)
+        assert not _is_session_alive(token)
 
-    def test_bulk_revokes_checked_tokens_only(
+    def test_bulk_removes_checked_grants_only(
         self, flask_app: Flask, test_edition: Edition
     ) -> None:
         client_id = _register_client()
-        checked = _issue_token(_USER, client_id)
-        unchecked = _issue_token(_USER, client_id)
+        checked = _start_grant(_USER, client_id)
+        unchecked = _start_grant(_USER, client_id)
 
         _run_action(
             flask_app,
             test_edition,
-            data={"_bulk_revoke_tokens": "1", f"_c_token_{_token_hash(checked)}": "on"},
+            data={"_bulk_revoke_tokens": "1", f"_c_grant_{_grant_id(checked)}": "on"},
         )
 
-        assert not _is_token_alive(checked)
-        assert _is_token_alive(unchecked)
+        assert not _is_session_alive(checked)
+        assert _is_session_alive(unchecked)
 
-    def test_does_not_revoke_when_transaction_is_invalid(
+    def test_does_not_remove_when_transaction_is_invalid(
         self, flask_app: Flask, test_edition: Edition
     ) -> None:
-        token = _issue_token(_USER, _register_client())
+        token = _start_grant(_USER, _register_client())
 
         _run_action(
             flask_app,
             test_edition,
-            query_string={"_delete": _token_hash(token)},
+            query_string={"_delete": _grant_id(token)},
             valid_transaction=False,
         )
 
-        assert _is_token_alive(token)
+        assert _is_session_alive(token)

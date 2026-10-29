@@ -226,18 +226,21 @@ def test_issue_token_rejects_an_unregistered_client(store: TokenStore) -> None:
 
 def test_get_by_token_returns_the_matching_record(store: TokenStore) -> None:
     issued_at = _future(0)
-    expires_at = issued_at + timedelta(minutes=60)
 
     with time_machine.travel(issued_at, tick=False):
         token = store.issue_token(
-            _USER, expires_at=expires_at, resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+            _USER,
+            expires_at=issued_at + timedelta(minutes=60),
+            resource=None,
+            scope=DEFAULT_SCOPE,
+            client_id=_CLIENT,
         )
     assert token.is_ok()
 
     record = store.get_by_token(token.ok.access)
     assert record is not None
     assert record.user_id == _USER
-    assert record.expires_at == expires_at
+    assert record.expires_at == issued_at + timedelta(minutes=60)
     assert token.ok.expires_in == 3600
 
 
@@ -311,42 +314,6 @@ def test_get_by_token_returns_the_issuing_client(store: TokenStore) -> None:
     assert record.client_id == _CLIENT
 
 
-# TokenStore.list_by_user
-
-
-def test_list_by_user_returns_empty_for_a_user_without_tokens(store: TokenStore) -> None:
-    assert store.list_by_user(_USER) == []
-
-
-def test_list_by_user_only_returns_that_users_tokens(store: TokenStore) -> None:
-    other_user = UserId("other")
-    store.issue_token(
-        other_user, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-    store.issue_token(
-        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-
-    records = store.list_by_user(_USER)
-
-    assert len(records) == 1
-    assert records[0].user_id == _USER
-
-
-def test_list_by_user_skips_tokens_whose_stored_scope_does_not_parse(store: TokenStore) -> None:
-    # One unusable row must not take the whole listing down with it.
-    store.issue_token(
-        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-    unusable = store.issue_token(
-        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-    assert unusable.is_ok()
-    _overwrite_stored_scope(store, unusable.ok.access, "mcp")
-
-    assert len(store.list_by_user(_USER)) == 1
-
-
 # TokenStore.list_all
 
 
@@ -367,66 +334,6 @@ def test_list_all_returns_tokens_across_users(store: TokenStore) -> None:
 
     assert len(records) == 2
     assert {record.user_id for record in records} == {_USER, other_user}
-
-
-# TokenStore.revoke
-
-
-def test_revoke_deletes_the_given_token(store: TokenStore) -> None:
-    token = store.issue_token(
-        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-    assert token.is_ok()
-    record = store.get_by_token(token.ok.access)
-    assert record is not None
-
-    deleted = store.revoke([record.token_hash])
-
-    assert deleted == 1
-    assert store.get_by_token(token.ok.access) is None
-
-
-def test_revoke_returns_zero_for_an_unknown_token(store: TokenStore) -> None:
-    assert store.revoke(["never-issued"]) == 0
-
-
-def test_revoke_returns_zero_for_an_empty_collection(store: TokenStore) -> None:
-    assert store.revoke([]) == 0
-
-
-def test_revoke_deletes_multiple_tokens_at_once(store: TokenStore) -> None:
-    first = store.issue_token(
-        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-    second = store.issue_token(
-        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-    assert first.is_ok()
-    assert second.is_ok()
-    first_record = store.get_by_token(first.ok.access)
-    second_record = store.get_by_token(second.ok.access)
-    assert first_record is not None
-    assert second_record is not None
-
-    deleted = store.revoke([first_record.token_hash, second_record.token_hash])
-
-    assert deleted == 2
-    assert store.list_by_user(_USER) == []
-
-
-def test_revoke_scoped_to_a_user_does_not_delete_another_users_token(store: TokenStore) -> None:
-    other_user = UserId("other")
-    token = store.issue_token(
-        other_user, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-    assert token.is_ok()
-    record = store.get_by_token(token.ok.access)
-    assert record is not None
-
-    deleted = store.revoke([record.token_hash], user_id=_USER)
-
-    assert deleted == 0
-    assert store.get_by_token(token.ok.access) is not None
 
 
 def test_issue_token_deletes_expired_tokens_and_keeps_valid_ones(store: TokenStore) -> None:
@@ -451,26 +358,34 @@ def test_issue_token_deletes_expired_tokens_and_keeps_valid_ones(store: TokenSto
 # Grants and refresh tokens
 
 
-def _start_grant(store: TokenStore, *, grant_lifetime: timedelta = _GRANT_LIFETIME) -> IssuedTokens:
+def _start_grant(
+    store: TokenStore,
+    *,
+    user_id: UserId = _USER,
+    grant_lifetime: timedelta = _GRANT_LIFETIME,
+    idle_timeout: timedelta = _IDLE_TIMEOUT,
+) -> IssuedTokens:
     now = datetime.now(UTC)
     issued = store.start_grant(
-        _USER,
-        resource=None,
+        user_id,
+        resource="https://example.test/api",
         scope=DEFAULT_SCOPE,
         client_id=_CLIENT,
         expires_at=now + grant_lifetime,
-        refresh_token_expires_at=now + _IDLE_TIMEOUT,
+        refresh_token_expires_at=now + idle_timeout,
         access_token_expires_at=now + _ACCESS_TOKEN_TTL,
     )
     assert issued.is_ok()
     return issued.ok
 
 
-def _rotate(store: TokenStore, refresh_token: str) -> IssuedTokens | None:
+def _rotate(
+    store: TokenStore, refresh_token: str, idle_timeout: timedelta = _IDLE_TIMEOUT
+) -> IssuedTokens | None:
     now = datetime.now(UTC)
     return store.rotate(
         refresh_token,
-        refresh_token_expires_at=now + _IDLE_TIMEOUT,
+        refresh_token_expires_at=now + idle_timeout,
         access_token_expires_at=now + _ACCESS_TOKEN_TTL,
     )
 
@@ -677,3 +592,133 @@ def test_a_grant_is_purged_only_once_none_of_its_refresh_tokens_remain(
         kept_grant_id,
         new_grant_id,
     }
+
+
+# TokenStore.list_usable_grants
+
+
+def test_a_listed_grant_carries_client_scope_resource_and_start_time(store: TokenStore) -> None:
+    started_at = _future(0)
+    with time_machine.travel(started_at, tick=False):
+        _start_grant(store)
+
+    (grant,) = store.list_usable_grants(_USER)
+
+    assert (grant.user_id, grant.client_id, grant.scope, grant.resource, grant.created_at) == (
+        _USER,
+        _CLIENT,
+        DEFAULT_SCOPE,
+        "https://example.test/api",
+        started_at,
+    )
+
+
+def test_list_usable_grants_returns_the_newest_grant_first(store: TokenStore) -> None:
+    started_at = _future(0)
+    grant_ids = []
+    for hours in (0, 2, 1):
+        with time_machine.travel(started_at + timedelta(hours=hours), tick=False):
+            grant_ids.append(_grant_id(store, _start_grant(store).refresh))
+
+    listed = [grant.grant_id for grant in store.list_usable_grants(_USER)]
+
+    assert listed == [grant_ids[1], grant_ids[2], grant_ids[0]]
+
+
+def test_list_usable_grants_of_a_user_leaves_out_other_users_grants(store: TokenStore) -> None:
+    own = _grant_id(store, _start_grant(store).refresh)
+    _start_grant(store, user_id=UserId("other"))
+
+    assert [grant.grant_id for grant in store.list_usable_grants(_USER)] == [own]
+
+
+def test_list_all_usable_grants_returns_every_users_grants(store: TokenStore) -> None:
+    own = _grant_id(store, _start_grant(store).refresh)
+    other = _grant_id(store, _start_grant(store, user_id=UserId("other")).refresh)
+
+    assert {grant.grant_id for grant in store.list_all_usable_grants()} == {own, other}
+
+
+def test_list_usable_grants_skips_a_grant_whose_stored_scope_does_not_parse(
+    store: TokenStore, connection: sqlite3.Connection
+) -> None:
+    _start_grant(store)
+    unusable = _grant_id(store, _start_grant(store).refresh)
+    connection.execute("UPDATE grants SET scope = 'mcp' WHERE grant_id = ?", (unusable,))
+
+    assert len(store.list_usable_grants(_USER)) == 1
+
+
+def test_a_grant_without_a_usable_token_is_not_listed(store: TokenStore) -> None:
+    started_at = _future(0)
+    with time_machine.travel(started_at, tick=False):
+        _start_grant(store)
+
+    with time_machine.travel(started_at + _IDLE_TIMEOUT + timedelta(seconds=1), tick=False):
+        assert store.list_usable_grants(_USER) == []
+
+
+def test_a_rotated_refresh_token_does_not_keep_its_grant_listed(store: TokenStore) -> None:
+    started_at = _future(0)
+    with time_machine.travel(started_at, tick=False):
+        refresh_token = _start_grant(store).refresh
+    with time_machine.travel(started_at + timedelta(hours=1), tick=False):
+        assert _rotate(store, refresh_token, idle_timeout=timedelta(hours=1)) is not None
+
+    with time_machine.travel(started_at + timedelta(hours=1) + _ACCESS_TOKEN_TTL, tick=False):
+        assert store.list_usable_grants(_USER) == []
+
+
+def test_a_grant_with_expired_access_tokens_is_listed_while_its_refresh_token_is_valid(
+    store: TokenStore,
+) -> None:
+    started_at = _future(0)
+    with time_machine.travel(started_at, tick=False):
+        _start_grant(store)
+
+    with time_machine.travel(started_at + _ACCESS_TOKEN_TTL + timedelta(hours=1), tick=False):
+        assert len(store.list_usable_grants(_USER)) == 1
+
+
+# TokenStore.revoke_grants
+
+
+def test_revoke_grants_ends_the_given_grants_only(store: TokenStore) -> None:
+    first = _start_grant(store)
+    second = _start_grant(store)
+    kept = _start_grant(store)
+
+    deleted = store.revoke_grants(
+        [_grant_id(store, first.refresh), _grant_id(store, second.refresh)], _USER
+    )
+
+    assert deleted == 2
+    assert store.get_by_token(first.access) is None
+    assert store.get_refresh_token(second.refresh) is None
+    assert store.get_by_token(kept.access) is not None
+
+
+def test_revoke_grants_does_not_end_another_users_grant(
+    store: TokenStore,
+) -> None:
+    other = _start_grant(store, user_id=UserId("other"))
+
+    deleted = store.revoke_grants([_grant_id(store, other.refresh)], _USER)
+
+    assert deleted == 0
+    assert store.get_refresh_token(other.refresh) is not None
+
+
+def test_revoke_any_grants_ends_grants_of_every_user(store: TokenStore) -> None:
+    own = _start_grant(store)
+    other = _start_grant(store, user_id=UserId("other"))
+    kept = _start_grant(store)
+
+    deleted = store.revoke_any_grants(
+        [_grant_id(store, own.refresh), _grant_id(store, other.refresh)]
+    )
+
+    assert deleted == 2
+    assert store.get_refresh_token(own.refresh) is None
+    assert store.get_refresh_token(other.refresh) is None
+    assert store.get_refresh_token(kept.refresh) is not None

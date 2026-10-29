@@ -7,10 +7,16 @@
 from cmk.schema_manager import ManagedDatabase, RevisionChain
 from cmk.schema_manager.backend.sqlite import Sqlite
 from cmk.schema_migrations.oauth._0001_initial_schema import InitialSchema
+from cmk.schema_migrations.oauth._0002_refresh_tokens import RefreshTokens
 
 schema_manager_oauth = ManagedDatabase(
     name="oauth",
     backend=Sqlite(),
-    chain=RevisionChain((InitialSchema(),)),
+    chain=RevisionChain(
+        (
+            InitialSchema(),
+            RefreshTokens(),
+        )
+    ),
     omd_lifecycle=["create", "update", "backup"],
 )

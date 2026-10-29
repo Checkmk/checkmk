@@ -10,7 +10,7 @@ import sqlite3
 from collections.abc import Collection, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import datetime, UTC
+from datetime import datetime, timedelta, UTC
 
 from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.user import UserId
@@ -29,6 +29,7 @@ class TokenRecord:
     resource: str | None
     scope: frozenset[ScopeId]
     client_id: str
+    grant_id: str | None
 
     def is_valid(self, *, at: datetime | None = None) -> bool:
         current_time = at or _utc_now()
@@ -38,6 +39,12 @@ class TokenRecord:
 
 
 _ACCESS_TOKEN_PREFIX = "cmko1"
+_REFRESH_TOKEN_PREFIX = "cmkr1"
+
+# Rotated refresh tokens are kept so that a replay is recognized as reuse.
+# Once expired for this long they are purged, so the table does not grow
+# without bound.
+_REFRESH_TOKEN_RETENTION = timedelta(days=30)
 
 
 def _mint_token(prefix: str) -> str:
@@ -85,6 +92,31 @@ class IssuedAccessToken:
     expires_in: int
 
 
+@dataclass(frozen=True, slots=True)
+class IssuedTokens:
+    access: str
+    refresh: str
+
+
+@dataclass(frozen=True, slots=True)
+class GrantRecord:
+    grant_id: str
+    user_id: UserId
+    client_id: str
+    resource: str | None
+    scope: frozenset[ScopeId]
+    created_at: datetime
+    expires_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class RefreshTokenRecord:
+    issued_at: datetime
+    expires_at: datetime
+    rotated_at: datetime | None
+    grant: GrantRecord
+
+
 class TokenStore:
     """Borrows `connection`; it is closed when the `with get_token_store()` block ends."""
 
@@ -118,9 +150,7 @@ class TokenStore:
 
         token = _mint_token(_ACCESS_TOKEN_PREFIX)
         with write_transaction(self._connection):
-            self._connection.execute(
-                "DELETE FROM tokens WHERE expires_at <= ?", (issued_at_timestamp,)
-            )
+            self._purge_expired_access_tokens(issued_at_timestamp)
             try:
                 self._connection.execute(
                     """
@@ -159,7 +189,7 @@ class TokenStore:
 
         row = self._connection.execute(
             """
-            SELECT token_hash, user_id, issued_at, expires_at, resource, scope, client_id
+            SELECT token_hash, user_id, issued_at, expires_at, resource, scope, client_id, grant_id
             FROM tokens
             WHERE token_hash = ?
             """,
@@ -174,7 +204,7 @@ class TokenStore:
     def list_by_user(self, user_id: UserId) -> list[TokenRecord]:
         rows = self._connection.execute(
             """
-            SELECT token_hash, user_id, issued_at, expires_at, resource, scope, client_id
+            SELECT token_hash, user_id, issued_at, expires_at, resource, scope, client_id, grant_id
             FROM tokens
             WHERE user_id = ?
             """,
@@ -185,7 +215,7 @@ class TokenStore:
     def list_all(self) -> list[TokenRecord]:
         rows = self._connection.execute(
             """
-            SELECT token_hash, user_id, issued_at, expires_at, resource, scope, client_id
+            SELECT token_hash, user_id, issued_at, expires_at, resource, scope, client_id, grant_id
             FROM tokens
             ORDER BY issued_at DESC
             """
@@ -216,6 +246,209 @@ class TokenStore:
                 )
         return cursor.rowcount
 
+    def start_grant(
+        self,
+        user_id: UserId,
+        *,
+        resource: str | None,
+        scope: frozenset[ScopeId],
+        client_id: str,
+        expires_at: datetime,
+        refresh_token_expires_at: datetime,
+        access_token_expires_at: datetime,
+    ) -> Result[IssuedTokens, UnknownClient]:
+        """A new grant with its first refresh token and access token, or
+        UnknownClient if client_id is not a registered client.
+
+        expires_at ends the grant. The tokens end at their own expiry, or
+        with the grant if that comes first.
+        """
+        _require_grant_arguments(user_id, client_id, scope)
+        now = int(_utc_now().timestamp())
+        grant_expires_at = _expiry_timestamp("expires_at", expires_at, issued_at=now)
+        refresh_token_expires_at_timestamp = _expiry_timestamp(
+            "refresh_token_expires_at", refresh_token_expires_at, issued_at=now
+        )
+        access_token_expires_at_timestamp = _expiry_timestamp(
+            "access_token_expires_at", access_token_expires_at, issued_at=now
+        )
+
+        grant_id = secrets.token_urlsafe(32)
+        with write_transaction(self._connection):
+            try:
+                self._connection.execute(
+                    """
+                    INSERT INTO grants
+                        (grant_id, user_id, client_id, resource, scope, created_at, expires_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        grant_id,
+                        user_id,
+                        client_id,
+                        resource,
+                        format_scopes(scope),
+                        now,
+                        grant_expires_at,
+                    ),
+                )
+            except sqlite3.IntegrityError:
+                # As in issue_token: the guards above leave the client_id
+                # foreign key as the only constraint left to trip.
+                logger.exception(
+                    "Refusing to start an OAuth grant: client %(client_id)s is not registered",
+                    {"client_id": client_id},
+                )
+                return Error(UnknownClient())
+            tokens = self._issue_for_grant(
+                grant_id,
+                now,
+                refresh_token_expires_at_timestamp,
+                access_token_expires_at_timestamp,
+            )
+        return OK(tokens)
+
+    def rotate(
+        self,
+        refresh_token: str,
+        *,
+        refresh_token_expires_at: datetime,
+        access_token_expires_at: datetime,
+    ) -> IssuedTokens | None:
+        """Retire refresh_token and issue its successor and a new access token.
+
+        None if refresh_token is unknown, already rotated or expired;
+        get_refresh_token tells these apart.
+        """
+        now = int(_utc_now().timestamp())
+        refresh_token_expires_at_timestamp = _expiry_timestamp(
+            "refresh_token_expires_at", refresh_token_expires_at, issued_at=now
+        )
+        access_token_expires_at_timestamp = _expiry_timestamp(
+            "access_token_expires_at", access_token_expires_at, issued_at=now
+        )
+        try:
+            token_hash = _refresh_token_hash(refresh_token)
+        except ValueError:
+            return None
+
+        with write_transaction(self._connection):
+            # One conditional UPDATE instead of read-then-write, so of two
+            # concurrent rotations of the same token exactly one wins.
+            rotated = self._connection.execute(
+                """
+                UPDATE refresh_tokens SET rotated_at = :now
+                WHERE token_hash = :token_hash
+                    AND rotated_at IS NULL
+                    AND expires_at > :now
+                RETURNING grant_id
+                """,
+                {"now": now, "token_hash": token_hash},
+            ).fetchall()
+            if not rotated:
+                return None
+            return self._issue_for_grant(
+                rotated[0]["grant_id"],
+                now,
+                refresh_token_expires_at_timestamp,
+                access_token_expires_at_timestamp,
+            )
+
+    def revoke_grant(self, grant_id: str) -> None:
+        """End the grant, deleting it with all of its refresh and access tokens."""
+        with write_transaction(self._connection):
+            self._connection.execute("DELETE FROM grants WHERE grant_id = ?", (grant_id,))
+
+    def get_refresh_token(self, refresh_token: str) -> RefreshTokenRecord | None:
+        try:
+            token_hash = _refresh_token_hash(refresh_token)
+        except ValueError:
+            return None
+
+        row = self._connection.execute(
+            """
+            SELECT
+                r.issued_at, r.expires_at, r.rotated_at,
+                g.grant_id, g.user_id, g.client_id, g.resource, g.scope,
+                g.created_at, g.expires_at AS grant_expires_at
+            FROM refresh_tokens AS r JOIN grants AS g USING (grant_id)
+            WHERE r.token_hash = ?
+            """,
+            (token_hash,),
+        ).fetchone()
+        if row is None:
+            return None
+
+        try:
+            scope = parse_scopes(row["scope"] or "")
+        except InvalidScopeError:
+            logger.warning(
+                "Refusing OAuth grant of user %(user_id)s: stored scope %(scope)r is not usable",
+                {"user_id": row["user_id"], "scope": row["scope"]},
+            )
+            return None
+
+        return RefreshTokenRecord(
+            issued_at=_from_timestamp(row["issued_at"]),
+            expires_at=_from_timestamp(row["expires_at"]),
+            rotated_at=_optional_from_timestamp(row["rotated_at"]),
+            grant=GrantRecord(
+                grant_id=row["grant_id"],
+                user_id=UserId(row["user_id"]),
+                client_id=row["client_id"],
+                resource=row["resource"],
+                scope=scope,
+                created_at=_from_timestamp(row["created_at"]),
+                expires_at=_from_timestamp(row["grant_expires_at"]),
+            ),
+        )
+
+    def _issue_for_grant(
+        self, grant_id: str, now: int, refresh_token_expires_at: int, access_token_expires_at: int
+    ) -> IssuedTokens:
+        """Must run inside a write_transaction."""
+        refresh_token = _mint_token(_REFRESH_TOKEN_PREFIX)
+        # Both tokens are capped at the grant's expiry: no refresh token
+        # outlives its grant, so an expired grant needs no separate check on
+        # rotation, and no access token keeps a session alive past it.
+        self._connection.execute(
+            """
+            INSERT INTO refresh_tokens (token_hash, grant_id, issued_at, expires_at)
+            SELECT ?, grant_id, ?, MIN(?, expires_at) FROM grants WHERE grant_id = ?
+            """,
+            (_refresh_token_hash(refresh_token), now, refresh_token_expires_at, grant_id),
+        )
+        self._purge_expired_access_tokens(now)
+        self._purge_expired_refresh_tokens(now)
+        access_token = _mint_token(_ACCESS_TOKEN_PREFIX)
+        self._connection.execute(
+            """
+            INSERT INTO tokens
+                (token_hash, user_id, issued_at, expires_at, resource, scope, client_id, grant_id)
+            SELECT ?, user_id, ?, MIN(?, expires_at), resource, scope, client_id, grant_id
+            FROM grants WHERE grant_id = ?
+            """,
+            (_access_token_hash(access_token), now, access_token_expires_at, grant_id),
+        )
+        return IssuedTokens(access=access_token, refresh=refresh_token)
+
+    def _purge_expired_access_tokens(self, now: int) -> None:
+        self._connection.execute("DELETE FROM tokens WHERE expires_at <= ?", (now,))
+
+    def _purge_expired_refresh_tokens(self, now: int) -> None:
+        purged = self._connection.execute(
+            "DELETE FROM refresh_tokens WHERE expires_at < ? RETURNING grant_id",
+            (now - int(_REFRESH_TOKEN_RETENTION.total_seconds()),),
+        ).fetchall()
+        # Only the grants that just lost a token can have become empty.
+        self._connection.executemany(
+            """
+            DELETE FROM grants WHERE grant_id = ?
+                AND NOT EXISTS (SELECT 1 FROM refresh_tokens WHERE grant_id = grants.grant_id)
+            """,
+            {(row["grant_id"],) for row in purged},
+        )
+
 
 @contextmanager
 def get_token_store() -> Iterator[TokenStore]:
@@ -243,6 +476,7 @@ def _row_to_record(row: sqlite3.Row) -> TokenRecord | None:
         resource=row["resource"],
         scope=scope,
         client_id=row["client_id"],
+        grant_id=row["grant_id"],
     )
 
 
@@ -252,6 +486,10 @@ def _utc_now() -> datetime:
 
 def _from_timestamp(value: int) -> datetime:
     return datetime.fromtimestamp(value, tz=UTC)
+
+
+def _optional_from_timestamp(value: int | None) -> datetime | None:
+    return None if value is None else _from_timestamp(value)
 
 
 def _to_timestamp(value: datetime) -> int:
@@ -269,6 +507,10 @@ def _expiry_timestamp(name: str, value: datetime, *, issued_at: int) -> int:
 
 def _access_token_hash(token: str) -> str:
     return _prefixed_token_hash(token, _ACCESS_TOKEN_PREFIX)
+
+
+def _refresh_token_hash(token: str) -> str:
+    return _prefixed_token_hash(token, _REFRESH_TOKEN_PREFIX)
 
 
 def _prefixed_token_hash(token: str, prefix: str) -> str:

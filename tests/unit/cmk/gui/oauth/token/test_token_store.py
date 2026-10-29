@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import sqlite3
+import threading
 from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, UTC
+from pathlib import Path
 
 import pytest
 import time_machine
@@ -14,28 +18,40 @@ from cmk.ccc.resulttype import Error
 from cmk.ccc.user import UserId
 from cmk.gui.oauth.token.token_store import (
     _access_token_hash,
+    IssuedTokens,
     TokenRecord,
     TokenStore,
     UnknownClient,
 )
 from cmk.gui.scopes import DEFAULT_SCOPE, ScopeId
+from cmk.schema_manager import ensure_schema
 from cmk.schema_migrations.oauth import schema_manager_oauth
 from cmk.testlib.schema_manager import migrated_connection
 
 _USER = UserId("cmkadmin")
 _CLIENT = "test-client"
+_GRANT_ID = "Hq3vTn8xWbL2kEe5RmYc0sPz7uJdA9fGiOw4NtK1lMQ"
+
+
+_GRANT_LIFETIME = timedelta(days=365)
+_IDLE_TIMEOUT = timedelta(days=30)
+_ACCESS_TOKEN_TTL = timedelta(hours=48)
+
+
+def _register_client(connection: sqlite3.Connection) -> None:
+    connection.execute(
+        """
+        INSERT INTO clients (client_id, redirect_uris, client_name, registered_at)
+        VALUES (?, '["https://client.example/callback"]', NULL, 0)
+        """,
+        (_CLIENT,),
+    )
 
 
 @pytest.fixture
 def connection() -> Iterator[sqlite3.Connection]:
     with migrated_connection(schema_manager_oauth) as connection:
-        connection.execute(
-            """
-            INSERT INTO clients (client_id, redirect_uris, client_name, registered_at)
-            VALUES (?, '["https://client.example/callback"]', NULL, 0)
-            """,
-            (_CLIENT,),
-        )
+        _register_client(connection)
         yield connection
 
 
@@ -72,6 +88,7 @@ def test_record_is_valid_before_it_expires() -> None:
         resource=None,
         scope=DEFAULT_SCOPE,
         client_id=_CLIENT,
+        grant_id=_GRANT_ID,
     )
 
     assert record.is_valid(at=_future(1)) is True
@@ -86,6 +103,7 @@ def test_record_is_not_valid_after_it_expires() -> None:
         resource=None,
         scope=DEFAULT_SCOPE,
         client_id=_CLIENT,
+        grant_id=_GRANT_ID,
     )
 
     assert record.is_valid(at=datetime.now(UTC)) is False
@@ -100,6 +118,7 @@ def test_record_is_valid_defaults_to_the_current_time() -> None:
         resource=None,
         scope=DEFAULT_SCOPE,
         client_id=_CLIENT,
+        grant_id=_GRANT_ID,
     )
 
     assert record.is_valid() is True
@@ -114,6 +133,7 @@ def test_record_is_valid_rejects_naive_datetimes() -> None:
         resource=None,
         scope=DEFAULT_SCOPE,
         client_id=_CLIENT,
+        grant_id=_GRANT_ID,
     )
 
     with pytest.raises(ValueError, match="timezone-aware"):
@@ -426,3 +446,221 @@ def test_issue_token_deletes_expired_tokens_and_keeps_valid_ones(store: TokenSto
 
     assert store.get_by_token(expiring.ok.access) is None
     assert store.get_by_token(lasting.ok.access) is not None
+
+
+# Grants and refresh tokens
+
+
+def _start_grant(store: TokenStore, *, grant_lifetime: timedelta = _GRANT_LIFETIME) -> IssuedTokens:
+    now = datetime.now(UTC)
+    issued = store.start_grant(
+        _USER,
+        resource=None,
+        scope=DEFAULT_SCOPE,
+        client_id=_CLIENT,
+        expires_at=now + grant_lifetime,
+        refresh_token_expires_at=now + _IDLE_TIMEOUT,
+        access_token_expires_at=now + _ACCESS_TOKEN_TTL,
+    )
+    assert issued.is_ok()
+    return issued.ok
+
+
+def _rotate(store: TokenStore, refresh_token: str) -> IssuedTokens | None:
+    now = datetime.now(UTC)
+    return store.rotate(
+        refresh_token,
+        refresh_token_expires_at=now + _IDLE_TIMEOUT,
+        access_token_expires_at=now + _ACCESS_TOKEN_TTL,
+    )
+
+
+def _grant_id(store: TokenStore, refresh_token: str) -> str:
+    record = store.get_refresh_token(refresh_token)
+    assert record is not None
+    return record.grant.grant_id
+
+
+def _row_counts(connection: sqlite3.Connection) -> dict[str, int]:
+    return {
+        table: connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]  # nosec B608
+        for table in ("grants", "refresh_tokens", "tokens")
+    }
+
+
+def _fail_access_token_inserts(connection: sqlite3.Connection) -> None:
+    connection.execute(
+        """
+        CREATE TRIGGER fail_access_token_insert BEFORE INSERT ON tokens
+        BEGIN SELECT RAISE(ABORT, 'injected failure'); END
+        """
+    )
+
+
+def test_a_refresh_token_is_not_stored_in_plaintext(
+    store: TokenStore, connection: sqlite3.Connection
+) -> None:
+    refresh_token = _start_grant(store).refresh
+
+    stored = [row[0] for row in connection.execute("SELECT token_hash FROM refresh_tokens")]
+
+    assert stored
+    assert refresh_token not in stored
+
+
+def test_start_grant_rejects_an_unregistered_client(store: TokenStore) -> None:
+    now = datetime.now(UTC)
+    issued = store.start_grant(
+        _USER,
+        resource=None,
+        scope=DEFAULT_SCOPE,
+        client_id="never-registered",
+        expires_at=now + _GRANT_LIFETIME,
+        refresh_token_expires_at=now + _IDLE_TIMEOUT,
+        access_token_expires_at=now + _ACCESS_TOKEN_TTL,
+    )
+
+    assert issued == Error(UnknownClient())
+
+
+def test_a_rotated_token_expires_one_idle_timeout_after_its_own_issuance(
+    store: TokenStore,
+) -> None:
+    rotated_at = datetime(2026, 3, 1, tzinfo=UTC)
+    with time_machine.travel(rotated_at - timedelta(days=10), tick=False):
+        refresh_token = _start_grant(store).refresh
+    with time_machine.travel(rotated_at, tick=False):
+        successor = _rotate(store, refresh_token)
+    assert successor is not None
+
+    record = store.get_refresh_token(successor.refresh)
+
+    assert record is not None
+    assert record.expires_at == rotated_at + _IDLE_TIMEOUT
+
+
+def test_a_grant_that_keeps_being_rotated_ends_at_its_lifetime(store: TokenStore) -> None:
+    started_at = datetime(2026, 3, 1, tzinfo=UTC)
+    with time_machine.travel(started_at, tick=False):
+        refresh_token = _start_grant(store, grant_lifetime=timedelta(days=60)).refresh
+    for day in (20, 40, 59):
+        with time_machine.travel(started_at + timedelta(days=day), tick=False):
+            successor = _rotate(store, refresh_token)
+        assert successor is not None
+        refresh_token = successor.refresh
+
+    # The end of the grant's 60-day lifetime.
+    with time_machine.travel(started_at + timedelta(days=60), tick=False):
+        assert _rotate(store, refresh_token) is None
+
+
+def test_an_access_token_issued_shortly_before_the_grant_ends_ends_with_it(
+    store: TokenStore,
+) -> None:
+    started_at = datetime(2026, 3, 1, tzinfo=UTC)
+    with time_machine.travel(started_at, tick=False):
+        refresh_token = _start_grant(store, grant_lifetime=timedelta(days=20)).refresh
+    with time_machine.travel(started_at + timedelta(days=19, hours=12), tick=False):
+        successor = _rotate(store, refresh_token)
+    assert successor is not None
+
+    record = store.get_by_token(successor.access)
+    assert record is not None
+    assert not record.is_valid(at=started_at + timedelta(days=20))
+
+
+def test_concurrent_rotations_of_the_same_token_yield_exactly_one_success(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("OMD_ROOT", str(tmp_path))
+    ensure_schema(schema_manager_oauth, logging.getLogger(__name__))
+    with schema_manager_oauth.connect() as connection:
+        _register_client(connection)
+        refresh_token = _start_grant(TokenStore(connection)).refresh
+    both_connected = threading.Barrier(2)
+
+    def rotate_on_own_connection() -> IssuedTokens | None:
+        with schema_manager_oauth.connect() as connection:
+            both_connected.wait()
+            return _rotate(TokenStore(connection), refresh_token)
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        results = list(executor.map(lambda _: rotate_on_own_connection(), range(2)))
+
+    assert sorted(result is not None for result in results) == [False, True]
+
+
+def test_revoking_a_grant_ends_its_refresh_and_access_tokens(store: TokenStore) -> None:
+    issued = _start_grant(store)
+
+    store.revoke_grant(_grant_id(store, issued.refresh))
+
+    assert store.get_refresh_token(issued.refresh) is None
+    assert store.get_by_token(issued.access) is None
+
+
+def test_a_failed_start_grant_leaves_no_rows_behind(
+    store: TokenStore, connection: sqlite3.Connection
+) -> None:
+    _fail_access_token_inserts(connection)
+
+    with pytest.raises(sqlite3.IntegrityError, match="injected failure"):
+        _start_grant(store)
+
+    assert _row_counts(connection) == {"grants": 0, "refresh_tokens": 0, "tokens": 0}
+
+
+def test_a_failed_rotation_leaves_no_rows_behind(
+    store: TokenStore, connection: sqlite3.Connection
+) -> None:
+    refresh_token = _start_grant(store).refresh
+    _fail_access_token_inserts(connection)
+
+    with pytest.raises(sqlite3.IntegrityError, match="injected failure"):
+        _rotate(store, refresh_token)
+
+    record = store.get_refresh_token(refresh_token)
+    assert record is not None
+    assert record.rotated_at is None
+
+
+def test_issuing_purges_refresh_tokens_expired_beyond_the_retention_period(
+    store: TokenStore,
+) -> None:
+    started_at = datetime(2026, 3, 1, tzinfo=UTC)
+    with time_machine.travel(started_at, tick=False):
+        first = _start_grant(store).refresh
+    with time_machine.travel(started_at + timedelta(days=1), tick=False):
+        successor = _rotate(store, first)
+    assert successor is not None
+    with time_machine.travel(started_at + timedelta(days=59), tick=False):
+        other = _start_grant(store).refresh
+
+    # first expired 30.5 days ago, successor 29.5 days ago.
+    with time_machine.travel(started_at + timedelta(days=60, hours=12), tick=False):
+        assert _rotate(store, other) is not None
+
+    assert store.get_refresh_token(first) is None
+    assert store.get_refresh_token(successor.refresh) is not None
+
+
+def test_a_grant_is_purged_only_once_none_of_its_refresh_tokens_remain(
+    store: TokenStore, connection: sqlite3.Connection
+) -> None:
+    started_at = datetime(2026, 3, 1, tzinfo=UTC)
+    with time_machine.travel(started_at, tick=False):
+        _start_grant(store)
+        rotated = _start_grant(store).refresh
+    with time_machine.travel(started_at + timedelta(days=10), tick=False):
+        successor = _rotate(store, rotated)
+    assert successor is not None
+    kept_grant_id = _grant_id(store, successor.refresh)
+
+    # Both initial tokens expired 35 days ago, the successor 25 days ago.
+    with time_machine.travel(started_at + timedelta(days=65), tick=False):
+        new_grant_id = _grant_id(store, _start_grant(store).refresh)
+
+    assert {row[0] for row in connection.execute("SELECT grant_id FROM grants")} == {
+        kept_grant_id,
+        new_grant_id,
+    }

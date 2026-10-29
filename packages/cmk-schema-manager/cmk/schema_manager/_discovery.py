@@ -7,8 +7,6 @@
 # mypy: disable-error-code="explicit-any"
 """Discovery of `ManagedDatabase` registrations via the `cmk.schema_migrations` namespace."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any, cast
 

@@ -9,8 +9,6 @@ Records the id of the last applied revision as the only row of
 transaction so a crash mid-revision rolls back cleanly.
 """
 
-from __future__ import annotations
-
 import logging
 import sqlite3
 import threading

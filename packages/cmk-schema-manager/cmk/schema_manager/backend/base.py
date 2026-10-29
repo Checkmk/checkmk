@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The interface the schema-migration mechanism goes through; each database kind implements it fully."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from contextlib import AbstractContextManager
 from logging import Logger

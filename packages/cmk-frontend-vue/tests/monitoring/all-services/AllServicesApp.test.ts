@@ -151,7 +151,7 @@ test('hides the site column by default without a remote site', async () => {
   expect(screen.queryByRole('columnheader', { name: 'Site' })).not.toBeInTheDocument()
 })
 
-test('requests the services by host name descending on a click of the ascending Host header', async () => {
+test('requests the services by host name alone on a click of the Host header', async () => {
   mockServices([makeApiEntry()])
   renderApp()
   await screen.findByRole('button', { name: 'Host' })
@@ -160,7 +160,7 @@ test('requests the services by host name descending on a click of the ascending 
 
   expect(servicesPost).toHaveBeenLastCalledWith(
     SERVICES_PATH,
-    expect.objectContaining({ body: { limit: 1000, sort: ['host_name:desc'], fields: [] } })
+    expect.objectContaining({ body: { limit: 1000, sort: ['host_name:asc'], fields: [] } })
   )
 })
 

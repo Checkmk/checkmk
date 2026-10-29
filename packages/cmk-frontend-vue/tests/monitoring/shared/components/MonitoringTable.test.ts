@@ -265,6 +265,38 @@ test('clicking a sortable header calls updateSort with the new sort', async () =
   expect(next).toEqual([{ id: 'name', desc: false }])
 })
 
+test('clicking the header of a secondary sort key makes it the only sort, ascending', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({
+    sortState: [
+      { id: 'state', desc: false },
+      { id: 'name', desc: false }
+    ],
+    onSortUpdate
+  })
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Name' }))
+
+  expect(onSortUpdate).toHaveBeenCalledTimes(1)
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([{ id: 'name', desc: false }])
+})
+
+test('clicking the header of the primary sort key flips its direction', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({
+    sortState: [
+      { id: 'name', desc: false },
+      { id: 'state', desc: false }
+    ],
+    onSortUpdate
+  })
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Name' }))
+
+  expect(onSortUpdate).toHaveBeenCalledTimes(1)
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([{ id: 'name', desc: true }])
+})
+
 test('aria-sort reflects the active sort direction', () => {
   mountTable({ sortState: [{ id: 'state', desc: true }] })
 

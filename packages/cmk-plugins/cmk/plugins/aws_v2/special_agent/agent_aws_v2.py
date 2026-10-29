@@ -449,6 +449,13 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
             )
 
     parser.add_argument(
+        "--parallel-jobs",
+        type=_positive_int,
+        default=PARALLEL_JOBS,
+        help="Query this many account regions at the same time. With 1, the agent queries"
+        " them one after the other.",
+    )
+    parser.add_argument(
         "--connection-test",
         action="store_true",
         help="Run a connection test. No further agent code is executed.",
@@ -469,6 +476,12 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     if (args.excluded_accounts or args.account_list_role_arn) and not args.organization:
         parser.error("--exclude-account and --account-list-role-arn require --organization")
     return args
+
+
+def _positive_int(value: str) -> int:
+    if (number := int(value)) < 1:
+        raise argparse.ArgumentTypeError("must be at least 1")
+    return number
 
 
 def _setup_logging(opt_debug: bool, opt_verbose: int) -> None:
@@ -807,7 +820,7 @@ def _run_region(
     return RegionRun(output.getvalue(), False, notes)
 
 
-def agent_aws_main(args: argparse.Namespace, parallel_jobs: int = PARALLEL_JOBS) -> int:
+def agent_aws_main(args: argparse.Namespace) -> int:
     _setup_logging(args.debug, args.verbose)
 
     client_config = _client_config(args)
@@ -827,7 +840,7 @@ def agent_aws_main(args: argparse.Namespace, parallel_jobs: int = PARALLEL_JOBS)
         return 0
 
     settings = _prepare_run(args, client_config)
-    with JobPool(parallel_jobs) as pool:
+    with JobPool(args.parallel_jobs) as pool:
         accounts = [
             _start_account(pool, credentials, account_id, settings) for account_id in account_ids
         ]

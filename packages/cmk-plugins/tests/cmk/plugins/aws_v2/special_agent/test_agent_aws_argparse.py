@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from cmk.plugins.aws_v2.special_agent.agent_aws_v2 import parse_arguments
+from cmk.plugins.aws_v2.special_agent.agent_aws_v2 import PARALLEL_JOBS, parse_arguments
 from cmk.plugins.aws_v2.special_agent.config import NamingConvention, TagsImportPatternOption
 
 # These have to always exist, so just set them here
@@ -224,3 +224,12 @@ def test_organization_options_are_parsed() -> None:
 def test_wrong_organization_options_are_rejected(args: Sequence[str]) -> None:
     with pytest.raises(SystemExit):
         parse_arguments(args)
+
+
+def test_parallel_jobs_default_to_the_constant() -> None:
+    assert parse_arguments(REQUIRED_ARGS).parallel_jobs == PARALLEL_JOBS
+
+
+def test_parallel_jobs_below_one_are_rejected() -> None:
+    with pytest.raises(SystemExit):
+        parse_arguments([*REQUIRED_ARGS, "--parallel-jobs", "0"])

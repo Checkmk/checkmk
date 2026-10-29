@@ -79,13 +79,13 @@ class Views(SidebarSnapin):
     @classmethod
     @override
     def description(cls) -> str:
-        return _("Links to global views and dashboards")
+        return _("Links to global views")
 
     @override
     def show(self, config: Config) -> None:
         show_main_menu(
             treename="views",
-            menu=default_view_menu_topics(UserPermissions.from_config(config, all_permissions())),
+            menu=self._get_view_menu_topics(UserPermissions.from_config(config, all_permissions())),
         )
 
         links = []
@@ -94,6 +94,15 @@ class Views(SidebarSnapin):
                 links.append((_("Export"), "export_views.py"))
             links.append((_("Edit"), "edit_views.py"))
             footnotelinks(links)
+
+    def _get_view_menu_topics(self, user_permissions: UserPermissions) -> list[NavItemTopic]:
+        return merge_registered_monitor_topics(
+            make_main_menu(
+                [item for item in view_menu_items(user_permissions) if item.type != "dashboards"],
+                user_permissions,
+            ),
+            user_permissions,
+        )
 
 
 def ajax_export_views(ctx: PageContext) -> None:  # noqa: ARG001

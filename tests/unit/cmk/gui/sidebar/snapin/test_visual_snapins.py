@@ -82,7 +82,7 @@ def _page_context(config: Config) -> PageContext:
 def test_views_metadata() -> None:
     assert Views.type_name() == "views"
     assert Views.title() == "Views"
-    assert Views.description() == "Links to global views and dashboards"
+    assert Views.description() == "Links to global views"
 
 
 def test_dashboards_metadata() -> None:
@@ -199,6 +199,27 @@ def test_views_snapin_offers_the_edit_link(
     assert "All hosts" in rendered
     assert "edit_views.py" in rendered
     assert "export_views.py" not in rendered
+
+
+@pytest.mark.usefixtures("patch_theme")
+def test_views_snapin_leaves_dashboards_to_the_dashboards_snapin(
+    monkeypatch: pytest.MonkeyPatch, load_config: Config
+) -> None:
+    with monkeypatch.context() as m:
+        m.setattr(
+            "cmk.gui.sidebar._snapin._views.get_permitted_views",
+            lambda: {"allhosts": _visual("allhosts", "All hosts")},
+        )
+        m.setattr(
+            "cmk.gui.sidebar._snapin._views.get_permitted_dashboards",
+            lambda: {"main": _visual("main", "Main dashboard")},
+        )
+        with output_funnel.plugged():
+            Views().show(load_config)
+            rendered = output_funnel.drain()
+
+    assert "All hosts" in rendered
+    assert "Main dashboard" not in rendered
 
 
 @pytest.mark.usefixtures("patch_theme")

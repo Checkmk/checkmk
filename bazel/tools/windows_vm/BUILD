@@ -76,6 +76,22 @@ py_binary(
     ],
 )
 
+# What a *-qemu test tier's runner uses (qemu_test): staging its payload,
+# running it in the guest.
+py_library(
+    name = "tier",
+    srcs = [
+        "qemu_windows/stage.py",
+        "qemu_windows/tier.py",
+    ],
+    imports = ["."],
+    visibility = ["//bazel/rules:__pkg__"],
+    deps = [
+        ":session",
+        ":state",
+    ],
+)
+
 py_cmk_test(
     name = "unit",
     size = "small",
@@ -86,6 +102,7 @@ py_cmk_test(
         ":machine",
         ":session",
         ":state",
+        ":tier",
     ],
 )
 

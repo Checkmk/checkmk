@@ -4,6 +4,7 @@ load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:sign_azure.bzl", "sign_file_azure")
 load("//bazel/rules:xcomp/cc.bzl", "cc_binary")
 load("//bazel/rules:xcomp/package_msi.bzl", "package_msi")
+load("//bazel/rules:xcomp/qemu_test.bzl", "qemu_test")
 load("//bazel/toolchains/cc/clang/xwin:rc.bzl", "windows_rc")
 
 package(features = ["treat_warnings_as_errors"])
@@ -272,6 +273,47 @@ sh_test(
     ],
 )
 
+# The tiers of run_tests.ps1 (Invoke-UnitTest), named as there.
+_WATEST_QEMU_TIERS = [
+    "unit",
+    "component",
+    "ext",
+    "simulation",
+]
+
+# The whole watest suite inside real-Windows QEMU VMs, one test per tier
+# of run_tests.ps1: unit, *Component (component), *ComponentExt (ext) and
+# *_Simulation (simulation), each in its own VM with an auto-logged-on
+# console session (see watest/watest_qemu.py and
+# bazel/tools/windows_vm/qemu_windows/tier.py).
+[
+    qemu_test(
+        name = "watest-qemu-" + tier,
+        src = "watest/watest_qemu.py",
+        args = [
+            tier,
+            "$(rootpath watest/qemu-excluded-tests.txt)",
+            "$(rootpath :watest-windows)",
+        ],
+        data = [
+            "watest/qemu-excluded-tests.txt",
+            "watest/watest-qemu-share.ps1",
+            ":watest-windows",
+            ":watest_data",
+            "//agents/windows/plugins",
+            "//doc:ohm_binaries",
+        ],
+    )
+    for tier in _WATEST_QEMU_TIERS
+]
+
+# All four tiers.
+test_suite(
+    name = "watest-qemu",
+    tags = ["manual"],
+    tests = [":watest-qemu-" + tier for tier in _WATEST_QEMU_TIERS],
+)
+
 sh_library(
     name = "build_msi_sh",
     srcs = ["install/build_msi.sh"],
@@ -293,6 +335,7 @@ filegroup(
         "run_tests.ps1",
         "test_files/tools/v/run.ps1",
         "tests/files/regression/windows_if.ps1",
+        "watest/watest-qemu-share.ps1",
     ],
     tags = ["lint-with-psscriptanalyzer"],
 )

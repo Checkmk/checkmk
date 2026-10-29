@@ -1,0 +1,22 @@
+# googletest test names excluded from the QEMU tiers (watest-qemu), which
+# run the whole watest suite inside a real-Windows QEMU VM, one test per
+# tier of run_tests.ps1 (unit, *Component, *ComponentExt, *_Simulation),
+# all except *Flaky. Every tier leaves these out. Verified 2026-10-29 on
+# the pinned Windows Server 2022 Eval Server Core image
+# (agents/wnx/test-vm/image.bzl): with these exclusions the remaining
+# tests all pass or self-skip (run/passed/skipped: unit 528/518/10,
+# component 64/62/2, ext 6/6/0, simulation 8/7/1).
+
+# Asserts that the "MSI Development Tools" product is installed (part of
+# the Windows SDK on the legacy build nodes; not provisioned into the VM
+# image), a stand-in for any installed MSI product. Its sibling
+# FindAgentMsiSkippable runs the same lookup for the agent and self-skips
+# here; the MSI install tier runs it with the agent installed (CMK-39893),
+# after which this test is removed (CMK-41512).
+InstallAuto.FindProductMsiComponent
+
+# Runs and passes on the build nodes: googletest disables only a DISABLED_
+# prefix, not this _DISABLED suffix. It needs a warning or error in the
+# System event log recorded by the SYSTEM user, which the image's log does
+# not have.
+LogWatchEventTest.TestFilterUsers_DISABLED

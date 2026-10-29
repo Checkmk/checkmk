@@ -137,6 +137,8 @@ windows_vm_state(
         ":disabled": ["@platforms//:incompatible"],
         "//conditions:default": [],
     }),
+    # For qemu_test().
+    visibility = ["//bazel/rules:__pkg__"],
 )
 
 _CORE_VM = {
@@ -248,6 +250,8 @@ py_cmk_test(
     tags = [
         # Needs /dev/kvm and a VM state created on this host.
         "manual",
+        # Like qemu_test(): one VM, its vCPUs and RAM (bazel/rc/qemu.rc).
+        "resources:qemu_vm:1",
         "resources:cpu:%d" % WINDOWS_TEST_VM.cpus,
         "resources:memory:%d" % WINDOWS_TEST_VM.claim_mb,
     ],

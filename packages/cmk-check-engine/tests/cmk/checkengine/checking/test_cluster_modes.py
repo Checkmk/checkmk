@@ -30,7 +30,7 @@ TEST_SERVICE_ID = ServiceID(CheckPluginName("unit_test_plugin"), "unit_test_item
 
 class _AllValueStoresStoreMocker(value_store.AllValueStoresStore):
     def __init__(self) -> None:
-        super().__init__(Path(), log_debug=lambda x: None)  # noqa: ARG005
+        super().__init__(Path(), log_debug=lambda _x: None, debug=False)
 
     @override
     def load(self) -> Mapping[value_store.ValueStoreKey, Mapping[str, str]]:

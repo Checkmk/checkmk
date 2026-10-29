@@ -262,7 +262,8 @@ def run_checking(
             error_handler,
             set_value_store_manager(
                 ValueStoreManager(
-                    hostname, AllValueStoresStore(cmk.utils.paths.counters_dir / hostname)
+                    hostname,
+                    AllValueStoresStore(cmk.utils.paths.counters_dir / hostname, debug=debug),
                 ),
                 store_changes=not dry_run,
             ) as value_store_manager,

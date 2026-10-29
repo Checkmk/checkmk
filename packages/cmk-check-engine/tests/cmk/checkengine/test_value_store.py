@@ -34,7 +34,8 @@ def test_load_host_value_store_loads_file(tmp_path: Path) -> None:
                 HostName("test_load_host_value_store_loads_file"),
                 value_store.AllValueStoresStore(
                     stores_file,
-                    log_debug=lambda x: None,  # noqa: ARG005
+                    log_debug=lambda _x: None,
+                    debug=False,
                 ),
             ),
             store_changes=False,
@@ -52,12 +53,18 @@ class TestAllValueStoresStore:
             '[["host1", "service2", null], {"key": "value2"}]'
             "]"
         )
-        return value_store.AllValueStoresStore(file, log_debug=lambda x: None)  # noqa: ARG005
+        return value_store.AllValueStoresStore(file, log_debug=lambda _x: None, debug=False)
 
     def test_load_without_file(self, tmp_path: Path) -> None:
         file = tmp_path / "no-file"
         assert not file.exists()
-        assert value_store.AllValueStoresStore(file).load() == {}
+        assert value_store.AllValueStoresStore(file, debug=False).load() == {}
+
+    def test_load_unreadable_file_reraises_in_debug_mode(self, tmp_path: Path) -> None:
+        (unreadable := tmp_path / "directory").mkdir()
+
+        with pytest.raises(IsADirectoryError):
+            value_store.AllValueStoresStore(unreadable, debug=True).load()
 
     def test_load(self, tmp_path: Path) -> None:
         assert self._get_avss(tmp_path / "file").load() == {
@@ -77,7 +84,10 @@ class TestAllValueStoresStore:
     def test_load_corrupt_file(self, tmp_path: Path, content: str) -> None:
         file = tmp_path / "corrupt-file"
         file.write_text(content)
-        assert value_store.AllValueStoresStore(file, log_debug=lambda x: None).load() == {}  # noqa: ARG005
+        assert (
+            value_store.AllValueStoresStore(file, log_debug=lambda _x: None, debug=False).load()
+            == {}
+        )
 
     def test_update(self, tmp_path: Path) -> None:
         file = tmp_path / "file"
@@ -87,7 +97,9 @@ class TestAllValueStoresStore:
         avss1.update({(HostName("host1"), "service1", "item"): {"key": "new_value1"}})
         avss2.update({(HostName("host1"), "service2", None): {"key": "new_value2"}})
 
-        assert value_store.AllValueStoresStore(file, log_debug=lambda x: None).load() == {  # noqa: ARG005
+        assert value_store.AllValueStoresStore(
+            file, log_debug=lambda _x: None, debug=False
+        ).load() == {
             (HostName("host1"), "service1", "item"): {"key": "new_value1"},
             (HostName("host1"), "service2", None): {"key": "new_value2"},
         }
@@ -149,7 +161,7 @@ _KEY_OUTER = (str(_TEST_HOST), str(_SERVICE_OUTER[0]), _SERVICE_OUTER[1])
 
 class _AllValueStoresStoreSpy(value_store.AllValueStoresStore):
     def __init__(self) -> None:
-        super().__init__(Path(), log_debug=lambda x: None)  # noqa: ARG005
+        super().__init__(Path(), log_debug=lambda _x: None, debug=False)
         self.inspect_updated: Mapping[value_store.ValueStoreKey, Mapping[str, str]] | None = None
 
     @override
@@ -222,7 +234,7 @@ def _write_values(counters: Path, values: Mapping[str, str]) -> None:
 
 def _stored_values(counters: Path) -> Mapping[str, str]:
     service_key = (_TEST_HOST, str(_SERVICE_OUTER[0]), _SERVICE_OUTER[1])
-    return value_store.AllValueStoresStore(counters).load().get(service_key, {})
+    return value_store.AllValueStoresStore(counters, debug=False).load().get(service_key, {})
 
 
 @contextmanager
@@ -231,7 +243,7 @@ def _check_run(counters: Path) -> Iterator[MutableMapping[str, object]]:
         set_value_store_manager(
             value_store.ValueStoreManager(
                 _TEST_HOST,
-                value_store.AllValueStoresStore(counters, log_debug=lambda x: None),  # noqa: ARG005
+                value_store.AllValueStoresStore(counters, log_debug=lambda _x: None, debug=False),
             ),
             store_changes=True,
         ) as mgr,

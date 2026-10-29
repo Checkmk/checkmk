@@ -66,7 +66,7 @@ class _AllValueStoresStoreMocker(value_store.AllValueStoresStore):
     """Mock the AllValueStoresStore class to avoid writing to disk"""
 
     def __init__(self) -> None:
-        super().__init__(Path(), log_debug=lambda x: None)  # noqa: ARG005
+        super().__init__(Path(), log_debug=lambda _x: None, debug=False)
         self.update_count = 0
 
     @override

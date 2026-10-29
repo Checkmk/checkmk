@@ -41,7 +41,7 @@ def main(raw_args: Sequence[str]) -> int:
     """Run tests in docker"""
     args, command = _parse_arguments(raw_args)
 
-    distro_name = _os_environ_get("DISTRO", "ubuntu-22.04")
+    distro_name = _os_environ_get("DISTRO", "ubuntu-24.04")
     docker_tag = _os_environ_get("DOCKER_TAG", f"{current_base_branch_name()}-latest")
     test_filter = _os_environ_get("TEST_FILTER", "")
     faked_artifacts = _os_environ_get("FAKED_ARTIFACTS", "")

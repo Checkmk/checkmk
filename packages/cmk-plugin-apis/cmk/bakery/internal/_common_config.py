@@ -250,22 +250,21 @@ class DeploymentModeProvider:
     """
 
     def __init__(self, agconf: AgentConfig):
-        if (customize_package := agconf.get("customize_agent_package")) is not None and (
-            deployment_config := CustomizeAgentPackageConfig.model_validate(
-                customize_package
-            ).deployment_mode
-        ) is not None:
-            self.deployment_config = deployment_config
-            self._legacy_agent_user: str | None = None
-            return
-
-        self._legacy_agent_user = agconf.get("agent_user", {}).get("user")
+        self._legacy_agent_user: str | None = None
         self.deployment_config = DeploymentConfig(
             mode=DeploymentMode.ROOT,
             user_deployment=UserDeploymentConfig(
                 user="cmk-agent", creation_options=UserCreationStrategy.AUTO
             ),
         )
+        if _is_classic_file_deployment(agconf):
+            self._legacy_agent_user = agconf.get("agent_user", {}).get("user")
+        elif (
+            deployment_config := CustomizeAgentPackageConfig.model_validate(
+                agconf["customize_agent_package"]
+            ).deployment_mode
+        ) is not None:
+            self.deployment_config = deployment_config
 
     def get_agent_user(self) -> str:
         """Caution: In "root mode with legacy agent user", this function will return the
@@ -297,7 +296,11 @@ class DeploymentModeProvider:
         return self.deployment_config.user_deployment.gid
 
 
+def _is_classic_file_deployment(agconf: AgentConfig) -> bool:
+    return agconf.get("customize_agent_package") is None
+
+
 def _parse_directory_config(agconf: AgentConfig) -> DirectoryConfig:
-    if (customize_agent_package := agconf.get("customize_agent_package")) is None:
+    if _is_classic_file_deployment(agconf):
         return AgentPathsConfig.model_validate(agconf["agent_paths"])
-    return CustomizeAgentPackageConfig.model_validate(customize_agent_package).directory
+    return CustomizeAgentPackageConfig.model_validate(agconf["customize_agent_package"]).directory

@@ -166,6 +166,7 @@ def test_invalid_config_missing_agent_paths() -> None:
 
 
 def test_deployment_mode_provider_legacy_agent_user() -> None:
+    """CMK-40617 AC4, AC6"""
     agconf = {"agent_user": {"user": "legacyuser"}}
     provider = DeploymentModeProvider(agconf)
     assert provider.get_agent_user() == "legacyuser"
@@ -181,6 +182,21 @@ def test_deployment_mode_provider_new_agent_user() -> None:
     assert provider.get_agent_controller_user() == "cmk-agent"
     assert provider.get_agent_user_gid() is None
     assert provider.get_agent_controller_gid() is None
+
+
+def test_single_directory_deployment_ignores_the_legacy_agent_user() -> None:
+    """CMK-40617 AC4, AC6"""
+    provider = DeploymentModeProvider(
+        {
+            "agent_user": {"user": "legacyuser"},
+            "customize_agent_package": {
+                "directory": {"installation_directory": "/opt/checkmk/agent"}
+            },
+        }
+    )
+
+    assert provider.get_agent_user() == "root"
+    assert provider.get_agent_controller_user() == "cmk-agent"
 
 
 def test_deployment_mode_provider_root_mode() -> None:

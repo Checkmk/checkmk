@@ -153,6 +153,7 @@ def check_aws_limits(
     for resource_key, resource_title, limit, amount, human_readable_func in parsed_region_data:
         parameter = params.get(resource_key, None)
         warn, crit = (None, None)
+        param_absolute_limit = None
         if (
             isinstance(parameter, tuple)
             and parameter[0] == "set_levels"
@@ -167,7 +168,7 @@ def check_aws_limits(
         if is_valid_aws_limits_perf_data(resource_key):
             yield Metric(name=f"aws_{aws_service}_{resource_key}", value=amount)
 
-        if param_absolute_limit is not None:  # type: ignore[possibly-undefined]
+        if param_absolute_limit is not None:
             limit = param_absolute_limit
 
         if not limit:

@@ -3,12 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
-from collections.abc import Mapping
-from typing import Literal
-
-from cmk.plugins.aws_v2.lib import AWSLimitPercentage, AWSLimits
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -17,7 +11,6 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     FixedValue,
-    FormSpec,
     Integer,
     Percentage,
     validators,
@@ -25,64 +18,12 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _pre_25_to_formspec_migration(
-    values: object,
-) -> Mapping[str, tuple[Literal["no_levels"], None] | tuple[Literal["set_levels"], AWSLimits]]:
-    """
-    Migrates the ValueSpecs format of the params to the new FormSpecs format.
-
-    ## ValueSpecs used until Checkmk 2.4
-    The old format is a tuple with three values:
-    ```
-        "number_of_tables": (None | int, None | float, None | float)
-        "read_capacity":    (None | int, None | float, None | float)
-        "write_capacity":   (None | int, None | float, None | float)
-    ```
-    ## Resulting in Mapping[str, tuple[Literal["no_levels"], None] | tuple[Literal["set_levels"], AWSLimits]]
-    """
-    if not isinstance(values, dict):
-        raise TypeError("Expected a dictionary for migration of AWS DynamoDB limits")
-
-    possible_settings = {"number_of_tables", "read_capacity", "write_capacity"}
-    return {
-        setting: _to_formspec_single_migration(values=values, key=setting)
-        for setting in possible_settings
-        if setting in values
-    }
-
-
-def _to_formspec_single_migration(
-    values: Mapping[str, tuple], key: str
-) -> tuple[Literal["no_levels"], None] | tuple[Literal["set_levels"], AWSLimits]:
-    if all(val is None for val in values[key]) and len(values[key]) == 3:
-        return ("no_levels", None)
-
-    if len(values[key]) == 3:
-        return (
-            "set_levels",
-            AWSLimits(
-                absolute=(
-                    "aws_default_limit" if values[key][0] is None else "aws_limit_value",
-                    values[key][0],
-                ),
-                percentage=AWSLimitPercentage(warn=values[key][1], crit=values[key][2]),
-            ),
-        )
-
-    if len(values[key]) == 2 and values[key][0] == "set_levels":
-        return values[key]
-
-    raise ValueError(
-        f"Invalid value for {key}: {values[key]}. Expected a tuple with len of 2 or 3."
-    )
-
-
 def _fs_aws_limits(
     resource_title: Title,
     default_limit: int,
     unit: str = "",
     title_default: Title | None = None,
-) -> FormSpec:
+) -> CascadingSingleChoice:
     if title_default is None:
         title_default = Title("Limit from AWS API")
     return CascadingSingleChoice(
@@ -153,7 +94,6 @@ def _fs_aws_limits(
 def _formspec_aws_dynamodb_limits() -> Dictionary:
     return Dictionary(
         title=Title("AWS v2/DynamoDB limits"),
-        migrate=_pre_25_to_formspec_migration,
         elements={
             "number_of_tables": DictElement(
                 parameter_form=_fs_aws_limits(

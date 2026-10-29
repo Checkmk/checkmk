@@ -269,10 +269,21 @@ def get_host_labels_entry_of_host(host_name: HostName) -> UpdatedHostLabelsEntry
         return (path.name, path.stat().st_mtime, f.read())
 
 
+def _make_secure_path(base: Path, leaf: str) -> Path:
+    path = Path(base).resolve()
+    resolved = (path / leaf).resolve()
+    if not resolved.is_relative_to(path):
+        raise ValueError(f"Path {resolved} is not relative to {path}")
+    if resolved.suffix != ".mk":
+        raise ValueError(f"Path {resolved} does not have .mk suffix")
+    HostName(resolved.stem)  # would raise if validation fails
+    return resolved
+
+
 def save_updated_host_label_files(updated_host_labels: list[UpdatedHostLabelsEntry]) -> None:
     """Persists the data previously read by get_updated_host_label_files()"""
     for file_name, mtime, content in updated_host_labels:
-        file_path = cmk.utils.paths.discovered_host_labels_dir / file_name
+        file_path = _make_secure_path(cmk.utils.paths.discovered_host_labels_dir, file_name)
         store.save_text_to_file(file_path, content)
         os.utime(file_path, (mtime, mtime))
 

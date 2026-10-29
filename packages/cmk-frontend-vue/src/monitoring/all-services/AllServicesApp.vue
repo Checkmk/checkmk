@@ -388,7 +388,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       <MonitoringToolbar
         ref="toolbar"
         :service="allServicesService"
-        :search-placeholder="_t('Search services…')"
+        :search-placeholder="_t('Search services and hosts…')"
       />
       <MonitoringExportFeedback v-model="exportFeedback" />
       <MonitoringSplitPane

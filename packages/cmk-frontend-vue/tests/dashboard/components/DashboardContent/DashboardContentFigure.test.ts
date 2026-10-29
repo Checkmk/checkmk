@@ -66,7 +66,7 @@ let reportResize: (entries: { contentRect: { width: number; height: number } }[]
 
 async function resizeWidget(width: number, height: number): Promise<void> {
   reportResize([{ contentRect: { width, height } }])
-  await vi.advanceTimersByTimeAsync(10)
+  await vi.runOnlyPendingTimersAsync()
 }
 
 function renderWidget() {
@@ -173,7 +173,7 @@ test('a resize after the data arrived redraws the figure', async () => {
   expect(redrawCount).toBe(1)
 })
 
-test('a resize back to the size from before the data arrived redraws the figure', async () => {
+test('a resize after loading is measured against the size reported while loading', async () => {
   renderWidget()
   await nextTick()
   await resizeWidget(300, 200)

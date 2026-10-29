@@ -9,7 +9,6 @@ from collections.abc import Iterable, Sequence
 from datetime import datetime, UTC
 from pathlib import Path
 
-from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import bound_contextvars, logger
 from cmk.agent_receiver.relay.api.routers.tasks.libs.retrieve_config_serial import (
     retrieve_config_serial,
@@ -85,20 +84,12 @@ class ConfigTaskFactory:
         self, relay_ids: Iterable[RelayID], serial: Serial
     ) -> tuple[ConfigTaskCreationResult, ...]:
         now = datetime.now(UTC)
-        config = get_config()
-
         return tuple(
-            self._safe_single_task(
-                relay_id=rid,
-                serial=serial,
-                helper_config_dir=config.helper_config_dir,
-                timestamp=now,
-            )
-            for rid in relay_ids
+            self._safe_single_task(relay_id=rid, serial=serial, timestamp=now) for rid in relay_ids
         )
 
     def _safe_single_task(
-        self, relay_id: RelayID, serial: Serial, helper_config_dir: Path, timestamp: datetime
+        self, relay_id: RelayID, serial: Serial, timestamp: datetime
     ) -> ConfigTaskCreationResult:
         with bound_contextvars(relay_id=relay_id, serial=serial):
             try:
@@ -110,7 +101,7 @@ class ConfigTaskFactory:
                         {"relay_id": relay_id},
                     )
                     return ConfigTaskAlreadyExists(relay_id)
-                parent = helper_config_dir / f"{serial}/relays/{relay_id}"
+                parent = self.relay_config_repository.config_dir(relay_id, serial)
                 relay_config_spec = RelayConfigSpec(serial=serial, tar_data=create_tar(parent))
                 task = RelayTask(
                     spec=relay_config_spec, creation_timestamp=timestamp, update_timestamp=timestamp

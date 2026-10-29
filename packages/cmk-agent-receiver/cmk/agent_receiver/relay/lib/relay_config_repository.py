@@ -25,7 +25,10 @@ class RelayConfigRepository:
         return iter(())  # The folder does not exist
 
     def has_config(self, relay_id: RelayID, serial: Serial | Literal["latest"] = "latest") -> bool:
-        return (self._relays(serial) / str(relay_id)).exists()
+        return self.config_dir(relay_id, serial).exists()
+
+    def config_dir(self, relay_id: RelayID, serial: Serial | Literal["latest"]) -> Path:
+        return self._relays(serial) / str(relay_id)
 
     def _relays(self, serial: Serial | Literal["latest"]) -> Path:
         return self._helper_config_dir / str(serial) / "relays"

@@ -42,6 +42,42 @@ def _issue_token(user_id: UserId, client_id: str) -> str:
     return token.ok
 
 
+def _token_hash(token: str) -> str:
+    with get_token_store() as store:
+        record = store.get_by_token(token)
+    assert record is not None
+    return record.token_hash
+
+
+def _is_token_alive(token: str) -> bool:
+    with get_token_store() as store:
+        return store.get_by_token(token) is not None
+
+
+def _mode() -> ModeOAuthTokens:
+    return ModeOAuthTokens()
+
+
+def _run_action(
+    flask_app: Flask,
+    *,
+    query_string: dict[str, str] | None = None,
+    data: dict[str, str] | None = None,
+    valid_transaction: bool = True,
+) -> None:
+    with flask_app.test_request_context(
+        method="POST",
+        query_string={"mode": "oauth_tokens", **(query_string or {})},
+        data=data,
+    ):
+        flask_app.preprocess_request()
+        if valid_transaction:
+            transactions.ignore()
+            request.set_var("_transid", "-1")
+
+        _mode().action(Config())
+
+
 def test_static_permissions_returns_users_permission() -> None:
     assert ModeOAuthTokens.static_permissions() == ["users"]
 
@@ -56,7 +92,7 @@ def test_page_renders_token_details(monkeypatch: pytest.MonkeyPatch) -> None:
     _issue_token(_USER, client_id)
 
     with output_funnel.plugged():
-        ModeOAuthTokens().page(Config())
+        _mode().page(Config())
         written = "".join(output_funnel.drain())
 
     assert _USER in written
@@ -66,7 +102,7 @@ def test_page_renders_token_details(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.mark.usefixtures("request_context")
 def test_page_renders_empty_table_without_error() -> None:
     with output_funnel.plugged():
-        ModeOAuthTokens().page(Config())
+        _mode().page(Config())
         written = "".join(output_funnel.drain())
 
     assert "No entries" in written
@@ -75,67 +111,32 @@ def test_page_renders_empty_table_without_error() -> None:
 @pytest.mark.usefixtures("request_context")
 class TestModeOAuthTokensAction:
     def test_deletes_single_token(self, flask_app: Flask) -> None:
-        client_id = _register_client()
-        token = _issue_token(_USER, client_id)
-        with get_token_store() as store:
-            record = store.get_by_token(token)
-        assert record is not None
+        token = _issue_token(_USER, _register_client())
 
-        with flask_app.test_request_context(
-            method="POST",
-            query_string={"mode": "oauth_tokens", "_delete": record.token_hash},
-        ):
-            flask_app.preprocess_request()
-            transactions.ignore()
-            request.set_var("_transid", "-1")
+        _run_action(flask_app, query_string={"_delete": _token_hash(token)})
 
-            ModeOAuthTokens().action(Config())
-
-        with get_token_store() as store:
-            assert store.get_by_token(token) is None
+        assert not _is_token_alive(token)
 
     def test_bulk_revokes_checked_tokens_only(self, flask_app: Flask) -> None:
         client_id = _register_client()
         checked = _issue_token(_USER, client_id)
         unchecked = _issue_token(_USER, client_id)
-        with get_token_store() as store:
-            checked_record = store.get_by_token(checked)
-            unchecked_record = store.get_by_token(unchecked)
-        assert checked_record is not None
-        assert unchecked_record is not None
 
-        with flask_app.test_request_context(
-            method="POST",
-            data={
-                "mode": "oauth_tokens",
-                "_bulk_revoke_tokens": "1",
-                f"_c_token_{checked_record.token_hash}": "on",
-            },
-        ):
-            flask_app.preprocess_request()
-            transactions.ignore()
-            request.set_var("_transid", "-1")
+        _run_action(
+            flask_app,
+            data={"_bulk_revoke_tokens": "1", f"_c_token_{_token_hash(checked)}": "on"},
+        )
 
-            ModeOAuthTokens().action(Config())
-
-        with get_token_store() as store:
-            assert store.get_by_token(checked) is None
-            assert store.get_by_token(unchecked) is not None
+        assert not _is_token_alive(checked)
+        assert _is_token_alive(unchecked)
 
     def test_does_not_revoke_when_transaction_is_invalid(self, flask_app: Flask) -> None:
-        client_id = _register_client()
-        token = _issue_token(_USER, client_id)
-        with get_token_store() as store:
-            record = store.get_by_token(token)
-        assert record is not None
+        token = _issue_token(_USER, _register_client())
 
-        with flask_app.test_request_context(
-            method="POST",
-            query_string={"mode": "oauth_tokens", "_delete": record.token_hash},
-        ):
-            flask_app.preprocess_request()
+        _run_action(
+            flask_app,
+            query_string={"_delete": _token_hash(token)},
+            valid_transaction=False,
+        )
 
-            ModeOAuthTokens().action(Config())
-
-        with get_token_store() as store:
-            assert store.get_by_token(token) is not None
+        assert _is_token_alive(token)

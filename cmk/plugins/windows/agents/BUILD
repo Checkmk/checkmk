@@ -4,9 +4,11 @@ exports_files(
         "win_dhcp_pools.bat",
         "win_license.bat",
         "windows_broadcom_bonding.bat",
+        "windows_if.ps1",
         "windows_multipath.ps1",
         "windows_tasks.ps1",
         "windows_updates.ps1",
+        "wmic_if.bat",
     ],
     visibility = [
         "//agents/windows/plugins:__pkg__",
@@ -17,6 +19,7 @@ exports_files(
 filegroup(
     name = "powershell_scripts",
     srcs = [
+        "windows_if.ps1",
         "windows_multipath.ps1",
         "windows_tasks.ps1",
         "windows_updates.ps1",

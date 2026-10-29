@@ -390,7 +390,7 @@ just to signal that real build script was not called -->
                 <File Id="fil46A0DC56ECCE3C41483B1E4CD7708C4D" KeyPath="yes" Source="$(var.SignedPluginsFolder)\win_printers.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmpD065F5D090988C41C559F2AAD37A744F" Guid="{379B00CD-2EF9-4EB2-9F97-AF325EC9814C}">
-                <File Id="fil0F589A3A337908339F3BFAE265EAF22C" KeyPath="yes" Source="..\..\windows\plugins\wmic_if.bat" DiskId="1"  />
+                <File Id="fil0F589A3A337908339F3BFAE265EAF22C" KeyPath="yes" Source="..\..\..\cmk\plugins\windows\agents\wmic_if.bat" DiskId="1"  />
             </Component>
         </DirectoryRef>
 

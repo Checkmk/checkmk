@@ -35,6 +35,7 @@ class _Config(BaseModel):
         "SAP CCMS Monitor Templates/Operating System/OperatingSystem/CPU/CPU_Utilization",
     )
     exclude_paths: Sequence[str] = ()
+    retention_period: float | None = None
 
 
 def get_mk_sap_files(conf: _Config) -> Iterator[Plugin | PluginConfig]:
@@ -79,6 +80,11 @@ def _get_mk_sap_config(config: _Config) -> Iterator[str]:
         yield ""
         yield "# CCMS paths to exclude from monitoring"
         yield from f"exclude_paths += {pformat(list(config.exclude_paths), width=120)}".split("\n")
+    if config.retention_period is not None:
+        yield ""
+        yield ""
+        yield "# Retention period of alerts in seconds"
+        yield f"retention_period = {int(config.retention_period)}"
 
 
 bakery_plugin_mk_sap = BakeryPlugin(

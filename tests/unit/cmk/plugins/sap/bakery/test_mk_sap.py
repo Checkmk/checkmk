@@ -117,3 +117,12 @@ def test_deploy_exclude_paths() -> None:
         "exclude_paths += ['SAP CCMS Technical Expert Monitors/All Monitoring Contexts/Critical Number Ranges/*/Client 000*']"
         in plugin_config.lines
     )
+
+
+def test_deploy_retention_period() -> None:
+    conf = bakery_plugin_mk_sap.parameter_parser({**CONFIG, "retention_period": 7200.0})
+
+    (_plugin, plugin_config) = bakery_plugin_mk_sap.files_function(conf)
+
+    assert isinstance(plugin_config, PluginConfig)
+    assert "retention_period = 7200" in plugin_config.lines

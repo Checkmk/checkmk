@@ -41,6 +41,7 @@ import ast
 import datetime
 import fcntl
 import fnmatch
+import hashlib
 import os
 import sys
 import time
@@ -141,6 +142,10 @@ monitor_types = []  # type: list[str]
 
 # Matches here override monitor_paths.
 exclude_paths = []  # type: list[str]
+
+# Alerts are sent again for this many seconds after they were first sent
+retention_period = 3600
+
 config_file = MK_CONFDIR + "/sap.cfg"
 
 cfg = {}  # type: list[dict[Any, Any]] | dict[Any, Any]
@@ -176,13 +181,17 @@ def _convert_state_node(node):
 
 def load_state_file():
     try:
-        with open(STATE_FILE) as opened_file:
+        with open(STATE_FILE, encoding="utf-8") as opened_file:
             tree = ast.parse(opened_file.read().strip(), mode="eval")
         states = {}
         for key, value in _convert_state_node(tree.body).items():
             if isinstance(value, tuple):
                 value = datetime.datetime(*value)
-            if not isinstance(value, datetime.datetime):
+            if isinstance(value, dict):
+                for first_sent, line in value.values():
+                    if not (isinstance(first_sent, int) and isinstance(line, (str, type(None)))):
+                        raise ValueError("unexpected value in state file: %r" % (value,))
+            elif not isinstance(value, datetime.datetime):
                 raise ValueError("unexpected value in state file: %r" % (value,))
             states[key] = value
         return states
@@ -191,7 +200,12 @@ def load_state_file():
 
 
 def serialize_states(states):
-    return repr({key: value.timetuple()[:6] for key, value in states.items()})
+    return repr(
+        {
+            key: value if isinstance(value, dict) else value.timetuple()[:6]
+            for key, value in states.items()
+        }
+    )
 
 
 # Load the state file into memory
@@ -366,7 +380,7 @@ def alert_details(conn, cfg_entry, alert):
     return state, msg
 
 
-def process_alerts(conn, cfg_entry, logs, ms_name, mon_name, node, alerts):  # noqa: ARG001
+def process_alerts(conn, cfg_entry, logs, ms_name, mon_name, node, alerts, now):  # noqa: ARG001
     global state_file_changed
 
     sid = node["MTSYSID"].strip() or "Other"
@@ -376,40 +390,56 @@ def process_alerts(conn, cfg_entry, logs, ms_name, mon_name, node, alerts):  # n
     # Use the sid as hostname for the logs
     hostname = sid
     logfile = context + "/" + path
-
-    logfiles.append((hostname, logfile))
+    # Keyed by piggyback host, as several cfg entries can report the same SID
+    state_key = (
+        cfg_entry.get("host_prefix", "") + sid + cfg_entry.get("host_suffix", ""),
+        logfile,
+    )
+    if state_key in logfiles:
+        return logs  # an earlier cfg entry of this run already sent these alerts
+    logfiles.append(state_key)
 
     logs.setdefault(sid, {})
     logs[hostname][logfile] = []
-    newest_log_dt = None
+    # Older versions keyed the state by the sid only
+    previous_state = states.get(state_key, states.get((hostname, logfile)))
+    # batch ID -> (time first sent, logwatch line or None once expired)
+    sent_alerts = {}  # type: dict[str, tuple[int, str | None]]
     for alert in alerts:
         dt = parse_dt(alert["ALERTDATE"], alert["ALERTTIME"])
+        # Time first, as the site processes batches in sorted order
+        batch_id = "%s-%s" % (
+            dt.strftime("%Y%m%d%H%M%S"),
+            hashlib.sha256(repr(sorted(aid(alert).items())).encode("utf-8")).hexdigest()[:16],
+        )
 
-        if (hostname, logfile) in states and states[(hostname, logfile)] >= dt:
-            continue  # skip log messages which are older than the last cached date
-
-        if not newest_log_dt or dt > newest_log_dt:
-            newest_log_dt = dt  # store the newest log of this run
-
-        alert_state, alert_msg = alert_details(conn, cfg_entry, alert)
-        # Format lines to "logwatch" format
-        logs[hostname][logfile].append(
-            "%s %s %s"
-            % (
+        if isinstance(previous_state, dict) and batch_id in previous_state:
+            first_sent, line = previous_state[batch_id]
+        elif isinstance(previous_state, datetime.datetime) and dt <= previous_state:
+            # Older versions only stored the time of the newest alert they reported
+            first_sent, line = 0, None
+        else:
+            first_sent = now
+            alert_state, alert_msg = alert_details(conn, cfg_entry, alert)
+            line = "%s %s %s" % (
                 STATE_LOGWATCH_MAP[alert_state["VALUE"]],
                 dt.strftime("%Y-%m-%d %H:%M:%S"),
                 alert_msg,
             )
-        )
 
-    if newest_log_dt:
-        # Write newest log age to cache to prevent double processing of logs
-        states[(hostname, logfile)] = newest_log_dt
+        if now - first_sent > retention_period:
+            line = None
+        sent_alerts[batch_id] = (first_sent, line)
+        if line is not None:
+            logs[hostname][logfile].extend(("BATCH: %s" % batch_id, line))
+
+    if sent_alerts != previous_state:
+        states[state_key] = sent_alerts
         state_file_changed = True
     return logs
 
 
-def check(pyrfc, cfg_entry):
+def check(pyrfc, cfg_entry, now):
     conn = pyrfc.Connection(
         ashost=cfg_entry["ashost"],
         sysnr=cfg_entry["sysnr"],
@@ -467,7 +497,7 @@ def check(pyrfc, cfg_entry):
 
             elif node["MTCLASS"] == MTE_MSG_CONTAINER:
                 alerts = mon_alerts(conn, cfg_entry, node)
-                logs = process_alerts(conn, cfg_entry, logs, ms_name, mon_name, node, alerts)
+                logs = process_alerts(conn, cfg_entry, logs, ms_name, mon_name, node, alerts, now)
                 if len(alerts) > 0:
                     last_alert = alerts[-1]
                     dt = parse_dt(last_alert["ALERTDATE"], last_alert["ALERTTIME"])
@@ -548,10 +578,11 @@ def main():
     # It is possible to configure multiple SAP instances to monitor. Loop them all, but
     # do not terminate when one connection failed
     processed_all = True
+    now = int(time.time())
     try:
         for entry in cfg:
             try:
-                check(pyrfc, entry)
+                check(pyrfc, entry, now)
                 sys.stdout.write("<<<sap_state:sep(9)>>>\n%s\tOK\n" % entry["ashost"])
             except SapError as e:
                 sys.stderr.write("ERROR: %s\n" % e)

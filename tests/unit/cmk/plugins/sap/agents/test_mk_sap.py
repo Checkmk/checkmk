@@ -8,6 +8,7 @@
 
 import datetime
 from collections import namedtuple
+from unittest.mock import ANY
 
 import pytest
 
@@ -180,6 +181,14 @@ def test_state_file_round_trip(monkeypatch, tmp_path):
     assert mk_sap.load_state_file() == STATES
 
 
+def test_sent_alerts_survive_a_state_file_round_trip(monkeypatch, tmp_path):
+    states = {("PRD", "logfile"): {"20261007100000-0123456789abcdef": (1000, "W ÄLERT")}}
+    state_file = tmp_path / "sap.state"
+    state_file.write_text(mk_sap.serialize_states(states), encoding="utf-8")
+    monkeypatch.setattr(mk_sap, "STATE_FILE", str(state_file))
+    assert mk_sap.load_state_file() == states
+
+
 def test_state_file_legacy_datetime_format(monkeypatch, tmp_path):
     state_file = tmp_path / "sap.state"
     state_file.write_text(repr(STATES))
@@ -202,10 +211,13 @@ def test_state_file_missing(monkeypatch, tmp_path):
         # tz-aware datetimes cannot be written by the plugin; keyword
         # arguments are rejected instead of silently dropping the tzinfo
         "{('PRD', 'logfile'): datetime.datetime(2026, 6, 10, 9, 30, tzinfo=datetime.timezone.utc)}",
-        # values must be datetimes, anything else would break alert
-        # processing later on
+        # values must be datetimes or dicts of (time first sent, line or None),
+        # anything else would break alert processing later on
         "{('PRD', 'logfile'): 5}",
         "{('PRD', 'logfile'): (2026, 6, 10, 9, 30, 0), ('PRD', 'other'): 'bogus'}",
+        "{('PRD', 'logfile'): {'20261007100000-0123456789abcdef': 5}}",
+        "{('PRD', 'logfile'): {'20261007100000-0123456789abcdef': ('1000', 'W ALERT')}}",
+        "{('PRD', 'logfile'): {'20261007100000-0123456789abcdef': (1000, 5)}}",
     ],
 )
 def test_state_file_corrupt(monkeypatch, tmp_path, content):  # type: ignore[misc]
@@ -251,3 +263,144 @@ def test_host_prefix_and_suffix_wrap_the_sid(capsys):
     text = capsys.readouterr().out
 
     assert text.count("<<<<ECC_SB1_S4H>>>>\n") == 2
+
+
+_NODE = {
+    "MTSYSID": "PRD",
+    "MTMCNAME": "sapprd01_PRD_00",
+    "PATH": "SAP CCMS Monitor Templates/Dialog Overview/Syslog",
+}
+
+_LOGFILE = "sapprd01_PRD_00/SAP CCMS Monitor Templates/Dialog Overview/Syslog"
+
+
+class _FakeConnection:
+    def call(self, _function_name, **parameters):
+        return {"VALUE": {"VALUE": 2}, "XMI_EXT_MSG": {"MSG": parameters["AID"]["ALUNIQNUM"]}}
+
+
+def _alert(alert_time, message):
+    return {
+        "ALSYSID": "PRD",
+        "MSEGNAME": "SAPCCMSR",
+        "ALUNIQNUM": message,
+        "ALINDEX": "1",
+        "ALERTDATE": "20261007",
+        "ALERTTIME": alert_time,
+    }
+
+
+def _process_alerts(connection, cfg_entry, alerts, now):
+    return mk_sap.process_alerts(connection, cfg_entry, {}, "", "", _NODE, alerts, now)
+
+
+def _logwatch_lines(connection, alerts, now, cfg_entry=None):
+    # every call is a new agent run, which starts without processed logfiles
+    mk_sap.logfiles.clear()
+    logs = _process_alerts(connection, cfg_entry or {"user": "cmkmon"}, alerts, now)
+    return logs["PRD"][_LOGFILE]
+
+
+@pytest.fixture(name="plugin_states")
+def fixture_plugin_states(monkeypatch):
+    monkeypatch.setattr(mk_sap, "states", {})
+    monkeypatch.setattr(mk_sap, "logfiles", [])
+    monkeypatch.setattr(mk_sap, "state_file_changed", False)
+    return mk_sap.states
+
+
+@pytest.mark.usefixtures("plugin_states")
+def test_alert_is_sent_again_until_the_retention_period_has_passed() -> None:
+    alerts = [_alert("100000", "ALERT-A")]
+    _logwatch_lines(_FakeConnection(), alerts, now=1000)
+
+    lines = _logwatch_lines(None, alerts, now=1000 + mk_sap.retention_period)
+
+    assert lines == ["BATCH: 20261007100000-290addf3eba47f75", "W 2026-10-07 10:00:00 ALERT-A"]
+
+
+@pytest.mark.usefixtures("plugin_states")
+def test_alert_is_not_sent_after_the_retention_period() -> None:
+    alerts = [_alert("100000", "ALERT-A")]
+    _logwatch_lines(_FakeConnection(), alerts, now=1000)
+
+    lines = _logwatch_lines(None, alerts, now=1000 + mk_sap.retention_period + 1)
+
+    assert lines == []
+
+
+@pytest.mark.parametrize(
+    "alert_time, expected_line",
+    [
+        pytest.param("100000", "W 2026-10-07 10:00:00 ALERT-B", id="same second"),
+        pytest.param("095900", "W 2026-10-07 09:59:00 ALERT-B", id="older"),
+    ],
+)
+@pytest.mark.usefixtures("plugin_states")
+def test_new_alert_is_sent_in_a_new_batch_whatever_its_time(alert_time, expected_line):  # type: ignore[misc]
+    sent_alert = _alert("100000", "ALERT-A")
+    first_lines = _logwatch_lines(_FakeConnection(), [sent_alert], now=1000)
+
+    lines = _logwatch_lines(
+        _FakeConnection(), [sent_alert, _alert(alert_time, "ALERT-B")], now=1060
+    )
+
+    assert lines == first_lines + [ANY, expected_line]
+    assert lines[2] != first_lines[0]
+
+
+@pytest.mark.parametrize(
+    "cfg_entry",
+    [
+        pytest.param({"user": "cmkmon"}, id="sid as host name"),
+        pytest.param({"user": "cmkmon", "host_prefix": "X_"}, id="prefixed host name"),
+    ],
+)
+def test_alerts_reported_by_older_versions_are_not_sent_again(plugin_states, cfg_entry):  # type: ignore[misc]
+    plugin_states[("PRD", _LOGFILE)] = datetime.datetime(2026, 10, 7, 10, 0, 0)
+    alerts = [_alert("100000", "ALERT-OLD"), _alert("100100", "ALERT-NEW")]
+
+    lines = _logwatch_lines(_FakeConnection(), alerts, now=1000, cfg_entry=cfg_entry)
+
+    assert lines == [ANY, "W 2026-10-07 10:01:00 ALERT-NEW"]
+
+
+@pytest.mark.usefixtures("plugin_states")
+def test_alerts_sent_by_an_earlier_cfg_entry_of_the_run_are_not_sent_again() -> None:
+    same_system = {"user": "cmkmon", "host_prefix": "X_"}
+    alerts = [_alert("100000", "ALERT-A")]
+    _logwatch_lines(_FakeConnection(), alerts, now=1000, cfg_entry=same_system)
+
+    logs = _process_alerts(_FakeConnection(), same_system, alerts, now=1000)
+
+    assert logs == {}
+
+
+@pytest.mark.parametrize("option", ["host_prefix", "host_suffix"])
+@pytest.mark.usefixtures("plugin_states")
+def test_systems_with_the_same_sid_are_sent_their_own_alerts(option):  # type: ignore[misc]
+    _logwatch_lines(
+        _FakeConnection(), [_alert("100000", "ALERT-A")], 1000, {"user": "cmkmon", option: "A"}
+    )
+
+    logs = _process_alerts(
+        _FakeConnection(), {"user": "cmkmon", option: "B"}, [_alert("100000", "ALERT-B")], 1000
+    )
+
+    assert logs["PRD"][_LOGFILE] == [ANY, "W 2026-10-07 10:00:00 ALERT-B"]
+
+
+@pytest.mark.parametrize("option", ["host_prefix", "host_suffix"])
+@pytest.mark.usefixtures("plugin_states")
+def test_systems_with_the_same_sid_keep_separate_states(option):  # type: ignore[misc]
+    first_system = {"user": "cmkmon", option: "A"}
+    alerts = [_alert("100000", "ALERT-A")]
+    _logwatch_lines(_FakeConnection(), alerts, now=1000, cfg_entry=first_system)
+    _process_alerts(
+        _FakeConnection(), {"user": "cmkmon", option: "B"}, [_alert("100000", "ALERT-B")], 1000
+    )
+
+    # None as connection fails if the alert details are fetched again
+    lines = _logwatch_lines(None, alerts, now=1060, cfg_entry=first_system)
+
+    assert lines == [ANY, "W 2026-10-07 10:00:00 ALERT-A"]

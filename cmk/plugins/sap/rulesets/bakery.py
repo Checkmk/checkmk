@@ -186,6 +186,24 @@ def _valuespec_agent_config_mk_sap() -> Dictionary:
                     element_template=String(),
                 ),
             ),
+            "retention_period": DictElement(
+                parameter_form=TimeSpan(
+                    title=Title("Retention period of alerts"),
+                    help_text=Help(
+                        "Alerts are sent again on every execution of the plug-in until this"
+                        " period has passed since they were first sent, so that none are lost"
+                        " if the agent is called more often than the SAP system host is checked."
+                        " The monitoring site processes every alert only once. Set it to at least"
+                        " the check interval of the SAP system hosts. Longer periods increase the"
+                        " amount of transmitted data. If not set, one hour is used."
+                    ),
+                    displayed_magnitudes=(
+                        TimeMagnitude.HOUR,
+                        TimeMagnitude.MINUTE,
+                    ),
+                    prefill=DefaultValue(3600.0),
+                ),
+            ),
         },
         migrate=migrate,
     )

@@ -1906,6 +1906,7 @@ httpx2==2.16.0 \
     # via
     #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-fastapi/requirements.in
 hypothesis==6.170.13 \
     --hash=sha256:0260427279284e66068e11b885ee46876f5de319ac0d942542c0f9d363abb09f \
     --hash=sha256:0571d81f297e3fb98b99211dc8f549076f124a4e0ff0470dd5bb5a1725113fbf \
@@ -5946,6 +5947,7 @@ starlette==1.10.0 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-fastapi/requirements.in
     #   -r packages/cmk-maps/requirements.in
     #   fastapi
 stevedore==5.9.1 \

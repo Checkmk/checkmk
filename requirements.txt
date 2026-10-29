@@ -1976,6 +1976,7 @@ httpx2==2.16.0 \
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-fastapi/dev-requirements.in
+    #   -r packages/cmk-fastapi/requirements.in
     #   anthropic
     #   genai-prices
     #   mcp
@@ -5060,6 +5061,7 @@ pytest-asyncio==1.4.1 \
     #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
     #   -r packages/cmk-agent-receiver/dev-requirements.in
+    #   -r packages/cmk-fastapi/dev-requirements.in
     #   -r packages/cmk-plugins/dev-requirements.in
     #   -r tests/dev-requirements.in
 pytest-benchmark==5.3.0 \
@@ -6159,9 +6161,10 @@ starlette==1.10.0 \
     --hash=sha256:b8399098d4c1e3522734f7235dc79b1fc967f96cf139c81e0fa30479e0685f9b
     # via
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-ai-control-plane/requirements.in
+    #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-fastapi/requirements.in
     #   -r packages/cmk-maps/requirements.in
     #   fastapi
     #   mcp

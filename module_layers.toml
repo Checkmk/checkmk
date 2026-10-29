@@ -805,7 +805,8 @@ allows = ["@ccc", "cmk.utils.paths"]
 allows = ["@ccc", "@livestatus_client", "cmk.ruleset_matcher"]
 
 [components."cmk.fastapi"]
-allows = []
+# The GUI session helpers send the site secret to the GUI of this site.
+allows = ["cmk.ccc.site", "cmk.password_store.v1"]
 
 [components."cmk.fetcher_encoder"]
 allows = ["cmk.checkengine.helper_interface"]
@@ -1871,6 +1872,7 @@ allows = []
 allows = [
   "@ccc",
   "cmk.ai_control_plane",
+  "cmk.fastapi",
   "cmk.password_store.v1",
   "cmk.schema_migrations.ai_control_plane",
 ]

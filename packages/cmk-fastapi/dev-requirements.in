@@ -1,3 +1,4 @@
 httpx2
 openapi-spec-validator
 pytest
+pytest-asyncio

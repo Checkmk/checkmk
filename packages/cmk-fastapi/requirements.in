@@ -1,3 +1,5 @@
 fastapi
+httpx2
 pydantic
+starlette
 typing-extensions

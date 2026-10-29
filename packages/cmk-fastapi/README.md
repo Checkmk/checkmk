@@ -3,6 +3,8 @@
 Helpers that fill gaps FastAPI leaves in typing and OpenAPI 3.2, for Checkmk's FastAPI apps.
 Each helper names the gap it fills, so it can be dropped once FastAPI or the tooling closes it.
 
+It also holds what site services behind the site Apache share to authenticate the GUI user of a request.
+
 ## Overview
 
 Public surface:
@@ -21,6 +23,14 @@ Public surface:
     A route annotated to yield `SentEvent[M]` declares the stream, so mypy rejects events of other streams.
 
 FastAPI does the rest of the stream: wire format, keepalive pings, `Cache-Control: no-cache` and `X-Accel-Buffering: no`.
+
+Authenticating the GUI user of a request:
+
+- `cmk.fastapi.gui_session.SessionCookie` reads the GUI session cookie `auth_<site>` as a FastAPI security dependency.
+- `GuiLoopback(loopback_http_client(omd_root)).identify(cookie, ...)` asks the GUI of the site, with the site secret, who is behind the session, which of the named permissions they hold and, on request, their contact groups.
+  It answers an `Identity`, `Rejected` for a session the GUI refused, or `Unavailable` without a verdict.
+- `IdentityCache` keeps an answer for a session for `IDENTITY_TTL` seconds, so a logged-out or locked user can send requests that long.
+- `cmk.fastapi.request_shape.RequestShapeMiddleware` refuses requests the browser marks with a `Sec-Fetch-Site` other than `same-origin`, and bodies that are not JSON.
 
 openapi-typescript does not read OpenAPI 3.2 yet.
 To generate TypeScript types, dump the document with `bazel/tools/dump_fastapi_openapi_spec.py`, which rewrites it to 3.1.

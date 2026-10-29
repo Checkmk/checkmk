@@ -1502,6 +1502,7 @@ httpx2==2.16.0 \
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-fastapi/requirements.in
     #   anthropic
     #   genai-prices
     #   mcp
@@ -4710,9 +4711,9 @@ starlette==1.10.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-fastapi/requirements.in
     #   -r packages/cmk-maps/requirements.in
     #   fastapi
     #   mcp

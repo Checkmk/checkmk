@@ -15,14 +15,21 @@ py_library(
     name = "cmk-fastapi",
     srcs = [
         "cmk/fastapi/__init__.py",
+        "cmk/fastapi/gui_session.py",
+        "cmk/fastapi/request_shape.py",
+        "cmk/fastapi/site_secret.py",
         "cmk/fastapi/sse.py",
     ],
     data = ["cmk/fastapi/py.typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-plugin-apis:password_store",
         requirement("fastapi"),
+        requirement("httpx2"),
         requirement("pydantic"),
+        requirement("starlette"),
     ],
 )
 
@@ -36,6 +43,8 @@ py_cmk_test(
         requirement("httpx2"),
         requirement("openapi-spec-validator"),
         requirement("pydantic"),
+        requirement("pytest-asyncio"),
+        requirement("starlette"),
     ],
 )
 

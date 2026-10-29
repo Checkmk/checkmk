@@ -1760,7 +1760,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
 
     assert succeeded is True
 
-    entries = AutochecksStore(testhost, cmk.utils.paths.autochecks_dir).read()
+    entries = AutochecksStore(testhost, cmk.utils.paths.autochecks_dir).read(debug=True)
     found = {e.id(): e.service_labels for e in entries}
     assert found == _EXPECTED_SERVICES
 
@@ -1904,7 +1904,9 @@ def test_commandline_discovery_ii_keeps_services_and_labels_when_a_source_failed
     )
 
     assert succeeded is False
-    assert {e.id() for e in AutochecksStore(host_name, _autochecks_dir(tmp_path)).read()} == {
+    assert {
+        e.id() for e in AutochecksStore(host_name, _autochecks_dir(tmp_path)).read(debug=True)
+    } == {
         ServiceID(_TEST_PLUGIN_NAME, "item_a"),
         ServiceID(_TEST_PLUGIN_NAME, "item_new"),
         ServiceID(_TEST_PLUGIN_NAME, "of_failed_source"),
@@ -2094,7 +2096,7 @@ def _run_commandline_service_discovery(
         inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
         debug=True,
     )
-    return {e.id() for e in AutochecksStore(host_name, _autochecks_dir(tmp_path)).read()}
+    return {e.id() for e in AutochecksStore(host_name, _autochecks_dir(tmp_path)).read(debug=True)}
 
 
 @pytest.mark.parametrize("only_new", [True, False], ids=["cmk-I", "cmk-II"])

@@ -57,7 +57,7 @@ class AutochecksSteps(AnonymizeStep):
         for host in _autocheck_hosts():
             anonymized_checks = [
                 _anonymize_auto_check(anon_interface, check)
-                for check in AutochecksStore(host, cmk.utils.paths.autochecks_dir).read()
+                for check in AutochecksStore(host, cmk.utils.paths.autochecks_dir).read(debug=False)
             ]
 
             new_file = f"{anon_interface.get_host(host)}.mk"

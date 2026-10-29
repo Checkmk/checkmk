@@ -304,7 +304,7 @@ def _mode_check_discovery(
                     enforced_services=enforced_services_table(hostname),
                     read_autochecks=lambda hn: AutochecksStore(
                         hn, cmk.utils.paths.autochecks_dir
-                    ).read(),
+                    ).read(debug=global_options.debug),
                     read_discovered_host_labels=label_manager.discovered_labels_of_host,
                     debug=global_options.debug,
                 )

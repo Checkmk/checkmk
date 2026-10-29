@@ -58,9 +58,9 @@ class AutochecksStore:
             serializer=AutochecksSerializer(),
         )
 
-    def read(self) -> Sequence[AutocheckEntry]:
+    def read(self, *, debug: bool) -> Sequence[AutocheckEntry]:
         try:
-            return self._store.read_obj(default=[])
+            return self._store.read_obj_explicit(default=[], debug=debug)
         except (ValueError, TypeError, KeyError, AttributeError, SyntaxError) as exc:
             raise MKGeneralException(
                 f"Unable to parse autochecks of host {self._host_name}"
@@ -114,9 +114,10 @@ class AutochecksMemoizer:
     multiple times (to a degree where it's not acceptable).
     """
 
-    def __init__(self, autochecks_dir: Path) -> None:
+    def __init__(self, autochecks_dir: Path, *, debug: bool) -> None:
         super().__init__()
         self._autochecks_dir: Final = autochecks_dir
+        self._debug: Final = debug
         self._raw_autochecks_cache: dict[HostName, Sequence[AutocheckEntry]] = {}
 
     def read(
@@ -126,7 +127,7 @@ class AutochecksMemoizer:
         if hostname not in self._raw_autochecks_cache:
             self._raw_autochecks_cache[hostname] = AutochecksStore(
                 hostname, self._autochecks_dir
-            ).read()
+            ).read(debug=self._debug)
         return self._raw_autochecks_cache[hostname]
 
 
@@ -134,6 +135,8 @@ def set_autochecks_of_real_hosts(
     hostname: HostName,
     new_services_with_nodes: Sequence[AutocheckServiceWithNodes],
     autochecks_dir: Path,
+    *,
+    debug: bool,
 ) -> None:
     # TODO: use set_autochecks_for_effective_host instead
     store = AutochecksStore(hostname, autochecks_dir)
@@ -142,7 +145,7 @@ def set_autochecks_of_real_hosts(
         _consolidate_autochecks_of_real_hosts(
             hostname,
             new_services_with_nodes,
-            store.read(),
+            store.read(debug=debug),
         )
     )
 
@@ -173,6 +176,8 @@ def set_autochecks_of_cluster(
     new_services_with_nodes_by_host: Mapping[HostName, Sequence[AutocheckServiceWithNodes]],
     get_effective_host: _GetEffectiveHost,
     autochecks_dir: Path,
+    *,
+    debug: bool,
 ) -> None:
     """A Cluster does not have an autochecks file. All of its services are located
     in the nodes instead. For clusters we cycle through all nodes remove all
@@ -189,6 +194,7 @@ def set_autochecks_of_cluster(
             ],
             get_effective_host=get_effective_host,
             autochecks_dir=autochecks_dir,
+            debug=debug,
         )
 
     # Check whether the cluster host autocheck files are still existent.
@@ -203,6 +209,8 @@ def set_autochecks_for_effective_host(
     new_services: Iterable[AutocheckEntry],
     get_effective_host: _GetEffectiveHost,
     autochecks_dir: Path,
+    *,
+    debug: bool,
 ) -> None:
     """Set all services of an effective host, and leave all other services alone."""
     store = AutochecksStore(autochecks_owner, autochecks_dir)
@@ -211,7 +219,7 @@ def set_autochecks_for_effective_host(
             [
                 *(
                     existing
-                    for existing in store.read()
+                    for existing in store.read(debug=debug)
                     if effective_host != get_effective_host(autochecks_owner, existing)
                 ),
                 *new_services,
@@ -242,6 +250,8 @@ def remove_autochecks_of_host(
     remove_hostname: HostName,
     get_effective_host: _GetEffectiveHost,
     autochecks_dir: Path,
+    *,
+    debug: bool,
 ) -> int:
     """Remove all autochecks of a host while being cluster-aware
 
@@ -249,7 +259,7 @@ def remove_autochecks_of_host(
     of removing the whole file the file is loaded and only the services associated
     with the given cluster are removed."""
     store = AutochecksStore(hostname, autochecks_dir)
-    existing_entries = store.read()
+    existing_entries = store.read(debug=debug)
     new_entries = [
         existing
         for existing in existing_entries

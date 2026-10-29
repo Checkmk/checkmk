@@ -231,9 +231,9 @@ def automation_discovery(
         services_by_host_name = get_host_services_by_host_name(
             host_name,
             existing_services=(
-                {n: AutochecksStore(n, autochecks_dir).read() for n in cluster_nodes}
+                {n: AutochecksStore(n, autochecks_dir).read(debug=debug) for n in cluster_nodes}
                 if is_cluster
-                else {host_name: AutochecksStore(host_name, autochecks_dir).read()}
+                else {host_name: AutochecksStore(host_name, autochecks_dir).read(debug=debug)}
             ),
             discovered_services=discovery_by_host(
                 cluster_nodes if is_cluster else (host_name,),
@@ -280,9 +280,12 @@ def automation_discovery(
                 new_services_by_host,
                 autochecks_config.effective_host,
                 autochecks_dir,
+                debug=debug,
             )
         else:
-            set_autochecks_of_real_hosts(host_name, new_services_by_host[host_name], autochecks_dir)
+            set_autochecks_of_real_hosts(
+                host_name, new_services_by_host[host_name], autochecks_dir, debug=debug
+            )
 
         results[host_name].host_labels = TransitionCounter(
             new=len(host_labels.new),

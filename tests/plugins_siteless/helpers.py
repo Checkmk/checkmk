@@ -238,7 +238,7 @@ def discover_services(
     )
 
     autochecks_store = AutochecksStore(hostname, cmk.utils.paths.autochecks_dir)
-    autochecks = autochecks_store.read()
+    autochecks = autochecks_store.read(debug=False)
 
     discovered_services = [
         ConfiguredService(

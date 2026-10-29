@@ -1479,6 +1479,7 @@ def _automation_set_autochecks_v2(
             new_services=set_autochecks_input.target_services.values(),
             get_effective_host=get_effective_host_of_autocheck,
             autochecks_dir=autochecks_dir,
+            debug=state.debug,
         )
     else:
         desired_on_cluster = {s.id() for s in set_autochecks_input.target_services.values()}
@@ -1489,6 +1490,7 @@ def _automation_set_autochecks_v2(
                 new_services=(s for s in services.values() if s.id() in desired_on_cluster),
                 get_effective_host=get_effective_host_of_autocheck,
                 autochecks_dir=autochecks_dir,
+                debug=state.debug,
             )
 
     _trigger_discovery_check(
@@ -1879,7 +1881,8 @@ def _automation_get_service_labels(
     with env.ruleset_matcher.ruleset_optimizer.processed_hosts({host_name}):
         # I think we might be computing something here that the caller already knew.
         discovered_services = env.service_configurer.configure_autochecks(
-            host_name, AutochecksStore(host_name, cmk.utils.paths.autochecks_dir).read()
+            host_name,
+            AutochecksStore(host_name, cmk.utils.paths.autochecks_dir).read(debug=state.debug),
         )
         discovered_labels = {s.description: s.labels for s in discovered_services}
 

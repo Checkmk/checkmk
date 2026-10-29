@@ -191,9 +191,9 @@ def get_check_preview(
     grouped_services_by_host = get_host_services_by_host_name(
         host_name,
         existing_services=(
-            {n: AutochecksStore(n, autochecks_dir).read() for n in cluster_nodes}
+            {n: AutochecksStore(n, autochecks_dir).read(debug=debug) for n in cluster_nodes}
             if is_cluster
-            else {host_name: AutochecksStore(host_name, autochecks_dir).read()}
+            else {host_name: AutochecksStore(host_name, autochecks_dir).read(debug=debug)}
         ),
         discovered_services=discovered_services,
         is_cluster=is_cluster,

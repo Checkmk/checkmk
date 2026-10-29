@@ -214,7 +214,11 @@ def _mode_flush(
         # autochecks
         count = sum(
             remove_autochecks_of_host(
-                node, host, effective_host_callback, cmk.utils.paths.autochecks_dir
+                node,
+                host,
+                effective_host_callback,
+                cmk.utils.paths.autochecks_dir,
+                debug=global_options.debug,
             )
             for node in (hosts_config.clusters.get(host) or [host])
         )

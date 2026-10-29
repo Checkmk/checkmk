@@ -230,7 +230,7 @@ def _commandline_discovery_on_host(
     # additionally drops vanished services and adopts changed parameters/labels.
     services_by_transition = get_host_services_by_host_name(
         real_host_name,
-        existing_services={real_host_name: autocheck_store.read()},
+        existing_services={real_host_name: autocheck_store.read(debug=debug)},
         discovered_services={real_host_name: discovered_services},
         is_cluster=False,
         cluster_nodes=(),

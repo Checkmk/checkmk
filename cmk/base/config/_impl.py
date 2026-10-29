@@ -1178,7 +1178,7 @@ class ConfigCache:
 
         self._check_table_cache = cache_manager.obtain_cache("check_tables")
 
-        self.autochecks_memoizer: Final = AutochecksMemoizer(autochecks_dir)
+        self.autochecks_memoizer: Final = AutochecksMemoizer(autochecks_dir, debug=debug)
 
         self.ruleset_matcher = make_ruleset_matcher(self._hosts_config, self._host_tags)
         self.label_manager = LabelManager(

@@ -60,14 +60,20 @@ class TestAutochecksStore:
     def test_clear(self) -> None:
         store = AutochecksStore(HostName("herbert"), cmk.utils.paths.autochecks_dir)
         store.write(_entries())
-        assert store.read()
+        assert store.read(debug=False)
         store.clear()
-        assert not store.read()
+        assert not store.read(debug=False)
 
     def test_write_read(self) -> None:
         store = AutochecksStore(HostName("herbert"), cmk.utils.paths.autochecks_dir)
         store.write(_entries())
-        assert store.read() == _entries()
+        assert store.read(debug=False) == _entries()
+
+    def test_unreadable_file_reraises_in_debug_mode(self, tmp_path: Path) -> None:
+        (tmp_path / "herbert.mk").mkdir()
+
+        with pytest.raises(IsADirectoryError):
+            AutochecksStore(HostName("herbert"), tmp_path).read(debug=True)
 
 
 @pytest.mark.parametrize(
@@ -96,7 +102,7 @@ def test_memoizer_get_autochecks_of(
     with (cmk.utils.paths.autochecks_dir / "host.mk").open("w", encoding="utf-8") as f:
         f.write(autochecks_content)
 
-    memoizer = AutochecksMemoizer(cmk.utils.paths.autochecks_dir)
+    memoizer = AutochecksMemoizer(cmk.utils.paths.autochecks_dir, debug=False)
 
     result = memoizer.read(HostName("host"))
     assert result == expected_result

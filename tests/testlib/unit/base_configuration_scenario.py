@@ -35,7 +35,7 @@ from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
 class _AutochecksMocker(AutochecksMemoizer):
     def __init__(self) -> None:
-        super().__init__(cmk.utils.paths.autochecks_dir)
+        super().__init__(cmk.utils.paths.autochecks_dir, debug=True)
         self.raw_autochecks: dict[HostName, Sequence[AutocheckEntry]] = {}
 
     @override

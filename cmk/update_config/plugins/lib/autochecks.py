@@ -103,7 +103,7 @@ def _get_fixed_autochecks(
     debug: bool,
 ) -> Generator[RewriteError, None, list[AutocheckEntry]]:
     try:
-        autochecks = AutochecksStore(host_name, paths.autochecks_dir).read()
+        autochecks = AutochecksStore(host_name, paths.autochecks_dir).read(debug=debug)
     except Exception as exc:
         if debug:
             raise

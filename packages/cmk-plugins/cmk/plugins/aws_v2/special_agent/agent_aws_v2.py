@@ -12,10 +12,13 @@ Checkmk special agent for monitoring Amazon Web Services (AWS).
 """
 
 import argparse
+import io
 import logging
 import os
 import sys
+import threading
 from collections.abc import Mapping, Sequence
+from concurrent.futures import Future
 from typing import NamedTuple
 
 import boto3
@@ -47,10 +50,14 @@ from .credentials import (
     role_session_name,
     SpokeAccounts,
 )
+from .job_pool import JobPool
 from .runner import AWSSectionsGeneric, AWSSectionsUSEast
 from .sections.s3 import ResultDistributorS3Limits
 
 __version__ = "3.0.0b1"
+
+# How many account regions the agent queries at the same time.
+PARALLEL_JOBS = 8
 
 
 ACCESS_KEY_SECRET_OPTION = "secret"
@@ -467,6 +474,16 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 def _setup_logging(opt_debug: bool, opt_verbose: int) -> None:
     logging.getLogger().disabled = not (opt_debug or opt_verbose)
     configure_logging(logging.DEBUG if opt_verbose > 1 else logging.INFO)
+    for handler in logging.getLogger().handlers:
+        handler.addFilter(_name_the_job)
+
+
+def _name_the_job(record: logging.LogRecord) -> bool:
+    # The jobs of several accounts and regions log at the same time. Their thread names
+    # tell them apart.
+    if record.threadName and record.threadName != "MainThread":
+        record.name = f"{record.name} {record.threadName}"
+    return True
 
 
 def _sanitize_aws_services_params(
@@ -684,76 +701,89 @@ def not_opted_in(regions: Sequence[Mapping[str, str]]) -> frozenset[str]:
     )
 
 
-class AccountRun(NamedTuple):
+class RegionRun(NamedTuple):
+    output: str
     has_exceptions: bool
     notes: Sequence[AgentInfoRow]
 
 
-def _run_account(
+class _AccountJobs(NamedTuple):
+    account: AwsAccount
+    notes: Sequence[AgentInfoRow]
+    runs: Sequence[Future[RegionRun]]
+
+
+def _open_account(
+    credentials: AwsCredentials,
+    account_id: str,
+    args: argparse.Namespace,
+    regional_services: Sequence[str],
+    proxy_config: botocore.config.Config | None,
+) -> tuple[AwsAccount, Sequence[str], Sequence[AgentInfoRow]]:
+    """The account, the regions to query in it, and the regions it has not enabled."""
+    account = credentials.open_account(account_id)
+    if not regional_services or not args.regions:
+        return account, args.regions, []
+
+    not_enabled = regions_not_enabled(account.session, args.global_service_region, proxy_config)
+    enabled: list[str] = []
+    notes: list[AgentInfoRow] = []
+    for region in args.regions:
+        if region in not_enabled:
+            notes.append(
+                AgentInfoRow("info", account.id, "Region is not enabled in this account", region)
+            )
+        else:
+            enabled.append(region)
+    return account, enabled, notes
+
+
+def _run_region(
     args: argparse.Namespace,
     account: AwsAccount,
     account_config: AWSConfig,
-    global_services: Sequence[str],
-    regional_services: Sequence[str],
+    services: Sequence[str],
+    region: str,
+    sections_class: type[AWSSectionsGeneric | AWSSectionsUSEast],
+    s3_limits_distributor: ResultDistributorS3Limits,
     use_cache: bool,
     proxy_config: botocore.config.Config | None,
-) -> AccountRun:
-    """Run the sections of one account in every region."""
-    not_enabled = (
-        regions_not_enabled(account.session, args.global_service_region, proxy_config)
-        if regional_services and args.regions
-        else frozenset()
-    )
+) -> RegionRun:
+    """Run the sections of one account in one region."""
+    threading.current_thread().name = f"{account.id} {region}"
+    output = io.StringIO()
+    try:
+        # The account's session for every region. init_sections below tells the sections
+        # which region their clients belong to.
+        sections = sections_class(
+            args.hostname,
+            account.session,
+            account.id,
+            debug=args.debug,
+            config=proxy_config,
+            output=output,
+        )
+        sections.init_sections(services, region, account_config, s3_limits_distributor)
+        sections.run(use_cache=use_cache)
+    except AwsAccessError:
+        raise
+    except AssertionError:
+        if args.debug:
+            raise
+        return RegionRun(output.getvalue(), False, ())
+    except Exception as e:
+        LOGGER.info(e)
+        if args.debug:
+            raise
+        return RegionRun(output.getvalue(), True, ())
     notes = [
-        AgentInfoRow("info", account.id, "Region is not enabled in this account", region)
-        for region in args.regions
-        if region in not_enabled
+        AgentInfoRow("info", account.id, f"A service control policy denies {name}", region)
+        for name in sections.denied_by_scp
     ]
-    regions = [region for region in args.regions if region not in not_enabled]
-    # Collects the S3 limits across the regions of this account, so it must not be shared.
-    s3_limits_distributor = ResultDistributorS3Limits(regions[0] if regions else None)
-
-    has_exceptions = False
-    for aws_services, aws_regions, aws_sections in [
-        (global_services, [args.global_service_region], AWSSectionsUSEast),
-        (regional_services, regions, AWSSectionsGeneric),
-    ]:
-        if not aws_services or not aws_regions:
-            continue
-
-        for region in aws_regions:
-            try:
-                # The same session for every region. init_sections below tells the
-                # sections which region their clients belong to.
-                sections = aws_sections(
-                    args.hostname,
-                    account.session,
-                    account.id,
-                    debug=args.debug,
-                    config=proxy_config,
-                )
-                sections.init_sections(aws_services, region, account_config, s3_limits_distributor)
-                sections.run(use_cache=use_cache)
-                notes += [
-                    AgentInfoRow(
-                        "info", account.id, f"A service control policy denies {name}", region
-                    )
-                    for name in sections.denied_by_scp
-                ]
-            except AwsAccessError:
-                raise
-            except AssertionError:
-                if args.debug:
-                    raise
-            except Exception as e:
-                LOGGER.info(e)
-                has_exceptions = True
-                if args.debug:
-                    raise
-    return AccountRun(has_exceptions, notes)
+    return RegionRun(output.getvalue(), False, notes)
 
 
-def agent_aws_main(args: argparse.Namespace) -> int:
+def agent_aws_main(args: argparse.Namespace, parallel_jobs: int = PARALLEL_JOBS) -> int:
     _setup_logging(args.debug, args.verbose)
 
     proxy_config = _get_proxy(args)
@@ -805,26 +835,71 @@ def agent_aws_main(args: argparse.Namespace) -> int:
             {"services": ", ".join(regional_services)},
         )
 
+    accounts: list[tuple[str, _AccountJobs | AwsAccessError]] = []
+    with JobPool(parallel_jobs) as pool:
+        for account_id in account_ids:
+            try:
+                with pool.slot():
+                    account, regions, notes = _open_account(
+                        credentials, account_id, args, regional_services, proxy_config
+                    )
+            except AwsAccessError as ae:
+                accounts.append((account_id, ae))
+                continue
+            account_config = aws_config.for_account(account.id, host=account.id)
+            # Collects the S3 limits across the regions of this account, so it must not be
+            # shared with other accounts.
+            s3_limits_distributor = ResultDistributorS3Limits(regions[0] if regions else None)
+            region_jobs: list[
+                tuple[Sequence[str], str, type[AWSSectionsGeneric | AWSSectionsUSEast]]
+            ] = []
+            if global_services:
+                region_jobs.append((global_services, args.global_service_region, AWSSectionsUSEast))
+            if regional_services:
+                region_jobs += [
+                    (regional_services, region, AWSSectionsGeneric) for region in regions
+                ]
+
+            runs = [
+                pool.submit(
+                    _run_region,
+                    args,
+                    account,
+                    account_config,
+                    services,
+                    region,
+                    sections_class,
+                    s3_limits_distributor,
+                    use_cache,
+                    proxy_config,
+                )
+                for services, region, sections_class in region_jobs
+            ]
+            accounts.append((account_id, _AccountJobs(account, notes, runs)))
+
+    # The output follows the order of the accounts and regions, whichever job finished first.
     has_exceptions = False
     agent_info: list[AgentInfoRow] = []
-    for account_id in account_ids:
-        try:
-            account = credentials.open_account(account_id)
-            account_run = _run_account(
-                args,
-                account,
-                aws_config.for_account(account.id, host=account.id),
-                global_services,
-                regional_services,
-                use_cache,
-                proxy_config,
-            )
-        except AwsAccessError as ae:
+    for account_id, jobs in accounts:
+        if isinstance(jobs, AwsAccessError):
             # Only this account is lost. The others still get monitored.
-            agent_info.append(AgentInfoRow("error", account_id, str(ae)))
+            agent_info.append(AgentInfoRow("error", account_id, str(jobs)))
+            continue
+        error: AwsAccessError | None = None
+        notes = list(jobs.notes)
+        for run in jobs.runs:
+            try:
+                region_run = run.result()
+            except AwsAccessError as ae:
+                error = error or ae
+                continue
+            sys.stdout.write(region_run.output)
+            has_exceptions |= region_run.has_exceptions
+            notes += region_run.notes
+        if error is None:
+            agent_info += [AgentInfoRow("ok", jobs.account.id), *notes]
         else:
-            has_exceptions |= account_run.has_exceptions
-            agent_info += [AgentInfoRow("ok", account.id), *account_run.notes]
+            agent_info.append(AgentInfoRow("error", account_id, str(error)))
 
     write_agent_info(agent_info)
     return 1 if has_exceptions else 0

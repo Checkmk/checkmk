@@ -13,6 +13,8 @@ key. Roles in DENIED_ACCOUNT cannot be assumed.
 DescribeRegions names NOT_ENABLED_REGION as an opt-in region the account has not enabled.
 Every other call of SCP_DENIED_ACCOUNT is denied by a service control policy.
 
+S3 ListBuckets answers with an account that has no buckets.
+
 ListAccounts answers with ORGANIZATION_PAGES, one page per call, active and inactive
 accounts mixed. It denies callers that log in with NO_LIST_KEY_ID.
 
@@ -29,7 +31,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlparse
 
 HUB_ACCOUNT = "111111111111"
 ROLE_ACCOUNT = "222222222222"
@@ -127,6 +129,14 @@ _SCP_DENIED_RESPONSE = """\
 """
 
 
+_LIST_BUCKETS_RESPONSE = """\
+<ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <Owner><ID>1</ID><DisplayName>checkmk</DisplayName></Owner>
+  <Buckets></Buckets>
+</ListAllMyBucketsResult>
+"""
+
+
 _SERVICE_ERROR_RESPONSE = """\
 <ErrorResponse>
   <Error><Type>Sender</Type><Code>FakeAws</Code><Message>Not faked</Message></Error>
@@ -206,6 +216,8 @@ def _handler(sts: FakeSts) -> type[BaseHTTPRequestHandler]:
                         self._answer(403, _SCP_DENIED_RESPONSE)
                     elif params.get("Action") == "DescribeRegions":
                         self._answer(200, _DESCRIBE_REGIONS_RESPONSE)
+                    elif request.service == "s3" and urlparse(self.path).path == "/":
+                        self._answer(200, _LIST_BUCKETS_RESPONSE)
                     else:
                         self._answer(400, _SERVICE_ERROR_RESPONSE)
 

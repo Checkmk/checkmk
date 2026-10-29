@@ -6,6 +6,7 @@
 
 import itertools
 import json
+import re
 
 import pytest
 
@@ -109,8 +110,13 @@ def _steps(calls: list[AssumeRoleCall | SignedRequest]) -> list[str]:
     ]
 
 
-@pytest.mark.usefixtures("list_mode_output")
-def test_each_account_role_is_assumed_right_before_its_account(fake_sts: FakeSts) -> None:
+def test_each_account_role_is_assumed_right_before_its_account(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # With one job at a time the order is exact. More jobs look ahead by as many accounts.
+    monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
+    agent_aws_main(parse_arguments([*LOGIN_ARGS, *_account_args(ACCOUNTS)]), parallel_jobs=1)
+
     steps = [step for step, _ in itertools.groupby(_steps(fake_sts.calls))]
 
     assert steps == [
@@ -326,3 +332,47 @@ def test_assumed_role_account_gets_its_own_host(
     args = [*SINGLE_ACCOUNT_ARGS, "--assume-role", "--role-arn", ROLE]
 
     assert _hosts(fake_sts, monkeypatch, capsys, args) == {None, ROLE_ACCOUNT}
+
+
+def _two_regions_with_s3() -> list[str]:
+    return [
+        *LOGIN_ARGS,
+        *_account_args(ACCOUNTS),
+        "--region",
+        "eu-west-1",
+        "--service",
+        "s3",
+        "--s3-limits",
+        "--no-cache",
+    ]
+
+
+def _run(
+    fake_sts: FakeSts,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    parallel_jobs: int,
+) -> str:
+    monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
+    agent_aws_main(parse_arguments(_two_regions_with_s3()), parallel_jobs=parallel_jobs)
+    # The cache timestamps in the section headers differ from run to run.
+    return re.sub(r":cached\(\d+,", ":cached(<time>,", capsys.readouterr().out)
+
+
+def test_parallel_jobs_give_the_same_output_as_one_job(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    one_job = _run(fake_sts, monkeypatch, capsys, 1)
+
+    assert _run(fake_sts, monkeypatch, capsys, 4) == one_job
+
+
+def test_s3_limits_are_written_once_per_account_with_parallel_regions(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    output = _sections_by_host(_run(fake_sts, monkeypatch, capsys, 4))
+
+    assert {
+        account: sum(line.startswith("<<<aws_v2_s3_limits") for line in output[account])
+        for account in ACCOUNTS
+    } == dict.fromkeys(ACCOUNTS, 1)

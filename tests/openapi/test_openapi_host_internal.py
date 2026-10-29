@@ -72,7 +72,7 @@ def test_openapi_host_register_with_read_scoped_token_reports_insufficient_scope
     with get_client_store() as clients:
         client_id = clients.register(["https://client.example/callback"], None).ok.client_id
     with get_token_store() as tokens:
-        token = tokens.issue_token(
+        token = tokens.issue_delegated_token(
             with_admin[0],
             expires_at=datetime.now(UTC) + timedelta(minutes=5),
             resource=None,

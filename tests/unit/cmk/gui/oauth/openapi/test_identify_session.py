@@ -56,7 +56,7 @@ def test_identify_issues_no_token(
     clients.GuiSession.identify({"session_cookie": cookie}, headers=internal_token)
 
     with get_token_store() as tokens:
-        assert tokens.list_all() == []
+        assert tokens.list_all_usable_grants() == []
     assert [e for e in security_events if e.summary == "oauth token issued"] == []
 
 

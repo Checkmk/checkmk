@@ -46,7 +46,8 @@ _AI_CONTROL_PLANE_CLIENT_ID: Final = ClientId("checkmk-ai-control-plane")
 _AI_CONTROL_PLANE_CLIENT_NAME: Final = "Checkmk AI Control Plane"
 
 # One token serves one turn of the AI control plane, so it has to outlive
-# the longest turn.
+# the longest turn. The same lifetime is the idle timeout of the delegated
+# session.
 _TOKEN_LIFETIME: Final = timedelta(hours=1)
 
 
@@ -71,16 +72,16 @@ def _requested_scopes(raw: str) -> frozenset[ScopeId]:
 def _issue_token(
     user_id: UserId, *, resource: str, scopes: frozenset[ScopeId]
 ) -> IssuedAccessToken:
-    """A new token for the built-in client, which is created if it is missing."""
+    """A token of a live delegated session of the built-in client, which is created if it is missing."""
     with get_client_store() as clients:
         clients.ensure_builtin(_AI_CONTROL_PLANE_CLIENT_ID, _AI_CONTROL_PLANE_CLIENT_NAME)
     with get_token_store() as tokens:
-        issued = tokens.issue_token(
+        issued = tokens.issue_delegated_token(
             user_id,
-            expires_at=datetime.now(UTC) + _TOKEN_LIFETIME,
             resource=resource,
             scope=scopes,
             client_id=_AI_CONTROL_PLANE_CLIENT_ID,
+            expires_at=datetime.now(UTC) + _TOKEN_LIFETIME,
         )
     if not issued.is_ok():
         # Only if an admin deleted the client right after it was ensured.

@@ -19,6 +19,7 @@ import type {
   ServiceOverview,
   ServiceRef
 } from '@/monitoring/shared/api/types'
+import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { ActionFeedback } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import { ACK_ACTION_ID } from '@/monitoring/shared/components/action/actions/acknowledge'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
@@ -26,6 +27,8 @@ import type { MonitoringActionRegistry } from '@/monitoring/shared/components/ac
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import type { DisplayOptions } from '@/monitoring/shared/types'
+
+import { makeListingService } from '../../shared/services/testHelpers'
 
 const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
@@ -726,6 +729,22 @@ describe('ServiceSlideIn', () => {
     await screen.findByText('Service details')
 
     await userEvent.click(screen.getByRole('button', { name: 'Close' }))
+
+    expect(emitted()['close']).toHaveLength(1)
+  })
+
+  it('emits close once a label narrowed the listing behind it', async () => {
+    vi.spyOn(client, 'GET').mockResolvedValue({
+      data: makeOverview({ labels: { owner: { value: 'platform', source: 'explicit' } } }),
+      error: undefined,
+      response: new Response()
+    } as never)
+    const { emitted } = render(ServiceSlideIn, {
+      props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST },
+      global: { provide: { [MONITORING_SERVICE as symbol]: makeListingService() } }
+    })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'owner: platform' }))
 
     expect(emitted()['close']).toHaveLength(1)
   })

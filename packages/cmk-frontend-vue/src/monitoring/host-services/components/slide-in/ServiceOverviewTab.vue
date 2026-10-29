@@ -19,7 +19,7 @@ import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
 import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
-import { toNameItems, toTagItems } from '@/monitoring/shared/labels'
+import { labelCondition, toNameItems, toTagItems } from '@/monitoring/shared/labels'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const props = defineProps<{ data: ServiceOverview; displayOptions: DisplayOptions }>()
@@ -94,7 +94,7 @@ const nextCheck = computed(() =>
 
       <dt>{{ _t('Labels:') }}</dt>
       <dd>
-        <OverviewLabels :labels="data.labels" />
+        <OverviewLabels :labels="data.labels" :filter-by="labelCondition" />
       </dd>
     </OverviewDetailList>
 

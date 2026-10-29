@@ -9,7 +9,10 @@ import { describe, expect, it } from 'vitest'
 
 import ServiceOverviewTab from '@/monitoring/host-services/components/slide-in/ServiceOverviewTab.vue'
 import type { ServiceOverview } from '@/monitoring/shared/api/types'
+import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { DisplayOptions } from '@/monitoring/shared/types'
+
+import { makeListingService } from '../../../shared/services/testHelpers'
 
 const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
@@ -229,5 +232,25 @@ describe('ServiceOverviewTab', () => {
     })
 
     expect(screen.getByRole('link', { name: 'Host is in scheduled downtime' })).toBeInTheDocument()
+  })
+
+  it('narrows the listing to the services carrying a label clicked on', async () => {
+    const service = makeListingService()
+    render(ServiceOverviewTab, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        data: makeOverview({ labels: { owner: { value: 'platform', source: 'explicit' } } })
+      },
+      global: { provide: { [MONITORING_SERVICE as symbol]: service } }
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: 'owner: platform' }))
+
+    expect(service.filterState.value).toStrictEqual({
+      type: 'condition',
+      field: 'labels',
+      op: 'all_of',
+      value: ['owner:platform']
+    })
   })
 })

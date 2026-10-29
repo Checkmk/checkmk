@@ -326,6 +326,25 @@ test('renders the labels of a service, sorted alphabetically', () => {
   ])
 })
 
+test('clicking a label narrows the listing to the services carrying it', async () => {
+  const service = makeListingService()
+  mountRow(
+    makeService({ labels: { owner: { value: 'platform', source: 'explicit' } } }),
+    makeTableRow(),
+    {},
+    service
+  )
+
+  await fireEvent.click(screen.getByRole('button', { name: 'owner: platform' }))
+
+  expect(service.filterState.value).toStrictEqual({
+    type: 'condition',
+    field: 'labels',
+    op: 'all_of',
+    value: ['owner:platform']
+  })
+})
+
 test('renders the perfometer of a service that has one', () => {
   mountRow(
     makeService({

@@ -15,7 +15,7 @@ import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import CmkSlideInTabbed, { type SlideInTab } from 'cmk-ui-library/components/CmkSlideInTabbed'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, markRaw, onUnmounted, ref, watch } from 'vue'
+import { computed, markRaw, onUnmounted, provide, ref, watch } from 'vue'
 
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
 import { HostServicesApi } from '@/monitoring/host-services/api/services'
@@ -26,6 +26,7 @@ import type {
   ServiceOverview,
   ServiceRef
 } from '@/monitoring/shared/api/types'
+import { AFTER_NARROW } from '@/monitoring/shared/components/MonitoringTableContext'
 import ActionFeedback, {
   type ActionFeedback as ActionFeedbackResult
 } from '@/monitoring/shared/components/action/ActionFeedback.vue'
@@ -80,6 +81,8 @@ const emit = defineEmits<{
 }>()
 
 const { _t } = usei18n()
+
+provide(AFTER_NARROW, () => emit('close'))
 
 const servicesApi = new HostServicesApi()
 const graphsApi = new GraphsApi()

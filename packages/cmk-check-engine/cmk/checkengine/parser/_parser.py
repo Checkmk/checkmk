@@ -14,6 +14,7 @@ from typing import Final, override, Protocol
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.fetcher_abc import FetchResult
 from cmk.checkengine.helper_interface import AgentRawData, SourceInfo
 from cmk.checkengine.plugins import SectionName
 from cmk.checkengine.snmplib import SNMPRawData, SNMPRawDataElem
@@ -98,12 +99,7 @@ class Parser[Tin, Tout: Mapping[SectionName, Sequence]](abc.ABC):
 class ParserFunction(Protocol):
     def __call__(
         self,
-        fetched: Iterable[
-            tuple[
-                SourceInfo,
-                result.Result[AgentRawData | SNMPRawData, Exception],
-            ]
-        ],
+        fetched: Iterable[FetchResult],
     ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]: ...
 
 

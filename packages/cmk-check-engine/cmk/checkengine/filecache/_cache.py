@@ -13,7 +13,7 @@ Cache hierarchy
 .. uml::
 
     abstract FileCache<TRawData> {
-        + read(Mode) : TRawData | None
+        + read(Mode) : CachedRawData[TRawData] | None
         + write(TRawData, Mode) : None
         - {abstract} _from_cache_file(bytes) : TRawData
         - {abstract} _to_cache_file(TRawData) : bytes
@@ -63,6 +63,7 @@ from cmk.checkengine.fetcher_abc import DeserializationContext, FetcherError, Mo
 from cmk.checkengine.helper_interface import JsonSerializable
 
 __all__ = [
+    "CachedRawData",
     "FileCache",
     "FileCacheMode",
     "FileCacheOptions",
@@ -88,6 +89,12 @@ class FileCacheParams(TypedDict, total=False):
     simulation: bool
     use_only_cache: bool
     file_cache_mode: int
+
+
+class CachedRawData[TRawData](NamedTuple):
+    raw_data: TRawData
+    # Modification time of the cache file
+    mtime: float
 
 
 class MaxAge(NamedTuple):
@@ -201,12 +208,14 @@ class FileCache[TRawData: Sized](
 
         return True
 
-    def read(self, mode: Mode) -> TRawData | None:
+    def read(self, mode: Mode) -> CachedRawData[TRawData] | None:
         logger.debug("Read from cache: %(cls)s", {"cls": self.__class__.__name__})
-        raw_data = self._read(mode)
-        if raw_data is not None:
-            logger.debug("Got %(num_bytes)r bytes data from cache", {"num_bytes": len(raw_data)})
-            return raw_data
+        cached = self._read(mode)
+        if cached is not None:
+            logger.debug(
+                "Got %(num_bytes)r bytes data from cache", {"num_bytes": len(cached.raw_data)}
+            )
+            return cached
 
         if self.simulation:
             raise FetcherError("No cached data available (caching enforced via simulation mode)")
@@ -214,7 +223,7 @@ class FileCache[TRawData: Sized](
         if self.use_only_cache:
             raise FetcherError("No cached data available")
 
-        return raw_data
+        return None
 
     def _make_path(self, mode: Mode) -> Path:
         # This is a kind of arbitrary mini-language but explicit in the
@@ -223,30 +232,28 @@ class FileCache[TRawData: Sized](
         # creation, that's fine with me.
         return self.base_path / self.relative_path_template.format(mode=mode.name.lower())
 
-    def _read(self, mode: Mode) -> TRawData | None:
+    def _read(self, mode: Mode) -> CachedRawData[TRawData] | None:
         if FileCacheMode.READ not in self.file_cache_mode or not self._do_cache(mode):
             return None
 
         path = self._make_path(mode)
-        try:
-            cachefile_age = time.time() - path.stat().st_mtime
-        except FileNotFoundError:
-            logger.debug("Not using cache (does not exist)")
-            return None
-
-        if cachefile_age > self.max_age.get(mode):
-            logger.debug(
-                "Not using cache (Too old. Age is %(age)d sec, allowed is %(max_age)s sec)",
-                {"age": cachefile_age, "max_age": self.max_age.get(mode)},
-            )
-            return None
-
         # TODO: Use some generic store file read function to generalize error handling,
         # but there is currently no function that simply reads data from the file
         try:
-            cache_file = path.read_bytes()
+            # Take the modification time from the opened file, so that it belongs to the
+            # content even if the file is replaced in the meantime.
+            with path.open("rb") as f:
+                mtime = os.fstat(f.fileno()).st_mtime
+                cachefile_age = time.time() - mtime
+                if cachefile_age > self.max_age.get(mode):
+                    logger.debug(
+                        "Not using cache (Too old. Age is %(age)d sec, allowed is %(max_age)s sec)",
+                        {"age": cachefile_age, "max_age": self.max_age.get(mode)},
+                    )
+                    return None
+                cache_file = f.read()
         except FileNotFoundError:
-            logger.debug("Not using cache (Does not exist)")
+            logger.debug("Not using cache (does not exist)")
             return None
 
         if not cache_file:
@@ -254,7 +261,7 @@ class FileCache[TRawData: Sized](
             return None
 
         logger.debug("Using data from cache file %(path)s", {"path": path})
-        return self._from_cache_file(cache_file)
+        return CachedRawData(self._from_cache_file(cache_file), mtime)
 
     def write(self, raw_data: TRawData, mode: Mode) -> None:
         if FileCacheMode.WRITE not in self.file_cache_mode or not self._do_cache(mode):

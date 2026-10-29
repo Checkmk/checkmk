@@ -75,10 +75,10 @@ def get_raw_data(dump_path: Path) -> OK:
         file_cache_mode=FileCacheMode.READ,
     )
 
-    fetched_data = agent_cache.read(Mode.CHECKING)
-    assert fetched_data
-    LOGGER.debug("fetched_data: %s\n\n", fetched_data)
-    return result.OK(fetched_data)
+    cached = agent_cache.read(Mode.CHECKING)
+    assert cached
+    LOGGER.debug("fetched_data: %s\n\n", cached.raw_data)
+    return result.OK(cached.raw_data)
 
 
 def parser(config: ParserConfig) -> CMKParser:
@@ -198,7 +198,9 @@ def discover_services(
 ) -> Sequence[ConfiguredService]:
     def _fetcher():
         return lambda *a, **ka: [  # noqa: ARG005
-            FetchResult(source_info, get_raw_data(DUMPS_DIR / agent_data_filename), Snapshot.null())
+            FetchResult(
+                source_info, get_raw_data(DUMPS_DIR / agent_data_filename), Snapshot.null(), None
+            )
         ]
 
     commandline_discovery(

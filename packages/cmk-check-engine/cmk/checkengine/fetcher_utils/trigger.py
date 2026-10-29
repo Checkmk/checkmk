@@ -9,7 +9,7 @@ import abc
 from collections.abc import Mapping, Sized
 from functools import partial
 from pathlib import Path
-from typing import Final, final, override, Protocol, Self, TypeVar
+from typing import Final, final, NamedTuple, override, Protocol, Self, TypeVar
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import MKTimeout
@@ -24,9 +24,16 @@ from .secrets import FetcherSecrets
 __all__ = [
     "PlainFetcherTrigger",
     "FetcherTrigger",
+    "RawDataResult",
 ]
 
 _TRawData = TypeVar("_TRawData", bound=Sized)
+
+
+class RawDataResult[TRawData](NamedTuple):
+    raw_data: result.Result[TRawData, Exception]
+    # Modification time of the cache file, if the data was read from the file cache
+    cached_at: int | None
 
 
 class FetcherTrigger(JsonSerializable[Mapping[str, str], DeserializationContext]):
@@ -42,11 +49,11 @@ class FetcherTrigger(JsonSerializable[Mapping[str, str], DeserializationContext]
         secrets: FetcherSecrets,
         *,
         debug: bool,
-    ) -> result.Result[_TRawData, Exception]:
+    ) -> RawDataResult[_TRawData]:
         try:
             cached = file_cache.read(mode)
             if cached is not None:
-                return result.OK(cached)
+                return RawDataResult(result.OK(cached.raw_data), int(cached.mtime))
 
             if file_cache.simulation:
                 raise FetcherError(f"{fetcher}: data unavailable in simulation mode")
@@ -61,7 +68,7 @@ class FetcherTrigger(JsonSerializable[Mapping[str, str], DeserializationContext]
                 # behind for the next (cache-only) read. (See: CMK-31896)
                 error=lambda _exc: file_cache.delete(mode),
             )
-            return fetched
+            return RawDataResult(fetched, None)
 
         except MKTimeout, TimeoutError:
             raise
@@ -70,12 +77,12 @@ class FetcherTrigger(JsonSerializable[Mapping[str, str], DeserializationContext]
             # behind for the next (cache-only) read. (See: CMK-31896)
             file_cache.delete(mode)
             # These are intentionally raised exceptions for which we don't need crash reports
-            return result.Error(exc)
+            return RawDataResult(result.Error(exc), None)
         except Exception as exc:
             if debug:
                 raise
             self._on_error()
-            return result.Error(exc)
+            return RawDataResult(result.Error(exc), None)
 
     def _on_error(self) -> None:
         create_fetcher_crash_dump(

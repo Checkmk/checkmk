@@ -12,7 +12,6 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Literal
 
-import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.auto_queue import AutoQueue
@@ -34,7 +33,8 @@ from cmk.checkengine.discovery._discover.host_labels import (
 from cmk.checkengine.discovery._utils.filters import ServiceFilter, ServiceFilters
 from cmk.checkengine.discovery._utils.params import DiscoveryCheckParameters
 from cmk.checkengine.discovery.types import DiscoverySettings, QualifiedDiscovery
-from cmk.checkengine.helper_interface import AgentRawData, HostKey, SourceInfo
+from cmk.checkengine.fetcher_abc import FetchResult
+from cmk.checkengine.helper_interface import HostKey
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.plugins import (
     AutocheckEntry,
@@ -48,7 +48,6 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     store_piggybacked_sections,
 )
-from cmk.checkengine.snmplib import SNMPRawData
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.checkengine.summarize import SummarizerFunction
 from cmk.ruleset_matcher.labels import HostLabel
@@ -102,7 +101,7 @@ def execute_check_discovery(
     is_cluster: bool,
     cluster_nodes: Sequence[HostName],
     params: DiscoveryCheckParameters,
-    fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
+    fetched: Iterable[FetchResult],
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],

@@ -3012,21 +3012,25 @@ def _automation_diag_cmk_agent(
     )
 
     exit_state, output = 0, ""
-    raw_data = PlainFetcherTrigger(omd_root=omd_root).get_raw_data(
-        file_cache=NoCache(),
-        fetcher=TCPFetcher(
-            family=socket.AddressFamily.AF_INET,
-            address=(ipaddress, int(diag_cmk_agent_input.agent_port)),
-            timeout=float(diag_cmk_agent_input.timeout),
-            host_name=host_name,
-            encryption_handling=agent_protocol.TCPEncryptionHandling.ANY_AND_PLAIN,
-            uuid_file=cmk.utils.paths.uuid_lookup_dir / host_name,
-            pre_shared_secret=None,
-            tls_config=tls_config,
-        ),
-        mode=Mode.CHECKING,
-        secrets=ActivatedSecrets(),  # not used anyway.
-        debug=state.debug,
+    raw_data = (
+        PlainFetcherTrigger(omd_root=omd_root)
+        .get_raw_data(
+            file_cache=NoCache(),
+            fetcher=TCPFetcher(
+                family=socket.AddressFamily.AF_INET,
+                address=(ipaddress, int(diag_cmk_agent_input.agent_port)),
+                timeout=float(diag_cmk_agent_input.timeout),
+                host_name=host_name,
+                encryption_handling=agent_protocol.TCPEncryptionHandling.ANY_AND_PLAIN,
+                uuid_file=cmk.utils.paths.uuid_lookup_dir / host_name,
+                pre_shared_secret=None,
+                tls_config=tls_config,
+            ),
+            mode=Mode.CHECKING,
+            secrets=ActivatedSecrets(),  # not used anyway.
+            debug=state.debug,
+        )
+        .raw_data
     )
 
     if raw_data.is_ok():
@@ -3477,7 +3481,7 @@ class AutomationDiagHost:
                 Mode.CHECKING,
                 secrets_config,
                 debug=debug,
-            )
+            ).raw_data
             if raw_data.is_ok():
                 # We really receive a byte string here. The agent sections
                 # may have different encodings and are normally decoded one
@@ -4152,7 +4156,7 @@ def _automation_get_agent_output(
                     Mode.CHECKING,
                     secrets=secrets,
                     debug=state.debug,
-                )
+                ).raw_data
                 host_sections = parse_raw_data(
                     make_parser(
                         config.make_parser_config(
@@ -4164,6 +4168,7 @@ def _automation_get_agent_output(
                         source_info.hostname,
                         source_info.ipaddress,
                         source_info.fetcher_type,
+                        cached_at=None,
                         omd_root=cmk.utils.paths.omd_root,
                         persisted_section_dir=SectionStore.make_persisted_section_dir(
                             source_info.hostname,

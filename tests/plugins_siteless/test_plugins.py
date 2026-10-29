@@ -20,9 +20,11 @@ from cmk.base.checkers import (
     SectionPluginMapper,
 )
 from cmk.ccc import debug
+from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.checkengine import value_store
 from cmk.checkengine.checking import execute_checkmk_checks
+from cmk.checkengine.fetcher_abc import FetchResult
 from cmk.checkengine.helper_interface import FetcherType, SourceInfo, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.plugin_backend import load_all_plugins
@@ -180,7 +182,14 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
         _ = execute_checkmk_checks(
             hostname=HOSTNAME,
             omd_root=Path(""),
-            fetched=[(source_info, get_raw_data(DUMPS_DIR / agent_data_filename))],
+            fetched=[
+                FetchResult(
+                    source_info,
+                    get_raw_data(DUMPS_DIR / agent_data_filename),
+                    Snapshot.null(),
+                    None,
+                )
+            ],
             parser=parser(parser_config),
             summarizer=summarizer(HOSTNAME),
             section_plugins=SectionPluginMapper(

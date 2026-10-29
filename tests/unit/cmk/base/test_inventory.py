@@ -1260,21 +1260,18 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
                     SourceInfo(hostname, None, "ident", FetcherType.TCP, SourceType.HOST),
                     result.Error(Exception()),
                     Snapshot.null(),
+                    None,
                 ),
                 FetchResult(
                     SourceInfo(hostname, None, "ident", FetcherType.TCP, SourceType.HOST),
                     result.OK(AgentRawData(b"<<<data>>>")),
                     Snapshot.null(),
+                    None,
                 ),
             ]
 
     def parser(
-        fetched: Iterable[
-            tuple[
-                SourceInfo,
-                result.Result[AgentRawData | SNMPRawData, Exception],
-            ]
-        ],
+        fetched: Iterable[FetchResult],
     ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
         def parse(
             header: AgentRawData | SNMPRawData,
@@ -1285,14 +1282,14 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
 
         return [
             (
-                source_info,
+                f.source,
                 (
-                    result.Error(res.error)
-                    if res.is_error()
-                    else res.map(lambda ok: HostSections(parse(ok)))
+                    result.Error(f.raw_data.error)
+                    if f.raw_data.is_error()
+                    else f.raw_data.map(lambda ok: HostSections(parse(ok)))
                 ),
             )
-            for source_info, res in fetched
+            for f in fetched
         ]
 
     hostname = HostName("my-host")
@@ -1594,16 +1591,17 @@ class _ProductFetcher(FetcherFunction):
                 SourceInfo(host_name, None, "ident", FetcherType.TCP, SourceType.HOST),
                 self._raw_data,
                 Snapshot.null(),
+                None,
             )
         ]
 
 
 def _parse_product(
-    fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
+    fetched: Iterable[FetchResult],
 ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
     return [
-        (source_info, res.map(lambda ok: HostSections({SectionName("data"): ok})))
-        for source_info, res in fetched
+        (f.source, f.raw_data.map(lambda ok: HostSections({SectionName("data"): ok})))
+        for f in fetched
     ]
 
 

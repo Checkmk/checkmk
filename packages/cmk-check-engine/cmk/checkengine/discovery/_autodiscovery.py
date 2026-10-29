@@ -171,7 +171,7 @@ def automation_discovery(
 
     try:
         fetched = fetcher(host_name, ip_address=None)
-        host_sections = parser((f.source, f.raw_data) for f in fetched)
+        host_sections = parser(fetched)
         if failed_sources_results := [r for r in summarizer(host_sections) if r.state != 0]:
             return DiscoveryReport(error_text=", ".join(r.summary for r in failed_sources_results))
 

@@ -126,7 +126,7 @@ def get_check_preview(
     with tracer.span("preview.fetch", attributes={"cmk.host_name": host_name}):
         fetched = fetcher(host_name, ip_address=ip_address)
     with tracer.span("preview.parse", attributes={"cmk.host_name": host_name}):
-        host_sections = parser((f.source, f.raw_data) for f in fetched)
+        host_sections = parser(fetched)
     host_sections_by_host = group_by_host(
         ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok())
     )

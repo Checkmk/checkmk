@@ -13,9 +13,9 @@ from typing import NamedTuple
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import regex
-from cmk.ccc.resulttype import Result
 from cmk.checkengine.checkerplugin import AggregatedResult, CheckerPlugin, ConfiguredService
-from cmk.checkengine.helper_interface import AgentRawData, HostKey, SourceInfo
+from cmk.checkengine.fetcher_abc import FetchResult
+from cmk.checkengine.helper_interface import HostKey
 from cmk.checkengine.inventory import (
     HWSWInventoryParameters,
     inventorize_status_data_of_real_host,
@@ -33,7 +33,6 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     store_piggybacked_sections,
 )
-from cmk.checkengine.snmplib import SNMPRawData
 from cmk.checkengine.specs.checkresults import ActiveCheckResult, SubmittableServiceCheckResult
 from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.checkengine.submitters import Submittee, Submitter
@@ -69,12 +68,7 @@ def execute_checkmk_checks(
     *,
     hostname: HostName,
     omd_root: Path,
-    fetched: Iterable[
-        tuple[
-            SourceInfo,
-            Result[AgentRawData | SNMPRawData, Exception],
-        ]
-    ],
+    fetched: Iterable[FetchResult],
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],

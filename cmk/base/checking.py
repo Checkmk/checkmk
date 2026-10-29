@@ -282,7 +282,7 @@ def run_checking(
                 checks_result = execute_checkmk_checks(
                     hostname=hostname,
                     omd_root=cmk.utils.paths.omd_root,
-                    fetched=((f.source, f.raw_data) for f in fetched),
+                    fetched=fetched,
                     parser=parser,
                     summarizer=summarizer,
                     section_plugins=SectionPluginMapper(

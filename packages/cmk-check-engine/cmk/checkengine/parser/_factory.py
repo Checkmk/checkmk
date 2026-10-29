@@ -23,6 +23,9 @@ from ._snmp import SNMPParser
 __all__ = ["make_parser", "ParserConfig"]
 logger = logging.getLogger(__name__)
 
+# Push interval of the agent controller (cmk-agent-ctl, modes/push.rs)
+_PUSH_AGENT_INTERVAL = 60
+
 
 @dataclasses.dataclass(frozen=True)
 class ParserConfig:
@@ -44,6 +47,7 @@ def make_parser(
     ip_address: HostAddress | None,
     fetcher_type: FetcherType,
     *,
+    cached_at: int | None,
     omd_root: Path,
     persisted_section_dir: Path,
     keep_outdated: bool,
@@ -72,6 +76,14 @@ def make_parser(
         host_name,
         section_store,
         host_check_interval=config.check_interval(host_name),
+        # The agent receiver stores push data in a file. Its modification time is the
+        # time the data arrived. Reporting the data as cached since then makes the core
+        # allow for the age of the data when computing the staleness.
+        default_cache_info=(
+            (cached_at, _PUSH_AGENT_INTERVAL)
+            if fetcher_type is FetcherType.PUSH_AGENT and cached_at is not None
+            else None
+        ),
         translation=config.parsed_piggyback_translations(host_name),
         keep_outdated=keep_outdated,
         encoding_fallback=config.fallback_agent_output_encoding,

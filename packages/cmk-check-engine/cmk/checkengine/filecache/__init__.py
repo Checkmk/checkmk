@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._agent import AgentFileCache
-from ._cache import FileCache, FileCacheMode, FileCacheOptions, MaxAge, NoCache
+from ._cache import CachedRawData, FileCache, FileCacheMode, FileCacheOptions, MaxAge, NoCache
 from ._snmp import SNMPFileCache
 
 __all__ = [
+    "CachedRawData",
     "FileCache",
     "FileCacheOptions",
     "FileCacheMode",

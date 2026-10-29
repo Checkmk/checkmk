@@ -236,7 +236,7 @@ def _mode_dump_agent(
                 FetchMode.CHECKING,
                 secrets,
                 debug=global_options.debug,
-            )
+            ).raw_data
             host_sections = parse_raw_data(
                 make_parser(
                     config.make_parser_config(
@@ -248,6 +248,7 @@ def _mode_dump_agent(
                     source_info.hostname,
                     source_info.ipaddress,
                     source_info.fetcher_type,
+                    cached_at=None,
                     omd_root=cmk.utils.paths.omd_root,
                     persisted_section_dir=SectionStore.make_persisted_section_dir(
                         source_info.hostname,

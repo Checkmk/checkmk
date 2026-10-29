@@ -526,6 +526,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         section_store: SectionStore[Sequence[AgentRawDataSectionElem]],
         *,
         host_check_interval: float,
+        default_cache_info: tuple[int, int] | None,
         keep_outdated: bool,
         translation: TranslationOptions,
         encoding_fallback: str,
@@ -535,6 +536,8 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         self.hostname: Final = hostname
         # give the piggybacked host a little bit more time
         self.cache_piggybacked_data_for: Final = int(1.5 * host_check_interval)
+        # Cache info (cached_at, cache_interval) for sections without own cache info
+        self.default_cache_info: Final = default_cache_info
         self.section_store: Final = section_store
         self.keep_outdated: Final = keep_outdated
         self.translation: Final = translation
@@ -554,6 +557,10 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         section_info = make_section_info(raw_sections)
         sections = make_decoded_sections(raw_sections)
         cache_info = make_cache_info(section_info, now)
+        if self.default_cache_info is not None:
+            cache_info.update(
+                {name: self.default_cache_info for name in section_info if name not in cache_info}
+            )
 
         new_sections = self.section_store.update(
             sections,

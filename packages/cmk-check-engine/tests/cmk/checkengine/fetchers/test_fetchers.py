@@ -32,6 +32,7 @@ from cmk.checkengine.fetchers.snmp import SNMPFetcher, SNMPScanConfig, SNMPSecti
 from cmk.checkengine.fetchers.tcp import TCPFetcher, TLSConfig
 from cmk.checkengine.filecache import (
     AgentFileCache,
+    CachedRawData,
     FileCache,
     FileCacheMode,
     MaxAge,
@@ -167,12 +168,29 @@ class TestAgentFileCache_and_SNMPFileCache:
         file_cache.write(raw_data, mode)
 
         assert path.exists()
-        assert file_cache.read(mode) == raw_data
+        assert (cached := file_cache.read(mode)) is not None
+        assert cached.raw_data == raw_data
 
         # Now with another instance
         clone = clone_file_cache(file_cache)
         assert clone.file_cache_mode is FileCacheMode.READ_WRITE
-        assert clone.read(mode) == raw_data
+        assert (cached := clone.read(mode)) is not None
+        assert cached.raw_data == raw_data
+
+    def test_read_returns_modification_time_of_cache_file(
+        self,
+        file_cache: FileCache[Sized],
+        path: Path,
+        raw_data: AgentRawData | SNMPRawData,
+    ) -> None:
+        mode = Mode.DISCOVERY
+        file_cache.file_cache_mode = FileCacheMode.READ_WRITE
+        file_cache.write(raw_data, mode)
+
+        cached = file_cache.read(mode)
+
+        assert cached is not None
+        assert cached.mtime == path.stat().st_mtime
 
     def test_read_only(
         self,
@@ -262,8 +280,8 @@ class StubFileCache[TRawData: Sized](FileCache[TRawData]):
         self.cache = raw_data
 
     @override
-    def read(self, _mode: Mode) -> TRawData | None:
-        return self.cache
+    def read(self, _mode: Mode) -> CachedRawData[TRawData] | None:
+        return None if self.cache is None else CachedRawData(self.cache, 0.0)
 
 
 class CannedFetcherTrigger(PlainFetcherTrigger):
@@ -303,10 +321,41 @@ class TestFetcherTriggerCacheHandling:
 
         out = trigger.get_raw_data(
             file_cache, PiggybackFetcher(), Mode.DISCOVERY, ActivatedSecrets(), debug=False
-        )
+        ).raw_data
 
         assert out.is_ok()
         assert path.exists()
+
+    def test_fetched_data_has_no_cached_at(self, file_cache: AgentFileCache) -> None:
+        trigger = CannedFetcherTrigger(Path("/"), result.OK(AgentRawData(b"<<<check_mk>>>\nfresh")))
+
+        _raw_data, cached_at = trigger.get_raw_data(
+            file_cache, PiggybackFetcher(), Mode.DISCOVERY, ActivatedSecrets(), debug=False
+        )
+
+        assert cached_at is None
+
+    def test_cached_data_is_cached_at_modification_time_of_cache_file_in_seconds(
+        self, path: Path
+    ) -> None:
+        file_cache = AgentFileCache(
+            base_path=Path("/"),
+            relative_path_template=str(path),
+            max_age=MaxAge.unlimited(),
+            simulation=False,
+            use_only_cache=True,
+            file_cache_mode=FileCacheMode.READ,
+        )
+        path.write_bytes(b"<<<check_mk>>>\ncached")
+        os.utime(path, (1000.7, 1000.7))
+        trigger = CannedFetcherTrigger(Path("/"), result.Error(FetcherError("not reached")))
+
+        raw_data, cached_at = trigger.get_raw_data(
+            file_cache, PiggybackFetcher(), Mode.CHECKING, ActivatedSecrets(), debug=False
+        )
+
+        assert raw_data == result.OK(AgentRawData(b"<<<check_mk>>>\ncached"))
+        assert cached_at == 1000
 
     def test_failed_fetch_deletes_stale_cache(self, file_cache: AgentFileCache, path: Path) -> None:
         # A previous successful fetch left populated data on disk.
@@ -317,7 +366,7 @@ class TestFetcherTriggerCacheHandling:
 
         out = trigger.get_raw_data(
             file_cache, PiggybackFetcher(), Mode.DISCOVERY, ActivatedSecrets(), debug=False
-        )
+        ).raw_data
 
         assert not out.is_ok()
         # The stale cache must be gone so a later cache-only read reports the failure
@@ -382,7 +431,7 @@ class TestIPMIFetcher:
             assert (
                 PlainFetcherTrigger(Path("/"))
                 .get_raw_data(file_cache, fetcher, Mode.CHECKING, ActivatedSecrets(), debug=False)
-                .is_ok()
+                .raw_data.is_ok()
             )
 
     def test_command_raises_IpmiException_handling(self) -> None:
@@ -396,8 +445,10 @@ class TestIPMIFetcher:
         )
 
         with IPMIFetcherStub(address=HostAddress("127.0.0.1"), username="", password="") as fetcher:
-            raw_data = PlainFetcherTrigger(Path("/")).get_raw_data(
-                file_cache, fetcher, Mode.CHECKING, ActivatedSecrets(), debug=False
+            raw_data = (
+                PlainFetcherTrigger(Path("/"))
+                .get_raw_data(file_cache, fetcher, Mode.CHECKING, ActivatedSecrets(), debug=False)
+                .raw_data
             )
 
         assert isinstance(raw_data.error, FetcherError)
@@ -596,10 +647,10 @@ class TestSNMPFetcherFetch:
         )
         assert PlainFetcherTrigger(Path("/")).get_raw_data(
             file_cache, fetcher, Mode.INVENTORY, ActivatedSecrets(), debug=False
-        ) == result.OK({})  # 'pim' is not an inventory section
+        ).raw_data == result.OK({})  # 'pim' is not an inventory section
         assert PlainFetcherTrigger(Path("/")).get_raw_data(
             file_cache, fetcher, Mode.CHECKING, ActivatedSecrets(), debug=False
-        ) == result.OK({SectionName(raw_section_name): [table]})
+        ).raw_data == result.OK({SectionName(raw_section_name): [table]})
 
         monkeypatch.setattr(
             fetcher,
@@ -608,7 +659,7 @@ class TestSNMPFetcherFetch:
         )
         assert PlainFetcherTrigger(Path("/")).get_raw_data(
             file_cache, fetcher, Mode.DISCOVERY, ActivatedSecrets(), debug=False
-        ) == result.OK({SectionName(raw_section_name): [table]})
+        ).raw_data == result.OK({SectionName(raw_section_name): [table]})
 
     def test_fetch_from_io_partially_empty(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
         section_name = SNMPSectionName("pum")
@@ -640,7 +691,7 @@ class TestSNMPFetcherFetch:
         )
         assert PlainFetcherTrigger(Path("/")).get_raw_data(
             file_cache, fetcher, Mode.CHECKING, ActivatedSecrets(), debug=False
-        ) == result.OK({section_name: [table, []]})
+        ).raw_data == result.OK({section_name: [table, []]})
 
     def test_fetch_from_io_empty(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
         monkeypatch.setattr(snmp, "get_snmp_table", lambda *_, **__: [])
@@ -660,7 +711,7 @@ class TestSNMPFetcherFetch:
         )
         assert PlainFetcherTrigger(Path("/")).get_raw_data(
             file_cache, fetcher, Mode.DISCOVERY, ActivatedSecrets(), debug=False
-        ) == result.OK({SectionName("pam"): [[]]})
+        ).raw_data == result.OK({SectionName("pam"): [[]]})
 
     def test_mode_inventory_do_status_data_inventory(
         self, tmp_path: Path, monkeypatch: MonkeyPatch
@@ -697,7 +748,7 @@ class TestSNMPFetcherFetch:
         )
         assert PlainFetcherTrigger(Path("/")).get_raw_data(
             file_cache, fetcher, Mode.INVENTORY, ActivatedSecrets(), debug=False
-        ) == result.OK({SectionName("pim"): [[["1"]]]})
+        ).raw_data == result.OK({SectionName("pim"): [[["1"]]]})
 
     def test_mode_inventory_not_do_status_data_inventory(
         self, tmp_path: Path, monkeypatch: MonkeyPatch
@@ -733,7 +784,7 @@ class TestSNMPFetcherFetch:
         )
         assert PlainFetcherTrigger(Path("/")).get_raw_data(
             file_cache, fetcher, Mode.INVENTORY, ActivatedSecrets(), debug=False
-        ) == result.OK({SectionName("pim"): [[["1"]]]})
+        ).raw_data == result.OK({SectionName("pim"): [[["1"]]]})
 
     def test_mode_checking_do_status_data_inventory(
         self, tmp_path: Path, monkeypatch: MonkeyPatch
@@ -770,7 +821,7 @@ class TestSNMPFetcherFetch:
         )
         assert PlainFetcherTrigger(Path("/")).get_raw_data(
             file_cache, fetcher, Mode.CHECKING, ActivatedSecrets(), debug=False
-        ) == result.OK({SectionName("pim"): [[["1"]]]})
+        ).raw_data == result.OK({SectionName("pim"): [[["1"]]]})
 
     def test_mode_checking_not_do_status_data_inventory(
         self, tmp_path: Path, monkeypatch: MonkeyPatch
@@ -791,7 +842,7 @@ class TestSNMPFetcherFetch:
         )
         assert PlainFetcherTrigger(Path("/")).get_raw_data(
             file_cache, fetcher, Mode.CHECKING, ActivatedSecrets(), debug=False
-        ) == result.OK({})
+        ).raw_data == result.OK({})
 
 
 class TestSNMPFetcherConfiguredCaching:
@@ -819,7 +870,7 @@ class TestSNMPFetcherConfiguredCaching:
         return (
             PlainFetcherTrigger(Path("/"))
             .get_raw_data(NoCache(), fetcher, mode, ActivatedSecrets(), debug=False)
-            .ok
+            .raw_data.ok
         )
 
     def test_uncached(self, tmp_path: Path) -> None:
@@ -921,7 +972,7 @@ class TestSNMPFetcherFetchCache:
 
         assert PlainFetcherTrigger(Path("/")).get_raw_data(
             file_cache, fetcher, Mode.DISCOVERY, ActivatedSecrets(), debug=False
-        ) == result.OK({SectionName("section"): [[b"cached"]]})
+        ).raw_data == result.OK({SectionName("section"): [[b"cached"]]})
 
 
 class TestSNMPSectionMeta:
@@ -1000,7 +1051,7 @@ class TestTCPFetcher:
         ) as fetcher:
             assert PlainFetcherTrigger(Path("/")).get_raw_data(
                 file_cache, fetcher, Mode.CHECKING, ActivatedSecrets(), debug=False
-            ) == result.OK(b"cached_section")
+            ).raw_data == result.OK(b"cached_section")
 
     def test_open_exception_becomes_fetcher_error(self, tmp_path: Path) -> None:
         file_cache = StubFileCache[AgentRawData](
@@ -1025,8 +1076,10 @@ class TestTCPFetcher:
                 site_crt=tmp_path,
             ),
         ) as fetcher:
-            raw_data = PlainFetcherTrigger(Path("/")).get_raw_data(
-                file_cache, fetcher, Mode.CHECKING, ActivatedSecrets(), debug=False
+            raw_data = (
+                PlainFetcherTrigger(Path("/"))
+                .get_raw_data(file_cache, fetcher, Mode.CHECKING, ActivatedSecrets(), debug=False)
+                .raw_data
             )
 
         assert isinstance(raw_data.error, FetcherError)
@@ -1072,7 +1125,7 @@ class TestFetcherCaching:
 
         assert PlainFetcherTrigger(Path("/")).get_raw_data(
             file_cache, fetcher, Mode.DISCOVERY, ActivatedSecrets(), debug=False
-        ) == result.OK(b"cached_section")
+        ).raw_data == result.OK(b"cached_section")
         assert file_cache.cache == b"cached_section"
 
     def test_fetch_reading_cache_in_inventory_mode(self, fetcher: Fetcher[AgentRawData]) -> None:
@@ -1088,7 +1141,7 @@ class TestFetcherCaching:
 
         assert PlainFetcherTrigger(Path("/")).get_raw_data(
             file_cache, fetcher, Mode.INVENTORY, ActivatedSecrets(), debug=False
-        ) == result.OK(b"cached_section")
+        ).raw_data == result.OK(b"cached_section")
         assert file_cache.cache == b"cached_section"
 
 
@@ -1120,4 +1173,4 @@ class TestFetcherTimeout:
     with pytest.raises(MKTimeout):
         PlainFetcherTrigger(Path("/")).get_raw_data(
             NoCache[T](), TimeoutFetcher(), Mode.CHECKING, ActivatedSecrets(), debug=False
-        )
+        ).raw_data

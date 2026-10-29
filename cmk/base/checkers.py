@@ -88,7 +88,7 @@ from cmk.checkengine.sectionparserutils import (
     get_section_cluster_kwargs,
     get_section_kwargs,
 )
-from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPRawData
+from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.source_abc import (
     Source,
     SourceConfig,
@@ -184,8 +184,8 @@ def _do_fetch(  # type: ignore[explicit-any]
 ) -> FetchResult:
     logger.debug("Fetching source: %(source_info)s", {"source_info": source_info})
     with CPUTracker(logger.debug) as tracker:
-        raw_data = trigger.get_raw_data(file_cache, fetcher, mode, secrets, debug=debug)
-    return FetchResult(source_info, raw_data, tracker.duration)
+        raw_data, cached_at = trigger.get_raw_data(file_cache, fetcher, mode, secrets, debug=debug)
+    return FetchResult(source_info, raw_data, tracker.duration, cached_at)
 
 
 class CMKParser:
@@ -204,12 +204,7 @@ class CMKParser:
 
     def __call__(
         self,
-        fetched: Iterable[
-            tuple[
-                SourceInfo,
-                result.Result[AgentRawData | SNMPRawData, Exception],
-            ]
-        ],
+        fetched: Iterable[FetchResult],
     ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
         """Parse fetched data."""
         logger.debug("Parse fetcher results")
@@ -217,13 +212,15 @@ class CMKParser:
         section_cache_path = cmk.utils.paths.var_dir
         # Special agents can produce data for the same check_plugin_name on the same host, in this case
         # the section lines need to be extended
-        for source, raw_data in fetched:
+        for fetch_result in fetched:
+            source = fetch_result.source
             source_result = parse_raw_data(
                 make_parser(
                     self.config,
                     source.hostname,
                     source.ipaddress,
                     source.fetcher_type,
+                    cached_at=fetch_result.cached_at,
                     omd_root=cmk.utils.paths.omd_root,
                     persisted_section_dir=SectionStore.make_persisted_section_dir(
                         source.hostname,
@@ -233,7 +230,7 @@ class CMKParser:
                     keep_outdated=self.keep_outdated,
                     debug=self.debug,
                 ),
-                raw_data,
+                fetch_result.raw_data,
                 selection=self.selected_sections,
             )
             output.append((source, source_result))

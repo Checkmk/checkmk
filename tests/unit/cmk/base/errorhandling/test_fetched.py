@@ -135,7 +135,7 @@ class _AgentFetcher(FetcherFunction):
             fetcher_type=FetcherType.TCP,
             source_type=SourceType.HOST,
         )
-        return [FetchResult(source, result.OK(AgentRawData(b"<<<a>>>\n")), Snapshot.null())]
+        return [FetchResult(source, result.OK(AgentRawData(b"<<<a>>>\n")), Snapshot.null(), None)]
 
 
 def test_recording_fetcher_serializes_the_data_fetched_for_the_host() -> None:

@@ -277,7 +277,7 @@ def _mode_check_discovery(
                     is_cluster=hostname in hosts_config.clusters,
                     cluster_nodes=hosts_config.clusters.get(hostname, ()),
                     params=config_cache.discovery_check_parameters(hostname),
-                    fetched=((f.source, f.raw_data) for f in fetched),
+                    fetched=fetched,
                     parser=parser,
                     summarizer=summarizer,
                     section_plugins=SectionPluginMapper(

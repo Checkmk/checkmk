@@ -83,7 +83,7 @@ def commandline_discovery(
     failed_sources: list[str] = []
     try:
         fetched = fetcher(host_name, ip_address=None)
-        host_sections = parser((f.source, f.raw_data) for f in fetched)
+        host_sections = parser(fetched)
         for source, host_section in host_sections:
             if host_section.is_error():
                 failed_sources.append(f"[{source.ident}] {host_section.error}")

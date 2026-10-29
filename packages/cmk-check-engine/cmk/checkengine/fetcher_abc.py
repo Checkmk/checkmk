@@ -44,6 +44,8 @@ class FetchResult:
     source: SourceInfo
     raw_data: result.Result[AgentRawData | SNMPRawData, Exception]
     duration: Snapshot
+    # Time the data was stored, if it was read from a cache file
+    cached_at: int | None
 
 
 class FetcherFunction(ABC):

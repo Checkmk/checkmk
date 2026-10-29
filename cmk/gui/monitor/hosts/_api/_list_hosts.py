@@ -367,14 +367,15 @@ def _list_hosts(
         case _:
             limit = body.limit
 
-    return HostTable(api_context.config.sites, folders).list(
+    site_configs = api_context.user.authorized_sites(api_context.config.sites)
+    return HostTable(site_configs, folders).list(
         limit=limit,
         query="" if isinstance(body.q, ApiOmitted) else body.q,
         sorters=DEFAULT_HOST_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
         scoped_filter=(
             None
             if isinstance(body.filter, ApiOmitted)
-            else _scope_and_check_sites(body.filter, api_context.config.sites)
+            else _scope_and_check_sites(body.filter, site_configs)
         ),
         fields=_DEFAULT_FIELDS if isinstance(body.fields, ApiOmitted) else body.fields,
     )

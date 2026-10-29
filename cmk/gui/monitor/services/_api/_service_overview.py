@@ -248,7 +248,7 @@ def make_endpoint_get_service_overview(setup_folders: SetupFolderSource) -> Vers
             PathParam(description="Host name", example="web-server-01"),
         ],
         site_id: Annotated[
-            Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_exist)],
+            Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_be_authorized)],
             QueryParam(description="An existing site id", example="local"),
         ],
         service_name: Annotated[

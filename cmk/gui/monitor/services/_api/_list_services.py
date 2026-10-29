@@ -132,17 +132,18 @@ def list_all_services(
     """List the services of all hosts to be consumed by the all services monitoring page."""
     limit = resolve_service_limit(body.limit, api_context.user)
 
-    all_site_ids = frozenset(api_context.config.sites)
+    authorized_site_ids = frozenset(api_context.user.authorized_sites(api_context.config.sites))
     if isinstance(body.filter, ApiOmitted):
         filter_node, site_ids = None, None
     else:
-        filter_node, site_ids = _scope_and_check_sites(body.filter, all_site_ids)
+        filter_node, site_ids = _scope_and_check_sites(body.filter, authorized_site_ids)
 
     customer_of = customer_resolver(sites=api_context.config.sites)
     services_repo = LiveStatusServicesRepository(
         connection=sites.live(),
         sites=MonitorSites(
-            MonitorSite(id=site_id, customer=customer_of(site_id)) for site_id in all_site_ids
+            MonitorSite(id=site_id, customer=customer_of(site_id))
+            for site_id in authorized_site_ids
         ),
     )
     total_service_count = services_repo.count_total()

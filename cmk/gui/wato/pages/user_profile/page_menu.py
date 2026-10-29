@@ -90,7 +90,7 @@ def _page_menu_entries_related(
         and user_oauth_tokens_page_enabled()
     ):
         yield PageMenuEntry(
-            title=_("OAuth access tokens"),
+            title=_("OAuth sessions"),
             icon_name=StaticIcon(IconNames.passwords),
             item=make_simple_link("user_oauth_tokens.py"),
             is_shortcut=show_shortcuts,

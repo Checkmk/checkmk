@@ -19,9 +19,9 @@ from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.oauth.wato._token_table import (
     bulk_revoke_page_menu_topics,
     load_clients_by_id,
+    remove_grants_from_request,
+    render_grant_summary_cells,
     render_selection_checkbox_cell,
-    render_token_summary_cells,
-    revoke_tokens_from_request,
 )
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
@@ -49,24 +49,27 @@ class UserOAuthTokensOverview(Page):
         self._enabled = enabled
 
     def _page_title(self) -> str:
-        return _("OAuth access tokens")
+        return _("OAuth sessions")
 
     def _action(self, request: Request) -> None:
         assert user.id is not None
         check_csrf_token()
-        revoke_tokens_from_request(request, user_id=user.id)
+        user_id = user.id
+        remove_grants_from_request(
+            request, lambda store, grant_ids: store.revoke_grants(grant_ids, user_id)
+        )
 
     def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         topics = bulk_revoke_page_menu_topics(
             _SELECTION_KEY,
             _(
-                "Any application using the selected tokens will no longer be able to"
-                " access the API with them."
+                "Any application using the selected sessions will no longer be able to"
+                " access the API."
             ),
         )
         return PageMenu(
             dropdowns=[
-                PageMenuDropdown(name="tokens", title=_("Tokens"), topics=topics),
+                PageMenuDropdown(name="tokens", title=_("Sessions"), topics=topics),
                 page_menu_dropdown_user_related(
                     page_name="user_oauth_tokens",
                     show_shortcuts=False,
@@ -108,30 +111,30 @@ class UserOAuthTokensOverview(Page):
         # Read before emitting any HTML, so an unusable store shows as an error
         # message instead of a half-rendered table.
         with get_token_store() as store:
-            tokens = store.list_by_user(user.id)
+            grants = store.list_usable_grants(user.id)
         clients = load_clients_by_id()
 
         html.open_div(class_="wato")
         with html.form_context("bulk_revoke_form", method="POST"):
             with table_element("user_oauth_tokens", limit=config.table_row_limit) as table:
-                for token in tokens:
+                for grant in grants:
                     table.row()
-                    render_selection_checkbox_cell(table, token.token_hash)
+                    render_selection_checkbox_cell(table, grant.grant_id)
 
                     table.cell(_("Actions"), css=["buttons"])
                     delete_url = make_confirm_delete_link(
-                        url=makeactionuri(request, transactions, [("_delete", token.token_hash)]),
-                        title=_("Revoke this access token"),
+                        url=makeactionuri(request, transactions, [("_delete", grant.grant_id)]),
+                        title=_("Remove this session"),
                         message=_(
-                            "Any application using this token will no longer be able to "
-                            "access the API with it."
+                            "Any application using this session will no longer be able to "
+                            "access the API."
                         ),
                     )
                     html.icon_button(
-                        delete_url, _("Revoke this access token"), StaticIcon(IconNames.delete)
+                        delete_url, _("Remove this session"), StaticIcon(IconNames.delete)
                     )
 
-                    render_token_summary_cells(table, token, clients)
+                    render_grant_summary_cells(table, grant, clients)
             html.hidden_fields()
         html.close_div()
         html.footer()

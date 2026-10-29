@@ -449,7 +449,7 @@ def register(
             title=_l("User management"),
             description=_l(
                 "This permission is needed for the modules <b>Users</b>, "
-                "<b>Roles</b>, <b>Contact groups</b> and <b>OAuth access tokens</b>"
+                "<b>Roles</b>, <b>Contact groups</b> and <b>OAuth sessions</b>"
             ),
             defaults=["admin"],
         )

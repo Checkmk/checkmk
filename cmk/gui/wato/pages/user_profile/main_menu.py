@@ -144,7 +144,7 @@ def default_user_menu_topics(
         entries.append(
             MainMenuItem(
                 name="oauth_tokens",
-                title=_("OAuth access tokens"),
+                title=_("OAuth sessions"),
                 url="user_oauth_tokens.py",
                 sort_index=35,
                 icon=StaticIcon(IconNames.passwords),

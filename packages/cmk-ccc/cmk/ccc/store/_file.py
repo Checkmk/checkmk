@@ -111,6 +111,8 @@ class FileIo(Protocol):
 
     def read(self) -> bytes: ...
 
+    def read_explicit(self, *, debug: bool) -> bytes: ...
+
     def locked(self) -> Iterator[None]: ...
 
 
@@ -149,6 +151,9 @@ class RealIo:
             release_lock(self.path)
 
     def read(self) -> bytes:
+        return self.read_explicit(debug=cmk.ccc.debug.enabled())
+
+    def read_explicit(self, *, debug: bool) -> bytes:
         try:
             _raise_for_permissions(self.path)
             return self.path.read_bytes()
@@ -161,7 +166,7 @@ class RealIo:
         except MKTerminate, MKTimeout:
             raise
         except Exception as e:
-            if cmk.ccc.debug.enabled():
+            if debug:
                 raise
             raise MKGeneralException(
                 _('Cannot read file "%(path)s": %(error)s') % {"path": self.path, "error": e}
@@ -201,5 +206,8 @@ class ObjectStore[TObject]:
         return self._io.write(self._serializer.serialize(obj))
 
     def read_obj(self, *, default: TObject) -> TObject:
-        raw = self._io.read()
+        return self.read_obj_explicit(default=default, debug=cmk.ccc.debug.enabled())
+
+    def read_obj_explicit(self, *, default: TObject, debug: bool) -> TObject:
+        raw = self._io.read_explicit(debug=debug)
         return self._serializer.deserialize(raw) if raw else default

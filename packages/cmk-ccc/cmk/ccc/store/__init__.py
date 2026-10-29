@@ -19,6 +19,7 @@ from pathlib import Path
 from threading import Lock
 from typing import Any, final, Literal, TYPE_CHECKING
 
+import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.ccc.i18n import _
 from cmk.ccc.store._file import (
@@ -216,36 +217,72 @@ def bootstrap_statement(varname: str, empty: Literal["{}", "[]"]) -> str:
 # directly read via file/open and then parsed using eval.
 # TODO: Consolidate with load_mk_file?
 def load_object_from_file(path: Path, *, default: Any, lock: bool = False) -> Any:
+    return load_object_from_file_explicit(
+        path, default=default, lock=lock, debug=cmk.ccc.debug.enabled()
+    )
+
+
+def load_object_from_file_explicit(
+    path: Path, *, default: Any, debug: bool, lock: bool = False
+) -> Any:
     with (
         tracer.simple_span("load_object_from_file", path),
         _leave_locked_unless_exception(path) if lock else nullcontext(),
     ):
         try:
-            return ObjectStore(path, serializer=DimSerializer()).read_obj(default=default)
+            return ObjectStore(path, serializer=DimSerializer()).read_obj_explicit(
+                default=default, debug=debug
+            )
         except SyntaxError, ValueError:
             logger.warning("Failed to deserialize %(path)s, returning default", {"path": path})
             return default
 
 
 def load_object_from_pickle_file(path: Path, *, default: Any, lock: bool = False) -> Any:
+    return load_object_from_pickle_file_explicit(
+        path, default=default, lock=lock, debug=cmk.ccc.debug.enabled()
+    )
+
+
+def load_object_from_pickle_file_explicit(
+    path: Path, *, default: Any, debug: bool, lock: bool = False
+) -> Any:
     with (
         tracer.simple_span("load_object_from_pickle_file", path),
         _leave_locked_unless_exception(path) if lock else nullcontext(),
     ):
-        return ObjectStore(path, serializer=PickleSerializer()).read_obj(default=default)
+        return ObjectStore(path, serializer=PickleSerializer()).read_obj_explicit(
+            default=default, debug=debug
+        )
 
 
 def load_text_from_file(path: Path, *, default: str = "", lock: bool = False) -> str:
+    return load_text_from_file_explicit(
+        path, default=default, lock=lock, debug=cmk.ccc.debug.enabled()
+    )
+
+
+def load_text_from_file_explicit(
+    path: Path, *, debug: bool, default: str = "", lock: bool = False
+) -> str:
     with (
         tracer.simple_span("load_text_from_file", path),
         _leave_locked_unless_exception(path) if lock else nullcontext(),
     ):
-        return ObjectStore(path, serializer=TextSerializer()).read_obj(default=default)
+        return ObjectStore(path, serializer=TextSerializer()).read_obj_explicit(
+            default=default, debug=debug
+        )
 
 
 def load_bytes_from_file(path: Path, *, default: bytes) -> bytes:
+    return load_bytes_from_file_explicit(path, default=default, debug=cmk.ccc.debug.enabled())
+
+
+def load_bytes_from_file_explicit(path: Path, *, default: bytes, debug: bool) -> bytes:
     with tracer.simple_span("load_bytes_from_file", path):
-        return ObjectStore(path, serializer=BytesSerializer()).read_obj(default=default)
+        return ObjectStore(path, serializer=BytesSerializer()).read_obj_explicit(
+            default=default, debug=debug
+        )
 
 
 def save_object_to_file(path: Path, data: object, *, pprint_value: bool = False) -> None:

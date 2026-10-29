@@ -26,7 +26,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.store import FileIo, ObjectStore, RealIo, TextSerializer
 
 
-class FakeIo:
+class FakeIo(FileIo):
     """This is no-op/fake version of _file.RealIO
     TODO(sk): should be moved in testlib when we need it not only for store testing"""
 
@@ -34,12 +34,19 @@ class FakeIo:
         self.path = path
         self._data = b""
 
+    @override
     def write(self, data: bytes) -> None:
         self._data = data
 
+    @override
     def read(self) -> bytes:
         return self._data
 
+    @override
+    def read_explicit(self, *, debug: bool) -> bytes:
+        return self._data
+
+    @override
     def locked(self) -> Iterator[None]:
         yield
 
@@ -782,3 +789,17 @@ def test_non_blocking_decorated_locking_while_already_locked(
         assert result is False
         assert store.have_lock(test_file) is False
     assert store.have_lock(test_file) is False
+
+
+def test_load_object_from_unreadable_file_reraises_in_debug_mode(tmp_path: Path) -> None:
+    (unreadable := tmp_path / "directory").mkdir()
+
+    with pytest.raises(IsADirectoryError):
+        store.load_object_from_file_explicit(unreadable, default=None, debug=True)
+
+
+def test_load_object_from_unreadable_file_names_the_file(tmp_path: Path) -> None:
+    (unreadable := tmp_path / "directory").mkdir()
+
+    with pytest.raises(MKGeneralException, match="directory"):
+        store.load_object_from_file_explicit(unreadable, default=None, debug=False)

@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkWizard from 'cmk-ui-library/components/CmkWizard'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -35,6 +36,7 @@ const props = defineProps<{
   }
   folder_paths: FolderPaths
   prediction_periods: PredictionPeriods
+  time_picker: GlobalTimePickerProps
   activate_changes_url: string
 }>()
 
@@ -77,6 +79,7 @@ async function saveAlert(): Promise<void> {
       <ThresholdsStep
         v-model="model"
         :thresholds-spec="thresholds_form.spec"
+        :time-picker="time_picker"
         :saving="saving"
         :save-error="saveError"
         :index="3"

@@ -4,10 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import type { CmkWizardStepProps } from 'cmk-ui-library/components/CmkWizard'
 import { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
+import { getWizardContext } from 'cmk-ui-library/components/CmkWizard/utils.ts'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
@@ -16,13 +18,20 @@ import { computed } from 'vue'
 
 import { FormEdit } from '@/form'
 
-import { type AlertModel, hasCompleteThresholds, hasThresholds } from '@/mode-alerts/types'
+import AlertPreviewGraph from '@/mode-alerts/AlertPreviewGraph.vue'
+import {
+  type AlertModel,
+  hasCompleteThresholds,
+  hasThresholds,
+  servicePattern
+} from '@/mode-alerts/types'
 
 const { _t } = usei18n()
 
-defineProps<
+const props = defineProps<
   CmkWizardStepProps & {
     thresholdsSpec: FormSpec
+    timePicker: GlobalTimePickerProps
     saving: boolean
     saveError: string | null
   }
@@ -31,6 +40,8 @@ defineProps<
 const emit = defineEmits<{ create: [] }>()
 
 const model = defineModel<AlertModel>({ required: true })
+
+const wizard = getWizardContext()
 
 const problem = computed<TranslatedString | null>(() => {
   if (!hasThresholds(model.value)) {
@@ -54,9 +65,21 @@ const problem = computed<TranslatedString | null>(() => {
         <CmkParagraph>
           {{ _t('Set the default levels of the selected custom services.') }}
         </CmkParagraph>
-        <FormEdit v-model:data="model.thresholds" :spec="thresholdsSpec" :backend-validation="[]" />
-        <CmkAlert v-if="problem" variant="info" size="small" :text="problem" />
-        <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
+        <AlertPreviewGraph
+          v-if="wizard.isSelected(props.index)"
+          :match-type="model.matchType"
+          :pattern="servicePattern(model)"
+          :time-picker="timePicker"
+        />
+        <div class="mode-alerts-thresholds-step__levels">
+          <FormEdit
+            v-model:data="model.thresholds"
+            :spec="thresholdsSpec"
+            :backend-validation="[]"
+          />
+          <CmkAlert v-if="problem" variant="info" size="small" :text="problem" />
+          <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
+        </div>
       </div>
     </template>
 
@@ -73,10 +96,14 @@ const problem = computed<TranslatedString | null>(() => {
 </template>
 
 <style scoped>
-.mode-alerts-thresholds-step {
+.mode-alerts-thresholds-step,
+.mode-alerts-thresholds-step__levels {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-5);
+}
+
+.mode-alerts-thresholds-step__levels {
   max-width: 620px;
 }
 </style>

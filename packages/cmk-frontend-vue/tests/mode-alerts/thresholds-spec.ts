@@ -14,7 +14,12 @@ import type {
   Tuple
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
+import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
+
 import type { PredictionPeriods } from '@/mode-alerts/types'
+
+// The Setup page registers the form components on start, a test has to do it itself.
+initializeComponentRegistry()
 
 const WEEKDAY = '6c47c99835b507ae0ddffd0df817fbdd30633b902a75e5296b3a9c01417c2ec2'
 

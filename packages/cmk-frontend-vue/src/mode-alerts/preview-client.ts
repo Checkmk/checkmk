@@ -1,0 +1,65 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+import { networkAwareFetch } from 'cmk-ui-library/lib/networkAwareFetch'
+import { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
+import createClient from 'openapi-fetch'
+
+import type { HorizontalLine, Metric, TimeRange } from '@/graphing/components/TimeSeriesGraph'
+import type { RequestedTimeRange } from '@/graphing/types'
+import type { ServiceNameMatch } from '@/mode-alerts/types'
+
+const PREVIEW_PATH = '/domain-types/telemetry_alert/actions/preview_data/invoke'
+
+interface PreviewRequest {
+  service_name_match: ServiceNameMatch
+  service_name_pattern: string
+  requested_time_range: TimeRange
+  consolidation_function: 'min' | 'max' | 'avg'
+}
+
+export interface Preview {
+  time_range: TimeRange
+  metrics: Metric[]
+  horizontal_lines: HorizontalLine[]
+  notice: string | null
+  warnings: string[]
+  errors: string[]
+}
+
+// TODO(CMK-40260): drop these and use the shared client once the endpoint is in the spec.
+interface PreviewPaths {
+  [PREVIEW_PATH]: {
+    post: {
+      requestBody: { content: { 'application/json': PreviewRequest } }
+      responses: { 200: { content: { 'application/json': Preview } } }
+    }
+  }
+}
+
+const previewClient = createClient<PreviewPaths, 'application/json'>({
+  baseUrl: new URL('api/internal', document.location.href).href,
+  credentials: 'include',
+  headers: { Accept: 'application/json' },
+  fetch: networkAwareFetch
+})
+
+export async function fetchPreview(
+  match: ServiceNameMatch,
+  pattern: string,
+  range: RequestedTimeRange,
+  step: number
+): Promise<Preview> {
+  return unwrap(
+    await previewClient.POST(PREVIEW_PATH, {
+      body: {
+        service_name_match: match,
+        service_name_pattern: pattern,
+        requested_time_range: { start: range.start, end: range.end, step },
+        consolidation_function: 'max'
+      }
+    })
+  )
+}

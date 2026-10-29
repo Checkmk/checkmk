@@ -5,19 +5,22 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { untypedHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
-import { afterEach, expect, test } from 'vitest'
+import { afterEach, beforeEach, expect, test } from 'vitest'
 
+import { resetGlobalTimeState } from '@/graphing/GlobalTimePicker/globalTimeState'
 import AlertWizardApp from '@/mode-alerts/AlertWizardApp.vue'
 
 import { CONDITIONS_SPEC, FOLDER_PATHS, MAIN_FOLDER } from './conditions-spec'
 import { PREDICTION_PERIODS, THRESHOLDS_SPEC } from './thresholds-spec'
+import { TIME_PICKER } from './time-picker'
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
 const ENDPOINT = `${API_BASE}/domain-types/service/collections/all`
 const CREATE_ENDPOINT = `${API_BASE}/domain-types/telemetry_alert/collections/all`
+const PREVIEW_ENDPOINT = `${API_BASE}/domain-types/telemetry_alert/actions/preview_data/invoke`
 
 const server = useMswServer(
   http.post(ENDPOINT, () =>
@@ -26,11 +29,26 @@ const server = useMswServer(
       links: [],
       value: [{ extensions: { host_name: 'web01', description: 'HTTP request duration' } }]
     })
+  ),
+  untypedHttp.post(PREVIEW_ENDPOINT, () =>
+    HttpResponse.json({
+      time_range: { start: 0, end: 3600, step: 60 },
+      metrics: [],
+      horizontal_lines: [],
+      notice: null,
+      warnings: [],
+      errors: []
+    })
   )
 )
 
+beforeEach(() => {
+  resetGlobalTimeState()
+})
+
 afterEach(() => {
   cleanup()
+  resetGlobalTimeState()
 })
 
 function renderApp() {
@@ -40,8 +58,10 @@ function renderApp() {
       thresholds_form: { spec: THRESHOLDS_SPEC, data: {} },
       folder_paths: FOLDER_PATHS,
       prediction_periods: PREDICTION_PERIODS,
+      time_picker: TIME_PICKER,
       activate_changes_url: 'wato.py?mode=changelog'
-    }
+    },
+    global: { stubs: { TimeSeriesGraph: true } }
   })
 }
 

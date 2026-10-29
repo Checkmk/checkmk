@@ -44,6 +44,20 @@ The guests have unrestricted network access through QEMU's user-mode NAT: the ho
 10.0.2.2 (mk-oracle's database tests use that) and whatever the host itself reaches.
 Tests should not depend on the internet; nothing enforces that.
 
+The tiers are `qemu_test` targets (`bazel/rules/xcomp/qemu_test.bzl`), for example:
+
+```
+bazel test --config=qemu //agents/wnx:watest-qemu
+```
+
+Each test claims its VM's 4 vCPUs and 4700 MB, so Bazel runs as many VMs at once as the
+machine's CPUs and memory hold (2 on 8 cores); in a CI pod its memory limit decides.
+`--local_resources=qemu_vm=N` caps them at N. Neither is a licence limit: a developer's
+VMs run under their own MSDN licence, and in CI a cluster quota caps the Windows VMs of
+all builds together (CMK-41343). Never pass `--local_test_jobs` with these tiers: Bazel
+then ignores the resource tags. In CI the tiers need `--config=qemu` (see
+`bazel/rc/qemu.rc`).
+
 ## Exploring the test VM
 
 `winvm` starts the VM a test would get, after the same checks a test makes, and works

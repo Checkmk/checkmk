@@ -181,7 +181,7 @@ def _issue_read_scoped_token(user_id: UserId) -> str:
     with get_client_store() as clients:
         client_id = clients.register(["https://client.example/callback"], None).ok.client_id
     with get_token_store() as tokens:
-        return tokens.issue_token(
+        return tokens.issue_delegated_token(
             user_id,
             expires_at=datetime.now(UTC) + timedelta(minutes=5),
             resource=None,

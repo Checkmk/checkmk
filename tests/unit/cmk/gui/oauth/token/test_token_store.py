@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import hashlib
 import logging
 import sqlite3
 import threading
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from datetime import datetime, timedelta, UTC
 from pathlib import Path
 
@@ -17,7 +19,7 @@ import time_machine
 from cmk.ccc.resulttype import Error
 from cmk.ccc.user import UserId
 from cmk.gui.oauth.token.token_store import (
-    _access_token_hash,
+    IssuedAccessToken,
     IssuedTokens,
     TokenRecord,
     TokenStore,
@@ -31,6 +33,7 @@ from cmk.testlib.schema_manager import migrated_connection
 _USER = UserId("cmkadmin")
 _CLIENT = "test-client"
 _GRANT_ID = "Hq3vTn8xWbL2kEe5RmYc0sPz7uJdA9fGiOw4NtK1lMQ"
+_RESOURCE = "https://example.test/api"
 
 
 _GRANT_LIFETIME = timedelta(days=365)
@@ -68,11 +71,13 @@ def _past(minutes: int) -> datetime:
     return (datetime.now(UTC) - timedelta(minutes=minutes)).replace(microsecond=0)
 
 
-def _overwrite_stored_scope(store: TokenStore, token: str, raw_scope: str | None) -> None:
+def _overwrite_stored_scope(
+    connection: sqlite3.Connection, token: str, raw_scope: str | None
+) -> None:
     """Put a value in the scope column that this version would never write there."""
-    store._connection.execute(
+    connection.execute(
         "UPDATE tokens SET scope = ? WHERE token_hash = ?",
-        (raw_scope, _access_token_hash(token)),
+        (raw_scope, hashlib.sha256(token.encode("utf-8")).hexdigest()),
     )
 
 
@@ -140,221 +145,6 @@ def test_record_is_valid_rejects_naive_datetimes() -> None:
         record.is_valid(at=datetime.now())
 
 
-# TokenStore.issue_token
-
-
-def test_issue_token_stores_only_a_hash_never_the_plaintext(store: TokenStore) -> None:
-    token = store.issue_token(
-        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-    assert token.is_ok()
-
-    stored_hashes = [row[0] for row in store._connection.execute("SELECT token_hash FROM tokens")]
-    assert token.ok.access not in stored_hashes
-
-
-def test_issue_token_produces_unique_tokens(store: TokenStore) -> None:
-    first = store.issue_token(
-        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-    second = store.issue_token(
-        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-    assert first.is_ok()
-    assert second.is_ok()
-
-    assert first.ok.access != second.ok.access
-
-
-def test_issue_token_rejects_an_empty_user_id(store: TokenStore) -> None:
-    with pytest.raises(ValueError, match="user_id"):
-        store.issue_token(
-            UserId(""),
-            expires_at=_future(60),
-            resource=None,
-            scope=DEFAULT_SCOPE,
-            client_id=_CLIENT,
-        )
-
-
-def test_issue_token_rejects_an_expiry_in_the_past(store: TokenStore) -> None:
-    with pytest.raises(ValueError, match="expires_at"):
-        store.issue_token(
-            _USER, expires_at=_past(5), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-        )
-
-
-def test_issue_token_rejects_a_naive_expiry(store: TokenStore) -> None:
-    with pytest.raises(ValueError, match="timezone-aware"):
-        store.issue_token(
-            _USER,
-            expires_at=datetime.now() + timedelta(minutes=5),
-            resource=None,
-            scope=DEFAULT_SCOPE,
-            client_id=_CLIENT,
-        )
-
-
-def test_issue_token_rejects_an_empty_client_id(store: TokenStore) -> None:
-    with pytest.raises(ValueError, match="client_id"):
-        store.issue_token(
-            _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=""
-        )
-
-
-def test_issue_token_rejects_an_empty_scope(store: TokenStore) -> None:
-    with pytest.raises(ValueError, match="scope"):
-        store.issue_token(
-            _USER, expires_at=_future(60), resource=None, scope=frozenset(), client_id=_CLIENT
-        )
-
-
-def test_issue_token_rejects_an_unregistered_client(store: TokenStore) -> None:
-    token = store.issue_token(
-        _USER,
-        expires_at=_future(60),
-        resource=None,
-        scope=DEFAULT_SCOPE,
-        client_id="never-registered",
-    )
-
-    assert token == Error(UnknownClient())
-
-
-# TokenStore.get_by_token
-
-
-def test_get_by_token_returns_the_matching_record(store: TokenStore) -> None:
-    issued_at = _future(0)
-
-    with time_machine.travel(issued_at, tick=False):
-        token = store.issue_token(
-            _USER,
-            expires_at=issued_at + timedelta(minutes=60),
-            resource=None,
-            scope=DEFAULT_SCOPE,
-            client_id=_CLIENT,
-        )
-    assert token.is_ok()
-
-    record = store.get_by_token(token.ok.access)
-    assert record is not None
-    assert record.user_id == _USER
-    assert record.expires_at == issued_at + timedelta(minutes=60)
-    assert token.ok.expires_in == 3600
-
-
-def test_get_by_token_returns_none_for_an_unknown_token(store: TokenStore) -> None:
-    assert store.get_by_token("never-issued") is None
-
-
-def test_get_by_token_returns_the_bound_resource(store: TokenStore) -> None:
-    token = store.issue_token(
-        _USER,
-        expires_at=_future(60),
-        resource="https://host/mysite/check_mk/mcp",
-        scope=DEFAULT_SCOPE,
-        client_id=_CLIENT,
-    )
-    assert token.is_ok()
-
-    record = store.get_by_token(token.ok.access)
-    assert record is not None
-    assert record.resource == "https://host/mysite/check_mk/mcp"
-
-
-def test_get_by_token_returns_none_for_an_unbound_resource(store: TokenStore) -> None:
-    token = store.issue_token(
-        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-    assert token.is_ok()
-
-    record = store.get_by_token(token.ok.access)
-    assert record is not None
-    assert record.resource is None
-
-
-def test_get_by_token_returns_the_bound_scope(store: TokenStore) -> None:
-    token = store.issue_token(
-        _USER,
-        expires_at=_future(60),
-        resource=None,
-        scope=frozenset({ScopeId.READ}),
-        client_id=_CLIENT,
-    )
-    assert token.is_ok()
-
-    record = store.get_by_token(token.ok.access)
-    assert record is not None
-    assert record.scope == {ScopeId.READ}
-    assert store._connection.execute("SELECT scope FROM tokens").fetchone()[0] == "read"
-
-
-@pytest.mark.parametrize("stored_scope", ["mcp", None])
-def test_get_by_token_refuses_a_token_whose_stored_scope_does_not_parse(
-    store: TokenStore, stored_scope: str | None
-) -> None:
-    token = store.issue_token(
-        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-    assert token.is_ok()
-    _overwrite_stored_scope(store, token.ok.access, stored_scope)
-
-    assert store.get_by_token(token.ok.access) is None
-
-
-def test_get_by_token_returns_the_issuing_client(store: TokenStore) -> None:
-    token = store.issue_token(
-        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-    assert token.is_ok()
-
-    record = store.get_by_token(token.ok.access)
-    assert record is not None
-    assert record.client_id == _CLIENT
-
-
-# TokenStore.list_all
-
-
-def test_list_all_returns_empty_for_an_empty_store(store: TokenStore) -> None:
-    assert store.list_all() == []
-
-
-def test_list_all_returns_tokens_across_users(store: TokenStore) -> None:
-    other_user = UserId("other")
-    store.issue_token(
-        other_user, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-    store.issue_token(
-        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-
-    records = store.list_all()
-
-    assert len(records) == 2
-    assert {record.user_id for record in records} == {_USER, other_user}
-
-
-def test_issue_token_deletes_expired_tokens_and_keeps_valid_ones(store: TokenStore) -> None:
-    expiring = store.issue_token(
-        _USER, expires_at=_future(1), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-    lasting = store.issue_token(
-        _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
-    assert expiring.is_ok()
-    assert lasting.is_ok()
-
-    with time_machine.travel(_future(5)):
-        store.issue_token(
-            _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-        )
-
-    assert store.get_by_token(expiring.ok.access) is None
-    assert store.get_by_token(lasting.ok.access) is not None
-
-
 # Grants and refresh tokens
 
 
@@ -368,7 +158,7 @@ def _start_grant(
     now = datetime.now(UTC)
     issued = store.start_grant(
         user_id,
-        resource="https://example.test/api",
+        resource=_RESOURCE,
         scope=DEFAULT_SCOPE,
         client_id=_CLIENT,
         expires_at=now + grant_lifetime,
@@ -410,6 +200,279 @@ def _fail_access_token_inserts(connection: sqlite3.Connection) -> None:
         BEGIN SELECT RAISE(ABORT, 'injected failure'); END
         """
     )
+
+
+_OTHER_CLIENT = "other-client"
+_DELEGATE_LIFETIME = timedelta(hours=1)
+_AT = datetime(2026, 3, 1, tzinfo=UTC)
+
+
+def _delegate(
+    store: TokenStore,
+    *,
+    user_id: UserId = _USER,
+    resource: str | None = _RESOURCE,
+    scope: frozenset[ScopeId] = DEFAULT_SCOPE,
+    client_id: str = _CLIENT,
+) -> IssuedAccessToken:
+    issued = store.issue_delegated_token(
+        user_id,
+        resource=resource,
+        scope=scope,
+        client_id=client_id,
+        expires_at=datetime.now(UTC) + _DELEGATE_LIFETIME,
+    )
+    assert issued.is_ok()
+    return issued.ok
+
+
+def _access_token_record(store: TokenStore, access_token: str) -> TokenRecord:
+    record = store.get_by_token(access_token)
+    assert record is not None
+    return record
+
+
+def _grant_of(store: TokenStore, access_token: str) -> str:
+    grant_id = _access_token_record(store, access_token).grant_id
+    assert grant_id is not None
+    return grant_id
+
+
+def _register_other_client(connection: sqlite3.Connection) -> None:
+    connection.execute(
+        "INSERT INTO clients (client_id, redirect_uris, client_name, registered_at)"
+        " VALUES (?, '[]', NULL, 0)",
+        (_OTHER_CLIENT,),
+    )
+
+
+def _grant_ids(connection: sqlite3.Connection) -> set[str]:
+    return {row[0] for row in connection.execute("SELECT grant_id FROM grants")}
+
+
+# TokenStore.get_by_token
+
+
+def test_get_by_token_returns_the_record_of_the_issued_token(store: TokenStore) -> None:
+    with time_machine.travel(_AT, tick=False):
+        issued = _delegate(store, scope=frozenset({ScopeId.WRITE}))
+
+        record = store.get_by_token(issued.access)
+
+    assert record is not None
+    assert (record.user_id, record.resource, record.scope, record.client_id) == (
+        _USER,
+        _RESOURCE,
+        frozenset({ScopeId.READ, ScopeId.WRITE}),
+        _CLIENT,
+    )
+    assert record.expires_at == _AT + _DELEGATE_LIFETIME
+
+
+def test_get_by_token_returns_none_for_an_unknown_token(store: TokenStore) -> None:
+    assert store.get_by_token("never-issued") is None
+
+
+@pytest.mark.parametrize("stored_scope", ["mcp", None])
+def test_get_by_token_refuses_a_token_whose_stored_scope_does_not_parse(
+    store: TokenStore, connection: sqlite3.Connection, stored_scope: str | None
+) -> None:
+    issued = _delegate(store)
+    _overwrite_stored_scope(connection, issued.access, stored_scope)
+
+    assert store.get_by_token(issued.access) is None
+
+
+# TokenStore.issue_delegated_token
+
+
+def test_a_delegated_token_belongs_to_a_grant_that_ends_with_it(store: TokenStore) -> None:
+    with time_machine.travel(_AT, tick=False):
+        issued = _delegate(store)
+
+        record = _access_token_record(store, issued.access)
+        (grant,) = store.list_usable_grants(_USER)
+
+    assert (grant.grant_id, grant.user_id, grant.client_id) == (record.grant_id, _USER, _CLIENT)
+    assert (grant.created_at, grant.expires_at) == (_AT, _AT + _DELEGATE_LIFETIME)
+    assert record.expires_at == grant.expires_at
+    assert issued.expires_in == int(_DELEGATE_LIFETIME.total_seconds())
+
+
+def test_a_repeated_delegated_request_extends_the_same_grant(store: TokenStore) -> None:
+    with time_machine.travel(_AT, tick=False):
+        first = _delegate(store)
+    with time_machine.travel(_AT + timedelta(minutes=30), tick=False):
+        second = _delegate(store)
+
+        (grant,) = store.list_usable_grants(_USER)
+
+    assert _grant_of(store, first.access) == grant.grant_id
+    assert _grant_of(store, second.access) == grant.grant_id
+    assert grant.created_at == _AT
+    assert grant.expires_at == _AT + timedelta(minutes=30) + _DELEGATE_LIFETIME
+    assert second.expires_in == int(_DELEGATE_LIFETIME.total_seconds())
+
+
+def test_a_delegated_request_after_the_grant_ended_starts_a_new_grant(store: TokenStore) -> None:
+    with time_machine.travel(_AT, tick=False):
+        first_grant_id = _grant_of(store, _delegate(store).access)
+    with time_machine.travel(_AT + _DELEGATE_LIFETIME, tick=False):
+        second = _delegate(store)
+
+        (grant,) = store.list_usable_grants(_USER)
+
+    assert grant.grant_id != first_grant_id
+    assert _grant_of(store, second.access) == grant.grant_id
+
+
+@dataclass(frozen=True)
+class _Arguments:
+    user_id: UserId = _USER
+    client_id: str = _CLIENT
+    resource: str | None = _RESOURCE
+    scope: frozenset[ScopeId] = DEFAULT_SCOPE
+    expires_at: datetime = _AT + _DELEGATE_LIFETIME
+
+
+@pytest.mark.parametrize(
+    "other",
+    [
+        pytest.param(_Arguments(resource="https://host/other/check_mk/mcp"), id="resource"),
+        pytest.param(_Arguments(resource=None), id="no resource"),
+        pytest.param(_Arguments(scope=frozenset({ScopeId.WRITE})), id="scope"),
+        pytest.param(_Arguments(user_id=UserId("other")), id="user"),
+        pytest.param(_Arguments(client_id=_OTHER_CLIENT), id="client"),
+    ],
+)
+def test_a_delegated_request_for_another_key_starts_a_new_grant(
+    store: TokenStore, connection: sqlite3.Connection, other: _Arguments
+) -> None:
+    _register_other_client(connection)
+    first = _delegate(store)
+
+    second = _delegate(
+        store,
+        user_id=other.user_id,
+        resource=other.resource,
+        scope=other.scope,
+        client_id=other.client_id,
+    )
+
+    assert _grant_of(store, first.access) != _grant_of(store, second.access)
+
+
+def test_a_delegated_request_does_not_reuse_a_grant_with_refresh_tokens(
+    store: TokenStore,
+) -> None:
+    started = _start_grant(store)
+
+    issued = _delegate(store)
+
+    assert _grant_of(store, issued.access) != _grant_id(store, started.refresh)
+
+
+def _start_grant_with(store: TokenStore, arguments: _Arguments) -> object:
+    return store.start_grant(
+        arguments.user_id,
+        resource=arguments.resource,
+        scope=arguments.scope,
+        client_id=arguments.client_id,
+        expires_at=arguments.expires_at,
+        refresh_token_expires_at=arguments.expires_at,
+        access_token_expires_at=arguments.expires_at,
+    )
+
+
+def _delegate_with(store: TokenStore, arguments: _Arguments) -> object:
+    return store.issue_delegated_token(
+        arguments.user_id,
+        resource=arguments.resource,
+        scope=arguments.scope,
+        client_id=arguments.client_id,
+        expires_at=arguments.expires_at,
+    )
+
+
+@pytest.mark.parametrize("issue", [_start_grant_with, _delegate_with])
+@pytest.mark.parametrize(
+    "invalid",
+    [
+        pytest.param(_Arguments(user_id=UserId("")), id="empty user"),
+        pytest.param(_Arguments(client_id=""), id="empty client"),
+        pytest.param(_Arguments(scope=frozenset()), id="empty scope"),
+        pytest.param(_Arguments(expires_at=_AT - timedelta(seconds=1)), id="expiry in the past"),
+        pytest.param(_Arguments(expires_at=_AT), id="expiry now"),
+        pytest.param(_Arguments(expires_at=_AT.replace(tzinfo=None)), id="naive expiry"),
+    ],
+)
+def test_issuing_refuses_invalid_arguments(
+    store: TokenStore,
+    issue: Callable[[TokenStore, _Arguments], object],
+    invalid: _Arguments,
+) -> None:
+    with time_machine.travel(_AT, tick=False), pytest.raises(ValueError):
+        issue(store, invalid)
+
+
+def test_concurrent_delegated_requests_for_one_key_leave_one_grant(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("OMD_ROOT", str(tmp_path))
+    ensure_schema(schema_manager_oauth, logging.getLogger(__name__))
+    with schema_manager_oauth.connect() as connection:
+        _register_client(connection)
+    both_connected = threading.Barrier(2)
+
+    def delegate_on_own_connection() -> IssuedAccessToken:
+        with schema_manager_oauth.connect() as connection:
+            both_connected.wait()
+            return _delegate(TokenStore(connection))
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        issued = list(executor.map(lambda _: delegate_on_own_connection(), range(2)))
+
+    with schema_manager_oauth.connect() as connection:
+        store = TokenStore(connection)
+        grant_ids = {_grant_of(store, i.access) for i in issued}
+        assert len(grant_ids) == 1
+
+
+def test_revoking_a_delegated_grant_ends_all_its_access_tokens(store: TokenStore) -> None:
+    first = _delegate(store)
+    second = _delegate(store)
+
+    store.revoke_grant(_grant_of(store, first.access))
+
+    assert store.get_by_token(first.access) is None
+    assert store.get_by_token(second.access) is None
+
+
+def test_issuing_a_delegated_token_deletes_the_expired_access_tokens_of_every_client(
+    store: TokenStore, connection: sqlite3.Connection
+) -> None:
+    _register_other_client(connection)
+    with time_machine.travel(_AT, tick=False):
+        expired = _delegate(store, client_id=_OTHER_CLIENT)
+    with time_machine.travel(_AT + timedelta(minutes=30), tick=False):
+        kept = _delegate(store, user_id=UserId("other"))
+    with time_machine.travel(_AT + _DELEGATE_LIFETIME, tick=False):
+        _delegate(store)
+
+        assert store.get_by_token(expired.access) is None
+        assert store.get_by_token(kept.access) is not None
+
+
+def test_issuing_a_delegated_token_refuses_an_unregistered_client(store: TokenStore) -> None:
+    issued = store.issue_delegated_token(
+        _USER,
+        resource=None,
+        scope=DEFAULT_SCOPE,
+        client_id="never-registered",
+        expires_at=datetime.now(UTC) + _DELEGATE_LIFETIME,
+    )
+
+    assert issued == Error(UnknownClient())
 
 
 def test_a_refresh_token_is_not_stored_in_plaintext(
@@ -572,26 +635,31 @@ def test_issuing_purges_refresh_tokens_expired_beyond_the_retention_period(
     assert store.get_refresh_token(successor.refresh) is not None
 
 
-def test_a_grant_is_purged_only_once_none_of_its_refresh_tokens_remain(
+def test_a_grant_is_purged_only_once_neither_refresh_nor_access_tokens_remain(
     store: TokenStore, connection: sqlite3.Connection
 ) -> None:
     started_at = datetime(2026, 3, 1, tzinfo=UTC)
     with time_machine.travel(started_at, tick=False):
+        long_lived = store.start_grant(
+            _USER,
+            resource=None,
+            scope=DEFAULT_SCOPE,
+            client_id=_CLIENT,
+            expires_at=started_at + _GRANT_LIFETIME,
+            refresh_token_expires_at=started_at + timedelta(days=1),
+            access_token_expires_at=started_at + timedelta(days=100),
+        )
+        assert long_lived.is_ok()
+    grant_id = _grant_id(store, long_lived.ok.refresh)
+
+    # The refresh token expired 39 days ago, the access token is valid for 60 more.
+    with time_machine.travel(started_at + timedelta(days=40), tick=False):
         _start_grant(store)
-        rotated = _start_grant(store).refresh
-    with time_machine.travel(started_at + timedelta(days=10), tick=False):
-        successor = _rotate(store, rotated)
-    assert successor is not None
-    kept_grant_id = _grant_id(store, successor.refresh)
+        assert grant_id in _grant_ids(connection)
 
-    # Both initial tokens expired 35 days ago, the successor 25 days ago.
-    with time_machine.travel(started_at + timedelta(days=65), tick=False):
-        new_grant_id = _grant_id(store, _start_grant(store).refresh)
-
-    assert {row[0] for row in connection.execute("SELECT grant_id FROM grants")} == {
-        kept_grant_id,
-        new_grant_id,
-    }
+    with time_machine.travel(started_at + timedelta(days=100), tick=False):
+        _start_grant(store)
+        assert grant_id not in _grant_ids(connection)
 
 
 # TokenStore.list_usable_grants
@@ -608,7 +676,7 @@ def test_a_listed_grant_carries_client_scope_resource_and_start_time(store: Toke
         _USER,
         _CLIENT,
         DEFAULT_SCOPE,
-        "https://example.test/api",
+        _RESOURCE,
         started_at,
     )
 
@@ -678,6 +746,18 @@ def test_a_grant_with_expired_access_tokens_is_listed_while_its_refresh_token_is
 
     with time_machine.travel(started_at + _ACCESS_TOKEN_TTL + timedelta(hours=1), tick=False):
         assert len(store.list_usable_grants(_USER)) == 1
+
+
+def test_a_grant_without_refresh_tokens_is_listed_while_its_access_token_is_valid(
+    store: TokenStore,
+) -> None:
+    with time_machine.travel(_AT, tick=False):
+        _delegate(store)
+
+    with time_machine.travel(_AT + _DELEGATE_LIFETIME - timedelta(seconds=1), tick=False):
+        assert len(store.list_usable_grants(_USER)) == 1
+    with time_machine.travel(_AT + _DELEGATE_LIFETIME, tick=False):
+        assert store.list_usable_grants(_USER) == []
 
 
 # TokenStore.revoke_grants

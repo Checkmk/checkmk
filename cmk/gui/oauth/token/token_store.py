@@ -80,7 +80,7 @@ def _require_grant_arguments(user_id: UserId, client_id: str, scope: frozenset[S
 class UnknownClient:
     """The client_id does not (or no longer) reference a registered client.
 
-    Returned by issue_token and start_grant when the foreign key on client_id
+    Returned by start_grant and issue_delegated_token when the foreign key on client_id
     rejects the insert -- e.g. the client was deleted between the authorization
     request and the code redemption.
     """
@@ -122,64 +122,6 @@ class TokenStore:
     def __init__(self, connection: sqlite3.Connection) -> None:
         self._connection = connection
 
-    def issue_token(
-        self,
-        user_id: UserId,
-        *,
-        expires_at: datetime,
-        resource: str | None,
-        scope: frozenset[ScopeId],
-        client_id: str,
-    ) -> Result[IssuedAccessToken, UnknownClient]:
-        """The new access token, or UnknownClient if client_id is not a registered client.
-
-        A client deleted between the authorization request and the code
-        redemption takes its grants with it (tokens.client_id is ON DELETE
-        CASCADE), so there is nothing left to issue against.
-
-        Issuing also deletes the expired tokens of every client, so they do
-        not pile up.
-        """
-        _require_grant_arguments(user_id, client_id, scope)
-
-        issued_at_timestamp = int(_utc_now().timestamp())
-        expires_at_timestamp = _expiry_timestamp(
-            "expires_at", expires_at, issued_at=issued_at_timestamp
-        )
-
-        token = _mint_token(_ACCESS_TOKEN_PREFIX)
-        with write_transaction(self._connection):
-            self._purge_expired_access_tokens(issued_at_timestamp)
-            try:
-                self._connection.execute(
-                    """
-                    INSERT INTO tokens
-                        (user_id, token_hash, issued_at, expires_at, resource, scope, client_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        user_id,
-                        _access_token_hash(token),
-                        issued_at_timestamp,
-                        expires_at_timestamp,
-                        resource,
-                        format_scopes(scope),
-                        client_id,
-                    ),
-                )
-            except sqlite3.IntegrityError:
-                # The client_id foreign key is the only constraint left to trip:
-                # the ValueError guards above cover every other CHECK on the
-                # table, and token_hash is a fresh sha256 hexdigest.
-                logger.exception(
-                    "Refusing to issue an OAuth access token: client %(client_id)s is not registered",
-                    {"client_id": client_id},
-                )
-                return Error(UnknownClient())
-        return OK(
-            IssuedAccessToken(access=token, expires_in=expires_at_timestamp - issued_at_timestamp)
-        )
-
     def get_by_token(self, token: str) -> TokenRecord | None:
         try:
             token_hash = _access_token_hash(token)
@@ -199,16 +141,6 @@ class TokenStore:
             return None
 
         return _row_to_record(row)
-
-    def list_all(self) -> list[TokenRecord]:
-        rows = self._connection.execute(
-            """
-            SELECT token_hash, user_id, issued_at, expires_at, resource, scope, client_id, grant_id
-            FROM tokens
-            ORDER BY issued_at DESC
-            """
-        ).fetchall()
-        return [record for row in rows if (record := _row_to_record(row)) is not None]
 
     def start_grant(
         self,
@@ -237,33 +169,18 @@ class TokenStore:
             "access_token_expires_at", access_token_expires_at, issued_at=now
         )
 
-        grant_id = secrets.token_urlsafe(32)
         with write_transaction(self._connection):
-            try:
-                self._connection.execute(
-                    """
-                    INSERT INTO grants
-                        (grant_id, user_id, client_id, resource, scope, created_at, expires_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        grant_id,
-                        user_id,
-                        client_id,
-                        resource,
-                        format_scopes(scope),
-                        now,
-                        grant_expires_at,
-                    ),
-                )
-            except sqlite3.IntegrityError:
-                # As in issue_token: the guards above leave the client_id
-                # foreign key as the only constraint left to trip.
-                logger.exception(
-                    "Refusing to start an OAuth grant: client %(client_id)s is not registered",
-                    {"client_id": client_id},
-                )
-                return Error(UnknownClient())
+            inserted = self._insert_grant(
+                user_id,
+                client_id=client_id,
+                resource=resource,
+                scope=scope,
+                now=now,
+                expires_at=grant_expires_at,
+            )
+            if inserted.is_error():
+                return Error(inserted.error)
+            grant_id = inserted.ok
             tokens = self._issue_for_grant(
                 grant_id,
                 now,
@@ -271,6 +188,75 @@ class TokenStore:
                 access_token_expires_at_timestamp,
             )
         return OK(tokens)
+
+    def issue_delegated_token(
+        self,
+        user_id: UserId,
+        *,
+        resource: str | None,
+        scope: frozenset[ScopeId],
+        client_id: str,
+        expires_at: datetime,
+    ) -> Result[IssuedAccessToken, UnknownClient]:
+        """An access token for a grant of the user without refresh tokens, or
+        UnknownClient if client_id is not a registered client.
+
+        A live grant of the same user, client, resource and scope is reused and
+        extended to expires_at, and the access token expires then. Repeated
+        requests keep extending the grant, so an expires_at a fixed time after
+        each request acts as an idle timeout. Otherwise a new grant starts.
+        Grants with refresh tokens are never reused.
+        """
+        _require_grant_arguments(user_id, client_id, scope)
+        now = int(_utc_now().timestamp())
+        grant_expires_at = _expiry_timestamp("expires_at", expires_at, issued_at=now)
+        stored_scope = format_scopes(scope)
+        # write_transaction takes the write lock before the lookup, so of two
+        # concurrent requests the second finds the grant the first started.
+        with write_transaction(self._connection):
+            reused = self._connection.execute(
+                """
+                UPDATE grants SET expires_at = :grant_expires_at
+                WHERE grant_id = (
+                    SELECT grant_id FROM grants
+                    WHERE user_id = :user_id AND client_id = :client_id
+                        AND resource IS :resource AND scope = :scope
+                        AND expires_at > :now
+                        AND NOT EXISTS (
+                            SELECT 1 FROM refresh_tokens
+                            WHERE grant_id = grants.grant_id
+                        )
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                )
+                RETURNING grant_id
+                """,
+                {
+                    "grant_expires_at": grant_expires_at,
+                    "user_id": user_id,
+                    "client_id": client_id,
+                    "resource": resource,
+                    "scope": stored_scope,
+                    "now": now,
+                },
+            ).fetchone()
+            if reused is not None:
+                grant_id = reused["grant_id"]
+            else:
+                inserted = self._insert_grant(
+                    user_id,
+                    client_id=client_id,
+                    resource=resource,
+                    scope=scope,
+                    now=now,
+                    expires_at=grant_expires_at,
+                )
+                if inserted.is_error():
+                    return Error(inserted.error)
+                grant_id = inserted.ok
+            access_token = self._insert_access_token(grant_id, now, grant_expires_at)
+            self._purge(now)
+        return OK(access_token)
 
     def rotate(
         self,
@@ -424,6 +410,37 @@ class TokenStore:
             grant=grant,
         )
 
+    def _insert_grant(
+        self,
+        user_id: UserId,
+        *,
+        client_id: str,
+        resource: str | None,
+        scope: frozenset[ScopeId],
+        now: int,
+        expires_at: int,
+    ) -> Result[str, UnknownClient]:
+        """Insert a grant within the caller's write transaction."""
+        grant_id = secrets.token_urlsafe(32)
+        try:
+            self._connection.execute(
+                """
+                INSERT INTO grants
+                    (grant_id, user_id, client_id, resource, scope, created_at, expires_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (grant_id, user_id, client_id, resource, format_scopes(scope), now, expires_at),
+            )
+        except sqlite3.IntegrityError:
+            # _require_grant_arguments leaves the client_id foreign key as the
+            # only constraint left to trip.
+            logger.exception(
+                "Refusing to start an OAuth grant: client %(client_id)s is not registered",
+                {"client_id": client_id},
+            )
+            return Error(UnknownClient())
+        return OK(grant_id)
+
     def _issue_for_grant(
         self, grant_id: str, now: int, refresh_token_expires_at: int, access_token_expires_at: int
     ) -> IssuedTokens:
@@ -439,8 +456,18 @@ class TokenStore:
             """,
             (_refresh_token_hash(refresh_token), now, refresh_token_expires_at, grant_id),
         )
-        self._purge_expired_access_tokens(now)
-        self._purge_expired_refresh_tokens(now)
+        access_token = self._insert_access_token(grant_id, now, access_token_expires_at)
+        self._purge(now)
+        return IssuedTokens(
+            access=access_token.access,
+            expires_in=access_token.expires_in,
+            refresh=refresh_token,
+        )
+
+    def _insert_access_token(
+        self, grant_id: str, now: int, access_token_expires_at: int
+    ) -> IssuedAccessToken:
+        """Must run inside a write_transaction."""
         access_token = _mint_token(_ACCESS_TOKEN_PREFIX)
         (stored_expires_at,) = self._connection.execute(
             """
@@ -452,16 +479,17 @@ class TokenStore:
             """,
             (_access_token_hash(access_token), now, access_token_expires_at, grant_id),
         ).fetchone()
-        return IssuedTokens(
-            access=access_token,
-            expires_in=stored_expires_at - now,
-            refresh=refresh_token,
-        )
+        return IssuedAccessToken(access=access_token, expires_in=stored_expires_at - now)
 
-    def _purge_expired_access_tokens(self, now: int) -> None:
-        self._connection.execute("DELETE FROM tokens WHERE expires_at <= ?", (now,))
+    def _purge(self, now: int) -> None:
+        """Delete expired tokens, then the grants left with no tokens at all.
 
-    def _purge_expired_refresh_tokens(self, now: int) -> None:
+        Must run inside a write_transaction, after the issuing step inserted
+        its own tokens. Tokens issued before grants existed have no grant_id.
+        """
+        expired = self._connection.execute(
+            "DELETE FROM tokens WHERE expires_at <= ? RETURNING grant_id", (now,)
+        ).fetchall()
         purged = self._connection.execute(
             "DELETE FROM refresh_tokens WHERE expires_at < ? RETURNING grant_id",
             (now - int(_REFRESH_TOKEN_RETENTION.total_seconds()),),
@@ -471,8 +499,9 @@ class TokenStore:
             """
             DELETE FROM grants WHERE grant_id = ?
                 AND NOT EXISTS (SELECT 1 FROM refresh_tokens WHERE grant_id = grants.grant_id)
+                AND NOT EXISTS (SELECT 1 FROM tokens WHERE grant_id = grants.grant_id)
             """,
-            {(row["grant_id"],) for row in purged},
+            {(row["grant_id"],) for row in (*expired, *purged) if row["grant_id"] is not None},
         )
 
 

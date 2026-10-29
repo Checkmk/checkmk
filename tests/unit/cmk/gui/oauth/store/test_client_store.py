@@ -151,7 +151,7 @@ def test_delete_revokes_the_deleted_clients_tokens(store: ClientStore) -> None:
     registered = store.register(["https://client.example/callback"], "Example")
     assert registered.is_ok()
     token_store = TokenStore(store._connection)
-    token = token_store.issue_token(
+    token = token_store.issue_delegated_token(
         UserId("cmkadmin"),
         expires_at=datetime.now(UTC) + timedelta(minutes=5),
         resource=None,

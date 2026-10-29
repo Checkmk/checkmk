@@ -118,7 +118,7 @@ def test_oauth_token_exempt_from_2fa_check(
     assert registration.is_ok()
 
     with get_token_store() as token_store:
-        issued = token_store.issue_token(
+        issued = token_store.issue_delegated_token(
             user_id,
             expires_at=datetime.now(UTC) + timedelta(minutes=5),
             resource=None,

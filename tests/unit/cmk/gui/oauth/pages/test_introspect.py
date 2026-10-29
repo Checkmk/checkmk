@@ -33,7 +33,7 @@ def fixture_client_id(flask_app: Flask) -> str:
 
 def _issue_token(user_id: UserId, client_id: str, expires_at: datetime) -> str:
     with get_token_store() as store:
-        result = store.issue_token(
+        result = store.issue_delegated_token(
             user_id,
             expires_at=expires_at,
             resource=None,

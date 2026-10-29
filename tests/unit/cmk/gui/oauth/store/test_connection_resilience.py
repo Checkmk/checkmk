@@ -34,7 +34,7 @@ def test_a_damaged_database_does_not_authenticate_anyone(
         registration = clients.register(["https://client.example/callback"], None)
     assert registration.is_ok()
     with get_token_store() as tokens:
-        token = tokens.issue_token(
+        token = tokens.issue_delegated_token(
             username,
             expires_at=datetime.now(UTC) + timedelta(minutes=5),
             resource=None,

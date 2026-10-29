@@ -333,6 +333,7 @@ def action(
                 progress_logger=progress_logger,
                 tree=ctx.tree,
                 additional_rules=_otel_routing_rules,
+                additional_dcd_host_attributes=_otel_dcd_host_attributes,
             )
         case QuickSetupActionMode.EDIT:
             raise ValueError("Edit mode not supported")
@@ -360,6 +361,30 @@ def _otel_routing_rules(
             bundle_id=bundle_id,
             site_id=site_id,
             description="OpenTelemetry data routing",
+        )
+    ]
+
+
+def _otel_dcd_host_attributes(params: Mapping[str, object]) -> Sequence[tuple[str, object]]:
+    """The attribute "OpenTelemetry data" with one host name lookup rule without filters and
+    without a host name template, so the routing rule selects the data by the identity labels."""
+    if not _otel_enabled(params):
+        return ()
+    return [
+        (
+            "metrics_association",
+            (
+                "enabled",
+                {
+                    "host_name_lookup_rules": [
+                        {
+                            "resource_attributes": [],
+                            "scope_attributes": [],
+                            "data_point_attributes": [],
+                        }
+                    ]
+                },
+            ),
         )
     ]
 

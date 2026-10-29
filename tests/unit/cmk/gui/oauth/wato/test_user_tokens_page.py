@@ -56,6 +56,24 @@ def _issue_token(user_id: UserId, client_id: str) -> str:
     return token.ok
 
 
+def _token_hash(token: str) -> str:
+    with get_token_store() as store:
+        record = store.get_by_token(token)
+    assert record is not None
+    return record.token_hash
+
+
+def _is_token_alive(token: str) -> bool:
+    with get_token_store() as store:
+        return store.get_by_token(token) is not None
+
+
+def _remove_one(edition: Edition, token_hash: str) -> None:
+    fake_request = MagicMock()
+    fake_request.get_ascii_input.return_value = token_hash
+    UserOAuthTokensOverview(edition)._action(fake_request)  # noqa: SLF001
+
+
 def test_show_form_renders_only_the_callers_own_tokens(
     monkeypatch: pytest.MonkeyPatch, test_edition: Edition, with_admin_login: UserId
 ) -> None:
@@ -89,34 +107,20 @@ def test_show_form_renders_empty_table_without_error(test_edition: Edition) -> N
 def test_action_revokes_the_callers_own_token(
     test_edition: Edition, with_admin_login: UserId
 ) -> None:
-    client_id = _register_client("client")
-    token = _issue_token(with_admin_login, client_id)
-    with get_token_store() as store:
-        record = store.get_by_token(token)
-    assert record is not None
+    token = _issue_token(with_admin_login, _register_client("client"))
 
-    fake_request = MagicMock()
-    fake_request.get_ascii_input.return_value = record.token_hash
-    UserOAuthTokensOverview(test_edition)._action(fake_request)  # noqa: SLF001
+    _remove_one(test_edition, _token_hash(token))
 
-    with get_token_store() as store:
-        assert store.get_by_token(token) is None
+    assert not _is_token_alive(token)
 
 
 @pytest.mark.usefixtures("with_admin_login", "valid_csrf_token")
 def test_action_does_not_revoke_another_users_token(test_edition: Edition) -> None:
-    client_id = _register_client("client")
-    token = _issue_token(UserId("other"), client_id)
-    with get_token_store() as store:
-        record = store.get_by_token(token)
-    assert record is not None
+    token = _issue_token(UserId("other"), _register_client("client"))
 
-    fake_request = MagicMock()
-    fake_request.get_ascii_input.return_value = record.token_hash
-    UserOAuthTokensOverview(test_edition)._action(fake_request)  # noqa: SLF001
+    _remove_one(test_edition, _token_hash(token))
 
-    with get_token_store() as store:
-        assert store.get_by_token(token) is not None
+    assert _is_token_alive(token)
 
 
 def _login(user_id: UserId, load_config: Config) -> AbstractContextManager[None]:
@@ -136,6 +140,27 @@ def _login(user_id: UserId, load_config: Config) -> AbstractContextManager[None]
     )
 
 
+def _bulk_remove(
+    flask_app: Flask,
+    edition: Edition,
+    user_id: UserId,
+    load_config: Config,
+    *token_hashes: str,
+) -> None:
+    with (
+        flask_app.test_request_context(
+            method="POST",
+            data={
+                "_bulk_revoke_tokens": "1",
+                **{f"_c_token_{token_hash}": "on" for token_hash in token_hashes},
+            },
+        ),
+        _login(user_id, load_config),
+    ):
+        flask_app.preprocess_request()
+        UserOAuthTokensOverview(edition)._action(request)  # noqa: SLF001
+
+
 @pytest.mark.usefixtures("valid_csrf_token")
 def test_action_revokes_multiple_selected_tokens_at_once(
     flask_app: Flask,
@@ -147,28 +172,11 @@ def test_action_revokes_multiple_selected_tokens_at_once(
     client_id = _register_client("client")
     checked = _issue_token(user_id, client_id)
     unchecked = _issue_token(user_id, client_id)
-    with get_token_store() as store:
-        checked_record = store.get_by_token(checked)
-        unchecked_record = store.get_by_token(unchecked)
-    assert checked_record is not None
-    assert unchecked_record is not None
 
-    with (
-        flask_app.test_request_context(
-            method="POST",
-            data={
-                "_bulk_revoke_tokens": "1",
-                f"_c_token_{checked_record.token_hash}": "on",
-            },
-        ),
-        _login(user_id, load_config),
-    ):
-        flask_app.preprocess_request()
-        UserOAuthTokensOverview(test_edition)._action(request)  # noqa: SLF001
+    _bulk_remove(flask_app, test_edition, user_id, load_config, _token_hash(checked))
 
-    with get_token_store() as store:
-        assert store.get_by_token(checked) is None
-        assert store.get_by_token(unchecked) is not None
+    assert not _is_token_alive(checked)
+    assert _is_token_alive(unchecked)
 
 
 @pytest.mark.usefixtures("valid_csrf_token")
@@ -182,29 +190,18 @@ def test_action_bulk_revoke_only_revokes_the_callers_own_tokens(
     client_id = _register_client("client")
     own_token = _issue_token(user_id, client_id)
     other_token = _issue_token(UserId("other"), client_id)
-    with get_token_store() as store:
-        own_record = store.get_by_token(own_token)
-        other_record = store.get_by_token(other_token)
-    assert own_record is not None
-    assert other_record is not None
 
-    with (
-        flask_app.test_request_context(
-            method="POST",
-            data={
-                "_bulk_revoke_tokens": "1",
-                f"_c_token_{own_record.token_hash}": "on",
-                f"_c_token_{other_record.token_hash}": "on",
-            },
-        ),
-        _login(user_id, load_config),
-    ):
-        flask_app.preprocess_request()
-        UserOAuthTokensOverview(test_edition)._action(request)  # noqa: SLF001
+    _bulk_remove(
+        flask_app,
+        test_edition,
+        user_id,
+        load_config,
+        _token_hash(own_token),
+        _token_hash(other_token),
+    )
 
-    with get_token_store() as store:
-        assert store.get_by_token(own_token) is None
-        assert store.get_by_token(other_token) is not None
+    assert not _is_token_alive(own_token)
+    assert _is_token_alive(other_token)
 
 
 @pytest.mark.usefixtures("with_admin_login")

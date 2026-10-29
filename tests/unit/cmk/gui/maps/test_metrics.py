@@ -93,13 +93,13 @@ _REGISTERED_PERFOMETERS: Mapping[str, ApiPerfometer] = {
 }
 
 
-_REGISTERED_GRAPHS: Mapping[str, ApiGraph] = {
-    "ram_usage": graphs_api.Graph(
+_REGISTERED_GRAPHS: Sequence[ApiGraph] = [
+    graphs_api.Graph(
         name="ram_usage",
         title=Title("RAM usage graph"),
         compound_lines=["mem_used_percent"],
     ),
-    "bandwidth": graphs_api.Bidirectional(
+    graphs_api.Bidirectional(
         name="bandwidth",
         title=Title("Bandwidth"),
         upper=graphs_api.Graph(
@@ -109,12 +109,12 @@ _REGISTERED_GRAPHS: Mapping[str, ApiGraph] = {
             name="bandwidth_down", title=Title("In"), compound_lines=["if_in_bps"]
         ),
     ),
-    "cpu_load": graphs_api.Graph(
+    graphs_api.Graph(
         name="cpu_load",
         title=Title('CPU load - _EXPRESSION:{"metric":"load1","scalar":"max"} CPU cores'),
         compound_lines=["load1"],
     ),
-}
+]
 
 # Renames *and* scales, so the payload has to report the raw label as its key,
 # the canonical name as ``name`` and the translation factor as ``scale``.

@@ -18,7 +18,6 @@ from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
     ApiGraph,
     ConsolidationFunction,
-    sort_registered_graph_plugins,
     TimeRange,
 )
 from cmk.graphing_engine import HostName as EngineHostName
@@ -39,8 +38,8 @@ from cmk.gui.graphing import (
     GraphChoices,
     GraphDestinations,
     GraphPluginChoice,
-    graphs_from_api,
     GraphSpecification,
+    registered_graphs,
     registered_metrics,
     registered_translations,
     resolve_graph_id_from_index,
@@ -319,7 +318,7 @@ def graph_templates_autocompleter(
     return _graph_templates_autocompleter_testable(
         value_entered_by_user=value_entered_by_user,
         params=params,
-        registered_plugin_graphs=graphs_from_api,
+        registered_plugin_graphs=registered_graphs(),
         registered_metric_definitions=registered_metrics(),
         registered_translations=registered_translations(),
         debug=config.debug,
@@ -330,7 +329,7 @@ def _graph_templates_autocompleter_testable(
     *,
     value_entered_by_user: str,
     params: Mapping[str, Any],
-    registered_plugin_graphs: Mapping[str, ApiGraph],
+    registered_plugin_graphs: Sequence[ApiGraph],
     registered_metric_definitions: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
     debug: bool,
@@ -359,7 +358,7 @@ def _graph_templates_autocompleter_testable(
 
 def _graph_and_single_metric_templates_choices_for_context(
     context: VisualContext,
-    registered_graphs: Mapping[str, ApiGraph],
+    registered_graphs: Sequence[ApiGraph],
     registered_metric_definitions: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
     *,
@@ -372,9 +371,6 @@ def _graph_and_single_metric_templates_choices_for_context(
     site_id = only_sites[0] if only_sites and len(only_sites) == 1 else None
     host_name = HostName(context["host"]["host"])
     service_name = ServiceName(context["service"]["service"])
-    sorted_graph_plugins = [
-        plugin for _name, plugin in sort_registered_graph_plugins(registered_graphs)
-    ]
     return graph_choices(
         [
             built.graph
@@ -384,7 +380,7 @@ def _graph_and_single_metric_templates_choices_for_context(
                     host_name=host_name,
                     service_description=service_name,
                 ),
-                registered_graphs=sorted_graph_plugins,
+                registered_graphs=registered_graphs,
                 registered_metrics=registered_metric_definitions,
                 fetch_metric_names=RRDFetchMetricNames(
                     host_name=EngineHostName(host_name),
@@ -395,7 +391,7 @@ def _graph_and_single_metric_templates_choices_for_context(
                 ),
             )
         ],
-        sorted_graph_plugins,
+        registered_graphs,
     )
 
 

@@ -28,8 +28,8 @@ from cmk.gui.graphing import (
     evaluated_to_graph_spec,
     EvaluationOptions,
     get_graph_plugin_from_id,
-    graphs_from_api,
     MKGraphNotFound,
+    registered_graphs,
     registered_metrics,
     registered_translations,
     RRDFetchMetricNames,
@@ -90,7 +90,7 @@ def get_graph(params: Mapping[str, Any]) -> Response:
         graph_plugins = (
             []
             if body["type"] == "single_metric"
-            else [get_graph_plugin_from_id(graphs_from_api, graph_id)]
+            else [get_graph_plugin_from_id(registered_graphs(), graph_id)]
         )
         built_graphs = build_template_graphs(
             specification,

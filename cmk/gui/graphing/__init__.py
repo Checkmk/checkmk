@@ -5,10 +5,7 @@
 from ._autocompleter import monitored_metrics_autocompleter
 from ._built_graphs import BuiltGraph, DiscoveredGraphs
 from ._decoding import context_from_json, ensure_type
-from ._from_api import (
-    graphs_from_api,
-    perfometers_from_api,
-)
+from ._from_api import perfometers_from_api
 from ._frontend import (
     DEFAULT_INTERACTION,
     default_time_range_seconds,
@@ -220,7 +217,6 @@ __all__ = [
     "GraphPluginChoice",
     "GraphRanges",
     "GraphRenderOptions",
-    "graphs_from_api",
     "GraphSpec",
     "GraphSpecification",
     "StoredGraphSpecification",

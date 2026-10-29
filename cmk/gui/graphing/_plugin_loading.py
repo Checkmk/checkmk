@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.graphing_engine import ApiGraph, ApiPerfometer
+from cmk.graphing_engine import ApiPerfometer
 from cmk.gui.log import logger
 
-from ._from_api import graphs_from_api, perfometers_from_api
+from ._from_api import perfometers_from_api
 from ._plugins import DiscoveredGraphingPlugins, graphing_plugins
 
 
@@ -15,8 +15,6 @@ def _add_graphing_plugins(plugins: DiscoveredGraphingPlugins) -> None:
     for plugin in plugins.plugins.values():
         if isinstance(plugin, ApiPerfometer):
             perfometers_from_api.register(plugin)
-        elif isinstance(plugin, ApiGraph):
-            graphs_from_api.register(plugin)
 
 
 def register_plugins() -> None:

@@ -13,8 +13,8 @@ from http import HTTPStatus
 from cmk.ccc.hostaddress import HostNameValidationError
 from cmk.gui.graphing import (
     get_temperature_unit,
-    graphs_from_api,
     perfometers_from_api,
+    registered_graphs,
     registered_metrics,
     registered_translations,
 )
@@ -85,7 +85,7 @@ def show_metric_info_v1(
         temperature_unit=get_temperature_unit(user, api_context.config.default_temperature_unit),
         theme=theme,
         debug=api_context.config.debug,
-        registered_graphs=graphs_from_api if context is not None else None,
+        registered_graphs=registered_graphs() if context is not None else None,
         object_context=context,
     )
 

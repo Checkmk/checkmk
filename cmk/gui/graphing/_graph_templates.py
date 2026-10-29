@@ -27,7 +27,6 @@ from cmk.graphing_engine import (
     RequestedMetric,
     RRDMetric,
     ServiceName,
-    sort_registered_graph_plugins,
     TimeRange,
 )
 from cmk.gui.config import active_config
@@ -60,19 +59,19 @@ class MKGraphMixedUnitsError(MKGeneralException): ...
 
 
 def get_graph_plugin_choices(
-    registered_graphs: Mapping[str, ApiGraph],
+    registered_graphs: Sequence[ApiGraph],
 ) -> list[GraphPluginChoice]:
     return sorted(
         [
             GraphPluginChoice(graph.name, graph.title.localize(translate_to_current_language))
-            for graph in registered_graphs.values()
+            for graph in registered_graphs
         ],
         key=lambda c: c.title,
     )
 
 
 def get_graph_plugin_from_id(
-    registered_graphs: Mapping[str, ApiGraph],
+    registered_graphs: Sequence[ApiGraph],
     graph_id: str,
 ) -> ApiGraph:
     if isinstance(request := graph_request_of(graph_id), RequestedMetric):
@@ -88,8 +87,8 @@ def get_graph_plugin_from_id(
                 metrics_v2_unstable.LowerCriticalOf(metric_name),
             ],
         )
-    for name, graph_plugin in sort_registered_graph_plugins(registered_graphs):
-        if graph_id == name:
+    for graph_plugin in registered_graphs:
+        if graph_id == graph_plugin.name:
             return graph_plugin
     raise MKGraphNotFound(
         _("There is no graph plug-in with the id '%(graph_id)s'") % {"graph_id": graph_id}

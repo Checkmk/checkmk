@@ -54,7 +54,6 @@ from cmk.graphing_engine import (
     RRDMetric,
     Service,
     SiteID,
-    sort_registered_graph_plugins,
     TimeRange,
     translated_names_and_scales,
 )
@@ -392,7 +391,7 @@ def _graph_title(graph: Graph, evaluated: Mapping[MetricName, EvaluatedMetric]) 
 def _graphs_payload(
     names_and_scales: Mapping[MetricName, tuple[MetricName, float]],
     metrics: Mapping[MetricName, EvaluatedMetric],
-    registered_graphs: Mapping[str, ApiGraph],
+    registered_graphs: Sequence[ApiGraph],
     engine: _EngineInputs,
     object_context: tuple[SiteId, HostName, ServiceName],
 ) -> list[GraphGroup]:
@@ -412,7 +411,7 @@ def _graphs_payload(
         return [str(raw_by_canonical[name]) for name in canonical_names if name in raw_by_canonical]
 
     groups: list[GraphGroup] = []
-    for _name, plugin in sort_registered_graph_plugins(registered_graphs):
+    for plugin in registered_graphs:
         if isinstance(plugin, graphs_v1.Bidirectional | graphs_v2_unstable.Bidirectional):
             upper = _metric_names(_matched_graphs(plugin.upper, metrics, engine, object_context))
             lower = _metric_names(_matched_graphs(plugin.lower, metrics, engine, object_context))
@@ -469,7 +468,7 @@ def metric_info(
     temperature_unit: TemperatureUnit,
     theme: Theme,
     debug: bool,
-    registered_graphs: Mapping[str, ApiGraph] | None = None,
+    registered_graphs: Sequence[ApiGraph] | None = None,
     object_context: tuple[SiteId, HostName, ServiceName] | None = None,
 ) -> MetricInfo:
     """Resolve raw perfdata display semantics through Checkmk's graphing pipeline.

@@ -18,11 +18,9 @@ from cmk.graphing_engine import Service, sort_registered_graph_plugins
 from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui.graphing import (
     build_template_graphs,
-    graphs_from_api,
     legacy_graph_id,
     TemplateGraphSpecification,
 )
-from cmk.gui.graphing import registered_graphs as engine_registered_graphs
 
 _HOST = "host_name"
 _SERVICE = "service_name"
@@ -131,10 +129,3 @@ def test_the_engine_discovers_a_services_graphs_in_a_pinned_order(
     registered_metrics = {name: _metric(name) for name in metric_names}
 
     assert _engine_ids(metric_names, registered_graphs, registered_metrics) == expected
-
-
-@pytest.mark.usefixtures("load_plugins")
-def test_the_engine_registered_graphs_keep_the_legacy_plugin_order() -> None:
-    assert [plugin.name for plugin in engine_registered_graphs()] == [
-        name for name, _plugin in sort_registered_graph_plugins(graphs_from_api)
-    ]

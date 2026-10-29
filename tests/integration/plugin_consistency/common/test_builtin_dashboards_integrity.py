@@ -10,7 +10,7 @@ from cmk.gui.dashboard.dashlet.dashlets.graph import (
     TemplateGraphDashlet,
     TemplateGraphDashletConfig,
 )
-from cmk.gui.graphing import get_graph_plugin_from_id, graphs_from_api
+from cmk.gui.graphing import get_graph_plugin_from_id, registered_graphs
 
 
 def test_all_template_graph_dashlets_reference_known_graph_templates() -> None:
@@ -19,4 +19,4 @@ def test_all_template_graph_dashlets_reference_known_graph_templates() -> None:
             if dashlet_config["type"] == TemplateGraphDashlet.type_name():
                 graph_id = cast(TemplateGraphDashletConfig, dashlet_config).get("graph_id")
                 assert graph_id is not None, "Builtin dashlets must use the stable 'graph_id' field"
-                get_graph_plugin_from_id(graphs_from_api, graph_id)
+                get_graph_plugin_from_id(registered_graphs(), graph_id)

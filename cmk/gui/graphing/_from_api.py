@@ -6,7 +6,7 @@
 from typing import override
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.graphing_engine import ApiGraph, ApiPerfometer
+from cmk.graphing_engine import ApiPerfometer
 
 
 class PerfometersFromAPI(Registry[ApiPerfometer]):
@@ -16,12 +16,3 @@ class PerfometersFromAPI(Registry[ApiPerfometer]):
 
 
 perfometers_from_api = PerfometersFromAPI()
-
-
-class GraphsFromAPI(Registry[ApiGraph]):
-    @override
-    def plugin_name(self, instance: ApiGraph) -> str:
-        return instance.name
-
-
-graphs_from_api = GraphsFromAPI()

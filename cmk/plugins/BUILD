@@ -211,6 +211,7 @@ sh_library(
         "oracle/agents/mk-oracle-v2_sync",
         "oracle/agents/mk-oracle-v2_sync.solaris",
         "sap_hana/agents/mk_sap_hana",
+        "scaleio/agents/mk_scaleio",
         "smart/agents/smart",
         "smart/agents/smart_posix",
         "suseconnect/agents/mk_suseconnect",

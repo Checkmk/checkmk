@@ -55,7 +55,6 @@ sh_library(
         "mk_oracle",
         "mk_oracle_crs",
         "mk_redis",
-        "mk_scaleio",
         "runas",
         "//agents/cfg_examples:agents_cfg_examples_sh",
     ],

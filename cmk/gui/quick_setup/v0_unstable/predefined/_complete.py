@@ -7,6 +7,7 @@
 
 import time
 from collections.abc import Callable, Mapping, Sequence
+from copy import deepcopy
 from uuid import uuid4
 
 from cmk.ccc.hostaddress import HostName
@@ -54,7 +55,7 @@ from cmk.gui.watolib.configuration_bundles import (
     CreateRule,
     delete_config_bundle,
 )
-from cmk.gui.watolib.host_attributes import HostAttributes
+from cmk.gui.watolib.host_attributes import all_host_attributes, HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
     _normalize_folder_name,
     Folder,
@@ -244,6 +245,39 @@ def _no_additional_rules(*_args: object) -> Sequence[CreateRule]:
     return ()
 
 
+# Host attributes that the dynamic host management sets on the hosts it creates, in addition to
+# its default ones or instead of them. Argument: the special agent rule's value.
+type AdditionalDCDHostAttributes = Callable[[Mapping[str, object]], Sequence[tuple[str, object]]]
+
+
+def _no_additional_dcd_host_attributes(
+    _params: Mapping[str, object],
+) -> Sequence[tuple[str, object]]:
+    return ()
+
+
+def _ensure_known_host_attributes(host_attributes: Sequence[tuple[str, object]]) -> None:
+    # An unknown attribute makes the dynamic host management fail later, when it creates a host.
+    known = all_host_attributes(
+        active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+    )
+    if unknown := sorted(name for name, _value in host_attributes if name not in known):
+        raise ValueError(f"Unknown host attributes: {', '.join(unknown)}")
+
+
+def _with_host_attributes(
+    connections: Sequence[CreateDCDConnection], host_attributes: Sequence[tuple[str, object]]
+) -> list[CreateDCDConnection]:
+    result = deepcopy(list(connections))
+    for connection in result:
+        _connector_type, connector_spec = connection["spec"]["connector"]
+        for creation_rule in connector_spec["creation_rules"]:
+            # An attribute the connection already sets gets the value of the Quick Setup.
+            attributes = {**dict(creation_rule["host_attributes"]), **dict(host_attributes)}
+            creation_rule["host_attributes"] = list(attributes.items())
+    return result
+
+
 def create_and_save_special_agent_bundle_custom_collect_params(
     special_agent_name: str,
     parameter_form: Dictionary,
@@ -252,6 +286,9 @@ def create_and_save_special_agent_bundle_custom_collect_params(
     progress_logger: ProgressLogger,
     tree: FolderTree,
     additional_rules: AdditionalRules = _no_additional_rules,
+    additional_dcd_host_attributes: AdditionalDCDHostAttributes = (
+        _no_additional_dcd_host_attributes
+    ),
 ) -> str:
     return _create_and_save_special_agent_bundle(
         special_agent_name=special_agent_name,
@@ -261,6 +298,7 @@ def create_and_save_special_agent_bundle_custom_collect_params(
         progress_logger=progress_logger,
         tree=tree,
         additional_rules=additional_rules,
+        additional_dcd_host_attributes=additional_dcd_host_attributes,
     )
 
 
@@ -353,6 +391,9 @@ def _create_and_save_special_agent_bundle(
     progress_logger: ProgressLogger,
     tree: FolderTree,
     additional_rules: AdditionalRules = _no_additional_rules,
+    additional_dcd_host_attributes: AdditionalDCDHostAttributes = (
+        _no_additional_dcd_host_attributes
+    ),
 ) -> str:
     rulespec_name = RuleGroup.SpecialAgents(special_agent_name)
     bundle_id = _find_bundle_id(all_stages_form_data)
@@ -408,6 +449,8 @@ def _create_and_save_special_agent_bundle(
         *additional_rules(params, bundle_id, site_id, folder),
     ]
     _ensure_user_may_create_rules(rules)
+    dcd_host_attributes = additional_dcd_host_attributes(params)
+    _ensure_known_host_attributes(dcd_host_attributes)
     progress_logger.log_new_progress_step(
         "create_config_bundle", "Create underlying configurations"
     )
@@ -431,8 +474,9 @@ def _create_and_save_special_agent_bundle(
             ],
             passwords=password_entities,
             rules=rules,
-            dcd_connections=DCDHook.create_dcd_connections(
-                bundle_id, site_id, validated_host_name, folder
+            dcd_connections=_with_host_attributes(
+                DCDHook.create_dcd_connections(bundle_id, site_id, validated_host_name, folder),
+                dcd_host_attributes,
             ),
         ),
         user_permissions=user_permissions,

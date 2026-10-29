@@ -39,7 +39,7 @@ All endpoints that operate on a specific agent UUID require mTLS — the client 
 
 The **relay** sub-app covers relay registration, certificate exchange, task management (create / fetch / update), config activation, and forwarding of monitoring data to CMC.
 Relay tasks are stored in-memory with a configurable TTL and a bounded per-relay queue depth.
-At startup the service schedules an asynchronous background task (with exponential-backoff retry) to push an initial relay config task — startup is not blocked while this completes.
+At startup the service schedules an asynchronous background task to push an initial relay config task — startup is not blocked while this completes.
 
 The full endpoint list is available via FastAPI's auto-generated OpenAPI docs at `/<site>/agent-receiver/docs` and `/<site>/relays/docs` when running locally.
 

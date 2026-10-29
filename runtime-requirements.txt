@@ -4311,7 +4311,6 @@ tenacity==9.2.1 \
     # via
     #   -c requirements.txt
     #   -r non-free/packages/cmk-data-backend/requirements.in
-    #   -r packages/cmk-agent-receiver/requirements.in
 tiktoken==0.14.0 \
     --hash=sha256:087538c080e5ff421abd3a0785ed63c5111d06af98e6cd0d374dbe5969147ca3 \
     --hash=sha256:10f31e63e40313f2e518d87f7086cfa44e45f64cc14d8ae14103b41220c30a14 \

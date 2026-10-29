@@ -125,7 +125,6 @@ py_library(
         requirement("httpx2"),
         requirement("python-dateutil"),
         requirement("python-multipart"),
-        requirement("tenacity"),
         requirement("starlette"),
         requirement("uvicorn"),
         requirement("uvicorn-worker"),

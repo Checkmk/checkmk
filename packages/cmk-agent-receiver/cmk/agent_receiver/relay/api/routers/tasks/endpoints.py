@@ -45,7 +45,6 @@ from cmk.agent_receiver.relay.api.routers.tasks.serializers import (
     TaskResponseSerializer,
 )
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial, TaskID
-from cmk.agent_receiver.relay.lib.site_client import CheckmkAPIError
 from cmk.relay_protocols import tasks as tasks_protocol
 
 router = fastapi.APIRouter()
@@ -118,13 +117,7 @@ async def create_task_endpoint(
         case _:  # pragma: no cover
             assert_never(request_body.spec)
 
-    try:
-        task_id = handler.process(RelayID(relay_id), spec)
-    except CheckmkAPIError as e:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
-            detail=e.msg,
-        )
+    task_id = handler.process(RelayID(relay_id), spec)
     return tasks_protocol.TaskCreateResponse(task_id=task_id)
 
 
@@ -172,18 +165,12 @@ async def update_task(
         - Status changes based on result_type
         - Tasks with results can trigger expiration calculation
     """
-    try:
-        with bound_contextvars(task_id=task_id):
-            updated_task = handler.process(
-                relay_id=RelayID(relay_id),
-                task_id=TaskID(task_id),
-                result_type=ResultType(request.result_type.value),
-                result_payload=request.result_payload,
-            )
-    except CheckmkAPIError as e:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
-            detail=e.msg,
+    with bound_contextvars(task_id=task_id):
+        updated_task = handler.process(
+            relay_id=RelayID(relay_id),
+            task_id=TaskID(task_id),
+            result_type=ResultType(request.result_type.value),
+            result_payload=request.result_payload,
         )
     return TaskResponseSerializer.serialize(updated_task, config_encoding)
 
@@ -233,17 +220,11 @@ async def get_tasks_endpoint(
         - The response carries an ETag. A relay polling with a matching
           If-None-Match gets 304 instead of the (possibly large) task list again.
     """
-    try:
-        tasks = handler.process(
-            RelayID(relay_id),
-            TaskStatus(status.value) if status else None,
-            relay_serial=Serial(relay_serial) if relay_serial is not None else None,
-        )
-    except CheckmkAPIError as e:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
-            detail=e.msg,
-        )
+    tasks = handler.process(
+        RelayID(relay_id),
+        TaskStatus(status.value) if status else None,
+        relay_serial=Serial(relay_serial) if relay_serial is not None else None,
+    )
     etag = _task_list_etag(tasks, config_encoding)
     headers = {
         "ETag": etag,
@@ -289,14 +270,8 @@ async def get_task_endpoint(
     Returns:
         TaskResponse containing task details
     """
-    try:
-        with bound_contextvars(task_id=task_id):
-            task = handler.process(RelayID(relay_id), TaskID(task_id))
-    except CheckmkAPIError as e:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
-            detail=e.msg,
-        )
+    with bound_contextvars(task_id=task_id):
+        task = handler.process(RelayID(relay_id), TaskID(task_id))
 
     return TaskResponseSerializer.serialize(task)
 

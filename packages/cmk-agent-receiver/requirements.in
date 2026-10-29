@@ -10,4 +10,3 @@ uvicorn
 uvicorn-worker
 pydantic
 pydantic-core
-tenacity

@@ -147,7 +147,7 @@ def _run(crash_report_callback: Callable[[Exception], str], logger: logging.Logg
 
         # The registration and load_pugins take a few seconds and we don't want to delay the
         # pre-daemonize phase with this, because it also slows down "omd start" significantly.
-        main_modules.register(edition(omd_root))
+        main_modules.register(edition(omd_root), debug=False)
 
         if errors := main_modules.get_failed_plugins():
             logger.error(

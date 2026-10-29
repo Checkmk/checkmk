@@ -44,7 +44,9 @@ def _render_main_navigation(title: str | None, nav: MainNavigation) -> None:
 main_navigation_renderer_registry.register(_render_main_navigation)
 
 
-def _build_context(edition: Edition, features: LicenseOptions) -> RegistrationContext:
+def _build_context(
+    edition: Edition, features: LicenseOptions, *, debug: bool
+) -> RegistrationContext:
     return RegistrationContext(
         edition=edition,
         features=features,
@@ -67,6 +69,7 @@ def _build_context(edition: Edition, features: LicenseOptions) -> RegistrationCo
         snapin_registry=snapin_registry,
         snapshot_artifact_registry=snapshot_artifact_registry,
         versioned_endpoint_registry=versioned_endpoint_registry,
+        debug=debug,
     )
 
 
@@ -107,7 +110,7 @@ _FEATURE_PLUGIN_MODULES: Mapping[Edition, Sequence[str]] = {
 _registered_edition: Edition | None = None
 
 
-def register(edition: Edition) -> None:
+def register(edition: Edition, *, debug: bool) -> None:
     global _registered_edition
     if _registered_edition is not None:
         if _registered_edition is not edition:
@@ -119,7 +122,7 @@ def register(edition: Edition) -> None:
     _registered_edition = edition
 
     features = get_license_options(paths.omd_root, edition)
-    ctx = _build_context(edition, features)
+    ctx = _build_context(edition, features, debug=debug)
 
     match edition:
         case Edition.PRO:

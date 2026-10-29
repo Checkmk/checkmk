@@ -14,7 +14,7 @@ from cmk.post_rename_site.internal import (
 )
 
 
-def handler(old_site_id: SiteId, new_site_id: SiteId, logger: logging.Logger) -> None:
+def handler(old_site_id: SiteId, new_site_id: SiteId, logger: logging.Logger, _debug: bool) -> None:
     pass
 
 

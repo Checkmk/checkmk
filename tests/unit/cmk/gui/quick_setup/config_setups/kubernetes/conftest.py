@@ -45,5 +45,6 @@ def fixture_kube_v2_ruleset() -> Iterator[None]:
             LoadedRuleSpec(
                 rule_spec=rule_spec_special_agent_kube_v2, edition_only=Edition.COMMUNITY
             ),
+            debug=True,
         )
         yield

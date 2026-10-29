@@ -169,7 +169,7 @@ def _discover_load_plugins(
     )
 
     _, loaded = load_discovered_rule_specs(discovered)
-    register_plugins(rulespec_registry, notification_parameter_registry, loaded)
+    register_plugins(rulespec_registry, notification_parameter_registry, loaded, debug=False)
 
     def _add_name_prefix(plugin: RuleSpec) -> str:
         match plugin:
@@ -216,7 +216,7 @@ def _discover_load_plugins(
 def _load_and_transform_rulesets(
     discovered_names: set[str], renames: Mapping[RulesetName, RulesetName]
 ) -> None:
-    main_modules.register(edition(paths.omd_root))
+    main_modules.register(edition(paths.omd_root), debug=False)
 
     if errors := main_modules.get_failed_plugins():
         logger.error(

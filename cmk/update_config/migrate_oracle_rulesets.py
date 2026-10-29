@@ -57,7 +57,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     logger.addHandler(handler := logging.StreamHandler(stream=sys.stdout))
     handler.setFormatter(CMKFormatter(message_only=True))
     logger.setLevel(logging.INFO)
-    main_modules.register(edition(paths.omd_root))
+    main_modules.register(edition(paths.omd_root), debug=False)
 
     with gui_context():
         if is_distributed_setup_remote_site(active_config.sites):

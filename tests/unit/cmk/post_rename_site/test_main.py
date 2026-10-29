@@ -65,7 +65,12 @@ def test_run_executes_plugins(
 ) -> None:
     args = list[object]()
 
-    def handler_mock(old_site_id: SiteId, new_site_id: SiteId, logger: logging.Logger) -> None:
+    def handler_mock(
+        old_site_id: SiteId,
+        new_site_id: SiteId,
+        logger: logging.Logger,
+        _debug: bool,
+    ) -> None:
         args[:] = [old_site_id, new_site_id, logger]
 
     my_action = RenameAction(

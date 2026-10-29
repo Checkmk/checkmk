@@ -94,6 +94,7 @@ def _special_agent_with_quick_setup(*, is_deprecated: bool) -> Iterator[str]:
                 ),
                 edition_only=Edition.COMMUNITY,
             ),
+            debug=True,
         )
         quick_setup_registry.register(QuickSetupFactory.build(id=QuickSetupId(_TEST_SPECIAL_AGENT)))
         yield _TEST_SPECIAL_AGENT

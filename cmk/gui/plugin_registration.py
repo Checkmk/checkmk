@@ -22,7 +22,7 @@ tracer = trace.get_tracer()
 
 
 @tracer.instrument("plugins.register")
-def register() -> None:
+def register(*, debug: bool) -> None:
     """Loads plugins"""
     # deliberately not loading legacy_bakery_rulesets here.
     _load_plugins("visuals")
@@ -32,7 +32,7 @@ def register() -> None:
 
     hooks.unregister_plugin_hooks()
 
-    views_legacy_plugins.register()
+    views_legacy_plugins.register(debug=debug)
     _load_plugins("views")
 
     wato.register()
@@ -41,7 +41,7 @@ def register() -> None:
     dashboard.register()
     _load_plugins("dashboard")
 
-    load_graphing_plugins()
+    load_graphing_plugins(debug=debug)
 
 
 def _load_plugins(plugin_namespace: str) -> None:

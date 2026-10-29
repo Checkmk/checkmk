@@ -396,7 +396,7 @@ def _validate_rule_spec_usage(plugins: AgentBasedPlugins) -> ActiveCheckResult:
 
 
 def validate_plugins(*, debug: bool) -> ActiveCheckResult:
-    main_modules.register(edition(paths.omd_root))
+    main_modules.register(edition(paths.omd_root), debug=debug)
     plugins, loading_subresult = _validate_agent_based_plugin_loading(debug=debug)
     sub_results = [
         loading_subresult,

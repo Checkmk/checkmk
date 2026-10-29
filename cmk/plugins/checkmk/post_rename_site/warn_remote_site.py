@@ -19,9 +19,10 @@ from cmk.utils.log import console
 
 
 def warn_about_renamed_remote_site(
-    old_site_id: SiteId,  # noqa: ARG001
-    new_site_id: SiteId,  # noqa: ARG001
+    _old_site_id: SiteId,
+    _new_site_id: SiteId,
     logger: Logger,
+    _debug: bool,
 ) -> None:
     """Warn user about central site that needs to be updated manually
 

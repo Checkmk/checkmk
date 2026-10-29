@@ -90,7 +90,7 @@ def test_rewrite_folder_explicit_site() -> None:
 
     assert _make_tree().root_folder().attributes.get("site") == "stable"
 
-    update_hosts_and_folders(SiteId("stable"), SiteId("dingdong"), logger)
+    update_hosts_and_folders(SiteId("stable"), SiteId("dingdong"), logger, debug=True)
 
     assert _make_tree().root_folder().attributes.get("site") == "dingdong"
 
@@ -118,7 +118,7 @@ host_attributes.update(
 
     assert _make_tree().root_folder().load_host(HostName("ag")).attributes.get("site") == "stable"
 
-    update_hosts_and_folders(SiteId("stable"), SiteId("dingdong"), logger)
+    update_hosts_and_folders(SiteId("stable"), SiteId("dingdong"), logger, debug=True)
 
     root_folder = _make_tree().root_folder()
     assert root_folder.load_host(HostName("ag")).attributes.get("site") == "dingdong"
@@ -182,7 +182,7 @@ host_attributes.update(
         lambda self, sites: "dingdong",  # noqa: ARG005
     )
 
-    update_hosts_and_folders(SiteId("NO_SITE"), SiteId("dingdong"), logger)
+    update_hosts_and_folders(SiteId("NO_SITE"), SiteId("dingdong"), logger, debug=True)
 
     root_folder = _make_tree().root_folder()
 
@@ -300,7 +300,7 @@ def test_updating_site_name_for_dcd() -> None:
 
     ## Update the site name.
     update_hosts_and_folders(
-        old_site_id=old_site_id, new_site_id=new_site_id, logger=getLogger("test")
+        old_site_id=old_site_id, new_site_id=new_site_id, logger=getLogger("test"), debug=True
     )
 
     ## Check the state of the hosts after the update.
@@ -318,7 +318,7 @@ def test_updating_site_name_for_dcd() -> None:
     )
     ## Let's change the site back.
     update_hosts_and_folders(
-        old_site_id=new_site_id, new_site_id=old_site_id, logger=getLogger("test")
+        old_site_id=new_site_id, new_site_id=old_site_id, logger=getLogger("test"), debug=True
     )
 
     ## Check the state of the hosts, it should be exactly the same as the initial one.
@@ -376,7 +376,7 @@ def test_updating_site_name_without_dcd() -> None:
 
     ## Update the site name.
     update_hosts_and_folders(
-        old_site_id=old_site_id, new_site_id=new_site_id, logger=getLogger("test")
+        old_site_id=old_site_id, new_site_id=new_site_id, logger=getLogger("test"), debug=True
     )
 
     ## Check the state of the hosts after the update.
@@ -393,7 +393,7 @@ def test_updating_site_name_without_dcd() -> None:
 
     ## Let's change the site back.
     update_hosts_and_folders(
-        old_site_id=new_site_id, new_site_id=old_site_id, logger=getLogger("test")
+        old_site_id=new_site_id, new_site_id=old_site_id, logger=getLogger("test"), debug=True
     )
 
     ## Check the state of the hosts, it should be exactly the same as the initial one.

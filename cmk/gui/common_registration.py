@@ -181,9 +181,12 @@ def register(
     builtin_pagetype_topic_registry: pagetypes.BuiltinPagetypeTopicRegistry,
     agent_bakery_enabled: bool,
     monitoring_teleport_target: str | None = None,
+    debug: bool,
 ) -> None:
     hooks.register_thread_cache_cleanup()
-    notification_parameter_registry.register_form_spec_plugin = register_plugin
+    notification_parameter_registry.register_form_spec_plugin = lambda registry, loaded_rule_spec: (
+        register_plugin(registry, loaded_rule_spec, debug=debug)
+    )
     pagetypes_registration.register(
         main_menu_registry,
         builtin_pagetype_topic_registry,
@@ -410,6 +413,7 @@ def register(
         rulespec_registry,
         notification_parameter_registry,
         agent_bakery_enabled,
+        debug=debug,
     )
     welcome.register(page_registry, snapin_registry)
     global_settings.register(page_registry, match_item_generator_registry)

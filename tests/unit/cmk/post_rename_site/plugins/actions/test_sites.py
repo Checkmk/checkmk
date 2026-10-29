@@ -66,7 +66,7 @@ def test_update_basic_site_config(site_config_file: Path) -> None:
         ),
     )
 
-    update_site_config(SiteId("heute"), SiteId("haha"), logger)
+    update_site_config(SiteId("heute"), SiteId("haha"), logger, debug=True)
 
     all_sites = site_management_registry["site_management"].load_sites()
 
@@ -135,7 +135,7 @@ def test_update_remote_site_status_host_config(site_config_file: Path) -> None:
         ),
     )
 
-    update_site_config(SiteId("stable"), SiteId("dingdong"), logger)
+    update_site_config(SiteId("stable"), SiteId("dingdong"), logger, debug=True)
 
     all_sites = site_management_registry["site_management"].load_sites()
 

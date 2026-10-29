@@ -29,7 +29,9 @@ from cmk.utils import paths
 from cmk.utils.global_ident_type import GlobalIdent
 
 
-def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: Logger) -> None:
+def update_hosts_and_folders(
+    old_site_id: SiteId, new_site_id: SiteId, logger: Logger, debug: bool
+) -> None:
     """Update the Checkmk site attribute in folder and host config files
 
     - Explicitly configured `site` attributes are updated
@@ -38,7 +40,7 @@ def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: L
     # Loading and saving folders and hosts relies on the host attribute and folder
     # validator registries being populated. The registration only runs once per
     # process; the call is a no-op in case another rename action already did it.
-    main_modules.register(edition(paths.omd_root))
+    main_modules.register(edition(paths.omd_root), debug=debug)
 
     config = load_config()
     # This runs unattended on the command line; act as the superuser explicitly instead

@@ -17,7 +17,7 @@ from cmk.ccc.version import edition
 from cmk.gui import main_modules
 from cmk.utils import paths
 
-main_modules.register(edition(paths.omd_root))
+main_modules.register(edition(paths.omd_root), debug=False)
 
 if errors := main_modules.get_failed_plugins():
     sys.exit(f"The following errors occurred during plug-in loading: {errors!r}")

@@ -73,7 +73,6 @@ py_library(
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//cmk/gui/watolib",
-        "//packages/cmk-ccc:debug",
     ],
 )
 

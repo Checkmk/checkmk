@@ -13,7 +13,6 @@ from collections.abc import (
 from dataclasses import dataclass, field
 from typing import assert_never, Literal, overload
 
-import cmk.ccc.debug
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.gui.color import Color, parse_color_from_api
 from cmk.gui.i18n import _, _l
@@ -92,12 +91,12 @@ type _AnyChoiceField = ChoiceFieldFromAPI[int] | ChoiceFieldFromAPI[float] | Cho
 type _AnyField = BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | _AnyChoiceField
 
 
-def load_inventory_ui_plugins() -> DiscoveredPlugins[NodeFromAPI]:
+def load_inventory_ui_plugins(*, debug: bool) -> DiscoveredPlugins[NodeFromAPI]:
     discovered_plugins: DiscoveredPlugins[NodeFromAPI] = discover_all_plugins(
         PluginGroup.INVENTORY_UI,
         entry_point_prefixes(),
         skip_wrong_types=False,
-        raise_errors=cmk.ccc.debug.enabled(),
+        raise_errors=debug,
     )
     for exc in discovered_plugins.errors:
         logger.error(exc)

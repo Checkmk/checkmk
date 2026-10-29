@@ -147,7 +147,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     )
 
     try:
-        main_modules.register(edition(paths.omd_root))
+        main_modules.register(edition(paths.omd_root), debug=False)
 
         if errors := main_modules.get_failed_plugins():
             logger.error(

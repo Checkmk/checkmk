@@ -5,7 +5,6 @@
 from collections.abc import Sequence
 from pathlib import Path
 
-from cmk.ccc.debug import enabled as debug_enabled
 from cmk.ccc.version import Edition
 from cmk.gui.legacy_plugins import add_failed_plugin
 from cmk.gui.log import logger
@@ -21,9 +20,11 @@ def register(
     rulespec_registry: RulespecRegistry,
     notification_parameter_registry: NotificationParameterRegistry,
     agent_bakery_enabled: bool,
+    *,
+    debug: bool,
 ) -> None:
     errors, loaded_rule_specs = load_api_v1_rule_specs(
-        raise_errors=debug_enabled(),
+        raise_errors=debug,
         edition=edition,
         agent_bakery_enabled=agent_bakery_enabled,
     )
@@ -38,16 +39,20 @@ def register(
                 error,
             )
 
-    register_plugins(rulespec_registry, notification_parameter_registry, loaded_rule_specs)
+    register_plugins(
+        rulespec_registry, notification_parameter_registry, loaded_rule_specs, debug=debug
+    )
 
 
 def register_plugins(
     rulespec_registry: RulespecRegistry,
     notification_parameter_registry: NotificationParameterRegistry,
     loaded_rule_specs: Sequence[LoadedRuleSpec],
+    *,
+    debug: bool,
 ) -> None:
     for loaded_rule_spec in loaded_rule_specs:
         if isinstance(loaded_rule_spec.rule_spec, NotificationParameters):
             notification_parameter_registry.register(loaded_rule_spec.rule_spec)
 
-        register_plugin(rulespec_registry, loaded_rule_spec)
+        register_plugin(rulespec_registry, loaded_rule_spec, debug=debug)

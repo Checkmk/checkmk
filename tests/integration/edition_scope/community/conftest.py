@@ -16,7 +16,7 @@ def load_gui_plugins() -> None:
     Populates the GUI registries with the production set of this edition, which is what the
     snapshots in this directory assert on.
     """
-    main_modules.register(Edition.COMMUNITY)
+    main_modules.register(Edition.COMMUNITY, debug=True)
 
     if errors := main_modules.get_failed_plugins():
         raise Exception(f"The following errors occurred during plug-in loading: {errors}")

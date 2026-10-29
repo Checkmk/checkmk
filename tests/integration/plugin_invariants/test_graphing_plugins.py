@@ -24,14 +24,14 @@ from cmk.gui.graphing._plugins import discovered_graphing_plugins
 
 
 def test_graphing_plugins_load_without_errors() -> None:
-    discovered = discovered_graphing_plugins()
+    discovered = discovered_graphing_plugins(debug=False)
     assert not discovered.errors
     assert discovered.plugins
 
 
 def test_translations_to_be_standalone() -> None:
     by_module: dict[str, Counter[Literal["translations", "rest"]]] = {}
-    for plugin_location, plugin in discovered_graphing_plugins().plugins.items():
+    for plugin_location, plugin in discovered_graphing_plugins(debug=False).plugins.items():
         counter = by_module.setdefault(plugin_location.module, Counter())
         match plugin:
             case translations_api.Translation():
@@ -60,7 +60,7 @@ def test_growth_and_trend_translations_scale_mb_per_day_to_bytes_per_day() -> No
     every translation of them must rename and scale by 1 MiB. See SUP-29835."""
     offenders = [
         f"{location.module}: translation {plugin.name!r} maps {raw_name!r} via {op!r}"
-        for location, plugin in discovered_graphing_plugins().plugins.items()
+        for location, plugin in discovered_graphing_plugins(debug=False).plugins.items()
         if isinstance(plugin, translations_api.Translation)
         for raw_name, op in plugin.translations.items()
         if raw_name in _SIZE_TREND_RAW_METRICS
@@ -307,7 +307,7 @@ def test_bundles() -> None:
     offenders = [
         (module, metric_names, bundles)
         for module, metric_names in _metric_names_by_module(
-            discovered_graphing_plugins().plugins
+            discovered_graphing_plugins(debug=False).plugins
         ).items()
         if (bundles := metric_names.bundles)
         and (len(bundles) > 1 or set(metric_names.from_metrics) != set(bundles[0]))
@@ -342,7 +342,7 @@ def _names_sharing_a_title(titled_names: Iterable[tuple[str, str]]) -> Mapping[s
 def test_metric_titles_are_unique() -> None:
     assert not _names_sharing_a_title(
         (plugin.name, plugin.title.localize(str))
-        for plugin in discovered_graphing_plugins().plugins.values()
+        for plugin in discovered_graphing_plugins(debug=False).plugins.values()
         if isinstance(plugin, metrics_v1.Metric)
     )
 
@@ -350,7 +350,7 @@ def test_metric_titles_are_unique() -> None:
 def test_graph_titles_are_unique() -> None:
     assert not _names_sharing_a_title(
         (plugin.name, plugin.title.localize(str))
-        for plugin in discovered_graphing_plugins().plugins.values()
+        for plugin in discovered_graphing_plugins(debug=False).plugins.values()
         if isinstance(
             plugin,
             graphs_v1.Graph

@@ -33,7 +33,9 @@ def test_update_nagvis_maps_updates_backend_references(nagvis_maps_dir: Path) ->
         "}\n"
     )
 
-    update_nagvis_maps(SiteId("old_site"), SiteId("new_site"), logger, nagvis_maps_dir.parents[2])
+    update_nagvis_maps(
+        SiteId("old_site"), SiteId("new_site"), logger, True, nagvis_maps_dir.parents[2]
+    )
 
     content = map_file.read_text()
     assert "backend=new_site" in content
@@ -44,7 +46,9 @@ def test_update_nagvis_maps_does_not_match_prefix(nagvis_maps_dir: Path) -> None
     map_file = nagvis_maps_dir / "mymap.cfg"
     map_file.write_text("define host {\n    backend=old_site_extra\n}\n")
 
-    update_nagvis_maps(SiteId("old_site"), SiteId("new_site"), logger, nagvis_maps_dir.parents[2])
+    update_nagvis_maps(
+        SiteId("old_site"), SiteId("new_site"), logger, True, nagvis_maps_dir.parents[2]
+    )
 
     content = map_file.read_text()
     assert "backend=old_site_extra" in content
@@ -64,7 +68,9 @@ def test_update_nagvis_maps_ignores_other_backends(nagvis_maps_dir: Path) -> Non
         "}\n"
     )
 
-    update_nagvis_maps(SiteId("old_site"), SiteId("new_site"), logger, nagvis_maps_dir.parents[2])
+    update_nagvis_maps(
+        SiteId("old_site"), SiteId("new_site"), logger, True, nagvis_maps_dir.parents[2]
+    )
 
     content = map_file.read_text()
     assert "backend=other_site" in content
@@ -74,4 +80,4 @@ def test_update_nagvis_maps_ignores_other_backends(nagvis_maps_dir: Path) -> Non
 
 def test_update_nagvis_maps_no_maps_dir(tmp_path: Path) -> None:
     # Should not raise even if the maps directory doesn't exist
-    update_nagvis_maps(SiteId("old_site"), SiteId("new_site"), logger, tmp_path)
+    update_nagvis_maps(SiteId("old_site"), SiteId("new_site"), logger, True, tmp_path)

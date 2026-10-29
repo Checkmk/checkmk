@@ -81,7 +81,7 @@ def main(
         {"yellow": tty.yellow, "normal": tty.normal},
     )
     edition = cmk_edition(paths.omd_root)
-    main_modules.register(edition)
+    main_modules.register(edition, debug=arguments.debug)
 
     with _force_automations_cli_interface():
         exit_code = main_check_config(edition, logger, arguments.conflict, debug=arguments.debug)

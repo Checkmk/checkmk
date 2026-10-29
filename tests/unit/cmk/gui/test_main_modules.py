@@ -52,7 +52,7 @@ def test_load_legacy_views_plugin() -> None:
     main_module = importlib.import_module("cmk.gui.views.legacy_plugins")
     assert "ding" not in main_module.__dict__
     try:
-        main_module.register()
+        main_module.register(debug=True)
         assert main_module.ding == "dong"
     finally:
         del main_module.__dict__["ding"]

@@ -23,7 +23,9 @@ def test_update_builtin_host_labels_site_refreshes_site_and_preserves_customer(
     monkeypatch.setattr(cmk.utils.paths, "builtin_host_labels_file", labels_file)
     BuiltinHostLabelsStore(labels_file).save({"cmk/site": "old_site", "cmk/customer": "customer1"})
 
-    update_builtin_host_labels_site(SiteId("old_site"), SiteId("new_site"), logging.getLogger())
+    update_builtin_host_labels_site(
+        SiteId("old_site"), SiteId("new_site"), logging.getLogger(), True
+    )
 
     # cmk/site is refreshed to the new site id; cmk/customer (unaffected by a rename) is kept.
     assert BuiltinHostLabelsStore(labels_file).load() == {

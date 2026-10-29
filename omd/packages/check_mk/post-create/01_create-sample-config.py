@@ -35,7 +35,7 @@ def main(args: list[str]) -> int:
     log.setup_console_logging()
     log.logger.setLevel(log.verbosity_to_log_level(arguments.verbose))
 
-    main_modules.register(edition(paths.omd_root))
+    main_modules.register(edition(paths.omd_root), debug=False)
 
     if errors := main_modules.get_failed_plugins():
         log.logger.error(

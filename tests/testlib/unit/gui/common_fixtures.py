@@ -148,7 +148,7 @@ def perform_load_config() -> Iterator[config_module.Config]:
 
 
 def perform_load_plugins(edition: Edition) -> None:
-    main_modules.register(edition)
+    main_modules.register(edition, debug=True)
 
     if errors := main_modules.get_failed_plugins():
         raise Exception(f"The following errors occurred during plug-in loading: {errors}")

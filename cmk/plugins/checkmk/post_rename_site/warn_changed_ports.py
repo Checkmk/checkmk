@@ -17,7 +17,12 @@ from cmk.post_rename_site.internal import (
 from cmk.utils.log import console
 
 
-def warn_about_network_ports(old_site_id: SiteId, new_site_id: SiteId, logger: Logger) -> None:  # noqa: ARG001
+def warn_about_network_ports(
+    old_site_id: SiteId,
+    _new_site_id: SiteId,
+    logger: Logger,
+    _debug: bool,
+) -> None:
     if not Path("/omd/sites", old_site_id).exists():
         return  # Site was not copied
 

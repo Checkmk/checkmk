@@ -27,7 +27,7 @@ from cmk.messaging import rabbitmq
 from cmk.utils import paths
 
 if __name__ == "__main__":
-    main_modules.register(edition(paths.omd_root))
+    main_modules.register(edition(paths.omd_root), debug=False)
 
     with gui_context():
         _activate_central_steps(

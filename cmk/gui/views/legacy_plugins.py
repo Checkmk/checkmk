@@ -38,7 +38,7 @@ multisite_sorters: dict[str, Any] = {}
 multisite_icons_and_actions: dict[str, dict[str, Any]] = {}
 
 
-def register() -> None:
+def register(*, debug: bool) -> None:
     exporter.register(exporter_registry)
     _register_pre_21_plugin_api()
     load_web_plugins("views", globals())
@@ -59,6 +59,7 @@ def register() -> None:
         filter_registry,
         visual_info_registry,
         data_source_registry,
+        debug=debug,
     )
 
     # TODO: Kept for compatibility with pre 1.6 plugins

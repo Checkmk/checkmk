@@ -107,7 +107,7 @@ def run(
             },
         )
         try:
-            rename_action.run(old_site_id, new_site_id, logger)
+            rename_action.run(old_site_id, new_site_id, logger, debug)
         except Exception:
             has_errors = True
             logger.exception(' + "%(title)s" failed', {"title": rename_action.title})

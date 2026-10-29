@@ -20,7 +20,9 @@ from cmk.post_rename_site.internal import (
 from cmk.utils import paths
 
 
-def update_site_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logger) -> None:
+def update_site_config(
+    old_site_id: SiteId, new_site_id: SiteId, logger: Logger, debug: bool
+) -> None:
     """Update the Checkmk GUI site configuration
 
     This mainly updates the sites.mk, but also triggers changes on the following files when calling
@@ -34,7 +36,7 @@ def update_site_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logger)
     # The site management registry is populated by the GUI plug-in registration. The
     # registration only runs once per process; the call is a no-op in case another
     # rename action already did it.
-    main_modules.register(edition(paths.omd_root))
+    main_modules.register(edition(paths.omd_root), debug=debug)
 
     changed = False
     site_mgmt = site_management_registry["site_management"]

@@ -52,6 +52,7 @@ class RegistrationContext:
     snapin_registry: SnapinRegistry
     snapshot_artifact_registry: SnapshotArtifactRegistry
     versioned_endpoint_registry: VersionedEndpointRegistry
+    debug: bool
     # Add more registries here as new GuiFeaturePlugin instances require them.
 
 

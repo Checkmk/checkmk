@@ -16,7 +16,12 @@ from cmk.post_rename_site.internal import (
 from cmk.utils.log import console
 
 
-def warn_about_configs_to_review(old_site_id: SiteId, new_site_id: SiteId, logger: Logger) -> None:  # noqa: ARG001
+def warn_about_configs_to_review(
+    _old_site_id: SiteId,
+    _new_site_id: SiteId,
+    logger: Logger,
+    _debug: bool,
+) -> None:
     logger.info("")
     console.warning(
         tty.format_warning(

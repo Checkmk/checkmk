@@ -301,8 +301,10 @@ def register_table_views_and_columns(
     filter_registry: FilterRegistry,
     visual_info_registry: VisualInfoRegistry,
     data_source_registry: DataSourceRegistry,
+    *,
+    debug: bool,
 ) -> None:
-    register_display_hints(load_inventory_ui_plugins(), inventory_displayhints)
+    register_display_hints(load_inventory_ui_plugins(debug=debug), inventory_displayhints)
     for node_hint in inv_display_hints:
         if "*" in node_hint.path:
             # FIXME DYNAMIC-PATHS

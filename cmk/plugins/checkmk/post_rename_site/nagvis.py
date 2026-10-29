@@ -22,6 +22,7 @@ def update_nagvis_maps(
     old_site_id: SiteId,
     new_site_id: SiteId,
     logger: Logger,
+    _debug: bool,
     omd_root: Path = paths.omd_root,
 ) -> None:
     """Update backend references in NagVis map config files

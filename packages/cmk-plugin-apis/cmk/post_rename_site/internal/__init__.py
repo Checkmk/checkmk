@@ -34,7 +34,9 @@ class SortIndex(int): ...
 # ``cmk.ccc.site.SiteId`` to preserve strong typing without making
 # plugin-apis depend on cmk-ccc.
 class RenameActionHandler[SiteIdT: str](Protocol):
-    def __call__(self, old_site_id: SiteIdT, new_site_id: SiteIdT, logger: Logger) -> None:
+    def __call__(
+        self, old_site_id: SiteIdT, new_site_id: SiteIdT, logger: Logger, debug: bool, /
+    ) -> None:
         pass
 
 

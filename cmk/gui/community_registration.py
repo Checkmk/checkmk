@@ -217,6 +217,7 @@ def register(
         token_authenticated_page_registry=token_authenticated_page_registry,
         builtin_pagetype_topic_registry=builtin_pagetype_topic_registry,
         agent_bakery_enabled=agent_bakery_enabled,
+        debug=ctx.debug,
     )
 
     ldap_registration(
@@ -374,7 +375,7 @@ def register(
         livestatus_query=livestatus_query_bare,
     )
     png_registration.register(page_registry)
-    plugins.register()
+    plugins.register(debug=ctx.debug)
     password_change_effect_registry.register(
         affected_domains_add=[CORE],
         affected_domains_edit=[CORE],

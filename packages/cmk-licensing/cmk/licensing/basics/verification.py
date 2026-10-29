@@ -16,7 +16,7 @@ from uuid import UUID
 from cmk.ccc import store
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.licensing.basics.paths import get_verification_response_file_path
-from cmk.licensing.basics.protocol_version import get_licensing_protocol_version
+from cmk.licensing.basics.protocol_version import CURRENT_VERIFICATION_RESPONSE_VERSION
 
 
 class InvalidVerificationResponse(ValueError):
@@ -115,7 +115,7 @@ def load_plain_verification_response(omd_root: Path) -> PlainVerificationRespons
 
     try:
         raw = json.loads(raw_dump.decode("utf-8"))
-        return parse(parse_protocol_version(raw), raw, omd_root=omd_root)
+        return parse(parse_protocol_version(raw), raw)
     except json.decoder.JSONDecodeError as e:
         raise InvalidVerificationResponse(f"Failed to load verification response: {e}") from e
     except (TypeError, ValueError, KeyError) as e:
@@ -161,21 +161,19 @@ def parse(
         "1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1", "3.2"
     ],
     raw: object,
-    *,
-    omd_root: Path,
 ) -> PlainVerificationResponse:
     match protocol_version:
         case "1.0" | "1.1" | "1.2" | "1.3" | "1.4" | "1.5":
             raise ValueError(protocol_version)
         case "2.0" | "2.1":
-            return parse_verification_response_v2_0(raw, omd_root=omd_root)
+            return parse_verification_response_v2_0(raw)
         case "3.0" | "3.1":
-            return parse_verification_response_v3_0(raw, omd_root=omd_root)
+            return parse_verification_response_v3_0(raw)
         case "3.2":
-            return parse_verification_response_v3_2(raw, omd_root=omd_root)
+            return parse_verification_response_v3_2(raw)
 
 
-def parse_verification_response_v2_0(raw: object, *, omd_root: Path) -> PlainVerificationResponse:
+def parse_verification_response_v2_0(raw: object) -> PlainVerificationResponse:
     if not isinstance(raw, dict):
         raise TypeError(
             "Parse verification response for protocol versions 2.0/2.1: Wrong report type: %r"
@@ -185,7 +183,7 @@ def parse_verification_response_v2_0(raw: object, *, omd_root: Path) -> PlainVer
         raise TypeError("wrong payload type: %r" % type(payload))
     return PlainVerificationResponse(
         # After parsing we have the latest license protocol version
-        VERSION=get_licensing_protocol_version(omd_root),
+        VERSION=CURRENT_VERIFICATION_RESPONSE_VERSION,
         request_id=UUID(raw["request_id"]),
         response_id=UUID(raw["response_id"]),
         created_at=int(raw["created_at"]),
@@ -221,7 +219,7 @@ def parse_verification_response_v2_0(raw: object, *, omd_root: Path) -> PlainVer
     )
 
 
-def parse_verification_response_v3_0(raw: object, *, omd_root: Path) -> PlainVerificationResponse:
+def parse_verification_response_v3_0(raw: object) -> PlainVerificationResponse:
     if not isinstance(raw, dict):
         raise TypeError(
             "Parse verification response for protocol versions 3.0/3.1: Wrong report type: %r"
@@ -231,7 +229,7 @@ def parse_verification_response_v3_0(raw: object, *, omd_root: Path) -> PlainVer
         raise TypeError("wrong payload type: %r" % type(payload))
     return PlainVerificationResponse(
         # After parsing we have the latest license protocol version
-        VERSION=get_licensing_protocol_version(omd_root),
+        VERSION=CURRENT_VERIFICATION_RESPONSE_VERSION,
         request_id=UUID(raw["request_id"]),
         response_id=UUID(raw["response_id"]),
         created_at=int(raw["created_at"]),
@@ -256,7 +254,7 @@ def parse_verification_response_v3_0(raw: object, *, omd_root: Path) -> PlainVer
     )
 
 
-def parse_verification_response_v3_2(raw: object, *, omd_root: Path) -> PlainVerificationResponse:
+def parse_verification_response_v3_2(raw: object) -> PlainVerificationResponse:
     if not isinstance(raw, dict):
         raise TypeError(
             "Parse verification response for protocol version 3.2: Wrong report type: %r"
@@ -267,7 +265,7 @@ def parse_verification_response_v3_2(raw: object, *, omd_root: Path) -> PlainVer
 
     return PlainVerificationResponse(
         # After parsing we have the latest license protocol version
-        VERSION=get_licensing_protocol_version(omd_root),
+        VERSION=CURRENT_VERIFICATION_RESPONSE_VERSION,
         request_id=UUID(raw["request_id"]),
         response_id=UUID(raw["response_id"]),
         created_at=int(raw["created_at"]),

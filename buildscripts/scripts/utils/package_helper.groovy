@@ -142,7 +142,32 @@ void provide_agent_binaries(Map args) {
             //       Windows for consistency).
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
+            // Superseded by winagt-build-linux, whose artifacts end up in the
+            // packages. Still triggered, so that a change breaking the Windows
+            // build fails here. Never downloaded: its outputs carry the same
+            // file names as winagt-build-linux's.
             relative_job_name: "${branch_base_folder(false)}/winagt-build",
+            dependency_paths_hash: all_dependency_paths_hashes["winagt-build"],
+            condition: ! test_binaries_only,
+            retry: 3,
+            additional_build_params: [],
+            fetch_artifacts: false,
+        ],
+        "winagt-build-linux": [
+            // Cross builds the Windows agent artifacts on Linux.
+            // Keyed on winagt-build's dependency paths for now, so that it is
+            // only rebuilt (and signed via Azure) when those change. Its Bazel
+            // inputs reach further (toolchains under bazel/, MODULE.bazel.lock,
+            // the plugin scripts under cmk/plugins/*/agents the MSI embeds), a
+            // change only there reuses the last artifacts.
+            //
+            // NOTE: Only what the packages consume is installed here, see
+            //       //agents/windows:agents (WINDOWS_ARTIFACTS), the
+            //       win-signed-plugins and mk-oracle packages and artifacts.make.
+            //       cmk-agent-ctl.exe used to be copied to agents/windows/ as
+            //       well, but nothing picks it up there: the controller reaches
+            //       the packages inside the MSI. So it is deliberately left out.
+            relative_job_name: "${branch_base_folder(false)}/winagt-build-linux",
             dependency_paths_hash: all_dependency_paths_hashes["winagt-build"],
             condition: ! test_binaries_only,
             retry: 3,
@@ -160,7 +185,6 @@ void provide_agent_binaries(Map args) {
                 cp \
                     check_mk_agent.msi \
                     check_mk_agent_unsigned.msi \
-                    cmk-agent-ctl.exe \
                     mk-sql.exe \
                     robotmk_ext.exe \
                     windows_files_hashes.txt \
@@ -173,19 +197,6 @@ void provide_agent_binaries(Map args) {
                         unsign-msi.patch
                 )
                 """.stripIndent(),
-        ],
-        "winagt-build-linux": [
-            // Cross builds the Windows agent artifacts on Linux. Nothing consumes
-            // its outputs yet, it is triggered alongside winagt-build only so that
-            // a change breaking the Linux build fails here. Keyed on the git ref,
-            // not on dependency paths: its Bazel inputs span the whole tree.
-            // Never downloaded: its outputs carry the same file names as
-            // winagt-build's, and must not end up in a package in their place.
-            relative_job_name: "${branch_base_folder(false)}/winagt-build-linux",
-            condition: ! test_binaries_only,
-            retry: 1,
-            additional_build_params: [],
-            fetch_artifacts: false,
         ],
         "relay-msi": [
             // Windows-built relay MSI. Only the cloud/ultimate/ultimatemt editions ship

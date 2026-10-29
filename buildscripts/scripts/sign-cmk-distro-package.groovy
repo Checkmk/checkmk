@@ -93,7 +93,7 @@ void main() {
                 raiseOnError: true,
             ) {
                 single_tests.fetch_package(
-                    relative_job_name: "${branch_base_folder}/winagt-build",
+                    relative_job_name: "${branch_base_folder}/winagt-build-linux",
                     edition: "",
                     distro: "",
                     download_dir: checkout_dir,

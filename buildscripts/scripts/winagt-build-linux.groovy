@@ -34,9 +34,17 @@ void main() {
     def msi_exe_targets = [
         "//packages/cmk-agent-ctl:cmk-agent-ctl-windows": "//agents/wnx:msi_cmk-agent-ctl",
     ];
-    // Signed in the build; archived under the name winagt-build gives them.
-    def renamed_targets = ["//agents/windows/plugins:azure_signed_plugins": "signed_plugins.tar"];
-    def signed_in_build = ["cmk-agent-ctl.exe"] + renamed_targets.values();
+    // Signed in the build, copied to the given path below the artifacts
+    // directory. The plugin tar gets the name winagt-build gives it. The
+    // agent exe is only hashed into windows_files_hashes.txt: nothing
+    // consumes it on its own (see winagt-build-linux in
+    // package_helper.groovy), and the archive pattern does not reach into
+    // subdirectories.
+    def renamed_targets = [
+        "//agents/wnx:msi_check_mk_service": "unarchived/check_mk_service.exe",
+        "//agents/windows/plugins:azure_signed_plugins": "signed_plugins.tar",
+    ];
+    def signed_in_build = ["cmk-agent-ctl.exe", "signed_plugins.tar"];
     // Built and archived like the binaries, but there is no -static-crt tier
     // for an MSI to check.
     def targets = exe_targets.collect { msi_exe_targets[it] ?: it } + [
@@ -54,10 +62,11 @@ void main() {
     def toolchain_test_targets = [
         "//bazel/toolchains/cc/clang/xwin/tests:tests",
     ];
-    def crt_test_args = exe_targets.collect { it + "-static-crt" }.join(" ");
-    // Fail the build but keep going, so the test results below still get
-    // collected and published.
-    def fail_and_continue = [buildResult: 'FAILURE', stageResult: 'FAILURE'];
+    def test_stages = [
+        "Check toolchain argument contract": toolchain_test_targets,
+        "Run unit tests under Wine": wine_test_targets,
+        "Check static CRT": exe_targets.collect { it + "-static-crt" },
+    ];
 
     dir("${checkout_dir}") {
         def container_name = "testing-ubuntu-2204-checkmk-${safe_branch_name.replace('.', '-')}";
@@ -72,38 +81,7 @@ void main() {
                 );
             }
 
-            stage("Check toolchain argument contract") {
-                catchError(fail_and_continue) {
-                    sh(
-                        """
-                        set -euo pipefail
-                        bazel test --cmk_version=${cmk_version} ${toolchain_test_targets.join(" ")}
-                        """
-                    );
-                }
-            }
-
-            stage("Run unit tests under Wine") {
-                catchError(fail_and_continue) {
-                    sh(
-                        """
-                        set -euo pipefail
-                        bazel test --cmk_version=${cmk_version} ${wine_test_targets.join(" ")}
-                        """
-                    );
-                }
-            }
-
-            stage("Check static CRT") {
-                catchError(fail_and_continue) {
-                    sh(
-                        """
-                        set -euo pipefail
-                        bazel test --cmk_version=${cmk_version} ${crt_test_args}
-                        """
-                    );
-                }
-            }
+            run_test_stages(cmk_version, test_stages);
 
             stage("Collect test results") {
                 collect_test_results();
@@ -116,12 +94,17 @@ void main() {
             stage("Sign windows binaries") {
                 sign_windows_binaries(safe_branch_name, cmk_version, "artefacts", signed_in_build);
             }
+
+            // After signing: the hashes are taken of the signed binaries.
+            stage("Add hashes") {
+                add_hashes("artefacts");
+            }
         }
 
         stage("Archive binaries") {
             dir("artefacts") {
                 archiveArtifacts(
-                    artifacts: "*.exe,*.msi,*.tar",
+                    artifacts: "*.exe,*.msi,*.tar,*.txt",
                     fingerprint: true,
                 );
             }
@@ -169,7 +152,7 @@ void build_windows_binaries(
             set -euo pipefail
             bazel build --cmk_version=${cmk_version} ${signing_flag} \\
                 ${(targets + renamed_targets.keySet()).join(" ")}
-            mkdir -p ${binary_directory}
+            mkdir -p ${binary_directory}/unarchived
             """
         );
         // The outputs already carry the Windows-node job's artifact
@@ -187,6 +170,47 @@ void build_windows_binaries(
             );
         }
     }
+}
+
+/// Runs each group of test targets in its own stage.
+void run_test_stages(String cmk_version, Map test_stages) {
+    // Fail the build but keep going, so the test results still get
+    // collected and published.
+    def fail_and_continue = [buildResult: 'FAILURE', stageResult: 'FAILURE'];
+
+    test_stages.each { stage_name, test_targets ->
+        stage(stage_name) {
+            catchError(fail_and_continue) {
+                sh(
+                    """
+                    set -euo pipefail
+                    bazel test --cmk_version=${cmk_version} ${test_targets.join(" ")}
+                    """
+                );
+            }
+        }
+    }
+}
+
+/// Adds windows_files_hashes.txt, which the package ships, see
+/// Start-BinarySigning and Start-MsiSigning in agents/wnx/run.ps1.
+void add_hashes(String binary_directory) {
+    sh(
+        """
+        set -euo pipefail
+        # Same format as run.ps1's Add-HashLine, in the same order: the
+        # binaries, then the MSI. run.ps1 also hashes the OpenHardwareMonitor
+        # files it signs; they are neither in the MSI nor in the packages, nor
+        # built here, so they are left out.
+        cd ${binary_directory}
+        rm -f windows_files_hashes.txt
+        for file in unarchived/check_mk_service.exe cmk-agent-ctl.exe mk-sql.exe mk-oracle.exe \\
+            check_mk_agent.msi; do
+            hash=\$(sha256sum "\$file" | cut -d' ' -f1 | tr a-f A-F)
+            echo "\$(basename "\$file") \$hash" >>windows_files_hashes.txt
+        done
+        """
+    );
 }
 
 void sign_windows_binaries(

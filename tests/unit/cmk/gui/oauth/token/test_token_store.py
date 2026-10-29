@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sqlite3
 from collections.abc import Iterator
 from datetime import datetime, timedelta, UTC
 
@@ -11,7 +12,12 @@ import time_machine
 
 from cmk.ccc.resulttype import Error
 from cmk.ccc.user import UserId
-from cmk.gui.oauth.token.token_store import _token_hash, TokenRecord, TokenStore, UnknownClient
+from cmk.gui.oauth.token.token_store import (
+    _access_token_hash,
+    TokenRecord,
+    TokenStore,
+    UnknownClient,
+)
 from cmk.gui.scopes import DEFAULT_SCOPE, ScopeId
 from cmk.schema_migrations.oauth import schema_manager_oauth
 from cmk.testlib.schema_manager import migrated_connection
@@ -21,7 +27,7 @@ _CLIENT = "test-client"
 
 
 @pytest.fixture
-def store() -> Iterator[TokenStore]:
+def connection() -> Iterator[sqlite3.Connection]:
     with migrated_connection(schema_manager_oauth) as connection:
         connection.execute(
             """
@@ -30,7 +36,12 @@ def store() -> Iterator[TokenStore]:
             """,
             (_CLIENT,),
         )
-        yield TokenStore(connection)
+        yield connection
+
+
+@pytest.fixture
+def store(connection: sqlite3.Connection) -> TokenStore:
+    return TokenStore(connection)
 
 
 def _future(minutes: int) -> datetime:
@@ -45,7 +56,7 @@ def _overwrite_stored_scope(store: TokenStore, token: str, raw_scope: str | None
     """Put a value in the scope column that this version would never write there."""
     store._connection.execute(
         "UPDATE tokens SET scope = ? WHERE token_hash = ?",
-        (raw_scope, _token_hash(token)),
+        (raw_scope, _access_token_hash(token)),
     )
 
 

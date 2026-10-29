@@ -37,11 +37,11 @@ class TokenRecord:
         return current_time.astimezone(UTC) < self.expires_at
 
 
-_PREFIX = "cmko1"
+_ACCESS_TOKEN_PREFIX = "cmko1"
 
 
-def _mint_token() -> str:
-    return f"{_PREFIX}.{secrets.token_urlsafe(32)}"
+def _mint_token(prefix: str) -> str:
+    return f"{prefix}.{secrets.token_urlsafe(32)}"
 
 
 def looks_like_token(token: str) -> bool:
@@ -52,8 +52,12 @@ def looks_like_token(token: str) -> bool:
     cmk.gui.auth) tell an OAuth access token attempt apart from other
     Bearer credential schemes before paying for a lookup.
     """
+    return _has_prefix(token, _ACCESS_TOKEN_PREFIX)
+
+
+def _has_prefix(token: str, expected_prefix: str) -> bool:
     prefix, dot, secret = token.partition(".")
-    return bool(dot and secret and prefix == f"{_PREFIX}")
+    return bool(dot and secret and prefix == expected_prefix)
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,7 +107,7 @@ class TokenStore:
         if expires_at_timestamp <= issued_at_timestamp:
             raise ValueError("expires_at must be later than the issue time")
 
-        token = _mint_token()
+        token = _mint_token(_ACCESS_TOKEN_PREFIX)
         with write_transaction(self._connection):
             self._connection.execute(
                 "DELETE FROM tokens WHERE expires_at <= ?", (issued_at_timestamp,)
@@ -117,7 +121,7 @@ class TokenStore:
                     """,
                     (
                         user_id,
-                        _token_hash(token),
+                        _access_token_hash(token),
                         issued_at_timestamp,
                         expires_at_timestamp,
                         resource,
@@ -138,7 +142,7 @@ class TokenStore:
 
     def get_by_token(self, token: str) -> TokenRecord | None:
         try:
-            token_hash = _token_hash(token)
+            token_hash = _access_token_hash(token)
         except ValueError:
             return None
 
@@ -241,7 +245,7 @@ def _to_timestamp(value: datetime) -> int:
     return int(value.astimezone(UTC).timestamp())
 
 
-def _token_hash(token: str) -> str:
+def _access_token_hash(token: str) -> str:
     if not looks_like_token(token):
         raise ValueError("not a well-formed token")
     return hashlib.sha256(token.encode("utf-8")).hexdigest()

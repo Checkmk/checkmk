@@ -128,9 +128,11 @@ def _redirect_target(html_text: str) -> str:
     return target
 
 
-@pytest.mark.skip_if_edition("community", "cloud")
-def test_full_authorization_code_flow_with_pkce(site: Site, web: CMKWebSession) -> None:
-    """Register a client, run the consent screen, and redeem the issued code for a token."""
+def _authorize_and_redeem(site: Site, web: CMKWebSession) -> tuple[str, dict[str, object]]:
+    """Register a client, approve it on the consent screen, and redeem the code.
+
+    Returns the client_id and the token response body.
+    """
     client_id = _register_client(site)
     code_verifier, code_challenge = _make_pkce_pair()
     state = secrets.token_urlsafe(8)
@@ -148,21 +150,34 @@ def test_full_authorization_code_flow_with_pkce(site: Site, web: CMKWebSession) 
     assert query["state"] == [state]
     code = query["code"][0]
 
-    token_url = site.internal_url + _TOKEN_ENDPOINT_PATH
-    token_response = requests.post(
-        token_url,
-        data={
+    token_body = _post_token_request(
+        site,
+        {
             "grant_type": "authorization_code",
             "code": code,
             "redirect_uri": _REDIRECT_URI,
             "client_id": client_id,
             "code_verifier": code_verifier,
         },
-        timeout=30,
     )
+    return client_id, token_body
+
+
+def _post_token_request(site: Site, data: dict[str, str]) -> dict[str, object]:
+    token_url = site.internal_url + _TOKEN_ENDPOINT_PATH
+    token_response = requests.post(token_url, data=data, timeout=30)
     logger.info("POST %s -> %d", token_url, token_response.status_code)
     assert token_response.status_code == HTTPStatus.OK
-    token_body = token_response.json()
+    body = token_response.json()
+    assert isinstance(body, dict)
+    return body
+
+
+@pytest.mark.skip_if_edition("community", "cloud")
+def test_full_authorization_code_flow_with_pkce(site: Site, web: CMKWebSession) -> None:
+    """Register a client, run the consent screen, and redeem the issued code for a token."""
+    _client_id, token_body = _authorize_and_redeem(site, web)
+
     assert token_body["access_token"]
     assert token_body["token_type"] == "Bearer"
 

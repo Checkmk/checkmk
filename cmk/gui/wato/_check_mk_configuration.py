@@ -87,6 +87,7 @@ from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupDeveloperTools,
     ConfigVariableGroupSiteManagement,
     ConfigVariableGroupUserInterface,
+    ConfigVariableGroupUserManagement,
     ConfigVariableGroupWATO,
 )
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
@@ -2111,12 +2112,6 @@ ConfigVariableWATOIconCategories = ConfigVariable(
 #   +----------------------------------------------------------------------+
 #   | Global settings for users and LDAP connector.                        |
 #   '----------------------------------------------------------------------'
-
-
-ConfigVariableGroupUserManagement = ConfigVariableGroup(
-    title=_l("User management"),
-    sort_index=40,
-)
 
 
 ConfigVariableDefaultDynamicVisualsPermission = ConfigVariable(

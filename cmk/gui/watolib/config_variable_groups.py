@@ -33,6 +33,12 @@ ConfigVariableGroupUserInterface = ConfigVariableGroup(
 )
 
 
+ConfigVariableGroupUserManagement = ConfigVariableGroup(
+    title=_l("User management"),
+    sort_index=40,
+)
+
+
 ConfigVariableGroupWATO = ConfigVariableGroup(
     title=_l("Setup"),
     sort_index=25,

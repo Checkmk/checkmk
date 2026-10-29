@@ -136,8 +136,8 @@ def create_busy_socket(*, socket_path: str, busy_for: float) -> Iterator[MockSoc
     """
     Create a socket whose backlog is full for `busy_for` seconds, then accept as usual.
 
-    This simulates the core, which listens with a backlog of one and accepts the next
-    connection only when its main loop gets to it. Until then, a connect fails with EAGAIN.
+    This simulates the core while all its connections are in use and its backlog is full.
+    Until it accepts again, a connect fails with EAGAIN.
     """
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as soc:
         soc.bind(socket_path)

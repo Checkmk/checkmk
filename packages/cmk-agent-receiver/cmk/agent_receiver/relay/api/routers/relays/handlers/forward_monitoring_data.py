@@ -86,8 +86,9 @@ class ForwardMonitoringDataHandler:
     def _connect(self, sock: socket.socket) -> None:
         """Connect, waiting up to the socket timeout for a free slot in the backlog of the core
 
-        The core accepts one waiting connection at a time. A socket with a timeout connects
-        non-blocking, so a full backlog fails at once with EAGAIN instead of waiting.
+        The core serves a limited number of connections at once, further ones wait in its
+        backlog. A socket with a timeout connects non-blocking, so a full backlog fails at
+        once with EAGAIN instead of waiting.
         """
         deadline = time.monotonic() + self._socket_timeout
         pause = _CONNECT_RETRY_FIRST_PAUSE

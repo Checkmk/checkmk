@@ -19,6 +19,7 @@ import { computed } from 'vue'
 import { FormEdit } from '@/form'
 
 import AlertPreviewGraph from '@/mode-alerts/AlertPreviewGraph.vue'
+import type { LevelColors } from '@/mode-alerts/threshold-lines'
 import {
   type AlertModel,
   hasCompleteThresholds,
@@ -32,6 +33,7 @@ const props = defineProps<
   CmkWizardStepProps & {
     thresholdsSpec: FormSpec
     timePicker: GlobalTimePickerProps
+    levelColors: LevelColors
     saving: boolean
     saveError: string | null
   }
@@ -69,7 +71,9 @@ const problem = computed<TranslatedString | null>(() => {
           v-if="wizard.isSelected(props.index)"
           :match-type="model.matchType"
           :pattern="servicePattern(model)"
+          :thresholds="model.thresholds"
           :time-picker="timePicker"
+          :level-colors="levelColors"
         />
         <div class="mode-alerts-thresholds-step__levels">
           <FormEdit

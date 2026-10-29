@@ -59,6 +59,8 @@ function renderApp() {
       folder_paths: FOLDER_PATHS,
       prediction_periods: PREDICTION_PERIODS,
       time_picker: TIME_PICKER,
+      warning_color: '#ffd000',
+      critical_color: '#ff3232',
       activate_changes_url: 'wato.py?mode=changelog'
     },
     global: { stubs: { TimeSeriesGraph: true } }

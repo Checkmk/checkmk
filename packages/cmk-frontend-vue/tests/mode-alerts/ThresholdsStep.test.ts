@@ -90,10 +90,11 @@ function renderStep(thresholds: ThresholdsValue = {}, selected: boolean = true) 
       return {
         model,
         spec: THRESHOLDS_SPEC,
-        timePicker: TIME_PICKER
+        timePicker: TIME_PICKER,
+        levelColors: { warning: '#ffd000', critical: '#ff3232' }
       }
     },
-    template: `<ThresholdsStep v-model="model" :thresholds-spec="spec" :time-picker="timePicker" :saving="false" :save-error="null" :index="3" :is-completed="() => false" />`
+    template: `<ThresholdsStep v-model="model" :thresholds-spec="spec" :time-picker="timePicker" :level-colors="levelColors" :saving="false" :save-error="null" :index="3" :is-completed="() => false" />`
   })
   render(wrapper, {
     global: {
@@ -104,6 +105,10 @@ function renderStep(thresholds: ThresholdsValue = {}, selected: boolean = true) 
   return { model }
 }
 
+function legendRow(title: string): HTMLElement {
+  return screen.getByRole('button', { name: title }).closest('tr')!
+}
+
 test('the graph shows the metric of the services the alert applies to', async () => {
   renderStep()
 
@@ -111,6 +116,65 @@ test('the graph shows the metric of the services the alert applies to', async ()
   expect(requests).toMatchObject([
     { service_name_match: 'exact', service_name_pattern: 'HTTP request duration' }
   ])
+})
+
+test('the upper levels are drawn as warning and critical lines', async () => {
+  renderStep({ upper_levels: ['fixed', [80, 90]] })
+
+  await waitFor(() => expect(legendRow('Warning')).toHaveTextContent(/80\s*ms/))
+  expect(legendRow('Critical')).toHaveTextContent(/90\s*ms/)
+})
+
+test('the lower levels are drawn as lower warning and critical lines', async () => {
+  renderStep({ lower_levels: ['fixed', [20, 10]] })
+
+  await waitFor(() => expect(legendRow('Warning (lower)')).toHaveTextContent(/20\s*ms/))
+  expect(legendRow('Critical (lower)')).toHaveTextContent(/10\s*ms/)
+})
+
+test('a level that is not set yet is not drawn', async () => {
+  renderStep({ upper_levels: ['fixed', [80, '']] })
+
+  await waitFor(() => expect(legendRow('Warning')).toHaveTextContent(/80\s*ms/))
+  expect(screen.queryByRole('button', { name: 'Critical' })).toBeNull()
+})
+
+test('the graph renders while a level is not set yet', async () => {
+  renderStep({ upper_levels: ['fixed', [80, '']] })
+
+  expect(await screen.findByRole('button', { name: 'web01 HTTP request duration' })).toBeVisible()
+})
+
+test('predictive levels are not drawn', async () => {
+  renderStep({
+    upper_levels: [
+      'predictive',
+      { period: 'day', horizon: 90, levels: ['absolute', [5, 10]], bound: [80, 90] }
+    ]
+  })
+
+  expect(await screen.findByRole('button', { name: 'web01 HTTP request duration' })).toBeVisible()
+  expect(screen.queryByRole('button', { name: 'Warning' })).toBeNull()
+  expect(screen.queryByRole('button', { name: 'Critical' })).toBeNull()
+})
+
+test('editing a level moves its line without loading the data again', async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  try {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    renderStep({ upper_levels: ['fixed', [80, 90]] })
+    await waitFor(() => expect(legendRow('Warning')).toHaveTextContent(/80\s*ms/))
+
+    const warning = screen.getByRole('spinbutton', { name: 'Warning at' })
+    await user.clear(warning)
+    await user.type(warning, '70')
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(legendRow('Warning')).toHaveTextContent(/70\s*ms/)
+    expect(requests).toHaveLength(1)
+  } finally {
+    vi.useRealTimers()
+  }
 })
 
 test('choosing another time range loads the data for it', async () => {

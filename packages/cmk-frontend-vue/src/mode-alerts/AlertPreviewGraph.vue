@@ -23,13 +23,16 @@ import {
 import { useRequestedTimeRange } from '@/graphing/composables/useRequestedTimeRange'
 import type { PanelKey } from '@/graphing/types'
 import { type Preview, fetchPreview } from '@/mode-alerts/preview-client'
-import type { ServiceNameMatch } from '@/mode-alerts/types'
+import { type LevelColors, thresholdLines } from '@/mode-alerts/threshold-lines'
+import type { ServiceNameMatch, ThresholdsValue } from '@/mode-alerts/types'
 import PreviewGraphFrame from '@/mode-custom-services/PreviewGraphFrame.vue'
 
 const props = defineProps<{
   matchType: ServiceNameMatch
   pattern: string
+  thresholds: ThresholdsValue
   timePicker: GlobalTimePickerProps
+  levelColors: LevelColors
 }>()
 
 const { _t } = usei18n()
@@ -91,6 +94,7 @@ onScopeDispose(() => {
   }
 })
 
+// The thresholds are not part of the request: editing one only moves its line.
 watch(
   () =>
     JSON.stringify({
@@ -113,6 +117,21 @@ watch(
 void load()
 
 const metrics = computed(() => preview.value?.metrics ?? [])
+
+const horizontalLines = computed(() => {
+  const metricLines = preview.value?.horizontal_lines ?? []
+  const unit = metrics.value[0]?.metadata.unit
+  if (unit === undefined) {
+    return metricLines
+  }
+  return [
+    ...metricLines,
+    ...thresholdLines(props.thresholds, unit, props.levelColors, {
+      upper: { warning: _t('Warning'), critical: _t('Critical') },
+      lower: { warning: _t('Warning (lower)'), critical: _t('Critical (lower)') }
+    })
+  ]
+})
 
 const fetchNotice = useGraphNotice({
   error: () => error.value,
@@ -144,7 +163,7 @@ const notice = computed(
     :title="pattern"
     :metrics="metrics"
     :data-time-range="preview?.time_range"
-    :horizontal-lines="preview?.horizontal_lines ?? []"
+    :horizontal-lines="horizontalLines"
     :requested-time-range="requestedTimeRange"
     :range-change="rangeChange"
     :panel-key="PANEL_KEY"

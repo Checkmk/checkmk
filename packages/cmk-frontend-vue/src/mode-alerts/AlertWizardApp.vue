@@ -37,6 +37,8 @@ const props = defineProps<{
   folder_paths: FolderPaths
   prediction_periods: PredictionPeriods
   time_picker: GlobalTimePickerProps
+  warning_color: string
+  critical_color: string
   activate_changes_url: string
 }>()
 
@@ -80,6 +82,7 @@ async function saveAlert(): Promise<void> {
         v-model="model"
         :thresholds-spec="thresholds_form.spec"
         :time-picker="time_picker"
+        :level-colors="{ warning: warning_color, critical: critical_color }"
         :saving="saving"
         :save-error="saveError"
         :index="3"

@@ -52,3 +52,9 @@ class HostAttributeModifier(Protocol):
     def reset_modified_attributes(self, targets: Sequence[HostTarget]) -> None:
         """Undo what such toggles changed for each target, back to its configuration."""
         ...
+
+
+class HostEventArchiver(Protocol):
+    def archive_events(self, targets: Sequence[HostTarget], *, author: UserId) -> None:
+        """Archive the open Event Console events of each target on its site."""
+        ...

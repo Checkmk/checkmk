@@ -1380,3 +1380,28 @@ test('removes the downtime of the selected service after confirming it', async (
     })
   )
 })
+
+test('archives the events of the host of the selected services after confirming it', async () => {
+  const user = userEvent.setup()
+  mockServices([makeApiEntry()])
+  renderApp({
+    actions: [
+      { ident: 'ec_archive_events_of_host', title: 'Archive events of hosts', icon: 'archive' }
+    ]
+  })
+
+  await user.click(await screen.findByRole('checkbox', { name: 'Select all rows' }))
+  await user.click(screen.getByRole('button', { name: 'More' }))
+  await user.click(await screen.findByRole('menuitem', { name: 'Archive events of hosts' }))
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'All events of the host will be removed from the open events list.'
+  )
+  await user.click(screen.getByRole('button', { name: 'Archive events' }))
+
+  expect(await screen.findByText('Events are archived for the selected host')).toBeInTheDocument()
+  expect(postSpy).toHaveBeenCalledWith(
+    '/monitor/hosts/actions/archive_events',
+    expect.objectContaining({ body: { hosts: [{ site_id: 'local', name: 'web-1' }] } })
+  )
+})

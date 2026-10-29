@@ -105,12 +105,13 @@ const noTargetsFeedback: ActionFeedbackResult = {
 const confirmation = computed(() => {
   const id = confirmingActionId.value
   const action = id === null ? undefined : props.actions[id]
-  const count = id === null ? 0 : targetsFor(id).length
+  const targets = id === null ? [] : targetsFor(id)
+  const count = targets.length
   return (
     action?.confirm && {
       title: action.title,
       // Both lines are translated on their own; the alert keeps the line break.
-      text: `${props.countsLabel(selectedCount.value, props.service.total.value)}\n${action.confirm.detail(count)}` as TranslatedString,
+      text: `${props.countsLabel(selectedCount.value, props.service.total.value)}\n${action.confirm.detail(count, targets)}` as TranslatedString,
       submitLabel: action.confirm.submitLabel(count)
     }
   )

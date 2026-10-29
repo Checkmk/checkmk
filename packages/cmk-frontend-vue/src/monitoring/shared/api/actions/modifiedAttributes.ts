@@ -6,12 +6,20 @@
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import type { HostRef } from '@/monitoring/shared/api/types'
+import type { HostRef, ServiceRef } from '@/monitoring/shared/api/types'
 
 /** What a command may switch off for a host or service until it is reset. */
 export type ModifiableAttribute = components['schemas']['ToggleAttributeRequestBody']['attribute']
 
 const JSON_HEADER = { header: { 'Content-Type': 'application/json' } } as const
+
+function serviceRefs(services: ServiceRef[]) {
+  return services.map((service) => ({
+    site_id: service.host.site_id,
+    host_name: service.host.name,
+    name: service.description
+  }))
+}
 
 export class ModifiedAttributesApi {
   public async toggleHosts(
@@ -28,11 +36,35 @@ export class ModifiedAttributesApi {
     return response.modified
   }
 
+  public async toggleServices(
+    services: ServiceRef[],
+    attribute: ModifiableAttribute,
+    enabled: boolean
+  ): Promise<number> {
+    const response = unwrap(
+      await client.POST('/monitor/services/actions/toggle_attribute', {
+        params: JSON_HEADER,
+        body: { services: serviceRefs(services), attribute, enabled }
+      })
+    )
+    return response.modified
+  }
+
   public async resetHosts(hosts: HostRef[]): Promise<number> {
     const response = unwrap(
       await client.POST('/monitor/hosts/actions/reset_modified_attributes', {
         params: JSON_HEADER,
         body: { hosts }
+      })
+    )
+    return response.modified
+  }
+
+  public async resetServices(services: ServiceRef[]): Promise<number> {
+    const response = unwrap(
+      await client.POST('/monitor/services/actions/reset_modified_attributes', {
+        params: JSON_HEADER,
+        body: { services: serviceRefs(services) }
       })
     )
     return response.modified

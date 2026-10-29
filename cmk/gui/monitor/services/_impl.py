@@ -17,9 +17,18 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
+from cmk.gui.monitor.command import ModifiableAttribute
 from cmk.gui.monitor.hosts import reader_unavailable_sites
 from cmk.gui.monitor.site_scope import MonitorSites
 from cmk.livestatus_client import (
+    ChangeServiceModifiedAttributes,
+    Command,
+    DisablePassiveServiceChecks,
+    DisableServiceCheck,
+    DisableServiceNotifications,
+    EnablePassiveServiceChecks,
+    EnableServiceCheck,
+    EnableServiceNotifications,
     LivestatusClient,
     MultiSiteConnection,
     NotificationOption,
@@ -477,6 +486,34 @@ class LiveStatusServiceActions:
                 ),
                 SiteId(target.site_id),
             )
+
+    def toggle_attribute(
+        self, targets: Sequence[ServiceTarget], attribute: ModifiableAttribute, *, enabled: bool
+    ) -> None:
+        command = _SERVICE_ATTRIBUTE_COMMANDS[attribute][enabled]
+        client = LivestatusClient(self._connection)
+        for target in targets:
+            client.command(
+                command(HostName(target.host_name), target.description), SiteId(target.site_id)
+            )
+
+    def reset_modified_attributes(self, targets: Sequence[ServiceTarget]) -> None:
+        client = LivestatusClient(self._connection)
+        for target in targets:
+            client.command(
+                ChangeServiceModifiedAttributes(HostName(target.host_name), 0, target.description),
+                SiteId(target.site_id),
+            )
+
+
+# The command disabling an attribute, then the one enabling it, indexed by `enabled`.
+_SERVICE_ATTRIBUTE_COMMANDS: Mapping[
+    ModifiableAttribute, tuple[Callable[[HostName, str], Command], ...]
+] = {
+    ModifiableAttribute.NOTIFICATIONS: (DisableServiceNotifications, EnableServiceNotifications),
+    ModifiableAttribute.ACTIVE_CHECKS: (DisableServiceCheck, EnableServiceCheck),
+    ModifiableAttribute.PASSIVE_CHECKS: (DisablePassiveServiceChecks, EnablePassiveServiceChecks),
+}
 
 
 def _build_primary_sort(sorters: Sequence[ServiceSort]) -> str:

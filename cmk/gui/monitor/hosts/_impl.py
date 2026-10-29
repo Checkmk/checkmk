@@ -36,6 +36,7 @@ from cmk.livestatus_client import (
     DisableHostCheck,
     DisableHostNotifications,
     DisablePassiveHostChecks,
+    ECDeleteEventsOfHost,
     EnableHostCheck,
     EnableHostNotifications,
     EnablePassiveHostChecks,
@@ -580,6 +581,13 @@ class LiveStatusHostActions:
         for target in targets:
             client.command(
                 ChangeHostModifiedAttributes(HostName(target.host_name), 0), SiteId(target.site_id)
+            )
+
+    def archive_events(self, targets: Sequence[HostTarget], *, author: UserId) -> None:
+        client = LivestatusClient(self._connection)
+        for target in targets:
+            client.command(
+                ECDeleteEventsOfHost(HostName(target.host_name), author), SiteId(target.site_id)
             )
 
 

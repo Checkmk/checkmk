@@ -11,6 +11,7 @@ from collections.abc import Sequence
 from typing import Protocol
 
 from cmk.ccc.user import UserId
+from cmk.gui.monitor.command import ModifiableAttribute
 
 from ._models import RescheduleTarget, ServiceTarget
 
@@ -40,4 +41,16 @@ class ServiceCheckResultFaker(Protocol):
         self, targets: Sequence[ServiceTarget], *, state: int, output: str
     ) -> None:
         """Submit a check result for each target on its site, as if its check had run."""
+        ...
+
+
+class ServiceAttributeModifier(Protocol):
+    def toggle_attribute(
+        self, targets: Sequence[ServiceTarget], attribute: ModifiableAttribute, *, enabled: bool
+    ) -> None:
+        """Enable or disable the attribute for each target on its site."""
+        ...
+
+    def reset_modified_attributes(self, targets: Sequence[ServiceTarget]) -> None:
+        """Undo what such toggles changed for each target, back to its configuration."""
         ...

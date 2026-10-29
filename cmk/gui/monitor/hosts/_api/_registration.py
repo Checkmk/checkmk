@@ -8,6 +8,7 @@ from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 
 from ._action_menu import ENDPOINT_GET_HOST_ACTION_MENU
+from ._archive_events import ENDPOINT_ARCHIVE_EVENTS
 from ._custom_notification import ENDPOINT_SEND_CUSTOM_NOTIFICATION
 from ._events import ENDPOINT_GET_HOST_EVENTS
 from ._fake_check_result import ENDPOINT_FAKE_CHECK_RESULT
@@ -37,3 +38,4 @@ def register_endpoints(
     versioned_endpoint_registry.register(ENDPOINT_FAKE_CHECK_RESULT)
     versioned_endpoint_registry.register(ENDPOINT_TOGGLE_ATTRIBUTE)
     versioned_endpoint_registry.register(ENDPOINT_RESET_MODIFIED_ATTRIBUTES)
+    versioned_endpoint_registry.register(ENDPOINT_ARCHIVE_EVENTS)

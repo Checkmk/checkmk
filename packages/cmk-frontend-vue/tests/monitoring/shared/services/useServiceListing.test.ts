@@ -41,7 +41,12 @@ test('offers the commands implemented for services', () => {
     'send_custom_notification',
     'fake_check_result',
     'remove_acknowledgments',
-    'remove_downtimes_hosts_services'
+    'remove_downtimes_hosts_services',
+    'notifications',
+    'toggle_active_checks',
+    'toggle_passive_checks',
+    'clear_modified_attributes',
+    'ec_archive_events_of_host'
   ])
 })
 

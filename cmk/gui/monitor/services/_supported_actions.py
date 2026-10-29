@@ -13,4 +13,9 @@ SERVICE_SUPPORTED_ACTIONS: tuple[str, ...] = (
     "send_custom_notification",
     "add_comment",
     "fake_check_result",
+    "notifications",
+    "toggle_active_checks",
+    "toggle_passive_checks",
+    "clear_modified_attributes",
+    "ec_archive_events_of_host",
 )

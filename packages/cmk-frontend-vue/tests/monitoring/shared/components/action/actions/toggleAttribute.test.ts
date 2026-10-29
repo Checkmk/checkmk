@@ -14,6 +14,7 @@ import ToggleAttributeForm, {
   type ToggleAttributeValues
 } from '@/monitoring/shared/components/action/actions/ToggleAttributeForm.vue'
 import { useToggleHostAttributesActions } from '@/monitoring/shared/components/action/actions/toggleHostAttributes'
+import { useToggleServiceAttributesActions } from '@/monitoring/shared/components/action/actions/toggleServiceAttributes'
 
 const HOST = { name: 'db-1', site_id: 'local' }
 
@@ -60,6 +61,21 @@ test('says notifications were disabled for the selected host', async () => {
     attribute: 'notifications',
     enabled: false
   })
+})
+
+test('says passive checks were enabled for the selected services', async () => {
+  mockModified(2)
+  const passiveChecks = useToggleServiceAttributesActions()[2]!
+
+  expect(
+    await passiveChecks.perform(
+      [
+        { host: HOST, description: 'CPU load' },
+        { host: HOST, description: 'Memory' }
+      ],
+      { enabled: true }
+    )
+  ).toEqual({ variant: 'success', message: 'Enabled passive checks for the selected services' })
 })
 
 test('reports a refused change as an error', async () => {

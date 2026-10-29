@@ -13,6 +13,10 @@ from ._fake_check_result import ENDPOINT_FAKE_CHECK_RESULT
 from ._family import MONITOR_SERVICES_FAMILY
 from ._list_host_services import ENDPOINT_LIST_HOST_SERVICES
 from ._list_services import ENDPOINT_LIST_ALL_SERVICES
+from ._modified_attributes import (
+    ENDPOINT_RESET_MODIFIED_ATTRIBUTES,
+    ENDPOINT_TOGGLE_ATTRIBUTE,
+)
 from ._reschedule import ENDPOINT_RESCHEDULE_CHECKS
 from ._service_overview import make_endpoint_get_service_overview
 
@@ -31,3 +35,5 @@ def register_endpoints(
     versioned_endpoint_registry.register(ENDPOINT_RESCHEDULE_CHECKS)
     versioned_endpoint_registry.register(ENDPOINT_SEND_CUSTOM_NOTIFICATION)
     versioned_endpoint_registry.register(ENDPOINT_FAKE_CHECK_RESULT)
+    versioned_endpoint_registry.register(ENDPOINT_TOGGLE_ATTRIBUTE)
+    versioned_endpoint_registry.register(ENDPOINT_RESET_MODIFIED_ATTRIBUTES)

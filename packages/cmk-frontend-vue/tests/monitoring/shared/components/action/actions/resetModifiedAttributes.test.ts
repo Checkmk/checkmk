@@ -7,6 +7,7 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { beforeEach, expect, test, vi } from 'vitest'
 
 import { useResetHostModifiedAttributesAction } from '@/monitoring/shared/components/action/actions/resetHostModifiedAttributes'
+import { useResetServiceModifiedAttributesAction } from '@/monitoring/shared/components/action/actions/resetServiceModifiedAttributes'
 
 const DB = { name: 'db-1', site_id: 'local' }
 
@@ -25,7 +26,7 @@ test('asks to confirm resetting the modified attributes', () => {
     'Reset modified attributes',
     'Reset attributes'
   ])
-  expect(confirm?.detail(2)).toBe(
+  expect(confirm?.detail(2, [])).toBe(
     "Resets the commands 'Enable/disable active checks', 'Enable/disable passive checks' and 'Enable/disable notifications' to the default state."
   )
 })
@@ -34,5 +35,17 @@ test('says the modified attributes of the selected host were reset', async () =>
   expect(await useResetHostModifiedAttributesAction().perform([DB], {})).toEqual({
     variant: 'success',
     message: 'Modified attributes are reset for the selected host'
+  })
+})
+
+test('says the modified attributes of the selected services were reset', async () => {
+  const services = [
+    { host: DB, description: 'CPU load' },
+    { host: DB, description: 'Memory' }
+  ]
+
+  expect(await useResetServiceModifiedAttributesAction().perform(services, {})).toEqual({
+    variant: 'success',
+    message: 'Modified attributes are reset for the selected services'
   })
 })

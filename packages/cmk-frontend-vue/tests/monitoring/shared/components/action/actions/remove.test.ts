@@ -68,14 +68,14 @@ test('reports a refused removal as an error', async () => {
 test('asks to confirm the acknowledgements it removes', () => {
   const { confirm } = useRemoveHostAcknowledgementsAction()
 
-  expect(confirm?.detail(2)).toBe('Acknowledgements: 2')
+  expect(confirm?.detail(2, [])).toBe('Acknowledgements: 2')
   expect(confirm?.submitLabel(1)).toBe('Remove acknowledgements')
 })
 
 test('asks to confirm the downtimes it removes', () => {
   const { confirm } = useRemoveHostDowntimesAction()
 
-  expect(confirm?.detail(3)).toBe('Downtimes: 3')
+  expect(confirm?.detail(3, [])).toBe('Downtimes: 3')
   expect(confirm?.submitLabel(1)).toBe('Remove downtimes')
 })
 

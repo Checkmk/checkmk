@@ -6,6 +6,7 @@
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { beforeEach, expect, test, vi } from 'vitest'
 
+import { ArchiveEventsApi } from '@/monitoring/shared/api/actions/archiveEvents'
 import { ModifiedAttributesApi } from '@/monitoring/shared/api/actions/modifiedAttributes'
 
 const CONTENT_TYPE = { params: { header: { 'Content-Type': 'application/json' } } }
@@ -14,12 +15,15 @@ const HOSTS = [
   { site_id: 'remote', name: 'web-1' }
 ]
 
+const SERVICES = [{ host: HOSTS[0]!, description: 'CPU load' }]
+const SERVICE_REFS = [{ site_id: 'local', host_name: 'db-1', name: 'CPU load' }]
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
 
 beforeEach(() => {
   postSpy = vi.spyOn(client, 'POST').mockResolvedValue({
-    data: { modified: 2 },
+    data: { modified: 2, archived: 2 },
     error: undefined,
     response: new Response(null, { status: 200 })
   } as never)
@@ -37,6 +41,32 @@ test('posts the hosts to reset', async () => {
   await new ModifiedAttributesApi().resetHosts(HOSTS)
 
   expect(postSpy).toHaveBeenCalledWith('/monitor/hosts/actions/reset_modified_attributes', {
+    ...CONTENT_TYPE,
+    body: { hosts: HOSTS }
+  })
+})
+
+test('posts the services with the attribute to switch', async () => {
+  await new ModifiedAttributesApi().toggleServices(SERVICES, 'passive_checks', true)
+
+  expect(postSpy).toHaveBeenCalledWith('/monitor/services/actions/toggle_attribute', {
+    ...CONTENT_TYPE,
+    body: { services: SERVICE_REFS, attribute: 'passive_checks', enabled: true }
+  })
+})
+
+test('posts the services to reset', async () => {
+  await new ModifiedAttributesApi().resetServices(SERVICES)
+
+  expect(postSpy).toHaveBeenCalledWith('/monitor/services/actions/reset_modified_attributes', {
+    ...CONTENT_TYPE,
+    body: { services: SERVICE_REFS }
+  })
+})
+
+test('posts the hosts to archive the events of and returns the archived count', async () => {
+  expect(await new ArchiveEventsApi().archiveHostEvents(HOSTS)).toBe(2)
+  expect(postSpy).toHaveBeenCalledWith('/monitor/hosts/actions/archive_events', {
     ...CONTENT_TYPE,
     body: { hosts: HOSTS }
   })

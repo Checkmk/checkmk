@@ -8,22 +8,14 @@ import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import type { ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
-import CmkSurfaceNotice from 'cmk-ui-library/components/CmkSurfaceNotice.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, ref } from 'vue'
 
 import {
-  GlobalTimePicker,
   initGlobalRefresh,
   useGlobalRefresh,
   useGlobalTimePickerRange
 } from '@/graphing/GlobalTimePicker'
-import GraphPanel from '@/graphing/components/GraphPanel.vue'
-import {
-  clippedToNavigableTime,
-  navigableBounds
-} from '@/graphing/components/TimeSeriesGraph/interaction/timeBounds'
 import {
   type GraphNoticeDescriptor,
   hasPlottableData,
@@ -34,7 +26,8 @@ import { useRequestedTimeRange } from '@/graphing/composables/useRequestedTimeRa
 import { useCustomGraphData } from '@/graphing/designer/composables/useCustomGraphData'
 import { consolidationFromWire } from '@/graphing/designer/consolidation'
 import { DEFAULT_TITLE_MACRO, type GraphItem } from '@/graphing/designer/types'
-import type { PanelKey, RequestedTimeRange } from '@/graphing/types'
+import type { PanelKey } from '@/graphing/types'
+import PreviewGraphFrame from '@/mode-custom-services/PreviewGraphFrame.vue'
 
 const props = defineProps<{
   metricName: string | null
@@ -54,15 +47,7 @@ const { range: timePickerRange } = useGlobalTimePickerRange(props.timePicker.def
 const { requestedTimeRange, setRequestedTimeRange, rangeChange } = useRequestedTimeRange()
 const { pauseRefresh } = useGlobalRefresh()
 
-const graphContainer = ref<HTMLElement | null>(null)
 const figureWidth = ref(DEFAULT_FIGURE_WIDTH)
-const { observe } = useResizeObserver((entries) => {
-  const width = entries[0]!.contentBoxSize![0]!.inlineSize
-  if (width > 0) {
-    figureWidth.value = Math.round(width)
-  }
-})
-observe(graphContainer)
 
 const items = computed<GraphItem[]>(() =>
   props.metricName === null
@@ -96,10 +81,6 @@ const data = useCustomGraphData({
   getOverviewRange: () => null
 })
 
-function onPanelTimeRange(requested: RequestedTimeRange): void {
-  setRequestedTimeRange(clippedToNavigableTime(requested, navigableBounds()), PANEL_KEY)
-}
-
 const fetchNotice = useGraphNotice({
   error: () => data.error.value,
   isLoading: () => data.isLoading.value,
@@ -128,61 +109,20 @@ const notice = computed(
 </script>
 
 <template>
-  <div ref="graphContainer" class="mode-custom-services-metric-preview-graph">
-    <GlobalTimePicker
-      v-model="timePickerRange"
-      :custom-time-ranges="timePicker.custom_time_ranges"
-      :server-time-zone="timePicker.server_time_zone"
-      :first-day-of-week="timePicker.first_day_of_week"
-    />
-    <GraphPanel
-      :metrics="data.metrics.value"
-      :data-time-range="data.dataTimeRange.value"
-      :horizontal-lines="data.horizontalLines.value"
-      :requested-time-range="requestedTimeRange"
-      :panel-key="PANEL_KEY"
-      :range-change="rangeChange"
-      :title="metricName ?? ''"
-      show-title
-      show-timestamp
-      show-legend
-      :figure-width="figureWidth"
-      :figure-height="200"
-      :interaction="{
-        brush: 'disabled',
-        burger: 'disabled',
-        hover: 'enabled',
-        panning: 'enabled',
-        zoom: 'enabled',
-        pin: 'disabled'
-      }"
-      @update:requested-time-range="onPanelTimeRange"
-      @inspect="pauseRefresh"
-    >
-      <template #notice>
-        <CmkSurfaceNotice
-          v-if="notice"
-          v-bind="notice"
-          class="mode-custom-services-metric-preview-graph__notice"
-          @retry="data.refetch()"
-        />
-      </template>
-    </GraphPanel>
-  </div>
+  <PreviewGraphFrame
+    v-model:time-picker-range="timePickerRange"
+    v-model:figure-width="figureWidth"
+    :time-picker="timePicker"
+    :title="metricName ?? ''"
+    :metrics="data.metrics.value"
+    :data-time-range="data.dataTimeRange.value"
+    :horizontal-lines="data.horizontalLines.value"
+    :requested-time-range="requestedTimeRange"
+    :range-change="rangeChange"
+    :panel-key="PANEL_KEY"
+    :notice="notice"
+    @update:requested-time-range="setRequestedTimeRange($event, PANEL_KEY)"
+    @inspect="pauseRefresh"
+    @retry="data.refetch()"
+  />
 </template>
-
-<style scoped>
-.mode-custom-services-metric-preview-graph {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-4);
-}
-
-.mode-custom-services-metric-preview-graph__notice {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  max-width: 100%;
-}
-</style>

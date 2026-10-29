@@ -8,7 +8,6 @@ import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
-import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -22,8 +21,6 @@ import TrialModeSelectionStepIndicator from '../components/TrialModeSelectionSte
 import { LEGAL_LINKS } from '../legalLinks'
 
 const email = defineModel<string>('email', { required: true })
-// NOTE: placeholder that will be replaced with CMK-39398, nothing subscribes yet.
-const newsletterOptIn = ref(false)
 
 const { trialLengthDays } = defineProps<{
   trialLengthDays: number
@@ -48,17 +45,6 @@ const emailErrors = ref<string[]>([])
 
 const isWellFormed = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim()))
 
-/**
- * The sentence carrying the unsubscribe link stays one msgid with a placeholder, as the
- * acknowledge dialog writes it: split into fragments, the word order around the link
- * would not survive translation.
- */
-const newsletterLabelParts = computed(() =>
-  _t(
-    'I agree to receive email newsletters about Checkmk products and services. I can unsubscribe via %{link}.'
-  ).split('%{link}')
-)
-
 interface LegalNoticeLink {
   href: string
   label: TranslatedString
@@ -79,35 +65,17 @@ const legalNoticeLinks = computed(
   (): Record<string, LegalNoticeLink> => ({
     '%{terms}': { href: LEGAL_LINKS.terms, label: _t('General Terms & Conditions') },
     '%{eula}': { href: LEGAL_LINKS.eula, label: _t('EULA') },
-    // "email" also names the link in the opt-in above, and a screen reader lists the two
-    // side by side with nothing to tell them apart. The visible word stays, so the
-    // sentence still reads as written.
-    '%{unsubscribe}': {
-      href: LEGAL_LINKS.unsubscribe,
-      label: _t('email'),
-      ariaLabel: _t('unsubscribe from onboarding emails by email')
-    },
     '%{privacy_policy}': { href: LEGAL_LINKS.privacy, label: _t('Privacy Policy') }
   })
 )
 
 const legalNoticeSegments = computed((): LegalNoticeSegment[] =>
   _t(
-    'I agree to the %{terms} and the %{eula}. I will receive Checkmk trial onboarding emails and can unsubscribe any time via %{unsubscribe}. I have noted the %{privacy_policy}.'
+    'I agree to the %{terms} and the %{eula}. I will receive Checkmk trial onboarding emails and can unsubscribe any time via email. I have noted the %{privacy_policy}.'
   )
     .split(/(%\{\w+\})/)
     .map((part) => legalNoticeLinks.value[part] ?? { text: part })
 )
-
-/**
- * The link sits inside the checkbox's own `<label>`, where a plain click would activate
- * the control as its default action and silently flip the opt-in. Cancelling the event
- * is the only thing that stops that, so the navigation has to be made explicitly.
- */
-function openUnsubscribeInfo(event: MouseEvent): void {
-  event.preventDefault()
-  window.open(LEGAL_LINKS.unsubscribe, '_blank', 'noopener')
-}
 
 function submit(): void {
   if (!isWellFormed.value) {
@@ -168,21 +136,6 @@ function clearErrors(): void {
       }}
     </CmkParagraph>
 
-    <CmkCheckbox v-model="newsletterOptIn" class="trial-mode-selection-email-entry__newsletter">
-      <template #label>
-        {{ newsletterLabelParts[0]
-        }}<CmkLink
-          class="trial-mode-selection-email-entry__inline-link"
-          :href="LEGAL_LINKS.unsubscribe"
-          :aria-label="_t('unsubscribe from the newsletter by email')"
-          target="_blank"
-          rel="noopener"
-          @click="openUnsubscribeInfo"
-          >{{ _t('email') }}</CmkLink
-        >{{ newsletterLabelParts[1] }}
-      </template>
-    </CmkCheckbox>
-
     <!-- Not a second checkbox: pressing "Send code" is the agreement. -->
     <CmkParagraph class="trial-mode-selection-email-entry__legal">
       <template v-for="(segment, index) in legalNoticeSegments" :key="index"
@@ -221,10 +174,6 @@ function clearErrors(): void {
 .trial-mode-selection-email-entry__hint {
   font-size: var(--font-size-small);
   margin-top: var(--dimension-5);
-}
-
-.trial-mode-selection-email-entry__newsletter {
-  margin-top: var(--dimension-6);
 }
 
 .trial-mode-selection-email-entry__legal {

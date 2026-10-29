@@ -12,6 +12,5 @@
 export const LEGAL_LINKS = {
   terms: '#',
   eula: '#',
-  privacy: '#',
-  unsubscribe: '#'
+  privacy: '#'
 } as const

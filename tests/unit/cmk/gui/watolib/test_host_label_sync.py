@@ -63,3 +63,19 @@ def test_get_host_labels_entry_of_host(discovered_host_labels_dir: Path) -> None
 def test_get_host_labels_entry_of_host_not_existing() -> None:
     with pytest.raises(FileNotFoundError):
         assert get_host_labels_entry_of_host(HostName("not-existing"))
+
+
+def test_save_updated_host_label_files_raises(discovered_host_labels_dir: Path) -> None:
+    with pytest.raises(ValueError, match="Path .* does not have .mk suffix"):
+        save_updated_host_label_files(
+            [
+                ("no-mk-ending", 123, "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n"),
+            ]
+        )
+
+    with pytest.raises(ValueError, match="Path .* is not relative to .*"):
+        save_updated_host_label_files(
+            [
+                ("../../../foo.mk", 123, "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n"),
+            ]
+        )

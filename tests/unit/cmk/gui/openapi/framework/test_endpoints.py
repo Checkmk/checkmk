@@ -9,7 +9,7 @@ from cmk.gui.openapi.framework import validate_endpoint_definition
 def test_verify_registered_endpoints() -> None:
     """Test that all registered endpoints are valid"""
     seen_endpoints = set()
-    versioned_endpoints = [endpoint for endpoint in versioned_endpoint_registry]
+    versioned_endpoints = [*versioned_endpoint_registry]
     for endpoint in versioned_endpoints:
         validate_endpoint_definition(endpoint)
         endpoint_key = (endpoint.family.name, endpoint.metadata.link_relation)

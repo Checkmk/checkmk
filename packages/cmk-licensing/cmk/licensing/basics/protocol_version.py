@@ -37,6 +37,18 @@ def parse_usage_history_version(raw: object) -> AllowedUsageHistoryVersions:
             raise ValueError(f"Unknown protocol version for the usage history: {other!r}")
 
 
+def parse_verification_request_version(raw: object) -> AllowedVerificationRequestVersions:
+    if not isinstance(raw, dict):
+        raise TypeError(raw)
+    if not isinstance(raw_version := raw.get("VERSION"), str):
+        raise TypeError(raw_version)
+    match raw_version:
+        case "1.0" | "1.1" | "1.2" | "1.3" | "1.4" | "1.5" | "2.0" | "2.1" | "3.0" | "3.1" | "3.2":
+            return raw_version
+        case other:
+            raise ValueError(f"Unknown protocol version for the verification request: {other!r}")
+
+
 def get_licensing_protocol_version(
     omd_root: Path,
 ) -> Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1", "3.2"]:

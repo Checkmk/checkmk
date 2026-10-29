@@ -62,7 +62,7 @@ def main(args: Sequence[str]) -> int:
         logger.info("OLD_SITE_ID is equal to current OMD_SITE - Nothing to do.")
         return 0
 
-    plugins = load_plugins()
+    plugins = load_plugins(debug=arguments.debug)
 
     try:
         has_errors = run(plugins, arguments.debug, arguments.old_site_id, new_site_id)
@@ -77,12 +77,12 @@ def main(args: Sequence[str]) -> int:
     return 1 if has_errors else 0
 
 
-def load_plugins() -> Iterable[RenameAction[SiteId]]:
+def load_plugins(*, debug: bool) -> Iterable[RenameAction[SiteId]]:
     discovered_actions = discover_all_plugins(
         PluginGroup.POST_RENAME_SITE,
         entry_point_prefixes(),
         skip_wrong_types=False,
-        raise_errors=cmk.ccc.debug.enabled(),
+        raise_errors=debug,
     )
     for exc in discovered_actions.errors:
         logger.error("Error in action plug-in: %(exc)s\n", {"exc": exc})

@@ -7,7 +7,7 @@ from cmk.post_rename_site import main
 
 
 def test_load_plugins() -> None:
-    assert {p.name for p in main.load_plugins()} == {
+    assert {p.name for p in main.load_plugins(debug=True)} == {
         "builtin_host_labels",
         "sites",
         "messaging",

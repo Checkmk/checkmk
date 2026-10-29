@@ -7,6 +7,6 @@ import sys
 
 from cmk.post_rename_site.main import load_plugins
 
-plugins = {p.name for p in load_plugins()}
+plugins = {p.name for p in load_plugins(debug=False)}
 
 sys.stdout.write(f"{'test' in plugins}\n")

@@ -168,20 +168,28 @@ def _evaluate_plugin(
             assert_never(plugin)
 
 
-def _metric_names_read_by(perfometer: ApiPerfometer) -> Sequence[MetricName]:
-    return [
-        metric_name
-        for quantity in quantities_of_perfometer(perfometer)
-        for metric_name in metric_names_in_quantity(quantity)
-    ]
+@dataclass(frozen=True, kw_only=True)
+class _IndexedPerfometer:
+    position: int
+    name: str
+    plugin: ApiPerfometer
+    metric_names: frozenset[MetricName]
+    scalars: Sequence[ApiScalar]
 
 
-def _scalars_read_by(perfometer: ApiPerfometer) -> Sequence[ApiScalar]:
-    return [
-        scalar
-        for quantity in quantities_of_perfometer(perfometer)
-        for scalar in scalars_in_quantity(quantity)
-    ]
+def _indexed(position: int, name: str, plugin: ApiPerfometer) -> _IndexedPerfometer:
+    quantities = list(quantities_of_perfometer(plugin))
+    return _IndexedPerfometer(
+        position=position,
+        name=name,
+        plugin=plugin,
+        metric_names=frozenset(
+            metric_name
+            for quantity in quantities
+            for metric_name in metric_names_in_quantity(quantity)
+        ),
+        scalars=[scalar for quantity in quantities for scalar in scalars_in_quantity(quantity)],
+    )
 
 
 def _scalar_has_a_value(
@@ -192,37 +200,50 @@ def _scalar_has_a_value(
 
 
 def _matches(
-    perfometer: ApiPerfometer, performance_data: Mapping[MetricName, PerformanceData]
+    perfometer: _IndexedPerfometer, performance_data: Mapping[MetricName, PerformanceData]
 ) -> bool:
-    metric_names = _metric_names_read_by(perfometer)
     return (
-        len(metric_names) > 0
-        and all(metric_name in performance_data for metric_name in metric_names)
-        and all(
-            _scalar_has_a_value(scalar, performance_data) for scalar in _scalars_read_by(perfometer)
-        )
+        bool(perfometer.metric_names)
+        and perfometer.metric_names <= performance_data.keys()
+        and all(_scalar_has_a_value(scalar, performance_data) for scalar in perfometer.scalars)
     )
 
 
-def _matches_first(
-    registered_perfometers: Mapping[str, ApiPerfometer],
-    performance_data: Mapping[MetricName, PerformanceData],
-    superseders: Mapping[str, str],
-) -> ApiPerfometer | None:
-    if not performance_data:
+class PerfometerIndex:
+    def __init__(self, plugins: Mapping[str, ApiPerfometer]) -> None:
+        self.plugins: Final = plugins
+        self._by_name: Final = {
+            name: _indexed(position, name, plugin)
+            for position, (name, plugin) in enumerate(plugins.items())
+        }
+        by_metric_name: dict[MetricName, list[_IndexedPerfometer]] = {}
+        for perfometer in self._by_name.values():
+            for metric_name in perfometer.metric_names:
+                by_metric_name.setdefault(metric_name, []).append(perfometer)
+        self._by_metric_name: Final[Mapping[MetricName, Sequence[_IndexedPerfometer]]] = (
+            by_metric_name
+        )
+
+    def first_match(
+        self,
+        performance_data: Mapping[MetricName, PerformanceData],
+        superseders: Mapping[str, str],
+    ) -> ApiPerfometer | None:
+        candidates = {
+            perfometer.position: perfometer
+            for metric_name in performance_data
+            for perfometer in self._by_metric_name.get(metric_name, ())
+        }
+        for position in sorted(candidates):
+            perfometer = candidates[position]
+            if not _matches(perfometer, performance_data):
+                continue
+            superseder_name = superseders.get(perfometer.name)
+            superseder = None if superseder_name is None else self._by_name.get(superseder_name)
+            if superseder is not None and _matches(superseder, performance_data):
+                return superseder.plugin
+            return perfometer.plugin
         return None
-    for name, perfometer in registered_perfometers.items():
-        if not _matches(perfometer, performance_data):
-            continue
-        superseder_name = superseders.get(name)
-        if (
-            superseder_name is not None
-            and (superseder := registered_perfometers.get(superseder_name)) is not None
-            and _matches(superseder, performance_data)
-        ):
-            return superseder
-        return perfometer
-    return None
 
 
 def evaluate_perfometer(
@@ -230,11 +251,11 @@ def evaluate_perfometer(
     localizer: Callable[[str], str],
     service: Service,
     performance_data: Mapping[MetricName, PerformanceData],
-    registered_perfometers: Mapping[str, ApiPerfometer],
+    registered_perfometers: PerfometerIndex,
     registered_metrics: Mapping[str, metrics_v1.Metric],
     superseders: Mapping[str, str],
 ) -> EvaluatedPerfometerLayout | None:
-    if (plugin := _matches_first(registered_perfometers, performance_data, superseders)) is None:
+    if (plugin := registered_perfometers.first_match(performance_data, superseders)) is None:
         return None
     return _evaluate_plugin(
         plugin,

@@ -9,7 +9,6 @@ from typing import assert_never, Final
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
-    ApiPerfometer,
     evaluate_perfometer,
     EvaluatedBidirectional,
     EvaluatedPerfometer,
@@ -17,6 +16,7 @@ from cmk.graphing_engine import (
     EvaluatedStacked,
     HostName,
     parse_performance_data,
+    PerfometerIndex,
     Service,
     ServiceName,
     translate_performance_data,
@@ -71,7 +71,7 @@ def evaluated_perfometer(
     *,
     host_name: str,
     service_name: str,
-    registered_perfometers: Mapping[str, ApiPerfometer],
+    registered_perfometers: PerfometerIndex,
     registered_metrics: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
     debug: bool,

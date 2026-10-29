@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics as metrics_v1
-from cmk.graphing_engine import ApiPerfometer, drawn_segments, DrawnSegment, perfometer_sort_value
+from cmk.graphing_engine import drawn_segments, DrawnSegment, perfometer_sort_value, PerfometerIndex
 from cmk.gui.graphing import (
     evaluated_perfometer,
     perfometer_label,
@@ -26,7 +26,7 @@ class Perfometer:
         self,
         row: Row,
         registered_metrics: Mapping[str, metrics_v1.Metric],
-        registered_perfometers: Mapping[str, ApiPerfometer],
+        registered_perfometers: PerfometerIndex,
         *,
         debug: bool,
     ) -> None:

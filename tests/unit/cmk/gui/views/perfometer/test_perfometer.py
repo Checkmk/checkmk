@@ -9,6 +9,7 @@ import pytest
 
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers, Title
+from cmk.graphing_engine import PerfometerIndex
 from cmk.gui.logged_in import LoggedInUser, UserDefaultConfig
 from cmk.gui.painter import Cell, InternalPainter
 from cmk.gui.type_defs import Row
@@ -18,16 +19,18 @@ from cmk.gui.views.perfometer.base import Perfometer
 from cmk.gui.views.perfometer.painter import make_perfometer_painter
 from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
-_REGISTERED_PERFOMETERS = {
-    "kube_memory_usage": perfometers.Perfometer(
-        name="kube_memory_usage",
-        focus_range=perfometers.FocusRange(
-            perfometers.Closed(0),
-            perfometers.Open(1000000000),
-        ),
-        segments=["kube_memory_usage"],
-    )
-}
+_REGISTERED_PERFOMETERS = PerfometerIndex(
+    {
+        "kube_memory_usage": perfometers.Perfometer(
+            name="kube_memory_usage",
+            focus_range=perfometers.FocusRange(
+                perfometers.Closed(0),
+                perfometers.Open(1000000000),
+            ),
+            segments=["kube_memory_usage"],
+        )
+    }
+)
 
 
 def _row(perf_data: str, check_command: str = "check_mk-kube_memory") -> Row:

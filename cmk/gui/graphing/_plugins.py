@@ -16,7 +16,12 @@ from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing.v2_unstable import (
     entry_point_prefixes as entry_point_prefixes_v2_unstable,
 )
-from cmk.graphing_engine import ApiGraph, ApiPerfometer, sort_registered_graph_plugins
+from cmk.graphing_engine import (
+    ApiGraph,
+    ApiPerfometer,
+    PerfometerIndex,
+    sort_registered_graph_plugins,
+)
 from cmk.gui.log import logger
 
 type DiscoveredGraphingPlugins = DiscoveredPlugins[
@@ -28,7 +33,7 @@ type DiscoveredGraphingPlugins = DiscoveredPlugins[
 class GraphingPlugins:
     discovered: DiscoveredGraphingPlugins
     metrics: Mapping[str, metrics_v1.Metric]
-    perfometers: Mapping[str, ApiPerfometer]
+    perfometers: PerfometerIndex
     graphs: Sequence[ApiGraph]
     translations: Sequence[translations_v1.Translation]
 
@@ -48,9 +53,9 @@ def graphing_plugins() -> GraphingPlugins:
         metrics={
             plugin.name: plugin for plugin in plugins if isinstance(plugin, metrics_v1.Metric)
         },
-        perfometers={
-            plugin.name: plugin for plugin in plugins if isinstance(plugin, ApiPerfometer)
-        },
+        perfometers=PerfometerIndex(
+            {plugin.name: plugin for plugin in plugins if isinstance(plugin, ApiPerfometer)}
+        ),
         graphs=[plugin for _name, plugin in sort_registered_graph_plugins(graphs)],
         translations=[
             plugin for plugin in plugins if isinstance(plugin, translations_v1.Translation)
@@ -62,7 +67,7 @@ def registered_metrics() -> Mapping[str, metrics_v1.Metric]:
     return graphing_plugins().metrics
 
 
-def registered_perfometers() -> Mapping[str, ApiPerfometer]:
+def registered_perfometers() -> PerfometerIndex:
     return graphing_plugins().perfometers
 
 

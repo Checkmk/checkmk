@@ -2,12 +2,11 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping
 
 import pytest
 
 from cmk.graphing.v1 import perfometers
-from cmk.graphing_engine import ApiPerfometer
+from cmk.graphing_engine import ApiPerfometer, PerfometerIndex
 from cmk.gui.monitor.services._api._perfometer import ServicePerfometer
 
 pytestmark = pytest.mark.usefixtures("request_context")
@@ -17,8 +16,8 @@ _SERVICE_NAME = "CPU load"
 _CHECK_COMMAND = "check_mk-test"
 
 
-def _registered(perfometer: ApiPerfometer) -> Mapping[str, ApiPerfometer]:
-    return {perfometer.name: perfometer}
+def _registered(perfometer: ApiPerfometer) -> PerfometerIndex:
+    return PerfometerIndex({perfometer.name: perfometer})
 
 
 def _bar(metric_name: str) -> perfometers.Perfometer:
@@ -46,9 +45,7 @@ _BIDIRECTIONAL = _registered(
 )
 
 
-def _perfometer(
-    perf_data: str, registered_perfometers: Mapping[str, ApiPerfometer]
-) -> ServicePerfometer:
+def _perfometer(perf_data: str, registered_perfometers: PerfometerIndex) -> ServicePerfometer:
     perfometer = ServicePerfometer.from_perf_data(
         perf_data,
         _CHECK_COMMAND,

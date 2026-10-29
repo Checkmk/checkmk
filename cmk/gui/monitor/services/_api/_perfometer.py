@@ -2,10 +2,10 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from typing import Self
 
-from cmk.graphing_engine import ApiPerfometer, drawn_segments, DrawnSegment
+from cmk.graphing_engine import drawn_segments, DrawnSegment, PerfometerIndex
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
     evaluated_perfometer,
@@ -57,7 +57,7 @@ class ServicePerfometer:
         *,
         host_name: str,
         service_name: str,
-        registered_perfometers: Mapping[str, ApiPerfometer],
+        registered_perfometers: PerfometerIndex,
     ) -> Self | None:
         """Build the Perf-O-Meter a service's performance data resolves to, if any."""
         try:
@@ -82,7 +82,7 @@ class ServicePerfometer:
         *,
         host_name: str,
         service_name: str,
-        registered_perfometers: Mapping[str, ApiPerfometer],
+        registered_perfometers: PerfometerIndex,
     ) -> Self | None:
         if (
             evaluated := evaluated_perfometer(

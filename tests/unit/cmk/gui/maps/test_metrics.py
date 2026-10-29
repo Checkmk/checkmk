@@ -27,7 +27,7 @@ from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v1 import Title
 from cmk.graphing.v1 import translations as translations_api
-from cmk.graphing_engine import ApiGraph, ApiPerfometer
+from cmk.graphing_engine import ApiGraph, PerfometerIndex
 from cmk.gui.theme import make_theme
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.maps.gui._metrics import (
@@ -65,32 +65,34 @@ _METRIC_PLUGINS: Mapping[str, metrics_api.Metric] = {
     "load1": _metric("load1", Title("CPU load average of last minute"), _COUNT),
 }
 
-_REGISTERED_PERFOMETERS: Mapping[str, ApiPerfometer] = {
-    "mem_used_percent": perfometers_api.Perfometer(
-        name="mem_used_percent",
-        focus_range=perfometers_api.FocusRange(
-            perfometers_api.Closed(0), perfometers_api.Closed(100)
-        ),
-        segments=["mem_used_percent"],
-    ),
-    "if_bps": perfometers_api.Bidirectional(
-        name="if_bps",
-        left=perfometers_api.Perfometer(
-            name="if_in_bps",
+_REGISTERED_PERFOMETERS = PerfometerIndex(
+    {
+        "mem_used_percent": perfometers_api.Perfometer(
+            name="mem_used_percent",
             focus_range=perfometers_api.FocusRange(
                 perfometers_api.Closed(0), perfometers_api.Closed(100)
             ),
-            segments=["if_in_bps"],
+            segments=["mem_used_percent"],
         ),
-        right=perfometers_api.Perfometer(
-            name="if_out_bps",
-            focus_range=perfometers_api.FocusRange(
-                perfometers_api.Closed(0), perfometers_api.Closed(100)
+        "if_bps": perfometers_api.Bidirectional(
+            name="if_bps",
+            left=perfometers_api.Perfometer(
+                name="if_in_bps",
+                focus_range=perfometers_api.FocusRange(
+                    perfometers_api.Closed(0), perfometers_api.Closed(100)
+                ),
+                segments=["if_in_bps"],
             ),
-            segments=["if_out_bps"],
+            right=perfometers_api.Perfometer(
+                name="if_out_bps",
+                focus_range=perfometers_api.FocusRange(
+                    perfometers_api.Closed(0), perfometers_api.Closed(100)
+                ),
+                segments=["if_out_bps"],
+            ),
         ),
-    ),
-}
+    }
+)
 
 
 _REGISTERED_GRAPHS: Sequence[ApiGraph] = [

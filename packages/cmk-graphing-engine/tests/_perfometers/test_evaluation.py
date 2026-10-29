@@ -22,6 +22,7 @@ from cmk.graphing_engine import (
     FocusBoundKind,
     HostName,
     MetricName,
+    PerfometerIndex,
     PerformanceData,
     Service,
     ServiceName,
@@ -91,7 +92,7 @@ def _evaluate(
         localizer=_id,
         service=_SERVICE,
         performance_data=performance_data,
-        registered_perfometers=registered_perfometers,
+        registered_perfometers=PerfometerIndex(registered_perfometers),
         registered_metrics=_METRICS,
         superseders=superseders,
     )
@@ -111,6 +112,16 @@ def test_the_first_matching_plugin_draws() -> None:
         _drawn_by(
             _registered(_closed_bar("first", "a"), _closed_bar("second", "a")),
             _perf(a=PerformanceData(value=1.0)),
+        )
+        == "first"
+    )
+
+
+def test_the_registration_order_decides_between_plugins_reading_different_metrics() -> None:
+    assert (
+        _drawn_by(
+            _registered(_closed_bar("first", "b"), _closed_bar("second", "a")),
+            _perf(a=PerformanceData(value=1.0), b=PerformanceData(value=1.0)),
         )
         == "first"
     )
@@ -199,6 +210,29 @@ def test_a_superseder_draws_in_place_of_the_plugin_it_supersedes() -> None:
     )
     assert (
         _drawn_by(registered, _perf(a=PerformanceData(value=1.0)), _MEM_SUPERSEDERS) == "mem_used"
+    )
+
+
+def test_a_superseder_reading_no_metric_at_all_never_draws() -> None:
+    constant_only = perfometers_v1.Perfometer(
+        name="mem_used_percent",
+        focus_range=perfometers_v1.FocusRange(perfometers_v1.Closed(0), perfometers_v1.Closed(100)),
+        segments=[
+            metrics_v1.Constant(
+                Title("C"),
+                metrics_v1.Unit(metrics_v1.DecimalNotation("")),
+                metrics_v1.Color.BLUE,
+                5,
+            )
+        ],
+    )
+    assert (
+        _drawn_by(
+            _registered(_closed_bar("mem_used", "a"), constant_only),
+            _perf(a=PerformanceData(value=1.0)),
+            _MEM_SUPERSEDERS,
+        )
+        == "mem_used"
     )
 
 

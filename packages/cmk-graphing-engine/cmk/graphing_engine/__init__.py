@@ -85,6 +85,7 @@ from ._perfometers._evaluation import (
     EvaluatedSegment,
     EvaluatedStacked,
     FocusBoundKind,
+    PerfometerIndex,
 )
 from ._perfometers._geometry import drawn_segments, DrawnSegment, perfometer_sort_value
 from ._plugins._attributes import (
@@ -272,6 +273,7 @@ __all__ = [
     "DrawnCurve",
     "DrawnLineType",
     "evaluate_perfometer",
+    "PerfometerIndex",
     "metric_attributes",
     "parse_color",
     "parse_unit",

@@ -50,6 +50,7 @@ from cmk.graphing_engine import (
     MetricProtocol,
     parse_performance_data,
     parse_unit,
+    PerfometerIndex,
     RequestedGraph,
     RRDMetric,
     Service,
@@ -219,7 +220,7 @@ def _side_payload(
         check_command,
         host_name=engine.host_name,
         service_name=engine.service_name,
-        registered_perfometers={side.name: side},
+        registered_perfometers=PerfometerIndex({side.name: side}),
         registered_metrics=engine.registered_metric_plugins,
         registered_translations=engine.registered_translations,
         debug=engine.debug,
@@ -248,7 +249,7 @@ def _perfometer_payload(
     perf_data_str: str,
     check_command: str,
     metrics: Mapping[MetricName, EvaluatedMetric],
-    registered_perfometers: Mapping[str, ApiPerfometer],
+    registered_perfometers: PerfometerIndex,
     engine: _EngineInputs,
     temperature_unit: TemperatureUnit,
     theme: Theme,
@@ -283,7 +284,7 @@ def _perfometer_payload(
         ],
         sides=[
             _side_payload(side, perf_data_str, check_command, metrics, engine, temperature_unit)
-            for side in _component_perfometers(registered_perfometers[evaluated.name])
+            for side in _component_perfometers(registered_perfometers.plugins[evaluated.name])
         ],
         bg_color=bg_color,
     )
@@ -464,7 +465,7 @@ def metric_info(
     *,
     registered_metric_plugins: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
-    registered_perfometers: Mapping[str, ApiPerfometer],
+    registered_perfometers: PerfometerIndex,
     temperature_unit: TemperatureUnit,
     theme: Theme,
     debug: bool,

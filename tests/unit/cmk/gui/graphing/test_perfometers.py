@@ -18,6 +18,7 @@ from cmk.graphing_engine import (
     EvaluatedSegment,
     EvaluatedStacked,
     FocusBoundKind,
+    PerfometerIndex,
     Unit,
 )
 from cmk.gui.graphing import (
@@ -120,7 +121,9 @@ def test_backup_age_draws_in_place_of_backup_size() -> None:
         "check_mk-veeam_backups",
         host_name="host",
         service_name="Backup job",
-        registered_perfometers={name: _time_bar(name) for name in ("backup_size", "backup_age")},
+        registered_perfometers=PerfometerIndex(
+            {name: _time_bar(name) for name in ("backup_size", "backup_age")}
+        ),
         registered_metrics={name: _time_metric(name) for name in ("backup_size", "backup_age")},
         registered_translations=[],
         debug=True,

@@ -80,7 +80,7 @@ _read_config() {
     SITES=
     TAGS=
     SERVICE_CHECK_COMMANDS=
-    # shellcheck source=../cfg_examples/site_object_counts.cfg
+    # shellcheck source=agents/cfg_examples/site_object_counts.cfg
     [ -e "${MK_CONFDIR}/site_object_counts.cfg" ] && . "${MK_CONFDIR}/site_object_counts.cfg"
 }
 

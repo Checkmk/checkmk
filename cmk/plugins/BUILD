@@ -144,6 +144,7 @@ sh_library(
         "allnet_ip_sensoric/libexec/agent_allnet_ip_sensoric",
         "appdynamics/libexec/agent_appdynamics",
         "azure_status/libexec/agent_azure_status",
+        "checkmk/agents/mk_site_object_counts",
         "checkmk/libexec/agent_bi",
         "checkmk/libexec/check_cmk_inv",
         "checkmk/libexec/check_notify_count",
@@ -198,6 +199,7 @@ sh_library(
         "vnx_quotas/libexec/agent_vnx_quotas",
         "vxvm/agents/vxvm",
         "zerto/libexec/agent_zerto",
+        "//agents/cfg_examples:agents_cfg_examples_sh",
     ],
 )
 

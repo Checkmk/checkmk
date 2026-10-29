@@ -19,6 +19,11 @@ AllowedVerificationRequestVersions = Literal[
 ]
 CURRENT_VERIFICATION_REQUEST_VERSION: Final[AllowedVerificationRequestVersions] = "3.2"
 
+AllowedVerificationResponseVersions = Literal[
+    "1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1", "3.2"
+]
+CURRENT_VERIFICATION_RESPONSE_VERSION: Final[AllowedVerificationResponseVersions] = "3.2"
+
 
 def parse_usage_history_version(raw: object) -> AllowedUsageHistoryVersions:
     if not isinstance(raw, dict):

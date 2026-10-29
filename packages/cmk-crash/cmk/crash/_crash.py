@@ -24,7 +24,7 @@ from typing import cast, Final, NotRequired, override, TypedDict
 
 from cmk.ccc.version_info import VersionInfo, VersionInfoBase
 
-SENSITIVE_KEYWORDS = ["token", "secret", "pass", "key"]
+SENSITIVE_KEYWORDS = ["token", "secret", "pass", "key", "cookie"]
 
 REDACTED_STRING: Final = "redacted"
 

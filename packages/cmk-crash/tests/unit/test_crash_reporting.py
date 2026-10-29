@@ -266,6 +266,11 @@ def test_crash_report_sanitization_local_vars(crash: UnitTestCrashReport) -> Non
     assert b"notsecret" in decoded_local_vars
 
 
+def test_a_session_cookie_is_redacted(tmp_path: Path) -> None:
+    crash = _make_crash(tmp_path, local_vars={"session_cookie": "cmkadmin:verysecret"})
+    assert b"verysecret" not in base64.b64decode(crash.crash_info["local_vars"])
+
+
 def test_crash_report_ident(crash: UnitTestCrashReport) -> None:
     assert crash.ident() == (crash.crash_info["id"],)
 

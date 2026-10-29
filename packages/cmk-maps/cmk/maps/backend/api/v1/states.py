@@ -8,7 +8,7 @@ import asyncio
 import logging
 import time
 from collections.abc import AsyncIterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import cast, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
@@ -502,7 +502,8 @@ class StreamSubscription:
     name: str
     user: Principal
     auth: GuiAuth
-    session_cookie: str
+    # The repr lands in crash reports, which redact by variable name only.
+    session_cookie: str = field(repr=False)
 
 
 async def session_still_holds(subscription: StreamSubscription) -> bool:

@@ -411,6 +411,17 @@ def _still_holds(subscription: states.StreamSubscription) -> bool:
     return asyncio.run(states.session_still_holds(subscription))
 
 
+def test_the_session_cookie_of_a_stream_stays_out_of_its_repr(gui: _GUI) -> None:
+    subscription = states.StreamSubscription(
+        subscriber=MagicMock(spec=Subscriber),
+        name="b1",
+        user=Principal(name="alice").viewing("alice", "b1"),
+        auth=gui.auth(),
+        session_cookie="alice:do-not-leak",
+    )
+    assert "do-not-leak" not in repr(subscription)
+
+
 def test_an_open_stream_holds_while_the_session_does(gui: _GUI) -> None:
     assert _still_holds(_subscription(gui, "alice"))
 

@@ -25,12 +25,13 @@ from cmk.base.checkers import (
     SectionPluginMapper,
 )
 from cmk.ccc import debug
+from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import OK
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.discovery import ABCDiscoveryConfig, AutochecksStore, commandline_discovery
-from cmk.checkengine.fetcher_abc import Mode
+from cmk.checkengine.fetcher_abc import FetchResult, Mode
 from cmk.checkengine.filecache import AgentFileCache, FileCacheMode, MaxAge
 from cmk.checkengine.helper_interface import SourceInfo
 from cmk.checkengine.parser import NO_SELECTION, ParserConfig
@@ -196,7 +197,9 @@ def discover_services(
     source_info: SourceInfo,
 ) -> Sequence[ConfiguredService]:
     def _fetcher():
-        return lambda *a, **ka: [(source_info, get_raw_data(DUMPS_DIR / agent_data_filename))]  # noqa: ARG005
+        return lambda *a, **ka: [  # noqa: ARG005
+            FetchResult(source_info, get_raw_data(DUMPS_DIR / agent_data_filename), Snapshot.null())
+        ]
 
     commandline_discovery(
         hostname,

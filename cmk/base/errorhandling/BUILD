@@ -12,7 +12,6 @@ py_library(
     deps = [
         "//cmk/piggyback:backend",
         "//cmk/utils",
-        "//packages/cmk-ccc:cpu-tracking",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:resulttype",

@@ -20,7 +20,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.helper_interface import AgentRawData, JsonSerializable, SourceInfo
 from cmk.checkengine.snmplib import SNMPPluginStore, SNMPRawData
 
-__all__ = ["FetcherFunction", "DeserializationContext"]
+__all__ = ["FetcherFunction", "FetchResult", "DeserializationContext"]
 
 
 @dataclass(frozen=True)
@@ -39,17 +39,18 @@ class DeserializationContext:
     debug: bool
 
 
+@dataclass(frozen=True)
+class FetchResult:
+    source: SourceInfo
+    raw_data: result.Result[AgentRawData | SNMPRawData, Exception]
+    duration: Snapshot
+
+
 class FetcherFunction(ABC):
     @abstractmethod
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
-    ) -> Sequence[
-        tuple[
-            SourceInfo,
-            result.Result[AgentRawData | SNMPRawData, Exception],
-            Snapshot,
-        ]
-    ]:
+    ) -> Sequence[FetchResult]:
         raise NotImplementedError
 
 

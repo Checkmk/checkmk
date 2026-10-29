@@ -22,7 +22,7 @@ from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.auto_queue import AutoQueue
 from cmk.checkengine.discovery import DiscoverySettings
-from cmk.checkengine.fetcher_abc import FetcherFunction
+from cmk.checkengine.fetcher_abc import FetcherFunction, FetchResult
 from cmk.checkengine.helper_interface import AgentRawData, FetcherType, SourceInfo, SourceType
 from cmk.checkengine.inventory import (
     _check_fetched_data_or_trees,
@@ -1254,14 +1254,14 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
         @override
         def __call__(
             self, host_name: HostName, *, ip_address: HostAddress | None
-        ) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData, Exception], Snapshot]]:
+        ) -> Sequence[FetchResult]:
             return [
-                (
+                FetchResult(
                     SourceInfo(hostname, None, "ident", FetcherType.TCP, SourceType.HOST),
                     result.Error(Exception()),
                     Snapshot.null(),
                 ),
-                (
+                FetchResult(
                     SourceInfo(hostname, None, "ident", FetcherType.TCP, SourceType.HOST),
                     result.OK(AgentRawData(b"<<<data>>>")),
                     Snapshot.null(),
@@ -1332,7 +1332,7 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
         @override
         def __call__(
             self, host_name: HostName, *, ip_address: HostAddress | None
-        ) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData, Exception], Snapshot]]:
+        ) -> Sequence[FetchResult]:
             return []
 
     hostname = HostName("my-host")
@@ -1588,9 +1588,9 @@ class _ProductFetcher(FetcherFunction):
     @override
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
-    ) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData, Exception], Snapshot]]:
+    ) -> Sequence[FetchResult]:
         return [
-            (
+            FetchResult(
                 SourceInfo(host_name, None, "ident", FetcherType.TCP, SourceType.HOST),
                 self._raw_data,
                 Snapshot.null(),

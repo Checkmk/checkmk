@@ -31,7 +31,7 @@ from cmk.agent_based.v1 import Result as CheckFunctionResult
 from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
 from cmk.base.config import ConfigCache
 from cmk.base.errorhandling import create_check_crash_dump
-from cmk.ccc.cpu_tracking import CPUTracker, Snapshot
+from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.checkerplugin import (
@@ -45,7 +45,7 @@ from cmk.checkengine.discovery import (
     get_plugin_parameters,
     HostLabelPlugin,
 )
-from cmk.checkengine.fetcher_abc import Fetcher, FetcherFunction, Mode
+from cmk.checkengine.fetcher_abc import Fetcher, FetcherFunction, FetchResult, Mode
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, FetcherSecrets, StoredSecrets
 from cmk.checkengine.fetcher_utils.trigger import FetcherTrigger
 from cmk.checkengine.fetchers.program import ProgramFetcher
@@ -157,13 +157,7 @@ def _fetch_all(
     *,
     simulation: bool,
     debug: bool,
-) -> Sequence[
-    tuple[
-        SourceInfo,
-        result.Result[AgentRawData | SNMPRawData, Exception],
-        Snapshot,
-    ]
-]:
+) -> Sequence[FetchResult]:
     return [
         _do_fetch(
             trigger,
@@ -187,15 +181,11 @@ def _do_fetch(  # type: ignore[explicit-any]
     secrets: FetcherSecrets,
     *,
     debug: bool,
-) -> tuple[
-    SourceInfo,
-    result.Result[AgentRawData | SNMPRawData, Exception],
-    Snapshot,
-]:
+) -> FetchResult:
     logger.debug("Fetching source: %(source_info)s", {"source_info": source_info})
     with CPUTracker(logger.debug) as tracker:
         raw_data = trigger.get_raw_data(file_cache, fetcher, mode, secrets, debug=debug)
-    return source_info, raw_data, tracker.duration
+    return FetchResult(source_info, raw_data, tracker.duration)
 
 
 class CMKParser:
@@ -337,13 +327,7 @@ class SpecialAgentFetcher(FetcherFunction):
     @override
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
-    ) -> Sequence[
-        tuple[
-            SourceInfo,
-            result.Result[AgentRawData | SNMPRawData, Exception],
-            Snapshot,
-        ]
-    ]:
+    ) -> Sequence[FetchResult]:
         source_info = SourceInfo(
             hostname=host_name,
             ipaddress=ip_address,
@@ -437,13 +421,7 @@ class CMKFetcher(FetcherFunction):
     @override
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
-    ) -> Sequence[
-        tuple[
-            SourceInfo,
-            result.Result[AgentRawData | SNMPRawData, Exception],
-            Snapshot,
-        ]
-    ]:
+    ) -> Sequence[FetchResult]:
         # we might be checking a cluster, but the relay id is always the same.
         relay_id = self.get_relay_id(host_name)
 

@@ -11,16 +11,13 @@ from typing import override
 
 import cmk.ccc.resulttype as result
 import cmk.utils.paths
-from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.fetcher_abc import FetcherFunction
+from cmk.checkengine.fetcher_abc import FetcherFunction, FetchResult
 from cmk.checkengine.helper_interface import AgentRawData, FetcherType, SourceInfo
 from cmk.checkengine.snmplib import serialize_snmp_raw_data, SNMPRawData
 from cmk.piggyback.backend import get_messages_for
 
-type _Fetched = Sequence[
-    tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
-]
+type _Fetched = Sequence[FetchResult]
 
 
 def serialize_fetched(
@@ -84,4 +81,4 @@ class RecordingFetcher(FetcherFunction):
         """The serialized raw data of the most recent fetch, if it was for this host"""
         if self._last is None or self._last[0] != host_name:
             return None
-        return serialize_fetched((f[0], f[1]) for f in self._last[1])
+        return serialize_fetched((f.source, f.raw_data) for f in self._last[1])

@@ -14,7 +14,7 @@ import cmk.utils.paths
 from cmk.base.errorhandling import RecordingFetcher, serialize_fetched
 from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.fetcher_abc import FetcherFunction
+from cmk.checkengine.fetcher_abc import FetcherFunction, FetchResult
 from cmk.checkengine.helper_interface import AgentRawData, FetcherType, SourceInfo, SourceType
 from cmk.checkengine.snmplib import SNMPRawData, SNMPSectionMarker
 from cmk.piggyback.backend import store_piggyback_raw_data
@@ -127,9 +127,7 @@ class _AgentFetcher(FetcherFunction):
     @override
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
-    ) -> Sequence[
-        tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
-    ]:
+    ) -> Sequence[FetchResult]:
         source = SourceInfo(
             hostname=host_name,
             ipaddress=ip_address,
@@ -137,7 +135,7 @@ class _AgentFetcher(FetcherFunction):
             fetcher_type=FetcherType.TCP,
             source_type=SourceType.HOST,
         )
-        return [(source, result.OK(AgentRawData(b"<<<a>>>\n")), Snapshot.null())]
+        return [FetchResult(source, result.OK(AgentRawData(b"<<<a>>>\n")), Snapshot.null())]
 
 
 def test_recording_fetcher_serializes_the_data_fetched_for_the_host() -> None:
@@ -161,9 +159,7 @@ class _FailsOnSecondCall(_AgentFetcher):
     @override
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
-    ) -> Sequence[
-        tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
-    ]:
+    ) -> Sequence[FetchResult]:
         if self._called:
             raise RuntimeError("fetching failed")
         self._called = True

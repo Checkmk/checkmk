@@ -274,7 +274,7 @@ def run_checking(
                 plugins.check_plugins,
                 value_store_manager,
                 clusters=hosts_config.clusters,
-                get_agent_output=lambda: serialize_fetched((f[0], f[1]) for f in fetched),
+                get_agent_output=lambda: serialize_fetched((f.source, f.raw_data) for f in fetched),
                 omd_root=cmk.utils.paths.omd_root,
                 debug=debug,
             )
@@ -282,7 +282,7 @@ def run_checking(
                 checks_result = execute_checkmk_checks(
                     hostname=hostname,
                     omd_root=cmk.utils.paths.omd_root,
-                    fetched=((f[0], f[1]) for f in fetched),
+                    fetched=((f.source, f.raw_data) for f in fetched),
                     parser=parser,
                     summarizer=summarizer,
                     section_plugins=SectionPluginMapper(
@@ -293,7 +293,9 @@ def run_checking(
                         section_name=section_name,
                         section_content=raw_data,
                         host_name=hostname,
-                        get_agent_output=lambda: serialize_fetched((f[0], f[1]) for f in fetched),
+                        get_agent_output=lambda: serialize_fetched(
+                            (f.source, f.raw_data) for f in fetched
+                        ),
                     ),
                     check_plugins=check_plugins,
                     inventory_plugins=plugins.inventory_plugins,
@@ -330,7 +332,7 @@ def run_checking(
                 *checks_result,
                 make_timing_results(
                     tracker.duration,
-                    tuple((f[0], f[2]) for f in fetched),
+                    tuple((f.source, f.duration) for f in fetched),
                     perfdata_with_times=loaded_config.check_mk_perfdata_with_times,
                 ),
             ]

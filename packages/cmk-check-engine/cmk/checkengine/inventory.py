@@ -144,7 +144,7 @@ def inventorize_host(
     debug: bool,
 ) -> CheckInventoryTreeResult:
     fetched = fetcher(host_name, ip_address=None)
-    host_sections = parser((f[0], f[1]) for f in fetched)
+    host_sections = parser((f.source, f.raw_data) for f in fetched)
     host_sections_by_host = group_by_host(
         ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
     )

@@ -277,7 +277,7 @@ def _mode_check_discovery(
                     is_cluster=hostname in hosts_config.clusters,
                     cluster_nodes=hosts_config.clusters.get(hostname, ()),
                     params=config_cache.discovery_check_parameters(hostname),
-                    fetched=((f[0], f[1]) for f in fetched),
+                    fetched=((f.source, f.raw_data) for f in fetched),
                     parser=parser,
                     summarizer=summarizer,
                     section_plugins=SectionPluginMapper(
@@ -288,7 +288,9 @@ def _mode_check_discovery(
                         section_name=section_name,
                         section_content=raw_data,
                         host_name=hostname,
-                        get_agent_output=lambda: serialize_fetched((f[0], f[1]) for f in fetched),
+                        get_agent_output=lambda: serialize_fetched(
+                            (f.source, f.raw_data) for f in fetched
+                        ),
                     ),
                     host_label_plugins=HostLabelPluginMapper(
                         discovery_config=discovery_config,
@@ -310,7 +312,7 @@ def _mode_check_discovery(
                 *check_results,
                 make_timing_results(
                     tracker.duration,
-                    tuple((f[0], f[2]) for f in fetched),
+                    tuple((f.source, f.duration) for f in fetched),
                     perfdata_with_times=loaded_config.check_mk_perfdata_with_times,
                 ),
             ]

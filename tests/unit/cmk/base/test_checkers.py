@@ -633,7 +633,7 @@ def test_cmk_fetcher_reports_missing_ip_instead_of_the_fallback_address(
 
     fetched = fetcher(testhost, ip_address=None)
 
-    agent_sources = [(source, res) for source, res, _snapshot in fetched if source.ident == "agent"]
+    agent_sources = [(f.source, f.raw_data) for f in fetched if f.source.ident == "agent"]
     assert len(agent_sources) == 1
     source, res = agent_sources[0]
     assert source.ipaddress is None

@@ -86,10 +86,18 @@ watch([hostFilterType, serviceFilterType], () => {
   metricHandler.metric.value = null
 })
 
-const metricHandler = useMetric(
-  widgetFilterManager.filterHandler.configuredFilters,
-  getMetricFromWidget(props.editWidgetSpec)
-)
+const contextConfiguredFilters = computed((): ConfiguredFilters => {
+  return parseContextConfiguredFilters(props.contextFilters)
+})
+
+const appliedFilters = computed((): ConfiguredFilters => {
+  return squashFilters(
+    contextConfiguredFilters.value,
+    extractConfiguredFilters(widgetFilterManager)
+  )
+})
+
+const metricHandler = useMetric(appliedFilters, getMetricFromWidget(props.editWidgetSpec))
 
 watch([metricType], () => (metricHandler.metric.value = null))
 
@@ -107,10 +115,6 @@ const wizardStages: QuickSetupStageSpec[] = [
   }
 ]
 
-const contextConfiguredFilters = computed((): ConfiguredFilters => {
-  return parseContextConfiguredFilters(props.contextFilters)
-})
-
 const preselectedWidgetType: Ref<string | null> = ref(null)
 const recapAndNext = (selectedWidgetType: string | null) => {
   preselectedWidgetType.value = selectedWidgetType
@@ -124,13 +128,6 @@ const recapAndNext = (selectedWidgetType: string | null) => {
   addFilters.close()
   wizardHandler.next()
 }
-
-const appliedFilters = computed((): ConfiguredFilters => {
-  return squashFilters(
-    contextConfiguredFilters.value,
-    extractConfiguredFilters(widgetFilterManager)
-  )
-})
 
 const handleObjectTypeSwitch = (objectType: string): void => {
   widgetFilterManager.closeSelectionMenu()
@@ -178,6 +175,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
         v-model:metric-handler="metricHandler"
         :widget-configured-filters="widgetFilterManager.getConfiguredFilters()"
         :widget-active-filters="widgetFilterManager.getSelectedFilters()"
+        :applied-filters="appliedFilters"
         :context-filters="contextFilters"
         :is-in-filter-selection-menu-focus="widgetFilterManager.objectTypeIsInFocus"
         :dashboard-features="dashboardFeatures"

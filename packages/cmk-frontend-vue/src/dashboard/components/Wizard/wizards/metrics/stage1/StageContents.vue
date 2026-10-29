@@ -29,6 +29,7 @@ const { _t } = usei18n()
 interface Stage1Props {
   widgetConfiguredFilters: ConfiguredFilters
   widgetActiveFilters: string[]
+  appliedFilters: ConfiguredFilters
   contextFilters: ContextFilters
   isInFilterSelectionMenuFocus: (objectType: ObjectType) => boolean
   dashboardFeatures: DashboardFeatures
@@ -46,12 +47,6 @@ const props = defineProps<Stage1Props>()
 const emit = defineEmits<Emits>()
 
 const gotoNextStage = (preselectedWidgetType: string | null = null) => {
-  /*
-  TODOs:
-  - Filter validation
-  - Return processed data
-  */
-
   const isValid = metricHandler.value.validate()
   if (isValid) {
     emit('goNext', preselectedWidgetType)
@@ -153,7 +148,7 @@ if (!availableMetricTypes.value.includes(metricType.value)) {
       :available-metric-types="availableMetricTypes"
       :host-selection-mode="hostFilterType"
       :service-selection-mode="serviceFilterType"
-      :context="widgetConfiguredFilters"
+      :context="appliedFilters"
     />
   </SectionBlock>
 

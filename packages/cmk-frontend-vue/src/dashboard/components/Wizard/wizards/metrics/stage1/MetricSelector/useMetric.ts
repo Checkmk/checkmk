@@ -14,7 +14,7 @@ export interface UseMetric extends UseValidate {
 }
 
 export const useMetric = (
-  context?: ConfiguredFilters,
+  context?: Ref<ConfiguredFilters>,
   selectedMetric?: string | null
 ): UseMetric => {
   const metric = ref<LabelValueItem | null>(

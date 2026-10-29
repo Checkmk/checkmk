@@ -10,10 +10,12 @@
 
 from __future__ import annotations
 
+import json
+import logging
 import typing
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, override
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
@@ -37,6 +39,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils import paths
+from tests.testlib.unit.gui.gui_session_endpoints import LoggedSecurityEvent
 from tests.testlib.unit.rest_api_client import ClientRegistry, get_client_registry
 from tests.unit.cmk.gui.common_fixtures import (
     create_aut_user_auth_wsgi_app,
@@ -395,3 +398,29 @@ def clients(aut_user_auth_wsgi_app: WebTestAppForCMK, base_without_version: str)
     return get_client_registry(
         WebTestAppRequestHandler(aut_user_auth_wsgi_app), base_without_version
     )
+
+
+class _SecurityEventCollector(logging.Handler):
+    def __init__(self) -> None:
+        super().__init__()
+        self.events: list[LoggedSecurityEvent] = []
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        logged = json.loads(record.getMessage())
+        self.events.append(LoggedSecurityEvent(logged["summary"], logged["details"]))
+
+
+@pytest.fixture(name="security_events")
+def fixture_security_events() -> Iterator[list[LoggedSecurityEvent]]:
+    """The events written to the security log while the test runs."""
+    collector = _SecurityEventCollector()
+    security_logger = logging.getLogger("cmk_security")
+    previous_level = security_logger.level
+    security_logger.addHandler(collector)
+    security_logger.setLevel(logging.INFO)
+    try:
+        yield collector.events
+    finally:
+        security_logger.removeHandler(collector)
+        security_logger.setLevel(previous_level)

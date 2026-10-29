@@ -28,7 +28,7 @@ class OAuthAuthorizationServerMetadata(BaseModel):
     registration_endpoint: str
     token_endpoint: str
     response_types_supported: list[str] = ["code"]
-    grant_types_supported: list[str] = ["authorization_code"]
+    grant_types_supported: list[str] = ["authorization_code", "refresh_token"]
     token_endpoint_auth_methods_supported: list[str] = ["none"]
     code_challenge_methods_supported: list[str] = ["S256"]
     scopes_supported: list[str] = list(SUPPORTED_SCOPES)

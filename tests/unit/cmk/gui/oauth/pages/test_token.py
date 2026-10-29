@@ -6,21 +6,28 @@
 import base64
 import hashlib
 import urllib.parse
+from collections.abc import Iterator
+from datetime import datetime, timedelta, UTC
+from http import HTTPStatus
 
 import pytest
+import time_machine
 from flask import Flask
 from pytest_mock import MockerFixture
 
 from cmk.ccc.exceptions import MKTimeout
+from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.http import request, response
 from cmk.gui.oauth.pages._token import OAuthTokenPage
 from cmk.gui.oauth.store._auth_code_store import AuthCodeRecord, AuthCodeStore
 from cmk.gui.oauth.store.client_store import get_client_store
-from cmk.gui.oauth.token.token_store import get_token_store
+from cmk.gui.oauth.token.token_store import get_token_store, IssuedTokens
 from cmk.gui.pages import PageContext
-from cmk.gui.scopes import format_scopes
+from cmk.gui.scopes import format_scopes, ScopeId
 from cmk.utils.redis import disable_redis
+from tests.testlib.unit.gui.gui_session_endpoints import LoggedSecurityEvent
+from tests.unit.cmk.gui.users import create_and_destroy_user
 
 _FORM_CONTENT_TYPE = "application/x-www-form-urlencoded"
 # code_verifier is the RFC 7636 appendix B example value (43 characters);
@@ -234,7 +241,7 @@ class TestOAuthTokenPage:
             assert response.status_code == 400
             assert response.json == {"error": "invalid_request"}
 
-    @pytest.mark.parametrize("grant_type", ["refresh_token", "client_credentials", "no-such-grant"])
+    @pytest.mark.parametrize("grant_type", ["client_credentials", "no-such-grant"])
     def test_rejects_unsupported_grant_types(self, flask_app: Flask, grant_type: str) -> None:
         with flask_app.test_request_context(method="POST", data={"grant_type": grant_type}):
             flask_app.preprocess_request()
@@ -265,7 +272,16 @@ class TestOAuthTokenPage:
             assert response.json == {"error": "invalid_request"}
 
     @pytest.mark.parametrize(
-        "param", ["grant_type", "code", "client_id", "code_verifier", "redirect_uri", "resource"]
+        "param",
+        [
+            "grant_type",
+            "code",
+            "client_id",
+            "code_verifier",
+            "redirect_uri",
+            "resource",
+            "refresh_token",
+        ],
     )
     def test_rejects_a_duplicated_parameter(self, flask_app: Flask, param: str) -> None:
         # Appended twice: redirect_uri/resource are not in _VALID_FORM, so
@@ -560,3 +576,177 @@ class TestOAuthTokenPage:
             OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
 
             assert response.headers.get("Cache-Control") == "no-store"
+
+
+_GRANT_LIFETIME = timedelta(days=365)
+
+
+@pytest.fixture(name="alice")
+def fixture_alice(load_config: Config) -> Iterator[UserId]:
+    # A refresh re-checks the grant's user, so it has to exist for real.
+    with create_and_destroy_user(username="alice", config=load_config) as (user_id, _password):
+        yield user_id
+
+
+def _start_grant(client_id: str = "test-client", user_id: UserId = UserId("alice")) -> IssuedTokens:
+    now = datetime.now(UTC)
+    with get_token_store() as store:
+        started = store.start_grant(
+            user_id,
+            resource="https://host/mysite/check_mk/mcp",
+            scope=frozenset({ScopeId.READ, ScopeId.WRITE}),
+            client_id=client_id,
+            expires_at=now + _GRANT_LIFETIME,
+            refresh_token_expires_at=now + timedelta(days=30),
+            access_token_expires_at=now + timedelta(hours=48),
+        )
+    assert started.is_ok()
+    return started.ok
+
+
+def _refresh(
+    flask_app: Flask, refresh_token: str, client_id: str = "test-client"
+) -> tuple[int, object]:
+    with flask_app.test_request_context(
+        method="POST",
+        data={
+            "grant_type": "refresh_token",
+            "refresh_token": refresh_token,
+            "client_id": client_id,
+        },
+    ):
+        flask_app.preprocess_request()
+        OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+        return response.status_code, response.json
+
+
+def _refreshed_tokens(flask_app: Flask, refresh_token: str) -> tuple[str, str]:
+    status, body = _refresh(flask_app, refresh_token)
+    assert status == HTTPStatus.OK
+    assert isinstance(body, dict)
+    return body["access_token"], body["refresh_token"]
+
+
+@pytest.mark.usefixtures("request_context", "alice")
+class TestRefreshTokenGrant:
+    def test_a_refresh_yields_an_access_token_of_the_original_authorization(
+        self, flask_app: Flask
+    ) -> None:
+        refresh_token = _start_grant().refresh
+
+        status, body = _refresh(flask_app, refresh_token)
+
+        assert status == HTTPStatus.OK
+        assert isinstance(body, dict)
+        assert body["token_type"] == "Bearer"
+        assert body["scope"] == "read write"
+        with get_token_store() as store:
+            stored = store.get_by_token(body["access_token"])
+        assert stored is not None
+        assert stored.is_valid()
+        assert (stored.user_id, stored.client_id, stored.scope, stored.resource) == (
+            "alice",
+            "test-client",
+            frozenset({ScopeId.READ, ScopeId.WRITE}),
+            "https://host/mysite/check_mk/mcp",
+        )
+
+    @pytest.mark.parametrize("param", ["refresh_token", "client_id"])
+    def test_rejects_a_missing_required_parameter(self, flask_app: Flask, param: str) -> None:
+        form = {
+            "grant_type": "refresh_token",
+            "refresh_token": _start_grant().refresh,
+            "client_id": "test-client",
+        }
+        del form[param]
+        with flask_app.test_request_context(method="POST", data=form):
+            flask_app.preprocess_request()
+            OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+
+            assert response.status_code == HTTPStatus.BAD_REQUEST
+            assert response.json == {"error": "invalid_request"}
+
+    def test_a_refresh_token_presented_by_another_client_is_rejected_and_stays_usable(
+        self, flask_app: Flask
+    ) -> None:
+        refresh_token = _start_grant().refresh
+
+        assert _refresh(flask_app, refresh_token, client_id="other-client") == (
+            HTTPStatus.BAD_REQUEST,
+            {"error": "invalid_grant"},
+        )
+        status, _body = _refresh(flask_app, refresh_token)
+
+        assert status == HTTPStatus.OK
+
+    def test_rejects_an_unknown_refresh_token(self, flask_app: Flask) -> None:
+        assert _refresh(flask_app, "cmkr1.never-issued") == (
+            HTTPStatus.BAD_REQUEST,
+            {"error": "invalid_grant"},
+        )
+
+    def test_rejects_a_refresh_token_past_its_idle_timeout(self, flask_app: Flask) -> None:
+        refresh_token = _start_grant().refresh
+
+        with time_machine.travel(datetime.now(UTC) + timedelta(days=31)):
+            assert _refresh(flask_app, refresh_token) == (
+                HTTPStatus.BAD_REQUEST,
+                {"error": "invalid_grant"},
+            )
+
+    def test_rejects_a_refresh_token_of_a_deleted_user(
+        self, flask_app: Flask, load_config: Config
+    ) -> None:
+        with create_and_destroy_user(username="bob", config=load_config) as (bob, _password):
+            refresh_token = _start_grant(user_id=bob).refresh
+
+        assert _refresh(flask_app, refresh_token) == (
+            HTTPStatus.BAD_REQUEST,
+            {"error": "invalid_grant"},
+        )
+        with create_and_destroy_user(username="bob", config=load_config):
+            assert _refresh(flask_app, refresh_token)[0] == HTTPStatus.BAD_REQUEST
+
+    def test_rejects_a_refresh_token_of_a_locked_user(
+        self, flask_app: Flask, load_config: Config
+    ) -> None:
+        with create_and_destroy_user(
+            username="bob", custom_attrs={"locked": True}, config=load_config
+        ) as (bob, _password):
+            refresh_token = _start_grant(user_id=bob).refresh
+
+            assert _refresh(flask_app, refresh_token) == (
+                HTTPStatus.BAD_REQUEST,
+                {"error": "invalid_grant"},
+            )
+        with create_and_destroy_user(username="bob", config=load_config):
+            assert _refresh(flask_app, refresh_token)[0] == HTTPStatus.BAD_REQUEST
+
+    def test_replaying_a_used_refresh_token_ends_the_whole_grant(self, flask_app: Flask) -> None:
+        refresh_token = _start_grant().refresh
+        access_token, successor = _refreshed_tokens(flask_app, refresh_token)
+
+        assert _refresh(flask_app, refresh_token) == (
+            HTTPStatus.BAD_REQUEST,
+            {"error": "invalid_grant"},
+        )
+
+        assert _refresh(flask_app, successor) == (
+            HTTPStatus.BAD_REQUEST,
+            {"error": "invalid_grant"},
+        )
+        with get_token_store() as store:
+            assert store.get_by_token(access_token) is None
+
+    def test_replaying_a_used_refresh_token_is_logged_as_a_security_event(
+        self, flask_app: Flask, security_events: list[LoggedSecurityEvent]
+    ) -> None:
+        refresh_token = _start_grant().refresh
+        _refreshed_tokens(flask_app, refresh_token)
+
+        _refresh(flask_app, refresh_token)
+
+        assert [
+            (e.summary, e.details["user"], e.details["client_id"], e.details["remote_ip"])
+            for e in security_events
+        ] == [("oauth refresh token reused, grant revoked", "alice", "test-client", None)]

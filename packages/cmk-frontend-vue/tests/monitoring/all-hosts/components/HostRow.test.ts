@@ -125,12 +125,13 @@ test('offers no graphs link for a host without graphs', () => {
   ).not.toBeInTheDocument()
 })
 
-test('offers no graphs link on a read-only row, which opens nothing from its name', () => {
+test('links to the graphs on a read-only row too, as on a dashboard', () => {
   mountRow(makeHost({ graphs_link: GRAPHS_LINK }), makeTableRow(), { readOnly: true })
 
-  expect(
-    screen.queryByRole('link', { name: 'Show the graphs of host web-1' })
-  ).not.toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Show the graphs of host web-1' })).toHaveAttribute(
+    'href',
+    GRAPHS_LINK
+  )
 })
 
 test('previews the graphs of the host itself, from its own site', async () => {

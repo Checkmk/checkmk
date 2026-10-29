@@ -143,9 +143,9 @@ const lastStateChange = computed(() =>
     @click="emit('open', row)"
   >
     <!-- Every name keeps the slot, so the names line up whether their host has graphs or not.
-         A read-only row, as on a dashboard, opens nothing from its name, and a shared dashboard
-         could not load the preview. -->
-    <template v-if="!readOnly" #aside>
+         A read-only row on a dashboard still links to the graphs, as the legacy views do; a
+         shared dashboard is sent no link, as its viewer could not open the graphs. -->
+    <template #aside>
       <GraphsLink v-if="row.graphs_link !== undefined" :host="hostRef" :href="row.graphs_link" />
     </template>
   </StringCell>

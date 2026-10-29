@@ -424,11 +424,16 @@ class HostTable:
         folders: MonitorFolders,
         *,
         tag_groups: Set[str] = frozenset(),
+        row_fields: Set[HostOptionalField] = frozenset(),
     ) -> None:
         """``tag_groups`` are the IDs of the configured tag groups, which the dashboard filter for
-        tags needs. A table without them reports that filter instead of applying it."""
+        tags needs. A table without them reports that filter instead of applying it.
+
+        ``row_fields`` are read by :meth:`rows` for every row, whichever columns are shown, for
+        what a row offers beside its columns."""
         self._folders = folders
         self._tag_groups = tag_groups
+        self._row_fields = frozenset(row_fields)
         self._site_ids = frozenset(site_configs)
         self._customer_of = customer_resolver(sites=site_configs)
         self._sites = MonitorSites(
@@ -528,7 +533,7 @@ class HostTable:
             query="",
             sorters=HOST_TABLE.sorters(columns, sort),
             scoped_filter=translation.filter,
-            fields=HOST_TABLE.fields(columns),
+            fields=HOST_TABLE.fields(columns) | self._row_fields,
         )
         return TableRows(
             rows=response.hosts,

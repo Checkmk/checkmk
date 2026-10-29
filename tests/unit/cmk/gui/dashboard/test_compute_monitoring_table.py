@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from http import HTTPStatus
 from typing import get_args
 
 import pytest
 
+from cmk.ccc.user import UserId
 from cmk.gui.dashboard.api.model.widget_content.monitoring_table import MonitoringTableContent
 from cmk.gui.dashboard.dashlet.dashlets.monitoring_table import MonitoringTableDashlet
 from cmk.gui.dashboard.monitoring_tables import MONITORING_TABLES
@@ -19,6 +20,8 @@ from tests.testlib.unit.rest_api_client import ClientRegistry, Response
 from tests.unit.cmk.gui.helpers.dashboard_api_test_helper import (
     create_dashboard_payload,
     create_widget,
+    dashboard_widget_token,
+    SavedWidget,
 )
 
 _CONTENT: dict[str, object] = {
@@ -143,6 +146,91 @@ def test_a_site_that_does_not_answer_is_reported(
         response = clients.DashboardClient.compute_widget("compute-monitoring-table", _body({}))
 
     assert response.json["value"]["unreachable_sites"] == ["remote"]
+
+
+_HOST_WITH_GRAPHS: dict[str, object] = {
+    "name": "heute",
+    "state": 0,
+    "has_been_checked": 1,
+    "acknowledged": 0,
+    "scheduled_downtime_depth": 0,
+    "notifications_enabled": 1,
+    "comments": [],
+    "modified_attributes_list": [],
+    "active_checks_enabled": 1,
+    "accept_passive_checks": 1,
+    "in_notification_period": 1,
+    "in_service_period": 1,
+    "in_check_period": 1,
+    "is_flapping": 0,
+    "staleness": 0.0,
+    "pnpgraph_present": 1,
+}
+
+
+def _compute_host_with_graphs(
+    clients: ClientRegistry,
+    live: MockLiveStatusConnection,
+    body: dict[str, object],
+    *,
+    last_columns: str,
+    headers: dict[str, str] | None = None,
+) -> Response:
+    """Compute the widget, and expect the query for its rows to end its columns with the given.
+
+    That is where an optional column the table reads for every row is put."""
+    live.set_sites(["NO_SITE"])
+    live.add_table("hosts", [_HOST_WITH_GRAPHS])
+    live.expect_query("GET hosts\nStats: state >= 0")
+    live.expect_query(
+        [
+            "GET hosts",
+            f"Columns: ... {last_columns}",
+            "OrderBy: name asc natural",
+            "Limit: 100",
+        ],
+        match_type="ellipsis",
+    )
+    with live:
+        return clients.DashboardClient.compute_widget(
+            "compute-monitoring-table", body, headers=headers
+        )
+
+
+@pytest.fixture(name="saved_table_widget")
+def fixture_saved_table_widget(
+    clients: ClientRegistry, with_automation_user: tuple[UserId, str]
+) -> Iterator[SavedWidget]:
+    with dashboard_widget_token(clients, with_automation_user[0], _CONTENT) as saved:
+        yield saved
+
+
+def test_a_host_with_graphs_links_to_them_whichever_columns_are_shown(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    response = _compute_host_with_graphs(
+        clients, mock_livestatus, _body({}), last_columns="staleness pnpgraph_present"
+    )
+
+    assert [row.get("graphs_link") for row in response.json["value"]["rows"]] == [
+        "view.py?view_name=host_graphs&site=NO_SITE&host=heute"
+    ]
+
+
+def test_a_shared_dashboard_links_no_host_to_its_graphs(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    saved_table_widget: SavedWidget,
+) -> None:
+    response = _compute_host_with_graphs(
+        clients,
+        mock_livestatus,
+        {"source": saved_table_widget.source},
+        last_columns="is_flapping staleness",
+        headers=saved_table_widget.headers,
+    )
+
+    assert [row.get("graphs_link") for row in response.json["value"]["rows"]] == [None]
 
 
 def test_an_unknown_sort_column_is_400(clients: ClientRegistry) -> None:

@@ -297,6 +297,7 @@ class DeploymentModeProvider:
 
 
 def _is_classic_file_deployment(agconf: AgentConfig) -> bool:
+    # TODO CMK-40619: without "classic_file_deployment", hosts get the single directory deployment.
     return agconf.get("customize_agent_package") is None
 
 

@@ -300,6 +300,15 @@ agent_config['citrix_xenapp'] = [
 
 agent_config = locals().setdefault('agent_config', {})
 
+agent_config.setdefault('classic_file_deployment', [])
+
+agent_config['classic_file_deployment'] = [
+{'id': 'f4aede4a-7b45-401c-9e2d-98b269983ba6', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+] + agent_config['classic_file_deployment']
+
+
+agent_config = locals().setdefault('agent_config', {})
+
 agent_config.setdefault('cmk_update_agent', [])
 
 agent_config['cmk_update_agent'] = [

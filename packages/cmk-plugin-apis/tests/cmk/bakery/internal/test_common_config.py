@@ -76,6 +76,7 @@ def test_get_unix_agent_paths_keeper_single_directory() -> None:
 
 
 def test_multi_directory_all_paths() -> None:
+    """CMK-40617 AC3, AC6"""
     agconf = {
         "agent_paths": {
             "bin": "/opt/cmk/bin",
@@ -96,6 +97,7 @@ def test_multi_directory_all_paths() -> None:
 
 
 def test_single_directory_custom_install() -> None:
+    """CMK-40617 AC3, AC4, AC6"""
     agconf = {
         "agent_paths": {
             "bin": "/irrelevant/bin",
@@ -126,6 +128,45 @@ def test_single_directory_custom_install() -> None:
         assert mapping[logical_path] == expected_path, (
             f"{logical_path}: {mapping[logical_path]} != {expected_path}"
         )
+
+
+def test_classic_file_deployment_selects_the_agent_paths() -> None:
+    """CMK-40617 AC1, AC3, AC4, AC6"""
+    provider = TargetPathsProvider(
+        {
+            "agent_paths": {
+                "bin": "/opt/cmk/bin",
+                "config": "/opt/cmk/config",
+                "lib": "/opt/cmk/lib",
+                "var": "/opt/cmk/var",
+            },
+            "classic_file_deployment": {},
+        }
+    )
+
+    assert provider.get_installdir() is None
+    assert provider.get_target_path_mapping()[LogicalPath.BIN] == Path("/opt/cmk/bin")
+
+
+def test_customize_agent_package_wins_over_classic_file_deployment() -> None:
+    """CMK-40617 AC3, AC4, AC6"""
+    provider = TargetPathsProvider(
+        {
+            "agent_paths": {
+                "bin": "/irrelevant/bin",
+                "config": "/irrelevant/config",
+                "lib": "/irrelevant/lib",
+                "var": "/irrelevant/var",
+            },
+            "classic_file_deployment": {},
+            "customize_agent_package": {"directory": {"installation_directory": "/custom/agent"}},
+        }
+    )
+
+    assert provider.get_installdir() == Path("/custom/agent/default")
+    assert provider.get_target_path_mapping()[LogicalPath.BIN] == Path(
+        "/custom/agent/default/package/bin"
+    )
 
 
 def test_multi_directory_no_tmp() -> None:
@@ -197,6 +238,30 @@ def test_single_directory_deployment_ignores_the_legacy_agent_user() -> None:
 
     assert provider.get_agent_user() == "root"
     assert provider.get_agent_controller_user() == "cmk-agent"
+
+
+def test_classic_file_deployment_applies_the_legacy_agent_user() -> None:
+    """CMK-40617 AC4, AC6"""
+    provider = DeploymentModeProvider(
+        {"agent_user": {"user": "legacyuser"}, "classic_file_deployment": {}}
+    )
+
+    assert provider.get_agent_user() == "legacyuser"
+
+
+def test_customize_agent_package_wins_over_classic_file_deployment_for_the_agent_user() -> None:
+    """CMK-40617 AC4, AC6"""
+    provider = DeploymentModeProvider(
+        {
+            "agent_user": {"user": "legacyuser"},
+            "classic_file_deployment": {},
+            "customize_agent_package": {
+                "directory": {"installation_directory": "/opt/checkmk/agent"}
+            },
+        }
+    )
+
+    assert provider.get_agent_user() == "root"
 
 
 def test_deployment_mode_provider_root_mode() -> None:

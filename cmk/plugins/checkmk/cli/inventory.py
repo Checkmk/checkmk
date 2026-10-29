@@ -20,6 +20,7 @@ import cmk.utils.paths
 from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.checkers import CMKFetcher, CMKParser, CMKSummarizer, SectionPluginMapper
+from cmk.base.checking import mandatory_ip_lookup
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core.active_config_layout import (
@@ -27,7 +28,7 @@ from cmk.base.core.active_config_layout import (
     RELATIVE_PATH_TRUSTED_CAS,
 )
 from cmk.base.errorhandling import create_section_crash_dump, RecordingFetcher
-from cmk.base.modes.check_mk import execute_active_check_inventory, mandatory_ip_lookup
+from cmk.base.inventory import execute_active_check_inventory
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName

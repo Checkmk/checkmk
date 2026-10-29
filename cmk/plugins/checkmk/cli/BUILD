@@ -14,10 +14,11 @@ py_library(
     ],
     deps = [
         "//cmk/base:app",
+        "//cmk/base:checking",
         "//cmk/base:dump-host",
+        "//cmk/base:inventory",
         "//cmk/base/config",
         "//cmk/base/core",
-        "//cmk/base/modes",
         "//cmk/piggyback:backend",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",

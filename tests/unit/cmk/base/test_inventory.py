@@ -13,7 +13,7 @@ import pytest
 
 import cmk.ccc.resulttype as result
 from cmk.agent_based.v1 import Attributes, TableRow
-from cmk.base.modes.check_mk import (
+from cmk.base.inventory import (
     _get_save_tree_actions,
     _SaveTreeActions,
     execute_active_check_inventory,

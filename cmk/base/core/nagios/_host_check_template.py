@@ -14,9 +14,9 @@ import cmk.utils.log
 import cmk.utils.password_store
 from cmk.base import config
 from cmk.base.app import make_app
+from cmk.base.checking import run_checking
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS, RELATIVE_PATH_TRUSTED_CAS
 from cmk.base.core.nagios import HostCheckConfig
-from cmk.base.modes.check_mk import run_checking
 from cmk.ccc.config_path import detect_latest_config_path
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.checker_helper_config import load_packed_config

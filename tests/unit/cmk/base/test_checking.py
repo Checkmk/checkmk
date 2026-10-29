@@ -5,7 +5,7 @@
 
 import socket
 
-from cmk.base.modes.check_mk import mandatory_ip_lookup
+from cmk.base.checking import mandatory_ip_lookup
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.utils import ip_lookup
 

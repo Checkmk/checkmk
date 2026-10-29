@@ -508,6 +508,18 @@ def test_a_refresh_token_is_not_stored_in_plaintext(
     assert refresh_token not in stored
 
 
+def test_an_access_token_is_not_accepted_as_a_refresh_token(store: TokenStore) -> None:
+    issued = _start_grant(store)
+
+    assert store.get_refresh_token(issued.access) is None
+
+
+def test_a_refresh_token_is_not_accepted_as_an_access_token(store: TokenStore) -> None:
+    issued = _start_grant(store)
+
+    assert store.get_by_token(issued.refresh) is None
+
+
 def test_start_grant_rejects_an_unregistered_client(store: TokenStore) -> None:
     now = datetime.now(UTC)
     issued = store.start_grant(
@@ -563,6 +575,7 @@ def test_an_access_token_issued_shortly_before_the_grant_ends_ends_with_it(
     with time_machine.travel(started_at + timedelta(days=19, hours=12), tick=False):
         successor = _rotate(store, refresh_token)
     assert successor is not None
+    assert successor.expires_in == 12 * 3600
 
     record = store.get_by_token(successor.access)
     assert record is not None

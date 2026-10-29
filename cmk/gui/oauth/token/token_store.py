@@ -80,8 +80,8 @@ def _require_grant_arguments(user_id: UserId, client_id: str, scope: frozenset[S
 class UnknownClient:
     """The client_id does not (or no longer) reference a registered client.
 
-    Returned by issue_token when the foreign key on tokens.client_id rejects
-    the insert -- e.g. the client was deleted between the authorization
+    Returned by issue_token and start_grant when the foreign key on client_id
+    rejects the insert -- e.g. the client was deleted between the authorization
     request and the code redemption.
     """
 
@@ -93,8 +93,7 @@ class IssuedAccessToken:
 
 
 @dataclass(frozen=True, slots=True)
-class IssuedTokens:
-    access: str
+class IssuedTokens(IssuedAccessToken):
     refresh: str
 
 
@@ -421,16 +420,21 @@ class TokenStore:
         self._purge_expired_access_tokens(now)
         self._purge_expired_refresh_tokens(now)
         access_token = _mint_token(_ACCESS_TOKEN_PREFIX)
-        self._connection.execute(
+        (stored_expires_at,) = self._connection.execute(
             """
             INSERT INTO tokens
                 (token_hash, user_id, issued_at, expires_at, resource, scope, client_id, grant_id)
             SELECT ?, user_id, ?, MIN(?, expires_at), resource, scope, client_id, grant_id
             FROM grants WHERE grant_id = ?
+            RETURNING expires_at
             """,
             (_access_token_hash(access_token), now, access_token_expires_at, grant_id),
+        ).fetchone()
+        return IssuedTokens(
+            access=access_token,
+            expires_in=stored_expires_at - now,
+            refresh=refresh_token,
         )
-        return IssuedTokens(access=access_token, refresh=refresh_token)
 
     def _purge_expired_access_tokens(self, now: int) -> None:
         self._connection.execute("DELETE FROM tokens WHERE expires_at <= ?", (now,))

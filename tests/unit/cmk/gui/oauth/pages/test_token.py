@@ -83,6 +83,8 @@ class TestOAuthTokenPage:
             access_token = response.json["access_token"]
             assert isinstance(access_token, str)
             assert access_token
+            with get_token_store() as store:
+                assert store.get_refresh_token(response.json["refresh_token"]) is not None
 
     @pytest.mark.usefixtures("clean_redis")
     def test_the_minted_token_carries_the_scope_the_code_was_bound_to(

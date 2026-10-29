@@ -68,7 +68,7 @@ TO_SIGN_SCRIPTS = [
     "arcserve_backup.ps1",
     "citrix_farm.ps1",
     "//cmk/plugins/citrix/agents:citrix_licenses.ps1",
-    "citrix_xenapp.ps1",
+    "//cmk/plugins/citrix/agents:citrix_xenapp.ps1",
     "//cmk/plugins/hyperv/agents:hyperv_vms_guestinfos.ps1",
     "//cmk/plugins/hyperv/agents:hyperv_vms.ps1",
     "//cmk/plugins/collection/agents:iis_app_pool_state.ps1",

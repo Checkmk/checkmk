@@ -6,7 +6,6 @@ import json
 import logging
 import os
 import subprocess
-from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -28,6 +27,7 @@ from tests.testlib.common.version import (
     get_min_version,
     TypeCMKEdition,
 )
+from tests.testlib.system.edition_setup import edition_setup
 from tests.testlib.system.site import Site, SiteFactory
 
 MODULE_PATH = Path(__file__).parent.resolve()
@@ -90,24 +90,11 @@ def create_site(base_package: CMKPackageInfo) -> Site:
     assert not site.exists(), "Trying to install existing site!"
     logger.info("Creating new site")
 
-    is_cloud = base_package.edition.is_cloud_edition()
-    if is_cloud:
-        from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-            create_cloud_initial_config,
-        )
-
-        create_cloud_initial_config()
+    setup = edition_setup(base_package.edition)
+    setup.prepare_host(Path("/"))
 
     site = site_factory.get_site(site_name)
-    if is_cloud:
-        from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-            cloud_environment,
-        )
-
-        ctx: AbstractContextManager[object] = cloud_environment(site.apache_port)
-    else:
-        ctx = nullcontext()
-    with ctx:
+    with setup.site_environment(site):
         site_factory.initialize_site(site, auto_restart_httpd=True)
 
     return site

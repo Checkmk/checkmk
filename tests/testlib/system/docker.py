@@ -42,6 +42,7 @@ from tests.testlib.common.version import (
     edition_from_env,
     version_from_env,
 )
+from tests.testlib.system.edition_setup import edition_setup
 from tests.testlib.system.openapi_session import (
     AgentReceiverApiSession,
     APIVersion,
@@ -381,12 +382,7 @@ class CheckmkApp:
                 " to fix this, then restart your computer and try again."
             ) from e
 
-        if self.package_info.edition.is_cloud_edition():
-            from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-                create_cloud_initial_config,
-            )
-
-            create_cloud_initial_config(root=Path(cse_config_root))
+        edition_setup(self.package_info.edition).prepare_host(cse_config_root)
 
         try:
             if self.name is None:

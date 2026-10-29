@@ -11,7 +11,7 @@
 import logging
 from collections import defaultdict
 from collections.abc import Iterator
-from contextlib import AbstractContextManager
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -52,6 +52,7 @@ from tests.system.gui.testlib.playwright.pom.setup.licensing import Licensing
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils2 import is_cleanup_enabled, run
 from tests.testlib.pytest_helpers.registration import register_pytest_plugins
+from tests.testlib.system.edition_setup import edition_setup
 from tests.testlib.system.emails import EmailManager
 from tests.testlib.system.notifications import (
     create_host,
@@ -104,29 +105,15 @@ def _site_factory() -> SiteFactory:
 @pytest.fixture(name="test_site", scope="session")
 def fixture_test_site(request: pytest.FixtureRequest, site_factory: SiteFactory) -> Iterator[Site]:
     """Return the central Checkmk site object."""
-    is_cloud = site_factory.edition.is_cloud_edition()
-    if is_cloud:
-        from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-            create_cloud_initial_config,
-        )
-
-        create_cloud_initial_config()
+    setup = edition_setup(site_factory.edition)
+    setup.prepare_host(Path("/"))
     with exit_pytest_on_exceptions(
         exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
     ):
         yield from site_factory.get_test_site(
             name="central",
-            lifecycle_wrapper=_cloud_lifecycle_wrapper if is_cloud else None,
+            lifecycle_wrapper=setup.site_environment,
         )
-
-
-def _cloud_lifecycle_wrapper(site: Site) -> AbstractContextManager[None]:
-    from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-        cloud_environment,
-    )
-
-    ctx: AbstractContextManager[None] = cloud_environment(site.apache_port)
-    return ctx
 
 
 @pytest.fixture(name="remote_site_wato_disabled")

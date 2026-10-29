@@ -16,18 +16,8 @@ import pytest
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import run
 from tests.testlib.common.version import CMKPackageInfo, edition_from_env, version_from_env
+from tests.testlib.system.edition_setup import edition_setup
 from tests.testlib.system.site import Site, SiteFactory
-
-
-def _ensure_cloud_initial_config() -> None:
-    """Create Checkmk Cloud config files needed for cloud-edition sites to start."""
-    if not edition_from_env().is_cloud_edition():
-        return
-    from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-        create_cloud_initial_config,
-    )
-
-    create_cloud_initial_config()
 
 
 def _get_orphaned_versions() -> list[str]:
@@ -279,7 +269,7 @@ def test_run_omd_backup_and_omd_restore_empty() -> None:
     restored_site: Site | None = None
     try:
         # run the backup
-        _ensure_cloud_initial_config()
+        edition_setup(package.edition).prepare_host(Path("/"))
         restored_site = site_factory.get_site(restored_site_name, create=True)
         site_factory.backup_site(restored_site_name, backup_path, no_past=True)
         assert backup_path.stat().st_size > 0, "Backup file was not created."
@@ -315,7 +305,7 @@ def test_run_omd_create_welcome_message() -> None:
     site_factory = SiteFactory(package=package, prefix="")
     site: Site | None = None
     try:
-        _ensure_cloud_initial_config()
+        edition_setup(package.edition).prepare_host(Path("/"))
         site = site_factory.get_site("test_create_site", create=False)
         assert not site.exists()
         site.create()
@@ -334,7 +324,7 @@ def test_run_omd_init() -> None:
     site_factory = SiteFactory(package=package, prefix="")
     site = None
     try:
-        _ensure_cloud_initial_config()
+        edition_setup(package.edition).prepare_host(Path("/"))
         site = site_factory.get_site("test_init_site")
         run(["omd", "-V", package.version_directory(), "disable", site.id], sudo=True)
         run(["omd", "-V", package.version_directory(), "--force", "init", site.id], sudo=True)

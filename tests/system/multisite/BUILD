@@ -38,7 +38,6 @@ py_library(
             "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
             "//non-free/tests/testlib/system:data_backend",
             "//non-free/tests/testlib/system:opentelemetry",
-            "//non-free/tests/testlib/system/cloud",
         ],
         "//:gpl_repo": [],
     }),

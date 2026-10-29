@@ -7,6 +7,7 @@
 #include <ranges>
 
 #include "common/wtools.h"
+#include "eventlog/eventlogbase.h"
 #include "providers/logwatch_event.h"
 #include "providers/logwatch_event_details.h"
 #include "tools/_misc.h"
@@ -1119,44 +1120,95 @@ logwatch:
     EXPECT_TRUE(is_found_stamp(WriteStampReadEventLog(stamp)));
 }
 
-///  Test is disabled because it is VERY LONG
-TEST(LogWatchEventTest, TestFilterUsers_DISABLED) {
-    const auto config = [](bool yes_no) {
+namespace {
+constexpr const wchar_t *kBySystemMessage =
+    L"watest TestFilterUsers record by SYSTEM";
+constexpr const wchar_t *kByNoUserMessage =
+    L"watest TestFilterUsers record by no user";
+
+/// Writes a warning recorded by SYSTEM and one recorded by no user to the
+/// Application log and returns what the section shows of the new records.
+std::string WriteUsersReadEventLog(PSID system_sid) {
+    const auto log = evl::OpenEvl(L"Application", false);
+    const auto last_before = log->getLastRecordId();
+    LogWatchEvent lwe;
+    lwe.loadConfig();
+    lwe.generateContent();
+    // Pass the SIDs explicitly: the user running the tests differs between
+    // machines.
+    EXPECT_EQ(tst::WriteApplicationLogRecord(EVENTLOG_WARNING_TYPE, system_sid,
+                                             kBySystemMessage),
+              ERROR_SUCCESS);
+    EXPECT_EQ(tst::WriteApplicationLogRecord(EVENTLOG_WARNING_TYPE, nullptr,
+                                             kByNoUserMessage),
+              ERROR_SUCCESS);
+
+    // The event log service may show a record only some time after it is
+    // written.
+    const auto own_records_visible = [&log, from = last_before + 1] {
+        log->seek(from);
+        int count = 0;
+        while (true) {
+            const evl::EventLogRecordBase::ptr record{log->readRecord()};
+            if (!record) {
+                return count >= 2;
+            }
+            if (record->source() == tst::kOwnEventSource) {
+                ++count;
+            }
+        }
+    };
+    EXPECT_TRUE(
+        tst::WaitForSuccessSilent(std::chrono::seconds{5}, own_records_visible))
+        << "the records written are not in the log";
+    return lwe.generateContent();
+}
+}  // namespace
+
+TEST(LogWatchEventTest, TestFilterUsers) {
+    const auto config = [](bool vista_api) {
         return fmt::format(R"(
 global:
     enabled: yes
     sections: logwatch
 logwatch:
     enabled: yes
-    sendall: yes
+    sendall: no
     vista_api: {}
     logfile: #
-        - 'System': warn nocontext
+        - 'Application': warn nocontext
         - '*': off nocontext
     filter_users:
 )",
-                           yes_no ? "yes" : "no");
+                           vista_api ? "yes" : "no");
     };
-    for (auto vista : {false, true}) {
+    BYTE system_sid[SECURITY_MAX_SID_SIZE];
+    DWORD sid_size = sizeof(system_sid);
+    ASSERT_TRUE(::CreateWellKnownSid(WinLocalSystemSid, nullptr, system_sid,
+                                     &sid_size));
+    const auto by_system = wtools::ToUtf8(kBySystemMessage);
+    const auto by_no_user = wtools::ToUtf8(kByNoUserMessage);
+    for (auto vista_api : {false, true}) {
+        SCOPED_TRACE(vista_api ? "vista_api: yes" : "vista_api: no");
         auto temp_fs = tst::TempCfgFs::CreateNoIo();
-        auto cfg = config(vista);
+        const auto cfg = config(vista_api);
+
         ASSERT_TRUE(temp_fs->loadContent(cfg));
-        LogWatchEvent lwe;
-        lwe.loadConfig();
-        const auto all = lwe.generateContent();
-        size_t all_count = rs::count(all, '\n');
-        ASSERT_TRUE(temp_fs->loadContent(cfg + "        - 'System': ;;SYSTEM"));
-        lwe.loadConfig();
-        const auto no_system = lwe.generateContent();
-        size_t no_count = rs::count(no_system, '\n');
-        EXPECT_NE(all, no_system);
-        ASSERT_TRUE(temp_fs->loadContent(cfg + "        - 'System': SYSTEM;;"));
-        lwe.loadConfig();
-        const auto with_system = lwe.generateContent();
-        size_t with_count = rs::count(with_system, '\n');
-        EXPECT_NE(all, with_system);
-        EXPECT_NE(no_system, with_system);
-        EXPECT_TRUE(no_count + with_count > all_count / 2);
+        const auto all = WriteUsersReadEventLog(system_sid);
+        EXPECT_TRUE(all.contains(by_system));
+        EXPECT_TRUE(all.contains(by_no_user));
+
+        ASSERT_TRUE(
+            temp_fs->loadContent(cfg + "        - 'Application': ;;SYSTEM"));
+        const auto no_system = WriteUsersReadEventLog(system_sid);
+        EXPECT_FALSE(no_system.contains(by_system));
+        EXPECT_TRUE(no_system.contains(by_no_user));
+
+        ASSERT_TRUE(
+            temp_fs->loadContent(cfg + "        - 'Application': SYSTEM;;"));
+        const auto only_system = WriteUsersReadEventLog(system_sid);
+        EXPECT_TRUE(only_system.contains(by_system));
+        EXPECT_FALSE(only_system.contains(by_no_user));
     }
 }
 

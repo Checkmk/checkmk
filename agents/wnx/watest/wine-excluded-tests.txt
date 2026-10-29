@@ -35,7 +35,7 @@ LogWatchEventTest.RegPresence
 LogWatchEventTest.TestFilterIds
 LogWatchEventTest.TestFilterPattern
 LogWatchEventTest.TestFilterSources
-LogWatchEventTest.TestFilterUsers_DISABLED
+LogWatchEventTest.TestFilterUsers
 LogWatchEventTest.TestMakeBody
 LogWatchEventTest.TestNotSendAll
 LogWatchEventTest.TestNotSendAllVista

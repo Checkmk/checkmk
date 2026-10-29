@@ -16,6 +16,7 @@
 #include "fmt/format.h"
 #include "fmt/xchar.h"
 #include "tools/_misc.h"
+#include "tools/_raii.h"
 #include "wnx/cfg.h"
 #include "wnx/cfg_details.h"
 #include "wnx/firewall.h"
@@ -468,6 +469,21 @@ bool WaitForSuccessIndicate(std::chrono::milliseconds ms,
 bool WaitForSuccessSilent(std::chrono::milliseconds ms,
                           const std::function<bool()> &predicat) {
     return WaitForSuccess(ms, WaitForSuccessMode::silent, predicat);
+}
+
+DWORD WriteApplicationLogRecord(WORD type, PSID sid,
+                                const std::wstring &message) {
+    auto *source = ::RegisterEventSourceW(nullptr, kOwnEventSource);
+    if (source == nullptr) {
+        return ::GetLastError();
+    }
+    ON_OUT_OF_SCOPE(::DeregisterEventSource(source));
+    const wchar_t *strings[] = {message.c_str()};
+    if (::ReportEventW(source, type, 0, 100, sid, 1, 0, strings, nullptr) ==
+        FALSE) {
+        return ::GetLastError();
+    }
+    return ERROR_SUCCESS;
 }
 
 namespace {

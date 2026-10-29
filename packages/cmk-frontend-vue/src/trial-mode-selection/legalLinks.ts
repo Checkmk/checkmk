@@ -6,11 +6,10 @@
 
 /**
  * Targets for the consent links on the email step.
- *
- * NOTE: placeholders that will be replaced with CMK-39398
  */
 export const LEGAL_LINKS = {
-  terms: '#',
-  eula: '#',
-  privacy: '#'
+  terms: 'https://checkmk.com/legal/terms-and-conditions',
+  eula: 'https://checkmk.com/eula',
+  privacy: 'https://checkmk.com/privacy-policy',
+  checkmk_group: 'https://checkmk.com/contact'
 } as const

@@ -63,15 +63,23 @@ type LegalNoticeSegment = LegalNoticeLink | { text: string }
  */
 const legalNoticeLinks = computed(
   (): Record<string, LegalNoticeLink> => ({
-    '%{terms}': { href: LEGAL_LINKS.terms, label: _t('General Terms & Conditions') },
+    '%{terms}': { href: LEGAL_LINKS.terms, label: _t('Terms & Conditions') },
     '%{eula}': { href: LEGAL_LINKS.eula, label: _t('EULA') },
-    '%{privacy_policy}': { href: LEGAL_LINKS.privacy, label: _t('Privacy Policy') }
+    '%{privacy_policy}': { href: LEGAL_LINKS.privacy, label: _t('Privacy Policy') },
+    '%{checkmk_group}': { href: LEGAL_LINKS.checkmk_group, label: _t('Checkmk group companies') }
   })
 )
 
 const legalNoticeSegments = computed((): LegalNoticeSegment[] =>
   _t(
-    'I agree to the %{terms} and the %{eula}. I will receive Checkmk trial onboarding emails and can unsubscribe any time via email. I have noted the %{privacy_policy}.'
+    `By starting the trial, I agree to the %{terms} and the %{eula}. I have
+    noted the %{privacy_policy}. In exchange for this free trial, I agree to
+    receive information about Checkmk products and services (incl. newsletter,
+    events and customer surveys) from the %{checkmk_group} by email and telephone,
+    and that Checkmk may analyse my interaction with these emails (opens and
+    clicks) to improve its marketing. I understand that this consent is the
+    condition for receiving the trial free of charge. I can unsubscribe at any time
+    via email.`
   )
     .split(/(%\{\w+\})/)
     .map((part) => legalNoticeLinks.value[part] ?? { text: part })

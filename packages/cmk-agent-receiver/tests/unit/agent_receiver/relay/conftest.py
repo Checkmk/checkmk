@@ -33,9 +33,9 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     TasksRepository,
 )
 from cmk.agent_receiver.relay.lib.relay_config_repository import RelayConfigRepository
-from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
 from cmk.agent_receiver.relay.lib.site_auth import SecretAuth
+from cmk.agent_receiver.relay.lib.site_client import SiteRelaysClient
 from cmk.testlib.agent_receiver.relay import random_relay_id
 
 
@@ -116,11 +116,11 @@ def internal_api_client(_relay_mock_transport: httpx2.MockTransport) -> Iterator
 
 
 @pytest.fixture()
-def relays_repository(
+def site_relays_client(
     site_api_client: httpx2.Client, internal_api_client: httpx2.Client
-) -> Iterator[RelaysRepository]:
-    """Provides a RelaysRepository with mock transport for testing."""
-    repository = RelaysRepository(
+) -> Iterator[SiteRelaysClient]:
+    """Provides a SiteRelaysClient with mock transport for testing."""
+    repository = SiteRelaysClient(
         client=site_api_client,
         internal_client=internal_api_client,
         siteid="test-site",
@@ -136,19 +136,19 @@ def tasks_repository() -> Iterator[TasksRepository]:
 
 
 @pytest.fixture()
-def register_relay_handler(relays_repository: RelaysRepository) -> Iterator[RegisterRelayHandler]:
+def register_relay_handler(site_relays_client: SiteRelaysClient) -> Iterator[RegisterRelayHandler]:
     """Provides a RegisterRelayHandler with mock dependencies."""
-    handler = RegisterRelayHandler(relays_repository=relays_repository)
+    handler = RegisterRelayHandler(site_relays_client=site_relays_client)
     yield handler
 
 
 @pytest.fixture()
 def get_relay_status_handler(
-    relays_repository: RelaysRepository, site_context: Config
+    site_relays_client: SiteRelaysClient, site_context: Config
 ) -> Iterator[GetRelayStatusHandler]:
     """Provides a GetRelayStatusHandler with mock dependencies."""
     handler = GetRelayStatusHandler(
-        relays_repository=relays_repository,
+        site_relays_client=site_relays_client,
         relay_config_repository=RelayConfigRepository(
             helper_config_dir=site_context.helper_config_dir
         ),
@@ -202,13 +202,13 @@ def config_task_factory(
 
 @pytest.fixture
 def populated_repos(
-    relays_repository: RelaysRepository,
+    site_relays_client: SiteRelaysClient,
     tasks_repository: TasksRepository,
     test_user: SecretAuth,
-) -> tuple[RelayID, RelayTask, RelaysRepository, TasksRepository]:
+) -> tuple[RelayID, RelayTask, SiteRelaysClient, TasksRepository]:
     # arrange
     # register a relay in the repository
-    relay_id = relays_repository.add_relay(
+    relay_id = site_relays_client.add_relay(
         test_user, relay_id=random_relay_id(), alias="test-relay"
     )
 
@@ -226,4 +226,4 @@ def populated_repos(
     )
     tasks_repository.store_task(relay_id=relay_id, task=task)
 
-    return relay_id, task, relays_repository, tasks_repository
+    return relay_id, task, site_relays_client, tasks_repository

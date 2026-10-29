@@ -44,8 +44,8 @@ from cmk.agent_receiver.relay.api.routers.tasks.serializers import (
     TaskListResponseSerializer,
     TaskResponseSerializer,
 )
-from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial, TaskID
+from cmk.agent_receiver.relay.lib.site_client import CheckmkAPIError
 from cmk.relay_protocols import tasks as tasks_protocol
 
 router = fastapi.APIRouter()

@@ -32,7 +32,7 @@ default_log_level = "INFO"
 
 
 @final
-class RelaysRepository:
+class SiteRelaysClient:
     def __init__(
         self,
         *,
@@ -51,8 +51,8 @@ class RelaysRepository:
         site_url: str,
         internal_site_url: str,
         site_name: str,
-    ) -> RelaysRepository:
-        """Create RelaysRepository from site configuration."""
+    ) -> SiteRelaysClient:
+        """Create SiteRelaysClient from site configuration."""
         # FIXME async client
         headers = {
             "Content-Type": "application/json",

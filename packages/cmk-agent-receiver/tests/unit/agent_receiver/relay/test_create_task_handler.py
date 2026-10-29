@@ -13,15 +13,15 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     FetchSpec,
     TasksRepository,
 )
-from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
+from cmk.agent_receiver.relay.lib.site_client import SiteRelaysClient
 from cmk.testlib.agent_receiver.relay import random_relay_id
 
 
 @pytest.mark.usefixtures("site_context")
 def test_process_create_task(
     create_task_handler: CreateTaskHandler,
-    relays_repository: RelaysRepository,
+    site_relays_client: SiteRelaysClient,
     tasks_repository: TasksRepository,
     test_user: InternalAuth,
 ) -> None:
@@ -29,7 +29,7 @@ def test_process_create_task(
     payload = FetchSpec(payload='{"url": "http://example.com/data"}', timeout=60)
 
     # Register a relay first
-    relay_id = relays_repository.add_relay(
+    relay_id = site_relays_client.add_relay(
         test_user, relay_id=random_relay_id(), alias="test-relay"
     )
 

@@ -18,12 +18,12 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers.store_crash_report imp
     CrashExtractionTimeoutError,
     UndecodableCrashArchiveError,
 )
-from cmk.agent_receiver.relay.lib.relays_repository import (
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
+from cmk.agent_receiver.relay.lib.site_auth import UnsupportedAuthFormatError
+from cmk.agent_receiver.relay.lib.site_client import (
     CheckmkAPIError,
     RelayNotFoundError,
 )
-from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
-from cmk.agent_receiver.relay.lib.site_auth import UnsupportedAuthFormatError
 from cmk.relay_protocols import relays as relay_protocols
 from cmk.relay_protocols.monitoring_data import MonitoringData
 

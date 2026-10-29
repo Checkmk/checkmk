@@ -20,7 +20,7 @@ from cmk.agent_receiver.lib.middleware import B3RequestIDMiddleware
 from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import ConfigTaskFactory
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TasksRepository
 from cmk.agent_receiver.relay.lib.relay_config_repository import RelayConfigRepository
-from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
+from cmk.agent_receiver.relay.lib.site_client import CheckmkAPIError
 
 from .api.routers.relays import router as relay_router
 from .api.routers.tasks import router as task_router

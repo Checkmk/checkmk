@@ -19,9 +19,9 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import 
     GetRelayStatusHandler,
     RegisterRelayHandler,
 )
-from cmk.agent_receiver.relay.lib.relays_repository import RelayNotFoundError
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.agent_receiver.relay.lib.site_auth import SecretAuth
+from cmk.agent_receiver.relay.lib.site_client import RelayNotFoundError
 from cmk.relay_protocols.relays import RelayRegistrationRequest, RelayState
 from cmk.testlib.agent_receiver.certs import generate_csr_pair
 

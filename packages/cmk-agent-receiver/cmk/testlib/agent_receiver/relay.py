@@ -8,9 +8,9 @@ from http import HTTPStatus
 
 import httpx2
 
-from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.agent_receiver.relay.lib.site_auth import SiteAuth
+from cmk.agent_receiver.relay.lib.site_client import CheckmkAPIError
 
 logger = logging.getLogger(__name__)
 

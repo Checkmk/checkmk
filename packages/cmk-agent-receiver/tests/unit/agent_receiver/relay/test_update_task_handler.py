@@ -12,22 +12,22 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     ResultType,
     TasksRepository,
 )
-from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import (
     RelayID,
     TaskID,
     TaskNotFoundError,
 )
 from cmk.agent_receiver.relay.lib.site_auth import SecretAuth
+from cmk.agent_receiver.relay.lib.site_client import SiteRelaysClient
 from cmk.testlib.agent_receiver.relay import random_relay_id
 
 
 @pytest.mark.usefixtures("site_context")
 def test_process_update_task(
     update_task_handler: UpdateTaskHandler,
-    populated_repos: tuple[RelayID, RelayTask, RelaysRepository, TasksRepository],
+    populated_repos: tuple[RelayID, RelayTask, SiteRelaysClient, TasksRepository],
 ) -> None:
-    relay_id, task, relays_repository, tasks_repository = populated_repos
+    relay_id, task, site_relays_client, tasks_repository = populated_repos
 
     # act
     update_task_handler.process(
@@ -50,13 +50,13 @@ def test_process_update_task(
 
 @pytest.mark.usefixtures("site_context")
 def test_process_update_task_non_existent_task(
-    relays_repository: RelaysRepository,
+    site_relays_client: SiteRelaysClient,
     update_task_handler: UpdateTaskHandler,
     test_user: SecretAuth,
 ) -> None:
     # arrange
     # register a relay in the repository
-    relay_id = relays_repository.add_relay(
+    relay_id = site_relays_client.add_relay(
         test_user, relay_id=random_relay_id(), alias="test-relay"
     )
 

@@ -654,6 +654,18 @@ describe('multiplesWithin', () => {
 
     expect(multiples[multiples.length - 1]).toBeCloseTo(end, 12)
   })
+
+  test('returns nothing for an infinite bound', () => {
+    const multiples = multiplesWithin(0, Infinity, 1)
+
+    expect(multiples).toEqual([])
+  })
+
+  test('returns nothing when the bounds are too many spacings from zero to step through', () => {
+    const multiples = multiplesWithin(1e17, 1e17 + 1e3, 1)
+
+    expect(multiples).toEqual([])
+  })
 })
 
 describe('precisionForSpacing', () => {

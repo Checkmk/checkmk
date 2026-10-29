@@ -61,6 +61,11 @@ function displayedResolution(resolution: number, rawValue: number, part: Preform
 export function multiplesWithin(start: number, end: number, spacing: number): number[] {
   const firstIndex = Math.ceil(start / spacing - ON_MULTIPLE_TOLERANCE)
   const lastIndex = Math.floor(end / spacing + ON_MULTIPLE_TOLERANCE)
+  // Above 2^53 `index++` can round back to the same value, and an infinite bound never ends: the
+  // loop would push until the array overflows.
+  if (!Number.isSafeInteger(firstIndex) || !Number.isSafeInteger(lastIndex)) {
+    return []
+  }
   const multiples: number[] = []
   for (let index = firstIndex; index <= lastIndex; index++) {
     multiples.push(index * spacing)

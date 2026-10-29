@@ -13,6 +13,7 @@ Keep this module compatible with the oldest Python we support here, too: no
 f-strings, no variable annotations, no typing imports.
 """
 
+import importlib
 import sys
 import types
 
@@ -115,3 +116,25 @@ def test_time_it_propagates_exceptions():
 
     with pytest.raises(ValueError, match="kaboom"):
         mk_docker.time_it(boom)()
+
+
+def test_main_reports_missing_docker_library(monkeypatch, capsys):
+    # type: (pytest.MonkeyPatch, pytest.CaptureFixture[str]) -> None
+    import agents.plugins
+
+    # Import the stubbed plug-in first, so that monkeypatch restores it on
+    # teardown. Then force a fresh import, during which "import docker" fails.
+    _mk_docker()
+    monkeypatch.setitem(sys.modules, "docker", None)
+    monkeypatch.delitem(sys.modules, "agents.plugins.mk_docker")
+    monkeypatch.delattr(agents.plugins, "mk_docker")
+    mk_docker = importlib.import_module("agents.plugins.mk_docker")
+
+    monkeypatch.setattr(mk_docker, "which", lambda _name: "/usr/bin/docker")
+
+    assert mk_docker.main() == 0
+    assert capsys.readouterr().out.startswith(
+        "<<<docker_node_info:sep(124)>>>\n"
+        "@docker_version_info|{}\n"
+        '{"Critical": "Error: mk_docker requires the docker library >= 2.0.0.'
+    )

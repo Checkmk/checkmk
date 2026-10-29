@@ -45,10 +45,13 @@ from shutil import which
 try:
     import docker
     import docker.utils.socket
+    from docker import DockerClient  # exists from 2.0.0 onwards
 
-    HAS_DOCKERLIB = True
+    DOCKER_VERSION = docker.__version__  # type: str | None
 except ImportError:
-    HAS_DOCKERLIB = False
+    # no docker at all or older than 2.0.0
+    DockerClient = object  # type: ignore[misc,assignment]
+    DOCKER_VERSION = None
 
 if sys.version_info >= (3, 12):  # noqa: UP036
     from typing import override
@@ -139,7 +142,7 @@ class Section(list):
 
     version_info = {
         "PluginVersion": VERSION,
-        "DockerPyVersion": docker.__version__,
+        "DockerPyVersion": DOCKER_VERSION,
     }  # type: dict[str, str | None]
 
     # Should we need to parallelize one day, change this to be
@@ -247,7 +250,7 @@ class ParallelDfCall:
             return json.loads(file_.read())
 
 
-class MKDockerClient(docker.DockerClient):
+class MKDockerClient(DockerClient):
     """a docker.DockerClient that caches containers and node info"""
 
     API_VERSION = "auto"
@@ -735,7 +738,7 @@ def _call_single_containers_sections(client, config, container_id):
 
 
 def main():
-    # The HAS_DOCKERLIB check below result in agent sections being created. This
+    # The docker library check below results in agent sections being created. This
     # is a way to end the plugin in case it is being executed on a non docker host
     if (
         not os.path.isfile("/var/lib/docker")
@@ -745,16 +748,7 @@ def main():
         sys.stderr.write("mk_docker.py: Does not seem to be a docker host. Terminating.\n")
         return 1
 
-    if not HAS_DOCKERLIB:
-        sys.stdout.write(
-            "<<<docker_node_info:sep(124)>>>\n"
-            "@docker_version_info|{}\n"
-            '{"Critical": "Error: mk_docker requires the docker library.'
-            ' Please install it on the monitored system (pip3 install docker)."}\n'
-        )
-        return 0
-
-    if int(docker.__version__.split(".", 1)[0]) < 2:
+    if DOCKER_VERSION is None or int(DOCKER_VERSION.split(".", 1)[0]) < 2:
         sys.stdout.write(
             "<<<docker_node_info:sep(124)>>>\n"
             "@docker_version_info|{}\n"

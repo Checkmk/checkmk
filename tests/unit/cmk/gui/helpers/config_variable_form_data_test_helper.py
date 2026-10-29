@@ -1389,6 +1389,11 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
     },
     "rrdcached_tuning": {"TIMEOUT": 0, "RANDOM_DELAY": 0, "FLUSH_TIMEOUT": 0, "WRITE_THREADS": 1},
     "service_view_grouping": [],
+    "oauth_sessions": {
+        "grant_lifetime": 31536000,
+        "refresh_token_lifetime": 2592000,
+        "access_token_lifetime": 172800,
+    },
     "session_mgmt": {},
     "sidebar_notify_interval": None,
     "single_user_session": None,
@@ -2694,6 +2699,33 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
         CasePass("configured", [{"title": "Filesystems", "pattern": "fs_", "min_items": 2}]),
         CaseFail("invalid-regex", [{"title": "Broken", "pattern": "(", "min_items": 2}]),
         CaseFail("not-a-list", "fs_"),
+    ],
+    "oauth_sessions": [
+        CasePass(
+            "configured",
+            {
+                "grant_lifetime": 86400,
+                "refresh_token_lifetime": 3600,
+                "access_token_lifetime": 3600,
+            },
+        ),
+        CaseFail(
+            "refresh-token-exceeds-session-lifetime",
+            {
+                "grant_lifetime": 3600,
+                "refresh_token_lifetime": 86400,
+                "access_token_lifetime": 3600,
+            },
+        ),
+        CaseFail(
+            "access-token-exceeds-refresh-token",
+            {
+                "grant_lifetime": 86400,
+                "refresh_token_lifetime": 3600,
+                "access_token_lifetime": 7200,
+            },
+        ),
+        CaseFail("missing-required-keys", {}),
     ],
     "session_mgmt": [
         CasePass(

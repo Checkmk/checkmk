@@ -427,6 +427,7 @@ def register(
         main_module_registry,
         versioned_endpoint_registry,
         endpoint_family_registry,
+        config_variable_registry,
     )
     _pre_21_plugin_api.register()
     graphing_registration.register_prediction_page(page_registry, make_service_breadcrumb)

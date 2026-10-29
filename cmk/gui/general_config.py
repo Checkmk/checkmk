@@ -421,6 +421,14 @@ class GeneralConfig:
             "user_idle_timeout": 5400,
         }
     )
+    # Lifetimes in seconds of OAuth sessions (grants) and their tokens.
+    oauth_sessions: dict[str, int] = field(
+        default_factory=lambda: {
+            "grant_lifetime": 365 * 86400,
+            "refresh_token_lifetime": 30 * 86400,
+            "access_token_lifetime": 48 * 3600,
+        }
+    )
     # This option can be configured in Global Settings.
     # When configured, these are the expected behaviors:
     # 1. setting this option (the first time) does not log the user out from existing sessions

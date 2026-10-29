@@ -13,10 +13,12 @@ from cmk.gui.oauth.wato._main_module import register as register_main_module
 from cmk.gui.oauth.wato._registered_clients_mode import (
     register as register_registered_clients_mode,
 )
+from cmk.gui.oauth.wato._settings import ConfigVariableOAuthSessions
 from cmk.gui.oauth.wato._user_tokens_mode import register as register_user_tokens_mode
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
+from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 
@@ -27,6 +29,7 @@ def register(
     main_module_registry: MainModuleRegistry,
     versioned_endpoint_registry: VersionedEndpointRegistry,
     endpoint_family_registry: EndpointFamilyRegistry,
+    config_variable_registry: ConfigVariableRegistry,
 ) -> None:
     page_registry.register(
         PageEndpoint("noauth:oauth_authorization_server", OAuthAuthorizationServerMetadataPage())
@@ -40,4 +43,5 @@ def register(
     register_registered_clients_mode(mode_registry)
     register_user_tokens_mode(mode_registry)
     register_main_module(main_module_registry)
+    config_variable_registry.register(ConfigVariableOAuthSessions)
     register_openapi_endpoints(versioned_endpoint_registry, endpoint_family_registry)

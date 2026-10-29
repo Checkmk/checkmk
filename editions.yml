@@ -1,4 +1,5 @@
 # The common set of distros which gets build during an official release
+# ubuntu-22.04 is still built, but internal only, see internal_distros
 common: &common
     - "debian-12"
     - "debian-13"
@@ -27,7 +28,9 @@ daily_saas: &daily_saas
     - "ubuntu-24.04"
 
 # Builds for those distros will only be available internally for development purpose
-internal_distros: &internal_distros []
+# ubuntu-22.04: CI jobs still run on it, to be removed with CMK-35236
+internal_distros: &internal_distros
+    - "ubuntu-22.04"
 
 # Currently, all builds of the cloud (formerly saas) edition should stay completley internal
 internal_editions:
@@ -36,6 +39,8 @@ internal_editions:
 cma_distros: &cma_distros
     - "cma-4"
 
+# ubuntu-22.04 is internal only, it stays until FIPS testing moves to RHEL 9
+# (CMK-40529 to CMK-40533)
 fips_distros: &fips_distros
     - "ubuntu-22.04"
 
@@ -52,7 +57,13 @@ editions:
         daily_tests: *daily_reduced
         fips: [*fips_distros]
         # Don't test the update process for internal distros, they are not public anyway
-        daily_update_tests: [*daily_reduced]
+        # TODO: switch back to *daily_reduced once ubuntu-22.04 is gone (CMK-35236)
+        daily_update_tests:
+            - "almalinux-10"
+            - "debian-13"
+            - "ubuntu-24.04"
+            - "ubuntu-26.04"
+            - "sles-16.0"
         weekly: [*common, *cma_distros]
         testbuild: ["ubuntu-24.04", "sles-16.0", "cma-4"]
     ultimate:
@@ -61,7 +72,13 @@ editions:
         daily_tests: *daily_reduced
         fips: []
         # Don't test the update process for internal distros, they are not public anyway
-        daily_update_tests: [*daily_reduced]
+        # TODO: switch back to *daily_reduced once ubuntu-22.04 is gone (CMK-35236)
+        daily_update_tests:
+            - "almalinux-10"
+            - "debian-13"
+            - "ubuntu-24.04"
+            - "ubuntu-26.04"
+            - "sles-16.0"
         weekly: [*common, *cma_distros]
         testbuild: []
     ultimatemt:
@@ -70,7 +87,17 @@ editions:
         daily_tests: [*common]
         fips: []
         # Don't test the update process for internal distros, they are not public anyway
-        daily_update_tests: [*common]
+        # TODO: switch back to *common once ubuntu-22.04 is gone (CMK-35236)
+        daily_update_tests:
+            - "debian-12"
+            - "debian-13"
+            - "ubuntu-24.04"
+            - "ubuntu-26.04"
+            - "almalinux-8"
+            - "almalinux-9"
+            - "almalinux-10"
+            - "sles-15sp7"
+            - "sles-16.0"
         weekly: [*common, *cma_distros]
         testbuild: []
     community:
@@ -79,7 +106,13 @@ editions:
         daily_tests: *daily_reduced
         fips: []
         # Don't test the update process for internal distros, they are not public anyway
-        daily_update_tests: [*daily_reduced]
+        # TODO: switch back to *daily_reduced once ubuntu-22.04 is gone (CMK-35236)
+        daily_update_tests:
+            - "almalinux-10"
+            - "debian-13"
+            - "ubuntu-24.04"
+            - "ubuntu-26.04"
+            - "sles-16.0"
         weekly: *common
         testbuild: []
     cloud:
@@ -95,4 +128,5 @@ editions:
 # We currently only need this for the internal_distros as at the point in the pipeline,
 # where we want to exclude the internal distros, we are only using the distro codes and not the
 # distro name anymore.
-distro_to_codename: {}
+distro_to_codename:
+    "ubuntu-22.04": "jammy"

@@ -247,6 +247,41 @@ def test_missing_public_and_present_internal_artifacts_are_errors(
 
 
 @pytest.mark.usefixtures("credentials_file", "registries_with_images")
+def test_published_package_of_internal_distro_is_an_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    editions_file = tmp_path / "editions.yml"
+    editions_file.write_text("""
+internal_distros:
+    - "ubuntu-22.04"
+editions:
+    pro:
+        release: ["debian-12", "ubuntu-22.04"]
+""")
+    _install_download_server(monkeypatch, _FakeDownloadServer())
+
+    with pytest.raises(RuntimeError) as excinfo:
+        _run(
+            [
+                "--editions_file",
+                str(editions_file),
+                "--skip_docker",
+                "assert_build_artifacts",
+                "--version",
+                "2.4.0p1",
+            ],
+            monkeypatch,
+        )
+
+    message = str(excinfo.value)
+    assert (
+        "ARTIFACT_PRESENT: check-mk-pro-2.4.0p1_0.ubuntu-22.04_amd64.deb should not be available"
+        in message
+    )
+    assert "debian-12" not in message
+
+
+@pytest.mark.usefixtures("credentials_file", "registries_with_images")
 def test_missing_relay_image_exits_with_dedicated_code(
     editions_file: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

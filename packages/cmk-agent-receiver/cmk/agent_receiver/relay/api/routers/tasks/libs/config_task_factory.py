@@ -20,7 +20,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     TasksRepository,
     TaskStatus,
 )
-from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
+from cmk.agent_receiver.relay.lib.relay_config_repository import RelayConfigRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.relay_protocols.configuration import CONFIG_ARCHIVE_ROOT_FOLDER_NAME
 
@@ -53,7 +53,7 @@ type ConfigTaskCreationResult = (
 
 @dataclasses.dataclass
 class ConfigTaskFactory:
-    relays_repository: RelaysRepository
+    relay_config_repository: RelayConfigRepository
     tasks_repository: TasksRepository
 
     def create_for_all_relays(self) -> Sequence[ConfigTaskCreationResult]:
@@ -62,7 +62,7 @@ class ConfigTaskFactory:
         The number of actually created task might be lower than the number of the relays,
         because some relays might already have existing pending tasks for the current serial value.
         """
-        relay_ids = self.relays_repository.get_all_relay_ids()
+        relay_ids = self.relay_config_repository.relay_ids()
         return self._create(relay_ids)
 
     def create_for_relay(self, relay_id: RelayID) -> ConfigTaskCreationResult:
@@ -73,7 +73,7 @@ class ConfigTaskFactory:
         If the relay does not have a configuration folder created yet, the function
         does nothing and returns ConfigTaskSkipped.
         """
-        if not self.relays_repository.relay_config_applied(relay_id):
+        if not self.relay_config_repository.has_config(relay_id):
             logger.debug(
                 "Skipping config task creation for relay %(relay_id)s", {"relay_id": relay_id}
             )

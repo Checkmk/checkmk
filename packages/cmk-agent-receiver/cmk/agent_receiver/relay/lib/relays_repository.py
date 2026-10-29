@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 from http import HTTPStatus
-from pathlib import Path
 from typing import final
 
 import httpx2
@@ -40,12 +39,10 @@ class RelaysRepository:
         client: httpx2.Client,
         internal_client: httpx2.Client,
         siteid: str,
-        helper_config_dir: Path,
     ) -> None:
         self.client = client
         self.internal_client = internal_client
         self.siteid = siteid
-        self.helper_config_dir = helper_config_dir
 
     @classmethod
     def from_site(
@@ -54,7 +51,6 @@ class RelaysRepository:
         site_url: str,
         internal_site_url: str,
         site_name: str,
-        helper_config_dir: Path,
     ) -> RelaysRepository:
         """Create RelaysRepository from site configuration."""
         # FIXME async client
@@ -72,7 +68,6 @@ class RelaysRepository:
             client=client,
             internal_client=internal_client,
             siteid=site_name,
-            helper_config_dir=helper_config_dir,
         )
 
     def add_relay(self, auth: SiteAuth, relay_id: RelayID, alias: str) -> RelayID:
@@ -96,15 +91,6 @@ class RelaysRepository:
         assert relay_id == resp.json()["id"]
         return relay_id
 
-    def get_all_relay_ids(self) -> list[RelayID]:
-        latest = self.helper_config_dir / "latest/relays"
-        try:
-            dirs = next(latest.walk())[1]
-            return [RelayID(x) for x in dirs]
-        except StopIteration:
-            # The folder does not exist
-            return []
-
     def relay_exists(self, auth: SiteAuth, relay_id: RelayID) -> bool:
         """Check if a relay exists by querying the REST API."""
         resp = self.client.get(f"/objects/relay/{relay_id}", auth=auth)
@@ -115,8 +101,3 @@ class RelaysRepository:
         if resp.status_code >= HTTPStatus.BAD_REQUEST:
             raise CheckmkAPIError(resp.text)
         return True
-
-    def relay_config_applied(self, relay_id: RelayID) -> bool:
-        """Check if a relay has its configuration applied (exists in local config folder)."""
-        relay_config_path = self.helper_config_dir / "latest/relays" / str(relay_id)
-        return relay_config_path.exists()

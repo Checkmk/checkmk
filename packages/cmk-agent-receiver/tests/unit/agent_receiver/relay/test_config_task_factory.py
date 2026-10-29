@@ -138,7 +138,7 @@ def test_create_task_for_single_relay_skipped_when_config_not_applied(
 ) -> None:
     """
     Should skip task creation for a single relay when relay configuration
-    is not applied yet (relay_config_applied returns False).
+    is not applied yet (has_config returns False).
 
     Tests create_for_relay() with a relay ID that has no config folder.
 
@@ -188,8 +188,8 @@ def test_create_tasks_for_all_relays_with_multiple_configured_relays(
     Should create tasks for all relays that have config applied.
 
     Tests create_for_all_relays() with multiple configured relays.
-    Note: get_all_relay_ids() only returns relays with config folders,
-    so all relays returned will have relay_config_applied() == True.
+    Note: relay_ids() only returns relays with config folders,
+    so all relays returned will have has_config() == True.
 
     Verifies that:
     - Tasks are created for all configured relays

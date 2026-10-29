@@ -10,6 +10,9 @@ from typing import Annotated
 import fastapi
 
 from cmk.agent_receiver.lib.config import Config, config_dependency
+from cmk.agent_receiver.relay.api.dependencies.relay_config_repository import (
+    get_relay_config_repository,
+)
 from cmk.agent_receiver.relay.api.dependencies.relays_repository import (
     get_relays_repository,
 )
@@ -20,13 +23,19 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers import (
     RegisterRelayHandler,
     StoreCrashReportHandler,
 )
+from cmk.agent_receiver.relay.lib.relay_config_repository import RelayConfigRepository
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 
 
 def get_refresh_cert_handler(
     relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
+    relay_config_repository: Annotated[
+        RelayConfigRepository, fastapi.Depends(get_relay_config_repository)
+    ],
 ) -> RefreshCertHandler:
-    return RefreshCertHandler(relays_repository=relays_repository)
+    return RefreshCertHandler(
+        relays_repository=relays_repository, relay_config_repository=relay_config_repository
+    )
 
 
 def get_register_relay_handler(
@@ -37,8 +46,13 @@ def get_register_relay_handler(
 
 def get_relay_status_handler(
     relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
+    relay_config_repository: Annotated[
+        RelayConfigRepository, fastapi.Depends(get_relay_config_repository)
+    ],
 ) -> GetRelayStatusHandler:
-    return GetRelayStatusHandler(relays_repository=relays_repository)
+    return GetRelayStatusHandler(
+        relays_repository=relays_repository, relay_config_repository=relay_config_repository
+    )
 
 
 async def get_forward_monitoring_data_handler(

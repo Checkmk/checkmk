@@ -12,5 +12,4 @@ def get_relays_repository() -> RelaysRepository:
         site_url=config.rest_api_url,
         internal_site_url=config.internal_rest_api_url,
         site_name=config.site_name,
-        helper_config_dir=config.helper_config_dir,
     )

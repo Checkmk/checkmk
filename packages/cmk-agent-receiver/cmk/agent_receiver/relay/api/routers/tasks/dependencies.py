@@ -10,7 +10,9 @@ from fastapi import Header
 
 from cmk.agent_receiver.lib.config import Config, config_dependency
 from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_UUID_HEADER
-from cmk.agent_receiver.relay.api.dependencies.relays_repository import get_relays_repository
+from cmk.agent_receiver.relay.api.dependencies.relay_config_repository import (
+    get_relay_config_repository,
+)
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     ActivateConfigHandler,
     CreateTaskHandler,
@@ -24,7 +26,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.site_cn_authorization impor
     validate_site_cn_authorization,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TasksRepository
-from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
+from cmk.agent_receiver.relay.lib.relay_config_repository import RelayConfigRepository
 
 
 async def get_tasks_repository(
@@ -38,11 +40,13 @@ async def get_tasks_repository(
 
 async def get_config_task_factory(
     tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
-    relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
+    relay_config_repository: Annotated[
+        RelayConfigRepository, fastapi.Depends(get_relay_config_repository)
+    ],
 ) -> ConfigTaskFactory:
     return ConfigTaskFactory(
+        relay_config_repository=relay_config_repository,
         tasks_repository=tasks_repository,
-        relays_repository=relays_repository,
     )
 
 

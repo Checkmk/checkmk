@@ -19,7 +19,8 @@ from cmk.agent_receiver.lib.log import logger
 from cmk.agent_receiver.lib.middleware import B3RequestIDMiddleware
 from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import ConfigTaskFactory
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TasksRepository
-from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError, RelaysRepository
+from cmk.agent_receiver.relay.lib.relay_config_repository import RelayConfigRepository
+from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
 
 from .api.routers.relays import router as relay_router
 from .api.routers.tasks import router as task_router
@@ -31,14 +32,8 @@ def _build_config_task_factory() -> ConfigTaskFactory:
         ttl_seconds=config.task_ttl,
         max_pending_tasks_per_relay=config.max_pending_tasks_per_relay,
     )
-    relays_repository = RelaysRepository.from_site(
-        site_url=config.rest_api_url,
-        internal_site_url=config.internal_rest_api_url,
-        site_name=config.site_name,
-        helper_config_dir=config.helper_config_dir,
-    )
     return ConfigTaskFactory(
-        relays_repository=relays_repository,
+        relay_config_repository=RelayConfigRepository(helper_config_dir=config.helper_config_dir),
         tasks_repository=tasks_repository,
     )
 

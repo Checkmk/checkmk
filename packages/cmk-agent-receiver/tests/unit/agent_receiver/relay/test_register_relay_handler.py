@@ -21,6 +21,9 @@ from cmk.testlib.agent_receiver.certs import (
 )
 from cmk.testlib.agent_receiver.relay import site_has_relay
 
+# The handler reads the site config itself.
+pytestmark = pytest.mark.usefixtures("site_context")
+
 
 def test_process_adds_new_relay_id_to_registry(
     register_relay_handler: RegisterRelayHandler,

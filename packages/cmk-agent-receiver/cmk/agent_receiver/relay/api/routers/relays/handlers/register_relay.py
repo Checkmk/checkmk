@@ -8,6 +8,7 @@ from pydantic import SecretStr
 
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.relay.api.routers.relays.handlers.cert_retriever import get_certificates
+from cmk.agent_receiver.relay.lib.relay_config_repository import RelayConfigRepository
 from cmk.agent_receiver.relay.lib.relays_repository import (
     RelayNotFoundError,
     RelaysRepository,
@@ -46,6 +47,7 @@ class RegisterRelayHandler:
 @dataclasses.dataclass
 class RefreshCertHandler:
     relays_repository: RelaysRepository
+    relay_config_repository: RelayConfigRepository
 
     def process(
         self, relay_id: RelayID, request: relay_protocols.RelayRefreshCertRequest
@@ -54,7 +56,7 @@ class RefreshCertHandler:
         # Allow cert refresh for any relay known to the agent-receiver, including
         # relays in PENDING_DELETION (deleted from the site but change not yet activated).
         # get_relay_state() raises RelayNotFoundError if the relay is unknown everywhere.
-        get_relay_state(self.relays_repository, auth, relay_id)
+        get_relay_state(self.relays_repository, self.relay_config_repository, auth, relay_id)
         certificates = get_certificates(request.csr, relay_id)
         return relay_protocols.RelayRefreshCertResponse(
             root_cert=certificates.root_cert,
@@ -65,6 +67,7 @@ class RefreshCertHandler:
 @dataclasses.dataclass
 class GetRelayStatusHandler:
     relays_repository: RelaysRepository
+    relay_config_repository: RelayConfigRepository
 
     def process(self, relay_id: RelayID) -> relay_protocols.RelayStatusResponse:
         """Get relay status.
@@ -77,12 +80,17 @@ class GetRelayStatusHandler:
             CheckmkAPIError: If there is an API error
         """
         auth = InternalAuth()
-        state = get_relay_state(self.relays_repository, auth, relay_id)
+        state = get_relay_state(
+            self.relays_repository, self.relay_config_repository, auth, relay_id
+        )
         return relay_protocols.RelayStatusResponse(relay_id=relay_id, state=state)
 
 
 def get_relay_state(
-    relays_repository: RelaysRepository, auth: SiteAuth, relay_id: RelayID
+    relays_repository: RelaysRepository,
+    relay_config_repository: RelayConfigRepository,
+    auth: SiteAuth,
+    relay_id: RelayID,
 ) -> RelayState:
     """Get relay state by comparing local config and CMK API.
 
@@ -93,7 +101,7 @@ def get_relay_state(
         RelayNotFoundError: If the relay does not exist anywhere
         CheckmkAPIError: If there is an API error
     """
-    relay_in_config = relays_repository.relay_config_applied(relay_id)
+    relay_in_config = relay_config_repository.has_config(relay_id)
     relay_in_api = relays_repository.relay_exists(auth, relay_id)
 
     if not relay_in_api and not relay_in_config:

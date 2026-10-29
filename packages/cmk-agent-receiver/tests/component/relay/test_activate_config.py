@@ -333,7 +333,7 @@ def test_activation_with_relay_pending_activation_handles_gracefully(
     """Verify that activation gracefully handles relays pending activation without errors.
 
     This test ensures that when a relay is registered in the agent receiver but doesn't have
-    its configuration applied yet (relay_config_applied returns False), the system:
+    its configuration applied yet (has_config returns False), the system:
     1. Handles it as an expected scenario (no errors raised or logged)
     2. Does not create config tasks for the pending relay
     3. Proceeds normally with configured relays

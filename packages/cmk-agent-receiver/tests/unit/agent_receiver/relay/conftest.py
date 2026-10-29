@@ -32,6 +32,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     RelayTask,
     TasksRepository,
 )
+from cmk.agent_receiver.relay.lib.relay_config_repository import RelayConfigRepository
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
 from cmk.agent_receiver.relay.lib.site_auth import SecretAuth
@@ -116,14 +117,13 @@ def internal_api_client(_relay_mock_transport: httpx2.MockTransport) -> Iterator
 
 @pytest.fixture()
 def relays_repository(
-    site_api_client: httpx2.Client, internal_api_client: httpx2.Client, site_context: Config
+    site_api_client: httpx2.Client, internal_api_client: httpx2.Client
 ) -> Iterator[RelaysRepository]:
     """Provides a RelaysRepository with mock transport for testing."""
     repository = RelaysRepository(
         client=site_api_client,
         internal_client=internal_api_client,
         siteid="test-site",
-        helper_config_dir=site_context.helper_config_dir,
     )
     yield repository
 
@@ -144,10 +144,15 @@ def register_relay_handler(relays_repository: RelaysRepository) -> Iterator[Regi
 
 @pytest.fixture()
 def get_relay_status_handler(
-    relays_repository: RelaysRepository,
+    relays_repository: RelaysRepository, site_context: Config
 ) -> Iterator[GetRelayStatusHandler]:
     """Provides a GetRelayStatusHandler with mock dependencies."""
-    handler = GetRelayStatusHandler(relays_repository=relays_repository)
+    handler = GetRelayStatusHandler(
+        relays_repository=relays_repository,
+        relay_config_repository=RelayConfigRepository(
+            helper_config_dir=site_context.helper_config_dir
+        ),
+    )
     yield handler
 
 
@@ -185,9 +190,14 @@ def get_tasks_handler(
 
 @pytest.fixture()
 def config_task_factory(
-    tasks_repository: TasksRepository, relays_repository: RelaysRepository
+    tasks_repository: TasksRepository, site_context: Config
 ) -> Iterator[ConfigTaskFactory]:
-    yield ConfigTaskFactory(tasks_repository=tasks_repository, relays_repository=relays_repository)
+    yield ConfigTaskFactory(
+        tasks_repository=tasks_repository,
+        relay_config_repository=RelayConfigRepository(
+            helper_config_dir=site_context.helper_config_dir
+        ),
+    )
 
 
 @pytest.fixture

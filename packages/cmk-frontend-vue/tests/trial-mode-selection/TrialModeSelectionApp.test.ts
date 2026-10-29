@@ -384,7 +384,7 @@ describe('TrialModeSelectionApp', () => {
 
     // prettier-ignore
     it.each([
-      { title: 'Verify online',  mode: 'online',  target: VERIFY_ONLINE_URL },
+      { title: 'Verify online', mode: 'online', target: VERIFY_ONLINE_URL },
       { title: 'Verify offline', mode: 'offline', target: VERIFY_OFFLINE_URL }
     ] as const)('persists the selection and opens the $mode verification on $title', async ({ title, mode, target }) => {
       renderApp()
@@ -812,21 +812,13 @@ describe('TrialModeSelectionApp', () => {
       })
     })
 
-    it('leaves the newsletter opt-in off', async () => {
-      renderApp()
-
-      await startTrial()
-
-      expect(screen.getByRole('checkbox', { name: /email newsletters/ })).not.toBeChecked()
-    })
-
     // prettier-ignore
     describe.each([
-      { failure: 'the site cannot be reached',                failCodeRequest: makeSiteUnreachableForVerification,        reason: SITE_UNREACHABLE },
-      { failure: 'the site reports an error',                 failCodeRequest: reportErrorForVerification,                reason: SITE_ERROR },
+      { failure: 'the site cannot be reached', failCodeRequest: makeSiteUnreachableForVerification, reason: SITE_UNREACHABLE },
+      { failure: 'the site reports an error', failCodeRequest: reportErrorForVerification, reason: SITE_ERROR },
       { failure: 'the site reports an error without message', failCodeRequest: reportErrorWithoutMessageForVerification, reason: INTERNAL_ERROR },
-      { failure: 'the site answers without a salt',           failCodeRequest: answerWithoutSaltForVerification,          reason: INTERNAL_ERROR },
-      { failure: 'the site fails to handle the request',      failCodeRequest: raiseErrorForVerification,                 reason: NOT_PROCESSED }
+      { failure: 'the site answers without a salt', failCodeRequest: answerWithoutSaltForVerification, reason: INTERNAL_ERROR },
+      { failure: 'the site fails to handle the request', failCodeRequest: raiseErrorForVerification, reason: NOT_PROCESSED }
     ])('when $failure', ({ failCodeRequest, reason }) => {
       async function requestCode() {
         failCodeRequest()
@@ -1096,10 +1088,10 @@ describe('TrialModeSelectionApp', () => {
 
     // prettier-ignore
     describe.each([
-      { failure: 'the site cannot be reached',                failVerify: makeSiteUnreachableForVerification,        reason: SITE_UNREACHABLE },
-      { failure: 'the site reports an error',                 failVerify: reportErrorForVerification,                reason: SITE_ERROR },
+      { failure: 'the site cannot be reached', failVerify: makeSiteUnreachableForVerification, reason: SITE_UNREACHABLE },
+      { failure: 'the site reports an error', failVerify: reportErrorForVerification, reason: SITE_ERROR },
       { failure: 'the site reports an error without message', failVerify: reportErrorWithoutMessageForVerification, reason: INTERNAL_ERROR },
-      { failure: 'the site fails to handle the request',      failVerify: raiseErrorForVerification,                 reason: NOT_PROCESSED }
+      { failure: 'the site fails to handle the request', failVerify: raiseErrorForVerification, reason: NOT_PROCESSED }
     ])('when $failure on verifying', ({ failVerify, reason }) => {
       it('says why the code was not verified', async () => {
         renderApp()

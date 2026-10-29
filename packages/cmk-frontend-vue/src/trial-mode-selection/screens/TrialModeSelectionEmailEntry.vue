@@ -14,7 +14,6 @@ import CmkButton from '@/components/CmkButton'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkLink from '@/components/CmkLink.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
-import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
@@ -24,8 +23,6 @@ import TrialModeSelectionStepIndicator from '../components/TrialModeSelectionSte
 import { LEGAL_LINKS } from '../legalLinks'
 
 const email = defineModel<string>('email', { required: true })
-// NOTE: placeholder that will be replaced with CMK-39398, nothing subscribes yet.
-const newsletterOptIn = ref(false)
 
 const { trialLengthDays } = defineProps<{
   trialLengthDays: number
@@ -50,17 +47,6 @@ const emailErrors = ref<string[]>([])
 
 const isWellFormed = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim()))
 
-/**
- * The CmkCheckbox of this branch takes a plain label only, so the sentence keeps its
- * placeholder msgid and "email" stays plain text instead of the unsubscribe link.
- */
-const newsletterLabel = computed(() =>
-  _t(
-    'I agree to receive email newsletters about Checkmk products and services. I can unsubscribe via %{link}.',
-    { link: _t('email') }
-  )
-)
-
 interface LegalNoticeLink {
   href: string
   label: TranslatedString
@@ -81,21 +67,13 @@ const legalNoticeLinks = computed(
   (): Record<string, LegalNoticeLink> => ({
     '%{terms}': { href: LEGAL_LINKS.terms, label: _t('General Terms & Conditions') },
     '%{eula}': { href: LEGAL_LINKS.eula, label: _t('EULA') },
-    // "email" also names the link in the opt-in above, and a screen reader lists the two
-    // side by side with nothing to tell them apart. The visible word stays, so the
-    // sentence still reads as written.
-    '%{unsubscribe}': {
-      href: LEGAL_LINKS.unsubscribe,
-      label: _t('email'),
-      ariaLabel: _t('unsubscribe from onboarding emails by email')
-    },
     '%{privacy_policy}': { href: LEGAL_LINKS.privacy, label: _t('Privacy Policy') }
   })
 )
 
 const legalNoticeSegments = computed((): LegalNoticeSegment[] =>
   _t(
-    'I agree to the %{terms} and the %{eula}. I will receive Checkmk trial onboarding emails and can unsubscribe any time via %{unsubscribe}. I have noted the %{privacy_policy}.'
+    'I agree to the %{terms} and the %{eula}. I will receive Checkmk trial onboarding emails and can unsubscribe any time via email. I have noted the %{privacy_policy}.'
   )
     .split(/(%\{\w+\})/)
     .map((part) => legalNoticeLinks.value[part] ?? { text: part })
@@ -160,12 +138,6 @@ function clearErrors(): void {
       }}
     </CmkParagraph>
 
-    <CmkCheckbox
-      v-model="newsletterOptIn"
-      class="trial-mode-selection-email-entry__newsletter"
-      :label="newsletterLabel"
-    />
-
     <!-- Not a second checkbox: pressing "Send code" is the agreement. -->
     <CmkParagraph class="trial-mode-selection-email-entry__legal">
       <template v-for="(segment, index) in legalNoticeSegments" :key="index"
@@ -204,10 +176,6 @@ function clearErrors(): void {
 .trial-mode-selection-email-entry__hint {
   font-size: var(--font-size-small);
   margin-top: var(--dimension-5);
-}
-
-.trial-mode-selection-email-entry__newsletter {
-  margin-top: var(--dimension-6);
 }
 
 .trial-mode-selection-email-entry__legal {

@@ -159,10 +159,22 @@ def test_delete_revokes_the_deleted_clients_tokens(store: ClientStore) -> None:
         client_id=registered.ok.client_id,
     )
     assert token.is_ok()
+    now = datetime.now(UTC)
+    grant = token_store.start_grant(
+        UserId("cmkadmin"),
+        resource=None,
+        scope=DEFAULT_SCOPE,
+        client_id=registered.ok.client_id,
+        expires_at=now + timedelta(days=1),
+        refresh_token_expires_at=now + timedelta(hours=1),
+        access_token_expires_at=now + timedelta(minutes=5),
+    )
+    assert grant.is_ok()
 
     store.delete([registered.ok.client_id])
 
     assert token_store.get_by_token(token.ok.access) is None
+    assert token_store.get_refresh_token(grant.ok.refresh) is None
 
 
 def test_ensure_builtin_creates_the_client_under_its_fixed_id(store: ClientStore) -> None:

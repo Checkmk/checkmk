@@ -186,7 +186,7 @@ def test_backup_site_to_tarfile_snapshots_a_sqlite_database_without_its_wal(
         # Open while archiving, so the committed row is still only in the WAL.
         tar_path = tmp_path / "backup.tar"
         with tarfile.open(tar_path, mode="w:") as tar:
-            omdlib.backup._backup_site_to_tarfile(  # noqa: SLF001
+            omdlib.backup._backup_site_to_tarfile(
                 site_name,
                 str(site_home),
                 True,

@@ -753,6 +753,12 @@ allows = [
   "cmk.utils.servicename",
   "cmk.utils.timeperiod",
 ]
+# cmk-check-engine-nonfree's guest subtree, see below.
+excludes = ["cmk.checkengine.keepalive"]
+
+# Lives in non-free/packages/cmk-check-engine-nonfree.
+[components."cmk.checkengine.keepalive"]
+allows = ["@ccc"]
 
 [components."cmk.checkengine.source_builder"]
 allows = [

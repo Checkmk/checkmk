@@ -28,7 +28,10 @@ def _pkg_rpm_from_buildroot_impl(ctx):
             topdir="$PWD/rpm/topdir"
             buildroot="$PWD/rpm/buildroot"
             mkdir -p "$topdir"/{SOURCES,BUILD,RPMS,SRPMS,SPECS,TMP} "$buildroot"
-            tar xf "$buildroot_tar" -C "$buildroot"
+            # -p: the agent package ships directories with modes 0750 and 0751.
+            # Without it tar applies the builder's umask and the RPM's modes
+            # depend on who ran the build.
+            tar xpf "$buildroot_tar" -C "$buildroot"
 
             target_args=()
             [ -n "$target_arch" ] && target_args=(--target "$target_arch")

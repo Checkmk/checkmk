@@ -36,27 +36,14 @@ define __spec_install_pre %{___build_pre} &&\
 
 %files
 %defattr(-,root,root)
-/etc/check_mk
-%config(noreplace) /etc/check_mk/super-server.cfg
-%config(noreplace) /etc/check_mk/xinetd-service-template.cfg
-/usr/bin/check_mk_agent
-/usr/bin/check_mk_caching_agent
-/usr/bin/mk-job
-/usr/bin/waitmax
-/usr/lib/check_mk_agent
-/var/lib/check_mk_agent
-/var/lib/cmk-agent/cmk-agent-ctl.gz
-/var/lib/cmk-agent/scripts/manage-agent-user.sh
-/var/lib/cmk-agent/scripts/manage-binaries.sh
-/var/lib/cmk-agent/scripts/migrate.sh
-/var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent-async.service
-/var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent.socket
-/var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent.socket.fallback
-/var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent@.service
-/var/lib/cmk-agent/scripts/super-server/0_systemd/cmk-agent-ctl-daemon.service
-/var/lib/cmk-agent/scripts/super-server/0_systemd/setup
-/var/lib/cmk-agent/scripts/super-server/1_xinetd/setup
-/var/lib/cmk-agent/scripts/super-server/setup
+# /opt/checkmk and /opt/checkmk/agent are shared with whatever else Checkmk
+# installs under /opt one day, so the package owns the two directories but
+# claims no file below them. Its own tree is /opt/checkmk/agent/default.
+%dir /opt/checkmk
+%dir /opt/checkmk/agent
+/opt/checkmk/agent/default
+%config(noreplace) /opt/checkmk/agent/default/package/config/super-server.cfg
+%config(noreplace) /opt/checkmk/agent/default/package/config/xinetd-service-template.cfg
 
 %pre
 
@@ -71,19 +58,19 @@ fi
 # to single directory deployment, but may be augmented by further migration actions in the future.
 # This should run as the first action after files have been placed
 # by the package manager, in order to provide a clean structure for all further scripts.
-/bin/sh /var/lib/cmk-agent/scripts/migrate.sh
+/bin/sh /opt/checkmk/agent/default/package/scripts/migrate.sh
 
-/bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
-BIN_DIR="/usr/bin" /bin/sh /var/lib/cmk-agent/scripts/super-server/setup deploy
+/bin/sh /opt/checkmk/agent/default/package/scripts/super-server/setup cleanup
+/bin/sh /opt/checkmk/agent/default/package/scripts/super-server/setup deploy
 
-BIN_DIR="/usr/bin" /bin/sh /var/lib/cmk-agent/scripts/manage-agent-user.sh
+/bin/sh /opt/checkmk/agent/default/package/scripts/manage-agent-user.sh
 
-/bin/sh /var/lib/cmk-agent/scripts/super-server/setup trigger
+/bin/sh /opt/checkmk/agent/default/package/scripts/super-server/setup trigger
 
-/bin/sh /var/lib/cmk-agent/scripts/manage-binaries.sh install
+/bin/sh /opt/checkmk/agent/default/package/scripts/manage-binaries.sh install
 
 %preun
 
-/bin/sh /var/lib/cmk-agent/scripts/manage-binaries.sh remove
-/bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
-/bin/sh /var/lib/cmk-agent/scripts/super-server/setup trigger
+/bin/sh /opt/checkmk/agent/default/package/scripts/manage-binaries.sh remove
+/bin/sh /opt/checkmk/agent/default/package/scripts/super-server/setup cleanup
+/bin/sh /opt/checkmk/agent/default/package/scripts/super-server/setup trigger

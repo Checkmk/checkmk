@@ -153,10 +153,11 @@ def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
 def download_agent_package(
     site: Site, package_type: Literal["linux_deb", "linux_rpm"], target_dir: Path
 ) -> Path:
-    """Download the generic agent package of the site.
+    """Download the Linux agent package that the site serves.
 
-    The Community edition serves the vanilla package. The other editions serve the baked one,
-    so for them the caller has to run bake_agents() first.
+    The Community edition has no bakery, so its endpoint hands out the prebuilt package that
+    ships with the site. The other editions bake an agent for the "generic" target, so for them
+    the caller has to run bake_agents() first.
     """
     if site.edition.is_community_edition():
         agent_download_resp = site.openapi.get(

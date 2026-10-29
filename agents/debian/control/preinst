@@ -6,3 +6,19 @@
 if [ -r /var/lib/cmk-agent/scripts/super-server/setup ]; then
     /bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
 fi
+
+# The agent bakery builds its packages without any conffiles, so a baked package
+# leaves plain files where this package keeps its conffiles. dpkg has no
+# provenance for such a file, asks the installer what to do with it, and aborts
+# the whole installation when it cannot read an answer. Take the file out of the
+# way and keep its content next to the new one.
+for conffile in \
+    /opt/checkmk/agent/default/package/config/super-server.cfg \
+    /opt/checkmk/agent/default/package/config/xinetd-service-template.cfg; do
+    [ -e "${conffile}" ] || continue
+    if ! dpkg-query -W -f='${Conffiles}\n' check-mk-agent 2>/dev/null |
+        grep -qF " ${conffile} "; then
+        printf "Keeping the previous %s as %s.dpkg-bak\n" "${conffile}" "${conffile}"
+        mv "${conffile}" "${conffile}.dpkg-bak"
+    fi
+done

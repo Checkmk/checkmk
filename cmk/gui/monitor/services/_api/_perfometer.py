@@ -2,16 +2,15 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Self
 
-from cmk.graphing_engine import drawn_segments, DrawnSegment
+from cmk.graphing_engine import ApiPerfometer, drawn_segments, DrawnSegment
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
     evaluated_perfometer,
     get_temperature_unit,
     perfometer_label,
-    perfometers_from_api,
     registered_metrics,
     registered_translations,
 )
@@ -52,12 +51,22 @@ class ServicePerfometer:
 
     @classmethod
     def from_perf_data(
-        cls, perf_data: str, check_command: str, *, host_name: str, service_name: str
+        cls,
+        perf_data: str,
+        check_command: str,
+        *,
+        host_name: str,
+        service_name: str,
+        registered_perfometers: Mapping[str, ApiPerfometer],
     ) -> Self | None:
         """Build the Perf-O-Meter a service's performance data resolves to, if any."""
         try:
             return cls._from_perf_data(
-                perf_data, check_command, host_name=host_name, service_name=service_name
+                perf_data,
+                check_command,
+                host_name=host_name,
+                service_name=service_name,
+                registered_perfometers=registered_perfometers,
             )
         except Exception:
             logger.exception("error rendering perfometer")
@@ -67,7 +76,13 @@ class ServicePerfometer:
 
     @classmethod
     def _from_perf_data(
-        cls, perf_data: str, check_command: str, *, host_name: str, service_name: str
+        cls,
+        perf_data: str,
+        check_command: str,
+        *,
+        host_name: str,
+        service_name: str,
+        registered_perfometers: Mapping[str, ApiPerfometer],
     ) -> Self | None:
         if (
             evaluated := evaluated_perfometer(
@@ -75,7 +90,7 @@ class ServicePerfometer:
                 check_command,
                 host_name=host_name,
                 service_name=service_name,
-                registered_perfometers=perfometers_from_api,
+                registered_perfometers=registered_perfometers,
                 registered_metrics=registered_metrics(),
                 registered_translations=registered_translations(),
                 debug=active_config.debug,

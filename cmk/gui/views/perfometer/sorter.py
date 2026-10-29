@@ -5,13 +5,8 @@
 
 from collections.abc import Mapping
 
-from cmk.graphing.v1 import metrics as metrics_v1
-from cmk.graphing_engine import ApiPerfometer
 from cmk.gui.config import Config, RequestCacheConfig
-from cmk.gui.graphing import (
-    perfometers_from_api,
-    registered_metrics,
-)
+from cmk.gui.graphing import registered_metrics, registered_perfometers
 from cmk.gui.http import Request
 from cmk.gui.i18n import _l
 from cmk.gui.log import logger
@@ -23,8 +18,6 @@ from .base import Perfometer
 
 
 def _sort_perfometer(
-    registered_metrics_: Mapping[str, metrics_v1.Metric],
-    registered_perfometers: Mapping[str, ApiPerfometer],
     r1: Row,
     r2: Row,
     *,
@@ -35,10 +28,10 @@ def _sort_perfometer(
 ) -> int:
     try:
         v1 = Perfometer(
-            r1, registered_metrics_, registered_perfometers, debug=config.debug
+            r1, registered_metrics(), registered_perfometers(), debug=config.debug
         ).sort_value()
         v2 = Perfometer(
-            r2, registered_metrics_, registered_perfometers, debug=config.debug
+            r2, registered_metrics(), registered_perfometers(), debug=config.debug
         ).sort_value()
         return (v1 > v2) - (v1 < v2)
     except Exception:
@@ -48,29 +41,17 @@ def _sort_perfometer(
         return 0
 
 
-class _SorterPerfometer(Sorter):
-    def __init__(
-        self,
-        registered_metrics_: Mapping[str, metrics_v1.Metric],
-        registered_perfometers: Mapping[str, ApiPerfometer],
-    ) -> None:
-        super().__init__(
-            "perfometer",
-            _l("Perf-O-Meter"),
-            [
-                "host_name",
-                "service_description",
-                "service_perf_data",
-                "service_state",
-                "service_check_command",
-                "service_pnpgraph_present",
-                "service_plugin_output",
-            ],
-            lambda *args, **kwargs: _sort_perfometer(
-                registered_metrics_, registered_perfometers, *args, **kwargs
-            ),
-        )
-
-
-def sorter_perfometer() -> Sorter:
-    return _SorterPerfometer(registered_metrics(), perfometers_from_api)
+SorterPerfometer = Sorter(
+    ident="perfometer",
+    title=_l("Perf-O-Meter"),
+    columns=[
+        "host_name",
+        "service_description",
+        "service_perf_data",
+        "service_state",
+        "service_check_command",
+        "service_pnpgraph_present",
+        "service_plugin_output",
+    ],
+    sort_function=_sort_perfometer,
+)

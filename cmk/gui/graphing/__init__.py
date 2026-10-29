@@ -5,7 +5,6 @@
 from ._autocompleter import monitored_metrics_autocompleter
 from ._built_graphs import BuiltGraph, DiscoveredGraphs
 from ._decoding import context_from_json, ensure_type
-from ._from_api import perfometers_from_api
 from ._frontend import (
     DEFAULT_INTERACTION,
     default_time_range_seconds,
@@ -117,10 +116,11 @@ from ._perfometers import (
     evaluated_perfometer,
     perfometer_label,
 )
-from ._plugin_loading import register_plugins
 from ._plugins import (
+    load_plugins,
     registered_graphs,
     registered_metrics,
+    registered_perfometers,
     registered_translations,
 )
 from ._popup import PageHostServiceGraphPopup
@@ -237,6 +237,7 @@ __all__ = [
     "HTML_SIZE_PER_EX",
     "id_from_unit",
     "legacy_graph_id",
+    "load_plugins",
     "metric_name_of",
     "line_type_with_mirroring",
     "LineType",
@@ -255,7 +256,6 @@ __all__ = [
     "PageVsAutocomplete",
     "parse_graph_specification",
     "perfometer_label",
-    "perfometers_from_api",
     "prediction_graph_dispatcher",
     "QuantityCodec",
     "QuantitySpec",
@@ -267,9 +267,9 @@ __all__ = [
     "QueryDataValue",
     "QueryLimitReached",
     "registered_graphs",
-    "register_plugins",
     "registered_metric_ids_and_titles",
     "registered_metrics",
+    "registered_perfometers",
     "registered_translations",
     "render_engine_graph_group",
     "render_global_time_picker",

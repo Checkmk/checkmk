@@ -11,6 +11,7 @@ from pydantic import PlainValidator, ValidationError
 
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
+from cmk.gui.graphing import registered_perfometers
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -191,6 +192,7 @@ class HostServiceEntry:
                 service.check_command,
                 host_name=service.host_name,
                 service_name=service.name,
+                registered_perfometers=registered_perfometers(),
             )
             or ApiOmitted(),
             graphs_link=service_view_link_by_id(

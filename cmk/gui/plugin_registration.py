@@ -12,7 +12,7 @@ from cmk.gui import (
     hooks,
     wato,
 )
-from cmk.gui.graphing import register_plugins as register_graphing_plugins
+from cmk.gui.graphing import load_plugins as load_graphing_plugins
 from cmk.gui.legacy_plugins import add_failed_plugin, load_web_plugins
 from cmk.gui.log import logger
 from cmk.gui.views import legacy_plugins as views_legacy_plugins
@@ -41,7 +41,7 @@ def register() -> None:
     dashboard.register()
     _load_plugins("dashboard")
 
-    register_graphing_plugins()
+    load_graphing_plugins()
 
 
 def _load_plugins(plugin_namespace: str) -> None:

@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 
 import pytest
 
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers, Title
-from cmk.gui.graphing import perfometers_from_api
 from cmk.gui.logged_in import LoggedInUser, UserDefaultConfig
 from cmk.gui.painter import Cell, InternalPainter
 from cmk.gui.type_defs import Row
@@ -97,26 +96,12 @@ def test_a_segment_takes_the_attributes_of_its_registered_metric() -> None:
     assert "background-color: #28a2f3" in str(html)
 
 
-@pytest.fixture(name="registered_perfometer")
-def fixture_registered_perfometer() -> Iterator[None]:
-    perfometer = perfometers.Perfometer(
-        name="export_perfometer",
-        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Closed(100)),
-        segments=["export_metric"],
-    )
-    perfometers_from_api.register(perfometer)
-    try:
-        yield
-    finally:
-        perfometers_from_api.unregister("export_perfometer")
-
-
 def _perfometer_row() -> Row:
     return {
         "host_name": "myhost",
         "service_description": "mysvc",
         "service_staleness": 0.0,
-        "service_perf_data": "export_metric=42;;;0;100",
+        "service_perf_data": "fs_used_percent=42;;;0;100",
         "service_state": 0,
         "service_check_command": "check_mk-export",
         "service_pnpgraph_present": 0,
@@ -128,7 +113,6 @@ def _make_painter() -> InternalPainter:
     return make_perfometer_painter()
 
 
-@pytest.mark.usefixtures("registered_perfometer")
 def test_perfometer_export_contains_label() -> None:
     """The Perf-O-Meter label must be present in CSV/JSON exports.
 
@@ -144,5 +128,5 @@ def test_perfometer_export_contains_label() -> None:
         defaults=UserDefaultConfig(users={}, default_language="en", default_show_mode="default"),
     )
 
-    assert painter.export_for_csv(row, cell, user, cell.painter_context()) == "42"
-    assert painter.export_for_json(row, cell, user, cell.painter_context()) == "42"
+    assert painter.export_for_csv(row, cell, user, cell.painter_context()) == "42 %"
+    assert painter.export_for_json(row, cell, user, cell.painter_context()) == "42 %"

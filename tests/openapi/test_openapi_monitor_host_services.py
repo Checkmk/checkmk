@@ -4,34 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from http import HTTPStatus
 
 import pytest
 import time_machine
 
 from cmk.ccc.user import UserId
-from cmk.graphing.v1 import perfometers
-from cmk.gui.graphing import perfometers_from_api
 from cmk.gui.monitor.services._api._limits import MAX_SERVICE_LIMIT
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry
-
-
-@pytest.fixture(name="registered_perfometer")
-def fixture_registered_perfometer() -> Iterator[None]:
-    perfometers_from_api.register(
-        perfometers.Perfometer(
-            name="test_perfometer",
-            focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Closed(100)),
-            segments=["test_metric"],
-        )
-    )
-    try:
-        yield
-    finally:
-        perfometers_from_api.unregister("test_perfometer")
 
 
 class TestMonitorHostServicesAuth:
@@ -947,7 +930,6 @@ class TestMonitorHostServices:
 
         assert "contact_groups" not in resp.json["services"][0]
 
-    @pytest.mark.usefixtures("registered_perfometer")
     def test_service_with_performance_data_has_a_perfometer(
         self,
         clients: ClientRegistry,
@@ -978,7 +960,7 @@ class TestMonitorHostServices:
                     "staleness": 0.0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
-                    "perf_data": "test_metric=42;;;0;100",
+                    "perf_data": "fs_used_percent=42;;;0;100",
                     "labels": {},
                     "label_sources": {},
                     "tags": {},
@@ -999,8 +981,8 @@ class TestMonitorHostServices:
             )
 
         assert resp.json["services"][0]["perfometer"] == {
-            "bars": [[{"share": 42.0, "color": "#8c8c8c"}, {"share": 58.0, "color": None}]],
-            "formatted": "42",
+            "bars": [[{"share": 42.0, "color": "#1ee6e6"}, {"share": 58.0, "color": None}]],
+            "formatted": "42 %",
         }
 
     def test_service_without_performance_data_has_no_perfometer(
@@ -1110,7 +1092,6 @@ class TestMonitorHostServices:
             f"view.py?view_name=service_graphs&site={_SITE_ID}&host={_HOSTNAME}&service=CPU+load"
         )
 
-    @pytest.mark.usefixtures("registered_perfometer")
     def test_performance_data_matching_no_perfometer_is_omitted(
         self,
         clients: ClientRegistry,

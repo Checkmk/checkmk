@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.gui.graphing import get_temperature_unit, perfometers_from_api, registered_metrics
+from cmk.gui.graphing import get_temperature_unit, registered_metrics, registered_perfometers
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
@@ -22,7 +22,7 @@ from .base import Perfometer
 def _compute_data_perfometer(row: Row, acting_user: LoggedInUser, context: PainterContext) -> str:
     try:
         title, _h = Perfometer(
-            row, registered_metrics(), perfometers_from_api, debug=context.config.debug
+            row, registered_metrics(), registered_perfometers(), debug=context.config.debug
         ).render(
             get_temperature_unit(acting_user, context.config.default_temperature_unit),
             get_themed_perfometer_bg_color(context.theme),
@@ -44,7 +44,7 @@ def _render_perfometer(
 
     try:
         title, h = Perfometer(
-            row, registered_metrics(), perfometers_from_api, debug=context.config.debug
+            row, registered_metrics(), registered_perfometers(), debug=context.config.debug
         ).render(
             get_temperature_unit(acting_user, context.config.default_temperature_unit),
             get_themed_perfometer_bg_color(context.theme),

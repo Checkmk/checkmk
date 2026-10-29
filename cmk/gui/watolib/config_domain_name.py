@@ -346,7 +346,6 @@ class ConfigVariable:
         in_global_settings: bool = True,
         hint: Callable[[], HTML] = HTML.empty,
         hint_type: MsgType = "warning",
-        domain_hint: HTML | None = None,
     ) -> None:
         self._group = group
         self._primary_domain_ident = primary_domain.ident()
@@ -358,7 +357,6 @@ class ConfigVariable:
         self._in_global_settings = in_global_settings
         self._hint_func = hint
         self._hint_type = hint_type
-        self._domain_hint = domain_hint
         self._idents_of_affected_domains = [self._primary_domain_ident]
 
     def group(self) -> ConfigVariableGroup:
@@ -412,7 +410,7 @@ class ConfigVariable:
         return self._hint_type
 
     def domain_hint(self) -> HTML:
-        return self._domain_hint or self.primary_domain().hint() or HTML.empty()
+        return self.primary_domain().hint() or HTML.empty()
 
     def add_config_domain_affected_by_change(
         self,

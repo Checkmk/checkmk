@@ -68,6 +68,20 @@ class ConfigDomainProductUsageAnalytics(ABCConfigDomain):
         return []
 
     @override
+    @classmethod
+    def hint(cls) -> HTML:
+        return HTML.without_escaping(
+            _(
+                "Inspect product usage data: Run <tt>cmk-product-usage --dry-run</tt> as site user, or %s. "
+                "This allows you to review the data locally; it does not enable the feature or transmit any information."
+            )
+            % HTMLWriter.render_a(
+                content=_("download the full JSON report"),
+                href="download_product_usage.py",
+            )
+        )
+
+    @override
     def default_globals(self) -> GlobalSettings:
         return {
             "product_usage_analytics": {
@@ -84,16 +98,6 @@ def make_product_usage_analytics_config_variable(
         group=ConfigVariableGroupProductUsageAnalytics,
         primary_domain=ConfigDomainProductUsageAnalytics,
         ident="product_usage_analytics",
-        domain_hint=HTML.without_escaping(
-            _(
-                "Inspect product usage data: Run <tt>cmk-product-usage --dry-run</tt> as site user, or %s. "
-                "This allows you to review the data locally; it does not enable the feature or transmit any information."
-            )
-            % HTMLWriter.render_a(
-                content=_("download the full JSON report"),
-                href="download_product_usage.py",
-            )
-        ),
         hint=hint,
         valuespec=lambda context: Dictionary(
             title=_("Product usage analytics"),

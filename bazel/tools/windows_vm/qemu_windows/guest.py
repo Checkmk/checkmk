@@ -5,6 +5,7 @@
 import base64
 import contextlib
 import html
+import os
 import re
 import subprocess
 import time
@@ -143,10 +144,18 @@ class Guest:
             self._write(remote, iter(lambda: source.read(_WRITE_CHUNK), b""))
 
     def get(self, remote: str, local: Path) -> None:
-        """Copies the guest's file remote out of the guest, as local."""
-        with local.open("wb") as target:
-            for chunk in self._read(remote):
-                target.write(chunk)
+        """Copies the guest's file remote out of the guest, as local, which
+        a failed copy leaves as it was: the copy goes to a file next to it
+        first."""
+        partial = local.with_name(f".{local.name}.{os.getpid()}.part")
+        try:
+            with partial.open("wb") as target:
+                for chunk in self._read(remote):
+                    target.write(chunk)
+            partial.replace(local)
+        except BaseException:
+            partial.unlink(missing_ok=True)
+            raise
 
     def read(self, remote: str) -> bytes:
         """The content of the guest's file remote."""

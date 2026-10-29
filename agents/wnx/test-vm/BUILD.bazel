@@ -4,10 +4,11 @@
 
 load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_shell//shell:sh_library.bzl", "sh_library")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:xcomp/windows_vm_state.bzl", "windows_vm_state")
-load(":image.bzl", "WINDOWS_TEST_IMAGE", "WINDOWS_TEST_VM")
+load(":image.bzl", "TEST_VM_DATA", "WINDOWS_TEST_IMAGE", "WINDOWS_TEST_VM", "test_vm_env")
 
 # Off by default, which makes the targets that need the VM's media
 # incompatible: whole-repo sweeps then skip them instead of fetching
@@ -45,6 +46,8 @@ py_cmk_test(
     deps = [
         ":make_image",
         ":vm_console",
+        ":vm_registry",
+        ":winvm_lib",
     ],
 )
 
@@ -154,6 +157,13 @@ py_library(
     deps = ["//bazel/tools/windows_vm:console"],
 )
 
+# The running test VMs, as core-vm registers them for winvm.
+py_library(
+    name = "vm_registry",
+    srcs = ["vm_registry.py"],
+    imports = ["."],
+)
+
 # core-vm without its VM, for `bazel lint`: core-vm is manual.
 py_library(
     name = "core_vm",
@@ -161,6 +171,7 @@ py_library(
     imports = ["."],
     deps = [
         ":vm_console",
+        ":vm_registry",
         "//bazel/tools/windows_vm:state",
     ],
 )
@@ -190,4 +201,59 @@ py_binary(
         "//conditions:default": [],
     }),
     deps = [":core_vm"],
+)
+
+py_library(
+    name = "winvm_lib",
+    srcs = ["winvm.py"],
+    imports = ["."],
+    deps = [
+        ":vm_registry",
+        "//bazel/tools/windows_vm:guest",
+    ],
+)
+
+# Works with the VMs core-vm runs (README.md); needs neither the image nor
+# --config=test-vm. In bazel_env.
+py_binary(
+    name = "winvm",
+    srcs = ["winvm.py"],
+    main = "winvm.py",
+    visibility = ["//bazel/tools:__pkg__"],
+    deps = [":winvm_lib"],
+)
+
+# The smoke test without its VM, for `bazel lint`: vm_smoke is manual.
+py_library(
+    name = "vm_smoke_lib",
+    testonly = True,
+    srcs = ["tests/vm/test_vm_smoke.py"],
+    deps = [
+        ":vm_console",
+        ":vm_registry",
+        ":winvm_lib",
+        "//bazel/tools/windows_vm:state",
+        requirement("pytest"),
+    ],
+)
+
+# core-vm's shell and winvm against a VM resumed from the saved state, for
+# what the unit tests fake: the guest's cmd.exe and PowerShell, and SAC.
+py_cmk_test(
+    name = "vm_smoke",
+    size = "large",
+    srcs = ["tests/vm/test_vm_smoke.py"],
+    data = TEST_VM_DATA,
+    env = test_vm_env(),
+    tags = [
+        # Needs /dev/kvm and a VM state created on this host.
+        "manual",
+        "resources:cpu:%d" % WINDOWS_TEST_VM.cpus,
+        "resources:memory:%d" % WINDOWS_TEST_VM.claim_mb,
+    ],
+    target_compatible_with = select({
+        ":disabled": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    deps = [":vm_smoke_lib"],
 )

@@ -152,6 +152,7 @@ bazel_env(
         "py_import_cycles": ":py-import-cycles",
         "stylelint": ":stylelint",
         "uv": "@multitool//tools/uv",
+        "winvm": "//agents/wnx/test-vm:winvm",
     },
 )
 

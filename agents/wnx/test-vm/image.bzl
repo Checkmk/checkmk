@@ -25,3 +25,37 @@ WINDOWS_TEST_VM = struct(
     # QEMU's own.
     claim_mb = 4700,
 )
+
+# What a test needs to resume the saved VM, by the QEMU_WINDOWS_* variable
+# qemu_windows/state.py's resume_from_env() reads it from.
+TEST_VM_FILES = {
+    # The host CPU the state was saved for: checked before every resume.
+    "CPU_FINGERPRINT": "@qemu_host_cpu//:fingerprint",
+    "FIRMWARE": "@qemu_linux_x86_64//:share/qemu/bios-256k.bin",
+    "IMAGE": "@win2022_core_image//file",
+    "QEMU": "@qemu_linux_x86_64//:bin/qemu-system-x86_64",
+    "QEMU_IMG": "@qemu_linux_x86_64//:bin/qemu-img",
+    "STATE": "//agents/wnx/test-vm:core-state/state.bin",
+    "STATE_DISK": "//agents/wnx/test-vm:core-state/disk.qcow2",
+}
+
+# A test's data for resume_from_env(): the files above and QEMU's own.
+TEST_VM_DATA = list(TEST_VM_FILES.values()) + [
+    "@qemu_linux_x86_64//:firmware",
+    "@qemu_linux_x86_64//:qemu",
+]
+
+def test_vm_env():
+    """The QEMU_WINDOWS_* variables of a test that resumes the saved VM.
+
+    Returns:
+        A dict for a test's env, its paths as $(rootpath ...) of TEST_VM_DATA.
+    """
+    return {
+        "QEMU_WINDOWS_" + key: "$(rootpath %s)" % label
+        for key, label in TEST_VM_FILES.items()
+    } | {
+        "QEMU_WINDOWS_CPUS": str(WINDOWS_TEST_VM.cpus),
+        "QEMU_WINDOWS_EXPIRES": WINDOWS_TEST_IMAGE.expires,
+        "QEMU_WINDOWS_MEMORY_MIB": str(WINDOWS_TEST_VM.memory_mib),
+    }

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-MK_SAP_HANA_PLUGIN_PATH="${UNIT_SH_PLUGINS_DIR}/mk_sap_hana"
+MK_SAP_HANA_PLUGIN_PATH="${UNIT_SH_REPO_PATH}/cmk/plugins/sap_hana/agents/mk_sap_hana"
 
 #   .--helper--------------------------------------------------------------.
 #   |                    _          _                                      |

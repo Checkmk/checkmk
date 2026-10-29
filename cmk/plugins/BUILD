@@ -208,6 +208,7 @@ sh_library(
         "oracle/agents/mk-oracle-v2_async_custom_metrics.solaris",
         "oracle/agents/mk-oracle-v2_sync",
         "oracle/agents/mk-oracle-v2_sync.solaris",
+        "sap_hana/agents/mk_sap_hana",
         "smart/agents/smart",
         "smart/agents/smart_posix",
         "suseconnect/agents/mk_suseconnect",

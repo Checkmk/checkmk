@@ -18,10 +18,18 @@ from typing import Literal
 
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.site_config import enabled_sites, is_single_local_site
 from cmk.gui.utils.images import CMKImage, ImageType
-from cmk.maps.gui._cfg_import import decode_cfg, parse_cfg_upload
+from cmk.livestatus_client import SiteConfigurations
+from cmk.maps.gui._cfg_import import (
+    decode_cfg,
+    ImportSite,
+    NAGVIS_DEFAULT_BACKEND,
+    parse_cfg_upload,
+)
 from cmk.maps.gui._image_security import (
     ICON_SUFFIXES,
     is_valid_image,
@@ -69,9 +77,11 @@ class NagVisConfig:
     # Whether NagVis grants access by the Checkmk roles and contact groups, as on
     # every site unless its authorisation module was changed.
     checkmk_permissions: bool
+    default_backend: str
+    site: ImportSite
 
 
-def read_nagvis_config() -> NagVisConfig:
+def read_nagvis_config(sites: SiteConfigurations) -> NagVisConfig:
     """What the migration needs of NagVis' main configuration.
 
     NagVis reads ``conf.d`` first and ``nagvis.ini.php`` last; a later file adds to a
@@ -86,6 +96,8 @@ def read_nagvis_config() -> NagVisConfig:
     return NagVisConfig(
         pools=_rotation_pools(sections, _seconds(general.get("refreshtime")) or POOL_INTERVAL),
         checkmk_permissions=general.get("authorisationmodule") == "CoreAuthorisationModMultisite",
+        default_backend=sections.get("defaults", {}).get("backend") or NAGVIS_DEFAULT_BACKEND,
+        site=import_site(sites),
     )
 
 
@@ -134,9 +146,19 @@ def _read_ini(text: str, sections: dict[str, dict[str, str]]) -> None:
             section[key.strip().lower()] = value
 
 
+def import_site(sites: SiteConfigurations) -> ImportSite:
+    """This site, as a NagVis map imported on it needs to know it."""
+    return ImportSite(
+        connection=f"cmk_{omd_site()}",
+        distributed=not is_single_local_site(enabled_sites(sites)),
+    )
+
+
 def read_nagvis_map(path: Path, name: str, config: NagVisConfig) -> tuple[MapPayload, list[str]]:
     """The map in ``path`` as a map named ``name``, with what it lost on the way."""
-    map_cfg, warnings = parse_cfg_upload(path.name, path.read_bytes())
+    map_cfg, warnings = parse_cfg_upload(
+        path.name, path.read_bytes(), config.site, default_backend=config.default_backend
+    )
     map_cfg["name"] = name
     warnings += _apply_rotation(map_cfg, path.stem, config.pools)
     if map_cfg["view"]["type"] == "worldmap":

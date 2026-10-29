@@ -17,7 +17,7 @@ from logging import Logger
 from pathlib import Path
 
 from cmk.ccc import store
-from cmk.gui.config import default_authorized_builtin_role_ids
+from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.permissions import permission_registry
 from cmk.gui.role_types import UserRoleBase
 from cmk.gui.type_defs import VisualPublic
@@ -277,7 +277,7 @@ def migrate_nagvis_maps(
             _record_path(), {"maps": outcomes, "pending": pending, "migrated_as": migrated_as}
         )
 
-    config = read_nagvis_config()
+    config = read_nagvis_config(active_config.sites)
     access = _nagvis_access() if config.checkmk_permissions else None
     with admin_maps(admin, record.get("pending", {}), outcomes, save_record) as maps:
         if not force:

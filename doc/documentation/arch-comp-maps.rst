@@ -1452,6 +1452,10 @@ import of the editor:
   where its pools differ. URL entries of a pool are left out and named.
 * Worldmap and geomap markers are kept outside the ``.cfg`` and are not
   migrated; such a map is framed and named in the update output.
+* A NagVis dynamic map of hosts or services becomes a static map with one
+  grid. The members moved off the grid stay as objects pinned out of it.
+  Group dynamic maps, and dynamic maps combined with an automap or a
+  geographic map, get no grid and are named.
 
 Touchpoints in the core
 =======================

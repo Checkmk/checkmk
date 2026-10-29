@@ -5,7 +5,7 @@
 """Unit tests for the legacy .cfg map parser.
 
 Covers the block tokenizer, NagVis coordinate parsing (incl. percent offsets and
-two-segment line bends), and the full ``cfg_to_map`` conversion: global block,
+two-segment line bends), and the full ``convert_cfg`` conversion: global block,
 host/service/line/shape/textbox/aggregation handling, line_type → line_style
 mapping with template/global inheritance, weathermap metric defaults, url_target
 frameset rewriting, and the geographic (worldmap/geomap) + container variants.
@@ -23,11 +23,12 @@ from cmk.maps.gui._cfg_import import (
     _line_coords,
     _parse_blocks,
     _parse_coord,
-    cfg_to_map,
+    convert_cfg,
     decode_cfg,
     drop_member_filters,
+    drop_unusable_filters,
     drop_unusable_urls,
-    dynamic_map_warnings,
+    grid_site_warnings,
     map_name_from_filename,
     resolve_connection_ids,
 )
@@ -36,6 +37,10 @@ from cmk.maps.shared.map_payload import MapDisplay, MapObject, MapPayload
 
 def _coord(v: str) -> int:
     return _parse_coord(v).value
+
+
+def cfg_to_map(content: str, map_name: str) -> MapPayload:
+    return convert_cfg(content, map_name)[0]
 
 
 def test_parse_blocks_strips_hash_comments() -> None:
@@ -80,19 +85,6 @@ def test_cfg_to_map_reads_a_long_textbox_of_unclosed_tags_in_linear_time() -> No
 def test_cfg_to_map_drops_a_block_that_a_define_cuts_short() -> None:
     content = "define host {\n    host_name = h1\ndefine host {\n    host_name = h2\n}\n"
     assert [o.get("host_name") for o in cfg_to_map(content, "test")["objects"]] == ["h2"]
-
-
-@pytest.mark.parametrize(
-    "sources, warned",
-    [
-        pytest.param("dynmap", True, id="dynmap"),
-        pytest.param("automap,dynmap", True, id="among-others"),
-        pytest.param("automap", False, id="automap"),
-    ],
-)
-def test_dynamic_map_warnings_name_a_map_filled_by_a_filter(sources: str, warned: bool) -> None:
-    content = f"define global {{\n    sources = {sources}\n}}\n"
-    assert bool(dynamic_map_warnings(content)) is warned
 
 
 def test_decode_cfg_reads_a_latin1_file() -> None:
@@ -761,6 +753,21 @@ def test_drop_member_filters_drops_what_maps_cannot_apply(content: str) -> None:
     assert warnings[0].startswith("1 object leaves out members")
 
 
+def test_drop_unusable_filters_leaves_out_what_livestatus_would_refuse() -> None:
+    map_cfg = cfg_to_map(
+        "define dyngroup {\n    object_filter = Filter: description ~ CPU\n}\n"
+        "define dyngroup {\n    object_types = service\n"
+        "    object_filter = Filter: description ~ CPU\n}\n"
+        "define dyngroup {\n    object_filter = Filter: name = a\\nOr: 2\n}\n",
+        "test",
+    )
+
+    warnings = drop_unusable_filters(map_cfg)
+
+    assert [obj["object_types"] for obj in map_cfg["objects"]] == ["service"]
+    assert warnings[0].startswith("2 objects show what a Livestatus filter")
+
+
 def test_drop_member_filters_names_what_it_dropped() -> None:
     map_cfg = cfg_to_map(
         "define host {\n    host_name = h1\n    exclude_members = ^CPU\n}\n"
@@ -1157,6 +1164,414 @@ def test_geomap_global_becomes_geo_view() -> None:
 def test_dynmap_is_not_converted_to_geo() -> None:
     parsed_map = cfg_to_map("define global {\n sources=dynmap\n}\n", "dm")
     assert parsed_map["view"]["type"] == "static"
+
+
+def _dynmap(*lines: str, objects: str = "") -> str:
+    return (
+        "define global {\nsources=dynmap\n"
+        + "".join(f"{line}\n" for line in lines)
+        + "}\n"
+        + objects
+    )
+
+
+def _grid(content: str) -> dict[str, object]:
+    parsed_map = cfg_to_map(content, "dm")
+    assert parsed_map["view"]["type"] == "static"
+    grids = [dict(obj) for obj in parsed_map["objects"] if obj["type"] == "grid"]
+    return grids[0] if grids else {}
+
+
+def _hosts(parsed_map: MapPayload) -> list[str | None]:
+    return [obj.get("host_name") for obj in parsed_map["objects"] if obj["type"] != "grid"]
+
+
+def test_a_dynmap_without_a_filter_becomes_a_grid_of_every_host() -> None:
+    grid = _grid(_dynmap("dynmap_object_types=host"))
+
+    assert (grid["id"], grid["object_types"]) == ("dynmap", "host")
+    assert "object_filter" not in grid
+    assert (grid["x"], grid["y"], grid["grid_offset_x"], grid["grid_per_row"]) == (20, 700, 30, 30)
+
+
+def test_a_dynmap_with_an_empty_filter_becomes_a_grid_of_every_host() -> None:
+    grid = _grid(_dynmap("dynmap_object_types=host", "dynmap_object_filter= "))
+
+    assert grid["id"] == "dynmap"
+    assert "object_filter" not in grid
+
+
+def test_a_dynmap_keeps_its_filter_and_grid() -> None:
+    grid = _grid(
+        _dynmap(
+            "dynmap_object_types=service",
+            "dynmap_object_filter=Filter: host_name ~ ^web\\nFilter: state > 0\\nAnd: 2",
+            "dynmap_init_x=5",
+            "dynmap_init_y=6",
+            "dynmap_offset_x=40",
+            "dynmap_offset_y=50",
+            "dynmap_per_row=4",
+            "dynmap_sort=s",
+            "dynmap_order=desc",
+        )
+    )
+
+    assert grid["object_filter"] == "Filter: host_name ~ ^web\nFilter: state > 0\nAnd: 2\n"
+    assert (grid["x"], grid["y"], grid["grid_offset_x"], grid["grid_offset_y"]) == (5, 6, 40, 50)
+    assert (grid["grid_per_row"], grid["grid_sort"], grid["grid_order"]) == (4, "state", "desc")
+
+
+@pytest.mark.parametrize("sort", ["a", "k", "x"])
+def test_a_dynmap_sorts_by_name_unless_by_state(sort: str) -> None:
+    assert _grid(_dynmap("dynmap_object_types=host", f"dynmap_sort={sort}"))["grid_sort"] == "name"
+
+
+def test_a_dynmap_never_lays_out_fewer_than_one_per_row() -> None:
+    assert _grid(_dynmap("dynmap_object_types=host", "dynmap_per_row=0"))["grid_per_row"] == 1
+
+
+def test_a_dynmap_limited_to_a_host_group_filters_by_it() -> None:
+    content = (
+        "define global {\nsources=dynmap,filter\ndynmap_object_types=service\n"
+        "dynmap_object_filter=Filter: state > 0\nfilter_group=linux\n}\n"
+    )
+
+    assert _grid(content)["object_filter"] == "Filter: state > 0\nFilter: host_groups >= linux\n"
+
+
+@pytest.mark.parametrize(
+    "group",
+    [
+        pytest.param("lin\x01ux", id="control-character"),
+        pytest.param("linux\\nOr: 2", id="literal-line-break"),
+    ],
+)
+def test_a_dynmap_limited_to_a_host_group_maps_cannot_use_adds_nothing(group: str) -> None:
+    content = (
+        "define global {\nsources=dynmap,filter\ndynmap_object_types=host\n"
+        f"filter_group={group}\n}}\n"
+    )
+
+    parsed_map, warnings = convert_cfg(content, "dm")
+
+    assert parsed_map["objects"] == []
+    assert any("a Livestatus filter Maps cannot use" in warning for warning in warnings)
+
+
+@pytest.mark.parametrize(
+    "object_types, setting",
+    [
+        pytest.param("host", "exclude_members=a\\nOr: 2", id="host-pattern-maps-rejects"),
+        pytest.param("service", "exclude_members=^db-", id="service-pattern"),
+        pytest.param("service", "exclude_member_states=^db-", id="service-state-pattern"),
+    ],
+)
+def test_a_dynmap_warns_about_a_member_pattern_maps_cannot_apply(
+    object_types: str, setting: str
+) -> None:
+    content = _dynmap(f"dynmap_object_types={object_types}", setting)
+
+    _parsed_map, warnings = convert_cfg(content, "dm")
+
+    assert not {"exclude_members", "exclude_member_states"} & _grid(content).keys()
+    assert any("by a pattern Maps cannot apply" in warning for warning in warnings)
+
+
+@pytest.mark.parametrize(
+    "raw_filter", ["filter: state > 0", "Columns: name", "Or: 2", "Filter: nme = web"]
+)
+def test_a_dynmap_with_a_filter_maps_cannot_use_adds_nothing(raw_filter: str) -> None:
+    content = _dynmap("dynmap_object_types=host", f"dynmap_object_filter={raw_filter}")
+
+    parsed_map, warnings = convert_cfg(content, "dm")
+
+    assert parsed_map["objects"] == []
+    assert any(raw_filter in warning for warning in warnings)
+
+
+@pytest.mark.parametrize(
+    "sources, object_types",
+    [
+        pytest.param("dynmap,automap", "host", id="automap"),
+        pytest.param("dynmap,worldmap", "host", id="worldmap"),
+        pytest.param("dynmap", "hostgroup", id="groups"),
+    ],
+)
+def test_a_dynmap_maps_cannot_lay_out_is_named(sources: str, object_types: str) -> None:
+    content = f"define global {{\nsources={sources}\ndynmap_object_types={object_types}\n}}\n"
+
+    parsed_map, warnings = convert_cfg(content, "dm")
+
+    assert not [obj for obj in parsed_map["objects"] if obj["type"] == "grid"]
+    assert warnings
+
+
+def test_a_dynmap_without_an_object_type_is_a_plain_map() -> None:
+    parsed_map, warnings = convert_cfg("define global {\nsources=dynmap\n}\n", "dm")
+
+    assert parsed_map["view"] == {"type": "static"}
+    assert parsed_map["objects"] == []
+    assert warnings == []
+
+
+def test_the_members_look_as_the_global_block_says() -> None:
+    grid = _grid(
+        _dynmap(
+            "dynmap_object_types=host",
+            "label_show=1",
+            "label_text=[name]",
+            "label_border=#ff0000",
+            "label_maxlen=12",
+            "only_hard_states=1",
+            "recognize_services=0",
+            "exclude_members=^test",
+        )
+    )
+
+    assert grid["label"] == {
+        "show": True,
+        "text": "{{host}}",
+        "x": 0,
+        "y": 22,
+        "size": 11,
+        "color": "#ffffff",
+        "background": "transparent",
+        "width": None,
+    }
+    assert (grid["label_border"], grid["label_maxlen"]) == ("#ff0000", 12)
+    assert (grid["only_hard_states"], grid["recognize_services"]) == (True, False)
+    assert grid["exclude_members"] == "^test"
+
+
+def test_a_member_label_is_hidden_unless_shown() -> None:
+    label = _grid(_dynmap("dynmap_object_types=host"))["label"]
+
+    assert isinstance(label, dict) and label["show"] is False
+
+
+def test_a_service_member_is_labelled_with_its_service() -> None:
+    grid = _grid(_dynmap("dynmap_object_types=service", "label_text=[name]"))
+
+    assert isinstance(grid["label"], dict) and grid["label"]["text"] == "{{service}}"
+    assert "recognize_services" not in grid
+
+
+def test_a_member_label_at_a_point_of_the_map_is_put_at_its_object() -> None:
+    content = _dynmap("dynmap_object_types=host", "label_x=300", "label_y=400")
+
+    _parsed_map, warnings = convert_cfg(content, "dm")
+
+    label = _grid(content)["label"]
+    assert isinstance(label, dict) and (label["x"], label["y"]) == (0, 22)
+    assert warnings
+
+
+def test_dynmap_settings_are_not_pushed_onto_the_objects() -> None:
+    content = _dynmap(
+        "dynmap_object_types=service", objects="define host {\nhost_name=h\nx=1\ny=1\n}\n"
+    )
+
+    assert "dynmap_object_types" not in str(cfg_to_map(content, "dm")["objects"])
+
+
+# NagVis names the objects a dynmap adds sha1("<backend>~~<host>")[:6].
+_PINNED = "define host {\nobject_id=1c59e1\nhost_name=web01\nx=400\ny=100\n}\n"
+_IN_GRID = "define host {\nobject_id=405571\nhost_name=web02\nx=50\ny=730\nlabel_show=1\n}\n"
+_STALE = "define host {\nobject_id=abcdef\nhost_name=db01\nx=10\ny=10\n}\n"
+
+
+def test_a_dynmap_keeps_only_the_members_moved_off_the_grid_as_pinned_out_of_it() -> None:
+    content = _dynmap(
+        "dynmap_object_types=host", "backend_id=s1", objects=_PINNED + _IN_GRID + _STALE
+    )
+
+    parsed_map, warnings = convert_cfg(content, "dm")
+
+    assert [(o.get("host_name"), o.get("grid_id")) for o in parsed_map["objects"]] == [
+        (None, None),
+        ("web01", "dynmap"),
+    ]
+    assert len(warnings) == 2
+
+
+def test_a_dynmap_starting_left_of_the_map_still_lays_its_members_out() -> None:
+    on_grid = "define host {\nobject_id=405571\nhost_name=web02\nx=0\ny=730\n}\n"
+    content = _dynmap(
+        "dynmap_object_types=host", "dynmap_init_x=-30", "backend_id=s1", objects=on_grid
+    )
+
+    parsed_map, _warnings = convert_cfg(content, "dm")
+
+    assert [o.get("host_name") for o in parsed_map["objects"]] == [None]
+
+
+def test_a_dynmap_names_the_settings_a_member_on_the_grid_takes_from_a_template() -> None:
+    template = "define template {\nname=big\nlabel_show=1\n}\n"
+    in_grid = "define host {\nobject_id=405571\nuse=big\nhost_name=web02\nx=50\ny=730\n}\n"
+    content = _dynmap("dynmap_object_types=host", "backend_id=s1", objects=template + in_grid)
+
+    _parsed_map, warnings = convert_cfg(content, "dm")
+
+    assert any("settings of its own" in warning for warning in warnings)
+
+
+def test_a_map_limited_to_a_host_group_names_the_objects_maps_shows_besides() -> None:
+    content = (
+        "define global {\nsources=filter\nfilter_group=linux\n}\n"
+        "define host {\nhost_name=web01\nx=1\ny=1\n}\n"
+    )
+
+    _parsed_map, warnings = convert_cfg(content, "hg")
+
+    assert any("outside the host group linux" in warning for warning in warnings)
+
+
+def test_a_dynmap_limited_to_a_host_group_names_nothing_else_without_other_objects() -> None:
+    content = (
+        "define global {\nsources=dynmap,filter\ndynmap_object_types=host\nfilter_group=linux\n}\n"
+    )
+
+    _parsed_map, warnings = convert_cfg(content, "hg")
+
+    assert warnings == []
+
+
+def test_a_dynmap_limited_to_a_host_group_names_the_objects_pinned_out_of_its_grid() -> None:
+    pinned = "define host {\nobject_id=1c59e1\nhost_name=web01\nx=20\ny=730\n}\n"
+    content = (
+        "define global {\nsources=dynmap,filter\ndynmap_object_types=host\n"
+        "backend_id=s1\nfilter_group=linux\n}\n" + pinned
+    )
+
+    _parsed_map, warnings = convert_cfg(content, "hg")
+
+    assert any("outside the host group linux" in warning for warning in warnings)
+
+
+def test_a_member_on_the_first_column_is_pinned_as_in_nagvis() -> None:
+    first_column = "define host {\nobject_id=1c59e1\nhost_name=web01\nx=20\ny=730\n}\n"
+    content = _dynmap("dynmap_object_types=host", "backend_id=s1", objects=first_column)
+
+    assert _hosts(cfg_to_map(content, "dm")) == ["web01"]
+
+
+def test_a_dynmap_naming_no_backend_takes_the_one_nagvis_defaults_to() -> None:
+    pinned = "define host {\nobject_id=74ffab\nhost_name=web01\nx=400\ny=100\n}\n"
+    content = _dynmap("dynmap_object_types=host", objects=pinned)
+
+    assert _hosts(cfg_to_map(content, "dm")) == ["web01"]
+
+
+def test_a_member_id_skips_a_leading_0e() -> None:
+    # sha1("s1~~h525") starts with "0e", which PHP would compare as a number.
+    pinned = "define host {\nobject_id=eb9daf\nhost_name=h525\nx=400\ny=100\n}\n"
+    content = _dynmap("dynmap_object_types=host", "backend_id=s1", objects=pinned)
+
+    assert _hosts(cfg_to_map(content, "dm")) == ["h525"]
+
+
+def test_a_member_of_any_backend_of_the_map_is_one() -> None:
+    pinned = "define host {\nobject_id=1c59e1\nhost_name=web01\nx=400\ny=100\n}\n"
+    content = _dynmap("dynmap_object_types=host", "backend_id=other,s1", objects=pinned)
+
+    parsed_map, warnings = convert_cfg(content, "dm")
+
+    assert _hosts(parsed_map) == ["web01"]
+    assert parsed_map["connection_id"] == "other"
+    assert any("several NagVis backends" in warning for warning in warnings)
+
+
+def test_a_service_dynmap_names_its_members_by_host_and_service() -> None:
+    # sha1("s1~~web01~~CPU load")[:6]
+    pinned = (
+        "define service {\nobject_id=39b656\nhost_name=web01\n"
+        "service_description=CPU load\nx=400\ny=100\n}\n"
+    )
+    stale = (
+        "define service {\nobject_id=abcdef\nhost_name=db01\n"
+        "service_description=CPU load\nx=400\ny=200\n}\n"
+    )
+    content = _dynmap("dynmap_object_types=service", "backend_id=s1", objects=pinned + stale)
+
+    parsed_map, _warnings = convert_cfg(content, "dm")
+
+    assert [
+        (o.get("host_name"), o.get("service_description"), o.get("grid_id"))
+        for o in parsed_map["objects"]
+    ] == [(None, None, None), ("web01", "CPU load", "dynmap")]
+
+
+def test_objects_of_another_type_stay_as_they_are() -> None:
+    content = _dynmap("dynmap_object_types=service", "backend_id=s1", objects=_STALE)
+
+    parsed_map = cfg_to_map(content, "dm")
+
+    assert [(o.get("host_name"), o.get("grid_id")) for o in parsed_map["objects"]] == [
+        (None, None),
+        ("db01", None),
+    ]
+
+
+def test_a_member_drawn_as_a_line_is_not_pinned_out_of_the_grid() -> None:
+    line = (
+        "define host {\nobject_id=1c59e1\nhost_name=web01\nview_type=line\n"
+        "x=400,500\ny=100,200\n}\n"
+    )
+    content = _dynmap("dynmap_object_types=host", "backend_id=s1", objects=line)
+
+    parsed_map, warnings = convert_cfg(content, "dm")
+
+    assert [(o["type"], o.get("grid_id")) for o in parsed_map["objects"]] == [
+        ("grid", None),
+        ("line", None),
+    ]
+    assert len(warnings) == 1
+
+
+def _site_map(*objects: MapObject) -> MapPayload:
+    parsed_map = cfg_to_map("define global {\n}\n", "dm")
+    parsed_map["connection_id"] = "cmk_central"
+    parsed_map["objects"] = list(objects)
+    return parsed_map
+
+
+def test_a_grid_on_the_site_connection_of_a_distributed_setup_is_named() -> None:
+    grid: MapObject = {"id": "dynmap", "type": "grid", "x": 0, "y": 0, "url_target": "_self"}
+
+    assert grid_site_warnings(_site_map(grid), "cmk_central", distributed=True)
+
+
+@pytest.mark.parametrize(
+    "connection_id, distributed",
+    [
+        pytest.param(None, False, id="single-site"),
+        pytest.param("live_1", True, id="other-connection"),
+    ],
+)
+def test_a_grid_that_asks_one_site_is_not_named(
+    connection_id: str | None, distributed: bool
+) -> None:
+    grid: MapObject = {
+        "id": "dynmap",
+        "type": "grid",
+        "x": 0,
+        "y": 0,
+        "url_target": "_self",
+        "connection_id": connection_id,
+    }
+
+    assert grid_site_warnings(_site_map(grid), "cmk_central", distributed=distributed) == []
+
+
+def test_an_imported_dynmap_passes_the_daemon_schema() -> None:
+    content = _dynmap(
+        "dynmap_object_types=host",
+        "dynmap_object_filter=Filter: name ~ web",
+        "backend_id=s1",
+        objects=_PINNED,
+    )
+
+    DaemonMapConfig.model_validate(cfg_to_map(content, "dm"))
 
 
 def test_container_imports_as_graph_iframe() -> None:

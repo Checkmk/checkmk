@@ -247,6 +247,41 @@ def test_a_geographic_map_is_named_for_its_markers(
     assert any("not migrated" in warning for warning in _warnings(caplog))
 
 
+def test_a_dynamic_map_becomes_a_grid_keeping_the_members_moved_off_it(
+    admin: UserId,
+) -> None:
+    # NagVis names a member sha1("<backend>~~<host>")[:6]; abcdef names none.
+    page = _migrated(
+        admin,
+        "dynamic",
+        "define global {\nsources=dynmap\nbackend_id=s1\ndynmap_object_types=host\n"
+        "dynmap_object_filter=Filter: name ~ ^web\n}",
+        "define host {\nobject_id=1c59e1\nhost_name=web01\nx=400\ny=100\n}",
+        "define host {\nobject_id=405571\nhost_name=web02\nx=50\ny=730\n}",
+        "define host {\nobject_id=abcdef\nhost_name=db01\nx=10\ny=10\n}",
+    )
+
+    grid, pinned = _objects(page)
+    assert (grid["type"], grid["object_filter"]) == ("grid", "Filter: name ~ ^web\n")
+    assert (pinned["host_name"], pinned["grid_id"]) == ("web01", grid["id"])
+
+
+def test_a_dynamic_map_naming_no_backend_drops_what_the_default_backends_name_none(
+    admin: UserId,
+) -> None:
+    _write_nagvis_file("conf.d/omd.ini.php", '[defaults]\nbackend="s0,s1"\n')
+
+    page = _migrated(
+        admin,
+        "dynamic",
+        "define global {\nsources=dynmap\ndynmap_object_types=host\n}",
+        "define host {\nobject_id=1c59e1\nhost_name=web01\nx=400\ny=100\n}",
+        "define host {\nobject_id=abcdef\nhost_name=db01\nx=10\ny=10\n}",
+    )
+
+    assert [obj.get("host_name") for obj in _objects(page)] == [None, "web01"]
+
+
 # --- runs -------------------------------------------------------------------
 
 

@@ -360,7 +360,7 @@ def test_imported_cfg_map_passes_the_rest_bridge(all_objects_map: MapPayload) ->
     The SPA's import flow saves the parsed map through the create endpoint, so a
     schema mismatch (a missing ``sort_order``/``click_action``, an object without
     the required ``url_target``, or a partial ``label``) makes the save 400 and the
-    import silently fail. ``cfg_to_map`` produces the flat stored shape, so it is
+    import silently fail. ``convert_cfg`` produces the flat stored shape, so it is
     validated through the same flat->grouped bridge the endpoint uses — for every
     object and line type the shared fixture covers.
     """

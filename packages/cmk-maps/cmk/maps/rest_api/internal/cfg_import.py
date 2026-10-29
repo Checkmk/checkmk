@@ -13,6 +13,7 @@ saves through the Maps REST API like any other map. The parser lives in
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
@@ -22,6 +23,7 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.maps.gui._cfg_import import parse_cfg_upload
+from cmk.maps.gui.nagvis_maps import read_nagvis_config
 from cmk.maps.rest_api.internal.endpoint_family import MAPS_INTERNAL_FAMILY
 from cmk.maps.rest_api.internal.models.request_models import MapsCfgImportRequest
 from cmk.maps.rest_api.internal.models.response_models import MapsCfgImportResponse
@@ -29,12 +31,16 @@ from cmk.maps.rest_api.utils import NO_CONFIG_CHANGE
 from cmk.web.utils import permission_verification as permissions
 
 
-def parse_cfg_v1(body: MapsCfgImportRequest) -> MapsCfgImportResponse:
+def parse_cfg_v1(api_context: ApiContext, body: MapsCfgImportRequest) -> MapsCfgImportResponse:
     """Parse a legacy NagVis map file into a map draft"""
     user.need_permission("maps.use")
     # Importing produces a map to save, so it needs the pagetype create grant.
     user.need_permission("general.edit_map")
-    map_config, warnings = parse_cfg_upload(body.filename, body.content)
+    # A map naming no backend takes NagVis' default, as the migration does.
+    nagvis = read_nagvis_config(api_context.config.sites)
+    map_config, warnings = parse_cfg_upload(
+        body.filename, body.content, nagvis.site, default_backend=nagvis.default_backend
+    )
     # An upload is the map file alone; the update migration brings the image along.
     if background := map_config.get("background_image"):
         warnings.append(

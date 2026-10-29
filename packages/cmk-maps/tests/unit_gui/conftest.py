@@ -12,7 +12,7 @@ the same parsed map through the REST bridge. It is inlined rather than a sidecar
 
 import pytest
 
-from cmk.maps.gui._cfg_import import cfg_to_map
+from cmk.maps.gui._cfg_import import convert_cfg
 from cmk.maps.shared.map_payload import MapPayload
 
 _ALL_OBJECTS_CFG = """\
@@ -154,4 +154,4 @@ url_target=main
 
 @pytest.fixture
 def all_objects_map() -> MapPayload:
-    return cfg_to_map(_ALL_OBJECTS_CFG, "all-objects")
+    return convert_cfg(_ALL_OBJECTS_CFG, "all-objects")[0]

@@ -12,21 +12,24 @@ endpoint serving it is in :mod:`cmk.maps.rest_api.internal.cfg_import`.
 
 import codecs
 import contextlib
+import hashlib
 import html
 import re
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import get_args, Literal, TypedDict
+from typing import Final, get_args, Literal, TypedDict
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, ungettext
+from cmk.maps.gui._filter_check import check_object_filter
 from cmk.maps.gui._settings import connection_choices, map_object_defaults
 from cmk.maps.shared.filters import (
     bound_type_of,
     check_host_member_patterns,
     MEMBER_PATTERN_MAX_LENGTH,
+    normalize_object_filter,
     validate_member_pattern,
 )
 from cmk.maps.shared.geo import bounded_view, parse_degrees
@@ -35,6 +38,10 @@ from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH
 from cmk.maps.shared.map_payload import (
     FlowView,
     GadgetType,
+    GRID_FIELD_DEFAULTS,
+    GRID_OFFSET_MAX,
+    GRID_PER_ROW_MAX,
+    GridObjectType,
     LABEL_FIELD_DEFAULTS,
     LabelAlign,
     LabelWeight,
@@ -551,7 +558,7 @@ _NON_INHERITED_KEYS = frozenset({"object_id", "name", "use"})
 # Global-block keys that configure the map itself (handled by _apply_global)
 # and must not be pushed onto every object as a default. backend_id stays
 # map-level so an object only gets a connection override where its own block (or
-# its template) names one — see the object loop in cfg_to_map.
+# its template) names one — see the object loop in convert_cfg.
 # view_type is excluded too: a global view_type=line would reroute every host
 # into the line handler — view_type is inherited from templates (line/gadget
 # templates), never from global.
@@ -568,6 +575,16 @@ _GLOBAL_MAP_KEYS = frozenset(
         "child_layers",
         "parent_layers",
         "view_type",
+        "filter_group",
+        "dynmap_object_types",
+        "dynmap_object_filter",
+        "dynmap_init_x",
+        "dynmap_init_y",
+        "dynmap_offset_x",
+        "dynmap_offset_y",
+        "dynmap_per_row",
+        "dynmap_sort",
+        "dynmap_order",
     }
 )
 
@@ -615,7 +632,11 @@ def _sources(p: dict[str, str]) -> set[str]:
     return {s.strip().lower() for s in p.get("sources", "").split(",") if s.strip()}
 
 
-def _apply_global(map_cfg: MapPayload, p: dict[str, str]) -> None:
+def _backends(raw: str) -> list[str]:
+    return [b.strip() for b in raw.split(",") if b.strip()]
+
+
+def _apply_global(map_cfg: MapPayload, p: dict[str, str], warnings: list[str]) -> None:
     if "alias" in p:
         map_cfg["alias"] = p["alias"]
     if p.get("map_image", "").lower() not in ("", "none"):
@@ -624,8 +645,16 @@ def _apply_global(map_cfg: MapPayload, p: dict[str, str]) -> None:
         map_cfg["background_color"] = background
     # NagVis cfg uses the legacy "backend_id" parameter name on disk; map to our
     # canonical "connection_id" while reading.
-    if "backend_id" in p:
-        map_cfg["connection_id"] = p["backend_id"]
+    if backends := _backends(p.get("backend_id", "")):
+        map_cfg["connection_id"] = backends[0]
+        if len(backends) > 1:
+            warnings.append(
+                _(
+                    "The map names several NagVis backends (%(backends)s). Maps reads from "
+                    "one monitoring connection only; the others are ignored."
+                )
+                % {"backends": _clipped(", ".join(backends))}
+            )
     if "iconset" in p:
         map_cfg["icon_size"] = ICONSET_SIZE.get(p["iconset"], 22)
 
@@ -1032,8 +1061,8 @@ _NAME_PLACEHOLDERS = {
 _MACRO_RE = re.compile(r"\[(\w+)\]")
 
 
-def _translate_macros(payload: MapObject, block_type: str) -> None:
-    if not ((label := payload.get("label")) and (text := label.get("text"))):
+def _translate_macros(label: MapLabel, block_type: str) -> None:
+    if not (text := label.get("text")):
         return
     macros = {**_LABEL_MACROS, "name": _NAME_PLACEHOLDERS.get(block_type, "{{name}}")}
     if block_type == "map":
@@ -1057,8 +1086,286 @@ def _handle_object_block(
     return _handle_monitor_block(block_type, p, raw_id, map_icon_size)
 
 
-def cfg_to_map(content: str, map_name: str) -> MapPayload:
-    """Convert legacy .cfg text to an Maps map JSON dict."""
+# ---------------------------------------------------------------------------
+# Dynamic maps
+# ---------------------------------------------------------------------------
+
+# NagVis also knows group dynmaps; a Maps grid adds only hosts or services.
+_DYNMAP_TYPES: dict[str, GridObjectType] = {"host": "host", "service": "service"}
+# The column ``filter_group`` limits the members by, per member type.
+_GROUP_COLUMNS: dict[GridObjectType, str] = {"host": "groups", "service": "host_groups"}
+# Imported object ids carry a type prefix, so this one is always free.
+_DYNMAP_GRID_ID = "dynmap"
+# What a dynmap object carries anyway; anything else is a setting of its own.
+_DYNMAP_IDENTITY_KEYS = frozenset(
+    {"object_id", "host_name", "service_description", "x", "y", "backend_id", "use"}
+)
+
+
+# The backend NagVis reads where neither a map nor its configuration names one.
+NAGVIS_DEFAULT_BACKEND: Final = "live_1"
+
+
+@dataclass(frozen=True)
+class _Dynmap:
+    grid: MapObject
+    object_types: GridObjectType
+    # The map's, else those of the NagVis it came from.
+    backends: tuple[str, ...]
+    # Where NagVis lays the members out, as the file says, before the grid's
+    # position and spacing are kept within what Maps takes.
+    origin: tuple[int, int]
+    step: tuple[int, int]
+
+
+def _nagvis_object_id(key: str) -> str:
+    """NagVis' ``GlobalMapCfg::genObjId``, which names the objects a dynmap adds."""
+    digest = hashlib.sha1(key.encode(), usedforsecurity=False).hexdigest()
+    # PHP would read "0e…" as a number in a comparison.
+    return digest[1:7] if digest.startswith("0e") else digest[:6]
+
+
+def _dynmap(
+    p: dict[str, str],
+    defaults: dict[str, str],
+    icon_size: int,
+    default_backend: str,
+    warnings: list[str],
+) -> _Dynmap | None:
+    """The grid a NagVis dynamic map's global block describes, if Maps can show it."""
+    sources = _sources(p)
+    raw_type = p.get("dynmap_object_types", "").strip().lower()
+    if "dynmap" not in sources or not raw_type:
+        return None
+    if "automap" in sources or sources & _GEO_SOURCES:
+        warnings.append(
+            _(
+                "This NagVis map also adds objects from a Livestatus filter, which Maps "
+                "does not combine with an automatic or a geographic map. Those objects "
+                "were left out."
+            )
+        )
+        return None
+    if (object_types := _DYNMAP_TYPES.get(raw_type)) is None:
+        warnings.append(
+            _(
+                "This NagVis map adds a %(type)s for each group a Livestatus filter "
+                "matches. A grid in Maps adds only hosts or services, so those "
+                "objects were left out."
+            )
+            % {"type": _clipped(raw_type)}
+        )
+        return None
+    object_filter: str | None = None
+    # Without a filter, or with an empty one, NagVis adds every object of the type.
+    if (raw_filter := p.get("dynmap_object_filter", "")).strip() and (
+        object_filter := _usable_filter(raw_filter, object_types)
+    ) is None:
+        _warn_unusable_filter(warnings, raw_filter)
+        return None
+    if "filter" in sources and (group := p.get("filter_group", "").strip()):
+        raw_filter = f"{object_filter or ''}Filter: {_GROUP_COLUMNS[object_types]} >= {group}\n"
+        # A second line could add an Or: that makes the group optional.
+        if (
+            len(group.replace("\\n", "\n").splitlines()) > 1
+            or (object_filter := _usable_filter(raw_filter, object_types)) is None
+        ):
+            _warn_unusable_filter(warnings, raw_filter)
+            return None
+
+    offset_x = _int(p.get("dynmap_offset_x"), GRID_FIELD_DEFAULTS["grid_offset_x"])
+    offset_y = _int(p.get("dynmap_offset_y"), GRID_FIELD_DEFAULTS["grid_offset_y"])
+    # NagVis' dynmap_init_x/y defaults.
+    init_x = _int(p.get("dynmap_init_x"), 20)
+    init_y = _int(p.get("dynmap_init_y"), 700)
+    grid: MapObject = {
+        "id": _DYNMAP_GRID_ID,
+        "type": "grid",
+        "x": max(init_x, 0),
+        "y": max(init_y, 0),
+        "url_target": "_self",
+        "object_types": object_types,
+        "grid_per_row": _clamp(
+            _int(p.get("dynmap_per_row"), GRID_FIELD_DEFAULTS["grid_per_row"]), 1, GRID_PER_ROW_MAX
+        ),
+        "grid_offset_x": _clamp(offset_x, 0, GRID_OFFSET_MAX),
+        "grid_offset_y": _clamp(offset_y, 0, GRID_OFFSET_MAX),
+        # NagVis sorts by name for anything but "s", "k" included.
+        "grid_sort": "state" if p.get("dynmap_sort", "").strip() == "s" else "name",
+        "grid_order": "desc" if p.get("dynmap_order", "").strip().lower() == "desc" else "asc",
+    }
+    if object_filter:
+        grid["object_filter"] = object_filter
+    _apply_member_look(grid, defaults, object_types, icon_size, warnings)
+    backends = _backends(p.get("backend_id", "")) or _backends(default_backend)
+    return _Dynmap(
+        grid, object_types, tuple(backends), origin=(init_x, init_y), step=(offset_x, offset_y)
+    )
+
+
+# What a warning quotes from a cfg, which may be as long as the file.
+_QUOTED_MAX_CHARS = 200
+
+
+def _clipped(text: str) -> str:
+    if len(text) <= _QUOTED_MAX_CHARS:
+        return text
+    return f"{text[:_QUOTED_MAX_CHARS]}… ({len(text)} characters)"
+
+
+def _warn_unusable_filter(warnings: list[str], raw: str) -> None:
+    warnings.append(
+        _(
+            "This NagVis map adds its objects from a Livestatus filter Maps cannot "
+            'use: "%(filter)s". Those objects were left out.'
+        )
+        % {"filter": _clipped(raw)}
+    )
+
+
+def _usable_filter(raw: str, object_types: str | None) -> str | None:
+    try:
+        object_filter = normalize_object_filter(raw)
+        check_object_filter(object_filter, object_types)
+    except ValueError:
+        return None
+    return object_filter
+
+
+def _apply_member_look(
+    grid: MapObject,
+    p: dict[str, str],
+    object_types: GridObjectType,
+    icon_size: int,
+    warnings: list[str],
+) -> None:
+    """Gives the grid what the global block sets for every object, which its
+    members take."""
+    if any(_label_map_coord(p.get(key)) is not None for key in ("label_x", "label_y")):
+        warnings.append(
+            _(
+                "The objects a filter adds put their labels at one point of the map. "
+                "Maps puts each label at its own object."
+            )
+        )
+        p = {k: v for k, v in p.items() if k not in ("label_x", "label_y")}
+    label = _label(p, 0, 0, icon_size, show_default=False)
+    if object_types == "service":
+        # NagVis labels the services it adds with their names, whatever is set.
+        label["text"] = "{{service}}"
+    else:
+        _translate_macros(label, object_types)
+    grid["label"] = label
+    if border := _color(p.get("label_border"), ""):
+        grid["label_border"] = border
+    if (max_length := _int(p.get("label_maxlen"))) > 0:
+        grid["label_maxlen"] = max_length
+    grid["only_hard_states"] = _bool(p.get("only_hard_states"))
+    if object_types == "host":
+        grid["recognize_services"] = _bool(p.get("recognize_services"), True)
+    dropped: tuple[tuple[Literal["exclude_members", "exclude_member_states"], str], ...] = (
+        (
+            "exclude_members",
+            _(
+                "The objects a filter adds leave out members by a pattern Maps cannot "
+                "apply. The pattern was dropped."
+            ),
+        ),
+        (
+            "exclude_member_states",
+            _(
+                "The objects a filter adds ignore the state of some members by a pattern "
+                "Maps cannot apply. Maps counts every member; the setting was dropped."
+            ),
+        ),
+    )
+    for key, warning in dropped:
+        if not (pattern := p.get(key)):
+            continue
+        if object_types == "host" and (kept := _member_pattern("host", pattern)) is not None:
+            grid[key] = kept
+        else:
+            warnings.append(warning)
+
+
+def _dynmap_key(block_type: str, p: dict[str, str]) -> str:
+    host = p.get("host_name", "")
+    return f"{host}~~{p.get('service_description', '')}" if block_type == "service" else host
+
+
+def _in_dynmap_grid(dynmap: _Dynmap, p: dict[str, str]) -> bool:
+    """NagVis' ``dynmap_object_in_grid``, which leaves the first row and column out."""
+    dx = _int(p.get("x")) - dynmap.origin[0]
+    dy = _int(p.get("y")) - dynmap.origin[1]
+    step_x, step_y = dynmap.step
+    return step_x > 0 and step_y > 0 and dx > 0 and dx % step_x == 0 and dy > 0 and dy % step_y == 0
+
+
+def _dynmap_part(
+    dynmap: _Dynmap, block_type: str, block: dict[str, str], effective: dict[str, str]
+) -> Literal["pinned", "grid", "stale"] | None:
+    """What a file object of the dynmap's type is to NagVis.
+
+    ``stale`` is one NagVis deletes, as no member has its id; ``grid`` one it lays
+    out with the members; ``pinned`` one the operator moved off the grid. ``None``
+    for an object of another type.
+    """
+    if block_type != dynmap.object_types:
+        return None
+    key = _dynmap_key(block_type, effective)
+    ids = {_nagvis_object_id(f"{backend}~~{key}") for backend in dynmap.backends}
+    if ids and block.get("object_id") not in ids:
+        return "stale"
+    return "grid" if _in_dynmap_grid(dynmap, effective) else "pinned"
+
+
+def _dynmap_warnings(stale: int, customized: int, lines: int) -> list[str]:
+    warnings: list[str] = []
+    if lines:
+        warnings.append(
+            ungettext(
+                "%(count)d object the filter adds is drawn as a line. Maps shows it as a "
+                "line and in the grid, too.",
+                "%(count)d objects the filter adds are drawn as lines. Maps shows them as "
+                "lines and in the grid, too.",
+                lines,
+            )
+            % {"count": lines}
+        )
+    if stale:
+        warnings.append(
+            ungettext(
+                "%(count)d object of the type the filter adds is not one the filter "
+                "added. NagVis does not show it, so it was left out.",
+                "%(count)d objects of the type the filter adds are not ones the filter "
+                "added. NagVis does not show them, so they were left out.",
+                stale,
+            )
+            % {"count": stale}
+        )
+    if customized:
+        warnings.append(
+            ungettext(
+                "%(count)d object the filter adds had settings of its own. Maps shows "
+                "every such object as the map's settings say.",
+                "%(count)d objects the filter adds had settings of their own. Maps shows "
+                "every such object as the map's settings say.",
+                customized,
+            )
+            % {"count": customized}
+        )
+    return warnings
+
+
+def convert_cfg(
+    content: str, map_name: str, default_backend: str = NAGVIS_DEFAULT_BACKEND
+) -> tuple[MapPayload, list[str]]:
+    """Convert legacy .cfg text to a Maps map, with what it could not carry over.
+
+    ``default_backend`` is the one the NagVis the map comes from used where the map
+    names none, for the ids of the objects a dynamic map added.
+    """
+    warnings: list[str] = []
     map_cfg: MapPayload = {
         "name": map_name,
         "alias": map_name,
@@ -1105,11 +1412,12 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
         if k not in _NON_INHERITED_KEYS and k not in _GLOBAL_MAP_KEYS
     }
     map_icon_size = ICONSET_SIZE.get(global_props.get("iconset", ""), 22)
-    settings_chars = 0
+    dynmap = _dynmap(global_props, global_defaults, map_icon_size, default_backend, warnings)
+    stale = customized = lines = settings_chars = 0
 
     for (block_type, p), with_template in zip(blocks, _merge_templates(blocks), strict=True):
         if block_type == "global":
-            _apply_global(map_cfg, p)
+            _apply_global(map_cfg, p, warnings)
             continue
         if block_type not in _BLOCK_TYPES:
             continue
@@ -1129,20 +1437,32 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
                 )
                 % {"limit": _MAX_OBJECT_SETTINGS_CHARS},
             )
+        part = _dynmap_part(dynmap, block_type, p, effective) if dynmap else None
+        if part == "stale":
+            stale += 1
+            continue
+        if part == "grid":
+            customized += bool(with_template.keys() - _DYNMAP_IDENTITY_KEYS)
+            continue
         obj = _handle_object_block(block_type, effective, raw_id, map_icon_size)
         if obj is not None:
             # ``url_target`` is a required field on every map object; only the
             # monitor handler sets it (and only when the cfg gave a target). Give
             # everything else NagVis' default so the map round-trips on save.
             obj.payload.setdefault("url_target", "_self")
-            if block_type in _MONITOR_OBJECT_TYPES:
-                _translate_macros(obj.payload, block_type)
+            if block_type in _MONITOR_OBJECT_TYPES and (label := obj.payload.get("label")):
+                _translate_macros(label, block_type)
             # NagVis allows backend_id per object so one map can mix monitoring
             # sources; the daemon honours that (it groups the state fetch by
             # connection). Kept raw here and resolved against the configured
             # connections in resolve_connection_ids, like the map-level id.
             if backend := effective.get("backend_id") or effective.get("connection_id"):
                 obj.payload["connection_id"] = backend
+            if part == "pinned" and obj.payload["type"] in ("host", "service"):
+                obj.payload["grid_id"] = _DYNMAP_GRID_ID
+            elif part == "pinned":
+                # Only a host or a service is pinned out of a grid.
+                lines += 1
             obj.ref_id = object_id
             objects.append(obj)
 
@@ -1160,7 +1480,27 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
     ):
         obj.payload["id"] = object_id
     map_cfg["objects"] = [obj.payload for obj in objects]
-    return map_cfg
+    if dynmap:
+        # First, so its members are drawn over it.
+        map_cfg["objects"].insert(0, dynmap.grid)
+        warnings += _dynmap_warnings(stale, customized, lines)
+    warnings += _host_group_warnings(global_props, map_cfg["objects"])
+    return map_cfg, warnings
+
+
+def _host_group_warnings(p: dict[str, str], objects: list[MapObject]) -> list[str]:
+    """NagVis' ``filter`` source leaves out every object of a host outside the
+    group, which only a grid of Maps can do."""
+    group = p.get("filter_group", "").strip()
+    if "filter" not in _sources(p) or not group:
+        return []
+    # Only the grid's own filter takes the group, not what is pinned out of it.
+    if not any(obj.get("host_name") for obj in objects if obj["type"] != "grid"):
+        return []
+    return [
+        _("NagVis left out the objects of hosts outside the host group %(group)s. Maps shows them.")
+        % {"group": _clipped(group)}
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -1266,7 +1606,18 @@ def resolve_connection_ids(
     return warnings
 
 
-def parse_cfg_upload(filename: str, contents: bytes) -> tuple[MapPayload, list[str]]:
+@dataclass(frozen=True)
+class ImportSite:
+    """The site a map is imported on: its own connection, and whether it is
+    one of several, which a NagVis map of one backend does not cover alike."""
+
+    connection: str
+    distributed: bool
+
+
+def parse_cfg_upload(
+    filename: str, contents: bytes, site: ImportSite, default_backend: str
+) -> tuple[MapPayload, list[str]]:
     """Parse an uploaded legacy NagVis ``.cfg`` into a map dict (no persistence).
 
     The returned map is a draft the editor shows before the user saves it through
@@ -1286,34 +1637,36 @@ def parse_cfg_upload(filename: str, contents: bytes) -> tuple[MapPayload, list[s
             _("The uploaded file is too large (maximum %(limit)d MB).")
             % {"limit": MAX_CFG_BYTES // (1024 * 1024)},
         )
-    text = decode_cfg(contents)
-    map_cfg = cfg_to_map(text, map_name_from_filename(filename))
-    warnings = resolve_connection_ids(
-        map_cfg, _configured_connection_ids(), map_object_defaults()["default_backend_id"]
+    map_cfg, warnings = convert_cfg(
+        decode_cfg(contents), map_name_from_filename(filename), default_backend
     )
     return map_cfg, (
-        warnings
+        resolve_connection_ids(
+            map_cfg, _configured_connection_ids(), map_object_defaults()["default_backend_id"]
+        )
+        + warnings
         + drop_unusable_urls(map_cfg)
         + drop_member_filters(map_cfg)
-        + dynamic_map_warnings(text)
+        + drop_unusable_filters(map_cfg)
+        + grid_site_warnings(map_cfg, site.connection, distributed=site.distributed)
     )
 
 
-def dynamic_map_warnings(text: str) -> list[str]:
-    """Name a NagVis map that fills itself from a filter, which Maps does not do.
-
-    Without a warning such a map would arrive as an empty map.
-    """
-    if not any(
-        block_type == "global" and "dynmap" in _sources(params)
-        for block_type, params in _parse_blocks(text)
+def grid_site_warnings(
+    map_cfg: MapPayload, site_connection: str, *, distributed: bool
+) -> list[str]:
+    """NagVis takes a dynamic map's objects from one backend, which is one site;
+    the site's connection of Maps covers every site of a distributed setup."""
+    if not distributed or not any(
+        obj["type"] == "grid"
+        and (obj.get("connection_id") or map_cfg["connection_id"]) == site_connection
+        for obj in map_cfg["objects"]
     ):
         return []
     return [
         _(
-            "This NagVis map adds its objects from a Livestatus filter. Maps keeps only "
-            "the objects the file lists. To show the state of everything the filter "
-            "matches, add a dynamic group with that filter."
+            "NagVis added the objects of the filter from one site. Maps adds those of "
+            "every site of the connection."
         )
     ]
 
@@ -1340,6 +1693,34 @@ def drop_unusable_urls(map_cfg: MapPayload) -> list[str]:
         ungettext(
             "%(count)d link uses an address Maps does not accept. It was dropped.",
             "%(count)d links use an address Maps does not accept. They were dropped.",
+            dropped,
+        )
+        % {"count": dropped}
+    ]
+
+
+def drop_unusable_filters(map_cfg: MapPayload) -> list[str]:
+    """Leave out the objects whose Livestatus filter Maps cannot use, counting them.
+
+    Saving the imported map would refuse the filter, and without it the object
+    would show every host or service instead of those it names.
+    """
+    kept: list[MapObject] = []
+    for obj in map_cfg["objects"]:
+        if raw := obj.get("object_filter"):
+            if (object_filter := _usable_filter(raw, obj.get("object_types"))) is None:
+                continue
+            obj["object_filter"] = object_filter
+        kept.append(obj)
+    if not (dropped := len(map_cfg["objects"]) - len(kept)):
+        return []
+    map_cfg["objects"] = kept
+    return [
+        ungettext(
+            "%(count)d object shows what a Livestatus filter Maps cannot use matches. "
+            "It was left out.",
+            "%(count)d objects show what a Livestatus filter Maps cannot use matches. "
+            "They were left out.",
             dropped,
         )
         % {"count": dropped}
@@ -1408,6 +1789,10 @@ def _applicable_member_pattern(obj: MapObject, pattern: str) -> str | None:
     bound = bound_type_of(obj["type"], obj.get("line_object_type"), obj.get("service_description"))
     if bound not in ("host", "hostgroup", "servicegroup"):
         return None
+    return _member_pattern(bound, pattern)
+
+
+def _member_pattern(bound: str, pattern: str) -> str | None:
     try:
         check_host_member_patterns(bound, pattern)
         return validate_member_pattern(pattern)

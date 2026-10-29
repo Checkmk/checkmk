@@ -760,7 +760,6 @@ def test_bom_csv_synchronous(package_path: str) -> None:
 
 AGENT_PLUGINS_PREFIX = [
     "mk_docker",
-    "mk_inotify",
     "mk_logwatch",
     "mk_tinkerforge",
 ]

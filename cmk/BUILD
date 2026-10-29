@@ -214,6 +214,7 @@ py_requirements_test(
         "pymongo",  # cmk/plugins/mongodb/agents/mk_mongodb.py
         "bson",  # cmk/plugins/mongodb/agents/mk_mongodb.py
         "pyrfc",  # cmk/plugins/sap/agents/mk_sap.py
+        "pyinotify",  # cmk/plugins/inotify/agents/mk_inotify.py
         "rrdtool",  # is built as part of the project
         "git",  # cmk/utils/werks/mail/__init__.py, dev-only werks tooling
     ],

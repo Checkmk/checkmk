@@ -20,6 +20,7 @@ py_library(
         "//cmk/plugins/ceph/agents",
         "//cmk/plugins/collection/agents",
         "//cmk/plugins/files/agents",
+        "//cmk/plugins/inotify/agents",
         "//cmk/plugins/jolokia/agents",
         "//cmk/plugins/mongodb/agents",
         "//cmk/plugins/mtr/agents",

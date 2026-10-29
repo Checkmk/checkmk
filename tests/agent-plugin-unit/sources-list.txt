@@ -4,7 +4,6 @@
 # on the fly would significantly increase the load on the CI.
 #
 agents/plugins/mk_docker.py
-agents/plugins/mk_inotify.py
 agents/plugins/mk_logwatch.py
 agents/plugins/mk_podman.py
 agents/plugins/mk_tinkerforge.py
@@ -12,6 +11,7 @@ cmk/plugins/ceph/agents/mk_ceph.py
 cmk/plugins/collection/agents/apache_status.py
 cmk/plugins/collection/agents/isc_dhcpd.py
 cmk/plugins/files/agents/mk_filestats.py
+cmk/plugins/inotify/agents/mk_inotify.py
 cmk/plugins/jolokia/agents/mk_jolokia.py
 cmk/plugins/mongodb/agents/mk_mongodb.py
 cmk/plugins/mtr/agents/mtr.py
@@ -25,7 +25,6 @@ tests/agent-plugin-unit/datasets/mk_logwatch/test_append.log
 tests/agent-plugin-unit/datasets/mk_logwatch/test_data_for_mk_logwatch_crlf.txt
 tests/agent-plugin-unit/datasets/mk_logwatch/test_data_for_mk_logwatch.txt
 tests/agent-plugin-unit/test_mk_docker.py
-tests/agent-plugin-unit/test_mk_inotify.py
 tests/agent-plugin-unit/test_mk_logwatch.py
 tests/agent-plugin-unit/test_mk_podman.py
 tests/agent-plugin-unit/test_mk_tinkerforge.py
@@ -39,6 +38,7 @@ tests/unit/cmk/plugins/collection/agents/test_isc_dhcpd.py
 tests/unit/cmk/plugins/files/agents/datasets/mk_filestats/subdir/testfile2.html
 tests/unit/cmk/plugins/files/agents/datasets/mk_filestats/testfile1.txt
 tests/unit/cmk/plugins/files/agents/test_mk_filestats.py
+tests/unit/cmk/plugins/inotify/agents/test_mk_inotify.py
 tests/unit/cmk/plugins/jolokia/agents/test_mk_jolokia.py
 tests/unit/cmk/plugins/mongodb/agents/datasets/mk_mongodb/mongo_output_arbiter-3.4.21.json
 tests/unit/cmk/plugins/mongodb/agents/datasets/mk_mongodb/mongo_output_arbiter-3.6.13.json

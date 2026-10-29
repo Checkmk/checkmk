@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from agents.plugins import mk_inotify
+from cmk.plugins.inotify.agents import mk_inotify
 
 _ = Path, pytest  # only used in type comments; make ruff happy
 

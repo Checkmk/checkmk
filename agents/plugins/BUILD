@@ -25,7 +25,6 @@ py_library(
     name = "agent-plugins-python",
     srcs = [
         "mk_docker.py",
-        "mk_inotify.py",
         "mk_logwatch.py",
         "mk_podman.py",
         "mk_tinkerforge.py",

@@ -8,4 +8,8 @@ qemu: one QEMU process and its QMP connection (qmp).
 qga: the guest agent (qemu-ga), over the same protocol as QMP.
 guest: commands and files in the guest, through its agent.
 session: commands in the guest's autologon console session.
+state: resuming a saved test VM.
+host_cpu: whether the host CPU still matches a saved state's fingerprint.
+console: PowerShell on the serial console, through Windows' SAC.
+process: the setup of a program that runs a QEMU.
 """

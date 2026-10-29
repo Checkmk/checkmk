@@ -16,6 +16,7 @@ _TOOLS = [
     *("--sql-iso", "sql/downloaded", "--sql-cu", "cu/downloaded", "--odbc", "odbc/downloaded"),
     *("--answer", "answer/autounattend-core.xml", "--first-logon", "guest/first-logon.ps1"),
     *("--install-mssql", "guest/install-mssql.ps1", "--verify", "guest/verify-image.ps1"),
+    *("--cpus", "4", "--memory-mib", "4096"),
 ]
 
 

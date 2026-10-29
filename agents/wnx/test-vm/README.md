@@ -3,17 +3,67 @@
 The `*-qemu` test tiers run cross-built Windows payloads (watest, the regression and
 integration suites, Pester, the Rust tests of cmk-agent-ctl, mk-sql and mk-oracle, the
 MSI install) inside a real Windows Server 2022 VM, driven from Linux. This directory
-builds that VM's image.
+builds that VM's image and the saved state the tests start from.
 
-The image (`@win2022_core_image`, pinned in `image.bzl`) is Windows Server 2022
-Datacenter Evaluation, Server Core, provisioned by `make_image.py` and cleanly shut
-down. It is published on Nexus upstream-archives and shared by CI and developers.
-QEMU itself is `@qemu_linux_x86_64`, a static build from `third_party/qemu`, so
-building the image needs `/dev/kvm` (readable and writable, e.g. through the kvm
-group) but no QEMU package. The guest's user and password are fixed test values
-(`USER` and `PASSWORD` in `bazel/tools/windows_vm/qemu_windows/guest.py`): the
-host reaches the VM only through its own sockets (see "Reaching a guest"). The
-password is baked into the image, so changing it takes a new image.
+## How a test gets its VM
+
+1. The image (`@win2022_core_image`, pinned in `image.bzl`): Windows Server 2022
+   Datacenter Evaluation, Server Core, provisioned by `make_image.py` and cleanly shut
+   down. Published on Nexus upstream-archives; shared by CI and developers.
+2. The VM state (`:core-state`, `bazel/rules/xcomp/windows_vm_state.bzl`): a Bazel
+   action boots the image once, does the work Windows would otherwise do on first use
+   in every test (`guest/warm-up.ps1`), waits until the guest has settled and saves the
+   running VM (a small disk overlay plus the RAM and device state, about 1 GiB). It runs on the
+   build host, because the state only resumes on the same CPU (`-cpu host`): the host's
+   CPU as the pinned QEMU sees it (`@qemu_host_cpu`) is part of its cache key. About 3
+   to 5 minutes, then cached (disk cache, bazel-remote).
+3. Each test resumes that state in its own VM on a throwaway disk layer
+   (`bazel/tools/windows_vm/qemu_windows/state.py`), in a few seconds, and the
+   VM ends with the test.
+
+Every VM, from the image build on, has the size that `WINDOWS_TEST_VM` in `image.bzl`
+sets (4 vCPUs, 4 GiB of RAM): a state only resumes with the size it was saved with.
+
+QEMU itself is `@qemu_linux_x86_64`, a static build from `third_party/qemu`. So building
+the image and the tests need `/dev/kvm` (readable and writable, e.g. through the kvm
+group) and the host's `setpriv`, but no QEMU package. The first test run downloads the
+image (about 5 GiB: 30 to 45 minutes over the VPN), once per image version and machine.
+The guest's user and password are fixed test values (`USER` and `PASSWORD` in
+`bazel/tools/windows_vm/qemu_windows/guest.py`): the host reaches the VM only
+through its own sockets (see "Reaching a guest"). The password is baked into the
+image, so changing it takes a new image.
+
+The CPU fingerprint is taken once and then only re-read when QEMU, the CPU (model,
+features, microcode) or the kernel changes, not when a KVM module parameter or the kernel
+command line changes the features KVM passes on. The state action and every test check it against the host CPU and say
+when it is out of date, also when it was taken without usable KVM (before joining the
+kvm group, in a container without `/dev/kvm`); refresh it with
+`bazel fetch --force --repo=@qemu_host_cpu`.
+
+The guests have unrestricted network access through QEMU's user-mode NAT: the host as
+10.0.2.2 (mk-oracle's database tests use that) and whatever the host itself reaches.
+Tests should not depend on the internet; nothing enforces that.
+
+## Exploring the test VM
+
+`core-vm` resumes the VM a test would get, after the same checks a test makes, and
+switches your terminal to PowerShell on its serial console, as the Administrator:
+
+```
+bazel run --config=test-vm //agents/wnx/test-vm:core-vm
+```
+
+The VM is saved with that PowerShell already logged in, in SAC's first `cmd` channel
+(`Cmd0001`, see "Reaching a guest"), so its prompt shows about a second after the resume.
+`exit` ends that PowerShell and `core-vm` with it (Ctrl-] does the same for a PowerShell
+that hangs). The VM's disk layer goes with it: the next start is the saved state again.
+
+The session's console host lays out its screen for your terminal's size, and is switched
+to again when the terminal is resized, so that it redraws for the new size. SAC drops
+the ESC that cursor keys start with, so the shell sends the arrow keys, Home, End and
+Delete as control keys that the session's PSReadLine binds to them (Ctrl+P, N, F, B, A,
+E and D; `KEY_BINDINGS` in `qemu_windows/console.py`). Output comes at serial speed: a
+full listing of `C:\Windows\system32` takes about 10 s.
 
 ## What is in the image
 
@@ -38,7 +88,8 @@ after the install is a cold one with only the devices it needs:
 
 ## Building a new image
 
-The Eval licence runs 180 days from the build (`image.bzl` records its end). Build and
+The Eval licence runs 180 days from the build (`image.bzl` records its end; the
+tests and `core-vm` refuse to start the VM from the day before). Build and
 publish a new image with the manual Jenkins job
 `buildscripts/scripts/winagt-build-test-vm-image.groovy`, which runs
 
@@ -52,10 +103,16 @@ then put the three fields the upload prints (name, sha256, Eval expiry) into
 `image.bzl`. A local build takes `--work <dir>` for its ~13 GiB work disk and
 `--keep-work` to keep it, with the guest's provisioning logs, after a successful build.
 Unlike the tests, the build needs network access: the guest activates the Eval licence
-online. The image has no Python: the pytest suites bring their own.
+online. The image has no Python: the pytest suites bring their own
+(`//agents/modules/windows:python_test_cab`).
 The media (Eval ISO, virtio-win ISO, SQL Server ISO and CU, ODBC driver) are pinned in
 `bazel/extensions/test_vm_repositories.bzl`; a new SQL Server CU also bumps `MSSQL_VERSION`
 in `make_image.py`.
+
+To run the tiers against a locally built image before publishing it, point
+`@win2022_core_image` at it (`--override_repository`); keep the override directory out
+of `/tmp`, which linux-sandbox replaces with an empty one inside actions, so the
+state action would not find the image.
 
 ## Reaching a guest
 
@@ -66,9 +123,10 @@ each for one client at a time:
 - `qga`, the guest agent (qemu-ga, as LocalSystem), through which the build and the
   tests drive the guest (`qemu_windows/guest.py`);
 - `console`, COM1, with Windows' Special Administration Console (SAC), a shell for a
-  guest whose agent does not answer, also while something else drives it.
+  guest whose agent does not answer, also while something else drives it. `core-vm`
+  logs in there.
 
-To use the console:
+To use the console by hand:
 
 ```
 socat -,raw,echo=0,escape=0x1d UNIX-CONNECT:/tmp/qwin.XXXXXX/console

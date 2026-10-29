@@ -17,9 +17,9 @@ the install is a cold one, with a fresh clock and only the devices it needs:
      NGEN flush, component store cleanup, removal of C:\\setup and TRIM
   3. verification: the device set the tests use, verify-image.ps1
 then a zstd-compressed copy. The result is a cleanly shut down disk without
-snapshots: a running state only resumes on the CPU it was saved on, so it is
-never saved here. Every boot after the install is driven through the guest
-agent (qemu-ga).
+snapshots: the running state the tests resume is created per host CPU by
+Bazel (windows_vm_state.bzl), never here. Every boot after the install is
+driven through the guest agent (qemu-ga).
 
 Run through Bazel, which provides QEMU and the pinned media:
   bazel run --config=test-vm //agents/wnx/test-vm:build-core -- --out <image.qcow2> [--work <dir>] [--keep-work]
@@ -31,11 +31,9 @@ the image pin needs; <image.qcow2>.expires holds it for upload-image.sh.
 
 import argparse
 import contextlib
-import io
 import os
 import re
 import shutil
-import signal
 import subprocess
 import sys
 import time
@@ -43,9 +41,8 @@ from collections.abc import Iterator, Sequence
 from contextlib import contextmanager, ExitStack
 from dataclasses import dataclass
 from pathlib import Path
-from types import FrameType
 
-from qemu_windows import machine
+from qemu_windows import machine, process
 from qemu_windows.errors import VmError
 from qemu_windows.guest import Guest, PASSWORD, ps_quote
 from qemu_windows.qemu import Qemu
@@ -87,6 +84,7 @@ class Config:
     first_logon: Path
     install_mssql: Path
     verify: Path
+    size: machine.Size
     # The user's options.
     out: Path
     work: Path
@@ -110,6 +108,8 @@ def parse_args(argv: Sequence[str]) -> Config:
         parser.add_argument(f"--{tool}", type=Path, required=True)
     for template in ("answer", "first-logon", "install-mssql", "verify"):
         parser.add_argument(f"--{template}", type=Path, required=True)
+    parser.add_argument("--cpus", type=int, required=True)
+    parser.add_argument("--memory-mib", type=int, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--work", type=Path)
     parser.add_argument("--keep-work", action="store_true")
@@ -129,6 +129,7 @@ def parse_args(argv: Sequence[str]) -> Config:
         first_logon=args.first_logon.resolve(),
         install_mssql=args.install_mssql.resolve(),
         verify=args.verify.resolve(),
+        size=machine.Size(args.cpus, args.memory_mib),
         out=out,
         work=(_user_path(args.work) if args.work else out.parent) / "test-vm-build-core",
         keep_work=args.keep_work,
@@ -170,13 +171,7 @@ def parse_expiry(verify_output: str) -> str | None:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    # Each step line before the output it explains.
-    if isinstance(sys.stdout, io.TextIOWrapper):
-        sys.stdout.reconfigure(line_buffering=True)
-    # Like Ctrl-C: the running QEMU quits on the way out (a SIGKILL instead
-    # takes it down through its parent-death signal).
-    for signum in (signal.SIGTERM, signal.SIGHUP):
-        signal.signal(signum, _exit_on_signal)
+    process.setup()
     try:
         config = parse_args(sys.argv[1:] if argv is None else argv)
         check_paths(config)
@@ -192,10 +187,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     return 0
 
 
-def _exit_on_signal(signum: int, _frame: FrameType | None) -> None:
-    raise SystemExit(128 + signum)
-
-
 def _step(message: str) -> None:
     sys.stdout.write(f"\n=== [{time.strftime('%T')}] {message}\n")
 
@@ -204,7 +195,9 @@ def _step(message: str) -> None:
 def _boot(config: Config, extra: Sequence[str] = ()) -> Iterator[tuple[Qemu, Guest]]:
     """A QEMU run of the image. -no-shutdown keeps QEMU up when the guest
     powers off, so _wait_power_off can tell that from a crash."""
-    argv = machine.argv(config.qemu, config.firmware, [machine.Disk("disk", config.image)])
+    argv = machine.argv(
+        config.qemu, config.firmware, config.size, [machine.Disk("disk", config.image)]
+    )
     with Qemu.start(argv, config.work / "vm", ["-no-shutdown", *extra]) as vm:
         sys.stdout.write(f"serial console (SAC, README.md): {vm.console_socket}\n")
         with contextlib.closing(Qga(vm.qga_socket, vm.alive)) as agent:

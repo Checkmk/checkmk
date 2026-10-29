@@ -19,7 +19,7 @@ import livestatus
 
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.licensing.basics.paths import get_license_usage_report_file_path
-from cmk.licensing.basics.protocol_version import get_licensing_protocol_version
+from cmk.licensing.basics.protocol_version import CURRENT_USAGE_HISTORY_VERSION
 from cmk.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageSample,
@@ -205,7 +205,7 @@ def test__parse_cloud_hosts_or_services(
     assert hosts_or_services_cloud_counter.services == excepted_services
 
 
-def test_serialize_license_usage_report(omd_root: Path) -> None:
+def test_serialize_license_usage_report() -> None:
     raw_report = {
         "VERSION": "1.1",
         "history": [
@@ -238,7 +238,7 @@ def test_serialize_license_usage_report(omd_root: Path) -> None:
     # this test)
     assert _serialize_dump(
         RawLicenseUsageReport(
-            VERSION=get_licensing_protocol_version(omd_root),
+            VERSION=CURRENT_USAGE_HISTORY_VERSION,
             history=history.for_report(),
         )
     ) == (

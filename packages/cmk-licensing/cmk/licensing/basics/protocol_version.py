@@ -4,10 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from pathlib import Path
 from typing import Final, Literal
-
-from cmk.ccc.version import Edition, edition
 
 AllowedUsageHistoryVersions = Literal[
     "1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1", "3.2"
@@ -59,12 +56,3 @@ def parse_verification_response_version(raw: object) -> AllowedVerificationRespo
             return raw_version
         case other:
             raise ValueError(f"Unknown protocol version for the verification response: {other!r}")
-
-
-def get_licensing_protocol_version(
-    omd_root: Path,
-) -> Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1", "3.2"]:
-    """Returns the current licensing protocol version."""
-    if edition(omd_root) == Edition.CLOUD:
-        return "3.2"
-    return "3.2"

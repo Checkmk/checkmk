@@ -227,6 +227,200 @@ def test_map_link_handles_cycle_without_recursion(
     assert by_id["a_to_b"].state == "PENDING"
 
 
+@pytest.mark.parametrize("order", [("a", "b"), ("b", "a")])
+def test_map_links_into_a_cycle_show_the_same_state_in_any_order(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch, order: tuple[str, str]
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    a = _map(
+        [_obj("h_a", "host", host_name="srv-down"), _obj("a_to_b", "map", map_name="b")], name="a"
+    )
+    b = _map([_obj("b_to_a", "map", map_name="a")], name="b")
+    root = _map([_obj(f"to_{n}", "map", map_name=n) for n in order], name="root")
+    for cfg in (a, b, root):
+        map_service.register_map("alice", cfg)
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"srv-down": ObjectState(object_id="h_a", type="host", state="DOWN")}
+    )
+
+    result = asyncio.run(get_map_states(root, map_owner="alice", links=FakeLinkGui()))
+
+    by_id = {s.object_id: s.state for s in result.states}
+    assert (by_id["to_a"], by_id["to_b"]) == ("DOWN", "DOWN")
+
+
+def test_a_map_several_links_reach_is_evaluated_once(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    leaf = _map([_obj("h_leaf", "host", host_name="srv-down")], name="leaf")
+    details = [
+        _map(
+            [
+                _obj(f"{n}_up", "map", map_name="overview"),
+                _obj(f"{n}_leaf", "map", map_name="leaf"),
+            ],
+            name=n,
+        )
+        for n in ("d1", "d2")
+    ]
+    overview = _map(
+        [_obj("to_d1", "map", map_name="d1"), _obj("to_d2", "map", map_name="d2")], name="overview"
+    )
+    for cfg in (leaf, overview, *details):
+        map_service.register_map("alice", cfg)
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"srv-down": ObjectState(object_id="h_leaf", type="host", state="DOWN")}
+    )
+
+    result = asyncio.run(get_map_states(overview, map_owner="alice", links=FakeLinkGui()))
+
+    assert {s.object_id: s.state for s in result.states} == {"to_d1": "DOWN", "to_d2": "DOWN"}
+    assert mock_connection.get_hosts_states.await_count == 1
+
+
+def test_a_link_beyond_the_linked_maps_a_fetch_follows_stays_pending_and_stale(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    monkeypatch.setattr(state_service, "LINKED_MAPS_MAX", 2)
+    names = ["m0", "m1", "m2"]
+    for name in names:
+        map_service.register_map("alice", _map([_obj("h", "host", host_name="srv")], name=name))
+    root = _map([_obj(f"to_{n}", "map", map_name=n) for n in names], name="root")
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"srv": ObjectState(object_id="h", type="host", state="UP")}
+    )
+
+    result = asyncio.run(get_map_states(root, map_owner="alice", links=FakeLinkGui()))
+
+    by_id = {s.object_id: (s.state, s.stale) for s in result.states}
+    assert by_id == {"to_m0": ("UP", False), "to_m1": ("UP", False), "to_m2": ("PENDING", True)}
+
+
+def test_a_link_to_a_map_whose_links_were_all_left_out_is_stale(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    monkeypatch.setattr(state_service, "LINKED_MAPS_MAX", 1)
+    map_service.register_map("alice", _map([_obj("h", "host", host_name="srv")], name="leaf"))
+    map_service.register_map("alice", _map([_obj("to_leaf", "map", map_name="leaf")], name="mid"))
+    root = _map([_obj("to_mid", "map", map_name="mid")], name="root")
+
+    result = asyncio.run(get_map_states(root, map_owner="alice", links=FakeLinkGui()))
+
+    assert [(s.object_id, s.state, s.stale) for s in result.states] == [("to_mid", "PENDING", True)]
+
+
+def test_every_link_of_a_web_of_maps_shows_its_worst_state_from_one_query(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    names = [f"m{i}" for i in range(8)]
+    for name in names:
+        links = [_obj(f"to_{n}", "map", map_name=n) for n in ["overview", *names] if n != name]
+        map_service.register_map(
+            "alice", _map([_obj("h", "host", host_name=f"srv-{name}"), *links], name=name)
+        )
+    overview = _map([_obj(f"to_{n}", "map", map_name=n) for n in names], name="overview")
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={
+            f"srv-{n}": ObjectState(object_id="h", type="host", state="DOWN" if n == "m7" else "UP")
+            for n in names
+        }
+    )
+
+    result = asyncio.run(get_map_states(overview, map_owner="alice", links=FakeLinkGui()))
+
+    assert {(s.state, s.stale) for s in result.states} == {("DOWN", False)}
+    assert len(result.states) == len(names)
+    assert mock_connection.get_hosts_states.await_count == 1
+
+
+def test_a_link_leaves_out_the_map_being_shown_on_the_way_back(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    ring = {"root": ("a", "b"), "a": ("root", "b"), "b": ("a", "root")}
+    for name, linked in ring.items():
+        objects = [_obj("h", "host", host_name=f"srv-{name}")]
+        objects += [_obj(f"to_{n}", "map", map_name=n) for n in linked]
+        map_service.register_map("alice", _map(objects, name=name))
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={
+            f"srv-{n}": ObjectState(
+                object_id="h", type="host", state="DOWN" if n == "root" else "UP"
+            )
+            for n in ring
+        }
+    )
+
+    root = map_service.get_map("alice", "root")
+    assert root is not None
+    result = asyncio.run(get_map_states(root, map_owner="alice", links=FakeLinkGui()))
+
+    by_id = {s.object_id: s.state for s in result.states}
+    assert (by_id["to_a"], by_id["to_b"]) == ("UP", "UP")
+
+
+def test_a_linked_map_that_cannot_be_asked_leaves_the_other_links_alone(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    map_service.register_map("alice", _map([_obj("h", "host", host_name="srv")], name="up"))
+    map_service.register_map(
+        "alice", _map([_obj("h", "host", host_name="srv")], name="gone", connection_id="gone")
+    )
+    root = _map([_obj("to_up", "map", map_name="up"), _obj("to_gone", "map", map_name="gone")])
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"srv": ObjectState(object_id="h", type="host", state="DOWN")}
+    )
+
+    result = asyncio.run(get_map_states(root, map_owner="alice", links=FakeLinkGui()))
+
+    by_id = {s.object_id: (s.state, s.stale) for s in result.states}
+    assert by_id == {"to_up": ("DOWN", False), "to_gone": ("PENDING", False)}
+
+
+def test_links_on_several_connections_ask_the_linked_maps_once(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        state_service, "_connections", {"mock": mock_connection, "other": mock_connection}
+    )
+    map_service.register_map("alice", _map([_obj("h", "host", host_name="srv")], name="net"))
+    root = _map(
+        [
+            _obj("to_net", "map", map_name="net"),
+            _obj("to_net_too", "map", map_name="net", connection_id="other"),
+        ]
+    )
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"srv": ObjectState(object_id="h", type="host", state="DOWN")}
+    )
+
+    result = asyncio.run(get_map_states(root, map_owner="alice", links=FakeLinkGui()))
+
+    assert {s.object_id: s.state for s in result.states} == {"to_net": "DOWN", "to_net_too": "DOWN"}
+    assert mock_connection.get_hosts_states.await_count == 1
+
+
+def test_a_link_counts_another_users_map_named_like_the_map_shown(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _down_host_connection(mock_connection, monkeypatch)
+    bobs_overview = _map([_obj("h", "host", host_name="srv")], name="overview")
+    bobs_net = _map([_obj("to_overview", "map", map_name="overview")], name="net")
+    gui = FakeLinkGui(
+        {("alice", "net"): ("bob", bobs_net), ("bob", "overview"): ("bob", bobs_overview)}
+    )
+    alices_overview = _map([_obj("to_net", "map", map_name="net")], name="overview")
+
+    result = asyncio.run(get_map_states(alices_overview, map_owner="alice", links=gui))
+
+    assert [(s.object_id, s.state) for s in result.states] == [("to_net", "DOWN")]
+
+
 def _down_host_connection(mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
     mock_connection.get_hosts_states = AsyncMock(

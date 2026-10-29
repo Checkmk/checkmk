@@ -45,6 +45,7 @@ from cmk.maps.backend.schemas.topology import (
 from cmk.maps.backend.services import map_service
 from cmk.maps.backend.services.map_service import LinkSource
 from cmk.maps.backend.services.settings_service import get_daemon_runtime
+from cmk.maps.shared.map_links import LINKED_MAPS_MAX
 from cmk.maps.shared.map_payload import ObjectType
 from cmk.maps.shared.states import CRITICAL_STATES, SEVERITY_RANK, severity_rank
 
@@ -86,6 +87,16 @@ class _LinkCache:
     source: LinkSource | None = None
     # Per (user resolving it, linked name): the owner and config linked to.
     targets: dict[tuple[str, str], tuple[str, MapConfig] | None] = field(default_factory=dict)
+    capped: set[tuple[str, str]] = field(default_factory=set)
+    limited: bool = False
+
+    def note_limit(self, map_name: str) -> None:
+        if not self.limited:
+            self.limited = True
+            logger.debug(
+                "Map links reach too many maps; the link to %(map)s and later ones stay pending",
+                {"map": map_name},
+            )
 
 
 if TYPE_CHECKING:
@@ -202,17 +213,17 @@ async def _execute_map_states(
     # rendering) treats them like any other host. They are not persisted —
     # the MapConfig in map_service still holds only the user-curated set.
     objects = await inflate_auto_objects(cfg, connection)
-
-    state_map = await _states_for_objects(
-        objects,
-        default_connection=connection,
-        default_connection_id=cfg.connection_id,
-        auth_user=auth_user,
-        map_owner=map_owner,
-        map_cfg_cache=_LinkCache(source=links),
-        visited_maps=frozenset({cfg.name}),
+    link_objects = [o for o in map(_as_state_source, objects) if _is_link(o)]
+    state_map, link_states = await asyncio.gather(
+        _states_for_objects(
+            [o for o in objects if not _is_link(_as_state_source(o))],
+            default_connection=connection,
+            default_connection_id=cfg.connection_id,
+            auth_user=auth_user,
+        ),
+        _map_link_states(link_objects, auth_user, (map_owner, cfg.name), _LinkCache(links)),
     )
-    states = list(state_map.values())
+    states = [*state_map.values(), *link_states]
 
     connection_ok = await _derive_connection_ok(states, connection)
 
@@ -323,9 +334,6 @@ async def _states_for_objects(
     default_connection: ConnectionBase,
     default_connection_id: str,
     auth_user: str | None = None,
-    map_owner: str = "",
-    map_cfg_cache: _LinkCache | None = None,
-    visited_maps: frozenset[str] = frozenset(),
 ) -> dict[str, ObjectState]:
     """Run the batched state fetch once per distinct connection, then merge.
 
@@ -335,9 +343,6 @@ async def _states_for_objects(
     Objects sharing a connection are still batched together — only the
     cross-connection split adds round-trips, which run in parallel.
     """
-    if map_cfg_cache is None:
-        map_cfg_cache = _LinkCache()
-
     groups: dict[str, list[MapElement]] = {}
     for obj in objects:
         cid = obj.connection_id or default_connection_id
@@ -350,14 +355,7 @@ async def _states_for_objects(
                 obj.id: ObjectState(object_id=obj.id, type=obj.type, state="PENDING", stale=True)
                 for obj in group_objs
             }
-        return await _get_map_states_batched(
-            conn,
-            group_objs,
-            auth_user=auth_user,
-            map_owner=map_owner,
-            map_cfg_cache=map_cfg_cache,
-            _visited_maps=visited_maps,
-        )
+        return await _get_map_states_batched(conn, group_objs, auth_user=auth_user)
 
     if len(groups) == 1:
         cid, group_objs = next(iter(groups.items()))
@@ -378,7 +376,6 @@ class _MapElementBins:
     hosts_hard: list[MapElement] = field(default_factory=list)
     svcs_soft: list[MapElement] = field(default_factory=list)
     svcs_hard: list[MapElement] = field(default_factory=list)
-    map_objects: list[MapElement] = field(default_factory=list)
     others: list[MapElement] = field(default_factory=list)
 
 
@@ -395,8 +392,8 @@ def _bin_map_elements(objects: list[MapElement]) -> _MapElementBins:
             (bins.hosts_hard if obj.only_hard_states else bins.hosts_soft).append(obj)
         elif obj.type == "service" and obj.host_name and obj.service_description:
             (bins.svcs_hard if obj.only_hard_states else bins.svcs_soft).append(obj)
-        elif obj.type == "map" and obj.map_name:
-            bins.map_objects.append(obj)
+        elif _is_link(obj):
+            continue  # see _map_link_states
         elif obj.type == "aggregation":
             continue  # resolved GUI-side, not by the daemon
         else:
@@ -601,87 +598,231 @@ async def _resolve_individual_states(
         results[state.object_id] = state
 
 
-async def _resolve_map_link_states(
-    map_objects: list[MapElement],
-    auth_user: str | None,
-    map_owner: str,
-    map_cfg_cache: _LinkCache,
-    visited_maps: frozenset[str],
-    results: dict[str, ObjectState],
-) -> None:
-    """Aggregate each map-link object to the worst state of the map it
-    references, recursing into nested maps while guarding against cycles."""
-    if not map_objects:
-        return
+def _is_link(obj: MapElement) -> bool:
+    return obj.type == "map" and bool(obj.map_name)
 
+
+def _link_user(owner: str, auth_user: str | None) -> str:
     # A user restricted in what they see follows a link to the map they see under
     # its name; for everyone else it means what it means to the linking map's owner.
-    as_user = map_owner if auth_user is None else auth_user
-    names = list(dict.fromkeys(o.map_name for o in map_objects if o.map_name))
-    new = [name for name in names if (as_user, name) not in map_cfg_cache.targets]
+    return owner if auth_user is None else auth_user
+
+
+@dataclass
+class _LinkedMap:
+    cfg: MapConfig
+    connection: ConnectionBase
+    link_user: str
+    link_names: list[str]
+    # Filled once every map is found: the maps its links reach, and whether the
+    # caps left out one of its links.
+    edges: list[tuple[str, str]] = field(default_factory=list)
+    left_out: bool = False
+
+
+def _link_names(objects: list[MapElement]) -> list[str]:
+    links = (o for o in map(_as_state_source, objects) if _is_link(o))
+    return list(dict.fromkeys(o.map_name for o in links if o.map_name))
+
+
+async def _look_up_links(cache: _LinkCache, as_user: str, names: list[str]) -> None:
+    new = [name for name in dict.fromkeys(names) if (as_user, name) not in cache.targets]
+    room = max(LINKED_MAPS_MAX - len(cache.targets), 0)
+    looked_up, left_out = new[:room], new[room:]
+    for map_name in left_out:
+        cache.note_limit(map_name)
+        cache.capped.add((as_user, map_name))
     found = (
-        await map_service.find_link_targets(map_cfg_cache.source, as_user, new)
-        if new and map_cfg_cache.source is not None
+        await map_service.find_link_targets(cache.source, as_user, looked_up)
+        if looked_up and cache.source is not None
         else {}
     )
     for map_name in new:
-        map_cfg_cache.targets[(as_user, map_name)] = found.get(map_name)
+        cache.targets[(as_user, map_name)] = found.get(map_name)
 
-    # Load each unique referenced map once (avoid N reads for N map-link objects).
-    map_states: dict[str, dict[str, ObjectState]] = {}
-    for map_name in names:
-        target = map_cfg_cache.targets[(as_user, map_name)]
-        if target is None:
-            continue
-        ref_owner, ref_cfg = target
-        ref_backend = get_connection(ref_cfg.connection_id)
-        if ref_backend is None:
-            continue
-        # Include nested map-objects in the recursion as long as they
-        # don't form a cycle — otherwise a map with only nested links
-        # would aggregate to PENDING even when its leaves have real states.
-        child_visited = visited_maps | {map_name}
-        included_objs = [
-            o
-            for o in ref_cfg.objects
-            if _as_state_source(o).type != "map" or (o.map_name and o.map_name not in child_visited)
-        ]
+
+def _target(cache: _LinkCache, as_user: str, name: str) -> tuple[str, str] | None:
+    target = cache.targets.get((as_user, name))
+    return None if target is None else (target[0], name)
+
+
+async def _link_graph(
+    as_user: str, names: list[str], auth_user: str | None, cache: _LinkCache, root: tuple[str, str]
+) -> dict[tuple[str, str], _LinkedMap]:
+    """Every map the links reach, once each, by owner and name.
+
+    Found level by level from the configs alone, so a web of links costs one
+    lookup per level instead of one per path through it.
+    """
+    graph: dict[tuple[str, str], _LinkedMap] = {}
+    unusable: set[tuple[str, str]] = set()
+    level = [(as_user, names)]
+    first = True
+    while level:
+        by_user: dict[str, list[str]] = {}
+        for user, link_names in level:
+            by_user.setdefault(user, []).extend(link_names)
+        for user, link_names in by_user.items():
+            await _look_up_links(cache, user, link_names)
+        next_level = []
+        for user, link_names in level:
+            for name in link_names:
+                if (target := cache.targets[(user, name)]) is None:
+                    continue
+                owner, cfg = target
+                key = (owner, name)
+                # Only a link of the map being fetched may show that map itself.
+                if key in graph or key in unusable or (key == root and not first):
+                    continue
+                if (connection := get_connection(cfg.connection_id)) is None:
+                    unusable.add(key)
+                    continue
+                linked = _LinkedMap(
+                    cfg, connection, _link_user(owner, auth_user), _link_names(cfg.objects)
+                )
+                graph[key] = linked
+                next_level.append((linked.link_user, linked.link_names))
+        level = next_level
+        first = False
+    for linked in graph.values():
+        for name in linked.link_names:
+            if (edge := _target(cache, linked.link_user, name)) is None:
+                linked.left_out |= (linked.link_user, name) in cache.capped
+            elif edge in graph and edge != root:
+                linked.edges.append(edge)
+    return graph
+
+
+@dataclass(frozen=True)
+class _MapSummary:
+    """What a linked map's own objects add to a link: the worst state the user may
+    see, and whether there is a monitored object at all."""
+
+    worst: ObjectState | None
+    monitored: bool
+
+
+def _summary(states: list[ObjectState]) -> _MapSummary:
+    monitored = [s for s in states if s.type in _MAP_AGGREGATION_TYPES]
+    seen = [s for s in monitored if s.state != "NO_PERMISSION"]
+    worst = max(seen, key=lambda s: SEVERITY_RANK.get(s.state, 0)) if seen else None
+    return _MapSummary(worst, bool(monitored))
+
+
+def _log_link_failure(exc: Exception) -> None:
+    # A broken linked map shouldn't sink the map linking to it, but the failure
+    # is otherwise invisible.
+    logger.debug("Nested map-link state aggregation failed: %(error)s", {"error": exc})
+
+
+async def _linked_map_summaries(
+    graph: dict[tuple[str, str], _LinkedMap], auth_user: str | None
+) -> dict[tuple[str, str], _MapSummary]:
+    """Asks the own objects of all linked maps in one round per connection."""
+    keys: dict[str, tuple[str, str]] = {}
+    by_connection: dict[str, tuple[ConnectionBase, list[MapElement]]] = {}
+    for index, (key, linked) in enumerate(graph.items()):
+        _, objects = by_connection.setdefault(linked.cfg.connection_id, (linked.connection, []))
+        for obj in linked.cfg.objects:
+            if _is_link(_as_state_source(obj)):
+                continue
+            # Object ids are unique within a map only.
+            object_id = f"{index}/{obj.id}"
+            keys[object_id] = key
+            objects.append(obj.model_copy(update={"id": object_id}))
+
+    async def own(
+        connection_id: str, connection: ConnectionBase, objects: list[MapElement]
+    ) -> dict[str, ObjectState]:
         try:
-            map_states[map_name] = await _states_for_objects(
-                included_objs,
-                default_connection=ref_backend,
-                default_connection_id=ref_cfg.connection_id,
+            return await _states_for_objects(
+                objects,
+                default_connection=connection,
+                default_connection_id=connection_id,
                 auth_user=auth_user,
-                map_owner=ref_owner,
-                map_cfg_cache=map_cfg_cache,
-                visited_maps=child_visited,
             )
         except Exception as exc:
-            # A broken nested map-link shouldn't sink the parent map, but
-            # the failure is otherwise invisible — surface it at debug level.
-            logger.debug("Nested map-link state aggregation failed: %(error)s", {"error": exc})
-    for obj in map_objects:
+            _log_link_failure(exc)
+            return {}
+
+    per_connection = await asyncio.gather(
+        *(own(cid, *asked) for cid, asked in by_connection.items())
+    )
+    states: dict[tuple[str, str], list[ObjectState]] = {key: [] for key in graph}
+    for asked in per_connection:
+        for object_id, state in asked.items():
+            states[keys[object_id]].append(state)
+    return {key: _summary(map_states) for key, map_states in states.items()}
+
+
+def _link_state(
+    graph: dict[tuple[str, str], _LinkedMap],
+    summaries: dict[tuple[str, str], _MapSummary],
+    start: tuple[str, str],
+) -> ObjectState:
+    """The worst state of every map reachable from ``start``."""
+    reached = {start}
+    queue = [start]
+    for key in queue:
+        for edge in graph[key].edges:
+            if edge not in reached:
+                reached.add(edge)
+                queue.append(edge)
+    found = [summaries[key] for key in queue if key in summaries]
+    seen = [summary.worst for summary in found if summary.worst is not None]
+    left_out = any(graph[key].left_out for key in queue)
+    if not seen:
+        if any(summary.monitored for summary in found) and not left_out:
+            return ObjectState(object_id="", type="map", state="NO_PERMISSION")
+        return ObjectState(object_id="", type="map", state="PENDING", stale=left_out)
+    worst = max(seen, key=lambda s: SEVERITY_RANK.get(s.state, 0))
+    # Only a link the caps left out is a stale map state.
+    return ObjectState(
+        object_id="",
+        type="map",
+        state=worst.state,
+        stale=worst.state == "PENDING" and left_out,
+    )
+
+
+async def _map_link_states(
+    link_objects: list[MapElement],
+    auth_user: str | None,
+    root: tuple[str, str],
+    cache: _LinkCache,
+) -> list[ObjectState]:
+    """Aggregate each map-link object to the worst state of the maps it reaches.
+
+    A link counts every map reachable from the one it links to, except the map
+    being fetched (``root``, by owner and name), so a cycle back to it adds
+    nothing.
+    """
+    if not link_objects:
+        return []
+    as_user = _link_user(root[0], auth_user)
+    graph = await _link_graph(as_user, _link_names(link_objects), auth_user, cache, root)
+    summaries = await _linked_map_summaries(graph, auth_user) if graph else {}
+    by_target: dict[tuple[str, str], ObjectState] = {}
+    states = []
+    for obj in link_objects:
         assert obj.map_name is not None
-        sub = map_states.get(obj.map_name) or {}
-        mon = [s for s in sub.values() if s.type in _MAP_AGGREGATION_TYPES]
-        if mon:
-            real = [s for s in mon if s.state != "NO_PERMISSION"]
-            if not real:
-                results[obj.id] = ObjectState(object_id=obj.id, type="map", state="NO_PERMISSION")
-            else:
-                worst = max(real, key=lambda s: SEVERITY_RANK.get(s.state, 0))
-                results[obj.id] = ObjectState(object_id=obj.id, type="map", state=worst.state)
-        else:
-            results[obj.id] = ObjectState(object_id=obj.id, type="map", state="PENDING")
+        key = _target(cache, as_user, obj.map_name)
+        if key is None or key not in graph:
+            left_out = (as_user, obj.map_name) in cache.capped
+            states.append(
+                ObjectState(object_id=obj.id, type="map", state="PENDING", stale=left_out)
+            )
+            continue
+        if key not in by_target:
+            by_target[key] = _link_state(graph, summaries, key)
+        states.append(by_target[key].model_copy(update={"object_id": obj.id}))
+    return states
 
 
 async def _get_map_states_batched(
     connection: ConnectionBase,
     objects: list[MapElement],
     auth_user: str | None = None,
-    map_owner: str = "",
-    map_cfg_cache: _LinkCache | None = None,
-    _visited_maps: frozenset[str] | None = None,
 ) -> dict[str, ObjectState]:
     """Fetch states for all map objects using batch queries where supported.
 
@@ -689,35 +830,13 @@ async def _get_map_states_batched(
     resolved by a dedicated helper that writes into the shared ``results`` map.
     The helpers run in sequence because the host helper's output feeds the
     service-summary/recognize-services enrichment.
-
-    ``map_cfg_cache`` memoises ``map_service.find_link_targets`` across the full
-    map-link recursion so a map referenced by several sibling or nested maps
-    loads only once. The cache stores ``None`` for not-found maps to avoid
-    retrying missing names.
-
-    ``_visited_maps`` carries the set of map names already on the current
-    recursion path so map-link aggregation can transitively include nested
-    maps without infinite-looping on cycles.
     """
-    if map_cfg_cache is None:
-        map_cfg_cache = _LinkCache()
-    if _visited_maps is None:
-        _visited_maps = frozenset()
-
     bins = _bin_map_elements(objects)
     results: dict[str, ObjectState] = {}
 
     await _resolve_host_states(connection, bins.hosts_soft, bins.hosts_hard, auth_user, results)
     await _resolve_service_states(connection, bins.svcs_soft, bins.svcs_hard, auth_user, results)
     await _resolve_individual_states(connection, bins.others, results)
-    await _resolve_map_link_states(
-        bins.map_objects,
-        auth_user=auth_user,
-        map_owner=map_owner,
-        map_cfg_cache=map_cfg_cache,
-        visited_maps=_visited_maps,
-        results=results,
-    )
 
     return results
 
@@ -840,7 +959,6 @@ async def _get_presentation_states(
         default_connection=connection,
         default_connection_id=cfg.connection_id,
         auth_user=auth_user,
-        visited_maps=frozenset({cfg.name}),
     )
     for el in bound:
         if not el.host_name and (state := state_map.get(el.id)) and (host := _host_of(el)):

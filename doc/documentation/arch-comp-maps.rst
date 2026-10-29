@@ -821,6 +821,10 @@ comes with its signed config, which the daemon keeps apart from the opened maps
 and fetches again after five minutes, so links resolve after a restart too and
 follow saves of that map. The linked states are fetched under the viewer's
 AuthUser.
+A state fetch first follows the links through the configs to every map they
+reach, then asks Livestatus for the objects of all of them in one round. A link
+shows the worst state of every map reachable from the one it links to, except
+the map being fetched, so a cycle back to it adds nothing.
 
 Handling untrusted input
 ------------------------
@@ -979,6 +983,8 @@ Limits
      - 1024 (LRU)
    * - Objects per map
      - 5000 in the daemon; the REST model has no cap
+   * - Maps a state fetch follows through links
+     - 256; further links stay pending, marked stale
    * - Metric history window
      - 1 minute to 7 days
    * - Livestatus query timeout

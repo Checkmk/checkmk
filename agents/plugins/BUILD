@@ -45,8 +45,6 @@ sh_library(
         "jar_signature",
         "lnx_container_host_if.linux",
         "mk_apt",
-        "mk_db2.aix",
-        "mk_db2.linux",
         "mk_errpt.aix",
         "mk_informix",
         "mk_inventory.aix",

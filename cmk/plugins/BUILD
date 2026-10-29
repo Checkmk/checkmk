@@ -195,6 +195,8 @@ sh_library(
         "checkmk/agents/mk_site_object_counts",
         "cups/agents/mk_cups_queues",
         "db2/agents/db2_mem",
+        "db2/agents/mk_db2.aix",
+        "db2/agents/mk_db2.linux",
         "filehandler/agents/mk_filehandler",
         "logins/agents/mk_logins",
         "lvm/agents/lvm",

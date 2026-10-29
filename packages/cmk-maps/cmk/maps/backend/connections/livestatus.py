@@ -6,12 +6,13 @@
 
 import asyncio
 import contextlib
+import hashlib
 import logging
 import math
 import re
 import threading
 import time
-from collections.abc import AsyncIterator, Iterable, Mapping
+from collections.abc import AsyncIterator, Iterable, Mapping, Sequence
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from datetime import datetime, UTC
@@ -30,7 +31,7 @@ if TYPE_CHECKING:
 import httpx
 
 from cmk.ccc.site import SiteId
-from cmk.livestatus_client import lqencode
+from cmk.livestatus_client import ConnectedSite, lqencode, MKLivestatusQueryError
 from cmk.maps.backend.connections.base import (
     ConnectionBase,
     FolderInfo,
@@ -250,6 +251,10 @@ async def _load_wato_folders() -> list[FolderInfo]:
 # State-code maps + severity ranking are the shared GUI↔daemon vocabulary
 # (cmk.maps.shared.states); worst-state roll-ups use the one combined SEVERITY_RANK.
 _STATE_TYPE_MAP = {0: "SOFT", 1: "HARD"}
+
+# A refused query is remembered by this bound: its text is the map's, and
+# Livestatus repeats parts of it in the reason.
+_REFUSAL_REASON_MAX_CHARS = 1024
 
 _HOST_EXTRA_COLS = (
     "address alias last_check next_check state_type current_attempt max_check_attempts"
@@ -542,6 +547,8 @@ class LivestatusConnection(ConnectionBase):
         self._geo_hosts_cache: TtlCache[
             tuple[str | None, str | None, str | None], list[GeoHost]
         ] = TtlCache(maxsize=32)
+        # Sent again once a dead site would be retried.
+        self._refused_queries: TtlCache[tuple[bytes, str | None], str] = TtlCache(maxsize=1024)
 
         # Auto-federate when this connection points at the central site's local
         # Livestatus socket — the socket only sees local data, so MultiSiteConnection
@@ -1741,11 +1748,20 @@ class LivestatusConnection(ConnectionBase):
         """
         self._adopt_sites_if_appeared()
         if self._sites:
-            async with self._semaphore:
-                rows = await asyncio.wait_for(
-                    asyncio.to_thread(self._run_multisite_sync, query),
-                    timeout=settings.connection_query_timeout,
-                )
+            key = (_query_digest(query), _auth_user_ctx.get())
+            if (
+                reason := self._refused_queries.get(key, ttl=self._MC_DEAD_RETRY_SECONDS)
+            ) is not None:
+                raise MKLivestatusQueryError(reason)
+            try:
+                async with self._semaphore:
+                    rows = await asyncio.wait_for(
+                        asyncio.to_thread(self._run_multisite_sync, query),
+                        timeout=settings.connection_query_timeout,
+                    )
+            except MKLivestatusQueryError as e:
+                self._refused_queries.set(key, str(e)[:_REFUSAL_REASON_MAX_CHARS])
+                raise
             return [
                 (str(row[0]) if row and isinstance(row[0], str) else None, row[1:]) for row in rows
             ]
@@ -1855,15 +1871,19 @@ class LivestatusConnection(ConnectionBase):
             if auth_user:
                 headers += f"AuthUser: {lqencode(auth_user)}\n"
 
+            asked = [c for c in mc.connections if not only_sites or c.id in only_sites]
             mc.set_only_sites([SiteId(s) for s in only_sites] if only_sites else None)
             try:
                 rows = mc.query(lql, add_headers=headers)
             finally:
                 mc.set_only_sites(None)
 
+            refused = _take_back_a_refused_query(mc, asked)
             self._log_dead_site_transitions(
                 cast("Mapping[str, Mapping[str, object]]", mc.dead_sites())
             )
+            if refused is not None:
+                raise refused
             return list(rows)
 
     def _log_dead_site_transitions(self, dead: Mapping[str, Mapping[str, object]]) -> None:
@@ -1877,3 +1897,34 @@ class LivestatusConnection(ConnectionBase):
         for sid in self._mc_dead - current:
             logger.info("Livestatus site %(site_id)s recovered", {"site_id": sid})
         self._mc_dead = current
+
+
+def _query_digest(query: str) -> bytes:
+    return hashlib.blake2b(query.encode(), digest_size=16).digest()
+
+
+def _take_back_a_refused_query(
+    mc: MultiSiteConnection, asked: Sequence[ConnectedSite]
+) -> MKLivestatusQueryError | None:
+    """Keep the sites if every one asked refused the query, and return why.
+
+    ``MultiSiteConnection`` drops a site on any error, a 400 included. When all
+    refuse, the query is at fault and the sites stay connected. A site that
+    alone refuses, say one running an older version, stays out and shows
+    stale. The client wraps the 400 into a socket error, so only the error it
+    replaces tells a refusal apart. This belongs in the client, which should not drop a
+    site for a query error; until it does, this works on its state. The sites
+    reconnect on their next query.
+    """
+    refusals: list[MKLivestatusQueryError] = []
+    for site in asked:
+        exception = mc.deadsites.get(site.id, {}).get("exception")
+        if not isinstance(exception, Exception) or not isinstance(
+            exception.__context__, MKLivestatusQueryError
+        ):
+            return None
+        refusals.append(exception.__context__)
+    for site in asked:
+        del mc.deadsites[site.id]
+    mc.connections.extend(asked)
+    return next(iter(refusals), None)

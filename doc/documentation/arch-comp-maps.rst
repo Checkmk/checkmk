@@ -884,7 +884,9 @@ Livestatus queries
   bundles are dropped if they contain a newline or backslash. The GUI builds
   its queries with Checkmk's query expression builder. Dynamic groups accept
   only ``Filter:``, ``And:``, ``Or:`` and ``Negate:`` lines without control
-  characters (tab is allowed).
+  characters (tab is allowed). A query every federation site refuses fails,
+  and the sites stay connected. The same query for the same user is sent again
+  after 30 seconds at the earliest.
 
 Stored data and secrets
 -----------------------

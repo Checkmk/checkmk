@@ -19,11 +19,14 @@ another's cached rows.
 """
 
 import asyncio
-from collections.abc import Awaitable, Callable
+import socket
+import threading
+from collections.abc import Awaitable, Callable, Iterator
 from pathlib import Path
 
 import pytest
 
+from cmk.livestatus_client import MKLivestatusQueryError
 from cmk.maps.backend.connections import livestatus
 from cmk.maps.backend.connections.base import FolderTreeData
 from cmk.maps.backend.core.config import settings
@@ -258,3 +261,128 @@ def test_geo_hosts_are_asked_for_once_per_user_within_a_tick(
 
     assert asyncio.run(_ticks()) == [["muc"], ["muc"], ["muc"]]
     assert len(queries) == 2
+
+
+class _FakeSite:
+    """A Livestatus that answers with one host, and refuses a query naming an *unknown* column."""
+
+    def __init__(self, host: str, unknown: tuple[bytes, ...] = (b"nme",)) -> None:
+        self._host = host
+        self._unknown = unknown
+        self.queries: list[bytes] = []
+        self._server = socket.create_server(("127.0.0.1", 0))
+        self.url = f"tcp:127.0.0.1:{self._server.getsockname()[1]}"
+        threading.Thread(target=self._serve, daemon=True).start()
+
+    def close(self) -> None:
+        self._server.close()
+
+    def _serve(self) -> None:
+        while True:
+            try:
+                client, _ = self._server.accept()
+            except OSError:
+                return
+            threading.Thread(target=self._answer, args=(client,), daemon=True).start()
+
+    def _answer(self, client: socket.socket) -> None:
+        with client:
+            pending = b""
+            while chunk := client.recv(4096):
+                pending += chunk
+                while b"\n\n" in pending:
+                    query, pending = pending.split(b"\n\n", 1)
+                    self.queries.append(query)
+                    if any(column in query for column in self._unknown):
+                        code, body = "400", "unknown column"
+                    else:
+                        code, body = "200", repr([[self._host]])
+                    client.sendall(f"{code} {len(body):>11}\n{body}".encode())
+
+
+@pytest.fixture(name="sites")
+def fixture_sites() -> Iterator[dict[str, _FakeSite]]:
+    # Only the remote one lacks ``new_column``, as an older version would.
+    sites = {
+        "central": _FakeSite("central-h"),
+        "remote": _FakeSite("remote-h", (b"nme", b"new_column")),
+    }
+    yield sites
+    for site in sites.values():
+        site.close()
+
+
+@pytest.fixture(name="federated")
+def fixture_federated(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, sites: dict[str, _FakeSite]
+) -> livestatus.LivestatusConnection:
+    monkeypatch.setattr(settings, "checkmk_omd_root", str(tmp_path))
+    monkeypatch.setattr(checkmk_sites, "sites_mk_mtime", lambda: 1.0)
+    monkeypatch.setattr(
+        checkmk_sites, "load_sites", lambda: {sid: {"socket": s.url} for sid, s in sites.items()}
+    )
+    return livestatus.LivestatusConnection(socket_path=_local_socket_path(tmp_path), host=None)
+
+
+def test_a_query_every_site_refuses_fails_and_keeps_the_sites(
+    federated: livestatus.LivestatusConnection,
+) -> None:
+    with pytest.raises(MKLivestatusQueryError):
+        federated._run_multisite_sync("GET hosts\nColumns: name\nFilter: nme = a\n")  # noqa: SLF001
+
+    assert federated.dead_sites() == []
+    assert sorted(federated._run_multisite_sync("GET hosts\nColumns: name\n")) == [  # noqa: SLF001
+        ["central", "central-h"],
+        ["remote", "remote-h"],
+    ]
+
+
+def test_a_site_alone_refusing_a_query_drops_out(
+    federated: livestatus.LivestatusConnection,
+) -> None:
+    rows = federated._run_multisite_sync("GET hosts\nColumns: name\nFilter: new_column = a\n")  # noqa: SLF001
+
+    assert rows == [["central", "central-h"]]
+    assert federated.dead_sites() == ["remote"]
+
+
+def _ask_refused_as(federated: livestatus.LivestatusConnection, *auth_users: str) -> None:
+    async def _ask() -> None:
+        for auth_user in auth_users:
+            async with federated.with_auth_user(auth_user):
+                with pytest.raises(MKLivestatusQueryError):
+                    await federated.get_dyngroup_state("host", "Filter: nme = a\n")
+
+    asyncio.run(_ask())
+
+
+def _refused_asked(sites: dict[str, _FakeSite]) -> dict[str, int]:
+    return {sid: sum(b"nme" in q for q in site.queries) for sid, site in sites.items()}
+
+
+def test_a_query_every_site_refused_is_not_sent_again_at_once(
+    federated: livestatus.LivestatusConnection, sites: dict[str, _FakeSite]
+) -> None:
+    _ask_refused_as(federated, "alice", "alice")
+
+    assert _refused_asked(sites) == {"central": 1, "remote": 1}
+
+
+def test_a_refused_query_is_sent_again_after_the_retry_interval(
+    monkeypatch: pytest.MonkeyPatch,
+    federated: livestatus.LivestatusConnection,
+    sites: dict[str, _FakeSite],
+) -> None:
+    monkeypatch.setattr(livestatus.LivestatusConnection, "_MC_DEAD_RETRY_SECONDS", 0.0)
+
+    _ask_refused_as(federated, "alice", "alice")
+
+    assert _refused_asked(sites) == {"central": 2, "remote": 2}
+
+
+def test_a_query_refused_for_one_user_is_still_sent_for_another(
+    federated: livestatus.LivestatusConnection, sites: dict[str, _FakeSite]
+) -> None:
+    _ask_refused_as(federated, "alice", "bob")
+
+    assert _refused_asked(sites) == {"central": 2, "remote": 2}

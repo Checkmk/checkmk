@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""A small time-to-live cache with bounded, insertion-order (FIFO) eviction.
+"""A small time-to-live cache with bounded eviction of the least recently set entry.
 
 Several daemon hot paths cache an expensive Livestatus result for a few seconds
 so concurrent refreshes of the same map (multi-tab, multi-user) share one
@@ -25,7 +25,7 @@ from collections.abc import Callable
 
 class TtlCache[K, V]:
     """A ``key -> value`` cache whose entries expire after a per-get TTL and
-    whose size is bounded by FIFO eviction of the oldest insertion."""
+    whose size is bounded by evicting the entry set longest ago."""
 
     def __init__(self, *, maxsize: int = 32) -> None:
         self._store: dict[K, tuple[float, V]] = {}
@@ -42,9 +42,10 @@ class TtlCache[K, V]:
         return value
 
     def set(self, key: K, value: V, *, now: float | None = None) -> None:
-        """Store ``value`` under ``key``, evicting the oldest entry first when a
-        *new* key would exceed ``maxsize`` (updating an existing key never evicts)."""
-        if key not in self._store and len(self._store) >= self._maxsize:
+        """Store ``value`` under ``key``, evicting the entry set longest ago when
+        a *new* key would exceed ``maxsize``. Setting a key again makes it the
+        newest, so a key kept fresh is never the one evicted."""
+        if self._store.pop(key, None) is None and len(self._store) >= self._maxsize:
             self._store.pop(next(iter(self._store)))
         self._store[key] = (time.monotonic() if now is None else now, value)
 

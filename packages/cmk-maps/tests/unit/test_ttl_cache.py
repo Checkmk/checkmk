@@ -39,10 +39,20 @@ def test_updating_existing_key_does_not_evict() -> None:
     cache: TtlCache[str, int] = TtlCache(maxsize=2)
     cache.set("a", 1, now=0.0)
     cache.set("b", 2, now=0.0)
-    cache.set("a", 11, now=0.0)  # update, not a new key → no eviction
+    cache.set("a", 11, now=0.0)
     assert cache.get("a", ttl=99.0, now=0.0) == 11
     assert cache.get("b", ttl=99.0, now=0.0) == 2
     assert len(cache) == 2
+
+
+def test_a_key_set_again_is_evicted_last() -> None:
+    cache: TtlCache[str, int] = TtlCache(maxsize=2)
+    cache.set("a", 1, now=0.0)
+    cache.set("b", 2, now=0.0)
+    cache.set("a", 11, now=0.0)
+    cache.set("c", 3, now=0.0)
+    assert "a" in cache
+    assert "b" not in cache
 
 
 def test_pop_removes_entry_and_is_safe_when_absent() -> None:

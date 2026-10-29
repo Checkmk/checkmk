@@ -27,7 +27,7 @@ void main() {
         stage("Build python-3.cab") {
             // The cab rule is hermetic, so it hits the same remote-cache entries the deb/rpm/cma
             // package build populates it does not need to be built in the distro build image.
-            def container_name = "testing-ubuntu-2204-checkmk-${safe_branch_name.replace('.', '-')}";
+            def container_name = "testing-ubuntu-2404-checkmk-${safe_branch_name.replace('.', '-')}";
             container(container_name) {
                 if (disable_cache) {
                     sh("rm -rf remote.bazelrc");

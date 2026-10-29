@@ -48,7 +48,7 @@ void this_call_site(String safe_branch_name, String output_file) {
     def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
 
     // fancy fancy hack, see buildscripts/scripts/utils/docker_image_aliases_helper.groovy why
-    def container_name = "testing-ubuntu-2204-checkmk-${safe_branch_name.replace('.', '-')}";
+    def container_name = "testing-ubuntu-2404-checkmk-${safe_branch_name.replace('.', '-')}";
     withCredentials(secret_list(params.SECRET_VARS).collect {
         string(credentialsId: it, variable: it)
     }) {

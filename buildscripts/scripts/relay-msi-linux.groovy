@@ -34,7 +34,7 @@ void main() {
     def msi_test_target = "//non-free/packages/cmk-relay-engine/windows-installer:msi_test";
 
     dir("${checkout_dir}") {
-        def container_name = "testing-ubuntu-2204-checkmk-${safe_branch_name.replace('.', '-')}";
+        def container_name = "testing-ubuntu-2404-checkmk-${safe_branch_name.replace('.', '-')}";
         container(container_name) {
             if (disable_cache) {
                 sh("rm -rf remote.bazelrc");

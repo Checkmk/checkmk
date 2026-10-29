@@ -58,7 +58,7 @@ void main() {
     def fail_and_continue = [buildResult: 'FAILURE', stageResult: 'FAILURE'];
 
     dir("${checkout_dir}") {
-        def container_name = "testing-ubuntu-2204-checkmk-${safe_branch_name.replace('.', '-')}";
+        def container_name = "testing-ubuntu-2404-checkmk-${safe_branch_name.replace('.', '-')}";
         container(container_name) {
             if (disable_cache) {
                 sh("rm -rf remote.bazelrc");

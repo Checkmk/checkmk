@@ -8,7 +8,7 @@ void main() {
 
     dir(checkout_dir) {
         stage("Build & Deploy") {
-            def container_name = "testing-ubuntu-2204-checkmk-${safe_branch_name.replace('.', '-')}";
+            def container_name = "testing-ubuntu-2404-checkmk-${safe_branch_name.replace('.', '-')}";
 
             container(container_name) {
                 sh("bazel build //doc/documentation")

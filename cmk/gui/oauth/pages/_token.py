@@ -17,10 +17,11 @@ from cmk.gui.http import request, response
 from cmk.gui.log import logger
 from cmk.gui.oauth.pages._models import OAuthTokenErrorResponse, OAuthTokenResponse
 from cmk.gui.oauth.store._auth_code_store import AuthCodeStore
+from cmk.gui.oauth.token.active_token import user_can_authenticate
 from cmk.gui.oauth.token.token_store import get_token_store, UnknownClient
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.scopes import format_scopes, parse_scopes
-from cmk.gui.utils.security_log_events import OAuthTokenFailureEvent
+from cmk.gui.utils.security_log_events import OAuthRefreshTokenReuseEvent, OAuthTokenFailureEvent
 from cmk.utils.security_event import log_security_event
 
 _FORM_CONTENT_TYPE = "application/x-www-form-urlencoded"
@@ -31,7 +32,15 @@ _FORM_CONTENT_TYPE = "application/x-www-form-urlencoded"
 # it before reading further parameters. Rejecting a repeated resource also
 # rejects RFC 8707's multi-resource requests on purpose: a code binds
 # exactly one resource here.
-_KNOWN_PARAMS = ("grant_type", "code", "client_id", "code_verifier", "redirect_uri", "resource")
+_KNOWN_PARAMS = (
+    "grant_type",
+    "code",
+    "client_id",
+    "code_verifier",
+    "redirect_uri",
+    "resource",
+    "refresh_token",
+)
 
 # RFC 7636 section 4.1: 43 to 128 characters from the unreserved set.
 _CODE_VERIFIER_RE = re.compile(r"[A-Za-z0-9\-._~]{43,128}")
@@ -88,6 +97,10 @@ class OAuthTokenPage(Page):
     Rejections follow the RFC 6749 section 5.2 error format. The returned
     access and refresh tokens are real, store-backed tokens of a new grant for
     the record's user (see cmk.gui.oauth.token.token_store).
+
+    The refresh_token grant (RFC 6749 section 6) rotates the presented refresh
+    token within its grant; presenting an already rotated one revokes the
+    grant.
     """
 
     @override
@@ -119,17 +132,19 @@ class OAuthTokenPage(Page):
         if not grant_type:
             _error("invalid_request")
             return None
-        if grant_type != "authorization_code":
-            _error("unsupported_grant_type")
-            return None
-
-        _redeem_authorization_code(
-            form.get("code"),
-            form.get("client_id"),
-            form.get("code_verifier"),
-            form.get("redirect_uri"),
-            form.get("resource"),
-        )
+        match grant_type:
+            case "authorization_code":
+                _redeem_authorization_code(
+                    form.get("code"),
+                    form.get("client_id"),
+                    form.get("code_verifier"),
+                    form.get("redirect_uri"),
+                    form.get("resource"),
+                )
+            case "refresh_token":
+                _refresh(form.get("refresh_token"), form.get("client_id"))
+            case _:
+                _error("unsupported_grant_type")
         return None
 
 
@@ -237,3 +252,62 @@ def _redeem_authorization_code(
                 return
             case _:
                 assert False
+
+
+def _refresh(refresh_token: str | None, client_id: str | None) -> None:
+    """RFC 6749 section 6: exchange a refresh token for a new access and refresh token."""
+    if not refresh_token or not client_id:
+        _error("invalid_request")
+        return
+
+    with get_token_store() as store:
+        # The binding is checked before rotating, so a request from the wrong
+        # client cannot burn the legitimate client's token. Not revoking on a
+        # mismatch: client_id is public, so a thief sends the right one; a
+        # mismatch points to a misbehaving client, not to a leak.
+        presented = store.get_refresh_token(refresh_token)
+        if presented is None or presented.grant.client_id != client_id:
+            _error("invalid_grant")
+            return
+
+        # Stop refreshing for deleted or locked users. The grant is bound to
+        # the user name, so a re-created user inherits it.
+        if not user_can_authenticate(presented.grant.user_id):
+            store.revoke_grant(presented.grant.grant_id)
+            _error("invalid_grant")
+            return
+
+        now = datetime.now(UTC)
+        issued = store.rotate(
+            refresh_token,
+            refresh_token_expires_at=now + _IDLE_TIMEOUT,
+            access_token_expires_at=now + _ACCESS_TOKEN_TTL,
+        )
+        if issued is None:
+            # Re-read rather than reuse `presented`: a concurrent rotation
+            # since then is reuse, too. Otherwise the token has expired.
+            current = store.get_refresh_token(refresh_token)
+            if current is not None and current.rotated_at is not None:
+                # A rotated token is presented again: either the client or an
+                # attacker holds a copy, and we can't tell which, so the whole
+                # grant ends.
+                store.revoke_grant(current.grant.grant_id)
+                log_security_event(
+                    OAuthRefreshTokenReuseEvent(
+                        user_id=current.grant.user_id,
+                        client_id=current.grant.client_id,
+                        remote_ip=request.remote_ip,
+                    )
+                )
+            _error("invalid_grant")
+            return
+
+    response.set_content_type("application/json")
+    response.set_data(
+        OAuthTokenResponse(
+            access_token=issued.access,
+            expires_in=issued.expires_in,
+            refresh_token=issued.refresh,
+            scope=format_scopes(presented.grant.scope),
+        ).model_dump_json()
+    )

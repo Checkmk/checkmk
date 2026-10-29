@@ -6,7 +6,8 @@
 """System-level tests for the RFC 6749 + PKCE authorization-code flow.
 
 Walks the whole flow over real HTTP against a running site -- dynamic client
-registration, the authenticated consent screen, and the token exchange --
+registration, the authenticated consent screen, the token exchange, and a
+refresh whose access token authenticates against the REST API --
 which the Flask-test-client unit suite (tests/unit/cmk/gui/oauth/test_authorize.py)
 cannot exercise: real Apache routing, the real login-session cookie, and real
 CSRF (_transid) wiring all have to work together here.
@@ -180,6 +181,30 @@ def test_full_authorization_code_flow_with_pkce(site: Site, web: CMKWebSession) 
 
     assert token_body["access_token"]
     assert token_body["token_type"] == "Bearer"
+
+
+@pytest.mark.skip_if_edition("community", "cloud")
+def test_a_refreshed_access_token_authenticates_against_the_rest_api(
+    site: Site, web: CMKWebSession
+) -> None:
+    """Authorize, refresh, and call the REST API with the refreshed access token."""
+    client_id, token_body = _authorize_and_redeem(site, web)
+    refreshed = _post_token_request(
+        site,
+        {
+            "grant_type": "refresh_token",
+            "refresh_token": str(token_body["refresh_token"]),
+            "client_id": client_id,
+        },
+    )
+
+    response = requests.get(
+        site.internal_url + "api/1.0/version",
+        headers={"Authorization": f"Bearer {refreshed['access_token']}"},
+        timeout=30,
+    )
+
+    assert response.status_code == HTTPStatus.OK
 
 
 @pytest.mark.skip_if_edition("community", "cloud")

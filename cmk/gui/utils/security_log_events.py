@@ -177,6 +177,22 @@ class OAuthTokenIssuedEvent(SecurityEvent):
 
 
 @dataclass
+class OAuthRefreshTokenReuseEvent(SecurityEvent):
+    """Indicates a replayed, already rotated OAuth refresh token, which suggests it leaked"""
+
+    def __init__(self, *, user_id: UserId, client_id: str, remote_ip: str | None) -> None:
+        super().__init__(
+            "oauth refresh token reused, grant revoked",
+            {
+                "user": str(user_id),
+                "client_id": client_id,
+                "remote_ip": remote_ip,
+            },
+            SecurityEvent.Domain.auth,
+        )
+
+
+@dataclass
 class GUISessionRejectedEvent(SecurityEvent):
     """Indicates a GUI session that a site service asked about and that was refused"""
 

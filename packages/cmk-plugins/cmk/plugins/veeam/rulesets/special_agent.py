@@ -21,8 +21,8 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
-# The section names match the agent's section registry. A service the user
-# selects but the agent cannot fetch terminates the agent (see agent_veeam.py).
+# The section names match the agent's section registry. A selected service the
+# user may not read is reported as a warning (see agent_veeam.py).
 _SECTION_CHOICES = (
     MultipleChoiceElement(
         name="veeam_server_info", title=Title("Server information (HW/SW inventory)")
@@ -31,7 +31,7 @@ _SECTION_CHOICES = (
     MultipleChoiceElement(name="veeam_backup_jobs", title=Title("Backup jobs")),
     MultipleChoiceElement(
         name="veeam_backups",
-        title=Title("Backups (piggybacked to the protected machine)"),
+        title=Title("Backups (on one piggyback host per protected machine)"),
     ),
     MultipleChoiceElement(name="veeam_replicas", title=Title("Replicas")),
     MultipleChoiceElement(name="veeam_protection_groups", title=Title("Agent protection groups")),
@@ -57,10 +57,10 @@ def _parameter_form() -> Dictionary:
             "Monitor a Veeam Backup & Replication server through its REST API. Nothing "
             "is installed on the backup server, so this also works for the Veeam "
             "software appliance, where the Checkmk agent cannot run. "
-            "Use a dedicated account whose role can read the data you want to monitor; "
-            "some services require a more privileged role, and the agent stops when it "
-            "cannot read a service. Do not configure an administrator account: it could "
-            "also delete backups, trigger restores and read stored encryption passwords."
+            "Use a dedicated account with the least privileged role that can read the "
+            "services you need. Some services can only be read with an administrator "
+            "account. Such an account can also delete backups and start restores, so "
+            "only use one if you need these services."
         ),
         elements={
             "connection": DictElement(
@@ -153,11 +153,12 @@ def _parameter_form() -> Dictionary:
                     help_text=Help(
                         "Select which data the special agent fetches from the backup "
                         "server. Deselect services you do not need, for example ones your "
-                        "monitoring account has no permission for. A service that is "
-                        "selected but cannot be fetched makes the agent fail, so that you "
-                        "can correct the selection or the permissions. Most services are "
-                        'created on the host this rule applies to. "Backups" and '
-                        '"Restore points" are instead delivered via piggyback to one host '
+                        "monitoring account has no permission for. A selected service the "
+                        "account may not read is left out, and the Check_MK service shows "
+                        "a warning naming it, so that you can correct the selection or the "
+                        "permissions. Any other error while fetching makes the agent fail. "
+                        'Most services are created on the host this rule applies to. "Backups" '
+                        'and "Restore points" are instead delivered via piggyback to one host '
                         "per protected machine, named after the machine in its Veeam backup "
                         "chain. Create these hosts, for example with the dynamic host "
                         "management, or map the names to existing hosts with the rule "

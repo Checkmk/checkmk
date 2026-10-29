@@ -182,7 +182,7 @@ class AwsCredentials:
         self,
         hub: HubCredentials,
         global_service_region: str,
-        proxy_config: botocore.config.Config | None,
+        client_config: botocore.config.Config | None,
         spokes: SpokeAccounts | None = None,
     ) -> None:
         if hub.role is not None and spokes is not None:
@@ -190,7 +190,7 @@ class AwsCredentials:
         self._hub = hub
         self._spokes = spokes
         self._global_service_region = global_service_region
-        self._proxy_config = proxy_config
+        self._client_config = client_config
         self._session: boto3.session.Session | None = None
         self._account_id: str | None = None
 
@@ -201,7 +201,7 @@ class AwsCredentials:
         """
         if self._session is None:
             self._session, self._account_id = _create_hub_session(
-                self._hub, self._global_service_region, self._proxy_config
+                self._hub, self._global_service_region, self._client_config
             )
         return self._session
 
@@ -218,7 +218,7 @@ class AwsCredentials:
             session = self.session()
             if (account_id := self._account_id) is None:
                 with CLIENT_LOCK:
-                    sts = session.client("sts", config=self._proxy_config)
+                    sts = session.client("sts", config=self._client_config)
                 account_id = sts.get_caller_identity()["Account"]
                 self._account_id = account_id
         except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError) as e:
@@ -249,10 +249,10 @@ class AwsCredentials:
                     external_id,
                     self._hub.session_name,
                     self._global_service_region,
-                    self._proxy_config,
+                    self._client_config,
                 )
             with CLIENT_LOCK:
-                client = session.client("organizations", config=self._proxy_config)
+                client = session.client("organizations", config=self._client_config)
             accounts = [
                 account
                 for page in client.get_paginator("list_accounts").paginate()
@@ -290,7 +290,7 @@ class AwsCredentials:
                 spokes.external_id,
                 self._hub.session_name,
                 self._global_service_region,
-                self._proxy_config,
+                self._client_config,
             )
         except Exception as e:
             raise AwsAccessError(f"Account {account_id}: {describe_credential_failure(e)}")

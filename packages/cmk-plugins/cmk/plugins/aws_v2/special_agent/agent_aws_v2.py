@@ -541,23 +541,28 @@ def _proxy_address(
     return f"{authentication}{address}"
 
 
-def _get_proxy(args: argparse.Namespace) -> botocore.config.Config | None:
-    if args.proxy_host:
-        return botocore.config.Config(
-            proxies={
-                "https": _proxy_address(
-                    args.proxy_host,
-                    args.proxy_port,
-                    args.proxy_user,
-                    (
-                        resolve_secret_option(args, PROXY_SECRET_OPTION).reveal()
-                        if args.proxysecret is not None or args.proxysecret_id is not None
-                        else None
-                    ),
-                )
-            }
+def _client_config(args: argparse.Namespace) -> botocore.config.Config:
+    # The parallel jobs can hit the API rate limits of an account. Unlike the default
+    # "legacy" mode, "standard" retries every throttling error AWS knows, waits a random
+    # part of a growing time, and stops retrying when too many calls fail.
+    return botocore.config.Config(retries={"mode": "standard"}, proxies=_proxies(args))
+
+
+def _proxies(args: argparse.Namespace) -> dict[str, str] | None:
+    if not args.proxy_host:
+        return None
+    return {
+        "https": _proxy_address(
+            args.proxy_host,
+            args.proxy_port,
+            args.proxy_user,
+            (
+                resolve_secret_option(args, PROXY_SECRET_OPTION).reveal()
+                if args.proxysecret is not None or args.proxysecret_id is not None
+                else None
+            ),
         )
-    return None
+    }
 
 
 def _configure_aws(args: argparse.Namespace) -> AWSConfig:
@@ -723,7 +728,7 @@ class _RunSettings(NamedTuple):
     """What all accounts of one agent run share."""
 
     args: argparse.Namespace
-    proxy_config: botocore.config.Config | None
+    client_config: botocore.config.Config | None
     aws_config: AWSConfig
     global_services: Sequence[str]
     regional_services: Sequence[str]
@@ -735,14 +740,14 @@ def _open_account(
     account_id: str,
     args: argparse.Namespace,
     regional_services: Sequence[str],
-    proxy_config: botocore.config.Config | None,
+    client_config: botocore.config.Config | None,
 ) -> tuple[AwsAccount, Sequence[str], Sequence[AgentInfoRow]]:
     """The account, the regions to query in it, and the regions it has not enabled."""
     account = credentials.open_account(account_id)
     if not regional_services or not args.regions:
         return account, args.regions, []
 
-    not_enabled = regions_not_enabled(account.session, args.global_service_region, proxy_config)
+    not_enabled = regions_not_enabled(account.session, args.global_service_region, client_config)
     enabled: list[str] = []
     notes: list[AgentInfoRow] = []
     for region in args.regions:
@@ -764,7 +769,7 @@ def _run_region(
     sections_class: type[AWSSectionsGeneric | AWSSectionsUSEast],
     s3_limits_distributor: ResultDistributorS3Limits,
     use_cache: bool,
-    proxy_config: botocore.config.Config | None,
+    client_config: botocore.config.Config | None,
 ) -> RegionRun:
     """Run the sections of one account in one region."""
     threading.current_thread().name = f"{account.id} {region}"
@@ -777,7 +782,7 @@ def _run_region(
             account.session,
             account.id,
             debug=args.debug,
-            config=proxy_config,
+            config=client_config,
             output=output,
         )
         sections.init_sections(services, region, account_config, s3_limits_distributor)
@@ -803,13 +808,13 @@ def _run_region(
 def agent_aws_main(args: argparse.Namespace, parallel_jobs: int = PARALLEL_JOBS) -> int:
     _setup_logging(args.debug, args.verbose)
 
-    proxy_config = _get_proxy(args)
+    client_config = _client_config(args)
     # One credential owner for the whole run. The connection test and the agent run take
     # the same one, so both resolve credentials through the same path.
     credentials = AwsCredentials(
         _hub_credentials_from_args(args),
         args.global_service_region,
-        proxy_config,
+        client_config,
         _spoke_accounts_from_args(args),
     )
 
@@ -819,7 +824,7 @@ def agent_aws_main(args: argparse.Namespace, parallel_jobs: int = PARALLEL_JOBS)
     if not (account_ids := _monitored_account_ids(credentials)):
         return 0
 
-    settings = _prepare_run(args, proxy_config)
+    settings = _prepare_run(args, client_config)
     with JobPool(parallel_jobs) as pool:
         accounts = [
             _start_account(pool, credentials, account_id, settings) for account_id in account_ids
@@ -850,7 +855,7 @@ def _monitored_account_ids(credentials: AwsCredentials) -> Sequence[str]:
 
 
 def _prepare_run(
-    args: argparse.Namespace, proxy_config: botocore.config.Config | None
+    args: argparse.Namespace, client_config: botocore.config.Config | None
 ) -> _RunSettings:
     aws_config = _configure_aws(args)
 
@@ -869,7 +874,7 @@ def _prepare_run(
 
     return _RunSettings(
         args=args,
-        proxy_config=proxy_config,
+        client_config=client_config,
         aws_config=aws_config,
         global_services=global_services,
         regional_services=regional_services,
@@ -890,7 +895,7 @@ def _start_account(
                 account_id,
                 settings.args,
                 settings.regional_services,
-                settings.proxy_config,
+                settings.client_config,
             )
     except AwsAccessError as ae:
         return account_id, ae
@@ -912,7 +917,7 @@ def _start_account(
             job.sections_class,
             s3_limits_distributor,
             settings.use_cache,
-            settings.proxy_config,
+            settings.client_config,
         )
         for job in _region_jobs(settings, regions)
     ]

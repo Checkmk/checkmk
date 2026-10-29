@@ -326,6 +326,7 @@ def test_diagnostics_get_checkmk_file_info_by_name(
             "conf.d/wato/notifications.mk",
             diagnostics.CheckmkFileSensitivity.sensitive,
         ),
+        ("conf.d/wato/passwords.mk", diagnostics.CheckmkFileSensitivity.unknown),
         ("conf.d/wato/rules.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("conf.d/wato/tags.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("dcd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
@@ -352,6 +353,14 @@ def test_diagnostics_get_checkmk_file_info_by_name(
             diagnostics.CheckmkFileSensitivity.sensitive,
         ),
         ("multisite.mk", diagnostics.CheckmkFileSensitivity.insensitive),
+        (
+            "otel_collector.d/wato/otel_collector_receivers.mk",
+            diagnostics.CheckmkFileSensitivity.sensitive,
+        ),
+        (
+            "otel_collector.d/wato/otel_collector_prom_scrape.mk",
+            diagnostics.CheckmkFileSensitivity.sensitive,
+        ),
         ("rrdcached.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("alerts.log", diagnostics.CheckmkFileSensitivity.sensitive),
         ("apache/access_log", diagnostics.CheckmkFileSensitivity.high_sensitive),

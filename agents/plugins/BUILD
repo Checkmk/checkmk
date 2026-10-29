@@ -29,7 +29,6 @@ filegroup(
 py_library(
     name = "agent-plugins-python",
     srcs = [
-        "mk_docker.py",
         "mk_logwatch.py",
         "mk_podman.py",
         "mk_tinkerforge.py",
@@ -46,7 +45,6 @@ py_library(
     # When you do so, please consider making the used libraries a
     # dev dependency and write some actual tests :-|
     deps = [
-        requirement("docker"),
         requirement("requests"),
         requirement("urllib3"),
     ],

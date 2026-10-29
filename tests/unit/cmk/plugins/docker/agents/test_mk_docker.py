@@ -52,9 +52,9 @@ def _mk_docker():
     """
     _install_docker_stub()
 
-    import agents.plugins.mk_docker
+    import cmk.plugins.docker.agents.mk_docker
 
-    return agents.plugins.mk_docker
+    return cmk.plugins.docker.agents.mk_docker
 
 
 def test_plugin_is_importable():
@@ -120,15 +120,15 @@ def test_time_it_propagates_exceptions():
 
 def test_main_reports_missing_docker_library(monkeypatch, capsys):
     # type: (pytest.MonkeyPatch, pytest.CaptureFixture[str]) -> None
-    import agents.plugins
+    import cmk.plugins.docker.agents
 
     # Import the stubbed plug-in first, so that monkeypatch restores it on
     # teardown. Then force a fresh import, during which "import docker" fails.
     _mk_docker()
     monkeypatch.setitem(sys.modules, "docker", None)
-    monkeypatch.delitem(sys.modules, "agents.plugins.mk_docker")
-    monkeypatch.delattr(agents.plugins, "mk_docker")
-    mk_docker = importlib.import_module("agents.plugins.mk_docker")
+    monkeypatch.delitem(sys.modules, "cmk.plugins.docker.agents.mk_docker")
+    monkeypatch.delattr(cmk.plugins.docker.agents, "mk_docker")
+    mk_docker = importlib.import_module("cmk.plugins.docker.agents.mk_docker")
 
     monkeypatch.setattr(mk_docker, "which", lambda _name: "/usr/bin/docker")
 

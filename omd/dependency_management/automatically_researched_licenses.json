@@ -2617,6 +2617,7 @@
   "pkg:pypi/dnspython@2.9.0": "ISC",
   "pkg:pypi/dnspython@2.9.1": "ISC",
   "pkg:pypi/dnspython@2.9.2": "ISC",
+  "pkg:pypi/docker@7.2.0": "Apache-2.0",
   "pkg:pypi/docstring-parser@0.17.0": "MIT",
   "pkg:pypi/docstring-parser@0.18.0": "MIT",
   "pkg:pypi/durationpy@0.10": "MIT",

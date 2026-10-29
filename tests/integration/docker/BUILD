@@ -9,7 +9,7 @@ py_cmk_test(
         "deballast-keep=//packages/cmk-plugins/cmk/plugins/docker",  # agent sections are found at runtime by discover_all_plugins
     ],
     deps = [
-        "//agents/plugins:agent-plugins-python",
+        "//cmk/plugins/docker/agents",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugins/cmk/plugins/docker",

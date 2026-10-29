@@ -3,13 +3,13 @@
 # Unfortunately we have to maintain a list here, as creating it
 # on the fly would significantly increase the load on the CI.
 #
-agents/plugins/mk_docker.py
 agents/plugins/mk_logwatch.py
 agents/plugins/mk_podman.py
 agents/plugins/mk_tinkerforge.py
 cmk/plugins/ceph/agents/mk_ceph.py
 cmk/plugins/collection/agents/apache_status.py
 cmk/plugins/collection/agents/isc_dhcpd.py
+cmk/plugins/docker/agents/mk_docker.py
 cmk/plugins/files/agents/mk_filestats.py
 cmk/plugins/inotify/agents/mk_inotify.py
 cmk/plugins/jolokia/agents/mk_jolokia.py
@@ -24,7 +24,6 @@ cmk/plugins/unitrends/agents/unitrends_replication.py
 tests/agent-plugin-unit/datasets/mk_logwatch/test_append.log
 tests/agent-plugin-unit/datasets/mk_logwatch/test_data_for_mk_logwatch_crlf.txt
 tests/agent-plugin-unit/datasets/mk_logwatch/test_data_for_mk_logwatch.txt
-tests/agent-plugin-unit/test_mk_docker.py
 tests/agent-plugin-unit/test_mk_logwatch.py
 tests/agent-plugin-unit/test_mk_podman.py
 tests/agent-plugin-unit/test_mk_tinkerforge.py
@@ -35,6 +34,7 @@ tests/component/cmk/plugins/jolokia/agents/test_mk_jolokia_https.py
 tests/unit/cmk/plugins/ceph/agents/test_mk_ceph.py
 tests/unit/cmk/plugins/collection/agents/test_apache_status.py
 tests/unit/cmk/plugins/collection/agents/test_isc_dhcpd.py
+tests/unit/cmk/plugins/docker/agents/test_mk_docker.py
 tests/unit/cmk/plugins/files/agents/datasets/mk_filestats/subdir/testfile2.html
 tests/unit/cmk/plugins/files/agents/datasets/mk_filestats/testfile1.txt
 tests/unit/cmk/plugins/files/agents/test_mk_filestats.py

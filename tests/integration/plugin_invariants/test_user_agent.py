@@ -14,6 +14,7 @@ from cmk.discover_plugins import discover_families
 _AGENTS_WITHOUT_USER_AGENT = {
     "cmk.plugins.ceph.agents.mk_ceph",
     "cmk.plugins.collection.agents.isc_dhcpd",
+    "cmk.plugins.docker.agents.mk_docker",
     "cmk.plugins.files.agents.mk_filestats",
     "cmk.plugins.inotify.agents.mk_inotify",
     "cmk.plugins.mongodb.agents.mk_mongodb",

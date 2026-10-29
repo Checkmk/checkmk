@@ -10,9 +10,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from agents.plugins import mk_docker
 from cmk.agent_based.v2 import AgentSection, entry_point_prefixes
 from cmk.discover_plugins import discover_all_plugins, PluginGroup
+from cmk.plugins.docker.agents import mk_docker
 
 
 @pytest.fixture(name="agent_section_names", scope="module")

@@ -146,6 +146,21 @@ def _parameter_form() -> Dictionary:
                     ),
                 ),
             ),
+            "timeout": DictElement(
+                parameter_form=Integer(
+                    title=Title("Request timeout"),
+                    help_text=Help(
+                        "How long the special agent waits for the backup server to answer a "
+                        "single request to the REST API. The timeout applies to each request, "
+                        "not to the whole agent run. If you raise it above 60 seconds, raise "
+                        "the check interval of the host's Check_MK service accordingly, so "
+                        "that the agent has enough time to complete all its calls."
+                    ),
+                    prefill=DefaultValue(30),
+                    unit_symbol="seconds",
+                    custom_validate=(validators.NumberInRange(min_value=1),),
+                ),
+            ),
             "sections": DictElement(
                 required=True,
                 parameter_form=MultipleChoice(

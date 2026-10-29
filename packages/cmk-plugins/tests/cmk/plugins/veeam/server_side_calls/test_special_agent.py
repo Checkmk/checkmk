@@ -88,6 +88,16 @@ def test_selected_sections_are_passed_as_a_comma_separated_list() -> None:
     )
 
 
+def test_the_timeout_is_passed_when_configured() -> None:
+    arguments = _arguments({**BASE_PARAMS, "connection": ("ip_address", None), "timeout": 120})
+
+    assert arguments[arguments.index("--timeout") + 1] == "120"
+
+
+def test_no_timeout_is_passed_when_not_configured() -> None:
+    assert "--timeout" not in _arguments({**BASE_PARAMS, "connection": ("ip_address", None)})
+
+
 def test_skipping_verification_disables_certificate_verification() -> None:
     arguments = _arguments(
         {

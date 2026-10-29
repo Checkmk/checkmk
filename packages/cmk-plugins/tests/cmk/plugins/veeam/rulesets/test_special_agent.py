@@ -13,6 +13,7 @@ from cmk.plugins.veeam.special_agent.agent_veeam import SECTIONS
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     DefaultValue,
+    DictElement,
     Integer,
     MultipleChoice,
     validators,
@@ -94,3 +95,24 @@ def test_at_least_one_section_must_be_selected() -> None:
 
     with pytest.raises(validators.ValidationError):
         validate([])
+
+
+def _timeout_element() -> DictElement[int]:
+    element = rule_spec_special_agent_veeam.parameter_form().elements["timeout"]
+    assert isinstance(element.parameter_form, Integer)
+    return element
+
+
+def test_the_timeout_is_optional() -> None:
+    assert not _timeout_element().required
+    assert Params.model_validate(BASE_PARAMS).timeout is None
+
+
+def test_timeouts_below_one_second_are_rejected() -> None:
+    custom_validate = _timeout_element().parameter_form.custom_validate
+    assert custom_validate is not None
+    (validate,) = custom_validate
+
+    validate(1)
+    with pytest.raises(validators.ValidationError):
+        validate(0)

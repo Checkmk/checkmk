@@ -263,7 +263,7 @@ def _in_days(days: float) -> str:
 
 
 def _state_of(results: Sequence[object], label: str) -> State:
-    (result,) = [r for r in results if isinstance(r, Result) and r.details.startswith(label)]
+    (result,) = (r for r in results if isinstance(r, Result) and r.details.startswith(label))
     return result.state
 
 

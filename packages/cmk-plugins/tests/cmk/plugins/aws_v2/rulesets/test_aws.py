@@ -95,7 +95,7 @@ def _account_choice_elements(choice: str) -> Mapping[str, DictElement[object]]:
     login = _login_forms()["none"]
     assert isinstance(login, Dictionary)
     accounts = _parameter_form(login.elements, "accounts", CascadingSingleChoice)
-    (form,) = [e.parameter_form for e in accounts.elements if e.name == choice]
+    (form,) = (e.parameter_form for e in accounts.elements if e.name == choice)
     assert isinstance(form, Dictionary)
     return form.elements
 

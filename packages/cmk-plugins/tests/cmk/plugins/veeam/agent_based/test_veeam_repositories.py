@@ -206,11 +206,11 @@ def test_repositories_with_the_same_type_and_name_get_separate_services() -> Non
 
 def _used_space_state(params: Mapping[str, object], free_gb: float) -> State:
     section = parse_veeam_repositories([[_repository(capacityGB=1000.0, freeGB=free_gb)]])
-    (result,) = [
+    (result,) = (
         r
         for r in check_veeam_repositories(_ITEM, params, section)
         if isinstance(r, Result) and r.summary.startswith("Used:")
-    ]
+    )
     return result.state
 
 

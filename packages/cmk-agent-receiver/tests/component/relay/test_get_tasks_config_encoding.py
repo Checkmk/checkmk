@@ -149,9 +149,9 @@ def test_relay_accepting_gzip_gets_compressed_config_when_reporting_result(
 
 
 def _config_task_spec(body: object) -> RelayConfigTask:
-    (spec,) = [
+    (spec,) = (
         task.spec
         for task in TaskListResponse.model_validate(body).tasks
         if isinstance(task.spec, RelayConfigTask)
-    ]
+    )
     return spec

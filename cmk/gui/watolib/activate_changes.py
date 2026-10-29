@@ -2133,7 +2133,7 @@ class ActivateChangesManager:
                 _("You cannot activate changes while some hosts have an invalid configuration: ")
                 + ", ".join(
                     [
-                        '<a href="%s">%s</a>' % (tree.load_host(hn).edit_url(), hn)
+                        f'<a href="{tree.load_host(hn).edit_url()}">{hn}</a>'
                         for hn in defective_hosts
                     ]
                 ),

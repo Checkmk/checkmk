@@ -140,11 +140,11 @@ def _age_state(params: CheckParameters, hours_ago: float) -> State:
             _config_backup(lastSuccessfulBackup={"lastSuccessfulTime": last_success})
         )
     ) is not None
-    (result,) = [
+    (result,) = (
         r
         for r in check_veeam_config_backup(params, section, now=NOW)
         if isinstance(r, Result) and r.summary.startswith("Last successful backup age")
-    ]
+    )
     return result.state
 
 

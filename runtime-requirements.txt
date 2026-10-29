@@ -390,16 +390,16 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.43.120 \
-    --hash=sha256:86978245a7b911549a44df3f805ae4ce94a8154f4ebe4a166631b8a6d7af2697 \
-    --hash=sha256:9d85840e721869f8202ab5f6b4ec3e697ac46343116cc8d1d0804ec58f90c503
+boto3==1.43.121 \
+    --hash=sha256:0599bdde7d0c03d914d9247b0a328ea48c15b0b3b5fb31a153857fa5bc7a4fd3 \
+    --hash=sha256:fc41ea80507416c30a3f7bdea3682124551ec0c36405c0d8149efaf65d9628e7
     # via
     #   -c requirements.txt
     #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-plugins/requirements.in
-botocore==1.43.120 \
-    --hash=sha256:7f54674f26f0d9a500bf44a1f858e88b70b03c82b2aca385ddf51f6e968bfd01 \
-    --hash=sha256:f479cbb7273b9c0ea589a91a7abe38badda6353fb7c237a22c7461a06d279ee2
+botocore==1.43.121 \
+    --hash=sha256:39bfd17e69f3370350e6aac2072df64045d002f9878e09115e85b87c772bd473 \
+    --hash=sha256:69eb571c74ff140cc3a716aed3bc25d09eb7b12de4ea2f990c03785a634f9dcf
     # via
     #   -c requirements.txt
     #   -r packages/cmk-plugins/requirements.in
@@ -957,9 +957,9 @@ cycler==0.12.1 \
     # via
     #   -c requirements.txt
     #   matplotlib
-datamodel-code-generator==0.86.0 \
-    --hash=sha256:1834ba0e84307dfed625eeacfbb07d790ede01a3adf5414a1c9947c5b9139078 \
-    --hash=sha256:1a3d6f0a14a33e334b4251d04e67b0b6ef05c96d4625fb99bd09d716e30ea084
+datamodel-code-generator==0.87.0 \
+    --hash=sha256:657f162c1a72881b14dc699e80a9c877975d825dfcb1e8823c75b65e869e1305 \
+    --hash=sha256:fd1404cd3033d63e6c322bce5bd0682699f9597ff4a14fa062620121651f850c
     # via
     #   -c requirements.txt
     #   -r packages/cmk-shared-typing/requirements.in
@@ -1342,9 +1342,9 @@ google-cloud-os-config==1.25.0 \
     # via
     #   -c requirements.txt
     #   google-cloud-asset
-google-genai==2.33.0 \
-    --hash=sha256:f3f8ab696b35caf95c222e05268740c1ccd6934257890506be73b126150d3b14 \
-    --hash=sha256:fced7f746da45264b34bcf6044a6fcdb91ebad1825e95c324ee48addb6e557ae
+google-genai==2.34.0 \
+    --hash=sha256:8e182cf3f73384167b96861cf0aef5102b5070f2db1ea11002879e913806ef37 \
+    --hash=sha256:a4cb02aebc4c357f863d2938132f0e3f7967fc5e00b8a4078673f68aad340665
     # via
     #   -c requirements.txt
     #   pydantic-ai-slim
@@ -1478,9 +1478,9 @@ httpcore2==2.16.0 \
     # via
     #   -c requirements.txt
     #   httpx2
-httplib2==0.32.0 \
-    --hash=sha256:48a0ef30a42db65d8f3399045e1d09ab0ba66e3b9efc360d07f80ea55d286025 \
-    --hash=sha256:dc6705cacdf3fb0a2aba7629fa33c90fd93e30035db0c157325826be177e4816
+httplib2==0.32.1 \
+    --hash=sha256:37900eb8a74576bd99fc39ae1dc8409f95f965d45b56cbcb2194bb55f58a90e1 \
+    --hash=sha256:82e7a6ab08fcb27879864ddf63dbb529fb032ca336c331cb1597d6dd8b47c92e
     # via
     #   -c requirements.txt
     #   google-api-python-client
@@ -2784,9 +2784,9 @@ oauthlib==4.0.0 \
     #   -r cmk/requirements.in
     #   exchangelib
     #   requests-oauthlib
-openai==3.40.0 \
-    --hash=sha256:df309d434130e89a23e9c687fc4bcd3df0df705a33d3872503c87448df69f56f \
-    --hash=sha256:dfcfd4f65ee5a8bb824da90c9ad7fa0dda7f3bd472a7c564dffc6183f0a0b55c
+openai==3.41.0 \
+    --hash=sha256:7060a74b239609b21f2919eb98807a8aad463b4f510b8b3b388b15559360b0a8 \
+    --hash=sha256:d065fc59d3d7d8537a77b3ceb527732952c6ff610158e8a2a95b246be637e86f
     # via
     #   -c requirements.txt
     #   pydantic-ai-slim
@@ -3154,9 +3154,9 @@ pillow==13.0.0 \
     #   -r cmk/requirements.in
     #   matplotlib
     #   reportlab
-platformdirs==4.13.7 \
-    --hash=sha256:47664602fbecad0a6efa561fb690d20dbc26875fe8aedf65ba362935df619bbb \
-    --hash=sha256:f7f351c027d6632c30471124e1fdb6ac0fef9ccc5cbac1b34cb333431b1fc3e1
+platformdirs==4.14.0 \
+    --hash=sha256:1dadfc59a8a5d7565b3d9270ae8fa71c065595352c4277b41c11ee6c222c4b91 \
+    --hash=sha256:83f009c1e8c5fc36869b5171755b291887bd2cade7965233cdfabd23d754720b
     # via
     #   -c requirements.txt
     #   black
@@ -3670,9 +3670,9 @@ pydantic-graph==2.63.0 \
     # via
     #   -c requirements.txt
     #   pydantic-ai-slim
-pydantic-settings==2.16.1 \
-    --hash=sha256:30f5313340da4e8f1b440d1910b92a5bc3ccbb6b4ba70ec2b8395bc921f418f5 \
-    --hash=sha256:aff602a1886338c2df3d1e958e2193a8dc33cec75b91f202e83fd98484b4b0da
+pydantic-settings==2.16.2 \
+    --hash=sha256:3dc08ffabed2bbd5dc2dd55ead7b78b4e4c5cd776aecd04310db5f1224caaf46 \
+    --hash=sha256:8d523e5c129b097686bde019bd6109bff53f4c8c3f63f1ddf9933ffa42e5ab4f
     # via
     #   -c requirements.txt
     #   openapi-schema-validator
@@ -3892,9 +3892,9 @@ pyparsing==3.3.3 \
     #   -r cmk/requirements.in
     #   httplib2
     #   matplotlib
-pypdf==6.21.3 \
-    --hash=sha256:11e1ca6d6cc8ca322558a3a974078d5ebc0f3a2104b8e673eee25621ee97abd8 \
-    --hash=sha256:c8ca4d9a360dbd5d4b9bb7a8389e2a9ae6a106bee722b496f918040ba2daa17e
+pypdf==6.21.4 \
+    --hash=sha256:33e4fb41ca352810eb4e9838aa0d82d6888a5f8bf682f43e99cce5faa666255c \
+    --hash=sha256:c8817e3f888d47a087872ded69812c1ef30cacb871d6e053e0c00bbaf0bc2163
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -4018,9 +4018,9 @@ python-multipart==0.0.32 \
     #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
     #   mcp
-python-snap7==3.3.0 \
-    --hash=sha256:99aec46ef78d526ad3106b9359bd259ca5cd151034500b21a8732ba901e406f3 \
-    --hash=sha256:cd4d6a3eb3f199c78a1725e54a437ef664da7988c10817e8b19b58ed99ef8b04
+python-snap7==3.3.1 \
+    --hash=sha256:1f1f6f3590eb095c4eb2b3c4e43dde529d9ac1d23acea07308186ce0cae2d167 \
+    --hash=sha256:b6133aa7f713ffda5adf28ffa40febb937ec1c73ea03f8d72e4ca206b082fb96
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -4852,9 +4852,9 @@ typing-inspection==0.4.4 \
     #   pydantic-ai-slim
     #   pydantic-graph
     #   pydantic-settings
-tzdata==2026.5 \
-    --hash=sha256:8cc73c0a0bfca7dbfa59235d60b2eff82231dee33f53d206db1acd9173cfc0a7 \
-    --hash=sha256:b683bd1b6659ddcd810ff02ad09ba821d4bf1065072805063eb35c49617905ac
+tzdata==2026.6 \
+    --hash=sha256:0a10eec6e13ef16b627fabed9a5f2ba61a62b1c67f327305f4e7e412a70b4aec \
+    --hash=sha256:85d2cd9c09f81f0bb29db27759fc83af4f1e620efb814f8c5bf8b4cc4feece6d
     # via
     #   -c requirements.txt
     #   exchangelib

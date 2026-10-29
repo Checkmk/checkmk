@@ -68,6 +68,9 @@ export type CellBreakpoints = Readonly<Record<string, BreakpointValue>>
 export const MONITORING_SERVICE: InjectionKey<MonitoringService<unknown>> =
   Symbol('MonitoringService')
 
+/** What a panel does once a value in it narrowed the listing: make way for the result. */
+export const AFTER_NARROW: InjectionKey<() => void> = Symbol('AfterNarrow')
+
 export interface MonitoringTableState {
   readonly sortState: Ref<SortingState>
   readonly columnVisibility: Ref<VisibilityState>

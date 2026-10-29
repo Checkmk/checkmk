@@ -10,7 +10,7 @@ import { computed, inject } from 'vue'
 
 import type { ColumnCondition } from '@/monitoring/shared/services/MonitoringService'
 
-import { MONITORING_SERVICE } from './MonitoringTableContext'
+import { AFTER_NARROW, MONITORING_SERVICE } from './MonitoringTableContext'
 import {
   type LabelCellItem,
   labelItemContent,
@@ -30,12 +30,14 @@ const { _t } = usei18n()
 
 // A dashboard widget has no listing of its own to narrow, so it provides no service.
 const service = inject(MONITORING_SERVICE, null)
+const afterNarrow = inject(AFTER_NARROW, null)
 
 const interactive = computed(() => service !== null && props.filterBy !== undefined)
 
 function narrow(): void {
   if (service && props.filterBy) {
     service.showOnly(props.filterBy(props.item))
+    afterNarrow?.()
   }
 }
 </script>

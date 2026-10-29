@@ -10,11 +10,13 @@ import { computed } from 'vue'
 
 import type { HostOverview, HostRef } from '@/monitoring/shared/api/types'
 import ServiceSummaryBar from '@/monitoring/shared/components/ServiceSummaryBar.vue'
+import type { LabelCellItem } from '@/monitoring/shared/components/cell/labelCellItem'
 import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips.vue'
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
 import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { toNameItems, toTagItems } from '@/monitoring/shared/labels'
+import type { ColumnCondition } from '@/monitoring/shared/services/MonitoringService'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 import HostRelationsSection from './HostRelationsSection.vue'
@@ -25,6 +27,8 @@ const props = withDefaults(
     /** Counts how often the reader asked for the relations; 0 means they did not. */
     revealRelationsRequest?: number
     displayOptions: DisplayOptions
+    /** What a label click narrows the listing behind to; unset unless that lists hosts. */
+    filterLabelsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
   }>(),
   { revealRelationsRequest: 0 }
 )
@@ -113,7 +117,7 @@ const age = computed(() =>
 
       <dt>{{ _t('Labels') }}</dt>
       <dd>
-        <OverviewLabels :labels="data.labels" />
+        <OverviewLabels :labels="data.labels" :filter-by="filterLabelsBy" />
       </dd>
     </OverviewDetailList>
 

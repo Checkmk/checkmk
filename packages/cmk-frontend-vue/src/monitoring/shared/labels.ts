@@ -62,3 +62,9 @@ export function toTagItems(tags: Record<string, string>): LabelCellItem[] {
 export function groupCondition(item: LabelCellItem): FieldConditionMap['groups'] {
   return { type: 'condition', field: 'groups', op: 'one_of', value: [labelItemText(item)] }
 }
+
+/** Narrow the listing to what carries the label an entry shows. */
+export function labelCondition(item: LabelCellItem): FieldConditionMap['labels'] {
+  const pair = 'keyValue' in item ? `${item.keyValue.key}:${item.keyValue.value}` : item.text
+  return { type: 'condition', field: 'labels', op: 'all_of', value: [pair] }
+}

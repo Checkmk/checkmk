@@ -14,6 +14,7 @@ import type { HostEntry, HostOverview } from '@/monitoring/shared/api/types'
 import HostSlideIn, {
   type HostSlideInSubject
 } from '@/monitoring/shared/components/HostSlideIn.vue'
+import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { ActionFeedback } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import { ACK_ACTION_ID } from '@/monitoring/shared/components/action/actions/acknowledge'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
@@ -21,7 +22,10 @@ import type { MonitoringActionRegistry } from '@/monitoring/shared/components/ac
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
+import { labelCondition } from '@/monitoring/shared/labels'
 import type { DisplayOptions } from '@/monitoring/shared/types'
+
+import { makeListingService } from '../../shared/services/testHelpers'
 
 const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
@@ -368,5 +372,27 @@ describe('HostSlideIn', () => {
     expect(
       screen.queryByRole('button', { name: 'Send custom notification' })
     ).not.toBeInTheDocument()
+  })
+
+  it('emits close once a label narrowed the listing behind it', async () => {
+    vi.spyOn(client, 'GET').mockResolvedValue({
+      data: makeHostOverview({ labels: { env: { value: 'prod', source: 'explicit' } } }),
+      error: undefined,
+      response: new Response()
+    } as never)
+    const { emitted } = render(HostSlideIn, {
+      props: {
+        host: makeHost(),
+        actions: makeRegistry(vi.fn()),
+        loadActionMenu: async () => [],
+        displayOptions: DISPLAY_OPTIONS,
+        filterLabelsBy: labelCondition
+      },
+      global: { provide: { [MONITORING_SERVICE as symbol]: makeListingService() } }
+    })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'env: prod' }))
+
+    expect(emitted()['close']).toHaveLength(1)
   })
 })

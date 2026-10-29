@@ -531,6 +531,25 @@ test('clicking a host group narrows the listing to the hosts in that group', asy
   })
 })
 
+test('clicking a label narrows the listing to the hosts carrying it', async () => {
+  const service = makeListingService()
+  mountRow(
+    makeHost({ labels: { 'cmk/os_family': { value: 'linux', source: 'discovered' } } }),
+    makeTableRow(),
+    {},
+    service
+  )
+
+  await fireEvent.click(screen.getByRole('button', { name: 'cmk/os_family: linux' }))
+
+  expect(service.filterState.value).toStrictEqual({
+    type: 'condition',
+    field: 'labels',
+    op: 'all_of',
+    value: ['cmk/os_family:linux']
+  })
+})
+
 test('host groups stay plain where there is no listing to narrow', () => {
   mountRow(makeHost({ groups: ['linux'] }))
 

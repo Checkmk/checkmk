@@ -22,7 +22,13 @@ import GraphsLink from '@/monitoring/shared/components/graphs/GraphsLink.vue'
 import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
-import { groupCondition, toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
+import {
+  groupCondition,
+  labelCondition,
+  toLabelItems,
+  toNameItems,
+  toTagItems
+} from '@/monitoring/shared/labels'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const props = withDefaults(
@@ -174,7 +180,13 @@ const lastStateChange = computed(() =>
     column-id="last_state_change"
     :value="lastStateChange"
   />
-  <LabelCell v-if="hasColumn('labels')" column-id="labels" :items="labels" size="small" />
+  <LabelCell
+    v-if="hasColumn('labels')"
+    column-id="labels"
+    :items="labels"
+    size="small"
+    :filter-by="labelCondition"
+  />
   <LabelCell v-if="hasColumn('tags')" column-id="tags" :items="tags" size="small" />
   <LabelCell v-if="hasColumn('contacts')" column-id="contacts" :items="contacts" size="small" />
   <LabelCell

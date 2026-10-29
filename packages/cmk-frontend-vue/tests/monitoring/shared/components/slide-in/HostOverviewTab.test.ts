@@ -3,11 +3,16 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 
 import type { HostOverview } from '@/monitoring/shared/api/types'
+import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import HostOverviewTab from '@/monitoring/shared/components/slide-in/HostOverviewTab.vue'
+import { labelCondition } from '@/monitoring/shared/labels'
 import type { DisplayOptions } from '@/monitoring/shared/types'
+
+import { makeListingService } from '../../../shared/services/testHelpers'
 
 const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
@@ -105,4 +110,30 @@ test('dashes out the timestamps of a host that has never been checked', () => {
   })
 
   expect(screen.getAllByText('–')).toHaveLength(2)
+})
+
+test('narrows the listing of hosts to the ones carrying a label clicked on', async () => {
+  const service = makeListingService()
+  render(HostOverviewTab, {
+    props: { data: makeData(), displayOptions: DISPLAY_OPTIONS, filterLabelsBy: labelCondition },
+    global: { provide: { [MONITORING_SERVICE as symbol]: service } }
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: 'cmk/os_family: linux' }))
+
+  expect(service.filterState.value).toStrictEqual({
+    type: 'condition',
+    field: 'labels',
+    op: 'all_of',
+    value: ['cmk/os_family:linux']
+  })
+})
+
+test('keeps the labels plain where the listing behind the panel holds no hosts', () => {
+  render(HostOverviewTab, {
+    props: { data: makeData(), displayOptions: DISPLAY_OPTIONS },
+    global: { provide: { [MONITORING_SERVICE as symbol]: makeListingService() } }
+  })
+
+  expect(screen.queryByRole('button', { name: 'cmk/os_family: linux' })).not.toBeInTheDocument()
 })

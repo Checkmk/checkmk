@@ -24,23 +24,26 @@ import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkSlideInTabbed, { type SlideInTab } from 'cmk-ui-library/components/CmkSlideInTabbed'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, markRaw, onUnmounted, ref, watch } from 'vue'
+import { computed, markRaw, onUnmounted, provide, ref, watch } from 'vue'
 
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
 import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostOverview } from '@/monitoring/shared/api/types'
 import HostHeader, { type HostHeaderSubject } from '@/monitoring/shared/components/HostHeader.vue'
+import { AFTER_NARROW } from '@/monitoring/shared/components/MonitoringTableContext'
 import ActionFeedback, {
   type ActionFeedback as ActionFeedbackResult
 } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import MonitoringActionPane from '@/monitoring/shared/components/action/MonitoringActionPane.vue'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import type { LabelCellItem } from '@/monitoring/shared/components/cell/labelCellItem'
 import SlideInActions from '@/monitoring/shared/components/slide-in/SlideInActions.vue'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import EventHistoryApp from '@/monitoring/shared/events/EventHistoryApp.vue'
 import { fetchEvents } from '@/monitoring/shared/events/api'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
+import type { ColumnCondition } from '@/monitoring/shared/services/MonitoringService'
 import { useSlideInActions } from '@/monitoring/shared/services/useSlideInActions'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
@@ -62,6 +65,8 @@ const props = withDefaults(
     /** Counts how often the reader asked for the relations; 0 means they did not. */
     revealRelationsRequest?: number
     displayOptions: DisplayOptions
+    /** What a label click narrows the listing behind to; unset unless that lists hosts. */
+    filterLabelsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
   }>(),
   {
     rowActions: () => [],
@@ -77,6 +82,8 @@ const emit = defineEmits<{
 }>()
 
 const { _t } = usei18n()
+
+provide(AFTER_NARROW, () => emit('close'))
 
 const hostApi = new HostApi()
 
@@ -239,7 +246,8 @@ const tabs = computed<SlideInTab[]>(() => {
       skeleton: markRaw(HostOverviewSkeleton),
       props: {
         revealRelationsRequest: props.revealRelationsRequest,
-        displayOptions: props.displayOptions
+        displayOptions: props.displayOptions,
+        filterLabelsBy: props.filterLabelsBy
       },
       load: () => loadOverview({ site_id: host.site_id, name: host.name })
     },

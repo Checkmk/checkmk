@@ -38,6 +38,14 @@ ConfigVariableGroupUserInterface = ConfigVariableGroup(
 )
 
 
+ConfigVariableGroupUserManagement = ConfigVariableGroup(
+    title=_l("User management"),
+    sort_index=40,
+    icon=IconNames.users,
+    description=_l("Configures user/authentication settings"),
+)
+
+
 ConfigVariableGroupWATO = ConfigVariableGroup(
     title=_l("Setup"),
     sort_index=25,

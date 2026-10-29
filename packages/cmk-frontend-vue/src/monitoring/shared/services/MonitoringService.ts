@@ -23,7 +23,7 @@ import {
   watch
 } from 'vue'
 
-import type { FilterNode } from '@/monitoring/shared/api/types'
+import type { FieldConditionMap, FilterNode } from '@/monitoring/shared/api/types'
 import { DEFAULT_BATCH_SIZE, POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
 import type { FilterUrlState } from '@/monitoring/shared/filterState/types'
 import {
@@ -80,6 +80,9 @@ export type FetchKind = 'foreground' | 'background'
 
 /** The current fetch state: a {@link FetchKind} in flight, or `'idle'`. */
 export type FetchState = 'idle' | FetchKind
+
+/** A condition on a field whose column has the same id, so narrowing to it can show that column. */
+export type ColumnCondition = FieldConditionMap['groups'] | FieldConditionMap['labels']
 
 export interface MonitoringServiceOptions<T> {
   pollIntervalMs?: number | undefined
@@ -252,6 +255,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
   readonly toggleableColumns: ToggleableColumn[]
   protected readonly hideableColumnIds: string[]
   readonly columnVisibility: Ref<VisibilityState>
+  private readonly storedColumnVisibility: Ref<VisibilityState>
   readonly defaultColumnVisibility: VisibilityState
   /** The table's non-filter display state, for a URL sync to watch. */
   readonly tableState: ComputedRef<TableState>
@@ -345,17 +349,15 @@ export abstract class MonitoringService<T> extends ServiceBase {
       initialState?.cols === undefined
         ? undefined
         : visibilityFromColumnIds(initialState.cols, this.hideableColumnIds)
-    // usePersistentRef writes every later change back, so the selection outlives
-    // the tab it was made in. Seeding through `parse` lets a URL's columns win
-    // without persisting them - the user's own next change still writes through.
-    this.columnVisibility =
+    // Only the user's own picks are stored, so the selection outlives the tab it was made in. A
+    // URL's columns, and those a click on a value sets, are shown without overwriting it.
+    this.storedColumnVisibility =
       columnStorageKey === undefined
-        ? ref(urlVisibility ?? defaultVisibility)
+        ? ref(defaultVisibility)
         : usePersistentRef(columnStorageKey, defaultVisibility, (stored) =>
-            urlVisibility === undefined
-              ? sanitizeVisibility(stored, this.toggleableColumns, defaultVisibility)
-              : urlVisibility
+            sanitizeVisibility(stored, this.toggleableColumns, defaultVisibility)
           )
+    this.columnVisibility = ref(urlVisibility ?? { ...this.storedColumnVisibility.value })
 
     this.offeredLimits =
       tableStateSchema?.offeredLimits ?? buildOfferedLimits(limitTiers, mayRemoveLimit)
@@ -524,6 +526,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
       ({ id }) => isHidden(this.columnVisibility.value, id) && !isHidden(guarded, id)
     )
     this.columnVisibility.value = guarded
+    this.storedColumnVisibility.value = { ...guarded }
     if (revealed || (toggled && this.appliedSearchQuery.value !== '')) {
       void this.fetch()
     }
@@ -623,6 +626,18 @@ export abstract class MonitoringService<T> extends ServiceBase {
     // Refresh explicitly: a quick filter may only change the search query, leaving the
     // filter node unchanged so the filterNode watcher would not fire.
     this.updateFilters(quickFilter.filter)
+  }
+
+  /**
+   * Narrow the listing to `condition` alone. Whatever filter and search were set before go, and
+   * the columns go back to their defaults plus the one filtered on, so the result shows what it
+   * was narrowed by. The user's stored column selection stays as it is.
+   */
+  showOnly(condition: ColumnCondition): void {
+    this.clearSearch()
+    this.columnVisibility.value = { ...this.defaultColumnVisibility, [condition.field]: true }
+    // A fresh node always fires the filter watcher, which fetches; no second fetch here.
+    this.filters.setQueryNode({ ...condition })
   }
 
   deactivateQuickFilter(quickFilter: QuickFilter): void {

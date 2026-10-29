@@ -11,6 +11,7 @@ import { nextTick } from 'vue'
 import type { FilterNode } from '@/monitoring/shared/api/types'
 import { POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
 import {
+  type ColumnCondition,
   MonitoringService,
   type MonitoringServiceOptions,
   type PagedResponse,
@@ -994,6 +995,17 @@ describe('MonitoringService', () => {
         expect(makePersistingService().columnVisibility.value).toEqual({ alias: false })
       })
 
+      it('leaves the stored selection alone when a click narrows the listing', async () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ alias: true, address: false }))
+        const service = makePersistingService()
+
+        service.showOnly({ type: 'condition', field: 'groups', op: 'one_of', value: ['linux'] })
+        await nextTick()
+
+        expect(service.columnVisibility.value).toEqual({ alias: false, groups: true })
+        expect(stored()).toEqual({ alias: true, address: false })
+      })
+
       it('keeps the selection in memory when no storage key is given', async () => {
         const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
           columns: COLUMNS
@@ -1021,6 +1033,54 @@ describe('MonitoringService', () => {
 
       service.resetColumnVisibility()
       expect(service.columnVisibility.value).toEqual({ alias: false })
+
+      service.stopPolling()
+    })
+  })
+
+  describe('showOnly', () => {
+    const GROUP_LINUX: ColumnCondition = {
+      type: 'condition',
+      field: 'groups',
+      op: 'one_of',
+      value: ['linux']
+    }
+
+    it('narrows the listing to the condition alone, dropping the filter and search before', async () => {
+      const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
+      const service = new TestService(fetchBatch)
+      service.filters.setQueryNode({
+        type: 'condition',
+        field: 'acknowledged',
+        op: 'eq',
+        value: true
+      })
+      service.updateSearch('web')
+      await vi.advanceTimersByTimeAsync(0)
+
+      service.showOnly(GROUP_LINUX)
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(service.filterState.value).toStrictEqual(GROUP_LINUX)
+      expect(service.appliedSearchQuery.value).toBe('')
+
+      service.stopPolling()
+    })
+
+    it('shows the default columns plus the one filtered on', () => {
+      const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
+      const service = new TestService(fetchBatch, {
+        columns: [
+          { accessorKey: 'address', header: 'IP address' },
+          { accessorKey: 'alias', header: 'Alias', meta: { hidden: true } },
+          { accessorKey: 'groups', header: 'Groups', meta: { hidden: true } }
+        ]
+      })
+      service.updateColumnVisibility({ address: false, alias: true, groups: false })
+
+      service.showOnly(GROUP_LINUX)
+
+      expect(service.columnVisibility.value).toEqual({ alias: false, groups: true })
 
       service.stopPolling()
     })

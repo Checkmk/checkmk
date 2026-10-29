@@ -6,7 +6,7 @@
 import type { Colors } from 'cmk-ui-library/components/CmkTag.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-import type { LabelValue } from '@/monitoring/shared/api/types'
+import type { FieldConditionMap, LabelValue } from '@/monitoring/shared/api/types'
 import {
   type LabelCellItem,
   labelItemText
@@ -56,4 +56,9 @@ export function toTagItems(tags: Record<string, string>): LabelCellItem[] {
       text: `${group}: ${value}` as TranslatedString
     }))
   )
+}
+
+/** Narrow the listing to what is in the group an entry names. */
+export function groupCondition(item: LabelCellItem): FieldConditionMap['groups'] {
+  return { type: 'condition', field: 'groups', op: 'one_of', value: [labelItemText(item)] }
 }

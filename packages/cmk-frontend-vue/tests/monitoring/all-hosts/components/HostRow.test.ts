@@ -14,9 +14,13 @@ import { defineComponent, h } from 'vue'
 import { buildHostColumns } from '@/monitoring/all-hosts/columns'
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
+import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 import type { DisplayOptions } from '@/monitoring/shared/types'
+
+import { makeListingService } from '../../shared/services/testHelpers'
 
 // 'abs' keeps assertions comparable to plain `renderDateAndTime`, independent of how old
 // a fixture's timestamp happens to be relative to the real clock the test runs under.
@@ -63,7 +67,8 @@ interface RowActionProps {
 function mountRow(
   row: HostEntry,
   tableRow: Row<HostEntry> = makeTableRow(),
-  actionProps: RowActionProps = {}
+  actionProps: RowActionProps = {},
+  service: MonitoringService<unknown> | null = null
 ) {
   return render(
     defineComponent({
@@ -77,7 +82,8 @@ function mountRow(
           ])
         ])
       }
-    })
+    }),
+    service ? { global: { provide: { [MONITORING_SERVICE as symbol]: service } } } : {}
   )
 }
 
@@ -509,6 +515,26 @@ test('renders the host groups of a host, sorted alphabetically', () => {
 
   const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
   expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['linux', 'web'])
+})
+
+test('clicking a host group narrows the listing to the hosts in that group', async () => {
+  const service = makeListingService()
+  mountRow(makeHost({ groups: ['web', 'linux'] }), makeTableRow(), {}, service)
+
+  await fireEvent.click(screen.getByRole('button', { name: 'linux' }))
+
+  expect(service.filterState.value).toStrictEqual({
+    type: 'condition',
+    field: 'groups',
+    op: 'one_of',
+    value: ['linux']
+  })
+})
+
+test('host groups stay plain where there is no listing to narrow', () => {
+  mountRow(makeHost({ groups: ['linux'] }))
+
+  expect(screen.queryByRole('button', { name: 'linux' })).not.toBeInTheDocument()
 })
 
 test('renders the customer of a host', () => {

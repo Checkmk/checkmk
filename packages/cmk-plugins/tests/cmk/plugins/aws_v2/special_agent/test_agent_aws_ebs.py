@@ -193,6 +193,37 @@ def test_agent_aws_ebs_limits(
         ]
 
 
+class FakeEC2ClientWithProvisionedIops(FakeEC2Client):
+    @override
+    def describe_volumes(
+        self,
+        VolumeIds: object = None,
+        Filters: object = None,
+    ) -> Mapping[str, object]:
+        return {
+            "Volumes": [
+                {"VolumeType": "io1", "Size": 10, "Iops": 500},
+                {"VolumeType": "io1", "Size": 20, "Iops": 700},
+                {"VolumeType": "io2", "Size": 30, "Iops": 900},
+            ]
+        }
+
+
+def test_agent_aws_ebs_limits_count_the_iops_of_provisioned_volumes(
+    get_ebs_sections: EBSSections,
+) -> None:
+    _ec2_summary, ebs_limits, _ebs_summary, _ebs = get_ebs_sections(
+        None, (None, None), ec2_client=FakeEC2ClientWithProvisionedIops()
+    )
+
+    amounts = {limit.key: limit.amount for limit in ebs_limits.run().results[0].content}
+
+    assert amounts["block_store_space_io1"] == 30
+    assert amounts["block_store_iops_io1"] == 1200
+    assert amounts["block_store_space_io2"] == 30
+    assert amounts["block_store_iops_io2"] == 900
+
+
 @pytest.mark.parametrize("names,tags,found_ebs", ebs_params)
 def test_agent_aws_ebs_summary(
     get_ebs_sections: EBSSections,

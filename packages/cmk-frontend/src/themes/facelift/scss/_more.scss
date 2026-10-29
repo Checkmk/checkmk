@@ -16,13 +16,11 @@
 
 .show_more_mode {
   display: none;
-  opacity: 0;
 }
 
 .more {
   .show_more_mode {
     display: block;
-    animation: fadein 0s both;
   }
 
   td.show_more_mode {
@@ -35,7 +33,7 @@
 }
 
 .more.withanimation .show_more_mode {
-  animation: fadein 1s both;
+  animation: fadein 1s;
 }
 
 a.more {

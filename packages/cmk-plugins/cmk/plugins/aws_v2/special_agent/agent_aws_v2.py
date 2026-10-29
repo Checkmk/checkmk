@@ -713,6 +713,23 @@ class _AccountJobs(NamedTuple):
     runs: Sequence[Future[RegionRun]]
 
 
+class _RegionJob(NamedTuple):
+    services: Sequence[str]
+    region: str
+    sections_class: type[AWSSectionsGeneric | AWSSectionsUSEast]
+
+
+class _RunSettings(NamedTuple):
+    """What all accounts of one agent run share."""
+
+    args: argparse.Namespace
+    proxy_config: botocore.config.Config | None
+    aws_config: AWSConfig
+    global_services: Sequence[str]
+    regional_services: Sequence[str]
+    use_cache: bool
+
+
 def _open_account(
     credentials: AwsCredentials,
     account_id: str,
@@ -799,12 +816,25 @@ def agent_aws_main(args: argparse.Namespace, parallel_jobs: int = PARALLEL_JOBS)
     if args.connection_test:
         return _test_connection(credentials)
 
+    if not (account_ids := _monitored_account_ids(credentials)):
+        return 0
+
+    settings = _prepare_run(args, proxy_config)
+    with JobPool(parallel_jobs) as pool:
+        accounts = [
+            _start_account(pool, credentials, account_id, settings) for account_id in account_ids
+        ]
+    return _write_output(accounts)
+
+
+def _monitored_account_ids(credentials: AwsCredentials) -> Sequence[str]:
+    """The accounts to monitor. Empty if there are none, after the agent info told why."""
     try:
         account_ids = credentials.monitored_account_ids()
     except AwsAccessError as ae:
         _write_access_error(ae)
         write_agent_info([AgentInfoRow("error", reason=str(ae))])
-        return 0
+        return []
     if not account_ids:
         # Only an organization can leave nothing: every account is excluded or inactive.
         write_agent_info(
@@ -816,15 +846,17 @@ def agent_aws_main(args: argparse.Namespace, parallel_jobs: int = PARALLEL_JOBS)
                 )
             ]
         )
-        return 0
+    return account_ids
 
+
+def _prepare_run(
+    args: argparse.Namespace, proxy_config: botocore.config.Config | None
+) -> _RunSettings:
     aws_config = _configure_aws(args)
 
     global_services, regional_services = _sanitize_aws_services_params(
         args.global_services, args.services, r_and_g_aws_services=("wafv2",)
     )
-
-    use_cache = aws_config.is_up_to_date() and not args.no_cache
 
     if regional_services and not args.regions:
         LOGGER.error(
@@ -835,48 +867,76 @@ def agent_aws_main(args: argparse.Namespace, parallel_jobs: int = PARALLEL_JOBS)
             {"services": ", ".join(regional_services)},
         )
 
-    accounts: list[tuple[str, _AccountJobs | AwsAccessError]] = []
-    with JobPool(parallel_jobs) as pool:
-        for account_id in account_ids:
-            try:
-                with pool.slot():
-                    account, regions, notes = _open_account(
-                        credentials, account_id, args, regional_services, proxy_config
-                    )
-            except AwsAccessError as ae:
-                accounts.append((account_id, ae))
-                continue
-            account_config = aws_config.for_account(account.id, host=account.id)
-            # Collects the S3 limits across the regions of this account, so it must not be
-            # shared with other accounts.
-            s3_limits_distributor = ResultDistributorS3Limits(regions[0] if regions else None)
-            region_jobs: list[
-                tuple[Sequence[str], str, type[AWSSectionsGeneric | AWSSectionsUSEast]]
-            ] = []
-            if global_services:
-                region_jobs.append((global_services, args.global_service_region, AWSSectionsUSEast))
-            if regional_services:
-                region_jobs += [
-                    (regional_services, region, AWSSectionsGeneric) for region in regions
-                ]
+    return _RunSettings(
+        args=args,
+        proxy_config=proxy_config,
+        aws_config=aws_config,
+        global_services=global_services,
+        regional_services=regional_services,
+        use_cache=aws_config.is_up_to_date() and not args.no_cache,
+    )
 
-            runs = [
-                pool.submit(
-                    _run_region,
-                    args,
-                    account,
-                    account_config,
-                    services,
-                    region,
-                    sections_class,
-                    s3_limits_distributor,
-                    use_cache,
-                    proxy_config,
-                )
-                for services, region, sections_class in region_jobs
-            ]
-            accounts.append((account_id, _AccountJobs(account, notes, runs)))
 
+def _start_account(
+    pool: JobPool, credentials: AwsCredentials, account_id: str, settings: _RunSettings
+) -> tuple[str, _AccountJobs | AwsAccessError]:
+    """Open the account and submit one job per region. The jobs run in the background."""
+    try:
+        # Runs in the main thread, because the jobs below need its result. It still takes a
+        # slot, since opening the account calls AWS like a job does.
+        with pool.slot():
+            account, regions, notes = _open_account(
+                credentials,
+                account_id,
+                settings.args,
+                settings.regional_services,
+                settings.proxy_config,
+            )
+    except AwsAccessError as ae:
+        return account_id, ae
+
+    account_config = settings.aws_config.for_account(account.id, host=account.id)
+    # Collects the S3 limits across the regions of this account, so it must not be
+    # shared with other accounts.
+    s3_limits_distributor = ResultDistributorS3Limits(regions[0] if regions else None)
+    # Each submit waits for a free slot and then runs the job in a worker thread. The jobs
+    # run in parallel, also with the jobs of the (other) accounts before and after this one.
+    runs = [
+        pool.submit(
+            _run_region,
+            settings.args,
+            account,
+            account_config,
+            job.services,
+            job.region,
+            job.sections_class,
+            s3_limits_distributor,
+            settings.use_cache,
+            settings.proxy_config,
+        )
+        for job in _region_jobs(settings, regions)
+    ]
+    return account_id, _AccountJobs(account, notes, runs)
+
+
+def _region_jobs(settings: _RunSettings, regions: Sequence[str]) -> list[_RegionJob]:
+    """One job for the global services, and one per region for the regional services."""
+    jobs: list[_RegionJob] = []
+    if settings.global_services:
+        jobs.append(
+            _RegionJob(
+                settings.global_services, settings.args.global_service_region, AWSSectionsUSEast
+            )
+        )
+    if settings.regional_services:
+        jobs += [
+            _RegionJob(settings.regional_services, region, AWSSectionsGeneric) for region in regions
+        ]
+    return jobs
+
+
+def _write_output(accounts: Sequence[tuple[str, _AccountJobs | AwsAccessError]]) -> int:
+    """Write the output of all accounts and the agent info. 1 if a section had exceptions."""
     # The output follows the order of the accounts and regions, whichever job finished first.
     has_exceptions = False
     agent_info: list[AgentInfoRow] = []
@@ -885,24 +945,36 @@ def agent_aws_main(args: argparse.Namespace, parallel_jobs: int = PARALLEL_JOBS)
             # Only this account is lost. The others still get monitored.
             agent_info.append(AgentInfoRow("error", account_id, str(jobs)))
             continue
-        error: AwsAccessError | None = None
-        notes = list(jobs.notes)
-        for run in jobs.runs:
-            try:
-                region_run = run.result()
-            except AwsAccessError as ae:
-                error = error or ae
-                continue
-            sys.stdout.write(region_run.output)
-            has_exceptions |= region_run.has_exceptions
-            notes += region_run.notes
-        if error is None:
-            agent_info += [AgentInfoRow("ok", jobs.account.id), *notes]
-        else:
-            agent_info.append(AgentInfoRow("error", account_id, str(error)))
+        account_info, account_has_exceptions = _write_account_output(account_id, jobs)
+        agent_info += account_info
+        has_exceptions |= account_has_exceptions
 
     write_agent_info(agent_info)
     return 1 if has_exceptions else 0
+
+
+def _write_account_output(
+    account_id: str, jobs: _AccountJobs
+) -> tuple[Sequence[AgentInfoRow], bool]:
+    """Wait for the jobs of one account and write their output.
+
+    Returns the agent info of the account, and whether a section had exceptions.
+    """
+    error: AwsAccessError | None = None
+    has_exceptions = False
+    notes = list(jobs.notes)
+    for run in jobs.runs:
+        try:
+            region_run = run.result()
+        except AwsAccessError as ae:
+            error = error or ae
+            continue
+        sys.stdout.write(region_run.output)
+        has_exceptions |= region_run.has_exceptions
+        notes += region_run.notes
+    if error is not None:
+        return [AgentInfoRow("error", account_id, str(error))], has_exceptions
+    return [AgentInfoRow("ok", jobs.account.id), *notes], has_exceptions
 
 
 @report_agent_crashes(AGENT, __version__)

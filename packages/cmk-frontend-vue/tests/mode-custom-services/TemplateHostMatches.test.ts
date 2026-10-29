@@ -3,7 +3,6 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { userEvent } from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import { expect, test } from 'vitest'
 
@@ -18,35 +17,42 @@ const RESOLUTION = {
 }
 
 function renderMatches(preview: TemplatePreview) {
-  return render(TemplateHostMatches, { props: { preview } })
+  return render(TemplateHostMatches, {
+    props: { preview, serviceName: 'HTTP duration', appendedAttributes: '+ http.route' }
+  })
 }
 
 function isAlert(text: RegExp): boolean {
   return screen.getByText(text).closest('[role="alert"]') !== null
 }
 
-test('lists the hosts the template matches', () => {
+test('names the service and the hosts the template matches', () => {
   renderMatches({ status: 'resolved', resolution: RESOLUTION })
 
-  expect(screen.getByText(/Matching hosts/)).toHaveTextContent('(2)')
-  expect(screen.getByText('pod-cart')).toBeTruthy()
-  expect(screen.getByText('pod-checkout')).toBeTruthy()
+  expect(screen.getByText(/Service:/)).toHaveTextContent('Service: HTTP duration + http.route')
+  expect(screen.getByText(/Target hosts:/)).toHaveTextContent(
+    'Target hosts: pod-cart, pod-checkout'
+  )
 })
 
-test('lists resolved names that match no configured host apart', () => {
+test('names resolved names that match no configured host apart', () => {
   renderMatches({
     status: 'resolved',
     resolution: { ...RESOLUTION, unmatched_host_names: ['pod-serach'] }
   })
 
-  expect(screen.getByText(/without a configured host/)).toHaveTextContent('(1)')
-  expect(screen.getByText('pod-serach')).toBeTruthy()
+  expect(screen.getByText(/Hosts that do not exist:/)).toHaveTextContent(
+    'Hosts that do not exist: pod-serach'
+  )
+  expect(screen.getByText(/Target hosts:/)).not.toHaveTextContent('pod-serach')
 })
 
 test('warns that the service cannot be saved when no host matches', () => {
   renderMatches({ status: 'resolved', resolution: { ...RESOLUTION, matching_hosts: [] } })
 
   expect(isAlert(/No configured host currently matches/)).toBe(true)
+  expect(screen.queryByText(/Service:/)).toBeNull()
+  expect(screen.queryByText(/Target hosts:/)).toBeNull()
 })
 
 test('warns about matching hosts the user may not see', () => {
@@ -65,45 +71,40 @@ test('matches that are all hidden are not reported as no match', () => {
   expect(screen.queryByText(/No configured host currently matches/)).toBeNull()
 })
 
-test('warns that a truncated list is incomplete', () => {
+test('warns that truncated target hosts may be incomplete', () => {
   renderMatches({ status: 'resolved', resolution: { ...RESOLUTION, truncated: true } })
 
-  expect(isAlert(/this list is incomplete/)).toBe(true)
+  expect(isAlert(/target hosts may be incomplete/)).toBe(true)
 })
 
-test('an incomplete list without a visible match is not reported as no match', () => {
+test('incomplete target hosts without a visible match are not reported as no match', () => {
   renderMatches({
     status: 'resolved',
     resolution: { ...RESOLUTION, matching_hosts: [], truncated: true }
   })
 
-  expect(screen.getByText(/this list is incomplete/)).toBeTruthy()
+  expect(screen.getByText(/target hosts may be incomplete/)).toBeTruthy()
   expect(screen.queryByText(/No configured host currently matches/)).toBeNull()
 })
 
-test('shows a pending lookup instead of a list', () => {
+test('shows a pending lookup instead of target hosts', () => {
   renderMatches({ status: 'loading' })
 
   expect(screen.getByText('Looking up the matching hosts…')).toBeTruthy()
-  expect(screen.queryByRole('list')).toBeNull()
+  expect(screen.queryByText(/Target hosts:/)).toBeNull()
 })
 
-test('a failed lookup shows its reason and can be retried', async () => {
-  const { emitted } = renderMatches({
-    status: 'failed',
-    error: 'The data backend is not reachable.'
-  })
+test('a failed lookup shows its reason and offers no refresh', () => {
+  renderMatches({ status: 'failed', error: 'The data backend is not reachable.' })
 
   expect(screen.getByText('The data backend is not reachable.')).toBeTruthy()
-  await userEvent.click(screen.getByRole('button', { name: 'Refresh' }))
-  expect(emitted('refresh')).toHaveLength(1)
+  expect(screen.queryByRole('button')).toBeNull()
 })
 
 test('asks for a template before looking anything up', () => {
   renderMatches({ status: 'idle' })
 
   expect(screen.getByText(/Enter a host name template/)).toBeTruthy()
-  expect(screen.getByRole('button', { name: 'Refresh' })).toBeDisabled()
 })
 
 test('a refused template shows the reason', () => {

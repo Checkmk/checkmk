@@ -76,7 +76,6 @@ function renderStep(
     templatePreview?: TemplatePreview
   } = {}
 ) {
-  const refreshes = ref(0)
   const service = ref(serviceName)
   const host = ref<string | null>(hostName)
   const template = ref<string | null>(hostNameTemplate)
@@ -92,8 +91,7 @@ function renderStep(
         aggregator,
         appendSeriesAttributes,
         templateErrors,
-        templatePreview,
-        refreshes
+        templatePreview
       }
     },
     template: `<AssignHostStep
@@ -107,11 +105,10 @@ function renderStep(
       :append-series-attributes="appendSeriesAttributes"
       :template-errors="templateErrors"
       :template-preview="templatePreview"
-      @refresh-template-preview="refreshes++"
     />`
   })
   render(wrapper)
-  return { service, host, template, refreshes }
+  return { service, host, template }
 }
 
 test('edits the service name', async () => {
@@ -261,13 +258,13 @@ test('asks for no attributes while the host is assigned by hand', async () => {
   expect(templateAttributesRequest).toBeNull()
 })
 
-test('shows the hosts the template matches and passes a refresh on', async () => {
-  const { refreshes } = renderStep('HTTP duration', null, {
+test('summarizes the services on the hosts the template matches below the tabs', () => {
+  renderStep('HTTP duration', null, {
     hostNameTemplate: 'pod-$RESOURCE_ATTR.k8s.pod.name$',
     templatePreview: {
       status: 'resolved',
       resolution: {
-        matching_hosts: ['pod-cart'],
+        matching_hosts: ['pod-cart', 'pod-search'],
         unmatched_host_names: [],
         hidden_match_count: 0,
         truncated: false
@@ -275,7 +272,8 @@ test('shows the hosts the template matches and passes a refresh on', async () =>
     }
   })
 
-  expect(screen.getByText('pod-cart')).toBeTruthy()
-  await userEvent.click(screen.getByRole('button', { name: 'Refresh' }))
-  expect(refreshes.value).toBe(1)
+  const targetHosts = screen.getByText(/Target hosts:/)
+  expect(targetHosts).toHaveTextContent('Target hosts: pod-cart, pod-search')
+  expect(screen.getByText(/Service:/)).toHaveTextContent('Service: HTTP duration + all attributes')
+  expect(screen.getByRole('tabpanel').contains(targetHosts)).toBe(false)
 })

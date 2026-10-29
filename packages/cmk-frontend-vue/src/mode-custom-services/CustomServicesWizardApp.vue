@@ -199,7 +199,6 @@ async function saveService(): Promise<void> {
             :consolidation="model.consolidation"
             :aggregator="model.aggregator"
             :append-series-attributes="model.appendSeriesAttributes"
-            @refresh-template-preview="templatePreview.refresh"
           />
           <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
         </template>

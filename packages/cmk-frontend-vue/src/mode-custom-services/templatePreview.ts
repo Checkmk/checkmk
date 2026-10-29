@@ -24,7 +24,6 @@ export type TemplatePreview =
 
 export interface HostNameTemplatePreview {
   preview: Readonly<Ref<TemplatePreview>>
-  refresh: () => void
 }
 
 /**
@@ -81,8 +80,8 @@ function withSortedKeys(value: unknown): unknown {
 }
 
 /**
- * Resolves the host name template of the model to the hosts it matches. Edits are debounced,
- * `refresh` asks at once. A null model resolves nothing.
+ * Resolves the host name template of the model to the hosts it matches. Edits are debounced. A
+ * null model resolves nothing.
  */
 export function useHostNameTemplatePreview(
   getModel: () => ServiceModel | null,
@@ -151,16 +150,6 @@ export function useHostNameTemplatePreview(
     }, debounceMs)
   }
 
-  function refresh(): void {
-    const body = requestOf(getModel())
-    if (body === null) {
-      return
-    }
-    cancel()
-    preview.value = { status: 'loading' }
-    void load(body)
-  }
-
   // A serialized key with sorted keys, so an equal request in a new object or another key order
   // does not ask again
   watch(() => JSON.stringify(withSortedKeys(requestOf(getModel()))), schedule, {
@@ -168,5 +157,5 @@ export function useHostNameTemplatePreview(
   })
   onScopeDispose(cancel)
 
-  return { preview, refresh }
+  return { preview }
 }

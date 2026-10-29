@@ -51,10 +51,10 @@ function mount(initial: ServiceModel | null, { debounceMs = 0, timeoutMs = 10_00
   const scope = effectScope()
   scopes.push(scope)
   const model = ref<ServiceModel | null>(initial)
-  const { preview, refresh } = scope.run(() =>
+  const { preview } = scope.run(() =>
     useHostNameTemplatePreview(() => model.value, { debounceMs, timeoutMs })
   )!
-  return { model, preview, refresh }
+  return { model, preview }
 }
 
 test('looks nothing up without a host name template', async () => {
@@ -187,17 +187,6 @@ test('a superseded lookup is dropped, not reported as failed', async () => {
   await vi.waitFor(() =>
     expect(preview.value).toEqual({ status: 'resolved', resolution: RESOLUTION })
   )
-})
-
-test('refresh looks the template up again', async () => {
-  const { preview, refresh } = mount(templateService('pod-$RESOURCE_ATTR.k8s.pod.name$'))
-  await vi.waitFor(() => expect(preview.value.status).toBe('resolved'))
-
-  refresh()
-
-  expect(preview.value.status).toBe('loading')
-  await vi.waitFor(() => expect(preview.value.status).toBe('resolved'))
-  expect(requests).toHaveLength(2)
 })
 
 test('a backend failure is reported', async () => {

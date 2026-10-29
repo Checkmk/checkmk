@@ -103,7 +103,6 @@ async function save(): Promise<void> {
         :append-series-attributes="model.appendSeriesAttributes"
         :template-errors="templateErrors"
         :template-preview="templatePreview.preview.value"
-        @refresh-template-preview="templatePreview.refresh"
       />
       <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
       <div class="mode-custom-services-create-custom-service-slide-in__actions">

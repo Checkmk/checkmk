@@ -43,10 +43,6 @@ const {
   templateErrors?: string[]
 }>()
 
-const emit = defineEmits<{
-  refreshTemplatePreview: []
-}>()
-
 const serviceName = defineModel<string>('serviceName', { required: true })
 const hostName = defineModel<string | null>('hostName', { required: true })
 const hostNameTemplate = defineModel<string | null>('hostNameTemplate', { required: true })
@@ -252,10 +248,6 @@ const templateFieldId = useId()
                   >
                 </div>
               </div>
-              <TemplateHostMatches
-                :preview="templatePreview"
-                @refresh="emit('refreshTemplatePreview')"
-              />
             </div>
           </CmkTabContent>
         </template>
@@ -275,6 +267,16 @@ const templateFieldId = useId()
           >{{ _t('Target host:') }} <strong>{{ hostName }}</strong></span
         >
       </div>
+    </div>
+    <div v-else class="mode-custom-services-assign-host-step__preview">
+      <span class="mode-custom-services-assign-host-step__label">
+        {{ _t('Services to be created') }}
+      </span>
+      <TemplateHostMatches
+        :preview="templatePreview"
+        :service-name="serviceName"
+        :appended-attributes="appendedAttributes"
+      />
     </div>
   </div>
 </template>

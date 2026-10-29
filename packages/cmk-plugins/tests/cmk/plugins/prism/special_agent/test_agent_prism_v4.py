@@ -5,21 +5,26 @@
 import io
 import json
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import timedelta
 from http import HTTPStatus
 from pathlib import Path
+from types import MappingProxyType
 from urllib.parse import parse_qsl, urlsplit
 
 import pytest
 import responses
+from responses import matchers
 
 from cmk.plugins.prism.special_agent.agent_prism import agent_prism_main, parse_arguments
 from cmk.plugins.prism.special_agent.agent_prism_v4 import (
     ALERTS_PATH,
     ClusterRouting,
     CLUSTERS_PATH,
+    CONTAINER_STATS_PATH,
+    CONTAINERS_PATH,
     fetch_alerts,
+    fetch_containers,
     fetch_hosts,
     FetchContext,
     Fetcher,
@@ -45,11 +50,11 @@ from .v4_testing import (
     v4_url,
 )
 
+FIXTURES = Path(__file__).parent / "v4_fixtures"
+
 
 def _recorded(name: str) -> dict[str, object]:
-    loaded: dict[str, object] = json.loads(
-        (Path(__file__).parent / "v4_fixtures" / name).read_text()
-    )
+    loaded: dict[str, object] = json.loads((FIXTURES / name).read_text())
     return loaded
 
 
@@ -66,6 +71,63 @@ def recorded_hosts() -> dict[str, object]:
 def recorded_alerts() -> dict[str, object]:
     """Open alerts of the same lab: three on Prism Central, one on cluster-a"""
     return _recorded("monitoring_serviceability_alerts.json")
+
+
+# Three of the lab's containers (anonymised), by extId: one with dedup savings, the default
+# container and an internal one
+RECORDED_CONTAINERS = {
+    "17aa3706-6394-405c-ae6a-964d9cb64aa2": "NutanixManagementShare",
+    "58973d0f-3460-49fa-9c29-e94958c51fa8": "default",
+    "e2f3f2fe-7738-4399-a8ce-1deebbefe62c": "container-dedup",
+}
+
+
+# The data of a recorded stats response: each field's samples
+type Stats = dict[str, list[dict[str, object]]]
+
+
+def _keep(_stats: Stats) -> None:
+    pass
+
+
+def _serve_recorded_containers(
+    api: responses.RequestsMock,
+    statuses: Mapping[str, HTTPStatus] = MappingProxyType({}),
+    edit_dedup_stats: Callable[[Stats], None] = _keep,
+) -> None:
+    """The stats of a container can be answered with an error, those of container-dedup edited"""
+    api.get(
+        v4_url(CONTAINERS_PATH),
+        json=json.loads((FIXTURES / "clustermgmt_config_storage_containers.json").read_text()),
+        match=[
+            page_matcher(0),
+            matchers.query_param_matcher(
+                {"$select": "containerExtId,name,clusterExtId,cacheDeduplication"},
+                strict_match=False,
+            ),
+        ],
+    )
+    for ext_id, name in RECORDED_CONTAINERS.items():
+        stats = json.loads(
+            (FIXTURES / f"clustermgmt_stats_storage_containers_{name}.json").read_text()
+        )
+        if (status := statuses.get(name, HTTPStatus.OK)) is not HTTPStatus.OK:
+            api.get(
+                v4_url(f"{CONTAINER_STATS_PATH}/{ext_id}"),
+                status=status,
+                json={"message": status.phrase},
+            )
+            continue
+        if name == "container-dedup":
+            edit_dedup_stats(stats["data"])
+        api.get(v4_url(f"{CONTAINER_STATS_PATH}/{ext_id}"), json=stats)
+
+
+def _container_names_and_messages(
+    sections: Sequence[Section], messages: AgentMessages
+) -> tuple[list[object], list[tuple[str, str]]]:
+    assert isinstance(containers := sections[0].payload, list)
+    return [c["name"] for c in containers], list(messages)
 
 
 CLUSTER_ID = "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
@@ -86,7 +148,7 @@ def _routing() -> ClusterRouting:
     return ClusterRouting.from_clusters(clusters, AgentMessages())
 
 
-def _context() -> FetchContext:
+def _context(messages: AgentMessages | None = None) -> FetchContext:
     client = PrismV4Client(
         BASE_URL,
         USERNAME,
@@ -95,7 +157,7 @@ def _context() -> FetchContext:
         timeout=10,
         deadline=time.monotonic() + 60,
     )
-    return FetchContext(client, [], _routing())
+    return FetchContext(client, [], _routing(), AgentMessages() if messages is None else messages)
 
 
 def _sections_of(*sections: Section) -> Fetcher:
@@ -411,7 +473,7 @@ def test_prism_central_gets_an_alerts_section_even_if_not_listed_as_cluster(
     api: responses.RequestsMock,
 ) -> None:
     api.get(v4_url(ALERTS_PATH), json=page([], has_next=False), match=[page_matcher(0)])
-    context = FetchContext(_context().client, [], ClusterRouting({}))
+    context = FetchContext(_context().client, [], ClusterRouting({}), AgentMessages())
 
     assert fetch_alerts(context) == [Section("prism_alerts_v2", [], None)]
 
@@ -465,12 +527,157 @@ def test_v4_agent_queries_only_the_v4_api(api: responses.RequestsMock) -> None:
     api.get(v4_url(CLUSTERS_PATH), json=recorded_clusters(), match=[page_matcher(0)])
     api.get(v4_url(HOSTS_PATH), json=recorded_hosts(), match=[page_matcher(0)])
     api.get(v4_url(ALERTS_PATH), json=recorded_alerts(), match=[page_matcher(0)])
+    _serve_recorded_containers(api)
 
     agent_prism_main(parse_arguments(_v4_args()))
 
     assert sorted(call.request.path_url.split("?")[0] for call in api.calls) == sorted(
-        f"/api/{path}" for path in (CLUSTERS_PATH, HOSTS_PATH, ALERTS_PATH)
+        f"/api/{path}"
+        for path in (
+            CLUSTERS_PATH,
+            HOSTS_PATH,
+            ALERTS_PATH,
+            CONTAINERS_PATH,
+            *(f"{CONTAINER_STATS_PATH}/{ext_id}" for ext_id in RECORDED_CONTAINERS),
+        )
     )
+
+
+def test_containers_section_holds_the_monitored_series_per_cluster(
+    api: responses.RequestsMock,
+) -> None:
+    """Each series keeps all samples of the window, the parse function picks the newest"""
+    _serve_recorded_containers(api)
+
+    sections = fetch_containers(_context())
+
+    assert sections == [
+        Section(
+            "prism_containers_v2",
+            json.loads((FIXTURES / "section_prism_containers_v2.json").read_text()),
+            "cluster-a",
+        )
+    ]
+
+
+def test_container_that_no_longer_exists_is_left_out_silently(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_recorded_containers(api, statuses={"container-dedup": HTTPStatus.NOT_FOUND})
+    messages = AgentMessages()
+
+    sections = fetch_containers(_context(messages))
+
+    assert _container_names_and_messages(sections, messages) == (
+        ["NutanixManagementShare", "default"],
+        [],
+    )
+
+
+def test_container_stats_error_other_than_not_found_fails_the_fetcher(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_recorded_containers(api, statuses={"container-dedup": HTTPStatus.FORBIDDEN})
+
+    with pytest.raises(PrismV4Error):
+        fetch_containers(_context())
+
+
+def test_stats_of_no_container_found_fails_the_fetcher(api: responses.RequestsMock) -> None:
+    _serve_recorded_containers(
+        api, statuses=dict.fromkeys(RECORDED_CONTAINERS.values(), HTTPStatus.NOT_FOUND)
+    )
+
+    with pytest.raises(PrismV4Error):
+        fetch_containers(_context())
+
+
+def _drop_replication_factor(stats: Stats) -> None:
+    stats["storageReplicationFactor"] = []
+
+
+def _zero_replication_factor(stats: Stats) -> None:
+    for sample in stats["storageReplicationFactor"]:
+        sample["value"] = 0
+
+
+@pytest.mark.parametrize("edit", [_drop_replication_factor, _zero_replication_factor])
+def test_container_without_usage_stats_is_skipped_with_an_info(
+    api: responses.RequestsMock, edit: Callable[[Stats], None]
+) -> None:
+    _serve_recorded_containers(api, edit_dedup_stats=edit)
+    messages = AgentMessages()
+
+    sections = fetch_containers(_context(messages))
+
+    assert _container_names_and_messages(sections, messages) == (
+        ["NutanixManagementShare", "default"],
+        [
+            (
+                "info",
+                (
+                    "Skipped storage container 'container-dedup': "
+                    "Prism Central has no usage stats for it"
+                ),
+            )
+        ],
+    )
+
+
+@pytest.mark.parametrize(
+    ["broken", "message"],
+    [
+        pytest.param(
+            {"name": "broken"},
+            "Skipped storage container 'broken': "
+            "Prism Central reports no valid containerExtId, clusterExtId for it",
+            id="named",
+        ),
+        pytest.param(
+            {},
+            "Skipped a storage container without a name: "
+            "Prism Central reports no valid containerExtId, name, clusterExtId for it",
+            id="unnamed",
+        ),
+    ],
+)
+def test_container_that_does_not_fit_the_model_is_skipped_with_an_info(
+    api: responses.RequestsMock, broken: dict[str, object], message: str
+) -> None:
+    recorded = _recorded("clustermgmt_config_storage_containers.json")
+    assert isinstance(listed := recorded["data"], list)
+    default = next(container for container in listed if container["name"] == "default")
+    api.get(
+        v4_url(CONTAINERS_PATH),
+        json=page([broken, default], has_next=False),
+        match=[page_matcher(0)],
+    )
+    api.get(
+        v4_url(f"{CONTAINER_STATS_PATH}/{default['containerExtId']}"),
+        json=_recorded("clustermgmt_stats_storage_containers_default.json"),
+    )
+    messages = AgentMessages()
+
+    sections = fetch_containers(_context(messages))
+
+    assert _container_names_and_messages(sections, messages) == (["default"], [("info", message)])
+
+
+@pytest.mark.parametrize("value", [None, 58284175018156.0, True])
+def test_container_sample_without_an_integer_is_left_out(
+    api: responses.RequestsMock, value: object
+) -> None:
+    def replace_newest_capacity(stats: Stats) -> None:
+        stats["storageCapacityBytes"][0]["value"] = value
+
+    _serve_recorded_containers(api, edit_dedup_stats=replace_newest_capacity)
+
+    sections = fetch_containers(_context())
+
+    assert isinstance(containers := sections[0].payload, list)
+    assert [sample["timestamp"] for sample in containers[2]["stats"]["storageCapacityBytes"]] == [
+        f"2026-10-28T{hour:02d}:00:00Z" for hour in range(14, 3, -1)
+    ]
 
 
 def test_v4_agent_reports_unreachable_cluster_list_in_one_line(

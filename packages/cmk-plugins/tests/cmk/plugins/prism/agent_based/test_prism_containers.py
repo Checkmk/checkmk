@@ -5,16 +5,19 @@
 
 # mypy: disable-error-code="explicit-any"
 
+import json
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 from cmk.plugins.prism.agent_based.prism_containers import (
     check_prism_container,
     discovery_prism_container,
+    parse_prism_containers_v2,
 )
 
 
@@ -568,3 +571,101 @@ def test_check_prism_container(  # type: ignore[misc]
         )
         == expected_check_result
     )
+
+
+# What the v4 agent writes for the containers recorded on a Prism Central 7.5 lab
+RECORDED_V4_SECTION = [
+    [
+        (
+            Path(__file__).parent.parent
+            / "special_agent"
+            / "v4_fixtures"
+            / "section_prism_containers_v2.json"
+        ).read_text()
+    ]
+]
+
+
+def _v4_container(cache_deduplication: str, dedup_samples: Sequence[int]) -> StringTable:
+    def series(value: int) -> list[dict[str, object]]:
+        return [{"value": value, "timestamp": "2026-10-28T15:00:00Z"}]
+
+    return [
+        [
+            json.dumps(
+                [
+                    {
+                        "name": "ctr",
+                        "cacheDeduplication": cache_deduplication,
+                        "stats": {
+                            "storageCapacityBytes": series(2 * 1024**4),
+                            "storageFreeBytes": series(1024**4),
+                            "storageReplicationFactor": series(2),
+                            "dataReductionDedupSavingRatioPpm": [
+                                {"value": ppm, "timestamp": "2026-10-28T12:00:00Z"}
+                                for ppm in dedup_samples
+                            ],
+                        },
+                    }
+                ]
+            )
+        ]
+    ]
+
+
+def _results(section: Mapping[str, Any], item: str) -> list[Result]:
+    return [
+        result
+        for result in check_prism_container(
+            item=item, params=FILESYSTEM_DEFAULT_PARAMS, section=section
+        )
+        if isinstance(result, Result)
+    ]
+
+
+def test_v4_containers_are_discovered_by_name() -> None:
+    section = parse_prism_containers_v2(RECORDED_V4_SECTION)
+
+    services = list(discovery_prism_container(section))
+
+    assert services == [
+        Service(item="NutanixManagementShare"),
+        Service(item="default"),
+        Service(item="container-dedup"),
+    ]
+
+
+@pytest.mark.usefixtures("empty_value_store")
+def test_v4_container_shows_the_usable_space_of_one_replica() -> None:
+    section = parse_prism_containers_v2(RECORDED_V4_SECTION)
+
+    results = _results(section, "default")
+
+    assert results == [Result(state=State.OK, summary="Used: 5.33% - 1.41 TiB of 26.5 TiB")]
+
+
+@pytest.mark.usefixtures("empty_value_store")
+def test_v4_container_with_dedup_on_shows_the_newest_dedup_ratio() -> None:
+    section = parse_prism_containers_v2(_v4_container("ON", [1211709]))
+
+    results = _results(section, "ctr")
+
+    assert results[-1] == Result(state=State.OK, summary="Dedup Ratio: 1.21")
+
+
+@pytest.mark.usefixtures("empty_value_store")
+def test_v4_container_with_dedup_on_and_no_dedup_sample_shows_no_dedup_ratio() -> None:
+    section = parse_prism_containers_v2(_v4_container("ON", []))
+
+    results = _results(section, "ctr")
+
+    assert results == [Result(state=State.OK, summary="Used: 50.00% - 512 GiB of 1.00 TiB")]
+
+
+@pytest.mark.usefixtures("empty_value_store")
+def test_v4_container_with_dedup_off_shows_no_dedup_ratio() -> None:
+    section = parse_prism_containers_v2(_v4_container("OFF", [1211709]))
+
+    results = _results(section, "ctr")
+
+    assert results == [Result(state=State.OK, summary="Used: 50.00% - 512 GiB of 1.00 TiB")]

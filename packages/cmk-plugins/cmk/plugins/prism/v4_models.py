@@ -8,7 +8,19 @@
 The v4 agent writes them to the prism_*_v2 sections, the parse functions read them back.
 """
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
+from contextlib import suppress
+from typing import Annotated
+
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    RootModel,
+    StrictInt,
+    ValidationError,
+)
 
 
 class V4Model(BaseModel):
@@ -63,4 +75,78 @@ class Alert(V4Model):
 
 
 class Alerts(RootModel[list[Alert]]):
+    model_config = ConfigDict(frozen=True)
+
+
+class StorageContainer(V4Model):
+    """An item of the storage container list"""
+
+    container_ext_id: str = Field(alias="containerExtId")
+    name: str
+    cluster_ext_id: str = Field(alias="clusterExtId")
+    cache_deduplication: str | None = Field(None, alias="cacheDeduplication")
+
+
+class Sample(V4Model):
+    value: StrictInt
+    timestamp: str
+
+
+def _complete_samples(series: object) -> list[Sample]:
+    """The API marks neither the value nor the timestamp as required"""
+    samples: list[Sample] = []
+    for sample in series if isinstance(series, list) else []:
+        with suppress(ValidationError):
+            samples.append(Sample.model_validate(sample))
+    return samples
+
+
+type Samples = Annotated[list[Sample], BeforeValidator(_complete_samples)]
+
+
+class StorageContainerStats(V4Model):
+    """The stats of one storage container, as time series
+
+    The stats endpoint ignores $select, the model picks the fields itself.
+    """
+
+    storage_capacity_bytes: Samples = Field(
+        default_factory=list,
+        alias="storageCapacityBytes",
+    )
+    storage_free_bytes: Samples = Field(
+        default_factory=list,
+        alias="storageFreeBytes",
+    )
+    storage_replication_factor: Samples = Field(
+        default_factory=list,
+        alias="storageReplicationFactor",
+    )
+    data_reduction_dedup_saving_ratio_ppm: Samples = Field(
+        default_factory=list,
+        alias="dataReductionDedupSavingRatioPpm",
+    )
+
+    @property
+    def has_usage(self) -> bool:
+        """The check can't compute the usage without these, nor with a replication factor
+        below 1"""
+        replication_factor = max(
+            self.storage_replication_factor, key=lambda sample: sample.timestamp, default=None
+        )
+        return bool(
+            self.storage_capacity_bytes
+            and self.storage_free_bytes
+            and replication_factor is not None
+            and replication_factor.value >= 1
+        )
+
+
+class StorageContainerWithStats(V4Model):
+    name: str
+    cache_deduplication: str | None = Field(None, alias="cacheDeduplication")
+    stats: StorageContainerStats
+
+
+class StorageContainersWithStats(RootModel[list[StorageContainerWithStats]]):
     model_config = ConfigDict(frozen=True)

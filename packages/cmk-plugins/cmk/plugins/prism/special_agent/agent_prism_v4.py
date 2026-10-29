@@ -13,7 +13,10 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
+from http import HTTPStatus
 from typing import NamedTuple, Protocol, Self, TextIO
+
+from pydantic import ValidationError
 
 from cmk.plugins.prism.special_agent.session import base_url
 from cmk.plugins.prism.special_agent.v4_client import (
@@ -21,7 +24,13 @@ from cmk.plugins.prism.special_agent.v4_client import (
     PrismV4Client,
     PrismV4Error,
 )
-from cmk.plugins.prism.v4_models import Alert, Host
+from cmk.plugins.prism.v4_models import (
+    Alert,
+    Host,
+    StorageContainer,
+    StorageContainerStats,
+    StorageContainerWithStats,
+)
 from cmk.server_side_programs.v1 import AgentMessages, Storage
 
 LOGGER = logging.getLogger(__name__)
@@ -108,6 +117,7 @@ class FetchContext:
     client: PrismV4Client
     clusters: Sequence[JsonObject]
     routing: ClusterRouting
+    messages: AgentMessages
 
 
 @dataclass(frozen=True)
@@ -163,9 +173,96 @@ def fetch_alerts(context: FetchContext) -> Sequence[Section]:
     return [Section("prism_alerts_v2", alerts, target) for target, alerts in by_target.items()]
 
 
+CONTAINERS_PATH = "clustermgmt/v4.0/config/storage-containers"
+CONTAINER_STATS_PATH = "clustermgmt/v4.0/stats/storage-containers"
+# Prism Central computes the dedup ratio every 6 hours
+CONTAINER_STATS_WINDOW = timedelta(hours=12)
+CONTAINER_STATS_SAMPLING = timedelta(hours=1)
+
+
+def _fitting_containers(
+    raw_containers: Iterable[JsonObject],
+    messages: AgentMessages,
+) -> list[StorageContainer]:
+    containers: list[StorageContainer] = []
+    for raw in raw_containers:
+        try:
+            containers.append(StorageContainer.model_validate(raw))
+        except ValidationError as e:
+            fields = ", ".join(".".join(map(str, error["loc"])) for error in e.errors())
+            name = raw.get("name") or raw.get("containerExtId")
+            container = (
+                f"storage container '{name}'" if name else "a storage container without a name"
+            )
+            messages.add_info(
+                f"Skipped {container}: Prism Central reports no valid {fields} for it"
+            )
+    return containers
+
+
+def fetch_containers(context: FetchContext) -> Sequence[Section]:
+    """A container that is gone, doesn't fit the model or has no usage stats is left out,
+    the others are reported"""
+    by_cluster: dict[str, list[dict[str, object]]] = {}
+    containers = _fitting_containers(
+        context.client.list_all(
+            CONTAINERS_PATH,
+            {
+                "$select": ",".join(
+                    f.alias or name for name, f in StorageContainer.model_fields.items()
+                )
+            },
+        ),
+        context.messages,
+    )
+    gone = 0
+    for container in containers:
+        try:
+            stats = StorageContainerStats.model_validate(
+                context.client.entity_stats(
+                    f"{CONTAINER_STATS_PATH}/{container.container_ext_id}",
+                    window=CONTAINER_STATS_WINDOW,
+                    sampling_interval=CONTAINER_STATS_SAMPLING,
+                )
+            )
+        except PrismV4Error as e:
+            # Any other error concerns all containers, so the whole fetcher reports it once
+            if e.status != HTTPStatus.NOT_FOUND:
+                raise
+            # Deleted since it was listed: left out without a warning, like a container the
+            # legacy API no longer lists
+            LOGGER.info(
+                "container %(name)s no longer exists: %(error)s",
+                {"name": container.name, "error": e},
+            )
+            gone += 1
+            continue
+        if not stats.has_usage:
+            context.messages.add_info(
+                f"Skipped storage container '{container.name}': "
+                "Prism Central has no usage stats for it"
+            )
+            continue
+        by_cluster.setdefault(container.cluster_ext_id, []).append(
+            StorageContainerWithStats(
+                name=container.name,
+                cacheDeduplication=container.cache_deduplication,
+                stats=stats,
+            ).to_section()
+        )
+    if containers and gone == len(containers):
+        # Deletions don't hit every container at once, the stats endpoint itself is missing
+        raise PrismV4Error("Prism Central returned 404 for the stats of every storage container")
+    return [
+        Section("prism_containers_v2", cluster_containers, context.routing.host_for(cluster_id))
+        for cluster_id, cluster_containers in by_cluster.items()
+    ]
+
+
 SECTION_FETCHERS: Sequence[Fetcher] = (
     Fetcher("hosts", fetch_hosts),
     Fetcher("alerts", fetch_alerts),
+    Fetcher("containers", fetch_containers),
 )
 
 
@@ -317,7 +414,7 @@ def agent_prism_v4_main(
         clock=time.time,
     )
     result = run_fetchers(
-        FetchContext(client, clusters, ClusterRouting.from_clusters(clusters, messages)),
+        FetchContext(client, clusters, ClusterRouting.from_clusters(clusters, messages), messages),
         SECTION_FETCHERS,
         schedule,
         messages,

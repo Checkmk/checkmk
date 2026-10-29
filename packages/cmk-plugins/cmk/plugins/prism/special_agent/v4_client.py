@@ -42,7 +42,10 @@ RETRY = Retry(
 
 
 class PrismV4Error(Exception):
-    pass
+    def __init__(self, message: str, status: int | None = None) -> None:
+        super().__init__(message)
+        # The HTTP status, if Prism Central answered with an error
+        self.status = status
 
 
 def _as_object(value: object, what: str) -> JsonObject:
@@ -180,7 +183,7 @@ class PrismV4Client:
             LOGGER.debug("%(path)s failed", {"path": path}, exc_info=True)
             raise PrismV4Error(f"{path}: {_describe(e)}") from e
         if not response.ok:
-            raise PrismV4Error(f"{path}: {_http_error(response)}")
+            raise PrismV4Error(f"{path}: {_http_error(response)}", response.status_code)
         if (remaining := response.headers.get("x-ratelimit-remaining")) is not None:
             LOGGER.debug("rate limit remaining: %(remaining)s", {"remaining": remaining})
         body = _as_object(_json(response), path)

@@ -1,0 +1,500 @@
+[
+  {
+    "name": "NutanixManagementShare",
+    "cacheDeduplication": "OFF",
+    "stats": {
+      "storageCapacityBytes": [
+        {
+          "value": 55603289256013,
+          "timestamp": "2026-10-28T15:00:00Z"
+        },
+        {
+          "value": 55599598403006,
+          "timestamp": "2026-10-28T14:00:00Z"
+        },
+        {
+          "value": 55600369819085,
+          "timestamp": "2026-10-28T13:00:00Z"
+        },
+        {
+          "value": 55599397855207,
+          "timestamp": "2026-10-28T12:00:00Z"
+        },
+        {
+          "value": 55603719946215,
+          "timestamp": "2026-10-28T11:00:00Z"
+        },
+        {
+          "value": 55607865084668,
+          "timestamp": "2026-10-28T10:00:00Z"
+        },
+        {
+          "value": 55610985812409,
+          "timestamp": "2026-10-28T09:00:00Z"
+        },
+        {
+          "value": 55609383044430,
+          "timestamp": "2026-10-28T08:00:00Z"
+        },
+        {
+          "value": 55618104322847,
+          "timestamp": "2026-10-28T07:00:00Z"
+        },
+        {
+          "value": 55621389793864,
+          "timestamp": "2026-10-28T06:00:00Z"
+        },
+        {
+          "value": 55621237673723,
+          "timestamp": "2026-10-28T05:00:00Z"
+        },
+        {
+          "value": 55623531118698,
+          "timestamp": "2026-10-28T04:00:00Z"
+        }
+      ],
+      "storageFreeBytes": [
+        {
+          "value": 55177989190516,
+          "timestamp": "2026-10-28T15:00:00Z"
+        },
+        {
+          "value": 55174130958565,
+          "timestamp": "2026-10-28T14:00:00Z"
+        },
+        {
+          "value": 55175196277968,
+          "timestamp": "2026-10-28T13:00:00Z"
+        },
+        {
+          "value": 55174220859864,
+          "timestamp": "2026-10-28T12:00:00Z"
+        },
+        {
+          "value": 55178265766360,
+          "timestamp": "2026-10-28T11:00:00Z"
+        },
+        {
+          "value": 55182692053821,
+          "timestamp": "2026-10-28T10:00:00Z"
+        },
+        {
+          "value": 55185780456245,
+          "timestamp": "2026-10-28T09:00:00Z"
+        },
+        {
+          "value": 55183068090058,
+          "timestamp": "2026-10-28T08:00:00Z"
+        },
+        {
+          "value": 55192382097238,
+          "timestamp": "2026-10-28T07:00:00Z"
+        },
+        {
+          "value": 55196377713557,
+          "timestamp": "2026-10-28T06:00:00Z"
+        },
+        {
+          "value": 55195974329448,
+          "timestamp": "2026-10-28T05:00:00Z"
+        },
+        {
+          "value": 55198835127195,
+          "timestamp": "2026-10-28T04:00:00Z"
+        }
+      ],
+      "storageReplicationFactor": [
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T15:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T14:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T13:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T12:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T11:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T10:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T09:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T08:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T07:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T06:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T05:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T04:00:00Z"
+        }
+      ],
+      "dataReductionDedupSavingRatioPpm": [
+        {
+          "value": 1000000,
+          "timestamp": "2026-10-28T12:00:00Z"
+        },
+        {
+          "value": 1000000,
+          "timestamp": "2026-10-28T06:00:00Z"
+        }
+      ]
+    }
+  },
+  {
+    "name": "default",
+    "cacheDeduplication": "OFF",
+    "stats": {
+      "storageCapacityBytes": [
+        {
+          "value": 58284175018156,
+          "timestamp": "2026-10-28T15:00:00Z"
+        },
+        {
+          "value": 58282524014677,
+          "timestamp": "2026-10-28T14:00:00Z"
+        },
+        {
+          "value": 58282817221680,
+          "timestamp": "2026-10-28T13:00:00Z"
+        },
+        {
+          "value": 58282015693342,
+          "timestamp": "2026-10-28T12:00:00Z"
+        },
+        {
+          "value": 58282776046110,
+          "timestamp": "2026-10-28T11:00:00Z"
+        },
+        {
+          "value": 58284190823299,
+          "timestamp": "2026-10-28T10:00:00Z"
+        },
+        {
+          "value": 58284799927248,
+          "timestamp": "2026-10-28T09:00:00Z"
+        },
+        {
+          "value": 58282144765797,
+          "timestamp": "2026-10-28T08:00:00Z"
+        },
+        {
+          "value": 58290036097009,
+          "timestamp": "2026-10-28T07:00:00Z"
+        },
+        {
+          "value": 58292136524553,
+          "timestamp": "2026-10-28T06:00:00Z"
+        },
+        {
+          "value": 58291879068636,
+          "timestamp": "2026-10-28T05:00:00Z"
+        },
+        {
+          "value": 58294283469583,
+          "timestamp": "2026-10-28T04:00:00Z"
+        }
+      ],
+      "storageFreeBytes": [
+        {
+          "value": 55177989190516,
+          "timestamp": "2026-10-28T15:00:00Z"
+        },
+        {
+          "value": 55174130958565,
+          "timestamp": "2026-10-28T14:00:00Z"
+        },
+        {
+          "value": 55175196277968,
+          "timestamp": "2026-10-28T13:00:00Z"
+        },
+        {
+          "value": 55174220859864,
+          "timestamp": "2026-10-28T12:00:00Z"
+        },
+        {
+          "value": 55178265766360,
+          "timestamp": "2026-10-28T11:00:00Z"
+        },
+        {
+          "value": 55182692053821,
+          "timestamp": "2026-10-28T10:00:00Z"
+        },
+        {
+          "value": 55185780456245,
+          "timestamp": "2026-10-28T09:00:00Z"
+        },
+        {
+          "value": 55183068090058,
+          "timestamp": "2026-10-28T08:00:00Z"
+        },
+        {
+          "value": 55192382097238,
+          "timestamp": "2026-10-28T07:00:00Z"
+        },
+        {
+          "value": 55196377713557,
+          "timestamp": "2026-10-28T06:00:00Z"
+        },
+        {
+          "value": 55195974329448,
+          "timestamp": "2026-10-28T05:00:00Z"
+        },
+        {
+          "value": 55198835127195,
+          "timestamp": "2026-10-28T04:00:00Z"
+        }
+      ],
+      "storageReplicationFactor": [
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T15:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T14:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T13:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T12:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T11:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T10:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T09:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T08:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T07:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T06:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T05:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T04:00:00Z"
+        }
+      ],
+      "dataReductionDedupSavingRatioPpm": [
+        {
+          "value": 1000000,
+          "timestamp": "2026-10-28T12:00:00Z"
+        },
+        {
+          "value": 1000000,
+          "timestamp": "2026-10-28T06:00:00Z"
+        }
+      ]
+    }
+  },
+  {
+    "name": "container-dedup",
+    "cacheDeduplication": "OFF",
+    "stats": {
+      "storageCapacityBytes": [
+        {
+          "value": 55209714725748,
+          "timestamp": "2026-10-28T15:00:00Z"
+        },
+        {
+          "value": 55205855498469,
+          "timestamp": "2026-10-28T14:00:00Z"
+        },
+        {
+          "value": 55206920776913,
+          "timestamp": "2026-10-28T13:00:00Z"
+        },
+        {
+          "value": 55205945489881,
+          "timestamp": "2026-10-28T12:00:00Z"
+        },
+        {
+          "value": 55209990199769,
+          "timestamp": "2026-10-28T11:00:00Z"
+        },
+        {
+          "value": 55214416204606,
+          "timestamp": "2026-10-28T10:00:00Z"
+        },
+        {
+          "value": 55217504357180,
+          "timestamp": "2026-10-28T09:00:00Z"
+        },
+        {
+          "value": 55214791954129,
+          "timestamp": "2026-10-28T08:00:00Z"
+        },
+        {
+          "value": 55224105424733,
+          "timestamp": "2026-10-28T07:00:00Z"
+        },
+        {
+          "value": 55228100656028,
+          "timestamp": "2026-10-28T06:00:00Z"
+        },
+        {
+          "value": 55227695764591,
+          "timestamp": "2026-10-28T05:00:00Z"
+        },
+        {
+          "value": 55230556537762,
+          "timestamp": "2026-10-28T04:00:00Z"
+        }
+      ],
+      "storageFreeBytes": [
+        {
+          "value": 55177989190516,
+          "timestamp": "2026-10-28T15:00:00Z"
+        },
+        {
+          "value": 55174130958565,
+          "timestamp": "2026-10-28T14:00:00Z"
+        },
+        {
+          "value": 55175196277968,
+          "timestamp": "2026-10-28T13:00:00Z"
+        },
+        {
+          "value": 55174220859864,
+          "timestamp": "2026-10-28T12:00:00Z"
+        },
+        {
+          "value": 55178265766360,
+          "timestamp": "2026-10-28T11:00:00Z"
+        },
+        {
+          "value": 55182692053821,
+          "timestamp": "2026-10-28T10:00:00Z"
+        },
+        {
+          "value": 55185780456245,
+          "timestamp": "2026-10-28T09:00:00Z"
+        },
+        {
+          "value": 55183068090058,
+          "timestamp": "2026-10-28T08:00:00Z"
+        },
+        {
+          "value": 55192382097238,
+          "timestamp": "2026-10-28T07:00:00Z"
+        },
+        {
+          "value": 55196377713557,
+          "timestamp": "2026-10-28T06:00:00Z"
+        },
+        {
+          "value": 55195974329448,
+          "timestamp": "2026-10-28T05:00:00Z"
+        },
+        {
+          "value": 55198835127195,
+          "timestamp": "2026-10-28T04:00:00Z"
+        }
+      ],
+      "storageReplicationFactor": [
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T15:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T14:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T13:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T12:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T11:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T10:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T09:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T08:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T07:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T06:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T05:00:00Z"
+        },
+        {
+          "value": 2,
+          "timestamp": "2026-10-28T04:00:00Z"
+        }
+      ],
+      "dataReductionDedupSavingRatioPpm": [
+        {
+          "value": 1211709,
+          "timestamp": "2026-10-28T12:00:00Z"
+        },
+        {
+          "value": 1211740,
+          "timestamp": "2026-10-28T06:00:00Z"
+        }
+      ]
+    }
+  }
+]

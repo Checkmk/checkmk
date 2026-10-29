@@ -1,0 +1,1429 @@
+{
+  "data": {
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.StorageContainerStats",
+    "controllerNumIops": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "controllerIoBandwidthkBps": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "controllerAvgIoLatencyuSecs": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "controllerNumReadIops": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "controllerNumWriteIops": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "controllerReadIoBandwidthkBps": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "controllerWriteIoBandwidthkBps": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "controllerAvgReadIoLatencyuSecs": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "controllerAvgWriteIoLatencyuSecs": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "storageReservedCapacityBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "storageActualPhysicalUsageBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 425300065497,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 425467444441,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 425173541117,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 425176995343,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 425454179855,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 425173030847,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 425205356164,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 426314954372,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 425722225609,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 425012080307,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 425263344275,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 424695991503,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "dataReductionSavingRatioPpm": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 1559680,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 1559462,
+        "timestamp": "2026-10-28T06:00:00Z"
+      }
+    ],
+    "dataReductionTotalSavingRatioPpm": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 56629972,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 56682416,
+        "timestamp": "2026-10-28T06:00:00Z"
+      }
+    ],
+    "storageFreeBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 55177989190516,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 55174130958565,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 55175196277968,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 55174220859864,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 55178265766360,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 55182692053821,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 55185780456245,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 55183068090058,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 55192382097238,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 55196377713557,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 55195974329448,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 55198835127195,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "storageCapacityBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 55603289256013,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 55599598403006,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 55600369819085,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 55599397855207,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 55603719946215,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 55607865084668,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 55610985812409,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 55609383044430,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 55618104322847,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 55621389793864,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 55621237673723,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 55623531118698,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "dataReductionSavedBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 236272320512,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 235961483264,
+        "timestamp": "2026-10-28T06:00:00Z"
+      }
+    ],
+    "dataReductionOverallPreReductionBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 23906687076352,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 23906649659392,
+        "timestamp": "2026-10-28T06:00:00Z"
+      }
+    ],
+    "dataReductionOverallPostReductionBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 422156075008,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 421764825088,
+        "timestamp": "2026-10-28T06:00:00Z"
+      }
+    ],
+    "dataReductionCompressionSavingRatioPpm": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 1559680,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 1559462,
+        "timestamp": "2026-10-28T06:00:00Z"
+      }
+    ],
+    "dataReductionDedupSavingRatioPpm": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 1000000,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 1000000,
+        "timestamp": "2026-10-28T06:00:00Z"
+      }
+    ],
+    "dataReductionErasureCodingSavingRatioPpm": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 999999,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 1000000,
+        "timestamp": "2026-10-28T06:00:00Z"
+      }
+    ],
+    "controllerReadIoRatioPpm": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "controllerWriteIoRatioPpm": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "storageReplicationFactor": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 2,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 2,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 2,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 2,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 2,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 2,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 2,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 2,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 2,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 2,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 2,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 2,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "storageUsageBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 425300065497,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 425467444441,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 425173541117,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 425176995343,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 425454179855,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 425173030847,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 425205356164,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 426314954372,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 425722225609,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 425012080307,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 425263344275,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 424695991503,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "storageTierDasSataUsageBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "storageTierSsdUsageBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 425300065497,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 425467444441,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 425173541117,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 425176995343,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 425454179855,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 425173030847,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 425205356164,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 426314954372,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 425722225609,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 425012080307,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 425263344275,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 424695991503,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "storageReservedUsageBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "storageReservedFreeBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "storageUnreservedUsageBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 55177989190516,
+        "timestamp": "2026-10-28T15:00:00Z"
+      },
+      {
+        "value": 55174130958565,
+        "timestamp": "2026-10-28T14:00:00Z"
+      },
+      {
+        "value": 55175196277968,
+        "timestamp": "2026-10-28T13:00:00Z"
+      },
+      {
+        "value": 55174220859864,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 55178265766360,
+        "timestamp": "2026-10-28T11:00:00Z"
+      },
+      {
+        "value": 55182692053821,
+        "timestamp": "2026-10-28T10:00:00Z"
+      },
+      {
+        "value": 55185780456245,
+        "timestamp": "2026-10-28T09:00:00Z"
+      },
+      {
+        "value": 55183068090058,
+        "timestamp": "2026-10-28T08:00:00Z"
+      },
+      {
+        "value": 55192382097238,
+        "timestamp": "2026-10-28T07:00:00Z"
+      },
+      {
+        "value": 55196377713557,
+        "timestamp": "2026-10-28T06:00:00Z"
+      },
+      {
+        "value": 55195974329448,
+        "timestamp": "2026-10-28T05:00:00Z"
+      },
+      {
+        "value": 55198835127195,
+        "timestamp": "2026-10-28T04:00:00Z"
+      }
+    ],
+    "storageSnapshotReclaimable": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 50137956352,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 50137956352,
+        "timestamp": "2026-10-28T06:00:00Z"
+      }
+    ],
+    "dataReductionErasureCodingSavedBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      }
+    ],
+    "dataReductionDedupSavedBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 0,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-10-28T06:00:00Z"
+      }
+    ],
+    "dataReductionOverallSavedBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 23484531001344,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 23484884834304,
+        "timestamp": "2026-10-28T06:00:00Z"
+      }
+    ],
+    "dataReductionCompressionSavedBytes": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.stats.TimeIntValuePair",
+        "value": 236272320512,
+        "timestamp": "2026-10-28T12:00:00Z"
+      },
+      {
+        "value": 235961483264,
+        "timestamp": "2026-10-28T06:00:00Z"
+      }
+    ],
+    "containerExtId": "17aa3706-6394-405c-ae6a-964d9cb64aa2"
+  },
+  "$reserved": {
+    "$fv": "v4.r2"
+  },
+  "$objectType": "clustermgmt.v4.stats.GetStorageContainerStatsApiResponse",
+  "metadata": {
+    "flags": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "hasError",
+        "value": false
+      },
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "isPaginated",
+        "value": false
+      },
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "isTruncated",
+        "value": false
+      }
+    ],
+    "$reserved": {
+      "$fv": "v1.r0"
+    },
+    "$objectType": "common.v1.response.ApiResponseMetadata",
+    "links": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.response.ApiLink",
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.2/config/storage-containers/17aa3706-6394-405c-ae6a-964d9cb64aa2",
+        "rel": "storage-container"
+      },
+      {
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.2/stats/storage-containers/17aa3706-6394-405c-ae6a-964d9cb64aa2",
+        "rel": "storage-container-stats"
+      }
+    ]
+  }
+}

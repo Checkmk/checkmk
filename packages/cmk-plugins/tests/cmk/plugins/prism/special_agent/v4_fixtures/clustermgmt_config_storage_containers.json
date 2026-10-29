@@ -1,0 +1,131 @@
+{
+  "data": [
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.StorageContainer",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.2/config/storage-containers/17aa3706-6394-405c-ae6a-964d9cb64aa2",
+          "rel": "storage-container"
+        },
+        {
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.2/stats/storage-containers/17aa3706-6394-405c-ae6a-964d9cb64aa2",
+          "rel": "storage-container-stats"
+        }
+      ],
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
+      "containerExtId": "17aa3706-6394-405c-ae6a-964d9cb64aa2",
+      "name": "NutanixManagementShare",
+      "cacheDeduplication": "OFF"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.StorageContainer",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.2/config/storage-containers/58973d0f-3460-49fa-9c29-e94958c51fa8",
+          "rel": "storage-container"
+        },
+        {
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.2/stats/storage-containers/58973d0f-3460-49fa-9c29-e94958c51fa8",
+          "rel": "storage-container-stats"
+        }
+      ],
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
+      "containerExtId": "58973d0f-3460-49fa-9c29-e94958c51fa8",
+      "name": "default",
+      "cacheDeduplication": "OFF"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.StorageContainer",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.2/config/storage-containers/e2f3f2fe-7738-4399-a8ce-1deebbefe62c",
+          "rel": "storage-container"
+        },
+        {
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.2/stats/storage-containers/e2f3f2fe-7738-4399-a8ce-1deebbefe62c",
+          "rel": "storage-container-stats"
+        }
+      ],
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
+      "containerExtId": "e2f3f2fe-7738-4399-a8ce-1deebbefe62c",
+      "name": "container-dedup",
+      "cacheDeduplication": "OFF"
+    }
+  ],
+  "$reserved": {
+    "$fv": "v4.r2"
+  },
+  "$objectType": "clustermgmt.v4.config.ListStorageContainersApiResponse",
+  "metadata": {
+    "flags": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "hasError",
+        "value": false
+      },
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "isPaginated",
+        "value": true
+      },
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "isTruncated",
+        "value": false
+      }
+    ],
+    "$reserved": {
+      "$fv": "v1.r0"
+    },
+    "$objectType": "common.v1.response.ApiResponseMetadata",
+    "links": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.response.ApiLink",
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/storage-containers?$page=0&$limit=100&$select=containerExtId,name,clusterExtId,cacheDeduplication",
+        "rel": "first"
+      },
+      {
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/storage-containers?$page=0&$limit=100&$select=containerExtId,name,clusterExtId,cacheDeduplication",
+        "rel": "self"
+      },
+      {
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/storage-containers?$page=0&$limit=100&$select=containerExtId,name,clusterExtId,cacheDeduplication",
+        "rel": "last"
+      }
+    ],
+    "totalAvailableResults": 3
+  }
+}

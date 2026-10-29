@@ -46,16 +46,14 @@ WNX_DEFAULT_LINKOPTS = [
 windows_rc(
     name = "check_mk_service_res",
     src = "src/check_mk_service.rc",
-    hdrs = [
-        "include/common/version.h",
-        "include/common/wnx_version.h",
-        "src/resource.h",
-    ],
-    includes = [
-        "include",
-        "src",
-    ],
+    hdrs = ["src/resource.h"],
+    includes = ["src"],
     tags = ["manual"],
+    # common/version.h, with the version of :wnx_version.
+    deps = [
+        ":wnx_headers",
+        ":wnx_version",
+    ],
 )
 
 windows_rc(
@@ -108,8 +106,34 @@ cc_binary(
 
 cc_library(
     name = "wnx_headers",
-    hdrs = glob(["include/**/*.h"]),
+    # wnx_version.h is replaced by :wnx_version. Left out here, it can't
+    # be picked up next to common/version.h, which includes it.
+    hdrs = glob(
+        ["include/**/*.h"],
+        exclude = ["include/common/wnx_version.h"],
+    ),
     strip_include_prefix = "include",
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
+)
+
+# The agent version from --cmk_version, in place of the checked-in
+# wnx_version.h, which `make setversion` patches for the MSBuild build.
+genrule(
+    name = "wnx_version_h",
+    srcs = [":cmk_version"],
+    outs = ["stamped/wnx_version.h"],
+    cmd = "printf '#define CMK_WIN_AGENT_VERSION \"%s\"\\n' \"$$(cat $<)\" >$@",
+    tags = ["manual"],
+)
+
+cc_library(
+    name = "wnx_version",
+    hdrs = [":wnx_version_h"],
+    strip_include_prefix = "stamped",
     tags = ["manual"],
     target_compatible_with = [
         "@platforms//cpu:x86_64",
@@ -205,6 +229,7 @@ cc_library(
         ":wnx_common",
         ":wnx_headers",
         ":wnx_lwa",
+        ":wnx_version",
         "@asio",
         "@wnx_fmt//:fmt",
         "@wnx_yaml_cpp//:yaml-cpp",

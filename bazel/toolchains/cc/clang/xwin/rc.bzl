@@ -20,6 +20,13 @@ def _windows_rc_impl(ctx):
             args.add("/I", ctx.label.package)
         else:
             args.add("/I", ctx.label.package + "/" + include)
+    dep_headers = []
+    for dep in ctx.attr.deps:
+        compilation_context = dep[CcInfo].compilation_context
+        args.add_all(compilation_context.includes, before_each = "/I")
+        args.add_all(compilation_context.quote_includes, before_each = "/I")
+        args.add_all(compilation_context.system_includes, before_each = "/I")
+        dep_headers.append(compilation_context.headers)
     args.add("/FO", out)
     args.add(ctx.file.src)
 
@@ -28,7 +35,7 @@ def _windows_rc_impl(ctx):
         arguments = [args],
         inputs = depset(
             direct = [ctx.file.src] + ctx.files.hdrs,
-            transitive = sysroot_inputs,
+            transitive = sysroot_inputs + dep_headers,
         ),
         outputs = [out],
         mnemonic = "WindowsResource",
@@ -40,6 +47,12 @@ windows_rc = rule(
     implementation = _windows_rc_impl,
     doc = "Compile a .rc resource script to a .res with llvm-rc (cross from Linux).",
     attrs = {
+        "deps": attr.label_list(
+            providers = [CcInfo],
+            doc = "cc_library targets whose headers the .rc script includes, " +
+                  "found through their include directories like in a C++ " +
+                  "compile, generated headers included.",
+        ),
         "hdrs": attr.label_list(
             allow_files = True,
             doc = "Headers and data files the .rc script includes.",

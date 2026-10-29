@@ -1072,6 +1072,19 @@ def test_a_board_named_like_one_of_the_admin_gets_the_fallback_name(admin: UserI
     assert _outcomes()["dup"] == "migrated"
 
 
+def test_a_link_follows_its_board_to_the_fallback_name(admin: UserId) -> None:
+    save_user_file("user_maps", {"dc1": {"title": "Own"}}, admin)
+    _write_board("dc1", _complete_map())
+
+    page = _migrated(
+        admin,
+        "overview",
+        _complete_map(objects=[_complete_object(type="map", map_name="dc1")]),
+    )
+
+    assert [obj["map_name"] for obj in _objects(page.config.map_spec)] == ["dc1_legacy"]
+
+
 def test_existing_map_keeps_its_content(admin: UserId) -> None:
     _migrated(admin, "dup", _complete_map(alias="First"))
     store.save_object_to_file(_record_path(), {})

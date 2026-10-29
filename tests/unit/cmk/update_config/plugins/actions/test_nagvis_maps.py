@@ -278,6 +278,23 @@ def test_a_cleaned_name_that_is_taken_names_each_step(
     assert any("migrated as 'core_switches_legacy'" in warning for warning in warnings)
 
 
+def test_a_link_follows_its_map_to_the_fallback_name(admin: UserId) -> None:
+    save_user_file("user_maps", {"office": {"title": "Own"}}, admin)
+    _write_map("office", _HOST)
+
+    page = _migrated(admin, "overview", "define map {\nmap_name=office\nx=10\ny=20\n}")
+
+    assert [obj["map_name"] for obj in _objects(page)] == ["office_legacy"]
+
+
+def test_a_link_follows_its_map_to_the_cleaned_name(admin: UserId) -> None:
+    _write_map("core.switches", _HOST)
+
+    page = _migrated(admin, "overview", "define map {\nmap_name=core.switches\nx=10\ny=20\n}")
+
+    assert [obj["map_name"] for obj in _objects(page)] == ["core_switches"]
+
+
 def test_a_long_name_is_shortened_for_its_fallback(admin: UserId) -> None:
     name = "a" * 100
     save_user_file("user_maps", {name: {"title": "Own"}}, admin)

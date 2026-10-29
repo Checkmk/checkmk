@@ -10,7 +10,7 @@ mirror and the opaque ``map_spec`` dict that the pagetype store persists.
 """
 
 import json
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from http import HTTPStatus
 from typing import Final, get_args
 
@@ -386,6 +386,15 @@ def map_etag(page: MapPage) -> ETag:
     )
 
 
+def map_link_objects(spec: Mapping[str, object]) -> Iterator[dict[str, object]]:
+    """The objects of a stored map spec that link to another map."""
+    if not isinstance(objects := spec.get("objects"), list):
+        return
+    for obj in objects:
+        if isinstance(obj, dict) and "map" in (obj.get("type"), obj.get("line_object_type")):
+            yield obj
+
+
 def resolve_map_link_titles(
     spec: Mapping[str, object], lookup: Callable[[MapName], MapPage | None]
 ) -> dict[str, str]:
@@ -398,16 +407,11 @@ def resolve_map_link_titles(
     ``lookup`` decides visibility, and only the GUI can: a map the user may not
     see, or one that is gone, is left out, and the caption falls back to the name.
     """
-    objects = spec.get("objects")
-    if not isinstance(objects, list):
-        return {}
-    linked: set[str] = set()
-    for obj in objects:
-        if not isinstance(obj, dict) or "map" not in (obj.get("type"), obj.get("line_object_type")):
-            continue
-        name = obj.get("map_name")
-        if isinstance(name, str) and name:
-            linked.add(name)
+    linked = {
+        name
+        for obj in map_link_objects(spec)
+        if isinstance(name := obj.get("map_name"), str) and name
+    }
     titles: dict[str, str] = {}
     for name in linked:
         if (target := lookup(name)) is not None:

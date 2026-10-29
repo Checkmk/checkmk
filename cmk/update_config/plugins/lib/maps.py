@@ -20,6 +20,8 @@ from cmk.gui.userdb import UserRolesConfigFile
 from cmk.maps.gui._images import delete_background_files
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import user_maps_path
+from cmk.maps.gui.type_defs import MapConfig
+from cmk.maps.rest_api.utils import map_link_objects
 from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH
 
 _ADMIN_ROLE = "admin"
@@ -147,6 +149,28 @@ class AdminMaps:
         self.outcomes.update(dict.fromkeys(migrated, "migrated"))
         self.save_record(self.outcomes, {})
         return warnings
+
+
+def follow_renames(
+    maps: AdminMaps, pages: Mapping[str, MapConfig], migrated: Mapping[str, str]
+) -> None:
+    """Point the links among a run's maps at the names their targets migrated as.
+
+    ``pages`` holds the run's maps by name, ``migrated`` the name of each by
+    source; a link names its target by source. The record keeps no names, so a
+    link between maps of different runs keeps its source name.
+    """
+    renamed = {source: name for source, name in migrated.items() if source != name}
+    if not renamed:
+        return
+    for name, page in pages.items():
+        changed = False
+        for obj in map_link_objects(page.map_spec):
+            if isinstance(source := obj.get("map_name"), str) and source in renamed:
+                obj["map_name"] = renamed[source]
+                changed = True
+        if changed:
+            maps.own[name] = MapPage(page).serialize()
 
 
 @contextmanager

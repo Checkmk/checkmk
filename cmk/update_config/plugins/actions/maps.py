@@ -43,7 +43,7 @@ from cmk.maps.gui.legacy_maps import (
     used_connections,
 )
 from cmk.maps.gui.pagetype import MapPage
-from cmk.maps.gui.type_defs import map_config_from_spec
+from cmk.maps.gui.type_defs import map_config_from_spec, MapConfig
 from cmk.maps.rest_api.utils import map_from_spec, spec_from_map
 from cmk.maps.shared.validators import is_valid_map_name
 from cmk.update_config.internal import ExpiryVersion, UpdateAction
@@ -51,6 +51,7 @@ from cmk.update_config.plugins.lib.maps import (
     admin_maps,
     AdminMaps,
     base_role,
+    follow_renames,
     migration_owner,
     set_map_permission,
     SITE_ADMIN,
@@ -107,6 +108,7 @@ def _prepare_maps(
     icons_copied = False
     foreign = foreign_connections()
     migrated: dict[str, str] = {}
+    pages: dict[str, MapConfig] = {}
     for path in boards:
         board = path.stem
         if not is_valid_map_name(board):
@@ -145,6 +147,7 @@ def _prepare_maps(
                 maps.admin, name, spec, public=True, hidden=is_hidden_map(data)
             )
             maps.own[name] = MapPage(cfg).serialize()
+            pages[name] = cfg
         except Exception as exc:
             logger.warning(
                 "Could not migrate OrbVis board %(file)s: %(error)s. "
@@ -170,6 +173,7 @@ def _prepare_maps(
             "Prepared OrbVis board %(name)r for %(admin)s (published).",
             {"name": name, "admin": maps.admin},
         )
+    follow_renames(maps, pages, migrated)
     return migrated
 
 

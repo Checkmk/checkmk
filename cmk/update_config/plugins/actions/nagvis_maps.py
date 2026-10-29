@@ -37,13 +37,14 @@ from cmk.maps.gui.nagvis_maps import (
     ShapeCopies,
 )
 from cmk.maps.gui.pagetype import MapPage
-from cmk.maps.gui.type_defs import map_config_from_spec
+from cmk.maps.gui.type_defs import map_config_from_spec, MapConfig
 from cmk.maps.rest_api.utils import map_from_spec, spec_from_map
 from cmk.update_config.internal import ExpiryVersion, UpdateAction
 from cmk.update_config.plugins.lib.maps import (
     admin_maps,
     AdminMaps,
     base_role,
+    follow_renames,
     migration_owner,
     set_map_permission,
     SITE_ADMIN,
@@ -166,6 +167,7 @@ def _prepare_maps(
     private to the admin.
     """
     migrated = _Migrated()
+    pages: dict[str, MapConfig] = {}
     for path in files:
         nagvis_name = path.stem
         # NagVis allows more characters in a map name, a dot for one.
@@ -202,9 +204,8 @@ def _prepare_maps(
             public, migrated.seeing[name], access_warning = _map_access(nagvis_name, access)
             if access_warning:
                 warnings.append(access_warning)
-        maps.own[name] = MapPage(
-            map_config_from_spec(maps.admin, name, spec, public=public)
-        ).serialize()
+        pages[name] = map_config_from_spec(maps.admin, name, spec, public=public)
+        maps.own[name] = MapPage(pages[name]).serialize()
         migrated.names[nagvis_name] = name
         migrated.shapes.used |= shape_names
         if valid_name != nagvis_name:
@@ -223,6 +224,7 @@ def _prepare_maps(
             "Prepared NagVis map %(name)r for %(admin)s.",
             {"name": name, "admin": maps.admin},
         )
+    follow_renames(maps, pages, migrated.names)
     return migrated
 
 

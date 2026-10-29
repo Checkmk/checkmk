@@ -17,7 +17,6 @@ from pathlib import Path
 
 from cmk.base import config
 from cmk.base.config import ConfigCache
-from cmk.base.modes.check_mk import load_checks
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName, Hosts
@@ -46,6 +45,8 @@ from cmk.ruleset_matcher.tuple_rulesets import hosttags_match_taglist
 from cmk.server_side_calls_backend import (
     load_active_checks,
 )
+
+from .agent_based import load_checks
 
 
 # TODO: Does not care about internal group "check_mk"

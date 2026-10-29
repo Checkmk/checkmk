@@ -14,12 +14,6 @@ import cmk.ccc.cleanup
 import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.base import config
-from cmk.base.modes.check_mk import (
-    fake_dns_address,
-    FAKE_DNS_OPTION,
-    parse_snmp_backend,
-    SNMP_BACKEND_OPTION,
-)
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -45,6 +39,8 @@ from cmk.cli.internal import Option as CLIOption
 from cmk.cli.internal import Options
 from cmk.utils import ip_lookup
 from cmk.utils.log import console
+
+from .options import fake_dns_address, FAKE_DNS_OPTION, parse_snmp_backend, SNMP_BACKEND_OPTION
 
 # .
 #   .--snmptranslate-------------------------------------------------------.

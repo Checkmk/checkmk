@@ -20,17 +20,6 @@ from cmk.base.app import make_app
 from cmk.base.config import handle_ip_lookup_failure
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
-from cmk.base.modes.check_mk import (
-    fake_dns_address,
-    FAKE_DNS_OPTION,
-    FETCHER_OPTIONS,
-    handle_fetcher_options,
-    host_address,
-    host_addresses,
-    load_checks,
-    parse_snmp_backend,
-    SNMP_BACKEND_OPTION,
-)
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher_abc import Mode as FetchMode
@@ -55,6 +44,18 @@ from cmk.server_side_calls_backend import ExecutableFinder, load_secrets_file
 from cmk.utils import ip_lookup, timeperiod
 from cmk.utils.ip_lookup import ConfiguredIPLookup
 from cmk.utils.log import console
+
+from .agent_based import load_checks
+from .options import (
+    fake_dns_address,
+    FAKE_DNS_OPTION,
+    FETCHER_OPTIONS,
+    handle_fetcher_options,
+    host_address,
+    host_addresses,
+    parse_snmp_backend,
+    SNMP_BACKEND_OPTION,
+)
 
 # .
 #   .--dump-agent----------------------------------------------------------.

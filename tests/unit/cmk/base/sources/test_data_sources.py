@@ -18,7 +18,6 @@ from typing import Literal, Never
 import pytest
 
 from cmk.base.config import LoadingResult
-from cmk.base.modes.check_mk import handle_fetcher_options
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetcher_abc import FetcherError, Mode
@@ -629,9 +628,7 @@ def _no_tcp_file_caches(
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
     # `cmk -I <host>` defaults to not using the cache at all.
-    file_cache_options = handle_fetcher_options(
-        {"no-tcp": True}, defaults=FileCacheOptions(disabled=True)
-    )
+    file_cache_options = FileCacheOptions(disabled=False, use_outdated=True, use_only_cache=True)
     sources = [
         source
         for source in _make_sources(

@@ -12,12 +12,6 @@ from pathlib import Path
 import cmk.utils.paths
 from cmk.base import config
 from cmk.base.configlib.servicename import make_final_service_name_config
-from cmk.base.modes.check_mk import (
-    fake_dns_address,
-    FAKE_DNS_OPTION,
-    host_addresses,
-    load_checks,
-)
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.checkengine.discovery import remove_autochecks_of_host
@@ -32,6 +26,9 @@ from cmk.cli.internal import Options
 from cmk.inventory.paths import InventoryPaths
 from cmk.piggyback import backend as piggyback_backend
 from cmk.utils import ip_lookup
+
+from .agent_based import load_checks
+from .options import fake_dns_address, FAKE_DNS_OPTION, host_addresses
 
 # .
 #   .--update-dns-cache----------------------------------------------------.

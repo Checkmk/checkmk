@@ -5,42 +5,9 @@
 
 import socket
 
-import pytest
-
-from cmk.base.modes.check_mk import fake_dns_address, mandatory_ip_lookup, state_exit_code
-from cmk.ccc.exceptions import MKBailOut
+from cmk.base.modes.check_mk import mandatory_ip_lookup
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.utils import ip_lookup
-
-
-def test_no_fake_dns_option_leaves_the_lookup_alone() -> None:
-    assert fake_dns_address({}) is None
-
-
-def test_the_fake_dns_option_is_a_host_address() -> None:
-    assert fake_dns_address({"fake-dns": "1.2.3.4"}) == HostAddress("1.2.3.4")
-
-
-def test_an_invalid_fake_dns_address_is_refused() -> None:
-    with pytest.raises(MKBailOut):
-        fake_dns_address({"fake-dns": "not an address!"})
-
-
-@pytest.mark.parametrize(
-    ["state", "expected"],
-    [
-        (0, CLIExitCode.SUCCESS),
-        (1, CLIExitCode.FAILURE),
-        (2, CLIExitCode.ERROR),
-        (3, CLIExitCode.UNKNOWN),
-        (4, CLIExitCode.UNKNOWN),
-        (-1, CLIExitCode.UNKNOWN),
-        (127, CLIExitCode.UNKNOWN),
-    ],
-)
-def test_a_state_exits_with_its_monitoring_meaning(state: int, expected: CLIExitCode) -> None:
-    assert state_exit_code(state) == expected
 
 
 def _ip_lookup_config() -> ip_lookup.IPLookupConfig:

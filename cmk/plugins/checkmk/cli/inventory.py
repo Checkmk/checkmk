@@ -10,6 +10,7 @@ import itertools
 import time
 from collections.abc import Container, Mapping, Sequence
 from pathlib import Path
+from typing import Literal, TypedDict
 
 import cmk.ccc.cleanup
 import cmk.ccc.debug
@@ -26,22 +27,7 @@ from cmk.base.core.active_config_layout import (
     RELATIVE_PATH_TRUSTED_CAS,
 )
 from cmk.base.errorhandling import create_section_crash_dump, RecordingFetcher
-from cmk.base.modes.check_mk import (
-    execute_active_check_inventory,
-    extract_plugin_selection,
-    fake_dns_address,
-    FAKE_DNS_OPTION,
-    FETCHER_OPTIONS,
-    get_plugins_option,
-    handle_fetcher_options,
-    InventoryOptions,
-    load_checks,
-    mandatory_ip_lookup,
-    option_detect_plugins,
-    option_sections,
-    parse_snmp_backend,
-    SNMP_BACKEND_OPTION,
-)
+from cmk.base.modes.check_mk import execute_active_check_inventory, mandatory_ip_lookup
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName
@@ -73,6 +59,19 @@ from cmk.utils import ip_lookup
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.log import console, section
 
+from .agent_based import extract_plugin_selection, load_checks
+from .options import (
+    fake_dns_address,
+    FAKE_DNS_OPTION,
+    FETCHER_OPTIONS,
+    get_plugins_option,
+    handle_fetcher_options,
+    option_detect_plugins,
+    option_sections,
+    parse_snmp_backend,
+    SNMP_BACKEND_OPTION,
+)
+
 # .
 #   .--inventory-----------------------------------------------------------.
 #   |             _                      _                                 |
@@ -82,6 +81,23 @@ from cmk.utils.log import console, section
 #   |            |_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |              |
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
+
+
+InventoryOptions = TypedDict(
+    "InventoryOptions",
+    {
+        "cache": Literal[True],
+        "snmp-backend": str,
+        "no-cache": Literal[True],
+        "no-tcp": Literal[True],
+        "usewalk": Literal[True],
+        "force": bool,
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[InventoryPluginName],
+        "detect-plugins": frozenset[str],
+    },
+    total=False,
+)
 
 
 def _inventory_options(parsed: Mapping[str, object]) -> InventoryOptions:

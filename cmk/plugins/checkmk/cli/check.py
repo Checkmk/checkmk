@@ -7,28 +7,14 @@
 import itertools
 from collections.abc import Mapping
 from pathlib import Path
+from typing import Literal, TypedDict
 
 import cmk.ccc.debug
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.base import config
 from cmk.base.app import make_app
-from cmk.base.modes.check_mk import (
-    CheckingOptions,
-    extract_plugin_selection,
-    fake_dns_address,
-    FAKE_DNS_OPTION,
-    FETCHER_OPTIONS,
-    get_plugins_option,
-    handle_fetcher_options,
-    load_checks,
-    option_detect_plugins,
-    option_sections,
-    parse_snmp_backend,
-    run_checking,
-    SNMP_BACKEND_OPTION,
-    state_exit_code,
-)
+from cmk.base.modes.check_mk import run_checking
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.plugins import CheckPluginName, SectionName
@@ -43,6 +29,20 @@ from cmk.cli.internal import Option as CLIOption
 from cmk.cli.internal import Options
 from cmk.server_side_calls_backend import load_secrets_file
 
+from .agent_based import extract_plugin_selection, load_checks
+from .exit_code import state_exit_code
+from .options import (
+    fake_dns_address,
+    FAKE_DNS_OPTION,
+    FETCHER_OPTIONS,
+    get_plugins_option,
+    handle_fetcher_options,
+    option_detect_plugins,
+    option_sections,
+    parse_snmp_backend,
+    SNMP_BACKEND_OPTION,
+)
+
 # .
 #   .--check---------------------------------------------------------------.
 #   |                           _               _                          |
@@ -52,6 +52,24 @@ from cmk.server_side_calls_backend import load_secrets_file
 #   |                      \___|_| |_|\___|\___|_|\_\                      |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
+CheckingOptions = TypedDict(
+    "CheckingOptions",
+    {
+        "cache": Literal[True],
+        "snmp-backend": str,
+        "no-cache": Literal[True],
+        "no-tcp": Literal[True],
+        "usewalk": Literal[True],
+        "no-submit": bool,
+        "perfdata": bool,
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[CheckPluginName],
+        "detect-plugins": frozenset[str],
+    },
+    total=False,
+)
 
 
 def _checking_options(parsed: Mapping[str, object]) -> CheckingOptions:

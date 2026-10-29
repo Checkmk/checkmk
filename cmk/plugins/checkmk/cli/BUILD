@@ -9,6 +9,7 @@ py_library(
     imports = ["../../../.."],
     visibility = [
         "//cmk:__subpackages__",
+        "//non-free/packages/cmk-plugins-nonfree:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -32,8 +33,11 @@ py_library(
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:helper-interface",
         "//packages/cmk-check-engine:lib",
+        "//packages/cmk-check-engine:snmplib",
         "//packages/cmk-check-engine:sources",
+        "//packages/cmk-check-engine:specs",
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
+        "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-cli-engine:engine",
         "//packages/cmk-licensing/cmk/licensing/basics",

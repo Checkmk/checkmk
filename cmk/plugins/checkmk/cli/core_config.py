@@ -16,12 +16,6 @@ from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
-from cmk.base.modes.check_mk import (
-    fake_dns_address,
-    FAKE_DNS_OPTION,
-    host_addresses,
-    load_checks,
-)
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.store import activation_lock
@@ -36,6 +30,9 @@ from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import config_warnings, ip_lookup, timeperiod
 from cmk.utils.log import console
+
+from .agent_based import load_checks
+from .options import fake_dns_address, FAKE_DNS_OPTION, host_addresses
 
 # .
 #   .--nagios-config-------------------------------------------------------.

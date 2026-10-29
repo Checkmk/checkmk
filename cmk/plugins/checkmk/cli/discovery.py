@@ -10,6 +10,7 @@ import sys
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
+from typing import Literal, TypedDict
 
 import cmk.ccc.debug
 import cmk.utils.password_store
@@ -38,22 +39,6 @@ from cmk.base.errorhandling import (
     create_section_crash_dump,
     RecordingFetcher,
     serialize_fetched,
-)
-from cmk.base.modes.check_mk import (
-    DiscoveryOptions,
-    extract_plugin_selection,
-    fake_dns_address,
-    FAKE_DNS_OPTION,
-    FETCHER_OPTIONS,
-    get_plugins_option,
-    handle_fetcher_options,
-    host_address,
-    load_checks,
-    option_detect_plugins,
-    option_sections,
-    parse_snmp_backend,
-    SNMP_BACKEND_OPTION,
-    state_exit_code,
 )
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.cpu_tracking import CPUTracker
@@ -86,6 +71,21 @@ from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import ip_lookup
 from cmk.utils.log import console
+
+from .agent_based import extract_plugin_selection, load_checks
+from .exit_code import state_exit_code
+from .options import (
+    fake_dns_address,
+    FAKE_DNS_OPTION,
+    FETCHER_OPTIONS,
+    get_plugins_option,
+    handle_fetcher_options,
+    host_address,
+    option_detect_plugins,
+    option_sections,
+    parse_snmp_backend,
+    SNMP_BACKEND_OPTION,
+)
 
 # .
 #   .--check-discovery-----------------------------------------------------.
@@ -351,6 +351,24 @@ cli_command_check_discovery = CLICommand(
             "autodiscovery"
         )
     ],
+)
+
+
+DiscoveryOptions = TypedDict(
+    "DiscoveryOptions",
+    {
+        "cache": Literal[True],
+        "snmp-backend": str,
+        "no-cache": Literal[True],
+        "no-tcp": Literal[True],
+        "usewalk": Literal[True],
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[CheckPluginName],
+        "detect-plugins": frozenset[str],
+        "discover": int,
+        "only-host-labels": bool,
+    },
+    total=False,
 )
 
 

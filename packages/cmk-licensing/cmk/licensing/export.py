@@ -12,89 +12,17 @@ from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from enum import auto, Enum
 from typing import Literal, override, TypedDict
 from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
 
+from cmk.licensing.basics.protocol_version import AllowedUsageHistoryVersions
+
 
 class RawLicenseUsageReport(TypedDict):
     VERSION: str
     history: list[RawLicenseUsageSample]
-
-
-#   .--subscription details------------------------------------------------.
-#   |                 _                   _       _   _                    |
-#   |       ___ _   _| |__  ___  ___ _ __(_)_ __ | |_(_) ___  _ __         |
-#   |      / __| | | | '_ \/ __|/ __| '__| | '_ \| __| |/ _ \| '_ \        |
-#   |      \__ \ |_| | |_) \__ \ (__| |  | | |_) | |_| | (_) | | | |       |
-#   |      |___/\__,_|_.__/|___/\___|_|  |_| .__/ \__|_|\___/|_| |_|       |
-#   |                                      |_|                             |
-#   |                         _      _        _ _                          |
-#   |                      __| | ___| |_ __ _(_) |___                      |
-#   |                     / _` |/ _ \ __/ _` | | / __|                     |
-#   |                    | (_| |  __/ || (_| | | \__ \                     |
-#   |                     \__,_|\___|\__\__,_|_|_|___/                     |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-class SubscriptionDetailsLimitType(Enum):
-    fixed = auto()
-    unlimited = auto()
-    custom = auto()
-
-
-@dataclass(frozen=True)
-class SubscriptionDetailsLimit:
-    type_: SubscriptionDetailsLimitType
-    value: int
-
-    def for_report(self) -> tuple[str, int]:
-        return (self.type_.name, self.value)
-
-    def for_config(self) -> str | tuple[str, int]:
-        match self.type_:
-            case SubscriptionDetailsLimitType.fixed:
-                return str(self.value)
-            case SubscriptionDetailsLimitType.unlimited:
-                return "2000000+"
-            case SubscriptionDetailsLimitType.custom:
-                return ("custom", self.value)
-
-
-class RawSubscriptionDetails(TypedDict):
-    subscription_start: int
-    subscription_end: int
-    subscription_limit: tuple[str, int]
-
-
-class RawSubscriptionDetailsForConfig(TypedDict):
-    subscription_start: int
-    subscription_end: int
-    subscription_limit: str | tuple[str, int]
-
-
-@dataclass(frozen=True)
-class SubscriptionDetails:
-    start: int
-    end: int
-    limit: SubscriptionDetailsLimit
-
-    def for_report(self) -> RawSubscriptionDetails:
-        return RawSubscriptionDetails(
-            subscription_start=self.start,
-            subscription_end=self.end,
-            subscription_limit=self.limit.for_report(),
-        )
-
-    def for_config(self) -> RawSubscriptionDetailsForConfig:
-        return RawSubscriptionDetailsForConfig(
-            subscription_start=self.start,
-            subscription_end=self.end,
-            subscription_limit=self.limit.for_config(),
-        )
 
 
 # .
@@ -208,79 +136,6 @@ class LicenseUsageSample:
 #   '----------------------------------------------------------------------'
 
 
-_SUBSCRIPTION_LIMITS_FIXED = (
-    "3000",
-    "7000",
-    "12000",
-    "18000",
-    "30000",
-    "60000",
-    "100000",
-    "200000",
-    "300000",
-    "500000",
-    "1000000",
-    "1500000",
-    "2000000",
-    "2000000+",
-)
-
-
-def _parse_subscription_details_limit_type_and_value(
-    raw_type: object, raw_value: object
-) -> SubscriptionDetailsLimit:
-    if not isinstance(raw_type, str):
-        raise TypeError(raw_type)
-    if not isinstance(raw_value, str | int | float):
-        raise TypeError(raw_value)
-    if raw_type in ["2000000+", "unlimited"] or int(raw_value) == -1:
-        return SubscriptionDetailsLimit(
-            type_=SubscriptionDetailsLimitType.unlimited,
-            # '-1' means unlimited. This value is also used in Django DB
-            # where we have no appropriate 'float("inf")' DB field.
-            value=-1,
-        )
-    if str(raw_value) in _SUBSCRIPTION_LIMITS_FIXED:
-        return SubscriptionDetailsLimit(
-            type_=SubscriptionDetailsLimitType.fixed,
-            value=int(raw_value),
-        )
-    return SubscriptionDetailsLimit(
-        type_=SubscriptionDetailsLimitType.custom,
-        value=int(raw_value),
-    )
-
-
-def _parse_subscription_details_limit(raw: object) -> SubscriptionDetailsLimit:
-    if isinstance(raw, list | tuple) and len(raw) == 2:
-        return _parse_subscription_details_limit_type_and_value(raw[0], raw[1])
-    if isinstance(raw, str | int | float):
-        return _parse_subscription_details_limit_type_and_value(str(raw), raw)
-    raise TypeError(raw)
-
-
-def _parse_subscription_details(raw: object) -> SubscriptionDetails:
-    # Old:      'subscription_details': ['manual', {...}]
-    # Current:  'subscription_details': {"source": "manual", ...}
-    # Future:   'subscription_details': {"source": 'from_tribe'}/{"source": "manual", ...}
-    if isinstance(raw, list | tuple) and len(raw) == 2:
-        _source, details = raw
-        if not isinstance(details, dict):
-            raise TypeError(details)
-        return SubscriptionDetails(
-            start=int(details["subscription_start"]),
-            end=int(details["subscription_end"]),
-            limit=_parse_subscription_details_limit(details["subscription_limit"]),
-        )
-    if isinstance(raw, dict):
-        return SubscriptionDetails(
-            start=int(raw["subscription_start"]),
-            end=int(raw["subscription_end"]),
-            limit=_parse_subscription_details_limit(raw["subscription_limit"]),
-        )
-    raise TypeError(raw)
-
-
 def _parse_platform(platform: str) -> str:
     # Restrict platform string to 50 chars due to the restriction of the license DB field.
     return platform[:50]
@@ -371,19 +226,12 @@ def _parse_sample_v2_0(
 
 class Parser:
     @abc.abstractmethod
-    def parse_subscription_details(self, raw: object) -> SubscriptionDetails: ...
-
-    @abc.abstractmethod
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample: ...
 
 
 class ParserV1_0(Parser):
-    @override
-    def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
-        return _parse_subscription_details(raw)
-
     @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
@@ -420,10 +268,6 @@ class ParserV1_0(Parser):
 
 class ParserV1_1(Parser):
     @override
-    def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
-        return _parse_subscription_details(raw)
-
-    @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
@@ -431,10 +275,6 @@ class ParserV1_1(Parser):
 
 
 class ParserV1_2(Parser):
-    @override
-    def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
-        return _parse_subscription_details(raw)
-
     @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
@@ -444,10 +284,6 @@ class ParserV1_2(Parser):
 
 class ParserV1_3(Parser):
     @override
-    def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
-        return _parse_subscription_details(raw)
-
-    @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
@@ -455,10 +291,6 @@ class ParserV1_3(Parser):
 
 
 class ParserV1_4(Parser):
-    @override
-    def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
-        return _parse_subscription_details(raw)
-
     @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
@@ -494,10 +326,6 @@ class ParserV1_4(Parser):
 
 
 class ParserV1_5(Parser):
-    @override
-    def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
-        return _parse_subscription_details(raw)
-
     @override
     def parse_sample(
         self, _instance_id: UUID | None, site_hash: str, raw: object
@@ -536,10 +364,6 @@ class ParserV1_5(Parser):
 
 class ParserV2_0(Parser):
     @override
-    def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
-        return _parse_subscription_details(raw)
-
-    @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
@@ -548,10 +372,6 @@ class ParserV2_0(Parser):
 
 class ParserV2_1(Parser):
     @override
-    def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
-        return _parse_subscription_details(raw)
-
-    @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
@@ -559,10 +379,6 @@ class ParserV2_1(Parser):
 
 
 class ParserV3_0(Parser):
-    @override
-    def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
-        return _parse_subscription_details(raw)
-
     @override
     def parse_sample(
         self, _instance_id: UUID | None, site_hash: str, raw: object
@@ -674,10 +490,6 @@ def _parse_sample_v3_2(
 
 class ParserV3_1(Parser):
     @override
-    def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
-        return _parse_subscription_details(raw)
-
-    @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
@@ -686,21 +498,13 @@ class ParserV3_1(Parser):
 
 class ParserV3_2(Parser):
     @override
-    def parse_subscription_details(self, raw: object) -> SubscriptionDetails:
-        return _parse_subscription_details(raw)
-
-    @override
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
         return _parse_sample_v3_2(instance_id, site_hash, raw)
 
 
-def make_parser(
-    protocol_version: Literal[
-        "1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1", "3.2"
-    ],
-) -> Parser:
+def make_sample_parser(protocol_version: AllowedUsageHistoryVersions) -> Parser:
     match protocol_version:
         case "1.0":
             return ParserV1_0()

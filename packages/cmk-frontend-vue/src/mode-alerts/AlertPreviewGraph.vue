@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, onScopeDispose, ref, watch } from 'vue'
 
 import {
@@ -14,6 +15,7 @@ import {
 } from '@/graphing/GlobalTimePicker'
 import { CANVAS_MARGIN_HORIZONTAL } from '@/graphing/components/constants'
 import {
+  type GraphNoticeDescriptor,
   hasPlottableData,
   useGraphNotice,
   useNoDataNotice
@@ -29,6 +31,8 @@ const props = defineProps<{
   pattern: string
   timePicker: GlobalTimePickerProps
 }>()
+
+const { _t } = usei18n()
 
 const PANEL_KEY: PanelKey = 0
 const DEFAULT_FIGURE_WIDTH = 900
@@ -119,9 +123,16 @@ const fetchNotice = useGraphNotice({
 
 const noDataNotice = useNoDataNotice()
 
+const previewNotice = computed<GraphNoticeDescriptor | null>(() => {
+  const notice = preview.value?.notice
+  return notice ? { variant: 'info', message: _t('Nothing to preview'), description: notice } : null
+})
+
 const notice = computed(
   () =>
-    fetchNotice.value ?? (isLoading.value || hasPlottableData(metrics.value) ? null : noDataNotice)
+    fetchNotice.value ??
+    previewNotice.value ??
+    (isLoading.value || hasPlottableData(metrics.value) ? null : noDataNotice)
 )
 </script>
 

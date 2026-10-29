@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { CmkApiError } from 'cmk-ui-library/lib/error'
 import { networkAwareFetch } from 'cmk-ui-library/lib/networkAwareFetch'
 import { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import createClient from 'openapi-fetch'
@@ -46,20 +47,43 @@ const previewClient = createClient<PreviewPaths, 'application/json'>({
   fetch: networkAwareFetch
 })
 
+function problemDetail(error: CmkApiError): string {
+  const body = error.body
+  if (body !== null && typeof body === 'object' && 'detail' in body) {
+    return String(body.detail)
+  }
+  return error.message
+}
+
 export async function fetchPreview(
   match: ServiceNameMatch,
   pattern: string,
   range: RequestedTimeRange,
   step: number
 ): Promise<Preview> {
-  return unwrap(
-    await previewClient.POST(PREVIEW_PATH, {
-      body: {
-        service_name_match: match,
-        service_name_pattern: pattern,
-        requested_time_range: { start: range.start, end: range.end, step },
-        consolidation_function: 'max'
+  const requestedTimeRange = { start: range.start, end: range.end, step }
+  try {
+    return unwrap(
+      await previewClient.POST(PREVIEW_PATH, {
+        body: {
+          service_name_match: match,
+          service_name_pattern: pattern,
+          requested_time_range: requestedTimeRange,
+          consolidation_function: 'max'
+        }
+      })
+    )
+  } catch (error) {
+    if (error instanceof CmkApiError && error.statusCode === 422) {
+      return {
+        time_range: requestedTimeRange,
+        metrics: [],
+        horizontal_lines: [],
+        notice: problemDetail(error),
+        warnings: [],
+        errors: []
       }
-    })
-  )
+    }
+    throw error
+  }
 }

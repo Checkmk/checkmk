@@ -49,7 +49,7 @@ interface PreviewRequest {
 
 let requests: PreviewRequest[] = []
 
-useMswServer(
+const server = useMswServer(
   untypedHttp.post(PREVIEW_URL, async ({ request }) => {
     requests.push((await request.json()) as PreviewRequest)
     return HttpResponse.json({
@@ -122,6 +122,26 @@ test('choosing another time range loads the data for it', async () => {
   await waitFor(() => expect(requests).toHaveLength(2))
   const { start, end } = requests[1]!.requested_time_range
   expect(end - start).toBe(25 * 3600)
+})
+
+test('when nothing can be previewed for the service name, the graph says why', async () => {
+  server.use(
+    untypedHttp.post(PREVIEW_URL, () =>
+      HttpResponse.json(
+        {
+          title: 'Nothing to preview',
+          detail: 'No custom service can produce the name "HTTP request duration".',
+          status: 422
+        },
+        { status: 422 }
+      )
+    )
+  )
+  renderStep()
+
+  expect(
+    await screen.findByText('No custom service can produce the name "HTTP request duration".')
+  ).toBeVisible()
 })
 
 test('the data is not loaded before the step is reached', async () => {

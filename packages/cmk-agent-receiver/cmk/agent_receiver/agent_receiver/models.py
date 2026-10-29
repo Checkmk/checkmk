@@ -223,7 +223,7 @@ class RegistrationStatusV2ResponseRegistered(BaseModel, frozen=True):
 
 class LegacyRegistration(BaseModel, frozen=True):
     host_name: str
-    host_secret: str
+    proof: str
 
 
 class UpdateStatusRequest(BaseModel, frozen=True):

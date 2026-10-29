@@ -2177,7 +2177,9 @@ def test_timeout_is_reported_as_unreachable(
 ) -> None:
     api.post(TOKEN_URL, body=timeout)
 
-    with pytest.raises(TerminateAgent, match="did not answer within 30 seconds"):
+    with pytest.raises(
+        TerminateAgent, match="did not answer POST /api/oauth2/token within 30 seconds"
+    ):
         _auth(storage).authenticate()
 
 
@@ -2263,7 +2265,7 @@ def test_server_that_never_answers_is_reported_after_the_timeout(
         )
 
     assert exit_code == 1
-    assert "did not answer within 1 seconds" in capsys.readouterr().err
+    assert "did not answer POST /api/oauth2/token within 1 seconds" in capsys.readouterr().err
 
 
 _MINIMAL_ARGV = ["--user", "u", "--password", "p", "--disable-cert-verification"]

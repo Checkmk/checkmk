@@ -249,8 +249,8 @@ class VeeamApi:
             ) from exc
         except requests.exceptions.Timeout as exc:
             raise TerminateAgent(
-                f"The Veeam backup server at {self.url} did not answer within "
-                f"{self._timeout} seconds"
+                f"The Veeam backup server at {self.url} did not answer {method} {path} "
+                f"within {self._timeout} seconds"
             ) from exc
         except requests.exceptions.ConnectionError as exc:
             raise TerminateAgent(

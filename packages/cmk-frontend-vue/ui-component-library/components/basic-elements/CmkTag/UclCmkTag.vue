@@ -77,6 +77,12 @@ export const panelConfig = {
     title: 'Title',
     initialState: '',
     help: 'Native tooltip shown on hover, e.g. the full text when the tag is clipped.'
+  },
+  interactive: {
+    type: 'boolean' as const,
+    title: 'Interactive',
+    initialState: false,
+    help: 'Renders a button with hover and press states, for a tag a click acts on.'
   }
 } satisfies PanelConfigFor<typeof CmkTag>
 </script>
@@ -113,6 +119,7 @@ const propState = new PanelStateCreator<typeof CmkTag>().createRef(panelConfig)
         :color="propState.color"
         :variant="propState.variant"
         :spacing="propState.spacing"
+        :interactive="propState.interactive"
       />
 
       <template #properties>

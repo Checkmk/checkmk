@@ -58,24 +58,46 @@ export interface CmkTagProps {
   value?: string | undefined
   /** Native tooltip, e.g. the full text when a consumer clips the tag to its column. */
   title?: string
+  interactive?: boolean
 }
 
 defineProps<CmkTagProps>()
 </script>
 
 <template>
-  <span class="cmk-tag" :class="propsCva({ size, color, variant, spacing })" :title="title">
+  <component
+    :is="interactive ? 'button' : 'span'"
+    :type="interactive ? 'button' : undefined"
+    class="cmk-tag"
+    :class="[propsCva({ size, color, variant, spacing }), { 'cmk-tag--interactive': interactive }]"
+    :title="title"
+  >
     <template v-if="value !== undefined"
       >{{ content }}: <strong>{{ value }}</strong></template
     >
     <template v-else>{{ content }}</template>
-  </span>
+  </component>
 </template>
 
 <style scoped>
 .cmk-tag {
   border-radius: 4px;
   text-align: center;
+}
+
+/* Before size, spacing and variant, so they win over this reset. */
+.cmk-tag--interactive {
+  margin: 0;
+  padding: 0;
+  box-shadow: none;
+  font: inherit;
+  letter-spacing: inherit;
+  vertical-align: baseline;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: revert;
+  }
 }
 
 .cmk-tag--spacing-inline {
@@ -206,6 +228,30 @@ defineProps<CmkTagProps>()
   background: transparent;
   border: 1px solid var(--tag-color);
   color: var(--tag-color);
+}
+
+.cmk-tag--interactive:is(.cmk-tag--variant-fill, .cmk-tag--variant-weighted) {
+  &:hover {
+    background: color-mix(in srgb, var(--tag-fill-color, var(--tag-color)) 90%, var(--white) 10%);
+  }
+
+  &:active {
+    background: color-mix(
+      in srgb,
+      var(--tag-fill-color, var(--tag-color)) 90%,
+      var(--color-conference-grey-10) 10%
+    );
+  }
+}
+
+.cmk-tag--interactive.cmk-tag--variant-outline {
+  &:hover {
+    background: color-mix(in srgb, var(--tag-color) 10%, transparent);
+  }
+
+  &:active {
+    background: color-mix(in srgb, var(--tag-color) 20%, transparent);
+  }
 }
 
 /* Special cases for better contrast with fill variant */

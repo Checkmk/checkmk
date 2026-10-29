@@ -11,6 +11,17 @@ set -euo pipefail
 source "$1"
 shift
 package_msi_init "$@"
+set -- "${PACKAGE_MSI_ARGS[@]}"
+
+stamp_plugins() {
+    local stamp_version="$1" # //agents/windows/plugins:scripts/stamp_version.sh
+
+    # The plugins Product.wxs takes from their sources get the version like
+    # `make setversion` sets it for the package builds. The .ps1 come stamped
+    # and signed in plugins.tar.
+    find "$STAGE/agents/windows/plugins" "$STAGE/cmk/plugins" "$STAGE/packages/cmk-plugins" \
+        -type f -print0 | xargs -0 "$stamp_version" "$CMK_VERSION"
+}
 
 link_msi() {
     # See Product.wxs. Signed with --//bazel/rules:azure_signing_credentials_file.
@@ -42,6 +53,7 @@ patch_agent_msi() {
 }
 
 main() {
+    stamp_plugins "$1"
     normalize_stage_mtimes
     setup_wine_prefix
     link_msi
@@ -50,4 +62,4 @@ main() {
     cp "$STAGE/agents/wnx/install/bin/check_mk_agent.msi" "$OUT_MSI"
 }
 
-main
+main "$@"

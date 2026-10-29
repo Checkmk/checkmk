@@ -394,6 +394,8 @@ genrule(
         echo "$$v" >$@
     """,
     tags = ["manual"],
+    # Also stamped into the plugins the MSI embeds.
+    visibility = ["//agents/windows/plugins:__pkg__"],
 )
 
 filegroup(
@@ -455,6 +457,7 @@ package_msi(
     ],
     out = "check_mk_agent.msi",
     script = "install/build_msi.sh",
+    script_args = ["$(execpath //agents/windows/plugins:scripts/stamp_version.sh)"],
     # Where Product.wxs expects them.
     stage_files = {
         "//agents/windows/plugins:msi_plugins": "agents/wnx/install/plugins.tar",
@@ -462,5 +465,6 @@ package_msi(
         ":msi_cmk-agent-ctl": "artefacts/cmk-agent-ctl.exe",
     },
     tags = ["manual"],
+    tools = ["//agents/windows/plugins:scripts/stamp_version.sh"],
     version_file = ":cmk_version",
 )

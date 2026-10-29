@@ -125,8 +125,7 @@ pkg_tar(
 # signing path, which signs in the run.ps1 process (full environment + credentials)
 # instead of inside Bazel actions. Bazel only gathers the files here - including the
 # cross-package bakery-migrated plugins - and run.ps1 signs them and repacks the tar.
-# Unsigned MSI builds (run.ps1 without signing, :msi_plugins without credentials)
-# take their scripts from it too.
+# Unsigned MSI builds of run.ps1 (without signing) take their scripts from it too.
 pkg_files(
     name = "unsigned_plugin_files",
     srcs = TO_SIGN_SCRIPTS,
@@ -140,11 +139,57 @@ pkg_tar(
     visibility = ["//visibility:public"],
 )
 
+# Sets CMK_VERSION in plugins like `make setversion` does for the package builds.
+exports_files(
+    ["scripts/stamp_version.sh"],
+    visibility = ["//agents/wnx:__pkg__"],
+)
+
+# Lets shellcheck see the script.
+sh_library(
+    name = "stamp_version_sh",
+    srcs = ["scripts/stamp_version.sh"],
+)
+
+# The scripts with the version of --cmk_version, for the Linux build of the MSI
+# and of signed_plugins.tar. Stamped before signing: the signature covers it.
+[
+    genrule(
+        name = "stamp_" + name,
+        srcs = [
+            n,
+            "//agents/wnx:cmk_version",
+        ],
+        outs = ["stamped/" + name],
+        cmd = """
+            cp $(location {src}) $@
+            chmod u+w $@
+            $(execpath scripts/stamp_version.sh) "$$(cat $(location //agents/wnx:cmk_version))" $@
+        """.format(src = n),
+        tags = ["manual"],
+        tools = ["scripts/stamp_version.sh"],
+    )
+    for n, name in SIGNED_NAMES.items()
+]
+
+pkg_files(
+    name = "stamped_plugin_files",
+    srcs = [":stamp_" + name for name in SIGNED_NAMES.values()],
+    strip_prefix = strip_prefix.files_only(),
+    tags = ["manual"],
+)
+
+pkg_tar(
+    name = "stamped_plugins",
+    srcs = [":stamped_plugin_files"],
+    tags = ["manual"],
+)
+
 # Signed in the build via Azure Artifact Signing, for the MSI built on Linux.
 # Needs --//bazel/rules:azure_signing_credentials_file, see sign_azure.bzl.
 sign_tar_azure(
     name = "azure_signed_plugins",
-    src = ":unsigned_plugins",
+    src = ":stamped_plugins",
     tags = ["manual"],
 )
 
@@ -153,7 +198,7 @@ sign_tar_azure(
 alias(
     name = "msi_plugins",
     actual = select({
-        "//bazel/rules:azure_signing_credentials_file_unset": ":unsigned_plugins",
+        "//bazel/rules:azure_signing_credentials_file_unset": ":stamped_plugins",
         "//conditions:default": ":azure_signed_plugins",
     }),
     visibility = ["//agents/wnx:__pkg__"],

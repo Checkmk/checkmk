@@ -32,6 +32,7 @@ const REFILTERED = {
 let finishRender: () => void
 // Counts the refetches the widget asks the figure for.
 let updateCount = 0
+let redrawCount = 0
 vi.mock('@/dashboard/components/DashboardContent/cmk_figures.ts', () => ({
   FigureBase: class {
     instance = {
@@ -44,7 +45,9 @@ vi.mock('@/dashboard/components/DashboardContent/cmk_figures.ts', () => ({
       }
     }
     resize(): void {}
-    update_gui(): void {}
+    update_gui(): void {
+      redrawCount += 1
+    }
     update(): void {
       updateCount += 1
     }
@@ -58,6 +61,13 @@ const wrapperIsHidden = (): boolean =>
   document
     .querySelector('.db-content-figure__wrapper')!
     .classList.contains('db-content-figure__wrapper--loading')
+
+let reportResize: (entries: { contentRect: { width: number; height: number } }[]) => void
+
+async function resizeWidget(width: number, height: number): Promise<void> {
+  reportResize([{ contentRect: { width, height } }])
+  await vi.advanceTimersByTimeAsync(10)
+}
 
 function renderWidget() {
   return render(DashboardContentFigure, { props: baseProps as never })
@@ -85,11 +95,15 @@ beforeEach(() => {
   vi.stubGlobal(
     'ResizeObserver',
     class {
+      constructor(callback: typeof reportResize) {
+        reportResize = callback
+      }
       observe(): void {}
       disconnect(): void {}
     }
   )
   updateCount = 0
+  redrawCount = 0
 })
 
 afterEach(() => {
@@ -137,4 +151,36 @@ test('still shows a failure after changed filters, rather than loading forever',
 
   expect(wrapperIsHidden()).toBe(false)
   expect(loadingIcon()).not.toBeInTheDocument()
+})
+
+test('a resize before the data arrives does not redraw the figure', async () => {
+  renderWidget()
+  await nextTick()
+
+  await resizeWidget(300, 200)
+
+  expect(redrawCount).toBe(0)
+})
+
+test('a resize after the data arrived redraws the figure', async () => {
+  renderWidget()
+  await nextTick()
+  finishRender()
+  await nextTick()
+
+  await resizeWidget(300, 200)
+
+  expect(redrawCount).toBe(1)
+})
+
+test('a resize back to the size from before the data arrived redraws the figure', async () => {
+  renderWidget()
+  await nextTick()
+  await resizeWidget(300, 200)
+  finishRender()
+  await nextTick()
+
+  await resizeWidget(0, 0)
+
+  expect(redrawCount).toBe(1)
 })

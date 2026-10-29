@@ -77,6 +77,9 @@ function handleResize(newWidth: number, newHeight: number) {
   if (widthChanged || heightChanged) {
     currentDimensions.value = { width: newWidth, height: newHeight }
 
+    if (isLoading.value) {
+      return
+    }
     figure.resize()
     figure.update_gui()
   }

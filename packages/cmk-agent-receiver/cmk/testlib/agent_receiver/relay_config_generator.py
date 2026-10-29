@@ -7,10 +7,12 @@ import dataclasses
 import io
 import secrets
 import tarfile
+from collections.abc import Sequence
 from pathlib import Path
 
-from cmk.agent_receiver.relay.lib.shared_types import Serial
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.relay_protocols.configuration import CONFIG_ARCHIVE_ROOT_FOLDER_NAME
+from cmk.testlib.agent_receiver.relay import random_relay_id
 
 RelayId = str
 FileName = str
@@ -36,6 +38,10 @@ class RelayConfig:
     serial: Serial
     files: ConfigFiles
 
+    @property
+    def relay_ids(self) -> list[RelayID]:
+        return [RelayID(relay_id) for relay_id in self.files]
+
 
 def assert_config_tar(config: RelayConfig, relay_id: RelayId, tar_data: bytes) -> None:
     relay_files = config.files[relay_id]
@@ -51,7 +57,11 @@ def assert_config_tar(config: RelayConfig, relay_id: RelayId, tar_data: bytes) -
             assert relay_files[filename] == file_content, f"Failed for {relay_id=}, {filename=}"
 
 
-def generate_relay_config(root: Path, relays: list[RelayId]) -> RelayConfig:
+def generate_relay_config(
+    root: Path, relays: Sequence[RelayId] = (), *, count: int = 0
+) -> RelayConfig:
+    """Write a config for `relays`, plus for `count` new relays; `relay_ids` lists them all."""
+    relays = [*relays, *(random_relay_id() for _ in range(count))]
     serial = Serial.random()
 
     # the serial folder exists even if no relay configured

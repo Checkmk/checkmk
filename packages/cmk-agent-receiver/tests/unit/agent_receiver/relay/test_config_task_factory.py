@@ -23,8 +23,6 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     TasksRepository,
     TaskStatus,
 )
-from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
-from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
 from cmk.testlib.agent_receiver.relay import random_relay_id
 from cmk.testlib.agent_receiver.relay_config_generator import (
     assert_config_tar,
@@ -34,20 +32,11 @@ from cmk.testlib.agent_receiver.relay_config_generator import (
 
 def test_create_tasks_for_all_relays(
     config_task_factory: ConfigTaskFactory,
-    relays_repository: RelaysRepository,
     tasks_repository: TasksRepository,
-    test_user: InternalAuth,
     site_context: Config,
 ) -> None:
-    # Register two relays
-    relay_id_1 = relays_repository.add_relay(
-        test_user, relay_id=random_relay_id(), alias="test-relay-1"
-    )
-    relay_id_2 = relays_repository.add_relay(
-        test_user, relay_id=random_relay_id(), alias="test-relay-2"
-    )
-
-    cf = generate_relay_config(site_context.omd_root, [relay_id_1, relay_id_2])
+    cf = generate_relay_config(site_context.omd_root, count=2)
+    relay_id_1, relay_id_2 = cf.relay_ids
 
     # Create tasks for all relays
     config_task_factory.create_for_all_relays()
@@ -70,27 +59,15 @@ def test_create_tasks_for_all_relays(
 
 def test_create_task_for_single_chosen_relay_when_no_pending_task(
     config_task_factory: ConfigTaskFactory,
-    relays_repository: RelaysRepository,
     tasks_repository: TasksRepository,
-    test_user: InternalAuth,
     site_context: Config,
 ) -> None:
     """
     Should create a task for the specified relay only, and only if there is no pending task already.
     """
 
-    # Register more relays
-    relay_id_1 = relays_repository.add_relay(
-        test_user, relay_id=random_relay_id(), alias="test-relay-1"
-    )
-    relay_id_2 = relays_repository.add_relay(
-        test_user, relay_id=random_relay_id(), alias="test-relay-2"
-    )
-    relay_id_3 = relays_repository.add_relay(
-        test_user, relay_id=random_relay_id(), alias="test-relay-3"
-    )
-
-    cf = generate_relay_config(site_context.omd_root, [relay_id_1, relay_id_2, relay_id_3])
+    cf = generate_relay_config(site_context.omd_root, count=3)
+    relay_id_1, relay_id_2, relay_id_3 = cf.relay_ids
 
     # Create tasks for chosen relay: relay_id_2
     _ = config_task_factory.create_for_relay(relay_id_2)
@@ -113,27 +90,15 @@ def test_create_task_for_single_chosen_relay_when_no_pending_task(
 
 def test_create_task_for_single_chosen_relay_when_pending_task(
     config_task_factory: ConfigTaskFactory,
-    relays_repository: RelaysRepository,
     tasks_repository: TasksRepository,
-    test_user: InternalAuth,
     site_context: Config,
 ) -> None:
     """
     Should not create a task for the specified relay when there is pending task already.
     """
 
-    # Register more relays
-    relay_id_1 = relays_repository.add_relay(
-        test_user, relay_id=random_relay_id(), alias="test-relay-1"
-    )
-    relay_id_2 = relays_repository.add_relay(
-        test_user, relay_id=random_relay_id(), alias="test-relay-2"
-    )
-    relay_id_3 = relays_repository.add_relay(
-        test_user, relay_id=random_relay_id(), alias="test-relay-3"
-    )
-
-    cf = generate_relay_config(site_context.omd_root, [relay_id_1, relay_id_2, relay_id_3])
+    cf = generate_relay_config(site_context.omd_root, count=3)
+    relay_id_1, relay_id_2, relay_id_3 = cf.relay_ids
 
     # If we already have a pending task for this serial...
 
@@ -215,9 +180,7 @@ def test_create_task_for_single_relay_skipped_when_config_not_applied(
 
 def test_create_tasks_for_all_relays_with_multiple_configured_relays(
     config_task_factory: ConfigTaskFactory,
-    relays_repository: RelaysRepository,
     tasks_repository: TasksRepository,
-    test_user: InternalAuth,
     site_context: Config,
     caplog: LogCaptureFixture,
 ) -> None:
@@ -234,20 +197,16 @@ def test_create_tasks_for_all_relays_with_multiple_configured_relays(
     - No ERROR level logs are produced
     """
 
-    # Register three relays and create config folders for all of them
-    relay_id_1 = relays_repository.add_relay(test_user, relay_id=random_relay_id(), alias="relay-1")
-    relay_id_2 = relays_repository.add_relay(test_user, relay_id=random_relay_id(), alias="relay-2")
-    relay_id_3 = relays_repository.add_relay(test_user, relay_id=random_relay_id(), alias="relay-3")
-
-    # Create config folders for all relays
-    cf = generate_relay_config(site_context.omd_root, [relay_id_1, relay_id_2, relay_id_3])
+    # Create config folders for three relays
+    cf = generate_relay_config(site_context.omd_root, count=3)
+    relay_id_1, relay_id_2, relay_id_3 = cf.relay_ids
 
     # Capture logs at DEBUG level
     with caplog.at_level(logging.DEBUG, logger="agent-receiver"):
         # When creating tasks for all relays
         results = config_task_factory.create_for_all_relays()
 
-    # Then we should have results for all relays (get_all_relay_ids returns these 3)
+    # Then we should have results for all relays
     assert len(results) == 3
 
     # Verify all relays got tasks created
@@ -271,9 +230,7 @@ def test_create_tasks_for_all_relays_with_multiple_configured_relays(
 
 def test_create_task_fails_when_tar_creation_raises_exception(
     config_task_factory: ConfigTaskFactory,
-    relays_repository: RelaysRepository,
     tasks_repository: TasksRepository,
-    test_user: InternalAuth,
     site_context: Config,
 ) -> None:
     """
@@ -281,13 +238,7 @@ def test_create_task_fails_when_tar_creation_raises_exception(
     but tar creation fails due to an exception (e.g., file system error).
     """
 
-    # Register a relay
-    relay_id = relays_repository.add_relay(
-        test_user, relay_id=random_relay_id(), alias="test-relay"
-    )
-
-    # Create config folder so relay_config_applied returns True
-    _ = generate_relay_config(site_context.omd_root, [relay_id])
+    (relay_id,) = generate_relay_config(site_context.omd_root, count=1).relay_ids
 
     # Mock create_tar to raise an exception
     with patch(

@@ -5,9 +5,14 @@
 
 
 from pathlib import Path
-from typing import Literal
+from typing import Final, Literal
 
 from cmk.ccc.version import Edition, edition
+
+AllowedUsageHistoryVersions = Literal[
+    "1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1", "3.2"
+]
+CURRENT_USAGE_HISTORY_VERSION: Final[AllowedUsageHistoryVersions] = "3.2"
 
 
 def get_licensing_protocol_version(

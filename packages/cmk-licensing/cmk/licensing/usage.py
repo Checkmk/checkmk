@@ -30,7 +30,7 @@ from cmk.licensing.basics.paths import (
     get_licensing_dir,
     get_next_run_file_path,
 )
-from cmk.licensing.basics.protocol_version import get_licensing_protocol_version
+from cmk.licensing.basics.protocol_version import CURRENT_USAGE_HISTORY_VERSION
 from cmk.licensing.basics.verification import parse_protocol_version
 from cmk.licensing.export import (
     LicenseUsageExtensions,
@@ -114,7 +114,7 @@ def try_update_license_usage(
         save_license_usage_report(
             report_file_path,
             RawLicenseUsageReport(
-                VERSION=get_licensing_protocol_version(omd_root),
+                VERSION=CURRENT_USAGE_HISTORY_VERSION,
                 history=history.for_report(),
             ),
         )

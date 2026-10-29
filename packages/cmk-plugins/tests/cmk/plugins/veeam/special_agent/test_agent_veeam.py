@@ -1684,6 +1684,44 @@ def test_fetch_backups_task_sessions_404_skips_just_that_job(
     assert "vm-1" not in output
 
 
+def test_fetch_backups_task_sessions_500_skips_just_that_job(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _mock_jobs(api, [_job(), _job(id="job-id-2", sessionId="session-2")])
+    # Two objects, so that the job has no single-object session fallback.
+    _mock_session_and_objects(api, "session-1", ["vm-1", "vm-1b"])
+    api.get(
+        f"{URL}/api/v1/sessions/session-1/taskSessions?skip=0&typeFilter=Backup",
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        json={
+            "message": "The value of enum ESessionType is not supported (Parameter 'source')"
+            " Actual value was AgentManagement."
+        },
+    )
+    _mock_session_and_objects(api, "session-2", ["vm-2"], resource_id="resource-2")
+    _mock_tasks(api, [_task(name="vm-2", sessionId="session-2")], session_id="session-2")
+
+    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+
+    output = capsys.readouterr().out
+    assert "<<<<vm-2>>>>" in output
+    assert "vm-1" not in output
+
+
+def test_fetch_backups_session_500_aborts(api: responses.RequestsMock, storage: Storage) -> None:
+    _mock_jobs(api, [_job()])
+    api.get(
+        f"{URL}/api/v1/sessions/session-1",
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        json={"message": "boom"},
+    )
+
+    with pytest.raises(TerminateAgent, match="HTTP 500: boom"):
+        fetch_backups(_client(_auth(storage), storage), "veeam_backups")
+
+
 def test_fetch_backups_task_sessions_404_of_a_single_object_job_falls_back_to_its_session(
     api: responses.RequestsMock,
     storage: Storage,

@@ -829,11 +829,11 @@ class _JobObjects:
     `fetch_backups`."""
 
 
-def _is_skippable(exc: TerminateAgent) -> bool:
+def _is_skippable(exc: TerminateAgent, *, extra: Container[int] = ()) -> bool:
     """A failed per-job lookup that should just skip that job, not abort the agent."""
-    return isinstance(exc.__cause__, VeeamApiError) and exc.__cause__.status in (
-        HTTPStatus.BAD_REQUEST,
-        HTTPStatus.NOT_FOUND,
+    return isinstance(exc.__cause__, VeeamApiError) and (
+        exc.__cause__.status in (HTTPStatus.BAD_REQUEST, HTTPStatus.NOT_FOUND)
+        or exc.__cause__.status in extra
     )
 
 
@@ -997,8 +997,8 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     fetched, via /api/v1/sessions/{id}/taskSessions, and only for jobs whose
     objects resolved. This costs one request per job however long ago it last ran;
     a time window over /api/v1/taskSessions would reach back to the least recently
-    run job and pull everything since. A task session lookup that 404s/400s leaves
-    that job without tasks (a single-object job still falls back to its session).
+    run job and pull everything since. A task session lookup that 400s/404s/500s
+    leaves that job without tasks (a single-object job still falls back to its session).
 
     /api/v1/jobs/states also lists jobs that aren't backup jobs, e.g. backup copy
     jobs, whose sessions hold tasks of their own `sessionType`. These are dropped
@@ -1024,7 +1024,9 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
                 f"/api/v1/sessions/{session_id}/taskSessions", extra_params="&typeFilter=Backup"
             )
         except TerminateAgent as exc:
-            if _is_skippable(exc):
+            # The task sessions of an agent management session 500 ("The value of
+            # enum ESessionType is not supported") instead of coming back empty.
+            if _is_skippable(exc, extra=(HTTPStatus.INTERNAL_SERVER_ERROR,)):
                 continue
             raise
 

@@ -51,13 +51,13 @@ py_library(
         "//tests/testlib/system",
     ] + select({
         "//:gpl+nonfree_repo": [
+            "//cmk/gui/nonfree/pro",
             "//non-free/packages/cmk-core-helpers:inline-snmp",
             "//non-free/packages/cmk-liveproxyd",
             "//non-free/packages/cmk-otel-collector:testlib",
             "//non-free/packages/cmk-telemetry:cmk-telemetry-custom-query-rule-value",
             "//non-free/tests/testlib/system:data_backend",
             "//non-free/tests/testlib/system:opentelemetry",
-            "//non-free/tests/testlib/system/cloud",
             "//non-free/tests/testlib/system/licensing",
             "//packages/cmk-agent-receiver",
         ],

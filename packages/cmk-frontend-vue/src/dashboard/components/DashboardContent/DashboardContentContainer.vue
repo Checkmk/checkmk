@@ -16,6 +16,8 @@ interface DashboardContentContainerProps {
   contentOverflow?: string
   contentCenter?: boolean
   isScrollablePreview?: boolean
+  /** Caps the scrollable preview's width, for content that overflows it sideways. */
+  limitPreviewWidth?: boolean
 }
 
 const {
@@ -23,7 +25,8 @@ const {
   general_settings: generalSettings,
   contentOverflow = 'auto',
   contentCenter = false,
-  isScrollablePreview = false
+  isScrollablePreview = false,
+  limitPreviewWidth = false
 } = defineProps<DashboardContentContainerProps>()
 
 const hasBackground = computed<boolean>(() => {
@@ -62,6 +65,9 @@ const isPublicDashboard = useInjectIsPublicDashboard()
         v-if="isScrollablePreview"
         height="calc(calc(var(--dimension-8) * 10) - var(--dimension-8))"
         class="db-content-container__preview-scroll-container"
+        :class="{
+          'db-content-container__preview-scroll-container--limited-width': limitPreviewWidth
+        }"
       >
         <div class="db-content-container__preview-click-shield">
           <slot />
@@ -115,9 +121,9 @@ const isPublicDashboard = useInjectIsPublicDashboard()
   }
 }
 
-/* This max-width is only needed for the preview of 'url' widgets, i.e. plain
-   DashboardContentIFrame, which in preview mode always overflow this container */
-.db-content-container__preview-scroll-container {
+/* Only for the preview of 'url' widgets, i.e. plain DashboardContentIFrame, which in
+   preview mode always overflow this container; graphs fit their width on their own */
+.db-content-container__preview-scroll-container--limited-width {
   max-width: 720px;
 }
 

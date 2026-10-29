@@ -69,6 +69,7 @@ watch(() => [range, tick], postTimeRange)
     :general_settings="general_settings"
     :content-center="contentCenter"
     :is-scrollable-preview="isPreview && showsIframe"
+    :limit-preview-width="true"
   >
     <div
       class="db-content-i-frame__div"

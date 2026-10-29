@@ -23,7 +23,12 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
     do_remote_automation,
 )
-from cmk.utils.agent_registration import get_r4r_filepath, UUIDLinkManager, UUIDRegistration
+from cmk.utils.agent_registration import (
+    get_r4r_filepath,
+    RegistrationRoute,
+    UUIDLinkManager,
+    UUIDRegistration,
+)
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.security_event import log_security_event, SecurityEvent
 
@@ -188,6 +193,22 @@ def agent_updates_permitted(host_name: HostName, uuid: UUID) -> bool:
         )
         return False
     return registration is not None and registration.agent_updates_permitted is True
+
+
+def linked_host_name(uuid: UUID) -> HostName | None:
+    return _uuid_link_manager().linked_host_name(uuid)
+
+
+def authorize_migrated_uuid(uuid: UUID) -> None:
+    """Record that the legacy registration of the agent updater authorized the linked UUID"""
+    _uuid_link_manager().record_registration(
+        uuid,
+        UUIDRegistration(
+            agent_updates_permitted=True,
+            subject="",
+            registration_route=RegistrationRoute.MIGRATION,
+        ),
+    )
 
 
 def _uuid_link_manager() -> UUIDLinkManager:

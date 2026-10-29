@@ -60,7 +60,7 @@ def test_self_bootstrapping_files_pass_silently(
         "'value': 1}] + agent_ports\n"
     )
 
-    _ACTION(logging.getLogger(__name__))
+    _ACTION(logging.getLogger(__name__), debug=True)
 
     assert not _warnings(caplog)
 
@@ -73,7 +73,7 @@ def test_a_legacy_file_is_named_with_its_error(
         config_dir / "tags.mk", key="tag_config", value={"tag_groups": [], "aux_tags": []}
     )
 
-    _ACTION(logging.getLogger(__name__))
+    _ACTION(logging.getLogger(__name__), debug=True)
 
     warnings = _warnings(caplog)
 
@@ -89,7 +89,7 @@ def test_every_failing_file_is_named(config_dir: Path, caplog: pytest.LogCapture
     cmk.utils.paths.main_config_file.write_text("extra_nagios_conf += 'define command {}'\n")
     (config_dir / "groups.mk").write_text("define_hostgroups.update({'a': 'A'})\n")
 
-    _ACTION(logging.getLogger(__name__))
+    _ACTION(logging.getLogger(__name__), debug=True)
 
     assert [w.strip().split(":")[0] for w in _warnings(caplog)[1:]] == [
         str(cmk.utils.paths.main_config_file),
@@ -103,7 +103,7 @@ def test_a_file_relying_on_an_earlier_one_is_named(
     cmk.utils.paths.main_config_file.write_text("define_hostgroups = {}\n")
     (config_dir / "groups.mk").write_text("define_hostgroups.update({'a': 'A'})\n")
 
-    _ACTION(logging.getLogger(__name__))
+    _ACTION(logging.getLogger(__name__), debug=True)
 
     assert [w.strip().split(":")[0] for w in _warnings(caplog)[1:]] == [
         str(config_dir / "groups.mk")
@@ -118,7 +118,7 @@ def test_extending_a_non_empty_default_is_named_with_the_variable(
         "alert_handler_event_types += ['checkresult']\n"
     )
 
-    _ACTION(logging.getLogger(__name__))
+    _ACTION(logging.getLogger(__name__), debug=True)
 
     warnings = _warnings(caplog)
 
@@ -135,7 +135,7 @@ def test_setting_a_key_of_a_non_empty_default_is_named(
         "cmc_log_levels['cmk.alert'] = 7\n"
     )
 
-    _ACTION(logging.getLogger(__name__))
+    _ACTION(logging.getLogger(__name__), debug=True)
 
     assert [w.strip() for w in _warnings(caplog)[1:]] == [
         f"{config_dir / 'cmc.mk'}: cmc_log_levels"
@@ -147,7 +147,7 @@ def test_assigning_a_non_empty_default_passes_silently(
 ) -> None:
     (config_dir / "global.mk").write_text("alert_handler_event_types = ['checkresult']\n")
 
-    _ACTION(logging.getLogger(__name__))
+    _ACTION(logging.getLogger(__name__), debug=True)
 
     assert not _warnings(caplog)
 
@@ -157,7 +157,7 @@ def test_a_file_failing_to_load_is_not_named_for_its_defaults(
 ) -> None:
     (config_dir / "alerts.mk").write_text("alert_handler_event_types += ['checkresult']\n")
 
-    _ACTION(logging.getLogger(__name__))
+    _ACTION(logging.getLogger(__name__), debug=True)
 
     warnings = _warnings(caplog)
 

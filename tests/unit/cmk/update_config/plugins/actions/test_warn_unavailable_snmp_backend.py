@@ -209,7 +209,7 @@ def test_action_warns_on_the_central_site(
     _configure_inline_backend()
 
     with caplog.at_level(logging.WARNING):
-        _action()(LOGGER)
+        _action()(LOGGER, debug=True)
 
     assert "Choose SNMP backend" in caplog.text
 
@@ -226,6 +226,6 @@ def test_action_is_silent_on_remote_sites(
     )
 
     with caplog.at_level(logging.WARNING):
-        _action()(LOGGER)
+        _action()(LOGGER, debug=True)
 
     assert not caplog.text

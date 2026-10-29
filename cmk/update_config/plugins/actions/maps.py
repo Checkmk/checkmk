@@ -175,7 +175,7 @@ def _prepare_maps(
 
 class MigrateLegacyMaps(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         boards_dir = legacy_maps_dir() / "boards"
         if not boards_dir.is_dir():
             return

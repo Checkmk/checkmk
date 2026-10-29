@@ -25,7 +25,7 @@ class RemoveUnreadablePredictions(UpdateAction):
     """
 
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         self.cleanup_unreadable_files(PredictionPaths(cmk.utils.paths.omd_root).predictions_dir)
 
     @staticmethod

@@ -18,7 +18,7 @@ CMK_INV_RULESET_NAME = "active_checks:cmk_inv"
 
 class UpdateInventoryRules(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         tree = make_folder_tree(active_config)
         all_rulesets = AllRulesets.load_all_rulesets(tree)
         add_cmk_inv_rules(tree, logger, all_rulesets)

@@ -95,7 +95,7 @@ def warn_invalid_bi_regexes(packs: Iterable[object], logger: Logger) -> None:
 
 class WarnInvalidBIRegexes(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         if is_distributed_setup_remote_site(active_config.sites):
             return
         config = store.load_object_from_file(

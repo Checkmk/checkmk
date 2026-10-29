@@ -314,7 +314,7 @@ def migrate_proxy_credentials(
 
 class MigrateNotificationProxyCredentials(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         # Uncached: the users are modified in place and must not leak into other actions
         users = load_users_uncached(lock=True)
         try:

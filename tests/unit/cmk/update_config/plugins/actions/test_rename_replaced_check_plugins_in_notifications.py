@@ -25,7 +25,7 @@ def _run_update_action() -> None:
         title="Rename replaced check plug-ins in notification rules",
         sort_index=100,
         expiry_version=ExpiryVersion.NEVER,
-    )(getLogger())
+    )(getLogger(), debug=True)
 
 
 @pytest.mark.usefixtures("request_context")

@@ -8,7 +8,6 @@ from logging import Logger
 from pathlib import Path
 from typing import override
 
-from cmk.ccc import debug
 from cmk.discover_plugins import discover_all_plugins, PluginGroup
 from cmk.graphing.v1 import entry_point_prefixes as entry_point_prefixes_v1
 from cmk.graphing.v2_unstable import entry_point_prefixes as entry_point_prefixes_v2_unstable
@@ -48,7 +47,7 @@ class PreUpdateUIExtensions(PreUpdateAction):
     """Load all web plugins before the real update happens"""
 
     @override
-    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode, *, debug: bool) -> None:
         # no ui stuff to update
         if (path_config := make_path_config()) is None:
             return
@@ -85,15 +84,17 @@ class PreUpdateUIExtensions(PreUpdateAction):
 
             raise MKUserError(None, "incompatible extension package")
 
-        self._check_graphing_plugin_errors(logger, conflict_mode)
+        self._check_graphing_plugin_errors(logger, conflict_mode, debug=debug)
 
-    def _check_graphing_plugin_errors(self, logger: Logger, conflict_mode: ConflictMode) -> None:
+    def _check_graphing_plugin_errors(
+        self, logger: Logger, conflict_mode: ConflictMode, *, debug: bool
+    ) -> None:
         if not (
             discovered_plugins_errors := discover_all_plugins(
                 PluginGroup.GRAPHING,
                 dict(entry_point_prefixes_v1()) | dict(entry_point_prefixes_v2_unstable()),
                 skip_wrong_types=False,
-                raise_errors=debug.enabled(),
+                raise_errors=debug,
             ).errors
         ):
             return

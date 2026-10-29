@@ -20,7 +20,7 @@ class CreatePrecompiledFiles(UpdateAction):
     """
 
     @override
-    def __call__(self, _logger: Logger) -> None:
+    def __call__(self, _logger: Logger, *, debug: bool) -> None:
         #  Note: We do not use folder.save here, as this always invalidates all caches and reloads
         #  the folder tree afterwards
         tree = make_folder_tree(active_config)

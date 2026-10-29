@@ -27,7 +27,7 @@ from cmk.utils.redis import disable_redis
 
 class CheckHTTPRules(PreUpdateAction):
     @override
-    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode, *, debug: bool) -> None:
         with disable_redis(), gui_context(), SuperUserContext():
             set_global_vars()
             if is_distributed_setup_remote_site(active_config.sites):

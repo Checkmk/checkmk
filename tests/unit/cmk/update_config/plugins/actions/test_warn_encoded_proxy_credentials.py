@@ -72,7 +72,7 @@ def test_the_warning_names_the_proxy_but_not_its_credentials(
             title="",
             sort_index=100,
             expiry_version=ExpiryVersion.CMK_310,
-        )(getLogger())
+        )(getLogger(), debug=True)
 
     assert "Corp proxy" in caplog.text
     assert "p%40ss" not in caplog.text

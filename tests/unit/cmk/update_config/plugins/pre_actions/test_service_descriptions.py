@@ -57,7 +57,7 @@ def test_action_passes_on_clean_config(tmp_path: Path, caplog: pytest.LogCapture
     main_mk = tmp_path / "main.mk"
     main_mk.write_text('service_descriptions = {"ps_perf": "PS %s"}\n')
     with caplog.at_level(logging.WARNING):
-        action(LOGGER, ConflictMode.ABORT, config_file_paths=[main_mk])
+        action(LOGGER, ConflictMode.ABORT, config_file_paths=[main_mk], debug=True)
     assert caplog.text == ""
 
 
@@ -67,7 +67,7 @@ def test_action_aborts_on_old_plugin_names(
     main_mk = tmp_path / "main.mk"
     main_mk.write_text('service_descriptions = {"ps.perf": "PS %s"}\n')
     with pytest.raises(MKUserError):
-        action(LOGGER, ConflictMode.ABORT, config_file_paths=[main_mk])
+        action(LOGGER, ConflictMode.ABORT, config_file_paths=[main_mk], debug=True)
     assert "rename 'ps.perf' to 'ps_perf'" in caplog.text
 
 
@@ -77,5 +77,5 @@ def test_action_force_continues_despite_old_plugin_names(
     main_mk = tmp_path / "main.mk"
     main_mk.write_text('service_descriptions = {"ps.perf": "PS %s"}\n')
     with caplog.at_level(logging.WARNING):
-        action(LOGGER, ConflictMode.FORCE, config_file_paths=[main_mk])
+        action(LOGGER, ConflictMode.FORCE, config_file_paths=[main_mk], debug=True)
     assert "rename 'ps.perf' to 'ps_perf'" in caplog.text

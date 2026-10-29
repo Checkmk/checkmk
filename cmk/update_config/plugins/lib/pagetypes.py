@@ -66,7 +66,7 @@ class UpdatePagetypes[TOverridable_co: Overridable](UpdateAction):
         self._updater = updater
 
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         target_type = self._updater.target_type
         raw_page_dicts = target_type.load_raw()
 
@@ -122,7 +122,7 @@ class PreUpdatePagetypes[TOverridable_co: Overridable](PreUpdateAction):
         self._conflict_hint = conflict_hint
 
     @override
-    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode, *, debug: bool) -> None:
         encountered_errors = False
 
         for (user_id, element_id), raw_page_dict in self._updater.target_type.load_raw().items():

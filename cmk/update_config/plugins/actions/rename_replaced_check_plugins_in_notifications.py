@@ -23,7 +23,7 @@ from cmk.update_config.registry import update_action_registry
 
 class RenameReplacedCheckPluginsInNotificationRules(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         rule_file = NotificationRuleConfigFile()
         rules = rule_file.load_for_modification()
         if rename_matched_check_plugins(rules):

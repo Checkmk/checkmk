@@ -14,7 +14,7 @@ from cmk.update_config.registry import update_action_registry
 
 class MigrateSqliteSchemas(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         ensure_sqlite_up_to_date(logger)
 
 

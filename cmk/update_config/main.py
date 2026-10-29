@@ -20,12 +20,14 @@ from contextlib import contextmanager
 from itertools import chain
 from typing import Literal
 
+import cmk.ccc.debug
+
 # This special script needs persistence and conversion code from different
 # places of Checkmk. We may centralize the conversion and move the persistance
 # to a specific layer in the future, but for the the moment we need to deal
 # with it.
 from cmk.base import config as base_config
-from cmk.ccc import debug, tty
+from cmk.ccc import tty
 from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import Edition
@@ -65,7 +67,7 @@ def main(
     arguments = _parse_arguments(args)
 
     if arguments.debug:
-        debug.enable()
+        cmk.ccc.debug.enable()
 
     logger = _setup_logging(arguments.verbose)
     logger.debug("parsed arguments: %(arguments)s", {"arguments": arguments})
@@ -82,23 +84,25 @@ def main(
     main_modules.register(edition)
 
     with _force_automations_cli_interface():
-        exit_code = main_check_config(edition, logger, arguments.conflict)
+        exit_code = main_check_config(edition, logger, arguments.conflict, debug=arguments.debug)
         if exit_code != 0 or arguments.dry_run:
             return exit_code
-        return main_update_config(edition, logger, arguments.conflict)
+        return main_update_config(edition, logger, arguments.conflict, debug=arguments.debug)
 
 
 def main_update_config(
     edition: Edition,
     logger: logging.Logger,
     conflict: ConflictMode,  # noqa: ARG001
+    *,
+    debug: bool,
 ) -> Literal[0, 1]:
-    plugins = _load_plugins(edition, logger)
+    plugins = _load_plugins(edition, logger, debug=debug)
 
     try:
-        return update_config(plugins, logger)
+        return update_config(plugins, logger, debug=debug)
     except Exception:
-        if debug.enabled():
+        if debug:
             raise
         logger.exception(
             'ERROR: Please repair this and run "cmk-update-config" BEFORE starting the site again.'
@@ -107,15 +111,15 @@ def main_update_config(
 
 
 def main_check_config(
-    edition: Edition, logger: logging.Logger, conflict: ConflictMode
+    edition: Edition, logger: logging.Logger, conflict: ConflictMode, *, debug: bool
 ) -> Literal[0, 1]:
-    pre_plugins = _load_pre_plugins(edition)
+    pre_plugins = _load_pre_plugins(edition, debug=debug)
     try:
         # This has to be done BEFORE initializing the GUI context on start of
         # the pre update actions
         _cleanup_precompiled_files(logger)
 
-        check_config(pre_plugins, logger, conflict)
+        check_config(pre_plugins, logger, conflict, debug=debug)
     except Exception as e:
         if not isinstance(e, MKUserError):
             traceback.print_exc()
@@ -201,7 +205,9 @@ def ensure_site_is_stopped(logger: logging.Logger) -> None:
         sys.exit(1)
 
 
-def _load_plugins(edition: Edition, logger: logging.Logger) -> Iterable[UpdateAction]:
+def _load_plugins(
+    edition: Edition, logger: logging.Logger, *, debug: bool
+) -> Iterable[UpdateAction]:
     for plugin, exc in chain(
         load_plugins_with_exceptions("cmk.update_config.plugins.actions"),
         (
@@ -223,12 +229,12 @@ def _load_plugins(edition: Edition, logger: logging.Logger) -> Iterable[UpdateAc
         logger.error(
             "Error in action plug-in %(plugin)s: %(exc)s\n", {"plugin": plugin, "exc": exc}
         )
-        if debug.enabled():
+        if debug:
             raise exc
     return update_action_registry.values()
 
 
-def _load_pre_plugins(edition: Edition) -> Iterable[PreUpdateAction]:
+def _load_pre_plugins(edition: Edition, *, debug: bool) -> Iterable[PreUpdateAction]:
     for plugin, exc in chain(
         load_plugins_with_exceptions("cmk.update_config.plugins.pre_actions"),
         (
@@ -248,7 +254,7 @@ def _load_pre_plugins(edition: Edition) -> Iterable[PreUpdateAction]:
         ),
     ):
         sys.stderr.write(f"Error in pre action plug-in {plugin}: {exc}\n")
-        if debug.enabled():
+        if debug:
             raise exc
     return pre_update_action_registry.values()
 
@@ -260,6 +266,8 @@ def check_config(
     pre_update_actions: Iterable[PreUpdateAction],
     logger: logging.Logger,
     conflict_mode: ConflictMode,
+    *,
+    debug: bool,
 ) -> None:
     """Raise exception on failure"""
     pre_update_actions = sorted(pre_update_actions, key=lambda a: a.sort_index)
@@ -269,7 +277,7 @@ def check_config(
 
     # Note: Redis has to be disabled first, the other contexts depend on it
     with disable_redis(), gui_context():
-        _initialize_base_environment()
+        _initialize_base_environment(debug=debug)
         for count, pre_action in enumerate(pre_update_actions, start=1):
             logger.info(
                 " %(yellow)s%(count)02d/%(total)02d%(normal)s %(title)s...",
@@ -281,12 +289,14 @@ def check_config(
                     "title": pre_action.title,
                 },
             )
-            pre_action(logger, conflict_mode)
+            pre_action(logger, conflict_mode, debug=debug)
 
     logger.info("Done (%(green)ssuccess%(normal)s)\n", {"green": tty.green, "normal": tty.normal})
 
 
-def update_config(actions: Iterable[UpdateAction], logger: logging.Logger) -> Literal[0, 1]:
+def update_config(
+    actions: Iterable[UpdateAction], logger: logging.Logger, *, debug: bool
+) -> Literal[0, 1]:
     """Return exit code, 0 is ok, 1 is failure"""
     has_errors = False
     logger.log(VERBOSE, "Initializing application...")
@@ -298,7 +308,7 @@ def update_config(actions: Iterable[UpdateAction], logger: logging.Logger) -> Li
     with disable_redis(), gui_context(), SuperUserContext():
         set_global_vars()
         _check_failed_gui_plugins(logger)
-        _initialize_base_environment()
+        _initialize_base_environment(debug=debug)
 
         logger.info("Updating Checkmk configuration...")
 
@@ -315,7 +325,7 @@ def update_config(actions: Iterable[UpdateAction], logger: logging.Logger) -> Li
                     },
                 )
                 try:
-                    action(logger)
+                    action(logger, debug=debug)
                 except ForbiddenPendingChangeWriteError:
                     # A forbidden pending change write is always a programming error in an update
                     # action. It must fail hard regardless of continue_on_failure / debug mode.
@@ -323,7 +333,7 @@ def update_config(actions: Iterable[UpdateAction], logger: logging.Logger) -> Li
                 except Exception:
                     has_errors = True
                     logger.exception(' + "%(title)s" failed', {"title": action.title})
-                    if not action.continue_on_failure or debug.enabled():
+                    if not action.continue_on_failure or debug:
                         raise
 
         if not has_errors and not is_distributed_setup_remote_site(active_config.sites):
@@ -363,8 +373,8 @@ def _check_failed_gui_plugins(logger: logging.Logger) -> None:
         )
 
 
-def _initialize_base_environment() -> None:
-    base_config.load(validate_hosts=True, debug=debug.enabled())
+def _initialize_base_environment(*, debug: bool) -> None:
+    base_config.load(validate_hosts=True, debug=debug)
 
 
 @contextmanager

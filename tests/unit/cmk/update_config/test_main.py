@@ -74,7 +74,7 @@ class MockUpdateAction(UpdateAction):
         self.calls = 0
 
     @override
-    def __call__(self, logger: logging.Logger) -> None:
+    def __call__(self, logger: logging.Logger, *, debug: bool) -> None:
         self.calls += 1
 
 
@@ -109,13 +109,13 @@ def test_config_updater_executes_plugins(
 
 
 def test_load_plugins(test_edition: Edition) -> None:
-    main._load_plugins(test_edition, logging.getLogger())  # noqa: SLF001
+    main._load_plugins(test_edition, logging.getLogger(), debug=True)  # noqa: SLF001
     assert registry.update_action_registry
 
 
 class _WritesPendingChange(UpdateAction):
     @override
-    def __call__(self, logger: logging.Logger) -> None:
+    def __call__(self, logger: logging.Logger, *, debug: bool) -> None:
         PendingChangesStore().append(
             SiteId("NO_SITE"),
             ChangeSpec(
@@ -145,20 +145,20 @@ def test_forbid_pending_change_writes_raises_on_accidental_write(
     packages_dir = cmk.utils.paths.var_dir / "packages"
     packages_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(cmk.utils.paths, "installed_packages_dir", packages_dir)
-    reg = registry.UpdateActionRegistry()
-    reg.register(
-        _WritesPendingChange(
-            name="leaky",
-            title="Leaky action",
-            sort_index=4,
-            expiry_version=ExpiryVersion.NEVER,
-        )
-    )
-    monkeypatch.setattr(main, "pre_update_action_registry", registry.PreUpdateActionRegistry())
-    monkeypatch.setattr(main, "update_action_registry", reg)
-    monkeypatch.setattr(main, "_initialize_base_environment", lambda: None)
+    monkeypatch.setattr(main, "_initialize_base_environment", lambda **_kw: None)
 
     # The leaky action defaults to continue_on_failure=True, so without a hard failure the write
     # would only be logged and swallowed. It must fail hard even without --debug.
     with pytest.raises(main.ForbiddenPendingChangeWriteError, match="NoopPendingChangesStore"):
-        main.main(["-v"], ensure_site_is_stopped_callback=lambda _: None)
+        main.update_config(
+            [
+                _WritesPendingChange(
+                    name="leaky",
+                    title="Leaky action",
+                    sort_index=4,
+                    expiry_version=ExpiryVersion.NEVER,
+                )
+            ],
+            logging.getLogger(),
+            debug=False,
+        )

@@ -47,7 +47,7 @@ def test_action_no_local_modifications(tmp_path: Path, caplog: pytest.LogCapture
     assert (site_root / "etc/xinetd.d/mk-livestatus").exists()
     assert (site_root / "etc/mk-livestatus/xinetd.conf").exists()
     with caplog.at_level(logging.INFO):
-        action(LOGGER, site_root=site_root, site_id=SITE_ID)
+        action(LOGGER, site_root=site_root, site_id=SITE_ID, debug=True)
     assert caplog.text == ""
     assert not (site_root / "etc/xinetd.d/mk-livestatus").exists()
     assert not (site_root / "etc/mk-livestatus/xinetd.conf").exists()
@@ -61,7 +61,7 @@ def test_action_backup_on_local_modifications(
     assert (site_root / "etc/xinetd.d/mk-livestatus").exists()
     assert (site_root / "etc/mk-livestatus/xinetd.conf").exists()
     with caplog.at_level(logging.INFO):
-        action(LOGGER, site_root=site_root, site_id=SITE_ID)
+        action(LOGGER, site_root=site_root, site_id=SITE_ID, debug=True)
     assert "Local modifications to xinetd config detected." in caplog.text
     assert (site_root / "etc/mk-livestatus/xinetd.conf.bak").exists()
     assert not (site_root / "etc/xinetd.d/mk-livestatus").exists()
@@ -75,7 +75,7 @@ def test_no_livestatus_cleanup_old_xinetd_conf(
     (site_root / "etc/xinetd.d/mk-livestatus").unlink()
     assert (site_root / "etc/mk-livestatus/xinetd.conf").exists()
     with caplog.at_level(logging.INFO):
-        action(LOGGER, site_root=site_root, site_id=SITE_ID)
+        action(LOGGER, site_root=site_root, site_id=SITE_ID, debug=True)
     assert "" in caplog.text
     assert not (site_root / "etc/mk-livestatus/xinetd.conf").exists()
 
@@ -85,7 +85,7 @@ def test_no_xinetd_conf_cleanup_symlink(tmp_path: Path, caplog: pytest.LogCaptur
     (site_root / "etc/mk-livestatus/xinetd.conf").unlink()
     assert (site_root / "etc/xinetd.d/mk-livestatus").is_symlink()
     with caplog.at_level(logging.INFO):
-        action(LOGGER, site_root=site_root, site_id=SITE_ID)
+        action(LOGGER, site_root=site_root, site_id=SITE_ID, debug=True)
     assert "" in caplog.text
     assert not (site_root / "etc/xinetd.d/mk-livestatus").is_symlink()
 
@@ -96,13 +96,13 @@ def test_action_idempotent(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> 
     assert (site_root / "etc/mk-livestatus/xinetd.conf").exists()
 
     with caplog.at_level(logging.INFO):
-        action(LOGGER, site_root=site_root, site_id=SITE_ID)
+        action(LOGGER, site_root=site_root, site_id=SITE_ID, debug=True)
     assert "" in caplog.text
     assert not (site_root / "etc/xinetd.d/mk-livestatus").exists()
     assert not (site_root / "etc/mk-livestatus/xinetd.conf").exists()
 
     with caplog.at_level(logging.INFO):
-        action(LOGGER, site_root=site_root, site_id=SITE_ID)
+        action(LOGGER, site_root=site_root, site_id=SITE_ID, debug=True)
     assert "" in caplog.text
     assert not (site_root / "etc/xinetd.d/mk-livestatus").exists()
     assert not (site_root / "etc/mk-livestatus/xinetd.conf").exists()

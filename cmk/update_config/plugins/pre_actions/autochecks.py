@@ -40,10 +40,12 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
     """Load all agent based plugins before the real update happens"""
 
     @override
-    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode, *, debug: bool) -> None:
         plugin_errors: dict[CheckPluginName, dict[HostName, list[str]]] = {}
 
-        for error in rewrite_yielding_errors(make_folder_tree(active_config), write=False):
+        for error in rewrite_yielding_errors(
+            make_folder_tree(active_config), write=False, debug=debug
+        ):
             if error.plugin is None:
                 logger.error(
                     "%(host_name)s: %(message)s.",

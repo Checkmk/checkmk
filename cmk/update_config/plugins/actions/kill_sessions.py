@@ -22,7 +22,7 @@ class TerminateUserSessions(UpdateAction):
     """
 
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         for user_id in userdb.load_users(lock=False):
             session_infos = userdb.session.active_sessions(
                 userdb.session.load_session_infos(user_id, lock=True),

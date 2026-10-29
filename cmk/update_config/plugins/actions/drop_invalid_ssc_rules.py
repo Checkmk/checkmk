@@ -58,7 +58,7 @@ def drop_invalid_ssc_rules(
 
 class DropInvalidSSCRules(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         all_rulesets = AllRulesets.load_all_rulesets(make_folder_tree(active_config))
         pending_changes = PendingChanges(
             activation_sites=all_activation_sites(active_config.sites),

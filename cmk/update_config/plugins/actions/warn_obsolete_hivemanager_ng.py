@@ -48,7 +48,7 @@ def warn_obsolete_hivemanager_ng_rules(
 
 class WarnObsoleteHivemanagerNgRules(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         warn_obsolete_hivemanager_ng_rules(
             AllRulesets.load_all_rulesets(make_folder_tree(active_config)), logger
         )

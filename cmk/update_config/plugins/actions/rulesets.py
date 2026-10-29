@@ -6,7 +6,6 @@
 from logging import Logger
 from typing import override
 
-import cmk.ccc.debug
 from cmk.base import config as base_config
 from cmk.ccc.site import omd_site
 from cmk.gui.config import active_config
@@ -29,8 +28,8 @@ from cmk.update_config.registry import update_action_registry
 
 class UpdateRulesets(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
-        loading_result = base_config.load(validate_hosts=True, debug=cmk.ccc.debug.enabled())
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
+        loading_result = base_config.load(validate_hosts=True, debug=debug)
         pending_changes = PendingChanges(
             activation_sites=all_activation_sites(active_config.sites),
             local_site=omd_site(),
@@ -43,6 +42,7 @@ class UpdateRulesets(UpdateAction):
             logger,
             pending_changes=pending_changes,
             use_new_descriptions_for=loading_result.loaded_config.use_new_descriptions_for,
+            debug=debug,
         )
         validate_rule_values(logger, all_rulesets)
         all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)

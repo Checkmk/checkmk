@@ -97,7 +97,7 @@ class MigrateSiteChangesSchema(UpdateAction):
     """Rewrite per-site change journals into the new on-disk schema."""
 
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         site_changes_dir = wato_var_dir()
         if not site_changes_dir.exists():
             return

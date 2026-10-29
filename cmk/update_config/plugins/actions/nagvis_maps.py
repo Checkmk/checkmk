@@ -228,7 +228,7 @@ def _prepare_maps(
 
 class MigrateNagVisMaps(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         maps_dir = nagvis_maps_dir()
         if not maps_dir.is_dir():
             return

@@ -56,7 +56,7 @@ def proxies_with_encoded_credentials(
 
 class WarnEncodedProxyCredentials(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         http_proxies = ConfigDomainCore().load().get("http_proxies", {})
         if not isinstance(http_proxies, Mapping) or not http_proxies:
             return

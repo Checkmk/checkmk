@@ -125,7 +125,7 @@ class SelfbootstrapConfDFiles(UpdateAction):
         self._files = files
 
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         resave_extend_only_files(
             self._files, pprint_value=active_config.wato_pprint_config, logger=logger
         )

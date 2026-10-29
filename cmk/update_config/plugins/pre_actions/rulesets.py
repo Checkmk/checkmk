@@ -51,7 +51,7 @@ class PreUpdateRulesets(PreUpdateAction):
     """
 
     @override
-    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode, *, debug: bool) -> None:
         try:
             with disable_redis(), gui_context(), SuperUserContext():
                 set_global_vars()

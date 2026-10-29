@@ -55,4 +55,4 @@ def test_update_action_raises_on_removed_plugin() -> None:
             NotImplementedError,
             match="Removing plugins from 'use_new_descriptions_for' is not possible at the moment. The following plugins where found in the configuration under update, but are not configurable in the new Checkmk version: {'removed_plugin'}",
         ):
-            action(logging.getLogger())
+            action(logging.getLogger(), debug=True)

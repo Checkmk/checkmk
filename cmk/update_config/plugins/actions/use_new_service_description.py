@@ -17,7 +17,7 @@ from cmk.update_config.registry import update_action_registry
 
 class UpdateUseNewServiceDescription(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         global_settings = load_configuration_settings(full_config=True)
         updated_global_settings = dict(global_settings).copy()
         match updated_global_settings.get("use_new_descriptions_for"):

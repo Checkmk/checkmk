@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from logging import Logger
 from typing import Final
 
-from cmk.ccc import debug
 from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
@@ -105,6 +104,7 @@ def load_and_transform(
     *,
     pending_changes: PendingChanges,
     use_new_descriptions_for: Mapping[str, bool],
+    debug: bool,
 ) -> AllRulesets:
     all_rulesets = AllRulesets.load_all_rulesets(tree)
 
@@ -136,12 +136,12 @@ def load_and_transform(
     transform_wato_rulesets_params(
         logger,
         all_rulesets,
-        raise_errors=debug.enabled(),
+        raise_errors=debug,
     )
     transform_remove_null_host_tag_conditions_from_rulesets(
         logger,
         all_rulesets,
-        raise_errors=debug.enabled(),
+        raise_errors=debug,
         pending_changes=pending_changes,
     )
     return all_rulesets

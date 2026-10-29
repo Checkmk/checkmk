@@ -250,4 +250,4 @@ def _execute_pre_update_rulesets(mocker: MockerFixture) -> None:
         title="Rulesets",
         sort_index=10,
         expiry_version=ExpiryVersion.NEVER,
-    )(mocker.Mock(), ConflictMode.ABORT)
+    )(mocker.Mock(), ConflictMode.ABORT, debug=True)

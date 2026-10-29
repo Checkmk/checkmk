@@ -15,7 +15,7 @@ from cmk.utils import paths as paths_utils
 
 class VersionSpecificCachesCleaner(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         paths = [
             paths_utils.include_cache_dir / "builtin",
             paths_utils.include_cache_dir / "local",

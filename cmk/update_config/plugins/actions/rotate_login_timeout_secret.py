@@ -13,7 +13,7 @@ from cmk.utils.local_secrets import LoginTimeoutSecret
 
 class LoginTimeoutSecretRotation(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         LoginTimeoutSecret().regenerate()
 
 

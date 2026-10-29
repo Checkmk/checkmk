@@ -137,7 +137,7 @@ def _maps_backgrounds_dir() -> Path:
 
 def _run_with_board(name: str, map_spec: dict[str, object]) -> None:
     _write_board(name, map_spec)
-    _action()(_LOGGER)
+    _action()(_LOGGER, debug=True)
 
 
 def _migrated(admin: UserId, name: str, map_spec: dict[str, object]) -> MapPage:
@@ -207,7 +207,7 @@ def _run_with_failing_store(admin: UserId) -> None:
     # An existing store file: the store lock opens it, only writing it fails.
     save_user_file("user_maps", {}, admin)
     with _read_only_profile(admin), pytest.raises(MKGeneralException):
-        _action()(_LOGGER)
+        _action()(_LOGGER, debug=True)
 
 
 # --- what a board becomes ---------------------------------------------------
@@ -238,7 +238,7 @@ def test_the_legacy_map_file_is_left_alone() -> None:
     path = _write_board("legacy1", _complete_map())
     before = path.read_text()
 
-    _action()(_LOGGER)
+    _action()(_LOGGER, debug=True)
 
     assert path.read_text() == before
 
@@ -838,7 +838,7 @@ def test_a_board_withheld_from_a_role_stays_withheld() -> None:
     _set_role_permissions("user", {"orbvis.view_all": False, "orbvis.view_withheld": False})
     _write_board("shown", _complete_map())
     _write_board("withheld", _complete_map())
-    _action()(_LOGGER)
+    _action()(_LOGGER, debug=True)
 
     assert "map.shown" not in _role_permissions("user")
     assert _role_permissions("user")["map.withheld"] is False
@@ -1059,7 +1059,7 @@ def test_a_board_stored_by_a_stopped_run_is_recorded_as_migrated(admin: UserId) 
     _migrated(admin, "legacy", _complete_map())
     store.save_object_to_file(_record_path(), {"pending": {"legacy": "legacy"}})
 
-    _action()(_LOGGER)
+    _action()(_LOGGER, debug=True)
 
     assert _outcomes() == {"legacy": "migrated"}
 

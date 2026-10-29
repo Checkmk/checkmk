@@ -388,7 +388,7 @@ def test_the_update_action_saves_the_migrated_personal_rules(
         call_users_saved_hook=False,
     )
 
-    update_action_registry["migrate_notification_proxy_credentials"](getLogger())
+    update_action_registry["migrate_notification_proxy_credentials"](getLogger(), debug=True)
 
     match load_users_uncached()[user_id].get("notification_rules"):
         case [{"notify_plugin": ("slack", {"proxy_url": (_, "explicit_proxy", {"auth": auth})})}]:

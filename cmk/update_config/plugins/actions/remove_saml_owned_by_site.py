@@ -25,7 +25,7 @@ from cmk.utils.log import VERBOSE
 
 class RemoveSAMLOwnedBySite(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         config_file = UserConnectionConfigFile()
         connections = config_file.load_for_modification()
 

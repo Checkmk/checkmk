@@ -78,7 +78,7 @@ class VerifyUnseededBaseConfig(UpdateAction):
     """Warn about the config files that still need pre-seeded variables"""
 
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         findings = check_config_files()
         if findings.unloadable:
             _warn_unloadable(logger, findings.unloadable)

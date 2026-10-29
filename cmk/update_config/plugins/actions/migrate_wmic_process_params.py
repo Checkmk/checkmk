@@ -146,7 +146,7 @@ def _migrate_rules(logger: Logger, ui_config: Config) -> None:
 
 class MigrateWmicProcessParams(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         _migrate_rules(logger, active_config)
 
 

@@ -25,7 +25,7 @@ _RENAMED_PERMISSIONS: Final[Mapping[str, str]] = {
 
 class RenamePermissions(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         config_file = UserRolesConfigFile()
         roles = config_file.load_for_modification()
         if rename_permissions(roles, logger):

@@ -45,7 +45,7 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
             return ()
 
     @override
-    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode, *, debug: bool) -> None:
         # In this case we have no mkp plugins available so bail out early
         if (path_config := make_path_config()) is None:
             return

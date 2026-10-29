@@ -52,7 +52,7 @@ class RemoveObsoleteDashboardGraphRenderOptions(UpdateAction):
     """Drop the render options nothing reads any more from the stored graph widgets."""
 
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         self.remove_obsolete_render_options(cmk.utils.paths.profile_dir, logger)
 
     @staticmethod

@@ -99,7 +99,7 @@ def _count_inline_rules(all_rulesets: RulesetCollection) -> int:
 
 class WarnUnavailableSNMPBackend(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         if is_distributed_setup_remote_site(active_config.sites):
             # the configuration is owned by the central site
             return

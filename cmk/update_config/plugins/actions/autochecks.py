@@ -15,9 +15,11 @@ from cmk.update_config.registry import update_action_registry
 
 class UpdateAutochecks(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         # just consume to trigger rewriting. We already warned in pre-action.
-        for _error in rewrite_yielding_errors(make_folder_tree(active_config), write=True):
+        for _error in rewrite_yielding_errors(
+            make_folder_tree(active_config), write=True, debug=debug
+        ):
             pass
 
 

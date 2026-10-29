@@ -51,7 +51,7 @@ def _run(
 
     monkeypatch.setattr(UserConnectionConfigFile, "save", _save)
 
-    _action()(_LOGGER)
+    _action()(_LOGGER, debug=True)
     return saved["cfg"]
 
 

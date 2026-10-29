@@ -42,7 +42,7 @@ _REMOVED_OPTIONS: Sequence[str] = []
 
 class UpdateGlobalSettings(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         acting_user = LoggedInSuperUser()
         _update_installation_wide_global_settings(logger, active_config, acting_user)
         _update_site_specific_global_settings(logger, active_config, acting_user)

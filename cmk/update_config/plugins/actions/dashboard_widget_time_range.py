@@ -51,7 +51,7 @@ class MigrateDashboardWidgetTimeRange(UpdateAction):
     """Store the time range of the graph and scatterplot widgets of 2.5 as Inherit or Override."""
 
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         self.migrate_time_ranges(cmk.utils.paths.profile_dir, logger)
 
     @staticmethod

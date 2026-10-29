@@ -94,7 +94,7 @@ class UpdateAction(ABC):
         self.continue_on_failure: Final = continue_on_failure
 
     @abstractmethod
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         """
         Execute the update action.
         Raising an exception will abort the config update, unless continue_on_failure is True.
@@ -122,7 +122,7 @@ class PreUpdateAction(ABC):
         self.sort_index: Final = sort_index
 
     @abstractmethod
-    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode, *, debug: bool) -> None:
         """
         Execute the pre-update action.
         Raising an exception will abort the config update.

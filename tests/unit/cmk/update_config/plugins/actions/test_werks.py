@@ -91,6 +91,7 @@ def test_version_of_werk_keeps_first_incompatible_version(tmp_path: Path) -> Non
             acknowledged_werks_mk=acknowledge_werks_file,
             unacknowledged_werks_json=unacknowledged_werks_file,
             compiled_werks_folder=compiled_werks_dir,
+            debug=True,
         )
 
     def werks_load() -> dict[int, WerkV3]:

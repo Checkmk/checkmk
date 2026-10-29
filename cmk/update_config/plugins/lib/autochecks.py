@@ -6,7 +6,6 @@
 from collections.abc import Callable, Generator, Iterable, Mapping
 from dataclasses import dataclass
 
-from cmk.ccc import debug
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import AutochecksStore
 from cmk.checkengine.plugin_backend import get_check_plugin, load_all_plugins
@@ -78,17 +77,19 @@ class RewriteError:
     plugin: CheckPluginName | None = None
 
 
-def rewrite_yielding_errors(tree: FolderTree, *, write: bool) -> Iterable[RewriteError]:
+def rewrite_yielding_errors(
+    tree: FolderTree, *, write: bool, debug: bool
+) -> Iterable[RewriteError]:
     """Rewrite autochecks and yield errors
 
     This function is used by both the pre- and the regular update_config plug-in,
     to ensure consistency.
     """
     all_rulesets = AllRulesets.load_all_rulesets(tree)
-    plugins = load_all_plugins(raise_errors=debug.enabled())
+    plugins = load_all_plugins(raise_errors=debug)
     for hostname in _autocheck_hosts():
         fixed_autochecks = yield from _get_fixed_autochecks(
-            hostname, all_rulesets, plugins.check_plugins
+            hostname, all_rulesets, plugins.check_plugins, debug=debug
         )
         if write:
             AutochecksStore(hostname, paths.autochecks_dir).write(fixed_autochecks)
@@ -98,11 +99,13 @@ def _get_fixed_autochecks(
     host_name: HostName,
     all_rulesets: AllRulesets,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    *,
+    debug: bool,
 ) -> Generator[RewriteError, None, list[AutocheckEntry]]:
     try:
         autochecks = AutochecksStore(host_name, paths.autochecks_dir).read()
     except Exception as exc:
-        if debug.enabled():
+        if debug:
             raise
         yield RewriteError(message=f"Failed to load autochecks: {exc}", host_name=host_name)
         return []
@@ -112,7 +115,7 @@ def _get_fixed_autochecks(
         try:
             fixed_autochecks.append(_fix_entry(entry, all_rulesets, check_plugins, host_name))
         except Exception as exc:
-            if debug.enabled():
+            if debug:
                 raise
             yield RewriteError(
                 message=str(exc), host_name=host_name, plugin=entry.check_plugin_name

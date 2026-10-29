@@ -34,7 +34,7 @@ def test_removes_flags_that_no_longer_exist(tmp_path: Path, filename: str) -> No
     config_file = tmp_path / filename
     config_file.write_text('{"already_removed_flag": true, "exp_ai_assistant": true}')
 
-    update_action_registry["experimental_flags"](LOGGER)
+    update_action_registry["experimental_flags"](LOGGER, debug=True)
 
     assert json.loads(config_file.read_text()) == {"exp_ai_assistant": True}
 
@@ -44,13 +44,13 @@ def test_resets_unreadable_config_file_to_defaults(tmp_path: Path) -> None:
     config_file = tmp_path / CONFIG_FILENAME
     config_file.write_text("not json")
 
-    update_action_registry["experimental_flags"](LOGGER)
+    update_action_registry["experimental_flags"](LOGGER, debug=True)
 
     assert json.loads(config_file.read_text()) == {}
 
 
 @pytest.mark.usefixtures("request_context", "_experimental_flags_config_dir")
 def test_does_not_create_config_files_when_missing(tmp_path: Path) -> None:
-    update_action_registry["experimental_flags"](LOGGER)
+    update_action_registry["experimental_flags"](LOGGER, debug=True)
 
     assert not list(tmp_path.iterdir())

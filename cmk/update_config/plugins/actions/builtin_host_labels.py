@@ -23,7 +23,7 @@ class CreateBuiltinHostLabelsFile(UpdateAction):
     """
 
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         update_builtin_host_labels(
             cmk.utils.paths.builtin_host_labels_file, {BuiltinLabelsKey.SITE: str(omd_site())}
         )

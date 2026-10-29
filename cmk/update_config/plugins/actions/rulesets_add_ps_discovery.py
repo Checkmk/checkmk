@@ -27,7 +27,7 @@ PROXMOX_BASIC_PROCESSES_RULE_ID = "c7850d9b-847b-4ae6-b1a7-dc7b1d82a04e"
 
 class UpdatePSDiscovery(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         tree = make_folder_tree(active_config)
         all_rulesets = AllRulesets.load_all_rulesets(tree)
 

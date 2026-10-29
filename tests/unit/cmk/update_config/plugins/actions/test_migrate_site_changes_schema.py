@@ -101,7 +101,7 @@ def test_action_migrates_persisted_records() -> None:
             title="x",
             sort_index=0,
             expiry_version=None,  # type: ignore[arg-type]
-        )(logging.getLogger("test"))
+        )(logging.getLogger("test"), debug=True)
 
         migrated = list(store.read())
         assert len(migrated) == 2
@@ -129,4 +129,4 @@ def test_action_no_op_when_directory_missing(tmp_path: Path, monkeypatch: Monkey
         title="x",
         sort_index=0,
         expiry_version=None,  # type: ignore[arg-type]
-    )(logging.getLogger("test"))
+    )(logging.getLogger("test"), debug=True)

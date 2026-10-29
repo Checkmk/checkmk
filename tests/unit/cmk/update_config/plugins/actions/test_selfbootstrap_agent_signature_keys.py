@@ -43,7 +43,7 @@ def test_rewrites_bare_file() -> None:
         path.write_text(f"agent_signature_keys.update({ ({1: _RAW_KEY})!r})\n")
         keys_before = KeypairStore(path, "agent_signature_keys").load()
 
-        _ACTION(logging.getLogger(__name__))
+        _ACTION(logging.getLogger(__name__), debug=True)
 
         namespace = _exec_without_defaults(path.read_text())
         assert KeypairStore.parse(namespace["agent_signature_keys"]) == keys_before  # type: ignore[arg-type]
@@ -58,7 +58,7 @@ def test_keeps_self_bootstrapping_file() -> None:
         KeypairStore(path, "agent_signature_keys").save({})
         content = path.read_text()
 
-        _ACTION(logging.getLogger(__name__))
+        _ACTION(logging.getLogger(__name__), debug=True)
 
         assert path.read_text() == content
     finally:
@@ -66,4 +66,4 @@ def test_keeps_self_bootstrapping_file() -> None:
 
 
 def test_missing_file_is_fine() -> None:
-    _ACTION(logging.getLogger(__name__))
+    _ACTION(logging.getLogger(__name__), debug=True)

@@ -13,7 +13,7 @@ from cmk.update_config.registry import update_action_registry
 
 class ResetDeprecationsScheduling(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         # Note: We have to call 'reset_scheduling' from 'job_scheduler' directly and NOT via
         # fast API '/reset_scheduling' because the job-scheduler is not yet running during
         # cmk-update-config.

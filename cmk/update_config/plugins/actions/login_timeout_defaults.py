@@ -20,7 +20,7 @@ class UpdateLoginTimeoutDefaults(UpdateAction):
     """
 
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         updated_global_settings = dict(load_configuration_settings(full_config=True))
         if "timeout_on_logon_failures" not in updated_global_settings:
             updated_global_settings["timeout_on_logon_failures"] = False

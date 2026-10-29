@@ -32,7 +32,7 @@ def _run_update(omd_root: Path, from_version: str) -> int:
         omd_root=omd_root,
         from_version=lambda: from_version,
         enable_nagvis=lambda: enabled.append(True),
-    )(LOGGER)
+    )(LOGGER, debug=True)
     return len(enabled)
 
 

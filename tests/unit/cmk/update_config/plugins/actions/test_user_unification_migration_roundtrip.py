@@ -74,13 +74,13 @@ def _drive(
         title="test",
         sort_index=35,
         expiry_version=ExpiryVersion.CMK_310,
-    )(_LOGGER)
+    )(_LOGGER, debug=True)
     RemoveSAMLOwnedBySite(
         name="remove_saml_owned_by_site",
         title="test",
         sort_index=40,
         expiry_version=ExpiryVersion.CMK_310,
-    )(_LOGGER)
+    )(_LOGGER, debug=True)
 
     return site_mgmt.saved, conn_saved["called"]
 

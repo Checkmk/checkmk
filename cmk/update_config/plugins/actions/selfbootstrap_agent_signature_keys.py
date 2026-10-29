@@ -35,7 +35,7 @@ class SelfbootstrapAgentSignatureKeys(UpdateAction):
     """Make the persisted signature keys loadable without pre-seeded defaults"""
 
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         path = paths.default_config_dir / "multisite.d/wato/agent_signature_keys.mk"
         if not path.exists() or _SELF_BOOTSTRAP_MARKER in path.read_text():
             return

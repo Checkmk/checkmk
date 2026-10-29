@@ -88,6 +88,8 @@ class CheckServiceDescriptionsPluginNames(PreUpdateAction):
         logger: Logger,
         conflict_mode: ConflictMode,
         config_file_paths: Sequence[Path] | None = None,
+        *,
+        debug: bool,
     ) -> None:
         if config_file_paths is None:
             config_file_paths = get_config_file_paths(with_conf_d=True)

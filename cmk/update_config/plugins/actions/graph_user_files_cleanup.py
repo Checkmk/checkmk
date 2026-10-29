@@ -24,7 +24,7 @@ class RemoveOrphanedGraphUserFiles(UpdateAction):
     """
 
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         self.remove_orphaned_files(cmk.utils.paths.profile_dir, logger)
 
     @staticmethod

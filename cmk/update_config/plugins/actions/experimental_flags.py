@@ -15,7 +15,7 @@ class UpdateExperimentalFlags(UpdateAction):
     """Drop flags that are no longer declared from the staged and the active file."""
 
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         ConfigDomainExperimentalFlags().drop_undeclared_flags()
 
 

@@ -49,7 +49,7 @@ def test_abort_on_local_modifications(tmp_path: Path, caplog: pytest.LogCaptureF
     site_root = _build_site_root(tmp_path)
     (site_root / "etc/mk-livestatus/xinetd.conf").write_text("changes made")
     with pytest.raises(MKUserError):
-        action(LOGGER, ConflictMode.ABORT, site_root=site_root, site_id=SITE_ID)
+        action(LOGGER, ConflictMode.ABORT, site_root=site_root, site_id=SITE_ID, debug=True)
     assert "This update changes how the livestatus xinetd config is deployed" in caplog.text
 
 
@@ -58,7 +58,7 @@ def test_no_warning_when_config_is_unmodified(
 ) -> None:
     site_root = _build_site_root(tmp_path)
     with caplog.at_level(logging.WARNING):
-        action(LOGGER, ConflictMode.ABORT, site_root=site_root, site_id=SITE_ID)
+        action(LOGGER, ConflictMode.ABORT, site_root=site_root, site_id=SITE_ID, debug=True)
     assert caplog.text == ""
 
 
@@ -68,7 +68,7 @@ def test_force_continues_despite_local_modifications(
     site_root = _build_site_root(tmp_path)
     (site_root / "etc/mk-livestatus/xinetd.conf").write_text("changes made")
     with caplog.at_level(logging.WARNING):
-        action(LOGGER, ConflictMode.FORCE, site_root=site_root, site_id=SITE_ID)
+        action(LOGGER, ConflictMode.FORCE, site_root=site_root, site_id=SITE_ID, debug=True)
     assert "This update changes how the livestatus xinetd config is deployed" in caplog.text
 
 
@@ -77,4 +77,4 @@ def test_abort_cleanup_hook_generated_livesatus_config(tmp_path: Path) -> None:
     site_root = _build_site_root(tmp_path)
     (site_root / "etc/mk-livestatus/xinetd.conf").write_text("changes made")
     with pytest.raises(MKUserError):
-        action(LOGGER, ConflictMode.ABORT, site_root=site_root, site_id=SITE_ID)
+        action(LOGGER, ConflictMode.ABORT, site_root=site_root, site_id=SITE_ID, debug=True)

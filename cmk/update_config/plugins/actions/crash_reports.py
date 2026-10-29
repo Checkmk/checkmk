@@ -14,7 +14,7 @@ from cmk.update_config.registry import update_action_registry
 
 class MigrateCrashReports(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         CrashReportStore().consolidate_all_crash_dirs(
             make_crash_report_base_path(cmk.utils.paths.omd_root)
         )

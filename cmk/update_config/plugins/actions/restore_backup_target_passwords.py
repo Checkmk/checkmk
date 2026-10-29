@@ -34,7 +34,7 @@ def _has_formspec_password(value: object) -> bool:
 
 class RestoreBackupTargetPasswords(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         config = Config.load()
 
         restored = []

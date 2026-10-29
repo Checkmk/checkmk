@@ -80,7 +80,7 @@ class KeepNagVisForSitesWithMaps(UpdateAction):
         self._enable_nagvis = enable_nagvis
 
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         if not _is_update_from_before_3_0(self._from_version(), logger):
             return
         if "CONFIG_NAGVIS" not in get_omd_config(self._omd_root):

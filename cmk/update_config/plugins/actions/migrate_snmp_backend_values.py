@@ -161,7 +161,7 @@ def _migrate_rules(logger: Logger, ui_config: Config) -> None:
 
 class MigrateSNMPBackendValues(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         _migrate_installation_wide_global_setting(logger)
         _migrate_site_specific_global_setting(logger, active_config)
         _migrate_remote_site_global_settings(logger, active_config)

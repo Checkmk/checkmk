@@ -47,7 +47,7 @@ _MISSING = object()
 
 class MigrateUserSyncToAuthConnections(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         site_mgmt = site_management_registry["site_management"]
         configured_sites = site_mgmt.load_sites()
         central_site_id = omd_site()

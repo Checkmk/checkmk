@@ -72,7 +72,7 @@ def remove_management_bulkwalk_sample_rule(
 
 class RemoveManagementBulkwalkSampleRule(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         tree = make_folder_tree(active_config)
         all_rulesets = AllRulesets.load_all_rulesets(tree)
         pending_changes = PendingChanges(

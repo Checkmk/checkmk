@@ -32,7 +32,7 @@ def _run_action() -> None:
         title="t",
         sort_index=100,
         expiry_version=ExpiryVersion.CMK_310,
-    )(_LOGGER)
+    )(_LOGGER, debug=True)
 
 
 def test_restore_action_rewrites_formspec_secret_to_password_id(

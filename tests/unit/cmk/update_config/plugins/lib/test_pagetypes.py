@@ -96,7 +96,7 @@ def test_a_graph_that_cannot_be_converted_does_not_stop_the_others(
         (_OWNER, "bad"): {"name": "bad", "unconvertible": True},
     }
 
-    _action()(logging.getLogger(__name__))
+    _action()(logging.getLogger(__name__), debug=True)
 
     assert _FakePageType.saved_owners == [_OWNER]
     assert fake_pages == [
@@ -109,7 +109,7 @@ def test_a_page_that_cannot_be_read_after_conversion_is_parked_in_its_old_format
 ) -> None:
     _FakePageType.raw_pages = {(_OWNER, "bad"): {"name": "bad", "broken": True}}
 
-    _action()(logging.getLogger(__name__))
+    _action()(logging.getLogger(__name__), debug=True)
 
     # The original dict is parked, not the half-converted one.
     assert fake_pages == [
@@ -122,7 +122,7 @@ def test_nothing_is_parked_when_every_page_converts(
 ) -> None:
     _FakePageType.raw_pages = {(_OWNER, "good"): {"name": "good"}}
 
-    _action()(logging.getLogger(__name__))
+    _action()(logging.getLogger(__name__), debug=True)
 
     assert fake_pages == []
 
@@ -141,16 +141,16 @@ def test_the_pre_update_check_aborts_on_a_page_it_cannot_convert() -> None:
     _FakePageType.raw_pages = {(_OWNER, "bad"): {"name": "bad", "unconvertible": True}}
 
     with pytest.raises(MKUserError):
-        _pre_action()(logging.getLogger(__name__), ConflictMode.ABORT)
+        _pre_action()(logging.getLogger(__name__), ConflictMode.ABORT, debug=True)
 
 
 def test_the_pre_update_check_lets_a_forced_update_through() -> None:
     _FakePageType.raw_pages = {(_OWNER, "bad"): {"name": "bad", "unconvertible": True}}
 
-    _pre_action()(logging.getLogger(__name__), ConflictMode.FORCE)
+    _pre_action()(logging.getLogger(__name__), ConflictMode.FORCE, debug=True)
 
 
 def test_the_pre_update_check_passes_when_every_page_converts() -> None:
     _FakePageType.raw_pages = {(_OWNER, "good"): {"name": "good"}}
 
-    _pre_action()(logging.getLogger(__name__), ConflictMode.ABORT)
+    _pre_action()(logging.getLogger(__name__), ConflictMode.ABORT, debug=True)

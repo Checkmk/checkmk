@@ -169,7 +169,7 @@ def _run(monkeypatch: pytest.MonkeyPatch, sites: dict[SiteId, dict[str, object]]
         SimpleNamespace(wato_pprint_config=False, liveproxyd_enabled=False, wato_use_git=False),
     )
     monkeypatch.setattr(mod, "make_folder_tree", lambda _config: None)
-    _action()(_LOGGER)
+    _action()(_LOGGER, debug=True)
     return fake
 
 

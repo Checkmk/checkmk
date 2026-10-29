@@ -20,7 +20,12 @@ from cmk.utils.paths import omd_root
 class CleanUpLivestatusXinetdConf(UpdateAction):
     @override
     def __call__(
-        self, logger: Logger, site_root: Path | None = None, site_id: str | None = None
+        self,
+        logger: Logger,
+        site_root: Path | None = None,
+        site_id: str | None = None,
+        *,
+        debug: bool,
     ) -> None:
         if site_root is None:
             site_root = Path(omd_root)

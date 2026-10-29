@@ -44,6 +44,8 @@ class LivestatusXinetdMigrationWarning(PreUpdateAction):
         conflict_mode: ConflictMode,
         site_root: Path | None = None,
         site_id: str | None = None,
+        *,
+        debug: bool,
     ) -> None:
         if site_root is None:
             site_root = Path(omd_root)

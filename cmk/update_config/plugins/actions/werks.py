@@ -64,6 +64,7 @@ class UnacknowledgedWerks(UpdateAction):
         acknowledged_werks_mk: Path | None = None,
         unacknowledged_werks_json: Path | None = None,
         compiled_werks_folder: Path | None = None,
+        debug: bool,
     ) -> None:
         unacknowledged_werks = load_unacknowledged_werks(
             load_acknowledgements(

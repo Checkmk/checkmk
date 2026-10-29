@@ -18,7 +18,7 @@ class MigrateDashboardConfig(UpdateAction):
     """Save all user dashboards back to disk; loading them applies the migration."""
 
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         invalidate_all_caches()
         by_user: dict[UserId, dict[tuple[UserId, str], DashboardConfig]] = {}
         for (user_id, name), dashboard_config in DashboardStore().all.items():

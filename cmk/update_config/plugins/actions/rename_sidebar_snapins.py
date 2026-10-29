@@ -21,7 +21,7 @@ class RenameSidebarSnapins(UpdateAction):
     """Rename sidebar element type ids; the user configuration silently drops unknown ones."""
 
     @override
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, *, debug: bool) -> None:
         self.rename_snapins(cmk.utils.paths.profile_dir, logger)
 
     @staticmethod

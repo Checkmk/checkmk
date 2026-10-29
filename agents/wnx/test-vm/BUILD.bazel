@@ -1,11 +1,13 @@
 # The Windows Server 2022 test VM of the *-qemu test tiers: the
-# image build (make_image.py) and the guest-side files it pushes into the
-# guest. The image is pinned in image.bzl; see README.md.
+# image build, the saved VM state the tests resume, and the guest-side files
+# both push into the guest. The image is pinned in image.bzl; see README.md.
 
 load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@rules_shell//shell:sh_library.bzl", "sh_library")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
+load("//bazel/rules:xcomp/windows_vm_state.bzl", "windows_vm_state")
+load(":image.bzl", "WINDOWS_TEST_IMAGE", "WINDOWS_TEST_VM")
 
 # Off by default, which makes the targets that need the VM's media
 # incompatible: whole-repo sweeps then skip them instead of fetching
@@ -40,7 +42,10 @@ py_cmk_test(
     name = "unit",
     size = "small",
     srcs = glob(["tests/*.py"]),
-    deps = [":make_image"],
+    deps = [
+        ":make_image",
+        ":vm_console",
+    ],
 )
 
 # The upload script, for `bazel lint` (shellcheck): the Jenkins job runs it
@@ -55,6 +60,16 @@ filegroup(
     name = "guest_scripts",
     srcs = glob(["guest/*.ps1"]),
     tags = ["lint-with-psscriptanalyzer"],
+)
+
+# The guest-side scripts of the VM state action (windows_vm_state.bzl).
+exports_files(
+    [
+        "guest/purge-standby.ps1",
+        "guest/wait-idle.ps1",
+        "guest/warm-up.ps1",
+    ],
+    visibility = ["//bazel/rules:__pkg__"],
 )
 
 _TOOLS = {
@@ -77,6 +92,14 @@ _DATA = [
     "@qemu_linux_x86_64//:qemu",
 ]
 
+# The VM's size (image.bzl), for the image build and core-vm.
+_SIZE_ARGS = [
+    "--cpus",
+    str(WINDOWS_TEST_VM.cpus),
+    "--memory-mib",
+    str(WINDOWS_TEST_VM.memory_mib),
+]
+
 py_binary(
     name = "build-core",
     srcs = ["make_image.py"],
@@ -87,7 +110,7 @@ py_binary(
             option,
             "$(rootpath %s)" % label,
         ]
-    ],
+    ] + _SIZE_ARGS,
     data = _DATA + list(_TOOLS.values()),
     main = "make_image.py",
     # Downloads several GiB of media and needs /dev/kvm: bazel run only.
@@ -97,4 +120,74 @@ py_binary(
         "//conditions:default": [],
     }),
     deps = [":make_image"],
+)
+
+# The saved, running test VM that every *-qemu test resumes: created on
+# this host (its CPU is part of the key), cached like any action output.
+windows_vm_state(
+    name = "core-state",
+    disk = "core-state/disk.qcow2",
+    image = "@win2022_core_image//file",
+    state = "core-state/state.bin",
+    tags = ["manual"],
+    target_compatible_with = select({
+        ":disabled": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+)
+
+_CORE_VM = {
+    "--bios": "@qemu_linux_x86_64//:share/qemu/bios-256k.bin",
+    "--disk": ":core-state/disk.qcow2",
+    "--fingerprint": "@qemu_host_cpu//:fingerprint",
+    "--image": "@win2022_core_image//file",
+    "--qemu": "@qemu_linux_x86_64//:bin/qemu-system-x86_64",
+    "--qemu-img": "@qemu_linux_x86_64//:bin/qemu-img",
+    "--state": ":core-state/state.bin",
+}
+
+# PowerShell on a test VM's serial console.
+py_library(
+    name = "vm_console",
+    srcs = ["vm_console.py"],
+    imports = ["."],
+    deps = ["//bazel/tools/windows_vm:console"],
+)
+
+# core-vm without its VM, for `bazel lint`: core-vm is manual.
+py_library(
+    name = "core_vm",
+    srcs = ["core_vm.py"],
+    imports = ["."],
+    deps = [
+        ":vm_console",
+        "//bazel/tools/windows_vm:state",
+    ],
+)
+
+# The VM a test resumes, in PowerShell on its serial console, to explore it
+# by hand (README.md).
+py_binary(
+    name = "core-vm",
+    srcs = ["core_vm.py"],
+    args = [
+        arg
+        for option, label in _CORE_VM.items()
+        for arg in [
+            option,
+            "$(rootpath %s)" % label,
+        ]
+    ] + _SIZE_ARGS + [
+        "--expires",
+        WINDOWS_TEST_IMAGE.expires,
+    ],
+    data = _DATA + list(_CORE_VM.values()),
+    main = "core_vm.py",
+    # Needs /dev/kvm: bazel run only.
+    tags = ["manual"],
+    target_compatible_with = select({
+        ":disabled": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    deps = [":core_vm"],
 )

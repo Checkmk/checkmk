@@ -1,18 +1,22 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
-# Three libraries, so that what uses one is not rebuilt when another changes:
-# a saved VM state depends on the machine, not on how commands reach the
-# guest's console session.
+# Separate libraries, so that what uses one is not rebuilt when another
+# changes: a saved VM state depends on the machine, the guest agent and the
+# serial console login, not on how commands reach the guest's console
+# session.
 
-# The device set, the QEMU process and its QMP connection.
+# The device set, the QEMU process and its QMP connection, the host CPU
+# check, the setup of a program that runs a QEMU.
 py_library(
     name = "machine",
     srcs = [
         "qemu_windows/__init__.py",
         "qemu_windows/errors.py",
+        "qemu_windows/host_cpu.py",
         "qemu_windows/machine.py",
+        "qemu_windows/process.py",
         "qemu_windows/qemu.py",
         "qemu_windows/qmp.py",
     ],
@@ -33,6 +37,15 @@ py_library(
     deps = [":machine"],
 )
 
+# PowerShell on the serial console, through Windows' SAC.
+py_library(
+    name = "console",
+    srcs = ["qemu_windows/console.py"],
+    imports = ["."],
+    visibility = ["//agents/wnx/test-vm:__pkg__"],
+    deps = [":guest"],
+)
+
 # Commands in the guest's console session.
 py_library(
     name = "session",
@@ -42,14 +55,37 @@ py_library(
     deps = [":guest"],
 )
 
+# Resuming a saved test VM (windows_vm_state.bzl).
+py_library(
+    name = "state",
+    srcs = ["qemu_windows/state.py"],
+    imports = ["."],
+    visibility = ["//agents/wnx/test-vm:__pkg__"],
+    deps = [":guest"],
+)
+
+# The windows_vm_state() action.
+py_binary(
+    name = "save-state",
+    srcs = ["save_state.py"],
+    main = "save_state.py",
+    visibility = ["//bazel/rules:__pkg__"],
+    deps = [
+        ":console",
+        ":guest",
+    ],
+)
+
 py_cmk_test(
     name = "unit",
     size = "small",
     srcs = glob(["tests/unit/*.py"]),
     deps = [
+        ":console",
         ":guest",
         ":machine",
         ":session",
+        ":state",
     ],
 )
 

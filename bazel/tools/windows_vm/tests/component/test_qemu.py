@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 from qemu_windows.errors import VmError
 from qemu_windows.guest import Guest, GuestError
-from qemu_windows.machine import argv, Disk, overlay
+from qemu_windows.machine import argv, Disk, overlay, Size
 from qemu_windows.qemu import Qemu
 from qemu_windows.qga import Qga
 from qemu_windows.qmp import QmpError
@@ -35,7 +35,7 @@ def image(path: Path, size: str = "1G") -> Path:
 
 
 def qtest_argv(disks: Sequence[Disk]) -> list[str]:
-    machine = argv(QEMU, FIRMWARE, disks)
+    machine = argv(QEMU, FIRMWARE, Size(cpus=4, memory_mib=4096), disks)
     cpu = machine.index("-cpu")
     del machine[cpu : cpu + 2]
     return [arg.replace("accel=kvm", "accel=qtest") for arg in machine]

@@ -48,3 +48,9 @@ vendored_archive(
     build_file = "//third_party:yaml-cpp/BUILD.yaml-cpp.bazel",
     strip_prefix = "yaml-cpp-0.8.0",
 )
+
+# The host CPU as the pinned QEMU sees it: keys the Windows test VM's saved
+# state (bazel/rules/xcomp/windows_vm_state.bzl).
+qemu_host_cpu = use_repo_rule("//bazel/rules:xcomp/qemu_host_cpu.bzl", "qemu_host_cpu")
+
+qemu_host_cpu(name = "qemu_host_cpu")

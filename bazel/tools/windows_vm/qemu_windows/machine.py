@@ -62,12 +62,21 @@ class Disk:
         return ["-blockdev", file_opts, "-blockdev", qcow2_opts]
 
 
-def argv(qemu: Path, firmware: Path, disks: Sequence[Disk]) -> list[str]:
+@dataclass(frozen=True)
+class Size:
+    """The guest's vCPUs and RAM (WINDOWS_TEST_VM in agents/wnx/test-vm/image.bzl)."""
+
+    cpus: int
+    memory_mib: int
+
+
+def argv(qemu: Path, firmware: Path, size: Size, disks: Sequence[Disk]) -> list[str]:
     """The machine's QEMU command line; disks bottom first, the guest sees the last."""
     return [
         str(qemu),
         *("-L", str(firmware), "-nodefaults"),
-        *("-machine", f"{MACHINE},accel=kvm", "-cpu", "host", "-m", "4G", "-smp", "4"),
+        *("-machine", f"{MACHINE},accel=kvm", "-cpu", "host"),
+        *("-m", f"{size.memory_mib}M", "-smp", str(size.cpus)),
         *("-vga", "std", "-display", "none"),
         *(arg for disk in disks for arg in disk.blockdev_args()),
         *("-device", f"ide-hd,drive={disks[-1].node},bus=ide.0,unit=0"),
@@ -121,5 +130,7 @@ def check_kvm() -> None:
     if not os.access(kvm, os.R_OK | os.W_OK):
         raise VmError(
             f"/dev/kvm is not readable and writable for {getpass.getuser()}.\n"
-            "Add the user to the kvm group (or log in again after adding it)."
+            "Add the user to the kvm group (or log in again after adding it). Bazel took"
+            " the host CPU's fingerprint without KVM then: take it anew with"
+            " `bazel fetch --force --repo=@qemu_host_cpu`."
         )

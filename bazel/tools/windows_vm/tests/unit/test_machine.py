@@ -5,16 +5,18 @@
 from pathlib import Path
 
 import pytest
-from qemu_windows.machine import argv, Disk
+from qemu_windows.machine import argv, Disk, Size
+
+SIZE = Size(cpus=4, memory_mib=4096)
 
 
 def test_argv_is_the_saved_states_device_set() -> None:
-    result = argv(Path("/q/qemu"), Path("/q/fw"), [Disk("disk", Path("/d.qcow2"))])
+    result = argv(Path("/q/qemu"), Path("/q/fw"), SIZE, [Disk("disk", Path("/d.qcow2"))])
 
     assert result == [
         "/q/qemu",
         *("-L", "/q/fw", "-nodefaults"),
-        *("-machine", "pc-i440fx-11.1,accel=kvm", "-cpu", "host", "-m", "4G", "-smp", "4"),
+        *("-machine", "pc-i440fx-11.1,accel=kvm", "-cpu", "host", "-m", "4096M", "-smp", "4"),
         *("-vga", "std", "-display", "none"),
         *("-blockdev", "driver=file,node-name=disk-file,filename=/d.qcow2,discard=unmap"),
         "-blockdev",
@@ -35,7 +37,7 @@ def test_guest_disk_is_the_top_of_the_chain() -> None:
         Disk("test", Path("/t.qcow2"), backing="image", mode="scratch"),
     ]
 
-    result = argv(Path("/q/qemu"), Path("/q/fw"), disks)
+    result = argv(Path("/q/qemu"), Path("/q/fw"), SIZE, disks)
 
     assert "ide-hd,drive=test,bus=ide.0,unit=0" in result
 

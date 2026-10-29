@@ -17,7 +17,7 @@ from pathlib import Path
 from types import ModuleType
 
 from cmk.base.config import load
-from cmk.ccc import debug, store
+from cmk.ccc import store
 from cmk.ccc.version import edition
 from cmk.checkengine.plugin_backend import load_all_plugins
 from cmk.config_anonymizer.interface import AnonInterface
@@ -168,12 +168,12 @@ def main(argv: Sequence[str] | None = None) -> None:
                 lock=True,
             )
 
-            all_plugins = load_all_plugins(raise_errors=debug.enabled())
+            all_plugins = load_all_plugins(raise_errors=False)
 
             # The builtin host labels are read from the file the LabelManager also uses.
             builtin_host_labels = BuiltinHostLabelsStore(paths.builtin_host_labels_file).load()
 
-            loaded_config_result = load(validate_hosts=False, debug=debug.enabled())
+            loaded_config_result = load(validate_hosts=False, debug=False)
 
             interface = AnonInterface(args.target_dirname, rule_defaults, logger)
             plugins = load_plugins(logger, raise_errors=args.debug)

@@ -1,5 +1,4 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
-load("@cmk_requirements//:requirements.bzl", "requirement")
 
 exports_files(
     [
@@ -30,24 +29,10 @@ py_library(
     name = "agent-plugins-python",
     srcs = [
         "mk_logwatch.py",
-        "mk_podman.py",
         "mk_tinkerforge.py",
     ],
     imports = ["."],
     visibility = ["//tests:__subpackages__"],
-    # These dependencies are likely not complete.
-    # Agent plugins sometimes depend on third party modules that
-    # are currently not even a dev dependency.
-    # As this is the deprecated location for agent plugins,
-    # I am not cleanung this up now. This should be dealt with
-    # on a case by case basis when migrating the bakery plugins to
-    # the cmk.bakery.v2 API.
-    # When you do so, please consider making the used libraries a
-    # dev dependency and write some actual tests :-|
-    deps = [
-        requirement("requests"),
-        requirement("urllib3"),
-    ],
 )
 
 sh_library(

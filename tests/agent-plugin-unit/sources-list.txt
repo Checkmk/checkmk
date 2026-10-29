@@ -4,7 +4,6 @@
 # on the fly would significantly increase the load on the CI.
 #
 agents/plugins/mk_logwatch.py
-agents/plugins/mk_podman.py
 agents/plugins/mk_tinkerforge.py
 cmk/plugins/ceph/agents/mk_ceph.py
 cmk/plugins/collection/agents/apache_status.py
@@ -18,6 +17,7 @@ cmk/plugins/mtr/agents/mtr.py
 cmk/plugins/nginx/agents/nginx_status.py
 cmk/plugins/plesk/agents/plesk_backups.py
 cmk/plugins/plesk/agents/plesk_domains.py
+cmk/plugins/podman/agents/mk_podman.py
 cmk/plugins/postgres/agents/mk_postgres.py
 cmk/plugins/sap/agents/mk_sap.py
 cmk/plugins/unitrends/agents/unitrends_replication.py
@@ -25,7 +25,6 @@ tests/agent-plugin-unit/datasets/mk_logwatch/test_append.log
 tests/agent-plugin-unit/datasets/mk_logwatch/test_data_for_mk_logwatch_crlf.txt
 tests/agent-plugin-unit/datasets/mk_logwatch/test_data_for_mk_logwatch.txt
 tests/agent-plugin-unit/test_mk_logwatch.py
-tests/agent-plugin-unit/test_mk_podman.py
 tests/agent-plugin-unit/test_mk_tinkerforge.py
 tests/component/cmk/plugins/jolokia/agents/datasets/mk_jolokia/ca.pem
 tests/component/cmk/plugins/jolokia/agents/datasets/mk_jolokia/server-cert.pem
@@ -58,6 +57,7 @@ tests/unit/cmk/plugins/mtr/agents/test_mtr.py
 tests/unit/cmk/plugins/nginx/agents/test_nginx_status.py
 tests/unit/cmk/plugins/plesk/agents/test_plesk_backups.py
 tests/unit/cmk/plugins/plesk/agents/test_plesk_domains.py
+tests/unit/cmk/plugins/podman/agents/test_mk_podman.py
 tests/unit/cmk/plugins/postgres/agents/test_mk_postgres.py
 tests/unit/cmk/plugins/sap/agents/test_mk_sap.py
 tests/unit/cmk/plugins/unitrends/agents/test_unitrends_replication.py

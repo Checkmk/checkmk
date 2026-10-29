@@ -66,7 +66,7 @@ populate_folders() {
     done
 
     # mk_podman requires Python 3.8+ (walrus operator, dataclasses, etc.)
-    podman_test="${STAGE_DIR?}/tests/agent-plugin-unit/test_mk_podman.py"
+    podman_test="${STAGE_DIR?}/tests/unit/cmk/plugins/podman/agents/test_mk_podman.py"
     case "${PYTHON_VERSION_MAJ_MIN?}" in
         3.4 | 3.5 | 3.6 | 3.7) rm "${podman_test}" ;;
     esac

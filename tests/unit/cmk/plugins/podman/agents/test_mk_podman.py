@@ -17,7 +17,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from agents.plugins.mk_podman import (
+from cmk.plugins.podman.agents.mk_podman import (
     _skip_container,
     get_piggyback_host,
     get_socket_owner,

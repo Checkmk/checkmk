@@ -158,6 +158,8 @@ class RedfishData:
     section_data: dict[str, Any] = field(default_factory=dict)
     emitted_sections: set[str] = field(default_factory=set)
     left_out_sections: set[str] = field(default_factory=set)
+    # sections that an entry which could not be fetched might have supplied data to
+    incomplete_sections: set[str] = field(default_factory=set)
     phase_failed: bool = False
     systems_retries: int = 3
     systems_retry_delay: float = 2.0
@@ -381,6 +383,29 @@ def fetch_collection(
     return data_list
 
 
+def _fetch_available_members(
+    client: RedfishClient, data: Mapping[str, Any], component: str
+) -> tuple[Sequence[Mapping[str, Any]], bool]:
+    """fetch a collection, skipping members that are temporarily unavailable
+
+    Also returns whether a member was skipped. Raises TemporarilyUnavailable if a member was
+    skipped and none of the others is usable.
+    """
+    members = []
+    skipped = False
+    for element in data.get("Members") or ():
+        if not (url := element.get("@odata.id")):
+            continue
+        try:
+            members.append(fetch_data(client, url, component))
+        except TemporarilyUnavailable as exc:
+            logging.warning("redfish: %s, skipping it", exc)
+            skipped = True
+    if skipped and all("error" in member for member in members):
+        raise TemporarilyUnavailable(f"no {component} member is usable")
+    return members, skipped
+
+
 def fetch_entry(redfishobj: RedfishData, entry: Mapping[str, Any], section: str) -> RedfishData:
     """fetch a list entry and add the result"""
     result = fetch_data(redfishobj.redfish_connection, entry["@odata.id"], section)
@@ -538,10 +563,22 @@ def fetch_extra_data(
     return redfishobj
 
 
-def _is_known_good(data: object) -> bool:
-    """none of the section's entries is an error placeholder"""
+def _has_error_entry(data: object) -> bool:
+    """an entry of the section is an error placeholder"""
     entries = data if isinstance(data, list) else [data]
-    return not any(isinstance(entry, Mapping) and "error" in entry for entry in entries)
+    return any(isinstance(entry, Mapping) and "error" in entry for entry in entries)
+
+
+def _is_complete(redfishobj: RedfishData, section: str) -> bool:
+    """every entry the section's data comes from could be fetched"""
+    if section in redfishobj.incomplete_sections:
+        return False
+    return all(
+        not _has_error_entry(redfishobj.section_data.get(parent, []))
+        and _is_complete(redfishobj, parent)
+        for parent, dependents in _DEPENDENT_SECTIONS.items()
+        if section in dependents
+    )
 
 
 def _emit_section(redfishobj: RedfishData, section: str, data: object) -> None:
@@ -554,9 +591,12 @@ def _emit_section(redfishobj: RedfishData, section: str, data: object) -> None:
         separator="\0",
         cachetime=cachetime,
         validity=redfishobj.cache_per_section.get(section),
-        # persist only fresh data without errors: Checkmk serves it if the section is left out
+        # persist only fresh and complete data without errors: Checkmk serves it if the
+        # section is left out
         persist_until=(
-            None if cachetime or not _is_known_good(data) else int(time.time()) + _MAX_STALE_AGE
+            None
+            if cachetime or _has_error_entry(data) or not _is_complete(redfishobj, section)
+            else int(time.time()) + _MAX_STALE_AGE
         ),
     )
     content = data if isinstance(data, list) else [data]
@@ -692,7 +732,9 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
             manager_data = manager_col.get("Members", [])
         else:
             manager_col = fetch_data(redfishobj.redfish_connection, manager_url, "Manager")
-            manager_data = fetch_collection(redfishobj.redfish_connection, manager_col, "Manager")
+            manager_data, _skipped = _fetch_available_members(
+                redfishobj.redfish_connection, manager_col, "Manager"
+            )
 
         for element in manager_data:
             data_model = str(list(element.get("Oem", {"Unknown": "Unknown model"}).keys())[0])
@@ -794,7 +836,9 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
                     "FirmwareDirectory",
                     timeout=40,
                 )
-                if members := firmwares.get("Members"):
+                if "error" in firmwares:
+                    _leave_out(redfishobj, "FirmwareInventory")
+                elif members := firmwares.get("Members"):
                     assert not isinstance(members, str)
                     redfishobj.section_data.setdefault(
                         "FirmwareInventory",
@@ -806,11 +850,16 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
                     "".join(firmware_url),
                     "FirmwareDirectory",
                 )
-                firmware_members = fetch_collection(
-                    redfishobj.redfish_connection, firmware_col, "Manager"
-                )
-                redfishobj.section_data.setdefault("FirmwareInventory", list(firmware_members))
+                if "error" in firmware_col:
+                    _leave_out(redfishobj, "FirmwareInventory")
+                else:
+                    firmware_members = fetch_collection(
+                        redfishobj.redfish_connection, firmware_col, "Manager"
+                    )
+                    redfishobj.section_data.setdefault("FirmwareInventory", list(firmware_members))
 
+    if _has_error_entry(systems_data):
+        redfishobj.incomplete_sections.update(resulting_sections)
     with _phase(redfishobj, "systems"):
         for system in systems_data:
             if data_model in ["Hpe", "Hp"] and "SmartStorage" in resulting_sections:
@@ -843,7 +892,9 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
     chassis_data: Sequence[Mapping[str, Any]] = []
     with _phase(redfishobj, "chassis"):
         chassis_col = fetch_data(redfishobj.redfish_connection, chassis_url, "Chassis")
-        chassis_data = fetch_collection(redfishobj.redfish_connection, chassis_col, "Chassis")
+        chassis_data, chassis_skipped = _fetch_available_members(
+            redfishobj.redfish_connection, chassis_col, "Chassis"
+        )
         sys.stdout.write("<<<redfish_chassis:sep(0)>>>\n")
         sys.stdout.write(f"{json.dumps(chassis_data, sort_keys=True)}\n")
         sys.stdout.flush()
@@ -859,6 +910,11 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
         has_legacy = any(isinstance(chassis.get("Power"), dict) for chassis in chassis_data)
         chassis_sections = list(legacy_environment if has_legacy else modern_environment)
         chassis_sections.append("NetworkAdapters")
+        if chassis_skipped or _has_error_entry(chassis_data):
+            # the missing chassis may be the only one with the legacy sections
+            redfishobj.incomplete_sections.update(
+                (*legacy_environment, *modern_environment, "NetworkAdapters")
+            )
 
         resulting_sections = list(set(chassis_sections).intersection(redfishobj.sections))
         for chassis in chassis_data:
@@ -884,10 +940,12 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
                 redfishobj.section_data.setdefault("PowerSupplies", []).extend(members)
 
     # a section fetched without data is emitted empty, else Checkmk serves its persisted copy;
-    # after a failed phase, missing sections may just not have been fetched
+    # after a failed phase, missing sections may just not have been fetched, and an incomplete
+    # one may have been in an entry that could not be fetched
     if not redfishobj.phase_failed:
         for section in requested - redfishobj.left_out_sections:
-            redfishobj.section_data.setdefault(section, [])
+            if _is_complete(redfishobj, section):
+                redfishobj.section_data.setdefault(section, [])
     _emit_pending(redfishobj)
     store_section_data(storage, redfishobj)
     return 0

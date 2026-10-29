@@ -42,6 +42,10 @@ _CODE_VERIFIER_RE = re.compile(r"[A-Za-z0-9\-._~]{43,128}")
 # its own expiry.
 _ACCESS_TOKEN_TTL = timedelta(hours=48)
 
+# Defaults until they become global settings.
+_GRANT_LIFETIME = timedelta(days=365)
+_IDLE_TIMEOUT = timedelta(days=30)
+
 _TokenError = Literal["invalid_request", "unsupported_grant_type", "invalid_grant"]
 
 
@@ -82,8 +86,8 @@ class OAuthTokenPage(Page):
     in the response body, so a client that asked for more than it got finds out
     here instead of on its first rejected write.
     Rejections follow the RFC 6749 section 5.2 error format. The returned
-    access token is a real, store-backed token issued for the record's user
-    (see cmk.gui.oauth.token.token_store).
+    access and refresh tokens are real, store-backed tokens of a new grant for
+    the record's user (see cmk.gui.oauth.token.token_store).
     """
 
     @override
@@ -203,25 +207,31 @@ def _redeem_authorization_code(
     # scopes into the AuthCodeStore ourselves. If it still goes wrong it's not a user error.
     granted_scopes = parse_scopes(record.scope)
 
+    now = datetime.now(UTC)
     with get_token_store() as store:
-        match store.issue_token(
+        match store.start_grant(
             UserId(record.user_id),
-            expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL,
             resource=record.resource,
             scope=granted_scopes,
             client_id=record.client_id,
+            expires_at=now + _GRANT_LIFETIME,
+            refresh_token_expires_at=now + _IDLE_TIMEOUT,
+            access_token_expires_at=now + _ACCESS_TOKEN_TTL,
         ):
             case Error(UnknownClient()):
                 # The client was deleted after the code was issued. Its grants
-                # died with it (tokens.client_id is ON DELETE CASCADE), so the
-                # code must not become a token either.
+                # died with it (grants.client_id is ON DELETE CASCADE), so the
+                # code must not become one either.
                 _error("invalid_grant")
                 return
             case OK(issued):
                 response.set_content_type("application/json")
                 response.set_data(
                     OAuthTokenResponse(
-                        access_token=issued.access, scope=format_scopes(granted_scopes)
+                        access_token=issued.access,
+                        expires_in=issued.expires_in,
+                        refresh_token=issued.refresh,
+                        scope=format_scopes(granted_scopes),
                     ).model_dump_json()
                 )
                 return

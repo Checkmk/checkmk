@@ -8,7 +8,7 @@ import hashlib
 import hmac
 import http.client as http_client
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta, UTC
 from typing import Literal, override
 
@@ -45,16 +45,6 @@ _KNOWN_PARAMS = (
 
 # RFC 7636 section 4.1: 43 to 128 characters from the unreserved set.
 _CODE_VERIFIER_RE = re.compile(r"[A-Za-z0-9\-._~]{43,128}")
-
-# Not tied to AuthCodeStore.AUTH_CODE_TTL (that's the short-lived code, this
-# is the token it's redeemed for). Long-lived because permissions are
-# re-checked on every request; a compromised token is bounded by that, not by
-# its own expiry.
-_ACCESS_TOKEN_TTL = timedelta(hours=48)
-
-# Defaults until they become global settings.
-_GRANT_LIFETIME = timedelta(days=365)
-_IDLE_TIMEOUT = timedelta(days=30)
 
 _TokenError = Literal["invalid_request", "unsupported_grant_type", "invalid_grant"]
 
@@ -150,9 +140,12 @@ class OAuthTokenPage(Page):
                     form.get("code_verifier"),
                     form.get("redirect_uri"),
                     form.get("resource"),
+                    ctx.config.oauth_sessions,
                 )
             case "refresh_token":
-                _refresh(form.get("refresh_token"), form.get("client_id"))
+                _refresh(
+                    form.get("refresh_token"), form.get("client_id"), ctx.config.oauth_sessions
+                )
             case _:
                 _error("unsupported_grant_type")
         return None
@@ -164,6 +157,7 @@ def _redeem_authorization_code(
     code_verifier: str | None,
     redirect_uri: str | None,
     resource: str | None,
+    sessions: Mapping[str, int],
 ) -> None:
     """RFC 6749 section 4.1.3: exchange an authorization code for tokens."""
     # redirect_uri is deliberately not required here: OAuth 2.1
@@ -239,9 +233,9 @@ def _redeem_authorization_code(
             resource=record.resource,
             scope=granted_scopes,
             client_id=record.client_id,
-            expires_at=now + _GRANT_LIFETIME,
-            refresh_token_expires_at=now + _IDLE_TIMEOUT,
-            access_token_expires_at=now + _ACCESS_TOKEN_TTL,
+            expires_at=now + timedelta(seconds=sessions["grant_lifetime"]),
+            refresh_token_expires_at=now + timedelta(seconds=sessions["refresh_token_lifetime"]),
+            access_token_expires_at=now + timedelta(seconds=sessions["access_token_lifetime"]),
         ):
             case Error(UnknownClient()):
                 # The client was deleted after the code was issued. Its grants
@@ -264,7 +258,7 @@ def _redeem_authorization_code(
                 assert False
 
 
-def _refresh(refresh_token: str | None, client_id: str | None) -> None:
+def _refresh(refresh_token: str | None, client_id: str | None, sessions: Mapping[str, int]) -> None:
     """RFC 6749 section 6: exchange a refresh token for a new access and refresh token."""
     if not refresh_token or not client_id:
         _error("invalid_request")
@@ -290,8 +284,8 @@ def _refresh(refresh_token: str | None, client_id: str | None) -> None:
         now = datetime.now(UTC)
         issued = store.rotate(
             refresh_token,
-            refresh_token_expires_at=now + _IDLE_TIMEOUT,
-            access_token_expires_at=now + _ACCESS_TOKEN_TTL,
+            refresh_token_expires_at=now + timedelta(seconds=sessions["refresh_token_lifetime"]),
+            access_token_expires_at=now + timedelta(seconds=sessions["access_token_lifetime"]),
         )
         if issued is None:
             # Re-read rather than reuse `presented`: a concurrent rotation

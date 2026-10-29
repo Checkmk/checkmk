@@ -22,7 +22,7 @@ from cmk.gui.http import request, response
 from cmk.gui.oauth.pages._token import OAuthTokenPage
 from cmk.gui.oauth.store._auth_code_store import AuthCodeRecord, AuthCodeStore
 from cmk.gui.oauth.store.client_store import get_client_store
-from cmk.gui.oauth.token.token_store import get_token_store, IssuedTokens
+from cmk.gui.oauth.token.token_store import get_token_store, IssuedTokens, RefreshTokenRecord
 from cmk.gui.pages import PageContext
 from cmk.gui.scopes import format_scopes, ScopeId
 from cmk.utils.redis import disable_redis
@@ -32,6 +32,7 @@ from tests.unit.cmk.gui.users import create_and_destroy_user
 _FORM_CONTENT_TYPE = "application/x-www-form-urlencoded"
 # code_verifier is the RFC 7636 appendix B example value (43 characters);
 # _stored_record() carries the matching S256 code_challenge.
+_NOW = datetime(2030, 1, 1, tzinfo=UTC)
 _VALID_FORM = {
     "grant_type": "authorization_code",
     "code": "SplxlOBeZQQYbYS6WxSbIA",
@@ -605,8 +606,12 @@ def _start_grant(client_id: str = "test-client", user_id: UserId = UserId("alice
 
 
 def _refresh(
-    flask_app: Flask, refresh_token: str, client_id: str = "test-client"
+    flask_app: Flask,
+    refresh_token: str,
+    client_id: str = "test-client",
+    config: Config | None = None,
 ) -> tuple[int, object]:
+    config = config or Config()
     with flask_app.test_request_context(
         method="POST",
         data={
@@ -616,7 +621,7 @@ def _refresh(
         },
     ):
         flask_app.preprocess_request()
-        OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))
+        OAuthTokenPage(lambda: True).handle_page(PageContext(config=config, request=request))
         return response.status_code, response.json
 
 
@@ -685,7 +690,7 @@ class TestRefreshTokenGrant:
             {"error": "invalid_grant"},
         )
 
-    def test_rejects_a_refresh_token_past_its_idle_timeout(self, flask_app: Flask) -> None:
+    def test_rejects_a_refresh_token_past_its_lifetime(self, flask_app: Flask) -> None:
         refresh_token = _start_grant().refresh
 
         with time_machine.travel(datetime.now(UTC) + timedelta(days=31)):
@@ -750,3 +755,78 @@ class TestRefreshTokenGrant:
             (e.summary, e.details["user"], e.details["client_id"], e.details["remote_ip"])
             for e in security_events
         ] == [("oauth refresh token reused, grant revoked", "alice", "test-client", None)]
+
+
+def _sessions(
+    *,
+    grant_lifetime: timedelta = timedelta(days=365),
+    refresh_token_lifetime: timedelta = timedelta(days=30),
+    access_token_lifetime: timedelta = timedelta(hours=48),
+) -> Config:
+    return Config(
+        oauth_sessions={
+            "grant_lifetime": int(grant_lifetime.total_seconds()),
+            "refresh_token_lifetime": int(refresh_token_lifetime.total_seconds()),
+            "access_token_lifetime": int(access_token_lifetime.total_seconds()),
+        }
+    )
+
+
+def _redeem(flask_app: Flask, config: Config) -> dict[str, object]:
+    AuthCodeStore().store(_VALID_FORM["code"], _stored_record())
+    with flask_app.test_request_context(method="POST", data=_VALID_FORM):
+        flask_app.preprocess_request()
+        OAuthTokenPage(lambda: True).handle_page(PageContext(config=config, request=request))
+        assert response.status_code == HTTPStatus.OK
+        assert isinstance(response.json, dict)
+        return response.json
+
+
+def _stored_refresh_token(body: dict[str, object]) -> RefreshTokenRecord:
+    refresh_token = body["refresh_token"]
+    assert isinstance(refresh_token, str)
+    with get_token_store() as store:
+        record = store.get_refresh_token(refresh_token)
+    assert record is not None
+    return record
+
+
+@pytest.mark.usefixtures("request_context", "clean_redis", "alice")
+class TestOAuthSessionSettings:
+    def test_an_unconfigured_site_uses_the_default_lifetimes(self, flask_app: Flask) -> None:
+        with time_machine.travel(_NOW, tick=False):
+            body = _redeem(flask_app, Config())
+
+            stored = _stored_refresh_token(body)
+        assert body["expires_in"] == 48 * 3600
+        assert stored.expires_at == _NOW + timedelta(days=30)
+        assert stored.grant.expires_at == _NOW + timedelta(days=365)
+
+    def test_configured_lifetimes_apply_to_a_redeemed_grant(self, flask_app: Flask) -> None:
+        config = _sessions(
+            grant_lifetime=timedelta(days=7),
+            refresh_token_lifetime=timedelta(days=2),
+            access_token_lifetime=timedelta(hours=2),
+        )
+
+        with time_machine.travel(_NOW, tick=False):
+            body = _redeem(flask_app, config)
+
+            stored = _stored_refresh_token(body)
+        assert stored.grant.expires_at == _NOW + timedelta(days=7)
+        assert stored.expires_at == _NOW + timedelta(days=2)
+        assert body["expires_in"] == 2 * 3600
+
+    def test_configured_lifetimes_apply_to_a_refresh(self, flask_app: Flask) -> None:
+        config = _sessions(
+            refresh_token_lifetime=timedelta(days=2), access_token_lifetime=timedelta(hours=2)
+        )
+
+        with time_machine.travel(_NOW, tick=False):
+            status, body = _refresh(flask_app, _start_grant().refresh, config=config)
+
+            assert status == HTTPStatus.OK
+            assert isinstance(body, dict)
+            stored = _stored_refresh_token(body)
+        assert stored.expires_at == _NOW + timedelta(days=2)
+        assert body["expires_in"] == 2 * 3600

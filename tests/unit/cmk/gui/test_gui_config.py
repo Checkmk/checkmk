@@ -106,6 +106,7 @@ def test_default_config_from_plugins() -> None:
         "log_level",
         "log_rulehits",
         "rule_optimizer",
+        "oauth_sessions",
         "session_mgmt",
         "mkeventd_service_levels",
         "wato_host_tags",

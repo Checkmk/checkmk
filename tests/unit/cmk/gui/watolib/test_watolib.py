@@ -222,6 +222,7 @@ def test_registered_configvars() -> None:
         "rule_optimizer",
         "selection_livetime",
         "service_view_grouping",
+        "oauth_sessions",
         "session_mgmt",
         "show_livestatus_errors",
         "show_mode",

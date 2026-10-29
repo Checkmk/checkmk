@@ -829,6 +829,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.gui.type_defs",
         "cmk.gui.userdb",
         "cmk.gui.utils",
+        "cmk.gui.valuespec",
         "cmk.gui.verify_requirements",
         "cmk.gui.wato",
         "cmk.gui.watolib",

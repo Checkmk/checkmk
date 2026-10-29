@@ -14,9 +14,13 @@ import HostServicesRow from '@/monitoring/host-services/components/HostServicesR
 import type { HostRef, HostServiceEntry, ServiceEntry } from '@/monitoring/shared/api/types'
 import {
   COLUMN_LAYOUT_KEY,
-  type ColumnLayoutInfo
+  type ColumnLayoutInfo,
+  MONITORING_SERVICE
 } from '@/monitoring/shared/components/MonitoringTableContext'
+import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 import type { DisplayOptions } from '@/monitoring/shared/types'
+
+import { makeListingService } from '../../shared/services/testHelpers'
 
 // 'abs' keeps assertions comparable to plain `renderDateAndTime`, independent of how old
 // a fixture's timestamp happens to be relative to the real clock the test runs under.
@@ -57,7 +61,8 @@ function makeTableRow(overrides: Partial<Row<HostServiceEntry>> = {}): Row<HostS
 function mountRow(
   row: HostServiceEntry,
   tableRow: Row<HostServiceEntry> = makeTableRow(),
-  extraProps: Record<string, unknown> = {}
+  extraProps: Record<string, unknown> = {},
+  service: MonitoringService<unknown> | null = null
 ) {
   return render(
     defineComponent({
@@ -77,7 +82,8 @@ function mountRow(
           ])
         ])
       }
-    })
+    }),
+    service ? { global: { provide: { [MONITORING_SERVICE as symbol]: service } } } : {}
   )
 }
 
@@ -270,6 +276,20 @@ test('renders the service groups of a service, sorted alphabetically', () => {
 
   const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
   expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['databases', 'web'])
+})
+
+test('clicking a service group narrows the listing to the services in that group', async () => {
+  const service = makeListingService()
+  mountRow(makeService({ groups: ['web', 'databases'] }), makeTableRow(), {}, service)
+
+  await fireEvent.click(screen.getByRole('button', { name: 'databases' }))
+
+  expect(service.filterState.value).toStrictEqual({
+    type: 'condition',
+    field: 'groups',
+    op: 'one_of',
+    value: ['databases']
+  })
 })
 
 test('renders the contacts of a service, sorted alphabetically', () => {

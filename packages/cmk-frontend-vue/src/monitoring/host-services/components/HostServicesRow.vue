@@ -30,7 +30,7 @@ import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import GraphsLink from '@/monitoring/shared/components/graphs/GraphsLink.vue'
 import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
-import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
+import { groupCondition, toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const props = withDefaults(
@@ -213,7 +213,13 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     :items="contactGroups"
     size="small"
   />
-  <LabelCell v-if="hasColumn('groups')" column-id="groups" :items="serviceGroups" size="small" />
+  <LabelCell
+    v-if="hasColumn('groups')"
+    column-id="groups"
+    :items="serviceGroups"
+    size="small"
+    :filter-by="groupCondition"
+  />
   <PerfometerCell
     v-if="hasColumn('perfometer')"
     column-id="perfometer"

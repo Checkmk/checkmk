@@ -16,6 +16,15 @@ export interface DomainBucket {
   maxValue: number
 }
 
+// A series computed per window, such as a histogram quantile interpolated inside one bucket, lands
+// on 0.00475 or an ulp beside it. A domain that narrow cannot be labelled: its label spacing is
+// finer than the precision of the values it sits at.
+const FLAT_RELATIVE_TOLERANCE = 1e-12
+
+function isFlat(yMin: number, yMax: number): boolean {
+  return yMax - yMin <= FLAT_RELATIVE_TOLERANCE * Math.max(Math.abs(yMin), Math.abs(yMax))
+}
+
 export function computeYDomain(
   metricsBuckets: DomainBucket[][],
   flags: DomainFlags = {}
@@ -43,7 +52,7 @@ export function computeYDomain(
     const bound = extent === 0 ? 1 : extent
     return [-bound, bound]
   }
-  if (yMin === yMax) {
+  if (isFlat(yMin, yMax)) {
     if (yMin === 0) {
       return [0, 1]
     }

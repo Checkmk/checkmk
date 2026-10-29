@@ -69,6 +69,24 @@ describe('computeYDomain', () => {
     expect(upper).toBeGreaterThanOrEqual(flatValue)
   })
 
+  test('treats floating-point noise around a value as flat', () => {
+    const justBelow = 0.004749999999999999
+    const justAbove = 0.004750000000000001
+
+    const [lower, upper] = computeYDomain([[bucket(justBelow, justAbove)]])
+
+    expect(lower).toBe(0)
+    expect(upper).toBeCloseTo(0.0095, 12)
+  })
+
+  test('keeps a small but real variation around a large value', () => {
+    const metrics = [[bucket(1e9, 1e9 + 1)]]
+
+    const domain = computeYDomain(metrics)
+
+    expect(domain).toEqual([1e9, 1e9 + 1])
+  })
+
   test('forces a symmetric domain around zero when flagged', () => {
     const metrics = [[bucket(-2, 8)]]
 

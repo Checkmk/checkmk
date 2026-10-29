@@ -416,8 +416,9 @@ class IPLookupCacheSerializer:
 class IPLookupCache:
     PATH = cmk.utils.paths.var_dir / "ipaddresses.cache"
 
-    def __init__(self, cache: MutableMapping[IPLookupCacheId, HostAddress]) -> None:
+    def __init__(self, cache: MutableMapping[IPLookupCacheId, HostAddress], *, debug: bool) -> None:
         self._cache = cache
+        self._debug = debug
         self._persist_on_update = True
         self._store = store.ObjectStore(self.PATH, serializer=IPLookupCacheSerializer())
 
@@ -447,16 +448,16 @@ class IPLookupCache:
     def get(self, key: IPLookupCacheId) -> HostAddress | None:
         return self._cache.get(key)
 
-    def load_persisted(self, *, debug: bool) -> None:
+    def load_persisted(self) -> None:
         try:
-            self._cache.update(self._store.read_obj(default={}))
+            self._cache.update(self._store.read_obj_explicit(default={}, debug=self._debug))
         except MKTerminate, MKTimeout:
             # We should be more specific with the exception handler below, then we
             # could drop this special handling here
             raise
 
         except Exception:
-            if debug:
+            if self._debug:
                 raise
             # TODO: Would be better to log it somewhere to make the failure transparent
 
@@ -484,7 +485,7 @@ class IPLookupCache:
             return
 
         with self._store.locked():
-            self._cache.update(self._store.read_obj(default={}))
+            self._cache.update(self._store.read_obj_explicit(default={}, debug=self._debug))
             self._cache[cache_id] = ipa
             self.save_persisted()
 
@@ -501,10 +502,10 @@ def _get_ip_lookup_cache(*, debug: bool) -> IPLookupCache:
     """A file based fall-back DNS cache in case resolution fails"""
     if "ip_lookup" in cache_manager:
         # Return already created and initialized cache
-        return IPLookupCache(cache_manager.obtain_cache("ip_lookup"))
+        return IPLookupCache(cache_manager.obtain_cache("ip_lookup"), debug=debug)
 
-    cache = IPLookupCache(cache_manager.obtain_cache("ip_lookup"))
-    cache.load_persisted(debug=debug)
+    cache = IPLookupCache(cache_manager.obtain_cache("ip_lookup"), debug=debug)
+    cache.load_persisted()
     return cache
 
 

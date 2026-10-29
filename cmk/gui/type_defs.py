@@ -378,6 +378,7 @@ VisualContext = Mapping[FilterName, FilterHTTPVariables]
 ADD_TO_GRAPH_TYPES: Final = (
     "pnpgraph",
     "custom_graph",
+    "embedded_custom_graph",
     "combined_graph",
     "single_timeseries",
     "problem_percentage",

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-import itertools
 import logging
 import sys
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
@@ -176,9 +175,9 @@ def state_exit_code(state: ServiceState) -> CLIExitCode:
 
 
 def mandatory_ip_lookup(
-    options: Mapping[str, object], ip_lookup_config: ip_lookup.IPLookupConfig
+    *, usewalk: bool, ip_lookup_config: ip_lookup.IPLookupConfig
 ) -> ip_lookup.IPLookup | None:
-    if options.get("usewalk", False):
+    if usewalk:
         return None
     return ip_lookup.make_lookup_ip_address(ip_lookup_config)
 
@@ -422,21 +421,21 @@ def run_checking(
     host_tags: HostTags,
     monitoring_core: Literal["cmc", "nagios"],
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
-    options: CheckingOptions,
     args: Sequence[str],
     *,
+    file_cache_options: FileCacheOptions,
+    snmp_backend: SNMPBackendEnum | None,
+    usewalk: bool,
+    selected_sections: SectionNameCollection,
+    run_plugin_names: Container[CheckPluginName],
+    dry_run: bool,
+    show_perfdata: bool,
     secrets_config_relay: AdHocSecrets | StoredSecrets,
     secrets_config_site: StoredSecrets,
     trusted_ca_file: Path,
     fake_dns: HostAddress | None,
     debug: bool,
 ) -> ServiceState:
-    file_cache_options = handle_fetcher_options(options)
-    try:
-        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
-    except ValueError as exc:
-        raise MKBailOut("Unknown SNMP backend") from exc
-
     set_global_logwatch_config(
         loaded_config,
         ruleset_matcher,
@@ -459,17 +458,6 @@ def run_checking(
         error_handler=config.handle_ip_lookup_failure,
     )
     with ruleset_matcher.ruleset_optimizer.processed_hosts({hostname}):
-        selected_sections, run_plugin_names = extract_plugin_selection(
-            detect_plugins=options.get("detect-plugins"),
-            detect_sections=options.get("detect-sections"),
-            selected_plugins=options.get("plugins"),
-            plugins=plugins.check_plugins,
-            sections=itertools.chain(
-                plugins.agent_sections.values(), plugins.snmp_sections.values()
-            ),
-            type_=CheckPluginName,
-        )
-
         service_name_config = make_passive_service_name_config(
             loaded_config, ruleset_matcher, label_manager
         )
@@ -520,7 +508,7 @@ def run_checking(
                             if n in plugins.snmp_sections
                         )
                     ),
-                    backend_override=snmp_backend_override,
+                    backend_override=snmp_backend,
                     base_path=cmk.utils.paths.omd_root,
                     relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
                     relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
@@ -528,7 +516,7 @@ def run_checking(
                     caching_config=make_parsed_snmp_fetch_intervals_config(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
-                    force_stored_walks=bool(options.get("usewalk", False)),
+                    force_stored_walks=usewalk,
                     debug=debug,
                 ),
             ),
@@ -539,7 +527,9 @@ def run_checking(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mandatory=mandatory_ip_lookup(options, ip_lookup_config),
+            ip_address_of_mandatory=mandatory_ip_lookup(
+                usewalk=usewalk, ip_lookup_config=ip_lookup_config
+            ),
             ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=(
                 FetchMode.CHECKING
@@ -578,7 +568,6 @@ def run_checking(
             config_cache.summary_config,
             override_non_ok_state=None,
         )
-        dry_run = options.get("no-submit", False)
         recording_fetcher = RecordingFetcher(fetcher)
         error_handler = CheckResultErrorHandler(
             exit_code_spec(hostname),
@@ -654,7 +643,7 @@ def run_checking(
                         dry_run=dry_run,
                         host_name=hostname,
                         perfdata_format=loaded_config.perfdata_format,
-                        show_perfdata=options.get("perfdata", False),
+                        show_perfdata=show_perfdata,
                     ),
                     exit_spec=exit_code_spec(hostname),
                     timeperiods_active=checker_config.timeperiods_active,

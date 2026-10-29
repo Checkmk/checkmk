@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The "cmk --check" command."""
 
+import itertools
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -14,13 +15,16 @@ from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.modes.check_mk import (
     CheckingOptions,
+    extract_plugin_selection,
     fake_dns_address,
     FAKE_DNS_OPTION,
     FETCHER_OPTIONS,
     get_plugins_option,
+    handle_fetcher_options,
     load_checks,
     option_detect_plugins,
     option_sections,
+    parse_snmp_backend,
     run_checking,
     SNMP_BACKEND_OPTION,
     state_exit_code,
@@ -89,6 +93,19 @@ def _mode_check(
 
     secrets = load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
 
+    try:
+        snmp_backend = parse_snmp_backend(options.get("snmp-backend"))
+    except ValueError as exc:
+        raise MKBailOut("Unknown SNMP backend") from exc
+    selected_sections, run_plugin_names = extract_plugin_selection(
+        detect_plugins=options.get("detect-plugins"),
+        detect_sections=options.get("detect-sections"),
+        selected_plugins=options.get("plugins"),
+        plugins=plugins.check_plugins,
+        sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
+        type_=CheckPluginName,
+    )
+
     state = run_checking(
         app,
         loaded_config,
@@ -104,8 +121,14 @@ def _mode_check(
             service_dependencies=loaded_config.service_dependencies,
             debug=global_options.debug,
         ),
-        options,
         args,
+        file_cache_options=handle_fetcher_options(options),
+        snmp_backend=snmp_backend,
+        usewalk=bool(options.get("usewalk", False)),
+        selected_sections=selected_sections,
+        run_plugin_names=run_plugin_names,
+        dry_run=options.get("no-submit", False),
+        show_perfdata=options.get("perfdata", False),
         secrets_config_relay=AdHocSecrets(
             path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
                 cmk.utils.paths.relative_tmp_dir

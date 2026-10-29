@@ -225,7 +225,9 @@ def _mode_inventory(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mandatory=mandatory_ip_lookup(options, ip_lookup_config),
+            ip_address_of_mandatory=mandatory_ip_lookup(
+                usewalk=bool(options.get("usewalk", False)), ip_lookup_config=ip_lookup_config
+            ),
             ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=(
                 FetchMode.INVENTORY
@@ -468,7 +470,9 @@ def _mode_inventorize_marked_hosts(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=mandatory_ip_lookup(options, ip_lookup_config),
+        ip_address_of_mandatory=mandatory_ip_lookup(
+            usewalk=bool(options.get("usewalk", False)), ip_lookup_config=ip_lookup_config
+        ),
         ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         simulation_mode=loaded_config.simulation_mode,

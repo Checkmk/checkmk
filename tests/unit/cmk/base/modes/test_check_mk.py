@@ -62,7 +62,7 @@ def _ip_lookup_config() -> ip_lookup.IPLookupConfig:
 
 
 def test_without_usewalk_the_address_is_mandatory() -> None:
-    lookup = mandatory_ip_lookup({}, _ip_lookup_config())
+    lookup = mandatory_ip_lookup(usewalk=False, ip_lookup_config=_ip_lookup_config())
 
     assert lookup is not None and lookup(
         HostName("testhost"), socket.AddressFamily.AF_INET
@@ -70,4 +70,4 @@ def test_without_usewalk_the_address_is_mandatory() -> None:
 
 
 def test_usewalk_does_not_insist_on_an_address() -> None:
-    assert mandatory_ip_lookup({"usewalk": True}, _ip_lookup_config()) is None
+    assert mandatory_ip_lookup(usewalk=True, ip_lookup_config=_ip_lookup_config()) is None

@@ -77,7 +77,6 @@ sh_library(
         "mk_sap_hana",
         "mk_scaleio",
         "runas",
-        "zorp",
         "//agents/cfg_examples:agents_cfg_examples_sh",
     ],
     visibility = ["//visibility:public"],

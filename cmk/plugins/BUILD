@@ -199,6 +199,7 @@ sh_library(
         "vnx_quotas/libexec/agent_vnx_quotas",
         "vxvm/agents/vxvm",
         "zerto/libexec/agent_zerto",
+        "zorp/agents/zorp",
         "//agents/cfg_examples:agents_cfg_examples_sh",
     ],
 )

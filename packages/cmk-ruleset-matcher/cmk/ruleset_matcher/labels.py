@@ -198,7 +198,7 @@ class DiscoveredHostLabelsStore:
                 raw["value"],
                 None if (raw_name := raw["plugin_name"]) is None else str(raw_name),
             )
-            for name, raw in self._store.read_obj(default={}).items()
+            for name, raw in self._store.read_obj_explicit(default={}, debug=False).items()
         ]
 
     def save(self, labels: Iterable[HostLabel]) -> None:
@@ -244,7 +244,7 @@ class BuiltinHostLabelsStore:
         self.locked: Final = self._store.locked
 
     def load(self) -> Labels:
-        return self._store.read_obj(default={})
+        return self._store.read_obj_explicit(default={}, debug=False)
 
     def save(self, labels: Labels) -> None:
         self.file_path.parent.mkdir(parents=True, exist_ok=True)

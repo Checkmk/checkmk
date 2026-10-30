@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
 
+from fastapi.concurrency import run_in_threadpool
 from pydantic import SecretStr
 
 from cmk.agent_receiver.lib.config import get_config
@@ -32,7 +33,7 @@ class RegisterRelayHandler:
         # Important: First authenticate
         auth = parse_authorization(authorization)
 
-        certificates = get_certificates(request.csr, relay_id)
+        certificates = await run_in_threadpool(get_certificates, request.csr, relay_id)
 
         # before relay registration
         await self.site_relays_client.add_relay(auth, relay_id, request.alias)
@@ -57,7 +58,7 @@ class RefreshCertHandler:
         # relays in PENDING_DELETION (deleted from the site but change not yet activated).
         # get_relay_state() raises RelayNotFoundError if the relay is unknown everywhere.
         await get_relay_state(self.site_relays_client, self.relay_config_repository, auth, relay_id)
-        certificates = get_certificates(request.csr, relay_id)
+        certificates = await run_in_threadpool(get_certificates, request.csr, relay_id)
         return relay_protocols.RelayRefreshCertResponse(
             root_cert=certificates.root_cert,
             client_cert=certificates.client_cert,

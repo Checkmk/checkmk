@@ -102,7 +102,9 @@ async def _sign_agent_csr(uuid: UUID4, csr_field: CsrField) -> Certificate:
         f"uuid={uuid} Querying agent controller certificate settings failed",
         internal_credentials(),
     )
-    return sign_csr(
+    # Off the loop: signing stalls every other request for milliseconds.
+    return await run_in_threadpool(
+        sign_csr,
         csr_field.csr,
         settings.lifetime_in_months,
         agent_root_ca(),

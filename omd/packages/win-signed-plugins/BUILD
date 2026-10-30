@@ -2,7 +2,7 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 # The signed Windows agent PowerShell plugins are produced by the Windows
-# signing CI job (`agents/windows/plugins:signed_plugins`) and dropped here as
+# signing CI job (agents/wnx/run.ps1 --sign-azure) and dropped here as
 # `signed_plugins.tar` (see artifacts.make). The tar is shipped verbatim into
 # the version tree; the OMD install scripts (omd/debian/postinst.in and the
 # %post section of omd/omd.spec.in) unpack it in place at install time.

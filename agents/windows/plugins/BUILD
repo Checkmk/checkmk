@@ -2,11 +2,6 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:sign_azure.bzl", "sign_tar_azure")
 
-# Sign all PowerShell scripts in the current directory.
-# `build bazel //agents/windows/plugins:all`
-#
-# We are using make variables, $, and $@ because we have no correct labels
-
 filegroup(
     name = "plugins",
     srcs = glob(
@@ -87,20 +82,6 @@ TO_SIGN_SCRIPTS = [
 # path below their package (e.g. agents/veeam_backup_status.ps1).
 SIGNED_NAMES = {n: n.split(":")[-1].split("/")[-1] for n in TO_SIGN_SCRIPTS}
 
-[
-    genrule(
-        name = "sign_" + name,
-        srcs = [n],
-        outs = ["signed/" + name],
-        cmd_bat = "$(execpath scripts/signer.bat) $< $@",
-        executable = True,
-        target_compatible_with = ["@platforms//os:windows"],
-        tools = ["scripts/signer.bat"],
-        visibility = ["//visibility:public"],
-    )
-    for n, name in SIGNED_NAMES.items()
-]
-
 # Signatures of non-ASCII scripts break on Windows, see the script header.
 sh_test(
     name = "signed_scripts_are_ascii",
@@ -112,19 +93,10 @@ sh_test(
     data = TO_SIGN_SCRIPTS + [":msi_cmk_plugin_files"],
 )
 
-pkg_tar(
-    name = "signed_plugins",
-    srcs = [":sign_" + name for name in SIGNED_NAMES.values()],
-    strip_prefix = "signed",
-    tags = ["manual"],
-    target_compatible_with = ["@platforms//os:windows"],
-    visibility = ["//visibility:public"],
-)
-
-# Unsigned collection of the same plugins, flattened to basenames. Used by the Azure
-# signing path, which signs in the run.ps1 process (full environment + credentials)
-# instead of inside Bazel actions. Bazel only gathers the files here - including the
-# cross-package bakery-migrated plugins - and run.ps1 signs them and repacks the tar.
+# The plugins to sign, flattened to basenames. run.ps1 signs them in its own
+# process (full environment + credentials) instead of inside Bazel actions. Bazel
+# only gathers the files here - including the cross-package bakery-migrated
+# plugins - and run.ps1 signs them and packs signed_plugins.tar.
 # Unsigned MSI builds of run.ps1 (without signing) take their scripts from it too.
 pkg_files(
     name = "unsigned_plugin_files",

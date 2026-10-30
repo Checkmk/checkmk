@@ -967,8 +967,6 @@ def _signing_ca_bundle() -> str:
     Built purely from the roots committed under certs/, so signature verification does not
     depend on the CI image's CA store (osslsigncode's -CAfile replaces the default trust
     store anyway):
-      - Comodo AAA Certificate Services              -> YubiKey/Sectigo code signing
-      - USERTrust RSA Certification Authority        -> Sectigo timestamp chain
       - Microsoft Identity Verification Root CA 2020 -> Azure Trusted Signing
                                                         (code signing + timestamp)
     The same bundle serves -TSA-CAfile too, since it covers the timestamp chains.

@@ -115,11 +115,10 @@ void build(Map args) {
         // node, half of it the regression suite. The job times out after 30 min.
 
         def (subdir, command, artifacts) = (
-            (args.TARGET == "agent_with_sign") || (args.TARGET == "agent_with_sign_azure") ? [
+            (args.TARGET == "agent_with_sign_azure") ? [
                 "agents/wnx",
                 // The deprecated_unused_param's have to be present or the script will fail.
-                "call run.cmd --all --skip-sql-test " +
-                    "${args.TARGET == 'agent_with_sign_azure' ? '--sign-azure' : '--sign'} " +
+                "call run.cmd --all --skip-sql-test --sign-azure " +
                     "deprecated_unused_param1 deprecated_unused_param2",
                 [
                     "cmk-agent-ctl.exe",
@@ -166,11 +165,11 @@ void build(Map args) {
                 "pwsh -File build-msi.ps1 -ProductVersion ${args.VERSION} -OutputDir ..\\..\\..\\..\\${artifacts_dir}",
                 "CheckmkRelayInstaller.msi"] :
 
-            (args.TARGET == "relay_msi_with_sign") || (args.TARGET == "relay_msi_with_sign_azure") ? [
+            (args.TARGET == "relay_msi_with_sign_azure") ? [
                 "non-free/packages/cmk-relay-engine/windows-installer",
                 "pwsh -File build-msi.ps1 " +
                     "-ProductVersion ${args.VERSION} -OutputDir ..\\..\\..\\..\\${artifacts_dir} " +
-                    "${args.TARGET == 'relay_msi_with_sign_azure' ? '-SignAzure' : '-Sign'}",
+                    "-SignAzure",
                 "CheckmkRelayInstaller.msi"] :
 
             (args.TARGET == "relay_msi_test") ? [
@@ -201,13 +200,7 @@ void build(Map args) {
         }
 
         dir(subdir) {
-            if ("${args.TARGET}" == "agent_with_sign" || "${args.TARGET}" == "relay_msi_with_sign") {
-                lock(label: "win_sign_key", quantity: 1, resource : null) {
-                    bat(command);
-                }
-            } else {
-                bat(command);
-            }
+            bat(command);
         }
 
         if (artifacts != '') {

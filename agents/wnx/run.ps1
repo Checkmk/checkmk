@@ -18,13 +18,11 @@ $argAll = $false
 $argBuildOnly = $false
 $argClean = $false
 $argCtl = $false
-$argSign = $false
 $argSignAzure = $false
 $argMsi = $false
 $argOracle = $false
 $argExt = $false
 $argSql = $false
-$argDetach = $false
 $argWin = $false
 $argSkipSqlTest = $false
 
@@ -83,9 +81,7 @@ $results_dir = "$repo_root\artefacts"
 $build_dir = "$pwd\build"
 $env:ExternalCompilerOptions = "/DDECREASE_COMPILE_TIME"
 $hash_file = "$results_dir\windows_files_hashes.txt"
-$usbip_exe = "c:\common\usbip-win-0.3.6-dev\usbip.exe"
 $make_exe = where.exe make | Out-String
-$signing_folder = "signed-files"
 
 
 if ("$env:arg_var_value" -ne "") {
@@ -117,17 +113,15 @@ function Write-Help() {
     Write-Host "  -M, --msi               make msi"
     Write-Host "  -E, --extensions        make extensions"
     Write-Host "  -S, --skip-sql-test     skip sql test to be able to build msi in case sql is not configured"
-    Write-Host "  --detach                detach USB before running"
-    Write-Host "  --sign                  sign using local YubiKey and scsigntool.exe"
     Write-Host "  --sign-azure            sign using Azure Artifact Signing"
     Write-Host ""
     Write-Host "Examples:"
     Write-Host ""
     Write-Host "$name --ctl"
     Write-Host "$name --build --test"
-    Write-Host "$name --build -T --sign"
+    Write-Host "$name --build -T --sign-azure"
     Write-Host "$name -A"
-    Write-Host "$name --all --sign"
+    Write-Host "$name --all --sign-azure"
 }
 
 
@@ -150,11 +144,9 @@ else {
             { $("-S", "--skip-sql-test") -contains $_ } { $argSkipSqlTest = $true }
             "--clean-all" { $argClean = $true; $argCleanArtifacts = $true }
             "--clean-artifacts" { $argCleanArtifacts = $true }
-            "--detach" { $argDetach = $true }
             "--var" {
                 [Environment]::SetEnvironmentVariable($args[++$i], $args[++$i])
             }
-            "--sign" { $argSign = $true }
             "--sign-azure" { $argSignAzure = $true }
         }
     }
@@ -341,116 +333,10 @@ function Start-UnitTests {
     }
 }
 
-function Test-SigningQuickly {
-    if ($argSign -ne $true) {
-        return
-    }
-
-    try {
-        Write-Host "Validate signing..." -ForegroundColor White
-        $TempFile = New-TemporaryFile
-        $ps_name = $TempFile.BaseName + ".ps1"
-        Rename-Item -NewName $ps_name -Path $TempFile
-        $newfile = $TempFile.DirectoryName + $TempFile.BaseName + ".ps1"
-        "Get-Date" | Out-File $newfile
-        for ($i = 1; $i -le 15; $i++) {
-            & ./scripts/sign_code_fast.cmd $newfile
-            if ($LASTEXITCODE -eq 0) {
-                break
-            }
-            Write-Host "Waiting 1 seconds before retry" -ForegroundColor White
-            Start-Sleep -Seconds 1
-        }
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "Failed to sign test file" $LASTEXITCODE -foreground Red
-        }
-        else {
-            Write-Host "Success signing test file" -ForegroundColor Green
-        }
-        Remove-Item -Path $newfile -Force -ErrorAction SilentlyContinue
-
-    }
-    catch {
-        Write-Host "Failed to create temporary file" -ForegroundColor Red
-    }
-
-
-}
-
-
-
-function Invoke-Attach($usbip, $addr, $port) {
-    if ($argSign -ne $true) {
-        Write-Host "Skipping attach" -ForegroundColor Yellow
-        return
-    }
-    &$usbip attach -r $addr -b $port
-    for ($i = 1; $i -le 20; $i++) {
-        if ($LASTEXITCODE -eq 0) {
-            break
-        }
-        Write-Host "Waiting 2 seconds for USB to attach" -ForegroundColor White
-        Start-Sleep -Seconds 2
-    }
-    if ($LASTEXITCODE -ne 0) {
-        $argSign = $False
-        Write-Host "Failed to attach USB token" $LASTEXITCODE -foreground Red
-        throw "Attach to the signing key is not possible. Signing can't be done"
-    }
-    Write-Host "Attached USB, waiting a bit" -ForegroundColor Green
-    Start-Sleep -Seconds 5
-    Test-SigningQuickly
-    return
-}
-
-function Test-Administrator {
-    [OutputType([bool])]
-    param()
-    process {
-        [Security.Principal.WindowsPrincipal]$user = [Security.Principal.WindowsIdentity]::GetCurrent();
-        return $user.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator);
-    }
-}
-
-function Invoke-TestSigning($usbip) {
-    if ($argSign -ne $true) {
-        Write-Host "Skipping Test Signing..." -ForegroundColor Yellow
-        return
-    }
-
-    if (-not(Test-Path -Path $usbip -PathType Leaf)) {
-        $argSign = $False
-        Write-Host "$usbip doesn't exist" -ForegroundColor Red
-        throw
-    }
-
-    if (-not (Test-Administrator)) {
-        Write-Host "This script must be executed as Administrator." -ForegroundColor Red
-        $argSign = $False
-        return
-    }
-
-    Write-Host "check port"
-    &$usbip port
-    if ($LastExitCode -eq 3) {
-        $argSign = $False
-        Write-Host "No chance"
-        throw
-    }
-    Write-Host "try to detach"
-
-    &$usbip detach -p 00
-    if ($LastExitCode -eq 0) {
-        Write-Host "Should not happen: connection has been established"
-    }
-
-}
-
 # Every .ps1 of the MSI comes from $env:SignedPluginsFolder (see Product.wxs). Stage them
-# unsigned and flat there; Start-BazelSigning signs them in place or points the folder at
-# signed copies.
+# unsigned and flat there; Start-BazelSigning signs them in place.
 function Initialize-MsiScripts {
-    if (-not ($argMsi -or $argSign -or $argSignAzure)) {
+    if (-not ($argMsi -or $argSignAzure)) {
         return
     }
 
@@ -466,14 +352,14 @@ function Initialize-MsiScripts {
     # Use .NET's tar support (System.Formats.Tar, part of the .NET runtime PowerShell 7
     # runs on) rather than a `tar` executable: tar is not always on PATH on the build
     # nodes, and Git's GNU tar mis-parses the drive-letter colon in Windows paths as a
-    # remote host. The tar is flat, matching the layout the signed_plugins pkg_tar produces.
+    # remote host. The tar is flat, matching the layout of signed_plugins.tar.
     [System.Formats.Tar.TarFile]::ExtractToDirectory($unsigned_tar, $plugins_dir, $true)
     $env:SignedPluginsFolder = $plugins_dir
     Write-Host "MSI scripts staged in $plugins_dir" -ForegroundColor Green
 }
 
 function Start-MsiControlBuild {
-    if (-not ($argSign -or $argSignAzure)) {
+    if (-not $argSignAzure) {
         Write-Host "Skipping MSI Control Build..." -ForegroundColor Yellow
         return
     }
@@ -486,17 +372,12 @@ function Start-MsiControlBuild {
 }
 
 function Invoke-SignFile([string]$FilePath) {
-    if ($argSignAzure) {
-        pwsh -ExecutionPolicy Bypass -File ./scripts/sign_code_azure.ps1 $FilePath
-    }
-    else {
-        & ./scripts/sign_code.cmd $FilePath
-    }
+    pwsh -ExecutionPolicy Bypass -File ./scripts/sign_code_azure.ps1 $FilePath
     return $LASTEXITCODE
 }
 
 function Start-BinarySigning {
-    if (-not ($argSign -or $argSignAzure)) {
+    if (-not $argSignAzure) {
         Write-Host "Skipping Signing..." -ForegroundColor Yellow
         return
     }
@@ -527,7 +408,7 @@ function Start-BinarySigning {
 function Start-BazelSigning {
     $signed_plugins_tar = "$repo_root/bazel-bin/agents/windows/plugins/signed_plugins.tar"
 
-    if (-not ($argSign -or $argSignAzure)) {
+    if (-not $argSignAzure) {
         Write-Host "Skipping Bazel Signing..." -ForegroundColor Yellow
         # Signing skipped: the tar is never built by Bazel, but Start-ArtifactUploading
         # still copies it. Create a zero-sized placeholder so the copy succeeds.
@@ -537,49 +418,25 @@ function Start-BazelSigning {
         return
     }
 
-    if ($argSignAzure) {
-        # Azure signing runs in this process, where the full environment and credentials are
-        # available. It signs the scripts Initialize-MsiScripts staged; signing must NOT run
-        # inside a Bazel action because strict action env scrubs the credentials and runtime
-        # the ArtifactSigning module needs. See Invoke-SignFile, which already signs the
-        # binaries this way.
-        Write-Host "Azure plugin signing (in-process)..." -ForegroundColor White
-        $sign_dir = $env:SignedPluginsFolder
-        Get-ChildItem -Path $sign_dir -Filter *.ps1 -Recurse | ForEach-Object {
-            Write-Host "Signing plugin $($_.Name)" -ForegroundColor White
-            Invoke-SignFile $_.FullName
-            if ($LASTEXITCODE -ne 0) {
-                Write-Error "Failed to sign plugin $($_.Name), error code is $LASTEXITCODE" -ErrorAction Stop
-            }
+    # Signing runs in this process, where the full environment and credentials are
+    # available. It signs the scripts Initialize-MsiScripts staged; signing must NOT run
+    # inside a Bazel action because strict action env scrubs the credentials and runtime
+    # the ArtifactSigning module needs. See Invoke-SignFile, which already signs the
+    # binaries this way.
+    Write-Host "Azure plugin signing (in-process)..." -ForegroundColor White
+    $sign_dir = $env:SignedPluginsFolder
+    Get-ChildItem -Path $sign_dir -Filter *.ps1 -Recurse | ForEach-Object {
+        Write-Host "Signing plugin $($_.Name)" -ForegroundColor White
+        Invoke-SignFile $_.FullName
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to sign plugin $($_.Name), error code is $LASTEXITCODE" -ErrorAction Stop
         }
+    }
 
-        New-Item -Path (Split-Path $signed_plugins_tar) -ItemType Directory -Force | Out-Null
-        Remove-Item $signed_plugins_tar -Force -ErrorAction SilentlyContinue
-        [System.Formats.Tar.TarFile]::CreateFromDirectory($sign_dir, $signed_plugins_tar, $false)
-        Write-Host "Signed plugins packed into $signed_plugins_tar" -ForegroundColor Green
-    }
-    else {
-        # YubiKey signing runs inside Bazel genrules (scsigntool.exe via signer.bat).
-        Write-Host "Bazel signing..." -ForegroundColor White
-        try {
-            &bazel build //agents/windows/plugins:all --action_env=SECTIGO_2023_PIN
-            if ($LASTEXITCODE -eq 0) {
-                $env:SignedPluginsFolder = Join-Path (Get-Item -Force ..\..\bazel-bin).Target "\agents\windows\plugins\signed"
-                Write-Host "Signed files are located in $env:SignedPluginsFolder"
-            }
-            else {
-                Write-Host "Error during signing $LASTEXITCODE"
-            }
-            Write-Host "Success Bazel signing" -foreground Green
-        }
-        catch {
-            Write-Host "Exception during Bazel signing: $_" -ForegroundColor Red
-        }
-        # Must pass the same --action_env as the :all build above; otherwise Bazel
-        # sees a changed action env, discards the analysis cache, and re-runs the
-        # sign genrules without %SECTIGO_2023_PIN% in the environment.
-        &bazel build //agents/windows/plugins:signed_plugins --action_env=SECTIGO_2023_PIN
-    }
+    New-Item -Path (Split-Path $signed_plugins_tar) -ItemType Directory -Force | Out-Null
+    Remove-Item $signed_plugins_tar -Force -ErrorAction SilentlyContinue
+    [System.Formats.Tar.TarFile]::CreateFromDirectory($sign_dir, $signed_plugins_tar, $false)
+    Write-Host "Signed plugins packed into $signed_plugins_tar" -ForegroundColor Green
     Write-Host "$env:SignedPluginsFolder is used to store the signed files"
 }
 
@@ -620,23 +477,9 @@ function Start-MsiPatching {
     Write-Host "Success artifact uploading" -foreground Green
 }
 
-function Invoke-Detach($argFlag) {
-    if ($argFlag -ne $true) {
-        Write-Host "No need to detach"
-        return
-    }
-    & $usbip_exe detach -p 00
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Failed to detach " $LASTEXITCODE -foreground Yellow
-        return
-    }
-    Start-Sleep -Seconds 2
-    Write-Host "Detached!" -ForegroundColor Green
-}
-
 
 function Start-MsiSigning {
-    if (-not ($argSign -or $argSignAzure)) {
+    if (-not $argSignAzure) {
         Write-Host "Skipping MSI signing..." -ForegroundColor Yellow
         return
     }
@@ -648,7 +491,6 @@ function Start-MsiSigning {
         throw
     }
     Add-HashLine $results_dir/check_mk_agent.msi $hash_file
-    Invoke-Detach $argSign
     & ./scripts/call_signing_tests.cmd
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Failed test MSI " $LASTEXITCODE -foreground Red
@@ -702,7 +544,7 @@ function Update-ArtefactDirs() {
 }
 
 function Test-MsiSigning($file) {
-    if (-not ($argSign -or $argSignAzure)) {
+    if (-not $argSignAzure) {
         Write-Host "Skipping Validate signing..." -ForegroundColor Yellow
         return
     }
@@ -754,14 +596,12 @@ else {
 }
 Invoke-CheckApp "is_crlf" "python .\scripts\check_crlf.py"
 
-$argAttached = $false
 $result = 1
 try {
     # SETTING UP
     $env:BAZELISK_BASE_URL = "https://github.com/aspect-build/aspect-cli/releases/download"
     $env:USE_BAZEL_VERSION = "aspect/2025.11.0"
     $mainStartTime = Get-Date
-    Invoke-Detach $argDetach
     Update-ArtefactDirs
     Clear-Artifacts
     Clear-All
@@ -808,14 +648,8 @@ try {
     Write-SessionHealth "after unit tests"
 
     # SIGNING
-    Invoke-TestSigning $usbip_exe
     Initialize-MsiScripts
     Start-MsiControlBuild
-    Invoke-Attach $usbip_exe "yubi-usbserver.lan.checkmk.net" "1-1.2"
-    if ($argSign -eq $true) {
-        $argAttached = $true
-        $env:pin_cert_windows_usb | Out-File -Path .\check-signing-param.txt  -Append
-    }
     Start-BinarySigning
     Start-BazelSigning
     Build-MSI
@@ -835,8 +669,5 @@ catch {
     Write-Host "Error: " $_ -ForegroundColor Red
     Write-Host "Trace stack: " -ForegroundColor Yellow
     Write-Host $_.ScriptStackTrace -ForegroundColor Yellow
-}
-finally {
-    Invoke-Detach $argAttached
 }
 exit $result

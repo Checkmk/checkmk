@@ -3,7 +3,7 @@
 /// file: winagt-build.groovy
 
 void main() {
-    check_job_parameters(["VERSION", "SIGN_METHOD"]);
+    check_job_parameters(["VERSION"]);
 
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -12,9 +12,6 @@ void main() {
     def branch_version = versioning.get_branch_version(checkout_dir);
     def cmk_vers_rc_aware = versioning.get_cmk_version(branch_name, branch_version, params.VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_vers_rc_aware);
-
-    def use_azure = (params.SIGN_METHOD == "azure");
-    def sign_target = use_azure ? "agent_with_sign_azure" : "agent_with_sign";
 
     dir("${checkout_dir}") {
         stage("make setversion") {
@@ -39,16 +36,14 @@ void main() {
         // signing diagnostics. It therefore lives in the credential store, not in an env var. It
         // stays bound for the whole build: the Azure client echoes the CorrelationId, and Jenkins
         // only masks the secret inside this block.
-        def sign_creds = use_azure ? [
+        def sign_creds = [
             string(credentialsId: "azure_artifact_signing_client_secret",   variable: "AZURE_ARTIFACT_SIGNING_CLIENT_SECRET"),
             string(credentialsId: "azure_artifact_signing_correlation_suffix", variable: "AZURE_ARTIFACT_SIGNING_CORRELATION_SUFFIX"),
-        ] : [
-            string(credentialsId: "sectigo_2023_pin",   variable: "SECTIGO_2023_PIN")
         ];
 
         withCredentials(common_creds + sign_creds) {
             // Assembled inside the binding block: the suffix is only available there.
-            def correlation_id = use_azure ? windows.azure_signing_correlation_id(branch_name) : "";
+            def correlation_id = windows.azure_signing_correlation_id(branch_name);
 
             // The windows.build function will create stages.
             withEnv([
@@ -61,19 +56,10 @@ void main() {
                 "AZURE_ARTIFACT_SIGNING_CORRELATION_ID=${correlation_id}",
             ]) {
                 windows.build(
-                    TARGET: sign_target,
+                    TARGET: "agent_with_sign_azure",
                     CREDS: NEXUS_USERNAME + ':' + NEXUS_PASSWORD,
                     CACHE_URL: 'https://artifacts.lan.tribe29.com/repository/omd-build-cache/'
                 );
-            }
-        }
-
-        // YubiKey requires a USB detach after signing; Azure does not.
-        if (!use_azure) {
-            stage("detach") {
-                dir("agents\\wnx") {
-                    bat("run.cmd --detach");
-                }
             }
         }
     }

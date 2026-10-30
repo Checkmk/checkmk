@@ -44,6 +44,13 @@ type AnnotatedMapName = Annotated[
 # request cannot force an unbounded walk of the compiled aggregation.
 MAX_TREE_DEPTH = 10
 
+# The core does not bound perfdata; this caps what the graphing pipeline is fed
+# per entry. Longer entries resolve to nothing rather than failing the lookups
+# sent along with them.
+MAX_PERF_DATA_LENGTH = 65536
+# The client splits the lookups of a tick into requests of this many.
+MAX_METRIC_INFO_ENTRIES = 1000
+
 
 @api_model
 class MapsMetricInfoRequest:
@@ -75,6 +82,29 @@ class MapsMetricInfoRequest:
         default="",
     )
     site_id: str = api_field(description="Site the object lives on.", example="heute", default="")
+
+
+@api_model
+class MapsMetricInfoEntry:
+    perf_data: str = api_field(
+        description="The raw perfdata string to resolve.",
+        example="rta=0.5ms;200;500;0; pl=0%;80;100;;",
+    )
+    check_command: str = api_field(
+        description="The check command that produced the perfdata; drives the metric translation.",
+        example="check_mk_active-icmp",
+        default="",
+    )
+
+
+@api_model
+class MapsMetricInfoBulkRequest:
+    entries: Annotated[list[MapsMetricInfoEntry], Field(max_length=MAX_METRIC_INFO_ENTRIES)] = (
+        api_field(
+            description="The perfdata to resolve, without graphs.",
+            example=[{"perf_data": "load1=0.5;;;0;", "check_command": "check_mk-cpu_loads"}],
+        )
+    )
 
 
 @api_model

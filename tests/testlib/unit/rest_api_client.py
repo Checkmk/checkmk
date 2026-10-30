@@ -2333,6 +2333,15 @@ class MapsClient(RestApiClient):
             "/domain-types/maps_metric_info/actions/resolve/invoke", body, expect_ok
         )
 
+    def bulk_resolve_metric_info(
+        self, entries: list[dict[str, str]], expect_ok: bool = True
+    ) -> Response:
+        return self._internal_post(
+            "/domain-types/maps_metric_info/actions/bulk-resolve/invoke",
+            {"entries": entries},
+            expect_ok,
+        )
+
     def get_aggregations(self, expect_ok: bool = True) -> Response:
         return self._internal_get("/domain-types/maps_aggregation/collections/all", None, expect_ok)
 

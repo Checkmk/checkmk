@@ -9,9 +9,17 @@ permission tracker raises in tests for any permission an endpoint checks without
 declaring it: each test also pins its endpoint's declaration.
 """
 
+from http import HTTPStatus
+
 import pytest
 
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.maps.rest_api.internal.metrics import resolve_each
+from cmk.maps.rest_api.internal.models.request_models import (
+    MAX_METRIC_INFO_ENTRIES,
+    MAX_PERF_DATA_LENGTH,
+)
+from cmk.maps.rest_api.internal.models.response_models import MapsMetricInfoResponse
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
@@ -79,6 +87,65 @@ def test_metric_info(clients: ClientRegistry) -> None:
         {"perf_data": "load1=0.5;;;0;", "check_command": "check_mk-cpu_loads"}
     )
     assert "metrics" in resp.json
+
+
+def test_bulk_metric_info_answers_each_entry_like_a_single_lookup(
+    clients: ClientRegistry,
+) -> None:
+    load = {"perf_data": "load1=0.5;;;0;", "check_command": "check_mk-cpu_loads"}
+    ping = {"perf_data": "rta=0.5ms;200;500;0; pl=0%;80;100;;", "check_command": "check_mk-ping"}
+
+    results = clients.Maps.bulk_resolve_metric_info([load, ping, load]).json["results"]
+
+    assert results == [
+        clients.Maps.resolve_metric_info(load).json,
+        clients.Maps.resolve_metric_info(ping).json,
+        clients.Maps.resolve_metric_info(load).json,
+    ]
+
+
+def test_bulk_metric_info_refuses_more_entries_than_a_map_holds(
+    clients: ClientRegistry,
+) -> None:
+    entry = {"perf_data": "load1=0.5;;;0;", "check_command": "check_mk-cpu_loads"}
+    clients.Maps.bulk_resolve_metric_info(
+        [entry] * (MAX_METRIC_INFO_ENTRIES + 1), expect_ok=False
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
+def test_bulk_metric_info_resolves_oversized_perf_data_to_nothing(
+    clients: ClientRegistry,
+) -> None:
+    load = {"perf_data": "load1=0.5;;;0;", "check_command": "check_mk-cpu_loads"}
+    oversized = {"perf_data": "x" * (MAX_PERF_DATA_LENGTH + 1), "check_command": ""}
+
+    results = clients.Maps.bulk_resolve_metric_info([oversized, load]).json["results"]
+
+    assert results == [
+        {"perfometer": None, "metrics": {}},
+        clients.Maps.resolve_metric_info(load).json,
+    ]
+
+
+def test_bulk_metric_info_isolates_an_entry_that_fails() -> None:
+    resolved = MapsMetricInfoResponse(perfometer=None, metrics={}, graphs=[])
+
+    def resolve(perf_data: str, _check_command: str) -> MapsMetricInfoResponse:
+        if perf_data == "broken=1":
+            raise ValueError("broken plug-in")
+        return resolved
+
+    results = resolve_each([("broken=1", ""), ("load1=0.5", "")], resolve, debug=False)
+
+    assert results == [MapsMetricInfoResponse(perfometer=None, metrics={}), resolved]
+
+
+def test_bulk_metric_info_raises_a_failing_entry_in_debug_mode() -> None:
+    def resolve(_perf_data: str, _check_command: str) -> MapsMetricInfoResponse:
+        raise ValueError("broken plug-in")
+
+    with pytest.raises(ValueError):
+        resolve_each([("broken=1", "")], resolve, debug=True)
 
 
 @pytest.mark.usefixtures("allow_redis")

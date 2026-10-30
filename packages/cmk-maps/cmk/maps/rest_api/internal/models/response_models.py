@@ -224,6 +224,13 @@ class MapsMetricInfoResponse:
 
 
 @api_model
+class MapsMetricInfoBulkResponse:
+    results: list[MapsMetricInfoResponse] = api_field(
+        description="One result per requested entry, in request order.", example=[]
+    )
+
+
+@api_model
 class MapsAggregation:
     aggregation_id: str = api_field(
         description="The resolved aggregation (branch) name.",

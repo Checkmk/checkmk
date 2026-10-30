@@ -30,7 +30,10 @@ from cmk.maps.rest_api.internal.images import (
     ENDPOINT_SHOW_IMAGE_USAGE,
     ENDPOINT_UPLOAD_IMAGE,
 )
-from cmk.maps.rest_api.internal.metrics import ENDPOINT_SHOW_METRIC_INFO
+from cmk.maps.rest_api.internal.metrics import (
+    ENDPOINT_BULK_RESOLVE_METRIC_INFO,
+    ENDPOINT_SHOW_METRIC_INFO,
+)
 from cmk.maps.rest_api.internal.object_lookups import (
     ENDPOINT_LIST_DYNGROUP_MEMBERS,
     ENDPOINT_LIST_FOLDERS,
@@ -56,6 +59,7 @@ def register(
     versioned_endpoint_registry.register(ENDPOINT_LIST_FOLDERS)
     versioned_endpoint_registry.register(ENDPOINT_LIST_SITES)
     versioned_endpoint_registry.register(ENDPOINT_SHOW_METRIC_INFO)
+    versioned_endpoint_registry.register(ENDPOINT_BULK_RESOLVE_METRIC_INFO)
     versioned_endpoint_registry.register(ENDPOINT_LIST_AGGREGATIONS)
     versioned_endpoint_registry.register(ENDPOINT_SHOW_AGGREGATION_TREE)
     versioned_endpoint_registry.register(ENDPOINT_SHOW_AGGREGATION_STATES)

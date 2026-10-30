@@ -367,8 +367,9 @@ OpenAPI types, not from hand-written copies.
      - ``FormSpec`` schemas for the authoring dialogs and translation of their
        values (``map_metadata``, ``flow_view``).
    * - POST
-     - ``domain-types/maps_metric_info/actions/resolve/invoke``
-     - Metric display semantics for perf data the SPA sends.
+     - ``domain-types/maps_metric_info/actions/{resolve,bulk-resolve}/invoke``
+     - Metric display semantics for perf data the SPA sends. Lookups without
+       graphs of one state tick go out as one ``bulk-resolve``.
    * - GET / POST
      - ``domain-types/maps_aggregation/…`` (list, ``show-tree``,
        ``show-states``)

@@ -162,6 +162,7 @@ CmkEndpointName = Literal[
     "cmk/bulk_create",
     "cmk/bulk_delete",
     "cmk/bulk_discovery",
+    "cmk/bulk_resolve_maps_metric_info",
     "cmk/bulk_update",
     "cmk/clone_dashboard_from_relative_grid",
     "cmk/clone_dashboard_relative_grid",

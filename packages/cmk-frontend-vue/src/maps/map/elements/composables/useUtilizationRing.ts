@@ -60,7 +60,7 @@ export function useUtilizationRing(source: {
     serviceDescription: () => source.object().service_description,
     perfData: () => source.state()?.perf_data,
     checkCommand: () => source.state()?.check_command,
-    enabled: () => !RINGLESS_STATES.has(stateName.value)
+    enabled: () => visible.value
   }
   const perfometer = usePerfometer(binding)
 

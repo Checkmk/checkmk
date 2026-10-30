@@ -394,9 +394,10 @@ def _graphs_payload(
     return list(best.values())
 
 
-def object_context(
-    site_id: str, host_name: str, service_description: str
-) -> tuple[SiteId, HostName, ServiceName]:
+type ObjectContext = tuple[SiteId, HostName, ServiceName]
+
+
+def object_context(site_id: str, host_name: str, service_description: str) -> ObjectContext:
     """The object identity the graph evaluation needs, from plain client strings.
 
     Raises :class:`HostNameValidationError` on a malformed host name — callers
@@ -417,7 +418,7 @@ def metric_info(
     theme: Theme,
     debug: bool,
     registered_graphs: Sequence[ApiGraph] | None = None,
-    object_context: tuple[SiteId, HostName, ServiceName] | None = None,
+    object_context: ObjectContext | None = None,
 ) -> MetricInfo:
     """Resolve raw perfdata display semantics through Checkmk's graphing pipeline.
 

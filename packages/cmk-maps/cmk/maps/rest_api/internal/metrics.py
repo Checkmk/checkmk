@@ -8,6 +8,7 @@ Thin wrapper around :mod:`cmk.maps.gui._metrics`, which owns the graphing
 pipeline (translations, Perf-O-Meter renderers, graph evaluation).
 """
 
+from collections.abc import Callable, Sequence
 from http import HTTPStatus
 
 from cmk.ccc.hostaddress import HostNameValidationError
@@ -18,6 +19,7 @@ from cmk.gui.graphing import (
     registered_perfometers,
     registered_translations,
 )
+from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -32,12 +34,17 @@ from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.theme.current_theme import theme
-from cmk.maps.gui._metrics import metric_info, object_context
+from cmk.maps.gui._metrics import metric_info, MetricInfo, object_context, ObjectContext
 from cmk.maps.rest_api.internal.endpoint_family import MAPS_INTERNAL_FAMILY
-from cmk.maps.rest_api.internal.models.request_models import MapsMetricInfoRequest
+from cmk.maps.rest_api.internal.models.request_models import (
+    MapsMetricInfoBulkRequest,
+    MapsMetricInfoRequest,
+    MAX_PERF_DATA_LENGTH,
+)
 from cmk.maps.rest_api.internal.models.response_models import (
     MapsGraphGroup,
     MapsMetric,
+    MapsMetricInfoBulkResponse,
     MapsMetricInfoResponse,
     MapsMetricUnit,
     MapsMetricUnitPrecision,
@@ -76,19 +83,75 @@ def show_metric_info_v1(
                 status=HTTPStatus.BAD_REQUEST, title="Invalid input", detail="Invalid host name."
             ) from None
 
-    info = metric_info(
-        body.perf_data,
-        body.check_command,
-        registered_metric_plugins=registered_metrics(),
-        registered_translations=registered_translations(),
-        registered_perfometers=registered_perfometers(),
-        temperature_unit=get_temperature_unit(user, api_context.config.default_temperature_unit),
-        theme=theme,
-        debug=api_context.config.debug,
-        registered_graphs=registered_graphs() if context is not None else None,
-        object_context=context,
+    return _resolve(body.perf_data, body.check_command, api_context, context)
+
+
+def bulk_resolve_metric_info_v1(
+    body: MapsMetricInfoBulkRequest, api_context: ApiContext
+) -> MapsMetricInfoBulkResponse:
+    """Resolve several raw perfdata strings against the metric registry"""
+    user.need_permission("maps.use")
+    return MapsMetricInfoBulkResponse(
+        results=resolve_each(
+            [(entry.perf_data, entry.check_command) for entry in body.entries],
+            lambda perf_data, check_command: _resolve(perf_data, check_command, api_context, None),
+            debug=api_context.config.debug,
+        )
     )
 
+
+def resolve_each(
+    entries: Sequence[tuple[str, str]],
+    resolve: Callable[[str, str], MapsMetricInfoResponse],
+    *,
+    debug: bool,
+) -> list[MapsMetricInfoResponse]:
+    """Resolve each distinct ``(perf_data, check_command)`` once, in request order.
+
+    An entry that fails resolves to nothing, as a Perf-O-Meter in a view does, so
+    one service cannot blank the others sent along with it.
+    """
+    resolved: dict[tuple[str, str], MapsMetricInfoResponse] = {}
+    for perf_data, check_command in entries:
+        if (perf_data, check_command) in resolved:
+            continue
+        result = _EMPTY
+        if len(perf_data) <= MAX_PERF_DATA_LENGTH:
+            try:
+                result = resolve(perf_data, check_command)
+            except Exception:
+                logger.exception("error resolving metric info")
+                if debug:
+                    raise
+        resolved[(perf_data, check_command)] = result
+    return [resolved[entry] for entry in entries]
+
+
+def _resolve(
+    perf_data: str,
+    check_command: str,
+    api_context: ApiContext,
+    context: ObjectContext | None,
+) -> MapsMetricInfoResponse:
+    return _response(
+        metric_info(
+            perf_data,
+            check_command,
+            registered_metric_plugins=registered_metrics(),
+            registered_translations=registered_translations(),
+            registered_perfometers=registered_perfometers(),
+            temperature_unit=get_temperature_unit(
+                user, api_context.config.default_temperature_unit
+            ),
+            theme=theme,
+            debug=api_context.config.debug,
+            registered_graphs=registered_graphs() if context is not None else None,
+            object_context=context,
+        )
+    )
+
+
+def _response(info: MetricInfo) -> MapsMetricInfoResponse:
     perfometer = info.perfometer
     return MapsMetricInfoResponse(
         perfometer=(
@@ -140,6 +203,9 @@ def show_metric_info_v1(
     )
 
 
+_EMPTY = _response(MetricInfo(perfometer=None, metrics={}))
+
+
 # POST on a read: the perfdata string is free-form and can be several kilobytes
 # on a wide check — too long for a query string.
 ENDPOINT_SHOW_METRIC_INFO = VersionedEndpoint(
@@ -152,4 +218,17 @@ ENDPOINT_SHOW_METRIC_INFO = VersionedEndpoint(
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=show_metric_info_v1)},
+)
+
+
+ENDPOINT_BULK_RESOLVE_METRIC_INFO = VersionedEndpoint(
+    metadata=EndpointMetadata(
+        path=domain_type_action_href("maps_metric_info", "bulk-resolve"),
+        link_relation="cmk/bulk_resolve_maps_metric_info",
+        method="post",
+    ),
+    permissions=EndpointPermissions(required=permissions.Perm("maps.use")),
+    doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
+    behavior=NO_CONFIG_CHANGE,
+    versions={APIVersion.INTERNAL: EndpointHandler(handler=bulk_resolve_metric_info_v1)},
 )

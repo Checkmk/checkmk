@@ -37,6 +37,15 @@ interface SharedEntry {
   result: Promise<MetricInfoResult | null>
 }
 
+interface QueuedLookup {
+  entry: { perf_data: string; check_command: string }
+  resolve: (result: MetricInfoResult) => void
+  reject: (error: unknown) => void
+}
+
+/** The most entries the server takes in one request. */
+const MAX_BULK_ENTRIES = 1000
+
 export class MetricInfoApi {
   /**
    * In-flight and settled lookups, so a wall with a dozen gadgets bound to the
@@ -45,6 +54,9 @@ export class MetricInfoApi {
    * reconnected element the previous one's answers.
    */
   private readonly shared = new Map<string, SharedEntry>()
+
+  /** Lookups waiting for the end of the current task, sent as one request. */
+  private queued: QueuedLookup[] = []
 
   /**
    * {@link resolve}, answered once for everyone asking the same question, and
@@ -55,21 +67,66 @@ export class MetricInfoApi {
     if (existing && existing.snapshot === request.snapshot) {
       return existing.result
     }
+    const lookup = request.graphContext
+      ? this.resolve(request.perfData, request.checkCommand, request.graphContext)
+      : this.resolveQueued(request.perfData, request.checkCommand)
     const entry: SharedEntry = {
       snapshot: request.snapshot,
-      result: this.resolve(request.perfData, request.checkCommand, request.graphContext).catch(
-        () => {
-          // Don't pin a transient failure (deploy restart, session refresh gap)
-          // for the session — drop the entry so the next tick retries.
-          if (this.shared.get(request.identity) === entry) {
-            this.shared.delete(request.identity)
-          }
-          return null
+      result: lookup.catch(() => {
+        // Don't pin a transient failure (deploy restart, session refresh gap)
+        // for the session — drop the entry so the next tick retries.
+        if (this.shared.get(request.identity) === entry) {
+          this.shared.delete(request.identity)
         }
-      )
+        return null
+      })
     }
     this.shared.set(request.identity, entry)
     return entry.result
+  }
+
+  /**
+   * {@link resolve} without graphs, sent together with every other lookup of the
+   * same task: a state tick changes the perfdata of many objects at once.
+   */
+  private resolveQueued(perfData: string, checkCommand: string): Promise<MetricInfoResult> {
+    return new Promise((resolve, reject) => {
+      if (this.queued.length === 0) {
+        setTimeout(() => void this.flushQueued(), 0)
+      }
+      this.queued.push({
+        entry: { perf_data: perfData, check_command: checkCommand },
+        resolve,
+        reject
+      })
+    })
+  }
+
+  private async flushQueued(): Promise<void> {
+    const queued = this.queued
+    this.queued = []
+    const chunks = []
+    for (let start = 0; start < queued.length; start += MAX_BULK_ENTRIES) {
+      chunks.push(queued.slice(start, start + MAX_BULK_ENTRIES))
+    }
+    await Promise.all(chunks.map((chunk) => this.sendChunk(chunk)))
+  }
+
+  private async sendChunk(chunk: QueuedLookup[]): Promise<void> {
+    try {
+      const { results } = unwrap(
+        await client.POST('/domain-types/maps_metric_info/actions/bulk-resolve/invoke', {
+          params: { header: { 'Content-Type': 'application/json' } },
+          body: { entries: chunk.map((lookup) => lookup.entry) }
+        })
+      )
+      if (results.length !== chunk.length) {
+        throw new Error('bulk-resolve answered a different number of entries')
+      }
+      chunk.forEach((lookup, index) => lookup.resolve(results[index]!))
+    } catch (error) {
+      chunk.forEach((lookup) => lookup.reject(error))
+    }
   }
 
   /**

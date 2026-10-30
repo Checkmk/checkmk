@@ -530,8 +530,13 @@ async fn _test_pull_reload(prefix: &str, ip_addr: IpAddr, port: u16) -> AnyhowRe
     }
     let test_dir = common::setup_test_dir(prefix);
     TrustFixture::setup(test_dir.path())?;
+    let agent_stream_fixture = AgentStreamFixture::setup(test_dir.path());
     let p = find_available_port_if_busy(port);
-    let pull_proc_fixture = PullProcessFixture::setup(test_dir.path(), &p, None)?;
+    let pull_proc_fixture = PullProcessFixture::setup(
+        test_dir.path(),
+        &p,
+        agent_stream_fixture.get_agent_channel(),
+    )?;
 
     // Give it some time to provide the TCP socket
     tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
@@ -573,7 +578,7 @@ async fn _test_pull_reload(prefix: &str, ip_addr: IpAddr, port: u16) -> AnyhowRe
     // If socket is still not closed we will fail.
     assert!(socket_closed, "port is {} ", p,);
 
-    teardown(test_dir, pull_proc_fixture, None)
+    teardown(test_dir, pull_proc_fixture, Some(agent_stream_fixture))
         .await
         .context("Teardown failed")
 }

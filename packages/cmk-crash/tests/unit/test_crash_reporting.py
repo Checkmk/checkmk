@@ -334,7 +334,8 @@ def _make_unique_crash(tmp_path: Path, num: int, timestamp: float = 0.0) -> Unit
 @pytest.mark.parametrize("n_crashes", [2, 4, 6])
 def test_crash_report_store_cleanup(tmp_path: Path, n_crashes: int) -> None:
     crash_store = CrashReportStore(
-        keep_num_crashes=4  # use a sane small number for performance reasons
+        keep_num_crashes=4,  # use a sane small number for performance reasons
+        debug=False,
     )
     crashes = tmp_path / "var/check_mk/crashes" / UnitTestCrashReport.type()
     assert not set(crashes.glob("*"))
@@ -353,7 +354,7 @@ def test_crash_report_store_cleanup(tmp_path: Path, n_crashes: int) -> None:
 
 def _saved_crash_ids(tmp_path: Path, timestamps: list[float]) -> tuple[Path, list[str]]:
     """Save one crash per timestamp and return the crashes base path and the crash ids."""
-    crash_store = CrashReportStore()
+    crash_store = CrashReportStore(debug=False)
     crash_ids = []
     for num, timestamp in enumerate(timestamps):
         crash = _make_unique_crash(tmp_path, num, timestamp=timestamp)
@@ -416,7 +417,7 @@ def test_crash_report_store_ignores_non_directories_in_base_dir(tmp_path: Path) 
     The lock file and any other stray files must be silently skipped during
     the fingerprint scan in _get_existing_crash.
     """
-    crash_store = CrashReportStore()
+    crash_store = CrashReportStore(debug=False)
     crashes_dir = tmp_path / "var/check_mk/crashes" / UnitTestCrashReport.type()
     crashes_dir.mkdir(parents=True)
 
@@ -436,7 +437,7 @@ def test_crash_report_store_no_deduplication_without_traceback(tmp_path: Path) -
     An empty traceback produces a degenerate fingerprint that would incorrectly
     merge unrelated crashes, so deduplication is skipped in that case.
     """
-    crash_store = CrashReportStore()
+    crash_store = CrashReportStore(debug=False)
     crashes_dir = tmp_path / "var/check_mk/crashes" / UnitTestCrashReport.type()
 
     for ts in [1000.0, 2000.0]:
@@ -463,7 +464,7 @@ def test_crash_report_store_no_deduplication_without_traceback(tmp_path: Path) -
 
 
 def test_crash_report_store_deduplication(tmp_path: Path) -> None:
-    crash_store = CrashReportStore()
+    crash_store = CrashReportStore(debug=False)
     crashes_dir = tmp_path / "var/check_mk/crashes" / UnitTestCrashReport.type()
 
     # Save the same crash three times with different timestamps
@@ -500,7 +501,7 @@ def test_crash_report_store_deduplication_out_of_order(tmp_path: Path) -> None:
     been stored, first_seen must be set to the minimum and last_seen to the
     maximum of all observed timestamps regardless of arrival order.
     """
-    crash_store = CrashReportStore()
+    crash_store = CrashReportStore(debug=False)
     crashes_dir = tmp_path / "var/check_mk/crashes" / UnitTestCrashReport.type()
 
     # Arrive in reverse chronological order: newest first, then oldest
@@ -528,7 +529,7 @@ def test_crash_report_store_corrupted_crash_info_saves_new_crash(tmp_path: Path)
     parsed, it must skip that directory and fall through to creating a fresh
     crash report instead of propagating the exception.
     """
-    crash_store = CrashReportStore()
+    crash_store = CrashReportStore(debug=False)
     crashes_dir = tmp_path / "var/check_mk/crashes" / UnitTestCrashReport.type()
     crashes_dir.mkdir(parents=True)
 
@@ -548,7 +549,7 @@ def test_crash_report_store_corrupted_crash_info_saves_new_crash(tmp_path: Path)
 
 def test_crash_report_store_missing_crash_info_saves_new_crash(tmp_path: Path) -> None:
     """A crash directory whose crash.info is absent must not prevent saving a new crash."""
-    crash_store = CrashReportStore()
+    crash_store = CrashReportStore(debug=False)
     crashes_dir = tmp_path / "var/check_mk/crashes" / UnitTestCrashReport.type()
     crashes_dir.mkdir(parents=True)
 
@@ -651,7 +652,7 @@ def test_fingerprint_hash_handles_none_exc_type() -> None:
 
 def test_crash_report_store_writes_fingerprint_index(tmp_path: Path) -> None:
     """Saving a crash with a traceback must create the fingerprint index file."""
-    crash_store = CrashReportStore()
+    crash_store = CrashReportStore(debug=False)
     crashes_dir = tmp_path / "var/check_mk/crashes" / UnitTestCrashReport.type()
 
     crash = _make_crash(tmp_path)

@@ -291,6 +291,7 @@ def _mode_check_discovery(
                         get_agent_output=lambda: serialize_fetched(
                             (f.source, f.raw_data) for f in fetched
                         ),
+                        debug=global_options.debug,
                     ),
                     host_label_plugins=HostLabelPluginMapper(
                         discovery_config=discovery_config,
@@ -611,6 +612,7 @@ def _mode_discover(
                     section_content=raw_data,
                     host_name=host_name,
                     get_agent_output=lambda: recording_fetcher.serialized(host_name),
+                    debug=global_options.debug,
                 )
 
             succeeded = commandline_discovery(

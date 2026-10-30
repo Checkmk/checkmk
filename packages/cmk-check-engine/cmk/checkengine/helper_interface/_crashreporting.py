@@ -37,7 +37,7 @@ def create_fetcher_crash_dump(
             serial=serial,
             host=host,
         )
-        CrashReportStore().save(crash)
+        CrashReportStore(debug=debug).save(crash)
         text += " (Crash-ID: %s)" % crash.ident_to_text()
         return text
     except Exception:

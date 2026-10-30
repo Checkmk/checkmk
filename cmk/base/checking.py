@@ -297,6 +297,7 @@ def run_checking(
                         get_agent_output=lambda: serialize_fetched(
                             (f.source, f.raw_data) for f in fetched
                         ),
+                        debug=debug,
                     ),
                     check_plugins=check_plugins,
                     inventory_plugins=plugins.inventory_plugins,

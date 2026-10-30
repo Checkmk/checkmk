@@ -95,7 +95,7 @@ def _crash_dir_last_seen(crash_dir: Path) -> float:
     Falls back to the directory's modification time when the crash.info is missing or
     unreadable, so a corrupted report is never considered "infinitely new"."""
     try:
-        info = json.loads(store.load_text_from_file(crash_dir / "crash.info"))
+        info = json.loads(store.load_text_from_file_explicit(crash_dir / "crash.info", debug=False))
         return read_occurrences(info)["last_seen"]
     except Exception:
         try:
@@ -184,7 +184,8 @@ def cleanup_crash_reports(
 class CrashReportStore:
     """Caring about the persistance of crash reports in the local site"""
 
-    def __init__(self, *, keep_num_crashes: int = 200) -> None:
+    def __init__(self, *, debug: bool, keep_num_crashes: int = 200) -> None:
+        self._debug: Final = debug
         self.keep_num_crashes: Final = keep_num_crashes
 
     def save[TDetails](self, crash: ABCCrashReport[TDetails]) -> None:
@@ -261,7 +262,9 @@ class CrashReportStore:
                 continue
             crash_info_path = existing_dir / "crash.info"
             try:
-                existing_info = json.loads(store.load_text_from_file(crash_info_path))
+                existing_info = json.loads(
+                    store.load_text_from_file_explicit(crash_info_path, debug=False)
+                )
             except Exception:
                 continue  # missing or corrupted — treat as no match, save new crash
 
@@ -281,7 +284,9 @@ class CrashReportStore:
     def _merge_into_existing[TDetails](
         self, crash: ABCCrashReport[TDetails], crash_info_path: Path
     ) -> None:
-        existing_info = json.loads(store.load_text_from_file(crash_info_path))
+        existing_info = json.loads(
+            store.load_text_from_file_explicit(crash_info_path, debug=self._debug)
+        )
         existing_occ = read_occurrences(existing_info)
         # ``crash`` is an individual, freshly-produced crash: a single occurrence.
         new_time = float(crash.crash_info["time"])
@@ -431,7 +436,9 @@ class CrashReportStore:
                 crash_info_path = crash_dir / "crash.info"
                 try:
                     # ``json.loads`` returns ``Any``, so this is a cast-free assignment.
-                    parsed: StoredCrashInfo = json.loads(store.load_text_from_file(crash_info_path))
+                    parsed: StoredCrashInfo = json.loads(
+                        store.load_text_from_file_explicit(crash_info_path, debug=False)
+                    )
                     # Bring legacy v0/v1 records up to date: move the timestamp into the
                     # ``occurrences`` aggregate and drop the old ``time`` key. A single
                     # unreadable or structurally-invalid report is skipped rather than

@@ -1088,6 +1088,7 @@ def get_aggregated_result(  # type: ignore[explicit-any]
                 is_enforced=service.is_enforced,
                 snmp_backend=snmp_backend,
                 get_agent_output=get_agent_output,
+                debug=debug,
             ),
         )
 

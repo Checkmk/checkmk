@@ -117,5 +117,6 @@ def _handle_failure(
             is_enforced=False,
             snmp_backend=snmp_backend,
             get_agent_output=get_agent_output,
+            debug=debug,
         ).replace("Crash dump:\n", "Crash dump:\\n"),
     )

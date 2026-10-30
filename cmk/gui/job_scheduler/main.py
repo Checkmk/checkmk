@@ -59,7 +59,7 @@ def default_crash_report_callback(_exc: Exception) -> str:
             cmk_version_info.get_general_version_infos(paths.omd_root), None
         ),
     )
-    CrashReportStore().save(crash)
+    CrashReportStore(debug=False).save(crash)
     return crash.ident_to_text()
 
 

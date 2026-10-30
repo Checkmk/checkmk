@@ -52,7 +52,7 @@ def create_javascript_crash_report_v1(
         ),
         crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
     )
-    CrashReportStore().save(crash)
+    CrashReportStore(debug=False).save(crash)
     logger.warning(
         "Unhandled exception in the Checkmk frontend (Crash ID: %(crash_id)s)",
         {"crash_id": crash.ident_to_text()},

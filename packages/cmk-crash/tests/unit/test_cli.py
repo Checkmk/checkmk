@@ -248,7 +248,7 @@ def test_cron_run_logs_a_schedule_failure_to_the_file(
     )
     monkeypatch.setattr("sys.argv", ["cmk-upload-crashes", "--cron"])
 
-    def _explode(*_args: object) -> bool:
+    def _explode(*_args: object, **_kwargs: object) -> bool:
         raise PermissionError("var/check_mk not writable")
 
     monkeypatch.setattr(cli, "claim_due_run", _explode)

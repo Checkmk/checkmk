@@ -2070,7 +2070,7 @@ def _handle_spoolfile(
             return 2
 
         with store.locked(spoolfile_path):
-            data = store.load_object_from_file(spoolfile_path, default={})
+            data = store.load_object_from_file_explicit(spoolfile_path, default={}, debug=False)
 
         if not data:
             logger.warning("Skipping empty spool file %(uuid)s", {"uuid": notif_uuid[:8]})
@@ -2591,7 +2591,9 @@ def notify_bulk(
     unhandled_uuids: UUIDs = []
     for mtime, notify_uuid in uuids:
         try:
-            params, context = store.load_object_from_file(Path(dirname) / notify_uuid, default=None)
+            params, context = store.load_object_from_file_explicit(
+                Path(dirname) / notify_uuid, default=None, debug=False
+            )
         except Exception as e:
             if debug:
                 raise
@@ -2741,16 +2743,19 @@ def store_notification_backlog(raw_context: EventContext, *, backlog_size: int) 
             path.unlink()
         return
 
-    backlog = store.load_object_from_file(
+    backlog = store.load_object_from_file_explicit(
         path,
         default=[],
         lock=True,
+        debug=False,
     )[: backlog_size - 1]
     store.save_object_to_file(path, [raw_context] + backlog, pprint_value=False)
 
 
 def raw_context_from_backlog(nr: int) -> EventContext:
-    backlog = store.load_object_from_file(notification_logdir / "backlog.mk", default=[])
+    backlog = store.load_object_from_file_explicit(
+        notification_logdir / "backlog.mk", default=[], debug=False
+    )
 
     if nr < 0 or nr >= len(backlog):
         console.error(f"No notification number {nr} in backlog.", file=sys.stderr)

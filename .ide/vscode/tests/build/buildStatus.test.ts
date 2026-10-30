@@ -10,6 +10,14 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { checkBuildStatus, sharedTypingConsumers } from '../../src/build/buildStatus'
 
+const SHARED_TYPING_CALL = `shared_typing(
+    name = "shared_typing",
+    srcs = glob(["shared_typing/*.json"]),
+    python_package = "cmk/foo/shared_typing",
+    typescript_dir = "frontend/types",
+)
+`
+
 let wsPath: string
 
 function writeBuild(pkg: string, content: string): void {
@@ -58,5 +66,20 @@ describe('checkBuildStatus', () => {
     writeBuild('packages/cmk-profiling', 'link_shared_typing()\n')
 
     expect(checkBuildStatus(wsPath).sharedTypingTs.ok).toBe(false)
+  })
+
+  it('needs the TypeScript of every shared_typing call in bazel-bin', () => {
+    writeBuild('packages/cmk-profiling', SHARED_TYPING_CALL)
+    fs.mkdirSync(path.join(wsPath, 'bazel-bin', 'packages', 'cmk-profiling'), { recursive: true })
+
+    expect(checkBuildStatus(wsPath).sharedTypingTs.ok).toBe(false)
+  })
+
+  it('accepts shared_typing TypeScript built into bazel-bin', () => {
+    writeBuild('non-free/packages/cmk-ai', SHARED_TYPING_CALL)
+    const builtDir = path.join(wsPath, 'bazel-bin', 'non-free/packages/cmk-ai/frontend/types')
+    fs.mkdirSync(builtDir, { recursive: true })
+
+    expect(checkBuildStatus(wsPath).sharedTypingTs.ok).toBe(true)
   })
 })

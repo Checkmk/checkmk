@@ -6,7 +6,7 @@
   },
   "cmk.buildSharedTyping": {
     "name": "Build shared-typing",
-    "command": "bazel build //packages/cmk-shared-typing:cmk_shared_typing_ts //packages/cmk-shared-typing:cmk_shared_typing_py && bin=\"$(bazel info bazel-bin)\" && for build in $(find packages non-free/packages -mindepth 2 -maxdepth 2 -name BUILD 2>/dev/null | xargs grep -l '^link_shared_typing('); do mkdir -p \"$(dirname $build)/node_modules\" && ln -sfn \"$bin/packages/cmk-shared-typing\" \"$(dirname $build)/node_modules/cmk-shared-typing\"; done",
+    "command": "targets=\"$(mktemp)\" && bazel query \"//packages/cmk-shared-typing:cmk_shared_typing_ts + //packages/cmk-shared-typing:cmk_shared_typing_py + kind(_typescript_types, //...) + attr(outs, '\\\\.ts\\\\b', //...)\" > \"$targets\" && bazel build --target_pattern_file=\"$targets\" && rm \"$targets\" && bin=\"$(bazel info bazel-bin)\" && for build in $(find packages non-free/packages -mindepth 2 -maxdepth 2 -name BUILD 2>/dev/null | xargs grep -l '^link_shared_typing('); do mkdir -p \"$(dirname $build)/node_modules\" && ln -sfn \"$bin/packages/cmk-shared-typing\" \"$(dirname $build)/node_modules/cmk-shared-typing\"; done",
     "requires": "frontend"
   },
   "cmk.buildCmkFrontend": {

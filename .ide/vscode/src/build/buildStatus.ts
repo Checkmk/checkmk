@@ -35,6 +35,22 @@ export interface CommandEntry {
 // `link_shared_typing()` call in their BUILD file. The `cmk.buildSharedTyping`
 // command finds the same packages.
 export function sharedTypingConsumers(wsPath: string): string[] {
+  return packageBuilds(wsPath)
+    .filter(({ build }) => /^link_shared_typing\(/m.test(build))
+    .map(({ pkg }) => pkg)
+}
+
+// `cmk.buildSharedTyping` builds every target that generates TypeScript, but
+// only the output of `shared_typing()` calls in package BUILD files is checked.
+function sharedTypingTypescriptDirs(wsPath: string): string[] {
+  return packageBuilds(wsPath).flatMap(({ pkg, build }) =>
+    [...build.matchAll(/^shared_typing\([\s\S]*?typescript_dir = "([^"]+)"/gm)].map((match) =>
+      path.join(pkg, match[1])
+    )
+  )
+}
+
+function packageBuilds(wsPath: string): { pkg: string; build: string }[] {
   return ['packages', path.join('non-free', 'packages')].flatMap((root) => {
     let names: string[]
     try {
@@ -44,12 +60,11 @@ export function sharedTypingConsumers(wsPath: string): string[] {
     }
     return names
       .map((name) => path.join(root, name))
-      .filter((pkg) => {
+      .flatMap((pkg) => {
         try {
-          const build = fs.readFileSync(path.join(wsPath, pkg, 'BUILD'), 'utf8')
-          return /^link_shared_typing\(/m.test(build)
+          return [{ pkg, build: fs.readFileSync(path.join(wsPath, pkg, 'BUILD'), 'utf8') }]
         } catch {
-          return false
+          return []
         }
       })
   })
@@ -72,14 +87,18 @@ export function checkBuildStatus(wsPath: string): BuildStatus {
   const sharedTypingLinks = sharedTypingConsumers(wsPath).map((pkg) =>
     path.join(wsPath, pkg, 'node_modules', 'cmk-shared-typing')
   )
-  status.sharedTypingTs.ok = sharedTypingLinks.every((link) => {
-    try {
-      const target = fs.readlinkSync(link)
-      return fs.existsSync(path.resolve(path.dirname(link), target))
-    } catch {
-      return false
-    }
-  })
+  status.sharedTypingTs.ok =
+    sharedTypingLinks.every((link) => {
+      try {
+        const target = fs.readlinkSync(link)
+        return fs.existsSync(path.resolve(path.dirname(link), target))
+      } catch {
+        return false
+      }
+    }) &&
+    sharedTypingTypescriptDirs(wsPath).every((dir) =>
+      fs.existsSync(path.join(wsPath, 'bazel-bin', dir))
+    )
 
   try {
     const sitePackages = fs

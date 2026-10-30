@@ -83,11 +83,11 @@ class VersionedConfigPath:
         return hash(Path(self))
 
 
-def _increment_to_next_serial(base: Path) -> int:
+def _increment_to_next_serial(base: Path, *, debug: bool) -> int:
     root = VersionedConfigPath.make_root_path(base)
     store = ObjectStore(root / "serial.mk", serializer=DimSerializer())
     with store.locked():
-        old_serial: int = store.read_obj(default=0)
+        old_serial: int = store.read_obj_explicit(default=0, debug=debug)
         new_serial = old_serial + 1
         store.write_obj(new_serial)
     # TODO: The fact that this can be interpreted as an int
@@ -130,13 +130,13 @@ def cleanup_old_configs(base: Path) -> None:
 
 
 @contextmanager
-def create(base: Path) -> Iterator[ConfigCreationContext]:
+def create(base: Path, *, debug: bool) -> Iterator[ConfigCreationContext]:
     # NOTE:
     # The "latest" symlink points to the last successfully created config.
     # The "serial.mk" file contains the last serial we started to create.
     latest_link_path = VersionedConfigPath.make_latest_path(base)
     current_config_path = latest_link_path.resolve()
-    serial = _increment_to_next_serial(base)
+    serial = _increment_to_next_serial(base, debug=debug)
     under_construction_path = Path(VersionedConfigPath(base, serial))
 
     with suppress(FileNotFoundError):

@@ -33,13 +33,21 @@ from cmk.gui.dashboard.api.model.contextual_link import (
     TagGroupKeyOption,
     VisualLocation,
 )
+from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
 from cmk.gui.dashboard.api.model.widget_content.inventory import InventoryContent
 from cmk.gui.dashboard.api.model.widget_content.metric import TopListContent
+from cmk.gui.dashboard.api.model.widget_content.overview import SiteOverviewContent
 from cmk.gui.dashboard.api.model.widget_content.state import (
     HostStateContent,
     ServiceStateContent,
 )
-from cmk.gui.dashboard.type_defs import ContextFilterConfig
+from cmk.gui.dashboard.api.model.widget_content.stats import HostStatsContent, ServiceStatsContent
+from cmk.gui.dashboard.type_defs import (
+    ContextFilterConfig,
+    ContextualLinkCustomConfig,
+    StatsDashletConfig,
+)
+from cmk.gui.type_defs import ContextualLinkEntryConfig
 from cmk.gui.views.drilldown_filters import filter_drilldown
 from cmk.gui.visuals.filter import filter_registry
 from tests.testlib.unit.gui.web_test_app import SetConfig
@@ -49,6 +57,9 @@ pytestmark = pytest.mark.usefixtures("request_context")
 
 _VIEW = VisualLocation(type="views", name="searchhost")
 _DASHBOARD = VisualLocation(type="dashboards", name="linux")
+
+_MULTI_VALUE_HOST_FILTERS = ["sites", "wato_folders", "hostgroups", "host_labels"]
+_SERVICE_ONLY_FILTERS = {"svcstate", "svchardstate", "service_labels", "service", "optservicegroup"}
 
 
 def _inherited(location: VisualLocation) -> ContextualLinkInherited:
@@ -146,11 +157,37 @@ def test_a_label_filter_does_not_load_without_its_key() -> None:
         OBJECT_HOST_FILTER_ADAPTER.validate_python(ContextFilterConfig(filter_id="host_labels"))
 
 
-def test_a_label_does_not_load_as_an_aggregate_filter() -> None:
+def test_a_single_value_filter_does_not_load_as_an_aggregate_filter() -> None:
     with pytest.raises(ValidationError):
-        AGGREGATE_HOST_FILTER_ADAPTER.validate_python(
-            ContextFilterConfig(filter_id="host_labels", key="cmk/os_family")
-        )
+        AGGREGATE_HOST_FILTER_ADAPTER.validate_python(ContextFilterConfig(filter_id="siteopt"))
+
+
+def test_a_stored_statistics_link_leaves_out_the_filters_statistics_no_longer_offer() -> None:
+    stored = ContextualLinkCustomConfig(
+        type="custom",
+        links=[
+            ContextualLinkEntryConfig(
+                title="Problem services",
+                location=("views", "searchsvc"),
+                filters=[
+                    ContextFilterConfig(filter_id="siteopt"),
+                    ContextFilterConfig(filter_id="wato_folder"),
+                    ContextFilterConfig(filter_id="optservicegroup"),
+                    ContextFilterConfig(filter_id="hoststate"),
+                ],
+                include_context=False,
+                include_time_range=False,
+                show_filter_form=False,
+            )
+        ],
+    )
+
+    link = ServiceStatsContent.from_internal(
+        StatsDashletConfig(type="servicestats", contextual_link=stored)
+    ).contextual_link
+
+    assert isinstance(link, ContextualLinkCustom)
+    assert link.links[0].filters == [HostStateContextFilter(filter_id="hoststate")]
 
 
 def test_a_service_filter_does_not_load_as_a_host_filter() -> None:
@@ -173,10 +210,48 @@ def test_a_host_state_click_may_carry_the_host_name() -> None:
     options = HostStateContent.contextual_link_options()
 
     assert options is not None
-    assert options.filters[:5] == ["siteopt", "wato_folder", "hoststate", "opthostgroup", "host"]
-    assert {"site", "host_check_command_exact", "kubernetes_namespace", "host_labels"} <= set(
-        options.filters
-    )
+    assert options.filters[:4] == ["siteopt", "wato_folder", "hoststate", "opthostgroup"]
+    assert {
+        "host",
+        "site",
+        "host_check_command_exact",
+        "kubernetes_namespace",
+        "host_labels",
+    } <= set(options.filters)
+
+
+@pytest.mark.parametrize(
+    "content, filters",
+    [
+        pytest.param(HostStatsContent, ["hoststate"], id="host statistics"),
+        pytest.param(ServiceStatsContent, ["hoststate", "svcstate"], id="service statistics"),
+    ],
+)
+def test_a_statistics_click_offers_only_the_states_its_part_names(
+    content: type[BaseWidgetContent], filters: list[str]
+) -> None:
+    options = content.contextual_link_options()
+
+    assert options is not None
+    assert options.filters == filters
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        pytest.param(SiteOverviewContent, id="site overview"),
+        pytest.param(HostStateContent, id="host state"),
+        pytest.param(InventoryContent, id="inventory"),
+    ],
+)
+def test_a_host_click_offers_the_multi_value_host_filters_but_no_service_filter(
+    content: type[BaseWidgetContent],
+) -> None:
+    options = content.contextual_link_options()
+
+    assert options is not None
+    assert set(_MULTI_VALUE_HOST_FILTERS) <= set(options.filters)
+    assert not _SERVICE_ONLY_FILTERS & set(options.filters)
 
 
 def test_a_host_state_click_names_the_key_of_each_keyed_filter() -> None:

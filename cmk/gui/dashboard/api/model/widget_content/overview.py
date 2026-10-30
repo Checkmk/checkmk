@@ -11,7 +11,7 @@ from cmk.gui.dashboard.type_defs import (
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import TimerangeModel
 
-from ..context_filters import AGGREGATE_HOST_FILTER_ADAPTER, AggregateHostContextFilter
+from ..context_filters import OBJECT_HOST_FILTER_ADAPTER, ObjectHostContextFilter
 from ..contextual_link import (
     AnyContextualLinkSpec,
     contextual_link_from_internal,
@@ -75,8 +75,11 @@ class SiteOverviewContent(BaseWidgetContent):
     hexagon_size: Literal["default", "large"] = api_field(
         description="Defines the size of the hexagons in the widget.",
     )
-    contextual_link: ContextualLinkSpec[AggregateHostContextFilter] = api_field(
-        description="Where a click on a site or a host leads."
+    contextual_link: ContextualLinkSpec[ObjectHostContextFilter] = api_field(
+        description=(
+            "Where a click on a site or a host leads. A filter of the host itself drops on a click "
+            "on a site."
+        )
     )
 
     @classmethod
@@ -95,7 +98,7 @@ class SiteOverviewContent(BaseWidgetContent):
             dataset=config.get("dataset") or "via_context",
             hexagon_size=config.get("box_scale") or "default",
             contextual_link=contextual_link_from_internal(
-                config.get("contextual_link"), AGGREGATE_HOST_FILTER_ADAPTER
+                config.get("contextual_link"), OBJECT_HOST_FILTER_ADAPTER
             ),
         )
 

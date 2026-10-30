@@ -80,6 +80,15 @@ _VALUED_CASES = [
         id="root folder",
     ),
     pytest.param("opthostgroup", _HOST_ROW, [], {"opthost_group": "linux"}, id="host group"),
+    pytest.param("sites", _HOST_ROW, [], {"sites": "heute"}, id="sites"),
+    pytest.param("wato_folders", _HOST_ROW, [], {"wato_folders": "servers/linux"}, id="folders"),
+    pytest.param(
+        "hostgroups",
+        {"host_groups": ["linux", "web"]},
+        [],
+        {"hostgroups": "linux|web"},
+        id="several host groups",
+    ),
     pytest.param(
         "host_tags",
         _HOST_ROW,

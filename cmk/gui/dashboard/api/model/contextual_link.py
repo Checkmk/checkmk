@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Container, Iterator, Mapping, Sequence
 from typing import (
     Annotated,
     assert_never,
@@ -227,9 +227,14 @@ def _key_option(key: FilterKey | None) -> FilterKeyOption | None:
 
 
 def _members(alias: TypeAliasType) -> tuple[object, ...]:
-    """The members of an alias of the form `Annotated[A | B | ..., Discriminator(...)]`."""
-    members: tuple[object, ...] = get_args(get_args(alias.__value__)[0])
-    return members
+    """The members of an alias of the form `Annotated[A | B | ..., Discriminator(...)]`, or the
+    one model an alias names."""
+    match get_args(alias.__value__):
+        case (union, *_):
+            members: tuple[object, ...] = get_args(union)
+            return members
+        case _:
+            return (alias.__value__,)
 
 
 def _literals(model: object, field: str) -> list[str]:
@@ -277,9 +282,11 @@ def _inherited_to_internal(link: ContextualLinkInherited) -> ContextualLinkInher
 
 
 def contextual_link_from_internal[F](
-    config: ContextualLinkConfig | None, filter_adapter: TypeAdapter[F]
+    config: ContextualLinkConfig | None,
+    filter_adapter: TypeAdapter[F],
+    left_out: Container[FilterName] = (),
 ) -> ContextualLinkSpec[F]:
-    """The API form of a stored link configuration."""
+    """The API form of a stored link configuration, without the filters `left_out`."""
     if config is None:
         return ContextualLinkDefault(type="default")
     if config["type"] == "none":
@@ -293,7 +300,11 @@ def contextual_link_from_internal[F](
                 ContextualLink(
                     title=entry["title"],
                     location=location_from_internal(entry["location"]),
-                    filters=[filter_adapter.validate_python(f) for f in entry["filters"]],
+                    filters=[
+                        filter_adapter.validate_python(f)
+                        for f in entry["filters"]
+                        if f["filter_id"] not in left_out
+                    ],
                     include_context=entry["include_context"],
                     include_time_range=entry["include_time_range"],
                     show_filter_form=entry["show_filter_form"],

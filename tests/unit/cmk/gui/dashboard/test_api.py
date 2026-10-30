@@ -220,7 +220,7 @@ def test_dashboard_constants_tell_the_link_options_of_a_widget(clients: ClientRe
 
     assert widgets["host_stats"]["contextual_link"] == {
         "modes": ["default", "inherited", "custom"],
-        "filters": ["siteopt", "wato_folder", "hoststate", "opthostgroup"],
+        "filters": ["hoststate"],
         "filter_keys": {},
     }
     assert "contextual_link" not in widgets["event_stats"]
@@ -1272,7 +1272,7 @@ def _custom(
 @pytest.mark.parametrize(
     "widget_type,link",
     [
-        pytest.param("host_stats", _custom("siteopt", "hoststate"), id="host"),
+        pytest.param("host_stats", _custom("hoststate"), id="host"),
         pytest.param("service_stats", _custom("hoststate", "svcstate"), id="service"),
     ],
 )
@@ -1290,6 +1290,7 @@ def test_a_custom_link_round_trips(
         pytest.param({"type": "custom", "links": []}, id="no links"),
         pytest.param(_custom("svcstate"), id="a service filter on a host widget"),
         pytest.param(_custom("host"), id="a host name on an aggregate widget"),
+        pytest.param(_custom("sites"), id="a filter that needs the objects of a part"),
         pytest.param(_custom(title=" "), id="a blank title"),
     ],
 )

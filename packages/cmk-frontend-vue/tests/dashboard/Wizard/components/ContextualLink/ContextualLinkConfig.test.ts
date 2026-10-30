@@ -22,7 +22,7 @@ import type { HostStateContent, HostStatisticsContent } from '@/dashboard/compon
 const API = `${location.protocol}//${location.host}/api/internal`
 const HOST_STATISTICS_OPTIONS: ContextualLinkOptions = {
   modes: ['default', 'inherited', 'custom'],
-  filters: ['siteopt', 'wato_folder', 'hoststate', 'opthostgroup'],
+  filters: ['hoststate'],
   filter_keys: {}
 }
 

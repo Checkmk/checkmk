@@ -8,7 +8,7 @@ from typing import Annotated, Literal
 from pydantic import Discriminator, StringConstraints, TypeAdapter
 
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.type_defs import ContextFilterConfig
+from cmk.gui.type_defs import ContextFilterConfig, FilterName
 
 
 @api_model
@@ -32,6 +32,32 @@ class HostStateContextFilter:
 class HostGroupContextFilter:
     filter_id: Literal["opthostgroup"] = api_field(
         description="The host group of the clicked element."
+    )
+
+
+@api_model
+class SitesContextFilter:
+    filter_id: Literal["sites"] = api_field(description="The sites of the clicked element.")
+
+
+@api_model
+class WatoFoldersContextFilter:
+    filter_id: Literal["wato_folders"] = api_field(
+        description="The folders of the clicked element."
+    )
+
+
+@api_model
+class HostGroupsContextFilter:
+    filter_id: Literal["hostgroups"] = api_field(
+        description="The host groups of the clicked element."
+    )
+
+
+@api_model
+class ServiceHardStateContextFilter:
+    filter_id: Literal["svchardstate"] = api_field(
+        description="The hard service state of the clicked element."
     )
 
 
@@ -85,7 +111,6 @@ class HostAttributeContextFilter:
 @api_model
 class ServiceAttributeContextFilter:
     filter_id: Literal[
-        "svchardstate",
         "service_state_type",
         "service_staleness",
         "check_command_exact",
@@ -132,44 +157,51 @@ class ServiceTagContextFilter(_KeyedContextFilter):
     filter_id: Literal["service_tags"] = api_field(description="A tag of the clicked service.")
 
 
-# Plain unions, so that a set built on another one still lists its members flat.
-_AggregateHostFilters = (
-    SiteContextFilter | WatoFolderContextFilter | HostStateContextFilter | HostGroupContextFilter
-)
-_AggregateServiceFilters = (
-    _AggregateHostFilters | ServiceStateContextFilter | ServiceGroupContextFilter
-)
+# A click that yields a set of hosts: only the state, which the clicked part names itself.
+type AggregateHostContextFilter = HostStateContextFilter
 
-# A click that yields a set of hosts: nothing that names one host.
-type AggregateHostContextFilter = Annotated[_AggregateHostFilters, Discriminator("filter_id")]
+# A click that yields a set of services, which also carry their hosts' state.
+type AggregateServiceContextFilter = Annotated[
+    HostStateContextFilter | ServiceStateContextFilter, Discriminator("filter_id")
+]
 
-# A click that yields a set of services, which also carry their hosts' filters.
-type AggregateServiceContextFilter = Annotated[_AggregateServiceFilters, Discriminator("filter_id")]
-
+# The single-value filters first, so the editor lists them first.
 _ObjectHostFilters = (
-    _AggregateHostFilters
+    SiteContextFilter
+    | WatoFolderContextFilter
+    | HostStateContextFilter
+    | HostGroupContextFilter
+    | SitesContextFilter
+    | WatoFoldersContextFilter
+    | HostGroupsContextFilter
+    | HostLabelContextFilter
     | HostNameContextFilter
     | HostAttributeContextFilter
-    | HostLabelContextFilter
     | HostTagContextFilter
     | HostAuxTagContextFilter
 )
 
-# A click that yields one host: every aggregate member, plus the host's name, attributes, labels
-# and tags.
+# A click that yields one host: its site, folder, state, groups, labels, name, attributes and
+# tags.
 type ObjectHostContextFilter = Annotated[_ObjectHostFilters, Discriminator("filter_id")]
 
 # A click that yields one service, which also carries its host's filters.
 type ObjectServiceContextFilter = Annotated[
     _ObjectHostFilters
     | ServiceStateContextFilter
+    | ServiceHardStateContextFilter
+    | ServiceLabelContextFilter
     | ServiceGroupContextFilter
     | ServiceNameContextFilter
     | ServiceAttributeContextFilter
-    | ServiceLabelContextFilter
     | ServiceTagContextFilter,
     Discriminator("filter_id"),
 ]
+
+# A statistics link stored while statistics offered these filters leaves them out.
+RETIRED_AGGREGATE_FILTERS: frozenset[FilterName] = frozenset(
+    {"siteopt", "wato_folder", "opthostgroup", "optservicegroup"}
+)
 
 
 # The stored form of a filter is its API form, so each set reads back through its own union.

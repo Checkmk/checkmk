@@ -50,6 +50,7 @@ def register(filter_registry: FilterRegistry) -> None:
             htmlvars=["wato_folders"],
             link_columns=[],
             group=FilterGroup.FOLDER,
+            drilldown=drilldowns.Drilldown(columns=["host_filename"], variables=_folders),
         ),
     )
 
@@ -70,11 +71,17 @@ def _wato_folders_to_lq_regex(path: str) -> str:
 
 
 def _folder(row: drilldowns.RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
-    if (filename := drilldowns.value(row, "host_filename")) is None or (
-        folder := _folder_path(filename)
-    ) is None:
+    return None if (folder := _row_folder(row)) is None else {"wato_folder": folder}
+
+
+def _folders(row: drilldowns.RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
+    return None if (folder := _row_folder(row)) is None else {"wato_folders": folder}
+
+
+def _row_folder(row: drilldowns.RowValues) -> str | None:
+    if (filename := drilldowns.value(row, "host_filename")) is None:
         return None
-    return {"wato_folder": folder}
+    return _folder_path(filename)
 
 
 class FilterWatoFolder(Filter):

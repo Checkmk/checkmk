@@ -78,6 +78,19 @@ def checked_option(prefix: str, column: ColumnName) -> Drilldown:
     return Drilldown(columns=[column], variables=variables)
 
 
+def multi_value(variable: str, column: ColumnName) -> Drilldown:
+    """A filter that takes the items of a list column, such as host groups, joined by "|"."""
+
+    def variables(row: RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
+        match row.get(column):
+            case [_, *_] as cell:
+                return {variable: "|".join(sorted({str(item) for item in cell}))}
+            case _:
+                return None
+
+    return Drilldown(columns=[column], variables=variables)
+
+
 def single_item(variable: str, column: ColumnName) -> Drilldown:
     def variables(row: RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
         match row.get(column):

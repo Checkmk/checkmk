@@ -38,7 +38,7 @@ const CONSTANTS: DashboardConstants = {
       title_macros: [],
       contextual_link: {
         modes: ['default', 'inherited', 'custom'],
-        filters: ['siteopt', 'wato_folder', 'hoststate', 'opthostgroup'],
+        filters: ['hoststate'],
         filter_keys: {}
       }
     }
@@ -51,7 +51,7 @@ const CUSTOM: HostStatisticsContent['contextual_link'] = {
     {
       title: 'Problems',
       location: { type: 'views', name: 'searchhost' },
-      filters: [{ filter_id: 'siteopt' }, { filter_id: 'hoststate' }],
+      filters: [{ filter_id: 'hoststate' }],
       include_context: false,
       include_time_range: true,
       show_filter_form: true

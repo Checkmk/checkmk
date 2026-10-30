@@ -13,6 +13,7 @@ from ..context_filters import (
     AGGREGATE_SERVICE_FILTER_ADAPTER,
     AggregateHostContextFilter,
     AggregateServiceContextFilter,
+    RETIRED_AGGREGATE_FILTERS,
 )
 from ..contextual_link import (
     AnyContextualLinkSpec,
@@ -52,7 +53,9 @@ class HostStatsContent(_LinkedStatsContent):
         return cls(
             type="host_stats",
             contextual_link=contextual_link_from_internal(
-                config.get("contextual_link"), AGGREGATE_HOST_FILTER_ADAPTER
+                config.get("contextual_link"),
+                AGGREGATE_HOST_FILTER_ADAPTER,
+                RETIRED_AGGREGATE_FILTERS,
             ),
         )
 
@@ -80,7 +83,9 @@ class ServiceStatsContent(_LinkedStatsContent):
         return cls(
             type="service_stats",
             contextual_link=contextual_link_from_internal(
-                config.get("contextual_link"), AGGREGATE_SERVICE_FILTER_ADAPTER
+                config.get("contextual_link"),
+                AGGREGATE_SERVICE_FILTER_ADAPTER,
+                RETIRED_AGGREGATE_FILTERS,
             ),
         )
 

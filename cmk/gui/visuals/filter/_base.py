@@ -545,6 +545,7 @@ class DualListFilter(Filter):
         description: None | str | LazyString = None,
         is_show_more: bool = True,
         group: FilterGroup | None = None,
+        drilldown: Drilldown | None = None,
     ):
         self.query_filter = query_filter
         self._options = options
@@ -558,6 +559,7 @@ class DualListFilter(Filter):
             description=description,
             is_show_more=is_show_more,
             group=group,
+            drilldown=drilldown,
         )
 
     @override

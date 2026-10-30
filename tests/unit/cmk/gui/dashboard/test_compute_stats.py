@@ -353,7 +353,7 @@ def test_inherited_yields_one_link_with_the_native_click_key(
     }
 
 
-def test_a_custom_link_carries_the_state_of_a_part_and_drops_its_site(
+def test_a_custom_link_carries_the_state_its_part_names(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
     body: dict[str, object] = {
@@ -366,7 +366,7 @@ def test_a_custom_link_carries_the_state_of_a_part_and_drops_its_site(
                         {
                             "title": "Down hosts",
                             "location": {"type": "views", "name": "allhosts"},
-                            "filters": [{"filter_id": "hoststate"}, {"filter_id": "siteopt"}],
+                            "filters": [{"filter_id": "hoststate"}],
                             "include_context": False,
                             "include_time_range": False,
                             "show_filter_form": False,
@@ -381,12 +381,7 @@ def test_a_custom_link_carries_the_state_of_a_part_and_drops_its_site(
 
     assert [link["title"] for link in value["links"]] == ["Down hosts"]
     assert value["parts"][3]["link_properties"] == {
-        "links": [
-            {
-                "hoststate": {"status": "encoded", "variables": {"hst1": "on"}},
-                "siteopt": {"status": "dropped", "reason": "no_value"},
-            }
-        ]
+        "links": [{"hoststate": {"status": "encoded", "variables": {"hst1": "on"}}}]
     }
 
 

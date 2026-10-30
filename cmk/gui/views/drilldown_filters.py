@@ -27,6 +27,9 @@ _FILTER_ID = re.compile(r"[A-Za-z0-9_]+")
 # A dropped key comes from the URL as well, so it may carry neither markup nor a sentence.
 _KEY = re.compile(r"[^\s<>&\"']+")
 
+# A view's row is one object; these filters value elements that stand for several.
+_MULTI_VALUE_ONLY = frozenset({"sites", "wato_folders", "hostgroups"})
+
 
 @dataclass(frozen=True)
 class Dropped:
@@ -62,6 +65,7 @@ def drilldown_filters(
         filter_name
         for filter_name, filter_ in sorted(filter_registry.items(), key=_menu_order)
         if filter_.drilldown is not None
+        and filter_name not in _MULTI_VALUE_ONLY
         and filter_.available()
         and filter_.info in data_source.infos
         # A dashboard's context takes only host and service filters.

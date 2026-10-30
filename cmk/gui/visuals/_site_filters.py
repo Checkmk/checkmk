@@ -133,6 +133,7 @@ class MultipleSitesFilter(SiteFilter):
             query_filter=query_filters.Query(ident="sites", request_vars=["sites"]),
             description=_l("Associative selection of multiple sites"),
             heading_info=heading_info,
+            drilldown=drilldowns.text("sites", "site"),
         )
         self._site_choices = site_choices
 

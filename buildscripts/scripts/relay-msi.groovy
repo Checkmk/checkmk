@@ -17,11 +17,6 @@ void main() {
     // When FORCE_SIGN parameter is present we honour it. Otherwise we sign the MSI.
     def should_sign = (params.FORCE_SIGN == null) || (params.FORCE_SIGN == true);
 
-    // Choose the signing method, mirroring winagt-build.groovy. Azure signs in-process
-    // against the cloud service (no YubiKey / win_sign_key lock); YubiKey is the fallback.
-    def use_azure = (params.SIGN_METHOD == "azure");
-    def sign_target = use_azure ? 'relay_msi_with_sign_azure' : 'relay_msi_with_sign';
-
     // The correlation ID suffix is a shared secret appended to every CorrelationId we send to
     // Azure, so signing requests which did not originate from our CI can be spotted in the signing
     // diagnostics. It therefore lives in the credential store, not in an env var. It stays bound
@@ -40,7 +35,7 @@ void main() {
     // Forward the pipeline version unchanged (like winagt-build does for the agent);
     // build-msi.ps1 normalises it into the strict x.x.x.x WiX requires.
     dir("${checkout_dir}") {
-        if (use_azure && should_sign) {
+        if (should_sign) {
             withCredentials(azure_creds) {
                 // Assembled inside the binding block: the suffix is only available there.
                 def correlation_id = windows.azure_signing_correlation_id(branch_name);
@@ -53,19 +48,7 @@ void main() {
                     "AZURE_ARTIFACT_SIGNING_CORRELATION_ID=${correlation_id}",
                 ]) {
                     windows.build(
-                        TARGET: sign_target,
-                        VERSION: cmk_version,
-                    );
-                }
-            }
-        } else if (should_sign) {
-            withCredentials([string(credentialsId: "sectigo_2023_pin", variable: "SECTIGO_2023_PIN")]) {
-                // Serialise access to the shared YubiKey signing token via the
-                // "win_sign_key" lock, the same way the agent build does (see
-                // buildscripts/scripts/winagt-build.groovy).
-                lock(label: "win_sign_key", quantity: 1, resource : null) {
-                    windows.build(
-                        TARGET: sign_target,
+                        TARGET: 'relay_msi_with_sign_azure',
                         VERSION: cmk_version,
                     );
                 }

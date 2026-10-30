@@ -3,7 +3,7 @@
 /// file: winagt-build.groovy
 
 void main() {
-    check_job_parameters(["VERSION", "SIGN_METHOD"]);
+    check_job_parameters(["VERSION"]);
 
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -12,11 +12,6 @@ void main() {
     def branch_version = versioning.get_branch_version(checkout_dir);
     def cmk_vers_rc_aware = versioning.get_cmk_version(branch_name, branch_version, params.VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_vers_rc_aware);
-
-    // Choose the signing method. Azure signs in-process against the cloud service (no
-    // YubiKey / win_sign_key lock); YubiKey is the fallback and keeps the hardware lock.
-    def use_azure = (params.SIGN_METHOD == "azure");
-    def sign_target = use_azure ? "agent_with_sign_azure" : "agent_with_sign";
 
     def common_creds = [
         usernamePassword(
@@ -36,64 +31,33 @@ void main() {
             bat("make -C agents\\wnx NEW_VERSION='${cmk_version}' setversion")
         }
 
-        if (use_azure) {
-            // The correlation ID suffix is a shared secret appended to every CorrelationId we send
-            // to Azure, so signing requests which did not originate from our CI can be spotted in
-            // the signing diagnostics. It therefore lives in the credential store, not in an env
-            // var. It stays bound for the whole build: the Azure client echoes the CorrelationId,
-            // and Jenkins only masks the secret inside this block.
-            withCredentials(common_creds + [
-                string(credentialsId: "azure_artifact_signing_client_secret", variable: "AZURE_ARTIFACT_SIGNING_CLIENT_SECRET"),
-                string(credentialsId: "azure_artifact_signing_correlation_suffix", variable: "AZURE_ARTIFACT_SIGNING_CORRELATION_SUFFIX"),
-            ]) {
-                // Assembled inside the binding block: the suffix is only available there.
-                def correlation_id = windows.azure_signing_correlation_id(branch_name);
+        // The correlation ID suffix is a shared secret appended to every CorrelationId we send
+        // to Azure, so signing requests which did not originate from our CI can be spotted in
+        // the signing diagnostics. It therefore lives in the credential store, not in an env
+        // var. It stays bound for the whole build: the Azure client echoes the CorrelationId,
+        // and Jenkins only masks the secret inside this block.
+        withCredentials(common_creds + [
+            string(credentialsId: "azure_artifact_signing_client_secret", variable: "AZURE_ARTIFACT_SIGNING_CLIENT_SECRET"),
+            string(credentialsId: "azure_artifact_signing_correlation_suffix", variable: "AZURE_ARTIFACT_SIGNING_CORRELATION_SUFFIX"),
+        ]) {
+            // Assembled inside the binding block: the suffix is only available there.
+            def correlation_id = windows.azure_signing_correlation_id(branch_name);
 
-                // The windows.build function will create stages.
-                withEnv([
-                    "CMK_VERSION=${cmk_version}",
-                    "AZURE_ARTIFACT_SIGNING_ENDPOINT=${env.AZURE_ARTIFACT_SIGNING_ENDPOINT}",
-                    "AZURE_ARTIFACT_SIGNING_ACCOUNT=${env.AZURE_ARTIFACT_SIGNING_ACCOUNT}",
-                    "AZURE_ARTIFACT_SIGNING_PROFILE=${env.AZURE_ARTIFACT_SIGNING_PROFILE}",
-                    "AZURE_ARTIFACT_SIGNING_TENANT_ID=${env.AZURE_ARTIFACT_SIGNING_TENANT_ID}",
-                    "AZURE_ARTIFACT_SIGNING_CLIENT_ID=${env.AZURE_ARTIFACT_SIGNING_CLIENT_ID}",
-                    "AZURE_ARTIFACT_SIGNING_CORRELATION_ID=${correlation_id}",
-                ]) {
-                    windows.build(
-                    TARGET: sign_target,
+            // The windows.build function will create stages.
+            withEnv([
+                "CMK_VERSION=${cmk_version}",
+                "AZURE_ARTIFACT_SIGNING_ENDPOINT=${env.AZURE_ARTIFACT_SIGNING_ENDPOINT}",
+                "AZURE_ARTIFACT_SIGNING_ACCOUNT=${env.AZURE_ARTIFACT_SIGNING_ACCOUNT}",
+                "AZURE_ARTIFACT_SIGNING_PROFILE=${env.AZURE_ARTIFACT_SIGNING_PROFILE}",
+                "AZURE_ARTIFACT_SIGNING_TENANT_ID=${env.AZURE_ARTIFACT_SIGNING_TENANT_ID}",
+                "AZURE_ARTIFACT_SIGNING_CLIENT_ID=${env.AZURE_ARTIFACT_SIGNING_CLIENT_ID}",
+                "AZURE_ARTIFACT_SIGNING_CORRELATION_ID=${correlation_id}",
+            ]) {
+                windows.build(
+                    TARGET: "agent_with_sign_azure",
                     CREDS: NEXUS_USERNAME + ':' + NEXUS_PASSWORD,
                     CACHE_URL: 'https://artifacts.lan.tribe29.com/repository/omd-build-cache/'
                 );
-                }
-            }
-        } else {
-            // Serialise access to the shared YubiKey signing token via the
-            // "win_sign_key" lock.
-            lock(label: "win_sign_key", quantity: 1, resource : null) {
-                withCredentials(common_creds + [
-                    string(
-                        credentialsId: "sectigo_2023_pin",
-                        variable: "SECTIGO_2023_PIN"
-                    ),
-                ]) {
-                    // The windows.build function will create stages.
-                    withEnv(["CMK_VERSION=${cmk_version}"]) {
-                        windows.build(
-                        TARGET: sign_target,
-                        CREDS: NEXUS_USERNAME + ':' + NEXUS_PASSWORD,
-                        CACHE_URL: 'https://artifacts.lan.tribe29.com/repository/omd-build-cache/'
-                    );
-                    }
-                }
-            }
-        }
-
-        // YubiKey requires a USB detach after signing; Azure does not.
-        if (!use_azure) {
-            stage("detach") {
-                dir("agents\\wnx") {
-                    bat("run.cmd --detach");
-                }
             }
         }
     }

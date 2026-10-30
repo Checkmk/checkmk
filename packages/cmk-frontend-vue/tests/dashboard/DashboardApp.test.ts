@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { configure, render, screen, within } from '@testing-library/vue'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { configure, render, screen, waitFor, within } from '@testing-library/vue'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -20,9 +20,12 @@ import {
 } from '@/dashboard/types/dashboard'
 import type { DashboardPageProperties } from '@/dashboard/types/page'
 import type {
+  ComputedMonitoringTable,
   ResponsiveGridWidgetLayout,
   ResponsiveGridWidgetLayouts
 } from '@/dashboard/types/widget'
+
+import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
 
 // reka's dialog warns about the missing DialogTitle of the bare slide-in, which fails the test.
 vi.mock('cmk-ui-library/components/CmkSlideIn', () => ({
@@ -53,6 +56,26 @@ const SOURCE_TITLE = 'Anchored dashboard to migrate'
 const REFUSAL = 'Dashboard ID already exists'
 const CLONE_ENDPOINT = `${API}/domain-types/dashboard_responsive_grid/actions/clone_from_relative_grid/invoke`
 
+const widgetConstants: DashboardConstants['widgets'][string] = {
+  filter_context: { restricted_to_single: [] },
+  title_macros: [],
+  layout: {
+    relative: {
+      initial_size: { width: 30, height: 10 },
+      minimum_size: { width: 10, height: 5 },
+      initial_position: { x: 1, y: 1 },
+      is_resizable: true
+    },
+    responsive: {
+      XS: { minimum_size: { columns: 4, rows: 4 }, initial_size: { columns: 4, rows: 7 } },
+      S: { minimum_size: { columns: 4, rows: 4 }, initial_size: { columns: 4, rows: 7 } },
+      M: { minimum_size: { columns: 4, rows: 4 }, initial_size: { columns: 6, rows: 7 } },
+      L: { minimum_size: { columns: 3, rows: 4 }, initial_size: { columns: 4, rows: 7 } },
+      XL: { minimum_size: { columns: 3, rows: 4 }, initial_size: { columns: 6, rows: 7 } }
+    }
+  }
+}
+
 const constants: DashboardConstants = {
   responsive_grid_breakpoints: {
     XS: { min_width: 280, columns: 4 },
@@ -62,25 +85,8 @@ const constants: DashboardConstants = {
     XL: { min_width: 1217, columns: 24 }
   },
   widgets: {
-    static_text: {
-      filter_context: { restricted_to_single: [] },
-      title_macros: [],
-      layout: {
-        relative: {
-          initial_size: { width: 30, height: 10 },
-          minimum_size: { width: 10, height: 5 },
-          initial_position: { x: 1, y: 1 },
-          is_resizable: true
-        },
-        responsive: {
-          XS: { minimum_size: { columns: 4, rows: 4 }, initial_size: { columns: 4, rows: 7 } },
-          S: { minimum_size: { columns: 4, rows: 4 }, initial_size: { columns: 4, rows: 7 } },
-          M: { minimum_size: { columns: 4, rows: 4 }, initial_size: { columns: 6, rows: 7 } },
-          L: { minimum_size: { columns: 3, rows: 4 }, initial_size: { columns: 4, rows: 7 } },
-          XL: { minimum_size: { columns: 3, rows: 4 }, initial_size: { columns: 6, rows: 7 } }
-        }
-      }
-    }
+    static_text: widgetConstants,
+    monitoring_table: widgetConstants
   }
 }
 
@@ -146,12 +152,95 @@ const sourceDashboard = {
   widgets: sourceWidgets
 }
 
+const TABLE_WIDGET_ID = 'hosts'
+
+const hostsTableWidget = {
+  general_settings: {
+    title: { text: 'Hosts', render_mode: 'with_background' },
+    render_background: true
+  },
+  content: {
+    type: 'monitoring_table',
+    table: 'hosts',
+    columns: ['state', 'name'],
+    sort: ['name:asc'],
+    limit: 100,
+    date_format: '%Y-%m-%d',
+    timestamp_format: 'mixed'
+  },
+  filter_context: { uses_infos: [], filters: {} }
+}
+
+const BREAKPOINTS = ['XS', 'S', 'M', 'L', 'XL'] as const
+
+// The same hosts table, once on each grid a dashboard can arrange its widgets on.
+const hostsTableDashboards = {
+  relative_grid: {
+    ...sourceDashboard,
+    widgets: {
+      [TABLE_WIDGET_ID]: {
+        ...hostsTableWidget,
+        layout: { type: 'relative_grid', position: { x: 1, y: 1 }, size: { width: 80, height: 40 } }
+      }
+    }
+  },
+  responsive_grid: {
+    ...sourceDashboard,
+    layout: {
+      type: 'responsive_grid',
+      layouts: { default: { title: 'Default', breakpoints: BREAKPOINTS } }
+    },
+    widgets: {
+      [TABLE_WIDGET_ID]: {
+        ...hostsTableWidget,
+        layout: {
+          type: 'responsive_grid',
+          layouts: {
+            default: Object.fromEntries(
+              BREAKPOINTS.map((bp) => [
+                bp,
+                { position: { x: 0, y: 0 }, size: { columns: 4, rows: 7 } }
+              ])
+            )
+          }
+        }
+      }
+    }
+  }
+}
+
+const hostsTable: ComputedMonitoringTable = {
+  table: 'hosts',
+  rows: [
+    {
+      name: 'heute',
+      state: 'UP',
+      is_flapping: false,
+      stale: false,
+      site_id: 'heute',
+      legacy_host_status_link: 'view.py?view_name=hoststatus&host=heute&site=heute',
+      setup_access: true
+    }
+  ],
+  matched: 1,
+  total: 1,
+  unapplied_filters: [],
+  unreachable_sites: [],
+  actions: [{ ident: 'reschedule', title: 'Reschedule', icon: 'reload' }],
+  links: [],
+  host_actions: [],
+  host_links: []
+}
+
+const pageFilterContext = {
+  context: {},
+  application_mode: 'overwrite',
+  dropped_filters_warning: null
+} as const
+
 const pageProperties: DashboardPageProperties = {
   initial_breadcrumb: [],
-  dashboard: {
-    metadata,
-    filter_context: { context: {}, application_mode: 'overwrite', dropped_filters_warning: null }
-  },
+  dashboard: { metadata, filter_context: pageFilterContext },
   mode: 'display',
   url_params: {},
   links: { list_dashboards: '', user_guide: '' },
@@ -317,6 +406,64 @@ async function migrateTheDashboard(): Promise<void> {
   await user.click(await screen.findByRole('button', { name: 'Clone' }))
 }
 
+type Grid = keyof typeof hostsTableDashboards
+
+/** Shows a dashboard of a hosts table on the grid instead, whose host cannot be rescheduled. */
+function showHostsTableFailingToReschedule(grid: Grid): DashboardPageProperties {
+  const gridMetadata = { ...metadata, layout_type: grid }
+  server.use(
+    http.get(`${API}/objects/dashboard_metadata/${SOURCE_ID}`, () =>
+      HttpResponse.json({
+        domainType: 'dashboard_metadata',
+        id: SOURCE_ID,
+        links: [],
+        extensions: gridMetadata
+      })
+    ),
+    http.get(`${API}/objects/dashboard_${grid}/${SOURCE_ID}`, () =>
+      HttpResponse.json({
+        domainType: `dashboard_${grid}`,
+        id: SOURCE_ID,
+        links: [],
+        extensions: hostsTableDashboards[grid]
+      })
+    ),
+    http.post(`${API}/domain-types/dashboard/actions/compute-widget-titles/invoke`, () =>
+      HttpResponse.json({
+        domainType: 'dashboard',
+        id: 'titles',
+        links: [],
+        extensions: { titles: { [TABLE_WIDGET_ID]: 'Hosts' } }
+      })
+    ),
+    http.post(`${API}/domain-types/dashboard/actions/compute-monitoring-table/invoke`, () =>
+      HttpResponse.json({ domainType: 'widget-compute', value: hostsTable })
+    ),
+    restApiHttp.get('/monitor/hosts/{hostname}/action_menu', ({ response }) =>
+      response(200).json({ items: [] })
+    ),
+    restApiHttp.post('/monitor/hosts/actions/reschedule', ({ response }) =>
+      response.untyped(HttpResponse.json({ title: 'Internal error' }, { status: 500 }))
+    )
+  )
+  return {
+    ...pageProperties,
+    dashboard: { metadata: gridMetadata, filter_context: pageFilterContext }
+  }
+}
+
+/** jsdom does no layout: the table shows its rows only once it is told it has room for them. */
+async function renderHostsTable(props: DashboardPageProperties): Promise<void> {
+  FakeResizeObserver.instances = []
+  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+  vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(600)
+  render(DashboardApp, { props })
+  await waitFor(() => {
+    deliverSize(800, 400)
+    expect(screen.getByText('heute')).toBeInTheDocument()
+  })
+}
+
 describe('DashboardApp', () => {
   it('tells why the migration of the dashboard failed', async () => {
     await migrateTheDashboard()
@@ -347,4 +494,19 @@ describe('DashboardApp', () => {
     expect(bottom.position).toEqual({ x: topLeft.position.x, y: endRowOf(topLeft) })
     expect(endColumnOf(bottom)).toBe(endColumnOf(topRight))
   })
+
+  it.each<Grid>(['relative_grid', 'responsive_grid'])(
+    'tells in its alert box that an action run in a widget on the %s failed',
+    async (grid) => {
+      const props = showHostsTableFailingToReschedule(grid)
+      const user = userEvent.setup()
+      await renderHostsTable(props)
+
+      await user.click(screen.getByRole('button', { name: 'More actions' }))
+      await user.click(await screen.findByRole('menuitem', { name: 'Reschedule' }))
+
+      const failure = await screen.findByRole('alert')
+      expect(failure).toHaveTextContent('Could not reschedule the checks for the selected hosts')
+    }
+  )
 })

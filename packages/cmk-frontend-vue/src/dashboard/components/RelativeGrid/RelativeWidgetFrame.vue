@@ -13,6 +13,7 @@ import { computed } from 'vue'
 import DashboardContent from '@/dashboard/components/DashboardContent/DashboardContent.vue'
 import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
 import MissingFiltersMsg from '@/dashboard/components/DashboardFilterSettings/MissingFiltersMsg.vue'
+import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 
 import type { ResizeDirection } from './helpers/resizeHelper.ts'
 import { ANCHOR_POSITION, type DimensionModes, SIZING_MODE } from './types'
@@ -40,6 +41,7 @@ const emit = defineEmits<{
   (e: 'toggle:sizing', dimension: 'width' | 'height'): void
   (e: 'update:anchorPosition', position: ANCHOR_POSITION): void
   (e: 'updateTimeRange', range: DateTimeRange): void
+  (e: 'actionOutcome', outcome: ActionOutcome): void
 }>()
 
 const containerStyle = computed(() => ({
@@ -93,6 +95,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
         <DashboardContent
           v-bind="contentProps"
           @update-time-range="emit('updateTimeRange', $event)"
+          @action-outcome="emit('actionOutcome', $event)"
         />
       </MissingFiltersMsg>
 

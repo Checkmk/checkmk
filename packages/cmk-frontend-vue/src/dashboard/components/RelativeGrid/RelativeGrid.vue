@@ -19,6 +19,7 @@ import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideD
 import { useInjectMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction.ts'
 import type { ContentRelativeGrid } from '@/dashboard/types/dashboard.ts'
 import type { WidgetLayout } from '@/dashboard/types/widget'
+import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 
 import { useRelativeGridLayout } from './composables/useRelativeGridLayout'
 import { createDragHelper } from './helpers/dragHelper.ts'
@@ -67,6 +68,7 @@ const emit = defineEmits<{
   'widget:delete': [widgetId: string]
   'widget:clone': [widgetId: string, newWidgetLayout: WidgetLayout]
   'widget:updateTimeRange': [widgetId: string, range: DateTimeRange]
+  'widget:actionOutcome': [widgetId: string, outcome: ActionOutcome]
 }>()
 
 const dashboard = ref<HTMLElement | null>(null)
@@ -235,6 +237,7 @@ defineExpose({
           @click:delete="$emit('widget:delete', spec.widget_id)"
           @click:clone="cloneRelativeGridWidget(spec.widget_id)"
           @update-time-range="$emit('widget:updateTimeRange', spec.widget_id, $event)"
+          @action-outcome="$emit('widget:actionOutcome', spec.widget_id, $event)"
         />
       </div>
     </div>

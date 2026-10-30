@@ -16,6 +16,7 @@ import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideD
 import { useInjectMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction.ts'
 import type { ContentResponsiveGrid, DashboardKey } from '@/dashboard/types/dashboard'
 import type { ResponsiveGridWidgetLayouts } from '@/dashboard/types/widget'
+import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 
 import ResponsiveGridWidget from './ResponsiveGridWidget.vue'
 import { useInternalBreakpointConfig } from './composables/useInternalBreakpointConfig'
@@ -84,6 +85,7 @@ defineEmits<{
   'widget:delete': [widgetId: string]
   'widget:clone': [widgetId: string, newLayout: ResponsiveGridWidgetLayouts]
   'widget:updateTimeRange': [widgetId: string, range: DateTimeRange]
+  'widget:actionOutcome': [widgetId: string, outcome: ActionOutcome]
 }>()
 
 const gridMargin = RESPONSIVE_GRID_MARGIN_PX
@@ -242,6 +244,7 @@ const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
               }
             "
             @update-time-range="$emit('widget:updateTimeRange', <string>item.i, $event)"
+            @action-outcome="$emit('widget:actionOutcome', <string>item.i, $event)"
           />
         </template>
       </GridLayout>

@@ -822,9 +822,9 @@ and fetches again after five minutes, so links resolve after a restart too and
 follow saves of that map. The linked states are fetched under the viewer's
 AuthUser.
 A state fetch first follows the links through the configs to every map they
-reach, then asks Livestatus for the objects of all of them in one round. A link
-shows the worst state of every map reachable from the one it links to, except
-the map being fetched, so a cycle back to it adds nothing.
+reach, then asks Livestatus for the objects of all of them in one round per
+connection. A link shows the worst state of every map reachable from the one it
+links to, except the map being fetched, so a cycle back to it adds nothing.
 
 Handling untrusted input
 ------------------------
@@ -906,8 +906,10 @@ Livestatus queries
   each ``Filter:`` line's column and operator must exist in the table it
   queries. A filter the map already had is not checked again, so a map saved by
   another Checkmk version still loads and saves. A query every federation site
-  refuses fails, and the sites stay connected. The same query for the same user
-  is sent again after 30 seconds at the earliest.
+  refuses fails, and the sites stay connected. A query Livestatus refused, on a
+  single site too, is sent again for the same user after 30 seconds at the
+  earliest; the daemon logs Livestatus' reason once per query and user, and the
+  object it serves shows stale.
 
 Stored data and secrets
 -----------------------

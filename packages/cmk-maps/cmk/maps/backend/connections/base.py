@@ -20,6 +20,10 @@ if TYPE_CHECKING:
     from cmk.maps.backend.integrations.checkmk import FolderScope
 
 
+class QueryRefusedError(Exception):
+    """The monitoring backend refused the query itself; the connection has logged why."""
+
+
 class TopologyRow(TypedDict):
     """One host in the topology view (parent-child flow-graph).
 

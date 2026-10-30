@@ -17,6 +17,7 @@ plain ``def`` and need no wrapper.
 """
 
 import asyncio
+import logging
 from collections.abc import Iterator
 from typing import Literal
 from unittest.mock import AsyncMock, MagicMock
@@ -25,7 +26,7 @@ import pytest
 from fake_connection import FakeConnection
 from fake_links import FakeLinkGui
 
-from cmk.maps.backend.connections.base import FolderTreeData
+from cmk.maps.backend.connections.base import FolderTreeData, QueryRefusedError
 from cmk.maps.backend.schemas.map import (
     MapConfig,
     MapElement,
@@ -382,6 +383,29 @@ def test_a_linked_map_that_cannot_be_asked_leaves_the_other_links_alone(
     assert by_id == {"to_up": ("DOWN", False), "to_gone": ("PENDING", False)}
 
 
+def test_a_linked_map_whose_query_fails_leaves_the_maps_on_its_connection_alone(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    map_service.register_map("alice", _map([_obj("h", "host", host_name="srv")], name="up"))
+    map_service.register_map(
+        "alice",
+        _map([_obj("s", "service", host_name="srv", service_description="CPU")], name="refused"),
+    )
+    root = _map(
+        [_obj("to_up", "map", map_name="up"), _obj("to_refused", "map", map_name="refused")]
+    )
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"srv": ObjectState(object_id="h", type="host", state="DOWN")}
+    )
+    mock_connection.get_services_states = AsyncMock(side_effect=QueryRefusedError("refused"))
+
+    result = asyncio.run(get_map_states(root, map_owner="alice", links=FakeLinkGui()))
+
+    by_id = {s.object_id: (s.state, s.stale) for s in result.states}
+    assert by_id == {"to_up": ("DOWN", False), "to_refused": ("PENDING", False)}
+
+
 def test_links_on_several_connections_ask_the_linked_maps_once(
     mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -702,6 +726,28 @@ def test_static_bundle_suppresses_markers_and_folds_services(
     assert "auto:srv2" not in by_id
     assert "auto:srv3" in by_id
     mock_connection.get_dyngroup_state.assert_awaited_once()
+
+
+def test_a_dyngroup_whose_query_is_refused_shows_stale_without_a_log(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_dyngroup_state = AsyncMock(side_effect=QueryRefusedError("400: bad regex"))
+    cfg = MapConfig(
+        name="dyn",
+        connection_id="mock",
+        objects=[
+            MapElement(
+                id="dg", type="dyngroup", object_types="host", object_filter="Filter: name ~ (\n"
+            )
+        ],
+    )
+
+    with caplog.at_level(logging.WARNING):
+        result = asyncio.run(get_map_states(cfg, map_owner=""))
+
+    assert [(s.object_id, s.state, s.stale) for s in result.states] == [("dg", "PENDING", True)]
+    assert caplog.records == []
 
 
 def test_location_bundle_matches_hosts_at_coordinate(

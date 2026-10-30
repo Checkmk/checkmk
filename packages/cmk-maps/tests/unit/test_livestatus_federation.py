@@ -19,6 +19,7 @@ another's cached rows.
 """
 
 import asyncio
+import logging
 import socket
 import threading
 from collections.abc import Awaitable, Callable, Iterator
@@ -28,7 +29,7 @@ import pytest
 
 from cmk.livestatus_client import MKLivestatusQueryError
 from cmk.maps.backend.connections import livestatus
-from cmk.maps.backend.connections.base import FolderTreeData
+from cmk.maps.backend.connections.base import FolderTreeData, QueryRefusedError
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.integrations import checkmk_sites
 
@@ -271,7 +272,8 @@ class _FakeSite:
         self._unknown = unknown
         self.queries: list[bytes] = []
         self._server = socket.create_server(("127.0.0.1", 0))
-        self.url = f"tcp:127.0.0.1:{self._server.getsockname()[1]}"
+        self.port = self._server.getsockname()[1]
+        self.url = f"tcp:127.0.0.1:{self.port}"
         threading.Thread(target=self._serve, daemon=True).start()
 
     def close(self) -> None:
@@ -350,7 +352,7 @@ def _ask_refused_as(federated: livestatus.LivestatusConnection, *auth_users: str
     async def _ask() -> None:
         for auth_user in auth_users:
             async with federated.with_auth_user(auth_user):
-                with pytest.raises(MKLivestatusQueryError):
+                with pytest.raises(QueryRefusedError):
                     await federated.get_dyngroup_state("host", "Filter: nme = a\n")
 
     asyncio.run(_ask())
@@ -386,3 +388,47 @@ def test_a_query_refused_for_one_user_is_still_sent_for_another(
     _ask_refused_as(federated, "alice", "bob")
 
     assert _refused_asked(sites) == {"central": 2, "remote": 2}
+
+
+def test_a_refused_query_is_warned_about_once(
+    monkeypatch: pytest.MonkeyPatch,
+    federated: livestatus.LivestatusConnection,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    monkeypatch.setattr(livestatus.LivestatusConnection, "_MC_DEAD_RETRY_SECONDS", 0.0)
+
+    with caplog.at_level(logging.WARNING):
+        _ask_refused_as(federated, "alice", "alice")
+
+    assert len(caplog.records) == 1
+    assert caplog.records[0].getMessage().startswith("Livestatus refused a query")
+
+
+def test_a_long_refused_query_is_logged_shortened(
+    federated: livestatus.LivestatusConnection,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    object_filter = "Filter: nme = a\n" + "Filter: name = padding\nOr: 2\n" * 2000
+
+    async def _ask() -> None:
+        async with federated.with_auth_user("alice"):
+            with pytest.raises(QueryRefusedError):
+                await federated.get_dyngroup_state("host", object_filter)
+
+    with caplog.at_level(logging.WARNING):
+        asyncio.run(_ask())
+
+    message = caplog.records[0].getMessage()
+    assert len(message) < len(object_filter) // 10
+    assert message.endswith(" characters)")
+
+
+def test_a_query_a_single_site_refuses_fails_as_refused(
+    sites: dict[str, _FakeSite],
+) -> None:
+    single = livestatus.LivestatusConnection(
+        host="127.0.0.1", port=sites["central"].port, tls=False
+    )
+
+    with pytest.raises(QueryRefusedError):
+        asyncio.run(single.get_dyngroup_state("host", "Filter: nme = a\n"))

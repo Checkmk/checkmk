@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
-from cmk.maps.backend.connections.base import FolderTreeData, GeoHost
+from cmk.maps.backend.connections.base import FolderTreeData, GeoHost, QueryRefusedError
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.integrations.checkmk import FolderScope
 from cmk.maps.backend.schemas.map import (
@@ -532,8 +532,9 @@ async def _summaries_by_pattern(
     async def _one(pattern: str, hosts: set[str]) -> None:
         try:
             summaries = await connection.get_hosts_services_summaries(sorted(hosts), pattern)
-        except Exception:
-            logger.warning("Filtered services-summary query failed", exc_info=True)
+        except Exception as e:
+            if not isinstance(e, QueryRefusedError):
+                logger.warning("Filtered services-summary query failed", exc_info=True)
             failed.add(pattern)
             return
         if summaries is not None:
@@ -870,10 +871,11 @@ async def _get_object_state(connection: ConnectionBase, obj: MapElement) -> Obje
         state.object_id = obj.id
         return state
     except Exception as exc:
-        logger.exception(
-            "Error fetching state for object %(object_id)s: %(error)s",
-            {"object_id": obj.id, "error": exc},
-        )
+        if not isinstance(exc, QueryRefusedError):
+            logger.exception(
+                "Error fetching state for object %(object_id)s: %(error)s",
+                {"object_id": obj.id, "error": exc},
+            )
         return ObjectState(object_id=obj.id, type=obj.type, state="PENDING", stale=True)
 
 

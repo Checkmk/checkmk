@@ -41,6 +41,7 @@ from cmk.maps.backend.connections.base import (
     FolderTreeHostRow,
     GeoHost,
     MetricHistoryResult,
+    QueryRefusedError,
     ServiceMatchRow,
     ServiceRow,
     TopologyRow,
@@ -254,9 +255,10 @@ async def _load_wato_folders() -> list[FolderInfo]:
 # (cmk.maps.shared.states); worst-state roll-ups use the one combined SEVERITY_RANK.
 _STATE_TYPE_MAP = {0: "SOFT", 1: "HARD"}
 
-# A refused query is remembered by this bound: its text is the map's, and
-# Livestatus repeats parts of it in the reason.
+# A refused query is remembered and logged by these bounds: its text is the
+# map's, and Livestatus repeats parts of it in the reason.
 _REFUSAL_REASON_MAX_CHARS = 1024
+_LOGGED_QUERY_MAX_CHARS = 1024
 
 _HOST_EXTRA_COLS = (
     "address alias last_check next_check state_type current_attempt max_check_attempts"
@@ -1758,30 +1760,41 @@ class LivestatusConnection(ConnectionBase):
         connection-agnostic.
         """
         self._adopt_sites_if_appeared()
-        if self._sites:
-            key = (_query_digest(query), _auth_user_ctx.get())
-            if (
-                reason := self._refused_queries.get(key, ttl=self._MC_DEAD_RETRY_SECONDS)
-            ) is not None:
-                raise MKLivestatusQueryError(reason)
-            try:
+        key = (_query_digest(query), _auth_user_ctx.get())
+        if (reason := self._refused_queries.get(key, ttl=self._MC_DEAD_RETRY_SECONDS)) is not None:
+            raise QueryRefusedError(reason)
+        try:
+            if self._sites:
                 async with self._semaphore:
                     rows = await asyncio.wait_for(
                         asyncio.to_thread(self._run_multisite_sync, query),
                         timeout=settings.connection_query_timeout,
                     )
-            except MKLivestatusQueryError as e:
-                self._refused_queries.set(key, str(e)[:_REFUSAL_REASON_MAX_CHARS])
+                return [
+                    (str(row[0]) if row and isinstance(row[0], str) else None, row[1:])
+                    for row in rows
+                ]
+            async with self._semaphore:
+                single_rows = await asyncio.wait_for(
+                    asyncio.to_thread(self._run_singlesite_sync, query),
+                    timeout=settings.connection_query_timeout,
+                )
+            return [(None, r) for r in single_rows]
+        except Exception as e:
+            if (refusal := _refusal(e)) is None:
                 raise
-            return [
-                (str(row[0]) if row and isinstance(row[0], str) else None, row[1:]) for row in rows
-            ]
-        async with self._semaphore:
-            single_rows = await asyncio.wait_for(
-                asyncio.to_thread(self._run_singlesite_sync, query),
-                timeout=settings.connection_query_timeout,
+            reason = _shortened(str(refusal), _REFUSAL_REASON_MAX_CHARS)
+            self._note_refused_query(key, query, reason)
+            raise QueryRefusedError(reason) from None
+
+    def _note_refused_query(self, key: tuple[bytes, str | None], query: str, reason: str) -> None:
+        # An expired entry stays until evicted, so each query is warned about once.
+        if key not in self._refused_queries:
+            logger.warning(
+                "Livestatus refused a query: %(reason)s\n%(query)s",
+                {"reason": reason, "query": _shortened(query, _LOGGED_QUERY_MAX_CHARS)},
             )
-        return [(None, r) for r in single_rows]
+        self._refused_queries.set(key, reason)
 
     @property
     def _rest_tls(self) -> ssl.SSLContext | bool:
@@ -1925,6 +1938,12 @@ def _query_digest(query: str) -> bytes:
     return hashlib.blake2b(query.encode(), digest_size=16).digest()
 
 
+def _shortened(text: str, max_chars: int) -> str:
+    if len(text) <= max_chars:
+        return text
+    return f"{text[:max_chars]}… ({len(text)} characters)"
+
+
 def _take_back_a_refused_query(
     mc: MultiSiteConnection, asked: Sequence[ConnectedSite]
 ) -> MKLivestatusQueryError | None:
@@ -1941,12 +1960,17 @@ def _take_back_a_refused_query(
     refusals: list[MKLivestatusQueryError] = []
     for site in asked:
         exception = mc.deadsites.get(site.id, {}).get("exception")
-        if not isinstance(exception, Exception) or not isinstance(
-            exception.__context__, MKLivestatusQueryError
-        ):
+        if not isinstance(exception, Exception) or (refusal := _refusal(exception)) is None:
             return None
-        refusals.append(exception.__context__)
+        refusals.append(refusal)
     for site in asked:
         del mc.deadsites[site.id]
     mc.connections.extend(asked)
     return next(iter(refusals), None)
+
+
+def _refusal(error: BaseException) -> MKLivestatusQueryError | None:
+    """The refusal behind *error*: the client wraps a 400 into a socket error."""
+    if isinstance(error, MKLivestatusQueryError):
+        return error
+    return error.__context__ if isinstance(error.__context__, MKLivestatusQueryError) else None

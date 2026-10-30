@@ -10,10 +10,9 @@ import { computed, inject, provide } from 'vue'
 
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 
-import type { ActionFeedback } from './ActionFeedback.vue'
 import ActionFormPane from './ActionFormPane.vue'
 import type { MonitoringActionRegistry } from './registry'
-import { ACTION_TARGET_COUNT } from './types'
+import { ACTION_TARGET_COUNT, type ActionOutcome } from './types'
 
 const props = withDefaults(
   defineProps<{
@@ -30,7 +29,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (event: 'feedback', result: ActionFeedback): void
+  (event: 'feedback', result: ActionOutcome): void
   (event: 'cancel'): void
 }>()
 

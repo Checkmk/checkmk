@@ -48,9 +48,9 @@ import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyVie
 import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import MonitoringToolbar from '../shared/components/MonitoringToolbar.vue'
-import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
 import { rowsToActOn } from '../shared/components/action/actions/remove'
 import { RESCHEDULE_ACTION_ID } from '../shared/components/action/actions/reschedule'
+import type { ActionOutcome } from '../shared/components/action/types'
 import { InstantReport } from '../shared/export/instantReport'
 import { useRowExport } from '../shared/export/useRowExport'
 import { buildFilterUrlSchema } from '../shared/filterState/schema'
@@ -405,7 +405,7 @@ function explainService(service: HostServiceEntry): void {
   })
 }
 
-function onActionPerformed(result: ActionFeedbackResult): void {
+function onActionPerformed(result: ActionOutcome): void {
   if (result.variant === 'success') {
     hostServicesService.refresh(ACTION_REFRESH_DELAY_MS)
   }

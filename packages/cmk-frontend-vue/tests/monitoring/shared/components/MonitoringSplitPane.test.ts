@@ -14,9 +14,8 @@ import { defineComponent, h, markRaw, provide } from 'vue'
 import type { HostRef } from '@/monitoring/shared/api/types'
 import MonitoringSplitPane from '@/monitoring/shared/components/MonitoringSplitPane.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
-import type { ActionFeedback } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
-import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
+import type { ActionOutcome, MonitoringAction } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import {
   MonitoringService,
@@ -236,7 +235,7 @@ describe('MonitoringSplitPane', () => {
 
   it('pulses the immediate action while it is in flight', async () => {
     let settle: () => void = () => {}
-    const pending = new Promise<ActionFeedback>((resolve) => {
+    const pending = new Promise<ActionOutcome>((resolve) => {
       settle = () => resolve({ variant: 'success', message: untranslated('Rescheduled') })
     })
     await mountPaneWithLoadedRows(vi.fn().mockReturnValue(pending))

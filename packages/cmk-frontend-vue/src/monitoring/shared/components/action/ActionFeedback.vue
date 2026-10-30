@@ -6,17 +6,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkAlert, { type CmkAlertProps } from 'cmk-ui-library/components/CmkAlert.vue'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
-export interface ActionFeedback {
-  variant: 'success' | 'error'
-  message: TranslatedString
-  heading?: TranslatedString
-}
+import type { ActionOutcome } from './types'
 
 const props = defineProps<{
-  feedback: ActionFeedback
+  feedback: ActionOutcome
 }>()
 
 const open = defineModel<boolean>('open', { default: false })

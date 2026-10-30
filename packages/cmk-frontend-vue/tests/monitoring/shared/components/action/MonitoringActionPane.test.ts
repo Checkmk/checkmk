@@ -10,10 +10,9 @@ import { markRaw, ref } from 'vue'
 
 import type { HostRef } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
-import type { ActionFeedback } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import MonitoringActionPane from '@/monitoring/shared/components/action/MonitoringActionPane.vue'
 import AcknowledgeForm from '@/monitoring/shared/components/action/actions/AcknowledgeForm.vue'
-import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
+import type { ActionOutcome, MonitoringAction } from '@/monitoring/shared/components/action/types'
 import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 
 const TWO_HOSTS: HostRef[] = [
@@ -35,7 +34,7 @@ const ackAction: MonitoringAction = {
     notify: true
   }),
   perform: async (targets) =>
-    ({ variant: 'success', message: `Acknowledged ${targets.length}` }) as ActionFeedback
+    ({ variant: 'success', message: `Acknowledged ${targets.length}` }) as ActionOutcome
 }
 
 const REGISTRY = { acknowledge: ackAction }
@@ -83,7 +82,7 @@ test('resolves the action by id and bubbles feedback', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Acknowledge' }))
   await flush()
 
-  const events = emitted('feedback') as ActionFeedback[][]
+  const events = emitted('feedback') as ActionOutcome[][]
   expect(events).toHaveLength(1)
   expect(events[0]?.[0]).toEqual({ variant: 'success', message: 'Acknowledged 2' })
 })

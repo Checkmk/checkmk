@@ -33,9 +33,9 @@ import MonitoringSurveyLink from '@/monitoring/shared/components/MonitoringSurve
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import MonitoringToolbar from '@/monitoring/shared/components/MonitoringToolbar.vue'
 import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
-import { type ActionFeedback as ActionFeedbackResult } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import { rowsToActOn } from '@/monitoring/shared/components/action/actions/remove'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
+import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
@@ -364,7 +364,7 @@ function serviceActionTargets(rows: ServiceEntry[], actionId: string): ServiceRe
   return [...targets.values()]
 }
 
-function onActionPerformed(result: ActionFeedbackResult): void {
+function onActionPerformed(result: ActionOutcome): void {
   if (result.variant === 'success') {
     allServicesService.refresh(ACTION_REFRESH_DELAY_MS)
   }

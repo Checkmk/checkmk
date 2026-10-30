@@ -27,12 +27,11 @@ import type {
   ServiceRef
 } from '@/monitoring/shared/api/types'
 import { AFTER_NARROW } from '@/monitoring/shared/components/MonitoringTableContext'
-import ActionFeedback, {
-  type ActionFeedback as ActionFeedbackResult
-} from '@/monitoring/shared/components/action/ActionFeedback.vue'
+import ActionFeedback from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import MonitoringActionPane from '@/monitoring/shared/components/action/MonitoringActionPane.vue'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
+import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 import SlideInActions from '@/monitoring/shared/components/slide-in/SlideInActions.vue'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
@@ -76,7 +75,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (event: 'close'): void
-  (event: 'performed', result: ActionFeedbackResult): void
+  (event: 'performed', result: ActionOutcome): void
   (event: 'update:activeTabId', id: string): void
 }>()
 
@@ -188,7 +187,7 @@ onUnmounted(() => {
   }
 })
 
-function onActionPerformed(result: ActionFeedbackResult): void {
+function onActionPerformed(result: ActionOutcome): void {
   // The header sits outside the tabbed body, so it needs its own reload - unless the Overview
   // tab is active (or none has been picked yet, which defaults to it), since reloadToken then
   // reloads it via this same loadOverview() already.

@@ -11,8 +11,7 @@ import {
   type ScheduleDowntimeOptions
 } from '@/monitoring/shared/api/actions/downtime'
 
-import type { ActionFeedback } from '../ActionFeedback.vue'
-import type { ActionTargetKind, MonitoringAction } from '../types'
+import type { ActionOutcome, ActionTargetKind, MonitoringAction } from '../types'
 import ScheduleDowntimeForm, {
   type DowntimePresetOption,
   type DowntimeRecurrenceOption,
@@ -64,7 +63,7 @@ export function scheduleDowntimeOptions(
   }
 }
 
-export function noDowntimeWindow(): ActionFeedback {
+export function noDowntimeWindow(): ActionOutcome {
   const { _t } = usei18n()
   return {
     variant: 'error',

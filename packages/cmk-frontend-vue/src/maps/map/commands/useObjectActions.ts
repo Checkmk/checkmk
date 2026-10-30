@@ -19,7 +19,6 @@ import { type ComputedRef, type Ref, computed, reactive, ref, watch } from 'vue'
 import { useMapsApis, useStates, useToast } from '@/maps/services/context'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 import type { ScheduleDowntimeOptions } from '@/monitoring/shared/api/actions/downtime'
-import type { ActionFeedback } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import AcknowledgeForm, {
   type AcknowledgeValues
 } from '@/monitoring/shared/components/action/actions/AcknowledgeForm.vue'
@@ -40,7 +39,7 @@ import {
   type MonitoringActionRegistry,
   createActionRegistry
 } from '@/monitoring/shared/components/action/registry'
-import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
+import type { ActionOutcome, MonitoringAction } from '@/monitoring/shared/components/action/types'
 
 import { describeGroupCommandError, messageOf } from './commandErrors'
 import { acknowledgeOptions, useCommandForms } from './commandForms'
@@ -99,14 +98,14 @@ export interface ObjectActions {
   /** Whether removing the object's downtimes waits for a confirmation. */
   confirmingRemoveDowntimes: Ref<boolean>
   /** How the last command went, shown by the actions as in the host view. */
-  feedback: Ref<ActionFeedback | null>
+  feedback: Ref<ActionOutcome | null>
   feedbackOpen: Ref<boolean>
   /** Whether an action's command is still on its way. */
   running: (actionId: string) => boolean
   /** Opens an action's form, or sends a command that needs none. */
   select: (actionId: string) => void
   /** Sends the open form; a failure is returned to show beside it. */
-  submit: (values: unknown) => Promise<ActionFeedback | null>
+  submit: (values: unknown) => Promise<ActionOutcome | null>
   confirmRemoveDowntimes: () => Promise<void>
   close: () => void
 }
@@ -125,7 +124,7 @@ export function useObjectActions(options: ObjectActionsOptions): ObjectActions {
 
   const activeActionId = ref<string | null>(null)
   const confirmingRemoveDowntimes = ref(false)
-  const feedback = ref<ActionFeedback | null>(null)
+  const feedback = ref<ActionOutcome | null>(null)
   const feedbackOpen = ref(false)
   // A command already on its way is not sent twice by a second click. Keyed by
   // object too, so the next object's button is not held up by it.
@@ -166,7 +165,7 @@ export function useObjectActions(options: ObjectActionsOptions): ObjectActions {
     send: () => Promise<void>,
     success: TranslatedString,
     heading: TranslatedString
-  ): Promise<ActionFeedback> {
+  ): Promise<ActionOutcome> {
     try {
       await send()
     } catch (caught) {
@@ -377,7 +376,7 @@ export function useObjectActions(options: ObjectActionsOptions): ObjectActions {
   // A result is shown where it was asked for. Once the slide-in has moved on to
   // another object or closed, that place is gone, and only a toast still
   // reaches the operator.
-  function report(result: ActionFeedback, objectId: string): void {
+  function report(result: ActionOutcome, objectId: string): void {
     if (options.object()?.id === objectId) {
       feedback.value = result
       feedbackOpen.value = true
@@ -393,7 +392,7 @@ export function useObjectActions(options: ObjectActionsOptions): ObjectActions {
    * Sends an action's command and shows how it went. A refusal of an open form
    * is returned instead, for its dialog to show; a success closes the dialog.
    */
-  async function perform(actionId: string, values: unknown): Promise<ActionFeedback | null> {
+  async function perform(actionId: string, values: unknown): Promise<ActionOutcome | null> {
     const action = registry.value[actionId]
     const object = options.object()
     if (!action || !object) {
@@ -405,7 +404,7 @@ export function useObjectActions(options: ObjectActionsOptions): ObjectActions {
     }
     sending.add(key)
     feedback.value = null
-    let result: ActionFeedback
+    let result: ActionOutcome
     try {
       result = await action.perform([object], values)
     } finally {
@@ -437,7 +436,7 @@ export function useObjectActions(options: ObjectActionsOptions): ObjectActions {
     }
   }
 
-  async function submit(values: unknown): Promise<ActionFeedback | null> {
+  async function submit(values: unknown): Promise<ActionOutcome | null> {
     return activeActionId.value === null ? null : perform(activeActionId.value, values)
   }
 

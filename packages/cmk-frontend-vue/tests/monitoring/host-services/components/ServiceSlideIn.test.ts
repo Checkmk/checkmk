@@ -20,10 +20,10 @@ import type {
   ServiceRef
 } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
-import type { ActionFeedback } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import { ACK_ACTION_ID } from '@/monitoring/shared/components/action/actions/acknowledge'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
+import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import type { DisplayOptions } from '@/monitoring/shared/types'
@@ -39,10 +39,10 @@ const PERMITTED_ACTIONS: CellAction[] = [
   { id: RESCHEDULE_ACTION_ID, label: 'Reschedule check' as TranslatedString, icon: 'reload' }
 ]
 
-const SUCCESS: ActionFeedback = { variant: 'success', message: 'Done' as TranslatedString }
+const SUCCESS: ActionOutcome = { variant: 'success', message: 'Done' as TranslatedString }
 
 function makeActionRegistry(
-  perform: (targets: ServiceRef[]) => Promise<ActionFeedback> = async () => SUCCESS
+  perform: (targets: ServiceRef[]) => Promise<ActionOutcome> = async () => SUCCESS
 ): MonitoringActionRegistry<ServiceRef> {
   const action = (id: string, title: string) => ({
     id,

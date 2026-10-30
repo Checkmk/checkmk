@@ -19,12 +19,11 @@ import MonitoringLimitSelector from '@/monitoring/shared/components/MonitoringLi
 import MonitoringResultsCount from '@/monitoring/shared/components/MonitoringResultsCount.vue'
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import MonitoringTotalCount from '@/monitoring/shared/components/MonitoringTotalCount.vue'
-import ActionFeedback, {
-  type ActionFeedback as ActionFeedbackResult
-} from '@/monitoring/shared/components/action/ActionFeedback.vue'
+import ActionFeedback from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import MonitoringActionBar from '@/monitoring/shared/components/action/MonitoringActionBar.vue'
 import MonitoringActionPane from '@/monitoring/shared/components/action/MonitoringActionPane.vue'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
+import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { ACTION_PANE_MIN_WIDTH } from '@/monitoring/shared/constants'
 import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
@@ -65,7 +64,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (event: 'performed', result: ActionFeedbackResult): void
+  (event: 'performed', result: ActionOutcome): void
 }>()
 
 const { _t } = usei18n()
@@ -97,7 +96,7 @@ function targetsFor(actionId: string): Target[] {
     : rows.map((row) => props.getActionTarget(row))
 }
 
-const noTargetsFeedback: ActionFeedbackResult = {
+const noTargetsFeedback: ActionOutcome = {
   variant: 'error',
   message: _t('This action cannot be performed on any of the selected rows.')
 }
@@ -157,7 +156,7 @@ const unreachableSitesText = computed(() =>
   unreachableSitesHint(props.service.unreachableSites.value)
 )
 
-function onFeedback(result: ActionFeedbackResult): void {
+function onFeedback(result: ActionOutcome): void {
   applyFeedback(result)
   emit('performed', result)
 }

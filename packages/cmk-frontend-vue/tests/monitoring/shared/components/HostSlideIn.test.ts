@@ -15,11 +15,10 @@ import HostSlideIn, {
   type HostSlideInSubject
 } from '@/monitoring/shared/components/HostSlideIn.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
-import type { ActionFeedback } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import { ACK_ACTION_ID } from '@/monitoring/shared/components/action/actions/acknowledge'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
-import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
+import type { ActionOutcome, MonitoringAction } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import { labelCondition } from '@/monitoring/shared/labels'
@@ -33,7 +32,7 @@ const RUNNING_CLASS = 'cmk-button--running'
 const RESCHEDULE_LABEL = 'Reschedule check'
 const ACK_LABEL = 'Acknowledge problem'
 
-const SUCCESS: ActionFeedback = { variant: 'success', message: untranslated('Rescheduled') }
+const SUCCESS: ActionOutcome = { variant: 'success', message: untranslated('Rescheduled') }
 
 const STUB_FORM = markRaw(
   defineComponent({
@@ -143,9 +142,9 @@ function renderSlideIn(
   })
 }
 
-function feedbackSettledByHand(): { promise: Promise<ActionFeedback>; resolve: () => void } {
+function feedbackSettledByHand(): { promise: Promise<ActionOutcome>; resolve: () => void } {
   let resolve: () => void = () => {}
-  const promise = new Promise<ActionFeedback>((res) => {
+  const promise = new Promise<ActionOutcome>((res) => {
     resolve = () => res(SUCCESS)
   })
   return { promise, resolve }

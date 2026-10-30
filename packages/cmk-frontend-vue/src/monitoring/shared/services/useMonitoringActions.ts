@@ -6,16 +6,16 @@
 import type { RowSelectionState } from '@tanstack/vue-table'
 import { type ComputedRef, type Ref, computed, ref, watch } from 'vue'
 
-import type { ActionFeedback } from '@/monitoring/shared/components/action/ActionFeedback.vue'
+import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 
 export interface MonitoringActions<Id extends string = string> {
   activeAction: Ref<Id | null>
   selectedCount: ComputedRef<number>
-  feedback: Ref<ActionFeedback | null>
+  feedback: Ref<ActionOutcome | null>
   feedbackOpen: Ref<boolean>
   openAction: (id: Id) => void
   closeAction: () => void
-  applyFeedback: (result: ActionFeedback, options?: { clearSelection?: boolean }) => void
+  applyFeedback: (result: ActionOutcome, options?: { clearSelection?: boolean }) => void
 }
 
 export function useMonitoringActions<Id extends string = string>(
@@ -23,7 +23,7 @@ export function useMonitoringActions<Id extends string = string>(
   selectableKeys: Ref<readonly string[]>
 ): MonitoringActions<Id> {
   const activeAction = ref<Id | null>(null) as Ref<Id | null>
-  const feedback = ref<ActionFeedback | null>(null)
+  const feedback = ref<ActionOutcome | null>(null)
   const feedbackOpen = ref(false)
 
   const selectedCount = computed(() => Object.values(rowSelection.value).filter(Boolean).length)
@@ -36,7 +36,7 @@ export function useMonitoringActions<Id extends string = string>(
     activeAction.value = null
   }
 
-  function applyFeedback(result: ActionFeedback, options: { clearSelection?: boolean } = {}): void {
+  function applyFeedback(result: ActionOutcome, options: { clearSelection?: boolean } = {}): void {
     // Row-level actions act on a single host and must not touch the (independent) bulk selection.
     if (result.variant === 'success' && (options.clearSelection ?? true)) {
       rowSelection.value = {}

@@ -5,22 +5,22 @@
  */
 import { type Ref, ref, watch } from 'vue'
 
-import type { ActionFeedback } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
+import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 
 export interface SlideInActions<Target> {
   /** The action whose form pane is on screen, taking the panel over. */
   activeActionId: Ref<string | null>
   /** The action performing right away, pulsing until it settles. */
   runningActionId: Ref<string | null>
-  feedback: Ref<ActionFeedback | null>
+  feedback: Ref<ActionOutcome | null>
   feedbackOpen: Ref<boolean>
   /** Performs the action outright when it needs no input, else opens its form. */
   openAction: (actionId: string) => Promise<void>
   closeAction: () => void
   /** Records the outcome of an action performed elsewhere, e.g. from the header's action menu. */
-  applyFeedback: (result: ActionFeedback) => void
+  applyFeedback: (result: ActionOutcome) => void
   perform: (actionId: string, targets: Target[]) => Promise<void>
 }
 
@@ -39,11 +39,11 @@ export function useSlideInActions<Target>(
   actions: () => MonitoringActionRegistry<Target>,
   targets: (actionId: string) => Target[],
   subject: () => unknown,
-  onPerformed: (result: ActionFeedback) => void
+  onPerformed: (result: ActionOutcome) => void
 ): SlideInActions<Target> {
   const activeActionId = ref<string | null>(null)
   const runningActionId = ref<string | null>(null)
-  const feedback = ref<ActionFeedback | null>(null)
+  const feedback = ref<ActionOutcome | null>(null)
   const feedbackOpen = ref(false)
 
   watch(subject, () => {
@@ -52,7 +52,7 @@ export function useSlideInActions<Target>(
     feedback.value = null
   })
 
-  function applyFeedback(result: ActionFeedback): void {
+  function applyFeedback(result: ActionOutcome): void {
     feedback.value = result
     feedbackOpen.value = true
     activeActionId.value = null

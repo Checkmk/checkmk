@@ -8,7 +8,11 @@ import type { Component, ComputedRef, InjectionKey } from 'vue'
 
 import type { HostRef } from '@/monitoring/shared/api/types'
 
-import type { ActionFeedback } from './ActionFeedback.vue'
+export interface ActionOutcome {
+  variant: 'success' | 'error'
+  message: TranslatedString
+  heading?: TranslatedString
+}
 
 /** Number of hosts the open action applies to, for forms that adapt their wording or hints. */
 export const ACTION_TARGET_COUNT: InjectionKey<ComputedRef<number>> = Symbol(
@@ -36,5 +40,5 @@ export interface MonitoringAction<Values = unknown, Target = HostRef> {
     submitLabel(count: number): TranslatedString
   }
   defaultValues(): Values
-  perform(targets: Target[], values: Values): Promise<ActionFeedback>
+  perform(targets: Target[], values: Values): Promise<ActionOutcome>
 }

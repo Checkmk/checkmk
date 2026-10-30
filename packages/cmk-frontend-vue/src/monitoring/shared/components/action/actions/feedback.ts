@@ -6,9 +6,9 @@
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-import type { ActionFeedback } from '../ActionFeedback.vue'
+import type { ActionOutcome } from '../types'
 
-export function commandFailed(heading: TranslatedString): ActionFeedback {
+export function commandFailed(heading: TranslatedString): ActionOutcome {
   const { _t } = usei18n()
   return {
     variant: 'error',

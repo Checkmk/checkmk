@@ -18,9 +18,8 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { CommandVerb } from '@/maps/api/session'
 import { OBJECT_ACTION_IDS as ACTIONS } from '@/maps/map/commands/useObjectActions'
 import type { ObjectState } from '@/maps/types/api'
-import ActionFeedback, {
-  type ActionFeedback as ActionFeedbackResult
-} from '@/monitoring/shared/components/action/ActionFeedback.vue'
+import ActionFeedback from '@/monitoring/shared/components/action/ActionFeedback.vue'
+import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 
 const props = defineProps<{
   state: ObjectState | undefined
@@ -34,7 +33,7 @@ const props = defineProps<{
   /** Whether an action's command is still on its way. */
   running: (actionId: string) => boolean
   /** How the last command went, shown as in the host view. */
-  feedback: ActionFeedbackResult | null
+  feedback: ActionOutcome | null
 }>()
 
 const feedbackOpen = defineModel<boolean>('feedbackOpen', { required: true })

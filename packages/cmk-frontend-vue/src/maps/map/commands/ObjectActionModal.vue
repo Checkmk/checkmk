@@ -15,17 +15,15 @@ import { ref } from 'vue'
 
 import MapsModal from '@/maps/shared/components/MapsModal.vue'
 import type { MapElement } from '@/maps/types/api'
-import ActionFeedback, {
-  type ActionFeedback as ActionFeedbackResult
-} from '@/monitoring/shared/components/action/ActionFeedback.vue'
-import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
+import ActionFeedback from '@/monitoring/shared/components/action/ActionFeedback.vue'
+import type { ActionOutcome, MonitoringAction } from '@/monitoring/shared/components/action/types'
 
 import CommandObjectName from './CommandObjectName.vue'
 
 const props = defineProps<{
   object: MapElement
   action: MonitoringAction<unknown, MapElement>
-  submit: (values: unknown) => Promise<ActionFeedbackResult | null>
+  submit: (values: unknown) => Promise<ActionOutcome | null>
 }>()
 
 const emit = defineEmits<{ close: [] }>()
@@ -35,7 +33,7 @@ const { _t } = usei18n()
 const draft = ref(props.action.defaultValues())
 const isValid = ref(props.action.form === undefined)
 const sending = ref(false)
-const failure = ref<ActionFeedbackResult | null>(null)
+const failure = ref<ActionOutcome | null>(null)
 const failureOpen = ref(false)
 
 async function onSubmit(): Promise<void> {

@@ -27,7 +27,7 @@ from cmk.agent_receiver.relay.lib.relay_config_repository import RelayConfigRepo
 from cmk.agent_receiver.relay.lib.site_client import SiteRelaysClient
 
 
-def get_refresh_cert_handler(
+async def get_refresh_cert_handler(
     site_relays_client: Annotated[SiteRelaysClient, fastapi.Depends(get_site_relays_client)],
     relay_config_repository: Annotated[
         RelayConfigRepository, fastapi.Depends(get_relay_config_repository)
@@ -38,13 +38,13 @@ def get_refresh_cert_handler(
     )
 
 
-def get_register_relay_handler(
+async def get_register_relay_handler(
     site_relays_client: Annotated[SiteRelaysClient, fastapi.Depends(get_site_relays_client)],
 ) -> RegisterRelayHandler:
     return RegisterRelayHandler(site_relays_client=site_relays_client)
 
 
-def get_relay_status_handler(
+async def get_relay_status_handler(
     site_relays_client: Annotated[SiteRelaysClient, fastapi.Depends(get_site_relays_client)],
     relay_config_repository: Annotated[
         RelayConfigRepository, fastapi.Depends(get_relay_config_repository)
@@ -70,7 +70,7 @@ def get_crash_extraction_executor() -> concurrent.futures.ThreadPoolExecutor:
     return concurrent.futures.ThreadPoolExecutor(max_workers=2, thread_name_prefix="crash-extract")
 
 
-def get_store_crash_report_handler(
+async def get_store_crash_report_handler(
     config: Annotated[Config, fastapi.Depends(config_dependency)],
     executor: Annotated[
         concurrent.futures.Executor, fastapi.Depends(get_crash_extraction_executor)

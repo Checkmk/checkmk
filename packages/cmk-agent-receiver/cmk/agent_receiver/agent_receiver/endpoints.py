@@ -121,7 +121,7 @@ class CmkToken(BaseModel):
     uuid: UUID4
 
 
-def verify_cmk_token(req: Request) -> str:
+async def verify_cmk_token(req: Request) -> str:
     auth_header = req.headers.get("Authorization")
     if not auth_header:
         raise token_auth_unauthorized_exception()

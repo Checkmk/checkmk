@@ -12,7 +12,7 @@ from starlette.status import HTTP_403_FORBIDDEN
 from cmk.agent_receiver.lib.log import logger
 
 
-def validate_localhost_authorization(request: Request) -> None:
+async def validate_localhost_authorization(request: Request) -> None:
     """Validate that the incoming request originates from localhost only.
 
     This function performs authorization by checking that the client IP address

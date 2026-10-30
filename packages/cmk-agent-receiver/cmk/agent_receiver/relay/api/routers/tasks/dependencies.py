@@ -61,7 +61,7 @@ async def get_relay_tasks_handler(
     )
 
 
-def get_relay_task_handler(
+async def get_relay_task_handler(
     tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
 ) -> GetRelayTaskHandler:
     return GetRelayTaskHandler(
@@ -69,7 +69,7 @@ def get_relay_task_handler(
     )
 
 
-def get_create_task_handler(
+async def get_create_task_handler(
     tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
 ) -> CreateTaskHandler:
     return CreateTaskHandler(
@@ -85,7 +85,7 @@ async def get_update_task_handler(
     )
 
 
-def get_activate_config_handler(
+async def get_activate_config_handler(
     config_task_factory: Annotated[ConfigTaskFactory, fastapi.Depends(get_config_task_factory)],
 ) -> ActivateConfigHandler:
     return ActivateConfigHandler(
@@ -97,7 +97,7 @@ async def get_version_handler() -> GetVersionHandler:
     return GetVersionHandler()
 
 
-def site_cn_authorization(
+async def site_cn_authorization(
     client_cn: Annotated[str, Header(alias=INJECTED_UUID_HEADER)],
 ) -> None:
     """FastAPI dependency for authorizing requests based on local site CN.

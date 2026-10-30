@@ -6,7 +6,7 @@ from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.relay.lib.site_client import SiteRelaysClient
 
 
-def get_site_relays_client() -> SiteRelaysClient:
+async def get_site_relays_client() -> SiteRelaysClient:
     config = get_config()
     return SiteRelaysClient.from_site(
         site_url=config.rest_api_url,

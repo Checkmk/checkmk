@@ -15,7 +15,8 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.localhost_authorization imp
 )
 
 
-def test_localhost_only_validation() -> None:
+@pytest.mark.asyncio
+async def test_localhost_only_validation() -> None:
     """Test localhost-only authorization dependency with various client addresses."""
     app = FastAPI()
     router = APIRouter()
@@ -38,16 +39,16 @@ def test_localhost_only_validation() -> None:
 
     # Test successful IPv4 localhost
     mock_request = create_mock_request("127.0.0.1")
-    validate_localhost_authorization(mock_request)
+    await validate_localhost_authorization(mock_request)
 
     # Test successful IPv6 localhost
     mock_request = create_mock_request("::1")
-    validate_localhost_authorization(mock_request)
+    await validate_localhost_authorization(mock_request)
 
     # Test failed remote IPv4
     mock_request = create_mock_request("192.168.1.100")
     with pytest.raises(HTTPException) as exc_info:
-        validate_localhost_authorization(mock_request)
+        await validate_localhost_authorization(mock_request)
     assert exc_info.value.status_code == HTTPStatus.FORBIDDEN
     assert (
         "Access denied: Request must originate from localhost (client: 192.168.1.100)"
@@ -57,7 +58,7 @@ def test_localhost_only_validation() -> None:
     # Test failed remote IPv6
     mock_request = create_mock_request("2001:db8::1")
     with pytest.raises(HTTPException) as exc_info:
-        validate_localhost_authorization(mock_request)
+        await validate_localhost_authorization(mock_request)
     assert exc_info.value.status_code == HTTPStatus.FORBIDDEN
     assert (
         "Access denied: Request must originate from localhost (client: 2001:db8::1)"
@@ -68,7 +69,7 @@ def test_localhost_only_validation() -> None:
     mock_request = Mock()
     mock_request.client = None
     with pytest.raises(HTTPException) as exc_info:
-        validate_localhost_authorization(mock_request)
+        await validate_localhost_authorization(mock_request)
     assert exc_info.value.status_code == HTTPStatus.FORBIDDEN
     assert (
         "Access denied: Request must originate from localhost (client: unknown)"

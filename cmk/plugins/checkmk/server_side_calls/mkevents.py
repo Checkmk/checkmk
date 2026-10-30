@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import re
 from collections.abc import Iterator, Mapping
 
 from pydantic import BaseModel
@@ -37,6 +38,17 @@ def _quote_host(host: str) -> str:
     return host.replace("\\", "\\\\").replace("/", "\\/")
 
 
+def _remote_address(host: str, port: int) -> str:
+    """A host with a port of its own, e.g. "myhost:6559", keeps it like it always did
+
+    Like before, an empty port, e.g. in "myhost:", means the port of the rule, and further
+    colons around the port don't matter, e.g. in "myhost::6559". Neither does whitespace
+    around the host and the port, e.g. in " myhost : 6559 "."""
+    host = re.sub(r"\s*:\s*", ":", host.strip())
+    name, _colon, own_port = host.partition(":")
+    return f"{name}:{own_port.strip(':') or port}"
+
+
 def generate_mkevents_command(
     params: MKEventsParams,
     host_config: HostConfig,
@@ -45,7 +57,7 @@ def generate_mkevents_command(
     if params.remote is not None:
         if isinstance(params.remote, tuple):
             ipaddress, port = params.remote
-            args += ["-H", f"{replace_macros(ipaddress, host_config.macros)}:{port}"]
+            args += ["-H", _remote_address(replace_macros(ipaddress, host_config.macros), port)]
         elif params.remote:
             args += ["-s", replace_macros(params.remote, host_config.macros)]
 
@@ -65,7 +77,8 @@ def generate_mkevents_command(
         )
     else:
         hostspec = replace_macros(params.hostspec, host_config.macros)
-    args.append(hostspec)
+    # The host and the application may start with a dash.
+    args += ["--", hostspec]
 
     if params.application is not None:
         args.append(params.application)

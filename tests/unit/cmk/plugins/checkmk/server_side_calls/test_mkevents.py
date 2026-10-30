@@ -16,18 +16,43 @@ from cmk.server_side_calls.v1 import HostConfig
     [
         pytest.param(
             {"hostspec": ["$HOSTNAME$", "$HOSTADDRESS$"], "show_last_log": "details"},
-            ["-L", "-q", "hostname/ipaddress"],
+            ["-L", "-q", "--", "hostname/ipaddress"],
             id="host list with the last log in the details",
         ),
         pytest.param(
             {"hostspec": ["$HOSTNAME$", "$HOSTALIAS$"], "show_last_log": "no"},
-            ["-q", "hostname/Router A\\/B\\\\C"],
+            ["-q", "--", "hostname/Router A\\/B\\\\C"],
             id="host list quoting slashes and backslashes",
         ),
         pytest.param(
             {"hostspec": "foobar", "show_last_log": "no"},
-            ["foobar"],
+            ["--", "foobar"],
             id="host",
+        ),
+        pytest.param(
+            {"hostspec": "foobar", "show_last_log": "no", "application": "-app"},
+            ["--", "foobar", "-app"],
+            id="application after the end of the options",
+        ),
+        pytest.param(
+            {"hostspec": "foobar", "show_last_log": "no", "remote": ("myhost:6559", 6558)},
+            ["-H", "myhost:6559", "--", "foobar"],
+            id="remote host with its own port",
+        ),
+        pytest.param(
+            {"hostspec": "foobar", "show_last_log": "no", "remote": (" myhost : 6559 ", 6558)},
+            ["-H", "myhost:6559", "--", "foobar"],
+            id="remote host with whitespace around its port",
+        ),
+        pytest.param(
+            {"hostspec": "foobar", "show_last_log": "no", "remote": ("myhost:", 6559)},
+            ["-H", "myhost:6559", "--", "foobar"],
+            id="remote host with an empty port",
+        ),
+        pytest.param(
+            {"hostspec": "foobar", "show_last_log": "no", "remote": ("myhost::6559", 6558)},
+            ["-H", "myhost:6559", "--", "foobar"],
+            id="remote host with its own port after colons",
         ),
     ],
 )

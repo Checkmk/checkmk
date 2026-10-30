@@ -328,6 +328,27 @@ class IconRenderResult(NamedTuple):
             ),
             id="Handling of multiple parameters with and without argument",
         ),
+        # Check how the parser handles the end of the options in service_check_command
+        pytest.param(
+            IconRenderArgs(
+                what="service",
+                row={
+                    "site": "heute",
+                    "host_name": "heute",
+                    "host_address": "127.0.0.1",
+                    "host_alias": "my_alias",
+                    "service_check_command": "check_mk_active-mkevents!'-a' '--' '$HOSTALIAS$' '-my_app'",
+                },
+                tags=[],
+                custom_vars={},
+            ),
+            IconRenderResult(
+                name="mkeventd",
+                title='Events of application "-my_app" on host heute',
+                url="view.py?event_application=-my_app&host=heute&site=heute&view_name=ec_events_of_monhost",
+            ),
+            id="Handling of the end of the options",
+        ),
     ],
 )
 def test_icon_options(
@@ -404,26 +425,33 @@ def _render_icon(site: str, check_command: str, alias: str = "my_alias") -> obje
     [
         pytest.param(
             _CMC_VERSION,
-            r"check_mk_active-mkevents!'-q' 'heute/Router A\/B' 'my_app'",
+            r"check_mk_active-mkevents!'-q' '--' 'heute/Router A\/B' 'my_app'",
             "Router A/B",
             id="slash, cmc",
         ),
         pytest.param(
             _NAGIOS_VERSION,
-            r"check_mk_active-mkevents!'-q' 'heute/Router A\\/B' 'my_app'",
+            r"check_mk_active-mkevents!'-q' '--' 'heute/Router A\\/B' 'my_app'",
             "Router A/B",
             id="slash, nagios",
+        ),
+        # A command line from before check_mkevents knew "--"
+        pytest.param(
+            _CMC_VERSION,
+            r"check_mk_active-mkevents!'-q' 'heute/Router A\/B' 'my_app'",
+            "Router A/B",
+            id="slash, cmc, without the end of the options",
         ),
         # Only Nagios doubles the backslashes of check_mkevents' quoting.
         pytest.param(
             _CMC_VERSION,
-            r"check_mk_active-mkevents!'-q' 'heute/\\\\fs1\\share' 'my_app'",
+            r"check_mk_active-mkevents!'-q' '--' 'heute/\\\\fs1\\share' 'my_app'",
             r"\\fs1\share",
             id="backslashes, cmc",
         ),
         pytest.param(
             _NAGIOS_VERSION,
-            r"check_mk_active-mkevents!'-q' 'heute/\\\\\\\\fs1\\\\share' 'my_app'",
+            r"check_mk_active-mkevents!'-q' '--' 'heute/\\\\\\\\fs1\\\\share' 'my_app'",
             r"\\fs1\share",
             id="backslashes, nagios",
         ),
@@ -451,7 +479,7 @@ def test_quoted_host_list_with_the_alias_is_the_monitored_host(
 
 @pytest.mark.usefixtures("request_context")
 def test_title_shows_a_host_specification_without_quoting_as_it_is() -> None:
-    rendered = _render_icon("heute", r"check_mk_active-mkevents!'Router A\/B' 'my_app'")
+    rendered = _render_icon("heute", r"check_mk_active-mkevents!'--' 'Router A\/B' 'my_app'")
 
     assert rendered == IconRenderResult(
         name="mkeventd",
@@ -463,7 +491,7 @@ def test_title_shows_a_host_specification_without_quoting_as_it_is() -> None:
 @pytest.mark.usefixtures("request_context")
 def test_whitespace_and_empty_hosts_in_a_host_list_dont_count_like_for_the_check() -> None:
     rendered = _render_icon(
-        "heute", "check_mk_active-mkevents!'-q' ' heute / 127.0.0.1 /' 'my_app'"
+        "heute", "check_mk_active-mkevents!'-q' '--' ' heute / 127.0.0.1 /' 'my_app'"
     )
 
     assert rendered == IconRenderResult(
@@ -476,9 +504,11 @@ def test_whitespace_and_empty_hosts_in_a_host_list_dont_count_like_for_the_check
 @pytest.mark.parametrize(
     "program_version, check_command",
     [
-        pytest.param(_CMC_VERSION, r"check_mk_active-mkevents!'heute' 'a\\b'", id="cmc"),
+        pytest.param(_CMC_VERSION, r"check_mk_active-mkevents!'--' 'heute' 'a\\b'", id="cmc"),
         # Only Nagios doubles the backslashes of the application.
-        pytest.param(_NAGIOS_VERSION, r"check_mk_active-mkevents!'heute' 'a\\\\b'", id="nagios"),
+        pytest.param(
+            _NAGIOS_VERSION, r"check_mk_active-mkevents!'--' 'heute' 'a\\\\b'", id="nagios"
+        ),
     ],
 )
 @pytest.mark.usefixtures("request_context")
@@ -502,7 +532,9 @@ def test_application_with_backslashes_is_the_regex_of_the_check(
 
 @pytest.mark.usefixtures("request_context")
 def test_application_with_apostrophes_is_the_regex_of_the_check() -> None:
-    rendered = _render_icon("heute", "check_mk_active-mkevents!'heute' " + shlex.quote("'my_app'"))
+    rendered = _render_icon(
+        "heute", "check_mk_active-mkevents!'--' 'heute' " + shlex.quote("'my_app'")
+    )
 
     assert rendered == IconRenderResult(
         name="mkeventd",

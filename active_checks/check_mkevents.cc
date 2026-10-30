@@ -13,7 +13,10 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include <algorithm>
+#include <cctype>
 #include <cerrno>
+#include <chrono>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -22,6 +25,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 enum class State { ok = 0, warn = 1, crit = 2, unknown = 3 };
@@ -87,8 +91,56 @@ void print_line(const std::string &output) {
     exit(state);
 }
 
+constexpr int timeout_seconds = 20;
+
 [[noreturn]] void ioError(const std::string &message) {
-    reply_and_exit(State::unknown, message + " (" + strerror(errno) + ")");
+    // All our sockets have timeouts, which expire with one of these errors.
+    auto err = errno;
+    std::string reason =
+        err == EAGAIN || err == EWOULDBLOCK || err == EINPROGRESS
+            ? "timeout after " + std::to_string(timeout_seconds) + " seconds"
+            : strerror(err);
+    reply_and_exit(State::unknown, message + " (" + reason + ")");
+}
+
+// The exchange with the event console, from connecting to reading the whole
+// answer, shares one deadline, so the timeouts of its steps don't add up.
+std::chrono::steady_clock::time_point deadline() {
+    static const auto deadline = std::chrono::steady_clock::now() +
+                                 std::chrono::seconds{timeout_seconds};
+    return deadline;
+}
+
+// A socket timeout only expires while a call waits, so a peer that keeps
+// sending or reading would keep a loop of such calls going past the deadline.
+// That's why the loop checks the deadline before each call, reporting a timeout
+// with the message of the call.
+void check_deadline(const std::string &message) {
+    if (std::chrono::steady_clock::now() >= deadline()) {
+        reply_and_exit(State::unknown, message + " (timeout after " +
+                                           std::to_string(timeout_seconds) +
+                                           " seconds)");
+    }
+}
+
+// Limits the next blocking call on the socket to the time left until the
+// deadline, via the timeout option SO_RCVTIMEO for receiving or SO_SNDTIMEO for
+// sending. Linux uses the send timeout for connect(), too.
+void limit_to_deadline(int sock, int option) {
+    using std::chrono::duration_cast;
+    using std::chrono::microseconds;
+    using std::chrono::seconds;
+    // A timeout of zero would mean no timeout at all.
+    const auto left =
+        std::max(duration_cast<microseconds>(deadline() -
+                                             std::chrono::steady_clock::now()),
+                 microseconds{1});
+    const auto left_seconds = duration_cast<seconds>(left);
+    const timeval tv{.tv_sec = left_seconds.count(),
+                     .tv_usec = (left - left_seconds).count()};
+    if (setsockopt(sock, SOL_SOCKET, option, &tv, sizeof(tv)) == -1) {
+        ioError("Cannot set socket timeout");
+    }
 }
 
 // Cuts a string after at most max_size bytes, but doesn't cut a character in
@@ -135,6 +187,22 @@ std::string start_of_response(const std::string &response) {
                     response);
 }
 
+// The event console closes the connection without answering when it denies
+// access via TCP or can't handle the query. Depending on the timing, we see
+// one of these errors or an empty answer.
+bool closed_by_peer(int err) {
+    return err == EPIPE || err == ECONNRESET || err == ENOTCONN;
+}
+
+[[noreturn]] void noAnswer(const std::string &query) {
+    reply_and_exit(State::unknown,
+                   "Event console closed the connection without answering, "
+                   "see its log file var/log/mkeventd.log for the reason, "
+                   "e.g. a denied access via TCP or an invalid regular "
+                   "expression for the application\nQuery was:\n" +
+                       query);
+}
+
 // Splits a line of the plain output format at the tabs, keeping empty columns
 // like an empty event text at the end of the line.
 std::vector<std::string> split_columns(const std::string &line) {
@@ -150,15 +218,48 @@ std::vector<std::string> split_columns(const std::string &line) {
     }
 }
 
-void usage() {
+[[noreturn]] void usage() {
     reply_and_exit(
         State::unknown,
-        "Usage: check_mkevents [-s SOCKETPATH] [-H REMOTE:PORT] [-a] [-l|-L] [-q] HOST [APPLICATION]\n"
+        "Usage: check_mkevents [-s SOCKETPATH] [-H REMOTE:PORT] [-a] [-l|-L] [-q] [--] HOST [APPLICATION]\n"
         " -a    do not take acknowledged events into account.\n"
         " -l    show last log message in summary/short output\n"
         " -L    show last log message in details/long output\n"
         " -q    take a backslash in HOST as quoting a following slash or backslash.\n"
+        " --    end the options, e.g. for a HOST starting with a dash.\n"
         " HOST  may be a hostname, and IP address or hostname/IP-address.");
+}
+
+// Parses a port number from 1 to 65535, leading zeros don't count.
+std::optional<uint16_t> parse_port(const std::string &s) {
+    if (!std::all_of(s.begin(), s.end(),
+                     [](unsigned char c) { return std::isdigit(c) != 0; })) {
+        return {};
+    }
+    const auto digits = s.substr(std::min(s.find_first_not_of('0'), s.size()));
+    if (digits.empty() || digits.size() > 5) {
+        return {};
+    }
+    const auto port = std::stoul(digits);  // can't throw for at most 5 digits
+    if (port > 65535) {
+        return {};
+    }
+    return static_cast<uint16_t>(port);
+}
+
+// Parses a remote address like "myhost:6558", the port is optional and may be
+// empty.
+std::pair<std::string, uint16_t> parse_remote(const std::string &remote) {
+    const auto colon = std::min(remote.find(':'), remote.size());
+    const auto address = remote.substr(0, colon);
+    const auto port = colon + 1 >= remote.size()
+                          ? std::optional<uint16_t>{6558}
+                          : parse_port(remote.substr(colon + 1));
+    if (address.empty() || !port) {
+        reply_and_exit(State::unknown, "Invalid remote address '" + remote +
+                                           "', expected HOST[:PORT]");
+    }
+    return {address, *port};
 }
 
 // Splits a host specification like "myhost/10.1.2.3" at the slashes. If it is
@@ -244,59 +345,55 @@ std::string host_filter(const std::string &spec, bool quoted) {
 
 int main(int argc, char **argv) {
     // Parse arguments
-    char *host = nullptr;
-    char *remote_host = nullptr;
-    char *application = nullptr;
+    const char *remote_host = nullptr;
     bool ignore_acknowledged = false;
     bool last_log_in_summary = false;
     bool last_log_in_details = false;
     bool host_spec_quoted = false;
     std::string unixsocket_path;
 
-    int argc_count = argc;
-    for (int i = 1; i < argc; i++) {
-        if (i < argc + 1 && strcmp("-H", argv[i]) == 0) {
-            remote_host = argv[i + 1];
-            i++;
-            argc_count -= 2;
-        } else if (i < argc + 1 && strcmp("-s", argv[i]) == 0) {
-            unixsocket_path = argv[i + 1];
-            i++;
-            argc_count -= 2;
-        } else if (strcmp("-a", argv[i]) == 0) {
-            ignore_acknowledged = true;
-            argc_count--;
-        } else if (strcmp("-l", argv[i]) == 0) {
-            last_log_in_summary = true;
-            argc_count--;
-        } else if (strcmp("-L", argv[i]) == 0) {
-            last_log_in_details = true;
-            argc_count--;
-        } else if (strcmp("-q", argv[i]) == 0) {
-            host_spec_quoted = true;
-            argc_count--;
-        } else if (argc_count > 2) {
-            host = argv[i];
-            application = argv[i + 1];
-            break;
-        } else if (argc_count > 1) {
-            host = argv[i];
-            break;
+    opterr = 0;  // We show the usage instead of the error of getopt().
+    // "+" ends the options at HOST, so APPLICATION may start with a dash.
+    int option = 0;
+    while ((option = getopt(argc, argv, "+s:H:alLq")) != -1) {
+        switch (option) {
+            case 's':
+                unixsocket_path = optarg;
+                break;
+            case 'H':
+                remote_host = optarg;
+                break;
+            case 'a':
+                ignore_acknowledged = true;
+                break;
+            case 'l':
+                last_log_in_summary = true;
+                break;
+            case 'L':
+                last_log_in_details = true;
+                break;
+            case 'q':
+                host_spec_quoted = true;
+                break;
+            default:
+                usage();
         }
     }
-
-    if (host == nullptr) {
+    // For compatibility, arguments after APPLICATION are ignored.
+    if (argc - optind < 1) {
         usage();
     }
+    const char *host = argv[optind];
+    const char *application = optind + 1 < argc ? argv[optind + 1] : nullptr;
 
     int sock;
     if (remote_host != nullptr) {
-        char *remote_hostaddress = strtok(remote_host, ":");
-        struct hostent *he = gethostbyname(remote_hostaddress);
+        auto [remote_hostaddress, remote_port] = parse_remote(remote_host);
+        struct hostent *he = gethostbyname(remote_hostaddress.c_str());
         if (he == nullptr) {
-            reply_and_exit(State::unknown,
-                           "Unable to resolve remote host address: " +
-                               std::string(remote_hostaddress));
+            reply_and_exit(
+                State::unknown,
+                "Unable to resolve remote host address: " + remote_hostaddress);
         }
 
         auto addr_list = reinterpret_cast<struct in_addr **>(he->h_addr_list);
@@ -305,21 +402,11 @@ int main(int argc, char **argv) {
             remote_hostipaddress = std::string{inet_ntoa(*addr_list[i])};
         }
 
-        char *port_str = strtok(nullptr, ":");
-        uint16_t remote_port = port_str != nullptr ? atoi(port_str) : 6558;
-
         sock = ::socket(AF_INET, SOCK_STREAM, 0);
         if (sock == -1) {
             ioError("Cannot create client socket");
         }
-
-        struct timeval tv;
-        tv.tv_sec = 10;
-        tv.tv_usec = 0;
-        if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv,
-                       sizeof(struct timeval)) == -1) {
-            ioError("Cannot set socket reveive timeout");
-        }
+        limit_to_deadline(sock, SO_SNDTIMEO);  // for connect()
 
         sockaddr_in addr{};
         addr.sin_family = AF_INET;
@@ -346,22 +433,22 @@ int main(int argc, char **argv) {
                 std::string(omd_path) + "/tmp/run/mkeventd/status";
         }
 
+        struct sockaddr_un addr{.sun_family = AF_UNIX, .sun_path = ""};
+        if (unixsocket_path.size() >= sizeof(addr.sun_path)) {
+            reply_and_exit(State::unknown,
+                           "Cannot connect to event daemon via UNIX socket " +
+                               unixsocket_path + " (path longer than " +
+                               std::to_string(sizeof(addr.sun_path) - 1) +
+                               " bytes)");
+        }
+        unixsocket_path.copy(&addr.sun_path[0], sizeof(addr.sun_path) - 1);
+        addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
+
         sock = ::socket(PF_UNIX, SOCK_STREAM, 0);
         if (sock == -1) {
             ioError("Cannot create client socket");
         }
-
-        struct timeval tv;
-        tv.tv_sec = 10;
-        tv.tv_usec = 0;
-        if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv,
-                       sizeof(struct timeval)) == -1) {
-            ioError("Cannot set socket reveive timeout");
-        }
-
-        struct sockaddr_un addr{.sun_family = AF_UNIX, .sun_path = ""};
-        unixsocket_path.copy(&addr.sun_path[0], sizeof(addr.sun_path) - 1);
-        addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
+        limit_to_deadline(sock, SO_SNDTIMEO);  // for connect()
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
                       sizeof(addr)) == -1) {
@@ -387,31 +474,51 @@ int main(int argc, char **argv) {
 
     // Send message
     {
+        const std::string message = "Cannot send query to event console";
         const char *buffer = query_message.c_str();
         size_t bytes_to_write = query_message.size();
         while (bytes_to_write > 0) {
-            ssize_t bytes_written = ::write(sock, buffer, bytes_to_write);
+            check_deadline(message);
+            limit_to_deadline(sock, SO_SNDTIMEO);
+            // Report a closed connection instead of dying from SIGPIPE.
+            ssize_t bytes_written =
+                ::send(sock, buffer, bytes_to_write, MSG_NOSIGNAL);
             if (bytes_written == -1) {
-                ioError("Cannot send query to event console");
+                if (closed_by_peer(errno)) {
+                    noAnswer(query_message);
+                }
+                if (errno != EINTR) {
+                    ioError(message);
+                }
+            } else {
+                buffer += bytes_written;
+                bytes_to_write -= bytes_written;
             }
-            buffer += bytes_written;
-            bytes_to_write -= bytes_written;
         }
         if (shutdown(sock, SHUT_WR) == -1) {
+            if (closed_by_peer(errno)) {
+                noAnswer(query_message);
+            }
             ioError("Cannot shutdown socket to event console");
         }
     }
 
     // Get response
+    const std::string message = "Error while reading response";
     std::stringstream response_stream;
     while (true) {
-        char response_chunk[4096];
+        char response_chunk[65536];
         memset(response_chunk, 0, sizeof(response_chunk));
+        check_deadline(message);
+        limit_to_deadline(sock, SO_RCVTIMEO);
         ssize_t bytes_read =
             ::read(sock, response_chunk, sizeof(response_chunk));
         if (bytes_read == -1) {
+            if (closed_by_peer(errno) && response_stream.tellp() == 0) {
+                noAnswer(query_message);
+            }
             if (errno != EINTR) {
-                ioError("Error while reading response");
+                ioError(message);
             }
         } else if (bytes_read == 0) {
             break;
@@ -426,6 +533,9 @@ int main(int argc, char **argv) {
     }
     if (::close(sock) == -1) {
         ioError("Error while closing connection");
+    }
+    if (response_stream.tellp() == 0) {
+        noAnswer(query_message);
     }
 
     // Start processing data

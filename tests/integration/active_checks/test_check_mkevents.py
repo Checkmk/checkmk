@@ -7,11 +7,16 @@
 
 import logging
 import os
+import signal
+import socket
 import socketserver
+import struct
 import subprocess
 import tempfile
 import threading
+import time
 from collections.abc import Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from pathlib import Path
 from typing import override
 
@@ -73,6 +78,58 @@ class _CutOffAnswerHandler(socketserver.BaseRequestHandler):
         self.request.sendall(b"event_phase\tevent_state\tevent_text\nopen\t0\tfine\nopen\t2")
 
 
+class _HangUpHandler(socketserver.BaseRequestHandler):
+    @override
+    def handle(self) -> None:
+        pass  # The server closes the connection without reading the query.
+
+
+class _TrickleHandler(socketserver.BaseRequestHandler):
+    @override
+    def handle(self) -> None:
+        while self.request.recv(4096):
+            pass
+        try:
+            for byte in b"event_phase\tevent_state\tevent_text\n":
+                self.request.sendall(bytes([byte]))
+                time.sleep(1)
+        except ConnectionError:
+            pass  # The check gave up, as it should.
+
+
+class _AnswerAfterTheDeadlineHandler(socketserver.BaseRequestHandler):
+    @override
+    def handle(self) -> None:
+        pid, _uid, _gid = struct.unpack(
+            "3i",
+            self.request.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize("3i")),
+        )
+        # The PID of a peer in another PID namespace is 0, and kill() would then stop
+        # our whole process group, pytest included.
+        assert pid > 0
+        while self.request.recv(4096):
+            pass
+        # Stopped until after the deadline, the check then finds the whole answer
+        # waiting, like with an Event Console sending faster than the check reads.
+        os.kill(pid, signal.SIGSTOP)
+        try:
+            time.sleep(21)  # more than the timeout of the check
+            self.request.sendall(b"event_phase\tevent_state\tevent_text\n")
+            self.request.shutdown(socket.SHUT_WR)
+        finally:
+            os.kill(pid, signal.SIGCONT)
+
+
+@contextmanager
+def _serving(server: socketserver.BaseServer) -> Iterator[None]:
+    with server:
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        try:
+            yield
+        finally:
+            server.shutdown()
+
+
 @pytest.fixture(name="socket_path")
 def fixture_socket_path() -> Iterator[Path]:
     # The temporary directories of Bazel are too deep for the path of a UNIX socket.
@@ -93,12 +150,8 @@ def _run_check(*args: str) -> subprocess.CompletedProcess[str]:
 def _check_events(
     socket_path: Path, events: Sequence[Event], *args: str
 ) -> subprocess.CompletedProcess[str]:
-    with _StatusServer(socket_path, events) as server:
-        threading.Thread(target=server.serve_forever, daemon=True).start()
-        try:
-            return _run_check("-s", str(socket_path), *args)
-        finally:
-            server.shutdown()
+    with _serving(_StatusServer(socket_path, events)):
+        return _run_check("-s", str(socket_path), *args)
 
 
 def test_event_with_empty_text_is_counted(socket_path: Path) -> None:
@@ -188,12 +241,8 @@ def test_only_the_start_of_a_long_invalid_answer_is_shown(socket_path: Path) -> 
 
 
 def test_long_invalid_answer_is_cut_between_characters(socket_path: Path) -> None:
-    with socketserver.UnixStreamServer(str(socket_path), _NoLineBreaksHandler) as server:
-        threading.Thread(target=server.serve_forever, daemon=True).start()
-        try:
-            result = _run_check("-s", str(socket_path), "myhost")
-        finally:
-            server.shutdown()
+    with _serving(socketserver.UnixStreamServer(str(socket_path), _NoLineBreaksHandler)):
+        result = _run_check("-s", str(socket_path), "myhost")
 
     assert result.stdout.partition(" byte response:\n")[2] == "x" + "ä" * 499 + "[...]\n"
 
@@ -210,12 +259,8 @@ def test_line_break_near_the_start_doesnt_shorten_the_shown_answer(socket_path: 
 
 
 def test_answer_cut_off_within_a_line_is_reported(socket_path: Path) -> None:
-    with socketserver.UnixStreamServer(str(socket_path), _CutOffAnswerHandler) as server:
-        threading.Thread(target=server.serve_forever, daemon=True).start()
-        try:
-            result = _run_check("-s", str(socket_path), "myhost")
-        finally:
-            server.shutdown()
+    with _serving(socketserver.UnixStreamServer(str(socket_path), _CutOffAnswerHandler)):
+        result = _run_check("-s", str(socket_path), "myhost")
 
     assert (result.returncode, result.stdout.splitlines()[0]) == (
         3,
@@ -289,3 +334,164 @@ def test_backslash_is_part_of_the_host_without_quoting(socket_path: Path) -> Non
     result = _check_events(socket_path, events, "-l", "\\\\fs1")
 
     assert result.stdout == "OK - 1 events (1 unacknowledged), Last line: \\\\fs1\n"
+
+
+def test_connecting_to_an_unresponsive_event_console_times_out() -> None:
+    with socket.create_server(("127.0.0.1", 0), backlog=0) as server, socket.socket() as client:
+        port = server.getsockname()[1]
+        # Fill the accept queue, so the kernel drops further connection attempts.
+        client.connect(("127.0.0.1", port))
+
+        result = _run_check("-H", f"127.0.0.1:{port}", "myhost")
+
+    assert (result.returncode, result.stdout) == (
+        3,
+        (
+            f"UNKNOWN - Cannot connect to event console at 127.0.0.1:{port}"
+            " (timeout after 20 seconds)\n"
+        ),
+    )
+
+
+def test_slowly_answering_event_console_times_out(socket_path: Path) -> None:
+    with _serving(socketserver.UnixStreamServer(str(socket_path), _TrickleHandler)):
+        result = _run_check("-s", str(socket_path), "myhost")
+
+    assert (result.returncode, result.stdout) == (
+        3,
+        "UNKNOWN - Error while reading response (timeout after 20 seconds)\n",
+    )
+
+
+def test_reading_stops_at_the_deadline_although_data_is_waiting(socket_path: Path) -> None:
+    with _serving(socketserver.UnixStreamServer(str(socket_path), _AnswerAfterTheDeadlineHandler)):
+        result = _run_check("-s", str(socket_path), "myhost")
+
+    assert (result.returncode, result.stdout) == (
+        3,
+        "UNKNOWN - Error while reading response (timeout after 20 seconds)\n",
+    )
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        pytest.param(["-a", "-s"], id="option without argument"),
+        pytest.param(["-x", "myhost"], id="unknown option"),
+        pytest.param(["-a"], id="no host"),
+    ],
+)
+def test_malformed_command_line_shows_usage(args: Sequence[str]) -> None:
+    result = _run_check(*args)
+
+    assert result.returncode == 3
+    assert result.stdout.startswith("UNKNOWN - Usage: check_mkevents ")
+
+
+@pytest.mark.parametrize(
+    "remote",
+    [
+        "",
+        ":6558",
+        "localhost:abc",
+        "localhost:70000",
+        "localhost:+80",
+        "localhost: 80",
+        "localhost:0",
+    ],
+)
+def test_invalid_remote_address_is_reported(remote: str) -> None:
+    result = _run_check("-H", remote, "myhost")
+
+    assert (result.returncode, result.stdout) == (
+        3,
+        f"UNKNOWN - Invalid remote address '{remote}', expected HOST[:PORT]\n",
+    )
+
+
+def test_empty_port_means_the_default_port() -> None:
+    result = _run_check("-H", "224.0.0.1:", "myhost")  # TCP can't connect to a multicast address.
+
+    assert (result.returncode, result.stdout) == (
+        3,
+        "UNKNOWN - Cannot connect to event console at 224.0.0.1:6558 (Network is unreachable)\n",
+    )
+
+
+def test_leading_zeros_of_the_port_dont_count() -> None:
+    # TCP can't connect to a multicast address.
+    result = _run_check("-H", "224.0.0.1:0006558", "myhost")
+
+    assert (result.returncode, result.stdout) == (
+        3,
+        "UNKNOWN - Cannot connect to event console at 224.0.0.1:6558 (Network is unreachable)\n",
+    )
+
+
+_NO_ANSWER = (
+    "UNKNOWN - Event console closed the connection without answering, see its log file"
+    " var/log/mkeventd.log for the reason, e.g. a denied access via TCP or an invalid regular"
+    " expression for the application"
+)
+
+
+def test_connection_closed_while_sending_the_query_is_reported(socket_path: Path) -> None:
+    # With the default socket buffer of 208 KiB, the check is still sending the
+    # query when the connection gets closed. With a larger buffer, it may notice
+    # the closed connection only while reading the answer, with the same output.
+    with _serving(socketserver.UnixStreamServer(str(socket_path), _HangUpHandler)):
+        result = _run_check("-s", str(socket_path), "a" * 120_000, "b" * 120_000)
+
+    assert (result.returncode, result.stdout.splitlines()[0]) == (3, _NO_ANSWER)
+
+
+def test_denied_access_via_tcp_is_reported() -> None:
+    server = socketserver.TCPServer(("127.0.0.1", 0), _HangUpHandler)
+    with _serving(server):
+        result = _run_check("-H", f"127.0.0.1:{server.server_address[1]}", "myhost")
+
+    assert (result.returncode, result.stdout.splitlines()[0]) == (3, _NO_ANSWER)
+
+
+def test_invalid_application_regex_is_reported(socket_path: Path) -> None:
+    result = _check_events(socket_path, [], "myhost", "my(app")
+
+    assert (result.returncode, result.stdout.splitlines()[0]) == (3, _NO_ANSWER)
+
+
+def test_too_long_socket_path_is_reported(socket_path: Path) -> None:
+    path = str(socket_path.parent / ("x" * 120))
+
+    result = _run_check("-s", path, "myhost")
+
+    assert (result.returncode, result.stdout) == (
+        3,
+        (
+            f"UNKNOWN - Cannot connect to event daemon via UNIX socket {path}"
+            " (path longer than 107 bytes)\n"
+        ),
+    )
+
+
+def test_application_may_start_with_a_dash(socket_path: Path) -> None:
+    events = [{"host": "myhost", "application": "-app", "phase": "open", "state": 1, "text": ""}]
+
+    result = _check_events(socket_path, events, "myhost", "-app")
+
+    assert result.stdout == "WARN - 1 events (1 unacknowledged)\n"
+
+
+def test_arguments_after_the_application_are_ignored(socket_path: Path) -> None:
+    events = [{"host": "myhost", "application": "myapp", "phase": "ack", "state": 2, "text": ""}]
+
+    result = _check_events(socket_path, events, "myhost", "myapp", "-a")
+
+    assert result.stdout == "CRIT - 1 events (0 unacknowledged)\n"
+
+
+def test_host_after_double_dash_may_start_with_a_dash(socket_path: Path) -> None:
+    events = [{"host": "-host", "phase": "open", "state": 1, "text": ""}]
+
+    result = _check_events(socket_path, events, "--", "-host")
+
+    assert result.stdout == "WARN - 1 events (1 unacknowledged)\n"

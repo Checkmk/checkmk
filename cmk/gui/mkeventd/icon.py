@@ -54,17 +54,21 @@ def _render_mkeventd_icon(
     if not args:
         return None
 
-    quoted = "-q" in args
+    if "--" in args:
+        # The host and the application follow the end of the options.
+        quoted = "-q" in args[: args.index("--")]
+        args = args[args.index("--") + 1 :]
+    else:
+        quoted = "-q" in args
+        # First, we remove options without arguments
+        for element in ["-a", "-L", "-l", "-q"]:
+            if element in args:
+                args.remove(element)
 
-    # First, we remove options without arguments
-    for element in ["-a", "-L", "-l", "-q"]:
-        if element in args:
-            args.remove(element)
-
-    # Then, we remove options with 1 argument
-    for i, element in enumerate(args):
-        if element in ["-H", "-s"]:
-            args = args[:i] + args[i + 2 :]
+        # Then, we remove options with 1 argument
+        for i, element in enumerate(args):
+            if element in ["-H", "-s"]:
+                args = args[:i] + args[i + 2 :]
 
     hosts = _split_host_spec(args[0], row["site"], quoted) if args else []
     host = _get_hostname(hosts, row)

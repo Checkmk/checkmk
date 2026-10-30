@@ -6,8 +6,10 @@
 """What both the quantity and the graph evaluation tests build their input out of."""
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, field
 
 from cmk.graphing_engine import (
+    ConsolidationFunction,
     FetchedData,
     HostName,
     MetricName,
@@ -15,6 +17,7 @@ from cmk.graphing_engine import (
     PerformanceData,
     RRDMetric,
     ServiceName,
+    SiteID,
     TimeRange,
     TimeSeries,
 )
@@ -81,3 +84,37 @@ class _FakeRRDFetchData:
         time_range: TimeRange,  # noqa: ARG002
     ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
         return {metric: self._fetched[metric] for metric in metrics if metric in self._fetched}
+
+
+_NOW = 1_800_000_000
+_DAY = 24 * 60 * 60
+_FIVE_MINUTES = 5 * 60
+_MIDNIGHT_A_WEEK_AGO = (_NOW - 7 * _DAY) // _DAY * _DAY
+_HALF_HOUR_A_WEEK_AGO = TimeRange(
+    start=_MIDNIGHT_A_WEEK_AGO, end=_MIDNIGHT_A_WEEK_AGO + 30 * 60, step=60
+)
+
+
+@dataclass
+class _FakeRRDWithOneArchive:
+    archive_step: int
+    asked_ranges: list[TimeRange] = field(default_factory=list)
+
+    def __call__(
+        self,
+        rrd_metrics: Sequence[RRDMetric],
+        *,
+        consolidation_function: ConsolidationFunction,  # noqa: ARG002
+        time_range: TimeRange,
+        only_site: SiteID | None,  # noqa: ARG002
+    ) -> Mapping[RRDMetric, TimeSeries]:
+        self.asked_ranges.append(time_range)
+        start = time_range.start - time_range.start % self.archive_step
+        end = time_range.end + -time_range.end % self.archive_step
+        return {
+            metric: TimeSeries(
+                time_range=TimeRange(start=start, end=end, step=self.archive_step),
+                values=[1.0] * ((end - start) // self.archive_step),
+            )
+            for metric in rrd_metrics
+        }

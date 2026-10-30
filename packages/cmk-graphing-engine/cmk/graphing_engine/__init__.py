@@ -109,6 +109,7 @@ from ._plugins._prediction import (
     PredictionGraphContext,
     PredictionTexts,
 )
+from ._plugins._rrd_fetch import RRDFetchData
 from ._plugins._translations import (
     map_metric_names,
     mapped_performance_data,
@@ -137,10 +138,13 @@ from ._quantities._quantity import (
     MetricProtocol,
     QuantityProtocol,
 )
-from ._rrd._edge_neighbours import expected_served_step, with_edge_neighbours
 from ._rrd._fetch import (
     FetchMetricNamesProtocol,
+    FetchPerformanceDataRowsProtocol,
+    FetchRRDTimeSeriesProtocol,
+    PerformanceDataRow,
     time_series_of_rrd_column,
+    TimeSeriesWithEdgeNeighbours,
 )
 from ._rrd._metrics import (
     ConsolidationFunction,
@@ -230,9 +234,12 @@ __all__ = [
     "last_present",
     "FetchDataProtocol",
     "FetchMetricNamesProtocol",
-    "expected_served_step",
-    "with_edge_neighbours",
     "time_series_of_rrd_column",
+    "FetchPerformanceDataRowsProtocol",
+    "FetchRRDTimeSeriesProtocol",
+    "PerformanceDataRow",
+    "RRDFetchData",
+    "TimeSeriesWithEdgeNeighbours",
     "FetchedData",
     "FixedRange",
     "FocusBoundKind",

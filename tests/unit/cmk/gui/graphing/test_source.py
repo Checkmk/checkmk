@@ -3,50 +3,38 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import override
 
 import pytest
-import time_machine
 
-from cmk.ccc.hostaddress import HostAddress
 from cmk.graphing.v1 import translations
 from cmk.graphing_engine import (
     ConsolidationFunction,
-    EvaluatedCurve,
-    EvaluatedGraph,
-    FetchedData,
     HostName,
     MetricName,
+    PerformanceDataRow,
+    RRDFetchData,
     RRDMetric,
     Service,
     ServiceName,
     SiteID,
     TimeRange,
     TimeSeries,
-    timestamps,
 )
 from cmk.gui.graphing import (
-    build_template_graphs,
-    EvaluateGraph,
     EvaluationOptions,
-    FetchDiagnostics,
     HOST_PSEUDO_SERVICE,
-    requested_window,
     rrd_fetch_data,
-    RRDFetchData,
     RRDFetchMetricNames,
-    TemplateGraphSpecification,
+    RRDFetchTimeSeries,
 )
-from cmk.gui.graphing._source import (
-    chop_last_empty_step,
-    PerformanceDataRow,
-    RRDFetchMetricNameMapping,
-)
+from cmk.gui.graphing._source import RRDFetchMetricNameMapping, RRDFetchPerformanceData
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 
+_LOGGER = logging.getLogger(__name__)
 _HOST_ROW = {
     "name": "h",
     "perf_data": "x=5",
@@ -177,7 +165,15 @@ def test_fetch_data_of_a_host_metric_reads_the_hosts_table(
     )
 
     with mock_livestatus():
-        [fetched] = RRDFetchData(debug=False, consolidation_function=ConsolidationFunction.MAX)(
+        [fetched] = RRDFetchData(
+            consolidation_function=ConsolidationFunction.MAX,
+            registered_translations=(),
+            performance_data_source=RRDFetchPerformanceData(),
+            time_series_source=RRDFetchTimeSeries(),
+            now=0.0,
+            debug=False,
+            logger=_LOGGER,
+        )(
             [metric],
             time_range=TimeRange(start=0, end=30, step=10),
         )[metric]
@@ -188,374 +184,49 @@ def test_fetch_data_of_a_host_metric_reads_the_hosts_table(
     assert list(fetched.time_series.values) == [1.0, 2.0, 3.0]
 
 
-_SITE = SiteID("mysite")
-_SERVICE = Service(site_id=_SITE, host_name=HostName("h"), service_name=ServiceName("svc"))
-_SPEC = TemplateGraphSpecification(site=None, host_name=HostAddress("h"), service_description="svc")
-_RANGE = TimeRange(start=0, end=30, step=10)
-# The check the translation under test is registered for, as the plug-in names it and as the
-# performance data of a passive check spells it.
-_CHECK_PLUGIN = "foo"
-
-type _MetricTranslations = Mapping[
-    str, translations.RenameTo | translations.ScaleBy | translations.RenameToAndScaleBy
-]
-
-
-@dataclass
-class _FakeMetricNames:
-    metric_name: str
-
-    def __call__(self) -> Mapping[Service, frozenset[MetricName]]:
-        return {_SERVICE: frozenset({MetricName(self.metric_name)})}
-
-
-@dataclass
-class _FakeRRDFetchPerformanceData:
-    # In place of RRDFetchPerformanceData: the performance data every requested service carries.
-    perf_data: str
-
-    def __call__(
-        self,
-        services: Sequence[Service],
-        *,
-        only_site: SiteID | None,  # noqa: ARG002
-    ) -> Sequence[PerformanceDataRow]:
-        return [
-            PerformanceDataRow(
-                service=service,
-                site_id=_SITE,
-                perf_data=self.perf_data,
-                check_command=f"check_mk-{_CHECK_PLUGIN}",
-            )
-            for service in services
-        ]
-
-
-@dataclass
-class _FakeRRDFetchTimeSeries:
-    # In place of RRDFetchTimeSeries: the RRDs behind a service, keyed by the column they are read
-    # from. Records which columns a series was asked for.
-    columns: Mapping[str, Sequence[float | None]]
-    requested: list[str] = field(default_factory=list)
-
-    def __call__(
-        self,
-        rrd_metrics: Sequence[RRDMetric],
-        *,
-        consolidation_function: ConsolidationFunction,  # noqa: ARG002
-        time_range: TimeRange,
-        only_site: SiteID | None,  # noqa: ARG002
-    ) -> Mapping[RRDMetric, TimeSeries]:
-        self.requested += [str(metric.metric_name) for metric in rrd_metrics]
-        return {
-            metric: TimeSeries(time_range=time_range, values=values)
-            for metric in rrd_metrics
-            if (values := self.columns.get(str(metric.metric_name))) is not None
-        }
-
-
-def _drawn_curves(evaluated: EvaluatedGraph) -> Sequence[EvaluatedCurve]:
-    return [
-        *(member for stack in evaluated.stacks for member in stack.members),
-        *(line.curve for line in evaluated.lines),
-    ]
-
-
-def _drawn(
-    metric_name: str,
-    perf_data: str,
-    columns: Mapping[str, Sequence[float | None]],
-    metric_translations: _MetricTranslations,
-) -> tuple[EvaluatedCurve, Sequence[str]]:
-    # The graph a service's metric is discovered into, evaluated over the data the sources serve:
-    # what a user ends up seeing, and the columns the fetch read it from.
-    time_series = _FakeRRDFetchTimeSeries(columns)
-    [built] = build_template_graphs(
-        _SPEC,
-        registered_graphs=[],
-        registered_metrics={},
-        fetch_metric_names=_FakeMetricNames(metric_name),
-    )
-    [evaluated] = EvaluateGraph(
-        _RANGE,
-        RRDFetchData(
-            debug=True,
-            consolidation_function=ConsolidationFunction.MAX,
-            registered_translations=[
-                translations.Translation(
-                    name="t",
-                    check_commands=[translations.PassiveCheck(_CHECK_PLUGIN)],
-                    translations=metric_translations,
-                )
-            ],
-            performance_data_source=_FakeRRDFetchPerformanceData(perf_data),
-            time_series_source=time_series,
-        ),
-        window_of=requested_window,
-        diagnostics=FetchDiagnostics(),
-    )(built.graph).graphs
-    [curve] = _drawn_curves(evaluated)
-    return curve, time_series.requested
-
-
-def test_a_scaling_translation_draws_the_series_in_the_translated_unit() -> None:
-    # A translation that only scales leaves the column name untouched, so the series is read from the
-    # metric's own column - but it still has to carry the factor, exactly as the value and the
-    # thresholds do. Legacy applies it to the series as well (via the RPN of the rrddata column).
-    curve, requested = _drawn(
-        "x", "x=5;7;9", {"x": [1.0, 2.0, 3.0]}, {"x": translations.ScaleBy(1024)}
-    )
-    assert requested == ["x"]
-    assert curve.value == 5120.0
-    assert list(curve.time_series.values) == [1024.0, 2048.0, 3072.0]
-
-
-def test_a_renaming_translation_draws_the_old_column_scaled() -> None:
-    # The canonical metric has no column of its own here: the series comes from the column the perf
-    # data actually carried, scaled by the translation's factor.
-    curve, requested = _drawn(
-        "new",
-        "old=5",
-        {"old": [1.0, 2.0, 3.0]},
-        {"old": translations.RenameToAndScaleBy("new", 1000)},
-    )
-    assert requested == ["old"]
-    assert curve.value == 5000.0
-    assert list(curve.time_series.values) == [1000.0, 2000.0, 3000.0]
-
-
-def test_two_columns_translated_to_one_metric_are_drawn_as_one_curve() -> None:
-    # Two perf data columns renamed onto one metric contribute one series each - which reading the
-    # canonical column alone could not - merged point-wise, the first column with a value winning.
-    curve, requested = _drawn(
-        "m",
-        "a=1 b=2",
-        {"a": [None, 2.0, None], "b": [9.0, 9.0, 9.0]},
-        {"a": translations.RenameTo("m"), "b": translations.RenameTo("m")},
-    )
-    assert requested == ["a", "b"]
-    assert list(curve.time_series.values) == [9.0, 2.0, 9.0]
-
-
-def test_a_deprecated_column_absent_from_the_perf_data_is_still_drawn() -> None:
-    # The old column is gone from the perf data but its RRD is still around, so it is read alongside
-    # the current one - with the factor of the translation that renamed it, while the current column
-    # stays unscaled.
-    curve, requested = _drawn(
-        "new",
-        "new=5",
-        {"new": [None, None, 3.0], "old": [1.0, 2.0, None]},
-        {"old": translations.RenameToAndScaleBy("new", 1000)},
-    )
-    assert requested == ["new", "old"]
-    assert curve.value == 5.0
-    assert list(curve.time_series.values) == [1000.0, 2000.0, 3.0]
-
-
-def test_a_metric_without_perf_data_is_drawn_from_its_own_column_unscaled() -> None:
-    # No perf data entry means no translation was applied to this metric, so its own column is read
-    # as it is - and with no value, only the series is drawn.
-    curve, requested = _drawn("y", "x=5", {"y": [1.0, 2.0, 3.0]}, {"x": translations.ScaleBy(1024)})
-    assert requested == ["y"]
-    assert curve.value is None
-    assert list(curve.time_series.values) == [1.0, 2.0, 3.0]
-
-
-_CHOPPED_METRIC = RRDMetric(
-    host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("x")
+_A_WEEK_BEFORE_NOW = int(time.time()) - 7 * 24 * 60 * 60
+_HALF_HOUR_A_WEEK_BEFORE_NOW = TimeRange(
+    start=_A_WEEK_BEFORE_NOW - 30 * 60, end=_A_WEEK_BEFORE_NOW, step=60
 )
-
-
-def _chopped_series(start: int, end: int, step: int, values: Sequence[float | None]) -> TimeSeries:
-    return TimeSeries(time_range=TimeRange(start=start, end=end, step=step), values=values)
-
-
-def test_the_empty_trailing_step_of_a_graph_ending_now_is_dropped() -> None:
-    # The current RRD step has no data yet, so an all-None last point is stripped rather than drawn as
-    # a gap. "Now" is what makes it the current step, hence the clock.
-    end = int(time.time())
-    chopped = chop_last_empty_step(
-        {_CHOPPED_METRIC: _chopped_series(end - 30, end, 10, [1.0, 2.0, None])}, end
-    )
-    assert list(chopped[_CHOPPED_METRIC].values) == [1.0, 2.0]
-    assert chopped[_CHOPPED_METRIC].time_range == TimeRange(start=end - 30, end=end - 10, step=10)
-
-
-def test_a_trailing_gap_in_the_past_is_kept() -> None:
-    # Well before "now" an all-None last point is real missing data, not a step that has yet to fill.
-    time_series = {_CHOPPED_METRIC: _chopped_series(0, 30, 10, [1.0, 2.0, None])}
-    assert chop_last_empty_step(time_series, 30) == time_series
-
-
-def test_a_step_one_curve_still_has_data_for_is_kept() -> None:
-    end = int(time.time())
-    other = RRDMetric(
-        host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("y")
-    )
-    time_series = {
-        _CHOPPED_METRIC: _chopped_series(end - 30, end, 10, [1.0, 2.0, None]),
-        other: _chopped_series(end - 30, end, 10, [1.0, 2.0, 3.0]),
-    }
-    assert chop_last_empty_step(time_series, end) == time_series
-
-
-_NOW = 1_800_000_000
-_DAY = 24 * 60 * 60
-_MIDNIGHT_A_WEEK_AGO = (_NOW - 7 * _DAY) // _DAY * _DAY
-_HALF_HOUR_A_WEEK_AGO = TimeRange(
-    start=_MIDNIGHT_A_WEEK_AGO, end=_MIDNIGHT_A_WEEK_AGO + 30 * 60, step=60
-)
-_FIVE_MINUTES = 5 * 60
 _EDGE_METRIC = RRDMetric(
-    site_id=_SITE,
+    site_id=SiteID("mysite"),
     host_name=HostName("h"),
     service_name=ServiceName("svc"),
     metric_name=MetricName("x"),
 )
 
 
-def _snapped_out_to_grid(time_range: TimeRange, grid_step: int) -> TimeRange:
-    return TimeRange(
-        start=time_range.start - time_range.start % grid_step,
-        end=time_range.end + -time_range.end % grid_step,
-        step=grid_step,
-    )
+def _edge_performance_data(
+    services: Sequence[Service],
+    *,
+    only_site: SiteID | None,  # noqa: ARG001
+) -> Sequence[PerformanceDataRow]:
+    return [
+        PerformanceDataRow(
+            service=service, site_id=SiteID("mysite"), perf_data="x=5", check_command="foo"
+        )
+        for service in services
+    ]
 
 
 @dataclass
-class _FakeRRDWithOneArchive:
-    archive_step: int
+class _RecordingRRD:
     asked_ranges: list[TimeRange] = field(default_factory=list)
 
     def __call__(
         self,
-        rrd_metrics: Sequence[RRDMetric],
+        rrd_metrics: Sequence[RRDMetric],  # noqa: ARG002
         *,
         consolidation_function: ConsolidationFunction,  # noqa: ARG002
         time_range: TimeRange,
         only_site: SiteID | None,  # noqa: ARG002
     ) -> Mapping[RRDMetric, TimeSeries]:
         self.asked_ranges.append(time_range)
-        served = _snapped_out_to_grid(time_range, self.archive_step)
-        sample_count = (served.end - served.start) // served.step
-        return {
-            metric: TimeSeries(time_range=served, values=[1.0] * sample_count)
-            for metric in rrd_metrics
-        }
-
-
-_EDGE_PERFORMANCE_DATA = _FakeRRDFetchPerformanceData("x=5")
-
-
-@dataclass
-class _CountingRRDFetchPerformanceData(_FakeRRDFetchPerformanceData):
-    reads: int = 0
-
-    @override
-    def __call__(
-        self, services: Sequence[Service], *, only_site: SiteID | None
-    ) -> Sequence[PerformanceDataRow]:
-        self.reads += 1
-        return super().__call__(services, only_site=only_site)
-
-
-def _fetched_with_edge_neighbours(
-    rrd: _FakeRRDWithOneArchive,
-    performance_data: _FakeRRDFetchPerformanceData = _EDGE_PERFORMANCE_DATA,
-) -> FetchedData:
-    with time_machine.travel(_NOW, tick=False):
-        [fetched] = RRDFetchData(
-            debug=False,
-            consolidation_function=ConsolidationFunction.MAX,
-            performance_data_source=performance_data,
-            time_series_source=rrd,
-            include_edge_neighbours=True,
-        )(
-            [_EDGE_METRIC],
-            time_range=_HALF_HOUR_A_WEEK_AGO,
-        )[_EDGE_METRIC]
-    return fetched
-
-
-def _sample_times(fetched: FetchedData) -> Sequence[int]:
-    return timestamps(fetched.time_series.time_range) if fetched.time_series else []
-
-
-@pytest.mark.parametrize(
-    "archive_step",
-    [
-        pytest.param(_FIVE_MINUTES, id="the default archive"),
-        pytest.param(_DAY, id="an archive coarser than the default"),
-    ],
-)
-def test_old_data_comes_with_a_sample_before_and_after_the_window(archive_step: int) -> None:
-    rrd = _FakeRRDWithOneArchive(archive_step=archive_step)
-
-    fetched = _fetched_with_edge_neighbours(rrd)
-
-    sample_times = _sample_times(fetched)
-    assert sample_times[0] < _HALF_HOUR_A_WEEK_AGO.start
-    assert sample_times[-1] > _HALF_HOUR_A_WEEK_AGO.end
-
-
-@pytest.mark.parametrize(
-    "archive_step",
-    [
-        pytest.param(_FIVE_MINUTES, id="the default archive"),
-        pytest.param(60, id="an archive finer than the default"),
-    ],
-)
-def test_an_archive_no_coarser_than_expected_is_queried_once(archive_step: int) -> None:
-    rrd = _FakeRRDWithOneArchive(archive_step=archive_step)
-
-    _fetched_with_edge_neighbours(rrd)
-
-    assert len(rrd.asked_ranges) == 1
-
-
-def test_the_performance_data_is_read_once_when_the_rrd_is_queried_again() -> None:
-    rrd = _FakeRRDWithOneArchive(archive_step=_DAY)
-    performance_data = _CountingRRDFetchPerformanceData("x=5")
-
-    _fetched_with_edge_neighbours(rrd, performance_data)
-
-    assert len(rrd.asked_ranges) == 2
-    assert performance_data.reads == 1
-
-
-def test_the_widened_query_keeps_the_requested_resolution() -> None:
-    rrd = _FakeRRDWithOneArchive(archive_step=_FIVE_MINUTES)
-
-    _fetched_with_edge_neighbours(rrd)
-
-    [asked_range] = rrd.asked_ranges
-    assert asked_range.step == _HALF_HOUR_A_WEEK_AGO.step
-
-
-def test_a_fetch_without_edge_neighbours_asks_for_exactly_the_range() -> None:
-    rrd = _FakeRRDWithOneArchive(archive_step=_FIVE_MINUTES)
-
-    RRDFetchData(
-        debug=False,
-        consolidation_function=ConsolidationFunction.MAX,
-        performance_data_source=_EDGE_PERFORMANCE_DATA,
-        time_series_source=rrd,
-    )(
-        [_EDGE_METRIC],
-        time_range=_HALF_HOUR_A_WEEK_AGO,
-    )
-
-    assert rrd.asked_ranges == [_HALF_HOUR_A_WEEK_AGO]
-
-
-_A_WEEK_BEFORE_NOW = int(time.time()) - 7 * _DAY
-_HALF_HOUR_A_WEEK_BEFORE_NOW = TimeRange(
-    start=_A_WEEK_BEFORE_NOW - 30 * 60, end=_A_WEEK_BEFORE_NOW, step=60
-)
+        return {}
 
 
 def test_a_request_for_edge_neighbours_reads_beyond_the_range() -> None:
-    rrd = _FakeRRDWithOneArchive(archive_step=_FIVE_MINUTES)
+    rrd = _RecordingRRD()
     rrd_fetch_data(
         EvaluationOptions(
             time_range=_HALF_HOUR_A_WEEK_BEFORE_NOW,
@@ -563,7 +234,7 @@ def test_a_request_for_edge_neighbours_reads_beyond_the_range() -> None:
             destination=None,
             include_edge_neighbours=True,
         ),
-        _EDGE_PERFORMANCE_DATA,
+        _edge_performance_data,
         rrd,
         debug=False,
     )([_EDGE_METRIC], time_range=_HALF_HOUR_A_WEEK_BEFORE_NOW)

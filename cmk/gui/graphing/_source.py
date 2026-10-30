@@ -8,33 +8,27 @@ import contextlib
 import time
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Final, Protocol
+from typing import Final
 
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
     ConsolidationFunction,
-    expected_served_step,
-    FetchedData,
+    FetchPerformanceDataRowsProtocol,
+    FetchRRDTimeSeriesProtocol,
     HostName,
     map_metric_names,
-    merge_series,
     MetricName,
-    MetricProtocol,
     parse_performance_data,
-    PerformanceData,
-    RawPerformanceData,
-    resample,
-    rrd_originals,
+    PerformanceDataRow,
+    RRDFetchData,
     RRDMetric,
-    scaled_series,
     Service,
     ServiceName,
     time_series_of_rrd_column,
     TimeRange,
     TimeSeries,
-    translate_performance_data,
-    with_edge_neighbours,
+    TimeSeriesWithEdgeNeighbours,
 )
 from cmk.graphing_engine import (
     SiteID as EngineSiteID,
@@ -173,31 +167,6 @@ class RRDFetchMetricNames:
         }
 
 
-@dataclass(frozen=True, kw_only=True)
-class PerformanceDataRow:
-    service: Service
-    site_id: EngineSiteID
-    perf_data: str
-    check_command: str
-
-
-class FetchPerformanceDataRowsProtocol(Protocol):
-    def __call__(
-        self, services: Sequence[Service], *, only_site: EngineSiteID | None
-    ) -> Sequence[PerformanceDataRow]: ...
-
-
-class FetchRRDTimeSeriesProtocol(Protocol):
-    def __call__(
-        self,
-        rrd_metrics: Sequence[RRDMetric],
-        *,
-        consolidation_function: ConsolidationFunction,
-        time_range: TimeRange,
-        only_site: EngineSiteID | None,
-    ) -> Mapping[RRDMetric, TimeSeries]: ...
-
-
 @dataclass(frozen=True)
 class RRDFetchPerformanceData:
     def __call__(
@@ -275,34 +244,6 @@ class RRDFetchTimeSeries:
         return result
 
 
-@dataclass(frozen=True)
-class _TimeSeriesWithEdgeNeighboursAtServedStep:
-    time_series_source: FetchRRDTimeSeriesProtocol
-
-    def __call__(
-        self,
-        rrd_metrics: Sequence[RRDMetric],
-        *,
-        consolidation_function: ConsolidationFunction,
-        time_range: TimeRange,
-        only_site: EngineSiteID | None,
-    ) -> Mapping[RRDMetric, TimeSeries]:
-        def fetch_widened_by(neighbour_step: int) -> Mapping[RRDMetric, TimeSeries]:
-            return self.time_series_source(
-                rrd_metrics,
-                consolidation_function=consolidation_function,
-                time_range=with_edge_neighbours(time_range, neighbour_step),
-                only_site=only_site,
-            )
-
-        expected_step = expected_served_step(time_range, now=time.time())
-        fetched = fetch_widened_by(expected_step)
-        served_step = max((series.time_range.step for series in fetched.values()), default=0)
-        if served_step <= expected_step:
-            return fetched
-        return fetch_widened_by(served_step)
-
-
 @dataclass(frozen=True, kw_only=True)
 class QueryLimitReached:
     # A fan-out query hit its backend series cap, so its result is truncated.
@@ -319,239 +260,6 @@ class FetchDiagnostics:
     errors: list[str] = field(default_factory=list)
 
 
-def assemble_fetched_data(
-    rrd_metrics: Sequence[RRDMetric],
-    performance_data: Mapping[RRDMetric, PerformanceData],
-    time_series: Mapping[RRDMetric, TimeSeries],
-) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
-    # A metric the fetch resolved neither performance data nor a series for is left out altogether,
-    # so the quantity evaluates as absent rather than as an empty curve.
-    assembled: dict[MetricProtocol, Sequence[FetchedData]] = {}
-    for metric in rrd_metrics:
-        data = performance_data.get(metric)
-        series = time_series.get(metric)
-        if data is None and series is None:
-            continue
-        assembled[metric] = [FetchedData(performance_data=data, time_series=series)]
-    return assembled
-
-
-def _grouped_by_site(
-    rrd_metrics: Sequence[RRDMetric],
-) -> Mapping[EngineSiteID | None, Sequence[RRDMetric]]:
-    # Group by the metric's own site (None when unknown). A same host/service on two sites is thereby
-    # kept apart - both as distinct fetch groups and as distinct performance-data keys.
-    groups: dict[EngineSiteID | None, list[RRDMetric]] = {}
-    for metric in rrd_metrics:
-        groups.setdefault(metric.site_id, []).append(metric)
-    return groups
-
-
-@dataclass(frozen=True)
-class RRDFetchData:
-    debug: bool
-    consolidation_function: ConsolidationFunction
-    registered_translations: Sequence[translations_v1.Translation] = ()
-    # Where the two reads this fetch is built on come from. The defaults are the monitoring core;
-    # what the fetch does with the data - translate it, resolve the columns a metric is drawn from,
-    # scale and merge the series - sits above them and is independent of it.
-    performance_data_source: FetchPerformanceDataRowsProtocol = RRDFetchPerformanceData()
-    time_series_source: FetchRRDTimeSeriesProtocol = RRDFetchTimeSeries()
-    include_edge_neighbours: bool = False
-
-    def __call__(
-        self,
-        metrics: Sequence[MetricProtocol],
-        *,
-        time_range: TimeRange,
-    ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
-        rrd_metrics = [metric for metric in metrics if isinstance(metric, RRDMetric)]
-        raw_performance_data, site_of_service = self._fetch_performance_data(rrd_metrics)
-        performance_data = self._translated_performance_data(rrd_metrics, raw_performance_data)
-        time_series = self._time_series(
-            rrd_metrics,
-            raw_performance_data,
-            site_of_service,
-            time_range=time_range,
-        )
-        return assemble_fetched_data(rrd_metrics, performance_data, time_series)
-
-    def _translated_performance_data(
-        self,
-        rrd_metrics: Sequence[RRDMetric],
-        raw_performance_data: Mapping[tuple[EngineSiteID | None, Service], RawPerformanceData],
-    ) -> Mapping[RRDMetric, PerformanceData]:
-        translated = {
-            location: translate_performance_data(
-                raw.check_command, raw.values, self.registered_translations
-            )
-            for location, raw in raw_performance_data.items()
-        }
-        performance_data: dict[RRDMetric, PerformanceData] = {}
-        for metric in rrd_metrics:
-            location = (
-                metric.site_id,
-                Service(host_name=metric.host_name, service_name=metric.service_name),
-            )
-            if location not in translated:
-                continue
-            if (data := translated[location].get(metric.metric_name)) is not None:
-                performance_data[metric] = data
-        return performance_data
-
-    def _time_series(
-        self,
-        rrd_metrics: Sequence[RRDMetric],
-        raw_performance_data: Mapping[tuple[EngineSiteID | None, Service], RawPerformanceData],
-        site_of_service: Mapping[Service, EngineSiteID],
-        *,
-        time_range: TimeRange,
-    ) -> Mapping[RRDMetric, TimeSeries]:
-        originals_by_metric: dict[
-            RRDMetric, tuple[ConsolidationFunction, list[tuple[RRDMetric, float]]]
-        ] = {}
-        for metric in rrd_metrics:
-            service = Service(host_name=metric.host_name, service_name=metric.service_name)
-            if (raw := raw_performance_data.get((metric.site_id, service))) is None:
-                continue
-            # A metric that already carries its site keeps it; otherwise use the site resolved while
-            # fetching the performance data, so the RRD fetch is scoped to it.
-            site_id = metric.site_id or site_of_service.get(service)
-            function = metric.consolidation_function or self.consolidation_function
-            originals_by_metric[metric] = (
-                function,
-                [
-                    (
-                        RRDMetric(
-                            site_id=site_id,
-                            host_name=metric.host_name,
-                            service_name=metric.service_name,
-                            metric_name=original.metric_name,
-                        ),
-                        original.scale,
-                    )
-                    for original in rrd_originals(
-                        metric.metric_name, raw, self.registered_translations
-                    )
-                ],
-            )
-
-        raw_by_function: dict[ConsolidationFunction, Mapping[RRDMetric, TimeSeries]] = {}
-        for function in dict.fromkeys(func for func, _ in originals_by_metric.values()):
-            raw_by_function[function] = self._fetch_time_series(
-                list(
-                    dict.fromkeys(
-                        rrd_metric
-                        for func, originals in originals_by_metric.values()
-                        if func == function
-                        for rrd_metric, _scale in originals
-                    )
-                ),
-                consolidation_function=function,
-                time_range=time_range,
-            )
-
-        # The reference grid is the first fetched source series in drawn order. The RRD backend snaps
-        # the requested start/end/step, so every series is aligned to this shared grid - not the
-        # request - which is what the curves and any arithmetic across them line up on (matching the
-        # legacy pipeline, which aligns everything to the first fetched RRD's returned grid).
-        reference = next(
-            (
-                ts.time_range
-                for function, originals in originals_by_metric.values()
-                for rrd_metric, _scale in originals
-                if (ts := raw_by_function[function].get(rrd_metric)) is not None
-            ),
-            None,
-        )
-        if reference is None:
-            return {}
-
-        time_series: dict[RRDMetric, TimeSeries] = {}
-        for metric, (function, originals) in originals_by_metric.items():
-            scaled = [
-                scaled_series(resample(ts, reference, function), scale)
-                for rrd_metric, scale in originals
-                if (ts := raw_by_function[function].get(rrd_metric)) is not None
-            ]
-            if scaled:
-                time_series[metric] = merge_series(scaled, reference)
-        return chop_last_empty_step(time_series, reference.end)
-
-    def _fetch_performance_data(
-        self, rrd_metrics: Sequence[RRDMetric]
-    ) -> tuple[
-        Mapping[tuple[EngineSiteID | None, Service], RawPerformanceData],
-        Mapping[Service, EngineSiteID],
-    ]:
-        result: dict[tuple[EngineSiteID | None, Service], RawPerformanceData] = {}
-        site_of_service: dict[Service, EngineSiteID] = {}
-        for group_site, site_metrics in _grouped_by_site(rrd_metrics).items():
-            site_services = tuple(
-                dict.fromkeys(
-                    Service(host_name=metric.host_name, service_name=metric.service_name)
-                    for metric in site_metrics
-                )
-            )
-            if not site_services:
-                continue
-            # The performance data is keyed by the metric's own site, so a same host/service matched
-            # on two sites keeps a distinct entry per site.
-            for row in self.performance_data_source(site_services, only_site=group_site):
-                result[(group_site, row.service)] = parse_performance_data(
-                    row.perf_data, row.check_command, debug=self.debug, logger=logger
-                )
-                site_of_service[row.service] = row.site_id
-        return result, site_of_service
-
-    def _fetch_time_series(
-        self,
-        rrd_metrics: Sequence[RRDMetric],
-        *,
-        time_range: TimeRange,
-        consolidation_function: ConsolidationFunction,
-    ) -> Mapping[RRDMetric, TimeSeries]:
-        time_series_source = (
-            _TimeSeriesWithEdgeNeighboursAtServedStep(self.time_series_source)
-            if self.include_edge_neighbours
-            else self.time_series_source
-        )
-        result: dict[RRDMetric, TimeSeries] = {}
-        for group_site, site_metrics in _grouped_by_site(rrd_metrics).items():
-            result.update(
-                time_series_source(
-                    site_metrics,
-                    consolidation_function=consolidation_function,
-                    time_range=time_range,
-                    only_site=group_site,
-                )
-            )
-        return result
-
-
-def chop_last_empty_step(
-    time_series: Mapping[RRDMetric, TimeSeries], end: int
-) -> Mapping[RRDMetric, TimeSeries]:
-    # Drop the empty trailing step of a graph that ends "now": the current RRD step has no data yet,
-    # so an all-None last point across every curve is stripped rather than drawn as a gap.
-    if not time_series:
-        return time_series
-    step = next(iter(time_series.values())).time_range.step
-    if step <= 0 or abs(time.time() - end) > step:
-        return time_series
-    if not all(series.values and series.values[-1] is None for series in time_series.values()):
-        return time_series
-    return {
-        metric: TimeSeries(
-            time_range=TimeRange(
-                start=series.time_range.start, end=series.time_range.end - step, step=step
-            ),
-            values=series.values[:-1],
-        )
-        for metric, series in time_series.items()
-    }
-
-
 def rrd_fetch_data(
     options: EvaluationOptions,
     performance_data_source: FetchPerformanceDataRowsProtocol,
@@ -559,11 +267,17 @@ def rrd_fetch_data(
     *,
     debug: bool,
 ) -> RRDFetchData:
+    now = time.time()
     return RRDFetchData(
-        debug=debug,
         consolidation_function=options.consolidation_function,
         registered_translations=registered_translations(),
         performance_data_source=performance_data_source,
-        time_series_source=time_series_source,
-        include_edge_neighbours=options.include_edge_neighbours,
+        time_series_source=(
+            TimeSeriesWithEdgeNeighbours(time_series_source, now=now)
+            if options.include_edge_neighbours
+            else time_series_source
+        ),
+        now=now,
+        debug=debug,
+        logger=logger,
     )

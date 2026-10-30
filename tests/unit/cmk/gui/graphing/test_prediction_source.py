@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
@@ -15,8 +16,10 @@ from cmk.graphing_engine import (
     HostName,
     MetricName,
     MetricProtocol,
+    PerformanceDataRow,
     PredictionCurveKind,
     PredictionMetric,
+    RRDFetchData,
     RRDMetric,
     Service,
     ServiceName,
@@ -33,7 +36,7 @@ from cmk.gui.graphing._prediction_source import (
     _sample_prediction_curves,
     PredictionFetchData,
 )
-from cmk.gui.graphing._source import FetchDiagnostics, PerformanceDataRow, RRDFetchData
+from cmk.gui.graphing._source import FetchDiagnostics
 from cmk.utils.prediction import DataStat, PredictionData
 
 _SITE = SiteID("heute")
@@ -44,6 +47,8 @@ _PERIOD: Literal["wday"] = "wday"
 _VALID_FROM = 0
 _VALID_UNTIL = 86400
 _RANGE = TimeRange(start=0, end=30, step=10)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _prediction(curve_kind: PredictionCurveKind, metric: MetricName = _METRIC) -> PredictionMetric:
@@ -161,10 +166,13 @@ def _fetch(
 ) -> tuple[Mapping[MetricProtocol, Sequence[FetchedData]], PredictionFetchData]:
     fetch = PredictionFetchData(
         rrd=RRDFetchData(
-            debug=False,
             consolidation_function=ConsolidationFunction.MAX,
+            registered_translations=(),
             performance_data_source=_FakeRRDPerformanceData(),
             time_series_source=_FakeRRDTimeSeries(observed, observed_range),
+            now=0.0,
+            debug=False,
+            logger=_LOGGER,
         ),
         debug=False,
         diagnostics=FetchDiagnostics(),

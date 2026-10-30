@@ -38,6 +38,7 @@ py_library(
         "cmk/graphing_engine/_plugins/_order.py",
         "cmk/graphing_engine/_plugins/_prediction.py",
         "cmk/graphing_engine/_plugins/_quantity_parsing.py",
+        "cmk/graphing_engine/_plugins/_rrd_fetch.py",
         "cmk/graphing_engine/_plugins/_translations.py",
         "cmk/graphing_engine/_plugins/_types.py",
         "cmk/graphing_engine/_quantities/__init__.py",

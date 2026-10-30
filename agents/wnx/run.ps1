@@ -18,13 +18,11 @@ $argAll = $false
 $argBuildOnly = $false
 $argClean = $false
 $argCtl = $false
-$argSign = $false
 $argSignAzure = $false
 $argMsi = $false
 $argOhm = $false
 $argExt = $false
 $argSql = $false
-$argDetach = $false
 $argWin = $false
 $argSkipSqlTest = $false
 
@@ -39,9 +37,7 @@ $build_dir = "$pwd\build"
 $ohm_dir = "$build_dir\ohm\"
 $env:ExternalCompilerOptions = "/DDECREASE_COMPILE_TIME"
 $hash_file = "$results_dir\windows_files_hashes.txt"
-$usbip_exe = "c:\common\usbip-win-0.3.6-dev\usbip.exe"
 $make_exe = where.exe make | Out-String
-$signing_folder = "signed-files"
 
 
 if ("$env:arg_var_value" -ne "") {
@@ -73,17 +69,15 @@ function Write-Help() {
     Write-Host "  -O, --ohm               make ohm"
     Write-Host "  -E, --extensions        make extensions"
     Write-Host "  -S, --skip-sql-test     skip sql test to be able to build msi in case sql is not configured"
-    Write-Host "  --detach                detach USB before running"
-    Write-Host "  --sign                  sign using local YubiKey and scsigntool.exe"
     Write-Host "  --sign-azure            sign using Azure Artifact Signing"
     Write-Host ""
     Write-Host "Examples:"
     Write-Host ""
     Write-Host "$name --ctl"
     Write-Host "$name --build --test"
-    Write-Host "$name --build -T --sign"
+    Write-Host "$name --build -T --sign-azure"
     Write-Host "$name -A"
-    Write-Host "$name --all --sign"
+    Write-Host "$name --all --sign-azure"
 }
 
 
@@ -106,11 +100,9 @@ else {
             { $("-S", "--skip-sql-test") -contains $_ } { $argSkipSqlTest = $true }
             "--clean-all" { $argClean = $true; $argCleanArtifacts = $true }
             "--clean-artifacts" { $argCleanArtifacts = $true }
-            "--detach" { $argDetach = $true }
             "--var" {
                 [Environment]::SetEnvironmentVariable($args[++$i], $args[++$i])
             }
-            "--sign" { $argSign = $true }
             "--sign-azure" { $argSignAzure = $true }
         }
     }
@@ -312,112 +304,8 @@ function Start-UnitTests {
     Write-Host "Success unit tests" -foreground Green
 }
 
-function Test-SigningQuickly {
-    if ($argSign -ne $true) {
-        return
-    }
-
-    try {
-        Write-Host "Validate signing..." -ForegroundColor White
-        $TempFile = New-TemporaryFile
-        $ps_name = $TempFile.BaseName + ".ps1"
-        Rename-Item -NewName $ps_name -Path $TempFile
-        $newfile = $TempFile.DirectoryName + $TempFile.BaseName + ".ps1"
-        "Get-Date" | Out-File $newfile
-        for ($i = 1; $i -le 15; $i++) {
-            & ./scripts/sign_code_fast.cmd $newfile
-            if ($LASTEXITCODE -eq 0) {
-                break
-            }
-            Write-Host "Waiting 1 seconds before retry" -ForegroundColor White
-            Start-Sleep -Seconds 1
-        }
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "Failed to sign test file" $LASTEXITCODE -foreground Red
-        }
-        else {
-            Write-Host "Success signing test file" -ForegroundColor Green
-        }
-        Remove-Item -Path $newfile -Force -ErrorAction SilentlyContinue
-
-    }
-    catch {
-        Write-Host "Failed to create temporary file" -ForegroundColor Red
-    }
-
-
-}
-
-
-
-function Invoke-Attach($usbip, $addr, $port) {
-    if ($argSign -ne $true) {
-        Write-Host "Skipping attach" -ForegroundColor Yellow
-        return
-    }
-    &$usbip attach -r $addr -b $port
-    for ($i = 1; $i -le 20; $i++) {
-        if ($LASTEXITCODE -eq 0) {
-            break
-        }
-        Write-Host "Waiting 2 seconds for USB to attach" -ForegroundColor White
-        Start-Sleep -Seconds 2
-    }
-    if ($LASTEXITCODE -ne 0) {
-        $argSign = $False
-        Write-Host "Failed to attach USB token" $LASTEXITCODE -foreground Red
-        throw "Attach to the signing key is not possible. Signing can't be done"
-    }
-    Write-Host "Attached USB, waiting a bit" -ForegroundColor Green
-    Start-Sleep -Seconds 5
-    return
-}
-
-function Test-Administrator {
-    [OutputType([bool])]
-    param()
-    process {
-        [Security.Principal.WindowsPrincipal]$user = [Security.Principal.WindowsIdentity]::GetCurrent();
-        return $user.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator);
-    }
-}
-
-function Invoke-TestSigning($usbip) {
-    if ($argSign -ne $true) {
-        Write-Host "Skipping Test Signing..." -ForegroundColor Yellow
-        return
-    }
-
-    if (-not(Test-Path -Path $usbip -PathType Leaf)) {
-        $argSign = $False
-        Write-Host "$usbip doesn't exist" -ForegroundColor Red
-        throw
-    }
-
-    if (-not (Test-Administrator)) {
-        Write-Host "This script must be executed as Administrator." -ForegroundColor Red
-        $argSign = $False
-        return
-    }
-
-    Write-Host "check port"
-    &$usbip port
-    if ($LastExitCode -eq 3) {
-        $argSign = $False
-        Write-Host "No chance"
-        throw
-    }
-    Write-Host "try to detach"
-
-    &$usbip detach -p 00
-    if ($LastExitCode -eq 0) {
-        Write-Host "Should not happen: connection has been established"
-    }
-
-}
-
 function Start-MsiControlBuild {
-    if (-not ($argSign -or $argSignAzure)) {
+    if (-not $argSignAzure) {
         Write-Host "Skipping MSI Control Build..." -ForegroundColor Yellow
         return
     }
@@ -430,17 +318,12 @@ function Start-MsiControlBuild {
 }
 
 function Invoke-SignFile([string]$FilePath) {
-    if ($argSignAzure) {
-        pwsh -ExecutionPolicy Bypass -File ./scripts/sign_code_azure.ps1 $FilePath
-    }
-    else {
-        & ./scripts/sign_code.cmd $FilePath
-    }
+    pwsh -ExecutionPolicy Bypass -File ./scripts/sign_code_azure.ps1 $FilePath
     return $LASTEXITCODE
 }
 
 function Start-BinarySigning {
-    if (-not ($argSign -or $argSignAzure)) {
+    if (-not $argSignAzure) {
         Write-Host "Skipping Signing..." -ForegroundColor Yellow
         return
     }
@@ -469,76 +352,6 @@ function Start-BinarySigning {
     }
     Write-Host "Success binary signing" -foreground Green
 }
-
-# TODO(sk): remove the function as deprecated after switch to bazel signing
-function Start-Ps1Signing {
-    Write-Host "Skipping PS1 Signing..." -ForegroundColor Yellow
-    return
-
-    # code below is a reference for bazel signing
-
-    Write-Host "Ps1 signing..." -ForegroundColor White
-
-    $source_folder = "$repo_root\agents\windows\plugins"
-    $target_folder = "$results_dir\$signing_folder"
-
-    $fileList = @("windows_tasks.ps1", "mk_msoffice.ps1")  # Modify as needed
-
-    if (Test-Path $target_folder) {
-        Remove-Item -Path $target_folder -Recurse -Force
-    }
-
-    New-Item -ItemType Directory -Path $target_folder | Out-Null
-
-    foreach ($file in $fileList) {
-        $sourcePath = Join-Path -Path $source_folder -ChildPath $file
-        $targetPath = Join-Path -Path $target_folder -ChildPath $file
-
-        if (Test-Path $sourcePath) {
-            Copy-Item -Path $sourcePath -Destination $targetPath -Force
-        }
-        else {
-            Write-Warning "File not found: $sourcePath"
-        }
-    }
-
-    Get-ChildItem -Path $target_folder | ForEach-Object {
-        $file = $($_.FullName)
-        Write-Host "Signing $file" -ForegroundColor White
-        & ./scripts/sign_code.cmd $file
-        if ($LASTEXITCODE -ne 0) {
-            Write-Error "Error Signing, error code is $LASTEXITCODE" -ErrorAction Stop
-            throw
-        }
-    }
-
-    Write-Host "Success PS1 signing" -foreground Green
-}
-
-function Start-BazelSigning {
-    if ($argSign -ne $true) {
-        Write-Host "Skipping Bazel Signing..." -ForegroundColor Yellow
-        return
-    }
-
-    Write-Host "Bazel signing..." -ForegroundColor White
-
-    try {
-        &bazel build //agents/windows/plugins:all --action_env=SECTIGO_2023_PIN
-        if ($LASTEXITCODE -eq 0) {
-            $signed_dir = (&bazel info bazel-bin )
-            Write-Host "Signed files are located in $signed_dir"
-        }
-        else {
-            Write-Host "Error during signing $LASTEXITCODE"
-        }
-        Write-Host "Success Bazel signing" -foreground Green
-    }
-    catch {
-        Write-Host "Exception during Bazel signing: $_" -ForegroundColor Red
-    }
-}
-
 
 function Start-ArtifactUploading {
     if ($argMsi -ne $true) {
@@ -578,23 +391,8 @@ function Start-MsiPatching {
     Write-Host "Success artifact uploading" -foreground Green
 }
 
-function Invoke-Detach($argFlag) {
-    if ($argFlag -ne $true) {
-        Write-Host "No need to detach"
-        return
-    }
-    & $usbip_exe detach -p 00
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Failed to detach " $LASTEXITCODE -foreground Yellow
-        return
-    }
-    Start-Sleep -Seconds 2
-    Write-Host "Detached!" -ForegroundColor Green
-}
-
-
 function Start-MsiSigning {
-    if (-not ($argSign -or $argSignAzure)) {
+    if (-not $argSignAzure) {
         Write-Host "Skipping MSI signing..." -ForegroundColor Yellow
         return
     }
@@ -606,7 +404,6 @@ function Start-MsiSigning {
         throw
     }
     Add-HashLine $results_dir/check_mk_agent.msi $hash_file
-    Invoke-Detach $argSign
     & ./scripts/call_signing_tests.cmd
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Failed test MSI " $LASTEXITCODE -foreground Red
@@ -659,7 +456,7 @@ function Update-ArtefactDirs() {
 }
 
 function Test-MsiSigning($file) {
-    if (-not ($argSign -or $argSignAzure)) {
+    if (-not $argSignAzure) {
         Write-Host "Skipping Validate signing..." -ForegroundColor Yellow
         return
     }
@@ -706,12 +503,10 @@ Invoke-CheckApp "make" "make -v"
 Invoke-CheckApp "msvc" "& ""$msbuild_exe"" --version"
 Invoke-CheckApp "is_crlf" "python .\scripts\check_crlf.py"
 
-$argAttached = $false
 $result = 1
 try {
     # SETTING UP
     $mainStartTime = Get-Date
-    Invoke-Detach $argDetach
     Update-ArtefactDirs
     Clear-Artifacts
     Clear-All
@@ -738,13 +533,7 @@ try {
     Start-UnitTests
 
     # SIGNING
-    Invoke-TestSigning $usbip_exe
     Start-MsiControlBuild
-    Invoke-Attach $usbip_exe "yubi-usbserver.lan.checkmk.net" "1-1.2"
-    if ($argSign -eq $true) {
-        $argAttached = $true
-        $env:pin_cert_windows_usb | Out-File -Path .\check-signing-param.txt  -Append
-    }
     Start-BinarySigning
     Build-MSI
     Set-Msi-Version
@@ -763,8 +552,5 @@ catch {
     Write-Host "Error: " $_ -ForegroundColor Red
     Write-Host "Trace stack: " -ForegroundColor Yellow
     Write-Host $_.ScriptStackTrace -ForegroundColor Yellow
-}
-finally {
-    Invoke-Detach $argAttached
 }
 exit $result

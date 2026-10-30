@@ -88,11 +88,6 @@ def provide_agent_binaries(Map args) {
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/winagt-build",
             retry: 3,
-            // Select Azure Artifact Signing for the Windows agent (winagt-build reads
-            // SIGN_METHOD; "azure" picks the in-process Azure path over YubiKey).
-            additional_build_params: [
-                SIGN_METHOD: "azure",
-            ],
             dependency_paths: [
                 "agents",
                 "packages/host/cmk-agent-ctl",

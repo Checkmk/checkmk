@@ -74,7 +74,7 @@ export function getDashboardWidgetWorkflows({
           icon: 'graph',
           icon_emblem: 'add',
           unavailableReason: mayEditCustomGraph
-            ? _t('Not available yet.')
+            ? undefined
             : _t('Requires the permission "Customize and use custom graphs".')
         },
         link_custom_graph: {
@@ -147,6 +147,7 @@ export const DASHBOARD_WIDGET_WORKFLOW_KEYS = [
   'metrics_graphs',
   'link_custom_graph',
   'new_custom_graph',
+  'clone_custom_graph',
   'view',
   'classic_view',
   'host_site_overview',

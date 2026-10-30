@@ -93,7 +93,7 @@ export function wizardSlideInSize(wizard: string): 'small' | 'medium' | 'large' 
   if (['other', 'ntop'].includes(wizard)) {
     return 'small'
   }
-  if (['view', 'classic_view', 'new_custom_graph'].includes(wizard)) {
+  if (['view', 'classic_view', 'new_custom_graph', 'clone_custom_graph'].includes(wizard)) {
     return 'large'
   }
   return 'medium'

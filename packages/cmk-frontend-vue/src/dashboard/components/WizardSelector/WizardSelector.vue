@@ -17,6 +17,7 @@ import type {
   WidgetSpec
 } from '../../types/widget'
 import AlertsAndNotificationsWizard from '../Wizard/wizards/alert-notification/AlertNotificationWizard.vue'
+import CloneCustomGraphWizard from '../Wizard/wizards/custom-graphs/CloneCustomGraphWizard.vue'
 import CreateCustomGraphWizard from '../Wizard/wizards/custom-graphs/CreateCustomGraphWizard.vue'
 import CustomGraphsWizard from '../Wizard/wizards/custom-graphs/CustomGraphsWizard.vue'
 import EventsWizard from '../Wizard/wizards/events/EventsWizard.vue'
@@ -207,6 +208,18 @@ const handleAddEditWidget = (
 
       <CreateCustomGraphWizard
         v-if="selectedWizard === 'new_custom_graph'"
+        :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
+        :context-filters="contextFilters"
+        :edit-widget-spec="editWidgetSpec"
+        @go-back="handleGoBack"
+        @close="handleClose"
+        @add-widget="handleAddEditWidget"
+      />
+
+      <CloneCustomGraphWizard
+        v-if="selectedWizard === 'clone_custom_graph'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"

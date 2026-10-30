@@ -45,7 +45,12 @@ describe('widgetTypeToSelectorMatcher', () => {
 
 describe('wizardSlideInSize', () => {
   const small: DashboardWidgetWorkflowKey[] = ['other', 'ntop']
-  const large: DashboardWidgetWorkflowKey[] = ['view', 'classic_view', 'new_custom_graph']
+  const large: DashboardWidgetWorkflowKey[] = [
+    'view',
+    'classic_view',
+    'new_custom_graph',
+    'clone_custom_graph'
+  ]
   const medium = DASHBOARD_WIDGET_WORKFLOW_KEYS.filter(
     (key) => !small.includes(key) && !large.includes(key)
   )

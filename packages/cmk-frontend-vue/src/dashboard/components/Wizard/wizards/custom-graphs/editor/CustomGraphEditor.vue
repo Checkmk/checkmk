@@ -40,7 +40,15 @@ const filterDefinitions = useFilterDefinitions()
 
 // Expose before the await: the parent's template ref is set when this component's setup
 // suspends, not when it finishes, and it keeps whatever was exposed at that moment.
-defineExpose({ submit })
+defineExpose({ submit, isModified })
+
+// Null until the config has loaded and the sources are in the store.
+let initialItems: string | null = null
+
+/** Whether the sources were edited since the editor started from `dataSources`. */
+function isModified(): boolean {
+  return initialItems !== null && JSON.stringify(store.items.value) !== initialItems
+}
 
 const designerBody = useTemplateRef('designerBody')
 
@@ -52,6 +60,7 @@ const config = await getDesignerConfig().catch((error: unknown) => {
 
 const store = useGraphItems(config?.palette ?? [])
 store.replaceAll(dataSources.map(fromApiDataSource))
+initialItems = JSON.stringify(store.items.value)
 
 const { blockingIssues, issuesByRow, blockedIds, hasAttemptedSave } = useBlockingIssues(
   store.items,

@@ -67,6 +67,16 @@ describe('getDashboardWidgetWorkflows', () => {
     expect(newEntry?.unavailableReason).toBeUndefined()
   })
 
+  it('offers cloning a custom graph to users who may edit custom graphs', () => {
+    const dashboardCatalog = getDashboardWidgetWorkflows({ mayEditCustomGraph: true })
+
+    const cloneEntry = (dashboardCatalog['custom_graphs'] as WorkflowGroup).subWorkflows[
+      'clone_custom_graph'
+    ]
+
+    expect(cloneEntry?.unavailableReason).toBeUndefined()
+  })
+
   it('disables cloning for users who may not edit custom graphs', () => {
     const dashboardCatalog = getDashboardWidgetWorkflows({ mayEditCustomGraph: false })
 

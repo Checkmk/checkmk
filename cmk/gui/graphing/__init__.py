@@ -5,6 +5,7 @@
 from ._autocompleter import monitored_metrics_autocompleter
 from ._built_graphs import BuiltGraph, DiscoveredGraphs
 from ._decoding import context_from_json, ensure_type
+from ._evaluation_options import EvaluationOptions
 from ._frontend import (
     DEFAULT_INTERACTION,
     default_time_range_seconds,
@@ -30,7 +31,6 @@ from ._graph_codec import (
 from ._graph_dispatch import (
     evaluate_built_graphs,
     EvaluatedGraphs,
-    EvaluationOptions,
     FetchDataWithDiagnosticsProtocol,
     graph_dispatcher_registry,
     graph_request_of,

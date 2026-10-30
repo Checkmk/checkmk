@@ -32,10 +32,10 @@ from cmk.gui.i18n import _, translate_to_current_language
 from cmk.utils.servicename import ServiceName as GUIServiceName
 
 from ._built_graphs import BuiltGraph, DiscoveredGraphs
+from ._evaluation_options import EvaluationOptions
 from ._graph_choices import GraphPluginChoice
 from ._graph_codec import GraphCodec
 from ._graph_dispatch import (
-    EvaluationOptions,
     graph_request_of,
     GraphDispatcher,
     legacy_graph_id,

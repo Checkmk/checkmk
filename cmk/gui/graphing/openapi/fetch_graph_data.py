@@ -24,11 +24,11 @@ from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.livestatus_client import MKLivestatusException
 from cmk.web.utils import permission_verification as permissions
 
+from .._evaluation_options import EvaluationOptions
 from .._graph_dispatch import (
     evaluate_built_graphs,
     evaluate_graphs,
     EvaluatedGraphs,
-    EvaluationOptions,
 )
 from .._user_specific_unit import get_temperature_unit
 from ._family import GRAPH_FAMILY

@@ -11,7 +11,6 @@ from typing import override, Protocol
 from cmk.ccc.plugin_registry import Registry
 from cmk.graphing_engine import (
     ApiGraph,
-    ConsolidationFunction,
     EvaluatedGraph,
     FetchDataProtocol,
     Graph,
@@ -19,10 +18,10 @@ from cmk.graphing_engine import (
     MetricName,
     RequestedGraph,
     RequestedMetric,
-    TimeRange,
 )
 
 from ._decoding import ensure_type
+from ._evaluation_options import EvaluationOptions
 from ._graph_codec import GraphCodec
 from ._source import FetchDiagnostics
 
@@ -50,15 +49,6 @@ def graph_request_of(graph_id: str) -> GraphRequest:
     if graph_id.startswith(_METRIC_PREFIX):
         return RequestedMetric(metric_name_of(graph_id))
     return RequestedGraph(graph_id)
-
-
-@dataclass(frozen=True, kw_only=True)
-class EvaluationOptions:
-    time_range: TimeRange
-    consolidation_function: ConsolidationFunction
-    destination: str | None
-    combination_mode: str | None = None
-    include_edge_neighbours: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)

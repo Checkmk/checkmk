@@ -12,9 +12,9 @@ from cmk.graphing_engine import (
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 
+from ._evaluation_options import EvaluationOptions
 from ._graph_codec import GraphCodec
 from ._graph_dispatch import (
-    EvaluationOptions,
     GraphDispatcher,
 )
 from ._graph_evaluation import EvaluateGraph

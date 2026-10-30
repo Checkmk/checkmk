@@ -73,7 +73,7 @@ def test_migrate_no_traceback_legacy_time_is_written(tmp_path: Path) -> None:
 
     CrashReportStore(debug=True).consolidate_crash_type_dir(crashes_dir)
 
-    info = json.loads(store.load_text_from_file(crash_dir / "crash.info"))
+    info = json.loads(store.load_text_from_file_explicit(crash_dir / "crash.info", debug=True))
     assert info["occurrences"] == {"first_seen": 1000.0, "last_seen": 1000.0, "count": 1}
     assert "time" not in info
 
@@ -104,7 +104,7 @@ def test_migrate_single_crash_legacy_time_is_written(tmp_path: Path) -> None:
 
     CrashReportStore(debug=True).consolidate_crash_type_dir(crashes_dir)
 
-    info = json.loads(store.load_text_from_file(crash_dir / "crash.info"))
+    info = json.loads(store.load_text_from_file_explicit(crash_dir / "crash.info", debug=True))
     assert info["occurrences"] == {"first_seen": 2000.0, "last_seen": 2000.0, "count": 1}
     assert "time" not in info
 
@@ -121,7 +121,7 @@ def test_migrate_single_crash_v1_time_dict_is_migrated(tmp_path: Path) -> None:
 
     CrashReportStore(debug=True).consolidate_crash_type_dir(crashes_dir)
 
-    info = json.loads(store.load_text_from_file(crash_dir / "crash.info"))
+    info = json.loads(store.load_text_from_file_explicit(crash_dir / "crash.info", debug=True))
     assert info["occurrences"] == {"first_seen": 1000.0, "last_seen": 2000.0, "count": 3}
     assert "time" not in info
     assert info["crash_info_version"] == 2
@@ -157,7 +157,7 @@ def test_migrate_merges_duplicate_crashes(tmp_path: Path) -> None:
 
     dirs = [p for p in crashes_dir.iterdir() if p.is_dir()]
     assert len(dirs) == 1
-    info = json.loads(store.load_text_from_file(dirs[0] / "crash.info"))
+    info = json.loads(store.load_text_from_file_explicit(dirs[0] / "crash.info", debug=True))
     assert info["occurrences"] == {"first_seen": 1000.0, "last_seen": 3000.0, "count": 3}
 
 
@@ -214,7 +214,7 @@ def test_migrate_merges_legacy_and_new_format(tmp_path: Path) -> None:
 
     dirs = [p for p in crashes_dir.iterdir() if p.is_dir()]
     assert len(dirs) == 1
-    info = json.loads(store.load_text_from_file(dirs[0] / "crash.info"))
+    info = json.loads(store.load_text_from_file_explicit(dirs[0] / "crash.info", debug=True))
     assert info["occurrences"] == {"first_seen": 1000.0, "last_seen": 3000.0, "count": 3}
 
 
@@ -232,13 +232,17 @@ def test_migrate_is_idempotent(tmp_path: Path) -> None:
     CrashReportStore(debug=True).consolidate_crash_type_dir(crashes_dir)
     dirs_after_first = {p.name for p in crashes_dir.iterdir() if p.is_dir()}
     info_after_first = json.loads(
-        store.load_text_from_file(crashes_dir / next(iter(dirs_after_first)) / "crash.info")
+        store.load_text_from_file_explicit(
+            crashes_dir / next(iter(dirs_after_first)) / "crash.info", debug=True
+        )
     )
 
     CrashReportStore(debug=True).consolidate_crash_type_dir(crashes_dir)
     dirs_after_second = {p.name for p in crashes_dir.iterdir() if p.is_dir()}
     info_after_second = json.loads(
-        store.load_text_from_file(crashes_dir / next(iter(dirs_after_second)) / "crash.info")
+        store.load_text_from_file_explicit(
+            crashes_dir / next(iter(dirs_after_second)) / "crash.info", debug=True
+        )
     )
 
     assert dirs_after_first == dirs_after_second
@@ -262,7 +266,7 @@ def test_migrate_skips_unreadable_crash_info(tmp_path: Path) -> None:
     CrashReportStore(debug=True).consolidate_crash_type_dir(crashes_dir)
 
     # The good crash was migrated; the bad directory was left untouched
-    info = json.loads(store.load_text_from_file(good_dir / "crash.info"))
+    info = json.loads(store.load_text_from_file_explicit(good_dir / "crash.info", debug=True))
     assert info["occurrences"] == {"first_seen": 1000.0, "last_seen": 1000.0, "count": 1}
     assert bad_dir.exists()
 
@@ -277,7 +281,7 @@ def test_migrate_skips_missing_crash_info(tmp_path: Path) -> None:
 
     CrashReportStore(debug=True).consolidate_crash_type_dir(crashes_dir)
 
-    info = json.loads(store.load_text_from_file(good_dir / "crash.info"))
+    info = json.loads(store.load_text_from_file_explicit(good_dir / "crash.info", debug=True))
     assert info["occurrences"] == {"first_seen": 1000.0, "last_seen": 1000.0, "count": 1}
     assert empty_dir.exists()
 
@@ -292,7 +296,7 @@ def test_migrate_skips_non_directory_entries(tmp_path: Path) -> None:
 
     CrashReportStore(debug=True).consolidate_crash_type_dir(crashes_dir)
 
-    info = json.loads(store.load_text_from_file(crash_dir / "crash.info"))
+    info = json.loads(store.load_text_from_file_explicit(crash_dir / "crash.info", debug=True))
     assert info["occurrences"] == {"first_seen": 1000.0, "last_seen": 1000.0, "count": 1}
 
 
@@ -321,10 +325,14 @@ def test_migrate_processes_multiple_crash_type_dirs(tmp_path: Path) -> None:
 
     check_dirs = [p for p in check_dir.iterdir() if p.is_dir()]
     assert len(check_dirs) == 1
-    check_info = json.loads(store.load_text_from_file(check_dirs[0] / "crash.info"))
+    check_info = json.loads(
+        store.load_text_from_file_explicit(check_dirs[0] / "crash.info", debug=True)
+    )
     assert check_info["occurrences"] == {"first_seen": 1000.0, "last_seen": 2000.0, "count": 2}
 
     gui_dirs = [p for p in gui_dir.iterdir() if p.is_dir()]
     assert len(gui_dirs) == 1
-    gui_info = json.loads(store.load_text_from_file(gui_dirs[0] / "crash.info"))
+    gui_info = json.loads(
+        store.load_text_from_file_explicit(gui_dirs[0] / "crash.info", debug=True)
+    )
     assert gui_info["occurrences"] == {"first_seen": 500.0, "last_seen": 600.0, "count": 2}

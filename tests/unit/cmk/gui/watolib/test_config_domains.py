@@ -11,7 +11,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.store import load_text_from_file
+from cmk.ccc.store import load_text_from_file_explicit
 from cmk.gui.type_defs import GlobalSettings, TrustedCertificateAuthorities
 from cmk.gui.watolib import config_domains
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates, ConfigDomainOMD
@@ -224,7 +224,10 @@ class TestConfigDomainCACertificates:
         expected_file_content: str,
     ) -> None:
         mocked_ca_config.update_trust_stores(ca_settings)
-        assert load_text_from_file(mocked_ca_config.trusted_cas_file) == expected_file_content
+        assert (
+            load_text_from_file_explicit(mocked_ca_config.trusted_cas_file, debug=True)
+            == expected_file_content
+        )
 
     def test_settings_change_updates_the_trust_store_from_the_local_site(
         self,
@@ -236,7 +239,7 @@ class TestConfigDomainCACertificates:
             after={omd_site(): _ca_globals(use_system_wide_cas=True)},
         ):
             pass
-        assert load_text_from_file(mocked_ca_config.trusted_cas_file) == (
+        assert load_text_from_file_explicit(mocked_ca_config.trusted_cas_file, debug=True) == (
             "system_cert_1\nsystem_cert_2"
         )
 

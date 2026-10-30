@@ -148,7 +148,6 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
-        "debug",
         "exceptions",
         "i18n",
         "//packages/cmk-trace",
@@ -333,7 +332,6 @@ py_cmk_test(
         "tests/test_store.py",
     ],
     deps = [
-        "debug",
         "store",
     ],
 )

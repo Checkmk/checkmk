@@ -92,8 +92,8 @@ def _objects(page: MapPage) -> list[dict[str, object]]:
 
 
 def _outcomes() -> Mapping[str, str]:
-    record: Mapping[str, Mapping[str, str]] = store.load_object_from_file(
-        _record_path(), default={}
+    record: Mapping[str, Mapping[str, str]] = store.load_object_from_file_explicit(
+        _record_path(), default={}, debug=True
     )
     return record.get("maps", {})
 

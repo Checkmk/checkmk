@@ -16,7 +16,6 @@ from pathlib import Path
 from stat import S_IMODE, S_IWOTH
 from typing import Any, Final, Protocol
 
-import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.ccc.i18n import _
 
@@ -109,8 +108,6 @@ class FileIo(Protocol):
 
     def write(self, data: bytes) -> None: ...
 
-    def read(self) -> bytes: ...
-
     def read_explicit(self, *, debug: bool) -> bytes: ...
 
     def locked(self) -> Iterator[None]: ...
@@ -149,9 +146,6 @@ class RealIo:
 
         finally:
             release_lock(self.path)
-
-    def read(self) -> bytes:
-        return self.read_explicit(debug=cmk.ccc.debug.enabled())
 
     def read_explicit(self, *, debug: bool) -> bytes:
         try:
@@ -204,9 +198,6 @@ class ObjectStore[TObject]:
 
     def write_obj(self, obj: TObject) -> None:
         return self._io.write(self._serializer.serialize(obj))
-
-    def read_obj(self, *, default: TObject) -> TObject:
-        return self.read_obj_explicit(default=default, debug=cmk.ccc.debug.enabled())
 
     def read_obj_explicit(self, *, default: TObject, debug: bool) -> TObject:
         raw = self._io.read_explicit(debug=debug)

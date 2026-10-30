@@ -19,7 +19,6 @@ from pathlib import Path
 from threading import Lock
 from typing import Any, final, Literal, TYPE_CHECKING
 
-import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.ccc.i18n import _
 from cmk.ccc.store._file import (
@@ -216,12 +215,6 @@ def bootstrap_statement(varname: str, empty: Literal["{}", "[]"]) -> str:
 # Handle .mk files that are only holding a python data structure and often
 # directly read via file/open and then parsed using eval.
 # TODO: Consolidate with load_mk_file?
-def load_object_from_file(path: Path, *, default: Any, lock: bool = False) -> Any:
-    return load_object_from_file_explicit(
-        path, default=default, lock=lock, debug=cmk.ccc.debug.enabled()
-    )
-
-
 def load_object_from_file_explicit(
     path: Path, *, default: Any, debug: bool, lock: bool = False
 ) -> Any:
@@ -238,12 +231,6 @@ def load_object_from_file_explicit(
             return default
 
 
-def load_object_from_pickle_file(path: Path, *, default: Any, lock: bool = False) -> Any:
-    return load_object_from_pickle_file_explicit(
-        path, default=default, lock=lock, debug=cmk.ccc.debug.enabled()
-    )
-
-
 def load_object_from_pickle_file_explicit(
     path: Path, *, default: Any, debug: bool, lock: bool = False
 ) -> Any:
@@ -256,12 +243,6 @@ def load_object_from_pickle_file_explicit(
         )
 
 
-def load_text_from_file(path: Path, *, default: str = "", lock: bool = False) -> str:
-    return load_text_from_file_explicit(
-        path, default=default, lock=lock, debug=cmk.ccc.debug.enabled()
-    )
-
-
 def load_text_from_file_explicit(
     path: Path, *, debug: bool, default: str = "", lock: bool = False
 ) -> str:
@@ -272,10 +253,6 @@ def load_text_from_file_explicit(
         return ObjectStore(path, serializer=TextSerializer()).read_obj_explicit(
             default=default, debug=debug
         )
-
-
-def load_bytes_from_file(path: Path, *, default: bytes) -> bytes:
-    return load_bytes_from_file_explicit(path, default=default, debug=cmk.ccc.debug.enabled())
 
 
 def load_bytes_from_file_explicit(path: Path, *, default: bytes, debug: bool) -> bytes:

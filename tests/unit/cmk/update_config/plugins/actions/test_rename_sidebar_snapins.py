@@ -30,7 +30,7 @@ def test_rename_snapins_rewrites_renamed_ids_only(tmp_path: Path) -> None:
 
     RenameSidebarSnapins.rename_snapins(tmp_path, LOGGER, debug=True)
 
-    assert store.load_object_from_file(path, default=None) == {
+    assert store.load_object_from_file_explicit(path, default=None, debug=True) == {
         "fold": False,
         "snapins": [
             {"snapin_type_id": "telemetry_metrics", "visibility": "open"},
@@ -50,5 +50,5 @@ def test_rename_snapins_without_renamed_ids_is_a_noop(
     with caplog.at_level(logging.INFO):
         RenameSidebarSnapins.rename_snapins(tmp_path, LOGGER, debug=True)
 
-    assert store.load_object_from_file(path, default=None) == config
+    assert store.load_object_from_file_explicit(path, default=None, debug=True) == config
     assert caplog.messages == []

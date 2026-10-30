@@ -290,6 +290,11 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         help="The password for authentication of the proxy server.",
     )
     parser.add_argument(
+        "--proxy-credential-process",
+        action="store_true",
+        help="Set HTTPS_PROXY to the proxy for a credential_process of the AWS config profile.",
+    )
+    parser.add_argument(
         "--global-service-region",
         help="Set this to your region when you are in 'us-gov-*' or 'cn-*' regions.",
         default="us-east-1",
@@ -572,6 +577,13 @@ def _proxies(args: argparse.Namespace) -> dict[str, str] | None:
     }
 
 
+def _pass_proxy_to_credential_process(args: argparse.Namespace) -> None:
+    # botocore starts the credential_process with the environment of the agent and offers
+    # no other way to pass anything to it.
+    if args.proxy_credential_process and (proxies := _proxies(args)):
+        os.environ["HTTPS_PROXY"] = f"http://{proxies['https']}"
+
+
 def _configure_aws(args: argparse.Namespace) -> AWSConfig:
     aws_config = AWSConfig(
         args.hostname,
@@ -820,6 +832,7 @@ def agent_aws_main(args: argparse.Namespace) -> int:
     _setup_logging(args.debug, args.verbose)
 
     client_config = _client_config(args)
+    _pass_proxy_to_credential_process(args)
     # One credential owner for the whole run. The connection test and the agent run take
     # the same one, so both resolve credentials through the same path.
     credentials = AwsCredentials(

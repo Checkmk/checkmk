@@ -54,6 +54,7 @@ class ProxyDetails(BaseModel):
     proxy_port: int | None = None
     proxy_user: str | None = None
     proxy_password: Secret | None = None
+    proxy_credential_process: bool = False
 
 
 class Tag(BaseModel):
@@ -146,6 +147,8 @@ def _proxy_args(details: ProxyDetails) -> list[str | Secret]:
         args += ["--proxy-port", str(details.proxy_port)]
     if details.proxy_user and details.proxy_password:
         args += ["--proxy-user", details.proxy_user, "--proxysecret-id", details.proxy_password]
+    if details.proxy_credential_process:
+        args.append("--proxy-credential-process")
     return args
 
 

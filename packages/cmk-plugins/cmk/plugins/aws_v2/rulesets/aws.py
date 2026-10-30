@@ -637,6 +637,22 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                     "proxy_password": DictElement(
                         parameter_form=Password(title=Title("Password")),
                     ),
+                    "proxy_credential_process": DictElement(
+                        parameter_form=BooleanChoice(
+                            title=Title("Proxy for credential_process"),
+                            label=Label("Pass the proxy to the credential_process"),
+                            help_text=Help(
+                                "Without this, only the calls of the agent itself go through "
+                                "the proxy. With this, the agent also sets "
+                                "<tt>HTTPS_PROXY</tt> for a <tt>credential_process</tt> of the "
+                                "AWS config profile. Whether the command uses it is up to the "
+                                "command: <tt>aws_signing_helper</tt> of IAM Roles Anywhere "
+                                "needs <tt>--with-proxy</tt>. The variable contains the "
+                                "username and password of the proxy, so the command can read "
+                                "them."
+                            ),
+                        ),
+                    ),
                 },
             ),
         ),

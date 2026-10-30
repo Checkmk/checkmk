@@ -67,6 +67,19 @@ def test_proxy_password_is_passed_as_secret() -> None:
     ]
 
 
+def test_proxy_for_credential_process_is_requested() -> None:
+    arguments = _arguments(
+        proxy_details={"proxy_host": "proxy.example.com", "proxy_credential_process": True}
+    )
+
+    assert arguments == [
+        "--proxy-host",
+        "proxy.example.com",
+        "--proxy-credential-process",
+        *_HOST_ARGS,
+    ]
+
+
 def test_regions_are_passed_with_their_aws_ids() -> None:
     arguments = _arguments(
         global_service_region="us_gov_west_1", regions=["eu_central_1", "us_east_1"]

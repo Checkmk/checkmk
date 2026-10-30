@@ -155,3 +155,40 @@ def test_connection_test_reports_a_missing_named_profile(
 
     assert exit_code == 2
     assert "checkmk" in capsys.readouterr().err
+
+
+PROXY_ARGS = ["--proxy-host", "proxy.example.com", "--proxy-port", "3128"]
+
+
+def _proxy_seen_by_credential_process(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, args: list[str]
+) -> str:
+    """Run the connection test with a credential_process that records its HTTPS_PROXY."""
+    seen = tmp_path / "https_proxy"
+    process = tmp_path / "credential_process.sh"
+    process.write_text(f'#!/bin/sh\nprintf %s "$HTTPS_PROXY" > {seen}\nexit 1\n')
+    process.chmod(process.stat().st_mode | stat.S_IEXEC)
+    _use_aws_config(tmp_path, monkeypatch, f"[default]\ncredential_process = {process}\n")
+    # The agent sets it in its own environment. This restores it after the test.
+    monkeypatch.setenv("HTTPS_PROXY", "")
+
+    agent_aws_main(parse_arguments([*KEYLESS_ARGS, *args, "--connection-test"]))
+
+    return seen.read_text()
+
+
+def test_credential_process_gets_the_proxy_if_asked(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert (
+        _proxy_seen_by_credential_process(
+            tmp_path, monkeypatch, [*PROXY_ARGS, "--proxy-credential-process"]
+        )
+        == "http://proxy.example.com:3128"
+    )
+
+
+def test_credential_process_gets_no_proxy_by_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert _proxy_seen_by_credential_process(tmp_path, monkeypatch, PROXY_ARGS) == ""

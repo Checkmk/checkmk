@@ -4,10 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import type { ConfiguredFilters, ConfiguredValues } from 'cmk-ui-library/components/filter'
 import { useFilterDefinitions } from 'cmk-ui-library/components/filter'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
+import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
@@ -23,6 +25,7 @@ import type { ContextFilters } from '@/dashboard/types/filter.ts'
 import type { ObjectType } from '@/dashboard/types/shared.ts'
 import type { MonitoringTableName } from '@/monitoring/table-widget/tableDescriptors'
 
+import CatalogPanelHeader from '../../../components/CatalogPanelHeader.vue'
 import SectionBlock from '../../../components/SectionBlock.vue'
 import Stage1Header from '../../../components/Stage1Header.vue'
 import { OFFERED_TABLES, monitoringTableViews } from '../monitoringTables'
@@ -67,10 +70,15 @@ const configuredFiltersByObjectType = computed(() =>
 <template>
   <Stage1Header :button-title="_t('Next step: Data configuration')" @click="emit('goNext')" />
 
-  <SectionBlock :title="_t('View selection')">
+  <CmkCatalogPanel :title="_t('View selection')" variant="padded">
+    <template #header>
+      <CatalogPanelHeader :title="_t('View selection')" />
+    </template>
     <TableForm>
       <TableFormRow>
-        <FieldDescription>{{ _t('View') }}</FieldDescription>
+        <FieldDescription :help="_t('The monitoring page whose table the widget shows.')"
+          >{{ _t('View') }}<CmkLabelRequired space="before"
+        /></FieldDescription>
         <FieldComponent>
           <CmkInlineValidation :validation="validationError ? [validationError] : []" />
           <CmkDropdown
@@ -87,7 +95,7 @@ const configuredFiltersByObjectType = computed(() =>
         </FieldComponent>
       </TableFormRow>
     </TableForm>
-  </SectionBlock>
+  </CmkCatalogPanel>
 
   <SectionBlock
     v-for="objectType in infos"

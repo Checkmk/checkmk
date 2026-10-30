@@ -42,6 +42,16 @@ function renderStage1(initialTable: MonitoringTableName | null = null) {
 }
 
 describe('monitoring table data selection', () => {
+  it('asks for the required view in an open, collapsible panel', () => {
+    renderStage1()
+
+    expect(screen.getByRole('button', { name: 'Toggle View selection' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    )
+    expect(screen.getByText('(required)')).toBeInTheDocument()
+  })
+
   it('offers no filters before a view is chosen', () => {
     renderStage1()
 

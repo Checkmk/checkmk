@@ -854,17 +854,52 @@ def test_archiving_the_events_of_a_host_archives_by_host_name(
     assert commands == [ECDeleteEventsOfHost(HostName("myhost"), with_user[0])]
 
 
+def _service_rows(*host_names: str) -> Rows:
+    return [
+        {"site": "local", "host_name": host_name, "service_description": f"Service {nr}"}
+        for nr, host_name in enumerate(host_names)
+    ]
+
+
 @pytest.mark.usefixtures("request_context")
 def test_the_confirmation_of_archiving_the_events_of_a_host_names_the_host(
     with_user: tuple[UserId, str],
 ) -> None:
-    set_request_vars(_archive_events_of_hosts="1", host="myhost")
+    set_request_vars(_archive_events_of_hosts="1")
+
+    _commands, dialog = _acted(
+        with_user[0], (), CommandECArchiveEventsOfHost, _service_rows("myhost", "myhost")
+    )
+
+    assert "All events of the host 'myhost' will be removed" in unescape(str(dialog.additions))
+
+
+@pytest.mark.usefixtures("request_context")
+def test_the_confirmation_of_archiving_the_events_of_several_hosts_counts_them(
+    with_user: tuple[UserId, str],
+) -> None:
+    set_request_vars(_archive_events_of_hosts="1")
+
+    _commands, dialog = _acted(
+        with_user[0], (), CommandECArchiveEventsOfHost, _service_rows("a", "b", "a")
+    )
+
+    assert "All events of the 2 hosts of the selected services will be removed" in str(
+        dialog.additions
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_the_confirmation_of_archiving_the_events_of_a_host_counts_nothing(
+    with_user: tuple[UserId, str],
+) -> None:
+    set_request_vars(_archive_events_of_hosts="1")
 
     _commands, dialog = _acted(
         with_user[0], (), CommandECArchiveEventsOfHost, [{"site": "local", "host_name": "myhost"}]
     )
 
-    assert "All events of the host 'myhost' will be removed" in unescape(str(dialog.additions))
+    assert dialog.affected == HTML.empty()
 
 
 @pytest.mark.usefixtures("request_context", "with_admin_login")

@@ -1455,7 +1455,7 @@ PermissionECArchiveEventsOfHost = Permission(
     section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="archive_events_of_hosts",
     title=_l("Archive events of hosts"),
-    description=_l("Archive all open events of all hosts shown in host views"),
+    description=_l("Archive all open events of the hosts of the selected services"),
     defaults=["user", "admin"],
 )
 
@@ -1463,19 +1463,31 @@ PermissionECArchiveEventsOfHost = Permission(
 def command_archive_events_of_host_confirm_dialog_additions(
     cmdtag: Literal["HOST", "SVC"],  # noqa: ARG001
     row: Row,  # noqa: ARG001
-    action_rows: Rows,  # noqa: ARG001
+    action_rows: Rows,
 ) -> HTML:
-    return HTML.empty() + _(
-        "All events of the host '%(host)s' will be removed from the open events list. You can still access them in the archive."
-    ) % {"host": active_request.var("host")}
+    host_names = {action_row["host_name"] for action_row in action_rows}
+    if len(host_names) == 1:
+        return HTML.with_escaping(
+            _(
+                "All events of the host '%(host)s' will be removed from the open events list. You can still access them in the archive."
+            )
+            % {"host": next(iter(host_names))}
+        )
+    return HTML.with_escaping(
+        ungettext(
+            "All events of the %(count)d host of the selected services will be removed from the open events list. You can still access them in the archive.",
+            "All events of the %(count)d hosts of the selected services will be removed from the open events list. You can still access them in the archive.",
+            len(host_names),
+        )
+        % {"count": len(host_names)}
+    )
 
 
 def command_archive_events_of_host_render(what: str) -> None:  # noqa: ARG001
     html.help(
         _(
-            "Note: With this command you can archive all events of one host. "
-            'Needs a rule "Check event state in Event Console" to be '
-            "configured."
+            "Archives all open events of the hosts of the selected services. "
+            "You can still access them in the archive."
         )
     )
     html.open_div(class_="group")
@@ -1501,10 +1513,10 @@ def command_archive_events_of_host_action(
     return None
 
 
-CommandECArchiveEventsOfHost = ECCommand(
+CommandECArchiveEventsOfHost = Command(
     ident="ec_archive_events_of_host",
     title=_l("Archive events of hosts"),
-    confirm_title=_l("Archive all events of this host?"),
+    confirm_title=_l("Archive events of hosts?"),
     confirm_button=_l("Archive"),
     permission=PermissionECArchiveEventsOfHost,
     group=CommandGroupVarious,

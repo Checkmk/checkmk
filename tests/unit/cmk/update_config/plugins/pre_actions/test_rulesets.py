@@ -4,22 +4,28 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import logging
+
 import pytest
 from pytest_mock import MockerFixture
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.watolib.hosts_and_folders import FolderTree
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
     Rule,
     RuleConditions,
     RuleOptions,
     Ruleset,
+    RulesetCollection,
 )
 from cmk.ruleset_matcher.conditions import HostOrServiceConditions
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.update_config.internal import ConflictMode, ExpiryVersion
-from cmk.update_config.plugins.pre_actions.rulesets import PreUpdateRulesets
+from cmk.update_config.plugins.pre_actions.rulesets import (
+    PreUpdateRulesets,
+    validate_rule_values_before_update,
+)
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
@@ -193,6 +199,49 @@ def test_rules_referring_to_a_replaced_snmp_section_pass_the_pre_action(
     )
 
     _execute_pre_update_rulesets(mocker)
+
+
+@pytest.mark.parametrize(
+    ["value", "problem"],
+    [
+        pytest.param("not a dictionary", TypeError, id="invalid value"),
+        pytest.param(
+            {"reclassify_patterns": [("C", "x", "a comment")]}, type(None), id="valid value"
+        ),
+    ],
+)
+def test_validate_rule_values_before_update_reports_per_rule(
+    tree: FolderTree, value: object, problem: type
+) -> None:
+    root_folder = tree.root_folder()
+    ruleset = Ruleset("logwatch_rules", None)
+    ruleset.append_rule(root_folder, _rule(root_folder, ruleset, value))
+
+    outcomes = list(
+        validate_rule_values_before_update(
+            logging.getLogger("test"), RulesetCollection({"logwatch_rules": ruleset})
+        )
+    )
+
+    assert [(outcome.index, type(outcome.problem)) for outcome in outcomes] == [(0, problem)]
+
+
+def _rule(folder: Folder, ruleset: Ruleset, value: object) -> Rule:
+    return Rule(
+        id_="1",
+        folder=folder,
+        ruleset=ruleset,
+        conditions=RuleConditions(
+            host_folder=folder.path(),
+            host_tags=None,
+            host_label_groups=None,
+            host_name=None,
+            service_description=None,
+            service_label_groups=None,
+        ),
+        options=RuleOptions(disabled=None, description="", comment="", docu_url=""),
+        value=value,
+    )
 
 
 def _execute_pre_update_rulesets(mocker: MockerFixture) -> None:

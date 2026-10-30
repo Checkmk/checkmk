@@ -7,19 +7,21 @@
 
 import re
 from collections.abc import Collection, Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from logging import Logger
 from typing import Final
 
 from cmk.ccc import debug
 from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
-from cmk.gui.watolib.hosts_and_folders import FolderTree
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
 from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
     FolderPath,
     Rule,
     RuleConditions,
+    Ruleset,
     RulesetCollection,
 )
 from cmk.gui.watolib.rulespecs import rulespec_registry
@@ -368,6 +370,19 @@ def _renamed(names: Sequence[object], renames: Mapping[str, str]) -> list[object
     if not any(isinstance(name, str) and name in renames for name in names):
         return None
     return [renames.get(name, name) if isinstance(name, str) else name for name in names]
+
+
+@dataclass(frozen=True)
+class RuleOutcome:
+    """What one of the update's stages (validation, transformation) made of a rule"""
+
+    ruleset: Ruleset
+    folder: Folder
+    index: int
+    """The rule's position among the ruleset's rules in the folder, zero-based"""
+    rule: Rule
+    problem: Exception | None
+    """What the stage raised on the rule, None if it went through"""
 
 
 def transform_wato_rulesets_params(

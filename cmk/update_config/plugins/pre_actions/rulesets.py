@@ -5,6 +5,7 @@
 """Pre update checks, executed before any configuration is changed."""
 
 import warnings
+from collections.abc import Iterator
 from dataclasses import dataclass
 from logging import Logger
 from typing import override
@@ -31,7 +32,11 @@ from cmk.update_config.internal import (
     PreUpdateAction,
     Resume,
 )
-from cmk.update_config.plugins.lib.rulesets import rename_replaced_plugins, SKIP_PREACTION
+from cmk.update_config.plugins.lib.rulesets import (
+    rename_replaced_plugins,
+    RuleOutcome,
+    SKIP_PREACTION,
+)
 from cmk.update_config.registry import pre_update_action_registry
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
@@ -163,6 +168,28 @@ def _continue_on_ruleset_exception(conflict_mode: ConflictMode) -> Resume:
             )
 
 
+def validate_rule_values_before_update(
+    logger: Logger, all_rulesets: RulesetCollection
+) -> Iterator[RuleOutcome]:
+    """Validate the value the update will produce for every rule the pre-flight checks
+
+    One outcome per rule; the rule about to be checked is logged first, so
+    a definition that raises something unexpected is named by the log.
+    """
+    for ruleset in all_rulesets.get_rulesets().values():
+        if ruleset.name in SKIP_PREACTION:
+            continue
+        for folder, index, rule in ruleset.get_rules():
+            logger.log(
+                VERBOSE,
+                "Validating ruleset '%(ruleset_name)s' in folder '%(folder_name)s'",
+                {"ruleset_name": ruleset.name, "folder_name": folder.name()},
+            )
+            # validate the value the update will produce, not one referring to replaced plug-ins
+            value = rename_replaced_plugins(ruleset.name, rule.value)
+            yield RuleOutcome(ruleset, folder, index, rule, _validation_problem(ruleset, value))
+
+
 def _validation_problem(ruleset: Ruleset, value: object) -> Exception | None:
     """What the current definition raises on the value, None if it accepts it
 
@@ -204,48 +231,38 @@ def _validate_rule_values(
 
     Returns True if the update shall continue, False otherwise.
     """
-    for ruleset in all_rulesets.get_rulesets().values():
-        if ruleset.name in SKIP_PREACTION:
-            continue
-
-        for folder, index, rule in ruleset.get_rules():
-            logger.log(
-                VERBOSE,
-                "Validating ruleset '%(ruleset_name)s' in folder '%(folder_name)s'",
-                {"ruleset_name": ruleset.name, "folder_name": folder.name()},
-            )
-            # validate the value the update will produce, not one referring to replaced plug-ins
-            value = rename_replaced_plugins(ruleset.name, rule.value)
-            match _validation_problem(ruleset, value):
-                case None:
+    for outcome in validate_rule_values_before_update(logger, all_rulesets):
+        ruleset, folder, index, rule = outcome.ruleset, outcome.folder, outcome.index, outcome.rule
+        match outcome.problem:
+            case None:
+                continue
+            case RegexFutureWarning() as e:
+                error_messages = [
+                    f"WARNING: {e}",
+                    f"Ruleset: {ruleset.name}",
+                    f"Title: {ruleset.title()}",
+                    f"Folder: {folder.path() or 'main'}",
+                    f"Rule nr: {index}",
+                    "At the moment your regex works correctly, but it might stop working or",
+                    "behave differently in a future Python version. Please consider updating it.",
+                    "",
+                ]
+                add_info = _additional_info(ruleset, rule.value, contact_groups)
+                logger.warning("\n".join(error_messages + add_info.messages))
+            case problem:
+                error_messages = [
+                    "WARNING: Invalid rule configuration detected",
+                    f"Ruleset: {ruleset.name}",
+                    f"Title: {ruleset.title()}",
+                    f"Folder: {folder.path() or 'main'}",
+                    f"Rule nr: {index}",
+                ]
+                add_info = _additional_info(ruleset, rule.value, contact_groups)
+                logger.error("\n".join(error_messages + add_info.messages), exc_info=problem)
+                if add_info.skip_user_input:
                     continue
-                case RegexFutureWarning() as e:
-                    error_messages = [
-                        f"WARNING: {e}",
-                        f"Ruleset: {ruleset.name}",
-                        f"Title: {ruleset.title()}",
-                        f"Folder: {folder.path() or 'main'}",
-                        f"Rule nr: {index}",
-                        "At the moment your regex works correctly, but it might stop working or",
-                        "behave differently in a future Python version. Please consider updating it.",
-                        "",
-                    ]
-                    add_info = _additional_info(ruleset, rule.value, contact_groups)
-                    logger.warning("\n".join(error_messages + add_info.messages))
-                case problem:
-                    error_messages = [
-                        "WARNING: Invalid rule configuration detected",
-                        f"Ruleset: {ruleset.name}",
-                        f"Title: {ruleset.title()}",
-                        f"Folder: {folder.path() or 'main'}",
-                        f"Rule nr: {index}",
-                    ]
-                    add_info = _additional_info(ruleset, rule.value, contact_groups)
-                    logger.error("\n".join(error_messages + add_info.messages), exc_info=problem)
-                    if add_info.skip_user_input:
-                        continue
-                    if _continue_on_invalid_rule(conflict_mode).is_abort():
-                        return False
+                if _continue_on_invalid_rule(conflict_mode).is_abort():
+                    return False
 
     return True
 

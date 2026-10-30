@@ -61,6 +61,15 @@ MAX_CFG_BYTES = 5 * 1024 * 1024  # 5 MB
 # this; an automap this large is unusable as a map anyway.
 _MAX_CFG_OBJECTS = 2000
 
+# Each block that uses a template holds a copy of the template's parameters, so a
+# chain of templates or one large template used by many objects would multiply
+# the file far beyond the byte cap.
+_MAX_INHERITED_PARAMS = 100 * _MAX_CFG_OBJECTS
+
+# What templates and the global block pass on is copied into each object, so a
+# large value they hold is multiplied by the objects using it.
+_MAX_OBJECT_SETTINGS_CHARS = 4 * MAX_CFG_BYTES
+
 
 # Legacy line_type integers from the .cfg map format; 20 is not a valid value.
 _LINE_STYLES: dict[int, LineStyle] = {
@@ -128,6 +137,35 @@ _GAUGE_CAPTION_HEIGHT = 12
 
 _DEFINE_RE = re.compile(r"define\s+(\w+)\s*\{")
 _PROPERTY_RE = re.compile(r"(\w+)\s*=\s*(.*)")
+
+
+def _merge_templates(blocks: list[tuple[str, dict[str, str]]]) -> list[dict[str, str]]:
+    """Each block's parameters with the template ``use`` names merged in, as NagVis does.
+
+    In file order, a block takes the last template it names that exists, as
+    merged so far; a template is found by the first one of its name.
+    """
+    first: dict[str, int] = {}
+    for i, (block_type, p) in enumerate(blocks):
+        if block_type == "template" and (name := p.get("name")):
+            first.setdefault(name, i)
+    merged = [p for _block_type, p in blocks]
+    inherited = 0
+    for i, (block_type, p) in enumerate(blocks):
+        if block_type == "global":
+            continue
+        if used := [name for name in p.get("use", "").split(",") if name in first]:
+            template = merged[first[used[-1]]]
+            passed_on = {k: v for k, v in template.items() if k not in _NON_INHERITED_KEYS}
+            inherited += len(passed_on)
+            if inherited > _MAX_INHERITED_PARAMS:
+                raise MKUserError(
+                    "file",
+                    _("The templates of the map pass on more than %(limit)d parameters.")
+                    % {"limit": _MAX_INHERITED_PARAMS},
+                )
+            merged[i] = passed_on | p
+    return merged
 
 
 def _parse_blocks(text: str) -> list[tuple[str, dict[str, str]]]:
@@ -508,7 +546,7 @@ _MONITOR_OBJECT_TYPES: dict[str, MonitoredObjectType] = {
 _BLOCK_TYPES = frozenset(_MONITOR_OBJECT_TYPES) | {"shape", "line", "textbox", "container"}
 
 # Keys identifying a block — never inherited from a template/global layer.
-_NON_INHERITED_KEYS = frozenset({"object_id", "name", "template"})
+_NON_INHERITED_KEYS = frozenset({"object_id", "name", "use"})
 
 # Global-block keys that configure the map itself (handled by _apply_global)
 # and must not be pushed onto every object as a default. backend_id stays
@@ -1055,17 +1093,11 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
             _("The map contains more than %(limit)d objects.") % {"limit": _MAX_CFG_OBJECTS},
         )
 
-    # Pre-pass: collect templates and global object-defaults. NagVis resolves
-    # each parameter as object > template (``template=name``) > global > built-in
-    # default.
-    templates: dict[str, dict[str, str]] = {}
+    # NagVis resolves each parameter as object > template (``use=name``) >
+    # global > built-in default.
     global_props: dict[str, str] = {}
     for block_type, p in blocks:
-        if block_type == "template":
-            name = p.get("name")
-            if name:
-                templates[name] = p
-        elif block_type == "global":
+        if block_type == "global":
             global_props = p
     global_defaults = {
         k: v
@@ -1073,8 +1105,9 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
         if k not in _NON_INHERITED_KEYS and k not in _GLOBAL_MAP_KEYS
     }
     map_icon_size = ICONSET_SIZE.get(global_props.get("iconset", ""), 22)
+    settings_chars = 0
 
-    for block_type, p in blocks:
+    for (block_type, p), with_template in zip(blocks, _merge_templates(blocks), strict=True):
         if block_type == "global":
             _apply_global(map_cfg, p)
             continue
@@ -1084,13 +1117,18 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
         # object_id identifies the object and is never inherited.
         object_id = p.get("object_id")
         raw_id = object_id or str(counter)
-        tmpl = {
-            k: v
-            for k, v in templates.get(p.get("template", ""), {}).items()
-            if k not in _NON_INHERITED_KEYS
-        }
-        effective = {**global_defaults, **tmpl, **p}
-        effective.pop("template", None)
+        effective = {**global_defaults, **with_template}
+        effective.pop("use", None)
+        settings_chars += sum(len(k) + len(v) for k, v in effective.items())
+        if settings_chars > _MAX_OBJECT_SETTINGS_CHARS:
+            raise MKUserError(
+                "file",
+                _(
+                    "The objects of the map, with what their templates and the global"
+                    " settings pass on, take more than %(limit)d characters."
+                )
+                % {"limit": _MAX_OBJECT_SETTINGS_CHARS},
+            )
         obj = _handle_object_block(block_type, effective, raw_id, map_icon_size)
         if obj is not None:
             # ``url_target`` is a required field on every map object; only the

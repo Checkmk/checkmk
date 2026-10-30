@@ -518,21 +518,21 @@ def test_cfg_to_map_line_type_inherited_from_template() -> None:
     content = (
         "define template {\n    name = wm\n    line_type = 13\n}\n"
         "define line {\n    object_id = l1\n    x = 10,20\n    y = 30,40\n"
-        "    host_name = h\n    service_description = s\n    template = wm\n}\n"
+        "    host_name = h\n    service_description = s\n    use = wm\n}\n"
     )
     obj = _first_obj(cfg_to_map(content, "test"))
     assert obj["line_style"] == "arrow_inward"
     assert obj["line_perfdata_label"] == "percent"
     assert obj["line_weather_color"] is True
     assert "name" not in obj
-    assert "template" not in obj
+    assert "use" not in obj
 
 
 def test_cfg_to_map_element_line_type_overrides_template() -> None:
     content = (
         "define template {\n    name = wm\n    line_type = 13\n}\n"
         "define line {\n    object_id = l1\n    x = 10,20\n    y = 30,40\n"
-        "    template = wm\n    line_type = 12\n}\n"
+        "    use = wm\n    line_type = 12\n}\n"
     )
     obj = _first_obj(cfg_to_map(content, "test"))
     assert obj["line_style"] == "plain"
@@ -1130,6 +1130,23 @@ def test_object_count_is_capped() -> None:
         cfg_to_map(content, "big")
 
 
+def test_inherited_parameters_are_capped() -> None:
+    content = "".join(
+        f"define template {{\n    name = t{i}\n    use = t{i - 1}\n    k{i} = v\n}}\n"
+        for i in range(1000)
+    )
+    with pytest.raises(MKUserError):
+        cfg_to_map(content, "chain")
+
+
+def test_settings_passed_on_to_objects_are_capped() -> None:
+    content = f"define global {{\n    label_text = {'a' * 100_000}\n}}\n" + (
+        "define host {\n    host_name = h\n}\n" * 300
+    )
+    with pytest.raises(MKUserError):
+        cfg_to_map(content, "wide")
+
+
 def test_geomap_global_becomes_geo_view() -> None:
     parsed_map = cfg_to_map("define global {\n sources=geomap\n geomap_zoom=7\n}\n", "gm")
     view = parsed_map["view"]
@@ -1360,10 +1377,30 @@ def test_cfg_to_map_object_backend_becomes_a_connection_override() -> None:
 def test_cfg_to_map_object_backend_inherited_from_its_template() -> None:
     content = (
         "define template {\n    name = t1\n    backend_id = other_site\n}\n"
-        "define host {\n    host_name = h1\n    template = t1\n"
+        "define host {\n    host_name = h1\n    use = t1\n"
         "    x = 10\n    y = 20\n    object_id = o1\n}\n"
     )
     assert _first_obj(cfg_to_map(content, "test"))["connection_id"] == "other_site"
+
+
+def test_cfg_to_map_object_takes_the_last_template_it_uses_that_exists() -> None:
+    content = (
+        "define template {\n    name = a\n    backend_id = site_a\n}\n"
+        "define template {\n    name = b\n    backend_id = site_b\n}\n"
+        "define host {\n    host_name = h1\n    use = a,b,missing\n"
+        "    x = 10\n    y = 20\n    object_id = o1\n}\n"
+    )
+    assert _first_obj(cfg_to_map(content, "test"))["connection_id"] == "site_b"
+
+
+def test_cfg_to_map_template_takes_what_its_own_template_sets() -> None:
+    content = (
+        "define template {\n    name = base\n    backend_id = site_a\n}\n"
+        "define template {\n    name = t1\n    use = base\n}\n"
+        "define host {\n    host_name = h1\n    use = t1\n"
+        "    x = 10\n    y = 20\n    object_id = o1\n}\n"
+    )
+    assert _first_obj(cfg_to_map(content, "test"))["connection_id"] == "site_a"
 
 
 def test_resolve_keeps_an_object_override_that_names_a_configured_connection() -> None:

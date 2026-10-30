@@ -181,7 +181,7 @@ def _account_host_sections() -> AWSSectionsUSEast:
         "aws-org", Args(), ([], []), NamingConvention.ip_region_instance
     ).for_account("333333333333", host="333333333333")
     sections = AWSSectionsUSEast(hostname="aws-org", session=mock.Mock(), account_id="333333333333")
-    sections.init_sections([], "us-east-1", config, ResultDistributorS3Limits())
+    sections.init_sections([], "us-east-1", config, ResultDistributorS3Limits(None))
     return sections
 
 

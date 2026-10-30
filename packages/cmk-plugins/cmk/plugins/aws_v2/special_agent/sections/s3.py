@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 
+import threading
 from collections.abc import Mapping, Sequence
 from datetime import datetime
 from typing import Any, Literal, override
@@ -38,25 +39,33 @@ class ResultDistributorS3Limits(ResultDistributor):
     results and distributes both upon receiving and upon adding a new colleague. This is done
     because we want to run S3Limits only once (does not matter for which region, results are the
     same for all regions) and later distribute the results to S3Summary objects in other regions.
+
+    S3Limits runs in the owner region. The regions of one account may run at the same time, so
+    the owner is chosen up front, and adding and distributing hold a lock. An S3Summary that
+    runs before S3Limits has distributed lists the buckets itself.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, owner_region: str | None) -> None:
         super().__init__()
+        self._owner_region = owner_region
         self._received_results: dict[str, tuple[AWSSection, AWSComputedContent]] = {}
+        self._lock = threading.Lock()
 
     @override
     def add(self, sender_name: str, colleague: AWSSection) -> None:
-        super().add(sender_name, colleague)
-        for sender, content in self._received_results.values():
-            colleague.receive(sender, content)
+        with self._lock:
+            super().add(sender_name, colleague)
+            for sender, content in self._received_results.values():
+                colleague.receive(sender, content)
 
     @override
     def distribute(self, sender: AWSSection, result: AWSComputedContent) -> None:
-        self._received_results.setdefault(sender.name, (sender, result))
-        super().distribute(sender, result)
+        with self._lock:
+            self._received_results.setdefault(sender.name, (sender, result))
+            super().distribute(sender, result)
 
-    def is_empty(self) -> bool:
-        return len(self._colleagues) == 0
+    def is_owner(self, region: str) -> bool:
+        return region == self._owner_region
 
 
 class S3BucketHelper:

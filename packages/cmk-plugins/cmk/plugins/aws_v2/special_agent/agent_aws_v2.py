@@ -700,9 +700,6 @@ def _run_account(
     proxy_config: botocore.config.Config | None,
 ) -> AccountRun:
     """Run the sections of one account in every region."""
-    # Collects the S3 limits across the regions of this account, so it must not be shared.
-    s3_limits_distributor = ResultDistributorS3Limits()
-
     not_enabled = (
         regions_not_enabled(account.session, args.global_service_region, proxy_config)
         if regional_services and args.regions
@@ -713,11 +710,14 @@ def _run_account(
         for region in args.regions
         if region in not_enabled
     ]
+    regions = [region for region in args.regions if region not in not_enabled]
+    # Collects the S3 limits across the regions of this account, so it must not be shared.
+    s3_limits_distributor = ResultDistributorS3Limits(regions[0] if regions else None)
 
     has_exceptions = False
     for aws_services, aws_regions, aws_sections in [
         (global_services, [args.global_service_region], AWSSectionsUSEast),
-        (regional_services, [r for r in args.regions if r not in not_enabled], AWSSectionsGeneric),
+        (regional_services, regions, AWSSectionsGeneric),
     ]:
         if not aws_services or not aws_regions:
             continue

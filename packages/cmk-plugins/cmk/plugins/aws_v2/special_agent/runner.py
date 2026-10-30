@@ -664,11 +664,11 @@ class AWSSectionsGeneric(AWSSections):
             # S3 is special because there are no per-region limits, but only a global per-account limit.
             # The list of buckets can be queried from any region, however, the metrics for the
             # individual buckets must be queried from the region the bucket resides in. Therefore, we
-            # only want to run S3Limits once, namely for the first region (does not matter which region
-            # that is). The results will then be distributed to the S3Summary objects across all regions
-            # using the special distributor for S3 limits.
+            # only want to run S3Limits once, namely for the owner region of the distributor (does not
+            # matter which region that is). The results will then be distributed to the S3Summary
+            # objects across all regions using the special distributor for S3 limits.
             s3_client = self._init_client("s3")
-            if s3_limits_distributor.is_empty():
+            if s3_limits_distributor.is_owner(region):
                 s3_limits: S3Limits | None = S3Limits(
                     s3_client, region, config, s3_limits_distributor
                 )

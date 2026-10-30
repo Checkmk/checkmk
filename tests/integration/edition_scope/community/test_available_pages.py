@@ -175,3 +175,70 @@ def test_registered_pages() -> None:
     ]
 
     assert sorted(cmk.gui.pages.page_registry) == sorted(expected_pages)
+
+
+@pytest.mark.usefixtures("load_gui_plugins")
+def test_no_new_ajax_pages_are_registered() -> None:
+    expected_ajax_pages = [
+        "ajax_activation_state",
+        "ajax_background_job_details",
+        "ajax_backup_job_state",
+        "ajax_bi_aggregation_preview",
+        "ajax_bi_rule_preview",
+        "ajax_cascading_render_painer_parameters",
+        "ajax_delete_bi_aggregation_layout",
+        "ajax_dict_host_tag_condition_get_choice",
+        "ajax_fetch_aggregation_data",
+        "ajax_fetch_ca",
+        "ajax_fetch_topology",
+        "ajax_get_user_messages",
+        "ajax_get_welcome_page_stage_information",
+        "ajax_graph_images",
+        "ajax_initial_topology_filters",
+        "ajax_initial_view_filters",
+        "ajax_load_bi_aggregation_layout",
+        "ajax_ping_host",
+        "ajax_popup_move_to_folder",
+        "ajax_request_ms_graph_access_token",
+        "ajax_reschedule",
+        "ajax_save_bi_aggregation_layout",
+        "ajax_service_discovery",
+        "ajax_set_change_action",
+        "ajax_set_dashboard_start_url",
+        "ajax_set_foldertree",
+        "ajax_sidebar_get_messages",
+        "ajax_sidebar_get_number_of_pending_changes",
+        "ajax_sidebar_get_sites_and_changes",
+        "ajax_sidebar_get_unack_incomp_werks",
+        "ajax_sidebar_position",
+        "ajax_start_activation",
+        "ajax_ui_theme",
+        "ajax_unified_search",
+        "ajax_user_message_action",
+        "ajax_validate_filter",
+        "ajax_visual_filter_list_get_choice",
+        "ajax_vs_autocomplete",
+        "ajax_vs_unit_resolver",
+        "automation_login",
+        "noauth:automation",
+        "sidebar_ajax_add_snapin",
+        "sidebar_ajax_get_available_snapins",
+        "sidebar_fold",
+        "sidebar_openclose",
+        "wato_ajax_agent_receiver_port",
+        "wato_ajax_diag_cmk_agent",
+        "wato_ajax_diag_host",
+        "wato_ajax_diag_snmp",
+        "wato_ajax_execute_check",
+        "wato_ajax_fetch_site_status",
+    ]
+
+    registered_ajax_pages = [
+        ident
+        for ident, endpoint in cmk.gui.pages.page_registry.items()
+        if isinstance(endpoint.handler, cmk.gui.pages.AjaxPage)
+    ]
+    assert sorted(registered_ajax_pages) == expected_ajax_pages, (
+        "There is no reason to choose AjaxPages over a (new) REST API endpoint, the "
+        "list of registered AjaxPages may only shrink."
+    )

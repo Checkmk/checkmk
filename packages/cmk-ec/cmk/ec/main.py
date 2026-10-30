@@ -2487,8 +2487,16 @@ class StatusServer(ECServerThread):
         if len(arguments) != 2:
             raise MKClientError("Wrong number of arguments for DELETE_EVENTS_OF_HOST")
         hostname, user = arguments
+        # Views assign events to hosts when showing them, so the core host of an event from
+        # before the core knew the host doesn't suffice.
+        designations = self._event_server.host_config.get_designations(hostname)
         self._event_status.delete_events_by(
-            lambda event: event["host"] == hostname, user, self._event_server.get_rule_by_id
+            lambda event: (
+                hostname in (event["core_host"], event["host"])
+                or event["host"].lower() in designations
+            ),
+            user,
+            self._event_server.get_rule_by_id,
         )
 
     def handle_command_update(self, arguments: list[str]) -> None:

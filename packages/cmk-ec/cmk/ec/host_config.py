@@ -30,6 +30,7 @@ class HostConfig:
         self._lock = Lock()
         self._hosts_by_name: dict[HostName, HostInfo] = {}
         self._hosts_by_designation: dict[str, HostName] = {}
+        self._designations_by_name: dict[str, frozenset[str]] = {}
         self._cache_timestamp: int | None = None
         self._connection = connection
 
@@ -47,6 +48,15 @@ class HostConfig:
                 self._hosts_by_designation.get(event_host_name.lower())
                 if self._update_cache_after_core_restart()
                 else None
+            )
+
+    def get_designations(self, host_name: str) -> frozenset[str]:
+        """Returns the lower-cased names, aliases and addresses the core assigns to the host"""
+        with self._lock:
+            return (
+                self._designations_by_name.get(host_name, frozenset())
+                if self._update_cache_after_core_restart()
+                else frozenset()
             )
 
     def _update_cache_after_core_restart(self) -> bool:
@@ -78,6 +88,13 @@ class HostConfig:
             if info.alias:
                 self._hosts_by_designation[info.alias.lower()] = info.name
             self._hosts_by_designation[info.name.lower()] = info.name
+        # Invert only the complete mapping, a later host takes over designations of earlier ones.
+        designations_by_name: dict[str, set[str]] = {}
+        for designation, name in self._hosts_by_designation.items():
+            designations_by_name.setdefault(name, set()).add(designation)
+        self._designations_by_name = {
+            name: frozenset(designations) for name, designations in designations_by_name.items()
+        }
         self._logger.debug(
             "Got %(host_count)d hosts from core", {"host_count": len(self._hosts_by_name)}
         )

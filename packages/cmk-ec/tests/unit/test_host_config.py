@@ -167,3 +167,55 @@ def test_host_config_get_canonical_name_is_cached_updated() -> None:
 
     with connection.expect([status_query(now + 10)]):
         assert host_config.get_canonical_name("new alias") == HostName("heute")
+
+
+@pytest.mark.parametrize(
+    "host_name, result",
+    [
+        ("heute", frozenset({"heute", "heute alias", "127.0.0.1"})),
+        ("example.com", frozenset({"example.com", "example.com alias", "server.example.com"})),
+    ],
+)
+def test_the_designations_of_a_host_are_its_name_alias_and_address(
+    host_name: str, result: frozenset[str]
+) -> None:
+    connection = ObservedConnection()
+    host_config = HostConfig(logging.getLogger("cmk.mkeventd.EventServer"), connection)
+
+    with connection.expect([status_query(1764329250), hosts_query()]):
+        designations = host_config.get_designations(host_name)
+
+    assert designations == result
+
+
+def test_an_unknown_host_has_no_designations() -> None:
+    connection = ObservedConnection()
+    host_config = HostConfig(logging.getLogger("cmk.mkeventd.EventServer"), connection)
+
+    with connection.expect([status_query(1764329250), hosts_query()]):
+        designations = host_config.get_designations("not-matching")
+
+    assert designations == frozenset()
+
+
+def test_a_designation_belongs_to_the_last_host_having_it() -> None:
+    connection = ObservedConnection()
+    host_config = HostConfig(logging.getLogger("cmk.mkeventd.EventServer"), connection)
+
+    with connection.expect([status_query(1764329250), hosts_query(heute_alias="example.com")]):
+        designations = host_config.get_designations("heute")
+
+    assert designations == frozenset({"heute", "127.0.0.1"})
+
+
+def test_the_designations_follow_a_core_restart() -> None:
+    connection = ObservedConnection()
+    host_config = HostConfig(logging.getLogger("cmk.mkeventd.EventServer"), connection)
+    now = 1764329250
+    with connection.expect([status_query(now), hosts_query()]):
+        host_config.get_designations("heute")
+
+    with connection.expect([status_query(now + 10), hosts_query("new alias")]):
+        designations = host_config.get_designations("heute")
+
+    assert designations == frozenset({"heute", "new alias", "127.0.0.1"})

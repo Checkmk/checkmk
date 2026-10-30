@@ -12,7 +12,7 @@ from typing import Literal, TypedDict
 
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.store import load_object_from_file
+from cmk.ccc.store import load_object_from_file_explicit
 from cmk.utils.servicename import ServiceName
 
 RRD_CONFIG_FOLDER = "rrd_config"
@@ -47,13 +47,15 @@ class _RRDHostConfig(TypedDict, total=False):
 
 class RRDConfig:
     def __init__(self, hostname: HostName, omd_root: Path) -> None:
-        self._loaded_config: _RRDHostConfig = load_object_from_file(
+        self._loaded_config: _RRDHostConfig = load_object_from_file_explicit(
             rrd_config_hosts_dir(VersionedConfigPath.make_latest_path(omd_root)) / hostname,
             default={},
+            debug=False,
         )
-        self._cmc_log_rrdcreation = load_object_from_file(
+        self._cmc_log_rrdcreation = load_object_from_file_explicit(
             rrd_config_dir(VersionedConfigPath.make_latest_path(omd_root)) / CMC_LOG_RRDCREATION,
             default=None,
+            debug=False,
         )
 
     def rrd_config(self) -> RRDObjectConfig | None:

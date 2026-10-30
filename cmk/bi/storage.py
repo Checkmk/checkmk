@@ -45,7 +45,7 @@ class AggregationStore:
         if not (path := self.fs_cache.compiled_aggregations / identifier).exists():
             raise AggregationNotFound(path)
 
-        schema = store.load_object_from_pickle_file(path, default={})
+        schema = store.load_object_from_pickle_file_explicit(path, default={}, debug=False)
         return BIAggregation.create_trees_from_schema(schema)
 
     def get(self, aggregation_id: str) -> BICompiledAggregation:
@@ -73,7 +73,7 @@ class FrozenAggregationStore:
         if not (path := self.get_branch_path(aggregation_id, branch_title)).exists():
             return None
 
-        schema = ast.literal_eval(store.load_text_from_file(path))
+        schema = ast.literal_eval(store.load_text_from_file_explicit(path, debug=False))
         return BIAggregation.create_trees_from_schema(schema)
 
     def delete_by_identifier(self, identifier: Identifier) -> None:

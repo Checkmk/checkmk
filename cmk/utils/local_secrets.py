@@ -129,7 +129,8 @@ class DistributedSetupSecret:
     def __init__(self) -> None:
         self.password = (
             Password(pw)
-            if (pw := store.load_object_from_file(self.path, default=None)) is not None
+            if (pw := store.load_object_from_file_explicit(self.path, default=None, debug=False))
+            is not None
             else None
         )
         self._secret = None if self.password is None else Secret(self.password.raw_bytes)

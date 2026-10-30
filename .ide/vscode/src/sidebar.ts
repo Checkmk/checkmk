@@ -21,6 +21,7 @@ import { type ExtensionSets, loadConfig } from './core/config'
 import { error, log, notifyInfo, notifyWarn, setActivityRefreshCallback } from './core/log'
 import { runCommand, waitForTask } from './core/tasks'
 import { getVersionMismatch, rebuildExtension } from './core/versionCheck'
+import { cmkUp } from './omd/cmkUp'
 import { getDevSiteToolsState, setDevSiteRefreshCallback } from './omd/devSiteTools'
 import {
   detectOmdSites,
@@ -45,10 +46,19 @@ import * as ideHealthSection from './sidebar/ideHealth'
 import { type IssueItem, IssuesProvider, updateIssues } from './sidebar/issues'
 import * as omdSection from './sidebar/omd'
 import * as overviewSection from './sidebar/overview'
+import * as playbooksSection from './sidebar/playbooks'
 import * as profilesSection from './sidebar/profiles'
 import type { SectionModule, StateCache, WebviewMessage } from './sidebar/types'
 
-const SECTIONS = ['overview', 'environment', 'omd', 'ideHealth', 'profiles', 'activity'] as const
+const SECTIONS = [
+  'overview',
+  'environment',
+  'omd',
+  'playbooks',
+  'ideHealth',
+  'profiles',
+  'activity'
+] as const
 
 const sectionModules: Record<string, SectionModule> = {
   overview: overviewSection,
@@ -56,6 +66,7 @@ const sectionModules: Record<string, SectionModule> = {
   profiles: profilesSection,
   ideHealth: ideHealthSection,
   omd: omdSection,
+  playbooks: playbooksSection,
   activity: activitySection
 }
 
@@ -103,6 +114,7 @@ function refreshStateCache(): StateCache {
     )
     const activeProxies = time('getActiveProxies', () => getActiveProxies())
     const devSiteTools = time('getDevSiteToolsState', () => getDevSiteToolsState())
+    const playbooks = time('cmkUp.snapshot', () => cmkUp.snapshot())
     const versionMismatch = time('getVersionMismatch', () =>
       _context ? getVersionMismatch(_context) : null
     )
@@ -122,6 +134,8 @@ function refreshStateCache(): StateCache {
       omdSites,
       activeProxies,
       devSiteTools,
+      playbooks,
+      playbooksScanned: cmkUp.scanned(),
       versionMismatch,
       onboarding,
       onboardingDismissed: _onboardingDismissed,
@@ -186,6 +200,8 @@ function refreshStateCache(): StateCache {
       omdSites: [],
       activeProxies: [],
       devSiteTools: { installed: false, installedVersion: '' },
+      playbooks: [],
+      playbooksScanned: false,
       versionMismatch: null,
       onboarding: {
         systemDone: false,
@@ -366,6 +382,16 @@ export function refreshOmd(): void {
   _providers['omd']?.refresh()
 }
 
+function refreshPlaybooks(): void {
+  if (!_stateCache) return
+  _stateCache = {
+    ..._stateCache,
+    playbooks: cmkUp.snapshot(),
+    playbooksScanned: cmkUp.scanned()
+  }
+  _providers['playbooks']?.refresh()
+}
+
 /**
  * Re-render after a profile toggle using the existing state cache. Cheaper
  * than `refreshAll()`: re-reads only the `profiles` slice (no bazel build
@@ -444,6 +470,7 @@ export function registerSidebar(
   environmentSection.setEnvironmentRefreshCallback(refreshAll)
   setDevSiteRefreshCallback(refreshAll)
   setOmdStatusRefreshCallback(refreshOmd)
+  cmkUp.setRefreshCallback(refreshPlaybooks)
   setAllocatorRefreshCallback(refreshAll)
   setActivityRefreshCallback(() => _providers['activity']?.refresh())
   setGitStateRefreshCallback(() => refreshOverview())
@@ -579,6 +606,12 @@ export function registerSidebar(
         }
         if (section === 'environment') {
           environmentSection.invalidateEnvironmentCache()
+        }
+        if (section === 'playbooks') {
+          p.showLoading()
+          await cmkUp.rescan()
+          refreshPlaybooks()
+          return
         }
         p.showLoadingThenRefresh()
       })

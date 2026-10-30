@@ -89,7 +89,7 @@ This means switching branches updates configs without rebuilding the VSIX.
 The sidebar has one activity bar container (`cmk-dashboard`) with multiple webview sections.
 Each section is a `SectionViewProvider` instance registered via `vscode.window.registerWebviewViewProvider()`.
 
-**Sections** (defined in `SECTIONS` array, in display order): `overview` (Cockpit), `environment`, `omd`, `ideHealth`, `profiles`, `activity`. The `cmk.dashboard.badge` Issues tree view sits between Profiles and Activity, registered separately because it's a `TreeDataProvider` rather than a webview.
+**Sections** (defined in `SECTIONS` array, in display order): `overview` (Cockpit), `environment`, `omd`, `playbooks` (CMK Playbooks), `ideHealth`, `profiles`, `activity`. The `cmk.dashboard.badge` Issues tree view sits between Profiles and Activity, registered separately because it's a `TreeDataProvider` rather than a webview.
 
 The **Cockpit** (`overview`) is the curated dashboard — three to four collapsible domain rows (Builds, Settings, Health, Git) derived from `getDomainSummary` in `src/sidebar/overview/domainSummary.ts`. Each row knows its severity, badge text, primary action, "open section" target, and a list of per-item drill-down rows. OMD is intentionally **not** in the cockpit — it owns its own dedicated section below. The Getting Started onboarding wizard also lives in the Cockpit (renders at the top when not all-done and not dismissed).
 
@@ -300,7 +300,7 @@ a cloud site while that port is free.
 
 `CmkUp` (singleton `cmkUp`, registered from `extension.ts`) finds playbooks — YAML files whose first line is a shebang naming `cmk-up` — in the workspace (`findFiles`), in `cmk.cmkUp.playbookDirectories`, and among the wheel's shipped examples (listed through `uvx … python`). The scan is stale-while-revalidate (`snapshot()` / `rescan()`); the found file paths go into the context key `cmk.cmkUp.playbookFiles`, which gates the editor-title and explorer menu entries via `resourcePath in …`.
 
-`PlaybookRunWizard` is the `cmk.cmkUp.run` QuickPick flow: playbook → phases (`--list-phases`, skipped for one phase) → options. The run goes through `runInteractiveInKeepaliveTerminal()` in `sudoBridge.ts`: the command is typed into the keepalive terminal **unwrapped** (as the user, in the foreground, inheriting the sudo ticket) and chained onto the bridge queue, so bridge commands wait instead of being typed into cmk-up's TUI. There is deliberately no `--rm` action: cmk-up's `--rm` wipes every site on the machine.
+`PlaybookRunWizard` is the `cmk.cmkUp.run` QuickPick flow: playbook → phases (`--list-phases`, skipped for one phase) → options. The run goes through `runInteractiveInKeepaliveTerminal()` in `sudoBridge.ts`: the command is typed into the keepalive terminal **unwrapped** (as the user, in the foreground, inheriting the sudo ticket) and chained onto the bridge queue, so bridge commands wait instead of being typed into cmk-up's TUI. The `playbooks` section renders `cmkUp.snapshot()` (state field `playbooks`, refreshed by `refreshPlaybooks()` in `sidebar.ts`); its buttons call `cmkUp.startRun(target, preset)`, and `cmk.cmkUp.init` writes `--init` into a save-dialog path. There is deliberately no `--rm` action: cmk-up's `--rm` wipes every site on the machine.
 
 ### cmk-dev-site Integration (`src/omd/devSiteTools.ts`)
 

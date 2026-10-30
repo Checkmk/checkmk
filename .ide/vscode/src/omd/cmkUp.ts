@@ -12,7 +12,7 @@ import { shellEscape } from '../core/config'
 import { log, notifyError } from '../core/log'
 import { safeExecAsync } from '../core/shell'
 import { getExtendedPath } from '../core/tasks'
-import { PlaybookRunWizard } from './cmkUpWizard'
+import { type PlaybookRunPreset, PlaybookRunWizard } from './cmkUpWizard'
 import { ensureKeepaliveAuth, runInteractiveInKeepaliveTerminal } from './sudoBridge'
 
 export type PlaybookSource = 'workspace' | 'directory' | 'shipped'
@@ -67,6 +67,7 @@ export class CmkUp {
   private _scanned = false
   private _onRefresh: (() => void) | null = null
   private _onSitesChanged: (() => Promise<void>) | null = null
+  private readonly _wizard = new PlaybookRunWizard(this)
 
   static isPlaybook(header: string): boolean {
     return CmkUp.SHEBANG.test(header.split('\n', 1)[0])
@@ -112,11 +113,11 @@ export class CmkUp {
 
   register(context: vscode.ExtensionContext, onSitesChanged: () => Promise<void>): void {
     this._onSitesChanged = onSitesChanged
-    const wizard = new PlaybookRunWizard(this)
     context.subscriptions.push(
       vscode.commands.registerCommand('cmk.cmkUp.run', (uri?: vscode.Uri) =>
-        wizard.start(uri instanceof vscode.Uri ? uri.fsPath : undefined)
+        this.startRun(uri instanceof vscode.Uri ? uri.fsPath : undefined)
       ),
+      vscode.commands.registerCommand('cmk.cmkUp.init', () => this.init()),
       vscode.window.onDidChangeActiveTextEditor((editor) => {
         if (editor) this.noteDocument(editor.document)
       }),
@@ -141,6 +142,10 @@ export class CmkUp {
     return this._playbooks
   }
 
+  scanned(): boolean {
+    return this._scanned
+  }
+
   async playbooks(): Promise<Playbook[]> {
     if (!this._scanned) await this.rescan()
     await this.loadShipped()
@@ -156,6 +161,40 @@ export class CmkUp {
 
   async listPhases(target: string): Promise<PlaybookPhase[]> {
     return CmkUp.parsePhases(await this.exec([target, '--list-phases']))
+  }
+
+  startRun(target?: string, preset?: PlaybookRunPreset): Promise<void> {
+    return this._wizard.start(target, preset)
+  }
+
+  async init(): Promise<void> {
+    const uri = await vscode.window.showSaveDialog({
+      title: 'New cmk-up playbook',
+      defaultUri: vscode.Uri.file(path.join(this.newPlaybookDirectory(), 'scenario.yaml')),
+      filters: { 'cmk-up playbook': ['yaml', 'yml'] }
+    })
+    if (!uri) return
+    fs.rmSync(uri.fsPath, { force: true })
+    log(`cmk-up: --init ${uri.fsPath}`)
+    await this.exec(['--init', uri.fsPath])
+    if (!fs.existsSync(uri.fsPath)) {
+      void notifyError(`cmk-up --init did not write ${uri.fsPath}`)
+      return
+    }
+    await this.openAndRescan(uri.fsPath)
+  }
+
+  async openAndRescan(file: string): Promise<void> {
+    await vscode.window.showTextDocument(vscode.Uri.file(file))
+    await this.rescan()
+  }
+
+  private newPlaybookDirectory(): string {
+    return (
+      this.configuredDirectories()[0] ??
+      vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ??
+      os.homedir()
+    )
   }
 
   async run(target: string, options: PlaybookRunOptions): Promise<number | null> {
@@ -220,22 +259,24 @@ export class CmkUp {
   }
 
   private scanDirectories(): Playbook[] {
-    const directories = vscode.workspace
+    const files = this.configuredDirectories().flatMap((dir) => {
+      try {
+        return fs
+          .readdirSync(dir)
+          .filter((name) => CmkUp.YAML.test(name))
+          .map((name) => path.join(dir, name))
+      } catch {
+        return []
+      }
+    })
+    return this.fromFiles(files, 'directory')
+  }
+
+  private configuredDirectories(): string[] {
+    return vscode.workspace
       .getConfiguration('cmk.cmkUp')
       .get<string[]>('playbookDirectories', [])
-    const files = directories
       .map((dir) => dir.replace(/^~(?=$|\/)/, os.homedir()))
-      .flatMap((dir) => {
-        try {
-          return fs
-            .readdirSync(dir)
-            .filter((name) => CmkUp.YAML.test(name))
-            .map((name) => path.join(dir, name))
-        } catch {
-          return []
-        }
-      })
-    return this.fromFiles(files, 'directory')
   }
 
   private async scanShipped(): Promise<Playbook[]> {

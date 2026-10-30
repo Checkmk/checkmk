@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.4.38",
+  "version": "0.4.39",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -68,6 +68,11 @@
           "id": "cmk.dashboard.omd",
           "name": "OMD Sites",
           "when": "cmk.omdAvailable || cmk.devSiteInstalled"
+        },
+        {
+          "type": "webview",
+          "id": "cmk.dashboard.playbooks",
+          "name": "CMK Playbooks"
         },
         {
           "type": "webview",
@@ -164,6 +169,16 @@
       {
         "command": "cmk.omdCreateSite",
         "title": "CMK ▸ OMD: Create Site",
+        "icon": "$(add)"
+      },
+      {
+        "command": "cmk.dashboard.refresh.playbooks",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "cmk.cmkUp.init",
+        "title": "CMK ▸ cmk-up: New Playbook…",
         "icon": "$(add)"
       },
       {
@@ -593,6 +608,21 @@
         {
           "command": "cmk.cmkUp.run",
           "when": "view == cmk.dashboard.omd",
+          "group": "navigation"
+        },
+        {
+          "command": "cmk.dashboard.refresh.playbooks",
+          "when": "view == cmk.dashboard.playbooks",
+          "group": "navigation"
+        },
+        {
+          "command": "cmk.cmkUp.init",
+          "when": "view == cmk.dashboard.playbooks",
+          "group": "navigation"
+        },
+        {
+          "command": "cmk.cmkUp.run",
+          "when": "view == cmk.dashboard.playbooks",
           "group": "navigation"
         }
       ],

@@ -1,0 +1,69 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+/* stylelint-disable custom-property-pattern */
+/* stylelint-disable selector-class-pattern */
+.playbook-empty {
+  padding: 6px 8px;
+  color: var(--vscode-descriptionForeground);
+  font-style: italic;
+}
+
+.playbook-new {
+  margin-top: 8px;
+}
+
+.playbook-group {
+  margin-bottom: 8px;
+}
+
+.playbook-group-title {
+  padding: 2px 8px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.playbook-row {
+  display: flex;
+  place-items: center;
+  gap: 8px;
+  padding: 3px 8px;
+  border-radius: var(--radius);
+  font-size: 0.9em;
+}
+
+.playbook-row:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.playbook-icon {
+  color: var(--vscode-descriptionForeground);
+}
+
+.playbook-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.playbook-name,
+.playbook-description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playbook-description {
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.9em;
+}
+
+.playbook-actions {
+  display: flex;
+  gap: 2px;
+}

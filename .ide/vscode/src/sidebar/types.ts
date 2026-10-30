@@ -7,6 +7,7 @@ import type * as vscode from 'vscode'
 
 import type { BuildStatus } from '../build/buildStatus'
 import type { VersionMismatch } from '../core/versionCheck'
+import type { Playbook } from '../omd/cmkUp'
 import type { DevSiteToolsState } from '../omd/devSiteTools'
 import type { OmdSiteWithStatus } from '../omd/omd'
 import type { ProxyInfo } from '../omd/proxy'
@@ -131,6 +132,8 @@ export interface StateCache {
   omdSites: OmdSiteWithStatus[]
   activeProxies: ProxyInfo[]
   devSiteTools: DevSiteToolsState
+  playbooks: Playbook[]
+  playbooksScanned: boolean
   versionMismatch: VersionMismatch | null
   onboarding: OnboardingState
   onboardingDismissed: boolean

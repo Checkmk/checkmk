@@ -9,6 +9,8 @@ import type { CmkUp, Playbook, PlaybookRunOptions, PlaybookSource } from './cmkU
 
 type RunFlag = Exclude<keyof PlaybookRunOptions, 'phases'>
 
+export type PlaybookRunPreset = Partial<Record<RunFlag, boolean>>
+
 interface PlaybookItem extends vscode.QuickPickItem {
   target?: string
   browse?: boolean
@@ -38,10 +40,10 @@ export class PlaybookRunWizard {
 
   constructor(private readonly cmkUp: CmkUp) {}
 
-  async start(file?: string, preset?: Partial<Record<RunFlag, boolean>>): Promise<void> {
-    const target = file ?? (await this.pickPlaybook())
+  async start(presetTarget?: string, preset?: PlaybookRunPreset): Promise<void> {
+    const target = presetTarget ?? (await this.pickPlaybook())
     if (!target) return
-    if (file) await this.saveIfDirty(file)
+    await this.saveIfDirty(target)
     const phases = await this.pickPhases(target)
     if (!phases) return
     const flags = await this.pickFlags(preset)
@@ -107,7 +109,7 @@ export class PlaybookRunWizard {
   }
 
   private async pickFlags(
-    preset?: Partial<Record<RunFlag, boolean>>
+    preset?: PlaybookRunPreset
   ): Promise<Record<RunFlag, boolean> | undefined> {
     const items = PlaybookRunWizard.FLAGS.map((item) => ({
       ...item,

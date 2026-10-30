@@ -43,6 +43,8 @@ function emptyState(overrides: Partial<StateCache> = {}): StateCache {
     omdSites: [],
     activeProxies: [],
     devSiteTools: { installed: true, installedVersion: '1.0.0' },
+    playbooks: [],
+    playbooksScanned: true,
     versionMismatch: null,
     onboarding: {
       systemDone: true,

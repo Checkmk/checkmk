@@ -96,7 +96,10 @@ export function wrap(
   .codicon-extensions::before { content: "\\eae6"; }
   .codicon-git-commit::before { content: "\\eafc"; }
   .codicon-source-control::before { content: "\\ea68"; }
-  .codicon-rocket::before { content: "\\eb44"; }`
+  .codicon-rocket::before { content: "\\eb44"; }
+  .codicon-book::before { content: "\\eaa4"; }
+  .codicon-beaker::before { content: "\\ea79"; }
+  .codicon-go-to-file::before { content: "\\ea94"; }`
     : ''
   return `<!DOCTYPE html>
 <html lang="en">
@@ -179,6 +182,10 @@ ${body}
       case 'omd-proxy-stop': vscode.postMessage({ type: 'omdProxyStop', site: el.dataset.site, service: el.dataset.service }); break;
       case 'omd-proxy-site': vscode.postMessage({ type: 'omdProxySite', site: el.dataset.site }); break;
       case 'omd-deploy': vscode.postMessage({ type: 'omdDeploy', site: el.dataset.site }); break;
+      case 'playbook-run': vscode.postMessage({ type: 'playbookRun', target: el.dataset.target }); break;
+      case 'playbook-dry-run': vscode.postMessage({ type: 'playbookDryRun', target: el.dataset.target }); break;
+      case 'playbook-open': vscode.postMessage({ type: 'playbookOpen', file: el.dataset.file }); break;
+      case 'playbook-new': vscode.postMessage({ type: 'playbookNew' }); break;
       case 'copy-setting': {
         const text = el.dataset.value;
         navigator.clipboard.writeText(text);

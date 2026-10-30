@@ -146,7 +146,7 @@ Available via the command palette (F1) or by clicking the status bar. Build comm
 
 ### 5. Dashboard
 
-The sidebar dashboard groups related information into collapsible webview sections. Default visibility on first install: **Cockpit** and **OMD Sites** expanded; **Environment**, **IDE Health**, **Issues**, **Activity** collapsed; **Profiles** hidden.
+The sidebar dashboard groups related information into collapsible webview sections. Default visibility on first install: **Cockpit**, **OMD Sites** and **CMK Playbooks** expanded; **Environment**, **IDE Health**, **Issues**, **Activity** collapsed; **Profiles** hidden.
 
 #### Cockpit
 
@@ -196,6 +196,10 @@ Expanding a site shows individual service status with per-service start/stop/res
 **Authentication:** OMD commands require sudo. Click "Authenticate (sudo)" to cache credentials. A background keepalive extends the sudo cache for up to 1 hour. Subsequent read-only OMD queries (status refresh, log discovery) are piped through the keepalive terminal's authenticated TTY so they reuse the same sudo ticket — no re-prompt per action.
 
 **cmk-up Playbooks:** F1 → `CMK ▸ cmk-up: Run Playbook…` (also the **▶** button in the OMD section title bar, the editor title of an open playbook, and the explorer context menu of a playbook file) runs a cmk-up playbook (cmk-werk-zeug, see its `doc/cmk-up.md`) through `uvx --from cmk-werk-zeug@latest cmk-up`. Pick the playbook (type to filter), the phases of a phased playbook, and the options `--keep`, `--purge`, `--dry-run` and `--verify`. Playbooks are YAML files whose first line is the cmk-up shebang, found in the workspace, in the folders listed in `cmk.cmkUp.playbookDirectories` (e.g. where ticket attachments are downloaded), and among the examples cmk-werk-zeug ships. The run happens in the authenticated sudo keepalive terminal, so cmk-up does not ask for the password; other OMD actions wait until it ends. The OMD section refreshes when the run is over.
+
+#### CMK Playbooks
+
+Lists the cmk-up playbooks found in the workspace, in `cmk.cmkUp.playbookDirectories` and among the shipped examples, grouped by where they come from, each with its description. Per playbook: **Open**, **Dry run** (the run wizard with `--dry-run` ticked) and **Run…**. The title bar has refresh, **New Playbook** (`cmk-up --init`: writes the reference playbook to a file you pick and opens it) and **Run…**.
 
 #### Issues (Activity Bar Badge)
 

@@ -1,0 +1,536 @@
+{
+  "data": [
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Host",
+      "extId": "247a477f-b32f-4fc1-83a6-c73172169e73",
+      "hostName": "host-3",
+      "hostType": "HYPER_CONVERGED",
+      "hypervisor": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.HypervisorReference",
+        "externalAddress": {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.config.IPAddress",
+          "ipv4": {
+            "$reserved": {
+              "$fv": "v1.r0"
+            },
+            "$objectType": "common.v1.config.IPv4Address",
+            "value": "192.0.2.27",
+            "prefixLength": 32
+          }
+        },
+        "userName": "root",
+        "fullName": "AHV 11.0.0.2",
+        "type": "AHV",
+        "numberOfVms": 54,
+        "state": "ACROPOLIS_NORMAL",
+        "acropolisConnectionState": "CONNECTED"
+      },
+      "cluster": {
+        "name": "cluster-a",
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.ClusterReference",
+        "uuid": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
+      },
+      "controllerVm": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.ControllerVmReference",
+        "externalAddress": {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.config.IPAddress",
+          "ipv4": {
+            "$reserved": {
+              "$fv": "v1.r0"
+            },
+            "$objectType": "common.v1.config.IPv4Address",
+            "value": "192.0.2.31",
+            "prefixLength": 32
+          }
+        },
+        "backplaneAddress": {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.config.IPAddress",
+          "ipv4": {
+            "$reserved": {
+              "$fv": "v1.r0"
+            },
+            "$objectType": "common.v1.config.IPv4Address",
+            "value": "192.0.2.31",
+            "prefixLength": 32
+          }
+        },
+        "isInMaintenanceMode": false
+      },
+      "disk": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "clustermgmt.v4.config.DiskReference",
+          "uuid": "98d5171a-e7f9-4c8d-9c69-50b8b1ebd5cb",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/SERIAL0000",
+          "sizeInBytes": 3659324221183,
+          "serialId": "SERIAL0000"
+        },
+        {
+          "uuid": "38335161-6996-4547-9db7-93b6184cd4f8",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/SERIAL0001",
+          "sizeInBytes": 3394549302994,
+          "serialId": "SERIAL0001"
+        },
+        {
+          "uuid": "5ca809ac-775e-4d59-891e-9218c17beeef",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/SERIAL0002",
+          "sizeInBytes": 3659324221183,
+          "serialId": "SERIAL0002"
+        },
+        {
+          "uuid": "411ca187-5e5f-493f-9b6e-f6b0fa6ed641",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/SERIAL0003",
+          "sizeInBytes": 3394549302994,
+          "serialId": "SERIAL0003"
+        },
+        {
+          "uuid": "acd38994-c278-4306-83d6-2148d3ea7483",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/SERIAL0004",
+          "sizeInBytes": 3659324221183,
+          "serialId": "SERIAL0004"
+        },
+        {
+          "uuid": "71fb8a95-e5f5-4e34-b570-b2b390d5c06b",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/SERIAL0005",
+          "sizeInBytes": 3659324221183,
+          "serialId": "SERIAL0005"
+        }
+      ],
+      "isSecureBooted": false,
+      "isHardwareVirtualized": false,
+      "hasCsr": true,
+      "numberOfCpuCores": 64,
+      "numberOfCpuThreads": 128,
+      "numberOfCpuSockets": 2,
+      "cpuCapacityHz": 246016000000,
+      "cpuFrequencyHz": 3844000000,
+      "cpuModel": "AMD EPYC 9374F 32-Core Processor",
+      "gpuList": [""],
+      "bootTimeUsecs": 1780720908550400,
+      "memorySizeBytes": 1622495199232,
+      "nodeSerial": "SERIAL0006",
+      "blockSerial": "SERIAL0007",
+      "blockModel": "NX-8155A-G9",
+      "maintenanceState": "normal",
+      "nodeStatus": "NORMAL",
+      "ipmi": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.IpmiReference",
+        "ip": {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.config.IPAddress",
+          "ipv4": {
+            "$reserved": {
+              "$fv": "v1.r0"
+            },
+            "$objectType": "common.v1.config.IPv4Address",
+            "value": "198.51.100.148",
+            "prefixLength": 32
+          }
+        },
+        "username": "ADMIN"
+      },
+      "rackableUnitUuid": "bd455ac3-24b5-4ad9-b7dd-d1d56f69fd20"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Host",
+      "extId": "24bce4ff-ea77-4f52-84b2-438552e227be",
+      "hostName": "host-1",
+      "hostType": "HYPER_CONVERGED",
+      "hypervisor": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.HypervisorReference",
+        "externalAddress": {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.config.IPAddress",
+          "ipv4": {
+            "$reserved": {
+              "$fv": "v1.r0"
+            },
+            "$objectType": "common.v1.config.IPv4Address",
+            "value": "192.0.2.25",
+            "prefixLength": 32
+          }
+        },
+        "userName": "root",
+        "fullName": "AHV 11.0.0.2",
+        "type": "AHV",
+        "numberOfVms": 30,
+        "state": "ACROPOLIS_NORMAL",
+        "acropolisConnectionState": "CONNECTED"
+      },
+      "cluster": {
+        "name": "cluster-a",
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.ClusterReference",
+        "uuid": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
+      },
+      "controllerVm": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.ControllerVmReference",
+        "externalAddress": {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.config.IPAddress",
+          "ipv4": {
+            "$reserved": {
+              "$fv": "v1.r0"
+            },
+            "$objectType": "common.v1.config.IPv4Address",
+            "value": "192.0.2.29",
+            "prefixLength": 32
+          }
+        },
+        "backplaneAddress": {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.config.IPAddress",
+          "ipv4": {
+            "$reserved": {
+              "$fv": "v1.r0"
+            },
+            "$objectType": "common.v1.config.IPv4Address",
+            "value": "192.0.2.29",
+            "prefixLength": 32
+          }
+        },
+        "isInMaintenanceMode": false
+      },
+      "disk": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "clustermgmt.v4.config.DiskReference",
+          "uuid": "9880b614-1cb6-4380-9466-24f4175f5708",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/55L0A1B9TM8J",
+          "sizeInBytes": 3394549302994,
+          "serialId": "55L0A1B9TM8J"
+        },
+        {
+          "uuid": "96379f77-6f08-4fea-978c-0b8e61e8188b",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/55L0A1BGTM8J",
+          "sizeInBytes": 3394549302994,
+          "serialId": "55L0A1BGTM8J"
+        },
+        {
+          "uuid": "9172a796-49eb-4181-a514-aca205a84ba1",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/55L0A1BHTM8J",
+          "sizeInBytes": 3659324221183,
+          "serialId": "55L0A1BHTM8J"
+        },
+        {
+          "uuid": "b6bc907e-68e2-43ca-8d4d-3d0e688c60fa",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/55L0A1AUTM8J",
+          "sizeInBytes": 3659324221183,
+          "serialId": "55L0A1AUTM8J"
+        },
+        {
+          "uuid": "70b82532-5a89-4e28-8c08-0623b77d65a6",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/55L0A1BFTM8J",
+          "sizeInBytes": 3659324221183,
+          "serialId": "55L0A1BFTM8J"
+        },
+        {
+          "uuid": "62fca765-9cd9-42d6-b79f-969b1f390006",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/55L0A1B3TM8J",
+          "sizeInBytes": 3659324221183,
+          "serialId": "55L0A1B3TM8J"
+        }
+      ],
+      "isSecureBooted": false,
+      "isHardwareVirtualized": false,
+      "hasCsr": true,
+      "numberOfCpuCores": 64,
+      "numberOfCpuThreads": 128,
+      "numberOfCpuSockets": 2,
+      "cpuCapacityHz": 246016000000,
+      "cpuFrequencyHz": 3844000000,
+      "cpuModel": "AMD EPYC 9374F 32-Core Processor",
+      "gpuList": [""],
+      "bootTimeUsecs": 1780730564446688,
+      "memorySizeBytes": 1622495199232,
+      "nodeSerial": "SERIAL0008",
+      "blockSerial": "SERIAL0009",
+      "blockModel": "NX-8155A-G9",
+      "maintenanceState": "normal",
+      "nodeStatus": "NORMAL",
+      "ipmi": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.IpmiReference",
+        "ip": {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.config.IPAddress",
+          "ipv4": {
+            "$reserved": {
+              "$fv": "v1.r0"
+            },
+            "$objectType": "common.v1.config.IPv4Address",
+            "value": "198.51.100.146",
+            "prefixLength": 32
+          }
+        },
+        "username": "ADMIN"
+      },
+      "rackableUnitUuid": "f1c3a59d-75a9-4580-b724-35c0dc167499"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Host",
+      "extId": "387a54c1-7286-49aa-9602-a7e8e889f63c",
+      "hostName": "host-2",
+      "hostType": "HYPER_CONVERGED",
+      "hypervisor": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.HypervisorReference",
+        "externalAddress": {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.config.IPAddress",
+          "ipv4": {
+            "$reserved": {
+              "$fv": "v1.r0"
+            },
+            "$objectType": "common.v1.config.IPv4Address",
+            "value": "192.0.2.26",
+            "prefixLength": 32
+          }
+        },
+        "userName": "root",
+        "fullName": "AHV 11.0.0.2",
+        "type": "AHV",
+        "numberOfVms": 42,
+        "state": "ACROPOLIS_NORMAL",
+        "acropolisConnectionState": "CONNECTED"
+      },
+      "cluster": {
+        "name": "cluster-a",
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.ClusterReference",
+        "uuid": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
+      },
+      "controllerVm": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.ControllerVmReference",
+        "externalAddress": {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.config.IPAddress",
+          "ipv4": {
+            "$reserved": {
+              "$fv": "v1.r0"
+            },
+            "$objectType": "common.v1.config.IPv4Address",
+            "value": "192.0.2.30",
+            "prefixLength": 32
+          }
+        },
+        "backplaneAddress": {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.config.IPAddress",
+          "ipv4": {
+            "$reserved": {
+              "$fv": "v1.r0"
+            },
+            "$objectType": "common.v1.config.IPv4Address",
+            "value": "192.0.2.30",
+            "prefixLength": 32
+          }
+        },
+        "isInMaintenanceMode": false
+      },
+      "disk": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "clustermgmt.v4.config.DiskReference",
+          "uuid": "b09f6ac3-6b9b-43ac-a9e7-7e22f58e47b0",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/SERIAL0010",
+          "sizeInBytes": 3659324221183,
+          "serialId": "SERIAL0010"
+        },
+        {
+          "uuid": "ed780c11-2c5b-4497-9613-5a942b132d9b",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/SERIAL0011",
+          "sizeInBytes": 3659324221183,
+          "serialId": "SERIAL0011"
+        },
+        {
+          "uuid": "1ff5a5d9-e42a-4413-9f4e-f70b38fe4c44",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/SERIAL0012",
+          "sizeInBytes": 3394549302994,
+          "serialId": "SERIAL0012"
+        },
+        {
+          "uuid": "cf021cfe-57e2-4214-9e43-321ee7a3dfb2",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/SERIAL0013",
+          "sizeInBytes": 3659324221183,
+          "serialId": "SERIAL0013"
+        },
+        {
+          "uuid": "c3a0f690-d077-419d-9773-07fa2b341156",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/SERIAL0014",
+          "sizeInBytes": 3394549302994,
+          "serialId": "SERIAL0014"
+        },
+        {
+          "uuid": "c3444d13-da6c-4543-824a-5e2bf98f82fe",
+          "mountPath": "/home/nutanix/data/stargate-storage/disks/SERIAL0015",
+          "sizeInBytes": 3659324221183,
+          "serialId": "SERIAL0015"
+        }
+      ],
+      "isSecureBooted": false,
+      "isHardwareVirtualized": false,
+      "hasCsr": true,
+      "numberOfCpuCores": 64,
+      "numberOfCpuThreads": 128,
+      "numberOfCpuSockets": 2,
+      "cpuCapacityHz": 246016000000,
+      "cpuFrequencyHz": 3844000000,
+      "cpuModel": "AMD EPYC 9374F 32-Core Processor",
+      "gpuList": [""],
+      "bootTimeUsecs": 1780725763871836,
+      "memorySizeBytes": 1622495199232,
+      "nodeSerial": "SERIAL0016",
+      "blockSerial": "SERIAL0017",
+      "blockModel": "NX-8155A-G9",
+      "maintenanceState": "normal",
+      "nodeStatus": "NORMAL",
+      "ipmi": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.IpmiReference",
+        "ip": {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.config.IPAddress",
+          "ipv4": {
+            "$reserved": {
+              "$fv": "v1.r0"
+            },
+            "$objectType": "common.v1.config.IPv4Address",
+            "value": "198.51.100.147",
+            "prefixLength": 32
+          }
+        },
+        "username": "ADMIN"
+      },
+      "rackableUnitUuid": "54cd1c42-108f-44f9-92b1-d425bd1e2975"
+    }
+  ],
+  "$reserved": {
+    "$fv": "v4.r2"
+  },
+  "$objectType": "clustermgmt.v4.config.ListHostsApiResponse",
+  "metadata": {
+    "flags": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "hasError",
+        "value": false
+      },
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "isPaginated",
+        "value": true
+      },
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "isTruncated",
+        "value": false
+      }
+    ],
+    "$reserved": {
+      "$fv": "v1.r0"
+    },
+    "$objectType": "common.v1.response.ApiResponseMetadata",
+    "links": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.response.ApiLink",
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/hosts?$limit=100&$page=0",
+        "rel": "first"
+      },
+      {
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/hosts?$limit=100&$page=0",
+        "rel": "self"
+      },
+      {
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/hosts?$limit=100&$page=0",
+        "rel": "last"
+      }
+    ],
+    "totalAvailableResults": 3
+  }
+}

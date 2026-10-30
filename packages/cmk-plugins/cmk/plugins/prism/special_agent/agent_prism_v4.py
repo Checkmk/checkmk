@@ -21,11 +21,13 @@ from cmk.plugins.prism.special_agent.v4_client import (
     PrismV4Client,
     PrismV4Error,
 )
+from cmk.plugins.prism.v4_models import Host
 from cmk.server_side_programs.v1 import AgentMessages, Storage
 
 LOGGER = logging.getLogger(__name__)
 
 CLUSTERS_PATH = "clustermgmt/v4.0/config/clusters"
+HOSTS_PATH = "clustermgmt/v4.0/config/hosts"
 
 # The Checkmk service timeout (60 s by default) is shared with the other data sources. A call
 # started just before the end of the budget can wait up to 15 s for Retry-After on top
@@ -114,7 +116,32 @@ class Fetcher:
     refresh: timedelta | None = None
 
 
-SECTION_FETCHERS: Sequence[Fetcher] = ()
+def _cluster_uuid(host: JsonObject) -> str | None:
+    cluster = host.get("cluster")
+    uuid = cluster.get("uuid") if isinstance(cluster, dict) else None
+    return uuid if isinstance(uuid, str) else None
+
+
+def fetch_hosts(context: FetchContext) -> Sequence[Section]:
+    # No $select: it drops hypervisor/acropolisConnectionState (Prism Central 7.5)
+    by_cluster: dict[str | None, list[dict[str, object]]] = {}
+    for host in context.client.list_all(HOSTS_PATH):
+        by_cluster.setdefault(_cluster_uuid(host), []).append(
+            Host.model_validate(host).to_section()
+        )
+    return [
+        Section(
+            "prism_hosts_v2",
+            hosts,
+            Unroutable("hosts without a cluster")
+            if cluster_id is None
+            else context.routing.host_for(cluster_id),
+        )
+        for cluster_id, hosts in by_cluster.items()
+    ]
+
+
+SECTION_FETCHERS: Sequence[Fetcher] = (Fetcher("hosts", fetch_hosts),)
 
 
 class TextStore(Protocol):
@@ -257,9 +284,6 @@ def agent_prism_v4_main(
         sys.stderr.write(f"Could not fetch the clusters from Prism Central: {e}\n")
         return 1
     LOGGER.info("got %(count)d clusters", {"count": len(clusters)})
-    if not SECTION_FETCHERS:
-        sys.stderr.write("Nutanix API v4 is not implemented yet\n")
-        return 1
 
     messages = AgentMessages()
     schedule = FetchSchedule(

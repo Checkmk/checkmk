@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="explicit-any"
 
+import json
 import time
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -16,7 +17,10 @@ from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.prism.agent_based.prism_hosts import (
     check_prism_hosts,
     CheckParamsPrimsHosts,
+    DEFAULT,
     discovery_prism_hosts,
+    parse_prism_hosts,
+    parse_prism_hosts_v2,
 )
 
 SECTION = {
@@ -208,4 +212,62 @@ def test_check_prism_hosts(  # type: ignore[misc]
             )
         )
         == expected_check_result
+    )
+
+
+# Written by the v4 agent for a Prism Central 7.5 lab (anonymised)
+V4_HOST = {
+    "hostName": "host-3",
+    "nodeStatus": "NORMAL",
+    "memorySizeBytes": 1622495199232,
+    "bootTimeUsecs": 1780720908550400,
+    "hypervisor": {"numberOfVms": 54, "acropolisConnectionState": "CONNECTED"},
+}
+
+
+def _check_v4(host: Mapping[str, object]) -> list[object]:
+    section = parse_prism_hosts_v2([[json.dumps([host])]])
+    return list(check_prism_hosts("host-3", DEFAULT, section))
+
+
+def test_v4_host_is_discovered_by_its_name() -> None:
+    assert list(discovery_prism_hosts(parse_prism_hosts_v2([[json.dumps([V4_HOST])]]))) == [
+        Service(item="host-3")
+    ]
+
+
+def test_v4_host_gives_the_same_result_as_legacy() -> None:
+    # The legacy v2 API's answer for the same host
+    legacy = parse_prism_hosts(
+        [
+            [
+                json.dumps(
+                    {
+                        "entities": [
+                            {
+                                "name": "host-3",
+                                "state": "NORMAL",
+                                "num_vms": 54,
+                                "memory_capacity_in_bytes": 1622495199232,
+                                "boot_time_in_usecs": 1780720908550400,
+                                "acropolis_connection_state": "kConnected",
+                            }
+                        ]
+                    }
+                )
+            ]
+        ]
+    )
+
+    assert _check_v4(V4_HOST) == list(check_prism_hosts("host-3", DEFAULT, legacy))
+
+
+def test_v4_host_disconnected_from_acropolis_is_crit() -> None:
+    host = {
+        **V4_HOST,
+        "hypervisor": {"numberOfVms": 54, "acropolisConnectionState": "DISCONNECTED"},
+    }
+
+    assert _check_v4(host)[-1] == Result(
+        state=State.CRIT, summary="Acropolis state is kDisconnected"
     )

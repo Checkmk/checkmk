@@ -17,9 +17,11 @@ from cmk.plugins.prism.special_agent.agent_prism import agent_prism_main, parse_
 from cmk.plugins.prism.special_agent.agent_prism_v4 import (
     ClusterRouting,
     CLUSTERS_PATH,
+    fetch_hosts,
     FetchContext,
     Fetcher,
     FetchSchedule,
+    HOSTS_PATH,
     run_fetchers,
     Section,
     Unroutable,
@@ -32,6 +34,7 @@ from .v4_testing import (
     BASE_URL,
     FakeStorage,
     LOGIN_REJECTED,
+    page,
     page_matcher,
     PASSWORD,
     SERVER,
@@ -40,12 +43,21 @@ from .v4_testing import (
 )
 
 
-def recorded_clusters() -> dict[str, object]:
-    """The cluster list of a Prism Central 7.5 lab (anonymised): one cluster and PC itself"""
+def _recorded(name: str) -> dict[str, object]:
     loaded: dict[str, object] = json.loads(
-        (Path(__file__).parent / "v4_fixtures" / "clustermgmt_config_clusters.json").read_text()
+        (Path(__file__).parent / "v4_fixtures" / name).read_text()
     )
     return loaded
+
+
+def recorded_clusters() -> dict[str, object]:
+    """The cluster list of a Prism Central 7.5 lab (anonymised): one cluster and PC itself"""
+    return _recorded("clustermgmt_config_clusters.json")
+
+
+def recorded_hosts() -> dict[str, object]:
+    """The host list of the same lab: the three hosts of cluster-a"""
+    return _recorded("clustermgmt_config_hosts.json")
 
 
 CLUSTER_ID = "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
@@ -288,24 +300,55 @@ def test_failed_slow_data_is_due_again_on_the_next_run() -> None:
     assert schedule.is_due(failing)
 
 
+def test_hosts_go_to_their_cluster_with_only_the_checked_fields(
+    api: responses.RequestsMock,
+) -> None:
+    api.get(v4_url(HOSTS_PATH), json=recorded_hosts(), match=[page_matcher(0)])
+
+    assert fetch_hosts(_context()) == [
+        Section(
+            "prism_hosts_v2",
+            [
+                {
+                    "hostName": f"host-{number}",
+                    "nodeStatus": "NORMAL",
+                    "memorySizeBytes": 1622495199232,
+                    "bootTimeUsecs": boot_time,
+                    "hypervisor": {"numberOfVms": vms, "acropolisConnectionState": "CONNECTED"},
+                }
+                for number, vms, boot_time in [
+                    (3, 54, 1780720908550400),
+                    (1, 30, 1780730564446688),
+                    (2, 42, 1780725763871836),
+                ]
+            ],
+            "cluster-a",
+        )
+    ]
+
+
+def test_hosts_without_a_cluster_are_not_routed(api: responses.RequestsMock) -> None:
+    api.get(
+        v4_url(HOSTS_PATH),
+        json=page([{"hostName": "host-1"}], has_next=False),
+        match=[page_matcher(0)],
+    )
+
+    assert [section.target for section in fetch_hosts(_context())] == [
+        Unroutable("hosts without a cluster")
+    ]
+
+
 def test_v4_agent_queries_only_the_v4_api(api: responses.RequestsMock) -> None:
     api.get(v4_url(CLUSTERS_PATH), json=recorded_clusters(), match=[page_matcher(0)])
+    api.get(v4_url(HOSTS_PATH), json=recorded_hosts(), match=[page_matcher(0)])
 
     agent_prism_main(parse_arguments(_v4_args()))
 
     assert [call.request.url for call in api.calls] == [
-        f"{BASE_URL}/api/{CLUSTERS_PATH}?%24page=0&%24limit=100"
+        f"{BASE_URL}/api/{CLUSTERS_PATH}?%24page=0&%24limit=100",
+        f"{BASE_URL}/api/{HOSTS_PATH}?%24page=0&%24limit=100",
     ]
-
-
-def test_v4_agent_without_sections_reports_it_is_not_implemented(
-    api: responses.RequestsMock, capsys: pytest.CaptureFixture[str]
-) -> None:
-    api.get(v4_url(CLUSTERS_PATH), json=recorded_clusters(), match=[page_matcher(0)])
-
-    exit_code = agent_prism_main(parse_arguments(_v4_args()))
-
-    assert (exit_code, capsys.readouterr().err) == (1, "Nutanix API v4 is not implemented yet\n")
 
 
 def test_v4_agent_reports_unreachable_cluster_list_in_one_line(

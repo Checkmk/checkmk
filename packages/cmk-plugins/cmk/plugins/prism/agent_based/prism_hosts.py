@@ -20,6 +20,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.prism.lib import load_json
+from cmk.plugins.prism.v4_models import Hosts
 
 Section = Mapping[str, Mapping[str, Any]]
 
@@ -35,6 +36,38 @@ def parse_prism_hosts(string_table: StringTable) -> Section:
 agent_section_prism_hosts = AgentSection(
     name="prism_hosts",
     parse_function=parse_prism_hosts,
+)
+
+_ACROPOLIS_CONNECTION_STATES = {
+    "CONNECTED": "kConnected",
+    "DISCONNECTED": "kDisconnected",
+}
+
+
+def parse_prism_hosts_v2(string_table: StringTable) -> Section:
+    parsed: dict[str, dict[str, Any]] = {}
+    for host in Hosts.model_validate_json(string_table[0][0]).root:
+        acropolis_state = host.hypervisor.acropolis_connection_state or ""
+        parsed.setdefault(
+            host.host_name,
+            {
+                "name": host.host_name,
+                "state": host.node_status,
+                "num_vms": host.hypervisor.number_of_vms,
+                "memory_capacity_in_bytes": host.memory_size_bytes,
+                "boot_time_in_usecs": host.boot_time_usecs,
+                "acropolis_connection_state": _ACROPOLIS_CONNECTION_STATES.get(
+                    acropolis_state, acropolis_state
+                ),
+            },
+        )
+    return parsed
+
+
+agent_section_prism_hosts_v2 = AgentSection(
+    name="prism_hosts_v2",
+    parsed_section_name="prism_hosts",
+    parse_function=parse_prism_hosts_v2,
 )
 
 

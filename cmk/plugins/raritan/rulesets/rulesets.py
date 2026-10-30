@@ -19,6 +19,7 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     Float,
+    InputHint,
     LevelDirection,
     SimpleLevels,
 )
@@ -49,6 +50,24 @@ def _parameters_residual_current() -> Dictionary:
                     form_spec_template=Float(),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0, 0.030)),
+                ),
+                required=False,
+            ),
+            "residual_ac_levels": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("AC residual current levels (A)"),
+                    form_spec_template=Float(),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0.0, 0.030)),
+                ),
+                required=False,
+            ),
+            "residual_dc_levels": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("DC residual current levels (A)"),
+                    form_spec_template=Float(),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0.0, 0.0)),
                 ),
                 required=False,
             ),

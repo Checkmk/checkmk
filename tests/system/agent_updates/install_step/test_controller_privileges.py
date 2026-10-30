@@ -5,6 +5,9 @@
 
 """The controller never holds root's privileges, not even while root installs for it."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
+
 import pytest
 
 from tests.system.agent_updates.install_step._agent import AGENT_USER, IntegratedUpdaterAgent
@@ -52,6 +55,20 @@ def _running_daemon_confinement(host: HostUnderTest) -> dict[str, str]:
     return found[0]
 
 
+@contextmanager
+def _update_start_delay_skipped(host: HostUnderTest) -> Iterator[None]:
+    """Let a daemon started from here run its first update cycle at once, not after up to a
+    minute. systemd passes its own environment on to every unit it starts.
+
+    A daemon started inside keeps the variable after the unset, until its next restart. That only
+    takes the start delay from its first cycle, which later cases do not wait for."""
+    host.run(["systemctl", "set-environment", "DEBUG_NO_UPDATE_START_DELAY=1"], sudo=True)
+    try:
+        yield
+    finally:
+        host.run(["systemctl", "unset-environment", "DEBUG_NO_UPDATE_START_DELAY"], sudo=True)
+
+
 @pytest.mark.usefixtures("update_offer")
 def test_the_controller_holds_no_privileges_while_root_installs(
     host: HostUnderTest, integrated_updater_agent: IntegratedUpdaterAgent
@@ -73,8 +90,10 @@ def test_the_controller_holds_no_privileges_while_root_installs(
     }
     hash_before = installed_hash(host, integrated_updater_agent)
 
-    # A started daemon runs its first update cycle within a minute, whatever the interval.
-    host.run(["systemctl", "restart", CONTROLLER_UNIT], sudo=True)
+    with _update_start_delay_skipped(host):
+        # A started daemon runs its first update cycle within a minute, whatever the interval. A
+        # controller that knows DEBUG_NO_UPDATE_START_DELAY runs it at once.
+        host.run(["systemctl", "restart", CONTROLLER_UNIT], sudo=True)
     asking = _running_daemon_confinement(host)
     try:
         wait_until(

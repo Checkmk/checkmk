@@ -5329,6 +5329,27 @@ class AlertClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def edit(
+        self,
+        configuration_name: str,
+        body: Mapping[str, Any],
+        etag: IF_MATCH_HEADER_OPTIONS | str = "star",
+        expect_ok: bool = True,
+    ) -> Response:
+        """Send the body as it is, so a test can send fields the endpoint does not take."""
+        headers: Mapping[str, str] | None
+        if etag == "valid_etag":
+            headers = {"If-Match": self.get(configuration_name).headers["ETag"]}
+        else:
+            headers = _if_match_header(etag)
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{configuration_name}",
+            body=dict(body),
+            headers=headers,
+            expect_ok=expect_ok,
+        )
+
 
 class PagetypeTopicClient(RestApiClient):
     domain: DomainType = "pagetype_topic"

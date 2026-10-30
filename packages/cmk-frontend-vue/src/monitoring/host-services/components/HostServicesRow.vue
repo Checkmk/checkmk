@@ -42,8 +42,9 @@ import type { DisplayOptions } from '@/monitoring/shared/types'
 const props = withDefaults(
   defineProps<{
     row: HostServiceEntry | ServiceEntry
-    /** The host the service runs on, to preview the graphs of. */
-    serviceHost: HostRef
+    /** The host the service runs on, to preview the graphs of. Defaults to the host the row
+     * names; a row naming no host shows no graphs link without it. */
+    serviceHost?: HostRef | undefined
     tableRow: Row<HostServiceEntry>
     // Always-visible inline buttons; their url may contain a {service} placeholder resolved per row.
     rowActions?: CellAction[]
@@ -58,6 +59,7 @@ const props = withDefaults(
   {
     rowActions: () => [],
     mayReschedule: false,
+    serviceHost: undefined,
     loadActionMenu: undefined,
     aiExplain: false,
     readOnly: false
@@ -81,6 +83,8 @@ const host = computed<(HostRef & { state: HostState }) | null>(() =>
     ? { name: props.row.host_name, site_id: props.row.site_id, state: props.row.host_state }
     : null
 )
+
+const graphsHost = computed<HostRef | null>(() => props.serviceHost ?? host.value)
 
 function hasColumn(columnId: string): boolean {
   return columns?.value.has(columnId) ?? true
@@ -187,8 +191,8 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     <!-- Every name keeps the slot, so the names line up whether their service has graphs or not. -->
     <template #aside>
       <GraphsLink
-        v-if="row.graphs_link !== undefined"
-        :host="serviceHost"
+        v-if="row.graphs_link !== undefined && graphsHost !== null"
+        :host="graphsHost"
         :service="row.name"
         :href="row.graphs_link"
       />

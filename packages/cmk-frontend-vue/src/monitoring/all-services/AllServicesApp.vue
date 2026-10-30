@@ -410,7 +410,6 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         <template #row="{ row, tableRow, onCommand }">
           <HostServicesRow
             :row="row"
-            :service-host="hostOf(row)"
             :table-row="tableRow"
             :may-reschedule="serviceListing.mayReschedule"
             :load-action-menu="(service: string) => loadActionMenu(hostOf(row), service)"

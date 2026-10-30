@@ -174,24 +174,12 @@ def _compute_host_with_graphs(
     live: MockLiveStatusConnection,
     body: dict[str, object],
     *,
-    last_columns: str,
     headers: dict[str, str] | None = None,
 ) -> Response:
-    """Compute the widget, and expect the query for its rows to end its columns with the given.
-
-    That is where an optional column the table reads for every row is put."""
     live.set_sites(["NO_SITE"])
     live.add_table("hosts", [_HOST_WITH_GRAPHS])
     live.expect_query("GET hosts\nStats: state >= 0")
-    live.expect_query(
-        [
-            "GET hosts",
-            f"Columns: ... {last_columns}",
-            "OrderBy: name asc natural",
-            "Limit: 100",
-        ],
-        match_type="ellipsis",
-    )
+    live.expect_query(["GET hosts", "OrderBy: name asc natural", "Limit: 100"], match_type="loose")
     with live:
         return clients.DashboardClient.compute_widget(
             "compute-monitoring-table", body, headers=headers
@@ -209,9 +197,7 @@ def fixture_saved_table_widget(
 def test_a_host_with_graphs_links_to_them_whichever_columns_are_shown(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    response = _compute_host_with_graphs(
-        clients, mock_livestatus, _body({}), last_columns="staleness pnpgraph_present"
-    )
+    response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
 
     assert [row.get("graphs_link") for row in response.json["value"]["rows"]] == [
         "view.py?view_name=host_graphs&site=NO_SITE&host=heute"
@@ -227,11 +213,120 @@ def test_a_shared_dashboard_links_no_host_to_its_graphs(
         clients,
         mock_livestatus,
         {"source": saved_table_widget.source},
-        last_columns="is_flapping staleness",
         headers=saved_table_widget.headers,
     )
 
     assert [row.get("graphs_link") for row in response.json["value"]["rows"]] == [None]
+
+
+_SERVICES_CONTENT: dict[str, object] = {
+    **_CONTENT,
+    "table": "services",
+    "columns": ["state", "name"],
+    "sort": ["name:asc"],
+}
+
+
+_SERVICE_WITH_GRAPHS: dict[str, object] = {
+    "description": "CPU",
+    "host_name": "heute",
+    "state": 0,
+    "has_been_checked": 1,
+    "plugin_output": "OK",
+    "acknowledged": 0,
+    "scheduled_downtime_depth": 0,
+    "notifications_enabled": 1,
+    "comments": [],
+    "modified_attributes_list": [],
+    "active_checks_enabled": 1,
+    "accept_passive_checks": 1,
+    "in_notification_period": 1,
+    "in_service_period": 1,
+    "in_check_period": 1,
+    "in_passive_check_period": 1,
+    "is_flapping": 0,
+    "staleness": 0.0,
+    "last_check": 0,
+    "last_state_change": 0,
+    "perf_data": "",
+    "check_command": "check_cpu",
+    "check_type": 0,
+    "cached_at": 0,
+    "cache_interval": 0,
+    "host_state": 0,
+    "host_has_been_checked": 1,
+    "pnpgraph_present": 1,
+}
+
+
+def _compute_service_with_graphs(
+    clients: ClientRegistry,
+    live: MockLiveStatusConnection,
+    body: dict[str, object],
+    *,
+    headers: dict[str, str] | None = None,
+) -> Response:
+    live.set_sites(["NO_SITE"])
+    live.add_table("services", [_SERVICE_WITH_GRAPHS])
+    live.expect_query("GET services\nStats: state >= 0")
+    live.expect_query(
+        ["GET services", "OrderBy: description asc natural", "Limit: 100"], match_type="loose"
+    )
+    with live:
+        return clients.DashboardClient.compute_widget(
+            "compute-monitoring-table", body, headers=headers
+        )
+
+
+@pytest.fixture(name="saved_services_widget")
+def fixture_saved_services_widget(
+    clients: ClientRegistry, with_automation_user: tuple[UserId, str]
+) -> Iterator[SavedWidget]:
+    with dashboard_widget_token(clients, with_automation_user[0], _SERVICES_CONTENT) as saved:
+        yield saved
+
+
+def test_a_service_with_graphs_links_to_them_whichever_columns_are_shown(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    response = _compute_service_with_graphs(
+        clients,
+        mock_livestatus,
+        {"source": {"type": "explicit", "content": _SERVICES_CONTENT, "context": {}}},
+    )
+
+    assert [row.get("graphs_link") for row in response.json["value"]["rows"]] == [
+        "view.py?view_name=service_graphs&site=NO_SITE&host=heute&service=CPU"
+    ]
+
+
+def test_a_shared_dashboard_links_no_service_to_its_graphs(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    saved_services_widget: SavedWidget,
+) -> None:
+    response = _compute_service_with_graphs(
+        clients,
+        mock_livestatus,
+        {"source": saved_services_widget.source},
+        headers=saved_services_widget.headers,
+    )
+
+    assert [row.get("graphs_link") for row in response.json["value"]["rows"]] == [None]
+
+
+def test_a_services_widget_lists_the_services_of_a_user_who_may_reschedule_them(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # A service row checks whether its viewer may reschedule it, for the offer it carries, which
+    # the endpoint has to declare.
+    response = _compute_service_with_graphs(
+        clients,
+        mock_livestatus,
+        {"source": {"type": "explicit", "content": _SERVICES_CONTENT, "context": {}}},
+    )
+
+    assert [row["name"] for row in response.json["value"]["rows"]] == ["CPU"]
 
 
 def test_a_dashboard_host_filter_narrows_the_services_query(

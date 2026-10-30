@@ -8,6 +8,8 @@ import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, within } from '@testing-library/vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
+import client from 'cmk-ui-library/lib/rest-api-client/client'
+import { afterEach } from 'vitest'
 import { computed, defineComponent, h, provide } from 'vue'
 
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
@@ -27,6 +29,10 @@ import { makeListingService } from '../../shared/services/testHelpers'
 const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
 const HOST: HostRef = { site_id: 'local', name: 'web-server-01' }
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 function reschedulesItself(name: string) {
   return {
@@ -401,6 +407,27 @@ test('offers no graphs link for a service without graphs', () => {
   expect(
     screen.queryByRole('link', { name: 'Show the graphs of service CPU load' })
   ).not.toBeInTheDocument()
+})
+
+test('previews the graphs of the service on the host the row names, as on a dashboard', async () => {
+  const post = vi.spyOn(client, 'POST').mockResolvedValue({
+    data: { graphs: [], no_data_message: null },
+    response: new Response(null, { status: 200 })
+  } as never)
+  mountRow({ ...makeServiceOfHost(), graphs_link: 'view.py' }, makeTableRow(), {
+    serviceHost: undefined,
+    readOnly: true
+  })
+
+  await userEvent.hover(screen.getByRole('link', { name: 'Show the graphs of service CPU load' }))
+
+  await vi.waitUntil(() => post.mock.calls.length > 0)
+  expect(post).toHaveBeenCalledWith(
+    '/domain-types/graph/actions/discover_template_graphs/invoke',
+    expect.objectContaining({
+      body: { hostname: 'web-2', service_description: 'CPU load', site: 'remote', graph_id: null }
+    })
+  )
 })
 
 test('a service without a perfometer leaves its cell unclickable', () => {

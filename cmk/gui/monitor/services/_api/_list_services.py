@@ -147,7 +147,15 @@ def list_all_services(
 class ServiceTable:
     """The services of every host, as All services and the monitoring table widget list them."""
 
-    def __init__(self, site_configs: SiteConfigurations) -> None:
+    def __init__(
+        self,
+        site_configs: SiteConfigurations,
+        *,
+        row_fields: Set[ServiceOptionalField] = frozenset(),
+    ) -> None:
+        """``row_fields`` are read by :meth:`rows` for every row, whichever columns are shown, for
+        what a row offers beside its columns."""
+        self._row_fields = frozenset(row_fields)
         self._site_ids = frozenset(site_configs)
         customer_of = customer_resolver(sites=site_configs)
         self._sites = MonitorSites(
@@ -211,7 +219,7 @@ class ServiceTable:
             query="",
             sorters=SERVICE_TABLE.sorters(columns, sort),
             scoped_filter=translation.filter,
-            fields=SERVICE_TABLE.fields(columns),
+            fields=SERVICE_TABLE.fields(columns) | self._row_fields,
         )
         return TableRows(
             rows=response.services,

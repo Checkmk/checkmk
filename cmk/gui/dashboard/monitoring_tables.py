@@ -15,7 +15,12 @@ from cmk.gui.monitor.hosts.table import (
     HostTable,
     MonitorFolders,
 )
-from cmk.gui.monitor.services.table import SERVICE_TABLE, ServiceEntry, ServiceTable
+from cmk.gui.monitor.services.table import (
+    SERVICE_TABLE,
+    ServiceEntry,
+    ServiceOptionalField,
+    ServiceTable,
+)
 from cmk.gui.monitor.table_widget import TableCatalog, TableRows
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.type_defs import SingleInfos, VisualContext
@@ -35,12 +40,12 @@ class MonitoringTableSpec[R]:
     source: Callable[[ApiContext], MonitoringTableSource[R]]
 
 
-def _host_row_fields(api_context: ApiContext) -> frozenset[HostOptionalField]:
+def _graphs_link_field[F](api_context: ApiContext, graphs_link: F) -> frozenset[F]:
     # The viewer of a shared dashboard has no session, to open the graphs page or load their
     # preview with, so a row only links to its graphs for a logged-in viewer.
     if api_context.token is not None:
         return frozenset()
-    return frozenset({HostOptionalField.GRAPHS_LINK})
+    return frozenset({graphs_link})
 
 
 MONITORING_TABLES: Final[
@@ -53,12 +58,15 @@ MONITORING_TABLES: Final[
             api_context.config.sites,
             MonitorFolders(FolderReader(api_context.config, api_context.user)),
             tag_groups=frozenset(group.id for group in api_context.config.tags.tag_groups),
-            row_fields=_host_row_fields(api_context),
+            row_fields=_graphs_link_field(api_context, HostOptionalField.GRAPHS_LINK),
         ),
     ),
     "services": MonitoringTableSpec(
         catalog=SERVICE_TABLE,
         infos=["host", "service"],
-        source=lambda api_context: ServiceTable(api_context.config.sites),
+        source=lambda api_context: ServiceTable(
+            api_context.config.sites,
+            row_fields=_graphs_link_field(api_context, ServiceOptionalField.GRAPHS_LINK),
+        ),
     ),
 }

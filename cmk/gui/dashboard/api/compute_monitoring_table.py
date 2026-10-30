@@ -167,6 +167,7 @@ ENDPOINT_COMPUTE_MONITORING_TABLE = VersionedEndpoint(
             [
                 PERMISSIONS_WIDGET_QUERY,
                 permissions.Optional(permissions.OkayToIgnorePerm("wato.see_all_folders")),
+                permissions.Optional(permissions.OkayToIgnorePerm("action.reschedule")),
             ]
         )
     ),

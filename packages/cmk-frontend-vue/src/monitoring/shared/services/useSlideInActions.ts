@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type Ref, ref, watch } from 'vue'
+import { type Ref, onScopeDispose, ref, watch } from 'vue'
 
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
@@ -46,7 +46,14 @@ export function useSlideInActions<Target>(
   const feedback = ref<ActionOutcome | null>(null)
   const feedbackOpen = ref(false)
 
+  // An action run for the object on show stops waiting once another is on show or the panel is
+  // gone - a reschedule waits for its check - and its outcome is no longer this panel's to tell.
+  let shown = new AbortController()
+  onScopeDispose(() => shown.abort())
+
   watch(subject, () => {
+    shown.abort()
+    shown = new AbortController()
     activeActionId.value = null
     runningActionId.value = null
     feedback.value = null
@@ -64,11 +71,17 @@ export function useSlideInActions<Target>(
     if (!action || on.length === 0) {
       return
     }
+    const { signal } = shown
     runningActionId.value = actionId
     try {
-      applyFeedback(await action.perform(on, action.defaultValues()))
+      const result = await action.perform(on, action.defaultValues(), signal)
+      if (!signal.aborted) {
+        applyFeedback(result)
+      }
     } finally {
-      runningActionId.value = null
+      if (!signal.aborted) {
+        runningActionId.value = null
+      }
     }
   }
 

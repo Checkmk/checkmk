@@ -385,8 +385,9 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :counts-label="serviceListing.countsLabel"
         @performed="onActionPerformed"
       >
-        <template #row="{ row, tableRow, onCommand }">
+        <template #row="{ row, tableRow, busy, onCommand }">
           <HostServicesRow
+            :busy="busy"
             :row="row"
             :table-row="tableRow"
             :may-reschedule="serviceListing.mayReschedule"

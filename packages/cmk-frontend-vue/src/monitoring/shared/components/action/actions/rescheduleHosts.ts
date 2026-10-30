@@ -5,6 +5,7 @@
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
 
+import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostRef } from '@/monitoring/shared/api/types'
 import { type RescheduleValues } from '@/monitoring/shared/components/action/actions/RescheduleForm.vue'
 import { createRescheduleAction } from '@/monitoring/shared/components/action/actions/reschedule'
@@ -13,8 +14,12 @@ import type { MonitoringAction } from '@/monitoring/shared/components/action/typ
 export function useRescheduleHostsAction(): MonitoringAction<RescheduleValues, HostRef> {
   const { _t } = usei18n()
 
+  const hostApi = new HostApi()
+
   return createRescheduleAction<HostRef>({
     reschedule: (api, targets, spreadMinutes) => api.rescheduleHosts(targets, spreadMinutes),
+    lastCheck: async (host) => (await hostApi.fetchHostOverview(host)).last_check ?? null,
+    checkRan: (host) => _t('The check of %{host} has run', { host: host.name }),
     errorHeading: _t('Could not reschedule the checks for the selected hosts')
   })
 }

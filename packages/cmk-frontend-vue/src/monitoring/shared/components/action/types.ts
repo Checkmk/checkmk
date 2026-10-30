@@ -9,7 +9,8 @@ import type { Component, ComputedRef, InjectionKey } from 'vue'
 import type { HostRef } from '@/monitoring/shared/api/types'
 
 export interface ActionOutcome {
-  variant: 'success' | 'error'
+  /** A warning tells of an action that did not fail, but whose outcome is not known yet. */
+  variant: 'success' | 'warning' | 'error'
   message: TranslatedString
   heading?: TranslatedString
 }
@@ -40,5 +41,6 @@ export interface MonitoringAction<Values = unknown, Target = HostRef> {
     submitLabel(count: number): TranslatedString
   }
   defaultValues(): Values
-  perform(targets: Target[], values: Values): Promise<ActionOutcome>
+  /** The signal aborts once no one waits for the outcome any more, e.g. its pane has closed. */
+  perform(targets: Target[], values: Values, signal?: AbortSignal): Promise<ActionOutcome>
 }

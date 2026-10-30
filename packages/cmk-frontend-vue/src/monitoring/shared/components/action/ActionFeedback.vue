@@ -16,17 +16,16 @@ const props = defineProps<{
 
 const open = defineModel<boolean>('open', { default: false })
 
-const alertProps = computed<CmkAlertProps>(() =>
-  props.feedback.variant === 'success'
-    ? {
-        variant: 'success',
-        dismissible: true,
-        autoDismiss: true,
-        heading: props.feedback.heading,
-        text: props.feedback.message
-      }
-    : { variant: 'error', heading: props.feedback.heading, text: props.feedback.message }
-)
+const alertProps = computed<CmkAlertProps>(() => {
+  const { variant, heading, message } = props.feedback
+  if (variant === 'success') {
+    return { variant, dismissible: true, autoDismiss: true, heading, text: message }
+  }
+  if (variant === 'warning') {
+    return { variant, dismissible: true, heading, text: message }
+  }
+  return { variant, heading, text: message }
+})
 </script>
 
 <template>

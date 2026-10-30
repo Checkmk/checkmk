@@ -25,18 +25,18 @@ describe('RescheduleApi.rescheduleHosts', () => {
 
   function mockRescheduled(rescheduled: number): void {
     postSpy.mockResolvedValueOnce({
-      data: { rescheduled },
+      data: { rescheduled, scheduled_at: 1_800_000_000, wait_timeout: 10 },
       error: undefined,
       response: new Response(null, { status: 200 })
     } as never)
   }
 
-  it('posts the hosts and spread minutes and returns the rescheduled count', async () => {
+  it('posts the hosts and spread minutes and says what was rescheduled when', async () => {
     mockRescheduled(2)
 
-    const count = await new RescheduleApi().rescheduleHosts(HOSTS, 5)
+    const result = await new RescheduleApi().rescheduleHosts(HOSTS, 5)
 
-    expect(count).toBe(2)
+    expect(result).toEqual({ rescheduled: 2, scheduledAt: 1_800_000_000, waitTimeoutSeconds: 10 })
     expect(postSpy).toHaveBeenCalledTimes(1)
     expect(postSpy).toHaveBeenCalledWith('/monitor/hosts/actions/reschedule', {
       ...CONTENT_TYPE,
@@ -65,7 +65,7 @@ describe('RescheduleApi.rescheduleServices', () => {
 
   function mockRescheduled(rescheduled: number): void {
     postSpy.mockResolvedValueOnce({
-      data: { rescheduled },
+      data: { rescheduled, scheduled_at: 1_800_000_000, wait_timeout: 10 },
       error: undefined,
       response: new Response(null, { status: 200 })
     } as never)
@@ -74,7 +74,7 @@ describe('RescheduleApi.rescheduleServices', () => {
   it('names each service by its site and host', async () => {
     mockRescheduled(2)
 
-    const count = await new RescheduleApi().rescheduleServices(
+    const result = await new RescheduleApi().rescheduleServices(
       [
         { host: { site_id: 'local', name: 'web-1' }, description: 'CPU load' },
         { host: { site_id: 'remote', name: 'web-2' }, description: 'Memory' }
@@ -82,7 +82,7 @@ describe('RescheduleApi.rescheduleServices', () => {
       5
     )
 
-    expect(count).toBe(2)
+    expect(result.rescheduled).toBe(2)
     expect(postSpy).toHaveBeenCalledTimes(1)
     expect(postSpy).toHaveBeenCalledWith('/monitor/services/actions/reschedule', {
       ...CONTENT_TYPE,

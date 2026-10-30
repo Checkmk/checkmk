@@ -127,3 +127,53 @@ test('renders nothing for an unknown action id', () => {
 
   expect(screen.queryByRole('button', { name: 'Acknowledge' })).not.toBeInTheDocument()
 })
+
+test('shows the submitted action runs until it settles', async () => {
+  let settle: (outcome: ActionOutcome) => void = () => {}
+  const slow: MonitoringAction = {
+    ...ackAction,
+    perform: () => new Promise<ActionOutcome>((resolve) => (settle = resolve))
+  }
+  const service = { total: ref(12) } as unknown as MonitoringService<unknown>
+  const { emitted } = render(MonitoringActionPane, {
+    props: { actionId: 'acknowledge', actions: { acknowledge: slow }, targets: TWO_HOSTS },
+    global: { provide: { [MONITORING_SERVICE as symbol]: service } }
+  })
+  await userEvent.type(screen.getByPlaceholderText('Enter a comment…'), 'disk full')
+  await userEvent.click(screen.getByRole('button', { name: 'Acknowledge' }))
+  await flush()
+  const whileRunning = {
+    status: screen.queryByRole('status')?.textContent?.trim(),
+    submitDisabled: screen.getByRole('button', { name: 'Acknowledge' }).hasAttribute('disabled')
+  }
+
+  settle({ variant: 'success', message: 'Acknowledged 2' as TranslatedString })
+  await flush()
+
+  expect(whileRunning).toEqual({ status: 'Running the command…', submitDisabled: true })
+  expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  expect(emitted('feedback')).toHaveLength(1)
+})
+
+test('stops waiting for the action once the pane closes', async () => {
+  let signal: AbortSignal | undefined
+  const waiting: MonitoringAction = {
+    ...ackAction,
+    perform: (_targets, _values, given) => {
+      signal = given
+      return new Promise<ActionOutcome>(() => {})
+    }
+  }
+  const service = { total: ref(12) } as unknown as MonitoringService<unknown>
+  const { unmount } = render(MonitoringActionPane, {
+    props: { actionId: 'acknowledge', actions: { acknowledge: waiting }, targets: TWO_HOSTS },
+    global: { provide: { [MONITORING_SERVICE as symbol]: service } }
+  })
+  await userEvent.type(screen.getByPlaceholderText('Enter a comment…'), 'disk full')
+  await userEvent.click(screen.getByRole('button', { name: 'Acknowledge' }))
+  await flush()
+
+  unmount()
+
+  expect(signal?.aborted).toBe(true)
+})

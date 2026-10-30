@@ -43,8 +43,10 @@ const props = withDefaults(
     maxVisible?: number
     // Optional lazy loader for additional overflow-menu entries, fetched when the menu is opened.
     load?: (() => Promise<CellAction[]>) | undefined
+    /** A command picked here still runs: the menu pulses and stays shut until it settles. */
+    busy?: boolean
   }>(),
-  { maxVisible: 2, load: undefined }
+  { maxVisible: 2, load: undefined, busy: false }
 )
 
 const emit = defineEmits<{
@@ -111,14 +113,16 @@ function select(action: CellAction): void {
     </CmkButton>
 
     <DropdownMenuRoot v-if="hasMenu" @update:open="onOpenChange">
-      <DropdownMenuTrigger as-child>
+      <DropdownMenuTrigger as-child :disabled="busy">
         <CmkIconButton
           class="monitoring-action-buttons__more"
+          :class="{ 'monitoring-action-buttons__more--busy': busy }"
           name="more-actions"
           primary-color="font"
           size="small"
-          :title="_t('More actions')"
+          :title="busy ? _t('Running the command…') : _t('More actions')"
           :aria-label="_t('More actions')"
+          :aria-busy="busy"
         />
       </DropdownMenuTrigger>
       <DropdownMenuPortal>
@@ -216,6 +220,22 @@ function select(action: CellAction): void {
 </template>
 
 <style scoped>
+.monitoring-action-buttons__more--busy {
+  cursor: progress;
+  animation: monitoring-action-buttons-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes monitoring-action-buttons-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
 .monitoring-action-buttons {
   display: flex;
   flex-direction: row;

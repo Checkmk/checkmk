@@ -23,6 +23,8 @@ const props = defineProps<{
   indent?: boolean | undefined
   /** An 'x' that closes the pane. Off where a host already offers one, as the slide-ins do. */
   showClose?: boolean | undefined
+  /** The submitted action still runs: it cannot be submitted again, and the pane says so. */
+  running?: boolean | undefined
 }>()
 
 const emit = defineEmits<{
@@ -74,12 +76,15 @@ function cancel(): void {
       </div>
 
       <div class="monitoring-action-form-pane__actions">
-        <CmkButton variant="primary" size="medium" @click="submit">
+        <CmkButton variant="primary" size="medium" :running="running" @click="submit">
           {{ submitLabel ?? _t('Apply') }}
         </CmkButton>
         <CmkButton size="medium" :icon="{ name: 'cancel' }" @click="cancel">
           {{ _t('Cancel') }}
         </CmkButton>
+        <span v-if="running" role="status" class="monitoring-action-form-pane__running">
+          {{ _t('Running the command…') }}
+        </span>
       </div>
 
       <div class="monitoring-action-form-pane__body">
@@ -157,6 +162,10 @@ function cancel(): void {
   /* Room for the focus outline of the fields, which overflow would clip otherwise. */
   margin: calc(-1 * var(--dimension-3));
   padding: var(--dimension-3);
+}
+
+.monitoring-action-form-pane__running {
+  color: var(--font-color-dimmed);
 }
 
 .monitoring-action-form-pane__confirm {

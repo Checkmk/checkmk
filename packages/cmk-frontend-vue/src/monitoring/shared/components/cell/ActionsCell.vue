@@ -17,8 +17,10 @@ withDefaults(
     load?: (() => Promise<CellAction[]>) | undefined
     columnId?: string | undefined
     verticalAlign?: CellVerticalAlign | undefined
+    /** A command picked here still runs. */
+    busy?: boolean
   }>(),
-  { maxVisible: 2, load: undefined, columnId: undefined, verticalAlign: undefined }
+  { maxVisible: 2, load: undefined, columnId: undefined, verticalAlign: undefined, busy: false }
 )
 
 const emit = defineEmits<{
@@ -34,6 +36,7 @@ const emit = defineEmits<{
         :actions="actions"
         :max-visible="maxVisible"
         :load="load"
+        :busy="busy"
         @select="emit('select', $event)"
       />
     </template>

@@ -14,6 +14,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 
 import AllHostsApp from '@/monitoring/all-hosts/AllHostsApp.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
+import { CHECK_POLL_INTERVAL_MS } from '@/monitoring/shared/components/action/actions/reschedule'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -252,8 +253,11 @@ const RESCHEDULE: MonitoringAction = {
 
 const LISTING = '/monitor/hosts'
 const RESCHEDULE_COMMAND = '/monitor/hosts/actions/reschedule'
+const HOST_OVERVIEW = '/monitor/hosts/{hostname}'
+const HOST_ACTION_MENU = '/monitor/hosts/{hostname}/action_menu'
+const SCHEDULED_AT = 1_800_000_000
 
-/** Answers the two endpoints this flow touches; any other is a wiring mistake, not a test case. */
+/** Answers the endpoints this flow touches; any other is a wiring mistake, not a test case. */
 function mockBackend(commandFails: boolean): void {
   postSpy.mockImplementation((path: string) => {
     if (path === LISTING) {
@@ -274,13 +278,27 @@ function mockBackend(commandFails: boolean): void {
             response: new Response('', { status: 403, statusText: 'Forbidden' })
           })
         : Promise.resolve({
-            data: { rescheduled: 1 },
+            data: { rescheduled: 1, scheduled_at: SCHEDULED_AT, wait_timeout: 10 },
             error: undefined,
             response: new Response()
           })
     }
     throw new Error(`unexpected POST to ${path}`)
   })
+  // Rescheduling the one host waits for its check, which the overview says has run since.
+  vi.spyOn(client, 'GET').mockImplementation(((path: string) => {
+    if (path === HOST_OVERVIEW) {
+      return Promise.resolve({
+        data: { last_check: SCHEDULED_AT },
+        error: undefined,
+        response: new Response()
+      })
+    }
+    if (path === HOST_ACTION_MENU) {
+      return Promise.resolve({ data: { items: [] }, error: undefined, response: new Response() })
+    }
+    throw new Error(`unexpected GET to ${path}`)
+  }) as never)
 }
 
 function listingReads(): number {
@@ -309,8 +327,9 @@ async function rescheduleTheOnlyHost(commandFails: boolean): Promise<void> {
 
 test('re-reads the listing a moment after a command the site accepted', async () => {
   await rescheduleTheOnlyHost(false)
+  await vi.advanceTimersByTimeAsync(CHECK_POLL_INTERVAL_MS)
 
-  expect(screen.getByText('Rescheduled 1 check')).toBeInTheDocument()
+  expect(screen.getByText('The check of web-1 has run')).toBeInTheDocument()
   expect(listingReads()).toBe(1)
 
   await vi.advanceTimersByTimeAsync(ACTION_REFRESH_DELAY_MS)
@@ -328,6 +347,40 @@ test('leaves the listing alone after a command the site refused', async () => {
   await vi.advanceTimersByTimeAsync(ACTION_REFRESH_DELAY_MS)
 
   expect(listingReads()).toBe(1)
+})
+
+test('re-reads the listing once the check a row rescheduled has run', async () => {
+  // The rows only render once the virtualiser sees a viewport.
+  const offsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
+  const offsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+  Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
+  Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
+  try {
+    mockBackend(false)
+    renderApp('community', { actions: [RESCHEDULE] })
+    const user = userEvent.setup({
+      advanceTimers: (ms: number) => {
+        if (vi.isFakeTimers()) {
+          vi.advanceTimersByTime(ms)
+        }
+      }
+    })
+    await user.click(await screen.findByRole('button', { name: 'More actions' }))
+    const reschedule = await screen.findByRole('menuitem', { name: RESCHEDULE.title })
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+
+    await user.click(reschedule)
+    await vi.advanceTimersByTimeAsync(CHECK_POLL_INTERVAL_MS + ACTION_REFRESH_DELAY_MS)
+
+    await waitFor(() => expect(listingReads()).toBe(2))
+  } finally {
+    if (offsetHeight) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', offsetHeight)
+    }
+    if (offsetWidth) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', offsetWidth)
+    }
+  }
 })
 
 test('typing letters focuses the first host name containing them', async () => {

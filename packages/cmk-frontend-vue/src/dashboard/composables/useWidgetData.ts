@@ -18,6 +18,11 @@ export type WidgetDataState<T> =
 export interface WidgetData<T> {
   state: Readonly<ShallowRef<WidgetDataState<T>>>
   retry: () => void
+  /**
+   * Fetch again in the background after `delayMs`, keeping what is shown until the new data is
+   * there.
+   */
+  refresh: (delayMs?: number) => void
 }
 
 /** The fetch lifecycle of a widget: refetch on input changes and refresh ticks. */
@@ -30,6 +35,8 @@ export function useWidgetData<T>(
   let generation = 0
   let inFlight = false
   let refreshPending = false
+  let disposed = false
+  let delayedRefresh: ReturnType<typeof setTimeout> | undefined
 
   function start(): void {
     const current = ++generation
@@ -63,7 +70,10 @@ export function useWidgetData<T>(
     generation += 1
   }
 
-  function refresh(): void {
+  function refreshNow(): void {
+    if (disposed) {
+      return
+    }
     if (inFlight) {
       refreshPending = true
       return
@@ -73,13 +83,22 @@ export function useWidgetData<T>(
 
   watch([() => JSON.stringify(input()), tick], ([newInput, newTick], [oldInput, oldTick]) => {
     if (newTick > oldTick) {
-      refresh()
+      refreshNow()
     } else if (newInput !== oldInput) {
       start()
     }
   })
 
-  onScopeDispose(discardInFlight)
+  function refreshAfter(delayMs = 0): void {
+    clearTimeout(delayedRefresh)
+    delayedRefresh = setTimeout(refreshNow, delayMs)
+  }
+
+  onScopeDispose(() => {
+    disposed = true
+    clearTimeout(delayedRefresh)
+    discardInFlight()
+  })
 
   start()
 
@@ -88,7 +107,8 @@ export function useWidgetData<T>(
     retry: () => {
       state.value = { kind: 'loading' }
       start()
-    }
+    },
+    refresh: refreshAfter
   }
 }
 

@@ -41,8 +41,11 @@ export type MonitoringTableActionOffer = Pick<
 export interface MonitoringTableRowActions<T, Target> {
   /** The props that hand a row its action buttons and its action menu. */
   rowProps(row: T): object
-  /** Run the command picked in a row, and tell how it went; null for a command not run. */
-  run(row: T, command: RowCommand<Target>): Promise<ActionOutcome | null>
+  /**
+   * Run the command picked in a row, and tell how it went; null for a command not run. The signal
+   * aborts once no one waits for the outcome any more.
+   */
+  run(row: T, command: RowCommand<Target>, signal?: AbortSignal): Promise<ActionOutcome | null>
 }
 
 /**
@@ -162,7 +165,7 @@ export class HostsTableDescriptor extends MonitoringTableDescriptor<
     return {
       rowProps: () =>
         ({ rowActions, loadActionMenu }) satisfies Partial<ComponentProps<typeof HostRow>>,
-      run: (_row, command) => performRowCommand(registry, command)
+      run: (_row, command, signal) => performRowCommand(registry, command, signal)
     }
   }
 
@@ -217,8 +220,8 @@ export class ServicesTableDescriptor extends MonitoringTableDescriptor<
           mayReschedule,
           loadActionMenu: (service: string) => loadActionMenu(hostRefOfService(row), service)
         }) satisfies Partial<ComponentProps<typeof HostServicesRow>>,
-      run: (row, command) =>
-        performRowCommand(registry, serviceCommand(hostRefOfService(row), command))
+      run: (row, command, signal) =>
+        performRowCommand(registry, serviceCommand(hostRefOfService(row), command), signal)
     }
   }
 

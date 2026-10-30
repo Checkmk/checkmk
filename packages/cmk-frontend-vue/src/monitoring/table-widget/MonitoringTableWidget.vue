@@ -10,7 +10,10 @@ import { computed, provide } from 'vue'
 import MonitoringEmptyState from '@/monitoring/shared/components/MonitoringEmptyState.vue'
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import { MONITORING_TABLE_STATE } from '@/monitoring/shared/components/MonitoringTableContext'
-import type { RowCommand } from '@/monitoring/shared/components/action/rowCommand'
+import {
+  type RowCommand,
+  useRowCommandRunner
+} from '@/monitoring/shared/components/action/rowCommand'
 import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
 import type { DisplayOptions } from '@/monitoring/shared/types'
@@ -49,10 +52,18 @@ const columnPinning = computed<ColumnPinningState>(() => ({
   right: rowActions.value === null ? [] : [ACTIONS_COLUMN_ID]
 }))
 
+const rowCommands = useRowCommandRunner()
+
 async function onCommand(row: T, command: RowCommand<Target>): Promise<void> {
-  const feedback = (await rowActions.value?.run(row, command)) ?? null
-  if (feedback) {
-    emit('performed', feedback)
+  const actions = rowActions.value
+  if (actions === null) {
+    return
+  }
+  const outcome = await rowCommands.run(props.descriptor.rowKey(row), (signal) =>
+    actions.run(row, command, signal)
+  )
+  if (outcome) {
+    emit('performed', outcome)
   }
 }
 </script>
@@ -76,6 +87,7 @@ async function onCommand(row: T, command: RowCommand<Target>): Promise<void> {
           :table-row="tableRow"
           :display-options="displayOptions"
           :read-only="true"
+          :busy="rowCommands.isBusy(descriptor.rowKey(row))"
           @command="(command: RowCommand<Target>) => onCommand(row, command)"
         />
       </template>

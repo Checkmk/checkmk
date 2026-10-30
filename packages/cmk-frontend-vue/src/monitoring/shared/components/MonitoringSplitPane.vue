@@ -25,7 +25,8 @@ import MonitoringActionPane from '@/monitoring/shared/components/action/Monitori
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import {
   type RowCommand,
-  performRowCommand
+  performRowCommand,
+  useRowCommandRunner
 } from '@/monitoring/shared/components/action/rowCommand'
 import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
@@ -90,6 +91,7 @@ const {
   feedbackOpen,
   openAction,
   closeAction,
+  showFeedback,
   applyFeedback
 } = useMonitoringActions(rowSelection, selectableKeys)
 
@@ -141,7 +143,7 @@ async function onConfirm(): Promise<void> {
   }
   runningActionId.value = id
   try {
-    onFeedback(await action.perform(targets, action.defaultValues()))
+    onFeedbackOutsidePane(await action.perform(targets, action.defaultValues()))
   } finally {
     runningActionId.value = null
   }
@@ -165,6 +167,13 @@ function onFeedback(result: ActionOutcome): void {
   emit('performed', result)
 }
 
+// A command run outside the pane - from a row, at once or once confirmed - may take a while, as a
+// reschedule waits for its check: its outcome leaves alone a pane the user has opened meanwhile.
+function onFeedbackOutsidePane(result: ActionOutcome): void {
+  showFeedback(result)
+  emit('performed', result)
+}
+
 async function onBulkAction(action: CellAction): Promise<void> {
   const registered = props.actions[action.id]
   if (!registered || selectedCount.value === 0) {
@@ -176,9 +185,10 @@ async function onBulkAction(action: CellAction): Promise<void> {
     return
   }
   if (props.immediateActionIds.includes(action.id) && selectedCount.value === 1) {
+    closeAction()
     runningActionId.value = action.id
     try {
-      onFeedback(await registered.perform(targets, registered.defaultValues()))
+      onFeedbackOutsidePane(await registered.perform(targets, registered.defaultValues()))
     } finally {
       runningActionId.value = null
     }
@@ -203,10 +213,14 @@ function toggleDisplayOptions(): void {
   displayOptionsOpen.value = true
 }
 
-async function onRowCommand(command: RowCommand<Target>): Promise<void> {
-  const feedback = await performRowCommand(props.actions, command)
-  if (feedback) {
-    applyFeedback(feedback, { clearSelection: false })
+const rowCommands = useRowCommandRunner()
+
+async function onRowCommand(row: T, command: RowCommand<Target>): Promise<void> {
+  const outcome = await rowCommands.run(props.getRowKey(row), (signal) =>
+    performRowCommand(props.actions, command, signal)
+  )
+  if (outcome) {
+    onFeedbackOutsidePane(outcome)
   }
 }
 
@@ -311,7 +325,13 @@ function onRightPaneCollapse(collapsed: boolean): void {
           @retry="service.retry()"
         >
           <template #row="{ row, tableRow }">
-            <slot name="row" :row="row" :table-row="tableRow" :on-command="onRowCommand" />
+            <slot
+              name="row"
+              :row="row"
+              :table-row="tableRow"
+              :busy="rowCommands.isBusy(getRowKey(row))"
+              :on-command="(command: RowCommand<Target>) => onRowCommand(row, command)"
+            />
           </template>
           <template #empty-state>
             <slot name="empty-state">
@@ -325,8 +345,10 @@ function onRightPaneCollapse(collapsed: boolean): void {
       </div>
     </template>
     <template #right>
+      <!-- Another action is a new pane: the one before stops waiting for what it ran. -->
       <MonitoringActionPane
         v-if="activeAction"
+        :key="activeAction"
         :action-id="activeAction"
         :actions="actions"
         :targets="targetsFor(activeAction)"

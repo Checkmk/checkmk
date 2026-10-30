@@ -17,6 +17,8 @@ import type {
   WidgetEmitActionOutcome
 } from '@/dashboard/types/widget'
 import { dashboardAPI } from '@/dashboard/utils'
+import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
+import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import { unreachableSitesHint } from '@/monitoring/shared/unreachableSites'
 import MonitoringTableWidget from '@/monitoring/table-widget/MonitoringTableWidget.vue'
 import { WidgetTableState } from '@/monitoring/table-widget/WidgetTableState'
@@ -30,7 +32,7 @@ import WidgetFigureFrame from './figures/WidgetFigureFrame.vue'
 import type { ContentProps } from './types'
 
 const props = defineProps<ContentProps<MonitoringTableContent>>()
-defineEmits<WidgetEmitActionOutcome>()
+const emit = defineEmits<WidgetEmitActionOutcome>()
 const { _t } = usei18n()
 
 const { source, headers } = useWidgetSource(props)
@@ -46,7 +48,7 @@ const descriptor = computed(
     >
 )
 
-const { state, retry } = useWidgetData<ComputedMonitoringTable>(
+const { state, retry, refresh } = useWidgetData<ComputedMonitoringTable>(
   () =>
     dashboardAPI.computeMonitoringTable(
       { source: source.value, sort: tableState.encodedSort() },
@@ -55,6 +57,16 @@ const { state, retry } = useWidgetData<ComputedMonitoringTable>(
   () => [props.content, props.effective_filter_context, tableState.sortState.value],
   () => props.tick
 )
+
+// A successful action has taken effect - a rescheduled check has run - so the rows show it. They
+// are read a moment later, as the pages read theirs: a service whose check is a byproduct of the
+// host's "Check_MK" service gets its result only after that service has run.
+function onPerformed(outcome: ActionOutcome): void {
+  if (outcome.variant === 'success') {
+    refresh(ACTION_REFRESH_DELAY_MS)
+  }
+  emit('actionOutcome', outcome)
+}
 
 // The wizard preview shows what the table will be, and a shared dashboard reaches no endpoint
 // that runs an action: neither offers the rows' actions.
@@ -124,7 +136,7 @@ function truncatedHint(value: ComputedMonitoringTable): string {
             timestampFormat: content.timestamp_format
           }"
           :action-offer="actionOffer"
-          @performed="$emit('actionOutcome', $event)"
+          @performed="onPerformed"
         />
         <p v-if="value.matched > value.rows.length" class="db-content-monitoring-table__truncated">
           {{ truncatedHint(value) }}

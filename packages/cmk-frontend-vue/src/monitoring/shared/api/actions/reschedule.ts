@@ -7,18 +7,45 @@ import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
 import type { HostRef, ServiceRef } from '@/monitoring/shared/api/types'
 
+export interface RescheduleResult {
+  /** How many checks were rescheduled. */
+  rescheduled: number
+  /**
+   * The time at which the checks were rescheduled. A check has run again once it last ran at or
+   * after this time.
+   */
+  scheduledAt: number
+  /** How long to wait for a rescheduled check to run, in seconds. */
+  waitTimeoutSeconds: number
+}
+
+function rescheduleResult(response: {
+  rescheduled: number
+  scheduled_at: number
+  wait_timeout: number
+}): RescheduleResult {
+  return {
+    rescheduled: response.rescheduled,
+    scheduledAt: response.scheduled_at,
+    waitTimeoutSeconds: response.wait_timeout
+  }
+}
+
 export class RescheduleApi {
-  public async rescheduleHosts(hosts: HostRef[], spreadMinutes: number): Promise<number> {
+  public async rescheduleHosts(hosts: HostRef[], spreadMinutes: number): Promise<RescheduleResult> {
     const response = unwrap(
       await client.POST('/monitor/hosts/actions/reschedule', {
         params: { header: { 'Content-Type': 'application/json' } },
         body: { hosts, spread_minutes: spreadMinutes }
       })
     )
-    return response.rescheduled
+    return rescheduleResult(response)
   }
 
-  public async rescheduleServices(services: ServiceRef[], spreadMinutes: number): Promise<number> {
+  public async rescheduleServices(
+    services: ServiceRef[],
+    spreadMinutes: number
+  ): Promise<RescheduleResult> {
     const response = unwrap(
       await client.POST('/monitor/services/actions/reschedule', {
         params: { header: { 'Content-Type': 'application/json' } },
@@ -32,6 +59,6 @@ export class RescheduleApi {
         }
       })
     )
-    return response.rescheduled
+    return rescheduleResult(response)
   }
 }

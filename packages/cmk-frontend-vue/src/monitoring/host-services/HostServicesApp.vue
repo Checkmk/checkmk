@@ -437,9 +437,10 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :counts-label="serviceListing.countsLabel"
         @performed="onActionPerformed"
       >
-        <template #row="{ row, tableRow, onCommand }">
+        <template #row="{ row, tableRow, busy, onCommand }">
           <HostServicesRow
             :service-host="host"
+            :busy="busy"
             :row="row"
             :table-row="tableRow"
             :row-actions="rowActionButtons"

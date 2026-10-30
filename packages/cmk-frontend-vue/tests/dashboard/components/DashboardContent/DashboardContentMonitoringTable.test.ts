@@ -14,6 +14,9 @@ import { defineComponent, h, nextTick } from 'vue'
 import DashboardContentMonitoringTable from '@/dashboard/components/DashboardContent/DashboardContentMonitoringTable.vue'
 import { useProvideCmkToken } from '@/dashboard/composables/useCmkToken'
 import type { ComputedMonitoringTable, MonitoringTableContent } from '@/dashboard/types/widget'
+import type { HostOverview } from '@/monitoring/shared/api/types'
+import { CHECK_POLL_INTERVAL_MS } from '@/monitoring/shared/components/action/actions/reschedule'
+import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 
 import { makeContentProps } from '@tests/dashboard/contentProps'
 import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
@@ -88,6 +91,32 @@ const SERVICES_VALUE: ComputedMonitoringTable = {
   links: []
 }
 
+const SCHEDULED_AT = 1_800_000_000
+
+const HEUTE_OVERVIEW: HostOverview = {
+  name: 'heute',
+  alias: 'heute',
+  address: '127.0.0.1',
+  state: 'UP',
+  is_flapping: false,
+  stale: false,
+  site_id: 'heute',
+  site_alias: 'heute',
+  folder: '',
+  customer: null,
+  contact_groups: [],
+  tags: {},
+  labels: {},
+  modes: [],
+  service_counts: { ok: 0, warn: 0, crit: 0, unknown: 0, pending: 0, total: 0 },
+  last_check: SCHEDULED_AT,
+  last_state_change: 0,
+  legacy_host_status_link: 'view.py?view_name=hoststatus&host=heute&site=heute',
+  setup_access: true,
+  relations: [],
+  more_relations: false
+}
+
 const CMK_TOKEN = '0:the-token'
 
 let value: ComputedMonitoringTable = VALUE
@@ -95,6 +124,8 @@ let failWith: number | null = null
 let requests: unknown[] = []
 let authorizations: (string | null)[] = []
 let reschedules: unknown[] = []
+// When the host's check last ran: by default, since it was rescheduled.
+let hostLastCheck = SCHEDULED_AT
 
 const server = useMswServer(
   http.post(ENDPOINT, async ({ request }) => {
@@ -113,11 +144,15 @@ const server = useMswServer(
   ),
   restApiHttp.post('/monitor/hosts/actions/reschedule', async ({ request, response }) => {
     reschedules.push(await request.json())
-    return response(200).json({ rescheduled: 1, scheduled_at: 1_800_000_000, wait_timeout: 10 })
+    return response(200).json({ rescheduled: 1, scheduled_at: SCHEDULED_AT, wait_timeout: 10 })
   }),
+  restApiHttp.get('/monitor/hosts/{hostname}', ({ response }) =>
+    response(200).json({ ...HEUTE_OVERVIEW, last_check: hostLastCheck })
+  ),
+  // A timeout of 0 skips waiting for the service's check, which the hosts' tests cover.
   restApiHttp.post('/monitor/services/actions/reschedule', async ({ request, response }) => {
     reschedules.push(await request.json())
-    return response(200).json({ rescheduled: 1, scheduled_at: 1_800_000_000, wait_timeout: 10 })
+    return response(200).json({ rescheduled: 1, scheduled_at: SCHEDULED_AT, wait_timeout: 0 })
   })
 )
 
@@ -143,6 +178,8 @@ afterEach(() => {
   requests = []
   authorizations = []
   reschedules = []
+  hostLastCheck = SCHEDULED_AT
+  vi.useRealTimers()
   FakeResizeObserver.instances = []
   vi.unstubAllGlobals()
 })
@@ -167,6 +204,28 @@ async function renderInSharedDashboard() {
   await nextTick()
   deliverSize(800, 400)
   return rendered
+}
+
+/**
+ * Reschedules the host of the hosts table from its row. The clock is faked from the pick on, so
+ * that the test advances the wait for the check.
+ */
+async function rescheduleHeute() {
+  const user = userEvent.setup({
+    advanceTimers: (ms: number) => {
+      if (vi.isFakeTimers()) {
+        vi.advanceTimersByTime(ms)
+      }
+    }
+  })
+  const rendered = await renderWidget()
+  await screen.findByText('heute')
+  await user.click(screen.getByRole('button', { name: 'More actions' }))
+  const reschedule = await screen.findByRole('menuitem', { name: 'Reschedule' })
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  await user.click(reschedule)
+  await waitFor(() => expect(reschedules).toHaveLength(1))
+  return { ...rendered, user }
 }
 
 async function clickHeader(name: string, expectedRequests: number) {
@@ -385,18 +444,44 @@ describe('DashboardContentMonitoringTable', () => {
     )
   })
 
-  it('tells that the host picked in its row menu was rescheduled', async () => {
-    const { emitted } = await renderWidget()
-    await screen.findByText('heute')
+  it('keeps the menu of a row shut while the check it rescheduled has not run', async () => {
+    const { user } = await rescheduleHeute()
 
-    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
-    await userEvent.click(await screen.findByRole('menuitem', { name: 'Reschedule' }))
+    expect(screen.getByRole('button', { name: 'More actions' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'More actions' }))
+    expect(screen.queryByRole('menuitem')).not.toBeInTheDocument()
+  })
+
+  it('shows the rows anew once the check a row rescheduled has run', async () => {
+    await rescheduleHeute()
+
+    await vi.advanceTimersByTimeAsync(CHECK_POLL_INTERVAL_MS + ACTION_REFRESH_DELAY_MS)
+
+    await waitFor(() => expect(requests).toHaveLength(2))
+  })
+
+  it('tells that the check a row rescheduled has run', async () => {
+    const { emitted } = await rescheduleHeute()
+
+    await vi.advanceTimersByTimeAsync(CHECK_POLL_INTERVAL_MS)
 
     await waitFor(() =>
       expect(emitted()['actionOutcome']).toEqual([
-        [{ variant: 'success', message: 'Rescheduled 1 check' }]
+        [{ variant: 'success', message: 'The check of heute has run' }]
       ])
     )
+  })
+
+  it('leaves the rows as they are when the rescheduled check does not run in time', async () => {
+    hostLastCheck = SCHEDULED_AT - 60
+    await rescheduleHeute()
+
+    await vi.advanceTimersByTimeAsync(11 * CHECK_POLL_INTERVAL_MS + ACTION_REFRESH_DELAY_MS)
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'More actions' })).not.toBeDisabled()
+    )
+    expect(requests).toHaveLength(1)
   })
 
   it('tells that the host picked in its row menu could not be rescheduled', async () => {

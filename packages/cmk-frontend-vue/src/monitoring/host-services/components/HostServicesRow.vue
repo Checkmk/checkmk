@@ -56,6 +56,8 @@ const props = withDefaults(
     displayOptions: DisplayOptions
     aiExplain?: boolean
     readOnly?: boolean
+    /** A command picked in the row still runs. */
+    busy?: boolean
   }>(),
   {
     rowActions: () => [],
@@ -63,7 +65,8 @@ const props = withDefaults(
     serviceHost: undefined,
     loadActionMenu: undefined,
     aiExplain: false,
-    readOnly: false
+    readOnly: false,
+    busy: false
   }
 )
 
@@ -258,6 +261,7 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     :actions="actionButtons"
     :max-visible="actionButtons.length"
     :load="actionMenuLoader"
+    :busy="busy"
     @select="onActionSelect"
   />
 </template>

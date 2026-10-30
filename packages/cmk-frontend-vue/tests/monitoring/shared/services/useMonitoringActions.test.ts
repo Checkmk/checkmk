@@ -21,24 +21,35 @@ test('opens and closes an action', () => {
   expect(actions.activeAction.value).toBeNull()
 })
 
-test('successful feedback clears the selection, stores the message and closes the pane', () => {
-  const rowSelection = ref<RowSelectionState>({ 'heute/web-01': true })
-  const actions = useMonitoringActions<'acknowledge'>(rowSelection, onOffer('heute/web-01'))
+test('feedback stores the message and closes the pane', () => {
+  const actions = useMonitoringActions<'acknowledge'>(
+    ref<RowSelectionState>({ 'heute/web-01': true }),
+    onOffer('heute/web-01')
+  )
   actions.openAction('acknowledge')
 
   actions.applyFeedback({ variant: 'success', message: 'done' as TranslatedString })
 
-  expect(rowSelection.value).toEqual({})
   expect(actions.feedback.value).toEqual({ variant: 'success', message: 'done' })
   expect(actions.feedbackOpen.value).toBe(true)
   expect(actions.activeAction.value).toBeNull()
 })
 
-test('error feedback keeps the selection', () => {
+test('feedback of a command run outside the pane leaves the pane open', () => {
+  const actions = useMonitoringActions<'acknowledge'>(ref<RowSelectionState>({}), onOffer())
+  actions.openAction('acknowledge')
+
+  actions.showFeedback({ variant: 'success', message: 'done' as TranslatedString })
+
+  expect(actions.feedbackOpen.value).toBe(true)
+  expect(actions.activeAction.value).toBe('acknowledge')
+})
+
+test('feedback keeps the selection, as the legacy views do', () => {
   const rowSelection = ref<RowSelectionState>({ 'heute/web-01': true })
   const actions = useMonitoringActions<'acknowledge'>(rowSelection, onOffer('heute/web-01'))
 
-  actions.applyFeedback({ variant: 'error', message: 'nope' as TranslatedString })
+  actions.applyFeedback({ variant: 'success', message: 'done' as TranslatedString })
 
   expect(rowSelection.value).toEqual({ 'heute/web-01': true })
 })

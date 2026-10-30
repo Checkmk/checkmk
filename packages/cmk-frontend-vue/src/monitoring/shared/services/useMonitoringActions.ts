@@ -15,7 +15,14 @@ export interface MonitoringActions<Id extends string = string> {
   feedbackOpen: Ref<boolean>
   openAction: (id: Id) => void
   closeAction: () => void
-  applyFeedback: (result: ActionOutcome, options?: { clearSelection?: boolean }) => void
+  /**
+   * Show how a command went. The selection stays: a row-level command acts on a single row and must
+   * not touch the (independent) bulk selection, and a bulk command keeps its rows selected, as in
+   * the legacy views.
+   */
+  showFeedback: (result: ActionOutcome) => void
+  /** Show how the command of the open pane went, and close the pane. */
+  applyFeedback: (result: ActionOutcome) => void
 }
 
 export function useMonitoringActions<Id extends string = string>(
@@ -36,13 +43,13 @@ export function useMonitoringActions<Id extends string = string>(
     activeAction.value = null
   }
 
-  function applyFeedback(result: ActionOutcome, options: { clearSelection?: boolean } = {}): void {
-    // Row-level actions act on a single host and must not touch the (independent) bulk selection.
-    if (result.variant === 'success' && (options.clearSelection ?? true)) {
-      rowSelection.value = {}
-    }
+  function showFeedback(result: ActionOutcome): void {
     feedback.value = result
     feedbackOpen.value = true
+  }
+
+  function applyFeedback(result: ActionOutcome): void {
+    showFeedback(result)
     closeAction()
   }
 
@@ -69,6 +76,7 @@ export function useMonitoringActions<Id extends string = string>(
     feedbackOpen,
     openAction,
     closeAction,
+    showFeedback,
     applyFeedback
   }
 }

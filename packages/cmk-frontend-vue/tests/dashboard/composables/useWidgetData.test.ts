@@ -5,7 +5,7 @@
  */
 import { render } from '@testing-library/vue'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
 import { type WidgetData, useWidgetData } from '@/dashboard/composables/useWidgetData'
@@ -24,6 +24,7 @@ function harness() {
   const tick = ref(0)
   let state: WidgetData<string>['state'] | undefined
   let retry: (() => void) | undefined
+  let refresh: ((delayMs?: number) => void) | undefined
 
   const { unmount } = render(
     defineComponent({
@@ -41,6 +42,7 @@ function harness() {
         )
         state = data.state
         retry = data.retry
+        refresh = data.refresh
         return () => null
       }
     })
@@ -52,6 +54,7 @@ function harness() {
     tick,
     state: () => state!.value,
     retry: () => retry!(),
+    refresh: (delayMs?: number) => refresh!(delayMs),
     unmount,
     answer: async (index: number, value: string) => {
       calls[index]!.resolve(value)
@@ -69,6 +72,10 @@ function apiError(status: number, body: Record<string, string>): CmkApiError {
 }
 
 describe('useWidgetData', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('fetches once on mount', () => {
     const { calls } = harness()
 
@@ -252,6 +259,31 @@ describe('useWidgetData', () => {
 
     h.unmount()
     await h.answer(0, 'late')
+
+    expect(h.calls).toHaveLength(1)
+  })
+
+  it('fetches once more after the delay a refresh asks for', async () => {
+    vi.useFakeTimers()
+    const h = harness()
+    await h.answer(0, 'first')
+
+    h.refresh(1000)
+    await vi.advanceTimersByTimeAsync(999)
+    const beforeTheDelay = h.calls.length
+    await vi.advanceTimersByTimeAsync(1)
+
+    expect([beforeTheDelay, h.calls.length]).toEqual([1, 2])
+  })
+
+  it('does not fetch a delayed refresh after unmount', async () => {
+    vi.useFakeTimers()
+    const h = harness()
+    await h.answer(0, 'first')
+    h.refresh(1000)
+
+    h.unmount()
+    await vi.advanceTimersByTimeAsync(1000)
 
     expect(h.calls).toHaveLength(1)
   })

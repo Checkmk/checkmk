@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts" generic="Target">
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, inject, provide } from 'vue'
+import { computed, inject, onBeforeUnmount, provide, ref } from 'vue'
 
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 
@@ -49,12 +49,25 @@ const subtitle = computed(() =>
   props.countsLabel?.(props.targets.length, monitoringService?.total.value ?? 0)
 )
 
+// A pane that closes - the user closed the slide-in it sits in, or picked another action - no
+// longer waits for what it ran.
+const closed = new AbortController()
+onBeforeUnmount(() => closed.abort())
+
+// A command may take a while - a reschedule waits for its check - and the pane shows it runs.
+const running = ref(false)
+
 async function onSubmit(values: unknown): Promise<void> {
   const current = action.value
-  if (!current) {
+  if (!current || running.value) {
     return
   }
-  emit('feedback', await current.perform(props.targets, values))
+  running.value = true
+  try {
+    emit('feedback', await current.perform(props.targets, values, closed.signal))
+  } finally {
+    running.value = false
+  }
 }
 </script>
 
@@ -71,6 +84,7 @@ async function onSubmit(values: unknown): Promise<void> {
     :initial-values="initialValues"
     :indent="indent"
     :show-close="showClose"
+    :running="running"
     @submit="onSubmit"
     @cancel="emit('cancel')"
   />

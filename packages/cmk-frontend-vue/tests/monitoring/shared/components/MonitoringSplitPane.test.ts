@@ -8,13 +8,14 @@ import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, markRaw, provide } from 'vue'
 
 import type { HostRef } from '@/monitoring/shared/api/types'
 import MonitoringSplitPane from '@/monitoring/shared/components/MonitoringSplitPane.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
+import type { RowCommand } from '@/monitoring/shared/components/action/rowCommand'
 import type { ActionOutcome, MonitoringAction } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import {
@@ -24,11 +25,32 @@ import {
 
 import { makeKeyShortcutService } from '../services/testHelpers'
 
+// The table renders the rows the virtualizer finds room for, and jsdom lays nothing out.
+const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
+const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+
+beforeAll(() => {
+  Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
+  Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
+})
+
+afterAll(() => {
+  if (originalOffsetHeight) {
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', originalOffsetHeight)
+  }
+  if (originalOffsetWidth) {
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', originalOffsetWidth)
+  }
+})
+
 const RUNNING_CLASS = 'cmk-button--running'
 const RESCHEDULE_ID = 'reschedule'
 const ACK_ID = 'acknowledge'
+const COMMENT_ID = 'comment'
 const RESCHEDULE_LABEL = 'Reschedule check'
 const ACK_LABEL = 'Acknowledge'
+const COMMENT_LABEL = 'Add comment'
+const ROW_RESCHEDULE_LABEL = 'Reschedule this row'
 
 interface Row {
   site_id: string
@@ -44,14 +66,18 @@ const COLUMNS: ColumnDef<Row>[] = [
 
 const BULK_ACTIONS: CellAction[] = [
   { id: RESCHEDULE_ID, label: untranslated(RESCHEDULE_LABEL), icon: 'reload' },
-  { id: ACK_ID, label: untranslated(ACK_LABEL), icon: 'ack' }
+  { id: ACK_ID, label: untranslated(ACK_LABEL), icon: 'ack' },
+  { id: COMMENT_ID, label: untranslated(COMMENT_LABEL), icon: 'comment' }
 ]
 
 const STUB_FORM = markRaw(
   defineComponent({
     props: { modelValue: { type: Object, default: () => ({}) } },
     emits: ['update:modelValue', 'update:valid'],
-    setup: () => () => h('div')
+    setup: (_props, { emit }) => {
+      emit('update:valid', true)
+      return () => h('div')
+    }
   })
 )
 
@@ -87,7 +113,8 @@ async function mountPaneWithLoadedRows(
   service = new RowService('row-service', makeKeyShortcutService(), { columns: COLUMNS })
   const actions: MonitoringActionRegistry = {
     [RESCHEDULE_ID]: makeAction(RESCHEDULE_ID, perform),
-    [ACK_ID]: { ...makeAction(ACK_ID, perform), ...(ackConfirm && { confirm: ackConfirm }) }
+    [ACK_ID]: { ...makeAction(ACK_ID, perform), ...(ackConfirm && { confirm: ackConfirm }) },
+    [COMMENT_ID]: makeAction(COMMENT_ID, perform)
   }
   const activeService = service
   await vi.waitUntil(() => activeService.hasLoaded.value)
@@ -116,7 +143,13 @@ async function mountPaneWithLoadedRows(
                 `Selected hosts: ${selected} | Total hosts: ${total}` as unknown as TranslatedString
             },
             {
-              row: ({ tableRow }: { tableRow: TableRow<Row> }) => [
+              row: ({
+                tableRow,
+                onCommand
+              }: {
+                tableRow: TableRow<Row>
+                onCommand: (command: RowCommand<HostRef>) => void
+              }) => [
                 h('td', [
                   h('input', {
                     type: 'checkbox',
@@ -124,7 +157,14 @@ async function mountPaneWithLoadedRows(
                     onChange: () => tableRow.toggleSelected()
                   })
                 ]),
-                h('td', ROW.name)
+                h('td', ROW.name),
+                h('td', [
+                  h(
+                    'button',
+                    { onClick: () => onCommand({ id: RESCHEDULE_ID, target: ROW }) },
+                    ROW_RESCHEDULE_LABEL
+                  )
+                ])
               ],
               'display-options': () => h('div', 'Display options marker')
             }
@@ -136,6 +176,15 @@ async function mountPaneWithLoadedRows(
 
 async function selectTheOnlyRow(): Promise<void> {
   await userEvent.click(await screen.findByRole('checkbox', { name: 'Select all rows' }))
+}
+
+/** An outcome that comes only once settled, as a reschedule that waits for its check. */
+function pendingOutcome(message: string): { outcome: Promise<ActionOutcome>; settle: () => void } {
+  let settle: () => void = () => {}
+  const outcome = new Promise<ActionOutcome>((resolve) => {
+    settle = () => resolve({ variant: 'success', message: untranslated(message) })
+  })
+  return { outcome, settle }
 }
 
 describe('MonitoringSplitPane', () => {
@@ -260,6 +309,48 @@ describe('MonitoringSplitPane', () => {
 
     expect(await screen.findByText('Could not reschedule')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: RESCHEDULE_LABEL })).not.toHaveClass(RUNNING_CLASS)
+  })
+
+  it('leaves a form opened while an immediate action runs open once it settles', async () => {
+    const { outcome, settle } = pendingOutcome('Rescheduled')
+    await mountPaneWithLoadedRows(vi.fn().mockReturnValue(outcome))
+    await selectTheOnlyRow()
+    await userEvent.click(screen.getByRole('button', { name: RESCHEDULE_LABEL }))
+    await userEvent.click(screen.getByRole('button', { name: ACK_LABEL }))
+
+    settle()
+
+    expect(await screen.findByText('Rescheduled')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument()
+  })
+
+  it('leaves a form opened while a row command runs open once it settles', async () => {
+    const { outcome, settle } = pendingOutcome('Rescheduled')
+    await mountPaneWithLoadedRows(vi.fn().mockReturnValue(outcome))
+    await selectTheOnlyRow()
+    await userEvent.click(screen.getByRole('button', { name: ROW_RESCHEDULE_LABEL }))
+    await userEvent.click(screen.getByRole('button', { name: ACK_LABEL }))
+
+    settle()
+
+    expect(await screen.findByText('Rescheduled')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument()
+  })
+
+  it('stops waiting for a submitted action once another action is picked', async () => {
+    const { outcome, settle } = pendingOutcome('Acknowledged')
+    const perform = vi.fn().mockReturnValue(outcome)
+    await mountPaneWithLoadedRows(perform)
+    await selectTheOnlyRow()
+    await userEvent.click(screen.getByRole('button', { name: ACK_LABEL }))
+    await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
+
+    await userEvent.click(screen.getByRole('button', { name: COMMENT_LABEL }))
+
+    expect(perform.mock.calls[0]![2]).toHaveProperty('aborted', true)
+    expect(screen.getByRole('button', { name: 'Submit' })).not.toHaveClass(RUNNING_CLASS)
+    settle()
+    await outcome
   })
 
   it('selects every row when the select-all cell is clicked next to its checkbox', async () => {

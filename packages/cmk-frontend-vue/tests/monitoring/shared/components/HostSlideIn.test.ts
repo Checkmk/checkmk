@@ -169,7 +169,11 @@ describe('HostSlideIn', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: RESCHEDULE_LABEL }))
 
-    expect(perform).toHaveBeenCalledWith([{ site_id: 'local', name: 'host-1' }], {})
+    expect(perform).toHaveBeenCalledWith(
+      [{ site_id: 'local', name: 'host-1' }],
+      {},
+      expect.any(AbortSignal)
+    )
   })
 
   it('emits performed with the feedback the action returned', async () => {

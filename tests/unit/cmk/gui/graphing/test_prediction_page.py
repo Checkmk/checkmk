@@ -11,10 +11,20 @@ import pytest
 
 from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.graphing_engine import Direction
-from cmk.gui.graphing._prediction_page import _predictions_of, _selected_title
+from cmk.gui.graphing import EngineDisplayOptions
+from cmk.gui.graphing._prediction_page import (
+    _graph_group_data,
+    _Prediction,
+    _predictions_of,
+    _selected_title,
+)
 from cmk.gui.http import request as request_
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.utils.prediction import PredictionData
+from cmk.utils.servicename import ServiceName
 
 _VALID_FROM = 1700000000
 _VALID_UNTIL = _VALID_FROM + 86400
@@ -140,3 +150,25 @@ def test_the_oldest_stored_day_is_shown_by_default(
     request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> None:
     assert _selected_title(titles) == titles[0]
+
+
+def test_the_graphs_of_a_prediction_offer_no_consolidation_choice(
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+) -> None:
+    data = _graph_group_data(
+        SiteId("site"),
+        HostName("h"),
+        ServiceName("svc"),
+        [
+            _Prediction(
+                title="util",
+                metric_name="util",
+                period="wday",
+                valid_from=0,
+                valid_until=86400,
+                directions=["upper"],
+            )
+        ],
+        TemperatureUnit.CELSIUS,
+    )
+    assert data["display"] == EngineDisplayOptions(show_consolidation=False).as_props()

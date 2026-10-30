@@ -31,7 +31,7 @@ from cmk.shared_typing.cmk_time_series_graph import Size
 from cmk.utils.servicename import ServiceName
 
 from ._built_graphs import BuiltGraph
-from ._frontend import STATIC_INTERACTION, to_cmk_time_series_graph
+from ._frontend import EngineDisplayOptions, STATIC_INTERACTION, to_cmk_time_series_graph
 from ._graph_display_config import (
     GraphRenderOptions,
     HTML_SIZE_PER_EX,
@@ -191,7 +191,7 @@ def _graph_group_data(
         "time_range_scope": "local",
         "figure_height": int(size.height * HTML_SIZE_PER_EX),
         "graphs": graphs,
-        "show_consolidation": False,
+        "display": EngineDisplayOptions(show_consolidation=False).as_props(),
     }
 
 

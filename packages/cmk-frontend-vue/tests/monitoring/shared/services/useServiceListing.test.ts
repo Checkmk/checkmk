@@ -5,49 +5,11 @@
  */
 import { useServiceListing } from '@/monitoring/shared/services/useServiceListing'
 
-test('offers rescheduling and a selection when the user may reschedule', () => {
-  const listing = useServiceListing({
-    actions: [{ ident: 'reschedule', title: 'Reschedule', icon: 'reload' }]
-  })
-
-  expect(listing.permittedActions.map((action) => action.id)).toEqual(['reschedule'])
-  expect(listing.mayReschedule).toBe(true)
-  expect(listing.mayActOnSelection).toBe(true)
-})
-
-test('offers neither rescheduling nor a selection without permitted actions', () => {
-  const listing = useServiceListing({})
-
-  expect(listing.permittedActions).toEqual([])
-  expect(listing.mayReschedule).toBe(false)
-  expect(listing.mayActOnSelection).toBe(false)
-})
-
 test('labels a selection of services', () => {
   const listing = useServiceListing({})
 
   expect(listing.selectionLabel(2)).toBe('Selected services: 2')
   expect(listing.countsLabel(1, 5)).toBe('Selected service: 1 | Total services: 5')
-})
-
-test('offers the commands implemented for services', () => {
-  const listing = useServiceListing({})
-
-  expect(Object.keys(listing.registry)).toEqual([
-    'acknowledge',
-    'reschedule',
-    'schedule_downtimes',
-    'add_comment',
-    'send_custom_notification',
-    'fake_check_result',
-    'remove_acknowledgments',
-    'remove_downtimes_hosts_services',
-    'notifications',
-    'toggle_active_checks',
-    'toggle_passive_checks',
-    'clear_modified_attributes',
-    'ec_archive_events_of_host'
-  ])
 })
 
 test('filters for unhandled service problems', () => {

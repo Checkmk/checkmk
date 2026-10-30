@@ -6,9 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { MonitoringAllServicesApp } from 'cmk-shared-typing/typescript/monitoring/all_services'
 import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
-import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
 import { useKeyboardHints } from 'cmk-ui-library/lib/keyboardHelp'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
@@ -19,7 +17,6 @@ import HostServicesRow from '@/monitoring/host-services/components/HostServicesR
 import ServiceSlideIn, {
   SERVICE_GRAPHS_TAB_ID
 } from '@/monitoring/host-services/components/ServiceSlideIn.vue'
-import { ServiceActionMenuApi } from '@/monitoring/shared/api/serviceActionMenu'
 import type { HostRef, ServiceEntry, ServiceRef } from '@/monitoring/shared/api/types'
 import DisplayOptionsPane from '@/monitoring/shared/components/DisplayOptionsPane.vue'
 import HostSlideIn, {
@@ -54,10 +51,7 @@ import {
   buildDisplayOptionsStorageKey,
   sanitizeDisplayOptions
 } from '@/monitoring/shared/services/MonitoringService'
-import {
-  IMMEDIATE_SERVICE_COMMAND_IDS,
-  useServiceListing
-} from '@/monitoring/shared/services/useServiceListing'
+import { useServiceListing } from '@/monitoring/shared/services/useServiceListing'
 import { buildTableStateSchema } from '@/monitoring/shared/tableState/schema'
 import { readTableStateFromUrl, tableStateWriter } from '@/monitoring/shared/tableState/urlState'
 import { filterTimestampsAsShown } from '@/monitoring/shared/timestampFilters'
@@ -73,6 +67,7 @@ import { useUrlSync } from '@/monitoring/shared/urlState/useUrlSync'
 import { useContextMenuKey } from '@/monitoring/shared/useContextMenuKey'
 import { useFallbackKeys } from '@/monitoring/shared/useFallbackKeys'
 import { useHostActions } from '@/monitoring/shared/useHostActions'
+import { IMMEDIATE_SERVICE_COMMAND_IDS } from '@/monitoring/shared/useServiceActions'
 import { useTypeToFocus } from '@/monitoring/shared/useTypeToFocus'
 
 import { AllServicesApi } from './api/services'
@@ -90,24 +85,10 @@ const props = defineProps<MonitoringAllServicesApp>()
 
 const serviceListing = useServiceListing(props)
 
-const actionMenuApi = new ServiceActionMenuApi()
-
 const aiExplain = props.ai_explain ?? false
 
 function hostOf(service: ServiceEntry): HostRef {
   return { name: service.host_name, site_id: service.site_id }
-}
-
-async function loadActionMenu(host: HostRef, service: string): Promise<CellAction[]> {
-  const items = await actionMenuApi.fetchActionMenu(host, service)
-  return items.map((item) => ({
-    id: `${item.title}|${item.url}`,
-    label: item.title as TranslatedString,
-    icon: item.icon_name as SimpleIcons,
-    url: item.url,
-    target: item.target,
-    ident: item.ident
-  }))
 }
 
 const columns = useAllServicesColumns({
@@ -209,7 +190,7 @@ const slideInHost = computed<HostRef>(() =>
 )
 
 function loadSlideInActionMenu(service: string): Promise<CellAction[]> {
-  return loadActionMenu(slideInHost.value, service)
+  return serviceListing.loadActionMenu(slideInHost.value, service)
 }
 
 function openServiceSlideIn(service: ServiceEntry): void {
@@ -412,7 +393,9 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
             :row="row"
             :table-row="tableRow"
             :may-reschedule="serviceListing.mayReschedule"
-            :load-action-menu="(service: string) => loadActionMenu(hostOf(row), service)"
+            :load-action-menu="
+              (service: string) => serviceListing.loadActionMenu(hostOf(row), service)
+            "
             :display-options="displayOptions"
             @open="openServiceSlideIn(row)"
             @open-graphs="openServiceGraphs(row)"

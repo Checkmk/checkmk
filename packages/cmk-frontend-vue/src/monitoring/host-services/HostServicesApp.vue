@@ -16,7 +16,6 @@ import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } fr
 
 import { HostServicesApi } from '@/monitoring/shared/api/hostServices'
 import { HostApi } from '@/monitoring/shared/api/hosts'
-import { ServiceActionMenuApi } from '@/monitoring/shared/api/serviceActionMenu'
 import type {
   HostEntry,
   HostOptionalField,
@@ -41,6 +40,7 @@ import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
 import { filterTimestampsAsShown } from '@/monitoring/shared/timestampFilters'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import { useHostActions } from '@/monitoring/shared/useHostActions'
+import { IMMEDIATE_SERVICE_COMMAND_IDS } from '@/monitoring/shared/useServiceActions'
 
 import MonitoringExportFeedback from '../shared/components/MonitoringExportFeedback.vue'
 import MonitoringHeaderActions from '../shared/components/MonitoringHeaderActions.vue'
@@ -61,10 +61,7 @@ import {
   buildDisplayOptionsStorageKey,
   sanitizeDisplayOptions
 } from '../shared/services/MonitoringService'
-import {
-  IMMEDIATE_SERVICE_COMMAND_IDS,
-  useServiceListing
-} from '../shared/services/useServiceListing'
+import { useServiceListing } from '../shared/services/useServiceListing'
 import { buildTableStateSchema } from '../shared/tableState/schema'
 import { readTableStateFromUrl, tableStateWriter } from '../shared/tableState/urlState'
 import {
@@ -110,20 +107,10 @@ const rowActionButtons: CellAction[] = (props.row_actions ?? []).map((action) =>
   url: action.url
 }))
 
-const actionMenuApi = new ServiceActionMenuApi()
-
 // The legacy action-menu links (graphs, log file viewer, custom actions, ...), read when the
 // menu is opened.
-async function loadActionMenu(service: string): Promise<CellAction[]> {
-  const items = await actionMenuApi.fetchActionMenu(host, service)
-  return items.map((item) => ({
-    id: `${item.title}|${item.url}`,
-    label: item.title as TranslatedString,
-    icon: item.icon_name as SimpleIcons,
-    url: item.url,
-    target: item.target,
-    ident: item.ident
-  }))
+function loadActionMenu(service: string): Promise<CellAction[]> {
+  return serviceListing.loadActionMenu(host, service)
 }
 
 const hostActions = useHostActions({

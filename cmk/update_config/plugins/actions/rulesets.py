@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterator
 from logging import Logger
 from typing import override
 
@@ -22,7 +23,7 @@ from cmk.gui.watolib.rulesets import Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError
 from cmk.update_config.internal import ExpiryVersion, UpdateAction
 from cmk.update_config.lib import format_warning
-from cmk.update_config.plugins.lib.rulesets import load_and_transform, SKIP_ACTION
+from cmk.update_config.plugins.lib.rulesets import load_and_transform, RuleOutcome, SKIP_ACTION
 from cmk.update_config.registry import update_action_registry
 
 
@@ -48,11 +49,12 @@ class UpdateRulesets(UpdateAction):
         all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
 
 
-def validate_rule_values(
-    logger: Logger,
-    all_rulesets: RulesetCollection,
-) -> None:
-    n_invalid, n_broken = 0, 0
+def validate_transformed_rule_values(all_rulesets: RulesetCollection) -> Iterator[RuleOutcome]:
+    """Validate every transformed rule value against the current definition
+
+    One outcome per rule. An MKUserError is an invalid value, any other
+    exception a broken ruleset implementation.
+    """
     for ruleset in all_rulesets.get_rulesets().values():
         if ruleset.name in SKIP_ACTION:
             continue
@@ -78,23 +80,41 @@ def validate_rule_values(
                         rule.value,
                         "",
                     )
-            except MKUserError as excpt:
+            except Exception as exc:
+                yield RuleOutcome(ruleset, folder, index, rule, exc)
+            else:
+                yield RuleOutcome(ruleset, folder, index, rule, None)
+
+
+def validate_rule_values(
+    logger: Logger,
+    all_rulesets: RulesetCollection,
+) -> None:
+    n_invalid, n_broken = 0, 0
+    for outcome in validate_transformed_rule_values(all_rulesets):
+        match outcome.problem:
+            case None:
+                continue
+            case MKUserError() as excpt:
                 n_invalid += 1
                 logger.warning(
                     format_warning(
-                        f"WARNING: Invalid rule configuration detected ({_make_rule_reference(ruleset, folder, index, excpt)})"
+                        f"WARNING: Invalid rule configuration detected ({_make_rule_reference(outcome.ruleset, outcome.folder, outcome.index, excpt)})"
                     ),
                 )
-
-            except Exception as excpt:
+            case Exception() as excpt:
                 n_broken += 1
                 logger.warning(
                     format_warning(
-                        f"WARNING: Exception in ruleset implementation detected ({_make_rule_reference(ruleset, folder, index, excpt)})"
+                        f"WARNING: Exception in ruleset implementation detected ({_make_rule_reference(outcome.ruleset, outcome.folder, outcome.index, excpt)})"
                     ),
-                    exc_info=True,
+                    exc_info=excpt,
                 )
-                identity = create_gui_crash_report().ident_to_text()
+                # the crash report is built from the exception being handled
+                try:
+                    raise excpt
+                except Exception:
+                    identity = create_gui_crash_report().ident_to_text()
                 logger.warning(
                     "A crash report was generated with ID: %(crash_report_id)s",
                     {"crash_report_id": identity},

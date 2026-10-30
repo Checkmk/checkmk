@@ -4,11 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import sys
 from collections.abc import Callable, Mapping
 
 import pytest
 
 from cmk.ccc.version import Edition
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Dictionary, Float, Integer, Tuple
 from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
@@ -105,3 +107,64 @@ def test_validate_rule_values(
     caplog.set_level(logging.INFO)
     rulesets_updater.validate_rule_values(logging.getLogger(), all_rulesets)
     assert len(caplog.messages) == n_expected_warnings
+
+
+def test_validate_transformed_rule_values_reports_the_invalid_rule(tree: FolderTree) -> None:
+    all_rulesets = RulesetCollection(
+        {
+            "logwatch_rules": _instantiate_ruleset(tree, "logwatch_rules", "not a dictionary"),
+            RuleGroup.CheckgroupParameters("ntp_time"): _instantiate_ruleset(
+                tree,
+                RuleGroup.CheckgroupParameters("ntp_time"),
+                {"ntp_levels": (10, 200.0, 500.0)},
+                _ARTIFICIAL_RULESPECS[RuleGroup.CheckgroupParameters("ntp_time")],
+            ),
+        }
+    )
+
+    outcomes = list(rulesets_updater.validate_transformed_rule_values(all_rulesets))
+
+    assert [
+        (outcome.ruleset.name, outcome.index, type(outcome.problem)) for outcome in outcomes
+    ] == [
+        ("logwatch_rules", 0, MKUserError),
+        (RuleGroup.CheckgroupParameters("ntp_time"), 0, type(None)),
+    ]
+
+
+def test_a_broken_ruleset_gets_a_crash_report_of_its_exception(
+    tree: FolderTree, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The crash report is built from the exception being handled"""
+
+    def _broken(_value: object, _varprefix: str) -> None:
+        raise RuntimeError("the implementation is broken")
+
+    name = RuleGroup.CheckgroupParameters("broken")
+    all_rulesets = RulesetCollection(
+        {
+            name: _instantiate_ruleset(
+                tree,
+                name,
+                {},
+                HostRulespec(
+                    name=name,
+                    group=RulespecGroupMonitoringConfigurationVarious,
+                    valuespec=lambda: Dictionary(elements=[], validate=_broken),
+                ),
+            )
+        }
+    )
+    reported: list[BaseException | None] = []
+
+    class _Report:
+        def ident_to_text(self) -> str:
+            reported.append(sys.exc_info()[1])
+            return "the-crash-id"
+
+    # the real factory writes the report into the site's crash directory
+    monkeypatch.setattr(rulesets_updater, "create_gui_crash_report", _Report)
+
+    rulesets_updater.validate_rule_values(logging.getLogger(), all_rulesets)
+
+    assert [type(exc) for exc in reported] == [RuntimeError]

@@ -11,9 +11,13 @@ import pytest
 import time_machine
 
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.monitor.hosts._api._list_hosts import _MAX_NUMBER_OF_HOSTS
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.unit.gui.openapi_monitoring import site_configurations
+from tests.testlib.unit.gui.openapi_monitoring import (
+    roles_without_permission,
+    site_configurations,
+)
 from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
@@ -1534,6 +1538,72 @@ class TestMonitorHostsReschedule:
             )
 
         assert resp.json["rescheduled"] == 2
+
+    def test_reschedule_sends_each_command_to_the_site_named_for_its_host(
+        self,
+        clients: ClientRegistry,
+        set_config: SetConfig,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        # The mock keeps one expectation queue per site, so a command sent to the wrong site
+        # finds nothing waiting for it there and fails the test.
+        mock_livestatus.expect_query(
+            "COMMAND [...] SCHEDULE_FORCED_HOST_CHECK;heute;...",
+            match_type="ellipsis",
+            sites=[_SITE_ID],
+        )
+        mock_livestatus.expect_query(
+            "COMMAND [...] SCHEDULE_FORCED_HOST_CHECK;gestern;...",
+            match_type="ellipsis",
+            sites=["remote"],
+        )
+
+        with (
+            set_config(sites=site_configurations([_SITE_ID, "remote", "local"])),
+            mock_livestatus(expect_status_query=True),
+        ):
+            resp = clients.MonitorHosts.reschedule(
+                hosts=[
+                    {"site_id": _SITE_ID, "name": "heute"},
+                    {"site_id": "remote", "name": "gestern"},
+                ]
+            )
+
+        assert resp.json["rescheduled"] == 2
+
+    @pytest.mark.parametrize(
+        "denied_permission, expected_reason",
+        [
+            pytest.param("action.reschedule", "Reschedule checks", id="the reschedule permission"),
+            pytest.param(
+                "general.act",
+                "Perform commands in views",
+                id="the general permission to act on monitored objects",
+            ),
+        ],
+    )
+    def test_reschedule_is_refused_without_a_required_permission(
+        self,
+        clients: ClientRegistry,
+        with_user: tuple[UserId, str],
+        load_config: Config,
+        set_config: SetConfig,
+        mock_livestatus: MockLiveStatusConnection,
+        denied_permission: str,
+        expected_reason: str,
+    ) -> None:
+        # The page only hides an action the user may not perform; the endpoint refuses it too,
+        # and no command reaches the core (none is expected).
+        clients.MonitorHosts.set_credentials(*with_user)
+        roles = roles_without_permission(load_config, "user", denied_permission)
+
+        with set_config(roles=roles), mock_livestatus(expect_status_query=False):
+            resp = clients.MonitorHosts.reschedule(
+                hosts=[{"site_id": _SITE_ID, "name": "heute"}], expect_ok=False
+            )
+
+        assert resp.status_code == HTTPStatus.FORBIDDEN
+        assert expected_reason in resp.json["detail"]
 
 
 _LIMIT = 1000

@@ -9,8 +9,14 @@ from http import HTTPStatus
 
 import pytest
 
+from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.gui.openapi_monitoring import (
+    roles_without_permission,
+    site_configurations,
+)
+from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
@@ -784,3 +790,101 @@ def test_openapi_remove_acknowledgement_for_service_group(
 
     with live:
         clients.Acknowledge.remove_for_service_group("routers")
+
+
+def test_host_acknowledgement_is_refused_without_the_acknowledge_permission(
+    clients: ClientRegistry,
+    with_user: tuple[UserId, str],
+    load_config: Config,
+    set_config: SetConfig,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    # The page only hides an action the user may not perform; the endpoint refuses it too,
+    # and no command reaches the core (none is expected).
+    clients.Acknowledge.set_credentials(*with_user)
+    mock_livestatus.add_table("hosts", [{"name": "heute", "state": 1}])
+    mock_livestatus.expect_query(_heute_by_name_for(with_user[0]))
+    roles = roles_without_permission(load_config, "user", "action.acknowledge")
+
+    with set_config(roles=roles), mock_livestatus(expect_status_query=True):
+        resp = clients.Acknowledge.request(
+            "post",
+            url="/domain-types/acknowledge/collections/host",
+            body=_acknowledge_host_named("heute"),
+            expect_ok=False,
+        )
+
+    # A denied permission answers 403; 401 is reserved for a failed authentication.
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+    assert "Acknowledge" in resp.json["detail"]
+
+
+def test_host_acknowledgement_is_executed_for_a_user_of_the_default_user_role(
+    clients: ClientRegistry,
+    with_user: tuple[UserId, str],
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    clients.Acknowledge.set_credentials(*with_user)
+    mock_livestatus.add_table("hosts", [{"name": "heute", "state": 1}])
+    mock_livestatus.expect_query(_heute_by_name_for(with_user[0]))
+    mock_livestatus.expect_query(_heute_by_name_for(with_user[0]))
+    mock_livestatus.expect_query(
+        "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;heute;1;0;0;...;Acknowledged;",
+        match_type="ellipsis",
+    )
+
+    with mock_livestatus(expect_status_query=True):
+        resp = clients.Acknowledge.request(
+            "post",
+            url="/domain-types/acknowledge/collections/host",
+            body=_acknowledge_host_named("heute"),
+        )
+
+    assert resp.status_code == HTTPStatus.NO_CONTENT
+
+
+def test_host_acknowledgement_goes_to_the_site_that_monitors_the_host(
+    clients: ClientRegistry,
+    set_config: SetConfig,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    # The mock keeps one expectation queue per site, so a command sent to the wrong site
+    # finds nothing waiting for it there and fails the test.
+    for site_id in mock_livestatus.sites:
+        rows = [{"name": "gestern", "state": 1}] if site_id == "remote" else []
+        mock_livestatus.add_table("hosts", rows, site=site_id)
+    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = gestern")
+    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = gestern")
+    mock_livestatus.expect_query(
+        "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;gestern;1;0;0;...;Acknowledged;",
+        match_type="ellipsis",
+        sites=["remote"],
+    )
+
+    with (
+        set_config(sites=site_configurations(["NO_SITE", "remote", "local"])),
+        mock_livestatus(expect_status_query=True),
+    ):
+        resp = clients.Acknowledge.request(
+            "post",
+            url="/domain-types/acknowledge/collections/host",
+            body=_acknowledge_host_named("gestern"),
+        )
+
+    assert resp.status_code == HTTPStatus.NO_CONTENT
+
+
+def _heute_by_name_for(user_id: UserId) -> str:
+    # A user without "See all host and services" makes sites.live() add an AuthUser line.
+    return f"GET hosts\nColumns: name\nFilter: name = heute\nAuthUser: {user_id}"
+
+
+def _acknowledge_host_named(host_name: str) -> dict[str, object]:
+    return {
+        "acknowledge_type": "host_by_query",
+        "query": {"op": "=", "left": "hosts.name", "right": host_name},
+        "sticky": False,
+        "notify": False,
+        "persistent": False,
+        "comment": "Acknowledged",
+    }

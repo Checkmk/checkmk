@@ -5,14 +5,21 @@
 
 
 import datetime
+import json
 from http import HTTPStatus
 
 import pytest
 
 from cmk.ccc import version
+from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.openapi.api_endpoints.downtime.models.request_models import _with_defaulted_timezone
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils import paths
+from tests.testlib.unit.gui.openapi_monitoring import (
+    roles_without_permission,
+    site_configurations,
+)
 from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
@@ -1769,3 +1776,64 @@ def test_openapi_downtime_mode_flexible(
             "type": "flexible",
             "duration_minutes": 60,  # in minutes
         }
+
+
+def test_host_downtime_is_refused_without_the_downtime_permission(
+    clients: ClientRegistry,
+    with_user: tuple[UserId, str],
+    load_config: Config,
+    set_config: SetConfig,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    # The page only hides an action the user may not perform; the endpoint refuses it too,
+    # and no command reaches the core (none is expected).
+    clients.Downtime.set_credentials(*with_user)
+    mock_livestatus.add_table("hosts", [{"name": "heute"}])
+    # A user without "See all host and services" makes sites.live() add an AuthUser line.
+    heute_by_name = f"GET hosts\nColumns: name\nFilter: name = heute\nAuthUser: {with_user[0]}"
+    mock_livestatus.expect_query(heute_by_name)
+    mock_livestatus.expect_query(heute_by_name)
+    roles = roles_without_permission(load_config, "user", "action.downtimes")
+
+    with set_config(roles=roles), mock_livestatus(expect_status_query=True):
+        resp = clients.Downtime.create_for_host(
+            downtime_type="host",
+            host_name="heute",
+            start_time="2020-01-01T00:00:00Z",
+            end_time="2020-01-02T00:00:00Z",
+            expect_ok=False,
+        )
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+    assert "Set/remove downtimes" in resp.json["detail"]
+
+
+def test_host_downtime_goes_to_the_site_that_monitors_the_host(
+    clients: ClientRegistry,
+    set_config: SetConfig,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    # The mock keeps one expectation queue per site, so a command sent to the wrong site
+    # finds nothing waiting for it there and fails the test.
+    for site_id in mock_livestatus.sites:
+        rows = [{"name": "gestern"}] if site_id == "remote" else []
+        mock_livestatus.add_table("hosts", rows, site=site_id)
+    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = gestern")
+    mock_livestatus.expect_query(
+        "COMMAND [...] SCHEDULE_HOST_DOWNTIME;gestern;1577836800;1577923200;1;0;0;...",
+        match_type="ellipsis",
+        sites=["remote"],
+    )
+
+    with (
+        set_config(sites=site_configurations(["NO_SITE", "remote", "local"])),
+        mock_livestatus(expect_status_query=True),
+    ):
+        resp = clients.Downtime.create_for_host(
+            downtime_type="host_by_query",
+            query=json.dumps({"op": "=", "left": "hosts.name", "right": "gestern"}),
+            start_time="2020-01-01T00:00:00Z",
+            end_time="2020-01-02T00:00:00Z",
+        )
+
+    assert resp.status_code == HTTPStatus.NO_CONTENT

@@ -5,11 +5,23 @@
 
 """Setup shared by the in-process tests of the monitoring REST endpoints."""
 
+import copy
 from collections.abc import Iterable
 
 from livestatus import SiteConfiguration
 
 from cmk.ccc.site import SiteId
+from cmk.gui.config import Config
+from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
+
+
+def roles_without_permission(
+    config: Config, role: str, permission: str
+) -> dict[str, BuiltInUserRole | CustomUserRole]:
+    """The configured roles, with ``permission`` withheld from ``role``."""
+    roles = copy.deepcopy(config.roles)
+    roles[role]["permissions"] = {**roles[role].get("permissions", {}), permission: False}
+    return roles
 
 
 def site_configurations(site_ids: Iterable[str]) -> dict[SiteId, SiteConfiguration]:

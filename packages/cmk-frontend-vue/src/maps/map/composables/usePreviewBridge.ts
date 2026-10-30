@@ -71,7 +71,7 @@ export function usePreviewBridge(source: { preview: () => boolean }): void {
     if (!message || message.source !== PREVIEW_EDIT || !message.patch) {
       return
     }
-    const current = maps.currentMap
+    const current = maps.currentMap.value
     if (!current) {
       return
     }

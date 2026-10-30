@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.4.37",
+  "version": "0.4.38",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -165,6 +165,11 @@
         "command": "cmk.omdCreateSite",
         "title": "CMK ▸ OMD: Create Site",
         "icon": "$(add)"
+      },
+      {
+        "command": "cmk.cmkUp.run",
+        "title": "CMK ▸ cmk-up: Run Playbook…",
+        "icon": "$(play)"
       },
       {
         "command": "cmk.applySetting",
@@ -530,6 +535,15 @@
           "default": true,
           "scope": "application",
           "description": "Start the cmk-dev-site mock auth server (fake OIDC provider on port 8089) on activation when a local cloud/SaaS OMD site exists and the server is not already running."
+        },
+        "cmk.cmkUp.playbookDirectories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "application",
+          "description": "Folders (non-recursive, ~ allowed) searched for cmk-up playbooks in addition to the workspace and the shipped examples, e.g. where ticket attachments are downloaded."
         }
       }
     },
@@ -575,9 +589,26 @@
           "command": "cmk.omdCreateSite",
           "when": "view == cmk.dashboard.omd && cmk.devSiteInstalled",
           "group": "navigation"
+        },
+        {
+          "command": "cmk.cmkUp.run",
+          "when": "view == cmk.dashboard.omd",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "cmk.cmkUp.run",
+          "when": "resourcePath in cmk.cmkUp.playbookFiles",
+          "group": "cmk"
         }
       ],
       "editor/title": [
+        {
+          "command": "cmk.cmkUp.run",
+          "when": "resourcePath in cmk.cmkUp.playbookFiles",
+          "group": "navigation"
+        },
         {
           "command": "cmk.omdLogRefresh",
           "when": "resourceScheme == cmk-omd-log",

@@ -131,6 +131,51 @@ async function dispatchBridgeCommand(
   return null
 }
 
+export function runInteractiveInKeepaliveTerminal(command: string): Promise<number | null> {
+  const result = _bridgeChain.then(() => dispatchInteractiveCommand(command))
+  _bridgeChain = result.catch(() => undefined)
+  return result
+}
+
+async function dispatchInteractiveCommand(command: string): Promise<number | null> {
+  const term = _keepaliveTerm
+  if (!term) return null
+  if (!fs.existsSync(KEEPALIVE_READY)) return null
+
+  try {
+    fs.mkdirSync(BRIDGE_DIR, { recursive: true })
+  } catch {
+    /* ignore */
+  }
+  const id = crypto.randomUUID()
+  const rcPath = path.join(BRIDGE_DIR, `${id}.rc`)
+  const donePath = path.join(BRIDGE_DIR, `${id}.done`)
+
+  term.show()
+  term.sendText(`${command}; echo $? > ${rcPath}; touch ${donePath}`)
+
+  while (_keepaliveTerm === term) {
+    if (fs.existsSync(donePath)) {
+      let exitCode: number
+      try {
+        exitCode = parseInt(fs.readFileSync(rcPath, 'utf-8').trim(), 10)
+      } catch {
+        exitCode = NaN
+      }
+      try {
+        fs.unlinkSync(rcPath)
+        fs.unlinkSync(donePath)
+      } catch {
+        /* ignore */
+      }
+      return Number.isNaN(exitCode) ? -1 : exitCode
+    }
+    await new Promise((r) => setTimeout(r, 500))
+  }
+  log(`sudoBridge: keepalive terminal closed during ${command.substring(0, 60)}…`)
+  return null
+}
+
 /** Wait for the keepalive terminal's ready sentinel. */
 export async function waitForKeepaliveReady(timeoutMs = 60_000): Promise<boolean> {
   const deadline = Date.now() + timeoutMs

@@ -106,3 +106,59 @@ describe('runInKeepaliveTerminal serialization', () => {
     expect(sent).toHaveLength(0)
   })
 })
+
+describe('runInteractiveInKeepaliveTerminal', () => {
+  let bridge: typeof import('../../src/omd/sudoBridge')
+  let sent: string[]
+
+  const finishInteractive = (wrapped: string, rc: number): void => {
+    const m = wrapped.match(/echo \$\? > (\S+)\.rc;/)
+    if (!m) throw new Error(`could not parse rc-path from: ${wrapped}`)
+    fileContents.set(`${m[1]}.rc`, String(rc))
+    existing.add(`${m[1]}.rc`)
+    existing.add(`${m[1]}.done`)
+  }
+  const poll = () => new Promise((r) => setTimeout(r, 600))
+
+  beforeEach(async () => {
+    existing.clear()
+    fileContents.clear()
+    vi.resetModules()
+    bridge = await import('../../src/omd/sudoBridge')
+    existing.add(bridge.KEEPALIVE_READY)
+    sent = []
+    bridge.setKeepaliveTerminal({
+      sendText: (t: string) => sent.push(t),
+      show: () => {},
+      dispose: () => {}
+    } as never)
+  })
+
+  afterEach(() => {
+    bridge.setKeepaliveTerminal(null)
+  })
+
+  it('runs the command unwrapped and holds bridge commands until it exits', async () => {
+    const run = bridge.runInteractiveInKeepaliveTerminal('cmk-up 01-minimal --keep')
+    const status = bridge.runInKeepaliveTerminal('omd status mysite', 5000)
+
+    await poll()
+    expect(sent).toHaveLength(1)
+    expect(sent[0]).toMatch(/^cmk-up 01-minimal --keep; /)
+
+    finishInteractive(sent[0], 3)
+    expect(await run).toBe(3)
+
+    await tick()
+    expect(sent).toHaveLength(2)
+    completeCommand(bridge.BRIDGE_DIR, extractId(sent[1]), 0, 'ok')
+    expect(await status).toEqual({ output: 'ok', exitCode: 0 })
+  })
+
+  it('resolves null when the keepalive terminal closes during the run', async () => {
+    const run = bridge.runInteractiveInKeepaliveTerminal('cmk-up 01-minimal')
+    await tick()
+    bridge.setKeepaliveTerminal(null)
+    expect(await run).toBeNull()
+  })
+})

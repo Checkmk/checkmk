@@ -195,6 +195,8 @@ Expanding a site shows individual service status with per-service start/stop/res
 
 **Authentication:** OMD commands require sudo. Click "Authenticate (sudo)" to cache credentials. A background keepalive extends the sudo cache for up to 1 hour. Subsequent read-only OMD queries (status refresh, log discovery) are piped through the keepalive terminal's authenticated TTY so they reuse the same sudo ticket — no re-prompt per action.
 
+**cmk-up Playbooks:** F1 → `CMK ▸ cmk-up: Run Playbook…` (also the **▶** button in the OMD section title bar, the editor title of an open playbook, and the explorer context menu of a playbook file) runs a cmk-up playbook (cmk-werk-zeug, see its `doc/cmk-up.md`) through `uvx --from cmk-werk-zeug@latest cmk-up`. Pick the playbook (type to filter), the phases of a phased playbook, and the options `--keep`, `--purge`, `--dry-run` and `--verify`. Playbooks are YAML files whose first line is the cmk-up shebang, found in the workspace, in the folders listed in `cmk.cmkUp.playbookDirectories` (e.g. where ticket attachments are downloaded), and among the examples cmk-werk-zeug ships. The run happens in the authenticated sudo keepalive terminal, so cmk-up does not ask for the password; other OMD actions wait until it ends. The OMD section refreshes when the run is over.
+
 #### Issues (Activity Bar Badge)
 
 The activity bar icon shows a badge with the total number of issues across the workspace. The Issues view is the canonical flat list of everything the **Cockpit** rolls up:

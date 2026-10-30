@@ -21,11 +21,12 @@ import { error, log, notifyInfo, registerErrorHandlers } from './core/log'
 import { bindPersistedCacheContext } from './core/persistedCache'
 import { checkVersionMismatch } from './core/versionCheck'
 import { registerDoctor } from './doctor'
+import { cmkUp } from './omd/cmkUp'
 import { deployToSite } from './omd/devDeployTools'
 import { checkForUpdates, isInstalledAsync as isDevSiteInstalledAsync } from './omd/devSiteTools'
 import { registerLogs } from './omd/logs'
 import { registerMockAuth } from './omd/mockAuth'
-import { createSite, detectOmdSites, registerOmd } from './omd/omd'
+import { createSite, detectOmdSites, forceRefreshOmdStatusFiles, registerOmd } from './omd/omd'
 import { registerProfileDetector } from './profiles/profileDetector'
 import * as profileManager from './profiles/profileManager'
 import { registerDmypyHealth } from './profiles/python/dmypyHealth'
@@ -121,6 +122,10 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(...registerBazelCache())
   registerSandboxBranch(context)
   registerOmd(context, refreshAll, refreshOmd)
+  cmkUp.register(context, async () => {
+    await forceRefreshOmdStatusFiles()
+    refreshAll()
+  })
   registerMockAuth(context, detectOmdSites())
   registerLogs()
 

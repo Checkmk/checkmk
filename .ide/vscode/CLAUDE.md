@@ -296,6 +296,12 @@ a cloud site while that port is free.
   silent. It takes the sites as a parameter rather than calling `detectOmdSites()`
   itself so `omd.ts` → `mockAuth.ts` stays the only runtime import direction.
 
+### cmk-up Playbooks (`src/omd/cmkUp.ts`, `src/omd/cmkUpWizard.ts`)
+
+`CmkUp` (singleton `cmkUp`, registered from `extension.ts`) finds playbooks — YAML files whose first line is a shebang naming `cmk-up` — in the workspace (`findFiles`), in `cmk.cmkUp.playbookDirectories`, and among the wheel's shipped examples (listed through `uvx … python`). The scan is stale-while-revalidate (`snapshot()` / `rescan()`); the found file paths go into the context key `cmk.cmkUp.playbookFiles`, which gates the editor-title and explorer menu entries via `resourcePath in …`.
+
+`PlaybookRunWizard` is the `cmk.cmkUp.run` QuickPick flow: playbook → phases (`--list-phases`, skipped for one phase) → options. The run goes through `runInteractiveInKeepaliveTerminal()` in `sudoBridge.ts`: the command is typed into the keepalive terminal **unwrapped** (as the user, in the foreground, inheriting the sudo ticket) and chained onto the bridge queue, so bridge commands wait instead of being typed into cmk-up's TUI. There is deliberately no `--rm` action: cmk-up's `--rm` wipes every site on the machine.
+
 ### cmk-dev-site Integration (`src/omd/devSiteTools.ts`)
 
 - **Create Site** (`cmk.omdCreateSite`): Available when `cmk-dev-site` is on PATH. The `+` button in the OMD section title bar triggers site creation.

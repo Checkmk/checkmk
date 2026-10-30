@@ -10,12 +10,10 @@ from http import HTTPStatus
 import pytest
 import time_machine
 
-from livestatus import SiteConfiguration
-
-from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.monitor.hosts._api._list_hosts import _MAX_NUMBER_OF_HOSTS
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.testlib.unit.gui.openapi_monitoring import site_configurations
 from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
@@ -55,20 +53,21 @@ class TestMonitorHostsAuth:
         with_user: tuple[UserId, str],
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
+        user_id, _password = with_user
         client = clients.MonitorHosts
         client.set_credentials(*with_user)
 
         mock_livestatus.add_table("hosts", _HOSTS)
-        # see_all-less user → sites.live() adds an AuthUser line; match loosely to tolerate it.
-        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
+        # Livestatus decides what a user without "see all" may see, so every query names them.
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0", f"AuthUser: {user_id}"])
         mock_livestatus.expect_query(
             [
                 "GET hosts",
                 f"Columns: {_HOST_TABLE_COLUMNS}",
                 "OrderBy: name asc natural",
                 f"Limit: {_LIMIT}",
-            ],
-            match_type="loose",
+                f"AuthUser: {user_id}",
+            ]
         )
 
         with mock_livestatus(expect_status_query=True):
@@ -292,20 +291,20 @@ class TestMonitorHostsLimitPermissions:
         with_user: tuple[UserId, str],
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
+        user_id, _password = with_user
         client = clients.MonitorHosts
         client.set_credentials(*with_user)
 
         mock_livestatus.add_table("hosts", _HOSTS)
-        # see_all-less user → sites.live() adds an AuthUser line; match loosely to tolerate it.
-        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0", f"AuthUser: {user_id}"])
         mock_livestatus.expect_query(
             [
                 "GET hosts",
                 f"Columns: {_HOST_TABLE_COLUMNS}",
                 "OrderBy: name asc natural",
                 f"Limit: {_MAX_NUMBER_OF_HOSTS}",
-            ],
-            match_type="loose",
+                f"AuthUser: {user_id}",
+            ]
         )
 
         with mock_livestatus(expect_status_query=True):
@@ -336,6 +335,61 @@ class TestMonitorHostsLimitPermissions:
             resp = client.list_all(limit=None)
 
         assert resp.json["meta"]["limit"] is None
+
+
+class TestMonitorHostsTableRows:
+    def test_per_state_service_counts_match_livestatus_columns(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        # A distinct value per count, so a count read from its neighbour's column is caught.
+        counts = {
+            "num_services": 21,
+            "num_services_ok": 11,
+            "num_services_warn": 3,
+            "num_services_crit": 4,
+            "num_services_unknown": 1,
+            "num_services_pending": 2,
+        }
+        mock_livestatus.add_table("hosts", [_host_row("tally-host", **counts)])
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT)
+
+        [entry] = resp.json["hosts"]
+        assert {field: entry[field] for field in counts} == counts
+
+    def test_a_limit_of_zero_returns_no_hosts(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc natural",
+                "Limit: 0",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=0)
+
+        # The mock ignores the Limit header, so an empty list also proves the endpoint's own cut.
+        assert resp.json["hosts"] == []
 
 
 class TestMonitorHostsQuery:
@@ -639,7 +693,7 @@ class TestMonitorHostsFilters:
         # "remote" needs to be a real configured site (not just a mock-livestatus fake site) for
         # the handler to accept it, and for the complement (every site except "remote") to be
         # computed against the right set of configured sites.
-        with set_config(sites=_site_configs([SiteId(_SITE_ID), SiteId("remote"), SiteId("local")])):
+        with set_config(sites=site_configurations([_SITE_ID, "remote", "local"])):
             mock_livestatus.add_table("hosts", _HOSTS)
             mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
             # Excluding "remote" restricts the fetch/matched-count queries to the two remaining
@@ -683,7 +737,7 @@ class TestMonitorHostsFilters:
         # `only_sites([])` can't express "zero sites" -- an empty list is falsy to it and it falls
         # back to "no restriction" instead -- so this must be short-circuited before ever building
         # a fetch/matched-count query, rather than silently returning every host from every site.
-        with set_config(sites=_site_configs([SiteId(_SITE_ID)])):
+        with set_config(sites=site_configurations([_SITE_ID])):
             mock_livestatus.add_table("hosts", _HOSTS)
             mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
             filters = {
@@ -1031,6 +1085,39 @@ class TestMonitorHostsFields:
             resp = clients.MonitorHosts.list_all(limit=_LIMIT)
 
         assert "num_relations" not in resp.json["hosts"][0]
+
+
+class TestMonitorHostsSort:
+    def test_default_sort_merges_and_orders_across_sites(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        # Neither site hands its rows back in order. The merged rows have to interleave into one
+        # natural name order: not per site, and not lexical (host10 after host2).
+        _connect_two_sites(mock_livestatus)
+        mock_livestatus.add_table("hosts", [_host_row("host10"), _host_row("host2")], site="site_a")
+        mock_livestatus.add_table("hosts", [_host_row("host1"), _host_row("host20")], site="site_b")
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT)
+
+        # Each row keeps the site that answered it, which the actions address the host by.
+        assert [(host["name"], host["site_id"]) for host in resp.json["hosts"]] == [
+            ("host1", "site_b"),
+            ("host2", "site_a"),
+            ("host10", "site_a"),
+            ("host20", "site_b"),
+        ]
 
 
 class TestMonitorHostOverviewAuth:
@@ -1449,33 +1536,6 @@ class TestMonitorHostsReschedule:
         assert resp.json["rescheduled"] == 2
 
 
-def _site_configs(site_ids: list[SiteId]) -> dict[SiteId, SiteConfiguration]:
-    return {
-        site_id: SiteConfiguration(
-            id=site_id,
-            alias=str(site_id),
-            socket=("local", None),
-            disable_wato=True,
-            disabled=False,
-            insecure=False,
-            url_prefix=f"/{site_id}/",
-            multisiteurl="",
-            persist=False,
-            replicate_ec=False,
-            replicate_mkps=False,
-            replication=None,
-            timeout=5,
-            user_login=True,
-            proxy=None,
-            user_attribute_sync_connections="all",
-            status_host=None,
-            message_broker_port=5672,
-            is_trusted=False,
-        )
-        for site_id in site_ids
-    }
-
-
 _LIMIT = 1000
 _NON_DEFAULT_FIELD = "alias"
 _OPTIONAL_FIELDS_UNDER_TEST = ("alias", "folder", "last_check", "last_state_change")
@@ -1668,6 +1728,19 @@ _DEFAULT_FIELDS = (
 )
 
 
+def _host_row(name: str, **overrides: object) -> dict[str, object]:
+    """A complete host row, so a column the endpoint starts to read needs no edit here."""
+    return {**_HOSTS[0], "name": name, "alias": name.title(), **overrides}
+
+
+def _connect_two_sites(mock_livestatus: MockLiveStatusConnection) -> None:
+    mock_livestatus.set_sites(["site_a", "site_b"])
+    # Each site answers the connection probe with this row. The mock's default row pairs the
+    # legacy edition name with today's version, and the site check drops such a site.
+    for site_id in mock_livestatus.sites:
+        mock_livestatus.add_table("status", [_STATUS_ROW], site=site_id)
+
+
 def _host_columns(*fields: str) -> str:
     """The `Columns:` a request asking for `fields` reads (defaults when none are named)."""
     wanted = set(fields) if fields else set(_DEFAULT_FIELDS)
@@ -1680,6 +1753,16 @@ def _host_columns(*fields: str) -> str:
 
 
 _HOST_TABLE_COLUMNS = _host_columns()
+_STATUS_ROW = {
+    "livestatus_version": "1.0.0",
+    "program_version": "Check_MK 1.0.0",
+    "program_start": 0,
+    "num_hosts": 1,
+    "num_services": 1,
+    "max_long_output_size": 2000,
+    "core_pid": 12345,
+    "edition": "community",
+}
 _OVERVIEW_HOST: dict[str, object] = {
     "name": "heute",
     "alias": "Today",

@@ -5,15 +5,14 @@
 
 # mypy: disable-error-code="no-any-return"
 
-from collections.abc import Callable, Mapping, Sequence
-from typing import Literal, override, TypeGuard
+from collections.abc import Mapping, Sequence
+from typing import Literal, override
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import sites
 from cmk.gui.config import Config, default_authorized_builtin_role_ids, RequestCacheConfig
-from cmk.gui.dashboard.type_defs import DashletConfig, LinkedViewDashletConfig, ViewDashletConfig
 from cmk.gui.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -234,11 +233,8 @@ class RowTableEC(RowTableLivestatus):
         row_data = super().query(
             datasource, cells, columns, context, headers, only_sites, limit, all_active_filters
         )
-
-        if isinstance(row_data, tuple):
-            rows, _unfiltered_amount_of_rows = row_data
-        else:
-            rows = row_data
+        assert isinstance(row_data, tuple)  # RowTableLivestatus always counts the unfiltered rows
+        rows, _unfiltered_amount_of_rows = row_data
 
         if not rows:
             return rows
@@ -771,17 +767,10 @@ def make_event_pid_painter() -> InternalPainter:
     )
 
 
-# TODO: Rethink the typing of syslog_facilites/syslog_priorities.
-
-
-def _deref[T](x: T | Callable[[], T]) -> T:
-    return x() if callable(x) else x
-
-
 def _render_event_priority(
     row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
 ) -> CellSpec:
-    return ("", dict(_deref(syslog_priorities))[row["event_priority"]])
+    return ("", dict(syslog_priorities)[row["event_priority"]])
 
 
 def make_event_priority_painter() -> InternalPainter:
@@ -797,7 +786,7 @@ def make_event_priority_painter() -> InternalPainter:
 def _render_event_facility(
     row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
 ) -> CellSpec:
-    return ("", dict(_deref(syslog_facilities))[row["event_facility"]])
+    return ("", dict(syslog_facilities)[row["event_facility"]])
 
 
 def make_event_facility_painter() -> InternalPainter:
@@ -954,18 +943,6 @@ def render_delete_event_icons(
     return html.render_icon_button(
         url, _("Archive this event"), StaticIcon(IconNames.archive_event)
     )
-
-
-def _is_rendered_from_view_dashlet(request: Request) -> bool:
-    return request.has_var("name") and request.has_var("id")
-
-
-def _is_view_dashlet(dashlet_config: DashletConfig) -> TypeGuard[ViewDashletConfig]:
-    return dashlet_config["type"] == "view"
-
-
-def _is_linked_view_dashlet(dashlet_config: DashletConfig) -> TypeGuard[LinkedViewDashletConfig]:
-    return dashlet_config["type"] == "linked_view"
 
 
 def _render_event_icons(

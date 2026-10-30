@@ -2557,10 +2557,6 @@ def _rule_match_text(outcome: ec.MatchOutcome) -> str:
             return _("This rule matches and skips the rest of this rule pack.")
 
 
-def _deref[T](x: T | Callable[[], T]) -> T:
-    return x() if callable(x) else x
-
-
 class ModeEventConsoleRules(ABCEventConsoleMode):
     @classmethod
     @override
@@ -2837,9 +2833,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         site_configs: SiteConfigurations,
         move_choices: Sequence[Choice],
     ) -> None:
-        # TODO: Rethink the typing of syslog_facilites/syslog_priorities.
-        priorities = _deref(syslog_priorities)
-        facilities = dict(_deref(syslog_facilities))
+        facilities = dict(syslog_facilities)
 
         # Show content of the rule pack
         with table_element(title=_("Rules"), css="ruleset", limit=0) as table:
@@ -2979,9 +2973,13 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 if "match_priority" in rule:
                     prio_from, prio_to = rule["match_priority"]
                     if prio_from == prio_to:
-                        prio_text = priorities[prio_from][1]
+                        prio_text = syslog_priorities[prio_from][1]
                     else:
-                        prio_text = priorities[prio_from][1][:2] + ".." + priorities[prio_to][1][:2]
+                        prio_text = (
+                            syslog_priorities[prio_from][1][:2]
+                            + ".."
+                            + syslog_priorities[prio_to][1][:2]
+                        )
                 else:
                     prio_text = ""
                 table.cell(_("Priority"), prio_text)

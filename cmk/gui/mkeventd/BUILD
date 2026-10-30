@@ -16,7 +16,6 @@ py_library(
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
         "//cmk/gui:painter_options",
-        "//cmk/gui/dashboard:type_defs",
         "//cmk/gui/data_source",
         "//cmk/gui/form_specs",
         "//cmk/gui/global_settings",

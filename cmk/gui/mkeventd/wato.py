@@ -5656,6 +5656,10 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
                             title=_("Connect to the local Event Console"),
                             totext=_("local connect"),
                         ),
+                        # TODO: Let the rule choose the IP address family (any, IPv4 or IPv6) like
+                        # the HTTP checks do. The check tries IPv6 first, so for an Event Console
+                        # whose access list allows IPv4 only, users have to enter an IPv4 address
+                        # here, which gives up resolving its host name.
                         Tuple(
                             elements=[
                                 TextInput(
@@ -5674,7 +5678,11 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
                                 "In a distributed setup where the Event Console is not running in the same "
                                 "site as the host is monitored on, you need to access the remote Event Console "
                                 "via TCP. Please make sure that this is activated in the global settings of "
-                                "the Event Console. The default port number is 6558."
+                                "the Event Console. The default port number is 6558. A port after the "
+                                "host, e.g. myhost:6559 or [2001:db8::1]:6559, overrides it. The check "
+                                "tries IPv6 first, so if <i>Access to event status via TCP</i> of that "
+                                "Event Console restricts the source addresses, allow the IPv6 addresses "
+                                "of this site's host there, too."
                             ),
                         ),
                         TextInput(

@@ -5,6 +5,7 @@
 
 """Runs check_mkevents against a fake status socket with the events table of the Event Console"""
 
+import errno
 import logging
 import os
 import signal
@@ -39,6 +40,14 @@ class _StatusServer(socketserver.UnixStreamServer):
         self.table = _events_table(events)
 
 
+class _IPv6StatusServer(socketserver.TCPServer):
+    address_family: int = socket.AF_INET6
+
+    def __init__(self, events: Sequence[Event]) -> None:
+        super().__init__(("::1", 0), _StatusRequestHandler)
+        self.table = _events_table(events)
+
+
 # Only the events table is the real one: The loop over the queries, the plain output and closing
 # the connection without an answer on a client error are copies of StatusServer.handle_client()
 # and _answer_query(), so a change there doesn't show up in these tests. A real StatusServer would
@@ -46,7 +55,7 @@ class _StatusServer(socketserver.UnixStreamServer):
 class _StatusRequestHandler(socketserver.BaseRequestHandler):
     @override
     def handle(self) -> None:
-        assert isinstance(self.server, _StatusServer)
+        assert isinstance(self.server, _StatusServer | _IPv6StatusServer)
         table = self.server.table
         for request in Queries(self.request):
             try:
@@ -120,6 +129,14 @@ class _AnswerAfterTheDeadlineHandler(socketserver.BaseRequestHandler):
             os.kill(pid, signal.SIGCONT)
 
 
+class _NoEventsHandler(socketserver.BaseRequestHandler):
+    @override
+    def handle(self) -> None:
+        while self.request.recv(4096):
+            pass
+        self.request.sendall(b"event_phase\tevent_state\tevent_text\n")
+
+
 @contextmanager
 def _serving(server: socketserver.BaseServer) -> Iterator[None]:
     with server:
@@ -171,18 +188,67 @@ def fixture_socket_path() -> Iterator[Path]:
         yield Path(directory) / "status"
 
 
+@pytest.fixture(name="ipv6_loopback")
+def fixture_ipv6_loopback() -> None:
+    try:
+        with socket.socket(socket.AF_INET6) as sock:
+            sock.bind(("::1", 0))
+    except OSError as e:
+        if e.errno not in {errno.EADDRNOTAVAIL, errno.EAFNOSUPPORT}:
+            raise
+        pytest.skip(f"No IPv6 on the loopback interface, e.g. in some Docker containers: {e}")
+
+
+@pytest.fixture(name="ipv6_sockets")
+def fixture_ipv6_sockets() -> None:
+    """IPv6 sockets, maybe without addresses, enough to fail connecting to multicast"""
+    try:
+        socket.socket(socket.AF_INET6).close()
+    except OSError as e:
+        if e.errno != errno.EAFNOSUPPORT:
+            raise
+        pytest.skip(f"No IPv6 in the kernel: {e}")
+
+
 # The timeout for tests waiting for the check to time out, with slack for a loaded machine
 _SHORT_TIMEOUT = 2
 
 
-def _run_check(*args: str) -> subprocess.CompletedProcess[str]:
+def _run_check(
+    *args: str, env: Mapping[str, str] | None = None
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [os.environ["CHECK_MKEVENTS"], *args],
         capture_output=True,
         encoding="utf-8",
         timeout=30,
         check=False,
+        env=None if env is None else {**os.environ, **env},
     )
+
+
+# A name fake_network.c resolves to the addresses in FAKE_NETWORK_ADDRESSES
+_FAKE_NAME = "eventconsole.test"
+
+
+def _fake_network_env(*addresses: str, **variables: str) -> Mapping[str, str]:
+    """The environment for fake_network.c, resolving _FAKE_NAME to the addresses"""
+    return {
+        "LD_PRELOAD": str(Path(os.environ["FAKE_NETWORK"]).absolute()),
+        "FAKE_NETWORK_ADDRESSES": ",".join(addresses),
+        **variables,
+    }
+
+
+def _polls_between_connects(log: Path) -> Sequence[Sequence[int]]:
+    """The check's poll() timeouts in ms between its connects, which load can only lower"""
+    polls: list[list[int]] = [[]]
+    for call, value in struct.iter_unpack("=ii", log.read_bytes()):
+        if call == 1:  # connect()
+            polls.append([])
+        else:  # poll()
+            polls[-1].append(value)
+    return polls
 
 
 def _check_events(
@@ -433,6 +499,123 @@ def test_reading_stops_at_the_deadline_although_data_is_waiting(socket_path: Pat
     )
 
 
+def test_ipv4_address_is_used_if_no_ipv6_network_is_reachable() -> None:
+    server = socketserver.TCPServer(("127.0.0.1", 0), _NoEventsHandler)
+    with _serving(server):
+        result = _run_check(
+            "-H",
+            _FAKE_NAME,
+            "myhost",
+            # unreachable via TCP, like IPv6 from a host with IPv4 only
+            env=_fake_network_env("ff02::1", f"127.0.0.1#{server.server_address[1]}"),
+        )
+
+    assert (result.returncode, result.stdout) == (0, "OK - no events for myhost\n")
+
+
+def test_hanging_ipv6_lookup_doesnt_hold_up_the_ipv4_address() -> None:
+    server = socketserver.TCPServer(("127.0.0.1", 0), _NoEventsHandler)
+    with _serving(server):
+        # The default timeout, as the check must answer before it, even under load. How briefly
+        # IPv4 waits for IPv6 is up to the gtests of ConnectionSchedule.
+        result = _run_check(
+            "-H",
+            _FAKE_NAME,
+            "myhost",
+            env=_fake_network_env(
+                "ff02::1",
+                f"127.0.0.1#{server.server_address[1]}",
+                # like an unanswered AAAA query, longer than _run_check() waits
+                FAKE_NETWORK_IPV6_DELAY="60",
+            ),
+        )
+
+    assert (result.returncode, result.stdout) == (0, "OK - no events for myhost\n")
+
+
+def test_slow_address_can_still_win_against_the_next_one(tmp_path: Path) -> None:
+    log = tmp_path / "calls.log"
+    slow_server = socketserver.TCPServer(("127.0.0.1", 0), _NoEventsHandler)
+    with _unresponsive_listener("127.0.0.2") as unresponsive_server, _serving(slow_server):
+        result = _run_check(
+            "-H",
+            _FAKE_NAME,
+            "myhost",
+            env=_fake_network_env(
+                f"127.0.0.1#{slow_server.server_address[1]}",
+                f"127.0.0.2#{unresponsive_server.getsockname()[1]}",
+                # The first attempt seems to go on until the second one starts.
+                FAKE_NETWORK_SLOW_CONNECT="1",
+                FAKE_NETWORK_LOG=str(log),
+            ),
+        )
+
+    assert (result.returncode, result.stdout) == (0, "OK - no events for myhost\n")
+    # The first attempt won after the second one had started.
+    assert len(_polls_between_connects(log)) == 3
+
+
+def test_slow_name_resolution_counts_against_the_timeout(tmp_path: Path) -> None:
+    log = tmp_path / "calls.log"
+    with _unresponsive_listener("127.0.0.1") as server:
+        port = server.getsockname()[1]
+
+        result = _run_check(
+            "-t",
+            "4",
+            "-H",
+            f"127.0.0.1:{port}",
+            "myhost",
+            # Resolving leaves 2 seconds of slack, like _SHORT_TIMEOUT.
+            env=_fake_network_env(FAKE_NETWORK_DELAY="2", FAKE_NETWORK_LOG=str(log)),
+        )
+
+    assert (result.returncode, result.stdout) == (
+        3,
+        (
+            f"UNKNOWN - Cannot connect to event console at 127.0.0.1:{port}"
+            " (timeout after 4 seconds)\n"
+        ),
+    )
+    # Connecting waits for the 2 seconds left at most, not another 4.
+    assert all(timeout <= 2000 for timeout in _polls_between_connects(log)[1])
+
+
+def test_name_resolution_using_up_the_timeout_is_reported_as_such() -> None:
+    # Only resolving can time out, so a short timeout is safe under load.
+    with socket.create_server(("127.0.0.1", 0)) as server:
+        port = server.getsockname()[1]
+
+        result = _run_check(
+            "-t",
+            "1",
+            "-H",
+            f"127.0.0.1:{port}",
+            "myhost",
+            # longer than _run_check() waits
+            env=_fake_network_env(FAKE_NETWORK_DELAY="60"),
+        )
+
+    assert (result.returncode, result.stdout) == (
+        3,
+        "UNKNOWN - Cannot resolve the addresses of 127.0.0.1 (timeout after 1 second)\n",
+    )
+
+
+def test_unknown_zone_is_reported_as_unresolvable() -> None:
+    # Unlike the gtests of ConnectionSchedule, this takes the answers of the real resolver for both
+    # families. The zone is longer than any interface name.
+    result = _run_check("-H", "[fe80::1%no-such-interface]:6558", "myhost")
+
+    assert (result.returncode, result.stdout) == (
+        3,
+        (
+            "UNKNOWN - Cannot resolve the addresses of fe80::1%no-such-interface"
+            " (Name or service not known)\n"
+        ),
+    )
+
+
 @pytest.mark.parametrize(
     "args",
     [
@@ -448,29 +631,57 @@ def test_malformed_command_line_shows_usage(args: Sequence[str]) -> None:
     assert result.stdout.startswith("UNKNOWN - Usage: check_mkevents ")
 
 
-@pytest.mark.parametrize(
-    "remote",
-    [
-        "",
-        ":6558",
-        "localhost:abc",
-        "localhost:70000",
-        "localhost:+80",
-        "localhost: 80",
-        "localhost:0",
-    ],
-)
-def test_invalid_remote_address_is_reported(remote: str) -> None:
-    result = _run_check("-H", remote, "myhost")
+@pytest.mark.usefixtures("ipv6_loopback")
+def test_event_console_is_reachable_via_ipv6() -> None:
+    events = [{"host": "myhost", "phase": "open", "state": 1, "text": ""}]
+    server = _IPv6StatusServer(events)
+    with _serving(server):
+        result = _run_check("-H", f"[::1]:{server.server_address[1]}", "myhost")
+
+    assert (result.returncode, result.stdout) == (1, "WARN - 1 events (1 unacknowledged)\n")
+
+
+@pytest.mark.usefixtures("ipv6_loopback")
+def test_refused_ipv6_connection_shows_the_address_in_brackets() -> None:
+    with socket.socket(socket.AF_INET6) as unused:
+        unused.bind(("::1", 0))  # Reserves a port without listening on it.
+        port = unused.getsockname()[1]
+
+        result = _run_check("-H", f"[::1]:{port}", "myhost")
 
     assert (result.returncode, result.stdout) == (
         3,
-        f"UNKNOWN - Invalid remote address '{remote}', expected HOST[:PORT]\n",
+        f"UNKNOWN - Cannot connect to event console at [::1]:{port} (Connection refused)\n",
     )
 
 
-def test_empty_port_means_the_default_port() -> None:
-    result = _run_check("-H", "224.0.0.1:", "myhost")  # TCP can't connect to a multicast address.
+@pytest.mark.usefixtures("ipv6_sockets")
+def test_zone_of_an_ipv6_address_is_kept() -> None:
+    result = _run_check("-H", "ff02::1%lo", "myhost")  # TCP can't connect to a multicast address.
+
+    assert (result.returncode, result.stdout) == (
+        3,
+        (
+            "UNKNOWN - Cannot connect to event console at [ff02::1%lo]:6558"
+            " (Network is unreachable)\n"
+        ),
+    )
+
+
+def test_invalid_remote_address_is_reported() -> None:
+    result = _run_check("-H", "localhost:0", "myhost")
+
+    assert (result.returncode, result.stdout) == (
+        3,
+        (
+            "UNKNOWN - Invalid remote address 'localhost:0', expected HOST[:PORT],"
+            " e.g. myhost:6558 or [2001:db8::1]:6558\n"
+        ),
+    )
+
+
+def test_default_port_is_6558() -> None:
+    result = _run_check("-H", "224.0.0.1", "myhost")  # TCP can't connect to a multicast address.
 
     assert (result.returncode, result.stdout) == (
         3,
@@ -478,13 +689,22 @@ def test_empty_port_means_the_default_port() -> None:
     )
 
 
-def test_leading_zeros_of_the_port_dont_count() -> None:
+def test_port_option_applies_to_a_remote_address_without_a_port() -> None:
     # TCP can't connect to a multicast address.
-    result = _run_check("-H", "224.0.0.1:0006558", "myhost")
+    result = _run_check("-p", "6559", "-H", "224.0.0.1", "myhost")
 
     assert (result.returncode, result.stdout) == (
         3,
-        "UNKNOWN - Cannot connect to event console at 224.0.0.1:6558 (Network is unreachable)\n",
+        "UNKNOWN - Cannot connect to event console at 224.0.0.1:6559 (Network is unreachable)\n",
+    )
+
+
+def test_invalid_port_option_is_reported() -> None:
+    result = _run_check("-p", "0", "myhost")
+
+    assert (result.returncode, result.stdout) == (
+        3,
+        "UNKNOWN - Invalid port '0', expected 1 to 65535\n",
     )
 
 
@@ -497,11 +717,14 @@ def test_invalid_timeout_is_reported() -> None:
     )
 
 
-_NO_ANSWER = (
-    "UNKNOWN - Event console closed the connection without answering, see its log file"
-    " var/log/mkeventd.log for the reason, e.g. a denied access via TCP or an invalid regular"
-    " expression for the application"
-)
+def _no_answer(peer: str | None = None) -> str:
+    """The first line of the output for a connection closed without an answer"""
+    at = "" if peer is None else f" at {peer}"
+    return (
+        f"UNKNOWN - Event console{at} closed the connection without answering, see its log file"
+        " var/log/mkeventd.log for the reason, e.g. a denied access via TCP or an invalid regular"
+        " expression for the application"
+    )
 
 
 def test_connection_closed_while_sending_the_query_is_reported(socket_path: Path) -> None:
@@ -511,21 +734,25 @@ def test_connection_closed_while_sending_the_query_is_reported(socket_path: Path
     with _serving(socketserver.UnixStreamServer(str(socket_path), _HangUpHandler)):
         result = _run_check("-s", str(socket_path), "a" * 120_000, "b" * 120_000)
 
-    assert (result.returncode, result.stdout.splitlines()[0]) == (3, _NO_ANSWER)
+    assert (result.returncode, result.stdout.splitlines()[0]) == (3, _no_answer())
 
 
 def test_denied_access_via_tcp_is_reported() -> None:
     server = socketserver.TCPServer(("127.0.0.1", 0), _HangUpHandler)
+    port = server.server_address[1]
     with _serving(server):
-        result = _run_check("-H", f"127.0.0.1:{server.server_address[1]}", "myhost")
+        result = _run_check("-H", f"127.0.0.1:{port}", "myhost")
 
-    assert (result.returncode, result.stdout.splitlines()[0]) == (3, _NO_ANSWER)
+    assert (result.returncode, result.stdout.splitlines()[0]) == (
+        3,
+        _no_answer(f"127.0.0.1:{port}"),
+    )
 
 
 def test_invalid_application_regex_is_reported(socket_path: Path) -> None:
     result = _check_events(socket_path, [], "myhost", "my(app")
 
-    assert (result.returncode, result.stdout.splitlines()[0]) == (3, _NO_ANSWER)
+    assert (result.returncode, result.stdout.splitlines()[0]) == (3, _no_answer())
 
 
 def test_too_long_socket_path_is_reported(socket_path: Path) -> None:

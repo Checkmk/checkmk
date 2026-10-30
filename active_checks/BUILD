@@ -35,6 +35,35 @@ cc_test(
     ],
 )
 
+cc_library(
+    name = "connection_schedule",
+    srcs = ["connection_schedule.cc"],
+    hdrs = ["connection_schedule.h"],
+    copts = [
+        "-std=c++20",
+        "-g",
+        "-O3",
+        "-Wall",
+        "-Wextra",
+    ],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
+    deps = [":deadline"],
+)
+
+cc_test(
+    name = "test_connection_schedule",
+    size = "small",
+    srcs = ["test/test_connection_schedule.cc"],
+    copts = ["-std=c++20"],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
+    tags = ["cpp"],
+    deps = [
+        ":connection_schedule",
+        ":deadline",
+        "@gtest//:gtest_main",
+    ],
+)
+
 cc_binary(
     name = "check_mkevents",
     srcs = ["check_mkevents.cc"],
@@ -48,10 +77,14 @@ cc_binary(
     features = [
         "static_libstdcpp",
     ],
+    linkopts = [
+        "-pthread",
+    ],
     platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     visibility = ["//tests/integration/active_checks:__pkg__"],
     deps = [
         ":arguments",
+        ":connection_schedule",
         ":deadline",
     ],
 )

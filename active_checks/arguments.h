@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <utility>
 
 namespace check_mkevents {
 
@@ -18,6 +19,12 @@ std::optional<unsigned long> parse_number(const std::string &s,
 
 // Parses a port number from 1 to 65535.
 std::optional<uint16_t> parse_port(const std::string &s);
+
+// Parses "HOST[:PORT]" or "[IPV6]:PORT", ignoring extra colons around the port
+// like the rule always did. An empty port means the default one. Without
+// brackets, "cafe::6558" is an IPv6 address, "fe80::1%eth0:6558" has a port.
+std::optional<std::pair<std::string, uint16_t>> parse_remote(
+    const std::string &remote, uint16_t default_port);
 
 }  // namespace check_mkevents
 

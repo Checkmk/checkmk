@@ -3,9 +3,9 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include <arpa/inet.h>
+#include <fcntl.h>
 #include <netdb.h>
-#include <netinet/in.h>
+#include <poll.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -16,6 +16,7 @@
 #include <array>
 #include <cerrno>
 #include <chrono>
+#include <climits>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
@@ -25,18 +26,27 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <thread>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "active_checks/arguments.h"
+#include "active_checks/connection_schedule.h"
 #include "active_checks/deadline.h"
 
 namespace {
 
 using check_mkevents::Clock;
+using check_mkevents::ConnectionSchedule;
 using check_mkevents::Deadline;
+using check_mkevents::GiveUp;
+using check_mkevents::numeric_host;
 using check_mkevents::parse_number;
 using check_mkevents::parse_port;
+using check_mkevents::parse_remote;
+using check_mkevents::StartAttempt;
+using check_mkevents::Wait;
 
 enum class State { ok = 0, warn = 1, crit = 2, unknown = 3 };
 
@@ -96,8 +106,11 @@ void print_line(const std::string &output) {
     std::cout << '\n';
 }
 
+// A lookup thread may still run, so we skip the exit handlers, which could
+// destroy what it uses.
 [[noreturn]] void exit_with(State state) {
-    std::exit(static_cast<int>(state));  // NOLINT(concurrency-mt-unsafe)
+    std::cout.flush();
+    std::_Exit(static_cast<int>(state));
 }
 
 [[noreturn]] void reply_and_exit(State state, const std::string &output) {
@@ -111,11 +124,10 @@ constexpr std::chrono::seconds default_timeout{20};
 // The caller saves errno first, as building the message may change it.
 [[noreturn]] void io_error(const std::string &message, int err,
                            Deadline deadline) {
-    // All our sockets have timeouts, which expire with one of these errors.
-    const std::string reason =
-        err == EAGAIN || err == EWOULDBLOCK || err == EINPROGRESS
-            ? deadline.timeout_message()
-            : std::generic_category().message(err);
+    // The timeouts of our blocking sockets expire with one of these errors.
+    const std::string reason = err == EAGAIN || err == EWOULDBLOCK
+                                   ? deadline.timeout_message()
+                                   : std::generic_category().message(err);
     reply_and_exit(State::unknown, message + " (" + reason + ")");
 }
 
@@ -148,16 +160,6 @@ void limit_to_deadline(int sock, int option, Deadline deadline) {
         const int err = errno;
         io_error("Cannot set socket timeout", err, deadline);
     }
-}
-
-int create_socket(int domain, Deadline deadline) {
-    const int sock = ::socket(domain, SOCK_STREAM, 0);
-    if (sock == -1) {
-        const int err = errno;
-        io_error("Cannot create client socket", err, deadline);
-    }
-    limit_to_deadline(sock, SO_SNDTIMEO, deadline);  // for connect()
-    return sock;
 }
 
 // Cuts a string after at most max_size bytes, but doesn't cut a character in
@@ -210,12 +212,15 @@ bool closed_by_peer(int err) {
     return err == EPIPE || err == ECONNRESET || err == ENOTCONN;
 }
 
-[[noreturn]] void no_answer(const std::string &query) {
+// An IPv6 peer hints at an access list lacking our IPv6 address.
+[[noreturn]] void no_answer(const std::string &query, const std::string &peer) {
     reply_and_exit(State::unknown,
-                   "Event console closed the connection without answering, "
-                   "see its log file var/log/mkeventd.log for the reason, "
-                   "e.g. a denied access via TCP or an invalid regular "
-                   "expression for the application\nQuery was:\n" +
+                   "Event console" + std::string{peer.empty() ? "" : " at "} +
+                       peer +
+                       " closed the connection without answering, "
+                       "see its log file var/log/mkeventd.log for the reason, "
+                       "e.g. a denied access via TCP or an invalid regular "
+                       "expression for the application\nQuery was:\n" +
                        query);
 }
 
@@ -248,9 +253,10 @@ std::vector<std::string_view> split_columns(std::string_view line) {
 [[noreturn]] void usage() {
     reply_and_exit(
         State::unknown,
-        "Usage: check_mkevents [-s SOCKETPATH] [-H REMOTE[:PORT]] [-t SECONDS] [-a] [-l] [-L] [-q] [--] HOST [APPLICATION]\n"
+        "Usage: check_mkevents [-s SOCKETPATH] [-H REMOTE[:PORT]] [-p PORT] [-t SECONDS] [-a] [-l] [-L] [-q] [--] HOST [APPLICATION]\n"
         " -s    connect via this UNIX socket, by default $OMD_ROOT/tmp/run/mkeventd/status.\n"
-        " -H    connect via TCP, e.g. to myhost:6558.\n"
+        " -H    connect via TCP, e.g. to myhost:6558 or [2001:db8::1]:6558.\n"
+        " -p    connect to PORT if REMOTE has none, 6558 by default.\n"
         " -t    time out after SECONDS, 20 by default.\n"
         " -a    do not take acknowledged events into account.\n"
         " -l    show last log message in summary/short output.\n"
@@ -263,19 +269,11 @@ std::vector<std::string_view> split_columns(std::string_view line) {
 // More than an hour makes no sense for a check.
 constexpr unsigned long max_timeout_seconds = 3600;
 
-// Parses a remote address like "myhost:6558", the port is optional and may be
-// empty.
-std::pair<std::string, uint16_t> parse_remote(const std::string &remote) {
-    const auto colon = std::min(remote.find(':'), remote.size());
-    const auto address = remote.substr(0, colon);
-    const auto port = colon + 1 >= remote.size()
-                          ? std::optional<uint16_t>{6558}
-                          : parse_port(remote.substr(colon + 1));
-    if (address.empty() || !port) {
-        reply_and_exit(State::unknown, "Invalid remote address '" + remote +
-                                           "', expected HOST[:PORT]");
-    }
-    return {address, *port};
+[[noreturn]] void invalid_remote(const std::string &remote) {
+    reply_and_exit(State::unknown,
+                   "Invalid remote address '" + remote +
+                       "', expected HOST[:PORT], e.g. myhost:6558 or "
+                       "[2001:db8::1]:6558");
 }
 
 // Splits a host specification like "myhost/10.1.2.3" at the slashes. If it is
@@ -361,6 +359,7 @@ std::string host_filter(const std::string &spec, bool quoted) {
 
 struct Options {
     const char *remote_host = nullptr;
+    uint16_t remote_port = 6558;  // if remote_host has none
     std::string unixsocket_path;
     std::chrono::seconds timeout = default_timeout;
     bool ignore_acknowledged = false;
@@ -377,7 +376,7 @@ Options parse_options(int argc, char **argv) {
     // "+" ends the options at HOST, so APPLICATION may start with a dash.
     int option = 0;
     // NOLINTNEXTLINE(concurrency-mt-unsafe)
-    while ((option = getopt(argc, argv, "+s:H:t:alLq")) != -1) {
+    while ((option = getopt(argc, argv, "+s:H:p:t:alLq")) != -1) {
         switch (option) {
             case 's':
                 options.unixsocket_path = optarg;
@@ -385,6 +384,16 @@ Options parse_options(int argc, char **argv) {
             case 'H':
                 options.remote_host = optarg;
                 break;
+            case 'p': {
+                const auto port = parse_port(optarg);
+                if (!port) {
+                    reply_and_exit(State::unknown,
+                                   "Invalid port '" + std::string{optarg} +
+                                       "', expected 1 to 65535");
+                }
+                options.remote_port = *port;
+                break;
+            }
             case 't': {
                 const auto seconds = parse_number(optarg, max_timeout_seconds);
                 if (!seconds) {
@@ -424,44 +433,220 @@ Options parse_options(int argc, char **argv) {
     return options;
 }
 
-int connect_via_tcp(const std::string &remote, Deadline deadline) {
-    const auto [remote_hostaddress, remote_port] = parse_remote(remote);
-    // NOLINTNEXTLINE(concurrency-mt-unsafe)
-    const struct hostent *he = gethostbyname(remote_hostaddress.c_str());
-    if (he == nullptr) {
-        reply_and_exit(
-            State::unknown,
-            "Unable to resolve remote host address: " + remote_hostaddress);
+struct Attempt {
+    const addrinfo *address;
+    int sock;
+};
+
+// The answer of a lookup for one family
+struct Answer {
+    int family;
+    int rc;   // the result of getaddrinfo()
+    int err;  // errno, the reason for EAI_SYSTEM
+    addrinfo *addresses;
+};
+
+// A lookup sends its answer through a pipe, which writes it in one go.
+static_assert(sizeof(Answer) <= PIPE_BUF);
+
+// getaddrinfo() has no timeout, so each family gets a detached thread, using
+// only copies of our data. The pipe stays open, so writing can't raise SIGPIPE.
+void start_lookup(const std::string &name, const std::string &service,
+                  int family, int pipe_fd) {
+    try {
+        std::thread{[name, service, family, pipe_fd] {
+            addrinfo hints{};
+            hints.ai_family = family;
+            hints.ai_socktype = SOCK_STREAM;
+            Answer answer{
+                .family = family, .rc = 0, .err = 0, .addresses = nullptr};
+            answer.rc = ::getaddrinfo(name.c_str(), service.c_str(), &hints,
+                                      &answer.addresses);
+            answer.err = errno;
+            [[maybe_unused]] const auto written =
+                ::write(pipe_fd, &answer, sizeof(answer));
+        }}.detach();
+    } catch (const std::system_error &e) {
+        reply_and_exit(State::unknown, "Cannot start resolving names (" +
+                                           e.code().message() + ")");
     }
-
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    auto *addr_list = reinterpret_cast<struct in_addr **>(he->h_addr_list);
-    std::string remote_hostipaddress;
-    // NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic,concurrency-mt-unsafe)
-    for (int i = 0; addr_list[i] != nullptr; i++) {
-        remote_hostipaddress = std::string{inet_ntoa(*addr_list[i])};
-    }
-    // NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic,concurrency-mt-unsafe)
-
-    const int sock = create_socket(AF_INET, deadline);
-
-    sockaddr_in addr{};
-    addr.sin_family = AF_INET;
-    inet_aton(remote_hostipaddress.c_str(), &addr.sin_addr);
-    addr.sin_port = htons(remote_port);
-
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
-                  sizeof(sockaddr_in)) == -1) {
-        const int err = errno;
-        io_error("Cannot connect to event console at " + remote_hostipaddress +
-                     ":" + std::to_string(remote_port),
-                 err, deadline);
-    }
-    return sock;
 }
 
-int connect_via_unix_socket(std::string unixsocket_path, Deadline deadline) {
+// Returns the result of a finished attempt to connect, 0 for success.
+int connect_error(int sock) {
+    int err = 0;
+    socklen_t size = sizeof(err);
+    if (::getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &size) == -1) {
+        return errno;
+    }
+    return err;
+}
+
+// Happy Eyeballs: ConnectionSchedule decides, this class does the I/O.
+class HappyEyeballs {
+public:
+    HappyEyeballs(const std::string &name, uint16_t port, Deadline deadline)
+        : name_{name}, deadline_{deadline}, schedule_{name, port, deadline} {
+        if (::pipe2(pipe_.data(), O_CLOEXEC) == -1) {
+            const int err = errno;
+            io_error("Cannot create a pipe for resolving names", err,
+                     deadline_);
+        }
+        const auto service = std::to_string(port);
+        start_lookup(name_, service, AF_INET6, pipe_[1]);  // IPv6 first
+        start_lookup(name_, service, AF_INET, pipe_[1]);
+    }
+
+    // Returns the connected attempt or reports the failure. Its address lives
+    // as long as this object.
+    Attempt connect() {
+        while (true) {
+            const auto now = Clock::now();
+            const auto action = schedule_.next_action(now);
+            std::optional<Attempt> connected;
+            if (const auto *start = std::get_if<StartAttempt>(&action)) {
+                connected = start_attempt(now, *start->address);
+            } else if (const auto *wait = std::get_if<Wait>(&action)) {
+                connected = this->wait(wait->until);
+            } else {
+                reply_and_exit(State::unknown, std::get<GiveUp>(action).reason);
+            }
+            if (connected) {
+                for (const auto &attempt : going_on_) {
+                    ::close(attempt.sock);
+                }
+                return *connected;
+            }
+        }
+    }
+
+private:
+    std::string name_;
+    Deadline deadline_;
+    std::array<int, 2> pipe_{};  // from the lookups, never closed
+    ConnectionSchedule schedule_;
+    std::vector<Attempt> going_on_;
+
+    // Returns the attempt if it connects at once.
+    std::optional<Attempt> start_attempt(Clock::time_point now,
+                                         const addrinfo &address) {
+        const int sock =
+            ::socket(address.ai_family, address.ai_socktype | SOCK_NONBLOCK,
+                     address.ai_protocol);
+        if (sock == -1) {
+            const int err = errno;
+            schedule_.attempt_failed(now, address, err, /*got_socket=*/false);
+            return {};
+        }
+        if (::connect(sock, address.ai_addr, address.ai_addrlen) == 0) {
+            return Attempt{.address = &address, .sock = sock};
+        }
+        const int err = errno;
+        if (err == EINPROGRESS) {
+            going_on_.push_back({.address = &address, .sock = sock});
+            schedule_.attempt_going_on(now, address);
+        } else {
+            schedule_.attempt_failed(now, address, err, /*got_socket=*/true);
+            ::close(sock);
+        }
+        return {};
+    }
+
+    // Waits for attempts, answers or the time, returning a connected attempt.
+    std::optional<Attempt> wait(Clock::time_point until) {
+        std::vector<pollfd> fds;
+        fds.reserve(going_on_.size() + 1);
+        for (const auto &attempt : going_on_) {
+            fds.push_back(
+                {.fd = attempt.sock, .events = POLLOUT, .revents = 0});
+        }
+        const bool lookups_pending = schedule_.lookups_pending();
+        if (lookups_pending) {
+            fds.push_back({.fd = pipe_[0], .events = POLLIN, .revents = 0});
+        }
+        // A negative timeout would mean no timeout at all.
+        const auto timeout = std::max(
+            std::chrono::ceil<std::chrono::milliseconds>(until - Clock::now()),
+            std::chrono::milliseconds{0});
+        if (::poll(fds.data(), fds.size(), static_cast<int>(timeout.count())) ==
+            -1) {
+            const int err = errno;
+            if (err != EINTR) {
+                io_error("Cannot wait for the connection to the event console",
+                         err, deadline_);
+            }
+            return {};
+        }
+        const auto now = Clock::now();
+        if (lookups_pending && fds.back().revents != 0) {
+            take_answer(now);
+        }
+        std::optional<Attempt> connected;
+        std::vector<Attempt> still_going_on;
+        for (size_t i = 0; i < going_on_.size(); i++) {
+            if (connected || fds[i].revents == 0) {
+                still_going_on.push_back(going_on_[i]);
+            } else if (const int err = connect_error(going_on_[i].sock);
+                       err == 0) {
+                connected = going_on_[i];
+            } else {
+                schedule_.attempt_failed(now, *going_on_[i].address, err,
+                                         /*got_socket=*/true);
+                ::close(going_on_[i].sock);
+            }
+        }
+        going_on_ = std::move(still_going_on);
+        return connected;
+    }
+
+    // Takes the answer of a lookup, which has arrived.
+    void take_answer(Clock::time_point now) {
+        Answer answer{};
+        const ssize_t bytes = ::read(pipe_[0], &answer, sizeof(answer));
+        if (bytes != sizeof(answer)) {
+            const int err = bytes == -1 ? errno : EIO;
+            io_error("Cannot resolve the addresses of " + name_, err,
+                     deadline_);
+        }
+        schedule_.lookup_answered(now, answer.family, answer.rc, answer.err,
+                                  answer.addresses);
+    }
+};
+
+// The socket timeouts for sending and receiving need a blocking socket.
+void make_blocking(int sock, Deadline deadline) {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
+    const int flags = ::fcntl(sock, F_GETFL);
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
+    if (flags == -1 || ::fcntl(sock, F_SETFL, flags & ~O_NONBLOCK) == -1) {
+        const int err = errno;
+        io_error("Cannot make the socket blocking", err, deadline);
+    }
+}
+
+// A connection to the event console
+struct Connection {
+    int sock;
+    std::string peer;  // the address for TCP, e.g. "[2001:db8::1]:6558"
+};
+
+Connection connect_via_tcp(const std::string &remote, uint16_t default_port,
+                           Deadline deadline) {
+    const auto parsed = parse_remote(remote, default_port);
+    if (!parsed) {
+        invalid_remote(remote);
+    }
+    const auto &[remote_hostaddress, remote_port] = *parsed;
+    HappyEyeballs happy_eyeballs{remote_hostaddress, remote_port, deadline};
+    const auto attempt = happy_eyeballs.connect();
+    make_blocking(attempt.sock, deadline);
+    return {.sock = attempt.sock,
+            .peer = numeric_host(*attempt.address) + ":" +
+                    std::to_string(remote_port)};
+}
+
+Connection connect_via_unix_socket(std::string unixsocket_path,
+                                   Deadline deadline) {
     // Get omd environment
     if (unixsocket_path.empty()) {
         // NOLINTNEXTLINE(concurrency-mt-unsafe)
@@ -484,7 +669,12 @@ int connect_via_unix_socket(std::string unixsocket_path, Deadline deadline) {
     unixsocket_path.copy(&addr.sun_path[0], sizeof(addr.sun_path) - 1);
     addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
 
-    const int sock = create_socket(AF_UNIX, deadline);
+    const int sock = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    if (sock == -1) {
+        const int err = errno;
+        io_error("Cannot create client socket", err, deadline);
+    }
+    limit_to_deadline(sock, SO_SNDTIMEO, deadline);  // for connect()
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
                   sizeof(addr)) == -1) {
@@ -493,7 +683,7 @@ int connect_via_unix_socket(std::string unixsocket_path, Deadline deadline) {
             "Cannot connect to event daemon via UNIX socket " + unixsocket_path,
             err, deadline);
     }
-    return sock;
+    return {.sock = sock, .peer = ""};
 }
 
 std::string make_query(const char *host, bool host_spec_quoted,
@@ -514,19 +704,20 @@ std::string make_query(const char *host, bool host_spec_quoted,
     return query;
 }
 
-void send_query(int sock, const std::string &query, Deadline deadline) {
+void send_query(const Connection &connection, const std::string &query,
+                Deadline deadline) {
     const std::string message = "Cannot send query to event console";
     std::string_view rest{query};
     while (!rest.empty()) {
         check_deadline(message, deadline);
-        limit_to_deadline(sock, SO_SNDTIMEO, deadline);
+        limit_to_deadline(connection.sock, SO_SNDTIMEO, deadline);
         // Report a closed connection instead of dying from SIGPIPE.
         const ssize_t bytes_written =
-            ::send(sock, rest.data(), rest.size(), MSG_NOSIGNAL);
+            ::send(connection.sock, rest.data(), rest.size(), MSG_NOSIGNAL);
         if (bytes_written == -1) {
             const int err = errno;
             if (closed_by_peer(err)) {
-                no_answer(query);
+                no_answer(query, connection.peer);
             }
             if (err != EINTR) {
                 io_error(message, err, deadline);
@@ -535,29 +726,29 @@ void send_query(int sock, const std::string &query, Deadline deadline) {
             rest.remove_prefix(bytes_written);
         }
     }
-    if (shutdown(sock, SHUT_WR) == -1) {
+    if (shutdown(connection.sock, SHUT_WR) == -1) {
         const int err = errno;
         if (closed_by_peer(err)) {
-            no_answer(query);
+            no_answer(query, connection.peer);
         }
         io_error("Cannot shutdown socket to event console", err, deadline);
     }
 }
 
-std::string receive_response(int sock, const std::string &query,
-                             Deadline deadline) {
+std::string receive_response(const Connection &connection,
+                             const std::string &query, Deadline deadline) {
     const std::string message = "Error while reading response";
     std::string response;
     std::array<char, 65536> response_chunk{};
     while (true) {
         check_deadline(message, deadline);
-        limit_to_deadline(sock, SO_RCVTIMEO, deadline);
-        const ssize_t bytes_read =
-            ::read(sock, response_chunk.data(), response_chunk.size());
+        limit_to_deadline(connection.sock, SO_RCVTIMEO, deadline);
+        const ssize_t bytes_read = ::read(
+            connection.sock, response_chunk.data(), response_chunk.size());
         if (bytes_read == -1) {
             const int err = errno;
             if (closed_by_peer(err) && response.empty()) {
-                no_answer(query);
+                no_answer(query, connection.peer);
             }
             if (err != EINTR) {
                 io_error(message, err, deadline);
@@ -569,9 +760,9 @@ std::string receive_response(int sock, const std::string &query,
         }
     }
     // We have read the complete answer, so a failing close() doesn't matter.
-    ::close(sock);
+    ::close(connection.sock);
     if (response.empty()) {
-        no_answer(query);
+        no_answer(query, connection.peer);
     }
     return response;
 }
@@ -686,13 +877,14 @@ int main(int argc, char **argv) {
     const auto start = Clock::now();
     const auto options = parse_options(argc, argv);
     const Deadline deadline{.start = start, .timeout = options.timeout};
-    const int sock =
+    const auto connection =
         options.remote_host != nullptr
-            ? connect_via_tcp(options.remote_host, deadline)
+            ? connect_via_tcp(options.remote_host, options.remote_port,
+                              deadline)
             : connect_via_unix_socket(options.unixsocket_path, deadline);
     const auto query =
         make_query(options.host, options.host_spec_quoted, options.application);
-    send_query(sock, query, deadline);
-    const auto response = receive_response(sock, query, deadline);
+    send_query(connection, query, deadline);
+    const auto response = receive_response(connection, query, deadline);
     reply_with_events(parse_events(response, query), options);
 }

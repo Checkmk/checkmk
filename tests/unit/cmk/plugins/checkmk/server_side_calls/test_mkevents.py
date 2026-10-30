@@ -36,23 +36,18 @@ from cmk.server_side_calls.v1 import HostConfig
         ),
         pytest.param(
             {"hostspec": "foobar", "show_last_log": "no", "remote": ("myhost:6559", 6558)},
-            ["-H", "myhost:6559", "--", "foobar"],
+            ["-H", "myhost:6559", "-p", "6558", "--", "foobar"],
             id="remote host with its own port",
         ),
         pytest.param(
             {"hostspec": "foobar", "show_last_log": "no", "remote": (" myhost : 6559 ", 6558)},
-            ["-H", "myhost:6559", "--", "foobar"],
+            ["-H", "myhost:6559", "-p", "6558", "--", "foobar"],
             id="remote host with whitespace around its port",
         ),
         pytest.param(
-            {"hostspec": "foobar", "show_last_log": "no", "remote": ("myhost:", 6559)},
-            ["-H", "myhost:6559", "--", "foobar"],
-            id="remote host with an empty port",
-        ),
-        pytest.param(
-            {"hostspec": "foobar", "show_last_log": "no", "remote": ("myhost::6559", 6558)},
-            ["-H", "myhost:6559", "--", "foobar"],
-            id="remote host with its own port after colons",
+            {"hostspec": "foobar", "show_last_log": "no", "remote": ("2001:db8::1", 6559)},
+            ["-H", "2001:db8::1", "-p", "6559", "--", "foobar"],
+            id="remote IPv6 address",
         ),
         pytest.param(
             {"hostspec": "foobar", "show_last_log": "no", "timeout": 30},

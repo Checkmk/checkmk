@@ -39,15 +39,9 @@ def _quote_host(host: str) -> str:
     return host.replace("\\", "\\\\").replace("/", "\\/")
 
 
-def _remote_address(host: str, port: int) -> str:
-    """A host with a port of its own, e.g. "myhost:6559", keeps it like it always did
-
-    Like before, an empty port, e.g. in "myhost:", means the port of the rule, and further
-    colons around the port don't matter, e.g. in "myhost::6559". Neither does whitespace
-    around the host and the port, e.g. in " myhost : 6559 "."""
-    host = re.sub(r"\s*:\s*", ":", host.strip())
-    name, _colon, own_port = host.partition(":")
-    return f"{name}:{own_port.strip(':') or port}"
+def _remote_host(host: str) -> str:
+    """Drops whitespace around the host and its port, check_mkevents parses the rest"""
+    return re.sub(r"\s*:\s*", ":", host.strip())
 
 
 def generate_mkevents_command(
@@ -57,8 +51,13 @@ def generate_mkevents_command(
     args = []
     if params.remote is not None:
         if isinstance(params.remote, tuple):
-            ipaddress, port = params.remote
-            args += ["-H", _remote_address(replace_macros(ipaddress, host_config.macros), port)]
+            address, port = params.remote
+            args += [
+                "-H",
+                _remote_host(replace_macros(address, host_config.macros)),
+                "-p",
+                str(port),
+            ]
         elif params.remote:
             args += ["-s", replace_macros(params.remote, host_config.macros)]
 

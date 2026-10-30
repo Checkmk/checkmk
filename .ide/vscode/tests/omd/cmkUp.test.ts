@@ -63,6 +63,12 @@ describe('CmkUp command line', () => {
     )
   })
 
+  it('enrolls a single site into the picked file', () => {
+    expect(CmkUp.commandLine(CmkUp.enrollArgs('/ws/v300.yaml', 'v300'))).toBe(
+      'uvx --from cmk-werk-zeug@latest cmk-up --enroll /ws/v300.yaml --only-site v300'
+    )
+  })
+
   it('quotes a playbook path with spaces', () => {
     expect(CmkUp.commandLine(['/home/me/My Playbooks/SUP-1.yaml'])).toBe(
       "uvx --from cmk-werk-zeug@latest cmk-up '/home/me/My Playbooks/SUP-1.yaml'"

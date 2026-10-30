@@ -264,6 +264,7 @@ Each site header shows conditional icon buttons:
 - **Play/Stop** — starts or stops the site (hidden when status is unknown/needs auth)
 - **Terminal** — opens a `sudo omd su <site>` console
 - **Browser** — opens `http://localhost:<port>/<site>/` (only if port is configured)
+- **Book** — `cmk.cmkUp.enroll`: writes a cmk-up playbook that rebuilds the site (only while running)
 - **Trash** — deletes the site (with confirmation modal)
 
 ### OMD Socket Proxy (`src/omd/proxy.ts`)
@@ -300,7 +301,7 @@ a cloud site while that port is free.
 
 `CmkUp` (singleton `cmkUp`, registered from `extension.ts`) finds playbooks — YAML files whose first line is a shebang naming `cmk-up` — in the workspace (`findFiles`), in `cmk.cmkUp.playbookDirectories`, and among the wheel's shipped examples (listed through `uvx … python`). The scan is stale-while-revalidate (`snapshot()` / `rescan()`); the found file paths go into the context key `cmk.cmkUp.playbookFiles`, which gates the editor-title and explorer menu entries via `resourcePath in …`.
 
-`PlaybookRunWizard` is the `cmk.cmkUp.run` QuickPick flow: playbook → phases (`--list-phases`, skipped for one phase) → options. The run goes through `runInteractiveInKeepaliveTerminal()` in `sudoBridge.ts`: the command is typed into the keepalive terminal **unwrapped** (as the user, in the foreground, inheriting the sudo ticket) and chained onto the bridge queue, so bridge commands wait instead of being typed into cmk-up's TUI. The `playbooks` section renders `cmkUp.snapshot()` (state field `playbooks`, refreshed by `refreshPlaybooks()` in `sidebar.ts`); its buttons call `cmkUp.startRun(target, preset)`, and `cmk.cmkUp.init` writes `--init` into a save-dialog path. There is deliberately no `--rm` action: cmk-up's `--rm` wipes every site on the machine.
+`PlaybookRunWizard` is the `cmk.cmkUp.run` QuickPick flow: playbook → phases (`--list-phases`, skipped for one phase) → options. The run goes through `runInteractiveInKeepaliveTerminal()` in `sudoBridge.ts`: the command is typed into the keepalive terminal **unwrapped** (as the user, in the foreground, inheriting the sudo ticket) and chained onto the bridge queue, so bridge commands wait instead of being typed into cmk-up's TUI. The `playbooks` section renders `cmkUp.snapshot()` (state field `playbooks`, refreshed by `refreshPlaybooks()` in `sidebar.ts`); its buttons call `cmkUp.startRun(target, preset)`, and `cmk.cmkUp.init` writes `--init` into a save-dialog path. `cmk.cmkUp.enroll` (OMD site book button) runs `--enroll FILE --only-site SITE` through the keepalive terminal too (reading global settings needs sudo). There is deliberately no `--rm` action: cmk-up's `--rm` wipes every site on the machine.
 
 ### cmk-dev-site Integration (`src/omd/devSiteTools.ts`)
 

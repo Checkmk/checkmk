@@ -182,6 +182,7 @@ ${body}
       case 'omd-proxy-stop': vscode.postMessage({ type: 'omdProxyStop', site: el.dataset.site, service: el.dataset.service }); break;
       case 'omd-proxy-site': vscode.postMessage({ type: 'omdProxySite', site: el.dataset.site }); break;
       case 'omd-deploy': vscode.postMessage({ type: 'omdDeploy', site: el.dataset.site }); break;
+      case 'omd-enroll-site': vscode.postMessage({ type: 'omdEnrollSite', site: el.dataset.site }); break;
       case 'playbook-run': vscode.postMessage({ type: 'playbookRun', target: el.dataset.target }); break;
       case 'playbook-dry-run': vscode.postMessage({ type: 'playbookDryRun', target: el.dataset.target }); break;
       case 'playbook-open': vscode.postMessage({ type: 'playbookOpen', file: el.dataset.file }); break;

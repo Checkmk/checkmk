@@ -183,6 +183,7 @@ Displays all detected OMD sites with live status. Each site header shows:
 - **Logs** button — pick from all log files in `/omd/sites/<site>/var/log/` and tail the chosen file live in a terminal (`sudo tail -F`)
 - **Terminal** button — opens a `sudo omd su <site>` console
 - **Browser** button — opens the site in the browser (if port is configured)
+- **Create playbook** button — writes a cmk-up playbook that rebuilds the running site (`cmk-up --enroll`) and opens it
 - **Delete** button — removes the site (with confirmation)
 
 Expanding a site shows individual service status with per-service start/stop/restart controls. Services that have logs in the catalog (`cmc`, `apache`, `mkeventd`, `rrdcached`, `redis`, `stunnel`, `liveproxyd`, `dcd`, `rabbitmq`, `jaeger`, `agent-receiver`, `automation-helper`, `piggyback-hub`, `ui-job-scheduler`, `xinetd`, `mknotifyd`) also show a per-service **Logs** button — opens the matching log directly, or a scoped picker if multiple files are mapped (e.g. `apache-logs` + `web.log` + `security.log` for apache).
@@ -199,7 +200,7 @@ Expanding a site shows individual service status with per-service start/stop/res
 
 #### CMK Playbooks
 
-Lists the cmk-up playbooks found in the workspace, in `cmk.cmkUp.playbookDirectories` and among the shipped examples, grouped by where they come from, each with its description. Per playbook: **Open**, **Dry run** (the run wizard with `--dry-run` ticked) and **Run…**. The title bar has refresh, **New Playbook** (`cmk-up --init`: writes the reference playbook to a file you pick and opens it) and **Run…**.
+Lists the cmk-up playbooks found in the workspace, in `cmk.cmkUp.playbookDirectories` and among the shipped examples, grouped by where they come from, each with its description. A running site in **OMD Sites** has a **Create playbook** button (book icon; also F1 → `CMK ▸ cmk-up: Create Playbook from Site…`): `cmk-up --enroll` writes a playbook that rebuilds that site — versions, hosts, rules, users, BI — to a file you pick, and opens it. Per playbook: **Open**, **Dry run** (the run wizard with `--dry-run` ticked) and **Run…**. The title bar has refresh, **New Playbook** (`cmk-up --init`: writes the reference playbook to a file you pick and opens it) and **Run…**.
 
 #### Issues (Activity Bar Badge)
 

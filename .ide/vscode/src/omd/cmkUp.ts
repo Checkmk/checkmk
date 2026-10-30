@@ -13,6 +13,7 @@ import { log, notifyError } from '../core/log'
 import { safeExecAsync } from '../core/shell'
 import { getExtendedPath } from '../core/tasks'
 import { type PlaybookRunPreset, PlaybookRunWizard } from './cmkUpWizard'
+import { detectOmdSites } from './omd'
 import { ensureKeepaliveAuth, runInteractiveInKeepaliveTerminal } from './sudoBridge'
 
 export type PlaybookSource = 'workspace' | 'directory' | 'shipped'
@@ -93,6 +94,10 @@ export class CmkUp {
       })
   }
 
+  static enrollArgs(file: string, site: string): string[] {
+    return ['--enroll', file, '--only-site', site]
+  }
+
   static runArgs(target: string, options: PlaybookRunOptions): string[] {
     const args = [target]
     for (const phase of options.phases) args.push('--phase', phase)
@@ -118,6 +123,7 @@ export class CmkUp {
         this.startRun(uri instanceof vscode.Uri ? uri.fsPath : undefined)
       ),
       vscode.commands.registerCommand('cmk.cmkUp.init', () => this.init()),
+      vscode.commands.registerCommand('cmk.cmkUp.enroll', (site?: string) => this.enroll(site)),
       vscode.window.onDidChangeActiveTextEditor((editor) => {
         if (editor) this.noteDocument(editor.document)
       }),
@@ -195,6 +201,25 @@ export class CmkUp {
       vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ??
       os.homedir()
     )
+  }
+
+  async enroll(site?: string): Promise<void> {
+    site ??= (
+      await vscode.window.showQuickPick(
+        detectOmdSites().map((s) => ({ label: s.name, description: s.version })),
+        { title: 'cmk-up: create playbook from site' }
+      )
+    )?.label
+    if (!site) return
+    const uri = await vscode.window.showSaveDialog({
+      title: `Playbook that rebuilds ${site}`,
+      defaultUri: vscode.Uri.file(path.join(this.newPlaybookDirectory(), `${site}.yaml`)),
+      filters: { 'cmk-up playbook': ['yaml', 'yml'] }
+    })
+    if (!uri) return
+    fs.rmSync(uri.fsPath, { force: true })
+    const exitCode = await this.runInKeepalive(CmkUp.enrollArgs(uri.fsPath, site))
+    if (exitCode === 0 && fs.existsSync(uri.fsPath)) await this.openAndRescan(uri.fsPath)
   }
 
   async run(target: string, options: PlaybookRunOptions): Promise<number | null> {

@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.4.39",
+  "version": "0.4.40",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -180,6 +180,10 @@
         "command": "cmk.cmkUp.init",
         "title": "CMK ▸ cmk-up: New Playbook…",
         "icon": "$(add)"
+      },
+      {
+        "command": "cmk.cmkUp.enroll",
+        "title": "CMK ▸ cmk-up: Create Playbook from Site…"
       },
       {
         "command": "cmk.cmkUp.run",

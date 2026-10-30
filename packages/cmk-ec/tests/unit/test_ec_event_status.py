@@ -252,7 +252,6 @@ def test_corrupt_saved_status_is_not_silently_discarded(
         restart()
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "interval, timestamp, interval_count, expected",
     [
@@ -262,8 +261,7 @@ def test_corrupt_saved_status_is_not_silently_discarded(
         pytest.param((86400, 2), 10800.0, 0,   7200, id="start of the current day beginning at 2am"),
         pytest.param((86400, 2),  3600.0, 0, -79200, id="1am belongs to the previous day beginning at 2am"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_timestamps_are_clamped_to_the_start_of_their_interval(
     interval: ExpectInterval, timestamp: float, interval_count: int, expected: int
 ) -> None:

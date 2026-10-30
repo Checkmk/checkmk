@@ -18,7 +18,6 @@ def _migrate(element: str, value: object) -> object:
     return migrate(value)
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "element, value, expected",
     [
@@ -30,13 +29,11 @@ def _migrate(element: str, value: object) -> object:
         pytest.param("lgetage", (60, 120), ("fixed", (60.0, 120.0)), id="last get age"),
         pytest.param("lputage", (60, 120), ("fixed", (60.0, 120.0)), id="last put age"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_levels_keep_their_values(element: str, value: object, expected: object) -> None:
     assert _migrate(element, value) == expected
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "element, value, expected",
     [
@@ -44,8 +41,7 @@ def test_levels_keep_their_values(element: str, value: object, expected: object)
         pytest.param("opprocs", {"lower": (3, 1)}, {"lower": ("fixed", (3, 1)), "upper": _NO_LEVELS}, id="output lower only"),
         pytest.param("opprocs", {}, {"lower": _NO_LEVELS, "upper": _NO_LEVELS}, id="output none"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_handle_levels_left_out_become_no_levels(
     element: str, value: object, expected: object
 ) -> None:

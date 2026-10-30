@@ -388,7 +388,6 @@ def _render(command: Command, what: str) -> str:
         return "".join(output_funnel.drain())
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "permission, submit_var, what, row, expected",
     [
@@ -401,8 +400,7 @@ def _render(command: Command, what: str) -> str:
         pytest.param("action.clearmodattr", "_clear_modattr", "host", HOST_ROW, ChangeHostModifiedAttributes(HostName("myhost"), 0), id="reset host attributes"),
         pytest.param("action.clearmodattr", "_clear_modattr", "service", SERVICE_ROW, ChangeServiceModifiedAttributes(HostName("myhost"), 0, "CPU load"), id="reset service attributes"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @pytest.mark.usefixtures("request_context")
 def test_a_toggle_issues_the_core_command_of_the_pressed_button(
     with_user: tuple[UserId, str],
@@ -417,7 +415,6 @@ def test_a_toggle_issues_the_core_command_of_the_pressed_button(
     assert _issue(with_user[0], [permission], what, row) == [expected]
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "command, what, submit_button",
     [
@@ -435,8 +432,7 @@ def test_a_toggle_issues_the_core_command_of_the_pressed_button(
         pytest.param(CommandRemoveComments, "comment", "_delete_comments", id="remove comments"),
         pytest.param(CommandScheduleDowntimes(NoRecurringDowntimes()), "service", "_down_host", id="schedule downtimes"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @pytest.mark.usefixtures("request_context", "with_admin_login", "patch_theme")
 def test_a_command_form_offers_the_button_its_action_reacts_to(
     command: Command, what: str, submit_button: str
@@ -959,7 +955,6 @@ class TestScheduleDowntimes:
             "child",
         ]
 
-    # fmt: off
     @pytest.mark.parametrize(
         "form",
         [
@@ -967,8 +962,7 @@ class TestScheduleDowntimes:
             pytest.param({"_down_from_date": "2000-01-01", "_down_to_date": "2000-01-01"}, id="end in the past"),
             pytest.param({"_down_from_date": "2030-01-02"}, id="end before start"),
         ],
-    )
-    # fmt: on
+    )  # fmt: skip
     @pytest.mark.usefixtures("request_context")
     def test_an_invalid_downtime_form_is_rejected(
         self, with_user: tuple[UserId, str], form: dict[str, str]
@@ -1002,7 +996,6 @@ class TestScheduleDowntimes:
         ]
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "time_value, expected_end",
     [
@@ -1012,8 +1005,7 @@ class TestScheduleDowntimes:
         pytest.param("next_month", datetime(2030, 2, 1), id="next month"),
         pytest.param("next_year", datetime(2031, 1, 1), id="next year"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_a_downtime_preset_ends_at_the_start_of_the_next_period(
     time_value: int | Literal["next_day", "next_week", "next_month", "next_year"],
     expected_end: datetime,

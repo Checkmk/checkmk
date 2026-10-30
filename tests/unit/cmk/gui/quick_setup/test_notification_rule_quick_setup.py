@@ -49,8 +49,7 @@ _FILTER_FORM_SPEC_IDS = [
 ]
 
 
-# fmt: off
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context")  # fmt: skip
 @pytest.mark.parametrize(
     "stage, expected_ids",
     [
@@ -60,8 +59,7 @@ _FILTER_FORM_SPEC_IDS = [
         pytest.param(sending_conditions, ["sending_conditions"], id="sending_conditions"),
         pytest.param(general_properties, ["general_properties"], id="general_properties"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_stage_offers_its_form_specs(
     stage: Callable[[], QuickSetupStage], expected_ids: list[str]
 ) -> None:
@@ -70,12 +68,11 @@ def test_stage_offers_its_form_specs(
 
 @pytest.mark.usefixtures("request_context")
 def test_recipient_stage_offers_its_form_spec(test_edition: Edition) -> None:
-    assert list(
-        build_formspec_map_from_stages([recipient(test_edition)], _context(Config()))
-    ) == ["recipient"]
+    assert list(build_formspec_map_from_stages([recipient(test_edition)], _context(Config()))) == [
+        "recipient"
+    ]
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "trigger_events, message",
     [
@@ -83,8 +80,7 @@ def test_recipient_stage_offers_its_form_spec(test_edition: Edition) -> None:
         pytest.param({"host_events": []}, "At least one host event", id="empty-host-events"),
         pytest.param({"service_events": []}, "At least one service event", id="empty-service-events"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_at_least_one_event_is_required(trigger_events: dict[str, object], message: str) -> None:
     with pytest.raises(ValidationError, match=message):
         validate_at_least_one_event(trigger_events)
@@ -192,9 +188,7 @@ def test_saving_appends_a_rule(
 def test_editing_replaces_the_rule_with_the_given_id(
     load_config: Config, test_edition: Edition
 ) -> None:
-    NotificationRuleConfigFile().save(
-        [mail_rule("first"), mail_rule("second")], pprint_value=False
-    )
+    NotificationRuleConfigFile().save([mail_rule("first"), mail_rule("second")], pprint_value=False)
     form_data = dict(load_notifications("first"))
     form_data[FormSpecId("general_properties")] = {
         **form_data[FormSpecId("general_properties")],

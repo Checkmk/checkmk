@@ -270,15 +270,13 @@ def test_column_drilldowns_drops_a_link_whose_painter_is_gone(
     assert drilldowns == {}
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "view_name, columns",
     [
         pytest.param("allhosts", ["host_name"], id="host row"),
         pytest.param("allservices", ["host_name", "service_description"], id="service row"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @pytest.mark.usefixtures("request_context")
 def test_column_drilldowns_reads_the_columns_naming_the_row(
     admin_permissions: UserPermissions, view_name: str, columns: list[str]

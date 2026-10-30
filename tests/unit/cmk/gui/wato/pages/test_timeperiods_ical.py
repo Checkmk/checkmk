@@ -328,7 +328,6 @@ def test_import_ical_full_day_event_replaces_other_time_ranges_of_the_day() -> N
     assert result.exceptions == {"2027-01-05": [("00:00", "24:00")]}
 
 
-# fmt: off
 @pytest.mark.parametrize(
     ("properties", "expected_alias"),
     [
@@ -336,9 +335,10 @@ def test_import_ical_full_day_event_replaces_other_time_ranges_of_the_day() -> N
         pytest.param("X-WR-CALNAME:Name\n", "Name", id="name without description"),
         pytest.param("", "cal.ics", id="file name without both"),
     ],
-)
-# fmt: on
-def test_import_ical_alias_prefers_description_then_name_then_file_name(properties: str, expected_alias: str) -> None:
+)  # fmt: skip
+def test_import_ical_alias_prefers_description_then_name_then_file_name(
+    properties: str, expected_alias: str
+) -> None:
     content = _calendar(properties=properties)
 
     result = import_ical(content, filename="cal.ics", now=_NOW, horizon=_ONE_YEAR)

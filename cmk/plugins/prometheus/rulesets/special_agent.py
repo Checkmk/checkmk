@@ -106,7 +106,6 @@ def _parameter_form() -> Dictionary:
                                         "host_mapping": DictElement(
                                             parameter_form=String(
                                                 title=Title("Explicitly map Node Exporter host"),
-                                                # fmt: off
                                                 help_text=Help(
                                                     # weblate-flags: read-only, domain-specific
                                                     "Per default, Checkmk tries to map the underlying Checkmk host "
@@ -120,7 +119,6 @@ def _parameter_form() -> Dictionary:
                                                     "Exporter hosts to the underlying Checkmk host. This can be "
                                                     "used if the default options do not apply to your setup."
                                                 ),
-                                                # fmt: on
                                                 custom_validate=(_validate_hostname,),
                                             ),
                                         ),

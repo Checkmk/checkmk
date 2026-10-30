@@ -183,7 +183,6 @@ def test_cloudwatch_alarms_are_restricted_by_alarm_name() -> None:
     ]
 
 
-# fmt: off
 @pytest.mark.parametrize(
     ("params", "expected"),
     [
@@ -192,8 +191,7 @@ def test_cloudwatch_alarms_are_restricted_by_alarm_name() -> None:
         pytest.param({"global_services": {"cloudfront": ("all", {"host_assignment": "domain_host"})}}, ["--global-service", "cloudfront", "--cloudfront-host-assignment", "domain_host"], id="CloudFront host assignment"),
         pytest.param({"global_services": {"cloudfront": ("all", {"host_assignment": "distribution_host"})}}, ["--global-service", "cloudfront", "--cloudfront-host-assignment", "distribution_host"], id="CloudFront distribution host"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_service_specific_option_is_passed(
     params: Mapping[str, object], expected: Sequence[str]
 ) -> None:
@@ -212,7 +210,6 @@ def test_overall_tags_are_passed() -> None:
     ]
 
 
-# fmt: off
 @pytest.mark.parametrize(
     ("import_tags", "expected"),
     [
@@ -220,8 +217,7 @@ def test_overall_tags_are_passed() -> None:
         pytest.param(("filter_tags", "^cmk"), ["--import-matching-tags-as-labels", "^cmk"], id="import matching tags"),
         pytest.param(("ignore_tags", None), ["--ignore-all-tags"], id="import no tags"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_tag_import_follows_the_rule(
     import_tags: tuple[str, str | None], expected: Sequence[str]
 ) -> None:
@@ -269,7 +265,9 @@ def test_agent_accepts_the_arguments_of_every_option() -> None:
         connection_test=True,
     )
     # The backend replaces every secret with a reference to the password store.
-    command_line = [arg if isinstance(arg, str) else "password_store_reference" for arg in arguments]
+    command_line = [
+        arg if isinstance(arg, str) else "password_store_reference" for arg in arguments
+    ]
 
     parsed = parse_arguments(command_line)
 
@@ -324,7 +322,9 @@ def test_access_key_carries_the_account_list() -> None:
             },
         )
     )
-    command_line = [arg if isinstance(arg, str) else "password_store_reference" for arg in arguments]
+    command_line = [
+        arg if isinstance(arg, str) else "password_store_reference" for arg in arguments
+    ]
 
     parsed = parse_arguments(command_line)
 

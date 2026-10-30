@@ -93,7 +93,6 @@ def test_default_common_body_identifies_the_host() -> None:
     assert body.startswith("Host:     heute\nAlias:    Today\nAddress:  127.0.0.1\n")
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "overrides, expected_body",
     [
@@ -102,23 +101,20 @@ def test_default_common_body_identifies_the_host() -> None:
         pytest.param({"ALERTHANDLERNAME": "restart", "ALERTHANDLEROUTPUT": "done"}, "Alert handler: restart\nHandler output: done\n", id="host alert handler"),
         pytest.param({"WHAT": "SERVICE", "ALERTHANDLERNAME": "restart", "ALERTHANDLEROUTPUT": "done"}, "Service:  CPU load\nAlert handler: restart\nHandler output: done\n", id="service alert handler"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_default_event_body(overrides: dict[str, str], expected_body: str) -> None:
     body = asciimail.construct_content(_notification_context(PARAMETER_COMMON_BODY="", **overrides))
 
     assert body == expected_body
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "overrides, expected_body",
     [
         pytest.param({"PARAMETER_HOST_BODY": "$HOSTOUTPUT$"}, "heute\nNo response", id="host"),
         pytest.param({"WHAT": "SERVICE", "PARAMETER_SERVICE_BODY": "$SERVICEOUTPUT$"}, "heute\nload 5", id="service"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_configured_bodies_replace_defaults(overrides: dict[str, str], expected_body: str) -> None:
     body = asciimail.construct_content(
         _notification_context(PARAMETER_COMMON_BODY="$HOSTNAME$\n", **overrides)
@@ -133,7 +129,6 @@ def test_escaped_line_breaks_in_body_become_real_line_breaks() -> None:
     assert body.endswith("first\nsecond\n")
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "overrides, expected_subject",
     [
@@ -142,8 +137,7 @@ def test_escaped_line_breaks_in_body_become_real_line_breaks() -> None:
         pytest.param({"PARAMETER_HOST_SUBJECT": "$HOSTNAME$ is $HOSTSHORTSTATE$"}, "heute is DOWN", id="host custom"),
         pytest.param({"WHAT": "SERVICE", "PARAMETER_SERVICE_SUBJECT": "$SERVICEDESC$ broke"}, "CPU load broke", id="service custom"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_subject_is_stored_in_context(overrides: dict[str, str], expected_subject: str) -> None:
     context = _notification_context(**overrides)
 

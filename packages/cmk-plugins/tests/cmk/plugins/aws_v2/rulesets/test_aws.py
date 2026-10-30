@@ -47,15 +47,13 @@ def _values_of(option: str, params: Mapping[str, object]) -> set[str | Secret]:
     return {value for name, value in zip(arguments, arguments[1:]) if name == option}
 
 
-# fmt: off
 @pytest.mark.parametrize(
     ("services_key", "option", "global_service"),
     [
         pytest.param("global_services", "--global-service", True, id="global services"),
         pytest.param("regional_services", "--service", False, id="regional services"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_rule_offers_exactly_the_services_of_the_agent(
     services_key: str, option: str, global_service: bool
 ) -> None:

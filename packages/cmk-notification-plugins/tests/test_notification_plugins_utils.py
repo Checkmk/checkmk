@@ -727,15 +727,13 @@ _URL_CONTEXT = {
 }
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "what, expected_url",
     [
         pytest.param("HOST", "https://mon/heute/check_mk/view.py?siteopt=heute&view_name=host_graphs&host=host1", id="host"),
         pytest.param("SERVICE", "https://mon/heute/check_mk/view.py?siteopt=heute&view_name=service_graphs&host=host1&service=CPU load", id="service"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_graph_url_from_context(what: str, expected_url: str) -> None:
     assert utils.graph_url_from_context({**_URL_CONTEXT, "WHAT": what}) == expected_url
 
@@ -842,15 +840,13 @@ def test_post_request_uses_given_url_and_headers(
     assert responses.calls[0].request.headers["X-Token"] == "abc"
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "error, expected_stderr",
     [
         pytest.param(requests.exceptions.ProxyError("refused"), "Cannot connect to proxy: http://***@proxy.lan:3128\n", id="proxy error"),
         pytest.param(requests.exceptions.ConnectTimeout("slow"), "Connection timeout in notification plugin \n", id="timeout"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @responses.activate
 def test_post_request_connection_failure_is_final(
     error: requests.exceptions.RequestException,
@@ -866,7 +862,6 @@ def test_post_request_connection_failure_is_final(
     assert (result, capsys.readouterr().err) == (2, expected_stderr)
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "status_code, success_code, expected_result",
     [
@@ -875,8 +870,7 @@ def test_post_request_connection_failure_is_final(
         pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, HTTPStatus.OK, 1, id="server error is retried"),
         pytest.param(HTTPStatus.BAD_REQUEST, {HTTPStatus.OK}, 2, id="client error is final"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_process_by_status_code_result(
     status_code: int, success_code: int | set[int], expected_result: int
 ) -> None:
@@ -949,7 +943,6 @@ def test_json_field_matcher_does_not_match_non_json_body(
     assert capsys.readouterr().err == "Details for Status Code are not defined\n200: OK\n"
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "context, expected_message",
     [
@@ -961,8 +954,7 @@ def test_json_field_matcher_does_not_match_non_json_body(
         pytest.param({"WHAT": "HOST", "NOTIFICATIONTYPE": "DOWNTIMEEND", "NOTIFICATIONCOMMENT": "done"}, "host1  Downtime End done", id="downtime end"),
         pytest.param({"WHAT": "HOST", "NOTIFICATIONTYPE": "CUSTOM", "NOTIFICATIONCOMMENT": "hello"}, "host1  Custom Notification hello", id="custom"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_sms_message_from_context(context: dict[str, str], expected_message: str) -> None:
     assert utils.get_sms_message_from_context({"HOSTNAME": "host1", **context}) == expected_message
 
@@ -1080,7 +1072,6 @@ def test_render_cmk_graphs_reports_rendering_error(
     )
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "body, expected_error",
     [
@@ -1089,8 +1080,7 @@ def test_render_cmk_graphs_reports_rendering_error(
         pytest.param("not json", requests.exceptions.JSONDecodeError, id="invalid JSON"),
         pytest.param('{"result_code": 1, "result": "no permission"}', RuntimeError, id="rendering error"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @responses.activate
 def test_render_cmk_graphs_raises_when_requested(
     graph_url: re.Pattern[str], body: str | Exception, expected_error: type[Exception]

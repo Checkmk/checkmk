@@ -83,7 +83,6 @@ def test_check_innovaphone_priports_l1_first_run_initializes_signal_loss_counter
     assert value_store == {"innovaphone_priports_l1.Port 1": (60.0, 0)}
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "state, expected",
     [
@@ -91,8 +90,7 @@ def test_check_innovaphone_priports_l1_first_run_initializes_signal_loss_counter
         pytest.param(1, Result(state=State.CRIT, summary="Current state is Down"), id="down"),
         pytest.param(0, Result(state=State.UNKNOWN, summary="Current state is unknown (0)"), id="unknown"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @time_machine.travel(60.0)
 @pytest.mark.usefixtures("value_store")
 def test_check_innovaphone_priports_l1_reports_port_state(state: int, expected: Result) -> None:

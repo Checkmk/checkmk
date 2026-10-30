@@ -38,7 +38,6 @@ def _phases_and_counts(event_status: EventStatus) -> list[tuple[str, int]]:
     return [(event["phase"], event["count"]) for event in event_status.events()]
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "rewriting, expected",
     [
@@ -48,8 +47,7 @@ def _phases_and_counts(event_status: EventStatus) -> list[tuple[str, int]]:
         pytest.param({"set_host": "nas"}, {"host": "nas", "orig_host": "fileserver"}, id="host"),
         pytest.param({"set_contact": "Harry Hirsch"}, {"contact": "Harry Hirsch"}, id="contact"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_rule_rewrites_the_event(
     event_server: EventServer, event_status: EventStatus, rewriting: ec.Rule, expected: ec.Event
 ) -> None:
@@ -142,7 +140,6 @@ def test_counting_event_opens_when_its_count_is_reached(
     assert _phases_and_counts(event_status) == [("open", 3)]
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "separation, other_message",
     [
@@ -150,8 +147,7 @@ def test_counting_event_opens_when_its_count_is_reached(
         pytest.param({"separate_application": True}, {"application": "smartd"}, id="other application"),
         pytest.param({"separate_match_groups": True}, {"text": "disk /home full"}, id="other match groups"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_differing_messages_are_counted_separately(
     event_server: EventServer,
     event_status: EventStatus,
@@ -257,15 +253,13 @@ def test_event_of_a_delaying_rule_is_delayed(
     ]
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "counting, expected_history",
     [
         pytest.param({}, ["NEW", "AUTODELETE"], id="uncounted"),
         pytest.param({"count": new_count(1, period=HOUR)}, ["NEW", "COUNTREACHED", "AUTODELETE"], id="counted"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_event_of_an_autodeleting_rule_is_closed_immediately(
     event_server: EventServer,
     history: RecordingHistory,
@@ -325,7 +319,9 @@ def test_replication_slave_processes_messages_only_after_taking_over(
     )
     slave_status["mode"] = mode
 
-    event_server.process_syslog_messages([b"<11>Oct 22 13:05:00 fileserver smartd: disk full"], None)
+    event_server.process_syslog_messages(
+        [b"<11>Oct 22 13:05:00 fileserver smartd: disk full"], None
+    )
 
     assert len(event_status.events()) == expected_number_of_events
 

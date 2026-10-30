@@ -697,7 +697,6 @@ def test_alert_handler_mail_text_shows_handler_result() -> None:
     )
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "make_context, overrides, expected_subject",
     [
@@ -706,8 +705,7 @@ def test_alert_handler_mail_text_shows_handler_result() -> None:
         pytest.param(_host_context, {"PARAMETER_HOST_SUBJECT": "$HOSTNAME$ is $HOSTSTATE$"}, "heute is DOWN", id="host custom"),
         pytest.param(_service_context, {"PARAMETER_SERVICE_SUBJECT": "$SERVICEDESC$: $SERVICESTATE$"}, "CPU load: WARNING", id="service custom"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @pytest.mark.usefixtures("mail_site_root")
 def test_mail_subject(
     make_context: Callable[[], dict[str, str]], overrides: dict[str, str], expected_subject: str
@@ -765,7 +763,6 @@ def test_host_link_uses_configured_url_prefix() -> None:
     assert 'href="https://mon/heute/check_mk/index.py?host=heute"' in content.content_html
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "parameters, expected_icons",
     [
@@ -776,8 +773,7 @@ def test_host_link_uses_configured_url_prefix() -> None:
         pytest.param({"PARAMETER_SVC_LABELS": "1"}, ["checkmk_logo.png", "overview.png", "label.png"], id="service labels"),
         pytest.param({"PARAMETER_HOST_TAGS": "1"}, ["checkmk_logo.png", "overview.png", "vector.png"], id="host tags"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @pytest.mark.usefixtures("mail_site_root")
 def test_section_icons_are_attached_for_shown_sections(
     parameters: dict[str, str], expected_icons: list[str]
@@ -980,7 +976,6 @@ def test_send_mail_via_smtp_delivers_to_every_recipient(smtp_server: _FakeSmtpSe
     ]
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "replies, expected_result, expected_stderr",
     [
@@ -991,8 +986,7 @@ def test_send_mail_via_smtp_delivers_to_every_recipient(smtp_server: _FakeSmtpSe
         pytest.param({"DATA": "554 rejected"}, 1, 'unexpected error code from "127.0.0.1": rejected\n', id="data refused"),
         pytest.param({"EHLO": "502 no", "HELO": "502 no"}, 1, 'protocol error from "127.0.0.1": no\n', id="greeting refused"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_send_mail_via_smtp_failure(
     replies: dict[str, str],
     expected_result: int,

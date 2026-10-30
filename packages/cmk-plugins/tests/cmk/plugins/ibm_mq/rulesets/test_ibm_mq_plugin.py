@@ -16,15 +16,13 @@ def _migrate_version(version: object) -> object:
     return migrate(version)
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "version, expected",
     [
         pytest.param((("at_least", "2.0"), 1), ("at_least", {"version": "2.0", "state": 1}), id="at least"),
         pytest.param((("specific", "9.1"), 2), ("specific", {"version": "9.1", "state": 2}), id="specific"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_version_check_keeps_its_comparison_version_and_state(
     version: object, expected: object
 ) -> None:

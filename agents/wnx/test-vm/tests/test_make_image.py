@@ -65,7 +65,6 @@ def test_output_in_a_missing_directory_is_refused(tmp_path: Path) -> None:
         check_paths(missing)
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "unusable",
     [
@@ -74,8 +73,7 @@ def test_output_in_a_missing_directory_is_refused(tmp_path: Path) -> None:
         pytest.param(lambda c, d: replace(c, media=d / "eval:iso"), id="colon in the media"),
         pytest.param(lambda c, d: replace(c, sql_iso=d / "sql,iso"), id="comma in the SQL media"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_paths_qemu_cannot_take_are_refused(
     tmp_path: Path, unusable: Callable[[Config, Path], Config]
 ) -> None:

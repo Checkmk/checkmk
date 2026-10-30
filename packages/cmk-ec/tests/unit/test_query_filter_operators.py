@@ -67,7 +67,6 @@ def test_eq_tilde_different_strings_do_not_match() -> None:
     assert cmp("hello", "world") is False
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "operator_name, value, argument, expected",
     [
@@ -80,8 +79,7 @@ def test_eq_tilde_different_strings_do_not_match() -> None:
         pytest.param("!~~", "Hello", "^he",   False, id="regex does not match ignoring case, value differs in case"),
         pytest.param("!~~", "Hello", "^wo",   True,  id="regex does not match ignoring case, non-matching value"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_negated_operator_holds_only_if_the_value_does_not_match(
     operator_name: str, value: str, argument: str, expected: bool
 ) -> None:

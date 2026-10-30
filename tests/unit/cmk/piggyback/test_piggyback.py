@@ -300,7 +300,6 @@ def test_cleanup_removes_source_status_file_older_than_cut_off(
     assert message.meta.last_contact == expected_last_contact
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "max_cache_file_age, rule_values, effective_max_age",
     [
@@ -312,8 +311,7 @@ def test_cleanup_removes_source_status_file_older_than_cut_off(
         pytest.param(60, [{"global_max_cache_age": "global", "per_piggybacked_host": [{"max_cache_age": "global"}]}], 60, id="non-integer values ignored"),
         pytest.param(60, [{"per_piggybacked_host": [{}]}], 60, id="rule without max age ignored"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_cleanup_cut_off_uses_largest_configured_max_age(
     tmp_path: Path,
     max_cache_file_age: int,
@@ -342,9 +340,9 @@ def test_cleanup_keeps_piggybacked_host_folder_with_fresh_payload(tmp_path: Path
 
     _cleanup(tmp_path)
 
-    assert backend.get_current_piggyback_sources_of_host(
-        tmp_path, HostAddress("piggybacked")
-    ) == {"fresh-source"}
+    assert backend.get_current_piggyback_sources_of_host(tmp_path, HostAddress("piggybacked")) == {
+        "fresh-source"
+    }
 
 
 # These two call private functions on purpose: a file or folder vanishing while the

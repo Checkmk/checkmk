@@ -760,7 +760,6 @@ def test_filters_display_with_empty_request(live: MockLiveStatusConnection) -> N
                 filt.display(dict.fromkeys(filt.htmlvars, ""), RequestCache(Config()))
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "ident, expected_line_breaks",
     [
@@ -772,8 +771,7 @@ def test_filters_display_with_empty_request(live: MockLiveStatusConnection) -> N
         pytest.param("aggr_state", 0, id="hidden component adds no row"),
         pytest.param("aggregation_types", 0, id="horizontal group stays on one row"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @pytest.mark.usefixtures("request_context", "patch_theme")
 def test_filter_display_puts_top_level_components_on_separate_rows(
     ident: str, expected_line_breaks: int

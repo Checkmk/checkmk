@@ -42,7 +42,6 @@ _MANDATORY_MISSING: Final = (
 )
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "context, output",
     [
@@ -50,8 +49,7 @@ _MANDATORY_MISSING: Final = (
         pytest.param({**CONTEXT, "CONTACTPAGER": " "}, "Error: Pager Number of jdoe not set\n", id="missing_pager_number"),
         pytest.param({**CONTEXT, "PARAMETER_MODEM_TYPE": "other"}, "Unknown unsupported modem: other", id="unknown_modem"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @responses.activate
 def test_invalid_configuration_fails_without_request(
     notify_context: Callable[[Mapping[str, str]], None],
@@ -135,20 +133,16 @@ def test_tls_verification(
     assert exit_code(main) == 0
 
 
-_LEGACY_HTTP_ERROR: Final = (
-    f"HTTPError sending SMS: 500 Server Error: Internal Server Error for url: {LEGACY_URL}, b'boom'\n"
-)
+_LEGACY_HTTP_ERROR: Final = f"HTTPError sending SMS: 500 Server Error: Internal Server Error for url: {LEGACY_URL}, b'boom'\n"
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "status, body, error",
     [
         pytest.param(HTTPStatus.OK, "ERROR\n", "Error Status: 200 Details: b'ERROR\\n'\n", id="rejected"),
         pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, "boom", _LEGACY_HTTP_ERROR, id="http_error"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @responses.activate
 def test_legacy_endpoint_failure(
     notify_context: Callable[[Mapping[str, str]], None],
@@ -207,7 +201,6 @@ _LOGIN_HTTP_ERROR: Final = (
 )
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "login_status, login_reply, send_reply, error",
     [
@@ -215,8 +208,7 @@ _LOGIN_HTTP_ERROR: Final = (
         pytest.param(HTTPStatus.OK, {"data": {"token": "session-token"}}, {"success": False}, "", id="not_sent"),
         pytest.param(HTTPStatus.UNAUTHORIZED, {}, {"success": True}, _LOGIN_HTTP_ERROR, id="login_rejected"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @responses.activate
 def test_api_endpoint_failure(
     notify_context: Callable[[Mapping[str, str]], None],

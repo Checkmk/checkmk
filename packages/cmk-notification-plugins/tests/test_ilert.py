@@ -55,7 +55,6 @@ def test_posts_complete_context_as_event(
 _NONE_OPEN: Final = '{"code": "NONE_OPEN_FOR_KEY"}'
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "status, reply, expected_exit_code, outcome",
     [
@@ -67,8 +66,7 @@ _NONE_OPEN: Final = '{"code": "NONE_OPEN_FOR_KEY"}'
         pytest.param(451, "nope", 2, "Event not accepted by iLert: nope", id="other_4xx"),
         pytest.param(503, "down", 1, "Server error: down", id="5xx"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @responses.activate
 def test_response_maps_to_exit_code(
     notify_context: Callable[[Mapping[str, str]], None],

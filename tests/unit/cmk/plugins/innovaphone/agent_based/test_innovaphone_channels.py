@@ -57,7 +57,6 @@ def test_check_innovaphone_channels_down_channel_is_crit(link: str, physical: st
     ]
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "idle, expected_state, expected_usage",
     [
@@ -66,8 +65,7 @@ def test_check_innovaphone_channels_down_channel_is_crit(link: str, physical: st
         pytest.param(8.0, State.CRIT, 80, id="at crit"),
         pytest.param(0.0, State.CRIT, 100, id="fully used"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_check_innovaphone_channels_usage_state_follows_levels(
     idle: float, expected_state: State, expected_usage: int
 ) -> None:

@@ -28,19 +28,15 @@ def test_purl_str_sorts_the_qualifiers_by_key() -> None:
     )
 
 
-# fmt: off
 @pytest.mark.parametrize("spelling", [
     pytest.param("pkg:pypi/Charset-Normalizer@3.3.2", id="upper case"),
     pytest.param("pkg:pypi/charset_normalizer@3.3.2", id="underscore"),
     pytest.param("pkg:pypi/charset.normalizer@3.3.2", id="dot"),
     pytest.param("pkg:pypi/charset._-normalizer@3.3.2", id="run of separators"),
     pytest.param("pkg:PyPI/Charset_Normalizer@3.3.2", id="upper case type"),
-])
-# fmt: on
+])  # fmt: skip
 def test_pypi_purls_are_equal_however_the_name_is_spelled(spelling: str) -> None:
-    assert PUrl.from_str(spelling) == PUrl(
-        type_="pypi", name="charset-normalizer", version="3.3.2"
-    )
+    assert PUrl.from_str(spelling) == PUrl(type_="pypi", name="charset-normalizer", version="3.3.2")
 
 
 def test_pypi_purls_are_serialized_with_the_canonical_name() -> None:

@@ -1867,7 +1867,6 @@ def test_legacy_logging_levels_are_mapped(configured: int, expected: int) -> Non
     assert notify.resolve_logging_level(configured) == expected
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "edition, spooling, spool_to, expected",
     [
@@ -1878,8 +1877,7 @@ def test_legacy_logging_levels_are_mapped(configured: int, expected: int) -> Non
         pytest.param(Edition.PRO, None, ("host", 6555, True), "both", id="legacy spool_to also local"),
         pytest.param(Edition.PRO, None, ("host", 6555, False), "remote", id="legacy spool_to only remote"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_spooling_mode_is_resolved(
     edition: Edition,
     spooling: Literal["local", "remote", "both", "off"] | None,
@@ -1940,15 +1938,13 @@ def test_user_notification_rules_are_ordered_by_contact_name() -> None:
     assert [r["description"] for r in rules] == ["amy's", "zed's"]
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "rule, expected_sites",
     [
         pytest.param(_make_rule(), ["site_a"], id="authorized sites become the site condition"),
         pytest.param(_make_rule() | {"match_site": ["site_b"]}, ["site_b"], id="explicit site condition is kept"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_user_notification_rules_respect_authorized_sites(
     rule: EventRule, expected_sites: list[str]
 ) -> None:
@@ -2004,7 +2000,6 @@ _RULE_CONTACTS: Final[Mapping[ContactName, Contact]] = {
 }
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "rule, expected",
     [
@@ -2017,8 +2012,7 @@ _RULE_CONTACTS: Final[Mapping[ContactName, Contact]] = {
         pytest.param(_make_rule() | {"contact_users": ["fb@example.com"]}, {"fb@example.com"}, id="fallback address as user"),
         pytest.param(_make_rule() | {"contact_all": True, "contact_match_groups": ["ops"]}, {"alice"}, id="restricted to group members"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_rule_contacts(rule: EventRule, expected: set[str]) -> None:
     assert notify.rbn_rule_contacts(
         rule,
@@ -2031,7 +2025,6 @@ def test_rule_contacts(rule: EventRule, expected: set[str]) -> None:
 _NOW: Final = time.time()
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "disable_notifications, expected",
     [
@@ -2040,8 +2033,7 @@ _NOW: Final = time.time()
         pytest.param({"disable": True, "timerange": (_NOW - 7200, _NOW - 3600)}, frozenset({"alice"}), id="disabled in the past"),
         pytest.param({"disable": False}, frozenset({"alice"}), id="not disabled"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_rule_contacts_skip_contacts_with_disabled_notifications(
     disable_notifications: Mapping[str, object], expected: frozenset[str]
 ) -> None:
@@ -2197,7 +2189,7 @@ def test_event_type_of_non_state_change_service_notification(
             "NOTIFICATIONTYPE": notification_type,
             "SERVICESTATE": "OK",
             "PREVIOUSSERVICEHARDSTATE": "OK",
-        }
+        },
     )
 
     assert (
@@ -2456,7 +2448,9 @@ def test_test_notification_is_sent_via_the_dispatched_plugin(tmp_path: Path) -> 
     assert _sent_to(tmp_path) == ["harry@example.com"]
 
 
-@pytest.mark.usefixtures("core_notification", "release_locks", "no_monitoring_core", "isolated_logging")
+@pytest.mark.usefixtures(
+    "core_notification", "release_locks", "no_monitoring_core", "isolated_logging"
+)
 def test_notification_is_sent_directly_without_spooling(tmp_path: Path) -> None:
     _install_plugin("my_script", tmp_path)
 
@@ -2476,7 +2470,6 @@ def test_notification_is_spooled_for_local_delivery() -> None:
     assert (spooled["plugin"], spooled["context"]["CONTACTNAME"]) == ("my_script", "harry")
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "bulk, timeperiods_active, expected_bulk",
     [
@@ -2485,8 +2478,7 @@ def test_notification_is_spooled_for_local_delivery() -> None:
         pytest.param(("timeperiod", _NIGHT_BULK_WITH_OUTSIDE), {"night": False}, "60,10", id="outside time period with bulking outside"),
         pytest.param(("timeperiod", _NIGHT_BULK), _UnreachableCore(), "timeperiod:night,10", id="unknown time period state is assumed active"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @pytest.mark.usefixtures("core_notification", "release_locks", "isolated_logging")
 def test_notification_of_bulk_rule_is_stored_for_bulk_delivery(
     bulk: NotifyBulkType,
@@ -2501,7 +2493,9 @@ def test_notification_of_bulk_rule_is_stored_for_bulk_delivery(
     assert [d.name for d in bulk_dirs] == [expected_bulk]
 
 
-@pytest.mark.usefixtures("core_notification", "release_locks", "no_monitoring_core", "isolated_logging")
+@pytest.mark.usefixtures(
+    "core_notification", "release_locks", "no_monitoring_core", "isolated_logging"
+)
 def test_notification_outside_bulk_time_period_is_sent_directly(tmp_path: Path) -> None:
     _install_plugin("my_script", tmp_path)
     rule = _make_add_rule(contact_users=["harry"]) | {"bulk": ("timeperiod", _NIGHT_BULK)}
@@ -2511,7 +2505,9 @@ def test_notification_outside_bulk_time_period_is_sent_directly(tmp_path: Path) 
     assert _sent_to(tmp_path) == ["harry@example.com"]
 
 
-@pytest.mark.usefixtures("core_notification", "release_locks", "no_monitoring_core", "isolated_logging")
+@pytest.mark.usefixtures(
+    "core_notification", "release_locks", "no_monitoring_core", "isolated_logging"
+)
 def test_fallback_address_is_notified_when_no_rule_matches(tmp_path: Path) -> None:
     _install_plugin("my_script", tmp_path)
 
@@ -2571,15 +2567,13 @@ def _stored_bulk_notification(
     return params, context
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "bulk, expected_name",
     [
         pytest.param(TimeperiodBulkParameters(timeperiod="night", count=5, groupby=["host"]), "timeperiod:night,5,host,h", id="time period"),
         pytest.param(AlwaysBulkParameters(interval=60, count=5, groupby=["folder"]), "60,5,folder,linux", id="folder"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_bulk_directory_is_named_after_its_grouping(
     tmp_path: Path, bulk: NotifyBulkParameters, expected_name: str
 ) -> None:
@@ -2681,7 +2675,6 @@ def _make_bulk(bulk_root: Path, dirname: str, *, notifications: int, age: float)
         os.utime(notification, (mtime, mtime))
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "dirname, notifications, age, timeperiods_active, ripe",
     [
@@ -2695,8 +2688,7 @@ def _make_bulk(bulk_root: Path, dirname: str, *, notifications: int, age: float)
         pytest.param("timeperiod:night,10", 1, 0, _UnreachableCore(), False, id="time period state unknown"),
         pytest.param("bogus,10", 1, 120, {}, False, id="invalid bulk directory"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_ripe_bulks(
     tmp_path: Path,
     dirname: str,
@@ -2745,7 +2737,8 @@ def _send_bulk(bulk_root: Path) -> None:
 def _bulk_calls(out_dir: Path) -> list[list[str]]:
     """Lines piped into the bulk plug-in, one list per call"""
     return [
-        call.strip().splitlines() for call in (out_dir / "bulk_calls").read_text().split("=====")[:-1]
+        call.strip().splitlines()
+        for call in (out_dir / "bulk_calls").read_text().split("=====")[:-1]
     ]
 
 

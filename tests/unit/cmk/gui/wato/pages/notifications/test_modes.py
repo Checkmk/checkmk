@@ -1106,7 +1106,6 @@ def test_parameter_action_for_method_without_parameters_only_redirects(
     assert redirect_vars(result) == {"mode": "notification_parameters", "method": "mail"}
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "variables, expected_title",
     [
@@ -1114,8 +1113,7 @@ def test_parameter_action_for_method_without_parameters_only_redirects(
         pytest.param({"clone": "param_0"}, "Clone Email (HTML) notification parameter", id="clone"),
         pytest.param({"parameter": "param_0", "edit": "0"}, "Edit Email (HTML) notification parameter #0", id="edit"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_parameter_editor_renders_the_form(
     variables: dict[str, str], expected_title: str, load_config: Config, test_edition: Edition
 ) -> None:

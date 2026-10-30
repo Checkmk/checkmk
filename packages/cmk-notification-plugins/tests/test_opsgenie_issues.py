@@ -285,15 +285,13 @@ def test_problem_alert_takes_plain_parameters(
     }
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "parameters, expected",
     [
         pytest.param({"PARAMETER_ACTIONSS": "restart ping"}, {"actions": ["restart", "ping"]}, id="actions"),
         pytest.param({"PARAMETER_TAGSS": "$HOSTNAME$ production"}, {"tags": ["myhost", "production"]}, id="macro_tags"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_problem_alert_payload_from_list_parameters(
     notify_context: Callable[[Mapping[str, str]], None],
     opsgenie: FakeOpsgenie,
@@ -372,15 +370,13 @@ def test_problem_alert_details_contain_long_output(
     }
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "teams, visible_to",
     [
         pytest.param({"PARAMETER_TEAMSS": "ops", "PARAMETER_TEAMS_1": "ops"}, [_OPS_TEAM, _CMK_TEAM], id="appended"),
         pytest.param({"PARAMETER_TEAMSS": "cmk", "PARAMETER_TEAMS_1": "cmk"}, [_CMK_TEAM], id="already_a_responder"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_problem_alert_is_visible_to_integration_team(
     notify_context: Callable[[Mapping[str, str]], None],
     opsgenie: FakeOpsgenie,
@@ -455,7 +451,6 @@ def test_problem_keeps_unchanged_existing_alert(
     assert opsgenie.calls() == [("GET", f"/v2/alerts/{HOST_ALIAS}"), ("POST", "/v2/alerts")]
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "context, alias",
     [
@@ -464,8 +459,7 @@ def test_problem_keeps_unchanged_existing_alert(
         pytest.param(SERVICE_CONTEXT, SERVICE_ALIAS, id="service"),
         pytest.param({**SERVICE_CONTEXT, "SERVICEPROBLEMID": "0"}, "SVC_PROBLEM_ID: 6", id="service_last_problem"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_recovery_closes_alert_by_problem_id_alias(
     notify_context: Callable[[Mapping[str, str]], None],
     opsgenie: FakeOpsgenie,
@@ -508,15 +502,13 @@ def test_recovery_sends_configured_close_note_source_and_owner(
     assert opsgenie.requests[0].body == {"note": "Resolved", "source": "cmk-site", "user": "jdoe"}
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "context, alias",
     [
         pytest.param({**HOST_CONTEXT, **_HOST_ACK}, HOST_ALIAS, id="host"),
         pytest.param({**SERVICE_CONTEXT, **_SERVICE_ACK}, SERVICE_ALIAS, id="service"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_acknowledgement_acknowledges_alert(
     notify_context: Callable[[Mapping[str, str]], None],
     opsgenie: FakeOpsgenie,
@@ -559,15 +551,13 @@ def test_notification_type_without_integration_team_is_skipped(
     assert not opsgenie.requests
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "notification_type, body",
     [
         pytest.param("FLAPPINGSTART", {"tags": ["Flapping"], "note": "Flapping started"}, id="flapping"),
         pytest.param("DOWNTIMESTART", {"tags": ["Downtime"], "note": "Downtime started"}, id="downtime"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_start_event_adds_tag(
     notify_context: Callable[[Mapping[str, str]], None],
     opsgenie: FakeOpsgenie,
@@ -714,15 +704,13 @@ def test_unsupported_notification_type_sends_nothing(
     assert not opsgenie.requests
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "status, error",
     [
         pytest.param(HTTPStatus.UNAUTHORIZED, _CREATE_ALERT_FAILED, id="api_error"),
         pytest.param(HTTPStatus.UNPROCESSABLE_ENTITY, _CREATE_ALERT_UNHANDLED, id="unhandled_error"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_failing_alert_creation_aborts(
     notify_context: Callable[[Mapping[str, str]], None],
     capsys: pytest.CaptureFixture[str],
@@ -753,15 +741,13 @@ def test_forbidden_alert_lookup_aborts(
     assert capsys.readouterr().err.startswith("Exception when calling AlertApi -> get_alert: ")
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "parameters, first_line",
     [
         pytest.param({}, f"Using trust store: {trusted_ca_file}\n", id="trust_store"),
         pytest.param({"PARAMETER_IGNORE_SSL": "True"}, "Ignoring SSL certificate verification\n", id="ignore_ssl"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @pytest.mark.usefixtures("opsgenie")
 def test_connection_settings_are_reported(
     notify_context: Callable[[Mapping[str, str]], None],
@@ -787,7 +773,6 @@ def test_explicit_proxy_is_reported_redacted(
     assert capsys.readouterr().out.startswith("Using proxy: http://***@proxy.lan:3128\n")
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "parameters, uses_proxy",
     [
@@ -796,8 +781,7 @@ def test_explicit_proxy_is_reported_redacted(
         pytest.param({"PARAMETER_PROXY_URL": "NO_PROXY"}, False, id="no_proxy"),
         pytest.param({"PARAMETER_URL": "http://opsgenie.internal"}, False, id="other_scheme_not_configured"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @pytest.mark.usefixtures("opsgenie")
 def test_environment_proxy_selection(
     monkeypatch: pytest.MonkeyPatch,

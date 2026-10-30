@@ -195,7 +195,6 @@ def test_case_in_operator_with_some_matching_data_returns_matching_text(
         assert result.fetchall() == expected_results
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "operator_name, argument, expected_texts",
     [
@@ -207,8 +206,7 @@ def test_case_in_operator_with_some_matching_data_returns_matching_text(
         pytest.param("~~",  "^disk",     {"Disk full", "disk full"},     id="regex matches ignoring case"),
         pytest.param("!~~", "^disk",     {"CPU load high"},              id="regex does not match ignoring case"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_filter_operator_selects_only_the_history_entries_satisfying_it(
     history_sqlite: SQLiteHistory, operator_name: str, argument: str, expected_texts: set[str]
 ) -> None:

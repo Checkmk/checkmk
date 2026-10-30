@@ -1772,7 +1772,6 @@ def test_remote_activation_fails_on_other_errors_of_the_remote_site(
         )
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "job_id",
     [
@@ -1780,8 +1779,7 @@ def test_remote_activation_fails_on_other_errors_of_the_remote_site(
         pytest.param("activate-changes-remote-../../../etc", id="path traversal after prefix"),
         pytest.param("automation-6ff3d0a9-4a9e-4f4b-a65d-2df7b3dbcc52", id="job of other type"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_remote_activation_job_rejects_foreign_job_ids(job_id: str) -> None:
     with pytest.raises(MKUserError):
         RemoteActivationBackgroundJob.from_job_id(job_id)

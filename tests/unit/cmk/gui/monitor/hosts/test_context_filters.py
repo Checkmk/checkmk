@@ -27,7 +27,6 @@ from cmk.gui.monitor.shared import (
 from cmk.gui.type_defs import FilterHTTPVariables, VisualContext
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "context, expected",
     [
@@ -177,8 +176,7 @@ from cmk.gui.type_defs import FilterHTTPVariables, VisualContext
             id="service count range",
         ),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_a_dashboard_filter_becomes_its_monitoring_page_condition(
     context: VisualContext, expected: FilterNode
 ) -> None:
@@ -288,7 +286,9 @@ def test_a_dashboard_site_filter_scopes_the_sites_to_query(
     )
 
 
-def test_a_dashboard_time_filter_becomes_timestamp_bounds_from_the_time_of_the_translation() -> None:
+def test_a_dashboard_time_filter_becomes_timestamp_bounds_from_the_time_of_the_translation() -> (
+    None
+):
     now = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
 
     with time_machine.travel(now, tick=False):

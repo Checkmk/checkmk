@@ -42,7 +42,6 @@ def test_guest_disk_is_the_top_of_the_chain() -> None:
     assert "ide-hd,drive=test,bus=ide.0,unit=0" in result
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "disk, expected",
     [
@@ -60,7 +59,6 @@ def test_guest_disk_is_the_top_of_the_chain() -> None:
             id="scratch layer on a backing node",
         ),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_blockdev_options_follow_the_layer_mode(disk: Disk, expected: list[str]) -> None:
     assert disk.blockdev_args()[1::2] == expected

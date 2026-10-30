@@ -53,6 +53,7 @@ select = [
   "PL",                     # pylint
   "RET",                    # flake8: return
   "RSE",                    # flake8: raise
+  "RUF028",                 # ruff: invalid-formatter-suppression-comment
   "RUF100",                 # ruff: unused noqa
   "SIM",                    # flake8: simplify
   "SLF",                    # flake8: self

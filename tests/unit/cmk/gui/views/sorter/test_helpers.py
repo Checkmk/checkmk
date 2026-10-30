@@ -18,7 +18,6 @@ from cmk.gui.views.sorter.helpers import (
 )
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "ip1, ip2, ipv, expected",
     [
@@ -26,8 +25,7 @@ from cmk.gui.views.sorter.helpers import (
         pytest.param("my-host", "10.0.0.10", "ipv4", 1, id="IPv4 sorts host names last"),
         pytest.param("", "fe80::1", "ipv6", 1, id="IPv6 sorts a missing address last"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_addresses_sort_in_network_order(
     ip1: str, ip2: str, ipv: Literal["ipv4", "ipv6"], expected: int
 ) -> None:

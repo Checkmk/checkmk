@@ -86,7 +86,6 @@ _HOST_ACK_CONTEXT: Final = {**HOST_CONTEXT, "NOTIFICATIONTYPE": "ACKNOWLEDGEMENT
 _SERVICE_ACK_CONTEXT: Final = {**SERVICE_CONTEXT, "NOTIFICATIONTYPE": "ACKNOWLEDGEMENT"}
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "context, title",
     [
@@ -94,8 +93,7 @@ _SERVICE_ACK_CONTEXT: Final = {**SERVICE_CONTEXT, "NOTIFICATIONTYPE": "ACKNOWLED
         pytest.param(_HOST_ACK_CONTEXT, "ACKNOWLEDGEMENT on myhost ()", id="host_other_event"),
         pytest.param(_SERVICE_ACK_CONTEXT, "ACKNOWLEDGEMENT on myhost (CPU load)", id="service_other_event"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @responses.activate
 def test_alert_title(
     notify_context: Callable[[Mapping[str, str]], None], context: Mapping[str, str], title: str
@@ -127,15 +125,13 @@ def test_alert_status(
 _UNRESOLVED_PROBLEM_ID: Final = {**SERVICE_CONTEXT, "SERVICEPROBLEMID": "$SERVICEPROBLEMID$"}
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "context, external_id",
     [
         pytest.param(HOST_CONTEXT, "Checkmk: myhost-42-", id="host"),
         pytest.param(_UNRESOLVED_PROBLEM_ID, "Checkmk: myhost-0-:ServiceDesc:Q1BVIGxvYWQ=", id="unresolved_problem_id"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @responses.activate
 def test_alert_external_id(
     notify_context: Callable[[Mapping[str, str]], None],
@@ -150,7 +146,6 @@ def test_alert_external_id(
     assert _sent_alert()["X-S4-ExternalID"] == external_id
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "status, reply, expected_exit_code, error",
     [
@@ -158,8 +153,7 @@ def test_alert_external_id(
         pytest.param(HTTPStatus.BAD_REQUEST, "bad", 2, "Error: bad\n400: Bad Request\n", id="client_error"),
         pytest.param(HTTPStatus.BAD_GATEWAY, "down", 1, "Server-Error: down\n502: Bad Gateway\n", id="server_error"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @responses.activate
 def test_response_maps_to_exit_code(
     notify_context: Callable[[Mapping[str, str]], None],

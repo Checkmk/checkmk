@@ -198,7 +198,6 @@ def mongo_regex_for(operator_name: OperatorName, argument: str) -> re.Pattern[st
             raise AssertionError(f"no regex in MongoDB filter {mongo_filter!r}")
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "value, expected",
     [
@@ -208,8 +207,7 @@ def mongo_regex_for(operator_name: OperatorName, argument: str) -> re.Pattern[st
         pytest.param("xa.bx", False, id="value contains the argument"),
         pytest.param("a.b\n", False, id="value has a trailing newline"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_case_insensitive_equality_filter_matches_only_the_whole_value_ignoring_case(
     value: str, expected: bool
 ) -> None:
@@ -222,7 +220,6 @@ def test_negated_case_insensitive_equality_filter_negates_the_same_regex() -> No
     assert mongo_filter_for("!=~", "a.b") == {"$not": mongo_regex_for("=~", "a.b")}
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "operator_name, expected",
     [
@@ -230,8 +227,7 @@ def test_negated_case_insensitive_equality_filter_negates_the_same_regex() -> No
         pytest.param("!~",  {"$not": re.compile("a.b")},                id="regex does not match"),
         pytest.param("!~~", {"$not": re.compile("a.b", re.IGNORECASE)}, id="regex does not match ignoring case"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_negated_filter_becomes_negated_mongo_query(
     operator_name: OperatorName, expected: dict[str, object]
 ) -> None:

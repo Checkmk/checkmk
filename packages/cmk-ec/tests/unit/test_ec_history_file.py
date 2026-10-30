@@ -60,7 +60,6 @@ def test_file_add_get(history: FileHistory) -> None:
     assert row[column_index("event_host")] == "ABC1"
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "operator_name, argument, expected_texts",
     [
@@ -69,8 +68,7 @@ def test_file_add_get(history: FileHistory) -> None:
         pytest.param("!~",  "disk",      {"Disk full", "CPU load high"}, id="regex does not match"),
         pytest.param("!~~", "disk",      {"CPU load high"},              id="regex does not match ignoring case"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_negated_filter_ignores_matches_in_other_columns(
     history: FileHistory, operator_name: str, argument: str, expected_texts: set[str]
 ) -> None:
@@ -90,7 +88,6 @@ def test_negated_filter_ignores_matches_in_other_columns(
     assert {text for (text,) in rows} == expected_texts
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "operator_name, argument, expected_texts",
     [
@@ -105,8 +102,7 @@ def test_negated_filter_ignores_matches_in_other_columns(
         pytest.param("~",  r"\d",           {"Event 17"},        id="escape unknown to grep"),
         pytest.param("~",  "(?i)cpu",       {"CPU load high"},   id="inline flag unknown to grep"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_regex_filter_selects_all_history_entries_whose_value_matches(
     history: FileHistory, operator_name: str, argument: str, expected_texts: set[str]
 ) -> None:

@@ -29,7 +29,6 @@ def _on_all_sites(node: ServiceFilterNode) -> SiteScopedFilter[ServiceFilterNode
     return SiteScopedFilter(node=node, sites=None, exclude_sites=False)
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "context, expected",
     [
@@ -212,8 +211,7 @@ def _on_all_sites(node: ServiceFilterNode) -> SiteScopedFilter[ServiceFilterNode
             id="host service count range",
         ),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_a_dashboard_filter_becomes_its_monitoring_page_condition(
     context: VisualContext, expected: ServiceFilterNode
 ) -> None:
@@ -262,7 +260,9 @@ def test_several_dashboard_filters_must_all_match() -> None:
             type="and",
             children=[
                 ServiceStringCondition(type="condition", field="name", op="contains", value="CPU"),
-                ServiceBooleanCondition(type="condition", field="acknowledged", op="eq", value=True),
+                ServiceBooleanCondition(
+                    type="condition", field="acknowledged", op="eq", value=True
+                ),
             ],
         )
     )
@@ -280,8 +280,12 @@ def test_service_and_host_filters_must_all_match() -> None:
         ServiceAndNode(
             type="and",
             children=[
-                ServiceStateChoiceCondition(type="condition", field="state", op="one_of", value=["CRIT"]),
-                _host_node({"type": "condition", "field": "state", "op": "one_of", "value": ["DOWN"]}),
+                ServiceStateChoiceCondition(
+                    type="condition", field="state", op="one_of", value=["CRIT"]
+                ),
+                _host_node(
+                    {"type": "condition", "field": "state", "op": "one_of", "value": ["DOWN"]}
+                ),
             ],
         )
     )
@@ -293,7 +297,9 @@ def test_a_site_filter_scopes_the_sites_instead_of_adding_a_condition() -> None:
     )
 
     assert translation.filter == SiteScopedFilter(
-        node=ServiceStringCondition(type="condition", field="name", op="matches", value="^CPU\\ load$"),
+        node=ServiceStringCondition(
+            type="condition", field="name", op="matches", value="^CPU\\ load$"
+        ),
         sites=frozenset({SiteId("NO_SITE")}),
         exclude_sites=False,
     )
@@ -309,7 +315,9 @@ def test_a_site_filter_scopes_the_sites_instead_of_adding_a_condition() -> None:
         pytest.param({"servicegroups": {"servicegroups": "|"}}, id="no group named"),
         pytest.param({"service_ctc": {"service_ctc": "adm*"}}, id="contact pattern"),
         pytest.param({"serviceregex": {"service_regex": "CPU\nGET status"}}, id="line break"),
-        pytest.param({"service": {"service": "CPU\nGET status"}}, id="line break in the exact name"),
+        pytest.param(
+            {"service": {"service": "CPU\nGET status"}}, id="line break in the exact name"
+        ),
         pytest.param(
             {"optservice_contactgroup": {"optservice_contact_group": "all|adm\nGET status"}},
             id="line break in a contact group",

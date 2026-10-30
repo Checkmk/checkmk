@@ -204,7 +204,6 @@ def test_match_ipv6_network_all_ip(ip: str) -> None:
     assert match_ip_network(f"{ip}/0", "") is True
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "template, expected",
     [
@@ -214,8 +213,7 @@ def test_match_ipv6_network_all_ip(ip: str) -> None:
         pytest.param("$MATCH_GROUPS_SYSLOG_APPLICATION_1$", "smartd", id="application groups by name"),
         pytest.param(r"\3 $MATCH_GROUPS_MESSAGE_3$", r"\3 $MATCH_GROUPS_MESSAGE_3$", id="missing groups"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_references_to_the_matched_message_are_replaced(template: str, expected: str) -> None:
     match_groups = MatchGroups(
         match_groups_message=("sda", "98"), match_groups_syslog_application=("smartd",)
@@ -239,7 +237,6 @@ def test_two_digit_reference_refers_to_the_longest_matching_group_number(
     assert replace_groups(r"\10", "", match_groups) == expected
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "template, origtext, message_groups, expected",
     [
@@ -247,8 +244,7 @@ def test_two_digit_reference_refers_to_the_longest_matching_group_number(
         pytest.param(r"\1 \2", "", (r"\2", "98"), r"\2 98", id="reference in a group"),
         pytest.param("$MATCH_GROUPS_MESSAGE_1$ $MATCH_GROUPS_MESSAGE_2$", "", ("$MATCH_GROUPS_MESSAGE_2$", "98"), "$MATCH_GROUPS_MESSAGE_2$ 98", id="named reference in a group"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_inserted_texts_are_not_replaced_again(
     template: str, origtext: str, message_groups: tuple[str, ...], expected: str
 ) -> None:

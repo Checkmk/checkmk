@@ -51,7 +51,6 @@ def test_discover_aix_lvm_yields_one_service_per_volume() -> None:
     ]
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "volume",
     [
@@ -59,8 +58,7 @@ def test_discover_aix_lvm_yields_one_service_per_volume() -> None:
         pytest.param(["lg_dumplv", "sysdump", "6", "6", "1", "open/syncd", "N/A"], id="unmirrored"),
         pytest.param(["hd5", "boot", "1", "2", "2", "closed/syncd", "N/A"], id="closed boot volume"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 def test_check_aix_lvm_healthy_volume_is_ok(volume: list[str]) -> None:
     section = _section(volume)
 

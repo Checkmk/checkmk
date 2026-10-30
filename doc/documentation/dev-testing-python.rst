@@ -167,8 +167,10 @@ Parametrize
 ===========
 
 * Name every case with ``pytest.param(..., id="descriptive name")``.
-* To keep a table layout that helps scanning, wrap the decorator in
-  ``# fmt: off`` / ``# fmt: on``.
+* To keep a table layout that helps scanning, end the decorator with
+  ``)  # fmt: skip``. Do not wrap it in ``# fmt: off`` / ``# fmt: on``: ruff
+  ignores a ``# fmt: on`` between a decorator and its function, so the rest of
+  the module stays unformatted without ``//:format.check`` noticing.
 * An ``if`` on a parametrized argument bundles two behaviors. Split the test:
 
 .. code-block:: python

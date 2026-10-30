@@ -68,7 +68,6 @@ def test_sends_notification_with_credentials_and_timestamp(
     }
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "context, notification_type, title",
     [
@@ -81,8 +80,7 @@ def test_sends_notification_with_credentials_and_timestamp(
         pytest.param(HOST_CONTEXT, "CUSTOM", "myhost Custom Notification (DOWN)", id="custom"),
         pytest.param(HOST_CONTEXT, "ALERTHANDLER (0)", "myhost ALERTHANDLER (0)", id="other"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @responses.activate
 def test_title_describes_event(
     notify_context: Callable[[Mapping[str, str]], None],
@@ -104,7 +102,6 @@ _LINKED_HOST: Final = {**HOST_CONTEXT, **LINK_CONTEXT}
 _LINKED_SERVICE: Final = {**SERVICE_CONTEXT, **LINK_CONTEXT}
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "context, message",
     [
@@ -112,8 +109,7 @@ _LINKED_SERVICE: Final = {**SERVICE_CONTEXT, **LINK_CONTEXT}
         pytest.param(_LINKED_HOST, f"Host unreachable <i>Link: </i>{_HOST_LINK}", id="host_with_link"),
         pytest.param(_LINKED_SERVICE, f"Load too high <i>Link: </i>{_HOST_LINK}{_SERVICE_LINK}", id="service_with_links"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @responses.activate
 def test_message_contains_output_and_links(
     notify_context: Callable[[Mapping[str, str]], None], context: Mapping[str, str], message: str
@@ -212,7 +208,6 @@ def test_sound_parameter(
 _API_ERROR: Final = '{"status": 0, "errors": ["invalid"]}'
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "status, body, output",
     [
@@ -220,8 +215,7 @@ _API_ERROR: Final = '{"status": 0, "errors": ["invalid"]}'
         pytest.param(200, "not json", "Failed to decode JSON response: not json\n", id="invalid_json"),
         pytest.param(200, _API_ERROR, f"Received an error from the Pushover API: {_API_ERROR}", id="api_error"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @responses.activate
 def test_unsuccessful_response_fails(
     notify_context: Callable[[Mapping[str, str]], None],
@@ -237,15 +231,13 @@ def test_unsuccessful_response_fails(
     assert capsys.readouterr().out == output
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "error, output",
     [
         pytest.param(ProxyError(), "Cannot connect to proxy: http://***@proxy.lan:3128\n", id="proxy"),
         pytest.param(requests.ConnectionError(), f"POST request to server failed: {API_URL}\n", id="connection"),
     ],
-)
-# fmt: on
+)  # fmt: skip
 @responses.activate
 def test_connection_failure_fails(
     notify_context: Callable[[Mapping[str, str]], None],

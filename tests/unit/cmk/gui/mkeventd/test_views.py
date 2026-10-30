@@ -61,7 +61,7 @@ from cmk.gui.mkeventd.views import (
     make_svc_servicelevel_painter,
     SorterServicelevel,
 )
-from cmk.gui.painter import Cell, InternalPainter, PainterContext
+from cmk.gui.painter import Cell, InternalPainter, painter_registry, PainterContext
 from cmk.gui.type_defs import ColumnSpec, Row, Rows, VisualLinkSpec
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
@@ -69,6 +69,7 @@ from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.command import Command, CommandActionResult, CommandSpec
 from cmk.gui.views.command.base import CommandConfirmDialogOptions
+from cmk.gui.views.sort_url import compute_sort_url_parameter
 from cmk.gui.views.sorter import Sorter, sorter_registry
 from cmk.livestatus_client import Command as LivestatusCommand
 from cmk.livestatus_client import (
@@ -988,3 +989,19 @@ def test_the_sorters_named_after_the_service_level_columns_sort_by_number(
     ordered = _sorted_by(sorter_registry[sorter_name], rows)
 
     assert [row[f"{what}_custom_variable_values"][0] for row in ordered] == ["5", "10", "100"]
+
+
+@pytest.mark.parametrize(
+    "painter_name",
+    [
+        pytest.param("svc_servicelevel", id="service"),
+        pytest.param("host_servicelevel", id="host"),
+    ],
+)
+def test_the_header_of_a_service_level_column_sorts_by_that_column(painter_name: str) -> None:
+    assert (
+        compute_sort_url_parameter(
+            painter_name, None, None, [], [], [], sorter_registry, painter_registry
+        )
+        == painter_name
+    )

@@ -437,7 +437,6 @@ def make_svc_servicelevel_painter() -> InternalPainter:
         title=_l("Service service level"),
         short_title=_l("Service level"),
         columns=["service_custom_variable_names", "service_custom_variable_values"],
-        sorter="servicelevel",
         render=_render_svc_servicelevel,
     )
 
@@ -459,7 +458,6 @@ def make_host_servicelevel_painter() -> InternalPainter:
         title=_l("Host service level"),
         short_title=_l("Service level"),
         columns=["host_custom_variable_names", "host_custom_variable_values"],
-        sorter="servicelevel",
         render=_render_host_servicelevel,
     )
 

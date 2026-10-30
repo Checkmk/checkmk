@@ -41,7 +41,6 @@ py_library(
         "//cmk/utils",
         "//cmk/utils:paths",
         "//cmk/utils:redis",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crash:crash",

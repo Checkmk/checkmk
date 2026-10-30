@@ -14,7 +14,7 @@ import cmk.gui.wato._check_mk_configuration as _check_mk_configuration_module
 import cmk.gui.wato._check_plugin_selection as _check_plugin_selection_module
 import cmk.gui.watolib._autocompleters as _autocompleters_module
 import cmk.gui.watolib.rulespecs as _rulespecs_module
-from cmk.ccc import debug, store
+from cmk.ccc import store
 from cmk.ccc.version import edition
 from cmk.checkengine.plugin_backend import load_all_plugins
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
@@ -43,7 +43,7 @@ def flask_app(load_plugins: None) -> Iterator[Flask]:  # noqa: ARG001
 def agent_based_plugins() -> AgentBasedPlugins:
     """Load all check plugins, tolerating errors from non-free edition plugins unavailable
     in the community edition (e.g. missing cmk.plugins.graylog.lib)."""
-    return load_all_plugins(raise_errors=debug.enabled())
+    return load_all_plugins(raise_errors=False)
 
 
 class _DummyFolder:

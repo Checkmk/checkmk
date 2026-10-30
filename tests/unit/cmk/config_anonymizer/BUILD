@@ -10,7 +10,6 @@ py_cmk_test(
     visibility = ["//visibility:private"],
     deps = [
         "//cmk/config_anonymizer",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//tests/testlib/unit",

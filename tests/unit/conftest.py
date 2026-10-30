@@ -15,7 +15,6 @@ from typing import override
 
 import pytest
 
-import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc import tty
 from cmk.checkengine.plugins import AgentBasedPlugins
@@ -64,7 +63,6 @@ def patch_omd_version(test_edition: cmk_version.Edition) -> Iterator[None]:
 @pytest.fixture(name="fake_site", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_fake_site(
     cleanup_cmk: None,
-    enable_debug_fixture: None,
     fixture_omd_site: None,
     fixture_umask: None,
     patch_omd_version: None,
@@ -73,11 +71,6 @@ def fixture_fake_site(
 ) -> None:
     """Wrapper of multiple fixtures to immitate a site environment for testing"""
     return
-
-
-@pytest.fixture
-def enable_debug_fixture() -> Generator[None]:
-    yield from fake_site.enable_cmk_debug()
 
 
 @pytest.fixture(scope="session")
@@ -142,7 +135,7 @@ def agent_based_plugins(tmp_path_factory: pytest.TempPathFactory) -> Generator[A
     # Local import to have faster pytest initialization
     from cmk.checkengine.plugin_backend import load_all_plugins
 
-    plugins = load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
+    plugins = load_all_plugins(raise_errors=False)
     assert not plugins.errors
     yield plugins
 

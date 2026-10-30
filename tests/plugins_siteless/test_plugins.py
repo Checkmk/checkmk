@@ -19,7 +19,6 @@ from cmk.base.checkers import (
     CheckerPluginMapper,
     SectionPluginMapper,
 )
-from cmk.ccc import debug
 from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.checkengine import value_store
@@ -111,7 +110,7 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
             "we are doing an agent rework which is affecting this."
         )
 
-    agent_based_plugins = load_all_plugins(raise_errors=debug.enabled())
+    agent_based_plugins = load_all_plugins(raise_errors=False)
     assert not agent_based_plugins.errors
     assert agent_based_plugins.agent_sections
 
@@ -131,7 +130,7 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
         autochecks_dir=paths.autochecks_dir,
         discovered_host_labels_dir=paths.discovered_host_labels_dir,
         builtin_host_labels_file=Path("/dev/null"),
-        debug=debug.enabled(),
+        debug=False,
     )
     parser_config = config.make_parser_config(
         EMPTY_CONFIG,
@@ -174,7 +173,7 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
             clusters=(),
             get_agent_output=lambda: None,
             omd_root=Path(""),
-            debug=debug.enabled(),
+            debug=False,
         )
         assert check_plugins
 
@@ -206,7 +205,7 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
             submitter=submitter,
             exit_spec=ExitSpec(),
             timeperiods_active={},
-            debug=debug.enabled(),
+            debug=False,
         )
         checks_result = submitter.results
         assert checks_result

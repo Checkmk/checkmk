@@ -62,13 +62,6 @@ py_library(
 )
 
 py_library(
-    name = "debug",
-    srcs = ["cmk/ccc/debug.py"],
-    imports = ["."],
-    visibility = ["//visibility:public"],
-)
-
-py_library(
     name = "exceptions",
     srcs = ["cmk/ccc/exceptions.py"],
     imports = ["."],
@@ -228,7 +221,6 @@ _ALL = [
     "config-path",
     "cpu-tracking",
     "daemon",
-    "debug",
     "exceptions",
     "hostaddress",
     "i18n",

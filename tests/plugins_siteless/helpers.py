@@ -24,7 +24,6 @@ from cmk.base.checkers import (
     HostLabelPluginMapper,
     SectionPluginMapper,
 )
-from cmk.ccc import debug
 from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
@@ -86,7 +85,7 @@ def parser(config: ParserConfig) -> CMKParser:
         config=config,
         selected_sections=NO_SELECTION,
         keep_outdated=False,
-        debug=debug.enabled(),
+        debug=False,
     )
 
 
@@ -234,7 +233,7 @@ def discover_services(
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         inventorized_host_labels_dir=cmk.utils.paths.inventorized_host_labels_dir,
-        debug=debug.enabled(),
+        debug=False,
     )
 
     autochecks_store = AutochecksStore(hostname, cmk.utils.paths.autochecks_dir)

@@ -24,7 +24,6 @@ from fakeredis import FakeRedis
 
 import livestatus
 
-import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 import cmk.crypto.password_hashing
 import cmk.utils.caching
@@ -373,13 +372,6 @@ def use_fakeredis() -> Iterator[None]:
     with patch.object(redis, "Redis", FakeRedis) as _:
         redis.get_redis_client().flushall()
         yield
-
-
-def enable_cmk_debug() -> Iterator[None]:
-    debug_mode = cmk.ccc.debug.debug_mode
-    cmk.ccc.debug.enable()
-    yield
-    cmk.ccc.debug.debug_mode = debug_mode
 
 
 def reduce_password_hashing_rounds() -> Iterator[None]:

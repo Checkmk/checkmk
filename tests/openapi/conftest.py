@@ -149,11 +149,6 @@ def fixture_omd_site() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
-def enable_debug_fixture() -> Generator[None]:
-    yield from fake_site.enable_cmk_debug()
-
-
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def cleanup_after_test() -> Generator[None]:
     yield from fake_site.cleanup_omd_root_after_test()
 

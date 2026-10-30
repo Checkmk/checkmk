@@ -11,7 +11,6 @@ from typing import Never
 
 import pytest
 
-import cmk.ccc.debug
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher_utils.secrets import StoredSecrets
 from cmk.discover_plugins import PluginLocation
@@ -597,17 +596,10 @@ def test_get_active_service_data_password_without_hack() -> None:
         ),
     ],
 )
-def test_test_get_active_service_data_crash_with_debug(  # type: ignore[misc]
+def test_get_active_service_data_crash(  # type: ignore[misc]
     active_check_rule: tuple[str, Sequence[Mapping[str, object]]],
     active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        cmk.ccc.debug,
-        "enabled",
-        lambda: True,
-    )
-
     active_check = ActiveCheck(
         active_check_plugins,
         HostName("test_host"),

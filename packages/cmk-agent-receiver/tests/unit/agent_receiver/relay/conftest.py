@@ -202,15 +202,9 @@ def config_task_factory(
 
 @pytest.fixture
 def populated_repos(
-    site_relays_client: SiteRelaysClient,
     tasks_repository: TasksRepository,
-    test_user: SecretAuth,
-) -> tuple[RelayID, RelayTask, SiteRelaysClient, TasksRepository]:
-    # arrange
-    # register a relay in the repository
-    relay_id = site_relays_client.add_relay(
-        test_user, relay_id=random_relay_id(), alias="test-relay"
-    )
+) -> tuple[RelayID, RelayTask, TasksRepository]:
+    relay_id = random_relay_id()
 
     # insert a task in the repository
     now = datetime.now(UTC)
@@ -226,4 +220,4 @@ def populated_repos(
     )
     tasks_repository.store_task(relay_id=relay_id, task=task)
 
-    return relay_id, task, site_relays_client, tasks_repository
+    return relay_id, task, tasks_repository

@@ -21,7 +21,6 @@ from cmk.agent_receiver.relay.lib.shared_types import (
     TaskID,
     TaskNotFoundError,
 )
-from cmk.agent_receiver.relay.lib.site_client import SiteRelaysClient
 from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config
 
 
@@ -32,10 +31,10 @@ def omd_root(site_context: Config) -> Path:
 
 def test_get_task_handler(
     get_task_handler: GetRelayTaskHandler,
-    populated_repos: tuple[RelayID, RelayTask, SiteRelaysClient, TasksRepository],
+    populated_repos: tuple[RelayID, RelayTask, TasksRepository],
     omd_root: Path,
 ) -> None:
-    relay_id, task, site_relays_client, tasks_repository = populated_repos
+    relay_id, task, tasks_repository = populated_repos
     _ = generate_relay_config(root=omd_root, relays=[relay_id])
     handled_task = get_task_handler.process(relay_id=relay_id, task_id=task.id)
     assert handled_task == task
@@ -44,9 +43,9 @@ def test_get_task_handler(
 @pytest.mark.usefixtures("site_context")
 def test_get_task_handler_with_unknown_task(
     get_task_handler: GetRelayTaskHandler,
-    populated_repos: tuple[RelayID, RelayTask, SiteRelaysClient, TasksRepository],
+    populated_repos: tuple[RelayID, RelayTask, TasksRepository],
 ) -> None:
-    relay_id, task, site_relays_client, tasks_repository = populated_repos
+    relay_id, task, tasks_repository = populated_repos
 
     with pytest.raises(TaskNotFoundError):
         get_task_handler.process(
@@ -57,10 +56,10 @@ def test_get_task_handler_with_unknown_task(
 
 def test_get_tasks_handler(
     get_tasks_handler: GetRelayTasksHandler,
-    populated_repos: tuple[RelayID, RelayTask, SiteRelaysClient, TasksRepository],
+    populated_repos: tuple[RelayID, RelayTask, TasksRepository],
     omd_root: Path,
 ) -> None:
-    relay_id, task, site_relays_client, tasks_repository = populated_repos
+    relay_id, task, tasks_repository = populated_repos
     config_folder = generate_relay_config(root=omd_root, relays=[relay_id])
 
     handled_tasks = get_tasks_handler.process(
@@ -71,10 +70,10 @@ def test_get_tasks_handler(
 
 def test_get_tasks_handler_with_filter(
     get_tasks_handler: GetRelayTasksHandler,
-    populated_repos: tuple[RelayID, RelayTask, SiteRelaysClient, TasksRepository],
+    populated_repos: tuple[RelayID, RelayTask, TasksRepository],
     omd_root: Path,
 ) -> None:
-    relay_id, task, site_relays_client, tasks_repository = populated_repos
+    relay_id, task, tasks_repository = populated_repos
     config_folder = generate_relay_config(root=omd_root, relays=[relay_id])
     handled_tasks = get_tasks_handler.process(
         relay_id=relay_id, status=TaskStatus.FINISHED, relay_serial=config_folder.serial

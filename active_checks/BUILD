@@ -16,6 +16,7 @@ cc_binary(
     ],
     platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     tags = ["no-lint"],
+    visibility = ["//tests/integration/active_checks:__pkg__"],
 )
 
 pkg_files(

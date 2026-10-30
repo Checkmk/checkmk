@@ -18,8 +18,10 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 enum class State { ok = 0, warn = 1, crit = 2, unknown = 3 };
@@ -38,14 +40,38 @@ std::ostream &operator<<(std::ostream &os, const State &state) {
     return os;  // make compilers happy
 }
 
+// The order of the states from best to worst. CRIT is worse than UNKNOWN, like
+// in Livestatus' badness() and in State.worst() of the check API.
+int severity(State state) {
+    switch (state) {
+        case State::ok:
+            return 0;
+        case State::warn:
+            return 1;
+        case State::unknown:
+            return 2;
+        case State::crit:
+            return 3;
+    }
+    return 2;  // make compilers happy
+}
+
+// Parses an event state, which the event console sends as 0, 1, 2 or 3.
+std::optional<State> parse_state(const std::string &s) {
+    if (s.size() == 1 && s[0] >= '0' && s[0] <= '3') {
+        return static_cast<State>(s[0] - '0');
+    }
+    return {};
+}
+
 void print_line(const std::string &output) {
     // Make sure that plugin output does not contain a vertical bar. If that is
-    // the case then replace it with a Uniocode "Light vertical bar". Same as in
-    // Check_MK.
+    // the case then replace it with a Unicode "Light vertical bar". Same as in
+    // Checkmk, which turns it back into a vertical bar for notifications.
     for (char i : output) {
         if (i == '|') {
             // \u2758 (utf-8 encoded light vertical bar)
-            std::cout << "\xe2\x94\x82";  // NOLINT
+            std::cout << "\xe2\x9d\x98";  // NOLINT
         } else {
             std::cout << i;
         }
@@ -65,15 +91,63 @@ void print_line(const std::string &output) {
     reply_and_exit(State::unknown, message + " (" + strerror(errno) + ")");
 }
 
+// Cuts a string after at most max_size bytes, but doesn't cut a character in
+// two, i.e. not in front of a continuation byte 10xxxxxx of UTF-8.
+std::string cut_at(std::string_view str, std::string_view::size_type max_size) {
+    if (str.size() <= max_size) {
+        return std::string{str};
+    }
+    auto end = max_size;
+    while (end > 0 && (static_cast<unsigned char>(str[end]) & 0xC0) == 0x80) {
+        end--;
+    }
+    return std::string{str.substr(0, end)} + "[...]";
+}
+
+// An answer with thousands of events would flood the output, so we show only
+// its start, cut at a line break if that keeps at least half of it, i.e. not
+// after the header if a long row follows.
+std::string start_of_response(const std::string &response) {
+    constexpr std::string::size_type max_size = 1000;
+    if (response.size() <= max_size) {
+        return response;
+    }
+    const auto line_break = response.rfind('\n', max_size - 1);
+    const bool keeps_enough =
+        line_break != std::string::npos && line_break + 1 >= max_size / 2;
+    return cut_at(response, keeps_enough ? line_break + 1 : max_size);
+}
+
+[[noreturn]] void invalidResponse(const std::string &problem,
+                                  const std::string &query,
+                                  const std::stringstream &response) {
+    auto resp = response.str();
+    reply_and_exit(State::unknown,
+                   "Event console answered with " + problem + "\nQuery was:\n" +
+                       query + "\nReceived " + std::to_string(resp.size()) +
+                       " byte response:\n" + start_of_response(resp));
+}
+
 [[noreturn]] void missingHeader(const std::string &header,
                                 const std::string &query,
                                 const std::stringstream &response) {
-    auto resp = response.str();
-    reply_and_exit(State::unknown,
-                   "Event console answered with incorrect header (missing " +
-                       header + ")\nQuery was:\n" + query + "\nReceived " +
-                       std::to_string(resp.size()) + " byte response:\n" +
-                       resp);
+    invalidResponse("incorrect header (missing " + header + ")", query,
+                    response);
+}
+
+// Splits a line of the plain output format at the tabs, keeping empty columns
+// like an empty event text at the end of the line.
+std::vector<std::string> split_columns(const std::string &line) {
+    std::vector<std::string> columns;
+    std::string::size_type start = 0;
+    while (true) {
+        auto end = line.find('\t', start);
+        columns.push_back(line.substr(start, end - start));
+        if (end == std::string::npos) {
+            return columns;
+        }
+        start = end + 1;
+    }
 }
 
 void usage() {
@@ -326,23 +400,27 @@ int main(int argc, char **argv) {
         missingHeader("event_text", query_message, response_stream);
     }
 
-    // Get data
+    // The event console ends every line with a newline, so an answer without
+    // one at its end was cut off, e.g. by an event console stopped while
+    // answering. Its last row would continue the event text of the row before.
+    if (response_stream.str().back() != '\n') {
+        invalidResponse("an incomplete last line", query_message,
+                        response_stream);
+    }
+
+    // Get data. The event console replaces tabs within the columns by spaces,
+    // but it keeps newlines, so a line with too few columns continues the last
+    // column of the previous row, i.e. the event text we have requested last.
     std::vector<std::vector<std::string> > data;
     while (getline(response_stream, line)) {
-        if (line.size() < headers.size()) {
-            break;  // broken / empty line
-        }
-        linestream.str("");
-        linestream.clear();
-        linestream << line;
-        std::vector<std::string> data_line;
-        bool has_data = false;
-        while (getline(linestream, token, '\t')) {
-            has_data = true;
-            data_line.push_back(token);
-        }
-        if (has_data) {
-            data.push_back(data_line);
+        auto row = split_columns(line);
+        if (row.size() >= headers.size()) {
+            data.push_back(row);
+        } else if (data.empty()) {
+            invalidResponse("an incomplete row", query_message,
+                            response_stream);
+        } else {
+            data.back().back() += "\n" + line;
         }
     }
 
@@ -355,15 +433,16 @@ int main(int argc, char **argv) {
     for (auto &it : data) {
         count++;
         const char *p = it.at(idx_event_phase).c_str();
+        auto s = parse_state(it.at(idx_event_state));
+        if (!s) {
+            // A valid state has a single digit, so its start is enough.
+            invalidResponse("an invalid event state '" +
+                                cut_at(it.at(idx_event_state), 20) + "'",
+                            query_message, response_stream);
+        }
         if (strcmp(p, "open") == 0 || !ignore_acknowledged) {
-            auto s = static_cast<State>(atoi(it.at(idx_event_state).c_str()));
-            if (s == State::unknown) {
-                if (worst_state < State::crit) {
-                    worst_state = State::unknown;
-                    worst_row_event_text = it.at(idx_event_text);
-                }
-            } else if (s >= worst_state) {
-                worst_state = s;
+            if (severity(*s) >= severity(worst_state)) {
+                worst_state = *s;
                 worst_row_event_text = it.at(idx_event_text);
             }
         }
@@ -383,7 +462,11 @@ int main(int argc, char **argv) {
     std::stringstream output;
     output << count << " events (" << unhandled << " unacknowledged)";
     if (!worst_row_event_text.empty() && last_log_in_summary) {
-        output << ", Last line: " << worst_row_event_text;
+        output << ", Last line: ";
+        // The core would take everything after a newline as the details.
+        for (const char c : worst_row_event_text) {
+            output << (c == '\n' ? ' ' : c);
+        }
     }
     print_line(output.str());
 

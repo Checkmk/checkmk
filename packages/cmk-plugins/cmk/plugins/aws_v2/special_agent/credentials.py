@@ -7,8 +7,8 @@
 
 """How the agent logs in to AWS.
 
-The agent logs in once per run as the "hub": with an access key or with the boto3
-default credential chain. Without spokes, it monitors the account of the login.
+The agent logs in once per run as the "hub": with an access key, with the boto3
+default credential chain or with a named profile. Without spokes, it monitors the account of the login.
 
 To monitor other accounts, the hub assumes a "spoke" role of the same name in each of
 them. Every spoke is exactly one AssumeRole away from the login identity, so roles are
@@ -49,8 +49,18 @@ class DefaultCredentials:
 
 
 @dataclass(frozen=True)
+class NamedProfile:
+    """A profile of the ~/.aws files of the site user, for example one with a credential_process.
+
+    Checkmk stores no secret. The profile is read on the site that runs the agent.
+    """
+
+    name: str
+
+
+@dataclass(frozen=True)
 class HubCredentials:
-    login: AccessKey | DefaultCredentials
+    login: AccessKey | DefaultCredentials | NamedProfile
     session_name: str = "checkmk"
 
 
@@ -78,9 +88,11 @@ def role_session_name(site: str | None) -> str:
     return f"checkmk-{site}" if site else "checkmk"
 
 
-def _login_session(login: AccessKey | DefaultCredentials, region: str) -> boto3.session.Session:
-    # Reads the shared config, so a bad AWS_PROFILE or config file raises a BotoCoreError
-    # here. The callers build the session inside their own try.
+def _login_session(
+    login: AccessKey | DefaultCredentials | NamedProfile, region: str
+) -> boto3.session.Session:
+    # Reads the shared config, so a missing profile or a bad config file raises a
+    # BotoCoreError here. The callers build the session inside their own try.
     match login:
         case AccessKey(key_id=key_id, secret=secret):
             return boto3.session.Session(
@@ -90,6 +102,8 @@ def _login_session(login: AccessKey | DefaultCredentials, region: str) -> boto3.
             )
         case DefaultCredentials():
             return boto3.session.Session(region_name=region)
+        case NamedProfile(name=name):
+            return boto3.session.Session(profile_name=name, region_name=region)
 
 
 def _assume_role(
@@ -189,9 +203,10 @@ class AwsCredentials:
                     sts = session.client("sts", config=self._client_config)
                 account_id = sts.get_caller_identity()["Account"]
                 self._account_id = account_id
-        except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError) as e:
+        except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError, OSError) as e:
             # BotoCoreError covers every client-side failure, including all the
             # credential ones. ClientError is not a BotoCoreError, so it stays listed.
+            # OSError is a credential_process that cannot be started.
             raise AwsAccessError(describe_credential_failure(e))
         return account_id
 

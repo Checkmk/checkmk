@@ -45,6 +45,7 @@ from .credentials import (
     CLIENT_LOCK,
     DefaultCredentials,
     HubCredentials,
+    NamedProfile,
     Organization,
     role_session_name,
     SpokeAccounts,
@@ -273,6 +274,11 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         long=f"--{ACCESS_KEY_SECRET_OPTION}",
         required=False,
         help="The secret AWS access key for your AWS account.",
+    )
+    parser.add_argument(
+        "--profile",
+        help="Log in with this profile of the AWS config files instead of the default"
+        " credential chain.",
     )
     parser.add_argument("--proxy-host", help="The address of the proxy server")
     parser.add_argument("--proxy-port", help="The port of the proxy server")
@@ -643,14 +649,16 @@ def _configure_aws(args: argparse.Namespace) -> AWSConfig:
 
 
 def _hub_credentials_from_args(args: argparse.Namespace) -> HubCredentials:
-    login: AccessKey | DefaultCredentials = (
-        AccessKey(
+    login: AccessKey | DefaultCredentials | NamedProfile
+    if args.access_key_identity:
+        login = AccessKey(
             args.access_key_identity,
             resolve_secret_option(args, ACCESS_KEY_SECRET_OPTION).reveal(),
         )
-        if args.access_key_identity
-        else DefaultCredentials()
-    )
+    elif args.profile:
+        login = NamedProfile(args.profile)
+    else:
+        login = DefaultCredentials()
     return HubCredentials(login, role_session_name(os.environ.get("OMD_SITE")))
 
 

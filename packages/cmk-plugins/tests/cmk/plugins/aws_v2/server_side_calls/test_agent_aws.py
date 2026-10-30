@@ -38,6 +38,12 @@ def test_access_key_is_passed_as_secret() -> None:
     ]
 
 
+def test_named_profile_is_passed() -> None:
+    arguments = _arguments(auth=("profile", {"profile_name": "checkmk"}))
+
+    assert arguments == ["--profile", "checkmk", *_HOST_ARGS]
+
+
 def test_proxy_password_is_passed_as_secret() -> None:
     arguments = _arguments(
         proxy_details={
@@ -303,6 +309,14 @@ def test_access_key_carries_the_account_list() -> None:
         "CheckmkMonitoring",
         "tenant-42",
     )
+
+
+def test_named_profile_carries_the_account_list() -> None:
+    arguments = _arguments(auth=("profile", {"profile_name": "checkmk", "accounts": _ACCOUNT_LIST}))
+
+    parsed = parse_arguments([arg for arg in arguments if isinstance(arg, str)])
+
+    assert (parsed.profile, parsed.accounts) == ("checkmk", ["333333333333", "444444444444"])
 
 
 _ORGANIZATION = (

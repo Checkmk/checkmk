@@ -368,6 +368,25 @@ def configuration_access_key() -> Mapping[str, DictElement]:
     }
 
 
+def _named_profile() -> Mapping[str, DictElement]:
+    return {
+        "profile_name": DictElement(
+            parameter_form=String(
+                title=Title("Profile name"),
+                help_text=Help(
+                    "The name of a profile in <tt>~/.aws/config</tt> of the site user, for "
+                    "example <tt>checkmk</tt> for the section <tt>[profile checkmk]</tt>. "
+                    "The profile is read on the site that runs the agent, so every site that "
+                    "monitors this host needs a profile of this name."
+                ),
+                field_size=FieldSize.MEDIUM,
+                custom_validate=(validators.LengthInRange(min_value=1),),
+            ),
+            required=True,
+        ),
+    }
+
+
 def _accounts() -> Mapping[str, DictElement]:
     return {
         "accounts": DictElement(
@@ -536,6 +555,10 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                     "<tt>~/.aws</tt> of the site user, and the instance profile or EKS Pod Identity "
                     "when Checkmk runs on AWS. Recommended on AWS, because AWS renews the "
                     "instance profile and EKS Pod Identity credentials itself.<br>"
+                    "<b>Named profile:</b> Checkmk stores no secret. The agent uses a profile "
+                    "from <tt>~/.aws/config</tt> of the site user, for example one whose "
+                    "<tt>credential_process</tt> gets temporary credentials from IAM Roles "
+                    "Anywhere.<br>"
                     "To monitor through an IAM role, choose <b>Explicit list of account IDs</b> "
                     "under <b>Accounts</b>, and enter the account and the name of the role. The "
                     "agent then assumes the role in that account. The AWS CloudTrail log shows "
@@ -554,6 +577,11 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                         name="none",
                         title=Title("Default AWS credentials"),
                         parameter_form=Dictionary(elements=_accounts()),
+                    ),
+                    CascadingSingleChoiceElement(
+                        name="profile",
+                        title=Title("Named profile"),
+                        parameter_form=Dictionary(elements={**_named_profile(), **_accounts()}),
                     ),
                 ],
                 prefill=DefaultValue("access_key"),

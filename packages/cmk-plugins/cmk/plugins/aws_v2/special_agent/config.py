@@ -47,6 +47,20 @@ def describe_credential_failure(error: Exception) -> str:
             " and the EC2 instance metadata service."
             f" See {AWS_DOC_URL}"
         )
+    if (
+        isinstance(error, botocore.exceptions.CredentialRetrievalError)
+        and error.kwargs.get("provider") == "custom-process"
+    ):
+        # botocore puts the output of the command into the message. That output may hold
+        # anything, secrets included, so it is not repeated here.
+        return (
+            "The credential_process of the AWS config profile failed. Run its command as the"
+            f" site user to see why. See {AWS_DOC_URL}"
+        )
+    if isinstance(error, OSError):
+        # botocore starts the credential_process itself and lets this through, for example
+        # when the command does not exist or is not executable.
+        return f"Cannot run the credential_process of the AWS config profile: {error}"
     if isinstance(error, botocore.exceptions.BotoCoreError):
         # A client-side failure: credentials, configuration or transport.
         return f"{error} See {AWS_DOC_URL}"

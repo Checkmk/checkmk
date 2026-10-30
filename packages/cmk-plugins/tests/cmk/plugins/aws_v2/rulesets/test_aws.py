@@ -109,7 +109,7 @@ def test_every_login_offers_an_account_list() -> None:
         if isinstance(form, Dictionary) and "accounts" in form.elements
     }
 
-    assert offering == {"access_key", "none"}
+    assert offering == {"access_key", "none", "profile"}
 
 
 @pytest.mark.parametrize("account_id", ["12345678901", "1234567890123", "12345678901a"])

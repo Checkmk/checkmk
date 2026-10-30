@@ -44,6 +44,11 @@ class DefaultCredentials(BaseModel):
     accounts: Accounts = ("single", None)
 
 
+class NamedProfile(BaseModel):
+    profile_name: str
+    accounts: Accounts = ("single", None)
+
+
 class ProxyDetails(BaseModel):
     proxy_host: str
     proxy_port: int | None = None
@@ -77,6 +82,7 @@ class AwsParams(BaseModel):
     auth: (
         tuple[Literal["access_key"], AccessKeyLogin]
         | tuple[Literal["none"], DefaultCredentials | None]
+        | tuple[Literal["profile"], NamedProfile]
     )
     global_service_region: str = "default"
     proxy_details: ProxyDetails | None = None
@@ -103,13 +109,15 @@ def _service_from_formspec_name(formspec_name: str) -> str:
     return "lambda" if formspec_name == "aws_lambda" else formspec_name
 
 
-def _auth_args(auth: AccessKey | DefaultCredentials | None) -> list[str | Secret]:
+def _auth_args(auth: AccessKey | DefaultCredentials | NamedProfile | None) -> list[str | Secret]:
     if isinstance(auth, AccessKey):
         return ["--access-key-identity", auth.access_key_id, "--secret-id", auth.secret_access_key]
+    if isinstance(auth, NamedProfile):
+        return ["--profile", auth.profile_name]
     return []
 
 
-def _account_args(login: AccessKeyLogin | DefaultCredentials | None) -> list[str]:
+def _account_args(login: AccessKeyLogin | DefaultCredentials | NamedProfile | None) -> list[str]:
     if login is None:
         return []
     accounts = login.accounts[1]

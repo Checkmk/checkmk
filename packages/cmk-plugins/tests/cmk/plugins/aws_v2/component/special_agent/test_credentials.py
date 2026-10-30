@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+import stat
 from collections.abc import Sequence
+from pathlib import Path
 
 import pytest
 
@@ -13,6 +16,7 @@ from cmk.plugins.aws_v2.special_agent.credentials import (
     AwsCredentials,
     DefaultCredentials,
     HubCredentials,
+    NamedProfile,
     Organization,
     SpokeAccounts,
 )
@@ -44,6 +48,50 @@ def test_default_credentials_log_in_to_the_hub_account(monkeypatch: pytest.Monke
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "secret")
 
     assert _session_account_id(HubCredentials(DefaultCredentials())) == HUB_ACCOUNT
+
+
+def _configure_profiles(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, key_ids: dict[str, str]
+) -> None:
+    """Write an AWS config with one profile per key ID, each with a credential_process."""
+    sections = []
+    for section, key_id in key_ids.items():
+        process = tmp_path / f"credential_process_{key_id}.sh"
+        output = {"Version": 1, "AccessKeyId": key_id, "SecretAccessKey": "secret"}
+        process.write_text(f"#!/bin/sh\necho '{json.dumps(output)}'\n")
+        process.chmod(process.stat().st_mode | stat.S_IEXEC)
+        sections.append(f"[{section}]\ncredential_process = {process}\n")
+    config = tmp_path / "aws_config"
+    config.write_text("\n".join(sections))
+    monkeypatch.setenv("AWS_CONFIG_FILE", str(config))
+
+
+@pytest.mark.usefixtures("fake_sts")
+def test_named_profile_logs_in_without_a_default_profile(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _configure_profiles(tmp_path, monkeypatch, {"profile checkmk": "AKIAPROFILE"})
+
+    assert _session_account_id(HubCredentials(NamedProfile("checkmk"))) == HUB_ACCOUNT
+
+
+def test_named_profile_assumes_the_spoke_roles_with_its_own_credentials(
+    fake_sts: FakeSts, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _configure_profiles(
+        tmp_path, monkeypatch, {"default": "AKIADEFAULT", "profile checkmk": "AKIAPROFILE"}
+    )
+    credentials = AwsCredentials(
+        HubCredentials(NamedProfile("checkmk")),
+        "us-east-1",
+        None,
+        SpokeAccounts(["333333333333"], "CheckmkMonitoring"),
+    )
+
+    credentials.open_account(credentials.monitored_account_ids()[0])
+
+    [call] = fake_sts.assume_role_calls
+    assert call.caller_key_id == "AKIAPROFILE"
 
 
 def test_no_role_makes_no_assume_role_call(fake_sts: FakeSts) -> None:

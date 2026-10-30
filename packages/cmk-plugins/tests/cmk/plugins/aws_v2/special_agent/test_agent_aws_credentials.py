@@ -28,29 +28,30 @@ KEYLESS_ARGS = [
 ]
 
 
-def _write_credential_process(tmp_path: Path, script: str) -> Path:
-    process = tmp_path / "credential_process.sh"
-    process.write_text(script)
-    process.chmod(process.stat().st_mode | stat.S_IEXEC)
+# Whatever a credential_process prints may hold secrets, so the agent must not repeat it.
+PROCESS_OUTPUT = "token=hunter2"
 
-    config = tmp_path / "aws_config"
-    config.write_text(f"[default]\ncredential_process = {process}\n")
-    return config
+
+def _use_aws_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, config: str) -> None:
+    config_file = tmp_path / "aws_config"
+    config_file.write_text(config)
+
+    monkeypatch.delenv("AWS_PROFILE", raising=False)
+    monkeypatch.delenv("AWS_ACCESS_KEY_ID", raising=False)
+    monkeypatch.delenv("AWS_SECRET_ACCESS_KEY", raising=False)
+    monkeypatch.setenv("AWS_CONFIG_FILE", str(config_file))
+    monkeypatch.setenv("AWS_SHARED_CREDENTIALS_FILE", str(tmp_path / "does_not_exist"))
+    monkeypatch.setenv("AWS_EC2_METADATA_DISABLED", "true")
 
 
 @pytest.fixture(name="failing_credential_process")
 def _failing_credential_process(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Point the boto3 credential chain at a provider that fails."""
-    config = _write_credential_process(
-        tmp_path, "#!/bin/sh\necho 'no credentials for you' >&2\nexit 1\n"
-    )
+    process = tmp_path / "credential_process.sh"
+    process.write_text(f"#!/bin/sh\necho '{PROCESS_OUTPUT}' >&2\nexit 1\n")
+    process.chmod(process.stat().st_mode | stat.S_IEXEC)
 
-    monkeypatch.delenv("AWS_PROFILE", raising=False)
-    monkeypatch.delenv("AWS_ACCESS_KEY_ID", raising=False)
-    monkeypatch.delenv("AWS_SECRET_ACCESS_KEY", raising=False)
-    monkeypatch.setenv("AWS_CONFIG_FILE", str(config))
-    monkeypatch.setenv("AWS_SHARED_CREDENTIALS_FILE", str(tmp_path / "does_not_exist"))
-    monkeypatch.setenv("AWS_EC2_METADATA_DISABLED", "true")
+    _use_aws_config(tmp_path, monkeypatch, f"[default]\ncredential_process = {process}\n")
 
 
 @pytest.mark.usefixtures("failing_credential_process")
@@ -62,8 +63,18 @@ def test_connection_test_reports_a_failing_credential_process(
     assert exit_code == 2
     reported = capsys.readouterr().err
     assert "Connection failed with:" in reported
-    # botocore names the provider it could not get credentials from.
-    assert "custom-process" in reported
+    assert "credential_process" in reported
+
+
+@pytest.mark.usefixtures("failing_credential_process")
+def test_agent_does_not_report_what_a_failing_credential_process_printed(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    agent_aws_main(parse_arguments([*KEYLESS_ARGS, "--connection-test"]))
+    agent_aws_main(parse_arguments(KEYLESS_ARGS))
+
+    captured = capsys.readouterr()
+    assert PROCESS_OUTPUT not in captured.out + captured.err
 
 
 @pytest.mark.usefixtures("failing_credential_process")
@@ -102,3 +113,45 @@ def test_agent_run_writes_an_exceptions_section_for_a_missing_profile(
 
     assert exit_code == 0
     assert "<<<aws_v2_exceptions>>>" in capsys.readouterr().out
+
+
+@pytest.fixture(name="missing_credential_process")
+def _missing_credential_process(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _use_aws_config(
+        tmp_path,
+        monkeypatch,
+        f"[default]\ncredential_process = {tmp_path / 'aws_signing_helper'}\n",
+    )
+
+
+@pytest.mark.usefixtures("missing_credential_process")
+def test_connection_test_reports_a_missing_credential_process(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = agent_aws_main(parse_arguments([*KEYLESS_ARGS, "--connection-test"]))
+
+    assert exit_code == 2
+    assert "aws_signing_helper" in capsys.readouterr().err
+
+
+@pytest.mark.usefixtures("missing_credential_process")
+def test_agent_run_writes_an_exceptions_section_for_a_missing_credential_process(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = agent_aws_main(parse_arguments(KEYLESS_ARGS))
+
+    assert exit_code == 0
+    assert "<<<aws_v2_exceptions>>>" in capsys.readouterr().out
+
+
+def test_connection_test_reports_a_missing_named_profile(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _use_aws_config(tmp_path, monkeypatch, "[profile other]\nregion = eu-central-1\n")
+
+    exit_code = agent_aws_main(
+        parse_arguments([*KEYLESS_ARGS, "--profile", "checkmk", "--connection-test"])
+    )
+
+    assert exit_code == 2
+    assert "checkmk" in capsys.readouterr().err

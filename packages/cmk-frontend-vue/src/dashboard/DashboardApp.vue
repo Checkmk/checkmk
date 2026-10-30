@@ -777,10 +777,10 @@ const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(
           @close="openAddWidgetDialog = false"
         />
         <WizardSelector
-          v-if="dashboardsManager.constants.value"
+          v-if="dashboardsManager.constants.value && dashboardsManager.activeDashboardKey.value"
           :is-open="openWizard"
           :selected-wizard="selectedWizard"
-          :dashboard-key="dashboardsManager.activeDashboardKey.value!"
+          :dashboard-key="dashboardsManager.activeDashboardKey.value"
           :tick="refreshTick"
           :range="range"
           :context-filters="dashboardFilters.contextFilters.value || {}"

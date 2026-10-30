@@ -183,6 +183,24 @@ def with_user_login(load_config: Config, with_user: tuple[UserId, str]) -> Itera
         yield user_id
 
 
+@pytest.fixture(name="user_without_permissions")
+def fixture_user_without_permissions(load_config: Config) -> Iterator[UserId]:
+    with create_and_destroy_user(
+        automation=False, role="no_permissions", config=load_config
+    ) as created:
+        user_id = created[0]
+        with login.TransactionIdContext(
+            user_id,
+            UserPermissions(
+                load_config.roles,
+                all_permissions(),
+                {user_id: ["no_permissions"]},
+                [],
+            ),
+        ):
+            yield user_id
+
+
 @pytest.fixture()
 def with_admin(load_config: Config) -> Iterator[tuple[UserId, str]]:
     with create_and_destroy_user(automation=False, role="admin", config=load_config) as user:

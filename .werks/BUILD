@@ -8,6 +8,8 @@ filegroup(
             "first_free",
             ".gitignore",
             ".last",
+            # A bytecode cache, e.g. from loading the config as a module, isn't a werk.
+            "__pycache__/**",
         ],
     ),
     visibility = ["//:__subpackages__"],

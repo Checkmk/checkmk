@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from datetime import datetime, timedelta, UTC
-
 import pytest
 from flask import Flask
 
@@ -13,17 +11,12 @@ from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.oauth.store.client_store import get_client_store
-from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.oauth.wato._user_tokens_mode import ModeOAuthTokens
-from cmk.gui.scopes import DEFAULT_SCOPE
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
+from tests.unit.cmk.gui.oauth.wato._token_helpers import _is_token_alive, _issue_token, _token_hash
 
 _USER = UserId("cmkadmin")
-
-
-def _future(minutes: int) -> datetime:
-    return (datetime.now(UTC) + timedelta(minutes=minutes)).replace(microsecond=0)
 
 
 def _register_client() -> str:
@@ -31,27 +24,6 @@ def _register_client() -> str:
         registered = store.register(["https://client.example/callback"], "Example Client")
     assert registered.is_ok()
     return registered.ok.client_id
-
-
-def _issue_token(user_id: UserId, client_id: str) -> str:
-    with get_token_store() as store:
-        token = store.issue_token(
-            user_id, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=client_id
-        )
-    assert token.is_ok()
-    return token.ok.access
-
-
-def _token_hash(token: str) -> str:
-    with get_token_store() as store:
-        record = store.get_by_token(token)
-    assert record is not None
-    return record.token_hash
-
-
-def _is_token_alive(token: str) -> bool:
-    with get_token_store() as store:
-        return store.get_by_token(token) is not None
 
 
 def _mode() -> ModeOAuthTokens:

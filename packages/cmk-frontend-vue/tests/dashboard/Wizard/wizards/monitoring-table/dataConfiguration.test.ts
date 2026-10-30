@@ -8,7 +8,6 @@ import { describe, expect, it } from 'vitest'
 import {
   rowLimitChoice,
   rowLimitOf,
-  showsTimestamps,
   withColumns
 } from '@/dashboard/components/Wizard/wizards/monitoring-table/dataConfiguration'
 import type { MonitoringTableContent } from '@/dashboard/types/widget'
@@ -51,13 +50,5 @@ describe('columns', () => {
       columns: ['state'],
       sort: ['state:asc']
     })
-  })
-
-  it.each([
-    [['state', 'last_check'], true],
-    [['state', 'last_state_change'], true],
-    [['state', 'address'], false]
-  ])('offers the timestamp formats for the columns %j: %s', (columns, offered) => {
-    expect(showsTimestamps({ ...CONTENT, columns })).toBe(offered)
   })
 })

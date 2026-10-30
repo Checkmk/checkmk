@@ -37,7 +37,6 @@ import {
   parseSorters,
   rowLimitChoice,
   rowLimitOf,
-  showsTimestamps,
   sortableColumns,
   withColumns,
   withSorters
@@ -155,7 +154,7 @@ function goNext() {
       </TableFormRow>
       <TableFormRow>
         <FieldDescription>{{ _t('Row limit') }}</FieldDescription>
-        <FieldComponent>
+        <FieldComponent class="db-stage-contents__row-limit">
           <CmkDropdown
             :model-value="limitChoice"
             :label="_t('Row limit')"
@@ -204,41 +203,44 @@ function goNext() {
           />
         </FieldComponent>
       </TableFormRow>
-      <template v-if="showsTimestamps(content)">
-        <TableFormRow>
-          <FieldDescription>{{ _t('Date format') }}</FieldDescription>
-          <FieldComponent>
-            <CmkDropdown
-              :model-value="content.date_format"
-              :label="_t('Date format')"
-              :options="dateFormatChoices()"
-              @update:model-value="
-                (value) =>
-                  value !== null &&
-                  (content = { ...content, date_format: value as DisplayOptions['dateFormat'] })
-              "
-            />
-          </FieldComponent>
-        </TableFormRow>
-        <TableFormRow>
-          <FieldDescription>{{ _t('Timestamp format') }}</FieldDescription>
-          <FieldComponent>
-            <CmkDropdown
-              :model-value="content.timestamp_format"
-              :label="_t('Timestamp format')"
-              :options="timestampFormatChoices()"
-              @update:model-value="
-                (value) =>
-                  value !== null &&
-                  (content = {
-                    ...content,
-                    timestamp_format: value as DisplayOptions['timestampFormat']
-                  })
-              "
-            />
-          </FieldComponent>
-        </TableFormRow>
-      </template>
+      <TableFormRow>
+        <FieldDescription :help="_t('How the Check age and State age columns show a date.')">{{
+          _t('Date format')
+        }}</FieldDescription>
+        <FieldComponent>
+          <CmkDropdown
+            :model-value="content.date_format"
+            :label="_t('Date format')"
+            :options="dateFormatChoices()"
+            @update:model-value="
+              (value) =>
+                value !== null &&
+                (content = { ...content, date_format: value as DisplayOptions['dateFormat'] })
+            "
+          />
+        </FieldComponent>
+      </TableFormRow>
+      <TableFormRow>
+        <FieldDescription
+          :help="_t('Whether the Check age and State age columns show the time, the age or both.')"
+          >{{ _t('Timestamp format') }}</FieldDescription
+        >
+        <FieldComponent>
+          <CmkDropdown
+            :model-value="content.timestamp_format"
+            :label="_t('Timestamp format')"
+            :options="timestampFormatChoices()"
+            @update:model-value="
+              (value) =>
+                value !== null &&
+                (content = {
+                  ...content,
+                  timestamp_format: value as DisplayOptions['timestampFormat']
+                })
+            "
+          />
+        </FieldComponent>
+      </TableFormRow>
     </TableForm>
   </CmkCatalogPanel>
 
@@ -302,6 +304,13 @@ function goNext() {
 </template>
 
 <style scoped>
+.db-stage-contents__row-limit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--dimension-4);
+}
+
 .db-stage-contents__list {
   margin: 0 0 var(--spacing-half);
   padding: 0;

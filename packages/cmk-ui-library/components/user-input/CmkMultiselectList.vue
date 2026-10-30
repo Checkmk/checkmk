@@ -127,6 +127,12 @@ function select(name: string, checked: boolean): void {
   }
 }
 
+/* The box shares its color with the list behind it, which only its outline sets apart. */
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
+.cmk-multiselect-list__item :deep(.cmk-checkbox__button) {
+  border-color: var(--default-form-element-border-color);
+}
+
 .cmk-multiselect-list__empty {
   padding: 0 var(--dimension-4);
   color: var(--font-color-dimmed);

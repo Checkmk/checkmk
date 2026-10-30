@@ -110,12 +110,11 @@ describe('monitoring table data configuration', () => {
     expect(content.value.columns).toEqual(['state', 'name'])
   })
 
-  it('offers the timestamp format only with a timestamp column', async () => {
+  it('offers the date and timestamp format whichever columns are shown', async () => {
     const user = userEvent.setup()
     const { content } = renderStage2()
-    expect(screen.queryByRole('combobox', { name: 'Timestamp format' })).not.toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Date format' })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('checkbox', { name: 'Check age' }))
     await user.click(screen.getByRole('combobox', { name: 'Timestamp format' }))
     await user.click(await screen.findByText('Absolute'))
 

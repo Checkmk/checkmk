@@ -59,13 +59,6 @@ export function withColumns(
   }
 }
 
-/** The columns the date and timestamp format apply to. */
-const TIMESTAMP_COLUMNS: ReadonlySet<string> = new Set(['last_check', 'last_state_change'])
-
-export function showsTimestamps(content: MonitoringTableContent): boolean {
-  return content.columns.some((column) => TIMESTAMP_COLUMNS.has(column))
-}
-
 export function sortableColumns(
   content: MonitoringTableContent,
   catalog: readonly MonitoringTableColumn[]

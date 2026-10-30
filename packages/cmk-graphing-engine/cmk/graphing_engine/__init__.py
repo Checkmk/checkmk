@@ -139,6 +139,7 @@ from ._quantities._quantity import (
 )
 from ._rrd._fetch import (
     FetchMetricNamesProtocol,
+    time_series_of_rrd_column,
 )
 from ._rrd._metrics import (
     ConsolidationFunction,
@@ -228,6 +229,7 @@ __all__ = [
     "last_present",
     "FetchDataProtocol",
     "FetchMetricNamesProtocol",
+    "time_series_of_rrd_column",
     "FetchedData",
     "FixedRange",
     "FocusBoundKind",

@@ -29,6 +29,7 @@ from cmk.graphing_engine import (
     scaled_series,
     Service,
     ServiceName,
+    time_series_of_rrd_column,
     TimeRange,
     TimeSeries,
     translate_performance_data,
@@ -264,14 +265,10 @@ class RRDFetchTimeSeries:
                         service, values = query.parse_row(row)
                         for metric in metrics_by_service.get(service, []):
                             column = values[column_of[str(metric.metric_name)]]
-                            if not column:
+                            if column is None:
                                 continue
-                            result[metric] = TimeSeries(
-                                time_range=TimeRange(
-                                    start=int(column[0]), end=int(column[1]), step=int(column[2])
-                                ),
-                                values=column[3:],
-                            )
+                            if (series := time_series_of_rrd_column(column)) is not None:
+                                result[metric] = series
         return result
 
 

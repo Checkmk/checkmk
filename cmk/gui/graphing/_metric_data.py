@@ -24,6 +24,7 @@ from cmk.graphing_engine import (
     PerformanceData,
     reverse_translated_names,
     scaled_series,
+    time_series_of_rrd_column,
     TimeRange,
     TimeSeries,
     translate_performance_data,
@@ -68,14 +69,7 @@ def rrd_column_names(
 def _series_of_column(data: Sequence[float | None] | None) -> TimeSeries | None:
     if data is None:
         raise MKGeneralException(_("Cannot retrieve historic data with Nagios core"))
-    if len(data) <= 3:
-        return None
-    if data[0] is None or data[1] is None or data[2] is None:
-        raise ValueError(data)
-    return TimeSeries(
-        time_range=TimeRange(start=int(data[0]), end=int(data[1]), step=int(data[2])),
-        values=data[3:],
-    )
+    return time_series_of_rrd_column(data)
 
 
 def merge_rrd_columns(

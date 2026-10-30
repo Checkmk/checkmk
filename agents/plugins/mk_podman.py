@@ -400,13 +400,37 @@ class _LocalAdapter(HTTPAdapter):
 # =============================================================================
 
 
+def _su_shell_args(user: str) -> Sequence[str]:
+    """Force /bin/sh if the login shell of the user can not run commands (e.g. nologin)"""
+    try:
+        login_shell = pwd.getpwnam(user).pw_shell
+        valid_shells = {
+            line.strip()
+            for line in Path("/etc/shells").read_text().splitlines()
+            if line.strip() and not line.startswith("#")
+        }
+    except (KeyError, OSError):  # fmt: skip
+        return []
+    if not login_shell or login_shell in valid_shells:
+        return []
+    return ["-s", "/bin/sh"]
+
+
 def run_podman_command(
     args: Sequence[str], run_as_user: Union[str, None] = None
 ) -> Union[str, Error]:
     try:
         cmd = ["podman", *args]
         if run_as_user and os.geteuid() == 0:
-            cmd = ["su", "-", "--", run_as_user, "-c", shlex.join(cmd)]
+            cmd = [
+                "su",
+                *_su_shell_args(run_as_user),
+                "-l",
+                "--",
+                run_as_user,
+                "-c",
+                shlex.join(cmd),
+            ]
 
         result = subprocess.run(
             cmd,

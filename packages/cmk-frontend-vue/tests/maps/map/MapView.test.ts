@@ -13,7 +13,7 @@ import MapViewComponent from '@/maps/map/MapView.vue'
 import type { MapConfig, MapRead, MapView } from '@/maps/types/api'
 
 import { aListedMap, aMap, anObject, newMapView } from '../support/fixtures'
-import { fakeMapsServices, provideServices } from '../support/services'
+import { aSession, fakeMapsServices, fullCapabilities, provideServices } from '../support/services'
 
 // connectToMap opens an EventSource; jsdom has none. A minimal stand-in keeps the
 // SSE path from throwing without driving any events (this suite tests dispatch,
@@ -250,6 +250,31 @@ describe('MapView – loading / error / read-only states', () => {
     renderMap()
     await waitFor(() => expect(screen.getByTestId('renderer-static')).toBeInTheDocument())
     expect(screen.getByRole('button', { name: 'Map settings' })).toBeInTheDocument()
+  })
+})
+
+describe('MapView – the connection list', () => {
+  beforeEach(() => {
+    openMapPage()
+    vi.stubGlobal('EventSource', FakeEventSource)
+  })
+
+  async function opensMapAs(capabilities: Parameters<typeof fullCapabilities>[0]): Promise<void> {
+    services = fakeMapsServices({}, aSession({ capabilities: fullCapabilities(capabilities) }))
+    await services.auth.init()
+    opensMap(newMapView('static'))
+    renderMap()
+    await waitFor(() => expect(screen.getByTestId('renderer-static')).toBeInTheDocument())
+  }
+
+  it('is not asked for by a user who only views maps', async () => {
+    await opensMapAs({ configure: false, may_edit: false })
+    expect(services.apis.connections.list).not.toHaveBeenCalled()
+  })
+
+  it('is asked for by a user who may create maps', async () => {
+    await opensMapAs({ configure: false, may_edit: true })
+    expect(services.apis.connections.list).toHaveBeenCalled()
   })
 })
 

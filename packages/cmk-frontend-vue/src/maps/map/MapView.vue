@@ -790,7 +790,7 @@ useMapLifecycle({
 usePreviewBridge({ preview: () => isPreview.value })
 
 onMounted(() => {
-  if (auth.canConfigure || auth.canCreateMaps) {
+  if (auth.canConfigure.value || auth.canCreateMaps.value) {
     void connectionsStore.fetch()
   }
   // The map list carries the per-map edit capability; loading it even on a

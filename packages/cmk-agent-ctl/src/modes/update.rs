@@ -97,8 +97,8 @@ fn update_through(
 }
 
 /// Settle the pending installation, migrate the registration of the Python
-/// updater on a host without an update source, then fetch and hand over what
-/// the site offers.
+/// updater on a host without an update source, then ask the site, record its
+/// answer, and fetch and hand over what it offers.
 fn run_cycle(
     updater: &mut WritableUpdater,
     registry: &Registry,
@@ -115,7 +115,9 @@ fn run_cycle(
         );
     }
 
-    let fetched = updater.fetch_update(registry, api, signature)?;
+    let answer = updater.ask_update_source(registry, api)?;
+    updater.record_answer(&answer)?;
+    let fetched = updater.fetch_update(answer, api, signature)?;
 
     println!("{}", report_fetch(&fetched));
 

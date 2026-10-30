@@ -581,6 +581,22 @@ pub enum UpdateAvailabilityStatus {
     Unavailable,
 }
 
+/// What came of asking the update source for a status, short of an error.
+pub enum SourceAnswer<'r> {
+    /// No site was asked: the updater is not operational or no registered
+    /// connection can reach one. The reason is logged.
+    NotPossible,
+
+    /// The site of the update source serves no agent updates: it answered 501.
+    Unavailable,
+
+    /// The site named the agent package it has for this host.
+    Answered {
+        connection: connection::UpdateConnection<'r>,
+        status: agent_receiver_api::UpdateStatusResponse,
+    },
+}
+
 /// What the site answered a download with, short of an error.
 #[derive(Debug)]
 enum PackageDownload {
@@ -645,6 +661,16 @@ impl WritableUpdater {
             let reported = None;
             self.record_failed_install(reported)
         }
+    }
+
+    /// Record when the site last named the agent package it has for this host,
+    /// TD(4.2). A site that serves no agent updates named none.
+    pub fn record_answer(&mut self, answer: &SourceAnswer<'_>) -> AnyhowResult<()> {
+        if !matches!(answer, SourceAnswer::Answered { .. }) {
+            return Ok(());
+        }
+        self.state.last_check = Some(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs());
+        self.state.save(&self.state_path)
     }
 
     /// The pending package runs: record when, and drop the error that preceded it.
@@ -1083,12 +1109,10 @@ impl Updater {
         registry: &Registry,
         api: &impl agent_receiver_api::AgentUpdate,
     ) -> AnyhowResult<CheckOutcome> {
-        let Some(selected) = self.find_update_connection(registry) else {
-            return Ok(CheckOutcome::NotPossible);
-        };
-        let status = match self.request_update_status(api, &selected)? {
-            UpdateAvailabilityStatus::Available(status) => status,
-            UpdateAvailabilityStatus::Unavailable => return Ok(CheckOutcome::SourceUnavailable),
+        let status = match self.ask_update_source(registry, api)? {
+            SourceAnswer::NotPossible => return Ok(CheckOutcome::NotPossible),
+            SourceAnswer::Unavailable => return Ok(CheckOutcome::SourceUnavailable),
+            SourceAnswer::Answered { status, .. } => status,
         };
         let Some(target) = status.target_agent.map(|offered| offered.aghash) else {
             return Ok(CheckOutcome::NoPackage);
@@ -1106,12 +1130,38 @@ impl Updater {
         })
     }
 
-    /// Fetch the package the site offers and spool it for the installer.
+    /// Ask the site of the update source which agent package it has for this
+    /// host.
     ///
-    /// The four steps of an update the controller can do today: ask the site,
-    /// refuse what could not be verified anyway, download the rest, and write
-    /// it out once its signature has been checked. Installing the spooled
-    /// package is not part of it.
+    /// Writes nothing: the update cycle records the answer with
+    /// [`WritableUpdater::record_answer`].
+    ///
+    /// # Errors
+    ///
+    /// If the site cannot be reached or does not answer with a status this
+    /// controller can parse.
+    pub fn ask_update_source<'r>(
+        &self,
+        registry: &'r Registry,
+        api: &impl agent_receiver_api::AgentUpdate,
+    ) -> AnyhowResult<SourceAnswer<'r>> {
+        let Some(connection) = self.find_update_connection(registry) else {
+            return Ok(SourceAnswer::NotPossible);
+        };
+        Ok(match self.request_update_status(api, &connection)? {
+            UpdateAvailabilityStatus::Available(status) => {
+                SourceAnswer::Answered { connection, status }
+            }
+            UpdateAvailabilityStatus::Unavailable => SourceAnswer::Unavailable,
+        })
+    }
+
+    /// Fetch the package that `answer` offers and spool it for the installer.
+    ///
+    /// The three steps of an update after the status request: refuse what
+    /// could not be verified anyway, download the rest, and write it out once
+    /// its signature has been checked. Installing the spooled package is not
+    /// part of it.
     ///
     /// The package is the only thing written: recording the outcome in the
     /// updater state is left to the cycle that calls this.
@@ -1123,21 +1173,19 @@ impl Updater {
     ///
     /// # Errors
     ///
-    /// If the site cannot be reached, offers a package this host could not
-    /// verify, does not deliver the package it offered, delivers one that fails
-    /// verification, or if the package cannot be spooled.
+    /// If the site offers a package this host could not verify, does not
+    /// deliver the package it offered, delivers one that fails verification,
+    /// or if the package cannot be spooled.
     pub fn fetch_update(
         &self,
-        registry: &Registry,
+        answer: SourceAnswer<'_>,
         api: &impl agent_receiver_api::AgentUpdate,
         signature: SignatureCheck,
     ) -> AnyhowResult<FetchOutcome> {
-        let Some(selected) = self.find_update_connection(registry) else {
-            return Ok(FetchOutcome::NotPossible);
-        };
-        let status = match self.request_update_status(api, &selected)? {
-            UpdateAvailabilityStatus::Available(status) => status,
-            UpdateAvailabilityStatus::Unavailable => return Ok(FetchOutcome::SourceUnavailable),
+        let (connection, status) = match answer {
+            SourceAnswer::NotPossible => return Ok(FetchOutcome::NotPossible),
+            SourceAnswer::Unavailable => return Ok(FetchOutcome::SourceUnavailable),
+            SourceAnswer::Answered { connection, status } => (connection, status),
         };
         let offered = match self.offered_update(&status)? {
             OfferedUpdate::NoPackage => return Ok(FetchOutcome::NoPackage),
@@ -1151,7 +1199,7 @@ impl Updater {
         if signature == SignatureCheck::Required {
             ensure_verifiable(offered, &local_certificates)?;
         }
-        let package = match self.download_package(api, &selected, offered)? {
+        let package = match self.download_package(api, &connection, offered)? {
             PackageDownload::Downloaded(package) => package,
             PackageDownload::Unavailable => return Ok(FetchOutcome::SourceUnavailable),
             PackageDownload::Superseded => return Ok(FetchOutcome::Superseded),
@@ -2029,6 +2077,56 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         updater.record_source_unavailable().unwrap();
 
         assert!(!saved_source(&updater).unwrap().available);
+    }
+
+    /// CMK-39594, TC-AU-068: an answer of the site is recorded as the last check.
+    #[test]
+    fn test_an_answered_status_request_records_the_last_check() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let mut updater = writable_in(
+            &dir,
+            UpdateState {
+                source: Some(some_source()),
+                ..Default::default()
+            },
+        );
+        let before = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+
+        let answer = updater
+            .ask_update_source(&registry.registry, &TestApi::new(Some(TARGET_HASH)))
+            .unwrap();
+        updater.record_answer(&answer).unwrap();
+
+        assert!(UpdateState::load(&updater.state_path).unwrap().last_check >= Some(before));
+    }
+
+    /// CMK-39594, TC-AU-079: a 501 is no answer, so the last check stays.
+    #[test]
+    fn test_a_site_without_agent_updates_is_no_answer() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let mut updater = writable_in(
+            &dir,
+            UpdateState {
+                source: Some(some_source()),
+                last_check: Some(1_759_276_800),
+                ..Default::default()
+            },
+        );
+
+        let answer = updater
+            .ask_update_source(
+                &registry.registry,
+                &RefusingApi::status(http::StatusCode::NOT_IMPLEMENTED),
+            )
+            .unwrap();
+        updater.record_answer(&answer).unwrap();
+
+        assert_eq!(updater.state.last_check, Some(1_759_276_800));
     }
 
     /// The note is written before the hand-over, which may not return.
@@ -3027,6 +3125,19 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         }
     }
 
+    impl Updater {
+        /// The status request and the fetch of a cycle, without recording the
+        /// answer in between.
+        fn ask_and_fetch(
+            &self,
+            registry: &Registry,
+            api: &impl agent_receiver_api::AgentUpdate,
+            signature: SignatureCheck,
+        ) -> AnyhowResult<FetchOutcome> {
+            self.fetch_update(self.ask_update_source(registry, api)?, api, signature)
+        }
+    }
+
     #[test]
     fn test_request_update_status_reports_the_installed_hash_and_the_last_error() {
         let registry = registry_with_one_connection();
@@ -3479,7 +3590,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let updater = updater_spooling_into(&dir);
 
         let outcome = updater
-            .fetch_update(
+            .ask_and_fetch(
                 &registry.registry,
                 &TestApi::new(Some(TARGET_HASH)),
                 SignatureCheck::Required,
@@ -3511,7 +3622,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let updater = updater_spooling_into(&dir);
 
         let outcome = updater
-            .fetch_update(
+            .ask_and_fetch(
                 &registry.registry,
                 &TestApi::new(Some(TARGET_HASH)),
                 SignatureCheck::Required,
@@ -3577,7 +3688,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let updater = updater_spooling_into(&dir);
 
         let outcome = updater
-            .fetch_update(
+            .ask_and_fetch(
                 &registry.registry,
                 &TestApi::new(Some(INSTALLED_HASH)),
                 SignatureCheck::Required,
@@ -3598,7 +3709,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let updater = updater_spooling_into(&dir);
 
         let outcome = updater
-            .fetch_update(
+            .ask_and_fetch(
                 &registry.registry,
                 &TestApi::new(None),
                 SignatureCheck::Required,
@@ -3614,7 +3725,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let registry = registry_with_one_connection();
 
         let outcome = updater(some_config(), None)
-            .fetch_update(
+            .ask_and_fetch(
                 &registry.registry,
                 &TestApi::new(Some(TARGET_HASH)),
                 SignatureCheck::Required,
@@ -3634,7 +3745,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let api = TestApi::unsigned(TARGET_HASH);
 
         let error = updater
-            .fetch_update(&registry.registry, &api, SignatureCheck::Required)
+            .ask_and_fetch(&registry.registry, &api, SignatureCheck::Required)
             .unwrap_err();
 
         assert_eq!(
@@ -3655,7 +3766,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let api = TestApi::badly_signed(TARGET_HASH);
 
         let error = updater
-            .fetch_update(&registry.registry, &api, SignatureCheck::Required)
+            .ask_and_fetch(&registry.registry, &api, SignatureCheck::Required)
             .unwrap_err();
 
         assert_eq!(
@@ -3678,7 +3789,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         };
 
         let outcome = updater
-            .fetch_update(
+            .ask_and_fetch(
                 &registry.registry,
                 &TestApi::unsigned(TARGET_HASH),
                 SignatureCheck::Skip,
@@ -3708,7 +3819,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let updater = updater_spooling_into(&dir);
 
         let outcome = updater
-            .fetch_update(
+            .ask_and_fetch(
                 &registry.registry,
                 &TestApi::badly_signed(TARGET_HASH),
                 SignatureCheck::Skip,
@@ -3733,7 +3844,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let updater = updater_spooling_into(&dir);
 
         let outcome = updater
-            .fetch_update(
+            .ask_and_fetch(
                 &registry.registry,
                 &TestApi::new(Some(INSTALLED_HASH)),
                 SignatureCheck::Skip,
@@ -3752,7 +3863,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let registry = registry_with_one_connection();
 
         let error = updater_with_source(some_config(), some_agent_info())
-            .fetch_update(
+            .ask_and_fetch(
                 &registry.registry,
                 &UnreachableApi,
                 SignatureCheck::Required,
@@ -3772,7 +3883,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let registry = registry_with_one_connection();
 
         let outcome = updater_spooling_into(&dir)
-            .fetch_update(
+            .ask_and_fetch(
                 &registry.registry,
                 &RefusingApi::status(http::StatusCode::NOT_IMPLEMENTED),
                 SignatureCheck::Required,
@@ -3790,7 +3901,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let registry = registry_with_one_connection();
 
         let outcome = updater_spooling_into(&dir)
-            .fetch_update(
+            .ask_and_fetch(
                 &registry.registry,
                 &RefusingApi::download(http::StatusCode::NOT_IMPLEMENTED),
                 SignatureCheck::Required,
@@ -3808,7 +3919,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let registry = registry_with_one_connection();
 
         let outcome = updater_spooling_into(&dir)
-            .fetch_update(
+            .ask_and_fetch(
                 &registry.registry,
                 &RefusingApi::download(http::StatusCode::CONFLICT),
                 SignatureCheck::Required,
@@ -3826,7 +3937,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let registry = registry_with_one_connection();
 
         let error = updater_spooling_into(&dir)
-            .fetch_update(
+            .ask_and_fetch(
                 &registry.registry,
                 &RefusingApi::status(http::StatusCode::NOT_FOUND),
                 SignatureCheck::Required,

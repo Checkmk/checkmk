@@ -23,7 +23,7 @@ from tests.system.agent_updates.install_step._controller import (
     run_update,
     UPDATE_HOST,
 )
-from tests.testlib.system.agent import get_package_type
+from tests.testlib.system.agent import get_package_type, wait_until_host_receives_data
 from tests.testlib.system.host_under_test import HostUnderTest
 from tests.testlib.system.site import Site
 
@@ -207,4 +207,55 @@ def test_a_correct_controller_does_not_ask_through_a_registration_without_the_pe
     )
     assert new_uuid not in _refused_uuids(site), (
         f"The controller asked through the registration {new_uuid} without the permission"
+    )
+
+
+@pytest.mark.usefixtures("update_offer")
+def test_a_registration_without_the_permission_keeps_monitoring(
+    host: HostUnderTest,
+    site: Site,
+    integrated_updater_agent: IntegratedUpdaterAgent,
+    registrar_without_update_permission: _User,
+) -> None:
+    """TC-AU-026: a registration by a user without the update permission still serves monitoring,
+    and records not_permitted."""
+    # update_offer registered as cmkadmin. Only the registration without the permission may remain.
+    host.run([integrated_updater_agent.ctl.as_posix(), "delete-all"], sudo=True)
+
+    uuid, _ = _register_as(
+        host, integrated_updater_agent, site, registrar_without_update_permission
+    )
+
+    wait_until_host_receives_data(site, UPDATE_HOST)
+    registration = _registration(site, uuid)
+    assert registration is not None and registration["agent_updates_permitted"] is False, (
+        f"The registration of the user without the permission records {registration}"
+    )
+
+
+@pytest.mark.usefixtures("update_offer")
+def test_a_registration_without_the_permission_gets_no_updates(
+    host: HostUnderTest,
+    site: Site,
+    integrated_updater_agent: IntegratedUpdaterAgent,
+    registrar_without_update_permission: _User,
+) -> None:
+    """TC-AU-026: after a registration by a user without the update permission, the controller
+    names the missing permission and sends no update request."""
+    # update_offer registered as cmkadmin. Only the registration without the permission may remain.
+    host.run([integrated_updater_agent.ctl.as_posix(), "delete-all"], sudo=True)
+    uuid, said = _register_as(
+        host, integrated_updater_agent, site, registrar_without_update_permission
+    )
+
+    check = run_update(host, integrated_updater_agent, check_only=True)
+
+    assert all(permission in said for permission in _UPDATE_PERMISSIONS), (
+        f"The registration did not name the missing permission:\n{said}"
+    )
+    assert _NO_UPDATE_SOURCE in check.stdout + check.stderr, (
+        f"The controller has an update source:\n{check.stdout}{check.stderr}"
+    )
+    assert uuid not in _refused_uuids(site), (
+        f"The controller asked through the registration {uuid} without the permission"
     )

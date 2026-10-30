@@ -1837,3 +1837,77 @@ def test_host_downtime_goes_to_the_site_that_monitors_the_host(
         )
 
     assert resp.status_code == HTTPStatus.NO_CONTENT
+
+
+def test_service_downtime_is_refused_without_the_downtime_permission(
+    clients: ClientRegistry,
+    with_user: tuple[UserId, str],
+    load_config: Config,
+    set_config: SetConfig,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    # The page only hides an action the user may not perform; the endpoint refuses it too,
+    # and no command reaches the core (none is expected).
+    clients.Downtime.set_credentials(*with_user)
+    mock_livestatus.add_table("hosts", [{"name": "heute"}])
+    mock_livestatus.add_table("services", [{"host_name": "heute", "description": "CPU load"}])
+    mock_livestatus.expect_query(
+        f"GET hosts\nColumns: name\nFilter: name = heute\nAuthUser: {with_user[0]}"
+    )
+    mock_livestatus.expect_query(
+        "GET services\nColumns: description\nFilter: host_name = heute"
+        f"\nFilter: description = CPU load\nAnd: 2\nAuthUser: {with_user[0]}"
+    )
+    roles = roles_without_permission(load_config, "user", "action.downtimes")
+
+    with set_config(roles=roles), mock_livestatus(expect_status_query=True):
+        resp = clients.Downtime.create_for_services(
+            downtime_type="service",
+            host_name="heute",
+            service_descriptions=["CPU load"],
+            start_time="2020-01-01T00:00:00Z",
+            end_time="2020-01-02T00:00:00Z",
+            expect_ok=False,
+        )
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+    assert "Set/remove downtimes" in resp.json["detail"]
+
+
+def test_service_downtime_goes_to_the_site_that_monitors_the_host(
+    clients: ClientRegistry,
+    set_config: SetConfig,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    # The mock keeps one expectation queue per site, so a command sent to the wrong site
+    # finds nothing waiting for it there and fails the test.
+    for site_id in mock_livestatus.sites:
+        on_this_site = site_id == "remote"
+        hosts = [{"name": "gestern"}] if on_this_site else []
+        services = [{"host_name": "gestern", "description": "Memory"}] if on_this_site else []
+        mock_livestatus.add_table("hosts", hosts, site=site_id)
+        mock_livestatus.add_table("services", services, site=site_id)
+    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = gestern")
+    mock_livestatus.expect_query(
+        "GET services\nColumns: description\nFilter: host_name = gestern"
+        "\nFilter: description = Memory\nAnd: 2"
+    )
+    mock_livestatus.expect_query(
+        "COMMAND [...] SCHEDULE_SVC_DOWNTIME;gestern;Memory;...",
+        match_type="ellipsis",
+        sites=["remote"],
+    )
+
+    with (
+        set_config(sites=site_configurations(["NO_SITE", "remote", "local"])),
+        mock_livestatus(expect_status_query=True),
+    ):
+        resp = clients.Downtime.create_for_services(
+            downtime_type="service",
+            host_name="gestern",
+            service_descriptions=["Memory"],
+            start_time="2020-01-01T00:00:00Z",
+            end_time="2020-01-02T00:00:00Z",
+        )
+
+    assert resp.status_code == HTTPStatus.NO_CONTENT

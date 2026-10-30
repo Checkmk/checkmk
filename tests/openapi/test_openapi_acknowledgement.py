@@ -874,6 +874,94 @@ def test_host_acknowledgement_goes_to_the_site_that_monitors_the_host(
     assert resp.status_code == HTTPStatus.NO_CONTENT
 
 
+def test_service_acknowledgement_is_refused_without_the_acknowledge_permission(
+    clients: ClientRegistry,
+    with_user: tuple[UserId, str],
+    load_config: Config,
+    set_config: SetConfig,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    # The page only hides an action the user may not perform; the endpoint refuses it too,
+    # and no command reaches the core (none is expected).
+    clients.Acknowledge.set_credentials(*with_user)
+    mock_livestatus.add_table(
+        "services", [{"host_name": "heute", "description": "CPU load", "state": 2}]
+    )
+    mock_livestatus.expect_query(
+        "GET services\nColumns: host_name description state\nFilter: host_name = heute"
+        f"\nFilter: description = CPU load\nAnd: 2\nAuthUser: {with_user[0]}"
+    )
+    roles = roles_without_permission(load_config, "user", "action.acknowledge")
+
+    with set_config(roles=roles), mock_livestatus(expect_status_query=True):
+        resp = clients.Acknowledge.request(
+            "post",
+            url="/domain-types/acknowledge/collections/service",
+            body=_acknowledge_service_of("heute", "CPU load"),
+            expect_ok=False,
+        )
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+    assert "Acknowledge" in resp.json["detail"]
+
+
+def test_service_acknowledgement_goes_to_the_site_that_monitors_the_host(
+    clients: ClientRegistry,
+    set_config: SetConfig,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    # The mock keeps one expectation queue per site, so a command sent to the wrong site
+    # finds nothing waiting for it there and fails the test.
+    for site_id in mock_livestatus.sites:
+        on_this_site = site_id == "remote"
+        hosts = [{"name": "gestern"}] if on_this_site else []
+        services = (
+            [{"host_name": "gestern", "description": "Memory", "state": 2}] if on_this_site else []
+        )
+        mock_livestatus.add_table("hosts", hosts, site=site_id)
+        mock_livestatus.add_table("services", services, site=site_id)
+    mock_livestatus.expect_query(
+        "GET services\nColumns: host_name description state"
+        "\nFilter: host_name = gestern\nFilter: description = Memory\nAnd: 2"
+    )
+    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = gestern")
+    mock_livestatus.expect_query(
+        "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;gestern;Memory;...",
+        match_type="ellipsis",
+        sites=["remote"],
+    )
+
+    with (
+        set_config(sites=site_configurations(["NO_SITE", "remote", "local"])),
+        mock_livestatus(expect_status_query=True),
+    ):
+        resp = clients.Acknowledge.request(
+            "post",
+            url="/domain-types/acknowledge/collections/service",
+            body=_acknowledge_service_of("gestern", "Memory"),
+        )
+
+    assert resp.status_code == HTTPStatus.NO_CONTENT
+
+
+def _acknowledge_service_of(host_name: str, service: str) -> dict[str, object]:
+    # The query the services page builds: one host, any of the selected services.
+    return {
+        "acknowledge_type": "service_by_query",
+        "query": {
+            "op": "and",
+            "expr": [
+                {"op": "=", "left": "host_name", "right": host_name},
+                {"op": "or", "expr": [{"op": "=", "left": "description", "right": service}]},
+            ],
+        },
+        "sticky": False,
+        "notify": False,
+        "persistent": False,
+        "comment": "Acknowledged",
+    }
+
+
 def _heute_by_name_for(user_id: UserId) -> str:
     # A user without "See all host and services" makes sites.live() add an AuthUser line.
     return f"GET hosts\nColumns: name\nFilter: name = heute\nAuthUser: {user_id}"

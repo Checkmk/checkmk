@@ -42,6 +42,7 @@ ObjectType = Literal[
     "cmk_label",
     "graph",
     "aggregation",
+    "grid",
 ]
 
 LineStyle = Literal[
@@ -112,8 +113,21 @@ MapViewType = Literal[
 
 RadarFilter = Literal["hostgroup", "servicegroup", "all_hosts", "all_services"]
 
+GridObjectType = Literal["host", "service"]
+GridSort = Literal["name", "state"]
+GridOrder = Literal["asc", "desc"]
+
 # The daemon generates objects with this id prefix and never stores them.
 AUTO_OBJECT_ID_PREFIX: Final = "auto:"
+
+# A static map draws every member one by one, without virtual scrolling.
+GRID_MEMBER_LIMIT: Final = 1000
+GRID_OFFSET_MAX: Final = 10000
+GRID_PER_ROW_MAX: Final = GRID_MEMBER_LIMIT
+# Each grid queries its members on every update.
+GRID_MAX_PER_MAP: Final = 10
+# A member's id carries its grid's.
+GRID_ID_PATTERN: Final = r"^[A-Za-z0-9_-]{1,64}$"
 
 # Every state update resolves each of them.
 MAP_OBJECTS_MAX: Final = 5000
@@ -272,6 +286,14 @@ class MapObject(TypedDict):
     recognize_services: NotRequired[bool]
     exclude_members: NotRequired[str | None]
     exclude_member_states: NotRequired[str | None]
+    # A grid: the hosts or services its filter matches, laid out from x/y.
+    grid_per_row: NotRequired[int]
+    grid_offset_x: NotRequired[int]
+    grid_offset_y: NotRequired[int]
+    grid_sort: NotRequired[GridSort]
+    grid_order: NotRequired[GridOrder]
+    # A host or service: the grid it was pinned out of, which leaves it out.
+    grid_id: NotRequired[str | None]
     label_maxlen: NotRequired[int | None]
     image_src: NotRequired[str | None]
     line_style: NotRequired[LineStyle]
@@ -347,6 +369,16 @@ class _RadarViewFieldDefaults(TypedDict):
     filter_value: str
 
 
+class _GridFieldDefaults(TypedDict):
+    """The grid keys the daemon defaults; see :data:`GRID_FIELD_DEFAULTS`."""
+
+    grid_per_row: int
+    grid_offset_x: int
+    grid_offset_y: int
+    grid_sort: GridSort
+    grid_order: GridOrder
+
+
 # What the daemon assumes for a key left out. A producer that does not go
 # through the SPA completes a map with these, as the REST API requires most of
 # them; ``test_map_payload_contract`` pins them against the daemon model.
@@ -374,4 +406,12 @@ DISPLAY_FIELD_DEFAULTS: Final[MapDisplay] = {"mode": "icon"}
 RADAR_VIEW_FIELD_DEFAULTS: Final[_RadarViewFieldDefaults] = {
     "filter": "hostgroup",
     "filter_value": "",
+}
+# NagVis' dynmap defaults.
+GRID_FIELD_DEFAULTS: Final[_GridFieldDefaults] = {
+    "grid_per_row": 30,
+    "grid_offset_x": 30,
+    "grid_offset_y": 30,
+    "grid_sort": "name",
+    "grid_order": "asc",
 }

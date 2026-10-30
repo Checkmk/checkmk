@@ -140,6 +140,7 @@ _OBJECT_GROUPS: dict[str, dict[str, str]] = {
         "only_hard_states": "only_hard_states",
         "recognize_services": "recognize_services",
         "expand_depth": "expand_depth",
+        "grid_id": "grid_id",
     },
     "cmk_label": {
         "name": "cmk_label_name",
@@ -171,6 +172,13 @@ _OBJECT_GROUPS: dict[str, dict[str, str]] = {
         "border": "textbox_border",
         "width": "textbox_width",
         "height": "textbox_height",
+    },
+    "grid": {
+        "per_row": "grid_per_row",
+        "offset_x": "grid_offset_x",
+        "offset_y": "grid_offset_y",
+        "sort": "grid_sort",
+        "order": "grid_order",
     },
     "graph": {
         "url": "graph_url",
@@ -593,6 +601,13 @@ def serialize_map(page: MapPage, *, can_edit: bool, can_delete: bool) -> MapObje
     )
 
 
+def _has_grid(spec: Mapping[str, object]) -> bool:
+    if _sub_mapping(spec.get("view")).get("type", "static") != "static":
+        return False
+    objects = spec.get("objects")
+    return isinstance(objects, list) and any(_sub_mapping(o).get("type") == "grid" for o in objects)
+
+
 def serialize_map_list_entry(page: MapPage, *, can_edit: bool, can_delete: bool) -> MapListObject:
     cfg = page.config
     payload = cfg.map_spec
@@ -604,6 +619,7 @@ def serialize_map_list_entry(page: MapPage, *, can_edit: bool, can_delete: bool)
         view=_list_view(payload.get("view")),
         click_action=_click_action(payload.get("click_action")),
         object_count=cfg.object_count,
+        has_grid=_has_grid(payload),
         background_image=_opt_str(payload.get("background_image")),
         background_color=_opt_str(payload.get("background_color")),
         background_style=_background_style(payload.get("background_style")),

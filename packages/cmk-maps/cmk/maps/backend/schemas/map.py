@@ -41,6 +41,12 @@ from cmk.maps.shared.map_payload import (
     FLOW_SERVICES_PER_HOST_MAX,
     FLOW_TOP_AFFECTED_HOSTS_MAX,
     FOLDER_EXPAND_DEPTH_MAX,
+    GRID_FIELD_DEFAULTS,
+    GRID_ID_PATTERN,
+    GRID_OFFSET_MAX,
+    GRID_PER_ROW_MAX,
+    GridOrder,
+    GridSort,
     LINE_WIDTH_MAX,
     LINE_WIDTH_MIN,
     LinePerfdataLabel,
@@ -53,6 +59,9 @@ from cmk.maps.shared.map_payload import (
     RenderMode,
 )
 from cmk.maps.shared.validators import (
+    check_grid,
+    check_grid_binding,
+    check_grids,
     coerce_asset_ref,
     coerce_url_target,
     ConnectionId,
@@ -306,6 +315,22 @@ class MapElement(BaseModel):
     recognize_services: bool = False
     exclude_members: str | None = None
     exclude_member_states: str | None = None
+    # A grid lays out the hosts or services its filter matches, or all of them,
+    # from x/y, as a NagVis dynmap; its label, display and state options apply
+    # to them. The defaults are NagVis' ``dynmap_*`` defaults.
+    grid_per_row: int = Field(
+        default=GRID_FIELD_DEFAULTS["grid_per_row"], ge=1, le=GRID_PER_ROW_MAX
+    )
+    grid_offset_x: int = Field(
+        default=GRID_FIELD_DEFAULTS["grid_offset_x"], ge=0, le=GRID_OFFSET_MAX
+    )
+    grid_offset_y: int = Field(
+        default=GRID_FIELD_DEFAULTS["grid_offset_y"], ge=0, le=GRID_OFFSET_MAX
+    )
+    grid_sort: GridSort = GRID_FIELD_DEFAULTS["grid_sort"]
+    grid_order: GridOrder = GRID_FIELD_DEFAULTS["grid_order"]
+    # A host or service pinned out of a grid; that grid leaves it out.
+    grid_id: str | None = Field(default=None, pattern=GRID_ID_PATTERN)
     label: LabelConfig | None = LabelConfig()
     display: DisplayConfig | None = DisplayConfig()
     label_border: str | None = None
@@ -361,8 +386,18 @@ class MapElement(BaseModel):
 
     @model_validator(mode="after")
     def _host_takes_no_service_pattern(self) -> Self:
-        bound = bound_type_of(self.type, self.line_object_type, self.service_description)
+        bound = bound_type_of(
+            self.type, self.line_object_type, self.service_description, self.object_types
+        )
         check_host_member_patterns(bound, self.exclude_members, self.exclude_member_states)
+        check_grid(self.type, self.id)
+        check_grid_binding(
+            self.type,
+            self.object_types,
+            grid_id=self.grid_id,
+            recognize_services=self.recognize_services,
+            member_patterns=(self.exclude_members, self.exclude_member_states),
+        )
         return self
 
     line_color: str | None = None
@@ -426,6 +461,11 @@ class MapConfig(BaseModel):
     @classmethod
     def _validate_background_color(cls, v: str | None) -> str | None:
         return validate_color(v)
+
+    @model_validator(mode="after")
+    def _check_grids(self) -> Self:
+        check_grids(self.view.type, (o.type for o in self.objects))
+        return self
 
 
 class MapElementUpdate(BaseModel):

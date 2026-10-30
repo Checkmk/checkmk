@@ -911,6 +911,22 @@ reach, then asks Livestatus for the objects of all of them in one round per
 connection. A link shows the worst state of every map reachable from the one it
 links to, except the map being fetched, so a cycle back to it adds nothing.
 
+**Grids.** A grid, an object of a static map, adds every host or service a
+Livestatus filter matches, or all of them without one, as a NagVis dynamic map
+does. The daemon queries each grid on its own connection under the viewer's
+AuthUser and sends its members as states with ``auto:grid:<grid id>:`` ids; a
+host member brings its services' counts in the same query. Grids with the same
+filter, connection and viewer share that query. Past its limit (see Limits) a
+grid says so in its own state (``grid_truncated``) and keeps the members with a
+problem first, which a second query finds, then the others by name. A member
+pinned out of its grid is left out of it; a host placed elsewhere on the map
+stays in the grid, and one two grids match is in both. If Livestatus fails, the
+last members show stale, those of a site that stopped answering for as long as
+it is gone; a filter Livestatus refuses is held back for every viewer, any
+other failure only for the viewer it happened to. A link to a map with grids
+counts each whole filter through a dynamic group; with member patterns, which a
+dynamic group cannot apply, it counts the members the map shows.
+
 Handling untrusted input
 ------------------------
 
@@ -984,18 +1000,18 @@ Livestatus queries
   In the daemon, values from requests and map configs are passed through
   ``lqencode`` and, for searches, ``re.escape``; host names for world-map
   bundles are dropped if they contain a newline or backslash. The GUI builds
-  its queries with Checkmk's query expression builder. Dynamic groups accept
-  only ``Filter:``, ``And:``, ``Or:`` and ``Negate:`` lines without control
-  characters (tab is allowed), at most 64 KiB, nesting at most six levels where
-  the operator changes. Saving a map through the REST API also checks each filter the map did
-  not have before: each combining line must find the lines it combines, and
-  each ``Filter:`` line's column and operator must exist in the table it
-  queries. A filter the map already had is not checked again, so a map saved by
-  another Checkmk version still loads and saves. A query every federation site
-  refuses fails, and the sites stay connected. A query Livestatus refused, on a
-  single site too, is sent again for the same user after 30 seconds at the
-  earliest; the daemon logs Livestatus' reason once per query and user, and the
-  object it serves shows stale.
+  its queries with Checkmk's query expression builder. Dynamic groups and grids
+  accept only ``Filter:``, ``And:``, ``Or:`` and ``Negate:`` lines without
+  control characters (tab is allowed), at most 64 KiB, nesting at most six
+  levels where the operator changes. Saving a map through the REST API also
+  checks each filter the map did not have before: each combining line must find
+  the lines it combines, and each ``Filter:`` line's column and operator must
+  exist in the table it queries. A filter the map already had is not checked
+  again, so a map saved by another Checkmk version still loads and saves. A
+  query every federation site refuses fails, and the sites stay connected. A
+  query Livestatus refused, on a single site too, is sent again for the same
+  user after 30 seconds at the earliest; the daemon logs Livestatus' reason once
+  per query and user, and the object it serves shows stale.
 
 Stored data and secrets
 -----------------------
@@ -1079,10 +1095,13 @@ Limits
      - 10,000
    * - Hosts per geo bundle
      - 1000, 10,000 in all bundles of a map; each a valid host name
-   * - Filter of a dynamic group
+   * - Filter of a dynamic group or grid
      - 64 KiB
    * - Maps a state fetch follows through links
      - 256; further links stay pending, marked stale
+   * - Grids
+     - 10 per map, each adding 1000 objects, fetched as up to 1001 per site
+       plus the objects pinned out of it
    * - Metric history window
      - 1 minute to 7 days
    * - Livestatus query timeout

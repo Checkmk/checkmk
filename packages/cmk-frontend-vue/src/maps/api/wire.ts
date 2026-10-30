@@ -96,7 +96,7 @@ function labelToWire(obj: MapElement): Schemas['MapObjectLabel'] | undefined {
 // Map one FLAT internal object to the nested wire ``MapElement``. Mirrors the
 // server's ``_OBJECT_GROUPS`` table in ``cmk.maps.rest_api.utils`` (rest_field ->
 // flat_key). ``position`` and ``link`` are always emitted (required on every
-// object); the rest are omitted when empty. ``line`` and ``graph`` go
+// object); the rest are omitted when empty. ``line``, ``grid`` and ``graph`` go
 // only with their own type, as ``newMapElement`` gives every object their
 // defaults. ``site`` objects are filtered out before this runs, so ``type``
 // never carries the runtime-only ``'site'``.
@@ -133,7 +133,8 @@ function objectToWire(obj: MapElement): MapElementWire {
         object_filter: obj.object_filter,
         only_hard_states: obj.only_hard_states,
         recognize_services: obj.recognize_services,
-        expand_depth: obj.expand_depth
+        expand_depth: obj.expand_depth,
+        grid_id: obj.grid_id
       }),
       cmk_label: group<Schemas['MapObjectCmkLabel']>({
         name: obj.cmk_label_name,
@@ -173,6 +174,16 @@ function objectToWire(obj: MapElement): MapElementWire {
         width: obj.textbox_width,
         height: obj.textbox_height
       }),
+      grid:
+        obj.type === 'grid'
+          ? group<Schemas['MapObjectGrid']>({
+              per_row: obj.grid_per_row,
+              offset_x: obj.grid_offset_x,
+              offset_y: obj.grid_offset_y,
+              sort: obj.grid_sort,
+              order: obj.grid_order
+            })
+          : undefined,
       graph:
         obj.type === 'graph'
           ? group<Schemas['MapObjectGraph']>({

@@ -57,6 +57,7 @@ export function objectTypeLabel(type: ObjectType, _t: TranslateFn): TranslatedSt
     image: _t('Image'),
     graph: _t('Graph'),
     cmk_label: _t('Checkmk label'),
+    grid: _t('Grid'),
     // The flow map's synthetic per-site node: never placed, but it reaches the
     // same labelling as any other object the operator can click.
     site: _t('Site')

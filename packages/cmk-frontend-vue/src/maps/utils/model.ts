@@ -14,6 +14,15 @@
  */
 import type { FolderTreeView, MapElement, MapView, ObjectState } from '@/maps/types/api'
 
+/** How a grid lays out its members unless it says otherwise: NagVis' dynmap defaults. */
+export const GRID_DEFAULTS = {
+  grid_per_row: 30,
+  grid_offset_x: 30,
+  grid_offset_y: 30,
+  grid_sort: 'name',
+  grid_order: 'asc'
+} as const
+
 /** A map object with the defaults an unset field carries server-side. */
 export function newMapElement(
   fields: Partial<MapElement> & Pick<MapElement, 'id' | 'type'>
@@ -31,6 +40,7 @@ export function newMapElement(
     graph_width: 400,
     graph_height: 200,
     graph_refresh_interval: 0,
+    ...GRID_DEFAULTS,
     // Both are ``| null`` on the wire: no per-object override, render with the map's defaults.
     label: null,
     display: null,

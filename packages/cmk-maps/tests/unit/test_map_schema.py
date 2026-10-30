@@ -13,6 +13,7 @@ from cmk.maps.backend.schemas.map import MapConfig, MapElement, WorldmapView
 from cmk.maps.shared.map_payload import (
     BUNDLE_HOSTS_MAX,
     FLOW_POSITIONS_MAX,
+    GRID_MAX_PER_MAP,
     MAP_BUNDLE_HOSTS_MAX,
     MAP_OBJECTS_MAX,
     PRESENTATION_ELEMENTS_MAX,
@@ -136,6 +137,52 @@ def test_background_color_that_is_no_color_is_rejected() -> None:
     # It ends up in the canvas' inline style.
     with pytest.raises(ValidationError):
         MapConfig.model_validate({"name": "m", "background_color": "red; background: url(x)"})
+
+
+@pytest.mark.parametrize(
+    "host_setting",
+    [
+        pytest.param({"recognize_services": True}, id="counting-services"),
+        pytest.param({"exclude_members": "^db-"}, id="leaving-out-members"),
+        pytest.param({"exclude_member_states": "^db-"}, id="ignoring-states"),
+    ],
+)
+def test_a_grid_of_services_takes_no_setting_of_a_host(host_setting: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        MapElement.model_validate(
+            {"id": "g", "type": "grid", "object_types": "service", **host_setting}
+        )
+
+
+def test_a_grid_of_hosts_takes_no_service_pattern() -> None:
+    with pytest.raises(ValidationError):
+        MapElement.model_validate({"id": "g", "type": "grid", "exclude_members": "web~~CPU"})
+
+
+def _grids(count: int) -> list[dict[str, object]]:
+    return [{"id": f"g{i}", "type": "grid"} for i in range(count)]
+
+
+def test_a_map_takes_a_limited_number_of_grids() -> None:
+    MapConfig.model_validate({"name": "m", "objects": _grids(GRID_MAX_PER_MAP)})
+
+    with pytest.raises(ValidationError):
+        MapConfig.model_validate({"name": "m", "objects": _grids(GRID_MAX_PER_MAP + 1)})
+
+
+def test_only_a_static_map_takes_a_grid() -> None:
+    with pytest.raises(ValidationError):
+        MapConfig.model_validate({"name": "m", "view": {"type": "flow"}, "objects": _grids(1)})
+
+
+def test_a_grid_id_is_one_its_members_ids_can_carry() -> None:
+    with pytest.raises(ValidationError):
+        MapElement.model_validate({"id": "a:b", "type": "grid"})
+
+
+def test_only_a_host_or_a_service_is_pinned_out_of_a_grid() -> None:
+    with pytest.raises(ValidationError):
+        MapElement.model_validate({"id": "t", "type": "textbox", "grid_id": "g"})
 
 
 def _hosts(count: int) -> dict[str, object]:

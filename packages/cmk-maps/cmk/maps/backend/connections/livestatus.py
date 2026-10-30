@@ -13,7 +13,15 @@ import re
 import ssl
 import threading
 import time
-from collections.abc import AsyncIterator, Callable, Iterable, Mapping, Sequence
+from collections.abc import (
+    AsyncIterator,
+    Callable,
+    Collection,
+    Iterable,
+    Iterator,
+    Mapping,
+    Sequence,
+)
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from contextvars import ContextVar, copy_context
@@ -34,6 +42,7 @@ from cmk.livestatus_client import (
     ConnectedSite,
     lqencode,
     MKLivestatusQueryError,
+    MKLivestatusSocketError,
     MultiSiteConnection,
     SingleSiteConnection,
     SiteConfigurations,
@@ -44,6 +53,8 @@ from cmk.maps.backend.connections.base import (
     FolderTreeData,
     FolderTreeHostRow,
     GeoHost,
+    grid_member_name,
+    GridMemberKey,
     MetricHistoryResult,
     MonitoringScope,
     QueryRefusedError,
@@ -68,6 +79,7 @@ from cmk.maps.backend.schemas.state import (
 from cmk.maps.shared.config_vars import MAX_STATE_REFRESH_INTERVAL
 from cmk.maps.shared.filters import excluded_members_filter, one_of
 from cmk.maps.shared.geo import LAT_LABEL, LAT_VAR, LNG_LABEL, LNG_VAR, resolve_host_coords
+from cmk.maps.shared.map_payload import GridObjectType
 from cmk.maps.shared.perfdata import parse_perf_metrics
 from cmk.maps.shared.rows import (
     row_bool,
@@ -252,6 +264,13 @@ def _folder_path_from_filename(filename: str) -> str:
 # ``Folder.groups()``), not from Livestatus (which only knows folders that contain
 # hosts). Cached on the file version — the skeleton changes only on activation,
 # but the read would otherwise run on every state tick.
+class _GridProblems(NamedTuple):
+    """Which members of a grid have a problem, and the rows of those it kept."""
+
+    keys: frozenset[GridMemberKey]
+    rows: list[tuple[GridMemberKey, str | None, LivestatusRow]]
+
+
 class WatoFolders(NamedTuple):
     folders: list[FolderInfo]
     hide_unreadable: bool
@@ -301,9 +320,41 @@ _SVC_EXTRA_COLS = (
     " notifications_enabled active_checks_enabled check_command has_been_checked staleness"
 )
 
+
+def _host_states_query(state_col: str, more_columns: str = "") -> str:
+    """The head of a query ``_parse_host_state_row`` reads; filters follow.
+    ``more_columns`` come after the ones it reads, from
+    :data:`_HOST_STATE_COLUMN_COUNT` on."""
+    return (
+        f"GET hosts\nColumns: name {state_col} plugin_output perf_data acknowledged "
+        f"scheduled_downtime_depth {_HOST_EXTRA_COLS}{more_columns}\n"
+    )
+
+
+_HOST_STATE_COLUMN_COUNT = 6 + len(_HOST_EXTRA_COLS.split())
+
+
+def _service_states_query(state_col: str) -> str:
+    """The head of a query ``_parse_service_state_row`` reads; filters follow."""
+    return (
+        f"GET services\nColumns: host_name description {state_col} plugin_output perf_data "
+        f"acknowledged scheduled_downtime_depth {_SVC_EXTRA_COLS}\n"
+    )
+
+
 # Checkmk's default ``staleness_threshold`` (cmk.gui.general_config): from here
 # on a state is older than its check interval allows and views mark it stale.
 _STALENESS_THRESHOLD = 1.5
+# A grid's problems query that timed out scans the whole table again on the next
+# refresh; the grid is cut by name until then.
+_GRID_PROBLEMS_HELD_FOR = 300.0
+# On a large site with few problems, listing them scans the whole table; which
+# members have one is reused for this long. A member the members query of a
+# refresh lists has its state from there; one only that list named shows the
+# state it had then.
+_GRID_PROBLEMS_REUSED_FOR = 30.0
+# The members named that way, over all grids and viewers.
+_GRID_PROBLEM_MEMBERS_KEPT = 200_000
 
 # Column lists for the on-demand object-details endpoint. Order matters —
 # _build_details indexes positionally.
@@ -443,6 +494,47 @@ def _parse_service_state_row(
         site_id=site_id,
     )
     return (row_str(row, 0), row_str(row, 1)), _apply_extra(state, row, offset=7)
+
+
+def _host_member_rows(
+    tagged: Iterable[tuple[str | None, LivestatusRow]],
+) -> Iterator[tuple[str, ObjectState]]:
+    # Counted per row, so a host on several sites keeps the counts of the row
+    # whose state it shows.
+    for sid, r in tagged:
+        host, state = _parse_host_state_row(r, site_id=_default_site_id(sid))
+        summary = _services_summary_from_row(r, _HOST_STATE_COLUMN_COUNT)
+        yield host, state.model_copy(update={"host_name": host, "services_summary": summary})
+
+
+def _grid_member_states(
+    object_types: GridObjectType, tagged: Iterable[tuple[str | None, LivestatusRow]]
+) -> dict[GridMemberKey, ObjectState]:
+    if object_types == "service":
+        services = _worst_state_dict(
+            _parse_service_state_row(r, site_id=_default_site_id(sid)) for sid, r in tagged
+        )
+        return {
+            (host, svc): state.model_copy(update={"host_name": host, "service_description": svc})
+            for (host, svc), state in services.items()
+        }
+    hosts = _worst_state_dict(_host_member_rows(tagged))
+    return {(host, None): state for host, state in hosts.items()}
+
+
+def _grid_member_key(object_types: GridObjectType, row: LivestatusRow) -> GridMemberKey:
+    """The member a row stands for, without parsing it: the leading columns
+    ``_parse_host_state_row`` and ``_parse_service_state_row`` read as its name."""
+    return (row_str(row, 0), row_str(row, 1) if object_types == "service" else None)
+
+
+def _kept_grid_members(
+    members: Iterable[GridMemberKey], with_problems: Collection[GridMemberKey], limit: int
+) -> list[GridMemberKey]:
+    """The ``limit + 1`` members a grid past its limit keeps: those with a
+    problem first, then by name, so the cut hides no problem."""
+    ranked = sorted(set(members), key=lambda k: (k not in with_problems, grid_member_name(k)))
+    return ranked[: limit + 1]
 
 
 def _worst_state_dict[StateKey](
@@ -640,6 +732,15 @@ class LivestatusConnection(ConnectionBase):
         ] = TtlCache(maxsize=32)
         # Sent again once a dead site would be retried.
         self._refused_queries: TtlCache[tuple[bytes, MonitoringScope], str] = TtlCache(maxsize=1024)
+        self._timed_out_problem_queries: TtlCache[tuple[bytes, MonitoringScope], float] = TtlCache(
+            maxsize=512, expire_after=_GRID_PROBLEMS_HELD_FOR
+        )
+        self._grid_problems: TtlCache[tuple[bytes, MonitoringScope], _GridProblems] = TtlCache(
+            maxsize=512,
+            weigh=lambda problems: len(problems.keys),
+            maxweight=_GRID_PROBLEM_MEMBERS_KEPT,
+            expire_after=_GRID_PROBLEMS_REUSED_FOR,
+        )
 
         # Auto-federate when this connection points at the central site's local
         # Livestatus socket — the socket only sees local data, so MultiSiteConnection
@@ -1576,12 +1677,7 @@ class LivestatusConnection(ConnectionBase):
         filters = "".join(f"Filter: name = {lqencode(h)}\n" for h in hostnames)
         if len(hostnames) > 1:
             filters += f"Or: {len(hostnames)}\n"
-        tagged = await self._query_with_site(
-            f"GET hosts\n"
-            f"Columns: name {state_col} plugin_output perf_data acknowledged "
-            f"scheduled_downtime_depth {_HOST_EXTRA_COLS}\n"
-            f"{filters}"
-        )
+        tagged = await self._query_with_site(f"{_host_states_query(state_col)}{filters}")
         return _worst_state_dict(
             _parse_host_state_row(r, site_id=_default_site_id(sid)) for sid, r in tagged
         )
@@ -1589,11 +1685,7 @@ class LivestatusConnection(ConnectionBase):
     @override
     async def get_all_hosts_states(self, only_hard: bool = False) -> dict[str, ObjectState]:
         state_col = "last_hard_state" if only_hard else "state"
-        tagged = await self._query_with_site(
-            f"GET hosts\n"
-            f"Columns: name {state_col} plugin_output perf_data acknowledged "
-            f"scheduled_downtime_depth {_HOST_EXTRA_COLS}\n"
-        )
+        tagged = await self._query_with_site(_host_states_query(state_col))
         return _worst_state_dict(
             _parse_host_state_row(r, site_id=_default_site_id(sid)) for sid, r in tagged
         )
@@ -1702,15 +1794,93 @@ class LivestatusConnection(ConnectionBase):
         )
 
     @override
+    async def get_filter_members(
+        self,
+        object_types: GridObjectType,
+        object_filter: str | None,
+        *,
+        only_hard: bool = False,
+        with_services: bool = False,
+        limit: int,
+    ) -> dict[GridMemberKey, ObjectState]:
+        # The filter comes normalised from the map schema; the contact-group
+        # scope is the AuthUser header.
+        state_col = "last_hard_state" if only_hard else "state"
+        problems = f"Filter: {state_col} != 0\n"
+        if object_types == "service":
+            query = f"{_service_states_query(state_col)}{object_filter or ''}"
+        else:
+            # The services' counts come along, so the members cost no second query.
+            counts = _host_state_columns(only_hard=only_hard, with_services=True)[2:]
+            query = f"{_host_states_query(state_col, ' ' + ' '.join(counts))}{object_filter or ''}"
+            if with_services:
+                # The host then shows the worst state of its services, too.
+                worst_col = "worst_service_hard_state" if only_hard else "worst_service_state"
+                problems += f"Filter: {worst_col} != 0\nOr: 2\n"
+        # As in Checkmk's views, the limit applies per site.
+        tagged = await self._query_with_site(f"{query}Limit: {limit + 1}\n")
+        keyed = [(_grid_member_key(object_types, row), site, row) for site, row in tagged]
+        if len({key for key, _site, _row in keyed}) <= limit:
+            return _grid_member_states(object_types, tagged)
+        # Cut by name alone, the members a site lists past the limit would hide
+        # their problems; those come first instead.
+        problems_query = f"{query}{problems}Limit: {limit + 1}\n"
+        # Per viewer: what one sees decides how long the scan takes.
+        held_key = (_query_digest(problems_query), _scope_ctx.get())
+        reused = self._grid_problems.get(held_key, ttl=_GRID_PROBLEMS_REUSED_FOR)
+        problem_rows: list[tuple[str | None, LivestatusRow]] | None = None
+        if (
+            reused is None
+            and self._timed_out_problem_queries.get(held_key, ttl=_GRID_PROBLEMS_HELD_FOR) is None
+        ):
+            try:
+                problem_rows = await self._query_with_site(problems_query)
+            except QueryTimeoutError:
+                logger.warning(
+                    "Listing a grid's problems first timed out; cutting it by name for %(held)d s",
+                    {"held": _GRID_PROBLEMS_HELD_FOR},
+                )
+                self._timed_out_problem_queries.set(held_key, time.monotonic())
+            except QueryRefusedError:
+                # The connection logged it, and holds it back itself.
+                pass
+            except MKLivestatusSocketError:
+                logger.debug("Grid problems query failed, cutting by name", exc_info=True)
+        if reused is None:
+            problems_keyed = [
+                (_grid_member_key(object_types, row), site, row) for site, row in problem_rows or []
+            ]
+            problem_keys = frozenset(key for key, _site, _row in problems_keyed)
+        else:
+            # A reused row stands in only for a member this refresh did not list.
+            fresh = {key for key, _site, _row in keyed}
+            problems_keyed = [entry for entry in reused.rows if entry[0] not in fresh]
+            problem_keys = reused.keys
+        kept = _kept_grid_members(
+            [key for key, _site, _row in (*keyed, *problems_keyed)], problem_keys, limit
+        )
+        wanted = set(kept)
+        if problem_rows is not None:
+            self._grid_problems.set(
+                held_key,
+                _GridProblems(
+                    problem_keys, [entry for entry in problems_keyed if entry[0] in wanted]
+                ),
+            )
+        # Only what is kept becomes a state: past the limit, each site lists up to
+        # ``limit + 1`` rows.
+        states = _grid_member_states(
+            object_types,
+            ((site, row) for key, site, row in (*problems_keyed, *keyed) if key in wanted),
+        )
+        return {key: states[key] for key in kept}
+
+    @override
     async def get_all_services_states(
         self, only_hard: bool = False
     ) -> dict[tuple[str, str], ObjectState]:
         state_col = "last_hard_state" if only_hard else "state"
-        tagged = await self._query_with_site(
-            f"GET services\n"
-            f"Columns: host_name description {state_col} plugin_output perf_data "
-            f"acknowledged scheduled_downtime_depth {_SVC_EXTRA_COLS}\n"
-        )
+        tagged = await self._query_with_site(_service_states_query(state_col))
         return _worst_state_dict(
             _parse_service_state_row(r, site_id=_default_site_id(sid)) for sid, r in tagged
         )
@@ -1731,12 +1901,7 @@ class LivestatusConnection(ConnectionBase):
             )
         if len(pairs) > 1:
             filter_lines += f"Or: {len(pairs)}\n"
-        tagged = await self._query_with_site(
-            f"GET services\n"
-            f"Columns: host_name description {state_col} plugin_output perf_data "
-            f"acknowledged scheduled_downtime_depth {_SVC_EXTRA_COLS}\n"
-            f"{filter_lines}"
-        )
+        tagged = await self._query_with_site(f"{_service_states_query(state_col)}{filter_lines}")
         return _worst_state_dict(
             _parse_service_state_row(r, site_id=_default_site_id(sid)) for sid, r in tagged
         )

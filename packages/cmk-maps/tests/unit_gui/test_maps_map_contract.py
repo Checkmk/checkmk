@@ -88,6 +88,24 @@ _STATIC_MAP: dict[str, object] = {
     "objects": [{"id": "t1", "type": "textbox", "textbox_width": 120}],
 }
 
+_GRID_MAP: dict[str, object] = {
+    "name": "gridded",
+    "objects": [
+        {
+            "id": "g",
+            "type": "grid",
+            "object_types": "host",
+            "object_filter": "Filter: name ~ ^web",
+            "grid_per_row": 10,
+            "grid_sort": "state",
+            "label": {"show": True},
+            "label_border": "#000000",
+            "label_maxlen": 12,
+        },
+        {"id": "h1", "type": "host", "host_name": "web-1", "grid_id": "g"},
+    ],
+}
+
 _PRESENTATION_MAP: dict[str, object] = {
     "name": "slide1",
     "view": {
@@ -111,6 +129,7 @@ _MAPS = [
     _FOLDERTREE_MAP,
     _RADAR_MAP,
     _STATIC_MAP,
+    _GRID_MAP,
     _PRESENTATION_MAP,
 ]
 
@@ -257,6 +276,13 @@ def test_rest_model_rejects_object_filter_without_filter_header() -> None:
     # leaving the map permanently offline.
     dense = DaemonMapConfig.model_validate(_WORLDMAP_MAP).model_dump(mode="json")
     dense["objects"][0]["object_filter"] = "host_name ~ srv"
+    with pytest.raises(ValidationError):
+        map_from_spec(dense)
+
+
+def test_rest_model_rejects_a_grid_per_row_the_daemon_would_reject() -> None:
+    dense = DaemonMapConfig.model_validate(_GRID_MAP).model_dump(mode="json")
+    dense["objects"][0]["grid_per_row"] = 0
     with pytest.raises(ValidationError):
         map_from_spec(dense)
 

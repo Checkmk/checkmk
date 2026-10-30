@@ -139,9 +139,15 @@ def optional_member_pattern(value: str | None) -> str | None:
 
 
 def bound_type_of(
-    object_type: str, line_object_type: str | None, service_description: str | None
+    object_type: str,
+    line_object_type: str | None,
+    service_description: str | None,
+    object_types: str | None = None,
 ) -> str:
-    """The type of the object whose state an object shows; a line names it or implies it."""
+    """The type of the object whose state an object shows; a line names it or
+    implies it, a grid's members are of the type it adds."""
+    if object_type == "grid":
+        return object_types or "host"
     if object_type != "line":
         return object_type
     return line_object_type or ("service" if service_description else "host")

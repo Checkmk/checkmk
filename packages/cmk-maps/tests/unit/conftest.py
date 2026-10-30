@@ -80,8 +80,13 @@ def _clear_map_caches() -> Iterator[None]:
     map_service._PREVIEWS.invalidate()  # noqa: SLF001
     map_service._SIGNED_VERSIONS.invalidate()  # noqa: SLF001
     state_service._state_snapshots.clear()  # noqa: SLF001
+    state_service._grid_members.invalidate()  # noqa: SLF001
+    state_service._failing_grids.invalidate()  # noqa: SLF001
+    state_service._warned_grids.invalidate()  # noqa: SLF001
     states._fetched.invalidate()  # noqa: SLF001
     states._topologies.invalidate()  # noqa: SLF001
+    state_service._shown_grids.invalidate()  # noqa: SLF001
+    state_service._grid_rollup_states.invalidate()  # noqa: SLF001
     state_service._timing_snapshots.clear()  # noqa: SLF001
     state_service._folder_tree_snapshots.clear()  # noqa: SLF001
     state_service._topology_snapshots.clear()  # noqa: SLF001
@@ -131,6 +136,7 @@ def mock_connection() -> MagicMock:
     )
 
     connection.get_hosts_with_geo = AsyncMock(return_value=[])
+    connection.get_filter_members = AsyncMock(return_value={})
 
     connection.get_folder_tree = AsyncMock()
     connection.search_services = AsyncMock(return_value=[])

@@ -51,9 +51,18 @@ class ObjectState(BaseModel):
     last_state_change: float | None = None
     # Set in distributed Checkmk setups to identify the originating site.
     site_id: str | None = None
-    # The host an ``auto_host`` presentation tile was bound to: only the daemon
-    # resolves it, and the tile's name and commands need it.
+    # What an ``auto_host`` presentation tile was bound to, or an object a grid
+    # added stands for: only the daemon resolves them, and the name and commands
+    # of the object need them.
     host_name: str | None = None
+    service_description: str | None = None
+    # The grid that added the object.
+    grid_id: str | None = None
+    # A grid's own state: it matches more objects than it shows.
+    grid_truncated: bool | None = None
+    # A grid member's last state, shown while its query fails or its site is
+    # dead; ``stale`` alone also marks an overdue check.
+    kept: bool = Field(default=False, exclude=True)
     # Populated only for type=='aggregation' when the MapElement has expand_depth > 0.
     tree: AggregationNode | None = None
     # Aggregated service-state counts; populated only for type=='host'.

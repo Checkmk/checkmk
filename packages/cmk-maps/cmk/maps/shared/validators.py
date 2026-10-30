@@ -5,7 +5,7 @@
 """Shared validators for user-supplied URL/color fields on maps/presentations."""
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from ipaddress import ip_address
 from posixpath import normpath
 from typing import Annotated, Final
@@ -15,6 +15,7 @@ from pydantic import Field
 
 from cmk.ccc.hostaddress import HostName
 from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
+from cmk.maps.shared.map_payload import GRID_ID_PATTERN, GRID_MAX_PER_MAP
 
 # Connections are referenced by this id from maps and stored as a file name part.
 CONNECTION_ID_PATTERN: Final = r"^[a-zA-Z0-9_\-]+$"
@@ -341,3 +342,36 @@ def rgb_to_hex(value: str) -> str:
         return color
     opacity = float(alpha) / 100 if match.group(5) else float(alpha)
     return f"{color}{round(min(max(opacity, 0.0), 1.0) * 255):02x}"
+
+
+def check_grid(object_type: str, object_id: str) -> None:
+    if object_type == "grid" and not re.fullmatch(GRID_ID_PATTERN, object_id):
+        raise ValueError(f"a grid's id must match {GRID_ID_PATTERN}")
+
+
+def check_grid_binding(
+    object_type: str,
+    object_types: str | None,
+    *,
+    grid_id: str | None,
+    recognize_services: bool | None,
+    member_patterns: Iterable[str | None],
+) -> None:
+    """Refuse what a grid would not apply: a grid named by an object no grid
+    leaves out, and the host settings on a grid of services."""
+    if grid_id is not None and object_type not in ("host", "service"):
+        raise ValueError("only a host or a service is pinned out of a grid")
+    if object_type != "grid" or object_types != "service":
+        return
+    if recognize_services:
+        raise ValueError("a grid of services does not count services of its members")
+    if any(member_patterns):
+        raise ValueError("a grid of services leaves out no members of its members")
+
+
+def check_grids(view_type: str, object_types: Iterable[str]) -> None:
+    grids = sum(1 for object_type in object_types if object_type == "grid")
+    if grids and view_type != "static":
+        raise ValueError("only a static map takes a grid")
+    if grids > GRID_MAX_PER_MAP:
+        raise ValueError(f"a map takes at most {GRID_MAX_PER_MAP} grids")

@@ -13,7 +13,7 @@ import { toWireConfig } from '@/maps/api/wire'
 import type { MapConfig } from '@/maps/types/api'
 import { newMapElement } from '@/maps/utils/model'
 
-import { aMap, newMapView } from '../support/fixtures'
+import { aMap, anObject, newMapView } from '../support/fixtures'
 import { type SeenRequest, snapshot } from '../support/http'
 
 const api = new MapConfigApi()
@@ -83,7 +83,8 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
                   view_type: 'worldmap',
                   view: { type: 'worldmap', lat: 51, lng: 10, zoom: 5 },
                   click_action: 'link',
-                  object_count: 3
+                  object_count: 3,
+                  has_grid: false
                 }
               },
               links: []
@@ -255,12 +256,33 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
     })
   })
 
-  it('stores the line and graph settings only with their own type', () => {
+  it("sends a grid's layout with its map", () => {
+    const grid = anObject({
+      id: 'g',
+      type: 'grid',
+      grid_per_row: 10,
+      grid_offset_x: 40,
+      grid_offset_y: 50,
+      grid_sort: 'state',
+      grid_order: 'desc'
+    })
+
+    expect(toWireConfig({ ...staticMap, objects: [grid] }).objects[0]!.grid).toEqual({
+      per_row: 10,
+      offset_x: 40,
+      offset_y: 50,
+      sort: 'state',
+      order: 'desc'
+    })
+  })
+
+  it('stores the line, grid and graph settings only with their own type', () => {
     const host = newMapElement({ id: 'h', type: 'host', host_name: 'web01' })
 
     const wire = toWireConfig({ ...staticMap, objects: [host] }).objects[0]!
 
     expect(wire).not.toHaveProperty('line')
+    expect(wire).not.toHaveProperty('grid')
     expect(wire).not.toHaveProperty('graph')
   })
 

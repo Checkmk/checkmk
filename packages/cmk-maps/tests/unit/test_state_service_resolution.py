@@ -18,7 +18,8 @@ plain ``def`` and need no wrapper.
 
 import asyncio
 import logging
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
+from contextlib import asynccontextmanager
 from typing import Literal
 from unittest.mock import AsyncMock, MagicMock
 
@@ -27,11 +28,13 @@ from fake_connection import FakeConnection
 from fake_links import FakeLinkGui
 
 from cmk.maps.backend.connections.base import (
+    ConnectionBase,
     FolderInfo,
     FolderTreeData,
     FolderTreeHostRow,
     MonitoringScope,
     QueryRefusedError,
+    QueryTimeoutError,
     UNSCOPED,
 )
 from cmk.maps.backend.schemas.map import (
@@ -47,6 +50,7 @@ from cmk.maps.backend.schemas.presentation import (
 )
 from cmk.maps.backend.schemas.state import (
     FolderTreeNode,
+    MapStates,
     ObjectState,
     ServicesSummary,
 )
@@ -57,6 +61,7 @@ from cmk.maps.backend.services.state_service import (
     get_map_states,
     register_connection,
 )
+from cmk.maps.shared.map_payload import GRID_MEMBER_LIMIT
 from cmk.maps.shared.states import SEVERITY_RANK
 
 pytestmark = pytest.mark.usefixtures("_clear_topology_snapshots")
@@ -1816,6 +1821,714 @@ def test_foldertree_no_services_by_default(test_conn: FakeConnection) -> None:  
     assert result.folder_tree is not None
     host = _find_node(result.folder_tree, "datacenters/muc/localhost")
     assert host is not None and not host.children
+
+
+def _member(host: str, state: str, service: str | None = None) -> ObjectState:
+    return ObjectState(
+        object_id=host,
+        type="service" if service else "host",
+        state=state,
+        host_name=host,
+        service_description=service,
+    )
+
+
+# A host member comes with its services counted, as the hosts table has them.
+def _counted_member(host: str, state: str, summary: ServicesSummary) -> ObjectState:
+    return _member(host, state).model_copy(update={"services_summary": summary})
+
+
+def _grid(grid_id: str = "g", /, **settings: object) -> MapElement:
+    return _obj(grid_id, "grid", **settings)
+
+
+def _gridded_map(objects: list[MapElement] | None = None, **settings: object) -> MapConfig:
+    return MapConfig(
+        name="gridded",
+        connection_id="mock",
+        view=StaticView(),
+        objects=[_grid(**settings), *(objects or [])],
+    )
+
+
+def _members(result: MapStates) -> list[ObjectState]:
+    return [s for s in result.states if s.type != "grid"]
+
+
+def _grid_state(result: MapStates, grid_id: str = "g") -> ObjectState:
+    return next(s for s in result.states if s.object_id == grid_id)
+
+
+def test_a_grid_adds_what_the_filter_matches_by_name(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={
+            ("web-2", None): _member("web-2", "DOWN"),
+            ("web-1", None): _member("web-1", "UP"),
+        }
+    )
+
+    result = asyncio.run(
+        get_map_states(_gridded_map(object_filter="Filter: name ~ ^web"), map_owner="")
+    )
+
+    assert [(s.object_id, s.state, s.grid_id) for s in _members(result)] == [
+        ("auto:grid:g:web-1", "UP", "g"),
+        ("auto:grid:g:web-2", "DOWN", "g"),
+    ]
+    mock_connection.get_filter_members.assert_awaited_once_with(
+        "host", "Filter: name ~ ^web\n", only_hard=False, with_services=False, limit=1000
+    )
+
+
+def test_a_grid_without_a_filter_adds_every_host(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(return_value={})
+
+    asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+
+    assert mock_connection.get_filter_members.await_args.args == ("host", None)
+
+
+def test_a_grid_leaves_out_only_what_was_pinned_out_of_it(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={
+            ("web-1", None): _member("web-1", "UP"),
+            ("web-2", None): _member("web-2", "UP"),
+            ("web-3", None): _member("web-3", "UP"),
+        }
+    )
+    placed = [
+        _obj("pinned", "host", host_name="web-1", grid_id="g"),
+        _obj("placed", "host", host_name="web-2"),
+        _obj("other", "host", host_name="web-3", grid_id="another"),
+    ]
+
+    result = asyncio.run(get_map_states(_gridded_map(placed), map_owner=""))
+
+    assert [s.object_id for s in _members(result) if s.grid_id] == [
+        "auto:grid:g:web-2",
+        "auto:grid:g:web-3",
+    ]
+
+
+def test_two_grids_both_show_a_host_they_both_match(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={("web-1", None): _member("web-1", "UP")}
+    )
+
+    result = asyncio.run(get_map_states(_gridded_map([_grid("h")]), map_owner=""))
+
+    assert [s.object_id for s in _members(result)] == ["auto:grid:g:web-1", "auto:grid:h:web-1"]
+
+
+def test_a_grid_asks_its_own_connection(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    other = MagicMock(spec=ConnectionBase)
+    other.dead_sites = MagicMock(return_value=[])
+    other.get_filter_members = AsyncMock(return_value={("web-1", None): _member("web-1", "UP")})
+    other.get_services_summary = AsyncMock(return_value={})
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection, "other": other})
+    mock_connection.get_filter_members = AsyncMock(return_value={})
+
+    result = asyncio.run(get_map_states(_gridded_map(connection_id="other"), map_owner=""))
+
+    assert [s.object_id for s in _members(result)] == ["auto:grid:g:web-1"]
+    mock_connection.get_filter_members.assert_not_awaited()
+
+
+def test_a_grid_shows_no_more_than_its_limit(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    hosts = [f"h{i:04}" for i in range(GRID_MEMBER_LIMIT + 1)]
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={(h, None): _member(h, "UP") for h in hosts}
+    )
+
+    result = asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+
+    shown = [s.object_id for s in _members(result)]
+    assert len(shown) == GRID_MEMBER_LIMIT
+    assert f"auto:grid:g:h{GRID_MEMBER_LIMIT:04}" not in shown
+    assert _grid_state(result).grid_truncated
+
+
+def test_a_grid_past_its_limit_keeps_the_order_the_connection_ranks_problems_in(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    hosts = [f"h{i:04}" for i in range(GRID_MEMBER_LIMIT)]
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={("zz-down", None): _member("zz-down", "DOWN")}
+        | {(h, None): _member(h, "UP") for h in hosts}
+    )
+
+    result = asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+
+    shown = {s.object_id for s in result.states}
+    assert "auto:grid:g:zz-down" in shown
+    assert f"auto:grid:g:h{GRID_MEMBER_LIMIT - 1:04}" not in shown
+
+
+def test_a_grid_shows_as_many_as_its_limit_beside_what_was_pinned_out_of_it(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    hosts = [f"h{i:04}" for i in range(GRID_MEMBER_LIMIT + 1)]
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={(h, None): _member(h, "UP") for h in hosts}
+    )
+    pinned = _obj("pinned", "host", host_name="h0000", grid_id="g")
+
+    result = asyncio.run(get_map_states(_gridded_map([pinned]), map_owner=""))
+
+    assert mock_connection.get_filter_members.await_args.kwargs["limit"] == GRID_MEMBER_LIMIT + 1
+    assert len([s for s in _members(result) if s.grid_id]) == GRID_MEMBER_LIMIT
+    assert not _grid_state(result).grid_truncated
+
+
+def test_a_grid_says_it_left_out_some_beside_what_was_pinned_out_of_it(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    hosts = [f"h{i:04}" for i in range(GRID_MEMBER_LIMIT + 2)]
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={(h, None): _member(h, "UP") for h in hosts}
+    )
+    pinned = _obj("pinned", "host", host_name="h0000", grid_id="g")
+
+    result = asyncio.run(get_map_states(_gridded_map([pinned]), map_owner=""))
+
+    assert _grid_state(result).grid_truncated
+
+
+def test_a_grid_keeps_its_problems_when_a_pin_no_longer_matches(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    hosts = [f"h{i:04}" for i in range(GRID_MEMBER_LIMIT)]
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={(h, None): _member(h, "UP") for h in hosts}
+        | {("zz-down", None): _member("zz-down", "DOWN")}
+    )
+    gone = _obj("pinned", "host", host_name="renamed", grid_id="g")
+
+    result = asyncio.run(get_map_states(_gridded_map([gone]), map_owner=""))
+
+    shown = {s.object_id for s in _members(result) if s.grid_id}
+    assert "auto:grid:g:zz-down" in shown
+    assert len(shown) == GRID_MEMBER_LIMIT
+
+
+class _Clock:
+    """Deterministic replacement for ``time.monotonic``."""
+
+    def __init__(self) -> None:
+        self.now = 1000.0
+
+    def __call__(self) -> float:
+        return self.now
+
+
+@pytest.fixture(name="clock")
+def _clock(monkeypatch: pytest.MonkeyPatch) -> Iterator[_Clock]:
+    clock = _Clock()
+    monkeypatch.setattr("cmk.maps.backend.core.ttl_cache.time.monotonic", clock)
+    yield clock
+
+
+def test_a_grid_shows_its_last_objects_stale_when_livestatus_fails(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch, clock: _Clock
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={("web-1", None): _member("web-1", "UP")}
+    )
+    asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+    # A minute later: too old to share, recent enough to show stale.
+    clock.now += 60
+    mock_connection.get_filter_members = AsyncMock(side_effect=OSError("socket closed"))
+
+    result = asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+
+    assert [(s.object_id, s.stale) for s in result.states] == [
+        ("g", False),
+        ("auto:grid:g:web-1", True),
+    ]
+
+
+def test_a_map_of_grids_whose_query_fails_has_lost_its_connection(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch, clock: _Clock
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={("web-1", None): _member("web-1", "UP")}
+    )
+    asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+    clock.now += 60
+    mock_connection.get_filter_members = AsyncMock(side_effect=OSError("socket closed"))
+
+    result = asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+
+    assert not result.connection_ok
+
+
+def test_a_grid_on_a_connection_that_is_gone_has_one_state(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+
+    result = asyncio.run(get_map_states(_gridded_map(connection_id="gone"), map_owner=""))
+
+    assert [(s.object_id, s.stale) for s in result.states] == [("g", True)]
+
+
+def test_a_map_of_grids_on_a_dead_site_keeps_its_connection(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch, clock: _Clock
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={("web-1", None): _member("web-1", "UP").model_copy(update={"site_id": "s2"})}
+    )
+    asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+    mock_connection.dead_sites = MagicMock(return_value=["s2"])
+    mock_connection.get_filter_members = AsyncMock(return_value={})
+    clock.now += 60
+
+    result = asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+
+    assert result.connection_ok
+
+
+def test_a_grid_that_starts_leaving_some_out_is_sent_again() -> None:
+    the_map = "truncating-grid"
+    state_service.drop_states_snapshot(the_map)
+    grid = ObjectState(object_id="g", type="grid", state="PENDING")
+    state_service.compute_states_delta(the_map, None, [grid])
+
+    truncated = grid.model_copy(update={"grid_truncated": True})
+    to_send, _removed, _full, _timing = state_service.compute_states_delta(
+        the_map, None, [truncated]
+    )
+
+    assert to_send == [truncated]
+    state_service.drop_states_snapshot(the_map)
+
+
+def test_a_grid_livestatus_refuses_says_so_rather_than_matching_nothing(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(side_effect=OSError("400: invalid regex"))
+
+    result = asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+
+    assert [(s.object_id, s.type, s.stale) for s in result.states] == [("g", "grid", True)]
+
+
+def test_a_grid_that_keeps_failing_is_warned_about_once(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(side_effect=OSError("socket closed"))
+
+    with caplog.at_level(logging.WARNING):
+        asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+        asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+
+    assert [r.getMessage() for r in caplog.records].count(
+        "Failed to fetch grid g of map gridded and any other with its filter"
+    ) == 1
+
+
+def test_a_grid_failing_for_several_viewers_is_warned_about_once(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(side_effect=OSError("socket closed"))
+
+    with caplog.at_level(logging.WARNING):
+        asyncio.run(get_map_states(_gridded_map(), MonitoringScope("alice"), map_owner=""))
+        asyncio.run(get_map_states(_gridded_map(), MonitoringScope("bob"), map_owner=""))
+
+    assert len(caplog.records) == 1
+
+
+def test_a_grid_query_livestatus_refused_is_not_warned_about_again(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(side_effect=QueryRefusedError())
+
+    with caplog.at_level(logging.WARNING):
+        asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+
+    assert caplog.records == []
+
+
+def test_a_grid_livestatus_refused_is_not_asked_again_while_it_would_be_shared(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(side_effect=QueryRefusedError())
+
+    asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+    asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+
+    assert mock_connection.get_filter_members.await_count == 1
+
+
+def test_a_grid_livestatus_refused_is_not_asked_again_for_another_viewer_either(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(side_effect=QueryRefusedError())
+
+    asyncio.run(get_map_states(_gridded_map(), MonitoringScope("alice"), map_owner=""))
+    asyncio.run(get_map_states(_gridded_map(), MonitoringScope("bob"), map_owner=""))
+
+    assert mock_connection.get_filter_members.await_count == 1
+
+
+def test_a_grid_that_timed_out_for_one_viewer_is_still_asked_for_another(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(side_effect=QueryTimeoutError())
+
+    asyncio.run(get_map_states(_gridded_map(), MonitoringScope("alice"), map_owner=""))
+    asyncio.run(get_map_states(_gridded_map(), MonitoringScope("bob"), map_owner=""))
+
+    assert mock_connection.get_filter_members.await_count == 2
+
+
+def test_a_grid_shows_the_last_objects_of_a_dead_site_stale(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch, clock: _Clock
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    remote = _member("web-1", "UP").model_copy(update={"site_id": "remote"})
+    local = _member("web-2", "UP").model_copy(update={"site_id": "central"})
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={("web-1", None): remote, ("web-2", None): local}
+    )
+    asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+    clock.now += 60
+    mock_connection.get_filter_members = AsyncMock(return_value={("web-2", None): local})
+    mock_connection.dead_sites = MagicMock(return_value=["remote"])
+
+    result = asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+
+    assert [(s.object_id, s.stale) for s in _members(result)] == [
+        ("auto:grid:g:web-1", True),
+        ("auto:grid:g:web-2", False),
+    ]
+
+
+def test_a_grid_past_its_limit_by_a_dead_site_shows_its_live_objects_by_name(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch, clock: _Clock
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    remote = {
+        (h, None): _member(h, "UP").model_copy(update={"site_id": "remote"}) for h in ("a-1", "a-2")
+    }
+    local = {
+        (h, None): _member(h, "UP").model_copy(update={"site_id": "central"})
+        for h in (f"h{i:04}" for i in range(GRID_MEMBER_LIMIT - 1))
+    }
+    mock_connection.get_filter_members = AsyncMock(return_value=remote)
+    asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+    clock.now += 60
+    mock_connection.get_filter_members = AsyncMock(return_value=local)
+    mock_connection.dead_sites = MagicMock(return_value=["remote"])
+
+    result = asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+
+    shown = [(s.object_id, s.stale) for s in _members(result)]
+    assert shown[0] == ("auto:grid:g:a-1", True)
+    assert [object_id for object_id, stale in shown[1:]] == [
+        f"auto:grid:g:h{i:04}" for i in range(GRID_MEMBER_LIMIT - 1)
+    ]
+    assert _grid_state(result).grid_truncated
+
+
+def test_a_grid_shows_its_last_objects_with_their_services_when_livestatus_fails(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch, clock: _Clock
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    summary = ServicesSummary(ok=3, critical=1)
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={
+            ("web-1", None): _member("web-1", "UP").model_copy(update={"services_summary": summary})
+        }
+    )
+    gridded = _gridded_map(recognize_services=True)
+    asyncio.run(get_map_states(gridded, map_owner=""))
+    clock.now += 60
+    mock_connection.get_filter_members = AsyncMock(side_effect=OSError("socket closed"))
+
+    result = asyncio.run(get_map_states(gridded, map_owner=""))
+
+    assert [(s.state, s.services_summary, s.stale) for s in _members(result)] == [
+        ("CRITICAL", summary, True)
+    ]
+
+
+def test_a_grid_counts_the_services_its_hosts_come_with(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    summary = ServicesSummary(ok=3, warning=1)
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={
+            ("web-1", None): _member("web-1", "UP").model_copy(update={"services_summary": summary})
+        }
+    )
+    mock_connection.get_services_summary = AsyncMock(return_value={})
+
+    result = asyncio.run(get_map_states(_gridded_map(recognize_services=True), map_owner=""))
+
+    assert [(s.state, s.services_summary) for s in _members(result)] == [("WARNING", summary)]
+    mock_connection.get_services_summary.assert_not_awaited()
+
+
+def test_a_grid_with_a_member_pattern_asks_only_for_the_services_it_leaves_out(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={("web-1", None): _counted_member("web-1", "UP", ServicesSummary(ok=4))}
+    )
+    thinned = ServicesSummary(ok=3)
+    mock_connection.get_hosts_services_summaries = AsyncMock(return_value={"web-1": thinned})
+    mock_connection.get_services_summary = AsyncMock(return_value={})
+
+    result = asyncio.run(
+        get_map_states(
+            _gridded_map(recognize_services=True, exclude_members="^Check_MK"), map_owner=""
+        )
+    )
+
+    assert [s.services_summary for s in _members(result)] == [thinned]
+    mock_connection.get_services_summary.assert_not_awaited()
+
+
+def test_a_grid_with_a_member_pattern_keeps_the_services_it_showed_over_a_failed_summary(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch, clock: _Clock
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    summary = ServicesSummary(ok=3, critical=1)
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={("web-1", None): _counted_member("web-1", "UP", summary)}
+    )
+    mock_connection.get_hosts_services_summaries = AsyncMock(return_value={"web-1": summary})
+    gridded = _gridded_map(recognize_services=True, exclude_members="^Check_MK")
+    asyncio.run(get_map_states(gridded, map_owner=""))
+    clock.now += 60
+    mock_connection.get_hosts_services_summaries = AsyncMock(side_effect=OSError("socket closed"))
+    asyncio.run(get_map_states(gridded, map_owner=""))
+    clock.now += 60
+    mock_connection.get_filter_members = AsyncMock(side_effect=OSError("socket closed"))
+
+    result = asyncio.run(get_map_states(gridded, map_owner=""))
+
+    assert [s.state for s in _members(result)] == ["CRITICAL"]
+
+
+def test_a_grid_with_a_member_pattern_shows_what_an_overdue_host_has_now(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch, clock: _Clock
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    healthy = ServicesSummary(ok=3)
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={("web-1", None): _counted_member("web-1", "UP", healthy)}
+    )
+    mock_connection.get_hosts_services_summaries = AsyncMock(return_value={"web-1": healthy})
+    gridded = _gridded_map(recognize_services=True, exclude_members="^Check_MK")
+    asyncio.run(get_map_states(gridded, map_owner=""))
+    clock.now += 60
+    failing = ServicesSummary(ok=2, critical=1)
+    overdue = _counted_member("web-1", "UP", failing).model_copy(update={"stale": True})
+    mock_connection.get_filter_members = AsyncMock(return_value={("web-1", None): overdue})
+    mock_connection.get_hosts_services_summaries = AsyncMock(return_value={"web-1": failing})
+
+    result = asyncio.run(get_map_states(gridded, map_owner=""))
+
+    assert [(s.state, s.stale) for s in _members(result)] == [("CRITICAL", True)]
+
+
+def test_a_grid_with_a_member_pattern_shows_a_host_down_over_a_failed_summary(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch, clock: _Clock
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    summary = ServicesSummary(ok=3)
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={("web-1", None): _counted_member("web-1", "UP", summary)}
+    )
+    mock_connection.get_hosts_services_summaries = AsyncMock(return_value={"web-1": summary})
+    gridded = _gridded_map(recognize_services=True, exclude_members="^Check_MK")
+    asyncio.run(get_map_states(gridded, map_owner=""))
+    clock.now += 60
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={("web-1", None): _counted_member("web-1", "DOWN", summary)}
+    )
+    mock_connection.get_hosts_services_summaries = AsyncMock(side_effect=OSError("socket closed"))
+
+    result = asyncio.run(get_map_states(gridded, map_owner=""))
+
+    assert [(s.state, s.services_summary, s.stale) for s in _members(result)] == [
+        ("DOWN", summary, True)
+    ]
+    assert result.connection_ok
+
+
+def test_a_map_of_grids_of_overdue_hosts_keeps_its_connection(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    overdue = _member("web-1", "UP").model_copy(update={"stale": True})
+    mock_connection.get_filter_members = AsyncMock(return_value={("web-1", None): overdue})
+
+    result = asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+
+    assert result.connection_ok
+
+
+def test_a_grid_without_its_connection_shows_its_last_objects_stale(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={("web-1", None): _member("web-1", "UP")}
+    )
+    asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+    monkeypatch.setattr(state_service, "_connections", {})
+
+    result = asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+
+    assert [(s.object_id, s.stale) for s in _members(result)] == [("auto:grid:g:web-1", True)]
+
+
+def test_a_grid_without_its_connection_blames_the_connection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {})
+
+    result = asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+
+    assert not result.connection_ok
+    assert [(s.object_id, s.stale) for s in result.states] == [("g", True)]
+
+
+def test_a_grid_on_another_connection_asks_as_the_viewer_without_the_map_connection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    viewers: list[MonitoringScope] = []
+
+    @asynccontextmanager
+    async def as_viewer(scope: MonitoringScope) -> AsyncIterator[None]:
+        viewers.append(scope)
+        yield
+
+    other = MagicMock(spec=ConnectionBase)
+    other.dead_sites = MagicMock(return_value=[])
+    other.with_monitoring_scope = as_viewer
+    other.get_filter_members = AsyncMock(return_value={})
+    monkeypatch.setattr(state_service, "_connections", {"other": other})
+
+    asyncio.run(
+        get_map_states(_gridded_map(connection_id="other"), MonitoringScope("bob"), map_owner="")
+    )
+
+    assert viewers == [MonitoringScope("bob")]
+    other.get_filter_members.assert_awaited_once()
+
+
+def test_a_restricted_viewer_never_gets_what_a_see_all_viewer_fetched(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={("secret", None): _member("secret", "UP")}
+    )
+    asyncio.run(get_map_states(_gridded_map(), map_owner=""))
+    monkeypatch.setattr(state_service, "_connections", {})
+
+    result = asyncio.run(get_map_states(_gridded_map(), MonitoringScope("bob"), map_owner=""))
+
+    assert _members(result) == []
+
+
+def test_a_map_link_shows_the_worst_state_of_the_linked_grid(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    map_service.register_map("alice", _gridded_map(object_filter="Filter: name ~ ^web"))
+    mock_connection.get_dyngroup_state = AsyncMock(
+        return_value=ObjectState(object_id="", type="dyngroup", state="DOWN")
+    )
+    overview = _map([_obj("link", "map", map_name="gridded")], name="overview")
+
+    result = asyncio.run(get_map_states(overview, map_owner="alice", links=FakeLinkGui()))
+
+    assert {s.object_id: s.state for s in result.states}["link"] == "DOWN"
+    assert mock_connection.get_dyngroup_state.await_args.args == ("host", "Filter: name ~ ^web\n")
+
+
+def test_a_map_link_counts_every_host_of_a_grid_without_a_filter(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    map_service.register_map("alice", _gridded_map())
+    mock_connection.get_dyngroup_state = AsyncMock(
+        return_value=ObjectState(object_id="", type="dyngroup", state="UP")
+    )
+    overview = _map([_obj("link", "map", map_name="gridded")], name="overview")
+
+    asyncio.run(get_map_states(overview, map_owner="alice", links=FakeLinkGui()))
+
+    assert mock_connection.get_dyngroup_state.await_args.args == ("host", "Filter: state >= 0\n")
+
+
+def test_a_map_link_to_a_grid_livestatus_refuses_is_not_asked_again_while_shared(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    map_service.register_map("alice", _gridded_map(object_filter="Filter: a ~ ("))
+    mock_connection.get_dyngroup_state = AsyncMock(side_effect=OSError("400: invalid regex"))
+    overview = _map([_obj("link", "map", map_name="gridded")], name="overview")
+
+    asyncio.run(get_map_states(overview, map_owner="alice", links=FakeLinkGui()))
+    asyncio.run(get_map_states(overview, map_owner="alice", links=FakeLinkGui()))
+
+    assert mock_connection.get_dyngroup_state.await_count == 1
+
+
+def test_a_map_link_counts_the_shown_members_of_a_grid_leaving_some_out(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    map_service.register_map("alice", _gridded_map(exclude_member_states="^Backup"))
+    mock_connection.get_filter_members = AsyncMock(
+        return_value={("web-1", None): _member("web-1", "DOWN")}
+    )
+    overview = _map([_obj("link", "map", map_name="gridded")], name="overview")
+
+    result = asyncio.run(get_map_states(overview, map_owner="alice", links=FakeLinkGui()))
+
+    assert {s.object_id: s.state for s in result.states}["link"] == "DOWN"
+    mock_connection.get_dyngroup_state.assert_not_awaited()
 
 
 @pytest.mark.parametrize(

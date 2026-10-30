@@ -56,6 +56,11 @@ from cmk.maps.shared.map_payload import (
     FOLDER_EXPAND_DEPTH_MAX,
     FONT_SIZE_MAX,
     FONT_SIZE_MIN,
+    GRID_ID_PATTERN,
+    GRID_OFFSET_MAX,
+    GRID_PER_ROW_MAX,
+    GridOrder,
+    GridSort,
     IMAGE_SIZE_MAX,
     LINE_HEIGHT_MAX,
     LINE_HEIGHT_MIN,
@@ -77,6 +82,9 @@ from cmk.maps.shared.map_payload import (
     STROKE_WIDTH_MAX,
 )
 from cmk.maps.shared.validators import (
+    check_grid,
+    check_grid_binding,
+    check_grids,
     coerce_asset_ref,
     coerce_url_target,
     ConnectionId,
@@ -651,10 +659,12 @@ class MapObjectBinding:
         description="Bound BI aggregation id.", example="agg-1", default_factory=ApiOmitted
     )
     object_types: Literal["host", "service"] | None | ApiOmitted = api_field(
-        description="Dyngroup object type.", example="host", default_factory=ApiOmitted
+        description="Object type a dyngroup or a grid adds.",
+        example="host",
+        default_factory=ApiOmitted,
     )
     object_filter: _ObjectFilter | None | ApiOmitted = api_field(
-        description="Dyngroup Livestatus filter.",
+        description="Livestatus filter of a dyngroup or a grid.",
         example="Filter: name ~ ^web\n",
         default_factory=ApiOmitted,
     )
@@ -669,6 +679,36 @@ class MapObjectBinding:
     expand_depth: Annotated[int, Field(ge=0, le=OBJECT_EXPAND_DEPTH_MAX)] | ApiOmitted = api_field(
         description="Map-link/aggregation expand depth (0..10).",
         example=1,
+        default_factory=ApiOmitted,
+    )
+    grid_id: Annotated[str, Field(pattern=GRID_ID_PATTERN)] | None | ApiOmitted = api_field(
+        description="The grid a host or service was pinned out of; that grid leaves it out.",
+        example="grid_1",
+        default_factory=ApiOmitted,
+    )
+
+
+@api_model
+class MapObjectGrid:
+    """How a grid lays out the hosts or services its filter matches, as a NagVis dynamic map."""
+
+    per_row: Annotated[int, Field(ge=1, le=GRID_PER_ROW_MAX)] | ApiOmitted = api_field(
+        description="Objects per row.", example=30, default_factory=ApiOmitted
+    )
+    offset_x: Annotated[int, Field(ge=0, le=GRID_OFFSET_MAX)] | ApiOmitted = api_field(
+        description="Distance between two columns in pixels.",
+        example=30,
+        default_factory=ApiOmitted,
+    )
+    offset_y: Annotated[int, Field(ge=0, le=GRID_OFFSET_MAX)] | ApiOmitted = api_field(
+        description="Distance between two rows in pixels.", example=30, default_factory=ApiOmitted
+    )
+    sort: GridSort | ApiOmitted = api_field(
+        description="Order by name or by state.", example="name", default_factory=ApiOmitted
+    )
+    order: GridOrder | ApiOmitted = api_field(
+        description="For the state order: 'asc' puts the worst state first.",
+        example="asc",
         default_factory=ApiOmitted,
     )
 
@@ -965,6 +1005,14 @@ class MapElement:
     graph: MapObjectGraph | ApiOmitted = api_field(
         description="Embedded-graph config (graph objects).", default_factory=ApiOmitted
     )
+    grid: MapObjectGrid | ApiOmitted = api_field(
+        description=(
+            "Grid layout (grid objects). A grid's position is its first cell; its label,"
+            " display and state options apply to the objects it adds, and a filter left"
+            " out adds all hosts or services."
+        ),
+        default_factory=ApiOmitted,
+    )
     filter: MapObjectFilter | ApiOmitted = api_field(
         description="Members left out (hosts, host groups, service groups).",
         default_factory=ApiOmitted,
@@ -977,18 +1025,38 @@ class MapElement:
     )
 
     @model_validator(mode="after")
-    def _host_takes_no_service_pattern(self) -> Self:
+    def _check_grid_and_patterns(self) -> Self:
+        check_grid(self.type, self.id)
+        binding = None if isinstance(self.binding, ApiOmitted) else self.binding
+        patterns = (
+            []
+            if isinstance(self.filter, ApiOmitted)
+            else [
+                p
+                for p in (self.filter.exclude_members, self.filter.exclude_member_states)
+                if isinstance(p, str)
+            ]
+        )
+        if binding is not None:
+            check_grid_binding(
+                self.type,
+                binding.object_types if isinstance(binding.object_types, str) else None,
+                grid_id=binding.grid_id if isinstance(binding.grid_id, str) else None,
+                recognize_services=binding.recognize_services is True,
+                member_patterns=patterns,
+            )
         if isinstance(self.filter, ApiOmitted):
             return self
         line_type = None if isinstance(self.line, ApiOmitted) else self.line.object_type
-        service = None if isinstance(self.binding, ApiOmitted) else self.binding.service_description
+        service = None if binding is None else binding.service_description
+        object_types = None if binding is None else binding.object_types
         bound = bound_type_of(
             self.type,
             line_type if isinstance(line_type, str) else None,
             service if isinstance(service, str) else None,
+            object_types if isinstance(object_types, str) else None,
         )
-        patterns = (self.filter.exclude_members, self.filter.exclude_member_states)
-        check_host_member_patterns(bound, *(p for p in patterns if isinstance(p, str)))
+        check_host_member_patterns(bound, *patterns)
         return self
 
 
@@ -1097,6 +1165,11 @@ class MapConfig:
             raise ValueError(f"A map's bundles take at most {MAP_BUNDLE_HOSTS_MAX} hosts in all")
         return self
 
+    @model_validator(mode="after")
+    def _check_grids(self) -> Self:
+        check_grids(self.view.type, (o.type for o in self.objects))
+        return self
+
 
 @api_model
 class MapListEntry:
@@ -1121,6 +1194,7 @@ class MapListEntry:
         description="Default object click action.", example="link"
     )
     object_count: int = api_field(description="Number of placed objects/elements.", example=12)
+    has_grid: bool = api_field(description="Whether a grid adds objects to the map.", example=False)
     background_image: _AssetRef | ApiOmitted = api_field(
         description="Background image filename.",
         example="floorplan.png",

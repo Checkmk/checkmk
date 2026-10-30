@@ -15,6 +15,15 @@ from dataclasses import dataclass, field
 from typing import NotRequired, TYPE_CHECKING, TypedDict
 
 from cmk.maps.backend.schemas.state import ObjectDetails, ObjectState, ServicesSummary
+from cmk.maps.shared.map_payload import GridObjectType
+
+type GridMemberKey = tuple[str, str | None]
+
+
+def grid_member_name(key: GridMemberKey) -> str:
+    """What a grid sorts its members by: host and service run together, as NagVis does."""
+    return key[0] + (key[1] or "")
+
 
 if TYPE_CHECKING:
     from cmk.maps.backend.integrations.checkmk import FolderScope
@@ -424,6 +433,26 @@ class ConnectionBase(ABC):
                 host, svc = m.split(";", 1)
                 pairs.append((host, svc))
         return await self.get_services_states(pairs, only_hard=only_hard)
+
+    async def get_filter_members(
+        self,
+        object_types: GridObjectType,
+        object_filter: str | None,
+        *,
+        only_hard: bool = False,
+        with_services: bool = False,
+        limit: int,
+    ) -> dict[GridMemberKey, ObjectState]:
+        """The hosts or services a grid shows, with their states.
+
+        Keyed by host and service (``None`` for a host); each state names them
+        in ``host_name``/``service_description``. At most ``limit`` + 1, so the
+        caller can tell that there are more; then those with a problem come
+        first where the connection can tell, for a host *with_services* also a
+        problem of its services. Only connections that speak raw LQL
+        (Livestatus) can; the grid of any other fails.
+        """
+        raise NotImplementedError("This connection cannot list what a Livestatus filter matches.")
 
     async def get_hosts_services_batch(self, hostnames: list[str]) -> dict[str, list[ServiceRow]]:
         """Return all services for multiple hosts.

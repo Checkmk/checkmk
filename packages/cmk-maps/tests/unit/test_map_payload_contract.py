@@ -49,6 +49,7 @@ _DEFAULTS_TO_MODEL: list[tuple[Mapping[str, object], type[BaseModel]]] = [
     (wire.LABEL_FIELD_DEFAULTS, daemon.LabelConfig),
     (wire.DISPLAY_FIELD_DEFAULTS, daemon.DisplayConfig),
     (wire.RADAR_VIEW_FIELD_DEFAULTS, daemon.RadarView),
+    (wire.GRID_FIELD_DEFAULTS, daemon.MapElement),
 ]
 
 

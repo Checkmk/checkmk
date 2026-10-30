@@ -6,10 +6,11 @@
 
 import asyncio
 import gc
+import hashlib
 import logging
 import re
 import time
-from collections.abc import Callable, Collection, Iterator
+from collections.abc import Awaitable, Callable, Collection, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -18,17 +19,22 @@ from typing import TYPE_CHECKING
 from cmk.maps.backend.connections.base import (
     FolderTreeData,
     GeoHost,
+    grid_member_name,
+    GridMemberKey,
     MonitoringScope,
     QueryRefusedError,
     UNSCOPED,
 )
 from cmk.maps.backend.core.config import settings
+from cmk.maps.backend.core.single_flight import SingleFlight
+from cmk.maps.backend.core.ttl_cache import TtlCache
 from cmk.maps.backend.integrations.checkmk import FolderScope
 from cmk.maps.backend.schemas.map import (
     FolderTreeView,
     MapConfig,
     MapElement,
     RadarView,
+    StaticView,
     WorldmapView,
 )
 from cmk.maps.backend.schemas.presentation import DataElement, PresentationView, ShapeElement
@@ -52,7 +58,12 @@ from cmk.maps.backend.services import map_service
 from cmk.maps.backend.services.map_service import LinkSource
 from cmk.maps.backend.services.settings_service import get_daemon_runtime
 from cmk.maps.shared.map_links import LINKED_MAPS_MAX
-from cmk.maps.shared.map_payload import ObjectType
+from cmk.maps.shared.map_payload import (
+    AUTO_OBJECT_ID_PREFIX,
+    GRID_MEMBER_LIMIT,
+    GridObjectType,
+    ObjectType,
+)
 from cmk.maps.shared.states import CRITICAL_STATES, SEVERITY_RANK, severity_rank
 
 _NUMBER_RUNS = re.compile(r"(\d+)")
@@ -174,11 +185,13 @@ async def get_map_states(
             "No connection registered for '%(connection_id)s'", {"connection_id": connection_id}
         )
         states = [
-            ObjectState(object_id=obj.id, type=obj.type, state="PENDING") for obj in cfg.objects
+            ObjectState(object_id=obj.id, type=obj.type, state="PENDING")
+            for obj in cfg.objects
+            if obj.type != "grid"
         ]
         return MapStates(
             map_name=cfg.name,
-            states=states,
+            states=[*states, *await grid_states(cfg, None, scope)],
             generated_at=time.time(),
             connection_ok=False,
             runtime=get_daemon_runtime(),
@@ -197,12 +210,18 @@ async def _derive_connection_ok(states: list[ObjectState], connection: Connectio
 
     Non-monitoring types (image, textbox, map) always return PENDING without
     ``stale=True``, so they are excluded. A failed query reports a stale
-    PENDING; an overdue check keeps its state, so it does not count as down.
+    PENDING; an overdue check keeps its state, so it does not count as down. A
+    grid member is kept, stale, when its query fails, and when its site is
+    dead, which the dead sites say instead.
     A map without monitoring objects pings the connection.
     """
     monitoring_states = [s for s in states if s.type in _MONITORING_TYPES]
     if monitoring_states:
-        return not all(s.stale and s.state == "PENDING" for s in monitoring_states)
+        dead = set(connection.dead_sites())
+        return not all(
+            s.stale and (s.state == "PENDING" or (s.kept and s.site_id not in dead))
+            for s in monitoring_states
+        )
     try:
         return await connection.is_available()
     except Exception:
@@ -233,9 +252,10 @@ async def _execute_map_states(
     # the rest of the pipeline (state fetch, stream diffing, frontend
     # rendering) treats them like any other host. They are not persisted —
     # the MapConfig in map_service still holds only the user-curated set.
-    objects = await inflate_auto_objects(cfg, connection)
+    objects = [o for o in await inflate_auto_objects(cfg, connection) if o.type != "grid"]
     link_objects = [o for o in map(_as_state_source, objects) if _is_link(o)]
-    state_map, link_states = await asyncio.gather(
+    grids, state_map, link_states = await asyncio.gather(
+        grid_states(cfg, connection, scope),
         _states_for_objects(
             [o for o in objects if not _is_link(_as_state_source(o))],
             default_connection=connection,
@@ -244,13 +264,13 @@ async def _execute_map_states(
         ),
         _map_link_states(
             link_objects,
-            scope.auth_user,
+            scope,
             (map_owner, cfg.name),
             _LinkCache(links),
             restricted=restricted,
         ),
     )
-    states = [*state_map.values(), *link_states]
+    states = [*state_map.values(), *link_states, *grids]
 
     connection_ok = await _derive_connection_ok(states, connection)
 
@@ -262,9 +282,6 @@ async def _execute_map_states(
         dead_sites=connection.dead_sites(),
         runtime=get_daemon_runtime(),
     )
-
-
-_AUTO_PREFIX = "auto:"
 
 
 def _names_or_filter(names: list[str]) -> str:
@@ -342,7 +359,7 @@ async def inflate_auto_objects(cfg: MapConfig, connection: ConnectionBase) -> li
                 continue
             inflated.append(
                 MapElement(
-                    id=f"{_AUTO_PREFIX}{h['name']}",
+                    id=f"{AUTO_OBJECT_ID_PREFIX}{h['name']}",
                     type="host",
                     host_name=h["name"],
                     lat=h["lat"],
@@ -353,6 +370,319 @@ async def inflate_auto_objects(cfg: MapConfig, connection: ConnectionBase) -> li
                 )
             )
     return inflated
+
+
+# Members of a grid, per (connection, objects, filter, hard states, services,
+# viewer): shared for a few seconds between grids and map links asking the same,
+# and kept for a while to show stale when Livestatus fails. The viewer is the
+# explicit monitoring scope, not the context variable, so each viewer gets the
+# members fetched for them. Bounded by the members they hold together, as a grid holds
+# anything from one to a thousand. They come with the limit they were asked with:
+# a grid asks for one more for each member pinned out of it.
+type _GridKey = tuple[str, GridObjectType, bytes | None, bool, bool, MonitoringScope]
+_GRID_SHARED_FOR = 4.0
+_GRID_STALE_FOR = 600.0
+_GRID_CACHE_KEYS = 512
+# Two viewers' worth of a map with every grid full: what a viewer past that
+# misses is fetched again, and has no stale members to fall back on. The bound
+# keeps the daemon's memory flat however many restricted viewers there are.
+_GRID_CACHE_MEMBERS = 20 * GRID_MEMBER_LIMIT
+_grid_members: TtlCache[_GridKey, tuple[int, dict[GridMemberKey, ObjectState]]] = TtlCache(
+    maxsize=_GRID_CACHE_KEYS,
+    weigh=lambda fetched: len(fetched[1]),
+    maxweight=_GRID_CACHE_MEMBERS,
+    expire_after=_GRID_STALE_FOR,
+)
+# A failing grid would fail on every tick: it is asked again only once the
+# members are no longer shared. Livestatus refuses a filter for every viewer
+# alike, so a refusal holds the filter back for all; any other failure only for
+# the viewer it happened to.
+type _FailingKey = tuple[str, GridObjectType, bytes | None, bool, bool, MonitoringScope | None]
+_failing_grids: TtlCache[_FailingKey, float] = TtlCache(
+    maxsize=_GRID_CACHE_KEYS, expire_after=_GRID_SHARED_FOR
+)
+# When a filter last warned about failing: once per stale period, whoever views it.
+type _FilterKey = tuple[str, GridObjectType, bytes | None, bool, bool]
+_warned_grids: TtlCache[_FilterKey, float] = TtlCache(
+    maxsize=_GRID_CACHE_KEYS, expire_after=_GRID_STALE_FOR
+)
+# A grid that matches everything, for the map-link roll-up's dyngroup. Counting
+# a whole table, it is shared for longer than a filtered grid's roll-up.
+_MATCH_ALL_FILTER = "Filter: state >= 0\n"
+_MATCH_ALL_SHARED_FOR = 30.0
+# The worst state of every member, for map links: shared like the members.
+_grid_rollup_states: TtlCache[_GridKey, ObjectState] = TtlCache(
+    maxsize=_GRID_CACHE_KEYS, expire_after=_MATCH_ALL_SHARED_FOR
+)
+# The host members of a grid as last shown, with their member patterns applied:
+# Livestatus failing, they show stale as they were.
+type _ShownKey = tuple[_GridKey, str, str | None, str | None]
+_shown_grids: TtlCache[_ShownKey, dict[str, ObjectState]] = TtlCache(
+    maxsize=_GRID_CACHE_KEYS,
+    weigh=len,
+    maxweight=_GRID_CACHE_MEMBERS,
+    expire_after=_GRID_STALE_FOR,
+)
+# Fetches running, which a grid asking the same joins rather than repeats.
+_grid_fetches: SingleFlight[tuple[_GridKey, int], dict[GridMemberKey, ObjectState]] = SingleFlight()
+
+
+def grid_member_id(grid_id: str, host: str, service: str | None) -> str:
+    return f"{AUTO_OBJECT_ID_PREFIX}grid:{grid_id}:{host}" + (
+        f";{service}" if service is not None else ""
+    )
+
+
+def _grids(cfg: MapConfig) -> list[MapElement]:
+    # Only a static map lays its grids out.
+    if not isinstance(cfg.view, StaticView):
+        return []
+    return [o for o in cfg.objects if o.type == "grid"]
+
+
+def _grid_object_types(grid: MapElement) -> GridObjectType:
+    return "service" if grid.object_types == "service" else "host"
+
+
+def _grid_connection(
+    cfg: MapConfig, grid: MapElement, default: ConnectionBase | None
+) -> ConnectionBase | None:
+    if grid.connection_id is None or grid.connection_id == cfg.connection_id:
+        return default
+    return get_connection(grid.connection_id)
+
+
+def _grid_key(cfg: MapConfig, grid: MapElement, scope: MonitoringScope) -> _GridKey:
+    # By digest: a filter may be long, and the caches hold hundreds of keys.
+    return (
+        grid.connection_id or cfg.connection_id,
+        _grid_object_types(grid),
+        _filter_digest(grid.object_filter) if grid.object_filter else None,
+        grid.only_hard_states,
+        grid.recognize_services,
+        scope,
+    )
+
+
+def _filter_digest(object_filter: str) -> bytes:
+    return hashlib.blake2b(object_filter.encode(), digest_size=16).digest()
+
+
+def _refused_key(key: _GridKey) -> _FailingKey:
+    return (*key[:-1], None)
+
+
+def _is_failing(key: _GridKey) -> bool:
+    return any(
+        _failing_grids.get(failing, ttl=_GRID_SHARED_FOR) is not None
+        for failing in (key, _refused_key(key))
+    )
+
+
+def _clear_failing(key: _GridKey) -> None:
+    _failing_grids.pop(key)
+    _failing_grids.pop(_refused_key(key))
+
+
+def _note_failing_grid(map_name: str, grid_id: str, key: _GridKey, error: Exception) -> None:
+    refused = isinstance(error, QueryRefusedError)
+    now = time.monotonic()
+    _failing_grids.set(_refused_key(key) if refused else key, now, now=now)
+    if _warned_grids.get(key[:-1], ttl=_GRID_STALE_FOR, now=now) is not None:
+        return
+    _warned_grids.set(key[:-1], now, now=now)
+    # The connection logged a refused query already.
+    log = logger.debug if refused else logger.warning
+    log(
+        "Failed to fetch grid %(grid)s of map %(map)s and any other with its filter",
+        {"grid": grid_id, "map": map_name},
+        exc_info=error,
+    )
+
+
+def _kept(state: ObjectState) -> ObjectState:
+    return state.model_copy(update={"stale": True, "kept": True})
+
+
+async def _fetch_grid_members(
+    map_name: str,
+    key: _GridKey,
+    grid: MapElement,
+    connection: ConnectionBase | None,
+    limit: int,
+) -> tuple[dict[GridMemberKey, ObjectState], bool, int] | None:
+    """The grid's members, whether they are stale and the limit they were asked
+    with, or ``None`` if unknown."""
+    if (
+        connection is not None
+        and (shared := _grid_members.get(key, ttl=_GRID_SHARED_FOR)) is not None
+    ):
+        asked, members = shared
+        # Asked with another limit, they do only complete and within this one.
+        if asked == limit or sum(not s.kept for s in members.values()) <= min(asked, limit):
+            return members, False, asked
+    if connection is not None and not _is_failing(key):
+        try:
+            members = await _grid_fetches.run(
+                (key, limit),
+                lambda: connection.get_filter_members(
+                    _grid_object_types(grid),
+                    grid.object_filter,
+                    only_hard=grid.only_hard_states,
+                    with_services=grid.recognize_services,
+                    limit=limit,
+                ),
+            )
+        except Exception as e:
+            _note_failing_grid(map_name, grid.id, key, e)
+        else:
+            _clear_failing(key)
+            # A dead site of a distributed setup drops out without an error, so
+            # its last members stay, stale, for as long as it is gone; after the
+            # live ones, which a grid past its limit keeps first.
+            if dead := set(connection.dead_sites()):
+                _asked, last = _grid_members.get(key, ttl=_GRID_STALE_FOR) or (limit, {})
+                members = {
+                    **members,
+                    **{
+                        k: _kept(state)
+                        for k, state in last.items()
+                        if state.site_id in dead and k not in members
+                    },
+                }
+            _grid_members.set(key, (limit, members))
+            return members, False, limit
+    if (last_fetched := _grid_members.get(key, ttl=_GRID_STALE_FOR)) is not None:
+        asked, members = last_fetched
+        return members, True, asked
+    return None
+
+
+type _GridQuery = Callable[
+    [MapConfig, MapElement, ConnectionBase | None, MonitoringScope], Awaitable[list[ObjectState]]
+]
+
+
+async def _per_grid(
+    cfg: MapConfig, default: ConnectionBase | None, scope: MonitoringScope, query: _GridQuery
+) -> list[ObjectState]:
+    async def ask(grid: MapElement) -> list[ObjectState]:
+        connection = _grid_connection(cfg, grid, default)
+        # The only scope to the viewer when the map's own connection is missing.
+        if connection is None or scope == UNSCOPED:
+            return await query(cfg, grid, connection, scope)
+        async with connection.with_monitoring_scope(scope):
+            return await query(cfg, grid, connection, scope)
+
+    per_grid = await asyncio.gather(*(ask(grid) for grid in _grids(cfg)))
+    return [state for states in per_grid for state in states]
+
+
+async def grid_states(
+    cfg: MapConfig, connection: ConnectionBase | None, scope: MonitoringScope
+) -> list[ObjectState]:
+    """The states of a static map's grids: each grid's own and its members'."""
+    return await _per_grid(cfg, connection, scope, _grid_states)
+
+
+async def _grid_states(
+    cfg: MapConfig, grid: MapElement, connection: ConnectionBase | None, scope: MonitoringScope
+) -> list[ObjectState]:
+    """The grid's own state, then its members'.
+
+    The grid leaves out what was pinned out of it. One with more than
+    :data:`GRID_MEMBER_LIMIT` members keeps those with a problem first, then by
+    name others the connection returned. Its own state is stale when its members
+    are unknown.
+    """
+    pinned = {
+        (o.host_name, o.service_description if o.type == "service" else None)
+        for o in cfg.objects
+        if o.grid_id == grid.id and o.type in ("host", "service") and o.host_name
+    }
+    key = _grid_key(cfg, grid, scope)
+    # Bounded, so the pins a map gathers do not grow the query without end.
+    limit = GRID_MEMBER_LIMIT + min(len(pinned), GRID_MEMBER_LIMIT)
+    fetched = await _fetch_grid_members(cfg.name, key, grid, connection, limit)
+    if fetched is None:
+        return [ObjectState(object_id=grid.id, type="grid", state="PENDING", stale=True)]
+    members, stale, asked = fetched
+    keys = [k for k in members if k not in pinned]
+    truncated = len(keys) > GRID_MEMBER_LIMIT
+    own = ObjectState(object_id=grid.id, type="grid", state="PENDING", grid_truncated=truncated)
+    # Past the limit by its own members, the connection ranked them, problems first;
+    # the kept members of a dead site only follow the live ones.
+    ranked = sum(not state.kept for state in members.values()) > asked
+    if truncated and not ranked:
+        # The pins raised the limit the connection was asked for, so it listed
+        # the members unranked: cut by the same rule.
+        keys.sort(
+            key=lambda k: (
+                members[k].kept,
+                severity_rank(members[k].state) <= 0,
+                grid_member_name(k),
+            )
+        )
+    del keys[GRID_MEMBER_LIMIT:]
+    if not ranked:
+        # By host and service name run together, as the map lays them out.
+        keys.sort(key=grid_member_name)
+    # Host members come with their services' counts; a member pattern needs
+    # them counted again below, without the services it leaves out.
+    by_pattern = _grid_object_types(grid) == "host" and bool(_state_exclusion(grid))
+    fold = grid.recognize_services and _grid_object_types(grid) == "host" and not by_pattern
+
+    def as_member(state: ObjectState, object_id: str) -> ObjectState:
+        update: dict[str, object] = {
+            "object_id": object_id,
+            "grid_id": grid.id,
+            "stale": stale or state.stale,
+            "kept": stale or state.kept,
+        }
+        if fold:
+            update["state"] = _combined_state_from_summary(state.state, state.services_summary)
+        return state.model_copy(update=update)
+
+    results = {
+        (object_id := grid_member_id(grid.id, *k)): as_member(members[k], object_id) for k in keys
+    }
+    if not by_pattern:
+        return [own, *results.values()]
+    enriched = False
+    if connection is not None and not stale:
+        host_members = [
+            MapElement(
+                id=object_id,
+                type="host",
+                host_name=state.host_name,
+                recognize_services=grid.recognize_services,
+                exclude_members=grid.exclude_members,
+                exclude_member_states=grid.exclude_member_states,
+            )
+            for object_id, state in results.items()
+        ]
+        enriched = await _thin_grid_members(connection, host_members, results)
+    shown_key = (key, grid.id, grid.exclude_members, grid.exclude_member_states)
+    shown = _shown_grids.get(shown_key, ttl=_GRID_STALE_FOR) or {}
+
+    def with_shown(object_id: str, state: ObjectState) -> ObjectState:
+        if state.kept:
+            return _kept(shown[object_id]) if object_id in shown else state
+        if enriched:
+            return state
+        # The member was read, only its services were not counted: the excluded
+        # ones would count again, so the counts shown last stand in.
+        last = shown.get(object_id)
+        summary = last.services_summary if last is not None else None
+        update: dict[str, object] = {"stale": True, "services_summary": summary}
+        if grid.recognize_services and summary is not None:
+            update["state"] = _combined_state_from_summary(state.state, summary)
+        return state.model_copy(update=update)
+
+    results = {object_id: with_shown(object_id, state) for object_id, state in results.items()}
+    if not stale and enriched:
+        _shown_grids.set(shown_key, results)
+    return [own, *results.values()]
 
 
 async def _states_for_objects(
@@ -423,6 +753,8 @@ def _bin_map_elements(objects: list[MapElement]) -> _MapElementBins:
             continue  # see _map_link_states
         elif obj.type == "aggregation":
             continue  # resolved GUI-side, not by the daemon
+        elif obj.type == "grid":
+            continue  # see grid_states
         else:
             bins.others.append(obj)
     return bins
@@ -483,7 +815,15 @@ async def _resolve_host_states(
                 )
                 results[obj.id] = s
 
-    host_objs = hosts_soft + hosts_hard
+    await _enrich_host_states(connection, hosts_soft + hosts_hard, results)
+
+
+async def _enrich_host_states(
+    connection: ConnectionBase, host_objs: list[MapElement], results: dict[str, ObjectState]
+) -> bool:
+    """Add the services summary to resolved host states, and with
+    ``recognize_services`` fold it into the state. False if the summary or a
+    member pattern's failed."""
     summary_hosts = sorted(
         {
             o.host_name
@@ -495,7 +835,7 @@ async def _resolve_host_states(
     )
 
     if not summary_hosts:
-        return
+        return True
     try:
         summary_batch, (thinned, failed) = await asyncio.gather(
             connection.get_services_summary(summary_hosts),
@@ -503,7 +843,41 @@ async def _resolve_host_states(
         )
     except Exception:
         logger.warning("Services-summary query failed", exc_info=True)
-        return
+        return False
+    _apply_summaries(host_objs, results, summary_batch, thinned, failed)
+    return not failed
+
+
+async def _thin_grid_members(
+    connection: ConnectionBase, host_members: list[MapElement], results: dict[str, ObjectState]
+) -> bool:
+    """Count the host members' services again without those their pattern leaves out.
+
+    The members came with all their services counted, so only the pattern's
+    counts are asked for. False if they failed.
+    """
+    counted = {
+        o.host_name: summary
+        for o in host_members
+        if o.host_name is not None and (summary := results[o.id].services_summary) is not None
+    }
+    try:
+        thinned, failed = await _summaries_by_pattern(connection, host_members, set(counted))
+    except Exception:
+        logger.warning("Services-summary query failed", exc_info=True)
+        return False
+    _apply_summaries(host_members, results, counted, thinned, failed)
+    return not failed
+
+
+def _apply_summaries(
+    host_objs: list[MapElement],
+    results: dict[str, ObjectState],
+    summary_batch: Mapping[str, ServicesSummary],
+    thinned: Mapping[str, Mapping[str, ServicesSummary]],
+    failed: Collection[str],
+) -> None:
+    """Put the services' counts into the hosts' states, thinned where a pattern asks."""
     for obj in host_objs:
         if obj.host_name is None:
             continue
@@ -516,7 +890,7 @@ async def _resolve_host_states(
             # The excluded services would count again; better none at all.
             results[obj.id] = existing.model_copy(update={"stale": True})
             continue
-        if pattern in thinned:
+        if pattern is not None and pattern in thinned:
             summary = thinned[pattern].get(obj.host_name, summary)
         update: dict[str, object] = {"services_summary": summary}
         if obj.recognize_services:
@@ -740,7 +1114,7 @@ def _log_link_failure(exc: Exception) -> None:
 
 
 async def _linked_map_summaries(
-    graph: dict[tuple[str, str], _LinkedMap], *, restricted: bool
+    graph: dict[tuple[str, str], _LinkedMap], scope: MonitoringScope, *, restricted: bool
 ) -> dict[tuple[str, str], _MapSummary]:
     """Asks the own objects of all linked maps in one round per connection."""
     keys: dict[str, tuple[str, str]] = {}
@@ -748,7 +1122,7 @@ async def _linked_map_summaries(
     for index, (key, linked) in enumerate(graph.items()):
         _, objects = by_connection.setdefault(linked.cfg.connection_id, (linked.connection, []))
         for obj in linked.cfg.objects:
-            if _is_link(_as_state_source(obj)):
+            if obj.type == "grid" or _is_link(_as_state_source(obj)):
                 continue
             # Object ids are unique within a map only.
             object_id = f"{index}/{obj.id}"
@@ -769,13 +1143,23 @@ async def _linked_map_summaries(
             _log_link_failure(exc)
             return {}
 
-    per_connection = await asyncio.gather(
-        *(own(cid, *asked) for cid, asked in by_connection.items())
+    async def rollups(linked: _LinkedMap) -> list[ObjectState]:
+        try:
+            return await _grid_rollups(linked.cfg, linked.connection, scope)
+        except Exception as exc:
+            _log_link_failure(exc)
+            return []
+
+    per_connection, rollups_per_map = await asyncio.gather(
+        asyncio.gather(*(own(cid, *asked) for cid, asked in by_connection.items())),
+        asyncio.gather(*(rollups(linked) for linked in graph.values())),
     )
     states: dict[tuple[str, str], list[ObjectState]] = {key: [] for key in graph}
     for asked in per_connection:
         for object_id, state in asked.items():
             states[keys[object_id]].append(state)
+    for key, rollup in zip(graph, rollups_per_map, strict=True):
+        states[key].extend(rollup)
     return {key: _summary(map_states) for key, map_states in states.items()}
 
 
@@ -811,7 +1195,7 @@ def _link_state(
 
 async def _map_link_states(
     link_objects: list[MapElement],
-    auth_user: str | None,
+    scope: MonitoringScope,
     root: tuple[str, str],
     cache: _LinkCache,
     *,
@@ -825,9 +1209,9 @@ async def _map_link_states(
     """
     if not link_objects:
         return []
-    as_user = _link_user(root[0], auth_user)
-    graph = await _link_graph(as_user, _link_names(link_objects), auth_user, cache, root)
-    summaries = await _linked_map_summaries(graph, restricted=restricted) if graph else {}
+    as_user = _link_user(root[0], scope.auth_user)
+    graph = await _link_graph(as_user, _link_names(link_objects), scope.auth_user, cache, root)
+    summaries = await _linked_map_summaries(graph, scope, restricted=restricted) if graph else {}
     by_target: dict[tuple[str, str], ObjectState] = {}
     states = []
     for obj in link_objects:
@@ -843,6 +1227,55 @@ async def _map_link_states(
             by_target[key] = _link_state(graph, summaries, key)
         states.append(by_target[key].model_copy(update={"object_id": obj.id}))
     return states
+
+
+async def _grid_rollups(
+    cfg: MapConfig, connection: ConnectionBase, scope: MonitoringScope
+) -> list[ObjectState]:
+    return await _per_grid(cfg, connection, scope, _grid_rollup)
+
+
+async def _grid_rollup(
+    cfg: MapConfig, grid: MapElement, connection: ConnectionBase | None, scope: MonitoringScope
+) -> list[ObjectState]:
+    """What a linked map's grid adds to the link's state.
+
+    Asked as a dyngroup, so it counts the members beyond the grid's limit too.
+    A dyngroup cannot leave out members by pattern, so with such a pattern the
+    members the grid shows count instead.
+    """
+    object_types = _grid_object_types(grid)
+    object_id = grid_member_id(grid.id, "", None)
+    failed = [ObjectState(object_id=object_id, type=object_types, state="PENDING", stale=True)]
+    if connection is None:
+        return failed
+    if grid.exclude_members or grid.exclude_member_states:
+        own, *shown = await _grid_states(cfg, grid, connection, scope)
+        return failed if own.stale else shown
+    key = _grid_key(cfg, grid, scope)
+    # Held back like the members' query, so a filter Livestatus refuses is not
+    # asked again on every refresh.
+    if _is_failing(key):
+        return failed
+    shared_for = _GRID_SHARED_FOR if grid.object_filter else _MATCH_ALL_SHARED_FOR
+    if (state := _grid_rollup_states.get(key, ttl=shared_for)) is None:
+        try:
+            state = await _dyngroup_state(
+                connection,
+                object_types,
+                grid.object_filter or _MATCH_ALL_FILTER,
+                only_hard=grid.only_hard_states,
+                with_services=grid.recognize_services,
+            )
+        except Exception as e:
+            _note_failing_grid(cfg.name, grid.id, key, e)
+            return failed
+        _clear_failing(key)
+        _grid_rollup_states.set(key, state)
+    # A grid that matches nothing has nothing to report, unlike a dyngroup.
+    if state.state == "PENDING":
+        return []
+    return [state.model_copy(update={"object_id": object_id, "type": object_types})]
 
 
 async def _get_map_states_batched(
@@ -883,15 +1316,13 @@ async def _get_object_state(connection: ConnectionBase, obj: MapElement) -> Obje
                 obj.group_name, only_hard=obj.only_hard_states, exclude=_state_exclusion(obj)
             )
         elif obj.type == "dyngroup" and obj.object_filter:
-            object_types = obj.object_types or "host"
-            state = await connection.get_dyngroup_state(
-                object_types,
+            state = await _dyngroup_state(
+                connection,
+                obj.object_types or "host",
                 obj.object_filter,
                 only_hard=obj.only_hard_states,
                 with_services=obj.recognize_services,
             )
-            if object_types == "host" and obj.recognize_services:
-                state.state = _combined_state_from_summary(state.state, state.services_summary)
         else:
             state = ObjectState(object_id=obj.id, type=obj.type, state="PENDING")
         state.object_id = obj.id
@@ -903,6 +1334,22 @@ async def _get_object_state(connection: ConnectionBase, obj: MapElement) -> Obje
                 {"object_id": obj.id, "error": exc},
             )
         return ObjectState(object_id=obj.id, type=obj.type, state="PENDING", stale=True)
+
+
+async def _dyngroup_state(
+    connection: ConnectionBase,
+    object_types: str,
+    object_filter: str,
+    *,
+    only_hard: bool,
+    with_services: bool,
+) -> ObjectState:
+    state = await connection.get_dyngroup_state(
+        object_types, object_filter, only_hard=only_hard, with_services=with_services
+    )
+    if object_types == "host" and with_services:
+        state.state = _combined_state_from_summary(state.state, state.services_summary)
+    return state
 
 
 async def _resolve_primary_host(connection: ConnectionBase) -> str | None:
@@ -1640,6 +2087,7 @@ def _hash_object_state(s: ObjectState) -> int:
             s.max_attempts,
             s.last_state_change,
             s.site_id,
+            s.grid_truncated,
             _summary_key(s.services_summary),
             _summary_key(s.hosts_summary),
             tree_repr,

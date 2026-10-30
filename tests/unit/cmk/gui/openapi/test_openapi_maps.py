@@ -21,6 +21,7 @@ from cmk.maps.rest_api import utils
 from cmk.maps.rest_api.internal import signed_maps
 from cmk.maps.shared.map_payload import (
     BUNDLE_HOSTS_MAX,
+    GRID_MAX_PER_MAP,
     MAP_BUNDLE_HOSTS_MAX,
     MAP_CONFIG_MAX_BYTES,
     MAP_OBJECTS_MAX,
@@ -442,6 +443,85 @@ def test_an_object_id_used_twice_is_refused(clients: ClientRegistry) -> None:
 
     resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert "h1" in resp.json["detail"]
+
+
+def _gridded_map(object_types: str, object_filter: str) -> dict[str, object]:
+    grid = _host_object(
+        "g",
+        obj_type="grid",
+        binding={"object_types": object_types, "object_filter": object_filter},
+        grid={"per_row": 30, "offset_x": 30, "offset_y": 30, "sort": "name", "order": "asc"},
+    )
+    return _map("map1", objects=[grid])
+
+
+def test_a_grid_filters_on_the_columns_of_its_table(clients: ClientRegistry) -> None:
+    clients.Maps.create(config=_gridded_map("service", "Filter: description ~ CPU\n"))
+
+
+def test_a_grid_filter_livestatus_would_refuse_is_refused(clients: ClientRegistry) -> None:
+    clients.Maps.create(
+        config=_gridded_map("host", "Filter: name <> web\n"), expect_ok=False
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
+def test_a_grid_filter_past_its_length_is_refused(clients: ClientRegistry) -> None:
+    long_filter = "Filter: name ~ web\n" * 4000
+    clients.Maps.create(
+        config=_gridded_map("host", long_filter), expect_ok=False
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
+def test_a_grid_of_services_that_counts_services_is_refused(clients: ClientRegistry) -> None:
+    grid = _host_object(
+        "g", obj_type="grid", binding={"object_types": "service", "recognize_services": True}
+    )
+
+    clients.Maps.create(config=_map("map1", objects=[grid]), expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
+
+
+def test_a_grid_of_services_that_leaves_out_members_is_refused(clients: ClientRegistry) -> None:
+    grid = _host_object(
+        "g",
+        obj_type="grid",
+        binding={"object_types": "service"},
+        filter={"exclude_members": "^Check_MK"},
+    )
+
+    clients.Maps.create(config=_map("map1", objects=[grid]), expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
+
+
+def test_only_a_host_or_a_service_is_pinned_out_of_a_grid(clients: ClientRegistry) -> None:
+    group = _host_object(
+        "hg", obj_type="hostgroup", binding={"group_name": "linux", "grid_id": "grid_1"}
+    )
+
+    clients.Maps.create(config=_map("map1", objects=[group]), expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
+
+
+def test_a_map_with_more_grids_than_it_takes_is_refused(clients: ClientRegistry) -> None:
+    grids = [
+        _host_object(f"g{i}", obj_type="grid", binding={"object_types": "host"})
+        for i in range(GRID_MAX_PER_MAP + 1)
+    ]
+
+    clients.Maps.create(config=_map("map1", objects=grids), expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
+
+
+def test_a_map_with_a_grid_is_listed_as_one(clients: ClientRegistry) -> None:
+    clients.Maps.create(config=_gridded_map("host", "Filter: name ~ web\n"))
+
+    listed = clients.Maps.get_all().json["value"]
+
+    assert {m["id"]: m["extensions"]["summary"]["has_grid"] for m in listed}["map1"]
 
 
 def test_a_map_with_more_objects_than_the_daemon_takes_is_refused(

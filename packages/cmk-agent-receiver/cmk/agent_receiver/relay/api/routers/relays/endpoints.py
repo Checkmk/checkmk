@@ -54,7 +54,7 @@ async def register_relay(
         - Collision with existing relay IDs is not allowed
     """
     try:
-        return handler.process(authorization, request=payload)
+        return await handler.process(authorization, request=payload)
     except UnsupportedAuthFormatError:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_401_UNAUTHORIZED,
@@ -93,7 +93,7 @@ async def get_relay_status(
         502 Bad Gateway: If there is an error communicating with the CMK API
     """
     try:
-        return handler.process(relay_id=RelayID(relay_id))
+        return await handler.process(relay_id=RelayID(relay_id))
     except RelayNotFoundError:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_404_NOT_FOUND,
@@ -123,7 +123,7 @@ async def refresh_cert(
     payload: relay_protocols.RelayRefreshCertRequest,
 ) -> relay_protocols.RelayRefreshCertResponse:
     try:
-        return handler.process(relay_id=RelayID(relay_id), request=payload)
+        return await handler.process(relay_id=RelayID(relay_id), request=payload)
     except RelayNotFoundError:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_404_NOT_FOUND,

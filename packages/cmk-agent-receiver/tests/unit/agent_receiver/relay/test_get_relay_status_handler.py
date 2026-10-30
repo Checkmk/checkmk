@@ -26,7 +26,8 @@ from cmk.relay_protocols.relays import RelayRegistrationRequest, RelayState
 from cmk.testlib.agent_receiver.certs import generate_csr_pair
 
 
-def test_get_relay_status_returns_configured_when_both_api_and_config_exist(
+@pytest.mark.asyncio
+async def test_get_relay_status_returns_configured_when_both_api_and_config_exist(
     get_relay_status_handler: GetRelayStatusHandler,
     register_relay_handler: RegisterRelayHandler,
     test_user: SecretAuth,
@@ -36,7 +37,7 @@ def test_get_relay_status_returns_configured_when_both_api_and_config_exist(
     relay_id = RelayID(str(uuid4()))
 
     # Register the relay - this adds it to the mock CMK API
-    register_relay_handler.process(
+    await register_relay_handler.process(
         test_user.secret,
         request=RelayRegistrationRequest(
             relay_id=relay_id,
@@ -50,14 +51,15 @@ def test_get_relay_status_returns_configured_when_both_api_and_config_exist(
     relay_config_dir.mkdir(parents=True, exist_ok=True)
 
     # Act
-    response = get_relay_status_handler.process(relay_id=relay_id)
+    response = await get_relay_status_handler.process(relay_id=relay_id)
 
     # Assert
     assert response.relay_id == relay_id
     assert response.state == RelayState.CONFIGURED
 
 
-def test_get_relay_status_raises_not_found_when_relay_not_in_api_nor_config(
+@pytest.mark.asyncio
+async def test_get_relay_status_raises_not_found_when_relay_not_in_api_nor_config(
     get_relay_status_handler: GetRelayStatusHandler,
 ) -> None:
     """Test that get_relay_status raises RelayNotFoundError when relay doesn't exist anywhere."""
@@ -65,10 +67,11 @@ def test_get_relay_status_raises_not_found_when_relay_not_in_api_nor_config(
 
     # No registration in API, no local config - truly not found
     with pytest.raises(RelayNotFoundError):
-        get_relay_status_handler.process(relay_id=relay_id)
+        await get_relay_status_handler.process(relay_id=relay_id)
 
 
-def test_get_relay_status_returns_pending_activation_when_api_exists_but_no_local_config(
+@pytest.mark.asyncio
+async def test_get_relay_status_returns_pending_activation_when_api_exists_but_no_local_config(
     get_relay_status_handler: GetRelayStatusHandler,
     register_relay_handler: RegisterRelayHandler,
     test_user: SecretAuth,
@@ -82,7 +85,7 @@ def test_get_relay_status_returns_pending_activation_when_api_exists_but_no_loca
     relay_id = RelayID(str(uuid4()))
 
     # Register in CMK API
-    register_relay_handler.process(
+    await register_relay_handler.process(
         test_user.secret,
         request=RelayRegistrationRequest(
             relay_id=relay_id,
@@ -93,13 +96,14 @@ def test_get_relay_status_returns_pending_activation_when_api_exists_but_no_loca
 
     # Don't create local config folder - simulates pending state
 
-    response = get_relay_status_handler.process(relay_id=relay_id)
+    response = await get_relay_status_handler.process(relay_id=relay_id)
 
     assert response.relay_id == relay_id
     assert response.state == RelayState.PENDING_ACTIVATION
 
 
-def test_get_relay_status_returns_pending_deletion_when_config_exists_but_not_in_api(
+@pytest.mark.asyncio
+async def test_get_relay_status_returns_pending_deletion_when_config_exists_but_not_in_api(
     get_relay_status_handler: GetRelayStatusHandler,
     site_context: Config,
 ) -> None:
@@ -114,7 +118,7 @@ def test_get_relay_status_returns_pending_deletion_when_config_exists_but_not_in
     relay_config_dir = site_context.helper_config_dir / "latest/relays" / relay_id
     relay_config_dir.mkdir(parents=True, exist_ok=True)
 
-    response = get_relay_status_handler.process(relay_id=relay_id)
+    response = await get_relay_status_handler.process(relay_id=relay_id)
 
     assert response.relay_id == relay_id
     assert response.state == RelayState.PENDING_DELETION

@@ -36,8 +36,8 @@ class SiteRelaysClient:
     def __init__(
         self,
         *,
-        client: httpx2.Client,
-        internal_client: httpx2.Client,
+        client: httpx2.AsyncClient,
+        internal_client: httpx2.AsyncClient,
         siteid: str,
     ) -> None:
         self.client = client
@@ -53,15 +53,14 @@ class SiteRelaysClient:
         site_name: str,
     ) -> SiteRelaysClient:
         """Create SiteRelaysClient from site configuration."""
-        # FIXME async client
         headers = {
             "Content-Type": "application/json",
             "User-Agent": "Checkmk Agent Receiver",
         }
         # FIXME: increased timeout due to flacky test test_tasks.py::test_max_tasks_per_relay
         timeout = 20
-        client = httpx2.Client(base_url=site_url, headers=headers, timeout=timeout)
-        internal_client = httpx2.Client(
+        client = httpx2.AsyncClient(base_url=site_url, headers=headers, timeout=timeout)
+        internal_client = httpx2.AsyncClient(
             base_url=internal_site_url, headers=headers, timeout=timeout
         )
         return cls(
@@ -70,8 +69,8 @@ class SiteRelaysClient:
             siteid=site_name,
         )
 
-    def add_relay(self, auth: SiteAuth, relay_id: RelayID, alias: str) -> RelayID:
-        resp = self.internal_client.post(
+    async def add_relay(self, auth: SiteAuth, relay_id: RelayID, alias: str) -> RelayID:
+        resp = await self.internal_client.post(
             "/domain-types/relay/collections/all",
             auth=auth,
             json={
@@ -91,9 +90,9 @@ class SiteRelaysClient:
         assert relay_id == resp.json()["id"]
         return relay_id
 
-    def relay_exists(self, auth: SiteAuth, relay_id: RelayID) -> bool:
+    async def relay_exists(self, auth: SiteAuth, relay_id: RelayID) -> bool:
         """Check if a relay exists by querying the REST API."""
-        resp = self.client.get(f"/objects/relay/{relay_id}", auth=auth)
+        resp = await self.client.get(f"/objects/relay/{relay_id}", auth=auth)
         if resp.status_code >= HTTPStatus.INTERNAL_SERVER_ERROR:
             raise CheckmkAPIError(resp.text)
         if resp.status_code == HTTPStatus.NOT_FOUND:

@@ -20,8 +20,8 @@ def random_relay_id() -> RelayID:
     return RelayID(str(uuid.uuid4()))
 
 
-def site_has_relay(client: httpx2.Client, relay_id: RelayID, auth: SiteAuth) -> bool:
-    resp = client.get(url=f"/objects/relay/{relay_id}", auth=auth)
+async def site_has_relay(client: httpx2.AsyncClient, relay_id: RelayID, auth: SiteAuth) -> bool:
+    resp = await client.get(url=f"/objects/relay/{relay_id}", auth=auth)
     if resp.status_code == HTTPStatus.NOT_FOUND:
         return False
     if resp.status_code == HTTPStatus.OK:

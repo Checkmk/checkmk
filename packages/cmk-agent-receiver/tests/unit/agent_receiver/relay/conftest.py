@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
 from datetime import datetime, UTC
 from http import HTTPStatus
 
 import httpx2
 import pytest
+import pytest_asyncio
 from pydantic import SecretStr
 
 from cmk.agent_receiver.lib.config import Config
@@ -91,33 +92,35 @@ def _relay_mock_transport() -> httpx2.MockTransport:
     return create_relay_mock_transport()
 
 
-@pytest.fixture()
-def site_api_client(_relay_mock_transport: httpx2.MockTransport) -> Iterator[httpx2.Client]:
-    """Provides an httpx2.Client configured for the site API (v1)."""
-    client = httpx2.Client(
+@pytest_asyncio.fixture()
+async def site_api_client(
+    _relay_mock_transport: httpx2.MockTransport,
+) -> AsyncIterator[httpx2.AsyncClient]:
+    """Provides an httpx2.AsyncClient configured for the site API (v1)."""
+    async with httpx2.AsyncClient(
         base_url="http://test.com/test/check_mk/api/1.0",
         headers={"Content-Type": "application/json"},
         transport=_relay_mock_transport,
-    )
-    yield client
-    client.close()
+    ) as client:
+        yield client
 
 
-@pytest.fixture()
-def internal_api_client(_relay_mock_transport: httpx2.MockTransport) -> Iterator[httpx2.Client]:
-    """Provides an httpx2.Client configured for the internal API."""
-    client = httpx2.Client(
+@pytest_asyncio.fixture()
+async def internal_api_client(
+    _relay_mock_transport: httpx2.MockTransport,
+) -> AsyncIterator[httpx2.AsyncClient]:
+    """Provides an httpx2.AsyncClient configured for the internal API."""
+    async with httpx2.AsyncClient(
         base_url="http://test.com/test/check_mk/api/internal",
         headers={"Content-Type": "application/json"},
         transport=_relay_mock_transport,
-    )
-    yield client
-    client.close()
+    ) as client:
+        yield client
 
 
 @pytest.fixture()
 def site_relays_client(
-    site_api_client: httpx2.Client, internal_api_client: httpx2.Client
+    site_api_client: httpx2.AsyncClient, internal_api_client: httpx2.AsyncClient
 ) -> Iterator[SiteRelaysClient]:
     """Provides a SiteRelaysClient with mock transport for testing."""
     repository = SiteRelaysClient(

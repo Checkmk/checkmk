@@ -25,13 +25,14 @@ from cmk.testlib.agent_receiver.relay import site_has_relay
 pytestmark = pytest.mark.usefixtures("site_context")
 
 
-def test_process_adds_new_relay_id_to_registry(
+@pytest.mark.asyncio
+async def test_process_adds_new_relay_id_to_registry(
     register_relay_handler: RegisterRelayHandler,
     test_user: SecretAuth,
-    site_api_client: httpx2.Client,
+    site_api_client: httpx2.AsyncClient,
 ) -> None:
     relay_id = RelayID(str(uuid4()))
-    response = register_relay_handler.process(
+    response = await register_relay_handler.process(
         test_user.secret,
         request=RelayRegistrationRequest(
             relay_id=relay_id,
@@ -40,20 +41,21 @@ def test_process_adds_new_relay_id_to_registry(
         ),
     )
     assert relay_id == response.relay_id
-    assert site_has_relay(site_api_client, RelayID(response.relay_id), test_user)
+    assert await site_has_relay(site_api_client, RelayID(response.relay_id), test_user)
 
 
-def test_process_creates_multiple_relays(
+@pytest.mark.asyncio
+async def test_process_creates_multiple_relays(
     register_relay_handler: RegisterRelayHandler,
     test_user: SecretAuth,
-    site_api_client: httpx2.Client,
+    site_api_client: httpx2.AsyncClient,
 ) -> None:
     aliases = ["relay1", "relay2", "relay3"]
     relay_ids = []
 
     for alias in aliases:
         relay_id = RelayID(str(uuid4()))
-        response = register_relay_handler.process(
+        response = await register_relay_handler.process(
             authorization=test_user.secret,
             request=RelayRegistrationRequest(
                 relay_id=relay_id,
@@ -63,19 +65,20 @@ def test_process_creates_multiple_relays(
         )
         relay_ids.append(relay_id)
         assert relay_id == response.relay_id
-        assert site_has_relay(site_api_client, relay_id, test_user)
+        assert await site_has_relay(site_api_client, relay_id, test_user)
 
     # Verify all relays are still registered
     for relay_id in relay_ids:
-        assert site_has_relay(site_api_client, relay_id, test_user)
+        assert await site_has_relay(site_api_client, relay_id, test_user)
 
 
-def test_process_adds_relay_with_token_auth(
+@pytest.mark.asyncio
+async def test_process_adds_relay_with_token_auth(
     register_relay_handler: RegisterRelayHandler,
 ) -> None:
     token_secret = SecretStr("CMK-TOKEN 0:550e8400-e29b-41d4-a716-446655440000")
     relay_id = RelayID(str(uuid4()))
-    response = register_relay_handler.process(
+    response = await register_relay_handler.process(
         authorization=token_secret,
         request=RelayRegistrationRequest(
             relay_id=relay_id,
@@ -86,13 +89,14 @@ def test_process_adds_relay_with_token_auth(
     assert relay_id == response.relay_id
 
 
-def test_process_rejects_unknown_auth_format(
+@pytest.mark.asyncio
+async def test_process_rejects_unknown_auth_format(
     register_relay_handler: RegisterRelayHandler,
 ) -> None:
     bad_secret = SecretStr("Basic dXNlcjpwYXNz")
     relay_id = RelayID(str(uuid4()))
     with pytest.raises(UnsupportedAuthFormatError):
-        register_relay_handler.process(
+        await register_relay_handler.process(
             authorization=bad_secret,
             request=RelayRegistrationRequest(
                 relay_id=relay_id,

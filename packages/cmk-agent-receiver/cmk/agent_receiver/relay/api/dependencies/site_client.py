@@ -15,5 +15,5 @@ async def get_site_relays_client() -> AsyncIterator[SiteRelaysClient]:
         internal_site_url=config.internal_rest_api_url,
         site_name=config.site_name,
     )
-    with site_client.client, site_client.internal_client:
+    async with site_client.client, site_client.internal_client:
         yield site_client

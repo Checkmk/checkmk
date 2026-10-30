@@ -23,7 +23,7 @@ from cmk.relay_protocols.relays import RelayState
 class RegisterRelayHandler:
     site_relays_client: SiteRelaysClient
 
-    def process(
+    async def process(
         self, authorization: SecretStr, request: relay_protocols.RelayRegistrationRequest
     ) -> relay_protocols.RelayRegistrationResponse:
         if get_config().is_remote_site:
@@ -35,7 +35,7 @@ class RegisterRelayHandler:
         certificates = get_certificates(request.csr, relay_id)
 
         # before relay registration
-        self.site_relays_client.add_relay(auth, relay_id, request.alias)
+        await self.site_relays_client.add_relay(auth, relay_id, request.alias)
 
         return relay_protocols.RelayRegistrationResponse(
             relay_id=relay_id,
@@ -49,14 +49,14 @@ class RefreshCertHandler:
     site_relays_client: SiteRelaysClient
     relay_config_repository: RelayConfigRepository
 
-    def process(
+    async def process(
         self, relay_id: RelayID, request: relay_protocols.RelayRefreshCertRequest
     ) -> relay_protocols.RelayRefreshCertResponse:
         auth = InternalAuth()
         # Allow cert refresh for any relay known to the agent-receiver, including
         # relays in PENDING_DELETION (deleted from the site but change not yet activated).
         # get_relay_state() raises RelayNotFoundError if the relay is unknown everywhere.
-        get_relay_state(self.site_relays_client, self.relay_config_repository, auth, relay_id)
+        await get_relay_state(self.site_relays_client, self.relay_config_repository, auth, relay_id)
         certificates = get_certificates(request.csr, relay_id)
         return relay_protocols.RelayRefreshCertResponse(
             root_cert=certificates.root_cert,
@@ -69,7 +69,7 @@ class GetRelayStatusHandler:
     site_relays_client: SiteRelaysClient
     relay_config_repository: RelayConfigRepository
 
-    def process(self, relay_id: RelayID) -> relay_protocols.RelayStatusResponse:
+    async def process(self, relay_id: RelayID) -> relay_protocols.RelayStatusResponse:
         """Get relay status.
 
         Returns:
@@ -80,13 +80,13 @@ class GetRelayStatusHandler:
             CheckmkAPIError: If there is an API error
         """
         auth = InternalAuth()
-        state = get_relay_state(
+        state = await get_relay_state(
             self.site_relays_client, self.relay_config_repository, auth, relay_id
         )
         return relay_protocols.RelayStatusResponse(relay_id=relay_id, state=state)
 
 
-def get_relay_state(
+async def get_relay_state(
     site_relays_client: SiteRelaysClient,
     relay_config_repository: RelayConfigRepository,
     auth: SiteAuth,
@@ -102,7 +102,7 @@ def get_relay_state(
         CheckmkAPIError: If there is an API error
     """
     relay_in_config = relay_config_repository.has_config(relay_id)
-    relay_in_api = site_relays_client.relay_exists(auth, relay_id)
+    relay_in_api = await site_relays_client.relay_exists(auth, relay_id)
 
     if not relay_in_api and not relay_in_config:
         raise RelayNotFoundError(relay_id)

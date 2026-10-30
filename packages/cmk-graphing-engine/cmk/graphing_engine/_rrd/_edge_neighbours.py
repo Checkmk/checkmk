@@ -6,7 +6,7 @@
 from dataclasses import dataclass
 from typing import Final
 
-from cmk.graphing_engine import TimeRange
+from cmk.graphing_engine._data._timeseries import TimeRange
 
 _NEIGHBOURS_BEYOND_AN_EDGE: Final = 1
 _STEPS_FROM_A_RANGE_START_TO_ITS_FIRST_SAMPLE: Final = 1

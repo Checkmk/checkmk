@@ -14,6 +14,7 @@ from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
     ConsolidationFunction,
+    expected_served_step,
     FetchedData,
     HostName,
     map_metric_names,
@@ -33,6 +34,7 @@ from cmk.graphing_engine import (
     TimeRange,
     TimeSeries,
     translate_performance_data,
+    with_edge_neighbours,
 )
 from cmk.graphing_engine import (
     SiteID as EngineSiteID,
@@ -41,7 +43,6 @@ from cmk.gui import sites
 from cmk.gui.log import logger
 from cmk.livestatus_client import LivestatusColumn, lqencode, MKLivestatusNotFoundError
 
-from ._edge_neighbours import expected_served_step, with_edge_neighbours
 from ._metric_data import (
     rrd_column_name,
 )

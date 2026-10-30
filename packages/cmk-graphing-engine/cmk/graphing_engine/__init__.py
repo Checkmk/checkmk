@@ -137,6 +137,7 @@ from ._quantities._quantity import (
     MetricProtocol,
     QuantityProtocol,
 )
+from ._rrd._edge_neighbours import expected_served_step, with_edge_neighbours
 from ._rrd._fetch import (
     FetchMetricNamesProtocol,
     time_series_of_rrd_column,
@@ -229,6 +230,8 @@ __all__ = [
     "last_present",
     "FetchDataProtocol",
     "FetchMetricNamesProtocol",
+    "expected_served_step",
+    "with_edge_neighbours",
     "time_series_of_rrd_column",
     "FetchedData",
     "FixedRange",

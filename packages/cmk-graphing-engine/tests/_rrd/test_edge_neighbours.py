@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.graphing_engine import TimeRange
-from cmk.gui.graphing._edge_neighbours import expected_served_step
+from cmk.graphing_engine._rrd._edge_neighbours import expected_served_step
 
 _MINUTE = 60
 _HOUR = 60 * _MINUTE

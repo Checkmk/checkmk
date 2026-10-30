@@ -1,6 +1,7 @@
 [
   "tests/ai/components/user-action/AiConversationUserAction.test.ts",
   "tests/ai/lib/service/ai-template.test.ts",
+  "tests/dashboard/DashboardApp.test.ts",
   "tests/dashboard/Wizard/CloneDashboard/CloneDashboardWizard.test.ts",
   "tests/dashboard/Wizard/CreateDashboard/CreateDashboardWizard.test.ts",
   "tests/dashboard/Wizard/DashboardSharing/DashboardSharingWizard.test.ts",

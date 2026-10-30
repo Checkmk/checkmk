@@ -78,6 +78,7 @@ import type {
 import { type CloneResult, dashboardAPI, urlHandler } from '@/dashboard/utils.ts'
 import { PageHeader } from '@/page-header'
 
+import CloneFailedAlert from './components/CloneFailedAlert.vue'
 import CloneSuccessAlert from './components/CloneSuccessAlert.vue'
 import DashboardRefreshControl from './components/DashboardRefreshControl.vue'
 import DroppedFiltersAlert from './components/DroppedFiltersAlert.vue'
@@ -109,11 +110,12 @@ const widgetToEdit = ref<string | null>(null)
 const selectedDashboardBreadcrumb = ref<BreadcrumbItem[] | null>(null)
 const showCloneSuccessAlert = ref(false)
 const clonedAsResponsive = ref(false)
+const cloneFailure = ref<string | null>(null)
 const droppedFiltersWarning = ref<string | null>(null)
 // Another dashboard picked here was not drilled to, so it offers no way back.
 const drillUp = ref(props.drill_up)
 
-watch([showCloneSuccessAlert, droppedFiltersWarning], async () => {
+watch([showCloneSuccessAlert, cloneFailure, droppedFiltersWarning], async () => {
   await nextTick()
   window.dispatchEvent(new Event('resize'))
 })
@@ -253,6 +255,7 @@ const setAsActiveDashboard = async (dashboardKey: DashboardKey, layout: Dashboar
 const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
   isDashboardEditingMode.value = false
   showCloneSuccessAlert.value = false
+  cloneFailure.value = null
   droppedFiltersWarning.value = null
   drillUp.value = null
 
@@ -505,6 +508,7 @@ const cloneDashboard = async (
   openDashboardCloneDialog.value = false
   isCloning.value = true
   loadingError.value = null
+  cloneFailure.value = null
 
   let newKey: DashboardKey
   try {
@@ -541,7 +545,7 @@ const cloneDashboard = async (
       owner: newOwner
     }
   } catch (e) {
-    loadingError.value = e instanceof Error ? e : new Error(String(e))
+    cloneFailure.value = e instanceof Error ? e.message : String(e)
     isCloning.value = false
     return
   }
@@ -835,6 +839,7 @@ const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(
             :cloned-as-responsive="clonedAsResponsive"
             @edit-filters="openDashboardFilterSettings = true"
           />
+          <CloneFailedAlert v-if="cloneFailure !== null" :reason="cloneFailure" />
           <DroppedFiltersAlert
             v-if="droppedFiltersWarning !== null"
             :warning="droppedFiltersWarning"

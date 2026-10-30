@@ -3,13 +3,13 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-/* This small helper program is intended to be installed SUID root.
-   Otherwise it is pointless. It creates a UDP socket with port 514.
-   This is a privileged operation. Then it drops the privileges,
-   moves that port to file descriptor 3 and executes the mkeventd.
-
-   That can then simply use filedescriptor 3 and receive syslog
-   messages */
+// This small helper program needs the capability CAP_NET_BIND_SERVICE, which
+// the packaging gives it, otherwise it is pointless. Where the Debian package
+// can't set capabilities, it installs the program SUID root instead, see
+// omd/debian/postinst.in. It binds the privileged ports for syslog via UDP and
+// TCP and for SNMP traps, as its options request, moves the sockets to the file
+// descriptors given there and executes mkeventd with the same arguments.
+// mkeventd can then simply use these sockets.
 
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -18,146 +18,213 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <charconv>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
+#include <iostream>
+#include <memory>
+#include <optional>
+#include <span>
 #include <string>
-#include <vector>
+#include <string_view>
+#include <system_error>
+#include <utility>
 
 // Example command line:
 // mkeventd_open514 --syslog --syslog-fd 3 --syslog-tcp --syslog-tcp-fd 4
 // --snmptrap --snmptrap-fd 5
 
-int bind_socket(int sock_type, const char *service) {
-    addrinfo query{};
-    query.ai_flags = AI_PASSIVE;
-    query.ai_family = AF_UNSPEC;
-    query.ai_socktype = sock_type;
+namespace {
 
-    addrinfo *info = nullptr;
-    if (::getaddrinfo(nullptr, service, &query, &info) != 0) {
-        return -1;
-    }
+[[noreturn]] void fail(const std::string &message) {
+    std::cerr << message << '\n';
+    ::exit(1);  // NOLINT(concurrency-mt-unsafe)
+}
 
-    auto create_bound_socket = [](addrinfo *curr) {
+// The port of the service for the protocol, as /etc/services has it, or the
+// fallback port if it lacks the service or is missing altogether.
+std::string lookup_port(const char *service, const char *protocol,
+                        const char *fallback_port) {
+    // NOLINTNEXTLINE(concurrency-mt-unsafe): We have only one thread.
+    const servent *entry = ::getservbyname(service, protocol);
+    return entry == nullptr
+               ? fallback_port
+               : std::to_string(ntohs(static_cast<in_port_t>(entry->s_port)));
+}
+
+// A socket bound to one of the addresses, IPv6 ones first, or -1 and the errno
+// of the last failed attempt to bind one.
+std::pair<int, int> bind_socket(const addrinfo *addresses,
+                                const std::string &description) {
+    int error = 0;
+    auto create_bound_socket = [&error, &description](const addrinfo *curr) {
         auto result = ::socket(curr->ai_family, curr->ai_socktype, 0);
-
-        if (result != -1) {
-            int optval = 1;
-            if (::setsockopt(result, SOL_SOCKET, SO_REUSEADDR, &optval,
-                             sizeof(optval)) != 0) {
-                ::perror("Cannot set SO_REUSEADDR on socket inside mkeventd");
-                ::exit(1);
-            }
-
-            if (::bind(result, curr->ai_addr, curr->ai_addrlen) == 0) {
-                return result;
-            }
-            ::close(result);
+        if (result == -1) {
+            error = errno;
+            return -1;
         }
 
+        int optval = 1;
+        if (::setsockopt(result, SOL_SOCKET, SO_REUSEADDR, &optval,
+                         sizeof(optval)) != 0) {
+            const std::string reason = std::generic_category().message(errno);
+            fail("Cannot set SO_REUSEADDR on " + description + ": " + reason);
+        }
+
+        if (::bind(result, curr->ai_addr, curr->ai_addrlen) == 0) {
+            return result;
+        }
+        error = errno;
+        ::close(result);
         return -1;
     };
 
     int result = -1;
-    for (addrinfo *curr = info; curr != nullptr && result == -1;
+    for (const addrinfo *curr = addresses; curr != nullptr && result == -1;
          curr = curr->ai_next) {
         if (curr->ai_family == AF_INET6) {
             result = create_bound_socket(curr);
         }
     }
 
-    for (addrinfo *curr = info; curr != nullptr && result == -1;
+    for (const addrinfo *curr = addresses; curr != nullptr && result == -1;
          curr = curr->ai_next) {
         if (curr->ai_family == AF_INET) {
             result = create_bound_socket(curr);
         }
     }
-    ::freeaddrinfo(info);
 
-    return result;
+    return {result, error};
 }
 
-void open_socket_as_fd(int type, const char *service, int target_fd,
-                       const char *error_message) {
-    auto sock = bind_socket(type, service);
+void open_socket_as_fd(int type, const std::string &port, int target_fd,
+                       const std::string &description) {
+    const auto cannot_bind = "Cannot bind " + description + " to port " + port;
+    addrinfo query{};
+    query.ai_flags = AI_PASSIVE | AI_NUMERICSERV;
+    query.ai_family = AF_UNSPEC;
+    query.ai_socktype = type;
+
+    addrinfo *info = nullptr;
+    if (const int rc = ::getaddrinfo(nullptr, port.c_str(), &query, &info);
+        rc != 0) {
+        const std::string reason = rc == EAI_SYSTEM
+                                       ? std::generic_category().message(errno)
+                                       : ::gai_strerror(rc);
+        fail(cannot_bind + ": " + reason);
+    }
+    const auto [sock, error] = bind_socket(info, description);
+    ::freeaddrinfo(info);
 
     if (sock == -1) {
-        ::perror(error_message);
-        ::exit(1);
+        auto message =
+            cannot_bind + ": " + std::generic_category().message(error);
+        // Binding a privileged port fails with EACCES without the privilege,
+        // other errors like EADDRINUSE have nothing to do with it.
+        if (error == EACCES) {
+            message +=
+                " (Does mkeventd_open514 have the capability "
+                "CAP_NET_BIND_SERVICE, or is it SUID root? Is the filesystem "
+                "mounted without \"nosuid\"?)";
+        }
+        fail(message);
     }
 
     // Make sure it is at the correct FD
     if (sock != target_fd) {
-        ::dup2(sock, target_fd);
+        if (::dup2(sock, target_fd) == -1) {
+            const std::string reason = std::generic_category().message(errno);
+            fail("Cannot move " + description + " to file descriptor " +
+                 std::to_string(target_fd) + ": " + reason);
+        }
         ::close(sock);
     }
 }
 
+// The file descriptor the option value names, or -1 if it names none.
+int file_descriptor(std::string_view value) {
+    const auto *const end = std::to_address(value.end());
+    int fd = -1;
+    const auto [rest, error] =
+        std::from_chars(std::to_address(value.begin()), end, fd);
+    return error == std::errc{} && rest == end ? fd : -1;
+}
+
+}  // namespace
+
 int main(int argc, char **argv) {
-    int do_syslog = 0;
-    int do_syslog_tcp = 0;
-    int do_snmptrap = 0;
+    bool do_syslog = false;
+    bool do_syslog_tcp = false;
+    bool do_snmptrap = false;
 
     int syslog_fd = -1;
     int syslog_tcp_fd = -1;
     int snmptrap_fd = -1;
 
-    std::vector<std::string> arguments{argv, argv + argc};
-    for (int i = 1; i < argc; i++) {
-        if (arguments[i] == "--syslog") {
-            do_syslog = 1;
-        } else if (arguments[i] == "--syslog-tcp") {
-            do_syslog_tcp = 1;
-        } else if (arguments[i] == "--snmptrap") {
-            do_snmptrap = 1;
-        } else if (arguments[i] == "--syslog-fd") {
-            syslog_fd = atoi(arguments[i + 1].c_str());
-        } else if (arguments[i] == "--syslog-tcp-fd") {
-            syslog_tcp_fd = atoi(arguments[i + 1].c_str());
-        } else if (arguments[i] == "--snmptrap-fd") {
-            snmptrap_fd = atoi(arguments[i + 1].c_str());
+    const auto args = std::span{argv, static_cast<size_t>(argc)};
+    // We need our path to find mkeventd next to us. Linux before 5.18 allows
+    // calling a program without even its name, newer kernels pass an empty one
+    // instead, and shells pass only the name when they find it via PATH.
+    const std::filesystem::path program{args.empty() ? "" : args[0]};
+    if (!program.has_parent_path()) {
+        std::cerr << "Cannot find mkeventd: Called without a path\n";
+        return 1;
+    }
+    for (size_t i = 1; i < args.size(); i++) {
+        // Like the argparse of mkeventd, take "--option value" as well as
+        // "--option=value".
+        std::string_view option{args[i]};
+        std::optional<std::string_view> value;
+        if (const auto pos = option.find('='); pos != std::string_view::npos) {
+            value = option.substr(pos + 1);
+            option = option.substr(0, pos);
+        } else if (i + 1 < args.size()) {
+            value = args[i + 1];
+        }
+        if (option == "--syslog") {
+            do_syslog = true;
+        } else if (option == "--syslog-tcp") {
+            do_syslog_tcp = true;
+        } else if (option == "--snmptrap") {
+            do_snmptrap = true;
+        } else if (option == "--syslog-fd" && value) {
+            syslog_fd = file_descriptor(*value);
+        } else if (option == "--syslog-tcp-fd" && value) {
+            syslog_tcp_fd = file_descriptor(*value);
+        } else if (option == "--snmptrap-fd" && value) {
+            snmptrap_fd = file_descriptor(*value);
         }
     }
 
     // Syslog via UDP
-    if (do_syslog != 0 && syslog_fd > 0) {
-        open_socket_as_fd(
-            SOCK_DGRAM, "syslog", syslog_fd,
-            "Cannot bind UDP socket for syslog to port "
-            "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the "
-            "filesystem?)");
+    if (do_syslog && syslog_fd > 0) {
+        open_socket_as_fd(SOCK_DGRAM, lookup_port("syslog", "udp", "514"),
+                          syslog_fd, "UDP socket for syslog");
     }
 
-    // Syslog via TCP
-    if (do_syslog_tcp != 0 && syslog_tcp_fd > 0) {
-        // 514 specified explicitly because
-        // syslog does not resolve on certain distros for stream sockets.
-        open_socket_as_fd(
-            SOCK_STREAM, "514", syslog_tcp_fd,
-            "Cannot bind UDP socket for syslog to port "
-            "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the "
-            "filesystem?)");
+    // Syslog via TCP has no service of its own: 514/tcp is "shell", sometimes
+    // with the alias "syslog".
+    if (do_syslog_tcp && syslog_tcp_fd > 0) {
+        open_socket_as_fd(SOCK_STREAM, "514", syslog_tcp_fd,
+                          "TCP socket for syslog");
     }
 
     // SNMP traps
-    if (do_snmptrap != 0 && snmptrap_fd > 0) {
-        open_socket_as_fd(
-            SOCK_DGRAM, "snmptrap", snmptrap_fd,
-            "Cannot bind UDP socket for snptrap to port "
-            "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the "
-            "filesystem?)");
+    if (do_snmptrap && snmptrap_fd > 0) {
+        open_socket_as_fd(SOCK_DGRAM, lookup_port("snmptrap", "udp", "162"),
+                          snmptrap_fd, "UDP socket for snmptrap");
     }
 
     // Drop root privileges when installed SUID root, see the setuid fallback in
     // omd/debian/postinst.in. execv() drops the capability anyway.
-    if (getuid() != geteuid() && seteuid(getuid())) {
-        perror("Cannot drop privileges");
-        exit(1);
+    if (::getuid() != ::geteuid() && ::seteuid(::getuid()) != 0) {
+        ::perror("Cannot drop privileges");
+        return 1;
     }
 
     // Execute the actual program that needs access to the socket.
-    ::execv((std::filesystem::path{argv[0]}.parent_path() / "mkeventd").c_str(),
-            argv);
-    perror("Cannot execute mkeventd");
+    ::execv((program.parent_path() / "mkeventd").c_str(), argv);
+    ::perror("Cannot execute mkeventd");
+    return 1;
 }

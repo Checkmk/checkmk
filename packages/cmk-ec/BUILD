@@ -167,6 +167,12 @@ py_cmk_test(
     size = "small",
     srcs = glob(["tests/component/**/*.py"]),
     args = ["packages/cmk-ec/tests/component"],
+    data = [
+        ":mkeventd_open514",
+    ],
+    env = {
+        "MKEVENTD_OPEN514": "$(rootpath :mkeventd_open514)",
+    },
     deps = [
         ":mib_compiler",
         ":mib_status",
@@ -253,6 +259,7 @@ cc_binary(
     name = "mkeventd_open514",
     srcs = ["src/mkeventd_open514.cc"],
     copts = [
+        "-std=c++20",
         "-g",
         "-O3",
         "-Wall",
@@ -262,7 +269,6 @@ cc_binary(
         "static_libstdcpp",
     ],
     platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
-    tags = ["no-lint"],
 )
 
 pkg_files(

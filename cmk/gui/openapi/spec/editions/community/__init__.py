@@ -47,6 +47,7 @@ from cmk.gui.monitor.hosts._api._registration import (
 from cmk.gui.monitor.services._api._registration import (
     register_endpoints as monitor_services_register_endpoints,
 )
+from cmk.gui.oauth.openapi.registration import register as oauth_openapi_register
 from cmk.gui.openapi import (
     endpoint_family_registry,
     endpoint_registry,
@@ -113,6 +114,7 @@ def register_for_community() -> None:
     user_message_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
     agent_registration_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
     graphing_openapi_register(versioned_endpoint_registry, endpoint_family_registry)
+    oauth_openapi_register(versioned_endpoint_registry, endpoint_family_registry)
     openapi_central_register(
         endpoint_registry,
         versioned_endpoint_registry,

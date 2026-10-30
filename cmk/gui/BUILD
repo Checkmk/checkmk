@@ -744,6 +744,7 @@ py_library(
         "//cmk/gui/monitor/setup_folders",
         "//cmk/gui/nagvis",
         "//cmk/gui/nodevis",
+        "//cmk/gui/oauth",
         "//cmk/gui/oauth2_connections",
         "//cmk/gui/openapi:openapi_init",
         "//cmk/gui/openapi:registration",

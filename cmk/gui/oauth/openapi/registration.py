@@ -16,9 +16,14 @@ from .identify_session import ENDPOINT_IDENTIFY_SESSION
 def register(
     versioned_endpoint_registry: VersionedEndpointRegistry,
     endpoint_family_registry: EndpointFamilyRegistry,
-    *,
-    delegation_enabled: Callable[[], bool],
 ) -> None:
     endpoint_family_registry.register(GUI_SESSION_FAMILY)
     versioned_endpoint_registry.register(ENDPOINT_IDENTIFY_SESSION)
+
+
+def register_delegate(
+    versioned_endpoint_registry: VersionedEndpointRegistry,
+    *,
+    delegation_enabled: Callable[[], bool],
+) -> None:
     versioned_endpoint_registry.register(make_delegate_session_endpoint(delegation_enabled))

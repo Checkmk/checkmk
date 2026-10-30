@@ -56,6 +56,7 @@ from cmk.gui.monitor.router import registration as monitor_router_registration
 from cmk.gui.monitor.services import registration as monitor_services_registration
 from cmk.gui.monitor.services._page_menu import host_menus
 from cmk.gui.nodevis import nodevis
+from cmk.gui.oauth import registration as oauth_registration
 from cmk.gui.oauth2_connections.registration import register as register_oauth2_connections
 from cmk.gui.openapi import registration as openapi_registration
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
@@ -419,6 +420,13 @@ def register(
     )
     register_oauth2_connections(
         mode_registry, page_registry, main_module_registry, permission_registry
+    )
+    oauth_registration.register(
+        page_registry,
+        mode_registry,
+        main_module_registry,
+        versioned_endpoint_registry,
+        endpoint_family_registry,
     )
     _pre_21_plugin_api.register()
     graphing_registration.register_prediction_page(page_registry, make_service_breadcrumb)

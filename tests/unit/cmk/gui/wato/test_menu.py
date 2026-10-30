@@ -46,6 +46,8 @@ def expected_items() -> dict[str, list[str]]:
             "sites",
             "auditlog",
             "icons",
+            "oauth_registered_clients",
+            "oauth_tokens",
         ],
         "hosts": [
             "folder",

@@ -33,6 +33,8 @@ def test_registered_main_modules() -> None:
         "microsoft_entra_id_connections",
         "mkeventd_rule_packs",
         "notifications",
+        "oauth_registered_clients",
+        "oauth_tokens",
         "passwords",
         "performance_profiles",
         "predefined_conditions",

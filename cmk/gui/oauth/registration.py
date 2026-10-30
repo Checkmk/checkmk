@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
-
 from cmk.gui.oauth.openapi.registration import register as register_openapi_endpoints
 from cmk.gui.oauth.pages._authorize import OAuthAuthorizePage
 from cmk.gui.oauth.pages._client_registration import OAuthClientRegistrationPage
@@ -29,8 +27,6 @@ def register(
     main_module_registry: MainModuleRegistry,
     versioned_endpoint_registry: VersionedEndpointRegistry,
     endpoint_family_registry: EndpointFamilyRegistry,
-    *,
-    delegation_enabled: Callable[[], bool],
 ) -> None:
     page_registry.register(
         PageEndpoint("noauth:oauth_authorization_server", OAuthAuthorizationServerMetadataPage())
@@ -44,8 +40,4 @@ def register(
     register_registered_clients_mode(mode_registry)
     register_user_tokens_mode(mode_registry)
     register_main_module(main_module_registry)
-    register_openapi_endpoints(
-        versioned_endpoint_registry,
-        endpoint_family_registry,
-        delegation_enabled=delegation_enabled,
-    )
+    register_openapi_endpoints(versioned_endpoint_registry, endpoint_family_registry)

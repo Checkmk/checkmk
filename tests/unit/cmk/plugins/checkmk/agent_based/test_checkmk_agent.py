@@ -5,13 +5,13 @@
 
 import json
 from collections.abc import Iterable, Mapping
-from datetime import datetime, UTC
+from datetime import datetime, timedelta, UTC
 from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import CheckResult, Result, Service, State
+from cmk.agent_based.v2 import CheckResult, IgnoreResults, Metric, Result, Service, State
 from cmk.plugins.checkmk.agent_based.checkmk_agent import (
     _check_agent_update,
     _check_cmk_agent_update,
@@ -36,6 +36,7 @@ from cmk.plugins.checkmk.agent_based.lib import (
     CachedPlugin,
     CachedPluginsSection,
     CachedPluginType,
+    CertInfo,
     CertInfoController,
     CMKAgentUpdateSection,
     Connection,
@@ -317,6 +318,7 @@ def test_check_no_check_yet() -> None:
                 "agentupdate": "aghash None last_update None pending_hash None update_url foo last_check None error None"
             },
             None,
+            None,
         )
     ] == [
         Result(state=State.WARN, summary="No successful connect to server yet"),
@@ -328,6 +330,7 @@ def test_check_no_check_yet_pydantic() -> None:
     assert [
         *_check_cmk_agent_update(
             {},
+            None,
             None,
             CMKAgentUpdateSection(
                 aghash=None,
@@ -553,6 +556,7 @@ def test_certificate_results(
                     "max_time_since_last_update_check": (2 * 3600 * 24, 7 * 3600 * 24),
                 },
                 None,
+                None,
                 section,
             )
         ] == [
@@ -585,6 +589,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
                     )
                 },
                 None,
+                None,
             )
         )
 
@@ -592,7 +597,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
         Result(
             state=State.WARN,
             summary="Update error: 503 Server Error: Service Unavailable",
-            details="503 Server Error: Service Unavailable\nSomething for second line",
+            details="Update error: 503 Server Error: Service Unavailable\nSomething for second line",
         ),
         Result(
             state=State.CRIT,
@@ -604,6 +609,341 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
         Result(state=State.OK, notice="Agent configuration: 38bf6e44175732bc"),
         Result(state=State.OK, notice="Pending installation: 1234abcd5678efgh"),
     ]
+
+
+_NOW = datetime(2026, 10, 30, 12, tzinfo=UTC)
+_AN_HOUR_AGO = (_NOW - timedelta(hours=1)).timestamp()
+_UPDATE_PARAMS = {**_DEFAULT_PARAMS, "only_from": None, "host_name": "my-host"}
+_CONNECTION = Connection(
+    site_id="server/site",
+    local=LocalConnectionStatus(
+        cert_info=CertInfoController(
+            to=datetime(2036, 1, 1, tzinfo=UTC), issuer="Site 'site' local CA"
+        )
+    ),
+)
+_LEGACY_UPDATER = CMKAgentUpdateSection(
+    last_check=_AN_HOUR_AGO, update_url="https://server/site/check_mk"
+)
+
+
+def _controller(
+    agent_updates: CMKAgentUpdateSection | None, *connections: Connection
+) -> ControllerSection:
+    return ControllerSection(
+        allow_legacy_pull=False, connections=connections, agent_updates=agent_updates
+    )
+
+
+def _update_results(
+    controller: ControllerSection, legacy: CMKAgentUpdateSection | None
+) -> list[IgnoreResults | Metric | Result]:
+    with time_machine.travel(_NOW, tick=False):
+        return [*check_checkmk_agent(_UPDATE_PARAMS, None, None, controller, legacy, None)]
+
+
+def test_without_the_legacy_updater_the_integrated_updater_decides_the_state() -> None:
+    """CMK-39594 AC2"""
+    results = _update_results(
+        _controller(
+            CMKAgentUpdateSection(
+                last_check=_AN_HOUR_AGO, error="Agent update status request to server/site failed"
+            )
+        ),
+        None,
+    )
+
+    assert results == [
+        Result(
+            state=State.WARN,
+            summary="Update error: Agent update status request to server/site failed",
+        ),
+        Result(state=State.OK, notice="Time since last update check: 1 hour 0 minutes"),
+        Result(state=State.OK, notice="Last update check: 2026-10-30 11:00:00"),
+    ]
+
+
+def test_without_the_legacy_updater_the_details_name_the_stage_of_the_integrated_updater() -> None:
+    """CMK-39594 AC8, TC-AU-096"""
+    results = _update_results(_controller(CMKAgentUpdateSection()), None)
+
+    assert results == [
+        Result(state=State.WARN, summary="No successful connect to server yet"),
+        Result(state=State.OK, notice="Agent Controller: not registered with any site"),
+    ]
+
+
+def test_without_agent_updates_of_the_controller_the_legacy_updater_decides_the_state() -> None:
+    """CMK-39594 AC2"""
+    results = _update_results(_controller(None), _LEGACY_UPDATER)
+
+    assert results == [
+        Result(state=State.OK, notice="Time since last update check: 1 hour 0 minutes"),
+        Result(state=State.OK, notice="Last update check: 2026-10-30 11:00:00"),
+        Result(state=State.OK, notice="Update URL: https://server/site/check_mk"),
+    ]
+
+
+def test_in_fallback_the_legacy_updater_decides_until_the_first_update_check() -> None:
+    """CMK-39594 AC2, AC8, TC-AU-094"""
+    results = _update_results(_controller(CMKAgentUpdateSection()), _LEGACY_UPDATER)
+
+    assert results == [
+        Result(
+            state=State.OK,
+            notice="Agent updates: Agent Controller with fallback to the legacy updater",
+        ),
+        Result(state=State.OK, notice="Time since last update check: 1 hour 0 minutes"),
+        Result(state=State.OK, notice="Last update check: 2026-10-30 11:00:00"),
+        Result(state=State.OK, notice="Update URL: https://server/site/check_mk"),
+        Result(state=State.OK, notice="Agent Controller: not registered with any site"),
+    ]
+
+
+def test_in_fallback_the_integrated_updater_decides_after_its_first_update_check() -> None:
+    """CMK-39594 AC2, AC8, TC-AU-095"""
+    results = _update_results(
+        _controller(
+            CMKAgentUpdateSection(last_check=_AN_HOUR_AGO, update_url="https://server:8000/site")
+        ),
+        CMKAgentUpdateSection(
+            error="503 Server Error: Service Unavailable",
+            update_url="https://server/site/check_mk",
+        ),
+    )
+
+    assert results == [
+        Result(
+            state=State.OK,
+            notice="Agent updates: Agent Controller with fallback to the legacy updater",
+        ),
+        Result(state=State.OK, notice="Time since last update check: 1 hour 0 minutes"),
+        Result(state=State.OK, notice="Last update check: 2026-10-30 11:00:00"),
+        Result(state=State.OK, notice="Update URL: https://server:8000/site"),
+        Result(
+            state=State.OK,
+            notice=(
+                "Agent Controller: the setup of agent updates is complete."
+                ' Setting "Activation" to "Enable agent updates using the Agent Controller"'
+                ' in the ruleset "Agent updater (Linux, Windows, Solaris)"'
+                " removes the legacy updater."
+            ),
+        ),
+        Result(
+            state=State.OK,
+            notice="Legacy updater: Update error: 503 Server Error: Service Unavailable",
+        ),
+        Result(state=State.OK, notice="Legacy updater: No successful connect to server yet"),
+        Result(state=State.OK, notice="Legacy updater: Update URL: https://server/site/check_mk"),
+    ]
+
+
+def test_fallback_details_name_a_missing_update_source() -> None:
+    """CMK-39594 AC8, TC-AU-094"""
+    results = _update_results(_controller(CMKAgentUpdateSection(), _CONNECTION), _LEGACY_UPDATER)
+
+    assert (
+        Result(
+            state=State.OK,
+            notice=(
+                "Agent Controller: no update source yet."
+                " cmk-agent-ctl register --automatic-updates sets one, and so does the migration"
+                " of the legacy registration. A registration with the permission for agent"
+                ' updates sets one, depending on "Registration" in the ruleset'
+                ' "Agent updater (Linux, Windows, Solaris)".'
+            ),
+        )
+        in results
+    )
+
+
+def test_fallback_details_name_the_update_source_before_the_first_update_check() -> None:
+    """CMK-39594 AC8, TC-AU-094"""
+    results = _update_results(
+        _controller(CMKAgentUpdateSection(update_url="https://server:8000/site"), _CONNECTION),
+        _LEGACY_UPDATER,
+    )
+
+    assert (
+        Result(
+            state=State.OK,
+            notice=(
+                "Agent Controller: update source https://server:8000/site,"
+                " no successful update check yet"
+            ),
+        )
+        in results
+    )
+
+
+def test_fallback_details_show_an_error_of_the_integrated_updater_as_a_notice() -> None:
+    """CMK-39594 AC8, TC-AU-094"""
+    results = _update_results(
+        _controller(
+            CMKAgentUpdateSection(error="Agent update status request to server/site failed"),
+            _CONNECTION,
+        ),
+        _LEGACY_UPDATER,
+    )
+
+    assert (
+        Result(
+            state=State.OK,
+            notice="Agent Controller: Update error: Agent update status request to server/site failed",
+        )
+        in results
+    )
+    assert all(result.state is State.OK for result in results if isinstance(result, Result))
+
+
+def test_in_fallback_a_failure_of_the_integrated_updater_determines_the_state() -> None:
+    """CMK-39594 AC2, TC-AU-095"""
+    results = _update_results(
+        _controller(
+            CMKAgentUpdateSection(
+                last_check=_AN_HOUR_AGO, error="Agent update status request to server/site failed"
+            ),
+            _CONNECTION,
+        ),
+        _LEGACY_UPDATER,
+    )
+
+    assert (
+        Result(
+            state=State.WARN,
+            summary="Update error: Agent update status request to server/site failed",
+        )
+        in results
+    )
+
+
+def test_in_fallback_a_multi_line_error_of_the_legacy_updater_keeps_its_details() -> None:
+    """CMK-39594 AC8, TC-AU-095"""
+    results = _update_results(
+        _controller(CMKAgentUpdateSection(last_check=_AN_HOUR_AGO), _CONNECTION),
+        CMKAgentUpdateSection(error="503 Server Error: Service Unavailable\nRetry later"),
+    )
+
+    assert (
+        Result(
+            state=State.OK,
+            notice="Legacy updater: Update error: 503 Server Error: Service Unavailable\nRetry later",
+        )
+        in results
+    )
+
+
+def test_the_integrated_updater_names_no_cmk_update_agent() -> None:
+    """CMK-39594 AC3"""
+    results = _update_results(_controller(CMKAgentUpdateSection(last_check=_AN_HOUR_AGO)), None)
+
+    assert not any(
+        "cmk-update-agent" in result.details for result in results if isinstance(result, Result)
+    )
+
+
+def test_a_successful_update_reports_the_new_version() -> None:
+    """CMK-39594 AC4"""
+    with time_machine.travel(_NOW, tick=False):
+        results = [
+            *check_checkmk_agent(
+                _UPDATE_PARAMS,
+                {"version": "2.5.0p2", "agentos": "linux"},
+                None,
+                _controller(
+                    CMKAgentUpdateSection(
+                        last_check=_AN_HOUR_AGO,
+                        last_update=_AN_HOUR_AGO,
+                        aghash="fedcba9876543210",
+                    )
+                ),
+                None,
+                None,
+            )
+        ]
+
+    assert results == [
+        Result(state=State.OK, summary="Version: 2.5.0p2"),
+        Result(state=State.OK, summary="OS: linux"),
+        Result(state=State.OK, notice="Time since last update check: 1 hour 0 minutes"),
+        Result(state=State.OK, notice="Last update check: 2026-10-30 11:00:00"),
+        Result(state=State.OK, summary="Last update: 2026-10-30 11:00:00"),
+        Result(state=State.OK, notice="Agent configuration: fedcba9876543210"),
+    ]
+
+
+def test_a_failed_update_reports_the_failure_and_the_installed_agent() -> None:
+    """CMK-39594 AC5"""
+    results = _update_results(
+        _controller(
+            CMKAgentUpdateSection(
+                last_check=_AN_HOUR_AGO,
+                aghash="0123456789abcdef",
+                error="The installation of agent package fedcba9876543210 failed: dpkg returned 1",
+            )
+        ),
+        None,
+    )
+
+    assert (
+        Result(
+            state=State.WARN,
+            summary=(
+                "Update error: The installation of agent package fedcba9876543210 failed:"
+                " dpkg returned 1"
+            ),
+        )
+        in results
+    )
+    assert Result(state=State.OK, notice="Agent configuration: 0123456789abcdef") in results
+
+
+def test_an_expiring_signature_key_of_the_integrated_updater_is_only_a_notice() -> None:
+    """CMK-39594 AC6, TC-AU-069"""
+    results = _update_results(
+        _controller(
+            CMKAgentUpdateSection(
+                last_check=_AN_HOUR_AGO,
+                trusted_certs={
+                    0: CertInfo(
+                        corrupt=False,
+                        not_after=_NOW + timedelta(days=3),
+                        signature_algorithm="ecdsa-with-SHA256",
+                        common_name="Signing key",
+                    )
+                },
+            )
+        ),
+        None,
+    )
+
+    assert (
+        Result(
+            state=State.OK,
+            notice="Time until agent signature key #0 ('Signing key') will expire: 3 days 0 hours",
+        )
+        in results
+    )
+    assert all(result.state is State.OK for result in results if isinstance(result, Result))
+
+
+def test_a_stale_update_check_of_the_integrated_updater_warns() -> None:
+    """CMK-39594 AC7, TC-AU-080"""
+    results = _update_results(
+        _controller(CMKAgentUpdateSection(last_check=(_NOW - timedelta(days=3)).timestamp())),
+        None,
+    )
+
+    assert (
+        Result(
+            state=State.WARN,
+            summary=(
+                "Time since last update check: 3 days 0 hours"
+                " (warn/crit at 2 days 0 hours/30 days 0 hours)"
+            ),
+        )
+        in results
+    )
 
 
 def test_get_error_result() -> None:

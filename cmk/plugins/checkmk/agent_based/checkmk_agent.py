@@ -300,7 +300,7 @@ def _get_error_result(error: str, params: Mapping[str, Any]) -> CheckResult:
     yield Result(
         state=default_state,
         summary=f"Update error: {summary}",
-        details=details,
+        details=None if details is None else f"Update error: {details}",
     )
 
 
@@ -369,16 +369,84 @@ def _check_cmk_agent_update_certificates(parsed: CMKAgentUpdateSection) -> Check
 def _check_cmk_agent_update(
     params: Mapping[str, Any],
     section_check_mk: CheckmkSection | None,
+    section_cmk_agent_ctl_status: ControllerSection | None,
     section_cmk_update_agent_status: CMKAgentUpdateSection | None,
 ) -> CheckResult:
+    legacy = section_cmk_update_agent_status or CMKAgentUpdateSection.parse_checkmk_section(
+        section_check_mk
+    )
     if (
-        section := (
-            section_cmk_update_agent_status
-            or CMKAgentUpdateSection.parse_checkmk_section(section_check_mk)
-        )
-    ) is None:
+        section_cmk_agent_ctl_status is None
+        or (integrated := section_cmk_agent_ctl_status.agent_updates) is None
+    ):
+        if legacy is not None:
+            yield from _check_updater(params, legacy)
+        return
+    if legacy is None:
+        yield from _check_updater(params, integrated)
+        if integrated.last_check is None:
+            yield from _integrated_updater_stage(section_cmk_agent_ctl_status, integrated)
         return
 
+    yield Result(
+        state=State.OK, notice="Agent updates: Agent Controller with fallback to the legacy updater"
+    )
+    if integrated.last_check is None:
+        yield from _check_updater(params, legacy)
+        yield from _integrated_updater_stage(section_cmk_agent_ctl_status, integrated)
+        if integrated.error is not None:
+            yield from _as_notices(
+                "Agent Controller: ", _get_error_result(integrated.error, params)
+            )
+        return
+    yield from _check_updater(params, integrated)
+    yield Result(
+        state=State.OK,
+        notice=(
+            "Agent Controller: the setup of agent updates is complete."
+            ' Setting "Activation" to "Enable agent updates using the Agent Controller"'
+            ' in the ruleset "Agent updater (Linux, Windows, Solaris)"'
+            " removes the legacy updater."
+        ),
+    )
+    yield from _as_notices("Legacy updater: ", _check_updater_state(params, legacy))
+
+
+def _integrated_updater_stage(
+    controller: ControllerSection, section: CMKAgentUpdateSection
+) -> CheckResult:
+    if not controller.connections:
+        yield Result(state=State.OK, notice="Agent Controller: not registered with any site")
+    elif (update_url := section.update_url) is None:
+        yield Result(
+            state=State.OK,
+            notice=(
+                "Agent Controller: no update source yet."
+                " cmk-agent-ctl register --automatic-updates sets one, and so does the migration"
+                " of the legacy registration. A registration with the permission for agent"
+                ' updates sets one, depending on "Registration" in the ruleset'
+                ' "Agent updater (Linux, Windows, Solaris)".'
+            ),
+        )
+    else:
+        yield Result(
+            state=State.OK,
+            notice=f"Agent Controller: update source {update_url}, no successful update check yet",
+        )
+
+
+def _as_notices(prefix: str, results: CheckResult) -> CheckResult:
+    for result in results:
+        if isinstance(result, Result):
+            yield Result(state=State.OK, notice=f"{prefix}{result.details}")
+
+
+def _check_updater(params: Mapping[str, Any], section: CMKAgentUpdateSection) -> CheckResult:
+    yield from _check_updater_state(params, section)
+    yield from _check_cmk_agent_update_certificates(section)
+
+
+def _check_updater_state(params: Mapping[str, Any], section: CMKAgentUpdateSection) -> CheckResult:
     if section.error is not None:
         yield from _get_error_result(section.error, params)
 
@@ -432,8 +500,6 @@ def _check_cmk_agent_update(
 
     if pending := section.pending_hash:
         yield Result(state=State.OK, notice=f"Pending installation: {pending}")
-
-    yield from _check_cmk_agent_update_certificates(section)
 
 
 def _check_plugins(
@@ -685,7 +751,9 @@ def check_checkmk_agent(
         yield from _check_cmk_agent_installation(
             params, section_check_mk, section_cmk_agent_ctl_status
         )
-    yield from _check_cmk_agent_update(params, section_check_mk, section_cmk_update_agent_status)
+    yield from _check_cmk_agent_update(
+        params, section_check_mk, section_cmk_agent_ctl_status, section_cmk_update_agent_status
+    )
 
     if section_checkmk_agent_plugins is not None:
         yield from _check_plugins(params, section_checkmk_agent_plugins)

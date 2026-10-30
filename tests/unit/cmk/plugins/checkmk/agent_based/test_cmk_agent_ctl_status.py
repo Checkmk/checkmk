@@ -11,7 +11,9 @@ from pydantic import ValidationError
 from cmk.agent_based.v2 import StringTable
 from cmk.plugins.checkmk.agent_based.cmk_agent_ctl_status import parse_cmk_agent_ctl_status
 from cmk.plugins.checkmk.agent_based.lib import (
+    CertInfo,
     CertInfoController,
+    CMKAgentUpdateSection,
     Connection,
     ControllerSection,
     LocalConnectionStatus,
@@ -170,3 +172,30 @@ def test_parse_cmk_agent_ctl_status_unparsable_trusted_ca() -> None:
                 ]
             ]
         )
+
+
+def test_parse_the_agent_updates_of_the_integrated_updater() -> None:
+    """CMK-39594 AC1"""
+    section = parse_cmk_agent_ctl_status(
+        [
+            [
+                """{"version":"2026.10.30","agent_socket_operational":true,"ip_allowlist":[],"allow_legacy_pull":false,"connections":[],"agent_updates":{"last_check":1793358000,"last_update":null,"aghash":"0123456789abcdef","pending_hash":null,"update_url":"https://server:8000/site","trusted_certs":{"0":{"corrupt":false,"not_after":"20310101000000Z","signature_algorithm":"ecdsa-with-SHA256","common_name":"Signing key"},"1":{"corrupt":true,"not_after":null,"signature_algorithm":null,"common_name":null}},"error":null}}"""
+            ]
+        ]
+    )
+
+    assert section is not None
+    assert section.agent_updates == CMKAgentUpdateSection(
+        last_check=1793358000,
+        aghash="0123456789abcdef",
+        update_url="https://server:8000/site",
+        trusted_certs={
+            0: CertInfo(
+                corrupt=False,
+                not_after=datetime.datetime(2031, 1, 1, tzinfo=datetime.UTC),
+                signature_algorithm="ecdsa-with-SHA256",
+                common_name="Signing key",
+            ),
+            1: CertInfo(corrupt=True),
+        },
+    )

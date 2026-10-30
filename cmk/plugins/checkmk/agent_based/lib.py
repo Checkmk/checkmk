@@ -118,6 +118,7 @@ class ControllerSection(BaseModel):
     agent_socket_operational: bool = True
     ip_allowlist: Sequence[str] = []
     connections: Sequence[Connection]
+    agent_updates: CMKAgentUpdateSection | None = None
 
 
 class CertInfo(BaseModel):

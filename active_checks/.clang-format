@@ -1,0 +1,10 @@
+---
+Language: Cpp
+BasedOnStyle: Google
+AccessModifierOffset: -4
+BreakConstructorInitializersBeforeComma: true
+BreakStringLiterals: false
+DerivePointerAlignment: false
+IndentWidth: 4
+PointerAlignment: Right
+...

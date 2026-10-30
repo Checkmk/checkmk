@@ -125,6 +125,46 @@ def test_failed_rule_transformation_does_not_log_the_value(
     assert "s3crit" not in caplog.text
 
 
+def test_transform_rule_values_reports_the_rule_it_cannot_migrate(
+    tree: FolderTree, rulespec_with_migration: Rulespec
+) -> None:
+    ruleset = _instantiate_ruleset(
+        tree, rulespec_with_migration.name, {"key": "s3crit"}, rulespec=rulespec_with_migration
+    )
+
+    outcomes = list(
+        rulesets_updater.transform_rule_values(
+            RulesetCollection({rulespec_with_migration.name: ruleset})
+        )
+    )
+
+    match outcomes:
+        case [rulesets_updater.RuleOutcome(index=0, problem=TypeError(), rule=rule)]:
+            assert rule.value == {"key": "s3crit"}, "a rule the migration fails on keeps its value"
+        case other:
+            pytest.fail(f"expected one outcome with a TypeError: {other}")
+
+
+def test_transform_rule_values_migrates_in_place(
+    tree: FolderTree, rulespec_with_migration: Rulespec
+) -> None:
+    ruleset = _instantiate_ruleset(
+        tree, rulespec_with_migration.name, {"key": 1}, rulespec=rulespec_with_migration
+    )
+
+    outcomes = list(
+        rulesets_updater.transform_rule_values(
+            RulesetCollection({rulespec_with_migration.name: ruleset})
+        )
+    )
+
+    assert [
+        outcome.problem if isinstance(outcome, rulesets_updater.RuleOutcome) else outcome
+        for outcome in outcomes
+    ] == [None]
+    assert ruleset.get_rules()[0][2].value == {"key": 2}
+
+
 @pytest.mark.parametrize(
     ["param_value", "transformed_param_value"],
     [

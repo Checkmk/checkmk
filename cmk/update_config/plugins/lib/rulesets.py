@@ -6,7 +6,7 @@
 # mypy: disable-error-code="type-arg"
 
 import re
-from collections.abc import Collection, Iterable, Mapping, Sequence
+from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from logging import Logger
 from typing import Final
@@ -106,6 +106,25 @@ def load_and_transform(
     use_new_descriptions_for: Mapping[str, bool],
     debug: bool,
 ) -> AllRulesets:
+    all_rulesets, _outcomes = load_and_transform_with_outcomes(
+        tree,
+        logger,
+        pending_changes=pending_changes,
+        use_new_descriptions_for=use_new_descriptions_for,
+        debug=debug,
+    )
+    return all_rulesets
+
+
+def load_and_transform_with_outcomes(
+    tree: FolderTree,
+    logger: Logger,
+    *,
+    pending_changes: PendingChanges,
+    use_new_descriptions_for: Mapping[str, bool],
+    debug: bool,
+) -> tuple[AllRulesets, Sequence[RuleOutcome | RulesetProblem]]:
+    """load_and_transform, plus what the transformation of every rule value made of it"""
     all_rulesets = AllRulesets.load_all_rulesets(tree)
 
     if not use_new_descriptions_for.get("http", False):
@@ -133,18 +152,15 @@ def load_and_transform(
         {**REPLACED_RULESETS, **_discovery_parameter_renames()},
     )
     transform_replaced_plugins(logger, all_rulesets)
-    transform_wato_rulesets_params(
-        logger,
-        all_rulesets,
-        raise_errors=debug,
-    )
+    outcomes = list(transform_rule_values(all_rulesets))
+    _log_transform_outcomes(logger, outcomes, raise_errors=debug)
     transform_remove_null_host_tag_conditions_from_rulesets(
         logger,
         all_rulesets,
         raise_errors=debug,
         pending_changes=pending_changes,
     )
-    return all_rulesets
+    return all_rulesets, outcomes
 
 
 def _discovery_parameter_renames() -> Mapping[RulesetName, RulesetName]:
@@ -385,22 +401,26 @@ class RuleOutcome:
     """What the stage raised on the rule, None if it went through"""
 
 
-def transform_wato_rulesets_params(
-    logger: Logger,
+@dataclass(frozen=True)
+class RulesetProblem:
+    """A ruleset whose definition fails, so none of its rules can be transformed"""
+
+    ruleset: Ruleset
+    error: Exception
+
+
+def transform_rule_values(
     all_rulesets: RulesetCollection,
-    raise_errors: bool = False,
-) -> Collection[RulesetName]:
-    migrated_rulesets = set()
+) -> Iterator[RuleOutcome | RulesetProblem]:
+    """Migrate every rule's value to the current definition, in place
+
+    One outcome per rule; a rule whose migration raises keeps its value.
+    """
     for ruleset in all_rulesets.get_rulesets().values():
         try:
             value_model = ruleset.rulespec.value_model
-        except Exception:
-            logger.exception(
-                "ERROR: Failed to load Ruleset: %(ruleset_name)s. "
-                "There is likely an error in the implementation.",
-                {"ruleset_name": ruleset.name},
-            )
-            logger.exception("This is the exception: ")
+        except Exception as exc:
+            yield RulesetProblem(ruleset, exc)
             continue
         for folder, folder_index, rule in ruleset.get_rules():
             try:
@@ -411,21 +431,66 @@ def transform_wato_rulesets_params(
                     rule.value = visitor.to_disk(RawDiskData(rule.value))
                 else:
                     rule.value = value_model.transform_value(rule.value)
-                migrated_rulesets.add(ruleset.name)
-            except Exception:
+            except Exception as exc:
+                yield RuleOutcome(ruleset, folder, folder_index, rule, exc)
+            else:
+                yield RuleOutcome(ruleset, folder, folder_index, rule, None)
+
+
+def transform_wato_rulesets_params(
+    logger: Logger,
+    all_rulesets: RulesetCollection,
+    raise_errors: bool = False,
+) -> Collection[RulesetName]:
+    """Transform every rule value and log what fails.
+
+    Returns the rulesets in which at least one rule was migrated.
+    """
+    return _log_transform_outcomes(
+        logger, transform_rule_values(all_rulesets), raise_errors=raise_errors
+    )
+
+
+def _log_transform_outcomes(
+    logger: Logger,
+    outcomes: Iterable[RuleOutcome | RulesetProblem],
+    *,
+    raise_errors: bool,
+) -> Collection[RulesetName]:
+    migrated_rulesets = set()
+    for outcome in outcomes:
+        match outcome:
+            case RulesetProblem(ruleset=ruleset, error=error):
+                logger.error(
+                    "ERROR: Failed to load Ruleset: %(ruleset_name)s. "
+                    "There is likely an error in the implementation.",
+                    {"ruleset_name": ruleset.name},
+                    exc_info=error,
+                )
+                logger.error("This is the exception: ", exc_info=error)
+            case RuleOutcome(
+                problem=Exception() as problem,
+                ruleset=ruleset,
+                folder=folder,
+                index=index,
+                rule=rule,
+            ):
                 if raise_errors:
-                    raise
-                logger.exception(
+                    raise problem
+                logger.error(
                     # The value is not logged, since it may contain secrets
                     "ERROR: Failed to transform rule: (Ruleset: %(ruleset_name)s, "
                     "Folder: %(folder)s, Rule: %(rule_index)d, ID: %(rule_id)s",
                     {
                         "ruleset_name": ruleset.name,
                         "folder": folder.path(),
-                        "rule_index": folder_index,
+                        "rule_index": index,
                         "rule_id": rule.id,
                     },
+                    exc_info=problem,
                 )
+            case RuleOutcome(ruleset=ruleset):
+                migrated_rulesets.add(ruleset.name)
     return migrated_rulesets
 
 

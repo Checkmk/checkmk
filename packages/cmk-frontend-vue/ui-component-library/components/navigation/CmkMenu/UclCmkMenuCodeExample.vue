@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkMenu, { type CmkMenuItem } from 'cmk-ui-library/components/CmkMenu'
+import { ref } from 'vue'
 
 const items: CmkMenuItem[] = [
   {
@@ -29,8 +30,25 @@ const items: CmkMenuItem[] = [
     ]
   }
 ]
+
+// Value items emit `select` instead of navigating.
+const graphs: CmkMenuItem[] = [
+  { label: [{ text: 'Custom graph 1' }], value: 'custom_graph_1', icon: 'clone' },
+  { label: [{ text: 'Custom graph 2' }], value: 'custom_graph_2', icon: 'clone' }
+]
+const picked = ref<string | null>(null)
 </script>
 
 <template>
   <CmkMenu :items="items" label="Contextual links" />
+
+  <CmkMenu
+    :items="graphs"
+    label="Clone custom graph"
+    trigger-icon="clone"
+    trigger-text="Clone custom graph"
+    search-placeholder="Search custom graphs ..."
+    searchable
+    @select="(value) => (picked = value)"
+  />
 </template>

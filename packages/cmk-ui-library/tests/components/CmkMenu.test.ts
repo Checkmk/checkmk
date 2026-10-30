@@ -5,9 +5,9 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
-import CmkMenu, { type CmkMenuItem } from 'cmk-ui-library/components/CmkMenu'
+import CmkMenu, { type CmkMenuItem, type CmkMenuLinkItem } from 'cmk-ui-library/components/CmkMenu'
 
-function anItem(host: string, links: CmkMenuItem['links'] = [{ title: 'Host', url: '#' }]) {
+function anItem(host: string, links: CmkMenuLinkItem['links'] = [{ title: 'Host', url: '#' }]) {
   return {
     color: '#3cc2ff',
     label: [
@@ -16,7 +16,7 @@ function anItem(host: string, links: CmkMenuItem['links'] = [{ title: 'Host', ur
       { text: 'Load average 1', bold: true }
     ],
     links
-  } satisfies CmkMenuItem
+  } satisfies CmkMenuLinkItem
 }
 
 function itemsFor(count: number): CmkMenuItem[] {
@@ -119,7 +119,7 @@ test('an open submenu follows reordered links, even when two share a URL', async
     { title: 'Service', url: '#' },
     { title: 'Graph', url: '#' },
     { title: 'Docs', url: '/docs' }
-  ] satisfies CmkMenuItem['links']
+  ] satisfies CmkMenuLinkItem['links']
   const { rerender } = render(CmkMenu, {
     props: { items: [anItem('web01', links)], label: 'Contextual links' }
   })
@@ -127,11 +127,86 @@ test('an open submenu follows reordered links, even when two share a URL', async
   await userEvent.click(screen.getByRole('menuitem', { name: 'web01 – CPU load – Load average 1' }))
   await screen.findByRole('menuitem', { name: 'Host' })
 
-  await rerender({ items: [anItem('web01', [...links].reverse() as CmkMenuItem['links'])] })
+  await rerender({ items: [anItem('web01', [...links].reverse() as CmkMenuLinkItem['links'])] })
 
   expect(
     screen
       .getAllByRole('menuitem', { name: /^(Host|Service|Graph|Docs)$/ })
       .map((link) => link.textContent)
   ).toEqual(['Docs', 'Graph', 'Service', 'Host'])
+})
+
+function valueItem(title: string, value: string): CmkMenuItem {
+  return { label: [{ text: title }], value }
+}
+
+test('selecting a value item emits its value instead of navigating', async () => {
+  const onSelect = vi.fn()
+  render(CmkMenu, {
+    props: {
+      items: [
+        valueItem('Custom graph 1', 'custom_graph_1'),
+        valueItem('Custom graph 2', 'custom_graph_2')
+      ],
+      label: 'Clone custom graph',
+      onSelect
+    }
+  })
+  await userEvent.click(screen.getByRole('button', { name: 'Clone custom graph' }))
+
+  const item = await screen.findByRole('menuitem', { name: 'Custom graph 2' })
+  expect(item).not.toHaveAttribute('href')
+  await userEvent.click(item)
+
+  expect(onSelect).toHaveBeenCalledWith('custom_graph_2')
+  expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+})
+
+test('a trigger with text is named by its text', () => {
+  render(CmkMenu, {
+    props: { items: [], label: 'Custom graphs', triggerText: 'Clone custom graph' }
+  })
+
+  const trigger = screen.getByRole('button', { name: 'Clone custom graph' })
+  expect(trigger).toHaveTextContent('Clone custom graph')
+  expect(trigger).toHaveAttribute('title', '')
+})
+
+test('the trigger keeps its text after a value is selected', async () => {
+  render(CmkMenu, {
+    props: {
+      items: [valueItem('Custom graph 1', 'custom_graph_1')],
+      label: 'Custom graphs',
+      triggerText: 'Clone custom graph'
+    }
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: 'Clone custom graph' }))
+  await userEvent.click(await screen.findByRole('menuitem', { name: 'Custom graph 1' }))
+
+  expect(screen.getByRole('button', { name: 'Clone custom graph' })).toHaveTextContent(
+    'Clone custom graph'
+  )
+})
+
+test('the default trigger is icon-only without text', () => {
+  render(CmkMenu, { props: { items: [], label: 'Contextual links' } })
+
+  expect(screen.getByRole('button', { name: 'Contextual links' })).toHaveTextContent('')
+})
+
+test('the search field takes the given placeholder', async () => {
+  render(CmkMenu, {
+    props: {
+      items: [valueItem('Custom graph 1', 'custom_graph_1')],
+      label: 'Clone custom graph',
+      searchable: true,
+      searchPlaceholder: 'Search custom graphs ...'
+    }
+  })
+  await userEvent.click(screen.getByRole('button', { name: 'Clone custom graph' }))
+
+  expect(
+    await screen.findByRole('searchbox', { name: 'Search custom graphs ...' })
+  ).toHaveAttribute('placeholder', 'Search custom graphs ...')
 })

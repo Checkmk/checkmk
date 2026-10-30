@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkColorSwatch from 'cmk-ui-library/components/CmkColorSwatch.vue'
+import { type SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
+import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
@@ -36,13 +38,26 @@ const { _t } = usei18n()
 const {
   items,
   label,
-  searchable = false
+  searchable = false,
+  triggerIcon,
+  triggerText,
+  searchPlaceholder
 } = defineProps<{
   items: CmkMenuItem[]
-  /** Names both the trigger, which carries no text, and the menu it opens. */
+  /** Names the icon-only trigger and the menu it opens; a trigger with text is named by it. */
   label: string
   /** Search is always shown from nine items on. */
   searchable?: boolean
+  /** Replaces the trigger's link icon. */
+  triggerIcon?: SimpleIcons | undefined
+  /** Text next to the trigger's icon; without it, the trigger is icon-only. */
+  triggerText?: string | undefined
+  searchPlaceholder?: string | undefined
+}>()
+
+const emit = defineEmits<{
+  /** The value of a selected value item. */
+  select: [value: string]
 }>()
 
 const floatingTarget = useFloatingTarget()
@@ -84,8 +99,21 @@ function onItemFocus(key: number, event: FocusEvent): void {
 <template>
   <DropdownMenuRoot v-model:open="open" @update:open="query = ''">
     <DropdownMenuTrigger as-child>
-      <CmkButton class="cmk-menu__trigger" size="small" :title="label" :aria-label="label">
-        <CmkMultitoneIcon name="chain" primary-color="font" size="small" aria-hidden="true" />
+      <CmkButton
+        class="cmk-menu__trigger"
+        size="small"
+        :title="triggerText ? undefined : label"
+        :aria-label="triggerText ? undefined : label"
+      >
+        <CmkIcon v-if="triggerIcon" :name="triggerIcon" size="small" aria-hidden="true" />
+        <CmkMultitoneIcon
+          v-else
+          name="chain"
+          primary-color="font"
+          size="small"
+          aria-hidden="true"
+        />
+        <span v-if="triggerText">{{ triggerText }}</span>
         <ArrowDown
           class="cmk-menu__caret"
           :class="{ 'cmk-menu__caret--open': open }"
@@ -107,7 +135,7 @@ function onItemFocus(key: number, event: FocusEvent): void {
           <CmkSearchInput
             ref="search"
             v-model="query"
-            :placeholder="_t('Search')"
+            :placeholder="searchPlaceholder ?? _t('Search')"
             inline-search-icon
             :show-submit-button="false"
           />
@@ -115,7 +143,29 @@ function onItemFocus(key: number, event: FocusEvent): void {
         <CmkTooltipProvider>
           <CmkScrollContainer :max-height="LIST_MAX_HEIGHT">
             <template v-for="entry in visibleEntries" :key="entry.key">
-              <DropdownMenuItem v-if="entry.item.links.length === 1" as-child>
+              <DropdownMenuItem
+                v-if="'value' in entry.item"
+                class="cmk-menu__item"
+                :aria-label="entry.fullLabel"
+                @select="emit('select', entry.item.value)"
+                @focus="onItemFocus(entry.key, $event)"
+                @blur="keyboardFocusedKey = null"
+              >
+                <CmkColorSwatch v-if="entry.item.color" :color="entry.item.color" />
+                <CmkMenuLabel
+                  :parts="entry.item.label"
+                  :full-label="entry.fullLabel"
+                  :keyboard-focused="keyboardFocusedKey === entry.key"
+                />
+                <CmkIcon
+                  v-if="entry.item.icon"
+                  class="cmk-menu__icon"
+                  :name="entry.item.icon"
+                  size="small"
+                  aria-hidden="true"
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem v-else-if="entry.item.links.length === 1" as-child>
                 <a
                   class="cmk-menu__item"
                   :href="entry.item.links[0].url"
@@ -128,6 +178,13 @@ function onItemFocus(key: number, event: FocusEvent): void {
                     :parts="entry.item.label"
                     :full-label="entry.fullLabel"
                     :keyboard-focused="keyboardFocusedKey === entry.key"
+                  />
+                  <CmkIcon
+                    v-if="entry.item.icon"
+                    class="cmk-menu__icon"
+                    :name="entry.item.icon"
+                    size="small"
+                    aria-hidden="true"
                   />
                 </a>
               </DropdownMenuItem>
@@ -143,6 +200,13 @@ function onItemFocus(key: number, event: FocusEvent): void {
                     :parts="entry.item.label"
                     :full-label="entry.fullLabel"
                     :keyboard-focused="keyboardFocusedKey === entry.key"
+                  />
+                  <CmkIcon
+                    v-if="entry.item.icon"
+                    class="cmk-menu__icon"
+                    :name="entry.item.icon"
+                    size="small"
+                    aria-hidden="true"
                   />
                   <CmkMultitoneIcon
                     class="cmk-menu__chevron"
@@ -179,6 +243,7 @@ function onItemFocus(key: number, event: FocusEvent): void {
 .cmk-menu__trigger.cmk-menu__trigger {
   gap: var(--dimension-2);
   padding: 0 var(--dimension-3);
+  font-weight: var(--font-weight-default);
 }
 
 .cmk-menu__caret {
@@ -233,9 +298,14 @@ function onItemFocus(key: number, event: FocusEvent): void {
   }
 }
 
-/* Fixed-size, so a long label cannot squeeze it. */
+/* Fixed-size, so a long label cannot squeeze them. */
+.cmk-menu__icon,
 .cmk-menu__chevron {
   flex: none;
+}
+
+.cmk-menu__icon {
+  margin-left: auto;
 }
 
 .cmk-menu__link {

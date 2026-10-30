@@ -9,7 +9,7 @@ import {
   type PanelConfigFor,
   listOptions
 } from '@ucl/_ucl/components/detail-page'
-import type { CmkMenuItem } from 'cmk-ui-library/components/CmkMenu'
+import type { CmkMenuItem, CmkMenuLinkItem } from 'cmk-ui-library/components/CmkMenu'
 
 import codeExample from './UclCmkMenuCodeExample.vue?raw'
 
@@ -49,9 +49,11 @@ const SERVICES: [string, string][] = [
 
 const ITEM_COUNTS = { few: 5, many: 12 }
 
+const ITEM_KINDS = { links: 'Links', values: 'Values' }
+
 const DEMO_ITEMS: CmkMenuItem[] = HOSTS.map((host, index) => {
   const [service, metric] = SERVICES[index % SERVICES.length]!
-  const links: CmkMenuItem['links'] =
+  const links: CmkMenuLinkItem['links'] =
     index % 3 === 2
       ? [{ title: 'Host status', url: '#' }]
       : [
@@ -69,6 +71,12 @@ const DEMO_ITEMS: CmkMenuItem[] = HOSTS.map((host, index) => {
     links
   }
 })
+
+const DEMO_VALUE_ITEMS: CmkMenuItem[] = HOSTS.map((_, index) => ({
+  label: [{ text: `Custom graph ${index + 1}` }],
+  value: `custom_graph_${index + 1}`,
+  icon: 'clone'
+}))
 
 export const a11yData = [
   {
@@ -95,7 +103,8 @@ export const a11yData = [
   },
   {
     keys: ['Enter'],
-    description: 'Follows the focused link, or opens the submenu of the focused item.'
+    description:
+      'Follows the focused link, selects the focused value, or opens the submenu of the focused item.'
   },
   {
     keys: ['Escape'],
@@ -115,6 +124,24 @@ export const panelConfig = {
     initialState: false,
     help: 'Search is always shown from nine items on.'
   },
+  itemKind: {
+    type: 'list' as const,
+    title: 'Item kind',
+    options: listOptions<keyof typeof ITEM_KINDS>(ITEM_KINDS),
+    initialState: 'links' as const,
+    help: 'Links navigate; values are emitted with select, e.g. to pick a graph.'
+  },
+  triggerText: {
+    type: 'string' as const,
+    title: 'Trigger text',
+    initialState: '',
+    help: 'Without text, the trigger is icon-only.'
+  },
+  searchPlaceholder: {
+    type: 'string' as const,
+    title: 'Search placeholder',
+    initialState: ''
+  },
   itemCount: {
     type: 'list' as const,
     title: 'Items',
@@ -125,7 +152,7 @@ export const panelConfig = {
     initialState: 'few' as const,
     help: 'Up to nine items the list grows with them; beyond that it scrolls at a fixed height.'
   }
-} satisfies PanelConfigFor<typeof CmkMenu, 'items'> & PanelConfig
+} satisfies PanelConfigFor<typeof CmkMenu, 'items' | 'triggerIcon'> & PanelConfig
 </script>
 
 <script setup lang="ts">
@@ -139,13 +166,26 @@ import {
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
 import CmkMenu from 'cmk-ui-library/components/CmkMenu'
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<typeof CmkMenu, 'items'>().createRef(panelConfig)
+const propState = new PanelStateCreator<typeof CmkMenu, 'items' | 'triggerIcon'>().createRef(
+  panelConfig
+)
 
-const items = computed(() => DEMO_ITEMS.slice(0, ITEM_COUNTS[propState.value.itemCount]))
+const pickValues = computed(() => propState.value.itemKind === 'values')
+// Each item kind starts with the trigger it has in use: text for picking values, icon-only for links.
+watch(pickValues, (values) => {
+  propState.value.triggerText = values ? 'Clone custom graph' : ''
+})
+const items = computed(() =>
+  (pickValues.value ? DEMO_VALUE_ITEMS : DEMO_ITEMS).slice(
+    0,
+    ITEM_COUNTS[propState.value.itemCount]
+  )
+)
+const selected = ref<string | null>(null)
 </script>
 
 <template>
@@ -153,7 +193,18 @@ const items = computed(() => DEMO_ITEMS.slice(0, ITEM_COUNTS[propState.value.ite
     <UclDetailPageHeader>CmkMenu</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <CmkMenu :items="items" :label="propState.label" :searchable="propState.searchable" />
+      <div class="ucl-cmk-menu">
+        <CmkMenu
+          :items="items"
+          :label="propState.label"
+          :searchable="propState.searchable"
+          :trigger-icon="pickValues ? 'clone' : undefined"
+          :trigger-text="propState.triggerText || undefined"
+          :search-placeholder="propState.searchPlaceholder || undefined"
+          @select="(value) => (selected = value)"
+        />
+        <p v-if="pickValues">Selected: {{ selected ?? '–' }}</p>
+      </div>
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />
@@ -165,3 +216,16 @@ const items = computed(() => DEMO_ITEMS.slice(0, ITEM_COUNTS[propState.value.ite
     <UclDetailPageAccessibility :data="a11yData" />
   </UclDetailPageLayout>
 </template>
+
+<style scoped>
+.ucl-cmk-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--dimension-6);
+
+  > p {
+    margin: 0;
+  }
+}
+</style>

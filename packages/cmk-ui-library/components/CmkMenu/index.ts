@@ -4,4 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 export { default } from './CmkMenu.vue'
-export type { CmkMenuItem, CmkMenuLabelPart, CmkMenuLink } from './types'
+export type {
+  CmkMenuItem,
+  CmkMenuLabelPart,
+  CmkMenuLink,
+  CmkMenuLinkItem,
+  CmkMenuValueItem
+} from './types'

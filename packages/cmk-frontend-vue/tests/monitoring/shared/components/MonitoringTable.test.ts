@@ -137,6 +137,20 @@ function probedPinnedColumns(): string[] {
   return JSON.parse(screen.getAllByTestId('layout-probe')[0]!.dataset.pinned ?? '[]') as string[]
 }
 
+type RowSlot = (props: {
+  row: Row
+  index: number
+  tableRow: TableRow<Row>
+}) => ReturnType<typeof h> | ReturnType<typeof h>[]
+
+function defaultRow({ row, index, tableRow }: Parameters<RowSlot>[0]): ReturnType<typeof h>[] {
+  return [
+    h('td', { 'data-testid': `row-${row.id}` }, `${index}:${row.name}`),
+    h('td', { 'data-testid': `can-select-${row.id}` }, String(tableRow.getCanSelect())),
+    h(layoutProbe)
+  ]
+}
+
 function mountTable(overrides: {
   rows?: Row[]
   columns?: ColumnDef<Row>[]
@@ -151,6 +165,7 @@ function mountTable(overrides: {
   onFilterUpdate?: (value: ColumnFiltersState) => void
   getRowKey?: (row: Row, index: number) => string | number
   columnPinning?: ColumnPinningState
+  row?: RowSlot
 }) {
   const rows = overrides.rows ?? makeRows(3)
   const columns = overrides.columns ?? COLUMNS
@@ -162,6 +177,7 @@ function mountTable(overrides: {
   const onFilterUpdate = overrides.onFilterUpdate ?? (() => {})
   const getRowKey = overrides.getRowKey
   const columnPinning = overrides.columnPinning
+  const rowSlot = overrides.row ?? defaultRow
   const mockService = makeMockService(
     overrides.sortState,
     overrides.onSortUpdate,
@@ -204,19 +220,7 @@ function mountTable(overrides: {
               onRetry: this.onRetry
             },
             {
-              row: ({
-                row,
-                index,
-                tableRow
-              }: {
-                row: Row
-                index: number
-                tableRow: TableRow<Row>
-              }) => [
-                h('td', { 'data-testid': `row-${row.id}` }, `${index}:${row.name}`),
-                h('td', { 'data-testid': `can-select-${row.id}` }, String(tableRow.getCanSelect())),
-                h(layoutProbe)
-              ],
+              row: rowSlot,
               'empty-state': () => h('div', { 'data-testid': 'empty-state' }, 'nothing here')
             }
           )
@@ -1000,4 +1004,50 @@ describe('a table without pinned columns', () => {
     expect(colWidths(container)).toEqual(['300px', '120px'])
     expect(table(container).style.minWidth).toBe('100%')
   })
+})
+
+// Each row offers its own checkbox, so a test can read and change the selection per row.
+function selectableRow({ row, tableRow }: Parameters<RowSlot>[0]): ReturnType<typeof h> {
+  return h('td', [
+    h('input', {
+      type: 'checkbox',
+      'aria-label': `select ${row.name}`,
+      checked: tableRow.getIsSelected(),
+      onChange: () => tableRow.toggleSelected()
+    })
+  ])
+}
+
+// A mouse click lands on the cell, not on the checkbox inside it.
+test('a second click on the select-all cell clears every row', async () => {
+  mountTable({ columns: COLUMNS_WITH_SELECT, row: selectableRow })
+  await flushVirtualizer()
+  const selectAllCell = screen.getByTitle('Select all rows')
+  await userEvent.click(selectAllCell)
+  expect(screen.getByRole('checkbox', { name: 'Select all rows' })).toHaveAttribute(
+    'aria-checked',
+    'true'
+  )
+
+  await userEvent.click(selectAllCell)
+
+  for (const box of screen.getAllByRole('checkbox', { name: /^select host-/ })) {
+    expect(box).not.toBeChecked()
+  }
+  expect(screen.getByRole('checkbox', { name: 'Select all rows' })).toHaveAttribute(
+    'aria-checked',
+    'false'
+  )
+})
+
+test('header select-all reports a partial selection as indeterminate', async () => {
+  mountTable({ columns: COLUMNS_WITH_SELECT, row: selectableRow })
+  await flushVirtualizer()
+
+  await userEvent.click(screen.getByRole('checkbox', { name: 'select host-1' }))
+
+  expect(screen.getByRole('checkbox', { name: 'Select all rows' })).toHaveAttribute(
+    'aria-checked',
+    'mixed'
+  )
 })

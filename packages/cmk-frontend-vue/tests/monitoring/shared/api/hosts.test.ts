@@ -4,12 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import client from 'cmk-ui-library/lib/rest-api-client/client'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HostApi } from '@/monitoring/shared/api/hosts'
 import type {
   FilterNode,
   HostEntry,
+  HostOverview,
   HostsPageMeta,
   HostsRequestBody,
   HostsResponse
@@ -327,5 +330,49 @@ describe('HostApi.requestBody', () => {
       op: 'lte',
       value: NOW - 300
     })
+  })
+})
+
+describe('HostApi.fetchHostOverview', () => {
+  const OVERVIEW: HostOverview = {
+    name: 'web-1',
+    state: 'UP',
+    is_flapping: false,
+    stale: false,
+    address: '10.0.0.1',
+    alias: 'web 1',
+    site_id: 'remote-1',
+    site_alias: 'Remote site',
+    folder: '/network',
+    customer: null,
+    contact_groups: ['all'],
+    tags: {},
+    labels: {},
+    modes: [],
+    service_counts: { ok: 1, warn: 0, crit: 0, unknown: 0, pending: 0, total: 1 },
+    last_check: 1784023200,
+    last_state_change: 1784019600,
+    legacy_host_status_link: 'view.py?view_name=hoststatus&site=remote-1&host=web-1',
+    relations: [],
+    more_relations: false,
+    setup_access: false
+  }
+
+  // Only the site that monitors web-1 has its overview.
+  useMswServer(
+    restApiHttp.get('/monitor/hosts/{hostname}', ({ params, query, response }) => {
+      if (params.hostname === 'web-1' && query.get('site_id') === 'remote-1') {
+        return response(200).json(OVERVIEW)
+      }
+      return response.untyped(
+        HttpResponse.json({ title: 'Not found', detail: 'no such host' }, { status: 404 })
+      )
+    })
+  )
+
+  it('fetches the overview of the given host from the given site', async () => {
+    const overview = await new HostApi().fetchHostOverview({ name: 'web-1', site_id: 'remote-1' })
+
+    expect(overview).toEqual(OVERVIEW)
   })
 })

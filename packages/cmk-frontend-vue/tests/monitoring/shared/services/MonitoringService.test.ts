@@ -218,6 +218,23 @@ describe('MonitoringService', () => {
     expect(fetchBatch).toHaveBeenCalledTimes(1)
   })
 
+  it('keeps polling after a fetch rejects', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const fetchBatch = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValue(makeResponse([{ id: 'a', value: 1 }], 1, 1))
+    const service = new TestService(fetchBatch)
+    await vi.advanceTimersByTimeAsync(0)
+
+    await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS)
+
+    expect(service.items.value).toEqual([{ id: 'a', value: 1 }])
+
+    service.stopPolling()
+    consoleErrorSpy.mockRestore()
+  })
+
   it('skips a poll tick while a fetch is in flight', async () => {
     let resolveFirst: (value: PagedResponse<TestItem>) => void = () => {}
     const firstFetch = new Promise<PagedResponse<TestItem>>((resolve) => {

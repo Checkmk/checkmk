@@ -6,7 +6,7 @@
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ServiceActionMenuApi } from '@/monitoring/host-services/api/actionMenu'
+import { ServiceActionMenuApi } from '@/monitoring/shared/api/serviceActionMenu'
 import type { HostRef, ServiceActionMenuItem } from '@/monitoring/shared/api/types'
 
 const HOST: HostRef = { name: 'web-1', site_id: 'local' }

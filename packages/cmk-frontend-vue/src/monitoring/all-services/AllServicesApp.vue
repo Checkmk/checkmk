@@ -14,12 +14,12 @@ import { useKeyboardHints } from 'cmk-ui-library/lib/keyboardHelp'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
 import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
-import { ServiceActionMenuApi } from '@/monitoring/host-services/api/actionMenu'
 import { uncapNameWithoutSummary } from '@/monitoring/host-services/columns'
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
 import ServiceSlideIn, {
   SERVICE_GRAPHS_TAB_ID
 } from '@/monitoring/host-services/components/ServiceSlideIn.vue'
+import { ServiceActionMenuApi } from '@/monitoring/shared/api/serviceActionMenu'
 import type { HostRef, ServiceEntry, ServiceRef } from '@/monitoring/shared/api/types'
 import DisplayOptionsPane from '@/monitoring/shared/components/DisplayOptionsPane.vue'
 import HostSlideIn, {

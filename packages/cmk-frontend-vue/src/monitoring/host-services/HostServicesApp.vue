@@ -14,7 +14,9 @@ import { useKeyboardHints } from 'cmk-ui-library/lib/keyboardHelp'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
 import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
+import { HostServicesApi } from '@/monitoring/shared/api/hostServices'
 import { HostApi } from '@/monitoring/shared/api/hosts'
+import { ServiceActionMenuApi } from '@/monitoring/shared/api/serviceActionMenu'
 import type {
   HostEntry,
   HostOptionalField,
@@ -77,8 +79,6 @@ import { useContextMenuKey } from '../shared/useContextMenuKey'
 import { useFallbackKeys } from '../shared/useFallbackKeys'
 import { useTypeToFocus } from '../shared/useTypeToFocus'
 import { requestAiExplanation } from './aiExplain'
-import { ServiceActionMenuApi } from './api/actionMenu'
-import { HostServicesApi } from './api/services'
 import {
   buildHostServicesColumnPinning,
   uncapNameWithoutSummary,

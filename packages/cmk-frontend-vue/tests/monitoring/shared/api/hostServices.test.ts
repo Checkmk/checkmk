@@ -7,7 +7,7 @@ import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { HostServicesApi } from '@/monitoring/host-services/api/services'
+import { HostServicesApi } from '@/monitoring/shared/api/hostServices'
 import type { HostRef } from '@/monitoring/shared/api/types'
 
 type ApiServiceEntry = components['schemas']['HostServiceEntry']

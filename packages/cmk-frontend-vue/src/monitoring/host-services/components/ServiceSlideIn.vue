@@ -18,8 +18,8 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, markRaw, onUnmounted, provide, ref, watch } from 'vue'
 
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
-import { HostServicesApi } from '@/monitoring/host-services/api/services'
 import { GraphsApi } from '@/monitoring/shared/api/graphs'
+import { HostServicesApi } from '@/monitoring/shared/api/hostServices'
 import type {
   HostRef,
   HostServiceEntry,

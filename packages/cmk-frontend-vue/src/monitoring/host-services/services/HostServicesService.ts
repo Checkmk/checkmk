@@ -7,6 +7,7 @@ import type { ColumnDef } from '@tanstack/vue-table'
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { type Ref, shallowRef } from 'vue'
 
+import type { HostServicesApi, HostServicesQueryParams } from '@/monitoring/shared/api/hostServices'
 import type { HostApi } from '@/monitoring/shared/api/hosts'
 import type {
   HostEntry,
@@ -21,7 +22,6 @@ import {
   type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
 
-import type { HostServicesApi, HostServicesQueryParams } from '../api/services'
 import { requestedServiceFields } from '../columns'
 import { ServiceExport, type ServiceExportColumn } from '../export/serviceExport'
 

@@ -5,8 +5,8 @@
  */
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import type { HostServicesQueryParams } from '@/monitoring/host-services/api/services'
 import { MonitoringApi } from '@/monitoring/shared/api/MonitoringApi'
+import type { HostServicesQueryParams } from '@/monitoring/shared/api/hostServices'
 import type {
   AllServicesRequestBody,
   ServiceFilterNode,

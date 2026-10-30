@@ -8,7 +8,7 @@ load("//bazel/rules:shared_typing_generators.bzl", "JSON2PYTHON_LITERAL_ENUM_ARG
 load("//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 
 _TS_HEADER = """/**
- * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * Copyright (C) 2026 Checkmk GmbH - License: {license}
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
@@ -18,6 +18,15 @@ _TS_HEADER = """/**
  * Do not edit manually.
  */
 """
+
+# As in packages/cmk-repo-checks/cmk/repo_checks/license_header_checker.py
+_ENTERPRISE_NAMES = ["non-free", "nonfree", "pro", "ultimate", "ultimatemt", "cloud"]
+
+def _license(ctx):
+    output_path = paths.join(ctx.label.package, ctx.attr.out_dir)
+    if any([part in _ENTERPRISE_NAMES for part in output_path.split("/")]):
+        return "Checkmk Enterprise License"
+    return "GNU General Public License v2"
 
 def _schemas(ctx):
     # One directory, so that `$ref`s between schemas resolve alike for both generators.
@@ -32,6 +41,12 @@ def _declare_module(ctx, schema, extension):
 
 def _python_types_impl(ctx):
     schemas = _schemas(ctx)
+    header = ctx.actions.declare_file(paths.join(ctx.attr.out_dir, "__init__.py"))
+    ctx.actions.expand_template(
+        template = ctx.file._header_template,
+        output = header,
+        substitutions = {"{license}": _license(ctx)},
+    )
     modules = []
     for schema in schemas:
         module = _declare_module(ctx, schema, ".py")
@@ -43,20 +58,18 @@ def _python_types_impl(ctx):
                 "--output=" + module.path,
                 "--target-python-version=" + PYTHON_MAJOR_DOT_MINOR,
             ] + JSON2PYTHON_LITERAL_ENUM_ARGS + [
-                "--custom-file-header-path=" + ctx.file._header.path,
+                "--custom-file-header-path=" + header.path,
             ],
-            inputs = schemas + [ctx.file._header],
+            inputs = schemas + [header],
             outputs = [module],
             mnemonic = "Json2Python",
         )
         modules.append(module)
 
-    init = ctx.actions.declare_file(paths.join(ctx.attr.out_dir, "__init__.py"))
-    ctx.actions.symlink(output = init, target_file = ctx.file._header)
     py_typed = ctx.actions.declare_file(paths.join(ctx.attr.out_dir, "py.typed"))
     ctx.actions.write(py_typed, "")
     return [
-        DefaultInfo(files = depset(modules + [init])),
+        DefaultInfo(files = depset(modules + [header])),
         OutputGroupInfo(py_typed = depset([py_typed])),
     ]
 
@@ -70,7 +83,7 @@ _python_types = rule(
             executable = True,
             cfg = "exec",
         ),
-        "_header": attr.label(
+        "_header_template": attr.label(
             default = Label("//bazel/rules:shared_typing_header_py.txt"),
             allow_single_file = True,
         ),
@@ -88,7 +101,7 @@ def _typescript_types_impl(ctx):
             arguments = [
                 "--additionalProperties=false",
                 "--declareExternallyReferenced",
-                "--bannerComment=" + _TS_HEADER,
+                "--bannerComment=" + _TS_HEADER.replace("{license}", _license(ctx)),
                 "--cwd=" + paths.dirname(schema.short_path),
                 "--input=" + schema.short_path,
                 "--output=" + module.short_path,

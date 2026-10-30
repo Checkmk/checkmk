@@ -1181,6 +1181,7 @@ allows = [
   "@mkp_tool",
   "@plugin_apis",
   "cmk.ai_control_plane.protocols",
+  "cmk.ai_control_plane.shared_typing",
   "cmk.backup",
   "cmk.bakery.shared",
   "cmk.data_backend.gui",

@@ -416,6 +416,7 @@ create_venv(
     ] + select({
         "@//:gpl+nonfree_repo": [
             "//non-free/packages/cmc-protocols:wheel",
+            "//non-free/packages/cmk-ai-control-plane:shared_typing_wheel",
         ],
         "@//:gpl_repo": [],
     }),

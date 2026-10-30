@@ -15,7 +15,6 @@ from ._data._naming import (
 )
 from ._data._temperature import TemperatureUnit, unit_conversion, UnitConversion
 from ._data._timeseries import (
-    constant_time_series,
     last_present,
     mapped_series,
     merge_series,
@@ -216,7 +215,6 @@ __all__ = [
     "MACRO_SERIES_ID",
     "AutoPrecision",
     "ConsolidationFunction",
-    "constant_time_series",
     "Constant",
     "Curve",
     "CurveAttributes",

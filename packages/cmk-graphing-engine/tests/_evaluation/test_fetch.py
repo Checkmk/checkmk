@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from cmk.graphing_engine import (
     AutoPrecision,
     ConsolidationFunction,
-    constant_time_series,
     Curve,
     CurveAttributes,
     DecimalNotation,
@@ -30,6 +29,7 @@ from cmk.graphing_engine import (
     TimeSeries,
     Unit,
 )
+from cmk.graphing_engine._data._timeseries import constant_time_series
 from tests._fixtures import _FakeRRDFetchData
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))

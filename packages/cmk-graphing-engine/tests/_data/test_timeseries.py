@@ -6,13 +6,13 @@
 from collections.abc import Sequence
 
 from cmk.graphing_engine import (
-    constant_time_series,
     merge_series,
     scaled_series,
     TimeRange,
     TimeSeries,
     timestamps,
 )
+from cmk.graphing_engine._data._timeseries import constant_time_series
 
 
 def test_each_point_sits_at_the_end_of_its_step() -> None:

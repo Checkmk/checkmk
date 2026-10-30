@@ -12,9 +12,9 @@ from cmk.ccc.hostaddress import HostAddress
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title
+from cmk.graphing_engine import graphing_plugins_of, Service
 from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import MetricName as EngineMetricName
-from cmk.graphing_engine import Service, sort_registered_graph_plugins
 from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui.graphing import (
     build_template_graphs,
@@ -52,7 +52,7 @@ def _engine_ids(
     registered_graphs: Mapping[str, graphs_v1.Graph | graphs_v1.Bidirectional],
     registered_metrics: Mapping[str, metrics_v1.Metric],
 ) -> list[str]:
-    ordered = [plugin for _name, plugin in sort_registered_graph_plugins(registered_graphs)]
+    ordered = graphing_plugins_of(list(registered_graphs.values())).graphs
     built = build_template_graphs(
         TemplateGraphSpecification(
             site=None, host_name=HostAddress(_HOST), service_description=_SERVICE

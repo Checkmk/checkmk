@@ -93,6 +93,7 @@ from ._plugins._attributes import (
     parse_color,
     parse_unit,
 )
+from ._plugins._graphing_plugins import ApiGraphingPlugin, graphing_plugins_of, GraphingPlugins
 from ._plugins._matching import (
     build_matched_graphs,
     GraphRequest,
@@ -100,7 +101,6 @@ from ._plugins._matching import (
     RequestedMetric,
     threshold_rules,
 )
-from ._plugins._order import sort_registered_graph_plugins
 from ._plugins._perfometer_matching import PerfometerIndex
 from ._plugins._prediction import (
     build_prediction_graph,
@@ -168,6 +168,9 @@ from ._rrd._performance_data import (
 from ._rrd._resample import resample
 
 __all__ = [
+    "ApiGraphingPlugin",
+    "GraphingPlugins",
+    "graphing_plugins_of",
     "threshold_rules",
     "build_prediction_graph",
     "Direction",
@@ -178,7 +181,6 @@ __all__ = [
     "unit_conversion",
     "TemperatureUnit",
     "UnitConversion",
-    "sort_registered_graph_plugins",
     "drawn_segments",
     "DrawnSegment",
     "perfometer_sort_value",

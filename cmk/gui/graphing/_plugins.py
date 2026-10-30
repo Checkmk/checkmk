@@ -6,7 +6,6 @@
 
 import functools
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
 
 import cmk.ccc.debug
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
@@ -18,49 +17,27 @@ from cmk.graphing.v2_unstable import (
 )
 from cmk.graphing_engine import (
     ApiGraph,
-    ApiPerfometer,
+    ApiGraphingPlugin,
+    graphing_plugins_of,
+    GraphingPlugins,
     PerfometerIndex,
-    sort_registered_graph_plugins,
 )
 from cmk.gui.log import logger
 
-type DiscoveredGraphingPlugins = DiscoveredPlugins[
-    metrics_v1.Metric | ApiPerfometer | ApiGraph | translations_v1.Translation
-]
-
-
-@dataclass(frozen=True, kw_only=True)
-class GraphingPlugins:
-    discovered: DiscoveredGraphingPlugins
-    metrics: Mapping[str, metrics_v1.Metric]
-    perfometers: PerfometerIndex
-    graphs: Sequence[ApiGraph]
-    translations: Sequence[translations_v1.Translation]
-
 
 @functools.cache
-def graphing_plugins() -> GraphingPlugins:
-    discovered = discover_all_plugins(
+def discovered_graphing_plugins() -> DiscoveredPlugins[ApiGraphingPlugin]:
+    return discover_all_plugins(
         PluginGroup.GRAPHING,
         dict(entry_point_prefixes_v1()) | dict(entry_point_prefixes_v2_unstable()),
         skip_wrong_types=False,
         raise_errors=cmk.ccc.debug.enabled(),
     )
-    plugins = discovered.plugins.values()
-    graphs = {plugin.name: plugin for plugin in plugins if isinstance(plugin, ApiGraph)}
-    return GraphingPlugins(
-        discovered=discovered,
-        metrics={
-            plugin.name: plugin for plugin in plugins if isinstance(plugin, metrics_v1.Metric)
-        },
-        perfometers=PerfometerIndex(
-            {plugin.name: plugin for plugin in plugins if isinstance(plugin, ApiPerfometer)}
-        ),
-        graphs=[plugin for _name, plugin in sort_registered_graph_plugins(graphs)],
-        translations=[
-            plugin for plugin in plugins if isinstance(plugin, translations_v1.Translation)
-        ],
-    )
+
+
+@functools.cache
+def graphing_plugins() -> GraphingPlugins:
+    return graphing_plugins_of(discovered_graphing_plugins().plugins.values())
 
 
 def registered_metrics() -> Mapping[str, metrics_v1.Metric]:
@@ -80,5 +57,5 @@ def registered_translations() -> Sequence[translations_v1.Translation]:
 
 
 def load_plugins() -> None:
-    for exc in graphing_plugins().discovered.errors:
+    for exc in discovered_graphing_plugins().errors:
         logger.error(exc)

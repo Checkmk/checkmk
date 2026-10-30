@@ -34,6 +34,7 @@ py_library(
         "cmk/graphing_engine/_plugins/__init__.py",
         "cmk/graphing_engine/_plugins/_attributes.py",
         "cmk/graphing_engine/_plugins/_graph_parsing.py",
+        "cmk/graphing_engine/_plugins/_graphing_plugins.py",
         "cmk/graphing_engine/_plugins/_matching.py",
         "cmk/graphing_engine/_plugins/_order.py",
         "cmk/graphing_engine/_plugins/_perfometer_matching.py",

@@ -64,7 +64,7 @@ def test_openssl_overwrite_ssl(site: Site, tmp_path: Path, tls_version: ssl.TLSV
                         "import ssl;"
                         "context = ssl.create_default_context();"
                         f'context.load_verify_locations(cafile="{site_ca_path}");'
-                        f'sock = socket.create_connection(("localhost", {port}));'
+                        f'sock = socket.create_connection(("127.0.0.1", {port}));'
                         'context.wrap_socket(sock, server_hostname="localhost")'
                     ),
                 ],
@@ -78,4 +78,4 @@ def test_openssl_overwrite_ssl(site: Site, tmp_path: Path, tls_version: ssl.TLSV
 def test_test_utils(tmp_path: Path, tls_version: ssl.TLSVersion) -> None:
     """make sure that our tls_connect indeed could connect to an old TLS version"""
     with tls_listening_socket(tmp_path, tls_version) as (port, ca_path):
-        tls_connect("localhost", port, ca_path, tls_version)
+        tls_connect("127.0.0.1", port, ca_path, tls_version)

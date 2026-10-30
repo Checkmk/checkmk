@@ -3,16 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import fcntl
 import logging
+import math
+import os
+import resource
+import threading
+import time
 from collections.abc import Sequence
-from typing import Literal
+from contextlib import suppress
+from typing import Literal, override
 
 import pytest
 
 import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
 from cmk.ec.config import Config, MatchGroups
-from cmk.ec.history import History
+from cmk.ec.event import Event
+from cmk.ec.history import History, HistoryWhat
 from cmk.ec.main import (
     create_history,
     EventServer,
@@ -21,7 +29,13 @@ from cmk.ec.main import (
     StatusTableHistory,
 )
 
-from .helpers import new_event, new_rule, process_message
+from .helpers import (
+    new_event,
+    new_rule,
+    process_message,
+    RecordingHistory,
+    wait_until_bytes_in_pipe,
+)
 
 
 def _make_rule(state: ec.State) -> ec.Rule:
@@ -392,3 +406,431 @@ def test_a_message_counts_no_hit_of_a_rule_a_reload_changed_since_it_matched(
     event_status.count_rule_match("unchanged", rule_digests=rule_digests)
 
     assert list(event_status.get_rule_stats()) == [("unchanged", 1)]
+
+
+def test_created_event_pipe_takes_messages_before_serving(
+    event_server: EventServer, settings: ec.Settings
+) -> None:
+    event_server.create_pipe()
+
+    # Without a reader, opening a FIFO for writing without blocking fails with ENXIO.
+    writer = os.open(settings.paths.event_pipe.value, os.O_WRONLY | os.O_NONBLOCK)
+    try:
+        bytes_written = os.write(writer, b"something happened\n")
+    finally:
+        os.close(writer)
+
+    assert bytes_written == len(b"something happened\n")
+
+
+def test_closed_event_pipe_is_removed(event_server: EventServer, settings: ec.Settings) -> None:
+    event_server.create_pipe()
+
+    event_server.close_pipe()
+
+    assert not settings.paths.event_pipe.value.exists()
+
+
+def test_event_pipe_someone_else_removed_can_be_closed(
+    event_server: EventServer, settings: ec.Settings
+) -> None:
+    event_server.create_pipe()
+    settings.paths.event_pipe.value.unlink()
+
+    event_server.close_pipe()
+
+
+def test_event_pipe_that_cannot_be_removed_is_an_error(
+    event_server: EventServer, settings: ec.Settings
+) -> None:
+    event_server.create_pipe()
+    path = settings.paths.event_pipe.value
+    # unlink() can't remove a directory.
+    path.unlink()
+    path.mkdir()
+
+    with pytest.raises(IsADirectoryError):
+        event_server.close_pipe()
+
+
+def test_event_pipe_is_closed_even_if_it_cannot_be_removed(
+    event_server: EventServer, settings: ec.Settings
+) -> None:
+    event_server.create_pipe()
+    path = settings.paths.event_pipe.value
+    writer = os.open(path, os.O_WRONLY | os.O_NONBLOCK)
+    try:
+        # unlink() can't remove a directory.
+        path.unlink()
+        path.mkdir()
+
+        with suppress(IsADirectoryError):
+            event_server.close_pipe()
+
+        # Without a reader, writing to a pipe fails.
+        with pytest.raises(BrokenPipeError):
+            os.write(writer, b"something happened\n")
+    finally:
+        os.close(writer)
+
+
+def test_messages_left_in_closed_event_pipe_are_processed(
+    event_server: EventServer, event_status: EventStatus, settings: ec.Settings, config: Config
+) -> None:
+    _reload_configuration(event_server, settings, config, [_rule_pack("pack", _rule("any"))])
+    event_server.create_pipe()
+    writer = os.open(settings.paths.event_pipe.value, os.O_WRONLY | os.O_NONBLOCK)
+    try:
+        os.write(writer, b"first\nsecond\nincomplete")
+    finally:
+        os.close(writer)
+
+    event_server.close_pipe()
+
+    assert _texts_of_events(event_status) == ["first", "second"]
+
+
+def test_message_of_writer_blocked_on_full_event_pipe_is_processed_on_closing(
+    event_server: EventServer, event_status: EventStatus, settings: ec.Settings, config: Config
+) -> None:
+    _reload_configuration(event_server, settings, config, [_rule_pack("pack", _rule("any"))])
+    event_server.create_pipe()
+    writer = os.open(settings.paths.event_pipe.value, os.O_WRONLY)
+    # A pipe of a single page, so that a page of filler and a message block the daemonic writer
+    page_size = fcntl.fcntl(writer, fcntl.F_SETPIPE_SZ, resource.getpagesize())
+    filler = "x" * (page_size - 1)
+    errors: list[OSError] = []
+    thread = threading.Thread(
+        target=_write_all_and_close,
+        args=(writer, f"{filler}\nsomething happened\n".encode(), errors),
+        daemon=True,
+    )
+    thread.start()
+    wait_until_bytes_in_pipe(writer, page_size)
+
+    _close_pipe_once_writers_closed_it(event_server)
+
+    thread.join(timeout=30)
+    assert (errors, _texts_of_events(event_status)) == ([], [filler, "something happened"])
+
+
+def test_messages_left_in_event_pipe_that_cannot_be_removed_are_processed(
+    event_server: EventServer, event_status: EventStatus, settings: ec.Settings, config: Config
+) -> None:
+    _reload_configuration(event_server, settings, config, [_rule_pack("pack", _rule("any"))])
+    event_server.create_pipe()
+    path = settings.paths.event_pipe.value
+    writer = os.open(path, os.O_WRONLY | os.O_NONBLOCK)
+    try:
+        os.write(writer, b"something happened\n")
+    finally:
+        os.close(writer)
+    # unlink() can't remove a directory.
+    path.unlink()
+    path.mkdir()
+
+    with suppress(IsADirectoryError):
+        event_server.close_pipe()
+
+    assert _texts_of_events(event_status) == ["something happened"]
+
+
+def _close_pipe_once_writers_closed_it(event_server: EventServer) -> None:
+    """
+    Closes the event pipe once its writers have closed it, however long they take: The clock stands
+    still, and the timeout is below the idle timeout, so that nothing counts as idle.
+    """
+    clock = _ClockStandingStill()
+    event_server.close_pipe(timeout=1.0, idle_timeout=2.0, clock=clock)
+    assert not clock.jumped, "closing didn't end once the writers had closed the event pipe"
+
+
+class _ClockStandingStill:
+    """
+    A clock standing still, but jumping past any timeout after 30 s of real time, so that a failing
+    test doesn't hang
+    """
+
+    def __init__(self) -> None:
+        self._real_deadline = time.monotonic() + 30
+        self.jumped = False
+
+    def __call__(self) -> float:
+        if time.monotonic() < self._real_deadline:
+            return 0.0
+        self.jumped = True
+        return math.inf
+
+
+class _HistoryFailingFor(RecordingHistory):
+    """Fails to record anything about the events with the given text"""
+
+    def __init__(self, text: str) -> None:
+        super().__init__()
+        self._text = text
+
+    @override
+    def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
+        if event["text"] == self._text:
+            raise OSError("disk full")
+        super().add(event, what, who, addinfo)
+
+
+def test_message_failing_on_closing_the_event_pipe_doesnt_drop_the_messages_after_it(
+    event_server: EventServer, event_status: EventStatus, config: Config, settings: ec.Settings
+) -> None:
+    event_server.create_pipe()
+    writer = os.open(settings.paths.event_pipe.value, os.O_WRONLY)
+    # A pipe of a single page, so that the failing filler and the message arrive separately
+    page_size = fcntl.fcntl(writer, fcntl.F_SETPIPE_SZ, resource.getpagesize())
+    filler = "x" * (page_size - 1)
+    history = _HistoryFailingFor(filler)
+    rule_config = config | {"rule_packs": [_rule_pack("pack", _rule("any"))]}
+    event_server.reload_configuration(rule_config, history)
+    event_status.reload_configuration(rule_config, history)
+    thread = threading.Thread(
+        target=_write_all_and_close,
+        args=(writer, f"{filler}\nsomething happened\n".encode(), []),
+        daemon=True,
+    )
+    thread.start()
+    wait_until_bytes_in_pipe(writer, page_size)
+
+    _close_pipe_once_writers_closed_it(event_server)
+
+    thread.join(timeout=30)
+    assert _texts_of_events(event_status) == [filler, "something happened"]
+
+
+class _HistoryWritingFor(RecordingHistory):
+    """Writes the data once when recording an event with the given text, like a busy writer"""
+
+    def __init__(self, text: str, fd: int, data: bytes) -> None:
+        super().__init__()
+        self._text = text
+        self._fd = fd
+        self._data: bytes | None = data
+
+    @override
+    def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
+        if event["text"] == self._text and self._data is not None:
+            os.write(self._fd, self._data)
+            self._data = None
+        super().add(event, what, who, addinfo)
+
+
+def test_message_still_arriving_in_closed_event_pipe_at_the_timeout_is_dropped(
+    event_server: EventServer, event_status: EventStatus, config: Config, settings: ec.Settings
+) -> None:
+    event_server.create_pipe()
+    writer = os.open(settings.paths.event_pipe.value, os.O_WRONLY | os.O_NONBLOCK)
+    try:
+        # The writer writes the 2nd message while the event server processes the 1st one.
+        history = _HistoryWritingFor("first", writer, b"second\n")
+        rule_config = config | {"rule_packs": [_rule_pack("pack", _rule("any"))]}
+        event_server.reload_configuration(rule_config, history)
+        event_status.reload_configuration(rule_config, history)
+        os.write(writer, b"first\n")
+
+        # The timeout runs out once the 1st message is processed, however long that takes.
+        event_server.close_pipe(clock=lambda: math.inf if _texts_of_events(event_status) else 0.0)
+    finally:
+        os.close(writer)
+
+    assert _texts_of_events(event_status) == ["first"]
+
+
+def test_messages_left_in_closed_event_pipe_after_the_timeout_are_dropped_with_a_warning(
+    event_server: EventServer,
+    event_status: EventStatus,
+    settings: ec.Settings,
+    config: Config,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.WARNING)
+    _reload_configuration(event_server, settings, config, [_rule_pack("pack", _rule("any"))])
+    event_server.create_pipe()
+    writer = os.open(settings.paths.event_pipe.value, os.O_WRONLY | os.O_NONBLOCK)
+    try:
+        os.write(writer, b"first\n")
+
+        event_server.close_pipe(timeout=0)
+    finally:
+        os.close(writer)
+
+    assert (caplog.messages, _texts_of_events(event_status)) == (
+        ["Processing the event pipe on stopping took too long, dropping the 6 bytes left"],
+        [],
+    )
+
+
+@pytest.mark.parametrize(
+    "start",
+    [
+        pytest.param(b"incomplete", id="short"),
+        pytest.param(b"x" * 100, id="long"),
+    ],
+)
+def test_start_of_a_message_already_read_counts_as_dropped_at_the_timeout(
+    event_server: EventServer,
+    event_status: EventStatus,
+    settings: ec.Settings,
+    config: Config,
+    caplog: pytest.LogCaptureFixture,
+    start: bytes,
+) -> None:
+    caplog.set_level(logging.WARNING)
+    _reload_configuration(event_server, settings, config, [_rule_pack("pack", _rule("any"))])
+    event_server.create_pipe()
+    writer = os.open(settings.paths.event_pipe.value, os.O_WRONLY | os.O_NONBLOCK)
+    try:
+        os.write(writer, b"first\n" + start)
+
+        # The timeout runs out once the 1st message is processed, however long that takes.
+        event_server.close_pipe(clock=lambda: math.inf if _texts_of_events(event_status) else 0.0)
+    finally:
+        os.close(writer)
+
+    assert caplog.messages == [
+        f"Processing the event pipe on stopping took too long, dropping the {len(start)} bytes left"
+    ]
+
+
+def test_start_of_a_message_whose_rest_doesnt_arrive_is_dropped_with_a_warning(
+    event_server: EventServer, settings: ec.Settings, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.WARNING)
+    event_server.create_pipe()
+    writer = os.open(settings.paths.event_pipe.value, os.O_WRONLY | os.O_NONBLOCK)
+    try:
+        os.write(writer, b"incomplete")
+
+        # With a clock standing still, only the idle writer can end the wait.
+        event_server.close_pipe(timeout=1.0, idle_timeout=0.1, clock=_ClockStandingStill())
+    finally:
+        os.close(writer)
+
+    assert caplog.messages == [
+        "The rest of a message didn't arrive in the event pipe on stopping, dropping the 10 bytes left"
+    ]
+
+
+def test_waiting_for_the_rest_of_a_message_until_the_timeout_is_no_idle_writer(
+    event_server: EventServer, settings: ec.Settings, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.WARNING)
+    event_server.create_pipe()
+    writer = os.open(settings.paths.event_pipe.value, os.O_WRONLY | os.O_NONBLOCK)
+    try:
+        os.write(writer, b"incomplete")
+
+        # Without an idle timeout, only the timeout can cut the wait for the rest short.
+        event_server.close_pipe(timeout=0.1, idle_timeout=math.inf)
+    finally:
+        os.close(writer)
+
+    assert caplog.messages == [
+        "Processing the event pipe on stopping took too long, dropping the 10 bytes left"
+    ]
+
+
+def test_start_of_a_message_whose_writer_closed_the_event_pipe_is_dropped_with_a_warning(
+    event_server: EventServer, settings: ec.Settings, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.WARNING)
+    event_server.create_pipe()
+    writer = os.open(settings.paths.event_pipe.value, os.O_WRONLY | os.O_NONBLOCK)
+    try:
+        os.write(writer, b"incomplete")
+    finally:
+        os.close(writer)
+
+    _close_pipe_once_writers_closed_it(event_server)
+
+    assert caplog.messages == [
+        "The rest of a message didn't arrive in the event pipe on stopping, dropping the 10 bytes left"
+    ]
+
+
+def test_idle_writer_keeping_closed_event_pipe_open_doesnt_hold_up_closing(
+    event_server: EventServer, settings: ec.Settings
+) -> None:
+    event_server.create_pipe()
+    writer = os.open(settings.paths.event_pipe.value, os.O_WRONLY | os.O_NONBLOCK)
+    # With a clock standing still, only the idle writer can end the wait.
+    clock = _ClockStandingStill()
+    try:
+        event_server.close_pipe(timeout=1.0, idle_timeout=0.1, clock=clock)
+
+        # Without a reader, writing to a pipe fails.
+        with pytest.raises(BrokenPipeError):
+            os.write(writer, b"something happened\n")
+    finally:
+        os.close(writer)
+
+    assert not clock.jumped
+
+
+def test_writer_keeping_closed_event_pipe_open_is_no_warning(
+    event_server: EventServer, settings: ec.Settings, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.WARNING)
+    event_server.create_pipe()
+    writer = os.open(settings.paths.event_pipe.value, os.O_WRONLY | os.O_NONBLOCK)
+    try:
+        event_server.close_pipe(timeout=0)
+    finally:
+        os.close(writer)
+
+    assert caplog.messages == []
+
+
+class _PipeExistenceWhileLogging(logging.Handler):
+    """Records whether the event pipe exists when logging a message with the given beginning"""
+
+    def __init__(self, beginning: str, settings: ec.Settings) -> None:
+        super().__init__()
+        self._beginning = beginning
+        self._pipe = settings.paths.event_pipe.value
+        self.existence: list[bool] = []
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        if record.getMessage().startswith(self._beginning):
+            self.existence.append(self._pipe.exists())
+
+
+def test_event_server_reports_its_termination_once_it_has_removed_the_event_pipe(
+    event_server: EventServer, settings: ec.Settings, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger="cmk.mkeventd.EventServer")
+    event_server.create_pipe()
+    pipe_existence = _PipeExistenceWhileLogging("Terminated", settings)
+    logger = logging.getLogger("cmk.mkeventd.EventServer")
+    logger.addHandler(pipe_existence)
+    # A daemon thread doesn't keep pytest from exiting if it doesn't terminate.
+    event_server.daemon = True
+    try:
+        # Before starting it, so that it doesn't serve without the sockets main() opens
+        event_server.terminate()
+
+        event_server.start()
+        event_server.join(timeout=30)
+    finally:
+        logger.removeHandler(pipe_existence)
+
+    assert pipe_existence.existence == [False]
+
+
+def _texts_of_events(event_status: EventStatus) -> list[str]:
+    return [event["text"] for event in event_status.events()]
+
+
+def _write_all_and_close(fd: int, data: bytes, errors: list[OSError]) -> None:
+    try:
+        while data:
+            data = data[os.write(fd, data) :]
+    except OSError as e:
+        errors.append(e)
+    finally:
+        os.close(fd)

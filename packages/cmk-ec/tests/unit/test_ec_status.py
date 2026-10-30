@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import socket
 import time
 
 import pytest
@@ -776,3 +777,21 @@ def test_several_queries_on_one_connection_are_answered_in_order(
     )
 
     assert status_socket.get_raw_response() == b"[['rule_id'], ['disk']]\n[['rule_hits'], [1]]\n"
+
+
+def test_terminated_status_server_refuses_queries(
+    settings: ec.Settings, status_server: StatusServer
+) -> None:
+    # A daemon thread doesn't keep pytest from exiting if it doesn't terminate.
+    status_server.daemon = True
+    status_server.start()
+
+    status_server.terminate()
+    status_server.join(timeout=30)
+
+    # Instead of letting clients wait for an answer while the EC goes on terminating
+    with (
+        socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client,
+        pytest.raises(ConnectionRefusedError),
+    ):
+        client.connect(str(settings.paths.unix_socket.value))

@@ -187,8 +187,8 @@ def fixture_event_server(
     history: History,
     event_status: EventStatus,
     core_connection: FakeConnection,
-) -> EventServer:
-    return EventServer(
+) -> Iterator[EventServer]:
+    event_server = EventServer(
         logging.getLogger("cmk.mkeventd.EventServer"),
         settings,
         config,
@@ -202,6 +202,8 @@ def fixture_event_server(
         SiteId("hurz"),
         create_pipes_and_sockets=False,
     )
+    yield event_server
+    event_server.close_pipe()
 
 
 @pytest.fixture(name="status_server")

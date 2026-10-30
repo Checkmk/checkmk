@@ -5,6 +5,7 @@
 """Commands sent to the status socket of the EC"""
 
 import ast
+import os
 import threading
 from typing import Literal
 
@@ -13,7 +14,7 @@ import pytest
 import cmk.ec.export as ec
 from cmk.ec.config import Config
 from cmk.ec.history import History
-from cmk.ec.main import EventStatus, SlaveStatus, StatusServer
+from cmk.ec.main import EventServer, EventStatus, SlaveStatus, StatusServer
 from cmk.ec.query import MKClientError
 
 from .helpers import new_event, query_status_server, replication_slave_config
@@ -117,11 +118,54 @@ def test_shutting_down_is_requested(
 
 
 def test_created_message_is_passed_unchanged_to_the_event_pipe(
-    settings: ec.Settings, status_server: StatusServer
+    settings: ec.Settings, event_server: EventServer, status_server: StatusServer
 ) -> None:
+    event_server.create_pipe()
+
     _command(status_server, "CREATE;disk /var full; 98% used")
 
-    assert settings.paths.event_pipe.value.read_text() == "disk /var full; 98% used\n"
+    assert _read_event_pipe(settings) == b"disk /var full; 98% used\n"
+
+
+def test_created_message_puts_no_file_in_place_of_a_removed_event_pipe(
+    settings: ec.Settings, status_server: StatusServer
+) -> None:
+    # Like after the event server removed the event pipe on terminating
+    with pytest.raises(MKClientError, match="No such file or directory"):
+        _command(status_server, "CREATE;disk /var full; 98% used")
+
+    assert not settings.paths.event_pipe.value.exists()
+
+
+def test_created_message_doesnt_overwrite_a_regular_file_in_place_of_the_event_pipe(
+    settings: ec.Settings, status_server: StatusServer
+) -> None:
+    path = settings.paths.event_pipe.value
+    path.write_bytes(b"something important\n")
+
+    with pytest.raises(MKClientError, match="Not a FIFO"):
+        _command(status_server, "CREATE;disk /var full; 98% used")
+
+    assert path.read_bytes() == b"something important\n"
+
+
+def test_created_message_for_an_event_pipe_nobody_reads_is_an_error(
+    settings: ec.Settings, status_server: StatusServer
+) -> None:
+    # Like after the event server couldn't remove the event pipe on terminating
+    os.mkfifo(settings.paths.event_pipe.value)
+
+    with pytest.raises(MKClientError, match="No such device or address"):
+        _command(status_server, "CREATE;disk /var full; 98% used")
+
+
+def _read_event_pipe(settings: ec.Settings) -> bytes:
+    # Without blocking, as the event server's own writer keeps reading from hitting EOF
+    reader = os.open(settings.paths.event_pipe.value, os.O_RDONLY | os.O_NONBLOCK)
+    try:
+        return os.read(reader, 65536)
+    finally:
+        os.close(reader)
 
 
 def test_user_executing_an_action_becomes_the_owner_of_the_event(

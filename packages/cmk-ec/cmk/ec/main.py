@@ -14,9 +14,11 @@
 
 
 import abc
+import array
 import ast
 import contextlib
 import errno
+import fcntl
 import hashlib
 import ipaddress
 import itertools
@@ -30,6 +32,7 @@ import signal
 import socket
 import stat
 import sys
+import termios
 import threading
 import time
 import traceback
@@ -38,7 +41,7 @@ from dataclasses import dataclass, replace
 from logging import DEBUG, getLogger, Logger
 from pathlib import Path
 from types import FrameType
-from typing import Any, assert_never, ClassVar, IO, Literal, override, TypedDict
+from typing import Any, assert_never, ClassVar, IO, Literal, NamedTuple, override, TypedDict
 
 from setproctitle import setthreadtitle
 
@@ -82,6 +85,7 @@ from .helpers import (
     SYSLOG_VIA_TCP,
     Truncated,
     Unprocessed,
+    unprocessed_size,
 )
 from .history import (
     ActiveHistoryPeriod,
@@ -225,18 +229,24 @@ class ECServerThread(threading.Thread):
     def run(self) -> None:
         self._logger.info("Starting up")
         setthreadtitle(self.name)
-        while not self._terminate_event.is_set():
-            try:
-                with cmk.ccc.profile.Profile(
-                    enabled=self._profiling_enabled, profile_file=str(self._profile_file)
-                ):
-                    self.serve()
-            except Exception:
-                self._logger.exception("Exception in %(name)s server", {"name": self.name})
-                if self.settings.options.debug:
-                    raise
-                time.sleep(self._restart_delay)
+        try:
+            while not self._terminate_event.is_set():
+                try:
+                    with cmk.ccc.profile.Profile(
+                        enabled=self._profiling_enabled, profile_file=str(self._profile_file)
+                    ):
+                        self.serve()
+                except Exception:
+                    self._logger.exception("Exception in %(name)s server", {"name": self.name})
+                    if self.settings.options.debug:
+                        raise
+                    time.sleep(self._restart_delay)
+        finally:
+            self._clean_up()
         self._logger.info("Terminated")
+
+    def _clean_up(self) -> None:
+        """Cleans up after serving, e.g. closes what serve() keeps open across restarts"""
 
     def terminate(self) -> None:
         self._terminate_event.set()
@@ -450,23 +460,10 @@ def process_exists(pid: int) -> bool:
         return False
 
 
-def drain_pipe(pipe: FileDescr) -> None:
-    while True:
-        try:
-            readable: list[FileDescr] = select.select([pipe], [], [], 0.1)[0]
-        except OSError as e:
-            if e.args[0] != errno.EINTR:
-                raise
-            continue
-
-        if pipe in readable:
-            try:
-                if not os.read(pipe, 4096):  # EOF
-                    break
-            except Exception:
-                break  # Error while reading
-        else:
-            break  # No data available
+def _bytes_in_pipe(pipe: FileDescr) -> int:
+    count = array.array("i", [0])
+    fcntl.ioctl(pipe, termios.FIONREAD, count)
+    return count[0]
 
 
 # A reference to the matched message in a text which a rule rewrites: \0 for the whole message,
@@ -587,6 +584,13 @@ class ClientConnection:
         return f"{self.endpoint}, host {self.address[0]}, port {self.address[1]}"
 
 
+class _EventPipe(NamedTuple):
+    """The event pipe, opened for reading and, by ourselves, for writing"""
+
+    reader: FileDescr
+    writer: FileDescr
+
+
 # .
 #   .--EventServer---------------------------------------------------------.
 #   |      _____                 _   ____                                  |
@@ -635,7 +639,7 @@ class EventServer(ECServerThread):
         # How long serve() waits for messages before it looks for spool files again, as nothing
         # wakes it up for these. Only tests pass a shorter one, to take less time.
         self._idle_timeout = idle_timeout
-        self._pipe: FileDescr | None = None
+        self._pipe: _EventPipe | None = None
         # Kept for the next data from the pipe, also when serve() restarts, like the pipe itself
         self._unprocessed_pipe: Unprocessed = Incomplete()
         # The connections to the event socket and to syslog via TCP, kept with their incomplete
@@ -692,9 +696,8 @@ class EventServer(ECServerThread):
         if not create_pipes_and_sockets:
             return
 
-        self.create_pipe()
         # Like the sockets, the pipe stays open when serve() restarts after an exception.
-        self._pipe = self.open_pipe()
+        self.create_pipe()
         self.open_eventsocket()
         self.open_syslog_udp()
         self.open_syslog_tcp()
@@ -790,6 +793,16 @@ class EventServer(ECServerThread):
             os.mkfifo(str(path))
         # We want to be able to receive events from all users on the local system
         path.chmod(0o662)
+        # Right away, so writers like mkevent don't wait for the rest of the startup. Our own writer
+        # keeps select() from reporting EOF forever once another one is done, see
+        # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
+        reader = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+        try:
+            writer = os.open(path, os.O_WRONLY | os.O_NONBLOCK)
+        except OSError:
+            os.close(reader)
+            raise
+        self._pipe = _EventPipe(reader, writer)
 
         self._logger.info("Created FIFO '%(path)s' for receiving events", {"path": path})
 
@@ -938,32 +951,98 @@ class EventServer(ECServerThread):
         self._eventsocket.listen(self._config["eventsocket_queue_len"])
         self._logger.info("Opened UNIX socket '%(path)s' for receiving events", {"path": path})
 
-    def open_pipe(self) -> FileDescr:
-        # Beware: we must open the pipe also for writing. Otherwise
-        # we will see EOF forever after one writer has finished and
-        # select() will trigger even if there is no data. A good article
-        # about this is here:
-        # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
-        return os.open(str(self.settings.paths.event_pipe.value), os.O_RDWR | os.O_NONBLOCK)
+    def close_pipe(
+        self,
+        *,
+        timeout: float = 5.0,
+        idle_timeout: float = 0.5,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
+        """
+        Removes the pipe, processes what's left in it and closes it. It waits for its writers to
+        close it, but at most for the timeout and only while something arrives within the idle
+        timeout, as e.g. rsyslog keeps it open. Only tests change the timeouts and the clock.
+        """
+        if (pipe := self._pipe) is None:
+            return
+        self._pipe = None
+        try:
+            try:
+                # Remove the pipe, so nobody opens it anymore.
+                self.settings.paths.event_pipe.value.unlink(missing_ok=True)
+            finally:
+                # Without our own writer, reading hits EOF once all others have closed the pipe.
+                os.close(pipe.writer)
+                # Even if removing the pipe failed, as its writers took what's in it as delivered
+                self._process_rest_of_pipe(
+                    pipe.reader, clock() + timeout, idle_timeout=idle_timeout, clock=clock
+                )
+        finally:
+            # Writers still blocked on it get EPIPE, so they report their message as lost.
+            os.close(pipe.reader)
+
+    def _process_rest_of_pipe(
+        self,
+        reader: FileDescr,
+        deadline: float,
+        *,
+        idle_timeout: float,
+        clock: Callable[[], float],
+    ) -> None:
+        # Writers like mkevent count a message in the pipe as delivered, so don't drop it.
+        idle = closed = False
+        while not idle and (timeout := deadline - clock()) > 0:
+            if not select.select([reader], [], [], min(timeout, idle_timeout))[0]:
+                # Nothing arrived within the idle timeout, unless the deadline cut it short
+                idle = idle_timeout < timeout
+                continue
+            if not (data := os.read(reader, 65536)):
+                closed = True  # EOF: All writers have closed the pipe.
+                break
+            try:
+                self._process_pipe_data(data)
+            except Exception:
+                # Going on with the rest, like serve() does
+                self._logger.exception("Exception while processing the event pipe on stopping")
+        left = _bytes_in_pipe(reader) + unprocessed_size(self._unprocessed_pipe)
+        if left and (idle or closed):
+            self._logger.warning(
+                "The rest of a message didn't arrive in the event pipe on stopping, dropping the "
+                "%(bytes)d bytes left",
+                {"bytes": left},
+            )
+        elif left:
+            self._logger.warning(
+                "Processing the event pipe on stopping took too long, dropping the %(bytes)d bytes left",
+                {"bytes": left},
+            )
+        elif not closed:
+            # Their writes fail once close_pipe() closes it. Only one right before gets lost.
+            self._logger.info(
+                "Writers still having the event pipe open on stopping get an error from now on"
+            )
+
+    def _process_pipe_data(self, data: bytes) -> None:
+        messages, self._unprocessed_pipe = next_messages(EVENT_PIPE, self._unprocessed_pipe, data)
+        self.process_syslog_messages(self._warning_about_truncated(messages, "event pipe"), None)
 
     @override
-    def run(self) -> None:
+    def _clean_up(self) -> None:
+        # Only now, as serve() keeps them open when it restarts
         try:
-            super().run()
-        finally:
-            # Only now, as serve() keeps them open when it restarts
-            if self._pipe is not None:
-                os.close(self._pipe)
-                self._pipe = None
-            for client in self._client_sockets.values():
-                client.sock.close()
-            self._client_sockets.clear()
+            self.close_pipe()
+        except Exception:
+            self._logger.exception("Cannot clean up event pipe")
+        for client in self._client_sockets.values():
+            client.sock.close()
+        self._client_sockets.clear()
 
     @override
     def serve(self) -> None:
         # We just read()/recvfrom() these, so we create no new FDs via them.
+        pipe_reader = None if self._pipe is None else self._pipe.reader
         pipe_and_datagram_sockets = [
-            f for f in (self._pipe, self._syslog_udp, self._snmp_trap_socket) if f is not None
+            f for f in (pipe_reader, self._syslog_udp, self._snmp_trap_socket) if f is not None
         ]
         # We use accept() on these FDs, so we must be careful to avoid creating too many additional
         # FDs. We use an arbitrary limit below (less than the usual 1024 FD_SETSIZE limit), so we
@@ -1039,19 +1118,13 @@ class EventServer(ECServerThread):
                         client.sock.close()  # after the bookkeeping above, close() can throw
 
             # Read data from the pipe, without octet counting, see EVENT_PIPE for why
-            if self._pipe is not None and self._pipe in readable:
+            if pipe_reader is not None and pipe_reader in readable:
                 try:
-                    data = os.read(self._pipe, 4096)
+                    data = os.read(pipe_reader, 4096)
                 except Exception:
                     data = b""
                     self._logger.exception("General exception during pipe os.read")
-
-                messages, self._unprocessed_pipe = next_messages(
-                    EVENT_PIPE, self._unprocessed_pipe, data
-                )
-                self.process_syslog_messages(
-                    self._warning_about_truncated(messages, "event pipe"), None
-                )
+                self._process_pipe_data(data)
 
             # Read events from builtin syslog server
             if self._syslog_udp is not None and self._syslog_udp in readable:
@@ -2549,6 +2622,12 @@ class StatusServer(ECServerThread):
         self.open_unix_socket()
         self.open_tcp_socket()
 
+    @override
+    def _clean_up(self) -> None:
+        # Right away, so that clients get an error instead of waiting while the EC terminates
+        self.close_unix_socket()
+        self.close_tcp_socket()
+
     def table(self, name: str) -> StatusTable:
         if name == "events":
             return self._table_events
@@ -2879,8 +2958,38 @@ class StatusServer(ECServerThread):
         # Would rather use process_syslog_messages(), but we are already
         # holding self._event_status.lock and it's sub functions are setting
         # self._event_status.lock too. The lock can not be allocated twice.
-        with open(str(self.settings.paths.event_pipe.value), "wb") as pipe:
-            pipe.write(f"{';'.join(arguments)}\n".encode())
+        self._write_to_event_pipe(f"{';'.join(arguments)}\n".encode())
+
+    def _write_to_event_pipe(self, line: bytes) -> None:
+        # Without O_CREAT, which would create a file where the terminating event server removed the
+        # pipe, and without waiting for a reader
+        path = self.settings.paths.event_pipe.value
+        try:
+            fd = os.open(path, os.O_WRONLY | os.O_NONBLOCK)
+            try:
+                # Writing to a regular file would overwrite it from its start.
+                if not stat.S_ISFIFO(os.fstat(fd).st_mode):
+                    raise MKClientError(f"Cannot write to event pipe '{path}': Not a FIFO")
+                self._write_waiting_for_room(fd, line)
+            finally:
+                os.close(fd)
+        except OSError as e:
+            # Logged in one line, like a client error: It's no bug, e.g. while terminating.
+            raise MKClientError(f"Cannot write to event pipe '{path}': {e.strerror}") from e
+
+    def _write_waiting_for_room(self, fd: int, line: bytes) -> None:
+        """Writes the line, waiting for room as long as it takes, like a blocking write"""
+        poller = select.poll()
+        poller.register(fd, select.POLLOUT)
+        rest = memoryview(line)
+        while rest:
+            try:
+                rest = rest[os.write(fd, rest) :]
+                continue
+            except BlockingIOError:
+                pass
+            # Until there is room or the reader is gone, which makes writing fail then
+            poller.poll()
 
     def handle_command_changestate(self, arguments: list[str]) -> None:
         event_ids, user, newstate = arguments
@@ -4506,15 +4615,6 @@ def main() -> None:
             # a signal or hitting Ctrl-C (in foreground mode)
 
             # TODO: Move this cleanup stuff to the classes that are responsible for these resources
-
-            # Remove event pipe and drain it, so that we make sure
-            # that processes (syslog, etc) will not hang when trying
-            # to write into the pipe.
-            logger.log(VERBOSE, "Cleaning up event pipe")
-            pipe = event_server.open_pipe()  # Open it
-            settings.paths.event_pipe.value.unlink()  # Remove pipe
-            drain_pipe(pipe)  # Drain any data
-            os.close(pipe)  # Close pipe
 
             logger.log(VERBOSE, "Saving final event state")
             event_status.save_status()

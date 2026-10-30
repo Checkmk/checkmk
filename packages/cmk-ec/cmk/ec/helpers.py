@@ -154,6 +154,15 @@ class Discarding:
 type Unprocessed = Incomplete | IncompleteLine | IncompleteOctetCounted | Skipping | Discarding
 
 
+def unprocessed_size(unprocessed: Unprocessed) -> int:
+    """How many bytes of an incomplete message the stream keeps"""
+    match unprocessed:
+        case Incomplete(data=data) | IncompleteLine(data=data) | IncompleteOctetCounted(data=data):
+            return len(data)
+        case Skipping() | Discarding():
+            return 0
+
+
 class Truncated(bytes):
     """The start of a message longer than its maximum size, so that its receiver can tell"""
 

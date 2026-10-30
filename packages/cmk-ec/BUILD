@@ -169,10 +169,12 @@ py_cmk_test(
     srcs = glob(["tests/component/**/*.py"]),
     args = ["packages/cmk-ec/tests/component"],
     data = [
+        ":fake_vanishing_fifo.so",
         ":mkevent",
         ":mkeventd_open514",
     ],
     env = {
+        "FAKE_VANISHING_FIFO": "$(rootpath :fake_vanishing_fifo.so)",
         "MKEVENT": "$(rootpath :mkevent)",
         "MKEVENTD_OPEN514": "$(rootpath :mkeventd_open514)",
     },
@@ -256,6 +258,20 @@ cc_binary(
     features = [
         "static_libstdcpp",
     ],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
+)
+
+cc_binary(
+    name = "fake_vanishing_fifo.so",
+    testonly = True,
+    srcs = ["tests/component/fake_vanishing_fifo.c"],
+    linkopts = [
+        # Without it, the toolchain makes the library depend on libstdc++.
+        "-Wl,--as-needed",
+        "-ldl",
+    ],
+    linkshared = True,
+    local_defines = ["_GNU_SOURCE"],
     platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
 )
 

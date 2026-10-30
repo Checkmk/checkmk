@@ -5,8 +5,11 @@
 
 # mypy: disable-error-code="explicit-any"
 
+import array
 import ast
+import fcntl
 import socket
+import termios
 import time
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, override
@@ -250,6 +253,19 @@ def activate_config(settings: Settings, config_text: str) -> None:
     path = settings.paths.active_config_dir.value / "mkeventd.mk"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(config_text)
+
+
+def wait_until_bytes_in_pipe(fd: int, count: int) -> None:
+    deadline = time.monotonic() + 30
+    while _bytes_in_pipe(fd) < count:
+        assert time.monotonic() < deadline, f"pipe didn't get {count} bytes"
+        time.sleep(0.01)
+
+
+def _bytes_in_pipe(fd: int) -> int:
+    buffer = array.array("i", [0])
+    fcntl.ioctl(fd, termios.FIONREAD, buffer)
+    return buffer[0]
 
 
 class FakeConnection:

@@ -153,6 +153,9 @@ def _running_event_console(
         # The event server closes the event pipe when it terminates, so it doesn't leak.
         if fds := _fds_open_on(settings.paths.event_pipe.value):
             pytest.fail(f"the event pipe is still open {fds} times after terminating")
+        # It removes the event pipe, too, unless a test put something else there.
+        if settings.paths.event_pipe.value.is_fifo():
+            pytest.fail("the event pipe is still there after terminating")
         # The Event Console copes with failing queries itself, so don't let a test rely on that.
         if core.unexpected_queries:
             pytest.fail(f"unexpected Livestatus queries: {core.unexpected_queries!r}")
@@ -262,7 +265,9 @@ def _fds_open_on(path: Path) -> int:
     for fd in Path("/proc/self/fd").iterdir():
         with contextlib.suppress(FileNotFoundError):  # closed in the meantime
             targets.append(os.readlink(fd))
-    return targets.count(str(path.resolve()))
+    # The link of a file descriptor on a removed file has a suffix.
+    target = str(path.resolve())
+    return targets.count(target) + targets.count(f"{target} (deleted)")
 
 
 def _make_adding_history_entries_fail(settings: ec.Settings) -> None:
@@ -285,7 +290,7 @@ def _restart_event_server_by_an_error(settings: ec.Settings, event_status: Event
         pytest.fail(f"no event from the event pipe after the restart: {texts!r}")
 
 
-def test_event_server_restarted_after_an_error_has_the_event_pipe_open_only_once(
+def test_event_server_restarted_after_an_error_doesnt_open_the_event_pipe_again(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     # The raw history raises its errors, which restarts the event server.
@@ -294,7 +299,7 @@ def test_event_server_restarted_after_an_error_has_the_event_pipe_open_only_once
         fds = _fds_open_on(settings.paths.event_pipe.value)
 
     assert "Exception in EventServer server" in caplog.text
-    assert fds == 1
+    assert fds == 2  # once for reading, once for writing
 
 
 def test_event_server_restarted_after_an_error_keeps_the_start_of_a_message_from_the_event_pipe(
@@ -342,6 +347,18 @@ def test_event_server_processes_messages_although_writing_the_history_fails(
     _write_to_event_pipe(settings, b"first\nsecond\n")
 
     assert _texts_of_events(event_status, 2) == ["first", "second"]
+
+
+def test_event_pipe_that_cannot_be_removed_on_terminating_is_logged(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with _running_event_console(create_history) as (settings, _event_status):
+        # unlink() can't remove a directory.
+        pipe = settings.paths.event_pipe.value
+        pipe.unlink()
+        pipe.mkdir()
+
+    assert _logged_errors(caplog) == ["Cannot clean up event pipe"]
 
 
 def _add_spool_file(

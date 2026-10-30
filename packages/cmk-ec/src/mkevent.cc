@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
         strncpy(message, argv[1], sizeof(message) - 1);
     }
 
-    /* If we have a remote host, send the message via syslog to the remote host. */
+    /* If we have a remote host, send the message via syslog to it. */
     int fd;
     if (remote[0] != 0) {
         if (isdigit(remote[0]) == 0) {
@@ -163,8 +163,8 @@ int main(int argc, char **argv) {
         }
         fd = ::socket(AF_INET, SOCK_DGRAM, 0);
         if (fd == -1) {
-          std::cerr << "ERROR: could not create socket" << std::endl;
-          exit(1);
+            std::cerr << "ERROR: could not create socket" << std::endl;
+            exit(1);
         }
         sockaddr_in servaddr{};
         servaddr.sin_family = AF_INET;

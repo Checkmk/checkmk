@@ -24,7 +24,7 @@ from cmk.web.utils import permission_verification as permissions
 
 from .._commands import HostRescheduler
 from .._impl import LiveStatusHostActions
-from .._models import RescheduleTarget
+from .._models import RescheduleTarget, UnixTimestamp
 from ._family import MONITOR_HOSTS_FAMILY
 
 
@@ -54,6 +54,20 @@ class RescheduleResponse:
     rescheduled: int = api_field(
         description="Number of hosts for which a check was rescheduled", example=3
     )
+    scheduled_at: UnixTimestamp = api_field(
+        description=(
+            "The time at which the checks were rescheduled. A host has been checked again once "
+            "its last check is at or after this time."
+        ),
+        example=1767225600,
+    )
+    wait_timeout: float = api_field(
+        description=(
+            "How many seconds to wait for a rescheduled check to run before giving up on seeing "
+            "its result, as configured in the global settings."
+        ),
+        example=10.0,
+    )
 
 
 def reschedule_checks(api_context: ApiContext, body: RescheduleRequestBody) -> RescheduleResponse:
@@ -64,7 +78,10 @@ def reschedule_checks(api_context: ApiContext, body: RescheduleRequestBody) -> R
     host_actions = LiveStatusHostActions(connection=sites.live())
 
     return _handle_reschedule_checks(
-        host_actions, hosts=body.hosts, spread_minutes=body.spread_minutes
+        host_actions,
+        hosts=body.hosts,
+        spread_minutes=body.spread_minutes,
+        wait_timeout=api_context.config.reschedule_timeout,
     )
 
 
@@ -73,11 +90,12 @@ def _handle_reschedule_checks(
     *,
     hosts: list[RescheduleHostRef],
     spread_minutes: int,
+    wait_timeout: float,
 ) -> RescheduleResponse:
-    if not hosts:
-        return RescheduleResponse(rescheduled=0)
-
     now = time.time()
+    if not hosts:
+        return RescheduleResponse(rescheduled=0, scheduled_at=int(now), wait_timeout=wait_timeout)
+
     targets = [
         RescheduleTarget(
             site_id=host.site_id,
@@ -88,7 +106,9 @@ def _handle_reschedule_checks(
     ]
     host_actions.reschedule(targets)
 
-    return RescheduleResponse(rescheduled=len(targets))
+    return RescheduleResponse(
+        rescheduled=len(targets), scheduled_at=int(now), wait_timeout=wait_timeout
+    )
 
 
 ENDPOINT_RESCHEDULE_CHECKS = VersionedEndpoint(

@@ -113,11 +113,11 @@ const server = useMswServer(
   ),
   restApiHttp.post('/monitor/hosts/actions/reschedule', async ({ request, response }) => {
     reschedules.push(await request.json())
-    return response(200).json({ rescheduled: 1 })
+    return response(200).json({ rescheduled: 1, scheduled_at: 1_800_000_000, wait_timeout: 10 })
   }),
   restApiHttp.post('/monitor/services/actions/reschedule', async ({ request, response }) => {
     reschedules.push(await request.json())
-    return response(200).json({ rescheduled: 1 })
+    return response(200).json({ rescheduled: 1, scheduled_at: 1_800_000_000, wait_timeout: 10 })
   })
 )
 

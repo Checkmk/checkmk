@@ -24,7 +24,7 @@ from cmk.web.utils import permission_verification as permissions
 
 from .._commands import ServiceRescheduler
 from .._impl import LiveStatusServiceActions
-from .._models import RescheduleTarget
+from .._models import RescheduleTarget, UnixTimestamp
 from ._family import MONITOR_SERVICES_FAMILY
 
 
@@ -55,6 +55,20 @@ class RescheduleServicesResponse:
     rescheduled: int = api_field(
         description="Number of services for which a check was rescheduled", example=3
     )
+    scheduled_at: UnixTimestamp = api_field(
+        description=(
+            "The time at which the checks were rescheduled. A service has been checked again once "
+            "its last check is at or after this time."
+        ),
+        example=1767225600,
+    )
+    wait_timeout: float = api_field(
+        description=(
+            "How many seconds to wait for a rescheduled check to run before giving up on seeing "
+            "its result, as configured in the global settings."
+        ),
+        example=10.0,
+    )
 
 
 def reschedule_checks(
@@ -67,7 +81,10 @@ def reschedule_checks(
     service_actions = LiveStatusServiceActions(connection=sites.live())
 
     return _handle_reschedule_checks(
-        service_actions, services=body.services, spread_minutes=body.spread_minutes
+        service_actions,
+        services=body.services,
+        spread_minutes=body.spread_minutes,
+        wait_timeout=api_context.config.reschedule_timeout,
     )
 
 
@@ -76,11 +93,14 @@ def _handle_reschedule_checks(
     *,
     services: list[RescheduleServiceRef],
     spread_minutes: int,
+    wait_timeout: float,
 ) -> RescheduleServicesResponse:
-    if not services:
-        return RescheduleServicesResponse(rescheduled=0)
-
     now = time.time()
+    if not services:
+        return RescheduleServicesResponse(
+            rescheduled=0, scheduled_at=int(now), wait_timeout=wait_timeout
+        )
+
     targets = [
         RescheduleTarget(
             site_id=service.site_id,
@@ -92,7 +112,9 @@ def _handle_reschedule_checks(
     ]
     service_actions.reschedule(targets)
 
-    return RescheduleServicesResponse(rescheduled=len(targets))
+    return RescheduleServicesResponse(
+        rescheduled=len(targets), scheduled_at=int(now), wait_timeout=wait_timeout
+    )
 
 
 ENDPOINT_RESCHEDULE_CHECKS = VersionedEndpoint(

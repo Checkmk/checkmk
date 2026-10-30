@@ -89,6 +89,7 @@ class ApiConfig:
     is_provider_site: bool
     liveproxyd_enabled: bool
     password_policy: PasswordPolicy
+    reschedule_timeout: float
     sites: SiteConfigurations
     tags: TagConfig
     ui_theme: str
@@ -117,6 +118,7 @@ class ApiConfig:
             is_provider_site=is_provider_site(config),
             liveproxyd_enabled=config.liveproxyd_enabled,
             password_policy=config.password_policy,
+            reschedule_timeout=config.reschedule_timeout,
             sites=config.sites,
             tags=config.tags,
             ui_theme=config.ui_theme,

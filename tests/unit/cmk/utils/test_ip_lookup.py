@@ -689,6 +689,8 @@ def test_lookup_mgmt_board_ip_address_dual_host(
 def test_lookup_mgmt_board_ip_address_unresolvable(
     monkeypatch: MonkeyPatch, tags: dict[TagGroupID, TagID]
 ) -> None:
+    patch_actual_lookup(monkeypatch, {})
+
     hostname = HostName("unresolveable-hostname")
     ts = Scenario()
     ts.add_host(hostname, tags=tags)

@@ -42,6 +42,7 @@ from cmk.base.core.nagios._precompile_host_checks import (
     PrecompileMode,
 )
 from cmk.ccc.config_path import VersionedConfigPath
+from cmk.ccc.exceptions import MKIPAddressLookupError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
@@ -86,6 +87,17 @@ def ip_address_of_return_local(
     family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,  # noqa: ARG001
 ) -> HostAddress:
     return HostAddress("127.0.0.1")
+
+
+def ip_address_of_without_dns(
+    host_name: HostName,
+    _family: ip_lookup.SupportedAddressFamily,
+) -> HostAddress:
+    """Resolve the scenario's hosts without asking the system resolver"""
+    known = {"localhost": "127.0.0.1", "node1": "127.0.0.1", "node2": "127.0.0.2"}
+    if (address := known.get(host_name)) is None:
+        raise MKIPAddressLookupError(f"Failed to lookup IPv4 address of {host_name}")
+    return HostAddress(address)
 
 
 def _patch_plugin_loading(
@@ -344,7 +356,7 @@ def test_create_nagios_host_spec(
     loading_result = ts.apply(monkeypatch)
     config_cache = loading_result.config_cache
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        ip_address_of_without_dns,
         allow_empty=loading_result.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )

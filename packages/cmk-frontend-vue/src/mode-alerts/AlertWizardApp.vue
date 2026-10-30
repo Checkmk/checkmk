@@ -6,11 +6,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkWizard from 'cmk-ui-library/components/CmkWizard'
-import usei18n from 'cmk-ui-library/lib/i18n'
-import { ref } from 'vue'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import { computed, onMounted, ref } from 'vue'
 
-import { createAlert } from '@/mode-alerts/alert-client'
+import { type SaveResult, createAlert, loadAlert, updateAlert } from '@/mode-alerts/alert-client'
 import NameStep from '@/mode-alerts/steps/NameStep.vue'
 import ServicesStep from '@/mode-alerts/steps/ServicesStep.vue'
 import ThresholdsStep from '@/mode-alerts/steps/ThresholdsStep.vue'
@@ -20,12 +21,14 @@ import {
   type HostConditions,
   type PredictionPeriods,
   type ThresholdsValue,
+  alertModelFrom,
   emptyAlert
 } from '@/mode-alerts/types'
 
 const { _t } = usei18n()
 
 const props = defineProps<{
+  configuration_name: string | null
   conditions_form: {
     spec: FormSpec
     data: HostConditions
@@ -42,23 +45,83 @@ const props = defineProps<{
   activate_changes_url: string
 }>()
 
-const currentStep = ref(1)
+const editing = props.configuration_name !== null
+// A stored alert keeps its name (the update endpoint cannot rename it), so editing skips step 1.
+const currentStep = ref(editing ? 2 : 1)
 const model = ref<AlertModel>(emptyAlert(props.conditions_form.data, props.thresholds_form.data))
 const saving = ref(false)
 const saveError = ref<string | null>(null)
+const editETag = ref<string | null>(null)
+const loading = ref(editing)
+const loadError = ref<string | null>(null)
+
+onMounted(async () => {
+  const configurationName = props.configuration_name
+  if (configurationName === null) {
+    return
+  }
+  try {
+    const result = await loadAlert(configurationName)
+    if (!result.ok) {
+      loadError.value = result.error
+      return
+    }
+    try {
+      model.value = alertModelFrom(result.extensions, props.folder_paths, props.prediction_periods)
+    } catch {
+      // The stored alert was read, but the wizard has no choice to show part of it in.
+      loadError.value = _t(
+        'This alert uses conditions the editor cannot show, for example a folder you cannot access.'
+      )
+      return
+    }
+    editETag.value = result.etag
+  } catch {
+    loadError.value = _t('Failed to load the alert.')
+  } finally {
+    loading.value = false
+  }
+})
+
+const finishLabel = computed(() =>
+  editing ? _t('Save & activate changes') : _t('Create & activate changes')
+)
+
+const failureMessage = computed(() =>
+  editing ? _t('Failed to save the alert.') : _t('Failed to create the alert.')
+)
+
+async function persist(): Promise<SaveResult> {
+  const configurationName = props.configuration_name
+  if (configurationName === null) {
+    return await createAlert(model.value, props.folder_paths, props.prediction_periods)
+  }
+  // Only a failed load leaves no ETag, and that hides the wizard. Never write without one: a
+  // wildcard would overwrite a concurrent change.
+  if (editETag.value === null) {
+    return { ok: false, error: failureMessage.value }
+  }
+  return await updateAlert(
+    configurationName,
+    model.value,
+    props.folder_paths,
+    props.prediction_periods,
+    editETag.value
+  )
+}
 
 async function saveAlert(): Promise<void> {
   saveError.value = null
   saving.value = true
   try {
-    const result = await createAlert(model.value, props.folder_paths, props.prediction_periods)
+    const result = await persist()
     if (result.ok) {
       window.location.href = props.activate_changes_url
     } else {
       saveError.value = result.error
     }
   } catch {
-    saveError.value = _t('Failed to create the alert.')
+    saveError.value = failureMessage.value
   } finally {
     saving.value = false
   }
@@ -67,8 +130,9 @@ async function saveAlert(): Promise<void> {
 
 <template>
   <div class="mode-alerts-alert-wizard-app">
-    <CmkWizard v-model="currentStep" mode="guided">
-      <NameStep v-model="model" :index="1" :is-completed="() => currentStep > 1" />
+    <CmkAlert v-if="loadError" variant="error" :text="untranslated(loadError)" />
+    <CmkWizard v-else-if="!loading" v-model="currentStep" mode="guided">
+      <NameStep v-if="!editing" v-model="model" :index="1" :is-completed="() => currentStep > 1" />
 
       <ServicesStep
         v-model="model"
@@ -76,6 +140,7 @@ async function saveAlert(): Promise<void> {
         :folder-paths="folder_paths"
         :index="2"
         :is-completed="() => currentStep > 2"
+        :is-first="editing"
       />
 
       <ThresholdsStep
@@ -83,6 +148,7 @@ async function saveAlert(): Promise<void> {
         :thresholds-spec="thresholds_form.spec"
         :time-picker="time_picker"
         :level-colors="{ warning: warning_color, critical: critical_color }"
+        :finish-label="finishLabel"
         :saving="saving"
         :save-error="saveError"
         :index="3"

@@ -44,8 +44,12 @@ const PREVIEW_LIMIT = 5
 
 const { _t } = usei18n()
 
-const { conditionsSpec, folderPaths } = defineProps<
-  CmkWizardStepProps & { conditionsSpec: FormSpec; folderPaths: FolderPaths }
+const {
+  conditionsSpec,
+  folderPaths,
+  isFirst = false
+} = defineProps<
+  CmkWizardStepProps & { conditionsSpec: FormSpec; folderPaths: FolderPaths; isFirst?: boolean }
 >()
 
 const model = defineModel<AlertModel>({ required: true })
@@ -297,7 +301,7 @@ async function validate(): Promise<boolean> {
 
     <template #actions>
       <CmkWizardButton type="next" :validation-cb="validate" />
-      <CmkWizardButton type="previous" />
+      <CmkWizardButton v-if="!isFirst" type="previous" />
     </template>
   </CmkWizardStep>
 </template>

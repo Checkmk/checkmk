@@ -34,6 +34,7 @@ const props = defineProps<
     thresholdsSpec: FormSpec
     timePicker: GlobalTimePickerProps
     levelColors: LevelColors
+    finishLabel: TranslatedString
     saving: boolean
     saveError: string | null
   }
@@ -90,7 +91,7 @@ const problem = computed<TranslatedString | null>(() => {
     <template #actions>
       <CmkWizardButton
         type="finish"
-        :override-label="_t('Create & activate changes')"
+        :override-label="finishLabel"
         :disabled="saving || problem !== null"
         @click="emit('create')"
       />

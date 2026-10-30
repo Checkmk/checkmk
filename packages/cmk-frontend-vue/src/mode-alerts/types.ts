@@ -24,6 +24,9 @@ export type AlertConditions = components['schemas']['AlertConditionsModel']
 type TagCondition = NonNullable<AlertConditions['host_tags']>[number]
 
 export type AlertThresholds = components['schemas']['AlertThresholdsModel']
+export type AlertExtensions = components['schemas']['AlertExtensions']
+type StoredConditions = AlertExtensions['conditions']
+type StoredTagCondition = StoredConditions['host_tags'][number]
 type Levels = NonNullable<AlertThresholds['upper']>
 type PredictionPeriod = components['schemas']['PredictiveLevelsModel']['period']
 type DifferenceType = components['schemas']['PredictiveLevelsModel']['difference']['type']
@@ -209,5 +212,91 @@ export function alertThresholds(model: AlertModel, periods: PredictionPeriods): 
   return {
     ...(upper && { upper: levels(upper, periods) }),
     ...(lower && { lower: levels(lower, periods) })
+  }
+}
+
+function optionId(options: Record<string, string>, value: string, what: string): string {
+  const found = Object.entries(options).find(([, optionValue]) => optionValue === value)
+  if (found === undefined) {
+    throw new Error(`No ${what} option for: ${value}`)
+  }
+  return found[0]
+}
+
+// The tag choice only offers tags, so it cannot show a condition on the empty one.
+function tagValue(groupName: string, value: string | null): string {
+  if (value === null) {
+    throw new Error(`Unsupported tag condition on: ${groupName}`)
+  }
+  return value
+}
+
+function tagChoice({ key, operator, value }: StoredTagCondition): ConditionChoicesValue {
+  if (Array.isArray(value)) {
+    const tags = value.map((tag) => tagValue(key, tag))
+    return {
+      group_name: key,
+      value: operator === 'none_of' ? { oper_nor: tags } : { oper_or: tags }
+    }
+  }
+  const tag = tagValue(key, value)
+  return { group_name: key, value: operator === 'is_not' ? { oper_ne: tag } : { oper_eq: tag } }
+}
+
+// Unset conditions are left out, as the rule editor shows a rule without them.
+function hostConditions(conditions: StoredConditions, folderPaths: FolderPaths): HostConditions {
+  const {
+    folder,
+    host_tags: tags,
+    host_label_groups: labelGroups,
+    host_name: hostName
+  } = conditions
+  return {
+    folder_path: optionId(folderPaths, folder.replace(/^\//, ''), 'folder'),
+    ...(tags.length > 0 && { host_tags: tags.map(tagChoice) }),
+    ...(labelGroups.length > 0 && { host_label_groups: labelGroups }),
+    ...(hostName && {
+      explicit_hosts: { value: hostName.match_on, negate: hostName.operator === 'none_of' }
+    })
+  }
+}
+
+function levelsValue(levels: Levels, periods: PredictionPeriods): LevelsValue {
+  switch (levels.type) {
+    case 'no_levels':
+      return ['no_levels', null]
+    case 'fixed':
+      return ['fixed', [levels.warn, levels.crit]]
+    case 'predictive': {
+      const { difference, fixed_limits: limits } = levels
+      return [
+        'predictive',
+        {
+          period: optionId(periods, levels.period, 'prediction period'),
+          horizon: levels.horizon_days,
+          levels: [difference.type, [difference.warn, difference.crit]],
+          bound: limits ? [limits.warn, limits.crit] : null
+        }
+      ]
+    }
+  }
+}
+
+/** The stored alert, as the wizard edits it: the inverse of what creating it sends. */
+export function alertModelFrom(
+  extensions: AlertExtensions,
+  folderPaths: FolderPaths,
+  periods: PredictionPeriods
+): AlertModel {
+  const { upper, lower } = extensions.thresholds
+  return {
+    name: extensions.alert_name,
+    matchType: extensions.service_match.mode,
+    servicePattern: extensions.service_match.pattern,
+    conditions: hostConditions(extensions.conditions, folderPaths),
+    thresholds: {
+      ...(upper && { upper_levels: levelsValue(upper, periods) }),
+      ...(lower && { lower_levels: levelsValue(lower, periods) })
+    }
   }
 }

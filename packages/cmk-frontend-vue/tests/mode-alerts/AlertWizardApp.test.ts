@@ -21,6 +21,7 @@ const API_BASE = `${location.protocol}//${location.host}/api/internal`
 const ENDPOINT = `${API_BASE}/domain-types/service/collections/all`
 const CREATE_ENDPOINT = `${API_BASE}/domain-types/telemetry_alert/collections/all`
 const PREVIEW_ENDPOINT = `${API_BASE}/domain-types/telemetry_alert/actions/preview_data/invoke`
+const ALERT_ENDPOINT = `${API_BASE}/objects/telemetry_alert/:name`
 
 const server = useMswServer(
   http.post(ENDPOINT, () =>
@@ -51,9 +52,10 @@ afterEach(() => {
   resetGlobalTimeState()
 })
 
-function renderApp() {
+function renderApp(configurationName: string | null = null) {
   render(AlertWizardApp, {
     props: {
+      configuration_name: configurationName,
       conditions_form: { spec: CONDITIONS_SPEC, data: { folder_path: MAIN_FOLDER } },
       thresholds_form: { spec: THRESHOLDS_SPEC, data: {} },
       folder_paths: FOLDER_PATHS,
@@ -221,4 +223,157 @@ test('a rejected alert shows the reason', async () => {
   await userEvent.click(await screen.findByRole('button', { name: 'Create & activate changes' }))
 
   expect(await screen.findByText(/already exists/)).toBeVisible()
+})
+
+const STORED_ALERT = {
+  domainType: 'telemetry_alert',
+  id: 'latency_too_high',
+  title: 'Latency too high',
+  links: [],
+  extensions: {
+    alert_name: 'Latency too high',
+    service_match: { mode: 'exact', pattern: 'HTTP request duration' },
+    conditions: { folder: '/linux', host_tags: [], host_label_groups: [] },
+    thresholds: { upper: { type: 'fixed', warn: 80, crit: 90 } }
+  }
+}
+
+function serveStoredAlert() {
+  server.use(
+    http.get(ALERT_ENDPOINT, () => HttpResponse.json(STORED_ALERT, { headers: { ETag: '"v1"' } }))
+  )
+}
+
+async function waitForServicesStep() {
+  const serviceName = await screen.findByRole('combobox', { name: 'Service name' })
+  await waitFor(() => expect(serviceName).toBeEnabled())
+}
+
+test('editing an alert does not offer naming it', async () => {
+  serveStoredAlert()
+  renderApp('latency_too_high')
+
+  await waitForServicesStep()
+
+  // The wizard lists every step by its heading, even while showing another one.
+  expect(screen.queryByRole('heading', { name: 'Name the alert' })).toBeNull()
+})
+
+test('editing an alert offers no step before its services', async () => {
+  serveStoredAlert()
+  renderApp('latency_too_high')
+
+  await waitForServicesStep()
+
+  expect(screen.getByRole('button', { name: /next step/i })).toBeVisible()
+  expect(screen.queryByRole('button', { name: /previous step/i })).toBeNull()
+})
+
+test('editing an alert opens on its services, prefilled', async () => {
+  serveStoredAlert()
+  renderApp('latency_too_high')
+
+  await waitForServicesStep()
+
+  // The service name's title is looked up like the user's input is, so it shows once found.
+  await waitFor(() =>
+    expect(screen.getByRole('combobox', { name: 'Service name' })).toHaveTextContent(
+      'HTTP request duration'
+    )
+  )
+  expect(screen.getByRole('combobox', { name: 'Folder' })).toHaveTextContent('Main/Linux')
+})
+
+test('saving an edited alert sends the update guarded by its ETag, without its name', async () => {
+  serveStoredAlert()
+  const sent: { body: unknown; ifMatch: string | null }[] = []
+  server.use(
+    http.put(ALERT_ENDPOINT, async ({ request }) => {
+      sent.push({ body: await request.json(), ifMatch: request.headers.get('If-Match') })
+      return HttpResponse.json({})
+    })
+  )
+  renderApp('latency_too_high')
+  await waitForServicesStep()
+  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Save & activate changes' }))
+
+  await waitFor(() => expect(sent).toHaveLength(1))
+  expect(sent).toEqual([
+    {
+      body: {
+        service_match: { mode: 'exact', pattern: 'HTTP request duration' },
+        conditions: { folder: '/linux', host_tags: [], host_label_groups: [] },
+        thresholds: { upper: { type: 'fixed', warn: 80, crit: 90 } }
+      },
+      ifMatch: '"v1"'
+    }
+  ])
+})
+
+test('an alert that cannot be loaded shows why instead of the wizard', async () => {
+  server.use(
+    http.get(ALERT_ENDPOINT, () =>
+      HttpResponse.json(
+        {
+          title: 'Alert not found',
+          detail: 'No alert named "latency_too_high" exists.',
+          status: 404
+        },
+        { status: 404 }
+      )
+    )
+  )
+  renderApp('latency_too_high')
+
+  expect(await screen.findByText(/No alert named/)).toBeVisible()
+  expect(screen.queryByRole('heading', { name: 'Select services' })).toBeNull()
+})
+
+test('an edit rejected for a concurrent change shows the reason', async () => {
+  serveStoredAlert()
+  server.use(
+    http.put(ALERT_ENDPOINT, () =>
+      HttpResponse.json(
+        {
+          title: 'Precondition failed',
+          detail: 'The ETag "\\"v1\\"" is not current.',
+          status: 412
+        },
+        { status: 412 }
+      )
+    )
+  )
+  renderApp('latency_too_high')
+  await waitForServicesStep()
+  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Save & activate changes' }))
+
+  expect(await screen.findByText(/is not current/)).toBeVisible()
+})
+
+test('an alert in a folder the editor does not offer says so instead of the wizard', async () => {
+  const conditions = { ...STORED_ALERT.extensions.conditions, folder: '/hidden' }
+  server.use(
+    http.get(ALERT_ENDPOINT, () =>
+      HttpResponse.json(
+        { ...STORED_ALERT, extensions: { ...STORED_ALERT.extensions, conditions } },
+        { headers: { ETag: '"v1"' } }
+      )
+    )
+  )
+  renderApp('latency_too_high')
+
+  expect(await screen.findByText(/uses conditions the editor cannot show/)).toBeVisible()
+  expect(screen.queryByRole('heading', { name: 'Select services' })).toBeNull()
+})
+
+test('an alert loaded without a version identifier says so instead of the wizard', async () => {
+  server.use(http.get(ALERT_ENDPOINT, () => HttpResponse.json(STORED_ALERT)))
+  renderApp('latency_too_high')
+
+  expect(await screen.findByText(/without a version identifier/)).toBeVisible()
+  expect(screen.queryByRole('heading', { name: 'Select services' })).toBeNull()
 })

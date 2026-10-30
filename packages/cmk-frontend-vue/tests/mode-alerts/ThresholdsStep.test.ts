@@ -94,7 +94,7 @@ function renderStep(thresholds: ThresholdsValue = {}, selected: boolean = true) 
         levelColors: { warning: '#ffd000', critical: '#ff3232' }
       }
     },
-    template: `<ThresholdsStep v-model="model" :thresholds-spec="spec" :time-picker="timePicker" :level-colors="levelColors" :saving="false" :save-error="null" :index="3" :is-completed="() => false" />`
+    template: `<ThresholdsStep v-model="model" :thresholds-spec="spec" :time-picker="timePicker" :level-colors="levelColors" finish-label="Create" :saving="false" :save-error="null" :index="3" :is-completed="() => false" />`
   })
   render(wrapper, {
     global: {

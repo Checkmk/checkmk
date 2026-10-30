@@ -6,7 +6,9 @@
 import { expect, test } from 'vitest'
 
 import {
+  type AlertExtensions,
   alertConditions,
+  alertModelFrom,
   alertName,
   alertThresholds,
   emptyAlert,
@@ -267,4 +269,91 @@ test('an empty fixed limit of predictive levels is incomplete', () => {
   })
 
   expect(hasCompleteThresholds(model)).toBe(false)
+})
+
+const STORED: AlertExtensions = {
+  alert_name: 'High pod CPU',
+  service_match: { mode: 'regex', pattern: '^Pod .* usage$' },
+  conditions: { folder: '/', host_tags: [], host_label_groups: [] },
+  thresholds: { upper: { type: 'fixed', warn: 80, crit: 90 } }
+}
+
+test('a stored alert is edited with its service match', () => {
+  const model = alertModelFrom(STORED, FOLDERS, PREDICTION_PERIODS)
+
+  expect([model.matchType, model.servicePattern]).toEqual(['regex', '^Pod .* usage$'])
+})
+
+test('a stored alert without further conditions is edited with only its folder set', () => {
+  expect(alertModelFrom(STORED, FOLDERS, PREDICTION_PERIODS).conditions).toEqual({
+    folder_path: ''
+  })
+})
+
+test('a stored alert is edited with the conditions it was created with', () => {
+  const conditions: AlertExtensions['conditions'] = {
+    folder: '/linux/web',
+    host_tags: [
+      { key: 'criticality', operator: 'is', value: 'prod' },
+      { key: 'networking', operator: 'is_not', value: 'wan' },
+      { key: 'address_family', operator: 'one_of', value: ['ip-v4-only', 'ip-v6-only'] },
+      { key: 'agent', operator: 'none_of', value: ['no-agent'] }
+    ],
+    host_label_groups: [
+      { operator: 'and', label_group: [{ operator: 'and', label: 'os:linux' }] },
+      { operator: 'not', label_group: [{ operator: 'or', label: 'env:test' }] }
+    ],
+    host_name: { match_on: ['web01', '~db'], operator: 'none_of' }
+  }
+
+  const model = alertModelFrom({ ...STORED, conditions }, FOLDERS, PREDICTION_PERIODS)
+
+  expect(alertConditions(model, FOLDERS)).toEqual(conditions)
+})
+
+test('a stored alert in an unknown folder is refused rather than moved to the Main folder', () => {
+  const conditions = { ...STORED.conditions, folder: '/gone' }
+
+  expect(() => alertModelFrom({ ...STORED, conditions }, FOLDERS, PREDICTION_PERIODS)).toThrow(
+    'gone'
+  )
+})
+
+test('a stored alert is edited with the thresholds it was created with', () => {
+  const thresholds: AlertExtensions['thresholds'] = {
+    upper: {
+      type: 'predictive',
+      period: 'minute_of_hour',
+      horizon_days: 7,
+      difference: { type: 'stdev', warn: 2, crit: 3 }
+    },
+    lower: {
+      type: 'predictive',
+      period: 'day_of_week',
+      horizon_days: 90,
+      difference: { type: 'relative', warn: 10, crit: 20 },
+      fixed_limits: { warn: 5, crit: 2 }
+    }
+  }
+
+  const model = alertModelFrom({ ...STORED, thresholds }, FOLDERS, PREDICTION_PERIODS)
+
+  expect(alertThresholds(model, PREDICTION_PERIODS)).toEqual(thresholds)
+})
+
+test('stored fixed levels and "No levels" are edited as they were created', () => {
+  const thresholds: AlertExtensions['thresholds'] = {
+    upper: { type: 'fixed', warn: 80, crit: 90 },
+    lower: { type: 'no_levels' }
+  }
+
+  const model = alertModelFrom({ ...STORED, thresholds }, FOLDERS, PREDICTION_PERIODS)
+
+  expect(alertThresholds(model, PREDICTION_PERIODS)).toEqual(thresholds)
+})
+
+test('a side without stored levels stays unset', () => {
+  expect(alertModelFrom(STORED, FOLDERS, PREDICTION_PERIODS).thresholds).toEqual({
+    upper_levels: ['fixed', [80, 90]]
+  })
 })

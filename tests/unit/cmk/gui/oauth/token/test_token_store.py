@@ -18,6 +18,7 @@ import time_machine
 
 from cmk.ccc.resulttype import Error
 from cmk.ccc.user import UserId
+from cmk.gui.oauth.store.client_store import ClientId, ClientStore
 from cmk.gui.oauth.token.token_store import (
     IssuedAccessToken,
     IssuedTokens,
@@ -705,6 +706,18 @@ def test_list_all_usable_grants_returns_every_users_grants(store: TokenStore) ->
     other = _grant_id(store, _start_grant(store, user_id=UserId("other")).refresh)
 
     assert {grant.grant_id for grant in store.list_all_usable_grants()} == {own, other}
+
+
+def test_listing_leaves_out_the_grants_of_built_in_clients(
+    store: TokenStore, connection: sqlite3.Connection
+) -> None:
+    ClientStore(connection).ensure_builtin(ClientId("builtin"), "Built-in")
+    _delegate(store, client_id="builtin")
+    registered = _delegate(store)
+
+    expected = [_grant_of(store, registered.access)]
+    assert [grant.grant_id for grant in store.list_usable_grants(_USER)] == expected
+    assert [grant.grant_id for grant in store.list_all_usable_grants()] == expected
 
 
 def test_list_usable_grants_skips_a_grant_whose_stored_scope_does_not_parse(

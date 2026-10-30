@@ -12,7 +12,6 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
-from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.type_defs import SessionState
 from cmk.gui.userdb import load_session_infos
 from cmk.gui.userdb.session import auth_cookie_value, create_session_id
@@ -55,8 +54,6 @@ def test_identify_issues_no_token(
 
     clients.GuiSession.identify({"session_cookie": cookie}, headers=internal_token)
 
-    with get_token_store() as tokens:
-        assert tokens.list_all_usable_grants() == []
     assert [e for e in security_events if e.summary == "oauth token issued"] == []
 
 

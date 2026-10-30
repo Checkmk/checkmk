@@ -314,11 +314,17 @@ class TokenStore:
         A grant is usable while it has an unexpired, unrotated refresh token
         or an unexpired access token. Tokens never outlive their grant, so
         this also leaves out grants past their end before they are purged.
+
+        Grants of built-in clients are left out: they are short-lived and the
+        control plane re-creates them on each turn, so they are not the
+        user's to manage and removing one achieves nothing lasting. Built-in
+        clients are the ones without redirect URIs, which registration
+        requires.
         """
         return self._list_usable_grants(user_id)
 
     def list_all_usable_grants(self) -> list[GrantRecord]:
-        """The usable grants of every user, newest first."""
+        """The usable grants of every user, newest first, without built-in clients' grants."""
         return self._list_usable_grants(None)
 
     def _list_usable_grants(self, user_id: UserId | None) -> list[GrantRecord]:
@@ -329,7 +335,11 @@ class TokenStore:
                 expires_at AS grant_expires_at
             FROM grants
             WHERE {"user_id = :user_id AND" if user_id is not None else ""}
-                (
+                EXISTS (
+                    SELECT 1 FROM clients
+                    WHERE client_id = grants.client_id AND redirect_uris != '[]'
+                )
+                AND (
                     EXISTS (
                         SELECT 1 FROM refresh_tokens
                         WHERE grant_id = grants.grant_id

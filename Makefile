@@ -209,6 +209,6 @@ check_python_requirements:
 
 test-github-actions:
 	EDITION=community bazel run //:format.check
-	EDITION=community bazel lint --fixes=false ...
+	EDITION=community bazel lint --fixes=false -- ... -//bazel/tools/windows_vm:component
 	EDITION=community tests/run_tests.sh test-unit
-	bazel build --config=mypy ...
+	bazel build --config=mypy -- ... -//bazel/tools/windows_vm:component

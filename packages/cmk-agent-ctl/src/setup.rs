@@ -64,6 +64,14 @@ pub fn connection_timeout() -> u64 {
     timeout
 }
 
+pub fn update_start_delay_disabled() -> bool {
+    let disabled = env::var_os(constants::ENV_NO_UPDATE_START_DELAY).is_some();
+    if disabled {
+        debug!("Skipping the start delay of the update thread");
+    }
+    disabled
+}
+
 pub fn max_connections() -> usize {
     let Ok(str_max) = env::var(constants::ENV_MAX_CONNECTIONS) else {
         return constants::MAX_CONNECTIONS;

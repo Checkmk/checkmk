@@ -10,7 +10,7 @@ use crate::environment::PathResolver;
 #[cfg(unix)]
 use crate::updater::InstallOutcome;
 use crate::updater::{CheckOutcome, FetchOutcome, SignatureCheck, Updater, WritableUpdater};
-use crate::{agent_receiver_api, misc};
+use crate::{agent_receiver_api, misc, setup};
 use anyhow::Result as AnyhowResult;
 use log::warn;
 #[cfg(unix)]
@@ -220,7 +220,8 @@ fn report_fetch(outcome: &FetchOutcome) -> String {
 }
 
 /// The update thread of the daemon: one cycle per interval, while automatic
-/// updates are activated, after a random delay at start.
+/// updates are activated, after a random delay at start. Tests skip the delay
+/// with `DEBUG_NO_UPDATE_START_DELAY`.
 ///
 /// The lock is taken only for a cycle that runs, so a host without automatic
 /// updates never touches the download directory. A failed cycle, a lock that
@@ -231,7 +232,9 @@ pub fn fn_thread(
     mut registry: Registry,
     client_config: ClientConfig,
 ) -> AnyhowResult<()> {
-    misc::sleep_randomly();
+    if !setup::update_start_delay_disabled() {
+        misc::sleep_randomly();
+    }
 
     loop {
         let begin = Instant::now();

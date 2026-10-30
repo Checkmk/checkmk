@@ -66,6 +66,9 @@ pub const ENV_UPDATE_CONFIG: &str = "CMK_AGENT_CTL_UPDATE_CONFIG";
 pub const ENV_HOME_DIR: &str = "DEBUG_HOME_DIR";
 pub const ENV_MAX_CONNECTIONS: &str = "DEBUG_MAX_CONNECTIONS";
 pub const ENV_CONNECTION_TIMEOUT: &str = "DEBUG_CONNECTION_TIMEOUT";
+/// Set for tests only: the update thread of the daemon runs its first cycle at
+/// once instead of after a random delay.
+pub const ENV_NO_UPDATE_START_DELAY: &str = "DEBUG_NO_UPDATE_START_DELAY";
 #[cfg(windows)]
 pub const ENV_PROGRAM_DATA: &str = "ProgramData";
 

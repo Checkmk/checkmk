@@ -196,7 +196,7 @@ def automation_discovery(
                     on_error=on_error,
                     inventorized_host_labels=InventorizedHostLabelsStore(
                         host_name, inventorized_host_labels_dir
-                    ).load(),
+                    ).load(debug=debug),
                 ),
             )
             DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).save(

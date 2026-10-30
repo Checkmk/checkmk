@@ -24,7 +24,9 @@ _NUMBER_OF_BUNDLES = 200
 
 def _transform_tree_path(tree_path: TreePath, mtime: float) -> None:
     with cmk.ccc.store.locked(tree_path.path), cmk.ccc.store.locked(tree_path.legacy):
-        if raw_tree := cmk.ccc.store.load_object_from_file(tree_path.legacy, default=None):
+        if raw_tree := cmk.ccc.store.load_object_from_file_explicit(
+            tree_path.legacy, default=None, debug=False
+        ):
             save_raw_tree(tree_path, raw_tree)
             os.utime(tree_path.path, (mtime, mtime))
     tree_path.legacy.unlink(missing_ok=True)
@@ -32,7 +34,9 @@ def _transform_tree_path(tree_path: TreePath, mtime: float) -> None:
 
 def _transform_tree_path_gz(tree_path_gz: TreePathGz, mtime: float) -> None:
     with cmk.ccc.store.locked(tree_path_gz.path), cmk.ccc.store.locked(tree_path_gz.legacy):
-        if gzipped := cmk.ccc.store.load_bytes_from_file(tree_path_gz.legacy, default=b""):
+        if gzipped := cmk.ccc.store.load_bytes_from_file_explicit(
+            tree_path_gz.legacy, default=b"", debug=False
+        ):
             save_raw_tree_gz(tree_path_gz, parse_from_gzipped(gzipped))
             os.utime(tree_path_gz.path, (mtime, mtime))
     tree_path_gz.legacy.unlink(missing_ok=True)
@@ -147,7 +151,9 @@ class TransformationResultsStore:
                 duration=r["duration"],
                 size=r["size"],
             )
-            for r in cmk.ccc.store.load_object_from_file(self.file_path, default=[])
+            for r in cmk.ccc.store.load_object_from_file_explicit(
+                self.file_path, default=[], debug=False
+            )
         ]
 
     def save(self, transformation_results: Sequence[TransformationResult]) -> None:

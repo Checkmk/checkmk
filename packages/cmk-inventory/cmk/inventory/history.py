@@ -205,7 +205,7 @@ class HistoryStore:
 
         key = (path.tree_path.path, path.tree_path.legacy)
         if key not in self._lookup:
-            self._lookup[key] = load_tree_from_tree_path(path.tree_path)
+            self._lookup[key] = load_tree_from_tree_path(path.tree_path, debug=False)
         return self._lookup[key]
 
     def _load_history_entry(
@@ -215,9 +215,11 @@ class HistoryStore:
             case HistoryDeltaPath():
                 try:
                     raw = (
-                        json.loads(store.load_text_from_file(path.file_path))
+                        json.loads(store.load_text_from_file_explicit(path.file_path, debug=False))
                         if path.file_path.suffix == ".json"
-                        else store.load_object_from_file(path.file_path, default=None)
+                        else store.load_object_from_file_explicit(
+                            path.file_path, default=None, debug=False
+                        )
                     )
                 except MKGeneralException:
                     return Error([path.file_path])

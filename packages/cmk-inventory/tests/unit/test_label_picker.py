@@ -545,11 +545,11 @@ def test_pick_labels_from_single_values_and_table_columns_of_one_node() -> None:
 
 
 def test_inventorized_host_labels_store_load_default(tmp_path: Path) -> None:
-    assert InventorizedHostLabelsStore(HostName("host"), tmp_path).load() == {}
+    assert InventorizedHostLabelsStore(HostName("host"), tmp_path).load(debug=False) == {}
 
 
 def test_inventorized_host_labels_store_save_load_roundtrip(tmp_path: Path) -> None:
     InventorizedHostLabelsStore(HostName("host"), tmp_path).save({"cmk/inventory/product": "foo"})
-    assert InventorizedHostLabelsStore(HostName("host"), tmp_path).load() == {
+    assert InventorizedHostLabelsStore(HostName("host"), tmp_path).load(debug=False) == {
         "cmk/inventory/product": "foo"
     }

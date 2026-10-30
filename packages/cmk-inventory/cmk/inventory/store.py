@@ -67,10 +67,12 @@ def rename(
     return list(actions)
 
 
-def load_tree_from_tree_path(tree_path: TreePath) -> ImmutableTree:
-    if raw_tree := store.load_text_from_file(tree_path.path):
+def load_tree_from_tree_path(tree_path: TreePath, *, debug: bool) -> ImmutableTree:
+    if raw_tree := store.load_text_from_file_explicit(tree_path.path, debug=debug):
         return deserialize_tree(json.loads(raw_tree))
-    if raw_tree := store.load_object_from_file(tree_path.legacy, default=None):
+    if raw_tree := store.load_object_from_file_explicit(
+        tree_path.legacy, default=None, debug=debug
+    ):
         return deserialize_tree(raw_tree)
     return ImmutableTree()
 
@@ -115,7 +117,7 @@ def _compute_mtime(tree_path: TreePath) -> _TreePathMTime | None:
             return None
 
 
-def _archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> None:
+def _archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName, *, debug: bool) -> None:
     tree_path = inv_paths.inventory_tree(host_name)
     if (tree_path_mtime := _compute_mtime(tree_path)) is None:
         return
@@ -131,7 +133,9 @@ def _archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> N
         tree_path_gz.legacy.unlink(missing_ok=True)
         return
 
-    if raw_tree := store.load_object_from_file(tree_path.legacy, default=None):
+    if raw_tree := store.load_object_from_file_explicit(
+        tree_path.legacy, default=None, debug=debug
+    ):
         inv_paths.archive_host(host_name).mkdir(parents=True, exist_ok=True)
         store.save_text_to_file(archive_tree.path, json.dumps(raw_tree))
         tree_path.legacy.unlink(missing_ok=True)
@@ -220,8 +224,8 @@ class RawInventoryStore:
         tree_path_gz.legacy.unlink(missing_ok=True)
         os.utime(tree_path_gz.path, (timestamp, timestamp))
 
-    def archive_inventory_tree(self, *, host_name: HostName) -> None:
-        _archive_inventory_tree(self.inv_paths, host_name)
+    def archive_inventory_tree(self, *, host_name: HostName, debug: bool) -> None:
+        _archive_inventory_tree(self.inv_paths, host_name, debug=debug)
 
 
 class InventoryStore:
@@ -229,7 +233,7 @@ class InventoryStore:
         self.inv_paths = InventoryPaths(omd_root)
 
     def load_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
-        return load_tree_from_tree_path(self.inv_paths.inventory_tree(host_name))
+        return load_tree_from_tree_path(self.inv_paths.inventory_tree(host_name), debug=False)
 
     def save_inventory_tree(
         self, *, host_name: HostName, tree: MutableTree | ImmutableTree, meta: SDMeta
@@ -256,7 +260,7 @@ class InventoryStore:
         tree_path_gz.legacy.unlink(missing_ok=True)
 
     def load_status_data_tree(self, *, host_name: HostName) -> ImmutableTree:
-        return load_tree_from_tree_path(self.inv_paths.status_data_tree(host_name))
+        return load_tree_from_tree_path(self.inv_paths.status_data_tree(host_name), debug=False)
 
     def save_status_data_tree(
         self, *, host_name: HostName, tree: MutableTree | ImmutableTree
@@ -284,8 +288,8 @@ class InventoryStore:
             ),
         )
 
-    def load_previous_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
-        if tree := load_tree_from_tree_path(self.inv_paths.inventory_tree(host_name)):
+    def load_previous_inventory_tree(self, *, host_name: HostName, debug: bool) -> ImmutableTree:
+        if tree := load_tree_from_tree_path(self.inv_paths.inventory_tree(host_name), debug=debug):
             return tree
 
         try:
@@ -297,8 +301,8 @@ class InventoryStore:
             return ImmutableTree()
 
         return load_tree_from_tree_path(
-            TreePath.from_archive_or_delta_cache_file_path(latest_archive_file_path)
+            TreePath.from_archive_or_delta_cache_file_path(latest_archive_file_path), debug=debug
         )
 
-    def archive_inventory_tree(self, *, host_name: HostName) -> None:
-        _archive_inventory_tree(self.inv_paths, host_name)
+    def archive_inventory_tree(self, *, host_name: HostName, debug: bool) -> None:
+        _archive_inventory_tree(self.inv_paths, host_name, debug=debug)

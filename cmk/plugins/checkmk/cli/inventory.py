@@ -312,7 +312,9 @@ def _mode_inventory(
             section.section_begin(hostname)
             section.section_step("Inventorizing")
             try:
-                previous_tree = inv_store.load_previous_inventory_tree(host_name=hostname)
+                previous_tree = inv_store.load_previous_inventory_tree(
+                    host_name=hostname, debug=global_options.debug
+                )
                 if hostname in hosts_config.clusters:
                     check_results = inventory.inventorize_cluster(
                         hosts_config.clusters[hostname],

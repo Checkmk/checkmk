@@ -49,6 +49,7 @@ from ._graph_display_config import (
     HTML_SIZE_PER_EX,
     resolve_size,
 )
+from ._graph_evaluation import EvaluateGraph, requested_window
 from ._graph_ranges import compute_graph_ranges_for_width, GraphRanges
 from ._graph_specification import (
     AnnotatedHostName,
@@ -189,6 +190,8 @@ __all__ = [
     "EvaluationOptions",
     "EvaluatedMetric",
     "graph_request_of",
+    "EvaluateGraph",
+    "requested_window",
     "FetchDataWithDiagnosticsProtocol",
     "FetchDiagnostics",
     "FetchTimeSeriesProtocol",

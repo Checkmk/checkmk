@@ -30,13 +30,14 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.graphing import (
     build_template_graphs,
+    EvaluateGraph,
     FetchDiagnostics,
     parse_graph_specification,
+    requested_window,
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._built_graphs import BuiltGraph
 from cmk.gui.graphing._graph_templates import (
-    _EvaluateTemplateGraphs,
     MKGraphMixedUnitsError,
     StoredTemplateGraphSpecification,
 )
@@ -116,9 +117,10 @@ def test_template_lifecycle_discover_and_update() -> None:
     # Discovery fetches performance data only, never the time series.
     assert fetch_data.requested_ranges == []
 
-    evaluate = _EvaluateTemplateGraphs(
+    evaluate = EvaluateGraph(
         _DISCOVERY_RANGE,
         fetch_data,
+        window_of=requested_window,
     )
     evaluated = [one for graph in graphs for one in evaluate(graph).graphs]
 

@@ -44,12 +44,13 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.graphing import (
     EvaluatedGraphs,
+    EvaluateGraph,
     EvaluationOptions,
     FetchDiagnostics,
     QueryLimitReached,
+    requested_window,
 )
 from cmk.gui.graphing._graph_dispatch import serialize_graphs
-from cmk.gui.graphing._graph_templates import _EvaluateTemplateGraphs
 from cmk.gui.graphing._user_specific_unit import user_unit_format
 from cmk.gui.graphing.openapi import fetch_graph_data as fetch_graph_data_module
 from cmk.gui.graphing.openapi._serialize import (
@@ -182,7 +183,7 @@ def test_a_region_open_at_the_top_is_served_without_an_upper_bound() -> None:
 @pytest.mark.usefixtures("load_config")
 def test_fetch_graph_data_empty_graph_runs_end_to_end() -> None:
     # An empty graph has no metrics, so the livestatus-backed RRD source is never queried. The handler
-    # therefore runs end to end (evaluate_graphs -> _EvaluateTemplateGraphs -> evaluated_to_response)
+    # therefore runs end to end (evaluate_graphs -> EvaluateGraph -> evaluated_to_response)
     # and returns an empty, fallback-ranged response -- guarding the real wiring without a livestatus
     # fixture.
     graph = Graph(name="g", title="t", kind="template")
@@ -388,9 +389,10 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
                 if isinstance(rrd_metric, RRDMetric)
             }
 
-    [evaluated] = _EvaluateTemplateGraphs(
+    [evaluated] = EvaluateGraph(
         time_range,
         _FetchData(),
+        window_of=requested_window,
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,
@@ -461,9 +463,10 @@ def test_evaluated_to_response_keeps_a_metric_whose_rrd_holds_no_series() -> Non
                 if isinstance(rrd_metric, RRDMetric)
             }
 
-    [evaluated] = _EvaluateTemplateGraphs(
+    [evaluated] = EvaluateGraph(
         time_range,
         _FetchData(),
+        window_of=requested_window,
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,
@@ -527,9 +530,10 @@ def test_evaluated_to_response_converts_the_values_to_the_users_temperature_unit
                 if isinstance(rrd_metric, RRDMetric)
             }
 
-    [evaluated] = _EvaluateTemplateGraphs(
+    [evaluated] = EvaluateGraph(
         time_range,
         _FetchData(),
+        window_of=requested_window,
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,
@@ -588,9 +592,10 @@ def test_evaluated_to_response_leaves_a_non_temperature_unit_alone() -> None:
                 if isinstance(rrd_metric, RRDMetric)
             }
 
-    [evaluated] = _EvaluateTemplateGraphs(
+    [evaluated] = EvaluateGraph(
         time_range,
         _FetchData(),
+        window_of=requested_window,
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,

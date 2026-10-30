@@ -5,8 +5,7 @@
 
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
-from typing import Final, Literal, override, Self
+from typing import Final, Literal, override
 
 from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
@@ -20,14 +19,12 @@ from cmk.graphing_engine import (
     ApiGraph,
     build_matched_graphs,
     drawn_curves,
-    evaluate_graphs,
     FetchMetricNamesProtocol,
     Graph,
     HostName,
     RequestedMetric,
     RRDMetric,
     ServiceName,
-    TimeRange,
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
@@ -38,13 +35,12 @@ from ._built_graphs import BuiltGraph, DiscoveredGraphs
 from ._graph_choices import GraphPluginChoice
 from ._graph_codec import GraphCodec
 from ._graph_dispatch import (
-    EvaluatedGraphs,
     EvaluationOptions,
-    FetchDataWithDiagnosticsProtocol,
     graph_request_of,
     GraphDispatcher,
     legacy_graph_id,
 )
+from ._graph_evaluation import EvaluateGraph, requested_window
 from ._graph_specification import AnnotatedHostName, GraphSpecification, StoredGraphSpecification
 from ._plugins import registered_graphs, registered_metrics, registered_translations
 from ._source import RRDFetchData, RRDFetchMetricNames
@@ -190,32 +186,17 @@ def build_template_graphs(
     ]
 
 
-@dataclass(frozen=True)
-class _EvaluateTemplateGraphs:
-    time_range: TimeRange
-    fetch_data: FetchDataWithDiagnosticsProtocol
-
-    @classmethod
-    def make(cls, options: EvaluationOptions) -> Self:
-        return cls(
-            options.time_range,
-            RRDFetchData(
-                debug=active_config.debug,
-                registered_translations=registered_translations(),
-                include_edge_neighbours=options.include_edge_neighbours,
-                consolidation_function=options.consolidation_function,
-            ),
-        )
-
-    def __call__(self, graph: Graph) -> EvaluatedGraphs:
-        return EvaluatedGraphs(
-            graphs=evaluate_graphs(
-                time_range=self.time_range,
-                graphs=[graph],
-                fetch_data=self.fetch_data,
-            ),
-            diagnostics=self.fetch_data.diagnostics,
-        )
+def _evaluate_template_graphs(options: EvaluationOptions) -> EvaluateGraph:
+    return EvaluateGraph(
+        options.time_range,
+        RRDFetchData(
+            debug=active_config.debug,
+            registered_translations=registered_translations(),
+            include_edge_neighbours=options.include_edge_neighbours,
+            consolidation_function=options.consolidation_function,
+        ),
+        window_of=requested_window,
+    )
 
 
 def template_graph_dispatcher(codec: GraphCodec) -> GraphDispatcher:
@@ -224,7 +205,7 @@ def template_graph_dispatcher(codec: GraphCodec) -> GraphDispatcher:
     return GraphDispatcher(
         kind=TEMPLATE_KIND,
         codec=codec,
-        make_evaluate=_EvaluateTemplateGraphs.make,
+        make_evaluate=_evaluate_template_graphs,
     )
 
 

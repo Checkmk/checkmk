@@ -30,12 +30,13 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.graphing import (
     build_template_graphs,
+    EvaluateGraph,
     HOST_PSEUDO_SERVICE,
+    requested_window,
     RRDFetchData,
     RRDFetchMetricNames,
     TemplateGraphSpecification,
 )
-from cmk.gui.graphing._graph_templates import _EvaluateTemplateGraphs
 from cmk.gui.graphing._source import (
     chop_last_empty_step,
     PerformanceDataRow,
@@ -272,7 +273,7 @@ def _drawn(
         registered_metrics={},
         fetch_metric_names=_FakeMetricNames(metric_name),
     )
-    [evaluated] = _EvaluateTemplateGraphs(
+    [evaluated] = EvaluateGraph(
         _RANGE,
         RRDFetchData(
             debug=True,
@@ -287,6 +288,7 @@ def _drawn(
             performance_data_source=_FakeRRDFetchPerformanceData(perf_data),
             time_series_source=time_series,
         ),
+        window_of=requested_window,
     )(built.graph).graphs
     [curve] = _drawn_curves(evaluated)
     return curve, time_series.requested

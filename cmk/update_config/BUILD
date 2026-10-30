@@ -67,7 +67,6 @@ py_library(
         "//cmk/validate_config",
         "//packages/cmk-backup:gui",
         "//packages/cmk-backup:utils",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:log",

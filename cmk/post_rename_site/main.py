@@ -7,7 +7,6 @@ from argparse import ArgumentParser
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
-import cmk.ccc.debug
 from cmk.ccc.i18n import _ as localizer
 from cmk.ccc.site import omd_site, SiteId
 from cmk.discover_plugins import discover_all_plugins, PluginGroup
@@ -53,8 +52,6 @@ def main(args: Sequence[str]) -> int:
     arguments = parse_arguments(args)
     setup_logging(verbose=arguments.verbose)
 
-    if arguments.debug:
-        cmk.ccc.debug.enable()
     logger.debug("parsed arguments: %(arguments)s", {"arguments": arguments})
 
     new_site_id = omd_site()

@@ -20,8 +20,6 @@ from contextlib import contextmanager
 from itertools import chain
 from typing import Literal
 
-import cmk.ccc.debug
-
 # This special script needs persistence and conversion code from different
 # places of Checkmk. We may centralize the conversion and move the persistance
 # to a specific layer in the future, but for the the moment we need to deal
@@ -65,9 +63,6 @@ def main(
     args: Sequence[str], ensure_site_is_stopped_callback: Callable[[logging.Logger], None]
 ) -> int:
     arguments = _parse_arguments(args)
-
-    if arguments.debug:
-        cmk.ccc.debug.enable()
 
     logger = _setup_logging(arguments.verbose)
     logger.debug("parsed arguments: %(arguments)s", {"arguments": arguments})

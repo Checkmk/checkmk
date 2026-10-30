@@ -44,7 +44,6 @@ py_library(
         "//cmk/gui/rule_specs:types",
         "//cmk/gui/watolib",
         "//cmk/server_side_calls_backend",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-check-engine:specs",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",

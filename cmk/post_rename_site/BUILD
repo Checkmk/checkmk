@@ -34,7 +34,6 @@ py_library(
     ],
     deps = [
         "//cmk/utils",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:i18n",
         "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:site",

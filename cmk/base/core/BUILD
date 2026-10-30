@@ -54,7 +54,6 @@ py_library(
         "//cmk/server_side_calls_backend",
         "//cmk/utils",
         "//packages/cmk-ccc:config-path",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-check-engine:checker-helper-config",
         "//packages/cmk-check-engine:fetchers",

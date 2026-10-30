@@ -14,7 +14,6 @@ from argparse import ArgumentParser
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import assert_never
 
-import cmk.ccc.debug
 from cmk.agent_based import v2 as agent_based_v2
 from cmk.agent_based import v3_unstable as agent_based_v3_unstable
 from cmk.ccc.exceptions import MKGeneralException
@@ -419,9 +418,6 @@ def main() -> int:
         help="Enable debug mode (raise Exceptions instead of logging them)",
     )
     args = parser.parse_args()
-
-    if args.debug:
-        cmk.ccc.debug.enable()
 
     validation_result = validate_plugins(debug=args.debug)
 

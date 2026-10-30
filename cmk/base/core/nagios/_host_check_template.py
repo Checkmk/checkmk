@@ -9,7 +9,6 @@
 import sys
 from contextlib import suppress
 
-import cmk.ccc.debug
 import cmk.utils.log
 import cmk.utils.password_store
 from cmk.base import config
@@ -89,8 +88,6 @@ def main() -> int:
     cmk.utils.log.setup_console_logging()
 
     cmk.utils.log.logger.setLevel(cmk.utils.log.verbosity_to_log_level(loglevel))
-    if debug:
-        cmk.ccc.debug.enable()
 
     try:
         # It's safe to resolve the latest link here, as the nagios core will not remove

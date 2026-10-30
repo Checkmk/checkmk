@@ -12,7 +12,6 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Literal, TypedDict
 
-import cmk.ccc.debug
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.base import config
@@ -327,9 +326,6 @@ def _mode_check_discovery(
 
 
 def _run_check_discovery(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
-    if context.global_options.debug:
-        # the store reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_check_discovery(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -651,9 +647,6 @@ def _mode_discover(
 
 
 def _run_discover(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
-    if context.global_options.debug:
-        # the store reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_discover(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

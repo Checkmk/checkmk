@@ -25,7 +25,6 @@ py_library(
         "//cmk/utils:man_pages",
         "//packages/cmk-ccc:cleanup",
         "//packages/cmk-ccc:config-path",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",

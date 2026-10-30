@@ -9,7 +9,6 @@ import sys
 from contextlib import nullcontext, suppress
 from pathlib import Path
 
-import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk import trace
@@ -93,9 +92,6 @@ def _mode_automation(
 
 
 def _run_automation(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
-    if context.global_options.debug:
-        # the store reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_automation(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

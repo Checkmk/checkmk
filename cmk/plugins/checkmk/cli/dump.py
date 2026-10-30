@@ -11,7 +11,6 @@ from collections.abc import Iterable
 from pathlib import Path
 
 import cmk.base.dump_host
-import cmk.ccc.debug
 import cmk.livestatus_client as livestatus
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -286,9 +285,6 @@ def _mode_dump_agent(
 
 
 def _run_dump_agent(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
-    if context.global_options.debug:
-        # the store reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_dump_agent(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -400,9 +396,6 @@ def _mode_dump_hosts(
 
 
 def _run_dump_hosts(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
-    if context.global_options.debug:
-        # the store reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_dump_hosts(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

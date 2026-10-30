@@ -9,7 +9,6 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal, TypedDict
 
-import cmk.ccc.debug
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.base import config
@@ -164,9 +163,6 @@ def _mode_check(
 
 
 def _run_check(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
-    if context.global_options.debug:
-        # the store reads cmk.ccc.debug
-        cmk.ccc.debug.enable()
     try:
         return _mode_check(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

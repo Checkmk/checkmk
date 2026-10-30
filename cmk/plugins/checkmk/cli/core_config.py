@@ -114,7 +114,7 @@ def _mode_dump_nagios_config(
         hostnames=hostnames,
         # This only dumps the configuration; unlike an activation it deliberately
         # does not persist the licensed state.
-        licensing_handler=app.licensing_handler_factory(),
+        licensing_handler=app.licensing_handler_factory(debug=global_options.debug),
         passwords=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         default_address_family=ip_lookup_config.default_address_family,

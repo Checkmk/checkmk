@@ -22,7 +22,7 @@ class DummyNotificationHandler(NotificationHandler):
 class DummyLicensingHandler(LicensingHandler):
     @classmethod
     @override
-    def make(cls) -> DummyLicensingHandler:
+    def make(cls, *, debug: bool) -> DummyLicensingHandler:
         return cls()
 
     @property

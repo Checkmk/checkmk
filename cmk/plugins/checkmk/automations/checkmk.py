@@ -190,7 +190,7 @@ from cmk.discover_plugins import (
 )
 from cmk.inventory import raw_store as inventory_raw_store
 from cmk.inventory.paths import InventoryPaths
-from cmk.licensing.handler import LicensingHandler
+from cmk.licensing.handler import LicensingHandlerFactory
 from cmk.monitoring_config.internal import MonitoringConfigBuilder
 from cmk.piggyback.backend import (
     get_messages_for as get_piggyback_messages_for,
@@ -2572,7 +2572,7 @@ class RestartContext:
     ip_address_of_mgmt: ip_lookup.IPLookupOptional
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]]
     notify_relay: Callable[[Callable[[str], object]], None]
-    licensing_handler_factory: Callable[[], LicensingHandler]
+    licensing_handler_factory: LicensingHandlerFactory
 
 
 def _execute_silently(

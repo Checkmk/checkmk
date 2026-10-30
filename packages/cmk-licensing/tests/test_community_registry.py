@@ -14,6 +14,6 @@ from cmk.licensing.registry import (
 
 def test_licensing_handler_registry_community() -> None:
     register_community_licensing_handler()
-    handler = licensing_handler_registry[Edition.COMMUNITY]()
+    handler = licensing_handler_registry[Edition.COMMUNITY](debug=False)
     assert isinstance(handler, CommunityLicensingHandler)
     assert isinstance(handler, LicensingHandler)

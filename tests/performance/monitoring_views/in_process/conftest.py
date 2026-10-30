@@ -92,7 +92,7 @@ class _DummyLicensingHandler(LicensingHandler):
 
     @classmethod
     @override
-    def make(cls) -> _DummyLicensingHandler:
+    def make(cls, *, debug: bool) -> _DummyLicensingHandler:
         return cls()
 
     @property

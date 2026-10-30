@@ -330,7 +330,7 @@ def _get_cloud_counter() -> HostsOrServicesCloudCounter:
 
 
 def _get_next_run_ts(file_path: Path) -> int:
-    return int(rot47(store.load_text_from_file(file_path, default="_")))
+    return int(rot47(store.load_text_from_file_explicit(file_path, default="_", debug=False)))
 
 
 def _create_next_run_ts(now: Now) -> int:
@@ -346,7 +346,9 @@ def save_license_usage_report(file_path: Path, raw_report: RawLicenseUsageReport
 
 
 def load_raw_license_usage_report(file_path: Path) -> object:
-    return deserialize_dump(store.load_bytes_from_file(file_path, default=b"{}"))
+    return deserialize_dump(
+        store.load_bytes_from_file_explicit(file_path, default=b"{}", debug=False)
+    )
 
 
 # .
@@ -427,9 +429,10 @@ def _load_extensions(*, omd_root: Path) -> LicenseUsageExtensions:
     extensions_file_path = get_extensions_file_path(omd_root)
     with store.locked(extensions_file_path):
         raw_extensions = deserialize_dump(
-            store.load_bytes_from_file(
+            store.load_bytes_from_file_explicit(
                 extensions_file_path,
                 default=b"{}",
+                debug=False,
             )
         )
     return _parse_extensions(raw_extensions)

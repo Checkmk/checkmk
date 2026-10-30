@@ -10,7 +10,7 @@ from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc.version import Edition
 from cmk.checkengine.fetcher_utils.trigger import FetcherTriggerFactory
 from cmk.core_client import CoreClient
-from cmk.licensing.handler import LicensingHandler
+from cmk.licensing.handler import LicensingHandlerFactory
 from cmk.monitoring_config.internal import MonitoringConfigBuilder
 
 
@@ -23,5 +23,5 @@ class CheckmkBaseApp:
 
     edition: Edition
     create_core: Callable[[BaseConfig], tuple[MonitoringConfigBuilder, CoreClient]]
-    licensing_handler_factory: Callable[[], LicensingHandler]
+    licensing_handler_factory: LicensingHandlerFactory
     make_fetcher_trigger: FetcherTriggerFactory

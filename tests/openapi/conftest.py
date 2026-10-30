@@ -93,7 +93,7 @@ class _DummyNotificationHandler(NotificationHandler):
 class DummyLicensingHandler(LicensingHandler):
     @classmethod
     @override
-    def make(cls) -> DummyLicensingHandler:
+    def make(cls, *, debug: bool) -> DummyLicensingHandler:
         return cls()
 
     @property
@@ -231,7 +231,7 @@ def fixture_monkeypatch_module() -> Iterator[pytest.MonkeyPatch]:
 def fixture_is_licensed(monkeypatch_module: pytest.MonkeyPatch) -> None:
     monkeypatch_module.setattr(
         "cmk.licensing.registry._get_licensing_handler_factory",
-        lambda omd_root: DummyLicensingHandler,  # noqa: ARG005
+        lambda omd_root: DummyLicensingHandler.make,  # noqa: ARG005
     )
 
 

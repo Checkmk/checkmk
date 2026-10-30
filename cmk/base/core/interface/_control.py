@@ -30,7 +30,7 @@ from cmk.checkengine.fetcher_utils.trigger import FetcherTriggerFactory
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.core_client import CoreAction, CoreClient
 from cmk.licensing.basics.paths import get_licensed_state_file_path
-from cmk.licensing.handler import LicensingHandler
+from cmk.licensing.handler import LicensingHandlerFactory
 from cmk.monitoring_config.internal import IntermediateMonitoringConfig, MonitoringConfigBuilder
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import HostTags
@@ -75,7 +75,7 @@ def build_and_activate_monitoring_config(
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
-    licensing_handler_factory: Callable[[], LicensingHandler],
+    licensing_handler_factory: LicensingHandlerFactory,
     edition: Edition,
     loaded_config: BaseConfig,
     make_fetcher_trigger: FetcherTriggerFactory,
@@ -144,7 +144,7 @@ def do_create_config(
     config_builders: Sequence[MonitoringConfigBuilder],
     duplicates: Collection[HostName],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
-    licensing_handler_factory: Callable[[], LicensingHandler],
+    licensing_handler_factory: LicensingHandlerFactory,
     edition: Edition,
     loaded_config: BaseConfig,
     make_fetcher_trigger: FetcherTriggerFactory,
@@ -269,7 +269,7 @@ def _create_active_config(
     *,
     config_builders: Sequence[MonitoringConfigBuilder],
     duplicates: Collection[HostName],
-    licensing_handler_factory: Callable[[], LicensingHandler],
+    licensing_handler_factory: LicensingHandlerFactory,
     edition: Edition,
     loaded_config: BaseConfig,
     make_fetcher_trigger: FetcherTriggerFactory,
@@ -296,7 +296,7 @@ def _create_active_config(
             debug=debug,
             config_creation_context=config_creation_context,
             passwords=passwords,
-            licensing_handler=licensing_handler_factory(),
+            licensing_handler=licensing_handler_factory(debug=debug),
             config_cache=config_cache,
             core_objects_config=core_objects_config,
             hosts_config=hosts_config,

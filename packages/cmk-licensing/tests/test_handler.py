@@ -28,7 +28,7 @@ class LicensingHandlerMock(LicensingHandler):
 
     @classmethod
     @override
-    def make(cls) -> LicensingHandler:
+    def make(cls, *, debug: bool) -> LicensingHandler:
         raise NotImplementedError
 
     @property

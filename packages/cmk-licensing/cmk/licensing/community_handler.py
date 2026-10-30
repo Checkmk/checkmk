@@ -23,7 +23,7 @@ class CommunityNotificationHandler(NotificationHandler):
 class CommunityLicensingHandler(LicensingHandler):
     @classmethod
     @override
-    def make(cls) -> CommunityLicensingHandler:
+    def make(cls, *, debug: bool) -> CommunityLicensingHandler:
         return cls()
 
     @property

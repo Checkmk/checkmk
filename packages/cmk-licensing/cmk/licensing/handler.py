@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import auto, Enum
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, Protocol
 
 from cmk.ccc import store
 
@@ -236,7 +236,7 @@ class RemainingTrialTime(NamedTuple):
 class LicensingHandler(abc.ABC):
     @classmethod
     @abc.abstractmethod
-    def make(cls) -> LicensingHandler:
+    def make(cls, *, debug: bool) -> LicensingHandler:
         raise NotImplementedError
 
     @property
@@ -274,3 +274,7 @@ def write_licensed_state(file_path: Path, state: LicenseState) -> None:
     state_repr = 1 if state is LicenseState.LICENSED else 0
     with store.locked(file_path):
         file_path.write_text(str(state_repr))
+
+
+class LicensingHandlerFactory(Protocol):
+    def __call__(self, *, debug: bool) -> LicensingHandler: ...

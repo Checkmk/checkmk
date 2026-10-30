@@ -66,7 +66,7 @@ def _patch_fetcher_trigger(monkeypatch: pytest.MonkeyPatch, fetched: bytes | Exc
     does that.
     """
 
-    def _not_called(*_a: object) -> NoReturn:
+    def _not_called(*_a: object, **_kw: object) -> NoReturn:
         raise AssertionError("call not expected here")
 
     monkeypatch.setattr(

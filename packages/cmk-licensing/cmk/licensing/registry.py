@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
 from pathlib import Path
 
 from cmk.ccc.version import Edition, edition
@@ -13,6 +12,7 @@ from cmk.licensing.handler import (
     LicenseState,
     LicenseStateError,
     LicensingHandler,
+    LicensingHandlerFactory,
     NotificationHandler,
     RemainingTrialTime,
     UserEffect,
@@ -21,17 +21,17 @@ from cmk.licensing.handler import (
 
 class LicensingHandlerRegistry:
     def __init__(self) -> None:
-        self._entries: dict[Edition, Callable[[], LicensingHandler]] = {}
+        self._entries: dict[Edition, LicensingHandlerFactory] = {}
 
     def register(
         self,
         *,
         cmk_edition: Edition,
-        licensing_handler_factory: Callable[[], LicensingHandler],
+        licensing_handler_factory: LicensingHandlerFactory,
     ) -> None:
         self._entries[cmk_edition] = licensing_handler_factory
 
-    def __getitem__(self, key: Edition) -> Callable[[], LicensingHandler]:
+    def __getitem__(self, key: Edition) -> LicensingHandlerFactory:
         return self._entries.__getitem__(key)
 
 
@@ -39,12 +39,12 @@ class LicensingHandlerRegistry:
 licensing_handler_registry = LicensingHandlerRegistry()
 
 
-def _get_licensing_handler_factory(omd_root: Path) -> Callable[[], LicensingHandler]:
+def _get_licensing_handler_factory(omd_root: Path) -> LicensingHandlerFactory:
     return licensing_handler_registry[edition(omd_root)]
 
 
 def _make_licensing_handler(omd_root: Path) -> LicensingHandler:
-    return _get_licensing_handler_factory(omd_root)()
+    return _get_licensing_handler_factory(omd_root)(debug=False)
 
 
 def get_license_message(omd_root: Path) -> str:

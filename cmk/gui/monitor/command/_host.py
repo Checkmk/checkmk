@@ -5,8 +5,8 @@
 """What every page that offers a host may do with it, in one place."""
 
 from dataclasses import dataclass
+from typing import Protocol
 
-from cmk.gui.config import Config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
 
@@ -36,7 +36,14 @@ class HostSetupLink:
     url: str
 
 
-def host_setup_links(config: Config, user: LoggedInUser) -> list[HostSetupLink]:
+class SetupSwitch(Protocol):
+    """The part of a configuration that says whether Setup is there to link to."""
+
+    @property
+    def wato_enabled(self) -> bool: ...
+
+
+def host_setup_links(config: SetupSwitch, user: LoggedInUser) -> list[HostSetupLink]:
     if not config.wato_enabled:
         return []
     links: list[HostSetupLink] = []

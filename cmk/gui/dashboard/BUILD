@@ -64,6 +64,7 @@ py_library(
         "//cmk/gui/fields",
         "//cmk/gui/graphing",
         "//cmk/gui/graphing:openapi",
+        "//cmk/gui/monitor/command",
         "//cmk/gui/monitor/hosts",
         "//cmk/gui/monitor/services",
         "//cmk/gui/monitor/table_widget",

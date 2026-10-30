@@ -45,7 +45,11 @@ const VALUE: ComputedMonitoringTable = {
   matched: 1,
   total: 1,
   unapplied_filters: [],
-  unreachable_sites: []
+  unreachable_sites: [],
+  actions: [],
+  links: [],
+  host_actions: [],
+  host_links: []
 }
 
 const SERVICES_CONTENT: MonitoringTableContent = {
@@ -74,7 +78,11 @@ const SERVICES_VALUE: ComputedMonitoringTable = {
   matched: 1,
   total: 1,
   unapplied_filters: [],
-  unreachable_sites: []
+  unreachable_sites: [],
+  actions: [],
+  links: [],
+  host_actions: [],
+  host_links: []
 }
 
 const CMK_TOKEN = '0:the-token'

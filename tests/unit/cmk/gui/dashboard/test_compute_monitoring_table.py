@@ -17,6 +17,7 @@ from cmk.gui.dashboard.dashlet.dashlets.monitoring_table import MonitoringTableD
 from cmk.gui.dashboard.monitoring_tables import MONITORING_TABLES
 from cmk.gui.dashboard.type_defs import MonitoringTableName
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry, Response
 from tests.unit.cmk.gui.helpers.dashboard_api_test_helper import (
     create_dashboard_payload,
@@ -165,6 +166,7 @@ _HOST_WITH_GRAPHS: dict[str, object] = {
     "in_check_period": 1,
     "is_flapping": 0,
     "staleness": 0.0,
+    "filename": "/etc/nagios/hosts.cfg",
     "pnpgraph_present": 1,
 }
 
@@ -175,9 +177,10 @@ def _compute_host_with_graphs(
     body: dict[str, object],
     *,
     headers: dict[str, str] | None = None,
+    host: dict[str, object] = _HOST_WITH_GRAPHS,
 ) -> Response:
     live.set_sites(["NO_SITE"])
-    live.add_table("hosts", [_HOST_WITH_GRAPHS])
+    live.add_table("hosts", [host])
     live.expect_query("GET hosts\nStats: state >= 0")
     live.expect_query(["GET hosts", "OrderBy: name asc natural", "Limit: 100"], match_type="loose")
     with live:
@@ -454,3 +457,189 @@ def test_a_stored_services_table_takes_host_and_service_filters() -> None:
 
 def test_every_monitoring_table_is_registered() -> None:
     assert set(MONITORING_TABLES) == set(get_args(MonitoringTableName.__value__))
+
+
+def _log_in_with_admin_permissions_but(
+    clients: ClientRegistry, permissions: dict[str, str]
+) -> None:
+    clients.UserRole.clone(body={"role_id": "admin", "new_role_id": "restricted"})
+    clients.UserRole.edit(role_id="restricted", body={"new_permissions": permissions})
+    clients.User.create(
+        username="restricted_user",
+        fullname="restricted_user",
+        customer=None,
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+        roles=["restricted"],
+    )
+    clients.DashboardClient.set_credentials("restricted_user", "supersecretish")
+
+
+def _services_body() -> dict[str, object]:
+    return {"source": {"type": "explicit", "content": _SERVICES_CONTENT, "context": {}}}
+
+
+def test_a_hosts_table_offers_the_host_commands_of_the_reader(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
+
+    assert "reschedule" in [action["ident"] for action in response.json["value"]["actions"]]
+
+
+def test_a_hosts_table_offers_the_setup_links_of_the_reader(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
+
+    assert [link["ident"] for link in response.json["value"]["links"]] == [
+        "edit",
+        "parameters",
+    ]
+
+
+def test_a_hosts_table_offers_nothing_more_for_the_host_of_a_row(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
+
+    value = response.json["value"]
+    assert (value["host_actions"], value["host_links"]) == ([], [])
+
+
+def test_a_reader_who_may_not_act_is_offered_no_commands(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _log_in_with_admin_permissions_but(clients, {"general.act": "no"})
+
+    response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
+
+    assert response.json["value"]["actions"] == []
+
+
+def test_a_reader_who_may_not_edit_rules_is_offered_no_link_to_the_parameters_of_a_host(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    _log_in_with_admin_permissions_but(clients, {"wato.rulesets": "no"})
+
+    response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
+
+    assert [link["ident"] for link in response.json["value"]["links"]] == ["edit"]
+
+
+def test_a_row_of_a_setup_host_says_the_reader_may_open_it_there(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    clients.HostConfig.create(host_name="heute")
+
+    response = _compute_host_with_graphs(
+        clients,
+        mock_livestatus,
+        _body({}),
+        host={**_HOST_WITH_GRAPHS, "filename": "/wato/hosts.mk"},
+    )
+
+    assert [row.get("setup_access") for row in response.json["value"]["rows"]] == [True]
+
+
+def test_a_row_of_a_host_outside_setup_says_the_reader_may_not_open_it_there(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
+
+    assert [row.get("setup_access") for row in response.json["value"]["rows"]] == [False]
+
+
+def test_without_setup_links_no_row_says_whether_the_reader_may_open_it_there(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection, set_config: SetConfig
+) -> None:
+    with set_config(wato_enabled=False):
+        response = _compute_host_with_graphs(clients, mock_livestatus, _body({}))
+
+    assert [row.get("setup_access") for row in response.json["value"]["rows"]] == [None]
+
+
+def test_a_shared_dashboard_offers_nothing_to_do_with_a_host(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    saved_table_widget: SavedWidget,
+) -> None:
+    response = _compute_host_with_graphs(
+        clients,
+        mock_livestatus,
+        {"source": saved_table_widget.source},
+        headers=saved_table_widget.headers,
+    )
+
+    value = response.json["value"]
+    assert (value["actions"], value["links"]) == ([], [])
+
+
+def test_a_shared_dashboard_says_of_no_host_whether_it_may_be_opened_in_setup(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    saved_table_widget: SavedWidget,
+) -> None:
+    response = _compute_host_with_graphs(
+        clients,
+        mock_livestatus,
+        {"source": saved_table_widget.source},
+        headers=saved_table_widget.headers,
+    )
+
+    assert [row.get("setup_access") for row in response.json["value"]["rows"]] == [None]
+
+
+def test_a_services_table_offers_the_service_commands_of_the_reader(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    response = _compute_service_with_graphs(clients, mock_livestatus, _services_body())
+
+    assert "reschedule" in [action["ident"] for action in response.json["value"]["actions"]]
+
+
+def test_a_services_table_offers_no_setup_links_for_a_service(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    response = _compute_service_with_graphs(clients, mock_livestatus, _services_body())
+
+    assert response.json["value"]["links"] == []
+
+
+def test_a_services_table_offers_the_host_commands_of_the_reader_for_the_host_of_a_row(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    response = _compute_service_with_graphs(clients, mock_livestatus, _services_body())
+
+    assert "reschedule" in [action["ident"] for action in response.json["value"]["host_actions"]]
+
+
+def test_a_services_table_offers_the_setup_links_of_the_reader_for_the_host_of_a_row(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    response = _compute_service_with_graphs(clients, mock_livestatus, _services_body())
+
+    assert [link["ident"] for link in response.json["value"]["host_links"]] == [
+        "edit",
+        "parameters",
+    ]
+
+
+def test_a_shared_dashboard_offers_nothing_to_do_with_a_service_or_its_host(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    saved_services_widget: SavedWidget,
+) -> None:
+    response = _compute_service_with_graphs(
+        clients,
+        mock_livestatus,
+        {"source": saved_services_widget.source},
+        headers=saved_services_widget.headers,
+    )
+
+    value = response.json["value"]
+    assert [
+        value["actions"],
+        value["links"],
+        value["host_actions"],
+        value["host_links"],
+    ] == [[], [], [], []]

@@ -9,12 +9,14 @@ from ._api._list_services import ServiceEntry, ServiceTable
 from ._exceptions import HostNotFoundError, InvalidServiceFilterError
 from ._listing import SERVICE_LISTING
 from ._models import ServiceOptionalField
+from ._supported_actions import SERVICE_SUPPORTED_ACTIONS
 from ._table_catalog import HOST_SERVICES_TABLE, SERVICE_TABLE
 
 __all__ = [
     "HOST_SERVICES_PERMISSION",
     "HOST_SERVICES_TABLE",
     "SERVICE_LISTING",
+    "SERVICE_SUPPORTED_ACTIONS",
     "SERVICE_TABLE",
     "HostNotFoundError",
     "HostServiceEntry",

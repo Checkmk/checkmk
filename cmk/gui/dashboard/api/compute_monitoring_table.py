@@ -10,8 +10,9 @@ from typing import Annotated, TypeIs
 from pydantic import Discriminator
 
 from cmk.gui import visuals
-from cmk.gui.dashboard.monitoring_tables import MONITORING_TABLES
+from cmk.gui.dashboard.monitoring_tables import MONITORING_TABLES, RowOffer
 from cmk.gui.dashboard.type_defs import MonitoringTableName
+from cmk.gui.monitor.command import monitor_commands, MonitorCommands
 from cmk.gui.monitor.hosts.table import HostEntry
 from cmk.gui.monitor.services.table import ServiceEntry
 from cmk.gui.monitor.table_widget import InvalidSortError
@@ -69,6 +70,24 @@ class UnappliedFilter:
 
 
 @api_model
+class MonitoringTableAction:
+    ident: str = api_field(description="The ID of the command.", example="reschedule")
+    title: str = api_field(description="The title of the command.", example="Reschedule")
+    icon: str = api_field(description="The icon of the command.", example="reload")
+
+
+@api_model
+class MonitoringTableLink:
+    ident: str = api_field(description="The ID of the link.", example="edit")
+    title: str = api_field(description="The title of the link.", example="Edit host")
+    icon: str = api_field(description="The icon of the link.", example="edit")
+    url: str = api_field(
+        description="The URL of the link, with '{host}' standing for the host of the row.",
+        example="wato.py?mode=edit_host&host={host}",
+    )
+
+
+@api_model
 class MonitoringTable:
     table: MonitoringTableName = api_field(description="The monitoring table.", example="hosts")
     rows: list[HostEntry | ServiceEntry] = api_field(
@@ -89,28 +108,50 @@ class MonitoringTable:
         ),
         example=["remote_1"],
     )
+    actions: list[MonitoringTableAction] = api_field(
+        description="The commands the user may run on a row of the table."
+    )
+    links: list[MonitoringTableLink] = api_field(
+        description=(
+            "The links into Setup the user may follow from a row of the table. Empty for a "
+            "services table."
+        )
+    )
+    host_actions: list[MonitoringTableAction] = api_field(
+        description=(
+            "The commands the user may run on the host of a row of the table. Empty for a hosts "
+            "table, whose rows are the hosts."
+        )
+    )
+    host_links: list[MonitoringTableLink] = api_field(
+        description=(
+            "The links into Setup the user may follow from the host of a row of the table. Empty "
+            "for a hosts table, whose rows are the hosts."
+        )
+    )
 
 
 class _MonitoringTableComputation:
     def __init__(
-        self, api_context: ApiContext, widget: ResolvedWidget[MonitoringTableContent]
+        self,
+        api_context: ApiContext,
+        widget: ResolvedWidget[MonitoringTableContent],
+        commands: MonitorCommands,
     ) -> None:
         self._api_context = api_context
         self._widget = widget
+        self._commands = commands
 
     def compute(self, sort_override: Sequence[str] | None) -> MonitoringTable:
         content = self._widget.content
         sort = content.sort if sort_override is None else sort_override
+        spec = MONITORING_TABLES[content.table]
         try:
-            computed = (
-                MONITORING_TABLES[content.table]
-                .source(self._api_context)
-                .rows(
-                    columns=content.columns,
-                    sort=sort,
-                    limit=content.limit,
-                    context=self._context_for_infos(),
-                )
+            computed = spec.source(self._api_context).rows(
+                columns=content.columns,
+                sort=sort,
+                limit=content.limit,
+                context=self._context_for_infos(),
             )
         except InvalidSortError as exc:
             raise ProblemException(
@@ -126,7 +167,27 @@ class _MonitoringTableComputation:
                 for name in computed.unapplied_filters
             ],
             unreachable_sites=list(computed.unreachable_sites),
+            actions=self._actions(spec.row_offer),
+            links=self._links(spec.row_offer),
+            host_actions=self._actions(spec.host_offer),
+            host_links=self._links(spec.host_offer),
         )
+
+    def _actions(self, offer: RowOffer | None) -> list[MonitoringTableAction]:
+        if offer is None:
+            return []
+        return [
+            MonitoringTableAction(ident=command.ident, title=str(command.title), icon=command.icon)
+            for command in offer.actions(self._api_context, self._commands)
+        ]
+
+    def _links(self, offer: RowOffer | None) -> list[MonitoringTableLink]:
+        if offer is None:
+            return []
+        return [
+            MonitoringTableLink(ident=link.ident, title=link.title, icon=link.icon, url=link.url)
+            for link in offer.links(self._api_context)
+        ]
 
     def _context_for_infos(self) -> VisualContext:
         allowed = visuals.filters_allowed_for_infos(self._widget.infos)
@@ -152,7 +213,9 @@ def compute_monitoring_table(
     sort_override = None if isinstance(body.sort, ApiOmitted) else body.sort
     with resolve_widget(api_context, body.source, _is_monitoring_table, no_built_in_link) as widget:
         return ComputedWidgetResponse.of(
-            _MonitoringTableComputation(api_context, widget).compute(sort_override)
+            _MonitoringTableComputation(api_context, widget, monitor_commands).compute(
+                sort_override
+            )
         )
 
 
@@ -167,7 +230,14 @@ ENDPOINT_COMPUTE_MONITORING_TABLE = VersionedEndpoint(
             [
                 PERMISSIONS_WIDGET_QUERY,
                 permissions.Optional(permissions.OkayToIgnorePerm("wato.see_all_folders")),
-                permissions.Optional(permissions.OkayToIgnorePerm("action.reschedule")),
+                # The row actions offered: the commands the user may run, the links into Setup.
+                permissions.Optional(permissions.Perm("general.act")),
+                permissions.Optional(permissions.PrefixPerm("action")),
+                permissions.Optional(permissions.Perm("mkeventd.archive_events_of_hosts")),
+                permissions.Optional(permissions.Perm("wato.use")),
+                permissions.Optional(permissions.Perm("wato.seeall")),
+                permissions.Optional(permissions.Perm("wato.hosts")),
+                permissions.Optional(permissions.Perm("wato.rulesets")),
             ]
         )
     ),

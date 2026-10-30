@@ -19,8 +19,8 @@ from cmk.relay_protocols.tasks import UpdateConfigResponse
 class ActivateConfigHandler:
     config_task_factory: ConfigTaskFactory
 
-    def process(self) -> UpdateConfigResponse:
-        config_creation_results = self.config_task_factory.create_for_all_relays()
+    async def process(self) -> UpdateConfigResponse:
+        config_creation_results = await self.config_task_factory.create_for_all_relays()
         return UpdateConfigResponse(
             created=[
                 r.relay_id for r in config_creation_results if isinstance(r, ConfigTaskCreated)

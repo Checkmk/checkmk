@@ -18,6 +18,8 @@ from cmk.agent_receiver.relay.lib.relay_config_repository import RelayConfigRepo
 from .api.routers.relays import router as relay_router
 from .api.routers.tasks import router as task_router
 
+INITIAL_RELAY_CONFIG_TASK = "agent-receiver-initial-relay-config"
+
 
 def _build_config_task_factory() -> ConfigTaskFactory:
     config = get_config()
@@ -34,7 +36,7 @@ def _build_config_task_factory() -> ConfigTaskFactory:
 async def _build_config_for_relays() -> None:
     """Enqueue initial relay config tasks."""
     factory = _build_config_task_factory()
-    created = factory.create_for_all_relays()
+    created = await factory.create_for_all_relays()
     logger.info(
         "startup: created %(task_count)d config task(s) for %(relay_count)d relay(s)",
         {
@@ -53,9 +55,7 @@ def _schedule_initial_relay_config() -> None:
     Instead we schedule it on the running loop and attach a done callback that
     logs any failure. This keeps startup non-blocking for site creation / health checks.
     """
-    task = asyncio.create_task(
-        _build_config_for_relays(), name="agent-receiver-initial-relay-config"
-    )
+    task = asyncio.create_task(_build_config_for_relays(), name=INITIAL_RELAY_CONFIG_TASK)
 
     def _log_result(t: asyncio.Task[None]) -> None:
         try:

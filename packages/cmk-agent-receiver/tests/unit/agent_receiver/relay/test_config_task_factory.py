@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import asyncio
 import datetime
 import logging
 from unittest.mock import patch
 
+import pytest
 from pytest import LogCaptureFixture
 
 from cmk.agent_receiver.lib.config import Config
@@ -30,7 +32,8 @@ from cmk.testlib.agent_receiver.relay_config_generator import (
 )
 
 
-def test_create_tasks_for_all_relays(
+@pytest.mark.asyncio
+async def test_create_tasks_for_all_relays(
     config_task_factory: ConfigTaskFactory,
     tasks_repository: TasksRepository,
     site_context: Config,
@@ -39,7 +42,7 @@ def test_create_tasks_for_all_relays(
     relay_id_1, relay_id_2 = cf.relay_ids
 
     # Create tasks for all relays
-    config_task_factory.create_for_all_relays()
+    await config_task_factory.create_for_all_relays()
 
     # assert
     tasks_for_relay_1 = tasks_repository.get_tasks(relay_id_1)
@@ -57,7 +60,8 @@ def test_create_tasks_for_all_relays(
     assert_config_tar(cf, relay_id_2, tasks_for_relay_2[0].spec.tar_data)
 
 
-def test_create_task_for_single_chosen_relay_when_no_pending_task(
+@pytest.mark.asyncio
+async def test_create_task_for_single_chosen_relay_when_no_pending_task(
     config_task_factory: ConfigTaskFactory,
     tasks_repository: TasksRepository,
     site_context: Config,
@@ -70,7 +74,7 @@ def test_create_task_for_single_chosen_relay_when_no_pending_task(
     relay_id_1, relay_id_2, relay_id_3 = cf.relay_ids
 
     # Create tasks for chosen relay: relay_id_2
-    _ = config_task_factory.create_for_relay(relay_id_2, cf.serial)
+    _ = await config_task_factory.create_for_relay(relay_id_2, cf.serial)
 
     # assert no tasks are created for the other relays
 
@@ -88,7 +92,8 @@ def test_create_task_for_single_chosen_relay_when_no_pending_task(
     assert_config_tar(cf, relay_id_2, tasks_for_relay_2[0].spec.tar_data)
 
 
-def test_create_task_for_single_chosen_relay_when_pending_task(
+@pytest.mark.asyncio
+async def test_create_task_for_single_chosen_relay_when_pending_task(
     config_task_factory: ConfigTaskFactory,
     tasks_repository: TasksRepository,
     site_context: Config,
@@ -113,7 +118,7 @@ def test_create_task_for_single_chosen_relay_when_pending_task(
     tasks_repository.store_task(relay_id_2, stored_task)
 
     # ...then we cannot create tasks for chosen relay: relay_id_2
-    creation_result = config_task_factory.create_for_relay(relay_id_2, cf.serial)
+    creation_result = await config_task_factory.create_for_relay(relay_id_2, cf.serial)
     assert isinstance(creation_result, ConfigTaskAlreadyExists)
 
     # assert no tasks are created for the other relays
@@ -131,7 +136,29 @@ def test_create_task_for_single_chosen_relay_when_pending_task(
     assert tasks_for_relay_2[0] == stored_task
 
 
-def test_create_task_for_relay_from_requested_activation(
+@pytest.mark.asyncio
+async def test_concurrent_polls_create_one_task(
+    config_task_factory: ConfigTaskFactory,
+    tasks_repository: TasksRepository,
+    site_context: Config,
+) -> None:
+    cf = generate_relay_config(site_context.omd_root, count=1)
+    (relay_id,) = cf.relay_ids
+
+    results = await asyncio.gather(
+        config_task_factory.create_for_relay(relay_id, cf.serial),
+        config_task_factory.create_for_relay(relay_id, cf.serial),
+    )
+
+    assert sorted(type(r).__name__ for r in results) == [
+        "ConfigTaskAlreadyExists",
+        "ConfigTaskCreated",
+    ]
+    assert len(tasks_repository.get_tasks(relay_id)) == 1
+
+
+@pytest.mark.asyncio
+async def test_create_task_for_relay_from_requested_activation(
     config_task_factory: ConfigTaskFactory,
     tasks_repository: TasksRepository,
     site_context: Config,
@@ -141,7 +168,7 @@ def test_create_task_for_relay_from_requested_activation(
     (relay_id,) = activation.relay_ids
     _ = generate_relay_config(site_context.omd_root)
 
-    result = config_task_factory.create_for_relay(relay_id, activation.serial)
+    result = await config_task_factory.create_for_relay(relay_id, activation.serial)
 
     assert isinstance(result, ConfigTaskCreated)
     (task,) = tasks_repository.get_tasks(relay_id)
@@ -149,7 +176,8 @@ def test_create_task_for_relay_from_requested_activation(
     assert_config_tar(activation, relay_id, task.spec.tar_data)
 
 
-def test_create_task_for_single_relay_skipped_when_config_not_applied(
+@pytest.mark.asyncio
+async def test_create_task_for_single_relay_skipped_when_config_not_applied(
     config_task_factory: ConfigTaskFactory,
     site_context: Config,
     caplog: LogCaptureFixture,
@@ -177,7 +205,9 @@ def test_create_task_for_single_relay_skipped_when_config_not_applied(
     # Capture logs at DEBUG level
     with caplog.at_level(logging.DEBUG, logger="agent-receiver"):
         # When creating a task for a relay without config applied
-        creation_result = config_task_factory.create_for_relay(relay_id_without_config, cf.serial)
+        creation_result = await config_task_factory.create_for_relay(
+            relay_id_without_config, cf.serial
+        )
 
     # Then it should be skipped
     assert isinstance(creation_result, ConfigTaskSkipped)
@@ -196,7 +226,8 @@ def test_create_task_for_single_relay_skipped_when_config_not_applied(
     )
 
 
-def test_create_tasks_for_all_relays_with_multiple_configured_relays(
+@pytest.mark.asyncio
+async def test_create_tasks_for_all_relays_with_multiple_configured_relays(
     config_task_factory: ConfigTaskFactory,
     tasks_repository: TasksRepository,
     site_context: Config,
@@ -222,7 +253,7 @@ def test_create_tasks_for_all_relays_with_multiple_configured_relays(
     # Capture logs at DEBUG level
     with caplog.at_level(logging.DEBUG, logger="agent-receiver"):
         # When creating tasks for all relays
-        results = config_task_factory.create_for_all_relays()
+        results = await config_task_factory.create_for_all_relays()
 
     # Then we should have results for all relays
     assert len(results) == 3
@@ -246,7 +277,8 @@ def test_create_tasks_for_all_relays_with_multiple_configured_relays(
     )
 
 
-def test_create_task_fails_when_tar_creation_raises_exception(
+@pytest.mark.asyncio
+async def test_create_task_fails_when_tar_creation_raises_exception(
     config_task_factory: ConfigTaskFactory,
     tasks_repository: TasksRepository,
     site_context: Config,
@@ -266,7 +298,7 @@ def test_create_task_fails_when_tar_creation_raises_exception(
         mock_create_tar.side_effect = OSError("Permission denied")
 
         # When creating a task and tar creation fails
-        creation_result = config_task_factory.create_for_relay(relay_id, cf.serial)
+        creation_result = await config_task_factory.create_for_relay(relay_id, cf.serial)
 
         # Then it should return ConfigTaskCreationFailed
         assert isinstance(creation_result, ConfigTaskCreationFailed)

@@ -54,7 +54,8 @@ def test_get_task_handler_with_unknown_task(
         )
 
 
-def test_get_tasks_handler(
+@pytest.mark.asyncio
+async def test_get_tasks_handler(
     get_tasks_handler: GetRelayTasksHandler,
     populated_repos: tuple[RelayID, RelayTask, TasksRepository],
     omd_root: Path,
@@ -62,20 +63,21 @@ def test_get_tasks_handler(
     relay_id, task, tasks_repository = populated_repos
     config_folder = generate_relay_config(root=omd_root, relays=[relay_id])
 
-    handled_tasks = get_tasks_handler.process(
+    handled_tasks = await get_tasks_handler.process(
         relay_id=relay_id, status=None, relay_serial=config_folder.serial
     )
     assert handled_tasks == [task]
 
 
-def test_get_tasks_handler_with_filter(
+@pytest.mark.asyncio
+async def test_get_tasks_handler_with_filter(
     get_tasks_handler: GetRelayTasksHandler,
     populated_repos: tuple[RelayID, RelayTask, TasksRepository],
     omd_root: Path,
 ) -> None:
     relay_id, task, tasks_repository = populated_repos
     config_folder = generate_relay_config(root=omd_root, relays=[relay_id])
-    handled_tasks = get_tasks_handler.process(
+    handled_tasks = await get_tasks_handler.process(
         relay_id=relay_id, status=TaskStatus.FINISHED, relay_serial=config_folder.serial
     )
     assert handled_tasks == []

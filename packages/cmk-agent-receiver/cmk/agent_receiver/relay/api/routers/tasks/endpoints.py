@@ -220,7 +220,7 @@ async def get_tasks_endpoint(
         - The response carries an ETag. A relay polling with a matching
           If-None-Match gets 304 instead of the (possibly large) task list again.
     """
-    tasks = handler.process(
+    tasks = await handler.process(
         RelayID(relay_id),
         TaskStatus(status.value) if status else None,
         relay_serial=Serial(relay_serial) if relay_serial is not None else None,
@@ -300,7 +300,7 @@ async def create_relay_config_tasks(
         UpdateConfigResponse containing the lists of relays for which the config task creation
         succeeded, is already pending or failed respectively.
     """
-    response_content = handler.process()
+    response_content = await handler.process()
 
     response.status_code = (
         fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR

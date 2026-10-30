@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import asyncio
 import shutil
 import uuid
 from pathlib import Path
@@ -12,6 +13,7 @@ from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.lib.config import Config
 from cmk.agent_receiver.main import main_app
+from cmk.agent_receiver.relay.app import INITIAL_RELAY_CONFIG_TASK
 from cmk.agent_receiver.relay.lib.shared_types import Serial
 from cmk.relay_protocols.tasks import RelayConfigTask, TaskListResponse, TaskResponse, TaskStatus
 from cmk.testlib.agent_receiver.clients import RelayClient
@@ -114,10 +116,18 @@ def _do_test_and_get_tasks(
 ) -> list[TaskResponse]:
     app = main_app()
     with TestClient(app) as client:
+        assert client.portal is not None
+        client.portal.call(_initial_relay_config_done)
         relay = RelayClient(client, site_context.site_name, relay_id)
         relay.apply_config(RelayConfig(serial=serial, files={}))
         tasks_resp = relay.get_tasks()
         return TaskListResponse.model_validate(tasks_resp.json()).tasks
+
+
+async def _initial_relay_config_done() -> None:
+    await asyncio.gather(
+        *(t for t in asyncio.all_tasks() if t.get_name() == INITIAL_RELAY_CONFIG_TASK)
+    )
 
 
 def _create_version_folder(omd_root: Path, edition: str) -> None:

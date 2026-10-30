@@ -9,6 +9,8 @@ from collections.abc import Iterable, Sequence
 from datetime import datetime, UTC
 from pathlib import Path
 
+from fastapi.concurrency import run_in_threadpool
+
 from cmk.agent_receiver.lib.log import bound_contextvars, logger
 from cmk.agent_receiver.relay.api.routers.tasks.libs.retrieve_config_serial import (
     retrieve_config_serial,
@@ -55,7 +57,7 @@ class ConfigTaskFactory:
     relay_config_repository: RelayConfigRepository
     tasks_repository: TasksRepository
 
-    def create_for_all_relays(self) -> Sequence[ConfigTaskCreationResult]:
+    async def create_for_all_relays(self) -> Sequence[ConfigTaskCreationResult]:
         """
         Creates relay config tasks for all registered relays.
         The number of actually created task might be lower than the number of the relays,
@@ -63,9 +65,9 @@ class ConfigTaskFactory:
         """
         serial = retrieve_config_serial()
         relay_ids = self.relay_config_repository.relay_ids(serial)
-        return self._create(relay_ids, serial)
+        return await self._create(relay_ids, serial)
 
-    def create_for_relay(self, relay_id: RelayID, serial: Serial) -> ConfigTaskCreationResult:
+    async def create_for_relay(self, relay_id: RelayID, serial: Serial) -> ConfigTaskCreationResult:
         """
         Creates a relay config task for the specified relay.
         If the relay has already a pending relay for the serial value, the function
@@ -78,17 +80,20 @@ class ConfigTaskFactory:
                 "Skipping config task creation for relay %(relay_id)s", {"relay_id": relay_id}
             )
             return ConfigTaskSkipped(relay_id)
-        return self._create([relay_id], serial)[0]
+        return (await self._create([relay_id], serial))[0]
 
-    def _create(
+    async def _create(
         self, relay_ids: Iterable[RelayID], serial: Serial
     ) -> tuple[ConfigTaskCreationResult, ...]:
         now = datetime.now(UTC)
         return tuple(
-            self._safe_single_task(relay_id=rid, serial=serial, timestamp=now) for rid in relay_ids
+            [
+                await self._safe_single_task(relay_id=rid, serial=serial, timestamp=now)
+                for rid in relay_ids
+            ]
         )
 
-    def _safe_single_task(
+    async def _safe_single_task(
         self, relay_id: RelayID, serial: Serial, timestamp: datetime
     ) -> ConfigTaskCreationResult:
         with bound_contextvars(relay_id=relay_id, serial=serial):
@@ -102,7 +107,12 @@ class ConfigTaskFactory:
                     )
                     return ConfigTaskAlreadyExists(relay_id)
                 parent = self.relay_config_repository.config_dir(relay_id, serial)
-                relay_config_spec = RelayConfigSpec(serial=serial, tar_data=create_tar(parent))
+                # Off the loop: packing a big config stalls every other request.
+                tar_data = await run_in_threadpool(create_tar, parent)
+                # A concurrent poll may have stored the task while this one was packing.
+                if self._pending_configuration_task_exists(relay_id, serial):
+                    return ConfigTaskAlreadyExists(relay_id)
+                relay_config_spec = RelayConfigSpec(serial=serial, tar_data=tar_data)
                 task = RelayTask(
                     spec=relay_config_spec, creation_timestamp=timestamp, update_timestamp=timestamp
                 )

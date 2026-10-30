@@ -48,4 +48,28 @@ describe('CMK Playbooks section', () => {
     expect(html).toContain('data-action="playbook-run" data-target="01-minimal"')
     expect(html.indexOf('Workspace')).toBeLessThan(html.indexOf('Shipped examples'))
   })
+
+  it('offers a search field over the shipped examples only, by name and description', () => {
+    const html = render(
+      stateWith([
+        {
+          name: 'SUP-1',
+          target: '/ws/SUP-1.yaml',
+          file: '/ws/SUP-1.yaml',
+          source: 'workspace',
+          description: ''
+        },
+        {
+          name: '07-BI-Phases',
+          target: '07-BI-Phases',
+          file: '/uv/cwz/example-playbooks/07-BI-Phases.yaml',
+          source: 'shipped',
+          description: 'SUP-30030 in two phases'
+        }
+      ])
+    )
+    expect(html.match(/data-filter="/g)).toHaveLength(1)
+    expect(html.indexOf('data-filter="')).toBeGreaterThan(html.indexOf('Shipped examples'))
+    expect(html).toContain('data-search="07-bi-phases sup-30030 in two phases"')
+  })
 })

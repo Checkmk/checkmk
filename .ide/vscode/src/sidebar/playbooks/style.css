@@ -36,6 +36,28 @@
   font-size: 0.9em;
 }
 
+.playbook-row[hidden],
+.playbook-empty[hidden] {
+  display: none;
+}
+
+.playbook-search {
+  box-sizing: border-box;
+  width: calc(100% - 16px);
+  margin: 2px 8px 4px;
+  padding: 3px 6px;
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: var(--radius);
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  font: inherit;
+}
+
+.playbook-search:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: -1px;
+}
+
 .playbook-row:hover {
   background: var(--vscode-list-hoverBackground);
 }

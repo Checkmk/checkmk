@@ -16,6 +16,8 @@ const SOURCE_LABELS: Readonly<Record<PlaybookSource, string>> = {
   shipped: 'Shipped examples'
 }
 
+const SEARCH_FIELD = `<input class="playbook-search" type="search" data-filter="shipped-playbooks" placeholder="Search examples…" aria-label="Search shipped examples">`
+
 export async function handleMessage(msg: WebviewMessage): Promise<boolean> {
   switch (msg.type) {
     case 'playbookRun':
@@ -63,7 +65,9 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
     .map((source) => {
       const rows = state.playbooks.filter((p) => p.source === source).map(renderRow)
       if (rows.length === 0) return ''
-      return `<div class="playbook-group"><div class="playbook-group-title">${SOURCE_LABELS[source]}</div>${rows.join('')}</div>`
+      const title = `<div class="playbook-group-title">${SOURCE_LABELS[source]}</div>`
+      if (source !== 'shipped') return `<div class="playbook-group">${title}${rows.join('')}</div>`
+      return `<div class="playbook-group" data-filter-scope>${title}${SEARCH_FIELD}${rows.join('')}<div class="playbook-empty" data-filter-empty hidden>No example matches</div></div>`
     })
     .join('')
 
@@ -76,7 +80,8 @@ function renderRow(playbook: Playbook): string {
   const description = playbook.description
     ? `<span class="playbook-description">${esc(playbook.description)}</span>`
     : ''
-  return `<div class="playbook-row" title="${title}">
+  const search = esc(`${playbook.name} ${playbook.description}`.toLowerCase())
+  return `<div class="playbook-row" title="${title}" data-search="${search}">
     <span class="codicon codicon-book playbook-icon"></span>
     <span class="playbook-text"><span class="playbook-name">${esc(playbook.name)}</span>${description}</span>
     <span class="playbook-actions">

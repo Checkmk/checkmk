@@ -250,8 +250,32 @@ ${body}
       }
     }
   });
+  function applyFilter(input) {
+    const terms = input.value.toLowerCase().split(' ').filter(Boolean);
+    const scope = input.closest('[data-filter-scope]') || document;
+    let shown = 0;
+    scope.querySelectorAll('[data-search]').forEach(row => {
+      const hit = terms.every(t => row.dataset.search.includes(t));
+      row.hidden = !hit;
+      if (hit) shown++;
+    });
+    const empty = scope.querySelector('[data-filter-empty]');
+    if (empty) empty.hidden = shown > 0;
+    const state = vscode.getState() || {};
+    vscode.setState({ ...state, filters: { ...(state.filters || {}), [input.dataset.filter]: input.value } });
+  }
+  document.addEventListener('input', (e) => {
+    if (e.target.matches('[data-filter]')) applyFilter(e.target);
+  });
   // Restore accordion open/close state
   const saved = vscode.getState();
+  document.querySelectorAll('[data-filter]').forEach(input => {
+    const value = saved && saved.filters && saved.filters[input.dataset.filter];
+    if (value) {
+      input.value = value;
+      applyFilter(input);
+    }
+  });
   if (saved && saved.openAccordions) {
     document.querySelectorAll('.ext-family,.omd-site').forEach(el => {
       const nameEl = el.querySelector('.ext-family-name,.omd-site-name');

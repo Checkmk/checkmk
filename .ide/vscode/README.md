@@ -200,7 +200,7 @@ Expanding a site shows individual service status with per-service start/stop/res
 
 #### CMK Playbooks
 
-Lists the cmk-up playbooks found in the workspace, in `cmk.cmkUp.playbookDirectories` and among the shipped examples, grouped by where they come from, each with its description. A running site in **OMD Sites** has a **Create playbook** button (book icon; also F1 → `CMK ▸ cmk-up: Create Playbook from Site…`): `cmk-up --enroll` writes a playbook that rebuilds that site — versions, hosts, rules, users, BI — to a file you pick, and opens it. Per playbook: **Open**, **Dry run** (the run wizard with `--dry-run` ticked) and **Run…**. The title bar has refresh, **New Playbook** (`cmk-up --init`: writes the reference playbook to a file you pick and opens it) and **Run…**.
+Lists the cmk-up playbooks found in the workspace, in `cmk.cmkUp.playbookDirectories` and among the shipped examples, grouped by where they come from, each with its description. The shipped examples have a search field that filters them by name and description as you type. A running site in **OMD Sites** has a **Create playbook** button (book icon; also F1 → `CMK ▸ cmk-up: Create Playbook from Site…`): `cmk-up --enroll` writes a playbook that rebuilds that site — versions, hosts, rules, users, BI — to a file you pick, and opens it. Per playbook: **Open**, **Dry run** (the run wizard with `--dry-run` ticked) and **Run…**. The title bar has refresh, **New Playbook** (`cmk-up --init`: writes the reference playbook to a file you pick and opens it) and **Run…**.
 
 #### Issues (Activity Bar Badge)
 

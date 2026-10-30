@@ -12,6 +12,11 @@ exports_files([
     "xcomp/package_msi.sh",
 ])
 
+exports_files(
+    ["shared_typing_header_py.txt"],
+    visibility = ["//visibility:private"],
+)
+
 js_library(
     name = "vitest_runner",
     srcs = ["vitest_runner.mjs"],

@@ -43,10 +43,10 @@ from cmk.profiling.gui._store import (
     ProfileStore,
     retention_kwargs,
 )
-from cmk.shared_typing.profiling_flamegraph import (
+from cmk.profiling.shared_typing.flamegraph import (
     ProfileMetadata as WireProfileMetadata,
 )
-from cmk.shared_typing.profiling_flamegraph import ProfilingFlamegraphData
+from cmk.profiling.shared_typing.flamegraph import ProfilingFlamegraphData
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.icons import IconNames, StaticIcon

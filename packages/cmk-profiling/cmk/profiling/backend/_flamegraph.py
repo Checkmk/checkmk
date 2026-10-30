@@ -16,7 +16,7 @@ from functools import cache
 from pathlib import Path
 from typing import cast, NotRequired, TypedDict
 
-from cmk.shared_typing.profiling_flamegraph import CallerInfo, FlamegraphNode, HotspotData
+from cmk.profiling.shared_typing.flamegraph import CallerInfo, FlamegraphNode, HotspotData
 
 _FuncKey = tuple[str, int, str]
 _CallerEdge = tuple[int, int, float, float] | int

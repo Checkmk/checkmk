@@ -1473,14 +1473,14 @@ allows = ["@plugin_apis"]
 allows = ["@plugin_apis", "@data_backend"]
 
 [components."cmk.profiling.backend"]
-allows = ["cmk.ccc.store", "cmk.shared_typing.profiling_flamegraph"]
+allows = ["cmk.ccc.store", "cmk.profiling.shared_typing"]
 
 [components."cmk.profiling.gui"]
 allows = [
   "cmk.web.utils",
   "cmk.gui",
   "cmk.profiling.backend",
-  "cmk.shared_typing.profiling_flamegraph",
+  "cmk.profiling.shared_typing",
   "cmk.utils.paths",
 ]
 

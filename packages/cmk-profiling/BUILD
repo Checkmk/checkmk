@@ -6,6 +6,7 @@ load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:link_shared_typing.bzl", "link_shared_typing")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
+load("//bazel/rules:shared_typing.bzl", "shared_typing")
 load("//bazel/rules:vitest_test.bzl", "vitest_test")
 load("//bazel/rules:vue_library.bzl", "vue_library")
 
@@ -26,8 +27,8 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
+        ":shared_typing_py",
         "//packages/cmk-ccc:store",
-        "//packages/cmk-shared-typing:cmk_shared_typing_py",
     ],
 )
 
@@ -43,6 +44,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":backend",
+        ":shared_typing_py",
         "//cmk/gui:auth_core",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
@@ -50,9 +52,15 @@ py_library(
         "//cmk/gui:page_toolkit",
         "//cmk/gui/watolib",
         "//cmk/utils:paths",
-        "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web/cmk/web/utils",
     ],
+)
+
+shared_typing(
+    name = "shared_typing",
+    srcs = ["shared_typing/flamegraph.json"],
+    python_package = "cmk/profiling/shared_typing",
+    typescript_dir = "frontend/shared_typing",
 )
 
 filegroup(
@@ -92,6 +100,8 @@ py_wheel(
         ":gui",
         ":gui_py_typed",
         ":plugins",
+        ":shared_typing_py",
+        ":shared_typing_py_typed",
     ],
 )
 
@@ -130,6 +140,7 @@ vue_library(
         "package.json",
         "tsconfig.json",
         "tsconfig.test.json",
+        ":shared_typing_ts",
     ],
     tsconfig = "tsconfig.json",
     visibility = ["//visibility:public"],

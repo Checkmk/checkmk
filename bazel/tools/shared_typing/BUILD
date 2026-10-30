@@ -33,13 +33,19 @@ py_console_script_binary(
     pkg = requirement("datamodel-code-generator"),
     script = "datamodel-codegen",
     tags = ["no-mypy"],
-    visibility = ["//packages/cmk-shared-typing:__pkg__"],
+    visibility = [
+        "//bazel/rules:__pkg__",
+        "//packages/cmk-shared-typing:__pkg__",
+    ],
     deps = [":formatter"],
 )
 
 json2ts_bin.json2ts_binary(
     name = "json2ts",
-    visibility = ["//packages/cmk-shared-typing:__pkg__"],
+    visibility = [
+        "//bazel/rules:__pkg__",
+        "//packages/cmk-shared-typing:__pkg__",
+    ],
 )
 
 py_cmk_test(

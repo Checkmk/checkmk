@@ -40,7 +40,7 @@ remove_suppression() {
     # shellcheck disable=SC2046  # we want word splitting here
     sed -i "/# mypy: disable-error-code=\"${st}\"/d" $(list_files_with_suppression "${st}")
     # quick and dirty hack to avoid running into a loop below
-    git checkout -- packages/cmk-shared-typing/header_py.txt
+    git checkout -- packages/cmk-shared-typing/header_py.txt bazel/rules/shared_typing_header_py.txt
     echo "Changed files: $(git ls-files --modified | wc --lines)"
 
     # Run linters and restore failures

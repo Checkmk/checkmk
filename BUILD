@@ -409,6 +409,7 @@ create_venv(
     whls = [
         "@rrdtool//:rrdtool_python_wheel",
         "//packages/cmk-shared-typing:wheel",
+        "//packages/cmk-profiling:shared_typing_wheel",
         "//packages/cmk-werks:wheel_entrypoint_only",
         "//packages/cmk-mkp-tool:wheel_entrypoint_only",
         "//packages/cmk-crash:wheel_entrypoint_only",

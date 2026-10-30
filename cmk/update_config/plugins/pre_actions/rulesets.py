@@ -163,6 +163,37 @@ def _continue_on_ruleset_exception(conflict_mode: ConflictMode) -> Resume:
             )
 
 
+def _validation_problem(ruleset: Ruleset, value: object) -> Exception | None:
+    """What the current definition raises on the value, None if it accepts it
+
+    A RegexFutureWarning is a problem like a validation error: the regex
+    works today and may not in a future Python version.
+    """
+    with warnings.catch_warnings(action="error", category=RegexFutureWarning):
+        try:
+            try:
+                visitor = get_visitor(
+                    ruleset.rulespec.form_spec,
+                    VisitorOptions(migrate_values=True, mask_values=True),
+                )
+                validation_errors = visitor.validate(RawDiskData(value))
+                if validation_errors:
+                    raise ValueError(f"Validation errors: {validation_errors}")
+            except FormSpecNotImplementedError:
+                transformed_value = ruleset.rulespec.valuespec.transform_value(value)
+                ruleset.rulespec.valuespec.validate_datatype(
+                    transformed_value,
+                    "",
+                )
+                ruleset.rulespec.valuespec.validate_value(
+                    transformed_value,
+                    "",
+                )
+        except (RegexFutureWarning, MKUserError, AssertionError, ValueError, TypeError) as exc:
+            return exc
+    return None
+
+
 def _validate_rule_values(
     all_rulesets: RulesetCollection,
     contact_groups: GroupSpec,
@@ -185,28 +216,10 @@ def _validate_rule_values(
             )
             # validate the value the update will produce, not one referring to replaced plug-ins
             value = rename_replaced_plugins(ruleset.name, rule.value)
-            with warnings.catch_warnings(action="error", category=RegexFutureWarning):
-                try:
-                    try:
-                        visitor = get_visitor(
-                            ruleset.rulespec.form_spec,
-                            VisitorOptions(migrate_values=True, mask_values=True),
-                        )
-                        validation_errors = visitor.validate(RawDiskData(value))
-                        if validation_errors:
-                            raise ValueError(f"Validation errors: {validation_errors}")
-                    except FormSpecNotImplementedError:
-                        transformed_value = ruleset.rulespec.valuespec.transform_value(value)
-                        ruleset.rulespec.valuespec.validate_datatype(
-                            transformed_value,
-                            "",
-                        )
-                        ruleset.rulespec.valuespec.validate_value(
-                            transformed_value,
-                            "",
-                        )
-
-                except RegexFutureWarning as e:
+            match _validation_problem(ruleset, value):
+                case None:
+                    continue
+                case RegexFutureWarning() as e:
                     error_messages = [
                         f"WARNING: {e}",
                         f"Ruleset: {ruleset.name}",
@@ -219,8 +232,7 @@ def _validate_rule_values(
                     ]
                     add_info = _additional_info(ruleset, rule.value, contact_groups)
                     logger.warning("\n".join(error_messages + add_info.messages))
-
-                except MKUserError, AssertionError, ValueError, TypeError:
+                case problem:
                     error_messages = [
                         "WARNING: Invalid rule configuration detected",
                         f"Ruleset: {ruleset.name}",
@@ -229,7 +241,7 @@ def _validate_rule_values(
                         f"Rule nr: {index}",
                     ]
                     add_info = _additional_info(ruleset, rule.value, contact_groups)
-                    logger.exception("\n".join(error_messages + add_info.messages))
+                    logger.error("\n".join(error_messages + add_info.messages), exc_info=problem)
                     if add_info.skip_user_input:
                         continue
                     if _continue_on_invalid_rule(conflict_mode).is_abort():

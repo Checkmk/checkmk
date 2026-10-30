@@ -18,6 +18,7 @@ from tests.code_quality.bazel_utils import bazel_repo_root as repo_path
 _NONFREE_INDICATORS = {"nonfree", "non-free"}
 _NONFREE_LICENSE = "Checkmk Enterprise License"
 _FREE_LICENSE = "GPLv2"
+_ALLOWED_DISTRIBUTIONS = frozenset({"check_mk", "check_mk_ultimate"})
 
 
 @pytest.fixture(scope="module", name="catalog")
@@ -234,4 +235,10 @@ def test_man_page_license_nonfree(all_pages: Mapping[str, man_pages.ManPage]) ->
         page.name
         for page in all_pages.values()
         if not _is_free(page) and page.license != _NONFREE_LICENSE
+    }
+
+
+def test_man_page_distributions(all_pages: Mapping[str, man_pages.ManPage]) -> None:
+    assert not {
+        page.name for page in all_pages.values() if page.distribution not in _ALLOWED_DISTRIBUTIONS
     }

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 from pathlib import Path
 
 import pytest
@@ -76,6 +77,13 @@ def test_print_man_page() -> None:
     rendered = man_pages.ConsoleManPageRenderer(_IF64_MAN_PAGE).render_page()
     assert rendered.startswith(" if64    ")
     assert "\n License: " in rendered
+
+
+def test_print_man_page_shows_ultimate_distribution() -> None:
+    rendered = man_pages.ConsoleManPageRenderer(
+        dataclasses.replace(_IF64_MAN_PAGE, distribution="check_mk_ultimate")
+    ).render_page()
+    assert "Official part of Checkmk Ultimate" in rendered
 
 
 def _broken_man_page(tmp_path: Path) -> Path:

@@ -217,11 +217,11 @@ def _redeem_authorization_code(
                 # code must not become a token either.
                 _error("invalid_grant")
                 return
-            case OK(access_token):
+            case OK(issued):
                 response.set_content_type("application/json")
                 response.set_data(
                     OAuthTokenResponse(
-                        access_token=access_token, scope=format_scopes(granted_scopes)
+                        access_token=issued.access, scope=format_scopes(granted_scopes)
                     ).model_dump_json()
                 )
                 return

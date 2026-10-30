@@ -162,7 +162,7 @@ def test_delete_revokes_the_deleted_clients_tokens(store: ClientStore) -> None:
 
     store.delete([registered.ok.client_id])
 
-    assert token_store.get_by_token(token.ok) is None
+    assert token_store.get_by_token(token.ok.access) is None
 
 
 def test_ensure_builtin_creates_the_client_under_its_fixed_id(store: ClientStore) -> None:

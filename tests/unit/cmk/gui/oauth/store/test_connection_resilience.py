@@ -52,7 +52,7 @@ def test_a_damaged_database_does_not_authenticate_anyone(
 
     response = wsgi_app.get(
         "/NO_SITE/check_mk/api/1.0/version",
-        headers={"Accept": "application/json", "Authorization": f"Bearer {token.ok}"},
+        headers={"Accept": "application/json", "Authorization": f"Bearer {token.ok.access}"},
         status=HTTPStatus.UNAUTHORIZED,
     )
 

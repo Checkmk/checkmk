@@ -130,7 +130,7 @@ def test_issue_token_stores_only_a_hash_never_the_plaintext(store: TokenStore) -
     assert token.is_ok()
 
     stored_hashes = [row[0] for row in store._connection.execute("SELECT token_hash FROM tokens")]  # noqa: SLF001
-    assert token.ok not in stored_hashes
+    assert token.ok.access not in stored_hashes
 
 
 def test_issue_token_produces_unique_tokens(store: TokenStore) -> None:
@@ -143,7 +143,7 @@ def test_issue_token_produces_unique_tokens(store: TokenStore) -> None:
     assert first.is_ok()
     assert second.is_ok()
 
-    assert first != second
+    assert first.ok.access != second.ok.access
 
 
 def test_issue_token_rejects_an_empty_user_id(store: TokenStore) -> None:
@@ -205,17 +205,20 @@ def test_issue_token_rejects_an_unregistered_client(store: TokenStore) -> None:
 
 
 def test_get_by_token_returns_the_matching_record(store: TokenStore) -> None:
-    expires_at = _future(60)
+    issued_at = _future(0)
+    expires_at = issued_at + timedelta(minutes=60)
 
-    token = store.issue_token(
-        _USER, expires_at=expires_at, resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
-    )
+    with time_machine.travel(issued_at, tick=False):
+        token = store.issue_token(
+            _USER, expires_at=expires_at, resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
+        )
     assert token.is_ok()
 
-    record = store.get_by_token(token.ok)
+    record = store.get_by_token(token.ok.access)
     assert record is not None
     assert record.user_id == _USER
     assert record.expires_at == expires_at
+    assert token.ok.expires_in == 3600
 
 
 def test_get_by_token_returns_none_for_an_unknown_token(store: TokenStore) -> None:
@@ -232,7 +235,7 @@ def test_get_by_token_returns_the_bound_resource(store: TokenStore) -> None:
     )
     assert token.is_ok()
 
-    record = store.get_by_token(token.ok)
+    record = store.get_by_token(token.ok.access)
     assert record is not None
     assert record.resource == "https://host/mysite/check_mk/mcp"
 
@@ -243,7 +246,7 @@ def test_get_by_token_returns_none_for_an_unbound_resource(store: TokenStore) ->
     )
     assert token.is_ok()
 
-    record = store.get_by_token(token.ok)
+    record = store.get_by_token(token.ok.access)
     assert record is not None
     assert record.resource is None
 
@@ -258,7 +261,7 @@ def test_get_by_token_returns_the_bound_scope(store: TokenStore) -> None:
     )
     assert token.is_ok()
 
-    record = store.get_by_token(token.ok)
+    record = store.get_by_token(token.ok.access)
     assert record is not None
     assert record.scope == {ScopeId.READ}
     assert store._connection.execute("SELECT scope FROM tokens").fetchone()[0] == "read"  # noqa: SLF001
@@ -272,9 +275,9 @@ def test_get_by_token_refuses_a_token_whose_stored_scope_does_not_parse(
         _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
     )
     assert token.is_ok()
-    _overwrite_stored_scope(store, token.ok, stored_scope)
+    _overwrite_stored_scope(store, token.ok.access, stored_scope)
 
-    assert store.get_by_token(token.ok) is None
+    assert store.get_by_token(token.ok.access) is None
 
 
 def test_get_by_token_returns_the_issuing_client(store: TokenStore) -> None:
@@ -283,7 +286,7 @@ def test_get_by_token_returns_the_issuing_client(store: TokenStore) -> None:
     )
     assert token.is_ok()
 
-    record = store.get_by_token(token.ok)
+    record = store.get_by_token(token.ok.access)
     assert record is not None
     assert record.client_id == _CLIENT
 
@@ -319,7 +322,7 @@ def test_list_by_user_skips_tokens_whose_stored_scope_does_not_parse(store: Toke
         _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
     )
     assert unusable.is_ok()
-    _overwrite_stored_scope(store, unusable.ok, "mcp")
+    _overwrite_stored_scope(store, unusable.ok.access, "mcp")
 
     assert len(store.list_by_user(_USER)) == 1
 
@@ -354,13 +357,13 @@ def test_revoke_deletes_the_given_token(store: TokenStore) -> None:
         _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
     )
     assert token.is_ok()
-    record = store.get_by_token(token.ok)
+    record = store.get_by_token(token.ok.access)
     assert record is not None
 
     deleted = store.revoke([record.token_hash])
 
     assert deleted == 1
-    assert store.get_by_token(token.ok) is None
+    assert store.get_by_token(token.ok.access) is None
 
 
 def test_revoke_returns_zero_for_an_unknown_token(store: TokenStore) -> None:
@@ -380,8 +383,8 @@ def test_revoke_deletes_multiple_tokens_at_once(store: TokenStore) -> None:
     )
     assert first.is_ok()
     assert second.is_ok()
-    first_record = store.get_by_token(first.ok)
-    second_record = store.get_by_token(second.ok)
+    first_record = store.get_by_token(first.ok.access)
+    second_record = store.get_by_token(second.ok.access)
     assert first_record is not None
     assert second_record is not None
 
@@ -397,13 +400,13 @@ def test_revoke_scoped_to_a_user_does_not_delete_another_users_token(store: Toke
         other_user, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
     )
     assert token.is_ok()
-    record = store.get_by_token(token.ok)
+    record = store.get_by_token(token.ok.access)
     assert record is not None
 
     deleted = store.revoke([record.token_hash], user_id=_USER)
 
     assert deleted == 0
-    assert store.get_by_token(token.ok) is not None
+    assert store.get_by_token(token.ok.access) is not None
 
 
 def test_issue_token_deletes_expired_tokens_and_keeps_valid_ones(store: TokenStore) -> None:
@@ -421,5 +424,5 @@ def test_issue_token_deletes_expired_tokens_and_keeps_valid_ones(store: TokenSto
             _USER, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=_CLIENT
         )
 
-    assert store.get_by_token(expiring.ok) is None
-    assert store.get_by_token(lasting.ok) is not None
+    assert store.get_by_token(expiring.ok.access) is None
+    assert store.get_by_token(lasting.ok.access) is not None

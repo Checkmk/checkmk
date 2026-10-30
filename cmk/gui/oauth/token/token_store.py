@@ -59,6 +59,15 @@ def _has_prefix(token: str, expected_prefix: str) -> bool:
     return bool(dot and secret and prefix == expected_prefix)
 
 
+def _require_grant_arguments(user_id: UserId, client_id: str, scope: frozenset[ScopeId]) -> None:
+    if not user_id:
+        raise ValueError("user_id must not be empty")
+    if not client_id:
+        raise ValueError("client_id must not be empty")
+    if not scope:
+        raise ValueError("scope must not be empty")
+
+
 @dataclass(frozen=True, slots=True)
 class UnknownClient:
     """The client_id does not (or no longer) reference a registered client.
@@ -67,6 +76,12 @@ class UnknownClient:
     the insert -- e.g. the client was deleted between the authorization
     request and the code redemption.
     """
+
+
+@dataclass(frozen=True, slots=True)
+class IssuedAccessToken:
+    access: str
+    expires_in: int
 
 
 class TokenStore:
@@ -83,7 +98,7 @@ class TokenStore:
         resource: str | None,
         scope: frozenset[ScopeId],
         client_id: str,
-    ) -> Result[str, UnknownClient]:
+    ) -> Result[IssuedAccessToken, UnknownClient]:
         """The new access token, or UnknownClient if client_id is not a registered client.
 
         A client deleted between the authorization request and the code
@@ -93,18 +108,12 @@ class TokenStore:
         Issuing also deletes the expired tokens of every client, so they do
         not pile up.
         """
-        if not user_id:
-            raise ValueError("user_id must not be empty")
-        if not client_id:
-            raise ValueError("client_id must not be empty")
-        if not scope:
-            raise ValueError("scope must not be empty")
+        _require_grant_arguments(user_id, client_id, scope)
 
         issued_at_timestamp = int(_utc_now().timestamp())
-        expires_at_timestamp = _to_timestamp(expires_at)
-
-        if expires_at_timestamp <= issued_at_timestamp:
-            raise ValueError("expires_at must be later than the issue time")
+        expires_at_timestamp = _expiry_timestamp(
+            "expires_at", expires_at, issued_at=issued_at_timestamp
+        )
 
         token = _mint_token(_ACCESS_TOKEN_PREFIX)
         with write_transaction(self._connection):
@@ -137,7 +146,9 @@ class TokenStore:
                     {"client_id": client_id},
                 )
                 return Error(UnknownClient())
-        return OK(token)
+        return OK(
+            IssuedAccessToken(access=token, expires_in=expires_at_timestamp - issued_at_timestamp)
+        )
 
     def get_by_token(self, token: str) -> TokenRecord | None:
         try:
@@ -226,8 +237,8 @@ def _row_to_record(row: sqlite3.Row) -> TokenRecord | None:
     return TokenRecord(
         token_hash=row["token_hash"],
         user_id=UserId(row["user_id"]),
-        issued_at=datetime.fromtimestamp(row["issued_at"], tz=UTC),
-        expires_at=datetime.fromtimestamp(row["expires_at"], tz=UTC),
+        issued_at=_from_timestamp(row["issued_at"]),
+        expires_at=_from_timestamp(row["expires_at"]),
         resource=row["resource"],
         scope=scope,
         client_id=row["client_id"],
@@ -238,13 +249,28 @@ def _utc_now() -> datetime:
     return datetime.now(UTC)
 
 
+def _from_timestamp(value: int) -> datetime:
+    return datetime.fromtimestamp(value, tz=UTC)
+
+
 def _to_timestamp(value: datetime) -> int:
     if value.tzinfo is None:
         raise ValueError("datetime values must be timezone-aware")
     return int(value.astimezone(UTC).timestamp())
 
 
+def _expiry_timestamp(name: str, value: datetime, *, issued_at: int) -> int:
+    timestamp = _to_timestamp(value)
+    if timestamp <= issued_at:
+        raise ValueError(f"{name} must be later than the issue time")
+    return timestamp
+
+
 def _access_token_hash(token: str) -> str:
-    if not looks_like_token(token):
+    return _prefixed_token_hash(token, _ACCESS_TOKEN_PREFIX)
+
+
+def _prefixed_token_hash(token: str, prefix: str) -> str:
+    if not _has_prefix(token, prefix):
         raise ValueError("not a well-formed token")
     return hashlib.sha256(token.encode("utf-8")).hexdigest()

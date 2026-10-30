@@ -11,7 +11,7 @@ from typing import Final
 
 from cmk.ccc.user import UserId
 from cmk.gui.oauth.store.client_store import ClientId, get_client_store
-from cmk.gui.oauth.token.token_store import get_token_store
+from cmk.gui.oauth.token.token_store import get_token_store, IssuedAccessToken
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -68,7 +68,9 @@ def _requested_scopes(raw: str) -> frozenset[ScopeId]:
         ) from None
 
 
-def _issue_token(user_id: UserId, *, resource: str, scopes: frozenset[ScopeId]) -> str:
+def _issue_token(
+    user_id: UserId, *, resource: str, scopes: frozenset[ScopeId]
+) -> IssuedAccessToken:
     """A new token for the built-in client, which is created if it is missing."""
     with get_client_store() as clients:
         clients.ensure_builtin(_AI_CONTROL_PLANE_CLIENT_ID, _AI_CONTROL_PLANE_CLIENT_NAME)
@@ -115,16 +117,16 @@ def make_delegate_session_endpoint(delegation_enabled: Callable[[], bool]) -> Ve
             )
         scopes = _requested_scopes(body.scope)
         user_id = live_session_user(api_context, body.session_cookie, endpoint="delegate")
-        access_token = _issue_token(user_id, resource=body.resource, scopes=scopes)
+        issued = _issue_token(user_id, resource=body.resource, scopes=scopes)
         log_security_event(
             OAuthTokenIssuedEvent(user_id=user_id, client_id=_AI_CONTROL_PLANE_CLIENT_ID)
         )
         return ApiResponse(
             DelegateSessionResponse(
-                access_token=access_token,
+                access_token=issued.access,
                 issued_token_type="urn:ietf:params:oauth:token-type:access_token",
                 token_type="Bearer",
-                expires_in=int(_TOKEN_LIFETIME.total_seconds()),
+                expires_in=issued.expires_in,
                 scope=format_scopes(scopes),
                 user_id=user_id,
             ),

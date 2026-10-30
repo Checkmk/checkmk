@@ -78,7 +78,7 @@ def test_openapi_host_register_with_read_scoped_token_reports_insufficient_scope
             resource=None,
             scope=frozenset({ScopeId.READ}),
             client_id=client_id,
-        ).ok
+        ).ok.access
 
     response = wsgi_app.call_method(
         "put",

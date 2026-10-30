@@ -44,7 +44,7 @@ def _issue_token(user_id: UserId, client_id: str) -> str:
             user_id, expires_at=_future(60), resource=None, scope=DEFAULT_SCOPE, client_id=client_id
         )
     assert token.is_ok()
-    return token.ok
+    return token.ok.access
 
 
 def _token_hash(token: str) -> str:

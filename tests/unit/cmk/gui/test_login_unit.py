@@ -203,7 +203,7 @@ def test_login_with_oauth_token(with_user: tuple[UserId, str], flask_app: flask.
         )
     assert token.is_ok()
     with flask_app.test_request_context(
-        "/", method="GET", headers={"Authorization": f"Bearer {token.ok}"}
+        "/", method="GET", headers={"Authorization": f"Bearer {token.ok.access}"}
     ):
         assert type(session.user) is LoggedInUser
         assert session.user.id == username
@@ -235,7 +235,7 @@ def test_read_scoped_oauth_token_narrows_what_the_user_may_do(
         )
     assert token.is_ok()
     with flask_app.test_request_context(
-        "/", method="GET", headers={"Authorization": f"Bearer {token.ok}"}
+        "/", method="GET", headers={"Authorization": f"Bearer {token.ok.access}"}
     ):
         assert session.user.may("general.use")
         assert not session.user.may("general.act")
@@ -258,7 +258,7 @@ def test_write_scoped_oauth_token_leaves_the_users_permissions_alone(
         )
     assert token.is_ok()
     with flask_app.test_request_context(
-        "/", method="GET", headers={"Authorization": f"Bearer {token.ok}"}
+        "/", method="GET", headers={"Authorization": f"Bearer {token.ok.access}"}
     ):
         assert session.user.may("general.act")
 
@@ -280,7 +280,7 @@ def _oauth_bearer_header(username: UserId, password: str) -> str:
             client_id=registration.ok.client_id,
         )
     assert token.is_ok()
-    return "Bearer " + token.ok
+    return "Bearer " + token.ok.access
 
 
 @pytest.mark.parametrize("make_header", [_legacy_bearer_header, _oauth_bearer_header])
@@ -327,7 +327,7 @@ def test_scope_denial_fails_explicitly(
         flask_app.test_request_context(
             "/",
             method="GET",
-            headers={"Authorization": f"Bearer {token.ok}"},
+            headers={"Authorization": f"Bearer {token.ok.access}"},
         ),
         pytest.raises(MKInsufficientScope),
     ):
@@ -360,7 +360,7 @@ def test_login_with_expired_oauth_bearer_token(
     with (
         time_machine.travel(datetime.now(UTC) + timedelta(minutes=10)),
         flask_app.test_request_context(
-            "/", method="GET", headers={"Authorization": f"Bearer {token.ok}"}
+            "/", method="GET", headers={"Authorization": f"Bearer {token.ok.access}"}
         ),
     ):
         assert isinstance(session.user, LoggedInNobody)

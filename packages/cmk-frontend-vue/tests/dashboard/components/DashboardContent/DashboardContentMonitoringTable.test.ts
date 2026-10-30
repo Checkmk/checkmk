@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -39,15 +39,18 @@ const VALUE: ComputedMonitoringTable = {
       is_flapping: false,
       stale: false,
       site_id: 'heute',
-      legacy_host_status_link: 'view.py?view_name=hoststatus&host=heute&site=heute'
+      legacy_host_status_link: 'view.py?view_name=hoststatus&host=heute&site=heute',
+      setup_access: true
     }
   ],
   matched: 1,
   total: 1,
   unapplied_filters: [],
   unreachable_sites: [],
-  actions: [],
-  links: [],
+  actions: [{ ident: 'reschedule', title: 'Reschedule', icon: 'reload' }],
+  links: [
+    { ident: 'edit', title: 'Edit host', icon: 'edit', url: 'wato.py?mode=edit_host&host={host}' }
+  ],
   host_actions: [],
   host_links: []
 }
@@ -60,6 +63,7 @@ const SERVICES_CONTENT: MonitoringTableContent = {
 }
 
 const SERVICES_VALUE: ComputedMonitoringTable = {
+  ...VALUE,
   table: 'services',
   rows: [
     {
@@ -72,17 +76,16 @@ const SERVICES_VALUE: ComputedMonitoringTable = {
       stale: false,
       summary: '[agent] Success',
       last_check: null,
-      last_state_change: null
+      last_state_change: null,
+      reschedule: {
+        label: "Reschedule 'Check_MK' service",
+        tooltip: "Reschedule 'Check_MK' service",
+        icon_name: 'reload-cmk',
+        target: 'Check_MK'
+      }
     }
   ],
-  matched: 1,
-  total: 1,
-  unapplied_filters: [],
-  unreachable_sites: [],
-  actions: [],
-  links: [],
-  host_actions: [],
-  host_links: []
+  links: []
 }
 
 const CMK_TOKEN = '0:the-token'
@@ -91,8 +94,9 @@ let value: ComputedMonitoringTable = VALUE
 let failWith: number | null = null
 let requests: unknown[] = []
 let authorizations: (string | null)[] = []
+let reschedules: unknown[] = []
 
-useMswServer(
+const server = useMswServer(
   http.post(ENDPOINT, async ({ request }) => {
     requests.push(await request.json())
     authorizations.push(request.headers.get('Authorization'))
@@ -100,6 +104,20 @@ useMswServer(
       return HttpResponse.json({ title: 'Internal error' }, { status: failWith })
     }
     return HttpResponse.json({ domainType: 'widget-compute', value })
+  }),
+  restApiHttp.get('/monitor/hosts/{hostname}/action_menu', ({ response }) =>
+    response(200).json({ items: [] })
+  ),
+  restApiHttp.get('/monitor/hosts/{hostname}/service/action_menu', ({ response }) =>
+    response(200).json({ items: [] })
+  ),
+  restApiHttp.post('/monitor/hosts/actions/reschedule', async ({ request, response }) => {
+    reschedules.push(await request.json())
+    return response(200).json({ rescheduled: 1 })
+  }),
+  restApiHttp.post('/monitor/services/actions/reschedule', async ({ request, response }) => {
+    reschedules.push(await request.json())
+    return response(200).json({ rescheduled: 1 })
   })
 )
 
@@ -124,6 +142,7 @@ afterEach(() => {
   failWith = null
   requests = []
   authorizations = []
+  reschedules = []
   FakeResizeObserver.instances = []
   vi.unstubAllGlobals()
 })
@@ -162,12 +181,12 @@ describe('DashboardContentMonitoringTable', () => {
     expect(await screen.findByText('heute')).toBeInTheDocument()
   })
 
-  it('shows only the columns the widget picks', async () => {
+  it('shows the columns the widget picks, followed by the row actions', async () => {
     await renderWidget()
     await screen.findByText('heute')
 
     expect(screen.getAllByRole('columnheader').map((header) => header.textContent?.trim())).toEqual(
-      ['State', 'Host']
+      ['State', 'Host', 'Actions']
     )
   })
 
@@ -280,7 +299,8 @@ describe('DashboardContentMonitoringTable', () => {
     expect(Object.fromEntries(headers.map((header, index) => [header, cells[index]]))).toEqual({
       Service: 'Check_MK',
       Summary: '[agent] Success',
-      Host: expect.stringContaining('today')
+      Host: expect.stringContaining('today'),
+      Actions: ''
     })
   })
 
@@ -340,6 +360,104 @@ describe('DashboardContentMonitoringTable', () => {
 
     expect(await screen.findByText('Widget data could not be loaded.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+  })
+
+  it('links a host into Setup', async () => {
+    await renderWidget()
+
+    expect(await screen.findByRole('link', { name: 'Edit host' })).toHaveAttribute(
+      'href',
+      'wato.py?mode=edit_host&host=heute'
+    )
+  })
+
+  it('reschedules the host picked in its row menu', async () => {
+    await renderWidget()
+    await screen.findByText('heute')
+
+    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Reschedule' }))
+
+    await waitFor(() =>
+      expect(reschedules).toEqual([
+        { hosts: [{ site_id: 'heute', name: 'heute' }], spread_minutes: 5 }
+      ])
+    )
+  })
+
+  it('tells that the host picked in its row menu was rescheduled', async () => {
+    const { emitted } = await renderWidget()
+    await screen.findByText('heute')
+
+    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Reschedule' }))
+
+    await waitFor(() =>
+      expect(emitted()['actionOutcome']).toEqual([
+        [{ variant: 'success', message: 'Rescheduled 1 check' }]
+      ])
+    )
+  })
+
+  it('tells that the host picked in its row menu could not be rescheduled', async () => {
+    server.use(
+      restApiHttp.post('/monitor/hosts/actions/reschedule', ({ response }) =>
+        response.untyped(HttpResponse.json({ title: 'Internal error' }, { status: 500 }))
+      )
+    )
+    const { emitted } = await renderWidget()
+    await screen.findByText('heute')
+
+    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Reschedule' }))
+
+    await waitFor(() =>
+      expect(emitted()['actionOutcome']).toEqual([
+        [
+          {
+            variant: 'error',
+            heading: 'Could not reschedule the checks for the selected hosts',
+            message: 'Retry the command. If it keeps failing, check whether the site is running.'
+          }
+        ]
+      ])
+    )
+  })
+
+  it('reschedules the service a service row names', async () => {
+    value = SERVICES_VALUE
+    await renderWidget(SERVICES_CONTENT)
+    await screen.findByText('Check_MK')
+
+    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: /Reschedule 'Check_MK'/ }))
+
+    await waitFor(() =>
+      expect(reschedules).toEqual([
+        {
+          services: [{ site_id: 'today', host_name: 'today', name: 'Check_MK' }],
+          spread_minutes: 5
+        }
+      ])
+    )
+  })
+
+  it('offers no row actions in the wizard preview', async () => {
+    render(DashboardContentMonitoringTable, {
+      props: makeContentProps(CONTENT, { isPreview: true })
+    })
+    await nextTick()
+    deliverSize(800, 400)
+    await screen.findByText('heute')
+
+    expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
+  })
+
+  it('offers no row actions in a shared dashboard', async () => {
+    await renderInSharedDashboard()
+    await screen.findByText('heute')
+
+    expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
   })
 
   it('asks by widget ID with the token of a shared dashboard', async () => {

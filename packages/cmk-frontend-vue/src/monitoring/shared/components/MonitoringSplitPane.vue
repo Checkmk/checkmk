@@ -23,6 +23,10 @@ import ActionFeedback from '@/monitoring/shared/components/action/ActionFeedback
 import MonitoringActionBar from '@/monitoring/shared/components/action/MonitoringActionBar.vue'
 import MonitoringActionPane from '@/monitoring/shared/components/action/MonitoringActionPane.vue'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
+import {
+  type RowCommand,
+  performRowCommand
+} from '@/monitoring/shared/components/action/rowCommand'
 import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { ACTION_PANE_MIN_WIDTH } from '@/monitoring/shared/constants'
@@ -199,14 +203,11 @@ function toggleDisplayOptions(): void {
   displayOptionsOpen.value = true
 }
 
-async function onRowCommand(payload: { id: string; target: Target }): Promise<void> {
-  const action = props.actions[payload.id]
-  if (!action) {
-    return
+async function onRowCommand(command: RowCommand<Target>): Promise<void> {
+  const feedback = await performRowCommand(props.actions, command)
+  if (feedback) {
+    applyFeedback(feedback, { clearSelection: false })
   }
-  applyFeedback(await action.perform([payload.target], action.defaultValues()), {
-    clearSelection: false
-  })
 }
 
 function onRightPaneCollapse(collapsed: boolean): void {

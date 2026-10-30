@@ -8,20 +8,29 @@ import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, watch } from 'vue'
 
+import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
 import { useWidgetData } from '@/dashboard/composables/useWidgetData'
 import { useWidgetSource } from '@/dashboard/composables/useWidgetSource'
-import type { ComputedMonitoringTable, MonitoringTableContent } from '@/dashboard/types/widget'
+import type {
+  ComputedMonitoringTable,
+  MonitoringTableContent,
+  WidgetEmitActionOutcome
+} from '@/dashboard/types/widget'
 import { dashboardAPI } from '@/dashboard/utils'
 import { unreachableSitesHint } from '@/monitoring/shared/unreachableSites'
 import MonitoringTableWidget from '@/monitoring/table-widget/MonitoringTableWidget.vue'
 import { WidgetTableState } from '@/monitoring/table-widget/WidgetTableState'
 import { monitoringTableRegistry } from '@/monitoring/table-widget/registry'
-import type { MonitoringTableDescriptor } from '@/monitoring/table-widget/tableDescriptors'
+import type {
+  MonitoringTableActionOffer,
+  MonitoringTableDescriptor
+} from '@/monitoring/table-widget/tableDescriptors'
 
 import WidgetFigureFrame from './figures/WidgetFigureFrame.vue'
 import type { ContentProps } from './types'
 
 const props = defineProps<ContentProps<MonitoringTableContent>>()
+defineEmits<WidgetEmitActionOutcome>()
 const { _t } = usei18n()
 
 const { source, headers } = useWidgetSource(props)
@@ -46,6 +55,20 @@ const { state, retry } = useWidgetData<ComputedMonitoringTable>(
   () => [props.content, props.effective_filter_context, tableState.sortState.value],
   () => props.tick
 )
+
+// The wizard preview shows what the table will be, and a shared dashboard reaches no endpoint
+// that runs an action: neither offers the rows' actions.
+const offersRowActions = !props.isPreview && useInjectCmkToken() === undefined
+
+// A refresh offering the same actions keeps the previous offer, and so the rows' actions as built.
+const actionOffer = computed<MonitoringTableActionOffer | undefined>((previous) => {
+  const current = state.value
+  if (!offersRowActions || current.kind !== 'data') {
+    return undefined
+  }
+  const offer = { actions: current.value.actions, links: current.value.links }
+  return JSON.stringify(offer) === JSON.stringify(previous) ? previous : offer
+})
 
 function unappliedHint(value: ComputedMonitoringTable): string {
   return _t('Not applied to this table: %{filters}', {
@@ -100,6 +123,8 @@ function truncatedHint(value: ComputedMonitoringTable): string {
             dateFormat: content.date_format,
             timestampFormat: content.timestamp_format
           }"
+          :action-offer="actionOffer"
+          @performed="$emit('actionOutcome', $event)"
         />
         <p v-if="value.matched > value.rows.length" class="db-content-monitoring-table__truncated">
           {{ truncatedHint(value) }}

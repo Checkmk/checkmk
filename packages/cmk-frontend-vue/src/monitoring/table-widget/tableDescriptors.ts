@@ -7,14 +7,22 @@ import type { ColumnDef } from '@tanstack/vue-table'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { Component } from 'vue'
+import type { ComponentProps } from 'vue-component-type-helpers'
 
 import { buildHostColumns } from '@/monitoring/all-hosts/columns'
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
 import { useAllServicesColumns } from '@/monitoring/all-services/columns'
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
 import type { HostEntry, ServiceEntry } from '@/monitoring/shared/api/types'
-import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
+import {
+  type RowCommand,
+  performRowCommand
+} from '@/monitoring/shared/components/action/rowCommand'
+import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
+import { hostRefOfService, serviceCommand } from '@/monitoring/shared/objectRefs'
 import { columnId } from '@/monitoring/shared/tableState/schema'
+import { useHostActions } from '@/monitoring/shared/useHostActions'
+import { useServiceActions } from '@/monitoring/shared/useServiceActions'
 
 export type MonitoringTableName = components['schemas']['MonitoringTableContent']['table']
 
@@ -23,6 +31,31 @@ export interface MonitoringTableRows {
   services: ServiceEntry
 }
 
+/** What the backend offers the reader to do with the rows of a table. */
+export type MonitoringTableActionOffer = Pick<
+  components['schemas']['MonitoringTable'],
+  'actions' | 'links'
+>
+
+/** How the rows of a table get their actions, and what a command picked in a row acts on. */
+export interface MonitoringTableRowActions<T, Target> {
+  /** The props that hand a row its action buttons and its action menu. */
+  rowProps(row: T): object
+  /** Run the command picked in a row, and tell how it went; null for a command not run. */
+  run(row: T, command: RowCommand<Target>): Promise<ActionOutcome | null>
+}
+
+/**
+ * What a command picked in a row of the row component `C` acts on, as `C` emits it. A descriptor
+ * runs the command with this type, so a row that changes what it emits fails to compile there.
+ */
+type RowCommandTarget<C> =
+  ComponentProps<C> extends { onCommand?: ((command: infer Command) => unknown) | undefined }
+    ? Command extends { target: infer Target }
+      ? Target
+      : never
+    : never
+
 export interface MonitoringTableColumn {
   id: string
   title: string
@@ -30,7 +63,8 @@ export interface MonitoringTableColumn {
   shownByDefault: boolean
 }
 
-export abstract class MonitoringTableDescriptor<T> {
+/** A table of rows `T`, whose row component emits a command picked in a row naming `Target`. */
+export abstract class MonitoringTableDescriptor<T, Target = unknown> {
   abstract readonly rowComponent: Component
 
   /** The columns the backend offers for this table. */
@@ -42,6 +76,12 @@ export abstract class MonitoringTableDescriptor<T> {
   abstract rowKey(row: T): string
 
   abstract truncatedHint(shown: number, matched: number): string
+
+  /**
+   * The widget builds the row actions in a computed, outside any component's setup: the actions
+   * must use no lifecycle hook, watcher or inject.
+   */
+  abstract rowActions(offer: MonitoringTableActionOffer): MonitoringTableRowActions<T, Target>
 
   catalog(): MonitoringTableColumn[] {
     return this.inRowOrder(this.columnIds).map(([id, column]) => ({
@@ -70,7 +110,10 @@ export abstract class MonitoringTableDescriptor<T> {
   }
 }
 
-export class HostsTableDescriptor extends MonitoringTableDescriptor<HostEntry> {
+export class HostsTableDescriptor extends MonitoringTableDescriptor<
+  HostEntry,
+  RowCommandTarget<typeof HostRow>
+> {
   readonly rowComponent: Component = HostRow
 
   readonly columnIds = [
@@ -109,6 +152,20 @@ export class HostsTableDescriptor extends MonitoringTableDescriptor<HostEntry> {
     return `${row.site_id}:${row.name}`
   }
 
+  rowActions(
+    offer: MonitoringTableActionOffer
+  ): MonitoringTableRowActions<HostEntry, RowCommandTarget<typeof HostRow>> {
+    const { rowActions, loadActionMenu, registry } = useHostActions({
+      actions: offer.actions,
+      row_actions: offer.links
+    })
+    return {
+      rowProps: () =>
+        ({ rowActions, loadActionMenu }) satisfies Partial<ComponentProps<typeof HostRow>>,
+      run: (_row, command) => performRowCommand(registry, command)
+    }
+  }
+
   truncatedHint(shown: number, matched: number): string {
     const { _t } = usei18n()
     return _t('Showing %{shown} of %{matched} hosts', {
@@ -118,7 +175,10 @@ export class HostsTableDescriptor extends MonitoringTableDescriptor<HostEntry> {
   }
 }
 
-export class ServicesTableDescriptor extends MonitoringTableDescriptor<ServiceEntry> {
+export class ServicesTableDescriptor extends MonitoringTableDescriptor<
+  ServiceEntry,
+  RowCommandTarget<typeof HostServicesRow>
+> {
   readonly rowComponent: Component = HostServicesRow
 
   readonly columnIds = [
@@ -138,13 +198,28 @@ export class ServicesTableDescriptor extends MonitoringTableDescriptor<ServiceEn
   ]
 
   protected allColumns(): ColumnDef<ServiceEntry>[] {
-    return useAllServicesColumns({ sites: [], includeSelect: false }).filter(
-      (column) => columnId(column) !== ACTIONS_COLUMN_ID
-    )
+    return useAllServicesColumns({ sites: [], includeSelect: false })
   }
 
   rowKey(row: ServiceEntry): string {
     return `${row.site_id}:${row.host_name}:${row.name}`
+  }
+
+  rowActions(
+    offer: MonitoringTableActionOffer
+  ): MonitoringTableRowActions<ServiceEntry, RowCommandTarget<typeof HostServicesRow>> {
+    const { mayReschedule, loadActionMenu, registry } = useServiceActions({
+      actions: offer.actions
+    })
+    return {
+      rowProps: (row) =>
+        ({
+          mayReschedule,
+          loadActionMenu: (service: string) => loadActionMenu(hostRefOfService(row), service)
+        }) satisfies Partial<ComponentProps<typeof HostServicesRow>>,
+      run: (row, command) =>
+        performRowCommand(registry, serviceCommand(hostRefOfService(row), command))
+    }
   }
 
   truncatedHint(shown: number, matched: number): string {

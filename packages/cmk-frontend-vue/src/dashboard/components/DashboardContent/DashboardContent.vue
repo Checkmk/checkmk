@@ -31,12 +31,17 @@ import { NTOP_TYPES } from './types.ts'
 </script>
 
 <script setup lang="ts">
-import type { TimelineContent, WidgetContent, WidgetEmitTimeRange } from '@/dashboard/types/widget'
+import type {
+  TimelineContent,
+  WidgetContent,
+  WidgetEmitActionOutcome,
+  WidgetEmitTimeRange
+} from '@/dashboard/types/widget'
 
 import type { ContentProps } from './types.ts'
 
 defineProps<ContentProps>()
-defineEmits<WidgetEmitTimeRange>()
+defineEmits<WidgetEmitTimeRange & WidgetEmitActionOutcome>()
 
 function isTimeline(content: WidgetContent): content is TimelineContent {
   return content.type === 'alert_timeline' || content.type === 'notification_timeline'
@@ -127,5 +132,6 @@ function componentKey(content: WidgetContent): string {
     :tick="tick"
     :range="range"
     @update-time-range="$emit('updateTimeRange', $event)"
+    @action-outcome="$emit('actionOutcome', $event)"
   />
 </template>

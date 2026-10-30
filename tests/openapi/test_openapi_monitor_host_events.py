@@ -8,6 +8,7 @@ from http import HTTPStatus
 import pytest
 import time_machine
 
+from cmk.ccc.user import UserId
 from cmk.gui.monitor.hosts._api._events import (
     _DEFAULT_LIMIT,
     _DEFAULT_TIME_WINDOW_DAYS,
@@ -77,9 +78,13 @@ def _expected_since(days: int = _DEFAULT_TIME_WINDOW_DAYS) -> int:
     return _NOW - days * _SECONDS_PER_DAY
 
 
-def _expect_host_exists(mock_livestatus: MockLiveStatusConnection) -> None:
+def _expect_host_exists(
+    mock_livestatus: MockLiveStatusConnection, *, auth_user: UserId | None = None
+) -> None:
+    # A user without "See all host and services" makes sites.live() add an AuthUser line.
+    restriction = [] if auth_user is None else [f"AuthUser: {auth_user}"]
     mock_livestatus.expect_query(
-        ["GET hosts", "Columns: name", f"Filter: name = {_HOSTNAME}", "Limit: 1"],
+        ["GET hosts", "Columns: name", f"Filter: name = {_HOSTNAME}", "Limit: 1", *restriction],
         sites=[_SITE_ID],
     )
 
@@ -335,3 +340,28 @@ class TestMonitorHostEvents:
             resp = clients.MonitorHosts.get_events(_HOSTNAME, site_id=_SITE_ID)
 
         assert resp.json["events"][0]["state_info"] == "SOFT"
+
+
+class TestMonitorHostEventsVisibility:
+    """Who may read a host's History tab.
+
+    Livestatus, not the endpoint, hides a host from a user who is neither its contact nor holds
+    "See all host and services", through the AuthUser line the connection carries. The mock
+    answers whatever its tables hold, so an empty host table stands in for the hidden host, and
+    the expected queries pin that the restriction is on the request.
+    """
+
+    def test_the_host_lookup_is_restricted_to_the_user(
+        self,
+        clients: ClientRegistry,
+        with_user: tuple[UserId, str],
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.MonitorHosts.set_credentials(*with_user)
+        mock_livestatus.add_table("hosts", [])
+        _expect_host_exists(mock_livestatus, auth_user=with_user[0])
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.get_events(_HOSTNAME, site_id=_SITE_ID, expect_ok=False)
+
+        assert resp.status_code == HTTPStatus.NOT_FOUND

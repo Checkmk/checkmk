@@ -12,7 +12,8 @@ import time_machine
 
 from cmk.ccc.user import UserId
 from cmk.gui.monitor.services._api._limits import MAX_SERVICE_LIMIT
-from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection, ResultEntry
+from tests.testlib.unit.gui.openapi_monitoring import site_configurations
 from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
@@ -1533,6 +1534,43 @@ class TestMonitorHostServicessLimitPermissions:
         assert resp.json["meta"]["limit"] is None
 
 
+class TestMonitorHostServicesMultiSite:
+    def test_only_the_named_site_is_asked_for_a_host_name_two_sites_share(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        set_config: SetConfig,
+    ) -> None:
+        # Both sites monitor a host of this name, so only the site the page was opened for
+        # decides which services come back. It is deliberately not the first site, which a
+        # query without a site would reach.
+        mock_livestatus.add_table("hosts", [{"name": _HOSTNAME}], site=_SITE_ID)
+        mock_livestatus.add_table("hosts", [{"name": _HOSTNAME}], site=_OTHER_SITE_ID)
+        mock_livestatus.add_table("services", [_service_row("CPU load", state=0)], site=_SITE_ID)
+        mock_livestatus.add_table(
+            "services",
+            [_service_row("Memory", state=2), _service_row("Filesystem /", state=0)],
+            site=_OTHER_SITE_ID,
+        )
+        # Every query is expected on the named site alone; one reaching another site finds no
+        # expectation waiting for it there and fails the test.
+        _expect_list_services_queries(mock_livestatus, site=_OTHER_SITE_ID)
+
+        with (
+            set_config(sites=site_configurations([_SITE_ID, _OTHER_SITE_ID, "local"])),
+            mock_livestatus(),
+        ):
+            resp = clients.MonitorHosts.list_host_services(
+                hostname=_HOSTNAME, site_id=_OTHER_SITE_ID, limit=_LIMIT
+            )
+
+        assert [service["name"] for service in resp.json["services"]] == [
+            "Filesystem /",
+            "Memory",
+        ]
+        assert resp.json["meta"]["total"] == 2
+
+
 class TestMonitorServiceOverview:
     @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
     def test_returns_the_requested_service(
@@ -2403,6 +2441,7 @@ _SERVICE_OVERVIEW_COLUMNS = (
     "check_command pnpgraph_present check_type cached_at cache_interval"
 )
 _LIMIT = 1000
+_OTHER_SITE_ID = "remote"
 _SERVICES_COLUMNS = (
     "description host_name state has_been_checked plugin_output acknowledged "
     "scheduled_downtime_depth "
@@ -2413,7 +2452,7 @@ _DEFAULT_ORDER_BY = "OrderBy: description asc natural"
 
 
 def _expect_list_services_queries(
-    mock_livestatus: MockLiveStatusConnection, *, extra_columns: str = ""
+    mock_livestatus: MockLiveStatusConnection, *, extra_columns: str = "", site: str = _SITE_ID
 ) -> None:
     mock_livestatus.expect_query(
         [
@@ -2422,7 +2461,7 @@ def _expect_list_services_queries(
             f"Filter: name = {_HOSTNAME}",
             "Limit: 1",
         ],
-        sites=[_SITE_ID],
+        sites=[site],
     )
     mock_livestatus.expect_query(
         [
@@ -2432,7 +2471,7 @@ def _expect_list_services_queries(
             _DEFAULT_ORDER_BY,
             f"Limit: {_LIMIT}",
         ],
-        sites=[_SITE_ID],
+        sites=[site],
     )
     mock_livestatus.expect_query(
         [
@@ -2440,5 +2479,40 @@ def _expect_list_services_queries(
             "Stats: state >= 0",
             f"Filter: host_name = {_HOSTNAME}",
         ],
-        sites=[_SITE_ID],
+        sites=[site],
     )
+
+
+def _service_row(name: str, *, state: int) -> ResultEntry:
+    return {
+        "description": name,
+        "host_name": _HOSTNAME,
+        "state": state,
+        "plugin_output": "",
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "is_flapping": 0,
+        "has_been_checked": 1,
+        "staleness": 0.0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "in_passive_check_period": 1,
+        "last_check": 1700000000,
+        "last_state_change": 1700000060,
+        "perf_data": "",
+        "check_command": "check_mk-test",
+        "check_type": 0,
+        "cached_at": 0,
+        "cache_interval": 0,
+        "host_state": 0,
+        "host_has_been_checked": 1,
+        "labels": {},
+        "label_sources": {},
+        "tags": {},
+    }

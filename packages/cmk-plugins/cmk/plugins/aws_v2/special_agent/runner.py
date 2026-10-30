@@ -27,6 +27,7 @@ from .config import (
     describe_credential_failure,
     LOGGER,
 )
+from .credentials import CLIENT_LOCK
 from .hosts import AccountScope, SOURCE_HOST, target_host, TargetHost
 from .sections.aws_lambda import (
     LambdaCloudwatch,
@@ -276,7 +277,10 @@ class AWSSections(abc.ABC):
         try:
             # TODO: The signature of the client() method depends on the literal(!) value of its
             # first argument, so using a plain str here is wrong.
-            return self._session.client(client_key, region_name=self._region, config=self.config)
+            with CLIENT_LOCK:
+                return self._session.client(
+                    client_key, region_name=self._region, config=self.config
+                )
         except (
             ValueError,
             botocore.exceptions.ClientError,

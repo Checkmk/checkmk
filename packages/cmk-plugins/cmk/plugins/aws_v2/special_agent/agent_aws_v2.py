@@ -40,6 +40,7 @@ from .credentials import (
     AssumedRole,
     AwsAccount,
     AwsCredentials,
+    CLIENT_LOCK,
     DefaultCredentials,
     HubCredentials,
     Organization,
@@ -667,11 +668,9 @@ def regions_not_enabled(
     Then every configured region is queried, as before.
     """
     try:
-        regions = (
-            session.client("ec2", region_name=region, config=config)
-            .describe_regions(AllRegions=True)
-            .get("Regions", [])
-        )
+        with CLIENT_LOCK:
+            ec2 = session.client("ec2", region_name=region, config=config)
+        regions = ec2.describe_regions(AllRegions=True).get("Regions", [])
     except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError) as e:
         LOGGER.info("Cannot tell which regions are enabled: %(error)s", {"error": e})
         return frozenset()

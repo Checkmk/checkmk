@@ -21,6 +21,7 @@ role in the management account for that one call. That role is also one AssumeRo
 from the login identity, and the spokes are not assumed through it.
 """
 
+import threading
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
@@ -28,6 +29,9 @@ import boto3
 import botocore
 
 from .config import AwsAccessError, describe_credential_failure
+
+# boto3 sessions are not thread-safe, their clients are. Create every client under this lock.
+CLIENT_LOCK = threading.Lock()
 
 
 @dataclass(frozen=True)
@@ -107,7 +111,9 @@ def _assume_role(
     config: botocore.config.Config | None,
 ) -> tuple[boto3.session.Session, str]:
     """The session of the assumed role, and the account AWS says the role belongs to."""
-    assumed_role_object = session.client("sts", config=config).assume_role(
+    with CLIENT_LOCK:
+        sts = session.client("sts", config=config)
+    assumed_role_object = sts.assume_role(
         RoleArn=role_arn,
         RoleSessionName=session_name,
         **({"ExternalId": external_id} if external_id else {}),
@@ -211,9 +217,9 @@ class AwsCredentials:
             # With an assumed role, building it already tells the account.
             session = self.session()
             if (account_id := self._account_id) is None:
-                account_id = session.client("sts", config=self._proxy_config).get_caller_identity()[
-                    "Account"
-                ]
+                with CLIENT_LOCK:
+                    sts = session.client("sts", config=self._proxy_config)
+                account_id = sts.get_caller_identity()["Account"]
                 self._account_id = account_id
         except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError) as e:
             # BotoCoreError covers every client-side failure, including all the
@@ -245,7 +251,8 @@ class AwsCredentials:
                     self._global_service_region,
                     self._proxy_config,
                 )
-            client = session.client("organizations", config=self._proxy_config)
+            with CLIENT_LOCK:
+                client = session.client("organizations", config=self._proxy_config)
             accounts = [
                 account
                 for page in client.get_paginator("list_accounts").paginate()

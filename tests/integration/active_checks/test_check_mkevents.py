@@ -276,6 +276,14 @@ def test_vertical_bar_is_replaced_like_in_checkmk(socket_path: Path) -> None:
     assert result.stdout == "OK - 1 events (1 unacknowledged), Last line: a❘b\n"
 
 
+def test_nul_byte_in_event_text_is_replaced_by_space(socket_path: Path) -> None:
+    events = [{"host": "myhost", "phase": "open", "state": 1, "text": "a\0b"}]
+
+    result = _check_events(socket_path, events, "-l", "myhost")
+
+    assert result.stdout == "WARN - 1 events (1 unacknowledged), Last line: a b\n"
+
+
 def _events_of_hosts(*hosts: str) -> Sequence[Event]:
     return [{"host": host, "phase": "open", "state": 0, "text": host} for host in hosts]
 

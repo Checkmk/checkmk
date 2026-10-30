@@ -3,7 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// NOTE: We really need <sstream>, IWYU bug?
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -22,15 +21,17 @@
 #include <cstring>
 #include <iostream>
 #include <optional>
-#include <sstream>
+#include <sstream>  // IWYU pragma: keep
 #include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
 
+namespace {
+
 enum class State { ok = 0, warn = 1, crit = 2, unknown = 3 };
 
-std::ostream &operator<<(std::ostream &os, const State &state) {
+std::ostream &operator<<(std::ostream &os, State state) {
     switch (state) {
         case State::ok:
             return os << "OK";
@@ -71,11 +72,14 @@ std::optional<State> parse_state(const std::string &s) {
 void print_line(const std::string &output) {
     // Make sure that plugin output does not contain a vertical bar. If that is
     // the case then replace it with a Unicode "Light vertical bar". Same as in
-    // Checkmk, which turns it back into a vertical bar for notifications.
+    // Checkmk, which turns it back into a vertical bar for notifications. A
+    // NUL byte would end the output for the core, so replace it by a space.
     for (char i : output) {
         if (i == '|') {
             // \u2758 (utf-8 encoded light vertical bar)
             std::cout << "\xe2\x9d\x98";  // NOLINT
+        } else if (i == '\0') {
+            std::cout << ' ';
         } else {
             std::cout << i;
         }
@@ -83,17 +87,17 @@ void print_line(const std::string &output) {
     std::cout << std::endl;
 }
 
-[[noreturn]] void exit(State state) { ::exit(static_cast<int>(state)); }
+[[noreturn]] void exit_with(State state) { std::exit(static_cast<int>(state)); }
 
 [[noreturn]] void reply_and_exit(State state, const std::string &output) {
     std::cout << state << " - ";
     print_line(output);
-    exit(state);
+    exit_with(state);
 }
 
 constexpr int timeout_seconds = 20;
 
-[[noreturn]] void ioError(const std::string &message) {
+[[noreturn]] void io_error(const std::string &message) {
     // All our sockets have timeouts, which expire with one of these errors.
     auto err = errno;
     std::string reason =
@@ -139,8 +143,17 @@ void limit_to_deadline(int sock, int option) {
     const timeval tv{.tv_sec = left_seconds.count(),
                      .tv_usec = (left - left_seconds).count()};
     if (setsockopt(sock, SOL_SOCKET, option, &tv, sizeof(tv)) == -1) {
-        ioError("Cannot set socket timeout");
+        io_error("Cannot set socket timeout");
     }
+}
+
+int create_socket(int domain) {
+    int sock = ::socket(domain, SOCK_STREAM, 0);
+    if (sock == -1) {
+        io_error("Cannot create client socket");
+    }
+    limit_to_deadline(sock, SO_SNDTIMEO);  // for connect()
+    return sock;
 }
 
 // Cuts a string after at most max_size bytes, but doesn't cut a character in
@@ -170,9 +183,9 @@ std::string start_of_response(const std::string &response) {
     return cut_at(response, keeps_enough ? line_break + 1 : max_size);
 }
 
-[[noreturn]] void invalidResponse(const std::string &problem,
-                                  const std::string &query,
-                                  const std::stringstream &response) {
+[[noreturn]] void invalid_response(const std::string &problem,
+                                   const std::string &query,
+                                   const std::stringstream &response) {
     auto resp = response.str();
     reply_and_exit(State::unknown,
                    "Event console answered with " + problem + "\nQuery was:\n" +
@@ -180,11 +193,11 @@ std::string start_of_response(const std::string &response) {
                        " byte response:\n" + start_of_response(resp));
 }
 
-[[noreturn]] void missingHeader(const std::string &header,
-                                const std::string &query,
-                                const std::stringstream &response) {
-    invalidResponse("incorrect header (missing " + header + ")", query,
-                    response);
+[[noreturn]] void missing_header(const std::string &header,
+                                 const std::string &query,
+                                 const std::stringstream &response) {
+    invalid_response("incorrect header (missing " + header + ")", query,
+                     response);
 }
 
 // The event console closes the connection without answering when it denies
@@ -194,7 +207,7 @@ bool closed_by_peer(int err) {
     return err == EPIPE || err == ECONNRESET || err == ENOTCONN;
 }
 
-[[noreturn]] void noAnswer(const std::string &query) {
+[[noreturn]] void no_answer(const std::string &query) {
     reply_and_exit(State::unknown,
                    "Event console closed the connection without answering, "
                    "see its log file var/log/mkeventd.log for the reason, "
@@ -345,6 +358,8 @@ std::string host_filter(const std::string &spec, bool quoted) {
                      : "Filter: event_host ~~ ^(?:" + regex + ")\\Z\n";
 }
 
+}  // namespace
+
 int main(int argc, char **argv) {
     // Parse arguments
     const char *remote_host = nullptr;
@@ -404,11 +419,7 @@ int main(int argc, char **argv) {
             remote_hostipaddress = std::string{inet_ntoa(*addr_list[i])};
         }
 
-        sock = ::socket(AF_INET, SOCK_STREAM, 0);
-        if (sock == -1) {
-            ioError("Cannot create client socket");
-        }
-        limit_to_deadline(sock, SO_SNDTIMEO);  // for connect()
+        sock = create_socket(AF_INET);
 
         sockaddr_in addr{};
         addr.sin_family = AF_INET;
@@ -418,8 +429,8 @@ int main(int argc, char **argv) {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
                       sizeof(sockaddr_in)) == -1) {
-            ioError("Cannot connect to event console at " +
-                    remote_hostipaddress + ":" + std::to_string(remote_port));
+            io_error("Cannot connect to event console at " +
+                     remote_hostipaddress + ":" + std::to_string(remote_port));
         }
 
     } else {
@@ -446,16 +457,12 @@ int main(int argc, char **argv) {
         unixsocket_path.copy(&addr.sun_path[0], sizeof(addr.sun_path) - 1);
         addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
 
-        sock = ::socket(PF_UNIX, SOCK_STREAM, 0);
-        if (sock == -1) {
-            ioError("Cannot create client socket");
-        }
-        limit_to_deadline(sock, SO_SNDTIMEO);  // for connect()
+        sock = create_socket(AF_UNIX);
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
                       sizeof(addr)) == -1) {
-            ioError("Cannot connect to event daemon via UNIX socket " +
-                    unixsocket_path);
+            io_error("Cannot connect to event daemon via UNIX socket " +
+                     unixsocket_path);
         }
     }
 
@@ -487,10 +494,10 @@ int main(int argc, char **argv) {
                 ::send(sock, buffer, bytes_to_write, MSG_NOSIGNAL);
             if (bytes_written == -1) {
                 if (closed_by_peer(errno)) {
-                    noAnswer(query_message);
+                    no_answer(query_message);
                 }
                 if (errno != EINTR) {
-                    ioError(message);
+                    io_error(message);
                 }
             } else {
                 buffer += bytes_written;
@@ -499,9 +506,9 @@ int main(int argc, char **argv) {
         }
         if (shutdown(sock, SHUT_WR) == -1) {
             if (closed_by_peer(errno)) {
-                noAnswer(query_message);
+                no_answer(query_message);
             }
-            ioError("Cannot shutdown socket to event console");
+            io_error("Cannot shutdown socket to event console");
         }
     }
 
@@ -510,79 +517,61 @@ int main(int argc, char **argv) {
     std::stringstream response_stream;
     while (true) {
         char response_chunk[65536];
-        memset(response_chunk, 0, sizeof(response_chunk));
         check_deadline(message);
         limit_to_deadline(sock, SO_RCVTIMEO);
         ssize_t bytes_read =
             ::read(sock, response_chunk, sizeof(response_chunk));
         if (bytes_read == -1) {
             if (closed_by_peer(errno) && response_stream.tellp() == 0) {
-                noAnswer(query_message);
+                no_answer(query_message);
             }
             if (errno != EINTR) {
-                ioError(message);
+                io_error(message);
             }
         } else if (bytes_read == 0) {
             break;
         } else {
-            for (int i = 0; i < bytes_read; i++) {
-                if (response_chunk[i] == 0) {
-                    response_chunk[i] = ' ';
-                }
-            }
-            response_stream << std::string(response_chunk, bytes_read);
+            response_stream.write(response_chunk, bytes_read);
         }
     }
-    if (::close(sock) == -1) {
-        ioError("Error while closing connection");
-    }
+    // We have read the complete answer, so a failing close() doesn't matter.
+    ::close(sock);
     if (response_stream.tellp() == 0) {
-        noAnswer(query_message);
+        no_answer(query_message);
     }
 
     // Start processing data
     std::string line;
     getline(response_stream, line);
 
-    std::stringstream linestream;
-    linestream << line;
-
     // Get headers
-    std::string token;
-    int idx_event_phase = -1;
-    int idx_event_state = -1;
-    int idx_event_text = -1;
-    int current_index = 0;
-    std::vector<std::string> headers;
-    while (getline(linestream, token, '\t')) {
-        if (strcmp(token.c_str(), "event_phase") == 0) {
-            idx_event_phase = current_index;
-        } else if (strcmp(token.c_str(), "event_state") == 0) {
-            idx_event_state = current_index;
-        } else if (strcmp(token.c_str(), "event_text") == 0) {
-            idx_event_text = current_index;
-        }
-        headers.push_back(token);
-        current_index++;
-    }
+    auto headers = split_columns(line);
+    auto index_of = [&headers](const std::string &column) {
+        auto pos = std::find(headers.begin(), headers.end(), column);
+        return pos == headers.end() ? -1
+                                    : static_cast<int>(pos - headers.begin());
+    };
+    int idx_event_phase = index_of("event_phase");
+    int idx_event_state = index_of("event_state");
+    int idx_event_text = index_of("event_text");
 
     // Basic header validation
     if (idx_event_phase == -1) {
-        missingHeader("event_phase", query_message, response_stream);
+        missing_header("event_phase", query_message, response_stream);
     }
     if (idx_event_state == -1) {
-        missingHeader("event_state", query_message, response_stream);
+        missing_header("event_state", query_message, response_stream);
     }
     if (idx_event_text == -1) {
-        missingHeader("event_text", query_message, response_stream);
+        missing_header("event_text", query_message, response_stream);
     }
 
     // The event console ends every line with a newline, so an answer without
     // one at its end was cut off, e.g. by an event console stopped while
     // answering. Its last row would continue the event text of the row before.
     if (response_stream.str().back() != '\n') {
-        invalidResponse("an incomplete last line", query_message,
-                        response_stream);
+        invalid_response("an incomplete last line", query_message,
+                         response_stream);
     }
 
     // Get data. The event console replaces tabs within the columns by spaces,
@@ -594,8 +583,8 @@ int main(int argc, char **argv) {
         if (row.size() >= headers.size()) {
             data.push_back(row);
         } else if (data.empty()) {
-            invalidResponse("an incomplete row", query_message,
-                            response_stream);
+            invalid_response("an incomplete row", query_message,
+                             response_stream);
         } else {
             data.back().back() += "\n" + line;
         }
@@ -607,23 +596,23 @@ int main(int argc, char **argv) {
     int count = 0;
     int unhandled = 0;
 
-    for (auto &it : data) {
+    for (const auto &row : data) {
         count++;
-        const char *p = it.at(idx_event_phase).c_str();
-        auto s = parse_state(it.at(idx_event_state));
+        const auto &phase = row.at(idx_event_phase);
+        auto s = parse_state(row.at(idx_event_state));
         if (!s) {
             // A valid state has a single digit, so its start is enough.
-            invalidResponse("an invalid event state '" +
-                                cut_at(it.at(idx_event_state), 20) + "'",
-                            query_message, response_stream);
+            invalid_response("an invalid event state '" +
+                                 cut_at(row.at(idx_event_state), 20) + "'",
+                             query_message, response_stream);
         }
-        if (strcmp(p, "open") == 0 || !ignore_acknowledged) {
+        if (phase == "open" || !ignore_acknowledged) {
             if (severity(*s) >= severity(worst_state)) {
                 worst_state = *s;
-                worst_row_event_text = it.at(idx_event_text);
+                worst_row_event_text = row.at(idx_event_text);
             }
         }
-        if (strcmp(p, "open") == 0) {
+        if (phase == "open") {
             unhandled++;
         }
     }
@@ -653,7 +642,5 @@ int main(int argc, char **argv) {
         print_line("Last line: " + worst_row_event_text);
     }
 
-    exit(worst_state);
-
-    return 0;  // never reached
+    exit_with(worst_state);
 }

@@ -24,7 +24,7 @@ def load_acknowledgements(
 ) -> set[int]:
     if acknowledged_werks_mk is None:
         acknowledged_werks_mk = ACKNOWLEDGEMENT_PATH
-    return set(store.load_object_from_file(acknowledged_werks_mk, default=[]))
+    return set(store.load_object_from_file_explicit(acknowledged_werks_mk, default=[], debug=False))
 
 
 def save_acknowledgements(

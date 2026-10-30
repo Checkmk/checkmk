@@ -26,45 +26,13 @@ from cmk.crash import make_crash_report_base_path
 
 def get_edition(
     omd_version: str,
-) -> tuple[
-    Literal[
-        "raw",
-        "enterprise",
-        "managed",
-        "cloud",
-        "saas",
-        "unknown",
-        "community",
-        "pro",
-        "ultimate",
-        "ultimatemt",
-    ],
-    Literal[
-        "cloud",
-        "community",
-        "pro",
-        "ultimate",
-        "ultimatemt",
-        "unknown",
-    ],
-]:
+) -> Literal["community", "pro", "ultimate", "ultimatemt", "cloud", "unknown"]:
     """Returns the long Checkmk Edition name or "unknown" of the given OMD version"""
-    # TODO: Needs to be able to deal with 2.4 edition names in 2.5. Can be removed with 2.6
     match omd_version.rsplit(".", maxsplit=1)[-1]:
-        case "community" | "pro" | "ultimate" | "ultimatemt" | "cloud" as new_edition:
-            return new_edition, new_edition
-        case "cre":
-            return "raw", "community"
-        case "cee":
-            return "enterprise", "pro"
-        case "cce":
-            return "cloud", "ultimate"
-        case "cme":
-            return "managed", "ultimatemt"
-        case "cse":
-            return "saas", "cloud"
+        case "community" | "pro" | "ultimate" | "ultimatemt" | "cloud" as edition:
+            return edition
         case _:
-            return "unknown", "unknown"
+            return "unknown"
 
 
 def store(site_home: Path, relpath: Path | str, backup_dir: Path) -> None:

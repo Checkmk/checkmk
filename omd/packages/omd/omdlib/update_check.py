@@ -175,12 +175,10 @@ def check_update_possible(
 
     # In case the user changes the installed Checkmk Edition during update let the
     # user confirm this step.
-    from_edition_is_ultimatemt = from_edition in ("managed", "ultimatemt")
-    to_edition_is_ultimatemt = to_edition in ("managed", "ultimatemt")
     if (
         resolution.ignore_editions_incompatible is IgnoreEditionsIncompatible.ABORT
-        and from_edition_is_ultimatemt
-        and not to_edition_is_ultimatemt
+        and from_edition == "ultimatemt"
+        and to_edition != "ultimatemt"
     ):
         sys.exit(
             f"ERROR: Changing from {from_edition.title()} to {to_edition.title()} is not possible. Aborted."

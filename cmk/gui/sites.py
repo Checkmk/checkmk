@@ -194,35 +194,17 @@ def _redacted_site_states_for_logging() -> dict[SiteId, dict[str, object]]:
     }
 
 
-def _edition_from_livestatus(*, version_str: str, edition_str: str | None) -> Edition | None:
-    # TODO The legacy edition names can be removed with Checkmk 2.6
-    version = Version.from_str(version_str)
-    if version.base is None:
-        return None
-    if version.base.major > 2 or (version.base.major == 2 and version.base.minor >= 5):
-        match edition_str:
-            case Edition.COMMUNITY.long:
-                return Edition.COMMUNITY
-            case Edition.PRO.long:
-                return Edition.PRO
-            case Edition.ULTIMATE.long:
-                return Edition.ULTIMATE
-            case Edition.ULTIMATEMT.long:
-                return Edition.ULTIMATEMT
-            case Edition.CLOUD.long:
-                return Edition.CLOUD
-            case _:
-                return None
+def _edition_from_livestatus(edition_str: str | None) -> Edition | None:
     match edition_str:
-        case "raw":
+        case Edition.COMMUNITY.long:
             return Edition.COMMUNITY
-        case "enterprise":
+        case Edition.PRO.long:
             return Edition.PRO
-        case "cloud":
+        case Edition.ULTIMATE.long:
             return Edition.ULTIMATE
-        case "managed":
+        case Edition.ULTIMATEMT.long:
             return Edition.ULTIMATEMT
-        case "saas":
+        case Edition.CLOUD.long:
             return Edition.CLOUD
         case _:
             return None
@@ -339,9 +321,7 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
 
         central_edition = edition(paths.omd_root)
         central_version = __version__
-        remote_edition = _edition_from_livestatus(
-            version_str=livestatus_version, edition_str=remote_edition
-        )
+        remote_edition = _edition_from_livestatus(remote_edition)
         central_license_state = get_license_state(paths.omd_root)
 
         compatibility = _get_distributed_monitoring_compatibility(

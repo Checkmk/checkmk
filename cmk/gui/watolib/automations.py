@@ -646,9 +646,10 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str, *, debug
     except SyntaxError:
         raise MKAutomationException(response)
     if isinstance(eval_response, dict):
-        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT and eval_response[
-            "edition_short"
-        ] not in ["cme", cmk_version.Edition.ULTIMATEMT.short]:
+        if (
+            cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT
+            and eval_response["edition_short"] != cmk_version.Edition.ULTIMATEMT.short
+        ):
             raise MKUserError(
                 None,
                 (
@@ -751,17 +752,16 @@ def _start_remote_automation_job(
 
 
 def _edition_from_short(edition_str: str) -> cmk_version.Edition:
-    # TODO The legacy edition names can be removed with Checkmk 2.6
     match edition_str:
-        case "cre" | cmk_version.Edition.COMMUNITY.short:
+        case cmk_version.Edition.COMMUNITY.short:
             return cmk_version.Edition.COMMUNITY
-        case "cee" | cmk_version.Edition.PRO.short:
+        case cmk_version.Edition.PRO.short:
             return cmk_version.Edition.PRO
-        case "cce" | cmk_version.Edition.ULTIMATE.short:
+        case cmk_version.Edition.ULTIMATE.short:
             return cmk_version.Edition.ULTIMATE
-        case "cme" | cmk_version.Edition.ULTIMATEMT.short:
+        case cmk_version.Edition.ULTIMATEMT.short:
             return cmk_version.Edition.ULTIMATEMT
-        case "cse" | cmk_version.Edition.CLOUD.short:
+        case cmk_version.Edition.CLOUD.short:
             return cmk_version.Edition.CLOUD
         case _:
             raise ValueError(edition_str)
@@ -789,25 +789,25 @@ def _compatible_with_central_site(
 
     C*E != CME is not allowed
 
-    >>> str(c("2.2.0p1", "cce", LicenseState.LICENSED, "2.2.0p1", "cce", LicenseState.FREE, True))
+    >>> str(c("2.2.0p1", "ultimate", LicenseState.LICENSED, "2.2.0p1", "ultimate", LicenseState.FREE, True))
     'Remote site in license state free is not allowed'
     >>> str(
-    ...    c("2.0.0p3", "cee", LicenseState.LICENSED, "2.0.0p3", "cme", LicenseState.LICENSED, True)
+    ...    c("2.0.0p3", "pro", LicenseState.LICENSED, "2.0.0p3", "ultimatemt", LicenseState.LICENSED, True)
     ... )  # doctest: +SKIP
     'Mix of CME and non-CME is not allowed.'
     >>> str(
-    ...    c("2.0.0p3", "cme", LicenseState.LICENSED, "2.0.0p3", "cee", LicenseState.LICENSED, True)
+    ...    c("2.0.0p3", "ultimatemt", LicenseState.LICENSED, "2.0.0p3", "pro", LicenseState.LICENSED, True)
     ... )  # doctest: +SKIP
     'Mix of CME and non-CME is not allowed.'
     >>> str(
-    ...    c("2.0.0p3", "cre", LicenseState.LICENSED, "2.0.0p3", "cme", LicenseState.LICENSED, True)
+    ...    c("2.0.0p3", "community", LicenseState.LICENSED, "2.0.0p3", "ultimatemt", LicenseState.LICENSED, True)
     ... )  # doctest: +SKIP
     'Mix of CME and non-CME is not allowed.'
     >>> str(
-    ...   c("2.0.0p3", "cme", LicenseState.LICENSED, "2.0.0p3", "cre", LicenseState.LICENSED, True)
+    ...   c("2.0.0p3", "ultimatemt", LicenseState.LICENSED, "2.0.0p3", "community", LicenseState.LICENSED, True)
     ... )  # doctest: +SKIP
     'Mix of CME and non-CME is not allowed.'
-    >>> isinstance(c("2.0.0p3", "cme", LicenseState.LICENSED, "2.0.0p3", "cme", LicenseState.LICENSED, True), cmk_version.VersionsCompatible)
+    >>> isinstance(c("2.0.0p3", "ultimatemt", LicenseState.LICENSED, "2.0.0p3", "ultimatemt", LicenseState.LICENSED, True), cmk_version.VersionsCompatible)
     True
     """
 

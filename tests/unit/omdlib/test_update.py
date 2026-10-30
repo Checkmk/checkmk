@@ -442,8 +442,7 @@ def test_get_conflict_mode_update(
 
 @pytest.mark.parametrize("edition", list(version.Edition))
 def test_get_edition(edition: version._EditionValue) -> None:
-    unknown = "unknown", "unknown"
-    assert get_edition(f"1.2.3.{edition.long}") != unknown
+    assert get_edition(f"1.2.3.{edition.long}") == edition.long
 
 
 def test_ensure_skel_is_intact_ok(tmp_path: Path) -> None:

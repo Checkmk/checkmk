@@ -45,7 +45,7 @@ def _service_status(
 
 
 def _get_sites_edition(site_info: Mapping[str, object]) -> _Edition:
-    # TODO With 2.6 we can remove the old edition names
+    # Keep the legacy edition names: the monitored host may run sites of any Checkmk version.
     match str(site_info["used_version"]).rsplit(".", 1)[-1]:
         case "cre" | "community":
             return "community"

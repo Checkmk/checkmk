@@ -18,11 +18,10 @@ import { getBazelCacheSnapshot, setBazelCacheRefreshCallback } from './build/baz
 import { type BuildStatus, checkBuildStatus } from './build/buildStatus'
 import type { SettingsEntry } from './build/settings'
 import { type ExtensionSets, loadConfig } from './core/config'
-import { error, log, notifyInfo, notifyWarn, setActivityRefreshCallback } from './core/log'
-import { runCommand, waitForTask } from './core/tasks'
+import { error, notifyInfo, notifyWarn, setActivityRefreshCallback } from './core/log'
 import { getVersionMismatch, rebuildExtension } from './core/versionCheck'
 import { cmkUp } from './omd/cmkUp'
-import { getDevSiteToolsState, setDevSiteRefreshCallback } from './omd/devSiteTools'
+import { devSitePackage, getDevSiteToolsState, setDevSiteRefreshCallback } from './omd/devSiteTools'
 import {
   detectOmdSites,
   forceRefreshOmdStatusFiles,
@@ -136,6 +135,8 @@ function refreshStateCache(): StateCache {
       devSiteTools,
       playbooks,
       playbooksScanned: cmkUp.scanned(),
+      playbookDirectories: cmkUp.directories(),
+      cwzInstalled: cmkUp.installed(),
       versionMismatch,
       onboarding,
       onboardingDismissed: _onboardingDismissed,
@@ -202,6 +203,8 @@ function refreshStateCache(): StateCache {
       devSiteTools: { installed: false, installedVersion: '' },
       playbooks: [],
       playbooksScanned: false,
+      playbookDirectories: [],
+      cwzInstalled: null,
       versionMismatch: null,
       onboarding: {
         systemDone: false,
@@ -387,7 +390,9 @@ function refreshPlaybooks(): void {
   _stateCache = {
     ..._stateCache,
     playbooks: cmkUp.snapshot(),
-    playbooksScanned: cmkUp.scanned()
+    playbooksScanned: cmkUp.scanned(),
+    playbookDirectories: cmkUp.directories(),
+    cwzInstalled: cmkUp.installed()
   }
   _providers['playbooks']?.refresh()
 }
@@ -521,13 +526,9 @@ export function registerSidebar(
 
   context.subscriptions.push(
     vscode.commands.registerCommand('cmk.installDevSite', async () => {
-      log('Install cmk-dev-site')
-      const exec = runCommand('Install cmk-dev-site', 'pipx install cmk-dev-site')
-      if (exec) {
-        await waitForTask(exec)
-        vscode.commands.executeCommand('setContext', 'cmk.devSiteInstalled', true)
-        refreshAll()
-      }
+      await devSitePackage.install()
+      vscode.commands.executeCommand('setContext', 'cmk.devSiteInstalled', true)
+      refreshAll()
     })
   )
 

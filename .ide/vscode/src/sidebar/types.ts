@@ -134,6 +134,8 @@ export interface StateCache {
   devSiteTools: DevSiteToolsState
   playbooks: Playbook[]
   playbooksScanned: boolean
+  playbookDirectories: string[]
+  cwzInstalled: boolean | null
   versionMismatch: VersionMismatch | null
   onboarding: OnboardingState
   onboardingDismissed: boolean

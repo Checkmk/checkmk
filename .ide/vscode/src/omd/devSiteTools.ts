@@ -5,14 +5,12 @@
  */
 import * as vscode from 'vscode'
 
-import { error, log } from '../core/log'
+import { error } from '../core/log'
 import { loadPersisted, savePersisted } from '../core/persistedCache'
+import { PipxUpdateCheck } from '../core/pipxUpdate'
 import { safeExecAsync } from '../core/shell'
-import { runCommand, waitForTask } from '../core/tasks'
-import { versionNewer } from '../core/version'
 
 const PYPI_CHECK_KEY = 'cmk.devSiteTools.lastPypiCheck'
-const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000
 const DEV_SITE_CACHE_TTL = 5 * 60 * 1000
 
 async function getInstalledVersionAsync(): Promise<string> {
@@ -25,58 +23,10 @@ export async function isInstalledAsync(): Promise<boolean> {
   return !!(await getInstalledVersionAsync())
 }
 
-/** Build the pipx upgrade command matching how cmk-dev-site was installed.
- *  A per-user `pipx install` is upgraded with a plain `pipx upgrade`, but a
- *  `pipx install --global` copy (venvs under /opt/pipx, shims in
- *  /usr/local/bin) is invisible to the per-user pipx home — it needs
- *  `sudo pipx upgrade --global`, otherwise the upgrade silently no-ops. */
-async function resolveUpgradeCommandAsync(): Promise<string> {
-  const globalList = await safeExecAsync('pipx list --global --short 2>/dev/null', {
-    timeout: 5000
-  })
-  const installedGlobally = /^cmk-dev-site\b/m.test(globalList)
-  return installedGlobally ? 'sudo pipx upgrade --global cmk-dev-site' : 'pipx upgrade cmk-dev-site'
-}
+export const devSitePackage = new PipxUpdateCheck('cmk-dev-site', PYPI_CHECK_KEY)
 
-async function getLatestPypiVersionAsync(): Promise<string> {
-  const raw = await safeExecAsync('curl -s https://pypi.org/pypi/cmk-dev-site/json 2>/dev/null', {
-    timeout: 10000
-  })
-  if (!raw) return ''
-  try {
-    const data = JSON.parse(raw)
-    return data.info?.version || ''
-  } catch {
-    return ''
-  }
-}
-
-export async function checkForUpdates(context: vscode.ExtensionContext): Promise<void> {
-  const lastCheck = context.globalState.get<number>(PYPI_CHECK_KEY, 0) ?? 0
-  if (Date.now() - lastCheck < CHECK_INTERVAL_MS) return
-
-  const installed = await getInstalledVersionAsync()
-  if (!installed) return
-
-  const latest = await getLatestPypiVersionAsync()
-  if (!latest || !versionNewer(latest, installed)) {
-    context.globalState.update(PYPI_CHECK_KEY, Date.now())
-    return
-  }
-
-  context.globalState.update(PYPI_CHECK_KEY, Date.now())
-
-  log(`cmk-dev-site update available: ${installed} → ${latest}`)
-  const choice = await vscode.window.showInformationMessage(
-    `cmk-dev-site update available: ${installed} → ${latest}`,
-    'Update'
-  )
-  if (choice === 'Update') {
-    const upgradeCommand = await resolveUpgradeCommandAsync()
-    log(`Update cmk-dev-site: ${upgradeCommand}`)
-    const exec = runCommand('cmk-dev-site update', upgradeCommand)
-    if (exec) await waitForTask(exec)
-  }
+export function checkForUpdates(context: vscode.ExtensionContext): Promise<void> {
+  return devSitePackage.run(context)
 }
 
 export interface DevSiteToolsState {

@@ -75,3 +75,26 @@ describe('CmkUp command line', () => {
     )
   })
 })
+
+describe('CmkUp installed copy', () => {
+  it('runs the installed cmk-up and falls back to uvx without one', () => {
+    expect(CmkUp.installedCommand('/home/me/.local/bin/cmk-up')).toBe('/home/me/.local/bin/cmk-up')
+    expect(CmkUp.installedCommand('')).toBe('uvx --from cmk-werk-zeug@latest cmk-up')
+  })
+
+  it('passes the installed cmk-up to the command line', () => {
+    expect(CmkUp.commandLine(['07-bi-phases'], CmkUp.installedCommand('/opt/cwz/cmk-up'))).toBe(
+      '/opt/cwz/cmk-up 07-bi-phases'
+    )
+  })
+
+  it('lists the shipped examples with the python of the installed cmk-up', () => {
+    expect(
+      CmkUp.interpreter('#!/home/me/.local/share/pipx/venvs/cmk-werk-zeug/bin/python\nimport sys')
+    ).toBe('/home/me/.local/share/pipx/venvs/cmk-werk-zeug/bin/python')
+    expect(CmkUp.interpreter('#!/bin/sh\nexec python')).toBe(
+      'uvx --from cmk-werk-zeug@latest python'
+    )
+    expect(CmkUp.interpreter('')).toBe('uvx --from cmk-werk-zeug@latest python')
+  })
+})

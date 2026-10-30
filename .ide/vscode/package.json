@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.4.41",
+  "version": "0.4.42",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -205,6 +205,10 @@
       {
         "command": "cmk.installDevSite",
         "title": "CMK ▸ OMD: Install cmk-dev-site"
+      },
+      {
+        "command": "cmk.cmkUp.install",
+        "title": "CMK ▸ cmk-up: Install cmk-werk-zeug"
       },
       {
         "command": "cmk.omdProxy",
@@ -560,9 +564,11 @@
           "items": {
             "type": "string"
           },
-          "default": [],
+          "default": [
+            "~/.local/share/cmk-up/playbooks"
+          ],
           "scope": "application",
-          "description": "Folders (non-recursive, ~ allowed) searched for cmk-up playbooks in addition to the workspace and the shipped examples, e.g. where ticket attachments are downloaded."
+          "description": "Folders (non-recursive, ~ allowed) searched for cmk-up playbooks in addition to the workspace and the shipped examples, e.g. where ticket attachments are downloaded. The first one is the local playbook folder: new playbooks are saved there and it is created when needed."
         }
       }
     },
@@ -778,6 +784,10 @@
         },
         {
           "command": "cmk.installDevSite",
+          "when": "false"
+        },
+        {
+          "command": "cmk.cmkUp.install",
           "when": "false"
         },
         {

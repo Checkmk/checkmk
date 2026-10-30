@@ -10,6 +10,7 @@ import * as vscode from 'vscode'
 
 import { shellEscape } from '../core/config'
 import { log, notifyError } from '../core/log'
+import { PipxUpdateCheck } from '../core/pipxUpdate'
 import { safeExecAsync } from '../core/shell'
 import { getExtendedPath } from '../core/tasks'
 import { type PlaybookRunPreset, PlaybookRunWizard } from './cmkUpWizard'
@@ -41,7 +42,9 @@ export interface PlaybookRunOptions {
 }
 
 export class CmkUp {
-  static readonly COMMAND = 'uvx --from cmk-werk-zeug@latest cmk-up'
+  static readonly PACKAGE = 'cmk-werk-zeug'
+  static readonly NAME = 'cmk-up'
+  static readonly UVX_COMMAND = 'uvx --from cmk-werk-zeug@latest cmk-up'
   static readonly EXIT_REASONS: Readonly<Record<number, string>> = {
     1: 'playbook or arguments',
     2: 'site or omd problem on this machine',
@@ -54,9 +57,11 @@ export class CmkUp {
   private static readonly WORKSPACE_EXCLUDE =
     '{**/node_modules/**,**/bazel-*/**,**/.venv/**,**/.git/**}'
   private static readonly WORKSPACE_LIMIT = 5000
+  private static readonly UVX_PYTHON = 'uvx --from cmk-werk-zeug@latest python'
   private static readonly SHIPPED_LISTING =
-    'uvx --from cmk-werk-zeug@latest python -c "import cwz, pathlib; ' +
+    '-c "import cwz, pathlib; ' +
     "print(*sorted(map(str, (pathlib.Path(cwz.__file__).parent / 'example-playbooks').glob('*.yaml'))), sep=chr(10))\""
+  private static readonly INTERPRETER = /^#!(\/\S*python[\d.]*)\s*$/
   private static readonly UVX_TIMEOUT = 120_000
 
   private _playbooks: Playbook[] = []
@@ -66,9 +71,12 @@ export class CmkUp {
   private _shippedLoad: Promise<Playbook[]> | null = null
   private _scan: Promise<void> | null = null
   private _scanned = false
+  private _installed: boolean | null = null
+  private _executable: Promise<string> | null = null
   private _onRefresh: (() => void) | null = null
   private _onSitesChanged: (() => Promise<void>) | null = null
   private readonly _wizard = new PlaybookRunWizard(this)
+  private readonly _updates = new PipxUpdateCheck(CmkUp.PACKAGE, 'cmk.cwz.lastPypiCheck')
 
   static isPlaybook(header: string): boolean {
     return CmkUp.SHEBANG.test(header.split('\n', 1)[0])
@@ -108,8 +116,17 @@ export class CmkUp {
     return args
   }
 
-  static commandLine(args: string[]): string {
-    return [CmkUp.COMMAND, ...args.map((arg) => CmkUp.quote(arg))].join(' ')
+  static commandLine(args: string[], command: string = CmkUp.UVX_COMMAND): string {
+    return [command, ...args.map((arg) => CmkUp.quote(arg))].join(' ')
+  }
+
+  static installedCommand(executable: string): string {
+    return executable ? CmkUp.quote(executable) : CmkUp.UVX_COMMAND
+  }
+
+  static interpreter(header: string): string {
+    const python = CmkUp.INTERPRETER.exec(header.split('\n', 1)[0])?.[1]
+    return python ? CmkUp.quote(python) : CmkUp.UVX_PYTHON
   }
 
   private static quote(arg: string): string {
@@ -123,6 +140,7 @@ export class CmkUp {
         this.startRun(uri instanceof vscode.Uri ? uri.fsPath : undefined)
       ),
       vscode.commands.registerCommand('cmk.cmkUp.init', () => this.init()),
+      vscode.commands.registerCommand('cmk.cmkUp.install', () => this.install()),
       vscode.commands.registerCommand('cmk.cmkUp.enroll', (site?: string) => this.enroll(site)),
       vscode.window.onDidChangeActiveTextEditor((editor) => {
         if (editor) this.noteDocument(editor.document)
@@ -136,6 +154,7 @@ export class CmkUp {
       const editor = vscode.window.activeTextEditor
       if (editor) this.noteDocument(editor.document)
     })
+    void this._updates.run(context)
   }
 
   setRefreshCallback(cb: () => void): void {
@@ -150,6 +169,15 @@ export class CmkUp {
 
   scanned(): boolean {
     return this._scanned
+  }
+
+  installed(): boolean | null {
+    return this._installed
+  }
+
+  async install(): Promise<void> {
+    await this._updates.install()
+    await this.rescan()
   }
 
   async playbooks(): Promise<Playbook[]> {
@@ -195,12 +223,28 @@ export class CmkUp {
     await this.rescan()
   }
 
+  async revealDirectory(dir: string): Promise<void> {
+    if (!this.createDirectory(dir)) {
+      void notifyError(`cmk-up: cannot create ${dir}`)
+      return
+    }
+    await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(dir))
+  }
+
   private newPlaybookDirectory(): string {
-    return (
-      this.configuredDirectories()[0] ??
-      vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ??
-      os.homedir()
-    )
+    const local = this.directories()[0]
+    if (local && this.createDirectory(local)) return local
+    return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? os.homedir()
+  }
+
+  private createDirectory(dir: string): boolean {
+    try {
+      fs.mkdirSync(dir, { recursive: true })
+      return true
+    } catch (e) {
+      log(`cmk-up: cannot create ${dir}: ${e}`)
+      return false
+    }
   }
 
   async enroll(site?: string): Promise<void> {
@@ -228,7 +272,7 @@ export class CmkUp {
 
   private async runInKeepalive(args: string[]): Promise<number | null> {
     if (!(await ensureKeepaliveAuth())) return null
-    const command = CmkUp.commandLine(args)
+    const command = CmkUp.commandLine(args, await this.command())
     log(`cmk-up: ${command}`)
     const exitCode = await runInteractiveInKeepaliveTerminal(command)
     await this._onSitesChanged?.()
@@ -241,15 +285,35 @@ export class CmkUp {
     return exitCode
   }
 
-  private exec(args: string[]): Promise<string> {
-    return safeExecAsync(`PATH=${shellEscape(getExtendedPath())} ${CmkUp.commandLine(args)}`, {
+  private async exec(args: string[]): Promise<string> {
+    const command = CmkUp.commandLine(args, await this.command())
+    return safeExecAsync(`PATH=${shellEscape(getExtendedPath())} ${command}`, {
       timeout: CmkUp.UVX_TIMEOUT
     })
   }
 
+  private executable(): Promise<string> {
+    this._executable ??= safeExecAsync(
+      `PATH=${shellEscape(getExtendedPath())} command -v ${CmkUp.NAME}`
+    )
+    return this._executable
+  }
+
+  private async command(): Promise<string> {
+    return CmkUp.installedCommand(await this.executable())
+  }
+
   private async scan(): Promise<void> {
-    const own = [...(await this.scanWorkspace()), ...this.scanDirectories()]
-    this._own = [...new Map(own.map((p) => [p.file, p])).values()]
+    this._executable = null
+    const [workspace, installed] = await Promise.all([
+      this.scanWorkspace(),
+      this._updates.available()
+    ])
+    this._installed = installed
+    const seen = new Set<string>()
+    this._own = [...workspace, ...this.scanDirectories()].filter(
+      (p) => !seen.has(p.file) && seen.add(p.file)
+    )
     this._files = new Set(this._own.map((p) => p.file))
     this._scanned = true
     this.publishFiles()
@@ -284,7 +348,7 @@ export class CmkUp {
   }
 
   private scanDirectories(): Playbook[] {
-    const files = this.configuredDirectories().flatMap((dir) => {
+    const files = this.directories().flatMap((dir) => {
       try {
         return fs
           .readdirSync(dir)
@@ -297,16 +361,17 @@ export class CmkUp {
     return this.fromFiles(files, 'directory')
   }
 
-  private configuredDirectories(): string[] {
+  directories(): string[] {
     return vscode.workspace
       .getConfiguration('cmk.cmkUp')
       .get<string[]>('playbookDirectories', [])
-      .map((dir) => dir.replace(/^~(?=$|\/)/, os.homedir()))
+      .map((dir) => path.resolve(dir.replace(/^~(?=$|\/)/, os.homedir())))
   }
 
   private async scanShipped(): Promise<Playbook[]> {
+    const python = CmkUp.interpreter(this.readHeader(await this.executable()))
     const listing = await safeExecAsync(
-      `PATH=${shellEscape(getExtendedPath())} ${CmkUp.SHIPPED_LISTING}`,
+      `PATH=${shellEscape(getExtendedPath())} ${python} ${CmkUp.SHIPPED_LISTING}`,
       { timeout: CmkUp.UVX_TIMEOUT }
     )
     return this.fromFiles(listing.split('\n').filter(Boolean), 'shipped')

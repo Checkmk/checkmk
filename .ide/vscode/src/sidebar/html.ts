@@ -126,6 +126,7 @@ ${body}
       'omd-site-action',
       'omd-service-action',
       'omd-install-devsite',
+      'playbook-install-cwz',
       'omd-deploy',
       'apply-setting',
       'apply-family-mismatches',
@@ -187,6 +188,9 @@ ${body}
       case 'playbook-dry-run': vscode.postMessage({ type: 'playbookDryRun', target: el.dataset.target }); break;
       case 'playbook-open': vscode.postMessage({ type: 'playbookOpen', file: el.dataset.file }); break;
       case 'playbook-new': vscode.postMessage({ type: 'playbookNew' }); break;
+      case 'playbook-folder': vscode.postMessage({ type: 'playbookFolder', dir: el.dataset.dir }); break;
+      case 'playbook-configure': vscode.postMessage({ type: 'playbookConfigure' }); break;
+      case 'playbook-install-cwz': vscode.postMessage({ type: 'playbookInstallCwz' }); break;
       case 'copy-setting': {
         const text = el.dataset.value;
         navigator.clipboard.writeText(text);

@@ -45,6 +45,8 @@ function emptyState(overrides: Partial<StateCache> = {}): StateCache {
     devSiteTools: { installed: true, installedVersion: '1.0.0' },
     playbooks: [],
     playbooksScanned: true,
+    playbookDirectories: [],
+    cwzInstalled: true,
     versionMismatch: null,
     onboarding: {
       systemDone: true,

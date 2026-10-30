@@ -20,6 +20,9 @@
 }
 
 .playbook-group-title {
+  display: flex;
+  place-items: center;
+  justify-content: space-between;
   padding: 2px 8px;
   color: var(--vscode-descriptionForeground);
   font-size: 0.8em;
@@ -88,4 +91,26 @@
 .playbook-actions {
   display: flex;
   gap: 2px;
+}
+
+.playbook-folder {
+  display: flex;
+  place-items: center;
+  gap: 8px;
+  padding: 3px 8px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.85em;
+}
+
+.playbook-folder-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.banner-info {
+  background: var(--vscode-editorInfo-background, rgb(0 120 212 / 10%));
+  border-color: var(--vscode-editorInfo-foreground, rgb(0 120 212 / 50%));
 }

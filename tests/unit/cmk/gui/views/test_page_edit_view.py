@@ -307,6 +307,19 @@ def test_view_editor_column_spec_with_drilldown_keeps_a_link_to_a_view(
             ),
             id="target object named by the context",
         ),
+        pytest.param(
+            "hosts", "alias", _link(("views", "service")), id="single-service view from host rows"
+        ),
+        pytest.param(
+            "hosts",
+            "alias",
+            _link(
+                ("views", "host"),
+                ContextFilterConfig(filter_id="wato_folder"),
+                include_context=False,
+            ),
+            id="single-host view without its host filter",
+        ),
     ],
 )
 @pytest.mark.usefixtures("request_context")
@@ -321,17 +334,20 @@ def test_view_editor_column_spec_with_drilldown_accepts(
     vs.validate_value(_columns(painter, drilldown), "columns")
 
 
+@pytest.mark.usefixtures("request_context")
+def test_view_editor_column_spec_with_drilldown_labels_a_dashboard_with_its_id(
+    admin_painter_context: PainterContext,
+) -> None:
+    vs = view_editor_column_spec("columns", "hosts", admin_painter_context, with_drilldown=True)
+
+    text = str(vs.value_to_html(_columns("alias", _link(("dashboards", "main")))))
+
+    assert "(main)" in text
+
+
 @pytest.mark.parametrize(
     "datasource, painter, drilldown, field, message",
     [
-        pytest.param(
-            "hosts",
-            "alias",
-            _link(("views", "service")),
-            "link_spec",
-            "Please select something else",
-            id="unfillable view",
-        ),
         pytest.param(
             "hostgroups",
             "hg_name",
@@ -347,18 +363,6 @@ def test_view_editor_column_spec_with_drilldown_accepts(
             "filters",
             "is not allowed here",
             id="view-only filter to a dashboard",
-        ),
-        pytest.param(
-            "hosts",
-            "alias",
-            _link(
-                ("views", "host"),
-                ContextFilterConfig(filter_id="wato_folder"),
-                include_context=False,
-            ),
-            "filters",
-            "The target page shows a single object",
-            id="target object named by nothing",
         ),
         pytest.param(
             "hosts",

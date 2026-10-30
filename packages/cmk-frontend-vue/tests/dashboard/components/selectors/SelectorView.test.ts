@@ -101,16 +101,14 @@ describe('SelectorView', () => {
     expect(options).toContain('Hosts - All hosts (allhosts) (harry)')
   })
 
-  it('offers no single-object view to a click that names no object', async () => {
-    const options = await openedOptions({ singleInfos: [] })
+  it('offers the views that show a single object', async () => {
+    const options = await openedOptions({})
 
-    expect(options).toEqual(['Hosts - All hosts (allhosts)'])
-  })
-
-  it('offers a single-host view but no single-service view to a click that names a host', async () => {
-    const options = await openedOptions({ singleInfos: ['host'] })
-
-    expect(options).toEqual(['Hosts - All hosts (allhosts)', 'Hosts - Single host (host)'])
+    expect(options).toEqual([
+      'Hosts - All hosts (allhosts)',
+      'Hosts - Single host (host)',
+      'Hosts - Single service (service)'
+    ])
   })
 
   it('labels a stored copy that is no longer listed by its name and owner', async () => {

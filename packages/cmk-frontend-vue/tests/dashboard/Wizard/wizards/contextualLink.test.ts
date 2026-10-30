@@ -138,8 +138,7 @@ const WIDGET_CONSTANTS: DashboardConstants['widgets'][string] = {
   contextual_link: {
     modes: ['default', 'inherited', 'custom'],
     filters: [],
-    filter_keys: {},
-    single_infos: []
+    filter_keys: {}
   }
 }
 

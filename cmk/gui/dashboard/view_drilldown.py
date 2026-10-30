@@ -75,7 +75,7 @@ def column_drilldowns(
         location = location_from_internal(link["location"])
         if (
             index >= len(view_spec["painters"])
-            or (target := _permitted_target(location, user_permissions)) is None
+            or _permitted_target(location, user_permissions) is None
         ):
             continue
         link_context = context if link["include_context"] else {}
@@ -112,7 +112,6 @@ def column_drilldowns(
                     location,
                     link_context,
                     object_infos,
-                    [info for info in target["single_infos"] if info in object_infos],
                     show_filter_form=link["show_filter_form"],
                     drilled_from=drilled_from,
                 ),
@@ -149,16 +148,12 @@ def _inherited_url(
     location: VisualLocation,
     context: VisualContext,
     object_infos: Sequence[InfoName],
-    target_infos: Sequence[InfoName],
     row: Row,
     *,
     show_filter_form: bool,
     drilled_from: DrillUpButton | None,
-) -> str | None:
+) -> str:
     object_filters = _object_filters(row, object_infos)
-    # The object filters are named after the infos they fill.
-    if any(info not in object_filters for info in target_infos):
-        return None
     # The clicked object goes last, so it wins over the same filter in the context.
     return _target_url(
         location,

@@ -105,14 +105,6 @@ def test_cell_render_leaves_a_painter_without_links_unlinked() -> None:
     assert content == "heute"
 
 
-def test_cell_render_leaves_a_row_without_a_drilldown_url_unlinked() -> None:
-    cell = _cell(ColumnSpec("alias"), CellDrilldown(columns=[], url=lambda _row: None))
-
-    _tdclass, content = cell.render(_ROW, _link_to_view, Mock(spec=LoggedInUser))
-
-    assert content == "heute"
-
-
 def test_cell_needed_columns_include_the_columns_of_its_drilldown() -> None:
     cell = _cell(ColumnSpec("alias"), CellDrilldown(columns=["host_name"], url=lambda _row: ""))
 

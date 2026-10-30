@@ -13,7 +13,6 @@ export interface DashboardTarget {
   // As in a link location: '' for the built-in copy.
   owner: string
   title: string
-  restrictedToSingle: string[]
 }
 
 export const fetchDashboardTargets = async (): Promise<DashboardTarget[]> => {
@@ -21,8 +20,7 @@ export const fetchDashboardTargets = async (): Promise<DashboardTarget[]> => {
   return dashboards.value.map((dashboard) => ({
     name: dashboard.extensions.name,
     owner: dashboard.extensions.owner ?? '',
-    title: dashboard.extensions.display.title,
-    restrictedToSingle: dashboard.extensions.restricted_to_single
+    title: dashboard.extensions.display.title
   }))
 }
 

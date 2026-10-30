@@ -350,13 +350,10 @@ class InternalPainter:
 
 @dataclass(frozen=True)
 class CellDrilldown:
-    """A link from a cell that its owner builds per row, for a cell without a link_spec.
-
-    A row without a URL leaves its cell unlinked.
-    """
+    """A link from a cell that its owner builds per row, for a cell without a link_spec."""
 
     columns: Sequence[ColumnName]
-    url: Callable[[Row], str | None]
+    url: Callable[[Row], str]
 
 
 def columns_of_cells(cells: Sequence[Cell], permitted_views: PermittedViewSpecs) -> set[ColumnName]:
@@ -582,9 +579,8 @@ class Cell:
             and self._use_painter_link()
             and link_renderer
             and self.painter_context().url_renderer.display_options.enabled(DisplayOptions.I)
-            and (url := self._drilldown.url(view_row)) is not None
         ):
-            content = HTMLWriter.render_a(content, href=url)
+            content = HTMLWriter.render_a(content, href=self._drilldown.url(view_row))
 
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():

@@ -23,8 +23,7 @@ const API = `${location.protocol}//${location.host}/api/internal`
 const HOST_STATISTICS_OPTIONS: ContextualLinkOptions = {
   modes: ['default', 'inherited', 'custom'],
   filters: ['siteopt', 'wato_folder', 'hoststate', 'opthostgroup'],
-  filter_keys: {},
-  single_infos: []
+  filter_keys: {}
 }
 
 useMswServer(
@@ -57,8 +56,7 @@ function renderConfig(
 const HOST_STATE_OPTIONS: ContextualLinkOptions = {
   modes: ['default', 'inherited', 'custom'],
   filters: ['host', 'host_labels'],
-  filter_keys: { host_labels: { type: 'label', object_type: 'host' } },
-  single_infos: ['host']
+  filter_keys: { host_labels: { type: 'label', object_type: 'host' } }
 }
 
 function renderCustomConfig() {

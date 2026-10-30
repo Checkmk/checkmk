@@ -14,11 +14,9 @@ from typing import Literal
 from cmk.gui.data_source import ABCDataSource
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import ContextFilterConfig, ContextualLinkTargetType, FilterName, InfoName
-from cmk.gui.visuals import info_params
+from cmk.gui.type_defs import ContextFilterConfig, ContextualLinkTargetType, FilterName
 from cmk.gui.visuals.filter import Filter, filter_registry
 from cmk.gui.visuals.filter.drilldowns import AuxTagKey, Drilldown, FilterKey
-from cmk.gui.visuals.info import visual_info_registry
 
 type DropReason = Literal["no_value", "no_such_key", "not_available"]
 
@@ -87,16 +85,6 @@ def filter_keys(filters: Iterable[ContextFilterConfig]) -> dict[FilterName, list
         if "key" in filter_config:
             keys.append(filter_config["key"])
     return keys_by_filter
-
-
-def filled_single_infos(filter_names: Iterable[FilterName]) -> set[InfoName]:
-    """The infos whose single-object filters are all among the filters."""
-    names = set(filter_names)
-    return {
-        ident
-        for ident in visual_info_registry
-        if (single_info_filters := info_params(ident)) and set(single_info_filters) <= names
-    }
 
 
 def drop_reason(keys: Sequence[str]) -> DropReason:

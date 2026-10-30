@@ -20,10 +20,6 @@ import type { VisualLocation } from './contextualLink'
 
 const { _t } = usei18n()
 
-const { singleInfos } = defineProps<{
-  // The objects a click names; a target restricted to others would open incomplete.
-  singleInfos: string[]
-}>()
 const target = defineModel<VisualLocation | null>({ required: true })
 
 const targetType = ref<VisualLocation['type']>(target.value?.type ?? 'views')
@@ -70,13 +66,8 @@ const selectedCopy = computed<VisualCopy | null>({
   }
 })
 
-const offeredDashboards = computed(() =>
-  dashboards.value.filter((dashboard) =>
-    dashboard.restrictedToSingle.every((info) => singleInfos.includes(info))
-  )
-)
 const { suggestions: dashboardOptions, key: dashboardKey } = useCopyOptions(selectedCopy, () =>
-  dashboardCopyOptions(offeredDashboards.value)
+  dashboardCopyOptions(dashboards.value)
 )
 </script>
 
@@ -92,7 +83,6 @@ const { suggestions: dashboardOptions, key: dashboardKey } = useCopyOptions(sele
       v-model:selected-copy="selectedCopy"
       :read-only="false"
       by-owner
-      :single-infos="singleInfos"
     />
     <template v-else>
       <div v-if="dashboardsError" class="error-message">

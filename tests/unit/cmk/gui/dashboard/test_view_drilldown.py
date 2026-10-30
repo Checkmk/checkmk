@@ -95,7 +95,6 @@ def _url_of_first_column(
         view_spec, {0: link}, _CONTEXT, user_permissions, drilled_from=drilled_from
     )
     url = drilldowns[0].url(row)
-    assert url is not None
     parts = urlsplit(url)
     return parts.path, dict(parse_qsl(parts.query, keep_blank_values=True))
 
@@ -144,14 +143,21 @@ def test_column_drilldowns_link_of_a_host_row_carries_no_service(
 
 
 @pytest.mark.usefixtures("request_context")
-def test_column_drilldowns_leaves_a_host_row_unlinked_to_a_service_view(
+def test_column_drilldowns_links_a_host_row_to_a_service_view_without_a_service(
     admin_permissions: UserPermissions,
 ) -> None:
-    drilldowns = column_drilldowns(
-        _view_spec("downtimes"), {0: _inherited(("views", "service"))}, _CONTEXT, admin_permissions
+    _path, variables = _url_of_first_column(
+        _view_spec("downtimes"),
+        _inherited(("views", "service")),
+        _HOST_DOWNTIME_ROW,
+        admin_permissions,
     )
 
-    assert drilldowns[0].url(_HOST_DOWNTIME_ROW) is None
+    assert (variables["view_name"], variables["host"], "service" in variables) == (
+        "service",
+        "heute",
+        False,
+    )
 
 
 @pytest.mark.usefixtures("request_context")
@@ -167,7 +173,6 @@ def test_column_drilldowns_clicked_host_wins_over_the_host_in_the_context(
 
     url = drilldowns[0].url(_HOST_ROW)
 
-    assert url is not None
     assert dict(parse_qsl(urlsplit(url).query))["host"] == "heute"
 
 
@@ -184,7 +189,6 @@ def test_column_drilldowns_link_keeps_its_target_over_the_context(
 
     url = drilldowns[0].url(_HOST_ROW)
 
-    assert url is not None
     assert dict(parse_qsl(urlsplit(url).query))["view_name"] == "host"
 
 
@@ -478,7 +482,6 @@ def test_column_drilldowns_custom_link_to_a_host_view_links_even_without_the_hos
         _CUSTOM_HOST_ROW
     )
 
-    assert url is not None
     assert dict(parse_qsl(urlsplit(url).query)).get("host") == host
 
 

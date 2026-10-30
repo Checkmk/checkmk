@@ -125,10 +125,7 @@ function confirmDelete() {
 
     <div v-if="handler.mode.value === 'inherited'" class="db-contextual-link-config__mode">
       <p>{{ _t('Target page') }}</p>
-      <ContextualLinkTargetPicker
-        v-model="handler.inheritedTarget.value"
-        :single-infos="handler.singleInfos"
-      />
+      <ContextualLinkTargetPicker v-model="handler.inheritedTarget.value" />
       <CmkCheckbox
         v-model="handler.inheritedIncludeTimeRange.value"
         :label="_t('Include current time range')"
@@ -171,7 +168,7 @@ function confirmDelete() {
               :placeholder="_t('e.g. host details')"
             />
             <p>{{ _t('Target page') }}</p>
-            <ContextualLinkTargetPicker v-model="link.target" :single-infos="handler.singleInfos" />
+            <ContextualLinkTargetPicker v-model="link.target" />
             <CmkCheckbox
               v-model="link.includeTimeRange"
               :label="_t('Include current time range')"

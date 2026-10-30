@@ -34,7 +34,6 @@ from cmk.gui.type_defs import (
     ContextualLinkEntryConfig,
     ContextualLinkLocationConfig,
     FilterName,
-    InfoName,
     Visual,
     VisualName,
 )
@@ -182,12 +181,6 @@ class ContextualLinkOptions:
             " tag."
         )
     )
-    single_infos: list[InfoName] = api_field(
-        description=(
-            "The objects a click on the widget names, such as the host. A target restricted to a "
-            "single object only fits a widget whose clicks name that object."
-        )
-    )
 
 
 def contextual_link_options(link_type: object) -> ContextualLinkOptions:
@@ -225,8 +218,6 @@ def contextual_link_options(link_type: object) -> ContextualLinkOptions:
             for filter_id in offered
             if (option := _key_option(filter_key(filter_id))) is not None
         },
-        # An object filter set holds the name filter of exactly the objects its click names.
-        single_infos=[info for info in ("host", "service") if info in accepted],
     )
 
 

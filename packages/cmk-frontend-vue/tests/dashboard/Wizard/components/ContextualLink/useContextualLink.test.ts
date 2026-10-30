@@ -18,8 +18,7 @@ const OWNED_DASHBOARD: VisualLocation = { type: 'dashboards', name: 'linux', own
 const HOST_STATISTICS_OPTIONS: ContextualLinkOptions = {
   modes: ['default', 'inherited', 'custom'],
   filters: ['siteopt', 'wato_folder', 'hoststate', 'opthostgroup'],
-  filter_keys: {},
-  single_infos: []
+  filter_keys: {}
 }
 
 function hostStatisticsLink(stored?: HostStatisticsContent['contextual_link']) {
@@ -33,8 +32,7 @@ const HOST_STATE_OPTIONS: ContextualLinkOptions = {
     host_labels: { type: 'label', object_type: 'host' },
     host_tags: { type: 'tag_group' },
     host_auxtags: { type: 'aux_tag', max_count: 3 }
-  },
-  single_infos: ['host']
+  }
 }
 
 function hostStateLink(stored?: HostStateContent['contextual_link']) {

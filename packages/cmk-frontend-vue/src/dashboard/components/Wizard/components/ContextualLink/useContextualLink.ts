@@ -45,7 +45,6 @@ export interface CustomLinkDraft<F> {
 export interface UseContextualLink<C extends LinkedContent> extends UseValidate {
   modes: ConfigurableMode[]
   filters: ContextFilterIdOf<C>[]
-  singleInfos: string[]
   enabled: Ref<boolean>
   mode: Ref<ConfigurableMode>
   inheritedTarget: Ref<VisualLocation | null>
@@ -274,7 +273,6 @@ export function useContextualLink<C extends LinkedContent>(
     modes: options.modes,
     // The constants list the filters of this widget's own union, which is what F names.
     filters: options.filters as F[],
-    singleInfos: options.single_infos,
     enabled,
     mode,
     inheritedTarget,

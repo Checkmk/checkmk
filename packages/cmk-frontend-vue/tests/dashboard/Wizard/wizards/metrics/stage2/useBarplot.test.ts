@@ -39,8 +39,7 @@ const CONSTANTS: DashboardConstants = {
       contextual_link: {
         modes: ['default', 'inherited', 'custom'],
         filters: ['siteopt', 'host', 'service', 'hoststate', 'svcstate'],
-        filter_keys: {},
-        single_infos: ['host', 'service']
+        filter_keys: {}
       }
     }
   }

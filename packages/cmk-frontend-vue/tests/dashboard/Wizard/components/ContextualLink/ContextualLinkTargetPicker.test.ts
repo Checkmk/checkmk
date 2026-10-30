@@ -15,7 +15,7 @@ import type { VisualLocation } from '@/dashboard/components/Wizard/components/Co
 
 const API = `${location.protocol}//${location.host}/api/internal`
 
-function dashboard(name: string, title: string, restrictedToSingle: string[]) {
+function dashboard(name: string, title: string) {
   return {
     domainType: 'dashboard_metadata',
     id: name,
@@ -26,7 +26,6 @@ function dashboard(name: string, title: string, restrictedToSingle: string[]) {
       is_built_in: true,
       is_editable: false,
       layout_type: 'relative_grid',
-      restricted_to_single: restrictedToSingle,
       display: { title }
     }
   }
@@ -38,7 +37,7 @@ useMswServer(
       domainType: 'dashboard_metadata',
       id: 'all',
       links: [],
-      value: [dashboard('main', 'Overview', []), dashboard('host', 'Host details', ['host'])]
+      value: [dashboard('main', 'Overview'), dashboard('host', 'Host details')]
     })
   ),
   // The views selector lists the views and their data sources.
@@ -50,37 +49,37 @@ useMswServer(
   )
 )
 
-function renderPicker(target: VisualLocation, singleInfos: string[]) {
-  render(ContextualLinkTargetPicker, { props: { modelValue: target, singleInfos } })
+function renderPicker(target: VisualLocation) {
+  render(ContextualLinkTargetPicker, { props: { modelValue: target } })
   return screen.findByRole('combobox', { name: 'Select a target' })
 }
 
 describe('ContextualLinkTargetPicker', () => {
-  it('offers only the dashboards a click can fill', async () => {
-    const dropdown = await renderPicker({ type: 'dashboards', name: 'main', owner: '' }, [])
+  it('offers every listed dashboard', async () => {
+    const dropdown = await renderPicker({ type: 'dashboards', name: 'main', owner: '' })
     await waitFor(() => expect(dropdown).toHaveTextContent('Overview'))
 
     await userEvent.setup().click(dropdown)
     const options = await screen.findAllByRole('option')
 
-    expect(options.map((option) => option.textContent)).toEqual(['Overview'])
+    expect(options.map((option) => option.textContent)).toEqual(['Host details', 'Overview'])
   })
 
   it('labels a stored dashboard copy that is no longer listed by its name and owner', async () => {
-    const dropdown = await renderPicker({ type: 'dashboards', name: 'gone', owner: 'harry' }, [])
+    const dropdown = await renderPicker({ type: 'dashboards', name: 'gone', owner: 'harry' })
 
     await waitFor(() => expect(dropdown).toHaveTextContent('gone (harry)'))
   })
 
   it('labels a stored dashboard without owner as resolved by name', async () => {
-    const dropdown = await renderPicker({ type: 'dashboards', name: 'main', owner: null }, [])
+    const dropdown = await renderPicker({ type: 'dashboards', name: 'main', owner: null })
 
     await waitFor(() => expect(dropdown).toHaveTextContent('main (resolved by name)'))
   })
 
   it('clears the target when the category changes, so no hidden target is saved', async () => {
     const { emitted } = render(ContextualLinkTargetPicker, {
-      props: { modelValue: { type: 'views', name: 'allhosts', owner: null }, singleInfos: [] }
+      props: { modelValue: { type: 'views', name: 'allhosts', owner: null } }
     })
     const user = userEvent.setup()
 

@@ -15,7 +15,6 @@ from cmk.gui.views.drilldown_filters import (
     Dropped,
     dropped_filters_variable,
     dropped_filters_warning,
-    filled_single_infos,
 )
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.filter.drilldowns import (
@@ -596,17 +595,6 @@ def test_drilldown_filters_offer_only_group_filters_on_a_group_view() -> None:
         "hostsgroups_having_problems",
         "hostgroup",
     ]
-
-
-@pytest.mark.usefixtures("request_context")
-def test_filled_single_infos_name_the_host_by_its_name_filter_only() -> None:
-    assert "host" in filled_single_infos(["host"])
-    assert "host" not in filled_single_infos(["hoststate"])
-
-
-@pytest.mark.usefixtures("request_context")
-def test_filled_single_infos_name_an_aggregation_by_its_name_filter() -> None:
-    assert "aggr" in filled_single_infos(["aggr_name"])
 
 
 @pytest.mark.usefixtures("request_context")

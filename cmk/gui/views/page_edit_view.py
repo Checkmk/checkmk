@@ -12,7 +12,7 @@
 import ast
 import datetime as dt
 import string
-from collections.abc import Iterator, Mapping, Sequence, Set
+from collections.abc import Iterator, Mapping, Sequence
 from functools import partial
 from typing import Any, Literal, NamedTuple, overload, override, TypedDict, TypeIs
 
@@ -40,7 +40,6 @@ from cmk.gui.type_defs import (
     ContextualLinkEntryConfig,
     ContextualLinkTargetType,
     FilterName,
-    InfoName,
     InventoryJoinMacrosSpec,
     PainterName,
     PainterParameters,
@@ -59,7 +58,6 @@ from cmk.gui.valuespec import (
     CascadingDropdownChoice,
     Checkbox,
     Dictionary,
-    DictionaryModel,
     DropdownChoice,
     DropdownChoiceEntries,
     DropdownChoiceEntry,
@@ -92,12 +90,11 @@ from cmk.web.utils.icons import DynamicIconName
 from .drilldown_filters import (
     drilldown_filters,
     exceeded_aux_tag_limits,
-    filled_single_infos,
     filter_key,
 )
 from .layout import layout_registry
 from .sorter import all_sorters, ParameterizedSorter, Sorter
-from .store import get_all_views, get_permitted_views
+from .store import get_all_views
 from .view_choices import view_choices
 
 # Inherited: carries the clicked row's object; custom: the filters the user picks.
@@ -966,13 +963,7 @@ def _drilldown_link_choices(
                 choice,
                 f"{_DRILLDOWN_TITLES[choice]}:",
                 DropdownChoice(
-                    choices=_fillable_targets(
-                        target_type,
-                        _permitted_target_single_infos(target_type, user_permissions),
-                        object_infos,
-                        user_permissions,
-                    ),
-                    sorted=True,
+                    choices=_drilldown_targets(target_type, user_permissions), sorted=True
                 ),
             )
             for choice, target_type in _INHERITED_DRILLDOWN_TARGETS.items()
@@ -989,37 +980,16 @@ def _drilldown_link_choices(
     return choices
 
 
-def _fillable_targets(
-    target_type: ContextualLinkTargetType,
-    target_single_infos: Mapping[VisualName, SingleInfos],
-    infos: Set[InfoName],
-    user_permissions: UserPermissions,
+def _drilldown_targets(
+    target_type: ContextualLinkTargetType, user_permissions: UserPermissions
 ) -> DropdownChoiceEntries:
-    fillable = {
-        name for name, single_infos in target_single_infos.items() if set(single_infos) <= infos
-    }
     if target_type == "views":
-        return [choice for choice in view_choices() if choice[0] in fillable]
+        return view_choices(allow_empty=False)
     dashboard_type = visual_type_registry["dashboards"]()
     return [
-        choice
-        for choice in dashboard_type.choices(dashboard_type.visuals(), user_permissions)
-        if choice[0] in fillable
+        (name, f"{title} ({name})")
+        for name, title in dashboard_type.choices(dashboard_type.visuals(), user_permissions)
     ]
-
-
-def _permitted_target_single_infos(
-    target_type: ContextualLinkTargetType, user_permissions: UserPermissions
-) -> dict[VisualName, SingleInfos]:
-    if target_type == "views":
-        return {name: view["single_infos"] for name, view in get_permitted_views().items()}
-    dashboard_type = visual_type_registry["dashboards"]()
-    return {
-        name: dashboard["single_infos"]
-        for name, dashboard in dashboard_type.permitted_visuals(
-            dashboard_type.visuals(), user_permissions
-        ).items()
-    }
 
 
 def _custom_drilldown_valuespec(
@@ -1028,13 +998,16 @@ def _custom_drilldown_valuespec(
     tags: TagConfig,
     user_permissions: UserPermissions,
 ) -> Dictionary:
-    target_single_infos = _permitted_target_single_infos(target_type, user_permissions)
-    targets = _fillable_targets(
-        target_type, target_single_infos, filled_single_infos(filters), user_permissions
-    )
     return Dictionary(
         elements=[
-            ("target", DropdownChoice(title=_("Target page"), choices=targets, sorted=True)),
+            (
+                "target",
+                DropdownChoice(
+                    title=_("Target page"),
+                    choices=_drilldown_targets(target_type, user_permissions),
+                    sorted=True,
+                ),
+            ),
             (
                 "filters",
                 ListOf(
@@ -1068,24 +1041,7 @@ def _custom_drilldown_valuespec(
             ),
         ],
         optional_keys=[],
-        validate=partial(_validate_named_target, target_single_infos),
     )
-
-
-def _validate_named_target(
-    target_single_infos: Mapping[VisualName, SingleInfos], value: DictionaryModel, varprefix: str
-) -> None:
-    if value["include_context"]:
-        return
-    filter_names = [_raw_filter_name(raw) for raw in value["filters"]]
-    if not set(target_single_infos.get(value["target"], ())) <= filled_single_infos(filter_names):
-        raise MKUserError(
-            f"{varprefix}_p_filters",
-            _(
-                "The target page shows a single object. Without the dashboard and widget filters,"
-                " add a filter that identifies it."
-            ),
-        )
 
 
 def _filter_title(filter_name: FilterName) -> str:

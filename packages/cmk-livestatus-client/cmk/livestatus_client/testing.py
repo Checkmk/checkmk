@@ -293,6 +293,7 @@ program_start num_hosts num_services max_long_output_size core_pid edition'
         self._connections: dict[SiteName, MockSingleSiteConnection] = collections.OrderedDict()
         self._expect_status_query: bool | None = None
         self.tables: Tables = {}
+        self._disabled: set[SiteName] = set()
         self.set_sites(["NO_SITE", "remote", "local"])
 
     def set_sites(self, site_names: list[ColumnName]) -> None:
@@ -316,6 +317,22 @@ program_start num_hosts num_services max_long_output_size core_pid edition'
             if site_name not in self._connections:
                 self._connections[site_name] = MockSingleSiteConnection(site_name, self)
         return self._connections
+
+    def disable_site(self, site: SiteName) -> MockLiveStatusConnection:
+        """Switch the site off, like a user does in the GUI, so the GUI does not connect to it.
+
+        The site gets no query, so it expects none. Switch the site off before you set the
+        expected queries.
+
+        Examples:
+
+            >>> live = MockLiveStatusConnection().disable_site("remote")
+            >>> live.enabled_and_disabled_sites(None)[1]
+            {'remote': {'socket': 'unix:'}}
+        """
+        self.make_site_unreachable(site)
+        self._disabled.add(site)
+        return self
 
     def create_socket(self, family: object, site_name: SiteName | None) -> FakeSocket:  # noqa: ARG002
         if site_name is None:  # plain SingleConnection instantiated by hand
@@ -346,7 +363,11 @@ program_start num_hosts num_services max_long_output_size core_pid edition'
 
     def enabled_and_disabled_sites(self, user_id: object) -> tuple[dict, dict]:  # noqa: ARG002
         """This method is used to inject the currently configured sites into livestatus.py"""
-        return {site_name: {"socket": "unix:"} for site_name in self.sites}, {}
+        sites = {site_name: {"socket": "unix:"} for site_name in self.sites}
+        return (
+            {site: spec for site, spec in sites.items() if site not in self._disabled},
+            {site: spec for site, spec in sites.items() if site in self._disabled},
+        )
 
     def __call__(self, expect_status_query: bool = True) -> MockLiveStatusConnection:
         self._expect_status_query = expect_status_query

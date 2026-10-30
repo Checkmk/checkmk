@@ -193,3 +193,25 @@ test('keeps an action performed right away pulsing while another one settles', a
 
   expect([...slideIn.runningActionIds.value]).toEqual([RESCHEDULE_ACTION_ID])
 })
+
+test('closes the open form once another object is on show', async () => {
+  const subject = ref('host-1')
+  const slideIn = slideInOn(subject, slowReschedule().action)
+  await slideIn.openAction(ACKNOWLEDGE_ID)
+
+  subject.value = 'host-2'
+  await nextTick()
+
+  expect(slideIn.activeActionId.value).toBeNull()
+})
+
+test('drops how the last action went once another object is on show', async () => {
+  const subject = ref('host-1')
+  const slideIn = slideInOn(subject, slowReschedule().action)
+  slideIn.applyFeedback(ACKNOWLEDGED)
+
+  subject.value = 'host-2'
+  await nextTick()
+
+  expect(shown(slideIn)).toEqual([])
+})

@@ -124,6 +124,15 @@ test('rescheduling several objects confirms without waiting for their checks', a
   expect(feedback).toEqual({ variant: 'success', message: 'Rescheduled 2 checks' })
 })
 
+// An object without active checks is skipped, so fewer checks may be rescheduled than selected.
+test('rescheduling several objects counts the checks rescheduled, not the objects selected', async () => {
+  const built = action(async () => ({ ...RESCHEDULED, rescheduled: 1 }))
+
+  const feedback = await built.perform(['host-1', 'host-2'], built.defaultValues())
+
+  expect(feedback).toEqual({ variant: 'success', message: 'Rescheduled 1 check' })
+})
+
 test('a check that can no longer be looked at ends the wait at once', async () => {
   const gone = new CmkApiError('Not Found', null, '', 404)
   const built = action(async () => RESCHEDULED, lastChecks(gone))

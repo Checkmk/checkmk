@@ -174,6 +174,21 @@ test('shows an error state when loading fails', async () => {
   expect(await screen.findByText('Could not load actions.')).toBeInTheDocument()
 })
 
+test('keeps the overflow entries and alerts when loading the rest fails', async () => {
+  mountCell({
+    actions: ACTIONS,
+    maxVisible: 2,
+    load: async () => {
+      throw new Error('boom')
+    }
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Could not load more actions.')
+  expect(screen.getByRole('menuitem', { name: /Schedule downtime/ })).toBeInTheDocument()
+})
+
 test('refetches the loader every time the menu is opened', async () => {
   const load = vi.fn(async () => LOADED)
   mountCell({ actions: [], load })

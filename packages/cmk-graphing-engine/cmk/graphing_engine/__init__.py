@@ -85,7 +85,6 @@ from ._perfometers._evaluation import (
     EvaluatedSegment,
     EvaluatedStacked,
     FocusBoundKind,
-    PerfometerIndex,
 )
 from ._perfometers._geometry import drawn_segments, DrawnSegment, perfometer_sort_value
 from ._plugins._attributes import (
@@ -102,6 +101,7 @@ from ._plugins._matching import (
     threshold_rules,
 )
 from ._plugins._order import sort_registered_graph_plugins
+from ._plugins._perfometer_matching import PerfometerIndex
 from ._plugins._prediction import (
     build_prediction_graph,
     Direction,

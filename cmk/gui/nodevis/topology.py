@@ -1886,7 +1886,7 @@ def _get_topology_config_for_hash(topology_hash: str) -> dict[str, Any]:
 
     topology_file.touch()  # Used for last usage statistics
     try:
-        return json.loads(store.load_text_from_file(topology_file))
+        return json.loads(store.load_text_from_file_explicit(topology_file, debug=False))
     except json.JSONDecodeError:
         return {}
 

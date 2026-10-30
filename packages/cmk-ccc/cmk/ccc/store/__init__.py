@@ -345,7 +345,7 @@ def try_load_file_from_pickle_cache(
         relative_path = path.relative_to(root_dir)  # usually cmk.utils.paths.omd_root
     except ValueError:
         # No idea why someone is trying to load something outside the sites home directory
-        return load_object_from_file(path, default=default, lock=lock)
+        return load_object_from_file_explicit(path, default=default, lock=lock, debug=False)
 
     pickle_path = (
         _pickled_files_cache_dir(temp_dir) / relative_path.parent / (relative_path.name + ".pkl")
@@ -353,7 +353,7 @@ def try_load_file_from_pickle_cache(
     try:
         if pickle_path.stat().st_mtime > path.stat().st_mtime:
             # Use pickled version since this file is newer and therefore valid
-            return load_object_from_pickle_file(pickle_path, default=default)
+            return load_object_from_pickle_file_explicit(pickle_path, default=default, debug=False)
     except FileNotFoundError, pickle.UnpicklingError:
         pass
 
@@ -365,7 +365,7 @@ def try_load_file_from_pickle_cache(
     #       original-missing/pickle-exists: no pickling, use load_object_from_file
     #       original-missing/pickle-missing_broken_outdated: no pickling, use load_object_from_file
     #       original-exists/pickle-missing_broken_outdated: create pickle file
-    data = load_object_from_file(path, default=default, lock=lock)
+    data = load_object_from_file_explicit(path, default=default, lock=lock, debug=False)
     if path.exists():
         # Only create the pickled version if an original file actually exists
         pickle_path.parent.mkdir(exist_ok=True, parents=True)

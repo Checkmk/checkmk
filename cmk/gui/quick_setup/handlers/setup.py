@@ -298,7 +298,7 @@ class CompleteActionResult(BaseModel):
         work_dir = Path(BackgroundJobDefines.base_dir) / job_id
         if not work_dir.exists():
             raise MKJobNotFoundException(None, _("Action result not found"))
-        content = store.load_text_from_file(cls._file_path(work_dir))
+        content = store.load_text_from_file_explicit(cls._file_path(work_dir), debug=False)
         try:
             return cls.model_validate_json(content)
         except ValidationError as e:

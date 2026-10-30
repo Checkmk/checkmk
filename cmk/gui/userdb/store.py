@@ -23,7 +23,7 @@ import cmk.utils.paths
 from cmk.ccc.store import (
     acquire_lock,
     load_from_mk_file,
-    load_text_from_file,
+    load_text_from_file_explicit,
     release_lock,
     save_text_to_file,
     save_to_mk_file,
@@ -79,7 +79,7 @@ def load_custom_attr[T](
         return None
 
     if lock:
-        result = load_text_from_file(attr_path, lock=lock)
+        result = load_text_from_file_explicit(attr_path, lock=lock, debug=False)
     else:
         # Simpler operation if no lock is required. Does NOT check file permissions
         # These are only considered critical in case of pickled data

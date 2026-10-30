@@ -188,7 +188,9 @@ class _CombinedVisualsCache[TVisual: Visual]:
 
     def _read_from_cache(self) -> CustomUserVisuals | None:
         try:
-            return store.load_object_from_pickle_file(self._content_filename, default={})
+            return store.load_object_from_pickle_file_explicit(
+                self._content_filename, default={}, debug=False
+            )
         except TypeError, pickle.UnpicklingError:
             return None
 

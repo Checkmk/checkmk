@@ -204,7 +204,9 @@ def _list_layout(ctx: PageContext) -> MapListView:
     # load a bare maps.py and would otherwise lose the layout last chosen.
     path = None if user.id is None else _list_layout_path(user.id)
     stored = (
-        None if path is None else _as_list_layout(store.load_object_from_file(path, default=None))
+        None
+        if path is None
+        else _as_list_layout(store.load_object_from_file_explicit(path, default=None, debug=False))
     )
     if (requested := _as_list_layout(ctx.request.get_ascii_input("layout"))) is None:
         return stored or map_object_defaults()["map_list_view"]

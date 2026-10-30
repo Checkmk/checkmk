@@ -1699,9 +1699,10 @@ class ModeAnalyzeNotifications(ModeNotifications):
         self, escape_plugin_output: bool, *, table_row_limit: int
     ) -> None:
         """Show recent notifications. We can use them for rule analysis"""
-        backlog = store.load_object_from_file(
+        backlog = store.load_object_from_file_explicit(
             cmk.utils.paths.var_dir / "notify/backlog.mk",
             default=[],
+            debug=False,
         )
         if not backlog:
             return

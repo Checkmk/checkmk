@@ -156,7 +156,7 @@ def _modify_gui_messages(
 ) -> list[Message]:
     store = ObjectStore[list[Message]](_messages_path(user_id), serializer=DimSerializer())
     with store.locked():
-        messages = store.read_obj(default=[])
+        messages = store.read_obj_explicit(default=[], debug=False)
         updated_messages = transform(_remove_expired(_update_validity(messages)))
         if messages != updated_messages:
             store.write_obj(updated_messages)

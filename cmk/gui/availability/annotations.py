@@ -38,7 +38,10 @@ def load_annotations(lock: bool = False) -> AVAnnotations:
         # Support legacy old wrong name-clashing path
         path = cmk.utils.paths.var_dir / "web/statehist_annotations.mk"
 
-    return cast(AVAnnotations, store.load_object_from_file(path, default={}, lock=lock))
+    return cast(
+        AVAnnotations,
+        store.load_object_from_file_explicit(path, default={}, lock=lock, debug=False),
+    )
 
 
 def update_annotations(

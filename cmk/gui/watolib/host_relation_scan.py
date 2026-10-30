@@ -575,7 +575,7 @@ class _JsonStore[T: BaseModel]:
         self._store.write_obj(result.model_dump_json())
 
     def read(self) -> T | None:
-        raw = self._store.read_obj(default="")
+        raw = self._store.read_obj_explicit(default="", debug=False)
         return self._model.model_validate_json(raw) if raw else None
 
 

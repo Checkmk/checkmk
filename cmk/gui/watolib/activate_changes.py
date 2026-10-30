@@ -480,10 +480,11 @@ def _sync_changes_before_remote_automation(
 
 
 def _load_site_replication_status(site_id: SiteId, lock: bool = False) -> SiteReplicationStatus:
-    return store.load_object_from_file(
+    return store.load_object_from_file_explicit(
         _site_replication_status_path(site_id),
         default={},
         lock=lock,
+        debug=False,
     )
 
 
@@ -1518,8 +1519,8 @@ class ActivateChanges:
 
     def last_activation_state(self, site_id: SiteId) -> SiteActivationState:
         """This function returns the last known persisted activation state"""
-        raw_state = store.load_object_from_file(
-            Path(ActivateChangesManager.persisted_site_state_path(site_id)), default={}
+        raw_state = store.load_object_from_file_explicit(
+            Path(ActivateChangesManager.persisted_site_state_path(site_id)), default={}, debug=False
         )
         return SiteActivationState(
             _site_id=raw_state.get("_site_id", site_id),
@@ -1614,9 +1615,10 @@ class ActivateChanges:
             Falls back to the persisted state if the temporary file is absent.
             """
             if activation_id:
-                live_state: SiteActivationState = store.load_object_from_file(
+                live_state: SiteActivationState = store.load_object_from_file_explicit(
                     Path(ActivateChangesManager.site_state_path(activation_id, site_id)),
                     default={},
+                    debug=False,
                 )
                 last_state = (
                     live_state
@@ -2214,7 +2216,7 @@ class ActivateChangesManager:
                 None,
                 f"Unknown activation process: {activation_id!r} not found",
             )
-        return store.load_object_from_file(Path(info_path), default={})
+        return store.load_object_from_file_explicit(Path(info_path), default={}, debug=False)
 
     def _set_persisted_changes(self) -> None:
         """Sets the persisted_changes, which are a subset of self._changes."""
@@ -2477,9 +2479,10 @@ class ActivateChangesManager:
     def get_site_state(self, site_id: SiteId) -> SiteActivationState:
         if self._activation_id is None:
             raise Exception("activation ID is not set")
-        raw_state = store.load_object_from_file(
+        raw_state = store.load_object_from_file_explicit(
             Path(ActivateChangesManager.site_state_path(self._activation_id, site_id)),
             default={},
+            debug=False,
         )
         return SiteActivationState(
             _site_id=raw_state.get("_site_id", site_id),
@@ -3598,7 +3601,7 @@ class RemoteActivationBackgroundJob(BackgroundJob):
                 else ""
             ),
             warnings=(
-                store.load_object_from_file(self._result_path(), default={})
+                store.load_object_from_file_explicit(self._result_path(), default={}, debug=False)
                 if status.state == JobStatusStates.FINISHED
                 else {}
             ),
@@ -4240,7 +4243,9 @@ def update_config_generation() -> None:
 
 
 def _get_current_config_generation(lock: bool = False) -> int:
-    return store.load_object_from_file(_config_generation_path(), default=0, lock=lock)
+    return store.load_object_from_file_explicit(
+        _config_generation_path(), default=0, lock=lock, debug=False
+    )
 
 
 def _config_generation_path() -> Path:

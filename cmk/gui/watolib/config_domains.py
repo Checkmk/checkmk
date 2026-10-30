@@ -509,7 +509,9 @@ class ConfigDomainSiteCertificate(ABCConfigDomain):
 def pid_from_file(pid_file: Path) -> ProcessId | None:
     """Read a process id from a given pid file"""
     try:
-        return ProcessId(int(store.load_object_from_file(pid_file, default=None)))
+        return ProcessId(
+            int(store.load_object_from_file_explicit(pid_file, default=None, debug=False))
+        )
     except Exception:
         return None
 

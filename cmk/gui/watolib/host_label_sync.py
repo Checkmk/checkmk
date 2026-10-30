@@ -221,8 +221,8 @@ class DiscoveredHostLabelSyncJob:
         return wato_var_dir() / "newest_host_labels_per_site.mk"
 
     def _load_newest_host_labels_per_site(self) -> dict[SiteId, float]:
-        return store.load_object_from_file(
-            DiscoveredHostLabelSyncJob.newest_host_labels_per_site_path(), default={}
+        return store.load_object_from_file_explicit(
+            DiscoveredHostLabelSyncJob.newest_host_labels_per_site_path(), default={}, debug=False
         )
 
     def _save_newest_host_labels_per_site(self, newest_host_labels: dict[SiteId, float]) -> None:

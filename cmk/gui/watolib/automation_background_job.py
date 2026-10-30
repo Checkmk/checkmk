@@ -181,7 +181,7 @@ class AutomationCheckmkAutomationGetStatus(AutomationCommand[str]):
 
     @staticmethod
     def _load_result(path: Path) -> str:
-        return store.load_text_from_file(path)
+        return store.load_text_from_file_explicit(path, debug=False)
 
     @override
     def execute(self, api_request: str) -> RemoteAutomationGetStatusResponseRaw:

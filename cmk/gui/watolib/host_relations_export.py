@@ -96,7 +96,7 @@ def _write_export_file(path: Path, macro_values: dict[str, str]) -> bool:
         lines.append(f"explicit_host_conf[{RELATIONS_MACRO!r}].update({macro_values!r})\n")
     content = "".join(lines)
 
-    if store.load_text_from_file(path) == content:
+    if store.load_text_from_file_explicit(path, debug=False) == content:
         return False
     store.save_text_to_file(path, content)
     return True
@@ -129,7 +129,7 @@ def write_dropped_relations(path: Path, dropped: Sequence[DroppedRelation]) -> N
 
 def read_dropped_relations(path: Path) -> Sequence[DroppedRelation]:
     """Skips what this version cannot word: a failed export leaves the file of another version."""
-    raw = store.load_object_from_file(path, default=[])
+    raw = store.load_object_from_file_explicit(path, default=[], debug=False)
     dropped = []
     for entry in raw if isinstance(raw, list) else []:
         if (parsed := parse_dropped_relation(entry)) is None:

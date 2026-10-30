@@ -19,6 +19,14 @@ class IdentifySessionResponse:
         ),
         example={"general.use": True},
     )
+    contact_groups: list[str] | ApiOmitted = api_field(
+        default_factory=ApiOmitted,
+        description=(
+            "The contact groups of the user. Only present if the request set "
+            "include_contact_groups."
+        ),
+        example=["all"],
+    )
 
 
 @api_model

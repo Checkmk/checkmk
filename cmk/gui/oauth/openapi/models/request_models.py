@@ -31,6 +31,11 @@ class IdentifySessionRequest:
         ),
         example=["general.use"],
     )
+    include_contact_groups: bool = api_field(
+        default=False,
+        description="Also answer with the contact groups of the user of the session.",
+        example=True,
+    )
 
 
 @api_model

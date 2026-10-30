@@ -15,6 +15,7 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
+from cmk.gui.userdb import contactgroups_of_user
 
 from .endpoint_family import GUI_SESSION_FAMILY
 from .models.request_models import IdentifySessionRequest
@@ -41,18 +42,24 @@ def identify_session_v1(
     A caller can name permissions in required_permissions, and the answer then
     says for each one whether the user holds it. The endpoint only reports. It
     never refuses a live session because a permission is missing, the caller
-    decides what that means for its own service.
+    decides what that means for its own service. The contact groups are only
+    answered on request, too.
     """
     require_site_internal_caller(api_context)
     user_id = live_session_user(api_context, body.session_cookie, endpoint="identify")
-    if isinstance(body.required_permissions, ApiOmitted):
-        return IdentifySessionResponse(user_id=user_id)
     return IdentifySessionResponse(
         user_id=user_id,
-        permissions=held_permissions(
-            user_id,
-            body.required_permissions,
-            user_permissions=api_context.config.user_permissions(),
+        permissions=(
+            ApiOmitted()
+            if isinstance(body.required_permissions, ApiOmitted)
+            else held_permissions(
+                user_id,
+                body.required_permissions,
+                user_permissions=api_context.config.user_permissions(),
+            )
+        ),
+        contact_groups=(
+            sorted(contactgroups_of_user(user_id)) if body.include_contact_groups else ApiOmitted()
         ),
     )
 

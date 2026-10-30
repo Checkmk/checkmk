@@ -9,7 +9,7 @@
 from typing import Literal
 
 from cmk.gui.num_split import cmp_num_split as _cmp_num_split
-from cmk.gui.type_defs import ColumnName, Row, SorterFunction
+from cmk.gui.type_defs import ColumnName, Row
 
 
 def cmp_simple_number(column: ColumnName, r1: Row, r2: Row) -> int:
@@ -68,12 +68,6 @@ def cmp_string_list(column: ColumnName, r1: Row, r2: Row) -> int:
     return cmp_insensitive_string(v1, v2)
 
 
-def cmp_custom_variable(r1: Row, r2: Row, key: str, cmp_func: SorterFunction) -> int:  # noqa: ARG001
-    return (_get_custom_var(r1, key) > _get_custom_var(r2, key)) - (
-        _get_custom_var(r1, key) < _get_custom_var(r2, key)
-    )
-
-
 def cmp_ip_address(column: ColumnName, r1: Row, r2: Row) -> int:
     return compare_ips(r1.get(column, ""), r2.get(column, ""))
 
@@ -94,7 +88,3 @@ def compare_ips(ip1: str, ip2: str, ipv: Literal["ipv4", "ipv6"] = "ipv4") -> in
 
     v1, v2 = split_ip(ip1), split_ip(ip2)
     return (v1 > v2) - (v1 < v2)
-
-
-def _get_custom_var(row: Row, key: str) -> str:
-    return row["custom_variables"].get(key, "")

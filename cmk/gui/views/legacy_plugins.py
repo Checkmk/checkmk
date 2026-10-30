@@ -14,7 +14,7 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.legacy_plugins import load_web_plugins
 from cmk.gui.painter import painter_registry, register_painter
 from cmk.gui.permissions import declare_permission, dynamic_permission_registry
-from cmk.gui.type_defs import Perfdata, ViewSpec, VisualLinkSpec
+from cmk.gui.type_defs import Perfdata, Row, SorterFunction, ViewSpec, VisualLinkSpec
 from cmk.gui.view_utils import cmp_service_name_equiv, get_labels, render_labels, render_tag_groups
 from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.visuals.filter import filter_registry
@@ -89,6 +89,16 @@ def _lazy_view_title(name: str, view_spec: ViewSpec) -> LazyText:
     return LazyText(lambda: format_view_title(name, view_spec))
 
 
+def _cmp_custom_variable(r1: Row, r2: Row, key: str, cmp_func: SorterFunction) -> int:  # noqa: ARG001
+    """Compare the values of a custom variable as strings, for legacy view plugins only
+
+    The plugins pass a comparison function, but this has always ignored it.
+    """
+    v1: str = r1["custom_variables"].get(key, "")
+    v2: str = r2["custom_variables"].get(key, "")
+    return (v1 > v2) - (v1 < v2)
+
+
 def _register_pre_21_plugin_api() -> None:
     """Register pre 2.1 "plug-in API"
 
@@ -154,7 +164,6 @@ def _register_pre_21_plugin_api() -> None:
         "register_sorter",
         "Sorter",
         "sorter_registry",
-        "cmp_custom_variable",
         "cmp_ip_address",
         "cmp_num_split",
         "cmp_simple_number",
@@ -164,6 +173,7 @@ def _register_pre_21_plugin_api() -> None:
     ):
         api_module.__dict__[name] = sorter.__dict__[name]
 
+    api_module.__dict__["cmp_custom_variable"] = _cmp_custom_variable
     api_module.__dict__["cmp_service_name_equiv"] = cmp_service_name_equiv
 
     for name in (

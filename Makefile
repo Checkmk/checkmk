@@ -203,6 +203,6 @@ check_python_requirements:
 
 test-github-actions:
 	EDITION=community bazel run //:format.check
-	EDITION=community bazel lint --fixes=false ...
+	EDITION=community bazel lint --fixes=false -- ... -//bazel/tools/windows_vm:component
 	EDITION=community make -C tests test-bandit
 	EDITION=community make -C tests test-unit

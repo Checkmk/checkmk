@@ -124,23 +124,28 @@ const commandActions = computed(() =>
     })
 )
 
+const showAiExplain = computed(() => props.aiExplain && overview.value !== null)
+
 // Links out next to the commands, offered by the overview once it has loaded.
-const slideInActions = computed<CellAction[]>(() => {
+const discoveryActions = computed<CellAction[]>(() => {
   const discoveryLink = overview.value?.legacy_service_discovery_link
-  return [
-    ...commandActions.value,
-    ...(discoveryLink
-      ? [
-          {
-            id: 'run_service_discovery',
-            label: _t('Run service discovery'),
-            icon: 'services' as SimpleIcons,
-            url: discoveryLink
-          }
-        ]
-      : [])
-  ]
+  return discoveryLink
+    ? [
+        {
+          id: 'run_service_discovery',
+          label: _t('Run service discovery'),
+          icon: 'services' as SimpleIcons,
+          url: discoveryLink
+        }
+      ]
+    : []
 })
+
+// The discovery leads the row of the AI explanation, so the commands wrap less.
+const slideInActions = computed<CellAction[]>(() => [
+  ...commandActions.value,
+  ...(showAiExplain.value ? [] : discoveryActions.value)
+])
 
 function serviceOfHost(description: string): ServiceRef {
   return { host: props.host, description }
@@ -357,7 +362,7 @@ const tabs = computed<SlideInTab[]>(() => {
         :load-action-menu="actionMenuLoader"
       />
     </template>
-    <template v-if="slideInActions.length || (aiExplain && overview)" #actions>
+    <template v-if="slideInActions.length || showAiExplain" #actions>
       <div class="monitoring-service-slide-in__actions">
         <SlideInActions
           v-if="slideInActions.length"
@@ -365,7 +370,12 @@ const tabs = computed<SlideInTab[]>(() => {
           :running-action-id="runningActionId"
           @select="openAction"
         />
-        <div v-if="aiExplain && overview" class="monitoring-service-slide-in__ai-explain">
+        <div v-if="showAiExplain && overview" class="monitoring-service-slide-in__ai-explain">
+          <SlideInActions
+            v-if="discoveryActions.length"
+            :actions="discoveryActions"
+            @select="openAction"
+          />
           <ServiceAiExplainButton :overview="overview" />
         </div>
       </div>
@@ -404,6 +414,8 @@ const tabs = computed<SlideInTab[]>(() => {
 
 .monitoring-service-slide-in__ai-explain {
   display: flex;
+  flex-flow: row wrap;
+  gap: var(--dimension-4);
 }
 
 .monitoring-service-slide-in__feedback {

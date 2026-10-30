@@ -493,6 +493,32 @@ describe('ServiceSlideIn', () => {
     )
   })
 
+  it('offers the service discovery in the row of the AI explanation, first', async () => {
+    vi.spyOn(client, 'GET').mockResolvedValue({
+      data: makeOverview({
+        name: 'Check_MK Discovery',
+        legacy_service_discovery_link: 'wato.py?mode=inventory&host=web-server-01'
+      }),
+      error: undefined,
+      response: new Response()
+    } as never)
+    render(ServiceSlideIn, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        service: makeService(),
+        host: HOST,
+        aiExplain: true
+      }
+    })
+
+    const aiRow = (await screen.findByTestId('service-ai-explain-button')).parentElement!
+    const discovery = await screen.findByRole('link', { name: 'Run service discovery' })
+
+    expect(aiRow.contains(discovery)).toBe(true)
+    expect(aiRow.firstElementChild!.contains(discovery)).toBe(true)
+    expect(screen.getAllByRole('link', { name: 'Run service discovery' })).toHaveLength(1)
+  })
+
   it('offers no service discovery without a link to it', async () => {
     render(ServiceSlideIn, {
       props: { displayOptions: DISPLAY_OPTIONS, service: makeService(), host: HOST }

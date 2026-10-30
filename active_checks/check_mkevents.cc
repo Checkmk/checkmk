@@ -221,13 +221,15 @@ std::vector<std::string> split_columns(const std::string &line) {
 [[noreturn]] void usage() {
     reply_and_exit(
         State::unknown,
-        "Usage: check_mkevents [-s SOCKETPATH] [-H REMOTE:PORT] [-a] [-l|-L] [-q] [--] HOST [APPLICATION]\n"
+        "Usage: check_mkevents [-s SOCKETPATH] [-H REMOTE[:PORT]] [-a] [-l] [-L] [-q] [--] HOST [APPLICATION]\n"
+        " -s    connect via this UNIX socket, by default $OMD_ROOT/tmp/run/mkeventd/status.\n"
+        " -H    connect via TCP, e.g. to myhost:6558.\n"
         " -a    do not take acknowledged events into account.\n"
-        " -l    show last log message in summary/short output\n"
-        " -L    show last log message in details/long output\n"
+        " -l    show last log message in summary/short output.\n"
+        " -L    show last log message in details/long output.\n"
         " -q    take a backslash in HOST as quoting a following slash or backslash.\n"
         " --    end the options, e.g. for a HOST starting with a dash.\n"
-        " HOST  may be a hostname, and IP address or hostname/IP-address.");
+        " HOST  may be a hostname, an IP address or hostname/IP-address.");
 }
 
 // Parses a port number from 1 to 65535, leading zeros don't count.

@@ -144,11 +144,10 @@ class MapsPerfometer:
         description="The projected segment stacks, including the theme background filler.",
         example=[],
     )
-    sides: list[MapsPerfometerSide | None] = api_field(
+    sides: list[MapsPerfometerSide] = api_field(
         description=(
             "Per gauge side (one for a plain Perf-O-Meter, upper/lower for a "
-            "stacked one, left/right for a bidirectional one). Null where the "
-            "side has no renderable stack."
+            "stacked one, left/right for a bidirectional one)."
         ),
         example=[],
     )

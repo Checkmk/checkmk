@@ -168,13 +168,6 @@ describe('GadgetRenderer two-sided Perf-O-Meter', () => {
     expect(screen.getByText('244 bit/s / 131 bit/s')).toBeInTheDocument()
     expect(fill(container)).toBe('60%')
   })
-
-  it('fills from the first side that is drawn', () => {
-    const { container } = renderSides([null, { title: 'Out', label: '131 bit/s', pct: 30 }])
-
-    expect(screen.getByText('131 bit/s')).toBeInTheDocument()
-    expect(fill(container)).toBe('30%')
-  })
 })
 
 describe('GadgetRenderer caption', () => {

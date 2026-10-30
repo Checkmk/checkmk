@@ -101,9 +101,7 @@ def show_metric_info_v1(
                     for row in perfometer.rows
                 ],
                 sides=[
-                    None
-                    if side is None
-                    else MapsPerfometerSide(title=side.title, label=side.label, pct=side.pct)
+                    MapsPerfometerSide(title=side.title, label=side.label, pct=side.pct)
                     for side in perfometer.sides
                 ],
                 bg_color=perfometer.bg_color,

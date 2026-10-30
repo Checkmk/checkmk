@@ -173,7 +173,6 @@ def test_simple_perfometer_payload(request_context: None) -> None:
     perfometer = payload.perfometer
     assert perfometer is not None
     (side,) = perfometer.sides
-    assert side is not None
     assert side.title == "RAM usage"
     assert side.pct == pytest.approx(42.0, abs=0.5)
     assert side.label.startswith("42")
@@ -194,7 +193,6 @@ def test_bidirectional_sides_are_per_direction(request_context: None) -> None:
     perfometer = payload.perfometer
     assert perfometer is not None
     left, right = perfometer.sides
-    assert left is not None and right is not None
     assert left.title == "Input bandwidth"
     assert left.pct == pytest.approx(25.0, abs=0.5)
     assert right.title == "Output bandwidth"

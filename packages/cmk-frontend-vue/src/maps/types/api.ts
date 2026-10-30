@@ -234,7 +234,6 @@ export type ServicesSummary = Daemon['ServicesSummary']
 export type ObjectState = Daemon['ObjectState']
 
 export type PerfometerSegment = Schemas['MapsPerfometerSegment']
-export type PerfometerSide = Schemas['MapsPerfometerSide']
 
 // GUI-rendered Perf-O-Meter (the maps_metric_info endpoint). ``rows`` are the
 // projected segment stacks exactly as Checkmk's views render them, including

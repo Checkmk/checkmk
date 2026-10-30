@@ -12,6 +12,7 @@ from cmk.graphing_engine import (
     AutoPrecision,
     CurveAttributes,
     DecimalNotation,
+    drawn_bar,
     drawn_segments,
     DrawnSegment,
     EvaluatedBidirectional,
@@ -23,6 +24,7 @@ from cmk.graphing_engine import (
     EvaluatedStacked,
     FocusBoundKind,
     perfometer_sort_value,
+    sides_of,
     Unit,
 )
 
@@ -236,6 +238,30 @@ def test_drawn_segments_of_a_stacked_is_two_rows_upper_first() -> None:
         None,
     ]
     assert [rows[0][0].share, rows[1][0].share] == [30.0, 10.0]
+
+
+def test_a_half_of_a_bidirectional_drawn_on_its_own_fills_the_whole_bar() -> None:
+    assert drawn_bar(_bar(_segment(50.0, "#aaaaaa"), name="l"), logger=_LOGGER) == [
+        DrawnSegment(share=50.0, color="#aaaaaa"),
+        DrawnSegment(share=50.0, color=None),
+    ]
+
+
+def test_the_sides_of_a_bar_are_the_bar_itself() -> None:
+    bar = _bar(_segment(1.0))
+    assert sides_of(bar) == [bar]
+
+
+def test_the_sides_of_a_bidirectional_are_left_then_right() -> None:
+    left = _bar(_segment(1.0), name="l")
+    right = _bar(_segment(2.0), name="r")
+    assert sides_of(EvaluatedBidirectional(name="both", left=left, right=right)) == [left, right]
+
+
+def test_the_sides_of_a_stacked_are_upper_then_lower() -> None:
+    upper = _bar(_segment(1.0), name="up")
+    lower = _bar(_segment(2.0), name="lo")
+    assert sides_of(EvaluatedStacked(name="two", upper=upper, lower=lower)) == [upper, lower]
 
 
 def test_the_fill_level_does_not_depend_on_the_temperature_unit() -> None:

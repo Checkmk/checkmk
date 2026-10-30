@@ -234,7 +234,7 @@ def _project_segments(
     return drawn
 
 
-def _drawn_bar(
+def _projected_bar(
     bar: EvaluatedPerfometer,
     lower: EvaluatedFocusBound,
     parameters: _ProjectionParameters,
@@ -253,27 +253,37 @@ def _drawn_bar(
     )
 
 
+def drawn_bar(bar: EvaluatedPerfometer, *, logger: logging.Logger) -> Sequence[DrawnSegment]:
+    return _projected_bar(bar, bar.focus_range.lower, _SINGLE_PARAMETERS, logger)
+
+
 def drawn_segments(
     perfometer: EvaluatedPerfometerLayout, *, logger: logging.Logger
 ) -> Sequence[Sequence[DrawnSegment]]:
     match perfometer:
         case EvaluatedPerfometer():
-            return [
-                _drawn_bar(perfometer, perfometer.focus_range.lower, _SINGLE_PARAMETERS, logger)
-            ]
+            return [drawn_bar(perfometer, logger=logger)]
         case EvaluatedBidirectional():
-            left = _drawn_bar(perfometer.left, _ZERO, _OPPOSED_PARAMETERS, logger)
-            right = _drawn_bar(perfometer.right, _ZERO, _OPPOSED_PARAMETERS, logger)
+            left = _projected_bar(perfometer.left, _ZERO, _OPPOSED_PARAMETERS, logger)
+            right = _projected_bar(perfometer.right, _ZERO, _OPPOSED_PARAMETERS, logger)
             return [[*left[::-1], *right]]
         case EvaluatedStacked():
             return [
-                _drawn_bar(
-                    perfometer.upper, perfometer.upper.focus_range.lower, _SINGLE_PARAMETERS, logger
-                ),
-                _drawn_bar(
-                    perfometer.lower, perfometer.lower.focus_range.lower, _SINGLE_PARAMETERS, logger
-                ),
+                drawn_bar(perfometer.upper, logger=logger),
+                drawn_bar(perfometer.lower, logger=logger),
             ]
+        case _:
+            assert_never(perfometer)
+
+
+def sides_of(perfometer: EvaluatedPerfometerLayout) -> Sequence[EvaluatedPerfometer]:
+    match perfometer:
+        case EvaluatedPerfometer():
+            return [perfometer]
+        case EvaluatedBidirectional():
+            return [perfometer.left, perfometer.right]
+        case EvaluatedStacked():
+            return [perfometer.upper, perfometer.lower]
         case _:
             assert_never(perfometer)
 

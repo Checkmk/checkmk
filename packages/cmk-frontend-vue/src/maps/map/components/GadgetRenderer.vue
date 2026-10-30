@@ -34,7 +34,7 @@ const m = computed(() => getMetric(metrics.value, props.metric))
 // them. A two-sided one (in/out, upper/lower) shows the side it fills; the
 // caption names both.
 const perfometerReading = computed(() =>
-  props.metric ? null : (props.perfometer?.sides.find((s) => s !== null) ?? null)
+  props.metric ? null : (props.perfometer?.sides[0] ?? null)
 )
 const pct = computed(() => (m.value ? utilPercent(m.value) : 0))
 // Fill is proportional (NagVis scales to crit when there's no max). Metrics

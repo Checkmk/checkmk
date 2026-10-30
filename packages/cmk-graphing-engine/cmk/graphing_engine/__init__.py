@@ -86,7 +86,13 @@ from ._perfometers._evaluation import (
     EvaluatedStacked,
     FocusBoundKind,
 )
-from ._perfometers._geometry import drawn_segments, DrawnSegment, perfometer_sort_value
+from ._perfometers._geometry import (
+    drawn_bar,
+    drawn_segments,
+    DrawnSegment,
+    perfometer_sort_value,
+    sides_of,
+)
 from ._plugins._attributes import (
     FALLBACK_UNIT,
     metric_attributes,
@@ -168,6 +174,8 @@ from ._rrd._performance_data import (
 from ._rrd._resample import resample
 
 __all__ = [
+    "drawn_bar",
+    "sides_of",
     "ApiGraphingPlugin",
     "GraphingPlugins",
     "graphing_plugins_of",

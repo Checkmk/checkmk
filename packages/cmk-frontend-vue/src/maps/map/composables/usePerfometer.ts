@@ -6,7 +6,7 @@
 import { type Ref, computed } from 'vue'
 
 import { type MetricInfoBinding, useMetricInfo } from '@/maps/map/composables/useMetricInfo'
-import type { PerfometerResult, PerfometerSegment, PerfometerSide } from '@/maps/types/api'
+import type { PerfometerResult, PerfometerSegment } from '@/maps/types/api'
 
 /**
  * The GUI-rendered CMK Perf-O-Meter for a bound host/service, kept fresh as
@@ -69,7 +69,7 @@ export function perfometerCaptionLines(perfometer: PerfometerResult): {
   title: string
   value: string
 } {
-  const sides = perfometer.sides.filter((side): side is PerfometerSide => !!side)
+  const sides = perfometer.sides
   if (!sides.length) {
     return { title: '', value: perfometer.label }
   }

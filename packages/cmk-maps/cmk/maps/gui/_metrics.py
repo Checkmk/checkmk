@@ -33,17 +33,16 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
-from cmk.graphing.v1 import perfometers as perfometers_v1
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
-from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
 from cmk.graphing_engine import (
     ApiGraph,
-    ApiPerfometer,
     build_matched_graphs,
+    drawn_bar,
     drawn_segments,
     DrawnSegment,
     evaluate_graphs,
+    EvaluatedPerfometer,
     FetchedData,
     Graph,
     MetricName,
@@ -54,6 +53,7 @@ from cmk.graphing_engine import (
     RequestedGraph,
     RRDMetric,
     Service,
+    sides_of,
     SiteID,
     TimeRange,
     translated_names_and_scales,
@@ -98,7 +98,7 @@ class PerfometerSide:
 class Perfometer:
     label: str
     rows: list[list[PerfometerSegment]]
-    sides: list[PerfometerSide | None]
+    sides: list[PerfometerSide]
     bg_color: str
 
 
@@ -188,67 +188,17 @@ def _row_fill(row: Sequence[DrawnSegment]) -> float:
     return round(min(100.0, sum(seg.share for seg in row if seg.color is not None)), 2)
 
 
-def _first_segment_title(
-    side: perfometers_v1.Perfometer | perfometers_v2_unstable.Perfometer,
-    metrics: Mapping[MetricName, EvaluatedMetric],
-) -> str | None:
-    """Title of the side's leading plain-metric segment ("RAM usage", "Input bandwidth")."""
-    for segment in side.segments:
-        if isinstance(segment, str):
-            evaluated = metrics.get(MetricName(segment))
-            return evaluated.title if evaluated else None
-    return None
-
-
-def _side_payload(
-    side: perfometers_v1.Perfometer | perfometers_v2_unstable.Perfometer,
-    perf_data_str: str,
-    check_command: str,
-    metrics: Mapping[MetricName, EvaluatedMetric],
-    engine: _EngineInputs,
-    temperature_unit: TemperatureUnit,
-) -> PerfometerSide | None:
-    """One gauge side, projected as a standalone Perf-O-Meter.
-
-    The merged bidirectional/stacked stack squeezes each half into its own
-    row/50% band, so every side is evaluated again on its own — a registry of
-    exactly this one Perf-O-Meter — to get its true utilization over the full
-    0-100 range, for gauge fills and line endpoints.
-    """
-    evaluated = evaluated_perfometer(
-        perf_data_str,
-        check_command,
-        host_name=engine.host_name,
-        service_name=engine.service_name,
-        registered_perfometers=PerfometerIndex({side.name: side}),
-        registered_metrics=engine.registered_metric_plugins,
-        registered_translations=engine.registered_translations,
-        debug=engine.debug,
-    )
-    if evaluated is None or not (rows := drawn_segments(evaluated, logger=logger)):
-        return None
+def _side_payload(side: EvaluatedPerfometer, temperature_unit: TemperatureUnit) -> PerfometerSide:
     return PerfometerSide(
-        title=_first_segment_title(side, metrics),
-        label=perfometer_label(evaluated, temperature_unit),
-        pct=_row_fill(rows[0]),
+        title=side.segments[0].attributes.title if side.segments else None,
+        label=perfometer_label(side, temperature_unit),
+        pct=_row_fill(drawn_bar(side, logger=logger)),
     )
-
-
-def _component_perfometers(
-    plugin: ApiPerfometer,
-) -> Sequence[perfometers_v1.Perfometer | perfometers_v2_unstable.Perfometer]:
-    """The plain Perf-O-Meters a plugin is composed of, in stack-row order."""
-    if isinstance(plugin, perfometers_v1.Bidirectional | perfometers_v2_unstable.Bidirectional):
-        return [plugin.left, plugin.right]
-    if isinstance(plugin, perfometers_v1.Stacked | perfometers_v2_unstable.Stacked):
-        return [plugin.upper, plugin.lower]
-    return [plugin]
 
 
 def _perfometer_payload(
     perf_data_str: str,
     check_command: str,
-    metrics: Mapping[MetricName, EvaluatedMetric],
     registered_perfometers: PerfometerIndex,
     engine: _EngineInputs,
     temperature_unit: TemperatureUnit,
@@ -282,10 +232,7 @@ def _perfometer_payload(
             ]
             for row in rows
         ],
-        sides=[
-            _side_payload(side, perf_data_str, check_command, metrics, engine, temperature_unit)
-            for side in _component_perfometers(registered_perfometers.plugins[evaluated.name])
-        ],
+        sides=[_side_payload(side, temperature_unit) for side in sides_of(evaluated)],
         bg_color=bg_color,
     )
 
@@ -509,7 +456,6 @@ def metric_info(
         perfometer=_perfometer_payload(
             perf_data_str,
             check_command,
-            metrics,
             registered_perfometers,
             engine,
             temperature_unit,

@@ -126,6 +126,9 @@ importers:
       eslint-plugin-vue:
         specifier: ^10.8.0
         version: 10.8.0(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3))(eslint@9.39.4(jiti@2.6.1))(vue-eslint-parser@10.4.0(eslint@9.39.4(jiti@2.6.1)))
+      json-schema-to-typescript:
+        specifier: ^15.0.4
+        version: 15.0.4
       npm-groovy-lint:
         specifier: 18.0.0
         version: 18.0.0
@@ -573,9 +576,6 @@ importers:
 
   packages/cmk-shared-typing:
     devDependencies:
-      json-schema-to-typescript:
-        specifier: ^15.0.4
-        version: 15.0.4
       openapi-typescript:
         specifier: ^7.9.1
         version: 7.13.0(typescript@6.0.3)

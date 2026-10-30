@@ -40,6 +40,7 @@ filegroup(
 filegroup(
     name = "dev_python_requirements",
     srcs = [
+        "//bazel/tools/shared_typing:requirements.in",
         "//packages/cmk-agent-receiver:dev-requirements.in",
         "//packages/cmk-astrein:requirements.in",
         "//packages/cmk-backup:dev-requirements.in",
@@ -69,7 +70,6 @@ filegroup(
         "//packages/cmk-relay-protocols:dev-requirements.in",
         "//packages/cmk-ruleset-matcher:dev-requirements.in",
         "//packages/cmk-schema-manager:dev-requirements.in",
-        "//packages/cmk-shared-typing:dev-requirements.in",
         "//packages/cmk-trace:dev-requirements.in",
         "//packages/cmk-web:dev-requirements.in",
         "//packages/cmk-werks:dev-requirements.in",

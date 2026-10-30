@@ -5,7 +5,6 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
 load(
@@ -15,12 +14,15 @@ load(
 load("@openapi_spec_editions//:editions.bzl", "OPENAPI_SPEC_EDITION_GENERATORS")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
-load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
-load("//bazel/rules:shared_typing_generators.bzl", "json2python", "json2typescript")
+load(
+    "//bazel/rules:shared_typing_generators.bzl",
+    "JSON2PYTHON_LITERAL_ENUM_ARGS",
+    "json2python",
+    "json2typescript",
+)
 
 exports_files([
-    "dev-requirements.in",
     "requirements.in",
     "package.json",
 ])
@@ -214,57 +216,13 @@ ts_project(
     visibility = ["//packages:__subpackages__"],
 )
 
-py_library(
-    name = "cmk_shared_typing_formatter",
-    srcs = [
-        "utils/__init__.py",
-        "utils/format.py",
-        "utils/postprocess.py",
-    ],
-    imports = ["."],
-    deps = [
-        requirement("black"),
-        requirement("datamodel_code_generator"),
-        requirement("libcst"),
-    ],
-)
-
-py_cmk_test(
-    name = "unit",
-    size = "small",
-    srcs = glob(["tests/**/*.py"]),
-    deps = [
-        ":cmk_shared_typing_formatter",
-        requirement("datamodel_code_generator"),
-    ],
-)
-
 json2python(
     name = "generated_py_files_special_dataclasses",
     srcs = SOURCES_SPECIAL_DATACLASSES,
     data = glob(["source/**/*.json"]) + ["header_py.txt"],
-    extra_args = [
-        "--use-field-description",
-        "--use-title-as-name",
-        "--use-double-quotes",
-        "--use-default",
+    extra_args = JSON2PYTHON_LITERAL_ENUM_ARGS + [
         "--custom-file-header-path=$(location :header_py.txt)",
-        "--formatters=builtin",
-        "--custom-formatters=utils.format",
-        "--output-model-type=dataclasses.dataclass",
-        "--enum-field-as-literal=all",
-        "--use-generic-container-types",
-        "--frozen-dataclasses",
-        "--keyword-only",
-        "--use-union-operator",
-        # Append an underscore to enum members clashing with a str method, e.g.
-        # "count_". Despite its name, this is needed for StrEnum, too.
-        "--use-subclass-enum",
-        # Fields with a default never become None. Despite its help text, this
-        # works for JSON Schema, too.
-        "--strict-nullable",
     ],
-    formatter = ":cmk_shared_typing_formatter",
     source_dir = "source",
     target_dir = "cmk/shared_typing",
 )
@@ -294,7 +252,6 @@ json2python(
         # works for JSON Schema, too.
         "--strict-nullable",
     ],
-    formatter = ":cmk_shared_typing_formatter",
     source_dir = "source",
     target_dir = "cmk/shared_typing",
 )
@@ -393,8 +350,6 @@ sh_library(
 
 py_requirements_test(
     name = "requirements-test",
-    dev_libs = [":cmk_shared_typing_formatter"],
-    dev_requirements_in = "dev-requirements.in",
     libs = [":cmk_shared_typing_py"],
     requirements_in = "requirements.in",
 )

@@ -1,10 +1,32 @@
 """Provides commands for generating Python and Typescript code from JSON files"""
 
-load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
-load("@cmk_requirements//:requirements.bzl", "requirement")
-load("@npm//packages/cmk-shared-typing:json-schema-to-typescript/package_json.bzl", json2ts = "bin")
-load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
+load("@aspect_bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@aspect_rules_js//js:defs.bzl", "js_run_binary")
 load("//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
+
+_DATAMODEL_CODEGEN = Label("//bazel/tools/shared_typing:datamodel_codegen")
+_JSON2TS = Label("//bazel/tools/shared_typing:json2ts")
+
+JSON2PYTHON_LITERAL_ENUM_ARGS = [
+    "--use-field-description",
+    "--use-title-as-name",
+    "--use-double-quotes",
+    "--use-default",
+    "--formatters=builtin",
+    "--custom-formatters=utils.format",
+    "--output-model-type=dataclasses.dataclass",
+    "--enum-field-as-literal=all",
+    "--use-generic-container-types",
+    "--frozen-dataclasses",
+    "--keyword-only",
+    "--use-union-operator",
+    # Append an underscore to enum members clashing with a str method, e.g.
+    # "count_". Despite its name, this is needed for StrEnum, too.
+    "--use-subclass-enum",
+    # Fields with a default never become None. Despite its help text, this
+    # works for JSON Schema, too.
+    "--strict-nullable",
+]
 
 def json2typescript(name, srcs, header_txt, data, chdir, source_dir, target_dir):
     """Create Typescript files from .json files using `json2ts`
@@ -23,8 +45,10 @@ def json2typescript(name, srcs, header_txt, data, chdir, source_dir, target_dir)
     for src in srcs:
         src_path = "{}/{}".format(source_dir, src)
         out_path = "{}/{}".format(target_dir, src.replace(".json", ".ts"))
-        json2ts.json2ts(
+        js_run_binary(
             name = "{}_{}".format(name, src.replace(".json", "")),
+            tool = _JSON2TS,
+            mnemonic = "Json2Typescript",
             srcs = data,
             outs = [out_path],
             args = [
@@ -44,26 +68,17 @@ def json2typescript(name, srcs, header_txt, data, chdir, source_dir, target_dir)
         srcs = output_names,
     )
 
-def json2python(name, srcs, data, formatter, extra_args, source_dir, target_dir):
+def json2python(name, srcs, data, extra_args, source_dir, target_dir):
     """Create Python files from .json files using `datamodel-code-generator`
 
     Args:
       name: name of the generated `filegroup` containing the output
       srcs: list of .json files to be processed
       data: additional files needed to successfully call `datamodel-code-generator`
-      formatter: label to a `py_library()` instance containing the `utils.format` package
       extra_args: additional arguments propagated to `datamodel-code-generator`
       source_dir: directory with .json files - relative for referenced files
       target_dir: relative path for Python files to be created to
     """
-    py_console_script_binary(
-        name = "{}_generator".format(name),
-        pkg = requirement("datamodel-code-generator"),
-        script = "datamodel-codegen",
-        tags = ["no-mypy"],
-        deps = [formatter],
-    )
-
     output_names = []
 
     for src in srcs:
@@ -80,7 +95,8 @@ def json2python(name, srcs, data, formatter, extra_args, source_dir, target_dir)
                 "--output=$(location :{})".format(out_path),
                 "--target-python-version={}".format(PYTHON_MAJOR_DOT_MINOR),
             ] + extra_args,
-            tool = ":{}_generator".format(name),
+            tool = _DATAMODEL_CODEGEN,
+            mnemonic = "Json2Python",
         )
         output_names.append(":" + out_path)
 

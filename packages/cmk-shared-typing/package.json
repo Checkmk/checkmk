@@ -4,7 +4,6 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "json-schema-to-typescript": "^15.0.4",
     "openapi-typescript": "^7.9.1"
   }
 }

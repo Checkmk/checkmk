@@ -1,2 +1,1 @@
 # The shipped cmk.shared_typing modules have no third-party runtime requirements.
-# The code generators in utils/ declare theirs in dev-requirements.in.

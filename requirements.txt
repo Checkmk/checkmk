@@ -463,7 +463,7 @@ black==26.10.1 \
     --hash=sha256:fe85fc4019bee59bc495c0f2a8ee76c5cd02c7015508d94a967ba2376f39a52c \
     --hash=sha256:ff57f63029aa1353fa8b1b0c8971fd88a6c92dc766608d2eee33ad2deb23270e
     # via
-    #   -r packages/cmk-shared-typing/dev-requirements.in
+    #   -r bazel/tools/shared_typing/requirements.in
     #   datamodel-code-generator
     #   python-lsp-server
 blinker==1.9.0 \
@@ -1202,7 +1202,7 @@ datamodel-code-generator==0.87.0 \
     --hash=sha256:657f162c1a72881b14dc699e80a9c877975d825dfcb1e8823c75b65e869e1305 \
     --hash=sha256:fd1404cd3033d63e6c322bce5bd0682699f9597ff4a14fa062620121651f850c
     # via
-    #   -r packages/cmk-shared-typing/dev-requirements.in
+    #   -r bazel/tools/shared_typing/requirements.in
     #   -r tests/dev-requirements.in
 defusedxml==0.7.1 \
     --hash=sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69 \
@@ -2643,7 +2643,7 @@ libcst==1.9.0 \
     --hash=sha256:f6248cb07444ab9a6733a855737a9febed8b9adca51347019348b09a3ac7dfe9 \
     --hash=sha256:fceeaf1a1fd186557973904cfd2bb3c05ad835b01d7d04e9ec1df463c0add966
     # via
-    #   -r packages/cmk-shared-typing/dev-requirements.in
+    #   -r bazel/tools/shared_typing/requirements.in
     #   -r tests/dev-requirements.in
 librt==0.16.0 \
     --hash=sha256:001bfd59a7d45b17e3e75f2a8c6405280b35e7b84471792778e718c4f368950e \

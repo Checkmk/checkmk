@@ -6,9 +6,10 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from cmk.graphing_engine import evaluate_graphs, Graph, TimeRange
+from cmk.graphing_engine import evaluate_graphs, FetchDataProtocol, Graph, TimeRange
 
-from ._graph_dispatch import EvaluatedGraphs, FetchDataWithDiagnosticsProtocol
+from ._graph_dispatch import EvaluatedGraphs
+from ._source import FetchDiagnostics
 
 
 def requested_window(graph: Graph) -> TimeRange | None:  # noqa: ARG001
@@ -18,8 +19,9 @@ def requested_window(graph: Graph) -> TimeRange | None:  # noqa: ARG001
 @dataclass(frozen=True)
 class EvaluateGraph:
     time_range: TimeRange
-    fetch_data: FetchDataWithDiagnosticsProtocol
+    fetch_data: FetchDataProtocol
     window_of: Callable[[Graph], TimeRange | None]
+    diagnostics: FetchDiagnostics
 
     def __call__(self, graph: Graph) -> EvaluatedGraphs:
         return EvaluatedGraphs(
@@ -28,5 +30,5 @@ class EvaluateGraph:
                 graphs=[graph],
                 fetch_data=self.fetch_data,
             ),
-            diagnostics=self.fetch_data.diagnostics,
+            diagnostics=self.diagnostics,
         )

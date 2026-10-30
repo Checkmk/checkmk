@@ -31,7 +31,6 @@ from ._graph_codec import (
 from ._graph_dispatch import (
     evaluate_built_graphs,
     EvaluatedGraphs,
-    FetchDataWithDiagnosticsProtocol,
     graph_dispatcher_registry,
     graph_request_of,
     GraphDispatcher,
@@ -128,12 +127,16 @@ from ._popup import PageHostServiceGraphPopup
 from ._prediction_graphs import prediction_graph_dispatcher
 from ._settings import ConfigVariableGraphTimeranges
 from ._source import (
-    assemble_fetched_data,
     FetchDiagnostics,
+    FetchPerformanceDataRowsProtocol,
+    FetchRRDTimeSeriesProtocol,
     HOST_PSEUDO_SERVICE,
+    PerformanceDataRow,
     QueryLimitReached,
+    rrd_fetch_data,
     RRDFetchData,
     RRDFetchMetricNames,
+    RRDFetchPerformanceData,
     RRDFetchTimeSeries,
 )
 from ._telemetry_metrics_registry import (
@@ -164,7 +167,6 @@ from ._valuespecs import (
 __all__ = [
     "GraphDisplayConfigBase",
     "AnnotatedHostName",
-    "assemble_fetched_data",
     "AttributeGroup",
     "BackendQueryBuilderProtocol",
     "build_template_graphs",
@@ -192,7 +194,7 @@ __all__ = [
     "graph_request_of",
     "EvaluateGraph",
     "requested_window",
-    "FetchDataWithDiagnosticsProtocol",
+    "rrd_fetch_data",
     "FetchDiagnostics",
     "FetchTimeSeriesProtocol",
     "GaugeAvg",
@@ -284,6 +286,10 @@ __all__ = [
     "RRDFetchData",
     "RRDFetchMetricNames",
     "RRDFetchTimeSeries",
+    "FetchRRDTimeSeriesProtocol",
+    "FetchPerformanceDataRowsProtocol",
+    "PerformanceDataRow",
+    "RRDFetchPerformanceData",
     "serialize_graphs",
     "STATIC_INTERACTION",
     "stored_time_range_seconds",

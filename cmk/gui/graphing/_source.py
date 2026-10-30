@@ -43,9 +43,11 @@ from cmk.gui import sites
 from cmk.gui.log import logger
 from cmk.livestatus_client import LivestatusColumn, lqencode, MKLivestatusNotFoundError
 
+from ._evaluation_options import EvaluationOptions
 from ._metric_data import (
     rrd_column_name,
 )
+from ._plugins import registered_translations
 
 HOST_PSEUDO_SERVICE: Final = ServiceName("_HOST_")
 
@@ -179,13 +181,13 @@ class PerformanceDataRow:
     check_command: str
 
 
-class _RRDFetchPerformanceDataProtocol(Protocol):
+class FetchPerformanceDataRowsProtocol(Protocol):
     def __call__(
         self, services: Sequence[Service], *, only_site: EngineSiteID | None
     ) -> Sequence[PerformanceDataRow]: ...
 
 
-class _RRDFetchTimeSeriesProtocol(Protocol):
+class FetchRRDTimeSeriesProtocol(Protocol):
     def __call__(
         self,
         rrd_metrics: Sequence[RRDMetric],
@@ -275,7 +277,7 @@ class RRDFetchTimeSeries:
 
 @dataclass(frozen=True)
 class _TimeSeriesWithEdgeNeighboursAtServedStep:
-    time_series_source: _RRDFetchTimeSeriesProtocol
+    time_series_source: FetchRRDTimeSeriesProtocol
 
     def __call__(
         self,
@@ -353,11 +355,9 @@ class RRDFetchData:
     # Where the two reads this fetch is built on come from. The defaults are the monitoring core;
     # what the fetch does with the data - translate it, resolve the columns a metric is drawn from,
     # scale and merge the series - sits above them and is independent of it.
-    performance_data_source: _RRDFetchPerformanceDataProtocol = RRDFetchPerformanceData()
-    time_series_source: _RRDFetchTimeSeriesProtocol = RRDFetchTimeSeries()
+    performance_data_source: FetchPerformanceDataRowsProtocol = RRDFetchPerformanceData()
+    time_series_source: FetchRRDTimeSeriesProtocol = RRDFetchTimeSeries()
     include_edge_neighbours: bool = False
-    # Accumulated while fetching; read by the dispatcher into the evaluated result.
-    diagnostics: FetchDiagnostics = field(default_factory=FetchDiagnostics, compare=False)
 
     def __call__(
         self,
@@ -550,3 +550,20 @@ def chop_last_empty_step(
         )
         for metric, series in time_series.items()
     }
+
+
+def rrd_fetch_data(
+    options: EvaluationOptions,
+    performance_data_source: FetchPerformanceDataRowsProtocol,
+    time_series_source: FetchRRDTimeSeriesProtocol,
+    *,
+    debug: bool,
+) -> RRDFetchData:
+    return RRDFetchData(
+        debug=debug,
+        consolidation_function=options.consolidation_function,
+        registered_translations=registered_translations(),
+        performance_data_source=performance_data_source,
+        time_series_source=time_series_source,
+        include_edge_neighbours=options.include_edge_neighbours,
+    )

@@ -5,13 +5,14 @@
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import override, Protocol
+from typing import Protocol
 
 from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.ccc.hostaddress import HostName as CoreHostName
 from cmk.ccc.site import SiteId
 from cmk.graphing_engine import (
     Direction,
+    FetchDataProtocol,
     fetched_time_range,
     FetchedData,
     HostName,
@@ -31,7 +32,7 @@ from cmk.utils.prediction import estimate_levels, PredictionData
 from cmk.utils.servicename import ServiceName as CoreServiceName
 
 from ._prediction_query import PredictionQuerier, PredictionQuerierProtocol
-from ._source import RRDFetchData
+from ._source import FetchDiagnostics
 
 _CURVE_KINDS_OF: Mapping[
     Direction, tuple[PredictionCurveKind, PredictionCurveKind, PredictionCurveKind]
@@ -217,18 +218,20 @@ def _drawn_curves(
     }
 
 
-@dataclass(frozen=True)
-class PredictionFetchData(RRDFetchData):
+@dataclass(frozen=True, kw_only=True)
+class PredictionFetchData:
+    rrd: FetchDataProtocol
+    debug: bool
+    diagnostics: FetchDiagnostics
     prediction_source: _PredictionSourceProtocol = _LivestatusPredictionSource()
 
-    @override
     def __call__(
         self,
         metrics: Sequence[MetricProtocol],
         *,
         time_range: TimeRange,
     ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
-        fetched = dict(super().__call__(metrics, time_range=time_range))
+        fetched = dict(self.rrd(metrics, time_range=time_range))
         predictions = [metric for metric in metrics if isinstance(metric, PredictionMetric)]
         if not predictions:
             return fetched

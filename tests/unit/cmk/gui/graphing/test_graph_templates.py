@@ -121,6 +121,7 @@ def test_template_lifecycle_discover_and_update() -> None:
         _DISCOVERY_RANGE,
         fetch_data,
         window_of=requested_window,
+        diagnostics=FetchDiagnostics(),
     )
     evaluated = [one for graph in graphs for one in evaluate(graph).graphs]
 

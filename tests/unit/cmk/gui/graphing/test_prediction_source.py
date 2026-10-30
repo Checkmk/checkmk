@@ -33,7 +33,7 @@ from cmk.gui.graphing._prediction_source import (
     _sample_prediction_curves,
     PredictionFetchData,
 )
-from cmk.gui.graphing._source import PerformanceDataRow, RRDFetchTimeSeries
+from cmk.gui.graphing._source import FetchDiagnostics, PerformanceDataRow, RRDFetchData
 from cmk.utils.prediction import DataStat, PredictionData
 
 _SITE = SiteID("heute")
@@ -160,10 +160,14 @@ def _fetch(
     unreadable: Sequence[MetricName] = (),
 ) -> tuple[Mapping[MetricProtocol, Sequence[FetchedData]], PredictionFetchData]:
     fetch = PredictionFetchData(
+        rrd=RRDFetchData(
+            debug=False,
+            consolidation_function=ConsolidationFunction.MAX,
+            performance_data_source=_FakeRRDPerformanceData(),
+            time_series_source=_FakeRRDTimeSeries(observed, observed_range),
+        ),
         debug=False,
-        consolidation_function=ConsolidationFunction.MAX,
-        performance_data_source=_FakeRRDPerformanceData(),
-        time_series_source=_FakeRRDTimeSeries(observed, observed_range),
+        diagnostics=FetchDiagnostics(),
         prediction_source=_FakePredictionSource(loaded, raises=raises, unreadable=unreadable),
     )
     return (
@@ -295,15 +299,6 @@ def test_every_predicted_metric_of_a_service_is_read_in_one_go() -> None:
 
     assert isinstance(fetch.prediction_source, _FakePredictionSource)
     assert fetch.prediction_source.calls == 1
-
-
-def test_the_real_time_series_source_is_the_production_default() -> None:
-    assert isinstance(
-        PredictionFetchData(
-            debug=False, consolidation_function=ConsolidationFunction.MAX
-        ).time_series_source,
-        RRDFetchTimeSeries,
-    )
 
 
 def _key(service_name: ServiceName, metric: MetricName = _METRIC) -> _PredictionKey:

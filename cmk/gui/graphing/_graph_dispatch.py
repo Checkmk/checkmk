@@ -12,7 +12,6 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.graphing_engine import (
     ApiGraph,
     EvaluatedGraph,
-    FetchDataProtocol,
     Graph,
     GraphRequest,
     MetricName,
@@ -57,13 +56,6 @@ class EvaluatedGraphs:
     # caller surfaces to the user - the engine evaluation itself stays diagnostics-free.
     graphs: Sequence[EvaluatedGraph]
     diagnostics: FetchDiagnostics
-
-
-class FetchDataWithDiagnosticsProtocol(FetchDataProtocol, Protocol):
-    # The fetch a dispatched evaluation runs on: it resolves the data and accumulates the non-fatal
-    # diagnostics the evaluation reads back into its result.
-    @property
-    def diagnostics(self) -> FetchDiagnostics: ...
 
 
 class DispatchedEvaluateProtocol(Protocol):

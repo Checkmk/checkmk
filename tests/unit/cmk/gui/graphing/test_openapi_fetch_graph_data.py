@@ -393,6 +393,7 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
         time_range,
         _FetchData(),
         window_of=requested_window,
+        diagnostics=FetchDiagnostics(),
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,
@@ -467,6 +468,7 @@ def test_evaluated_to_response_keeps_a_metric_whose_rrd_holds_no_series() -> Non
         time_range,
         _FetchData(),
         window_of=requested_window,
+        diagnostics=FetchDiagnostics(),
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,
@@ -534,6 +536,7 @@ def test_evaluated_to_response_converts_the_values_to_the_users_temperature_unit
         time_range,
         _FetchData(),
         window_of=requested_window,
+        diagnostics=FetchDiagnostics(),
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,
@@ -596,6 +599,7 @@ def test_evaluated_to_response_leaves_a_non_temperature_unit_alone() -> None:
         time_range,
         _FetchData(),
         window_of=requested_window,
+        diagnostics=FetchDiagnostics(),
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,

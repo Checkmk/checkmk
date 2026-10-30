@@ -31,8 +31,11 @@ from cmk.graphing_engine import (
 from cmk.gui.graphing import (
     build_template_graphs,
     EvaluateGraph,
+    EvaluationOptions,
+    FetchDiagnostics,
     HOST_PSEUDO_SERVICE,
     requested_window,
+    rrd_fetch_data,
     RRDFetchData,
     RRDFetchMetricNames,
     TemplateGraphSpecification,
@@ -289,6 +292,7 @@ def _drawn(
             time_series_source=time_series,
         ),
         window_of=requested_window,
+        diagnostics=FetchDiagnostics(),
     )(built.graph).graphs
     [curve] = _drawn_curves(evaluated)
     return curve, time_series.requested
@@ -542,3 +546,25 @@ def test_a_fetch_without_edge_neighbours_asks_for_exactly_the_range() -> None:
     )
 
     assert rrd.asked_ranges == [_HALF_HOUR_A_WEEK_AGO]
+
+
+_A_WEEK_BEFORE_NOW = int(time.time()) - 7 * _DAY
+_HALF_HOUR_A_WEEK_BEFORE_NOW = TimeRange(
+    start=_A_WEEK_BEFORE_NOW - 30 * 60, end=_A_WEEK_BEFORE_NOW, step=60
+)
+
+
+def test_a_request_for_edge_neighbours_reads_beyond_the_range() -> None:
+    rrd = _FakeRRDWithOneArchive(archive_step=_FIVE_MINUTES)
+    rrd_fetch_data(
+        EvaluationOptions(
+            time_range=_HALF_HOUR_A_WEEK_BEFORE_NOW,
+            consolidation_function=ConsolidationFunction.MAX,
+            destination=None,
+            include_edge_neighbours=True,
+        ),
+        _EDGE_PERFORMANCE_DATA,
+        rrd,
+        debug=False,
+    )([_EDGE_METRIC], time_range=_HALF_HOUR_A_WEEK_BEFORE_NOW)
+    assert rrd.asked_ranges[0].start < _HALF_HOUR_A_WEEK_BEFORE_NOW.start

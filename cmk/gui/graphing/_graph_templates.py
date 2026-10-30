@@ -43,7 +43,13 @@ from ._graph_dispatch import (
 from ._graph_evaluation import EvaluateGraph, requested_window
 from ._graph_specification import AnnotatedHostName, GraphSpecification, StoredGraphSpecification
 from ._plugins import registered_graphs, registered_metrics, registered_translations
-from ._source import RRDFetchData, RRDFetchMetricNames
+from ._source import (
+    FetchDiagnostics,
+    rrd_fetch_data,
+    RRDFetchMetricNames,
+    RRDFetchPerformanceData,
+    RRDFetchTimeSeries,
+)
 
 tracer = trace.get_tracer()
 
@@ -189,13 +195,11 @@ def build_template_graphs(
 def _evaluate_template_graphs(options: EvaluationOptions) -> EvaluateGraph:
     return EvaluateGraph(
         options.time_range,
-        RRDFetchData(
-            debug=active_config.debug,
-            registered_translations=registered_translations(),
-            include_edge_neighbours=options.include_edge_neighbours,
-            consolidation_function=options.consolidation_function,
+        rrd_fetch_data(
+            options, RRDFetchPerformanceData(), RRDFetchTimeSeries(), debug=active_config.debug
         ),
         window_of=requested_window,
+        diagnostics=FetchDiagnostics(),
     )
 
 

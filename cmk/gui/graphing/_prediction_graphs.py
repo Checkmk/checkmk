@@ -18,8 +18,13 @@ from ._graph_dispatch import (
     GraphDispatcher,
 )
 from ._graph_evaluation import EvaluateGraph
-from ._plugins import registered_translations
 from ._prediction_source import PredictionFetchData
+from ._source import (
+    FetchDiagnostics,
+    rrd_fetch_data,
+    RRDFetchPerformanceData,
+    RRDFetchTimeSeries,
+)
 
 PREDICTION_KIND: Final = "prediction"
 
@@ -36,15 +41,18 @@ def prediction_texts() -> PredictionTexts:
 
 
 def _evaluate_prediction(options: EvaluationOptions) -> EvaluateGraph:
+    diagnostics = FetchDiagnostics()
     return EvaluateGraph(
         options.time_range,
         PredictionFetchData(
+            rrd=rrd_fetch_data(
+                options, RRDFetchPerformanceData(), RRDFetchTimeSeries(), debug=active_config.debug
+            ),
             debug=active_config.debug,
-            registered_translations=registered_translations(),
-            include_edge_neighbours=options.include_edge_neighbours,
-            consolidation_function=options.consolidation_function,
+            diagnostics=diagnostics,
         ),
         window_of=prediction_window_of,
+        diagnostics=diagnostics,
     )
 
 

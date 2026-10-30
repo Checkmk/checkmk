@@ -122,6 +122,15 @@ def test_report_names_new_offender_with_its_target_kinds() -> None:
     )
 
 
+def test_report_names_no_private_rule_kind() -> None:
+    result = evaluate({"a/new.cc": C_CPP}, {"c/c++": set()}, known_offenders=set())
+
+    assert (
+        " -- c/c++: a/new.cc -> cc_binary, cc_library or cc_test"
+        in format_report(result).splitlines()
+    )
+
+
 def test_report_names_stale_known_offender() -> None:
     result = evaluate({"a/fixed.sh": SHELL}, {"shell": {"a/fixed.sh"}}, {"a/fixed.sh"})
 

@@ -13,17 +13,19 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cerrno>
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
-#include <cstring>
 #include <iostream>
 #include <optional>
+#include <span>
 #include <sstream>  // IWYU pragma: keep
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -74,7 +76,7 @@ void print_line(const std::string &output) {
     // the case then replace it with a Unicode "Light vertical bar". Same as in
     // Checkmk, which turns it back into a vertical bar for notifications. A
     // NUL byte would end the output for the core, so replace it by a space.
-    for (char i : output) {
+    for (const char i : output) {
         if (i == '|') {
             // \u2758 (utf-8 encoded light vertical bar)
             std::cout << "\xe2\x9d\x98";  // NOLINT
@@ -84,10 +86,12 @@ void print_line(const std::string &output) {
             std::cout << i;
         }
     }
-    std::cout << std::endl;
+    std::cout << '\n';
 }
 
-[[noreturn]] void exit_with(State state) { std::exit(static_cast<int>(state)); }
+[[noreturn]] void exit_with(State state) {
+    std::exit(static_cast<int>(state));  // NOLINT(concurrency-mt-unsafe)
+}
 
 [[noreturn]] void reply_and_exit(State state, const std::string &output) {
     std::cout << state << " - ";
@@ -99,11 +103,11 @@ constexpr int timeout_seconds = 20;
 
 [[noreturn]] void io_error(const std::string &message) {
     // All our sockets have timeouts, which expire with one of these errors.
-    auto err = errno;
-    std::string reason =
+    const auto err = errno;
+    const std::string reason =
         err == EAGAIN || err == EWOULDBLOCK || err == EINPROGRESS
             ? "timeout after " + std::to_string(timeout_seconds) + " seconds"
-            : strerror(err);
+            : std::generic_category().message(err);
     reply_and_exit(State::unknown, message + " (" + reason + ")");
 }
 
@@ -148,7 +152,7 @@ void limit_to_deadline(int sock, int option) {
 }
 
 int create_socket(int domain) {
-    int sock = ::socket(domain, SOCK_STREAM, 0);
+    const int sock = ::socket(domain, SOCK_STREAM, 0);
     if (sock == -1) {
         io_error("Cannot create client socket");
     }
@@ -232,7 +236,7 @@ std::vector<std::string_view> split_columns(std::string_view line) {
     std::vector<std::string_view> columns;
     std::string_view::size_type start = 0;
     while (true) {
-        auto end = line.find('\t', start);
+        const auto end = line.find('\t', start);
         columns.push_back(line.substr(start, end - start));
         if (end == std::string_view::npos) {
             return columns;
@@ -257,8 +261,8 @@ std::vector<std::string_view> split_columns(std::string_view line) {
 
 // Parses a port number from 1 to 65535, leading zeros don't count.
 std::optional<uint16_t> parse_port(const std::string &s) {
-    if (!std::all_of(s.begin(), s.end(),
-                     [](unsigned char c) { return std::isdigit(c) != 0; })) {
+    if (!std::ranges::all_of(
+            s, [](unsigned char c) { return std::isdigit(c) != 0; })) {
         return {};
     }
     const auto digits = s.substr(std::min(s.find_first_not_of('0'), s.size()));
@@ -324,7 +328,7 @@ bool is_plain_host(const std::string &host) {
 
 std::string quote_regex(const std::string &s) {
     std::string result;
-    for (char c : s) {
+    for (const char c : s) {
         if (std::string_view{R"(\.^$*+?{}[]|())"}.find(c) !=
             std::string_view::npos) {
             result += '\\';
@@ -345,7 +349,7 @@ std::string strip_whitespace(const std::string &s) {
 }
 
 std::string host_filter(const std::string &spec, bool quoted) {
-    auto hosts = split_host_spec(spec, quoted);
+    const auto hosts = split_host_spec(spec, quoted);
     if (hosts.size() == 1) {
         return "Filter: event_host =~ " + hosts[0] + "\n";
     }
@@ -384,6 +388,7 @@ Options parse_options(int argc, char **argv) {
     opterr = 0;  // We show the usage instead of the error of getopt().
     // "+" ends the options at HOST, so APPLICATION may start with a dash.
     int option = 0;
+    // NOLINTNEXTLINE(concurrency-mt-unsafe)
     while ((option = getopt(argc, argv, "+s:H:alLq")) != -1) {
         switch (option) {
             case 's':
@@ -408,31 +413,37 @@ Options parse_options(int argc, char **argv) {
                 usage();
         }
     }
+    const auto positional = std::span{argv, static_cast<size_t>(argc)}.subspan(
+        static_cast<size_t>(optind));
     // For compatibility, arguments after APPLICATION are ignored.
-    if (argc - optind < 1) {
+    if (positional.empty()) {
         usage();
     }
-    options.host = argv[optind];
-    options.application = optind + 1 < argc ? argv[optind + 1] : nullptr;
+    options.host = positional[0];
+    options.application = positional.size() >= 2 ? positional[1] : nullptr;
     return options;
 }
 
 int connect_via_tcp(const std::string &remote) {
-    auto [remote_hostaddress, remote_port] = parse_remote(remote);
-    struct hostent *he = gethostbyname(remote_hostaddress.c_str());
+    const auto [remote_hostaddress, remote_port] = parse_remote(remote);
+    // NOLINTNEXTLINE(concurrency-mt-unsafe)
+    const struct hostent *he = gethostbyname(remote_hostaddress.c_str());
     if (he == nullptr) {
         reply_and_exit(
             State::unknown,
             "Unable to resolve remote host address: " + remote_hostaddress);
     }
 
-    auto addr_list = reinterpret_cast<struct in_addr **>(he->h_addr_list);
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    auto *addr_list = reinterpret_cast<struct in_addr **>(he->h_addr_list);
     std::string remote_hostipaddress;
+    // NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic,concurrency-mt-unsafe)
     for (int i = 0; addr_list[i] != nullptr; i++) {
         remote_hostipaddress = std::string{inet_ntoa(*addr_list[i])};
     }
+    // NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic,concurrency-mt-unsafe)
 
-    int sock = create_socket(AF_INET);
+    const int sock = create_socket(AF_INET);
 
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
@@ -451,7 +462,8 @@ int connect_via_tcp(const std::string &remote) {
 int connect_via_unix_socket(std::string unixsocket_path) {
     // Get omd environment
     if (unixsocket_path.empty()) {
-        char *omd_path = getenv("OMD_ROOT");
+        // NOLINTNEXTLINE(concurrency-mt-unsafe)
+        const char *omd_path = getenv("OMD_ROOT");
         if (omd_path == nullptr) {
             reply_and_exit(State::unknown,
                            "OMD_ROOT is not set, no socket path is defined.");
@@ -470,7 +482,7 @@ int connect_via_unix_socket(std::string unixsocket_path) {
     unixsocket_path.copy(&addr.sun_path[0], sizeof(addr.sun_path) - 1);
     addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
 
-    int sock = create_socket(AF_UNIX);
+    const int sock = create_socket(AF_UNIX);
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
                   sizeof(addr)) == -1) {
@@ -500,14 +512,13 @@ std::string make_query(const char *host, bool host_spec_quoted,
 
 void send_query(int sock, const std::string &query) {
     const std::string message = "Cannot send query to event console";
-    const char *buffer = query.c_str();
-    size_t bytes_to_write = query.size();
-    while (bytes_to_write > 0) {
+    std::string_view rest{query};
+    while (!rest.empty()) {
         check_deadline(message);
         limit_to_deadline(sock, SO_SNDTIMEO);
         // Report a closed connection instead of dying from SIGPIPE.
-        ssize_t bytes_written =
-            ::send(sock, buffer, bytes_to_write, MSG_NOSIGNAL);
+        const ssize_t bytes_written =
+            ::send(sock, rest.data(), rest.size(), MSG_NOSIGNAL);
         if (bytes_written == -1) {
             if (closed_by_peer(errno)) {
                 no_answer(query);
@@ -516,8 +527,7 @@ void send_query(int sock, const std::string &query) {
                 io_error(message);
             }
         } else {
-            buffer += bytes_written;
-            bytes_to_write -= bytes_written;
+            rest.remove_prefix(bytes_written);
         }
     }
     if (shutdown(sock, SHUT_WR) == -1) {
@@ -531,12 +541,12 @@ void send_query(int sock, const std::string &query) {
 std::string receive_response(int sock, const std::string &query) {
     const std::string message = "Error while reading response";
     std::string response;
+    std::array<char, 65536> response_chunk{};
     while (true) {
-        char response_chunk[65536];
         check_deadline(message);
         limit_to_deadline(sock, SO_RCVTIMEO);
-        ssize_t bytes_read =
-            ::read(sock, response_chunk, sizeof(response_chunk));
+        const ssize_t bytes_read =
+            ::read(sock, response_chunk.data(), response_chunk.size());
         if (bytes_read == -1) {
             if (closed_by_peer(errno) && response.empty()) {
                 no_answer(query);
@@ -547,7 +557,7 @@ std::string receive_response(int sock, const std::string &query) {
         } else if (bytes_read == 0) {
             break;
         } else {
-            response.append(response_chunk, bytes_read);
+            response.append(response_chunk.data(), bytes_read);
         }
     }
     // We have read the complete answer, so a failing close() doesn't matter.
@@ -570,16 +580,16 @@ std::vector<Event> parse_events(const std::string &response,
 
     // Get headers
     const auto headers = split_columns(lines.empty() ? "" : lines.front());
-    auto index_of = [&](const std::string &column) {
-        auto pos = std::find(headers.begin(), headers.end(), column);
+    const auto index_of = [&](const std::string &column) {
+        const auto pos = std::ranges::find(headers, column);
         if (pos == headers.end()) {
             missing_header(column, query, response);
         }
         return static_cast<size_t>(pos - headers.begin());
     };
-    auto idx_event_phase = index_of("event_phase");
-    auto idx_event_state = index_of("event_state");
-    auto idx_event_text = index_of("event_text");
+    const auto idx_event_phase = index_of("event_phase");
+    const auto idx_event_state = index_of("event_state");
+    const auto idx_event_text = index_of("event_text");
 
     // The event console ends every line with a newline, so an answer without
     // one at its end was cut off, e.g. by an event console stopped while
@@ -617,9 +627,10 @@ std::vector<Event> parse_events(const std::string &response,
 [[noreturn]] void reply_with_events(const std::vector<Event> &events,
                                     const Options &options) {
     if (events.empty()) {
-        std::string app = options.application == nullptr
-                              ? ""
-                              : (std::string(options.application) + " on ");
+        const std::string app =
+            options.application == nullptr
+                ? ""
+                : (std::string(options.application) + " on ");
         reply_and_exit(
             State::ok,
             "no events for " + app +
@@ -664,13 +675,13 @@ std::vector<Event> parse_events(const std::string &response,
 }  // namespace
 
 int main(int argc, char **argv) {
-    auto options = parse_options(argc, argv);
-    int sock = options.remote_host != nullptr
-                   ? connect_via_tcp(options.remote_host)
-                   : connect_via_unix_socket(options.unixsocket_path);
-    auto query =
+    const auto options = parse_options(argc, argv);
+    const int sock = options.remote_host != nullptr
+                         ? connect_via_tcp(options.remote_host)
+                         : connect_via_unix_socket(options.unixsocket_path);
+    const auto query =
         make_query(options.host, options.host_spec_quoted, options.application);
     send_query(sock, query);
-    auto response = receive_response(sock, query);
+    const auto response = receive_response(sock, query);
     reply_with_events(parse_events(response, query), options);
 }

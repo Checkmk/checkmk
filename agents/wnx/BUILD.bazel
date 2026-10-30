@@ -93,7 +93,11 @@ cc_binary(
     ],
     opt = True,
     platform = "//bazel/platforms:x86_64-windows-msvc",
-    tags = ["manual"],
+    # The clang_tidy aspect in //bazel/tools:aspects.bzl lints for Linux only.
+    tags = [
+        "manual",
+        "no-lint",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":engine",
@@ -263,7 +267,11 @@ cc_binary(
     ],
     opt = True,
     platform = "//bazel/platforms:x86_64-windows-msvc",
-    tags = ["manual"],
+    # The clang_tidy aspect in //bazel/tools:aspects.bzl lints for Linux only.
+    tags = [
+        "manual",
+        "no-lint",
+    ],
     deps = [
         ":engine",
         ":wnx_headers",

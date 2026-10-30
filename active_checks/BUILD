@@ -6,6 +6,7 @@ cc_binary(
     name = "check_mkevents",
     srcs = ["check_mkevents.cc"],
     copts = [
+        "-std=c++20",
         "-g",
         "-O3",
         "-Wall",
@@ -15,7 +16,6 @@ cc_binary(
         "static_libstdcpp",
     ],
     platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
-    tags = ["no-lint"],
     visibility = ["//tests/integration/active_checks:__pkg__"],
 )
 

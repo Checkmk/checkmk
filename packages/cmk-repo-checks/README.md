@@ -73,7 +73,7 @@ This checker therefore works from the other side: it compares `git ls-files` wit
 | `*.js`, `*.cjs`                              | any target                                               |
 
 A file whose extension belongs to none of the other classes counts as shell when its shebang names `sh`, `bash`, `dash` or `ksh`.
-The rule kinds must match exactly. The transitioned rules from `bazel/rules/private/xcomp/`, such as `_cc_binary_transitioned`, do not count, because no aspect visits them.
+The rule kinds must match exactly. The transitioned rules from `bazel/rules/private/xcomp/`, such as `_rust_binary_transitioned`, do not count, because no aspect visits them. The exception is `_cc_binary_transitioned` of the cross-compiling `cc_binary`, which the `clang_tidy` aspect visits.
 A target tagged `no-lint` (or `noclippy` for Rust) does not count either.
 A `filegroup` in `srcs` counts with its own `srcs`.
 `bazel query` follows every `select()` branch, so the result covers all editions.
@@ -85,7 +85,7 @@ The `version.rs` files exist only for Cargo, because Bazel sets the version with
 
 For C and C++, the check guarantees less than for the other classes.
 A source file in `cc_test` and a header in `hdrs` count as covered, but clang-tidy lints neither of them today.
-The `clang_tidy` aspect in `bazel/tools/aspects.bzl` uses the default rule kinds of `aspect_rules_lint` (`cc_binary`, `cc_library`) and an empty `header_filter`.
+The `clang_tidy` aspect in `bazel/tools/aspects.bzl` uses the default rule kinds of `aspect_rules_lint` (`cc_binary`, `cc_library`) plus `_cc_binary_transitioned`, and an empty `header_filter`.
 The check still keeps these files in a `cc_*` target, so a later change of the aspect configuration (CMK-40386) covers all of them at once.
 
 Files that were uncovered when the check was introduced are listed in `bazel_lint_coverage_known_offenders.txt`.

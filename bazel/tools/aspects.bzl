@@ -1,7 +1,7 @@
 """Lint aspect definitions for mypy, bandit, ruff, clang-tidy, astrein, and groovy."""
 
 load("@aspect_rules_lint//lint:bandit.bzl", "lint_bandit_aspect")
-load("@aspect_rules_lint//lint:clang_tidy.bzl", "lint_clang_tidy_aspect")
+load("@aspect_rules_lint//lint:clang_tidy.bzl", "DEFAULT_RULE_KINDS", "lint_clang_tidy_aspect")
 load("@aspect_rules_lint//lint:eslint.bzl", "lint_eslint_aspect")
 load("@aspect_rules_lint//lint:groovy.bzl", "lint_groovy_aspect")
 load("@aspect_rules_lint//lint:ruff.bzl", "lint_ruff_aspect")
@@ -83,6 +83,10 @@ ruff = lint_ruff_aspect(
 
 clang_tidy = lint_clang_tidy_aspect(
     binary = Label("@multitool_hub//tools/clang-tidy"),
+    # The cross-compiling cc_binary of //bazel/rules:xcomp/cc.bzl creates targets of the
+    # rule _cc_binary_transitioned, i.e. of a rule kind of its own, so without it,
+    # clang-tidy would skip all our binaries.
+    rule_kinds = DEFAULT_RULE_KINDS + ["_cc_binary_transitioned"],
     global_config = [Label("//:.clang-tidy")],
     gcc_install_dir = [Label("@gcc_toolchain//:x86_64-checkmk-linux-gnu")],
     # GCC's own builtin headers aren't a safe substitute for clang's resource-dir headers

@@ -5,7 +5,6 @@
 .pre-commit-scripts/run-lint-bazel
 .pre-commit-scripts/run-mypy-bazel
 .pre-commit-scripts/run-unittests-bazel
-active_checks/check_mkevents.cc
 agents/waitmax.c
 agents/wnx/extensions/robotmk_ext/src/main.rs
 agents/wnx/test_files/tools/v/src/main.rs
@@ -20,10 +19,6 @@ buildscripts/scripts/gcc-toolchain/upload.sh
 cmk/plugins/collection/agents/dnsclient
 cmk/plugins/nvidia/agents/nvidia_smi
 cmk/plugins/sap/agents/mk_saprouter
-non-free/packages/cmc/src/check_helper.cc
-non-free/packages/cmc/src/icmp_receiver.cc
-non-free/packages/cmc/src/icmp_sender.cc
-non-free/packages/cmc/src/main.cc
 non-free/packages/cmk-update-agent/build_in_rootfs.sh
 omd/debian/config
 omd/debian/postinst.in
@@ -47,7 +42,6 @@ packages/check-http/src/main.rs
 packages/check-http/src/pwstore.rs
 packages/cmk-agent-ctl/src/main.rs
 packages/cmk-ec/src/mkevent.cc
-packages/cmk-ec/src/mkeventd_open514.cc
 packages/mk-oracle/deploy-docker
 packages/mk-oracle/deploy-run
 packages/mk-oracle/run_legacy.sh
@@ -58,7 +52,6 @@ packages/mk-sql/src/main.rs
 packages/mk-sql/tests/test_running_instances.rs
 packages/mk-sql/wine-prepare.sh
 packages/neb/test/NagiosMockup.cc
-packages/unixcat/src/unixcat.cc
 scripts/bootstrap_container.sh
 scripts/run-in-docker2.sh
 tests/packaging/package_validator/src/main.rs

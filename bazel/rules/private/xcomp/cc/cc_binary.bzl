@@ -2,6 +2,9 @@
 
 load(":private/xcomp/transition.bzl", _HOST_PLATFORM = "HOST_PLATFORM", _transition_platform = "transition_platform")
 
+# The name of this rule is the rule kind of our cc_binary targets, which the clang-tidy
+# aspect in //bazel/tools:aspects.bzl lists, so rename it there, too, and in the
+# bazel_lint_coverage check and the README of //packages/cmk-repo-checks.
 _cc_binary_transitioned = rule(
     implementation = lambda ctx: ctx.super(),
     parent = native.cc_binary,

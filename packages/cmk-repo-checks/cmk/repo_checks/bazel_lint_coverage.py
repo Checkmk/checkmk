@@ -39,8 +39,8 @@ def _tag_pattern(tag: str) -> str:
 
 
 def _rules_of_kind(*kinds: str) -> str:
-    # kind() matches unanchored, so "cc_binary" alone would also match
-    # "_cc_binary_transitioned", which no aspect visits.
+    # kind() matches unanchored, so e.g. "rust_binary" alone would also match
+    # "_rust_binary_transitioned", which no aspect visits.
     return f'kind("^({"|".join(kinds)}) rule$", //...)'
 
 
@@ -76,11 +76,14 @@ def _linted_by_rule_kinds(
     skip_tags: Sequence[str] = (),
     excluded: re.Pattern[str] | None = None,
 ) -> FileClass:
+    # A private rule kind like _cc_binary_transitioned comes from a public one, which the
+    # developer writes.
+    public_kinds = [kind for kind in kinds if not kind.startswith("_")]
     return FileClass(
         name=name,
         extensions=extensions,
         covering_query=_linted_sources(_rules_of_kind(*kinds), skip_tags),
-        target_hint=f"{', '.join(kinds[:-1])} or {kinds[-1]}",
+        target_hint=f"{', '.join(public_kinds[:-1])} or {public_kinds[-1]}",
         excluded=excluded,
     )
 
@@ -119,7 +122,9 @@ FILE_CLASSES: Final = (
     _linted_by_rule_kinds(
         "c/c++",
         (".c", ".cc", ".h"),
-        ("cc_binary", "cc_library", "cc_test"),
+        # The cross-compiling cc_binary of //bazel/rules:xcomp/cc.bzl creates a
+        # _cc_binary_transitioned rule, which the clang_tidy aspect visits, too.
+        ("cc_binary", "_cc_binary_transitioned", "cc_library", "cc_test"),
         # MSBuild builds the Windows agent.
         excluded=re.compile(r"^agents/wnx/"),
     ),

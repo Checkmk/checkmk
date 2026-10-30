@@ -41,7 +41,7 @@ def _issue_token(user_id: UserId, client_id: str, expires_at: datetime) -> str:
             client_id=client_id,
         )
     assert result.is_ok()
-    return result.ok
+    return result.ok.access
 
 
 @pytest.mark.usefixtures("request_context")

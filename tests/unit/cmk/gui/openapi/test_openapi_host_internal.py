@@ -187,7 +187,7 @@ def _issue_read_scoped_token(user_id: UserId) -> str:
             resource=None,
             scope=frozenset({ScopeId.READ}),
             client_id=client_id,
-        ).ok
+        ).ok.access
 
 
 @pytest.mark.usefixtures("with_host")

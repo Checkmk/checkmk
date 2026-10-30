@@ -127,7 +127,7 @@ def test_oauth_token_exempt_from_2fa_check(
         )
     assert issued.is_ok()
 
-    with flask_app.test_request_context(headers={"Authorization": f"Bearer {issued.ok}"}):
+    with flask_app.test_request_context(headers={"Authorization": f"Bearer {issued.ok.access}"}):
         sess = FileBasedSession().open_session(flask_app, request)
     assert sess is not None
     assert sess.session_info.session_state == "logged_in"

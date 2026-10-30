@@ -44,18 +44,26 @@ from tests.unit.cmk.gui.helpers.dashboard_widget_resolution_test_helper import (
 
 _BUILT_IN = EffectiveLink(
     title="All hosts",
-    location=VisualLocation(type="views", name="searchhost", owner=None),
+    location=VisualLocation(type="views", name="searchhost"),
     include_context=True,
     include_time_range=False,
     show_filter_form=True,
 )
 
-_SEARCHHOST = VisualLocation(type="views", name="searchhost", owner=None)
+_SEARCHHOST = VisualLocation(type="views", name="searchhost")
 _INHERITED = ContextualLinkInherited(
     type="inherited",
     location=_SEARCHHOST,
     include_context=False,
     include_time_range=True,
+    show_filter_form=False,
+)
+_DOWN_HOSTS = ContextualLink[AggregateHostContextFilter](
+    title="Down hosts",
+    location=_SEARCHHOST,
+    filters=[HostStateContextFilter(filter_id="hoststate")],
+    include_context=True,
+    include_time_range=False,
     show_filter_form=False,
 )
 
@@ -80,6 +88,11 @@ def _links(
         return widget.links
 
 
+@pytest.fixture(name="admin_permissions")
+def fixture_admin_permissions(load_config: Config, with_admin_login: UserId) -> UserPermissions:
+    return UserPermissions(load_config.roles, all_permissions(), {with_admin_login: ["admin"]}, [])
+
+
 @pytest.mark.usefixtures("load_config", "request_context")
 def test_a_content_without_a_link_field_resolves_the_built_in_link() -> None:
     assert _links(EventStatsContent(type="event_stats")) == [_BUILT_IN]
@@ -95,9 +108,8 @@ def test_none_resolves_no_link() -> None:
     assert _links(_linked(ContextualLinkNone(type="none"))) == []
 
 
-@pytest.mark.usefixtures("load_config", "request_context")
-def test_inherited_resolves_one_link_with_its_flags() -> None:
-    [link] = _links(_linked(_INHERITED))
+def test_inherited_resolves_one_link_with_its_flags(admin_permissions: UserPermissions) -> None:
+    [link] = _links(_linked(_INHERITED), admin_permissions)
 
     assert link.location == _SEARCHHOST
     assert (link.include_context, link.include_time_range, link.show_filter_form) == (
@@ -107,23 +119,17 @@ def test_inherited_resolves_one_link_with_its_flags() -> None:
     )
 
 
-@pytest.mark.usefixtures("load_config", "request_context")
-def test_custom_resolves_one_link_per_entry_with_its_filters() -> None:
-    entry = ContextualLink[AggregateHostContextFilter](
-        title="Down hosts",
-        location=_SEARCHHOST,
-        filters=[HostStateContextFilter(filter_id="hoststate")],
-        include_context=True,
-        include_time_range=False,
-        show_filter_form=False,
-    )
-
+def test_custom_resolves_one_link_per_entry_with_its_filters(
+    admin_permissions: UserPermissions,
+) -> None:
     links = _links(
         _linked(
             ContextualLinkCustom(
-                type="custom", links=[entry, dataclasses.replace(entry, title="Other")]
+                type="custom",
+                links=[_DOWN_HOSTS, dataclasses.replace(_DOWN_HOSTS, title="Other")],
             )
-        )
+        ),
+        admin_permissions,
     )
 
     assert [(link.title, link.filters) for link in links] == [
@@ -144,40 +150,27 @@ def test_the_saved_arm_resolves_no_link(monkeypatch: pytest.MonkeyPatch) -> None
 
 
 @pytest.mark.usefixtures("load_config", "request_context")
-def test_an_inherited_link_to_a_forbidden_target_resolves_with_the_stored_name() -> None:
-    [link] = _links(_linked(_INHERITED), UserPermissions({}, {}, {}, []))
-
-    assert link.title == "searchhost"
+def test_an_inherited_link_to_a_page_the_viewer_cannot_open_resolves_no_link() -> None:
+    assert _links(_linked(_INHERITED), UserPermissions({}, {}, {}, [])) == []
 
 
-def test_an_inherited_link_takes_the_title_of_a_readable_target(
-    load_config: Config, with_admin_login: UserId
+def test_a_custom_link_to_a_page_the_viewer_cannot_open_is_left_out(
+    admin_permissions: UserPermissions,
 ) -> None:
-    admin_permissions = UserPermissions(
-        load_config.roles,
-        all_permissions(),
-        {with_admin_login: ["admin"]},
-        [],
+    gone = dataclasses.replace(
+        _DOWN_HOSTS, title="Gone", location=VisualLocation(type="views", name="no_such_view")
     )
 
+    links = _links(
+        _linked(ContextualLinkCustom(type="custom", links=[gone, _DOWN_HOSTS])), admin_permissions
+    )
+
+    assert [link.title for link in links] == ["Down hosts"]
+
+
+def test_an_inherited_link_takes_the_title_of_its_target(
+    admin_permissions: UserPermissions,
+) -> None:
     [link] = _links(_linked(_INHERITED), admin_permissions)
-
-    assert link.title == "Host search"
-
-
-def test_a_link_whose_owned_copy_is_gone_takes_the_built_in_title(
-    load_config: Config, with_admin_login: UserId
-) -> None:
-    admin_permissions = UserPermissions(
-        load_config.roles,
-        all_permissions(),
-        {with_admin_login: ["admin"]},
-        [],
-    )
-    gone_copy = dataclasses.replace(
-        _INHERITED, location=VisualLocation(type="views", name="searchhost", owner=UserId("gone"))
-    )
-
-    [link] = _links(_linked(gone_copy), admin_permissions)
 
     assert link.title == "Host search"

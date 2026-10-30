@@ -129,7 +129,7 @@ describe('ContextualLinkConfig', () => {
       {},
       {
         type: 'inherited',
-        location: { type: 'views', name: 'allhosts', owner: null },
+        location: { type: 'views', name: 'allhosts' },
         include_context: false,
         include_time_range: false,
         show_filter_form: false

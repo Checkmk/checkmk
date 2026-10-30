@@ -14,7 +14,7 @@ import type { LinkProperties, ResolvedLink } from '@/dashboard/types/widget'
 
 const SEARCHHOST: ResolvedLink = {
   title: 'All hosts',
-  location: { type: 'views', name: 'searchhost', owner: null },
+  location: { type: 'views', name: 'searchhost' },
   include_context: false,
   include_time_range: false,
   show_filter_form: true
@@ -23,7 +23,7 @@ const SEARCHHOST: ResolvedLink = {
 const SEARCHSVC: ResolvedLink = {
   ...SEARCHHOST,
   title: 'All services',
-  location: { type: 'views', name: 'searchsvc', owner: null }
+  location: { type: 'views', name: 'searchsvc' }
 }
 
 const DOWN_HOSTS: LinkProperties = {

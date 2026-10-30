@@ -115,7 +115,7 @@ const SCALE: Record<Unit, number> = { percent: 100, bytes: 2 ** 30, count: 1000 
 
 const LINK: ResolvedLink = {
   title: 'Service',
-  location: { type: 'views', name: 'service', owner: null },
+  location: { type: 'views', name: 'service' },
   include_context: false,
   include_time_range: false,
   show_filter_form: false

@@ -17,7 +17,7 @@ const SITES: SiteOverviewSites = {
   links: [
     {
       title: 'Site',
-      location: { type: 'dashboards', name: 'site', owner: null },
+      location: { type: 'dashboards', name: 'site' },
       include_context: true,
       include_time_range: false,
       show_filter_form: false

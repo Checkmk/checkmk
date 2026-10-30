@@ -40,7 +40,7 @@ const HOSTS: SiteOverviewHosts = {
   links: [
     {
       title: 'Host',
-      location: { type: 'views', name: 'host', owner: null },
+      location: { type: 'views', name: 'host' },
       include_context: false,
       include_time_range: false,
       show_filter_form: false

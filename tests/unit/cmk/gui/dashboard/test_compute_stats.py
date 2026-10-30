@@ -94,7 +94,7 @@ _DEFAULT_LINK = {"type": "default"}
 
 _ALL_HOSTS = {
     "title": "All hosts",
-    "location": {"type": "views", "name": "searchhost", "owner": None},
+    "location": {"type": "views", "name": "searchhost"},
     "include_context": True,
     "include_time_range": False,
     "show_filter_form": True,
@@ -150,7 +150,7 @@ def fixture_saved_stats_widget(
             "type": "host_stats",
             "contextual_link": {
                 "type": "inherited",
-                "location": {"type": "views", "name": "allhosts", "owner": None},
+                "location": {"type": "views", "name": "allhosts"},
                 "include_context": True,
                 "include_time_range": False,
                 "show_filter_form": True,
@@ -234,13 +234,13 @@ def test_a_host_statistics_widget_answers_one_value(
     }
 
 
-def test_a_link_without_owner_takes_the_title_of_the_copy_the_name_resolves_to(
+def test_a_link_takes_the_title_of_the_copy_the_name_resolves_to(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
     clients.DashboardClient.create_relative_grid_dashboard(create_dashboard_payload("target", {}))
     link = {
         "type": "inherited",
-        "location": {"type": "dashboards", "name": "target", "owner": None},
+        "location": {"type": "dashboards", "name": "target"},
         "include_context": True,
         "include_time_range": False,
         "show_filter_form": True,
@@ -331,7 +331,7 @@ def test_inherited_yields_one_link_with_the_native_click_key(
                 "type": "host_stats",
                 "contextual_link": {
                     "type": "inherited",
-                    "location": {"type": "views", "name": "allhosts", "owner": None},
+                    "location": {"type": "views", "name": "allhosts"},
                     "include_context": False,
                     "include_time_range": False,
                     "show_filter_form": False,
@@ -342,9 +342,7 @@ def test_inherited_yields_one_link_with_the_native_click_key(
 
     value = _compute_hosts(clients, mock_livestatus, body).json["value"]
 
-    assert [link["location"] for link in value["links"]] == [
-        {"type": "views", "name": "allhosts", "owner": None}
-    ]
+    assert [link["location"] for link in value["links"]] == [{"type": "views", "name": "allhosts"}]
     assert value["parts"][3]["link_properties"] == {
         "links": [
             {
@@ -367,7 +365,7 @@ def test_a_custom_link_carries_the_state_of_a_part_and_drops_its_site(
                     "links": [
                         {
                             "title": "Down hosts",
-                            "location": {"type": "views", "name": "allhosts", "owner": None},
+                            "location": {"type": "views", "name": "allhosts"},
                             "filters": [{"filter_id": "hoststate"}, {"filter_id": "siteopt"}],
                             "include_context": False,
                             "include_time_range": False,
@@ -408,7 +406,7 @@ def test_a_widget_without_a_link_field_takes_the_built_in_link(
         )
 
     assert [link["location"] for link in response.json["value"]["links"]] == [
-        {"type": "views", "name": "ec_events", "owner": None}
+        {"type": "views", "name": "ec_events"}
     ]
 
 

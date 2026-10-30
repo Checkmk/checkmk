@@ -20,7 +20,6 @@ from cmk.gui.type_defs import (
     InfoName,
     Row,
     ViewSpec,
-    Visual,
     VisualContext,
 )
 from cmk.gui.utils.roles import UserPermissions
@@ -36,12 +35,7 @@ from cmk.gui.visuals.filter.drilldowns import Drilldown
 from cmk.shared_typing.drill_up_button import DrillUpButton
 from cmk.web.utils.urls import makeuri_contextless
 
-from .api.model.contextual_link import (
-    location_from_internal,
-    permitted_copies,
-    resolved_copy,
-    VisualLocation,
-)
+from .api.model.contextual_link import location_from_internal, resolved_copy, VisualLocation
 
 _PAGE_BY_TARGET_TYPE: Mapping[ContextualLinkTargetType, tuple[str, str]] = {
     "views": ("view.py", "view_name"),
@@ -73,10 +67,7 @@ def column_drilldowns(
     drilldowns: dict[int, CellDrilldown] = {}
     for index, link in column_links.items():
         location = location_from_internal(link["location"])
-        if (
-            index >= len(view_spec["painters"])
-            or _permitted_target(location, user_permissions) is None
-        ):
+        if index >= len(view_spec["painters"]) or resolved_copy(location, user_permissions) is None:
             continue
         link_context = context if link["include_context"] else {}
         if link["filters"]:
@@ -121,12 +112,6 @@ def column_drilldowns(
 
 def _object_columns(object_infos: Sequence[InfoName]) -> list[ColumnName]:
     return ["host_name", "service_description"] if "service" in object_infos else ["host_name"]
-
-
-def _permitted_target(location: VisualLocation, user_permissions: UserPermissions) -> Visual | None:
-    if location.owner is None:
-        return resolved_copy(location, user_permissions)
-    return permitted_copies(location, user_permissions).get(location.owner)
 
 
 def _object_filters(
@@ -215,9 +200,6 @@ def _target_url(
         variables.update(filter_variables)
     # The target's own variables go last, so no filter can override them.
     variables[name_variable] = location.name
-    # Without an owner, the target page resolves the name for each viewer.
-    if location.owner is not None:
-        variables["owner"] = str(location.owner)
     variables["filled_in"] = "filter"
     variables["_show_filter_form"] = "1" if show_filter_form else "0"
     if dropped:

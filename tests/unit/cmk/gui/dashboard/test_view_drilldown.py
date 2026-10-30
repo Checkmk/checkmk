@@ -214,20 +214,6 @@ def test_column_drilldowns_link_to_a_dashboard_opens_the_dashboard_page(
     assert (path, variables["name"]) == ("dashboard.py", "main")
 
 
-@pytest.mark.usefixtures("request_context")
-def test_column_drilldowns_link_to_a_stored_owner_names_that_owner(
-    admin_permissions: UserPermissions,
-) -> None:
-    _path, variables = _url_of_first_column(
-        _view_spec("allhosts"),
-        _inherited(("views", "host", UserId.builtin())),
-        _HOST_ROW,
-        admin_permissions,
-    )
-
-    assert variables["owner"] == ""
-
-
 @pytest.mark.usefixtures("load_config", "request_context")
 def test_column_drilldowns_withholds_a_target_the_viewer_may_not_open() -> None:
     drilldowns = column_drilldowns(

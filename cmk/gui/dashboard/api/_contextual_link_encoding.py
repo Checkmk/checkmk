@@ -48,7 +48,7 @@ def view_link(
     """The built-in link of a widget to a built-in view."""
     return EffectiveLink(
         title=title,
-        location=VisualLocation(type="views", name=view_name, owner=None),
+        location=VisualLocation(type="views", name=view_name),
         include_context=include_context,
         include_time_range=False,
         show_filter_form=show_filter_form,

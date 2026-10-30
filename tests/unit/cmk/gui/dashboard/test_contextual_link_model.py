@@ -47,9 +47,8 @@ from tests.testlib.unit.gui.web_test_app import SetConfig
 # The options read the site config, such as whether Setup is on.
 pytestmark = pytest.mark.usefixtures("request_context")
 
-_BY_NAME = VisualLocation(type="views", name="searchhost", owner=None)
-_BUILT_IN_VIEW = VisualLocation(type="views", name="searchhost", owner=UserId.builtin())
-_OWNED_DASHBOARD = VisualLocation(type="dashboards", name="linux", owner=UserId("harry"))
+_VIEW = VisualLocation(type="views", name="searchhost")
+_DASHBOARD = VisualLocation(type="dashboards", name="linux")
 
 
 def _inherited(location: VisualLocation) -> ContextualLinkInherited:
@@ -62,22 +61,24 @@ def _inherited(location: VisualLocation) -> ContextualLinkInherited:
     )
 
 
-def test_a_built_in_target_is_stored_with_the_empty_owner() -> None:
-    stored = contextual_link_to_internal(_inherited(_BUILT_IN_VIEW))
-
-    assert stored is not None and stored["type"] == "inherited"
-    assert stored["location"] == ("views", "searchhost", UserId.builtin())
-
-
-def test_a_target_without_owner_is_stored_without_one() -> None:
-    stored = contextual_link_to_internal(_inherited(_BY_NAME))
+def test_a_target_is_stored_by_its_name() -> None:
+    stored = contextual_link_to_internal(_inherited(_VIEW))
 
     assert stored is not None and stored["type"] == "inherited"
     assert stored["location"] == ("views", "searchhost")
 
 
-@pytest.mark.parametrize("location", [_BY_NAME, _BUILT_IN_VIEW, _OWNED_DASHBOARD])
-def test_an_inherited_link_round_trips_its_owner(location: VisualLocation) -> None:
+def test_a_target_stored_with_the_owner_of_its_copy_loads_by_its_name() -> None:
+    link = _inherited(_VIEW)
+    stored = contextual_link_to_internal(link)
+    assert stored is not None and stored["type"] == "inherited"
+    stored["location"] = ("views", "searchhost", UserId("harry"))
+
+    assert contextual_link_from_internal(stored, AGGREGATE_HOST_FILTER_ADAPTER) == link
+
+
+@pytest.mark.parametrize("location", [_VIEW, _DASHBOARD])
+def test_an_inherited_link_round_trips_its_target(location: VisualLocation) -> None:
     link = _inherited(location)
 
     assert (
@@ -94,7 +95,7 @@ def test_a_custom_link_round_trips_its_entries() -> None:
         links=[
             ContextualLink(
                 title="Problem services",
-                location=_OWNED_DASHBOARD,
+                location=_DASHBOARD,
                 filters=[
                     HostStateContextFilter(filter_id="hoststate"),
                     ServiceStateContextFilter(filter_id="svcstate"),
@@ -120,7 +121,7 @@ def test_a_custom_link_round_trips_its_keyed_filters() -> None:
         links=[
             ContextualLink(
                 title="Same OS",
-                location=_BY_NAME,
+                location=_VIEW,
                 filters=[
                     HostLabelContextFilter(filter_id="host_labels", key="cmk/os_family"),
                     ServiceTagContextFilter(filter_id="service_tags", key="tier"),

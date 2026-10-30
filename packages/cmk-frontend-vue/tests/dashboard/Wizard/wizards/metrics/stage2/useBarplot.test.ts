@@ -50,7 +50,7 @@ const CUSTOM: BarplotContent['contextual_link'] = {
   links: [
     {
       title: 'Problems',
-      location: { type: 'views', name: 'allservices', owner: null },
+      location: { type: 'views', name: 'allservices' },
       filters: [{ filter_id: 'host' }, { filter_id: 'svcstate' }],
       include_context: false,
       include_time_range: false,

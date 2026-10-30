@@ -10,7 +10,7 @@ import type { ResolvedLink } from '@/dashboard/types/widget'
 
 const SEARCHHOST: ResolvedLink = {
   title: 'All hosts',
-  location: { type: 'views', name: 'searchhost', owner: null },
+  location: { type: 'views', name: 'searchhost' },
   include_context: true,
   include_time_range: false,
   show_filter_form: true
@@ -43,28 +43,6 @@ describe('contextualLinkUrl', () => {
     expect(url.startsWith('view.py?view_name=searchhost&')).toBe(true)
   })
 
-  it('addresses the copy of the stored owner', () => {
-    const url = contextualLinkUrl(
-      { ...SEARCHHOST, location: { type: 'views', name: 'searchhost', owner: 'harry' } },
-      {},
-      {},
-      null
-    )
-
-    expect(variablesOf(url).owner).toBe('harry')
-  })
-
-  it('addresses the built-in copy with an empty owner', () => {
-    const url = contextualLinkUrl(
-      { ...SEARCHHOST, location: { type: 'views', name: 'searchhost', owner: '' } },
-      {},
-      {},
-      null
-    )
-
-    expect(variablesOf(url).owner).toBe('')
-  })
-
   it('appends the encoded variables, filled_in and _show_filter_form', () => {
     const url = contextualLinkUrl(SEARCHHOST, DOWN_HOSTS, {}, null)
 
@@ -78,7 +56,7 @@ describe('contextualLinkUrl', () => {
 
   it('addresses a dashboard through dashboard.py with name', () => {
     const url = contextualLinkUrl(
-      { ...SEARCHHOST, location: { type: 'dashboards', name: 'site', owner: null } },
+      { ...SEARCHHOST, location: { type: 'dashboards', name: 'site' } },
       {},
       {},
       null

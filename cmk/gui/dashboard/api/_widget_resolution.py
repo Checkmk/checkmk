@@ -10,7 +10,6 @@ from http import HTTPStatus
 from typing import assert_never, Protocol, TypeIs
 
 import cmk.web.utils.permission_verification as permissions
-from cmk.ccc.user import UserId
 from cmk.gui import visuals
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.openapi.framework import ApiContext
@@ -36,9 +35,7 @@ from .model.contextual_link import (
     ContextualLinkDefault,
     ContextualLinkInherited,
     ContextualLinkNone,
-    permitted_copies,
     resolved_copy,
-    VisualLocation,
 )
 from .model.link_properties import ResolvedLink
 from .model.widget_content import content_from_internal
@@ -214,13 +211,16 @@ def _effective_links(
     built_in_link: EffectiveLink | None,
     user_permissions: UserPermissions,
 ) -> list[EffectiveLink]:
+    """The widget's links, without a configured one to a page the viewer cannot open."""
     match content.configured_contextual_link():
         case ContextualLinkNone():
             return []
         case ContextualLinkInherited() as inherited:
+            if (target := resolved_copy(inherited.location, user_permissions)) is None:
+                return []
             return [
                 EffectiveLink(
-                    title=_target_title(inherited.location, user_permissions),
+                    title=visuals.visual_title_without_context(target, {}),
                     location=inherited.location,
                     include_context=inherited.include_context,
                     include_time_range=inherited.include_time_range,
@@ -238,19 +238,9 @@ def _effective_links(
                     filters=[context_filter_to_internal(f) for f in entry.filters],
                 )
                 for entry in custom.links
+                if resolved_copy(entry.location, user_permissions) is not None
             ]
         case ContextualLinkDefault():
             return [] if built_in_link is None else [built_in_link]
         case unreachable:
             assert_never(unreachable)
-
-
-def _target_title(location: VisualLocation, user_permissions: UserPermissions) -> str:
-    if location.owner is None:
-        visual = resolved_copy(location, user_permissions)
-    else:
-        copies = permitted_copies(location, user_permissions)
-        visual = copies.get(location.owner, copies.get(UserId.builtin()))
-    if visual is None:
-        return location.name
-    return visuals.visual_title_without_context(visual, {})

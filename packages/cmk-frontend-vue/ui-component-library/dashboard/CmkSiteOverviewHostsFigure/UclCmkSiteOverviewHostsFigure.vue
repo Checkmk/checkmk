@@ -70,7 +70,7 @@ const propState = new PanelStateCreator<
 
 const LINK: ResolvedLink = {
   title: 'Host',
-  location: { type: 'views', name: 'host', owner: null },
+  location: { type: 'views', name: 'host' },
   include_context: false,
   include_time_range: false,
   show_filter_form: false

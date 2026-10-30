@@ -671,7 +671,7 @@ class ViewSpec(Visual):
 type ContextualLinkTargetType = Literal["views", "dashboards"]
 
 
-# Without an owner, the name resolves for each viewer, as on the target page.
+# The name resolves for each viewer. An older link also holds an owner, which is ignored.
 type ContextualLinkLocationConfig = (
     tuple[ContextualLinkTargetType, VisualName]
     | tuple[ContextualLinkTargetType, VisualName, UserId]

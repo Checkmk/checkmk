@@ -38,7 +38,7 @@ from tests.unit.cmk.gui.helpers.dashboard_api_test_helper import (
 
 _INHERITED = {
     "type": "inherited",
-    "location": {"type": "views", "name": "searchhost", "owner": None},
+    "location": {"type": "views", "name": "searchhost"},
     "include_context": True,
     "include_time_range": True,
     "show_filter_form": False,
@@ -445,6 +445,52 @@ class TestDashboardMetadata:
         assert resp.status_code == HTTPStatus.OK, (
             f"Expected 200, got {resp.status_code} {resp.body!r}"
         )
+
+    def test_list_dashboard_metadata_lists_the_copy_the_name_opens(
+        self, clients: ClientRegistry, with_automation_user: tuple[UserId, str]
+    ) -> None:
+        _create_dashboard_of_harry(clients, with_automation_user, "target")
+        clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload("target", {})
+        )
+
+        def owners_of_target(all_owners: bool) -> list[str]:
+            dashboards = clients.DashboardClient.list_dashboard_metadata(
+                all_owners=all_owners
+            ).json["value"]
+            return sorted(d["extensions"]["owner"] for d in dashboards if d["id"] == "target")
+
+        assert owners_of_target(False) == [with_automation_user[0]]
+        assert owners_of_target(True) == sorted(["harry", with_automation_user[0]])
+
+    def test_list_dashboard_metadata_omits_a_private_dashboard_of_another_user(
+        self, clients: ClientRegistry, with_automation_user: tuple[UserId, str]
+    ) -> None:
+        _create_dashboard_of_harry(clients, with_automation_user, "harrys")
+
+        def ids(all_owners: bool) -> list[str]:
+            dashboards = clients.DashboardClient.list_dashboard_metadata(
+                all_owners=all_owners
+            ).json["value"]
+            return [dashboard["id"] for dashboard in dashboards]
+
+        assert "harrys" not in ids(False)
+        assert "harrys" in ids(True)
+
+
+def _create_dashboard_of_harry(
+    clients: ClientRegistry, with_automation_user: tuple[UserId, str], name: str
+) -> None:
+    clients.User.create(
+        username="harry",
+        fullname="harry",
+        customer=None,
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+        roles=["user"],
+    )
+    clients.DashboardClient.set_credentials("harry", "supersecretish")
+    clients.DashboardClient.create_relative_grid_dashboard(create_dashboard_payload(name, {}))
+    clients.DashboardClient.set_credentials(*with_automation_user)
 
 
 class TestDashboardIcon:
@@ -1108,7 +1154,7 @@ def test_a_link_to_a_forbidden_target_is_rejected_on_write(clients: ClientRegist
     response = _write_stats_widget(
         clients,
         "host_stats",
-        {**_INHERITED, "location": {"type": "views", "name": "no_such_view", "owner": None}},
+        {**_INHERITED, "location": {"type": "views", "name": "no_such_view"}},
     )
 
     assert response.status_code == HTTPStatus.BAD_REQUEST, (
@@ -1136,49 +1182,33 @@ def test_a_widget_without_its_link_is_rejected_on_write(clients: ClientRegistry)
     assert "body.widgets.test_widget.content.host_stats.contextual_link" in response.json["fields"]
 
 
-def test_a_link_to_the_writers_own_dashboard_round_trips_its_owner(
-    clients: ClientRegistry, with_automation_user: tuple[UserId, str]
+def test_a_link_to_the_writers_own_private_dashboard_round_trips(
+    clients: ClientRegistry,
 ) -> None:
     clients.DashboardClient.create_relative_grid_dashboard(create_dashboard_payload("target", {}))
-    link = {
-        **_INHERITED,
-        "location": {"type": "dashboards", "name": "target", "owner": with_automation_user[0]},
-    }
+    link = {**_INHERITED, "location": {"type": "dashboards", "name": "target"}}
 
     _write_stats_widget(clients, "host_stats", link)
 
     assert _written_link(clients) == link
 
 
-def test_a_link_to_a_private_dashboard_of_another_user_is_accepted_with_edit_foreign(
+def test_a_link_to_a_private_dashboard_of_another_user_is_rejected_on_write(
     clients: ClientRegistry, with_automation_user: tuple[UserId, str]
 ) -> None:
-    clients.User.create(
-        username="harry",
-        fullname="harry",
-        customer=None,
-        auth_option={"auth_type": "password", "password": "supersecretish"},
-        roles=["user"],
-    )
-    clients.DashboardClient.set_credentials("harry", "supersecretish")
-    clients.DashboardClient.create_relative_grid_dashboard(create_dashboard_payload("target", {}))
-    clients.DashboardClient.set_credentials(*with_automation_user)
-    link = {**_INHERITED, "location": {"type": "dashboards", "name": "target", "owner": "harry"}}
+    _create_dashboard_of_harry(clients, with_automation_user, "target")
+    link = {**_INHERITED, "location": {"type": "dashboards", "name": "target"}}
 
     response = _write_stats_widget(clients, "host_stats", link)
 
-    assert response.status_code == HTTPStatus.CREATED, response.body
-    assert _written_link(clients) == link
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.body
 
 
 def test_an_unchanged_link_to_a_target_gone_since_does_not_block_a_save(
-    clients: ClientRegistry, with_automation_user: tuple[UserId, str]
+    clients: ClientRegistry,
 ) -> None:
     clients.DashboardClient.create_relative_grid_dashboard(create_dashboard_payload("target", {}))
-    link = {
-        **_INHERITED,
-        "location": {"type": "dashboards", "name": "target", "owner": with_automation_user[0]},
-    }
+    link = {**_INHERITED, "location": {"type": "dashboards", "name": "target"}}
     linked_widget = create_widget({"type": "host_stats", "contextual_link": link})
     clients.DashboardClient.create_relative_grid_dashboard(
         create_dashboard_payload("test_dashboard", {"test_widget": linked_widget})
@@ -1199,7 +1229,7 @@ def test_an_unchanged_link_to_a_target_gone_since_does_not_block_a_save(
 
 def test_a_link_changed_to_a_forbidden_target_is_rejected_on_edit(clients: ClientRegistry) -> None:
     _write_stats_widget(clients, "host_stats", _INHERITED)
-    forbidden = {**_INHERITED, "location": {"type": "views", "name": "no_such_view", "owner": None}}
+    forbidden = {**_INHERITED, "location": {"type": "views", "name": "no_such_view"}}
 
     response = clients.DashboardClient.edit_relative_grid_dashboard(
         "test_dashboard",
@@ -1221,32 +1251,6 @@ def test_a_link_changed_to_a_forbidden_target_is_rejected_on_edit(clients: Clien
     )
 
 
-def test_a_link_to_the_built_in_copy_round_trips_its_empty_owner(clients: ClientRegistry) -> None:
-    link = {**_INHERITED, "location": {"type": "views", "name": "searchhost", "owner": ""}}
-
-    _write_stats_widget(clients, "host_stats", link)
-
-    assert _written_link(clients) == link
-
-
-def test_a_link_to_a_copy_of_another_owner_is_rejected_on_write(clients: ClientRegistry) -> None:
-    response = _write_stats_widget(
-        clients,
-        "host_stats",
-        {**_INHERITED, "location": {"type": "views", "name": "searchhost", "owner": "nobody"}},
-    )
-
-    assert response.status_code == HTTPStatus.BAD_REQUEST, (
-        f"Expected 400, got {response.status_code} {response.body!r}"
-    )
-    assert (
-        response.json["fields"][
-            "body.widgets.test_widget.content.host_stats.contextual_link.inherited.location"
-        ]["msg"]
-        == "View 'searchhost' of 'nobody' does not exist or you don't have permission to see it."
-    )
-
-
 def _custom(
     *filter_ids: str, location: dict[str, object] | None = None, title: str = "Problems"
 ) -> dict[str, object]:
@@ -1255,7 +1259,7 @@ def _custom(
         "links": [
             {
                 "title": title,
-                "location": location or {"type": "views", "name": "searchhost", "owner": None},
+                "location": location or {"type": "views", "name": "searchhost"},
                 "filters": [{"filter_id": filter_id} for filter_id in filter_ids],
                 "include_context": True,
                 "include_time_range": False,
@@ -1309,7 +1313,7 @@ def test_an_invalid_custom_link_is_rejected_on_write(
             id="a filter carried twice",
         ),
         pytest.param(
-            _custom(location={"type": "views", "name": "no_such_view", "owner": None}),
+            _custom(location={"type": "views", "name": "no_such_view"}),
             "custom.links.0.location",
             "View 'no_such_view' does not exist or you don't have permission to see it.",
             id="a forbidden target",

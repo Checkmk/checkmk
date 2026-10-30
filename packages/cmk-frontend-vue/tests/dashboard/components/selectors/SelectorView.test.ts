@@ -31,23 +31,19 @@ function view(id: string, title: string, owner: string, single: string[] = []): 
   }
 }
 
-const BUILT_IN_ALLHOSTS = view('allhosts', 'All hosts', '')
-const OWN_ALLHOSTS = view('allhosts', 'All hosts', 'harry')
+const ALLHOSTS = view('allhosts', 'All hosts', 'harry')
 const HOST_VIEW = view('host', 'Single host', '', ['host'])
 const SERVICE_VIEW = view('service', 'Single service', '', ['service', 'host'])
 
 useMswServer(
-  http.get(`${API}/domain-types/view/collections/all`, ({ request }) => {
-    const allOwners = new URL(request.url).searchParams.get('all_owners') === 'true'
-    return HttpResponse.json({
+  http.get(`${API}/domain-types/view/collections/all`, () =>
+    HttpResponse.json({
       domainType: 'view',
       id: 'all',
       links: [],
-      value: allOwners
-        ? [BUILT_IN_ALLHOSTS, OWN_ALLHOSTS, HOST_VIEW, SERVICE_VIEW]
-        : [OWN_ALLHOSTS, HOST_VIEW, SERVICE_VIEW]
+      value: [ALLHOSTS, HOST_VIEW, SERVICE_VIEW]
     })
-  }),
+  ),
   http.get(`${API}/objects/constant/data_source/collections/all`, () =>
     HttpResponse.json({
       domainType: 'constant',
@@ -79,26 +75,15 @@ async function openedOptions(props: Record<string, unknown>): Promise<string[]> 
 }
 
 describe('SelectorView', () => {
-  it('hands up the picked copy with its owner', async () => {
-    const { emitted } = render(SelectorView, {
-      props: { readOnly: false, byOwner: true, selectedCopy: null }
-    })
+  it('hands up the name of the picked view', async () => {
+    const { emitted } = render(SelectorView, { props: { readOnly: false, selectedView: null } })
     await waitForElementToBeRemoved(await screen.findByText('Loading...'))
     const user = userEvent.setup()
 
     await user.click(screen.getByRole('combobox', { name: 'Select view' }))
-    await user.click(
-      await screen.findByRole('option', { name: 'Hosts - All hosts (allhosts) (harry)' })
-    )
+    await user.click(await screen.findByRole('option', { name: 'Hosts - All hosts (allhosts)' }))
 
-    expect(emitted('update:selectedCopy')).toEqual([[{ name: 'allhosts', owner: 'harry' }]])
-  })
-
-  it('offers the built-in copy beside the own copy when keyed by owner', async () => {
-    const options = await openedOptions({ byOwner: true })
-
-    expect(options).toContain('Hosts - All hosts (allhosts)')
-    expect(options).toContain('Hosts - All hosts (allhosts) (harry)')
+    expect(emitted('update:selectedView')).toEqual([['allhosts']])
   })
 
   it('offers the views that show a single object', async () => {
@@ -111,21 +96,9 @@ describe('SelectorView', () => {
     ])
   })
 
-  it('labels a stored copy that is no longer listed by its name and owner', async () => {
-    const dropdown = await renderLoaded({
-      byOwner: true,
-      selectedCopy: { name: 'gone', owner: 'harry' }
-    })
+  it('labels a stored view that is no longer listed by its name', async () => {
+    const dropdown = await renderLoaded({ selectedView: 'gone' })
 
-    expect(dropdown).toHaveTextContent('gone (harry)')
-  })
-
-  it('labels a stored name without owner as resolved by name', async () => {
-    const dropdown = await renderLoaded({
-      byOwner: true,
-      selectedCopy: { name: 'allhosts', owner: null }
-    })
-
-    expect(dropdown).toHaveTextContent('allhosts (resolved by name)')
+    expect(dropdown).toHaveTextContent('gone')
   })
 })

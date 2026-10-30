@@ -246,7 +246,11 @@ export const dashboardAPI = {
     return data.extensions
   },
   listDashboardMetadata: async (): Promise<DashboardMetadata[]> => {
-    const data = unwrap(await client.GET('/domain-types/dashboard_metadata/collections/all'))
+    const data = unwrap(
+      await client.GET('/domain-types/dashboard_metadata/collections/all', {
+        params: { query: { all_owners: 'true' } }
+      })
+    )
     return data.value.map((model) => model.extensions).filter(Boolean)
   },
   showDashboardMetadata: async (

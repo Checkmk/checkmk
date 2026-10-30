@@ -9,11 +9,11 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
 import SelectorView from '@/dashboard/components/selectors/SelectorView.vue'
-import { type VisualCopy, useCopyOptions } from '@/dashboard/components/selectors/visualKey'
+import { withStoredName } from '@/dashboard/components/selectors/storedName'
 
 import {
   type DashboardTarget,
-  dashboardCopyOptions,
+  dashboardOptions,
   fetchDashboardTargets
 } from '../WidgetVisualization/api'
 import type { VisualLocation } from './contextualLink'
@@ -56,18 +56,15 @@ const selectedType = computed<string | null>({
   }
 })
 
-const selectedCopy = computed<VisualCopy | null>({
-  get: () =>
-    target.value?.type === targetType.value
-      ? { name: target.value.name, owner: target.value.owner }
-      : null,
-  set: (copy) => {
-    target.value = copy === null ? null : { type: targetType.value, ...copy }
+const selectedName = computed<string | null>({
+  get: () => (target.value?.type === targetType.value ? target.value.name : null),
+  set: (name) => {
+    target.value = name === null ? null : { type: targetType.value, name }
   }
 })
 
-const { suggestions: dashboardOptions, key: dashboardKey } = useCopyOptions(selectedCopy, () =>
-  dashboardCopyOptions(dashboards.value)
+const dashboardSuggestions = computed(() =>
+  withStoredName(dashboardOptions(dashboards.value), selectedName.value)
 )
 </script>
 
@@ -80,9 +77,8 @@ const { suggestions: dashboardOptions, key: dashboardKey } = useCopyOptions(sele
     />
     <SelectorView
       v-if="targetType === 'views'"
-      v-model:selected-copy="selectedCopy"
+      v-model:selected-view="selectedName"
       :read-only="false"
-      by-owner
     />
     <template v-else>
       <div v-if="dashboardsError" class="error-message">
@@ -90,9 +86,9 @@ const { suggestions: dashboardOptions, key: dashboardKey } = useCopyOptions(sele
       </div>
       <CmkDropdown
         v-else
-        v-model="dashboardKey"
+        v-model="selectedName"
         :label="_t('Select a target')"
-        :options="{ type: 'filtered', suggestions: dashboardOptions }"
+        :options="{ type: 'filtered', suggestions: dashboardSuggestions }"
       />
     </template>
   </div>

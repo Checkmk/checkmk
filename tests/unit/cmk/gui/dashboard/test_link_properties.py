@@ -36,7 +36,7 @@ def _link(
 ) -> EffectiveLink:
     return EffectiveLink(
         title=title,
-        location=VisualLocation(type="views", name="searchhost", owner=None),
+        location=VisualLocation(type="views", name="searchhost"),
         include_context=True,
         include_time_range=False,
         show_filter_form=True,

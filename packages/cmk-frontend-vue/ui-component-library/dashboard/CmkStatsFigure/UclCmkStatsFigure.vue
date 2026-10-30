@@ -149,7 +149,7 @@ const COUNTS: Record<Scenario, FamilyCounts> = {
 
 const LINK: ResolvedLink = {
   title: 'All objects',
-  location: { type: 'views', name: 'searchhost', owner: null },
+  location: { type: 'views', name: 'searchhost' },
   include_context: true,
   include_time_range: false,
   show_filter_form: true

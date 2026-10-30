@@ -18,7 +18,7 @@ const HOST_STATS: Stats = {
   links: [
     {
       title: 'All hosts',
-      location: { type: 'views', name: 'searchhost', owner: null },
+      location: { type: 'views', name: 'searchhost' },
       include_context: true,
       include_time_range: false,
       show_filter_form: true

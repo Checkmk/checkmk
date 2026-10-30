@@ -70,7 +70,7 @@ const propState = new PanelStateCreator<typeof CmkInventoryFigure, 'value' | 'fi
 
 const LINK: ResolvedLink = {
   title: 'Inventory of host',
-  location: { type: 'views', name: 'inv_host', owner: null },
+  location: { type: 'views', name: 'inv_host' },
   include_context: false,
   include_time_range: false,
   show_filter_form: false

@@ -13,31 +13,19 @@ import { computed, onMounted, ref } from 'vue'
 
 import { useDataSourcesCollection } from '@/dashboard/composables/api/useDataSourcesCollection'
 import { useViewsCollection } from '@/dashboard/composables/api/useViewsCollection'
-import type { ViewModel } from '@/dashboard/types/api'
 
-import { type VisualCopy, useCopyOptions } from './visualKey'
+import { withStoredName } from './storedName'
 
 type Width = ButtonVariants['width']
 
-const {
-  readOnly,
-  width = 'wide',
-  byOwner = false
-} = defineProps<{
+const { readOnly, width = 'wide' } = defineProps<{
   readOnly: boolean
   width?: Width
-  // Offer every copy a user may open by its owner; the model is then `selectedCopy`.
-  byOwner?: boolean
 }>()
-const selectedView = defineModel<string | null>('selectedView', { default: null })
-const selectedCopy = defineModel<VisualCopy | null>('selectedCopy', { default: null })
+const selectedView = defineModel<string | null>('selectedView', { required: true })
 
 const { _t } = usei18n()
-const {
-  list: viewsList,
-  ensureLoaded: ensureViewsLoaded,
-  error: viewsError
-} = useViewsCollection({ allOwners: byOwner })
+const { list: viewsList, ensureLoaded: ensureViewsLoaded, error: viewsError } = useViewsCollection()
 const {
   byId: dataSourcesById,
   ensureLoaded: ensureDataSourcesLoaded,
@@ -53,37 +41,22 @@ onMounted(async () => {
   loaded.value = true
 })
 
-const viewTitle = (view: ViewModel): TranslatedString =>
-  formatViewTitle(view.title!, view.id!, view.extensions.data_source!, view.extensions.is_mobile!)
-const byTitle = (a: { title: string }, b: { title: string }) => a.title.localeCompare(b.title)
-const views = computed(() => viewsList.value ?? [])
-
-const nameOptions = computed<Suggestion[]>(() =>
-  views.value.map((view) => ({ name: view.id!, title: viewTitle(view) })).sort(byTitle)
+const options = computed<Array<Suggestion>>(() =>
+  withStoredName(
+    (viewsList.value ?? [])
+      .map((view) => ({
+        name: view.id!,
+        title: formatViewTitle(
+          view.title!,
+          view.id!,
+          view.extensions.data_source!,
+          view.extensions.is_mobile!
+        )
+      }))
+      .sort((a: Suggestion, b: Suggestion) => a.title.localeCompare(b.title)),
+    selectedView.value
+  )
 )
-const { suggestions: copyOptions, key: copyKey } = useCopyOptions(selectedCopy, () =>
-  views.value
-    .map((view) => {
-      const owner = view.extensions.owner
-      const title = viewTitle(view)
-      return {
-        copy: { name: view.id!, owner },
-        title: owner === '' ? title : untranslated(`${title} (${owner})`)
-      }
-    })
-    .sort(byTitle)
-)
-const options = computed(() => (byOwner ? copyOptions.value : nameOptions.value))
-const dropdownValue = computed<string | null>({
-  get: () => (byOwner ? copyKey.value : selectedView.value),
-  set: (key) => {
-    if (byOwner) {
-      copyKey.value = key
-    } else {
-      selectedView.value = key
-    }
-  }
-})
 
 // Copied from cmk/gui/views/view_choices.py
 // needs to be updated together until views have been migrated to vue.js
@@ -136,7 +109,7 @@ const formatViewTitle = (
 
     <CmkDropdown
       v-if="loaded && !viewsError && !dataSourcesError"
-      v-model="dropdownValue"
+      v-model="selectedView"
       :options="{ type: 'filtered', suggestions: options }"
       :label="_t('Select view')"
       :input-hint="_t('Choose from available views')"

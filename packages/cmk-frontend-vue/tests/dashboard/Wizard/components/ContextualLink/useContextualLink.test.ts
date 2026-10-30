@@ -13,8 +13,8 @@ import type {
 import { useContextualLink } from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
 import type { HostStateContent, HostStatisticsContent } from '@/dashboard/components/Wizard/types'
 
-const SEARCHHOST: VisualLocation = { type: 'views', name: 'searchhost', owner: '' }
-const OWNED_DASHBOARD: VisualLocation = { type: 'dashboards', name: 'linux', owner: 'harry' }
+const SEARCHHOST: VisualLocation = { type: 'views', name: 'searchhost' }
+const LINUX_DASHBOARD: VisualLocation = { type: 'dashboards', name: 'linux' }
 const HOST_STATISTICS_OPTIONS: ContextualLinkOptions = {
   modes: ['default', 'inherited', 'custom'],
   filters: ['siteopt', 'wato_folder', 'hoststate', 'opthostgroup'],
@@ -60,11 +60,11 @@ describe('useContextualLink', () => {
     const handler = hostStatisticsLink()
 
     handler.mode.value = 'inherited'
-    handler.inheritedTarget.value = OWNED_DASHBOARD
+    handler.inheritedTarget.value = LINUX_DASHBOARD
 
     expect(handler.contextualLink.value).toEqual({
       type: 'inherited',
-      location: OWNED_DASHBOARD,
+      location: LINUX_DASHBOARD,
       include_context: true,
       include_time_range: true,
       show_filter_form: false
@@ -120,7 +120,7 @@ describe('useContextualLink', () => {
       links: [
         {
           title: 'Down hosts',
-          location: OWNED_DASHBOARD,
+          location: LINUX_DASHBOARD,
           filters: [{ filter_id: 'wato_folder' }],
           include_context: true,
           include_time_range: false,

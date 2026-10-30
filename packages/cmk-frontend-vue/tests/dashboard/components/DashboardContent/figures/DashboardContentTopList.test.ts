@@ -160,7 +160,7 @@ describe('DashboardContentTopList', () => {
       links: [
         {
           title: 'Linux hosts',
-          location: { type: 'dashboards', name: 'linux', owner: null },
+          location: { type: 'dashboards', name: 'linux' },
           include_context: true,
           include_time_range: true,
           show_filter_form: false
@@ -178,7 +178,7 @@ describe('DashboardContentTopList', () => {
       {
         contextual_link: {
           type: 'inherited',
-          location: { type: 'dashboards', name: 'linux', owner: null },
+          location: { type: 'dashboards', name: 'linux' },
           include_context: true,
           include_time_range: true,
           show_filter_form: false
@@ -201,7 +201,7 @@ describe('DashboardContentTopList', () => {
     const os = { status: 'encoded' as const, variables: { host_labels_1_vs_1_vs: 'os:linux' } }
     const custom = topList()
     const destination = {
-      location: { type: 'views' as const, name: 'allhosts', owner: null },
+      location: { type: 'views' as const, name: 'allhosts' },
       include_context: false,
       include_time_range: false,
       show_filter_form: false
@@ -213,7 +213,7 @@ describe('DashboardContentTopList', () => {
         {
           ...destination,
           title: 'Linux dashboard',
-          location: { type: 'dashboards', name: 'linux', owner: null }
+          location: { type: 'dashboards', name: 'linux' }
         }
       ],
       entries: [

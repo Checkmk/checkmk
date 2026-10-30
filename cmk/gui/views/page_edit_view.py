@@ -685,7 +685,7 @@ def _drilldown_link(link_spec: _RawVSLinkSpec | None) -> ContextualLinkEntryConf
         )
     if _is_custom_drilldown(link_spec):
         target_type, custom = _CUSTOM_DRILLDOWN_TARGETS[link_spec[0]], link_spec[1]
-        # The editor offers no title, owner or filter form, so it saves the defaults.
+        # The editor offers no title or filter form, so it saves the defaults.
         return ContextualLinkEntryConfig(
             title=custom["target"],
             location=(target_type, custom["target"]),
@@ -703,7 +703,7 @@ def _drilldown_link(link_spec: _RawVSLinkSpec | None) -> ContextualLinkEntryConf
 
 
 def _drilldown_link_spec(link: ContextualLinkEntryConfig) -> _RawVSLinkSpec:
-    target_type, name = link["location"][0], link["location"][1]
+    target_type, name, *_owner = link["location"]
     if not link["filters"]:
         return _INHERITED_DRILLDOWN_CHOICES[target_type], name
     return _CUSTOM_DRILLDOWN_CHOICES[target_type], _RawVSCustomDrilldown(

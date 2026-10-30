@@ -39,15 +39,3 @@ def test_list_views_offers_only_the_own_copy_of_a_customised_view(
     assert [view["extensions"]["owner"] for view in views if view["id"] == "allhosts"] == [
         with_automation_user[0]
     ]
-
-
-def test_list_views_with_all_owners_offers_the_built_in_beside_the_own_copy(
-    clients: ClientRegistry, with_automation_user: tuple[UserId, str]
-) -> None:
-    _save_own_copy(with_automation_user[0], "allhosts")
-
-    views = clients.ViewClient.get_all(all_owners=True).json["value"]
-
-    assert sorted(
-        view["extensions"]["owner"] for view in views if view["id"] == "allhosts"
-    ) == sorted(["", with_automation_user[0]])

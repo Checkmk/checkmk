@@ -151,7 +151,7 @@ const STATUS: Record<Status, GaugeStatus | null> = {
 
 const LINK: ResolvedLink = {
   title: 'Service',
-  location: { type: 'views', name: 'service', owner: null },
+  location: { type: 'views', name: 'service' },
   include_context: false,
   include_time_range: false,
   show_filter_form: false

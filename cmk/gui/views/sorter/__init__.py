@@ -13,6 +13,7 @@ from .base import (
 )
 from .helpers import (
     cmp_custom_variable,
+    cmp_ec_service_levels,
     cmp_ec_sl_simple_number,
     cmp_insensitive_string,
     cmp_ip_address,
@@ -40,6 +41,7 @@ __all__ = [
     "SorterRegistry",
     "all_sorters",
     "cmp_custom_variable",
+    "cmp_ec_service_levels",
     "cmp_ec_sl_simple_number",
     "cmp_insensitive_string",
     "cmp_ip_address",

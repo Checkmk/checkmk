@@ -70,6 +70,7 @@ from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.command import Command, CommandActionResult, CommandSpec
 from cmk.gui.views.command.base import CommandConfirmDialogOptions
+from cmk.gui.views.sorter import Sorter, sorter_registry
 from cmk.livestatus_client import Command as LivestatusCommand
 from cmk.livestatus_client import (
     ECAction,
@@ -928,15 +929,13 @@ def test_events_without_a_state_sort_first() -> None:
     assert _sorted_states([{"event_state": 0}, {}]) == [None, 0]
 
 
-def test_the_service_level_sorter_orders_by_service_level() -> None:
+def _sorted_by(sorter: Sorter, rows: Rows) -> Rows:
     config = Config()
-    rows: Rows = [{"custom_variables": {"EC_SL": level}} for level in ("20", "30", "10")]
-
-    ordered = sorted(
+    return sorted(
         rows,
         key=cmp_to_key(
             partial(
-                SorterServicelevel.cmp,
+                sorter.cmp,
                 parameters=None,
                 config=config,
                 request=request,
@@ -945,4 +944,38 @@ def test_the_service_level_sorter_orders_by_service_level() -> None:
         ),
     )
 
-    assert [row["custom_variables"]["EC_SL"] for row in ordered] == ["10", "20", "30"]
+
+def test_the_service_level_sorter_orders_by_number() -> None:
+    rows: Rows = [{"custom_variables": {"EC_SL": level}} for level in ("10", "5", "100")]
+
+    ordered = _sorted_by(SorterServicelevel, rows)
+
+    assert [row["custom_variables"]["EC_SL"] for row in ordered] == ["5", "10", "100"]
+
+
+def test_the_service_level_sorter_puts_objects_without_service_level_first() -> None:
+    rows: Rows = [{"custom_variables": {"EC_SL": "0"}}, {"custom_variables": {}}]
+
+    ordered = _sorted_by(SorterServicelevel, rows)
+
+    assert [row["custom_variables"].get("EC_SL") for row in ordered] == [None, "0"]
+
+
+@pytest.mark.parametrize(
+    "sorter_name, what",
+    [
+        pytest.param("svc_servicelevel", "service", id="service"),
+        pytest.param("host_servicelevel", "host", id="host"),
+    ],
+)
+def test_the_sorters_named_after_the_service_level_columns_sort_by_number(
+    sorter_name: str, what: str
+) -> None:
+    rows: Rows = [
+        {f"{what}_custom_variable_names": ["EC_SL"], f"{what}_custom_variable_values": [level]}
+        for level in ("10", "5", "100")
+    ]
+
+    ordered = _sorted_by(sorter_registry[sorter_name], rows)
+
+    assert [row[f"{what}_custom_variable_values"][0] for row in ordered] == ["5", "10", "100"]

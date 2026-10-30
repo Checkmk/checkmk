@@ -28,7 +28,20 @@ def cmp_ec_sl_simple_number(column: ColumnName, r1: Row, r2: Row) -> int:
             return ""
         return row[f"{host_or_svc}_custom_variable_values"][index]
 
-    return (_get_value(r1) > _get_value(r2)) - (_get_value(r1) < _get_value(r2))
+    return cmp_ec_service_levels(_get_value(r1), _get_value(r2))
+
+
+def cmp_ec_service_levels(sl1: str, sl2: str) -> int:
+    """Compare values of EC_SL custom variables by their numbers, missing ones first"""
+    k1, k2 = _ec_service_level_key(sl1), _ec_service_level_key(sl2)
+    return (k1 > k2) - (k1 < k2)
+
+
+def _ec_service_level_key(service_level: str) -> tuple[bool, int]:
+    try:
+        return True, int(service_level)
+    except ValueError:
+        return False, 0
 
 
 def cmp_num_split(column: ColumnName, r1: Row, r2: Row) -> int:

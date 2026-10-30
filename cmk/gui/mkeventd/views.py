@@ -49,7 +49,7 @@ from cmk.gui.views.command import (
     CommandSpec,
 )
 from cmk.gui.views.sorter import (
-    cmp_custom_variable,
+    cmp_ec_service_levels,
     cmp_ec_sl_simple_number,
     cmp_num_split,
     cmp_simple_number,
@@ -1547,7 +1547,9 @@ def _sort_service_level(
     request: Request,  # noqa: ARG001
     request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
-    return cmp_custom_variable(r1, r2, "EC_SL", cmp_simple_number)
+    return cmp_ec_service_levels(
+        r1["custom_variables"].get("EC_SL", ""), r2["custom_variables"].get("EC_SL", "")
+    )
 
 
 SorterServicelevel = Sorter(

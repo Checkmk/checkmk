@@ -17,11 +17,15 @@ class JobPool:
     submit() blocks until a thread is free. What the caller prepares for a job, such as the
     credentials of an assumed role that last one hour, is therefore used soon after, not
     after a long queue of other jobs.
+
+    Once a job raises, submit() and slot() raise its exception, so no new work starts. The
+    jobs that are already running still finish.
     """
 
     def __init__(self, size: int) -> None:
         self._executor = ThreadPoolExecutor(max_workers=size)
         self._slots = threading.BoundedSemaphore(size)
+        self._failure: BaseException | None = None
 
     def __enter__(self) -> Self:
         return self
@@ -37,13 +41,29 @@ class JobPool:
     @contextmanager
     def slot(self) -> Iterator[None]:
         """A slot for work that runs in the calling thread."""
-        with self._slots:
+        self._take_slot()
+        try:
             yield
+        finally:
+            self._slots.release()
 
     def submit[**P, T](
         self, function: Callable[P, T], *args: P.args, **kwargs: P.kwargs
     ) -> Future[T]:
-        self._slots.acquire()
+        self._take_slot()
         future = self._executor.submit(function, *args, **kwargs)
-        future.add_done_callback(lambda _: self._slots.release())
+        future.add_done_callback(self._job_done)
         return future
+
+    def _take_slot(self) -> None:
+        self._slots.acquire()
+        if self._failure is not None:
+            self._slots.release()
+            raise self._failure
+
+    def _job_done[T](self, future: Future[T]) -> None:
+        # Record the failure before freeing the slot, so the caller that waits for the
+        # slot sees it.
+        if self._failure is None and not future.cancelled():
+            self._failure = future.exception()
+        self._slots.release()

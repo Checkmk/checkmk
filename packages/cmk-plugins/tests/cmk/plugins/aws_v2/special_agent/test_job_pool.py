@@ -5,6 +5,8 @@
 
 import threading
 
+import pytest
+
 from cmk.plugins.aws_v2.special_agent.job_pool import JobPool
 
 
@@ -51,10 +53,15 @@ def test_slot_takes_a_thread_for_work_in_the_caller() -> None:
     assert waited
 
 
-def test_failing_job_frees_its_thread() -> None:
+def test_failing_job_stops_new_jobs() -> None:
     with JobPool(1) as pool:
-        pool.submit(_fail).exception()
-        submitter = _submit_in_the_background(pool)
-        submitter.join(timeout=1)
+        pool.submit(_fail)
+        with pytest.raises(RuntimeError, match="job failed"):
+            pool.submit(lambda: None)
 
-        assert not submitter.is_alive()
+
+def test_failing_job_stops_work_in_the_caller() -> None:
+    with JobPool(1) as pool:
+        pool.submit(_fail)
+        with pytest.raises(RuntimeError, match="job failed"), pool.slot():
+            pass

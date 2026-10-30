@@ -710,6 +710,7 @@ class RegionRun(NamedTuple):
     output: str
     has_exceptions: bool
     notes: Sequence[AgentInfoRow]
+    access_error: AwsAccessError | None = None
 
 
 class _AccountJobs(NamedTuple):
@@ -787,8 +788,9 @@ def _run_region(
         )
         sections.init_sections(services, region, account_config, s3_limits_distributor)
         sections.run(use_cache=use_cache)
-    except AwsAccessError:
-        raise
+    except AwsAccessError as ae:
+        # Not raised: a raising job stops the whole run, and this only loses the account.
+        return RegionRun(output.getvalue(), False, (), ae)
     except AssertionError:
         if args.debug:
             raise
@@ -969,10 +971,9 @@ def _write_account_output(
     has_exceptions = False
     notes = list(jobs.notes)
     for run in jobs.runs:
-        try:
-            region_run = run.result()
-        except AwsAccessError as ae:
-            error = error or ae
+        region_run = run.result()
+        if region_run.access_error is not None:
+            error = error or region_run.access_error
             continue
         sys.stdout.write(region_run.output)
         has_exceptions |= region_run.has_exceptions

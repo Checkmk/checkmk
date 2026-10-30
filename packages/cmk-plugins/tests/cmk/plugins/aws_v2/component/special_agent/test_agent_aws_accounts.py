@@ -127,6 +127,21 @@ def test_each_account_role_is_assumed_right_before_its_account(
     ]
 
 
+def test_debug_run_stops_at_the_first_failed_region(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The fake answers the SNS calls with an error, which --debug raises.
+    monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
+    args = [*LOGIN_ARGS, *_account_args(ACCOUNTS), "--debug"]
+
+    with pytest.raises(Exception, match="Not faked"):
+        agent_aws_main(parse_arguments(args), parallel_jobs=1)
+
+    assert [call.params["RoleArn"].split(":")[4] for call in fake_sts.assume_role_calls] == [
+        ACCOUNTS[0]
+    ]
+
+
 @pytest.fixture(name="output_with_unreachable_account")
 def _output_with_unreachable_account(
     fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]

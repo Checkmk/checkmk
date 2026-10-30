@@ -31,6 +31,7 @@ from tests.system.agent_updates.install_step._installer import (
     remove_marker_package,
 )
 from tests.system.agent_updates.install_step._units import reset_failed_instances
+from tests.testlib.common.utils import wait_until
 from tests.testlib.system.agent import (
     bake_agents,
     download_agent_package,
@@ -120,10 +121,17 @@ def _remove_agent(host: HostUnderTest) -> None:
     without the user.
     """
     purge_agent_package(host=host)
-    # A process of the agent user that the purge did not stop keeps userdel from removing the user.
-    host.run(["pkill", "-KILL", "-u", AGENT_USER], sudo=True, check=False)
     if host.run(["id", AGENT_USER], check=False).returncode == 0:
-        host.run(["userdel", AGENT_USER], sudo=True)
+        # A process of the agent user that the purge did not stop keeps userdel from removing the
+        # user. SIGKILL is sent at once, but the process ends a little later.
+        host.run(["pkill", "-KILL", "-u", AGENT_USER], sudo=True, check=False)
+        wait_until(
+            lambda: host.run(["pgrep", "-u", AGENT_USER], check=False).returncode != 0,
+            timeout=10,
+            interval=0.2,
+            condition_name=f"the processes of {AGENT_USER} to end",
+        )
+        host.run(["userdel", "--remove", "--force", AGENT_USER], sudo=True)
     if host.run(["getent", "group", AGENT_USER], check=False).returncode == 0:
         host.run(["groupdel", AGENT_USER], sudo=True)
     host.run(["rm", "-rf", INSTALLATION_DIRECTORY.as_posix()], sudo=True)

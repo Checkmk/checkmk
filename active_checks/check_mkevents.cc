@@ -62,7 +62,7 @@ int severity(State state) {
 }
 
 // Parses an event state, which the event console sends as 0, 1, 2 or 3.
-std::optional<State> parse_state(const std::string &s) {
+std::optional<State> parse_state(std::string_view s) {
     if (s.size() == 1 && s[0] >= '0' && s[0] <= '3') {
         return static_cast<State>(s[0] - '0');
     }
@@ -185,17 +185,16 @@ std::string start_of_response(const std::string &response) {
 
 [[noreturn]] void invalid_response(const std::string &problem,
                                    const std::string &query,
-                                   const std::stringstream &response) {
-    auto resp = response.str();
+                                   const std::string &response) {
     reply_and_exit(State::unknown,
                    "Event console answered with " + problem + "\nQuery was:\n" +
-                       query + "\nReceived " + std::to_string(resp.size()) +
-                       " byte response:\n" + start_of_response(resp));
+                       query + "\nReceived " + std::to_string(response.size()) +
+                       " byte response:\n" + start_of_response(response));
 }
 
 [[noreturn]] void missing_header(const std::string &header,
                                  const std::string &query,
-                                 const std::stringstream &response) {
+                                 const std::string &response) {
     invalid_response("incorrect header (missing " + header + ")", query,
                      response);
 }
@@ -216,15 +215,26 @@ bool closed_by_peer(int err) {
                        query);
 }
 
+// Splits the response into its lines, which stay in the response.
+std::vector<std::string_view> split_lines(std::string_view response) {
+    std::vector<std::string_view> lines;
+    while (!response.empty()) {
+        const auto end = std::min(response.find('\n'), response.size());
+        lines.push_back(response.substr(0, end));
+        response.remove_prefix(std::min(end + 1, response.size()));
+    }
+    return lines;
+}
+
 // Splits a line of the plain output format at the tabs, keeping empty columns
 // like an empty event text at the end of the line.
-std::vector<std::string> split_columns(const std::string &line) {
-    std::vector<std::string> columns;
-    std::string::size_type start = 0;
+std::vector<std::string_view> split_columns(std::string_view line) {
+    std::vector<std::string_view> columns;
+    std::string_view::size_type start = 0;
     while (true) {
         auto end = line.find('\t', start);
         columns.push_back(line.substr(start, end - start));
-        if (end == std::string::npos) {
+        if (end == std::string_view::npos) {
             return columns;
         }
         start = end + 1;
@@ -358,39 +368,41 @@ std::string host_filter(const std::string &spec, bool quoted) {
                      : "Filter: event_host ~~ ^(?:" + regex + ")\\Z\n";
 }
 
-}  // namespace
-
-int main(int argc, char **argv) {
-    // Parse arguments
+struct Options {
     const char *remote_host = nullptr;
+    std::string unixsocket_path;
     bool ignore_acknowledged = false;
     bool last_log_in_summary = false;
     bool last_log_in_details = false;
     bool host_spec_quoted = false;
-    std::string unixsocket_path;
+    const char *host = nullptr;
+    const char *application = nullptr;
+};
 
+Options parse_options(int argc, char **argv) {
+    Options options;
     opterr = 0;  // We show the usage instead of the error of getopt().
     // "+" ends the options at HOST, so APPLICATION may start with a dash.
     int option = 0;
     while ((option = getopt(argc, argv, "+s:H:alLq")) != -1) {
         switch (option) {
             case 's':
-                unixsocket_path = optarg;
+                options.unixsocket_path = optarg;
                 break;
             case 'H':
-                remote_host = optarg;
+                options.remote_host = optarg;
                 break;
             case 'a':
-                ignore_acknowledged = true;
+                options.ignore_acknowledged = true;
                 break;
             case 'l':
-                last_log_in_summary = true;
+                options.last_log_in_summary = true;
                 break;
             case 'L':
-                last_log_in_details = true;
+                options.last_log_in_details = true;
                 break;
             case 'q':
-                host_spec_quoted = true;
+                options.host_spec_quoted = true;
                 break;
             default:
                 usage();
@@ -400,121 +412,125 @@ int main(int argc, char **argv) {
     if (argc - optind < 1) {
         usage();
     }
-    const char *host = argv[optind];
-    const char *application = optind + 1 < argc ? argv[optind + 1] : nullptr;
+    options.host = argv[optind];
+    options.application = optind + 1 < argc ? argv[optind + 1] : nullptr;
+    return options;
+}
 
-    int sock;
-    if (remote_host != nullptr) {
-        auto [remote_hostaddress, remote_port] = parse_remote(remote_host);
-        struct hostent *he = gethostbyname(remote_hostaddress.c_str());
-        if (he == nullptr) {
-            reply_and_exit(
-                State::unknown,
-                "Unable to resolve remote host address: " + remote_hostaddress);
-        }
-
-        auto addr_list = reinterpret_cast<struct in_addr **>(he->h_addr_list);
-        std::string remote_hostipaddress;
-        for (int i = 0; addr_list[i] != nullptr; i++) {
-            remote_hostipaddress = std::string{inet_ntoa(*addr_list[i])};
-        }
-
-        sock = create_socket(AF_INET);
-
-        sockaddr_in addr{};
-        addr.sin_family = AF_INET;
-        inet_aton(remote_hostipaddress.c_str(), &addr.sin_addr);
-        addr.sin_port = htons(remote_port);
-
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
-                      sizeof(sockaddr_in)) == -1) {
-            io_error("Cannot connect to event console at " +
-                     remote_hostipaddress + ":" + std::to_string(remote_port));
-        }
-
-    } else {
-        // Get omd environment
-        if (unixsocket_path.empty()) {
-            char *omd_path = getenv("OMD_ROOT");
-            if (omd_path == nullptr) {
-                reply_and_exit(
-                    State::unknown,
-                    "OMD_ROOT is not set, no socket path is defined.");
-            }
-            unixsocket_path =
-                std::string(omd_path) + "/tmp/run/mkeventd/status";
-        }
-
-        struct sockaddr_un addr{.sun_family = AF_UNIX, .sun_path = ""};
-        if (unixsocket_path.size() >= sizeof(addr.sun_path)) {
-            reply_and_exit(State::unknown,
-                           "Cannot connect to event daemon via UNIX socket " +
-                               unixsocket_path + " (path longer than " +
-                               std::to_string(sizeof(addr.sun_path) - 1) +
-                               " bytes)");
-        }
-        unixsocket_path.copy(&addr.sun_path[0], sizeof(addr.sun_path) - 1);
-        addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
-
-        sock = create_socket(AF_UNIX);
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
-                      sizeof(addr)) == -1) {
-            io_error("Cannot connect to event daemon via UNIX socket " +
-                     unixsocket_path);
-        }
+int connect_via_tcp(const std::string &remote) {
+    auto [remote_hostaddress, remote_port] = parse_remote(remote);
+    struct hostent *he = gethostbyname(remote_hostaddress.c_str());
+    if (he == nullptr) {
+        reply_and_exit(
+            State::unknown,
+            "Unable to resolve remote host address: " + remote_hostaddress);
     }
 
-    // Create query message
-    std::string query_message;
-    query_message += "GET events\n";
-    query_message += "Columns: event_phase event_state event_text\n";
+    auto addr_list = reinterpret_cast<struct in_addr **>(he->h_addr_list);
+    std::string remote_hostipaddress;
+    for (int i = 0; addr_list[i] != nullptr; i++) {
+        remote_hostipaddress = std::string{inet_ntoa(*addr_list[i])};
+    }
 
-    query_message += host_filter(host, host_spec_quoted);
-    query_message += "Filter: event_phase in open ack\n";
-    query_message += "OutputFormat: plain\n";
+    int sock = create_socket(AF_INET);
+
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    inet_aton(remote_hostipaddress.c_str(), &addr.sin_addr);
+    addr.sin_port = htons(remote_port);
+
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
+                  sizeof(sockaddr_in)) == -1) {
+        io_error("Cannot connect to event console at " + remote_hostipaddress +
+                 ":" + std::to_string(remote_port));
+    }
+    return sock;
+}
+
+int connect_via_unix_socket(std::string unixsocket_path) {
+    // Get omd environment
+    if (unixsocket_path.empty()) {
+        char *omd_path = getenv("OMD_ROOT");
+        if (omd_path == nullptr) {
+            reply_and_exit(State::unknown,
+                           "OMD_ROOT is not set, no socket path is defined.");
+        }
+        unixsocket_path = std::string(omd_path) + "/tmp/run/mkeventd/status";
+    }
+
+    struct sockaddr_un addr{.sun_family = AF_UNIX, .sun_path = ""};
+    if (unixsocket_path.size() >= sizeof(addr.sun_path)) {
+        reply_and_exit(State::unknown,
+                       "Cannot connect to event daemon via UNIX socket " +
+                           unixsocket_path + " (path longer than " +
+                           std::to_string(sizeof(addr.sun_path) - 1) +
+                           " bytes)");
+    }
+    unixsocket_path.copy(&addr.sun_path[0], sizeof(addr.sun_path) - 1);
+    addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
+
+    int sock = create_socket(AF_UNIX);
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
+                  sizeof(addr)) == -1) {
+        io_error("Cannot connect to event daemon via UNIX socket " +
+                 unixsocket_path);
+    }
+    return sock;
+}
+
+std::string make_query(const char *host, bool host_spec_quoted,
+                       const char *application) {
+    std::string query;
+    query += "GET events\n";
+    query += "Columns: event_phase event_state event_text\n";
+
+    query += host_filter(host, host_spec_quoted);
+    query += "Filter: event_phase in open ack\n";
+    query += "OutputFormat: plain\n";
 
     if (application != nullptr) {
-        query_message += "Filter: event_application ~~ ";
-        query_message += application;
-        query_message += "\n";
+        query += "Filter: event_application ~~ ";
+        query += application;
+        query += "\n";
     }
+    return query;
+}
 
-    // Send message
-    {
-        const std::string message = "Cannot send query to event console";
-        const char *buffer = query_message.c_str();
-        size_t bytes_to_write = query_message.size();
-        while (bytes_to_write > 0) {
-            check_deadline(message);
-            limit_to_deadline(sock, SO_SNDTIMEO);
-            // Report a closed connection instead of dying from SIGPIPE.
-            ssize_t bytes_written =
-                ::send(sock, buffer, bytes_to_write, MSG_NOSIGNAL);
-            if (bytes_written == -1) {
-                if (closed_by_peer(errno)) {
-                    no_answer(query_message);
-                }
-                if (errno != EINTR) {
-                    io_error(message);
-                }
-            } else {
-                buffer += bytes_written;
-                bytes_to_write -= bytes_written;
-            }
-        }
-        if (shutdown(sock, SHUT_WR) == -1) {
+void send_query(int sock, const std::string &query) {
+    const std::string message = "Cannot send query to event console";
+    const char *buffer = query.c_str();
+    size_t bytes_to_write = query.size();
+    while (bytes_to_write > 0) {
+        check_deadline(message);
+        limit_to_deadline(sock, SO_SNDTIMEO);
+        // Report a closed connection instead of dying from SIGPIPE.
+        ssize_t bytes_written =
+            ::send(sock, buffer, bytes_to_write, MSG_NOSIGNAL);
+        if (bytes_written == -1) {
             if (closed_by_peer(errno)) {
-                no_answer(query_message);
+                no_answer(query);
             }
-            io_error("Cannot shutdown socket to event console");
+            if (errno != EINTR) {
+                io_error(message);
+            }
+        } else {
+            buffer += bytes_written;
+            bytes_to_write -= bytes_written;
         }
     }
+    if (shutdown(sock, SHUT_WR) == -1) {
+        if (closed_by_peer(errno)) {
+            no_answer(query);
+        }
+        io_error("Cannot shutdown socket to event console");
+    }
+}
 
-    // Get response
+std::string receive_response(int sock, const std::string &query) {
     const std::string message = "Error while reading response";
-    std::stringstream response_stream;
+    std::string response;
     while (true) {
         char response_chunk[65536];
         check_deadline(message);
@@ -522,8 +538,8 @@ int main(int argc, char **argv) {
         ssize_t bytes_read =
             ::read(sock, response_chunk, sizeof(response_chunk));
         if (bytes_read == -1) {
-            if (closed_by_peer(errno) && response_stream.tellp() == 0) {
-                no_answer(query_message);
+            if (closed_by_peer(errno) && response.empty()) {
+                no_answer(query);
             }
             if (errno != EINTR) {
                 io_error(message);
@@ -531,105 +547,105 @@ int main(int argc, char **argv) {
         } else if (bytes_read == 0) {
             break;
         } else {
-            response_stream.write(response_chunk, bytes_read);
+            response.append(response_chunk, bytes_read);
         }
     }
     // We have read the complete answer, so a failing close() doesn't matter.
     ::close(sock);
-    if (response_stream.tellp() == 0) {
-        no_answer(query_message);
+    if (response.empty()) {
+        no_answer(query);
     }
+    return response;
+}
 
-    // Start processing data
-    std::string line;
-    getline(response_stream, line);
+struct Event {
+    std::string phase;
+    State state;
+    std::string text;
+};
+
+std::vector<Event> parse_events(const std::string &response,
+                                const std::string &query) {
+    const auto lines = split_lines(response);
 
     // Get headers
-    auto headers = split_columns(line);
-    auto index_of = [&headers](const std::string &column) {
+    const auto headers = split_columns(lines.empty() ? "" : lines.front());
+    auto index_of = [&](const std::string &column) {
         auto pos = std::find(headers.begin(), headers.end(), column);
-        return pos == headers.end() ? -1
-                                    : static_cast<int>(pos - headers.begin());
+        if (pos == headers.end()) {
+            missing_header(column, query, response);
+        }
+        return static_cast<size_t>(pos - headers.begin());
     };
-    int idx_event_phase = index_of("event_phase");
-    int idx_event_state = index_of("event_state");
-    int idx_event_text = index_of("event_text");
-
-    // Basic header validation
-    if (idx_event_phase == -1) {
-        missing_header("event_phase", query_message, response_stream);
-    }
-    if (idx_event_state == -1) {
-        missing_header("event_state", query_message, response_stream);
-    }
-    if (idx_event_text == -1) {
-        missing_header("event_text", query_message, response_stream);
-    }
+    auto idx_event_phase = index_of("event_phase");
+    auto idx_event_state = index_of("event_state");
+    auto idx_event_text = index_of("event_text");
 
     // The event console ends every line with a newline, so an answer without
     // one at its end was cut off, e.g. by an event console stopped while
     // answering. Its last row would continue the event text of the row before.
-    if (response_stream.str().back() != '\n') {
-        invalid_response("an incomplete last line", query_message,
-                         response_stream);
+    if (response.back() != '\n') {
+        invalid_response("an incomplete last line", query, response);
     }
 
     // Get data. The event console replaces tabs within the columns by spaces,
-    // but it keeps newlines, so a line with too few columns continues the last
-    // column of the previous row, i.e. the event text we have requested last.
-    std::vector<std::vector<std::string> > data;
-    while (getline(response_stream, line)) {
-        auto row = split_columns(line);
-        if (row.size() >= headers.size()) {
-            data.push_back(row);
-        } else if (data.empty()) {
-            invalid_response("an incomplete row", query_message,
-                             response_stream);
-        } else {
-            data.back().back() += "\n" + line;
+    // but it keeps newlines, so a line with too few columns continues the event
+    // text of the previous row, which we have requested as the last column.
+    std::vector<Event> events;
+    for (size_t i = 1; i < lines.size(); i++) {
+        const auto row = split_columns(lines[i]);
+        if (row.size() < headers.size()) {
+            if (events.empty()) {
+                invalid_response("an incomplete row", query, response);
+            }
+            events.back().text.append("\n").append(lines[i]);
+            continue;
         }
-    }
-
-    // Generate output
-    std::string worst_row_event_text;
-    State worst_state = State::ok;
-    int count = 0;
-    int unhandled = 0;
-
-    for (const auto &row : data) {
-        count++;
-        const auto &phase = row.at(idx_event_phase);
-        auto s = parse_state(row.at(idx_event_state));
-        if (!s) {
+        const auto state = parse_state(row.at(idx_event_state));
+        if (!state) {
             // A valid state has a single digit, so its start is enough.
             invalid_response("an invalid event state '" +
                                  cut_at(row.at(idx_event_state), 20) + "'",
-                             query_message, response_stream);
+                             query, response);
         }
-        if (phase == "open" || !ignore_acknowledged) {
-            if (severity(*s) >= severity(worst_state)) {
-                worst_state = *s;
-                worst_row_event_text = row.at(idx_event_text);
-            }
-        }
-        if (phase == "open") {
-            unhandled++;
-        }
+        events.push_back({std::string{row.at(idx_event_phase)}, *state,
+                          std::string{row.at(idx_event_text)}});
     }
+    return events;
+}
 
-    if (count == 0) {
-        std::string app =
-            application == nullptr ? "" : (std::string(application) + " on ");
+[[noreturn]] void reply_with_events(const std::vector<Event> &events,
+                                    const Options &options) {
+    if (events.empty()) {
+        std::string app = options.application == nullptr
+                              ? ""
+                              : (std::string(options.application) + " on ");
         reply_and_exit(
             State::ok,
-            "no events for " + app + unquote_host_spec(host, host_spec_quoted));
+            "no events for " + app +
+                unquote_host_spec(options.host, options.host_spec_quoted));
+    }
+
+    std::string worst_row_event_text;
+    State worst_state = State::ok;
+    int unhandled = 0;
+    for (const auto &event : events) {
+        if (event.phase == "open" || !options.ignore_acknowledged) {
+            if (severity(event.state) >= severity(worst_state)) {
+                worst_state = event.state;
+                worst_row_event_text = event.text;
+            }
+        }
+        if (event.phase == "open") {
+            unhandled++;
+        }
     }
 
     std::cout << worst_state << " - ";
 
     std::stringstream output;
-    output << count << " events (" << unhandled << " unacknowledged)";
-    if (!worst_row_event_text.empty() && last_log_in_summary) {
+    output << events.size() << " events (" << unhandled << " unacknowledged)";
+    if (!worst_row_event_text.empty() && options.last_log_in_summary) {
         output << ", Last line: ";
         // The core would take everything after a newline as the details.
         for (const char c : worst_row_event_text) {
@@ -638,9 +654,23 @@ int main(int argc, char **argv) {
     }
     print_line(output.str());
 
-    if (!worst_row_event_text.empty() && last_log_in_details) {
+    if (!worst_row_event_text.empty() && options.last_log_in_details) {
         print_line("Last line: " + worst_row_event_text);
     }
 
     exit_with(worst_state);
+}
+
+}  // namespace
+
+int main(int argc, char **argv) {
+    auto options = parse_options(argc, argv);
+    int sock = options.remote_host != nullptr
+                   ? connect_via_tcp(options.remote_host)
+                   : connect_via_unix_socket(options.unixsocket_path);
+    auto query =
+        make_query(options.host, options.host_spec_quoted, options.application);
+    send_query(sock, query);
+    auto response = receive_response(sock, query);
+    reply_with_events(parse_events(response, query), options);
 }

@@ -4,9 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Simple in-memory rate limiter (no external dependencies)."""
 
+import functools
+import re
 import time
 from collections import defaultdict, deque
+from collections.abc import Callable
+from pathlib import Path
 from threading import Lock
+
+from cmk.maps.backend.core.config import settings
 
 
 class RateLimiter:
@@ -78,7 +84,7 @@ class ConcurrencyLimiter:
     the *rate* of new acquisitions, this caps how many are *held simultaneously*.
     """
 
-    def __init__(self, max_per_key: int, max_total: int) -> None:
+    def __init__(self, max_per_key: int, max_total: int | Callable[[], int]) -> None:
         self._max_per_key = max_per_key
         self._max_total = max_total
         self._counts: dict[str, int] = {}
@@ -87,9 +93,10 @@ class ConcurrencyLimiter:
 
     def try_acquire(self, key: str) -> bool:
         """Reserve one slot for key; return False (reserving nothing) when full."""
+        max_total = self._max_total() if callable(self._max_total) else self._max_total
         with self._lock:
             held = self._counts.get(key, 0)
-            if self._total >= self._max_total or held >= self._max_per_key:
+            if self._total >= max_total or held >= self._max_per_key:
                 return False
             self._counts[key] = held + 1
             self._total += 1
@@ -113,13 +120,54 @@ class ConcurrencyLimiter:
 # scripted connection floods.
 ws_connect_limiter = RateLimiter(max_calls=30, window_seconds=60)
 
+# Setup's Apache process tuning writes both into etc/apache/conf.d/zzz_check_mk.conf.
+_MAX_CLIENTS_RE = re.compile(
+    r"^[ \t]*(?:MaxClients|MaxRequestWorkers)[ \t]+(\d+)[ \t]*$", re.I | re.M
+)
+_SERVER_LIMIT_RE = re.compile(r"^[ \t]*ServerLimit[ \t]+(\d+)[ \t]*$", re.I | re.M)
+
+
+def site_stream_limit(apache_dir: Path | None = None) -> int:
+    """How many streams the site holds at once: an eighth of its Apache workers.
+
+    A worker holding a stream keeps the memory of a GUI process, so the maps shown
+    beyond it poll their states, which the daemon fetches once per interval for
+    all viewers who see the same.
+    """
+    apache_dir = apache_dir or Path(settings.checkmk_omd_root) / "etc" / "apache"
+    files = [apache_dir / "apache.conf", *sorted((apache_dir / "conf.d").glob("*.conf"))]
+    workers = _apache_workers(tuple((f, mtime) for f in files if (mtime := _mtime(f)) is not None))
+    return max(workers // 8, 1)
+
+
+def _mtime(path: Path) -> int | None:
+    try:
+        return path.stat().st_mtime_ns
+    except OSError:
+        return None
+
+
+@functools.lru_cache(maxsize=1)
+def _apache_workers(stamp: tuple[tuple[Path, int], ...]) -> int:
+    """The worker processes Apache runs, from the last value it reads of each directive."""
+    max_clients, server_limit = 64, None
+    for path, _ in stamp:
+        try:
+            text = path.read_text(errors="replace")
+        except OSError:
+            continue
+        if values := _MAX_CLIENTS_RE.findall(text):
+            max_clients = int(values[-1])
+        if values := _SERVER_LIMIT_RE.findall(text):
+            server_limit = int(values[-1])
+    return max(min(max_clients, server_limit or max_clients), 1)
+
+
 # Concurrently held SSE streams. Each stream pins one of the site Apache's
-# prefork workers (MaxClients 64) for as long as it is open, so the handshake rate
-# cap above is not enough on its own — a client can hold far more streams than the
-# pool absorbs. Cap them per user (a real client shows one map per visible tab and
-# closes hidden ones) and site-wide, keeping the total well under MaxClients so
-# the GUI and REST API always keep workers.
-sse_stream_limiter = ConcurrencyLimiter(max_per_key=6, max_total=40)
+# prefork workers for as long as it is open, so the handshake rate cap above is
+# not enough on its own. Two per user cover a wall and a desk (hidden tabs close
+# theirs); further views of the user poll.
+sse_stream_limiter = ConcurrencyLimiter(max_per_key=2, max_total=site_stream_limit)
 
 # Per-authenticated-user budget for the expensive Livestatus readers (topology,
 # metric-history, object-details, folder search/host-services, map states not

@@ -12,13 +12,16 @@ its window arithmetic and memory pruning are pinned here rather than only
 being exercised indirectly through the route.
 """
 
+import os
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 
 from cmk.maps.backend.core.ratelimit import (
     ConcurrencyLimiter,
     RateLimiter,
+    site_stream_limit,
     sse_stream_limiter,
     ws_connect_limiter,
 )
@@ -181,13 +184,72 @@ def test_concurrency_release_at_zero_is_a_noop() -> None:
     assert limiter.try_acquire("never-acquired") is False
 
 
-def test_sse_stream_limiter_holds_six_streams_per_user() -> None:
+def test_sse_stream_limiter_holds_two_streams_per_user() -> None:
     # The module-level limiter guarding concurrent SSE streams.
     held = 0
     try:
         while sse_stream_limiter.try_acquire("wall-display"):
             held += 1
-        assert held == 6
+        assert held == 2
     finally:
         for _ in range(held):
             sse_stream_limiter.release("wall-display")
+
+
+def test_concurrency_global_cap_follows_a_callable() -> None:
+    cap = [1]
+    limiter = ConcurrencyLimiter(max_per_key=5, max_total=lambda: cap[0])
+    assert limiter.try_acquire("a") is True
+    assert limiter.try_acquire("b") is False
+    cap[0] = 2
+    assert limiter.try_acquire("b") is True
+
+
+def _apache_dir(tmp_path: Path, workers: int, setup: int | None = None) -> Path:
+    (tmp_path / "conf.d").mkdir(exist_ok=True)
+    (tmp_path / "apache.conf").write_text(
+        f"# MaxClients: maximum number of connections\nServerLimit {workers}\n"
+        f"MaxClients {workers}\nInclude conf.d/*.conf\n"
+    )
+    if setup is not None:
+        (tmp_path / "conf.d" / "zzz_check_mk.conf").write_text(
+            f"ServerLimit {setup}\nMaxClients {setup}\n"
+        )
+    return tmp_path
+
+
+def test_site_streams_take_an_eighth_of_the_default_workers(tmp_path: Path) -> None:
+    assert site_stream_limit(_apache_dir(tmp_path, 64)) == 8
+
+
+def test_site_streams_follow_the_workers_setup_configures(tmp_path: Path) -> None:
+    assert site_stream_limit(_apache_dir(tmp_path, 64, setup=128)) == 16
+
+
+def test_site_streams_keep_one_with_few_workers(tmp_path: Path) -> None:
+    assert site_stream_limit(_apache_dir(tmp_path, 64, setup=4)) == 1
+
+
+def test_site_streams_stay_under_the_server_limit(tmp_path: Path) -> None:
+    apache_dir = _apache_dir(tmp_path, 64)
+    (apache_dir / "conf.d" / "tuning.conf").write_text("MaxRequestWorkers 256\n")
+    assert site_stream_limit(apache_dir) == 8
+
+
+def test_site_streams_follow_a_changed_setup(tmp_path: Path) -> None:
+    apache_dir = _apache_dir(tmp_path, 64, setup=128)
+    assert site_stream_limit(apache_dir) == 16
+    setup = apache_dir / "conf.d" / "zzz_check_mk.conf"
+    setup.write_text("ServerLimit 32\nMaxClients 32\n")
+    os.utime(setup, ns=(0, setup.stat().st_mtime_ns + 1_000_000))
+    assert site_stream_limit(apache_dir) == 4
+
+
+def test_site_streams_default_without_apache_config(tmp_path: Path) -> None:
+    assert site_stream_limit(tmp_path) == 8
+
+
+def test_site_streams_read_the_setup_without_the_main_config(tmp_path: Path) -> None:
+    apache_dir = _apache_dir(tmp_path, 64, setup=32)
+    (apache_dir / "apache.conf").unlink()
+    assert site_stream_limit(apache_dir) == 4

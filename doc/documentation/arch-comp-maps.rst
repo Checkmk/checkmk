@@ -976,8 +976,8 @@ Limits
    * - SSE connection attempts
      - 30 per minute and user
    * - Concurrent SSE streams
-     - 6 per user, 40 per site (the site Apache has 64 worker processes, and
-       each open stream holds one)
+     - 2 per user; per site, an eighth of the site Apache's worker processes
+       (8 of the default 64), at least 1. Each open stream holds one worker.
    * - Daemon read routes (register, states, auto-objects, folder routes,
        topology, metric history, object details)
      - 240 per minute and user; a poll of ``states`` the daemon answers from
@@ -1000,22 +1000,23 @@ Limits
    * - Uploads
      - 2 MB (library images), 10 MB (backgrounds), 5 MB (NagVis ``.cfg``)
 
-The rate and stream limits are kept in the daemon's memory, per user (the 40
-streams per site), and answered with HTTP 429. A map refused a stream polls its
-states at the state refresh interval and tries the stream again every minute.
-The SPA names its browser tab in the stream URL, keeping the name over a reload,
-and a new stream of the same user and tab takes over the slot of the one it
-replaces, so neither the probe that tries the stream again nor the page a reload
-replaced keeps the stream out until a proxy noticed it closed. The stream taken
-over is told so; a page still showing it, the copy of a duplicated tab, names
-its tab anew. The daemon fetches the states of a map once per interval for all
-viewers who see the same, whether they stream or poll, so a poll costs no
-further Livestatus query. It keeps those states only for viewers who poll, for
-an interval from when their query began, as gzip-compressed JSON, for up to
-100,000 objects together; a larger map is fetched anew for each poll that does
-not arrive while a fetch of it runs. Too many objects are rejected with 422 on
-register; the upload and import limits are checked by the GUI (400). The map
-cache evicts silently.
+The rate and stream limits are kept in the daemon's memory, per user (the
+streams also per site), and answered with HTTP 429. The site's stream limit
+follows the Apache process tuning set in Setup without a restart of the daemon.
+A map refused a stream polls its states at the state refresh interval and tries
+the stream again every minute. The SPA names its browser tab in the stream URL,
+keeping the name over a reload, and a new stream of the same user and tab takes
+over the slot of the one it replaces, so neither the probe that tries the stream
+again nor the page a reload replaced keeps the stream out until a proxy noticed
+it closed. The stream taken over is told so; a page still showing it, the copy
+of a duplicated tab, names its tab anew. The daemon fetches the states of a map
+once per interval for all viewers who see the same, whether they stream or poll,
+so a poll costs no further Livestatus query. It keeps those states only for
+viewers who poll, for an interval from when their query began, as
+gzip-compressed JSON, for up to 100,000 objects together; a larger map is
+fetched anew for each poll that does not arrive while a fetch of it runs. Too
+many objects are rejected with 422 on register; the upload and import limits are
+checked by the GUI (400). The map cache evicts silently.
 
 HTTP security headers
 ---------------------

@@ -13,7 +13,6 @@ from urllib.parse import parse_qsl, urlsplit
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.data_source import row_id
@@ -734,6 +733,23 @@ def test_the_update_confirmation_mentions_an_acknowledgement(
 
 
 @pytest.mark.parametrize(
+    "command, variables",
+    [
+        pytest.param(CommandECUpdateEvent, {"_mkeventd_update": "1"}, id="update"),
+        pytest.param(
+            CommandECChangeState,
+            {"_mkeventd_changestate": "1", "_mkeventd_state": DropdownChoice.option_id(1)},
+            id="change state",
+        ),
+        pytest.param(
+            CommandECCustomAction,
+            {"_action_@NOTIFY": "Send monitoring notification"},
+            id="custom action",
+        ),
+        pytest.param(CommandECArchiveEvent, {"_delete_event": "1"}, id="archive"),
+    ],
+)
+@pytest.mark.parametrize(
     "rows, affected",
     [
         pytest.param(_EVENT_ROWS[:1], "Affected event: 1", id="one"),
@@ -742,11 +758,15 @@ def test_the_update_confirmation_mentions_an_acknowledgement(
 )
 @pytest.mark.usefixtures("request_context")
 def test_the_confirmation_counts_the_affected_events(
-    with_user: tuple[UserId, str], rows: Rows, affected: str
+    with_user: tuple[UserId, str],
+    command: Command,
+    variables: dict[str, str],
+    rows: Rows,
+    affected: str,
 ) -> None:
-    set_request_vars(_delete_event="1")
+    set_request_vars(**variables)
 
-    _command, dialog = _acted(with_user[0], (), CommandECArchiveEvent, rows)
+    _command, dialog = _acted(with_user[0], (), command, rows)
 
     assert str(dialog.affected) == affected
 
@@ -901,17 +921,6 @@ def test_the_confirmation_of_archiving_the_events_of_a_host_counts_nothing(
     )
 
     assert dialog.affected == HTML.empty()
-
-
-@pytest.mark.usefixtures("request_context", "with_admin_login")
-def test_an_ec_command_is_sent_to_the_core_of_the_site(
-    mock_livestatus: MockLiveStatusConnection,
-) -> None:
-    mock_livestatus.set_sites(["NO_SITE"])
-    mock_livestatus.expect_query("COMMAND [...] EC_DELETE;1,2;harry", match_type="ellipsis")
-
-    with mock_livestatus():
-        CommandECArchiveEvent.executor(ECDelete((1, 2), UserId("harry")), SiteId("NO_SITE"))
 
 
 def _sorted_states(rows: Rows) -> list[object]:

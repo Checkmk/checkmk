@@ -9,9 +9,7 @@ from collections.abc import Mapping, Sequence
 from typing import Literal, override
 
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui import sites
 from cmk.gui.config import Config, default_authorized_builtin_role_ids, RequestCacheConfig
 from cmk.gui.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -46,7 +44,6 @@ from cmk.gui.views.command import (
     CommandActionResult,
     CommandGroupVarious,
     CommandRegistry,
-    CommandSpec,
 )
 from cmk.gui.views.sorter import (
     cmp_ec_service_levels,
@@ -61,15 +58,11 @@ from cmk.gui.views.sorter import (
 from cmk.gui.views.store import get_permitted_views, multisite_builtin_views
 from cmk.gui.visuals.filter import Filter
 from cmk.livestatus_client import (
-    Command as LivestatusCommand,
-)
-from cmk.livestatus_client import (
     ECAction,
     ECChangeState,
     ECDelete,
     ECDeleteEventsOfHost,
     ECUpdate,
-    LivestatusClient,
     OnlySites,
 )
 from cmk.utils.statename import short_service_state_name
@@ -1176,25 +1169,18 @@ PermissionECUpdateContact = Permission(
 )
 
 
-class ECCommand(Command):
-    @override
-    def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
-        return HTML.with_escaping(
-            _("Affected %(event_label)s: %(count)s")
-            % {
-                "event_label": ungettext(
-                    "event",
-                    "events",
-                    len_action_rows,
-                ),
-                "count": len_action_rows,
-            }
-        )
-
-    @override
-    def executor(self, command: CommandSpec, site: SiteId | None) -> None:
-        assert isinstance(command, LivestatusCommand)
-        LivestatusClient(sites.live()).command(command, site)
+def affected_events(len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:  # noqa: ARG001
+    return HTML.with_escaping(
+        _("Affected %(event_label)s: %(count)s")
+        % {
+            "event_label": ungettext(
+                "event",
+                "events",
+                len_action_rows,
+            ),
+            "count": len_action_rows,
+        }
+    )
 
 
 def command_update_event_render(what: str) -> None:  # noqa: ARG001
@@ -1260,7 +1246,7 @@ def command_update_event_action(
     return None
 
 
-CommandECUpdateEvent = ECCommand(
+CommandECUpdateEvent = Command(
     ident="ec_update_event",
     title=_l("Update & acknowledge"),
     confirm_title=lambda: (
@@ -1276,6 +1262,7 @@ CommandECUpdateEvent = ECCommand(
     tables=["event"],
     render=command_update_event_render,
     action=command_update_event_action,
+    affected_output_cb=affected_events,
 )
 
 PermissionECChangeEventState = Permission(
@@ -1340,7 +1327,7 @@ def command_change_state_action(
     return None
 
 
-CommandECChangeState = ECCommand(
+CommandECChangeState = Command(
     ident="ec_change_state",
     title=_l("Change state"),
     confirm_title=_l("Change event state?"),
@@ -1351,6 +1338,7 @@ CommandECChangeState = ECCommand(
     render=command_change_state_render,
     action=command_change_state_action,
     confirm_dialog_additions=command_change_state_confirm_dialog_additions,
+    affected_output_cb=affected_events,
 )
 
 PermissionECCustomActions = Permission(
@@ -1393,7 +1381,7 @@ def command_custom_actions_action(
     return None
 
 
-CommandECCustomAction = ECCommand(
+CommandECCustomAction = Command(
     ident="ec_custom_actions",
     title=_l("Custom action"),
     confirm_title=lambda: (
@@ -1406,6 +1394,7 @@ CommandECCustomAction = ECCommand(
     tables=["event"],
     render=command_custom_actions_render,
     action=command_custom_actions_action,
+    affected_output_cb=affected_events,
 )
 
 PermissionECArchiveEvent = Permission(
@@ -1439,7 +1428,7 @@ def command_archive_event_action(
     return None
 
 
-CommandECArchiveEvent = ECCommand(
+CommandECArchiveEvent = Command(
     ident="ec_archive_event",
     title=_l("Archive event"),
     confirm_title=_l("Archive event?"),
@@ -1449,6 +1438,7 @@ CommandECArchiveEvent = ECCommand(
     tables=["event"],
     render=command_archive_event_render,
     action=command_archive_event_action,
+    affected_output_cb=affected_events,
 )
 
 PermissionECArchiveEventsOfHost = Permission(

@@ -46,7 +46,7 @@ def test_a_graph_that_followed_time_range_changes_inherits(tmp_path: Path) -> No
         },
     )
 
-    MigrateDashboardWidgetTimeRange.migrate_time_ranges(tmp_path, LOGGER)
+    MigrateDashboardWidgetTimeRange.migrate_time_ranges(tmp_path, LOGGER, debug=True)
 
     assert _widgets(path)["w"] == {
         "type": "pnpgraph",
@@ -71,7 +71,7 @@ def test_a_graph_that_did_not_follow_time_range_changes_overrides(tmp_path: Path
         },
     )
 
-    MigrateDashboardWidgetTimeRange.migrate_time_ranges(tmp_path, LOGGER)
+    MigrateDashboardWidgetTimeRange.migrate_time_ranges(tmp_path, LOGGER, debug=True)
 
     assert _widgets(path)["w"] == {
         "type": "combined_graph",
@@ -86,7 +86,7 @@ def test_a_scatterplot_inherits(tmp_path: Path) -> None:
         {"d": {"widgets": {"w": {"type": "average_scatterplot", "time_range": "d0"}}}},
     )
 
-    MigrateDashboardWidgetTimeRange.migrate_time_ranges(tmp_path, LOGGER)
+    MigrateDashboardWidgetTimeRange.migrate_time_ranges(tmp_path, LOGGER, debug=True)
 
     assert _widgets(path)["w"]["time_range"] == {"type": "dashboard"}
 
@@ -97,7 +97,7 @@ def test_a_widget_listed_as_dashlet_is_migrated(tmp_path: Path) -> None:
         {"d": {"dashlets": [{"type": "average_scatterplot", "time_range": "25h"}]}},
     )
 
-    MigrateDashboardWidgetTimeRange.migrate_time_ranges(tmp_path, LOGGER)
+    MigrateDashboardWidgetTimeRange.migrate_time_ranges(tmp_path, LOGGER, debug=True)
 
     dashlets = literal_eval(path.read_text())["d"]["dashlets"]
     assert dashlets == [{"type": "average_scatterplot", "time_range": {"type": "dashboard"}}]
@@ -121,7 +121,7 @@ def test_a_dashboard_without_a_time_range_to_migrate_is_not_rewritten(tmp_path: 
     )
     untouched_content = path.read_text()
 
-    MigrateDashboardWidgetTimeRange.migrate_time_ranges(tmp_path, LOGGER)
+    MigrateDashboardWidgetTimeRange.migrate_time_ranges(tmp_path, LOGGER, debug=True)
 
     assert path.read_text() == untouched_content
 
@@ -138,7 +138,7 @@ def test_the_count_is_dashboards_not_users(
     )
 
     with caplog.at_level(logging.INFO):
-        MigrateDashboardWidgetTimeRange.migrate_time_ranges(tmp_path, LOGGER)
+        MigrateDashboardWidgetTimeRange.migrate_time_ranges(tmp_path, LOGGER, debug=True)
 
     assert "2 dashboards" in caplog.text
 
@@ -147,4 +147,4 @@ def test_a_widget_without_a_type_is_reported(tmp_path: Path) -> None:
     _write_dashboards(tmp_path / "cmkadmin", {"d": {"widgets": {"w": {"timerange": "25h"}}}})
 
     with pytest.raises(ValueError, match="user_dashboards.mk"):
-        MigrateDashboardWidgetTimeRange.migrate_time_ranges(tmp_path, LOGGER)
+        MigrateDashboardWidgetTimeRange.migrate_time_ranges(tmp_path, LOGGER, debug=True)

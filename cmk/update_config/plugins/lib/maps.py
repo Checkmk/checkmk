@@ -155,6 +155,8 @@ def admin_maps(
     pending: Mapping[str, str],
     outcomes: dict[str, str],
     save_record: Callable[[Mapping[str, str], Mapping[str, str]], None],
+    *,
+    debug: bool,
 ) -> Iterator[AdminMaps]:
     """The admin's stored maps, locked, with what a stopped run stored entered into
     ``outcomes``; the rest is tried again.
@@ -167,7 +169,9 @@ def admin_maps(
     with store.locked(maps_path):
         # As they are on disk: ``MapPage.load`` skips one it cannot deserialize, and
         # writing that set back would drop it.
-        own: dict[str, dict[str, object]] = store.load_object_from_file(maps_path, default={})
+        own: dict[str, dict[str, object]] = store.load_object_from_file_explicit(
+            maps_path, default={}, debug=debug
+        )
         for source, name in pending.items():
             if name in own:
                 outcomes[source] = "migrated"

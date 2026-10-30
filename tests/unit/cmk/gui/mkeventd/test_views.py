@@ -137,6 +137,24 @@ def _event(**columns: object) -> dict[str, object]:
     } | columns
 
 
+def _query_counting(
+    mock_livestatus: MockLiveStatusConnection,
+    user_id: UserId,
+    permissions: tuple[str, ...],
+    events: list[dict[str, object]],
+    datasource: DataSourceECEvents | DataSourceECEventHistory | None = None,
+) -> tuple[Rows, int]:
+    datasource = datasource or DataSourceECEvents()
+    table = datasource.table
+    mock_livestatus.set_sites(["NO_SITE"])
+    mock_livestatus.add_table(table.table_name, events)
+    mock_livestatus.expect_query(f"GET {table.table_name}", match_type="loose")
+    with mock_livestatus(), logged_in(user_id, *permissions):
+        return table.query(
+            datasource, [], ["event_id", "host_alias", "host_name"], {}, "", None, None, []
+        )
+
+
 def _query(
     mock_livestatus: MockLiveStatusConnection,
     user_id: UserId,
@@ -144,17 +162,10 @@ def _query(
     events: list[dict[str, object]],
     datasource: DataSourceECEvents | DataSourceECEventHistory | None = None,
 ) -> Rows:
-    datasource = datasource or DataSourceECEvents()
-    table = datasource.table
-    mock_livestatus.set_sites(["NO_SITE"])
-    mock_livestatus.add_table(table.table_name, events)
-    mock_livestatus.expect_query(f"GET {table.table_name}", match_type="loose")
-    with mock_livestatus(), logged_in(user_id, *permissions):
-        result = table.query(
-            datasource, [], ["event_id", "host_alias", "host_name"], {}, "", None, None, []
-        )
-    assert isinstance(result, list)
-    return result
+    rows, _unfiltered_amount_of_rows = _query_counting(
+        mock_livestatus, user_id, permissions, events, datasource
+    )
+    return rows
 
 
 @pytest.mark.usefixtures("request_context")
@@ -251,6 +262,17 @@ def test_unrelated_events_with_contact_groups_from_their_rule_are_shown(
     )
 
     assert [row["event_id"] for row in rows] == [1]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_events_hidden_from_the_user_count_towards_the_row_limit(
+    mock_livestatus: MockLiveStatusConnection, with_user: tuple[UserId, str]
+) -> None:
+    rows, unfiltered_amount_of_rows = _query_counting(
+        mock_livestatus, with_user[0], (), [_event(event_id=1), _event(event_id=2, host_name="")]
+    )
+
+    assert ([row["event_id"] for row in rows], unfiltered_amount_of_rows) == ([1], 2)
 
 
 # Trivial painters, but views fetch only the columns a painter declares, so this checks that

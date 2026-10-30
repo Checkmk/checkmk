@@ -218,7 +218,7 @@ class RowTableEC(RowTableLivestatus):
         only_sites: OnlySites,
         limit: int | None,
         all_active_filters: list[Filter],
-    ) -> Rows | tuple[Rows, int]:
+    ) -> tuple[Rows, int]:
         for c in ["event_contact_groups", "host_contact_groups", "event_host"]:
             if c not in columns:
                 columns.append(c)
@@ -227,10 +227,11 @@ class RowTableEC(RowTableLivestatus):
             datasource, cells, columns, context, headers, only_sites, limit, all_active_filters
         )
         assert isinstance(row_data, tuple)  # RowTableLivestatus always counts the unfiltered rows
-        rows, _unfiltered_amount_of_rows = row_data
+        # The row limit applies to all events of the core, including those hidden below.
+        rows, unfiltered_amount_of_rows = row_data
 
         if not rows:
-            return rows
+            return rows, unfiltered_amount_of_rows
 
         _ec_filter_host_information_of_not_permitted_hosts(rows)
 
@@ -246,7 +247,7 @@ class RowTableEC(RowTableLivestatus):
                 row["host_name"] = row["event_host"]
                 row["event_is_unrelated"] = True
 
-        return rows
+        return rows, unfiltered_amount_of_rows
 
 
 # Handle the case where a user is allowed to see all events (-> events for hosts he

@@ -20,6 +20,7 @@ from fastapi import (
     Response,
     UploadFile,
 )
+from fastapi.concurrency import run_in_threadpool
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, UUID4, ValidationError
 from starlette.status import (
@@ -342,8 +343,10 @@ async def _validate_is_allowed(credentials: HTTPBasicCredentials, uuid: UUID4) -
 
 def _store_agent_data(
     target_dir: Path,
-    decompressed_data: bytes,
+    decompressor: Decompressor,
+    compressed_data: bytes,
 ) -> None:
+    decompressed_data = decompressor(compressed_data)
     target_dir.resolve().mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(
         dir=target_dir,
@@ -402,8 +405,12 @@ async def agent_data(
             detail=f"Unsupported compression algorithm: {compression}",
         ) from e
 
+    compressed_agent_data = await monitoring_data.read()
     try:
-        decompressed_agent_data = decompressor(monitoring_data.file.read())
+        # Off the loop: decompressing and writing big agent outputs stalls every other request.
+        await run_in_threadpool(
+            _store_agent_data, host.source_path, decompressor, compressed_agent_data
+        )
     except DecompressionError as e:
         logger.error(
             "uuid=%(uuid)s Decompression of agent data failed: %(error)s",
@@ -413,11 +420,6 @@ async def agent_data(
             status_code=HTTPStatus.BAD_REQUEST,
             detail="Decompression of agent data failed",
         ) from e
-
-    _store_agent_data(
-        host.source_path,
-        decompressed_agent_data,
-    )
 
     logger.info(
         "uuid=%(uuid)s Agent data saved",

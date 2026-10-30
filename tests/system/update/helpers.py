@@ -25,6 +25,7 @@ from tests.testlib.common.version import (
     CMKVersion,
     edition_from_env,
     get_min_version,
+    supported_base_versions,
     TypeCMKEdition,
 )
 from tests.testlib.system.edition_setup import edition_setup
@@ -426,12 +427,9 @@ class BaseVersions:
 
     @classmethod
     def _version_lists(cls) -> list[list[str]]:
-        """The release-system-maintained version lists, oldest branch first."""
-        previous_branch = cls._read_versions("base_versions_previous_branch.json")
-        if previous_branch is None:
-            previous_branch = cls._read_versions("base_versions.json")
-        if previous_branch is None:
-            raise FileNotFoundError(f"No base versions list found in {MODULE_PATH}")
+        """The version lists, oldest branch first: the supported base versions
+        (tests/testlib/common) and, if present, the current branch's own."""
+        previous_branch = [version.version for version in supported_base_versions()]
         current_branch = cls._read_versions("base_versions_current_branch.json")
         return [previous_branch] + ([current_branch] if current_branch else [])
 

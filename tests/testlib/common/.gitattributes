@@ -1,0 +1,2 @@
+# generated file: the release system appends every patch release
+supported_base_versions.json  rules-lint-ignored=true

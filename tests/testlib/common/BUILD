@@ -7,6 +7,7 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 py_library(
     name = "common",
     srcs = glob(["*.py"]),
+    data = ["supported_base_versions.json"],
     imports = ["../../.."],
     visibility = [
         "//buildscripts/scripts:__pkg__",

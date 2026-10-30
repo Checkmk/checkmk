@@ -117,7 +117,7 @@ class PreUpdateRulesets(PreUpdateAction):
                     f"Ruleset: {ruleset.name}\n"
                     f"Title: {ruleset.title()}\n"
                     f"Folder: {folder.path() or 'main'}\n"
-                    f"Rule nr: {index + 1}\n"
+                    f"Rule nr: {index}\n"
                     f"Exception: {exception}\n\n"
                 )
                 logger.error(error_message)
@@ -212,7 +212,7 @@ def _validate_rule_values(
                         f"Ruleset: {ruleset.name}",
                         f"Title: {ruleset.title()}",
                         f"Folder: {folder.path() or 'main'}",
-                        f"Rule nr: {index + 1}",
+                        f"Rule nr: {index}",
                         "At the moment your regex works correctly, but it might stop working or",
                         "behave differently in a future Python version. Please consider updating it.",
                         "",
@@ -226,7 +226,7 @@ def _validate_rule_values(
                         f"Ruleset: {ruleset.name}",
                         f"Title: {ruleset.title()}",
                         f"Folder: {folder.path() or 'main'}",
-                        f"Rule nr: {index + 1}",
+                        f"Rule nr: {index}",
                     ]
                     add_info = _additional_info(ruleset, rule.value, contact_groups)
                     logger.exception("\n".join(error_messages + add_info.messages))

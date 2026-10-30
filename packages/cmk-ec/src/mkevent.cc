@@ -16,7 +16,6 @@
 #include <chrono>
 #include <csignal>
 #include <cstdlib>
-#include <cstring>
 #include <ctime>
 #include <iostream>
 #include <memory>
@@ -41,23 +40,27 @@ enum class ExitCode {
     permanent_error = 2,
 };
 
-// NOLINTBEGIN(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-pro-bounds-array-to-pointer-decay,cppcoreguidelines-pro-bounds-constant-array-index,cppcoreguidelines-pro-bounds-pointer-arithmetic,misc-const-correctness)
-char *append_str(std::string_view str, char *dest) {
-    memcpy(dest, str.data(), str.size());
-    return dest + str.size();
+// Like with the old message buffer of 8192 bytes, including the NUL
+constexpr std::string::size_type max_message_length = 8191;
+
+// Is the byte a continuation byte (10xxxxxx) of a UTF-8 character?
+bool is_continuation_byte(char byte) {
+    return (static_cast<unsigned char>(byte) & 0xC0U) == 0x80U;
 }
 
-char *append_int(long n, char *dest) {
-    static char digits[] = "0123456789";
-    char buf[32];
-    buf[31] = 0;
-    char *b = buf + 31;
-    do {
-        *(--b) = digits[n % 10];
-    } while ((n /= 10) > 0);
-    return append_str(b, dest);
+// The length of the message cut off after at most max_message_length bytes,
+// but not within a UTF-8 character
+std::string::size_type truncated_length(std::string_view message) {
+    if (message.size() <= max_message_length) {
+        return message.size();
+    }
+    // Cut off the start of a split character, too, which has at most 4 bytes.
+    auto length = max_message_length;
+    for (int i = 0; i < 3 && is_continuation_byte(message[length]); ++i) {
+        --length;
+    }
+    return length;
 }
-// NOLINTEND(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-pro-bounds-array-to-pointer-decay,cppcoreguidelines-pro-bounds-constant-array-index,cppcoreguidelines-pro-bounds-pointer-arithmetic,misc-const-correctness)
 
 std::string default_pipe_path(std::string_view program) {
     // NOLINTNEXTLINE(concurrency-mt-unsafe)
@@ -120,31 +123,20 @@ std::optional<Notification> parse_notification(std::span<char *const> args) {
         contact = "";
     }
 
-    // NOLINTBEGIN(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-pro-bounds-array-to-pointer-decay,cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    char message[8192];
-    char *w = message;
-    *w++ = '<';
-    w = append_int((static_cast<long>(facility) << 3) +
-                       syslog_priority(state, service.empty()),
-                   w);
-    *w++ = '>';
-    *w++ = '@';
-    w = append_int(std::time(nullptr), w);
-    *w++ = ';';
-    w = append_int(atoi(sl_text), w);
-    *w++ = ';';
-    w = append_str(contact, w);
-    *w++ = ';';
-    *w++ = ' ';
-    w = append_str(hostname, w);
-    *w++ = ' ';
-    w = append_str(service.empty() ? "HOST" : service, w);
-    *w++ = ':';
-    *w++ = ' ';
-    w = append_str(text, w);
-    *w = 0;
-    return Notification{.remote = args[1], .message = message};
-    // NOLINTEND(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-pro-bounds-array-to-pointer-decay,cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    std::string message =
+        "<" +
+        std::to_string((static_cast<long>(facility) << 3) +
+                       syslog_priority(state, service.empty())) +
+        ">@" + std::to_string(std::time(nullptr)) + ";" +
+        std::to_string(atoi(sl_text)) + ";";
+    message += contact;
+    message += "; ";
+    message += hostname;
+    message += " ";
+    message += service.empty() ? "HOST" : service;
+    message += ": ";
+    message += text;
+    return Notification{.remote = args[1], .message = std::move(message)};
 }
 
 ExitCode send_via_syslog(const std::string &remote,
@@ -421,12 +413,9 @@ int main(int argc, char **argv) {
         remote = std::move(notification->remote);
         message = std::move(notification->message);
     } else {
-        // NOLINTBEGIN(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-pro-bounds-array-to-pointer-decay)
-        char buffer[8192];
-        strncpy(buffer, args[1], sizeof(buffer) - 1);
-        message = buffer;
-        // NOLINTEND(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-pro-bounds-array-to-pointer-decay)
+        message = args[1];
     }
+    message.resize(truncated_length(message));
 
     // If we have a remote host, send the message to it via syslog.
     if (!remote.empty()) {

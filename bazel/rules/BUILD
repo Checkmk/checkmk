@@ -115,7 +115,10 @@ js_binary(
     entry_point = ":vue_type_check_tsconfig_lib",
 )
 
-vue_tsc_bin.vue_tsc_binary(name = "vue_tsc")
+vue_tsc_bin.vue_tsc_binary(
+    name = "vue_tsc",
+    env = {"NODE_OPTIONS": "--max-old-space-size=8192"},
+)
 
 py_library(
     name = "runpath_patch",

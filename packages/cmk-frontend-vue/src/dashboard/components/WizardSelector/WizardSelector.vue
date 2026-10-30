@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkSlideIn from 'cmk-ui-library/components/CmkSlideIn'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { computed, ref, watch } from 'vue'
 
 import type { DashboardFeatures, DashboardKey } from '../../types/dashboard.ts'
 import type { ContextFilters } from '../../types/filter.ts'
@@ -41,6 +42,7 @@ interface AllWizardsProps {
   editWidgetSpec: WidgetSpec | null
   editWidgetId: string | null
   dashboardFeatures: DashboardFeatures
+  mayEditCustomGraph?: boolean
 }
 
 const { _t } = usei18n()
@@ -62,6 +64,18 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps<AllWizardsProps>()
+
+// The graph of a linked widget the user switched to Clone, which replaces the Link wizard.
+const linkedGraphToClone = ref<string | null>(null)
+watch(
+  () => [props.selectedWizard, props.isOpen],
+  () => {
+    linkedGraphToClone.value = null
+  }
+)
+const activeWizard = computed(() =>
+  linkedGraphToClone.value === null ? props.selectedWizard : 'clone_custom_graph'
+)
 
 const handleGoBack = () => {
   emit('back-button')
@@ -92,10 +106,10 @@ const handleAddEditWidget = (
       :aria-label="
         props.editWidgetId ? _t('Edit widget properties') : _t('Add widget to dashboard')
       "
-      :size="wizardSlideInSize(selectedWizard)"
+      :size="wizardSlideInSize(activeWizard)"
     >
       <AlertsAndNotificationsWizard
-        v-if="selectedWizard === 'alerts_notifications'"
+        v-if="activeWizard === 'alerts_notifications'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"
@@ -107,7 +121,7 @@ const handleAddEditWidget = (
       />
 
       <HostsSiteWizard
-        v-if="selectedWizard === 'host_site_overview'"
+        v-if="activeWizard === 'host_site_overview'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"
@@ -120,7 +134,7 @@ const handleAddEditWidget = (
       />
 
       <HwSwInventoryWizard
-        v-if="selectedWizard === 'hw_sw_inventory'"
+        v-if="activeWizard === 'hw_sw_inventory'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"
@@ -132,7 +146,7 @@ const handleAddEditWidget = (
       />
 
       <MetricsWizard
-        v-if="selectedWizard === 'metrics_graphs'"
+        v-if="activeWizard === 'metrics_graphs'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"
@@ -145,7 +159,7 @@ const handleAddEditWidget = (
       />
 
       <ServicesOverviewWizard
-        v-if="selectedWizard === 'service_overview'"
+        v-if="activeWizard === 'service_overview'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"
@@ -158,7 +172,7 @@ const handleAddEditWidget = (
       />
 
       <MonitoringTableWizard
-        v-if="selectedWizard === 'view'"
+        v-if="activeWizard === 'view'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"
@@ -170,7 +184,7 @@ const handleAddEditWidget = (
       />
 
       <ViewWizardWrapper
-        v-if="selectedWizard === 'classic_view'"
+        v-if="activeWizard === 'classic_view'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"
@@ -183,7 +197,7 @@ const handleAddEditWidget = (
       />
 
       <EventsWizard
-        v-if="selectedWizard === 'event_stats'"
+        v-if="activeWizard === 'event_stats'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"
@@ -195,19 +209,21 @@ const handleAddEditWidget = (
       />
 
       <CustomGraphsWizard
-        v-if="selectedWizard === 'link_custom_graph'"
+        v-if="activeWizard === 'link_custom_graph'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
+        :may-edit-custom-graph="mayEditCustomGraph ?? false"
+        @clone-graph="(name) => (linkedGraphToClone = name)"
         @go-back="handleGoBack"
         @close="handleClose"
         @add-widget="handleAddEditWidget"
       />
 
       <CreateCustomGraphWizard
-        v-if="selectedWizard === 'new_custom_graph'"
+        v-if="activeWizard === 'new_custom_graph'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"
@@ -219,19 +235,20 @@ const handleAddEditWidget = (
       />
 
       <CloneCustomGraphWizard
-        v-if="selectedWizard === 'clone_custom_graph'"
+        v-if="activeWizard === 'clone_custom_graph'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
+        :linked-graph="linkedGraphToClone"
         @go-back="handleGoBack"
         @close="handleClose"
         @add-widget="handleAddEditWidget"
       />
 
       <OtherWizard
-        v-if="selectedWizard === 'other'"
+        v-if="activeWizard === 'other'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"
@@ -243,7 +260,7 @@ const handleAddEditWidget = (
       />
 
       <NtopWizard
-        v-if="selectedWizard === 'ntop'"
+        v-if="activeWizard === 'ntop'"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
         @close="handleClose"

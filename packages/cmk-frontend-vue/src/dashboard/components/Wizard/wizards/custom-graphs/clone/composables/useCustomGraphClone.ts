@@ -51,7 +51,11 @@ export interface UseCustomGraphClone {
   validate: () => boolean
 }
 
-export function useCustomGraphClone(handler: UseEmbeddedCustomGraph): UseCustomGraphClone {
+/** `initialGraph` names a catalog graph to copy as soon as the catalog has loaded. */
+export function useCustomGraphClone(
+  handler: UseEmbeddedCustomGraph,
+  initialGraph: string | null = null
+): UseCustomGraphClone {
   const catalog = ref<CatalogGraph[]>([])
   const selected = ref<SelectedGraph | null>(null)
   const loading = ref(false)
@@ -83,8 +87,6 @@ export function useCustomGraphClone(handler: UseEmbeddedCustomGraph): UseCustomG
       error.value = errorMessage(reason)
     }
   }
-  void loadCatalog()
-
   const hasEdits = (editorModified: boolean): boolean =>
     editedSources ||
     editorModified ||
@@ -142,6 +144,19 @@ export function useCustomGraphClone(handler: UseEmbeddedCustomGraph): UseCustomG
     selectionErrors.value = selected.value === null ? [_t('Select a custom graph to clone.')] : []
     return selectionErrors.value.length === 0 && error.value === null
   }
+
+  // The catalog holds one graph per name, the one a linked widget shows.
+  void loadCatalog().then(() => {
+    if (initialGraph === null) {
+      return
+    }
+    const linked = catalog.value.find((graph) => graph.name === initialGraph)
+    if (linked !== undefined) {
+      void clone(catalogKey(linked))
+    } else if (error.value === null) {
+      error.value = _t('The linked custom graph is not available for cloning.')
+    }
+  })
 
   return {
     catalogItems,

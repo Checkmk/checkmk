@@ -34,12 +34,18 @@ import Stage2 from './create/stage2/StageContents.vue'
 
 const { _t } = usei18n()
 
-const { contextFilters, editWidgetSpec } = defineProps<{
+const {
+  contextFilters,
+  editWidgetSpec,
+  linkedGraph = null
+} = defineProps<{
   tick: number
   range: DateTimeRange
   dashboardKey: DashboardKey
   contextFilters: ContextFilters
   editWidgetSpec: WidgetSpec | null
+  /** The graph name of a linked custom graph widget switched to clone, copied right away. */
+  linkedGraph?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -70,7 +76,7 @@ const filters = computed(() => parseContextConfiguredFilters(contextFilters))
 
 const handler = useEmbeddedCustomGraph(editWidgetSpec)
 // Kept here, as each stage is unmounted when the other one shows.
-const cloneState = useCustomGraphClone(handler)
+const cloneState = useCustomGraphClone(handler, linkedGraph)
 </script>
 
 <template>

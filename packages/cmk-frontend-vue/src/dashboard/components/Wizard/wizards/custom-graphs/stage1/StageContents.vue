@@ -4,11 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, toValue } from 'vue'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import { computed, ref, toValue } from 'vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import type { DashboardKey } from '@/dashboard/types/dashboard'
@@ -18,6 +19,7 @@ import type {
   WidgetGeneralSettings,
   WidgetSpec
 } from '@/dashboard/types/widget'
+import { listCustomGraphMetadata } from '@/graphing/designer/api'
 
 import ActionBar from '../../../components/ActionBar.vue'
 import ActionButton from '../../../components/ActionButton.vue'
@@ -32,6 +34,7 @@ interface Stage1Props {
   dashboardKey: DashboardKey
   filters: ConfiguredFilters
   editWidgetSpec: WidgetSpec | null
+  mayEditCustomGraph: boolean
 }
 
 const props = defineProps<Stage1Props>()
@@ -44,6 +47,8 @@ const emit = defineEmits<{
     generalSettings: WidgetGeneralSettings,
     filterContext: WidgetFilterContext
   ]
+  /** Replace the linked graph with an editable copy of it. */
+  cloneGraph: [name: string]
 }>()
 
 const addWidget = async () => {
@@ -60,6 +65,35 @@ const addWidget = async () => {
 }
 
 const isUpdate = computed(() => props.editWidgetSpec !== null)
+const mayClone = isUpdate.value && props.mayEditCustomGraph
+
+const cloneableGraph = computed(() => (mayClone ? handler.customGraph.value : null))
+
+// The widget stores only the graph's name; without the catalog, the name stands in for the title.
+const catalogTitles = ref<Record<string, string>>({})
+if (mayClone) {
+  void listCustomGraphMetadata()
+    .then((collection) => {
+      catalogTitles.value = Object.fromEntries(
+        collection.value.flatMap((entry) =>
+          entry.id === undefined ? [] : [[entry.id, entry.title ?? entry.id]]
+        )
+      )
+    })
+    .catch(() => {})
+}
+
+const cloneableGraphTitle = computed(() =>
+  cloneableGraph.value === null
+    ? null
+    : (catalogTitles.value[cloneableGraph.value] ?? cloneableGraph.value)
+)
+
+function cloneGraph(): void {
+  if (cloneableGraph.value !== null) {
+    emit('cloneGraph', cloneableGraph.value)
+  }
+}
 </script>
 
 <template>
@@ -79,6 +113,21 @@ const isUpdate = computed(() => props.editWidgetSpec !== null)
 
   <ContentSpacer />
 
+  <CmkAlert
+    v-if="cloneableGraphTitle !== null"
+    variant="info"
+    class="db-stage-contents__alert"
+    :heading="_t('Linked to catalog graph “%{title}”', { title: cloneableGraphTitle })"
+    :text="
+      untranslated(
+        `${_t('Changes here affect only this widget.')}\n${_t('Clone the graph to edit the query, metrics or visualization.')}`
+      )
+    "
+    :main-button="{ title: _t('Clone & edit graph'), onclick: cloneGraph }"
+  />
+
+  <ContentSpacer />
+
   <CustomGraphWidget
     v-model:handler="handler"
     :dashboard-key="dashboardKey"
@@ -86,3 +135,10 @@ const isUpdate = computed(() => props.editWidgetSpec !== null)
     :range="range"
   />
 </template>
+
+<style scoped>
+.db-stage-contents__alert {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+</style>

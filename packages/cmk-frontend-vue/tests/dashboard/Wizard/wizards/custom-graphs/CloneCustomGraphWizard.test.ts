@@ -14,6 +14,7 @@ import CloneCustomGraphWizard from '@/dashboard/components/Wizard/wizards/custom
 import { useProvideDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
+import type { WidgetSpec } from '@/dashboard/types/widget'
 
 import { makeContentProps } from '@tests/dashboard/contentProps'
 import { flushPromises } from '@tests/dashboard/utils'
@@ -143,7 +144,21 @@ beforeEach(() => {
   putSpy = vi.spyOn(client, 'PUT')
 })
 
-function renderWizard() {
+const LINKED_WIDGET = {
+  content: {
+    type: 'custom_graph',
+    custom_graph: 'cpu',
+    timerange: { type: 'graph', duration: 4 * 3600 },
+    graph_render_options: {}
+  },
+  filter_context: { filters: {}, uses_infos: [] },
+  general_settings: {
+    title: { text: '$DEFAULT_TITLE$', render_mode: 'with_background' },
+    render_background: true
+  }
+} as unknown as WidgetSpec
+
+function renderWizard(editWidgetSpec: WidgetSpec | null = null, linkedGraph: string | null = null) {
   const onAddWidget = vi.fn()
   const provider = defineComponent({
     setup() {
@@ -158,7 +173,8 @@ function renderWizard() {
             range: makeContentProps(null).range,
             dashboardKey: { name: 'main', owner: '' },
             contextFilters: {},
-            editWidgetSpec: null,
+            editWidgetSpec,
+            linkedGraph,
             onAddWidget
           })
         )
@@ -406,5 +422,37 @@ describe('CloneCustomGraphWizard', () => {
     expect(
       posted.filter((path) => path.startsWith('/domain-types/custom_graph/collections'))
     ).toEqual([])
+  })
+
+  test('opens a switched linked widget with a copy of its graph', async () => {
+    renderWizard(LINKED_WIDGET, 'cpu')
+
+    expect(await screen.findByRole('heading', { name: 'CPU' })).toBeInTheDocument()
+    await waitFor(() => expect(previewedSourceIds()).toContainEqual(['A', 'B']))
+  })
+
+  test('tells when the graph of a switched linked widget is not in the catalog', async () => {
+    renderWizard(LINKED_WIDGET, 'deleted')
+
+    expect(
+      await screen.findByText('The linked custom graph is not available for cloning.')
+    ).toBeInTheDocument()
+    expect(catalogRequests()).toEqual([])
+  })
+
+  test('saves a switched linked widget as an embedded copy with its time range', async () => {
+    const { onAddWidget } = renderWizard(LINKED_WIDGET, 'cpu')
+    await screen.findAllByLabelText('Title')
+    await gotoWidgetSettings()
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Save widget' }))
+
+    await waitFor(() => expect(onAddWidget).toHaveBeenCalled())
+    expect(onAddWidget.mock.calls[0]![0]).toMatchObject({
+      type: 'embedded_custom_graph',
+      definition: { data_sources: [expect.objectContaining({ id: 'A' }), expect.anything()] },
+      timerange: { type: 'graph', duration: 4 * 3600 }
+    })
+    expect(onAddWidget.mock.calls[0]![1].title.text).toBe('CPU')
   })
 })

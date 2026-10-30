@@ -17,6 +17,8 @@
   "tests/dashboard/Wizard/components/autocompleters/useLabelValueAutocomplete.test.ts",
   "tests/dashboard/Wizard/wizards/custom-graphs/CloneCustomGraphWizard.test.ts",
   "tests/dashboard/Wizard/wizards/custom-graphs/CreateCustomGraphWizard.test.ts",
+  "tests/dashboard/components/WizardSelector/WizardSelector.test.ts",
+  "tests/dashboard/Wizard/wizards/custom-graphs/CustomGraphsWizard.test.ts",
   "tests/dashboard/Wizard/wizards/custom-graphs/editor/CustomGraphEditor.test.ts",
   "tests/dashboard/Wizard/wizards/custom-graphs/create/stage2/EmbeddedCustomGraphWidget.test.ts",
   "tests/dashboard/Wizard/wizards/dashboard-settings/DashboardSettingsWizard.test.ts",

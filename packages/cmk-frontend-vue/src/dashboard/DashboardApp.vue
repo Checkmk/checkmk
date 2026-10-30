@@ -787,6 +787,7 @@ const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(
           :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit ?? null)"
           :edit-widget-id="widgetToEdit"
           :dashboard-features="available_features.dashboard_features"
+          :may-edit-custom-graph="props.permissions.edit_custom_graph"
           @back-button="handleWizardSelectorGoBack"
           @close-wizard="handleWizardClose"
           @add-widget="addWidget"

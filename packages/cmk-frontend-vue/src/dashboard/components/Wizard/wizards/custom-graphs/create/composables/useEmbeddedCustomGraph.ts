@@ -19,7 +19,11 @@ import {
 import type { WidgetProps } from '@/dashboard/components/Wizard/types'
 import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { computePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
-import type { EmbeddedCustomGraphContent, WidgetSpec } from '@/dashboard/types/widget'
+import type {
+  CustomGraphContent,
+  EmbeddedCustomGraphContent,
+  WidgetSpec
+} from '@/dashboard/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 import { computeEpochTimeRange } from '@/graphing/components/GraphFigure/computeEpochTimeRange'
 import type { CustomGraphOptions } from '@/graphing/designer/api'
@@ -67,6 +71,12 @@ export function useEmbeddedCustomGraph(currentSpec?: WidgetSpec | null): UseEmbe
       ? (currentSpec.content as EmbeddedCustomGraphContent)
       : null
   const definition = currentContent?.definition as Partial<EmbeddedGraphDefinition> | undefined
+  // A linked widget switched to an embedded copy keeps its time range and graph options.
+  const settingsContent =
+    currentContent ??
+    (currentSpec?.content?.type === 'custom_graph'
+      ? (currentSpec.content as CustomGraphContent)
+      : null)
   const constants = useInjectDashboardConstants()
 
   const visualization = useWidgetVisualizationProps(
@@ -75,14 +85,14 @@ export function useEmbeddedCustomGraph(currentSpec?: WidgetSpec | null): UseEmbe
     CONTENT_TYPE
   )
   const renderOptions = useGraphRenderOptions(
-    currentContent?.graph_render_options,
-    currentContent === null
+    settingsContent?.graph_render_options,
+    settingsContent === null
   )
   const {
     followDashboard: followDashboardTimeRange,
     timeRange,
     widgetProps: timeRangeSpec
-  } = useTimeRangeSource(currentContent?.timerange ?? null)
+  } = useTimeRangeSource(settingsContent?.timerange ?? null)
   const previewTimeRange = computed(() => {
     const spec = timeRangeSpec()
     return spec === 'dashboard' ? undefined : computeEpochTimeRange(spec)

@@ -2676,10 +2676,10 @@ class CustomGraphAPI(BaseAPI):
 
 
 class DashboardAPI(BaseAPI):
-    """Dashboards created through the relative-grid REST model.
+    """Dashboards created through the relative-grid REST model and read through the responsive one.
 
     Only registered at ``APIVersion.UNSTABLE``, unlike most of this session's other
-    sub-clients (``INTERNAL``): the endpoint itself has no stable version yet.
+    sub-clients (``INTERNAL``): the endpoints themselves have no stable version yet.
     """
 
     def create_relative_grid_dashboard(self, body: Mapping[str, Any]) -> dict[str, Any]:
@@ -2697,12 +2697,32 @@ class DashboardAPI(BaseAPI):
             )
         return parsed
 
-    def delete(self, dashboard_id: str) -> None:
+    def get_responsive_grid_dashboard(self, dashboard_id: str) -> dict[str, Any] | None:
+        """The responsive dashboard this ID resolves to for the requesting user, or None."""
+        response = self.session.get(
+            f"objects/dashboard_responsive_grid/{dashboard_id}",
+            api_version=APIVersion.UNSTABLE,
+        )
+        if response.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            return None
+        parsed = response.json()
+        extensions = parsed.get("extensions") if isinstance(parsed, dict) else None
+        if not isinstance(extensions, dict):
+            raise UnexpectedResponse(
+                response.status_code, f"expected a JSON object with extensions, got {parsed!r}"
+            )
+        return extensions
+
+    def delete(self, dashboard_id: str, ignore_missing: bool = False) -> None:
         response = self.session.delete(
             f"objects/dashboard/{dashboard_id}",
             api_version=APIVersion.UNSTABLE,
             headers={"If-Match": "*"},
         )
+        if ignore_missing and response.status_code == HTTPStatus.NOT_FOUND:
+            return
         if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 

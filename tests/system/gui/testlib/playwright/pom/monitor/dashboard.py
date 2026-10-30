@@ -110,6 +110,20 @@ class BaseDashboard(CmkPage):
             unique_id: the ID of the clone. Must be snake case.
         """
         self.get_menu_button("Clone").click()
+        self._clone_in_sidebar(title, unique_id)
+
+    def clone_as_responsive_dashboard(self, title: str, unique_id: str) -> None:
+        """Clone the open anchored dashboard into a responsive copy through the Settings menu.
+
+        Args:
+            title: the title of the clone.
+            unique_id: the ID of the clone. Must be snake case.
+        """
+        self._menu_header.get_by_role("button", name="Settings", exact=True).click()
+        self._menu_header.get_by_text("Clone as responsive dashboard", exact=True).click()
+        self._clone_in_sidebar(title, unique_id)
+
+    def _clone_in_sidebar(self, title: str, unique_id: str) -> None:
         clone_dashboard_sidebar = CloneDashboardSidebar(self.page)
         clone_dashboard_sidebar.name_input.fill(title)
         clone_dashboard_sidebar.fill_unique_id(unique_id)
@@ -118,6 +132,16 @@ class BaseDashboard(CmkPage):
             clone_dashboard_sidebar.clone_button,
             re.compile(rf"dashboard\.py\?name={re.escape(unique_id)}(?:&|$)"),
         )
+
+    @property
+    def clone_success_alert(self) -> Locator:
+        """Locator property for the message shown on a dashboard that was just cloned."""
+        return self.main_area.locator().get_by_role("status", name=re.compile(r"^Dashboard cloned"))
+
+    @property
+    def widgets(self) -> Locator:
+        """Locator property for every widget on the dashboard."""
+        return self.main_area.locator().get_by_label("Widget", exact=True)
 
     def get_widget(self, widget_title: str) -> Locator:
         """Get the Locator of the widget with the given title.

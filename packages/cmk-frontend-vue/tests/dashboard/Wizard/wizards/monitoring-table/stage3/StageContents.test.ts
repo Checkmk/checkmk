@@ -87,6 +87,15 @@ function renderStage3(currentSettings?: WidgetGeneralSettings) {
 }
 
 describe('monitoring table visualization', () => {
+  it('offers the title settings but no widget background', () => {
+    renderStage3()
+
+    expect(screen.getByRole('checkbox', { name: 'Show title background' })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('checkbox', { name: 'Show widget background' })
+    ).not.toBeInTheDocument()
+  })
+
   it('places the widget without a title when the title is hidden', async () => {
     const user = userEvent.setup()
     const saved = renderStage3()

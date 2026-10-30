@@ -108,7 +108,6 @@ function saveWidget() {
       <WidgetVisualization
         v-model:show-title="visualization.showTitle.value"
         v-model:show-title-background="visualization.showTitleBackground.value"
-        v-model:show-widget-background="visualization.showWidgetBackground.value"
         v-model:title="visualization.title.value"
         v-model:title-url="visualization.titleUrl.value"
         v-model:title-url-enabled="visualization.titleUrlEnabled.value"

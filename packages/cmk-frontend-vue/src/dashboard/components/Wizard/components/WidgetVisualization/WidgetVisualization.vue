@@ -48,7 +48,10 @@ const titleUrlValidationErrors = defineModel<string[]>('titleUrlValidationErrors
 })
 const showTitle = defineModel<boolean>('showTitle', { required: true })
 const showTitleBackground = defineModel<boolean>('showTitleBackground', { required: true })
-const showWidgetBackground = defineModel<boolean>('showWidgetBackground', { required: true })
+// Offered only where a wizard binds it; the default keeps Vue from casting it to false.
+const showWidgetBackground = defineModel<boolean | undefined>('showWidgetBackground', {
+  default: undefined
+})
 </script>
 
 <template>
@@ -90,7 +93,7 @@ const showWidgetBackground = defineModel<boolean>('showWidgetBackground', { requ
         <div class="field-component__item">
           <CmkCheckbox v-model="showTitleBackground" :label="_t('Show title background')" />
         </div>
-        <div class="field-component__item">
+        <div v-if="showWidgetBackground !== undefined" class="field-component__item">
           <CmkCheckbox v-model="showWidgetBackground" :label="_t('Show widget background')" />
         </div>
       </FieldComponent>

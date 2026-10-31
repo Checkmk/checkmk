@@ -1078,9 +1078,10 @@ always starts with a fresh full state; the daemon keeps no per-client history.
 Editing and saving a map
 ------------------------
 
-When the user adds or removes objects, the SPA re-registers the edited config
+When the user adds, removes or rebinds objects, the SPA re-registers the edited config
 unsigned with the daemon, so that new objects show their live state right away.
-Moving objects or changing their properties does not trigger this. The daemon
+Moving or restyling objects does not trigger this, except moving a location
+bundle, whose members include the hosts at its coordinates. The daemon
 accepts the unsigned config only for the user's own maps; while editing a
 foreign or built-in map, the live preview of new objects fails.
 

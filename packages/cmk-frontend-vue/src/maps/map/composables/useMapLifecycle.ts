@@ -18,7 +18,43 @@ import { onUnmounted, watch, watchEffect } from 'vue'
 
 import { isAutoObjectId } from '@/maps/api/wire'
 import { useMaps, useStates, useToast } from '@/maps/services/context'
-import type { MapConfig } from '@/maps/types/api'
+import type { MapConfig, MapElement } from '@/maps/types/api'
+
+/** What the daemon resolves an object by; layout and looks are left out. */
+const RESOLVED_BY = [
+  'type',
+  'connection_id',
+  'host_name',
+  'service_description',
+  'group_name',
+  'map_name',
+  'aggregation_id',
+  'cmk_label_name',
+  'cmk_label_value',
+  'cmk_label_target',
+  'object_types',
+  'object_filter',
+  'bundle_kind',
+  'bundle_hosts',
+  'bundle_precision',
+  'expand_depth',
+  'only_hard_states',
+  'recognize_services',
+  'exclude_members',
+  'exclude_member_states',
+  'line_object_type',
+  'weathermap_metric',
+  'weathermap_metric_out'
+] as const satisfies readonly (keyof MapElement)[]
+
+function resolvedBy(object: MapElement): string {
+  const key: unknown[] = [object.id, ...RESOLVED_BY.map((field) => object[field])]
+  if (object.bundle_kind === 'location') {
+    // A location bundle also takes the hosts at its coordinates.
+    key.push(object.lat, object.lng)
+  }
+  return JSON.stringify(key)
+}
 
 export function useMapLifecycle(source: {
   mapName: () => string
@@ -90,19 +126,27 @@ export function useMapLifecycle(source: {
   /**
    * The daemon resolves state for the object set it was handed when the stream
    * opened — the map configuration lives in the GUI, not in the daemon. So when
-   * the operator adds or removes an object, the updated map is registered again
-   * and the new object gets state immediately instead of only after a reload.
+   * the operator adds, removes or rebinds an object — a dynamic group's filter included —
+   * the updated map is registered again and gets state immediately instead of
+   * only after a reload.
    *
-   * Keyed on the set of ids, so moving an object or editing its properties —
-   * neither of which changes what to resolve — does not trigger a round trip.
-   * The auto-source hosts are left out: the daemon inflates those itself.
+   * Keyed on what is resolved, so moving or restyling an object does not
+   * trigger a round trip, except moving a location bundle. The auto-source
+   * hosts are left out: the daemon inflates those itself. Only who may edit
+   * the map can change its objects, and every field watched costs memory on a
+   * large map.
    */
   watch(
-    () =>
-      maps.currentMap.value?.objects
-        .map((object) => object.id)
-        .filter((id) => !isAutoObjectId(id))
-        .join('\n'),
+    () => {
+      const map = maps.currentMap.value
+      if (!map || !maps.mayEdit(map.name)) {
+        return undefined
+      }
+      return map.objects
+        .filter((object) => !isAutoObjectId(object.id))
+        .map(resolvedBy)
+        .join('\n')
+    },
     (ids, previous) => {
       // The initial load and the unload are not edits.
       if (ids === undefined || previous === undefined) {

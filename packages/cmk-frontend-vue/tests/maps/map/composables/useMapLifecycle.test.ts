@@ -7,8 +7,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { type Ref, nextTick, ref } from 'vue'
 
 import { useMapLifecycle } from '@/maps/map/composables/useMapLifecycle'
+import type { MapElement } from '@/maps/types/api'
 
-import { aMap, anObject } from '../../support/fixtures'
+import { aListedMap, aMap, anObject } from '../../support/fixtures'
 import { fakeMapsServices, mountWithServices } from '../../support/services'
 
 let services: ReturnType<typeof fakeMapsServices>
@@ -145,6 +146,7 @@ describe('useMapLifecycle', () => {
 
   it('does not re-register the map for its auto-source hosts', async () => {
     vi.spyOn(services.maps, 'fetchMap').mockResolvedValue(undefined)
+    services.maps.maps.value = [aListedMap({ name: 'world', can_edit: true })]
     services.maps.currentMap.value = aMap({
       name: 'world',
       objects: [anObject({ id: 'core', type: 'host' })]
@@ -153,6 +155,73 @@ describe('useMapLifecycle', () => {
     await settle()
 
     services.maps.currentMap.value!.objects.push(anObject({ id: 'auto:db01', type: 'host' }))
+    await settle()
+
+    expect(services.states.reregister).not.toHaveBeenCalled()
+  })
+
+  it('re-registers the map when a dynamic group is given another filter', async () => {
+    vi.spyOn(services.maps, 'fetchMap').mockResolvedValue(undefined)
+    services.maps.maps.value = [aListedMap({ name: 'groups', can_edit: true })]
+    services.maps.currentMap.value = aMap({
+      name: 'groups',
+      objects: [anObject({ id: 'g1', type: 'dyngroup', object_types: 'host', object_filter: null })]
+    })
+    mountLifecycle(ref('groups'))
+    await settle()
+
+    services.maps.currentMap.value!.objects[0]!.object_filter = 'Filter: name = db01'
+    await settle()
+
+    expect(services.states.reregister).toHaveBeenCalledOnce()
+  })
+
+  it('does not re-register the map of a user who may not edit it', async () => {
+    vi.spyOn(services.maps, 'fetchMap').mockResolvedValue(undefined)
+    services.maps.maps.value = [aListedMap({ name: 'groups', can_edit: false })]
+    services.maps.currentMap.value = aMap({
+      name: 'groups',
+      objects: [anObject({ id: 'g1', type: 'dyngroup', object_types: 'host', object_filter: null })]
+    })
+    mountLifecycle(ref('groups'))
+    await settle()
+
+    services.maps.currentMap.value!.objects.push(anObject({ id: 'h1', type: 'host' }))
+    await settle()
+
+    expect(services.states.reregister).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['given another precision', (bundle: MapElement) => (bundle.bundle_precision = 2)],
+    ['moved', (bundle: MapElement) => (bundle.lat = 51)]
+  ])('re-registers the map when a location bundle is %s', async (_case, edit) => {
+    vi.spyOn(services.maps, 'fetchMap').mockResolvedValue(undefined)
+    services.maps.maps.value = [aListedMap({ name: 'world', can_edit: true })]
+    services.maps.currentMap.value = aMap({
+      name: 'world',
+      objects: [anObject({ id: 'b1', type: 'dyngroup', bundle_kind: 'location', lat: 50, lng: 8 })]
+    })
+    mountLifecycle(ref('world'))
+    await settle()
+
+    edit(services.maps.currentMap.value!.objects[0]!)
+    await settle()
+
+    expect(services.states.reregister).toHaveBeenCalledOnce()
+  })
+
+  it('does not re-register the map for a moved object', async () => {
+    vi.spyOn(services.maps, 'fetchMap').mockResolvedValue(undefined)
+    services.maps.maps.value = [aListedMap({ name: 'groups', can_edit: true })]
+    services.maps.currentMap.value = aMap({
+      name: 'groups',
+      objects: [anObject({ id: 'g1', type: 'dyngroup', object_types: 'host' })]
+    })
+    mountLifecycle(ref('groups'))
+    await settle()
+
+    services.maps.currentMap.value!.objects[0]!.x = 300
     await settle()
 
     expect(services.states.reregister).not.toHaveBeenCalled()

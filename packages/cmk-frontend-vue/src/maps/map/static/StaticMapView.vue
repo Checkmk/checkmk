@@ -28,7 +28,7 @@ import MapCanvas from './components/MapCanvas.vue'
 const { _t } = usei18n()
 
 const props = defineProps<{
-  config: MapConfig | null
+  config: MapConfig
   states: Record<string, ObjectState>
   editor: MapEditor
   /** Why the map could not be loaded, if it could not. */
@@ -55,15 +55,14 @@ const emit = defineEmits<{
 
 const canvas = useTemplateRef<InstanceType<typeof MapCanvas>>('canvas')
 
-const centered = computed(() => props.config !== null && isCentered(props.config, props.preview))
+const centered = computed(() => isCentered(props.config, props.preview))
 
 /**
  * NagVis colors the whole page, so a label hanging past the canvas still sits
  * on the map's color; a centered map fills the pane around it with it, too.
  */
 const areaStyle = computed(() =>
-  (props.config?.render_mode === 'nagvis_classic' || centered.value) &&
-  props.config?.background_color
+  (props.config.render_mode === 'nagvis_classic' || centered.value) && props.config.background_color
     ? { backgroundColor: props.config.background_color }
     : {}
 )
@@ -76,7 +75,7 @@ const areaStyle = computed(() =>
  * and needs no lock. The wait lets the sticky extents settle after an addition.
  */
 async function lockCanvasSize(): Promise<void> {
-  if (!props.config || props.config.render_mode === 'nagvis_classic') {
+  if (props.config.render_mode === 'nagvis_classic') {
     return
   }
   await nextTick()
@@ -139,7 +138,7 @@ function onLineDragStart(
 
 /** A resize writes the new footprint straight to the object it belongs to. */
 async function onResizeEnd(id: string, width: number, height: number): Promise<void> {
-  const object = props.config?.objects.find((candidate) => candidate.id === id)
+  const object = props.config.objects.find((candidate) => candidate.id === id)
   await props.editor.saveObjectFootprint(id, width, height)
   // A graph is the one sized object that can grow the canvas.
   if (object && object.type !== 'textbox') {
@@ -164,7 +163,7 @@ function onObjectDblclick(object: MapElement): void {
   >
     <MapPlaceholder v-if="error" :message="error" variant="error" />
 
-    <template v-else-if="config">
+    <template v-else>
       <MapSearch
         v-if="config.objects.length > 0 && !editor.editMode.value && !preview"
         :model-value="filterNeedle"
@@ -237,8 +236,6 @@ function onObjectDblclick(object: MapElement): void {
         @graph-resize-end="(id, width, height) => void onResizeEnd(id, width, height)"
       />
     </template>
-
-    <MapPlaceholder v-else :message="_t('Map not found')" variant="empty" />
   </div>
 </template>
 

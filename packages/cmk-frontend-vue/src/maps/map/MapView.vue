@@ -32,6 +32,7 @@ import {
 
 import BulkAckModal from '@/maps/map/commands/BulkAckModal.vue'
 import MapKioskExit from '@/maps/map/components/MapKioskExit.vue'
+import MapPlaceholder from '@/maps/map/components/MapPlaceholder.vue'
 import MapProblemsPill, { type ProblemCounts } from '@/maps/map/components/MapProblemsPill.vue'
 import MapSitesPill from '@/maps/map/components/MapSitesPill.vue'
 import MapStateAlert from '@/maps/map/components/MapStateAlert.vue'
@@ -894,7 +895,7 @@ function closeBulkAckModal(sent: boolean): void {
       />
 
       <static-map-view
-        v-else
+        v-else-if="mapConfig"
         v-model:filter-needle="mapFilterNeedle"
         v-model:problems-only="problemsOnly"
         :config="mapConfig"
@@ -909,6 +910,14 @@ function closeBulkAckModal(sent: boolean): void {
         @object-properties="openPropsModal"
         @object-delete="onObjectDelete"
         @placed="onObjectPlaced"
+      />
+      <!-- Not the static view's own, so fetching a map of another type does not
+           load that view's code. None while loading: a screen reader would
+           announce a missing map under the overlay. -->
+      <MapPlaceholder
+        v-else-if="!isLoading"
+        :message="mapsStore.error.value ?? _t('Map not found')"
+        :variant="mapsStore.error.value ? 'error' : 'empty'"
       />
 
       <!-- Kiosk mode has no topbar to say it in, and nothing on a wall display

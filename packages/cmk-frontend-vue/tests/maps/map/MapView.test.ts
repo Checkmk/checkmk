@@ -115,9 +115,8 @@ async function expectOnlyRenderer(testid: string) {
 }
 
 // The static map is the one view this file lets render for real: the others are
-// stubbed at their tag, but the error placeholder and the "map not found" state
-// come from inside ``StaticMapView``. Its chunk is loaded up front so the
-// dynamic import is not on the clock of every ``waitFor`` below.
+// stubbed at their tag. Its chunk is loaded up front so the dynamic import is not
+// on the clock of every ``waitFor`` below.
 beforeAll(async () => {
   await import('@/maps/map/static/StaticMapView.vue')
 })
@@ -218,6 +217,8 @@ describe('MapView – loading / error / read-only states', () => {
     renderMap()
     await waitFor(() => expect(screen.getByText('Loading map…')).toBeInTheDocument())
     expect(screen.queryByTestId('renderer-static')).toBeNull()
+    expect(document.querySelector('.maps-static-map-view')).toBeNull()
+    expect(screen.queryByText('Map not found')).toBeNull()
   })
 
   it('reads as connecting, not offline, until the first states arrive', async () => {

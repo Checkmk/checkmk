@@ -101,7 +101,6 @@ cc_binary(
         "manual",
         "no-lint",
     ],
-    visibility = ["//visibility:public"],
     deps = [
         ":engine",
         ":wnx_headers",

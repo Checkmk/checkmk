@@ -65,6 +65,7 @@ Components
    arch-comp-mcp.rst
    arch-comp-oauth.rst
    arch-comp-product-usage-analytics.rst
+   arch-comp-diagnostics.rst
 
    arch-comp-agent-abstract.rst
    arch-comp-agent-linux.rst

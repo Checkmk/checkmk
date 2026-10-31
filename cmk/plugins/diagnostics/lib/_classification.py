@@ -96,8 +96,8 @@ class CheckmkFileInfo(NamedTuple):
 def get_checkmk_file_info(rel_filepath: str, component: str | None = None) -> CheckmkFileInfo:
     # Some files like hosts.mk or rules.mk may be located in folder hierarchies.
     # Thus we have to find them via name. The presedence is as following:
-    # 1. CheckmkFileInfoByNameMap
-    # 2. CheckmkFileInfoByRelFilePathMap
+    # 1. CheckmkFileInfoByRelFilePathMap
+    # 2. CheckmkFileInfoByNameMap
     #
     # Note:
     # A combination FILE + COMPONENT may be only in ONE of these two maps. Otherwise

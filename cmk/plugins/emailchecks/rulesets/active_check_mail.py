@@ -6,6 +6,7 @@
 # mypy: disable-error-code="exhaustive-match"
 
 
+import ast
 from collections.abc import Mapping
 from typing import Literal
 
@@ -187,13 +188,27 @@ def _migrate_cleanup(
     value: object,
 ) -> tuple[Literal["delete"], Literal["delete"]] | tuple[Literal["move"], str]:
     match value:
-        case True | ("delete", _):
+        case True | ("delete", "delete"):
+            return "delete", "delete"
+        case ("delete", None):
+            # created by 2.4.0p23 - 2.4.0p29 and 2.5.0b1 - 2.5.0p3
             return "delete", "delete"
         case str(s):
             return "move", s
-        case ("move", str() as folder):
-            return "move", folder
-    raise ValueError(f"Invalid cleanup value: {value!r}")
+        case ("move", str(folder)):
+            # 2.4.0 - 2.4.0p22 wrapped the repr of already migrated values into a "move"
+            # (possibly repeatedly), for example ("move", "('delete', 'delete')").
+            try:
+                wrapped = ast.literal_eval(folder)
+            except (ValueError, SyntaxError):
+                return "move", folder
+            match wrapped:
+                case ("delete" | "move", _):
+                    return _migrate_cleanup(wrapped)
+                case _:
+                    return "move", folder
+        case _:
+            raise ValueError(f"Invalid cleanup value: {value!r}")
 
 
 def _forward_to_ec_form() -> Dictionary:

@@ -30,6 +30,25 @@ export interface RadarOverride {
   filterValue: string
 }
 
+/** Unsaved view settings the settings preview shows the states of. */
+export interface ViewPreview {
+  radar: RadarOverride | null
+  folder: FolderTreeOverride | null
+}
+
+function previewQuery({ radar, folder }: ViewPreview) {
+  return {
+    ...(radar && { radar_filter: radar.filter, radar_filter_value: radar.filterValue }),
+    ...(folder && {
+      ft_override: true,
+      ft_root_folder: folder.rootFolder,
+      ft_show_empty_folders: folder.showEmptyFolders,
+      ft_only_hard_states: folder.onlyHardStates,
+      ft_sites: folder.sites
+    })
+  }
+}
+
 export class MapStatesApi {
   public constructor(private readonly client: MapsDaemonClient) {}
 
@@ -37,11 +56,16 @@ export class MapStatesApi {
    * Hands the daemon the GUI-signed map so its state and stream paths can resolve
    * it. The daemon verifies the signature and keys its shared loop by the map's
    * real owner (as the GUI names it for the user), so all viewers of a published
-   * map share one poll and none can substitute a tampered config.
+   * map share one poll. Answers with the map's full states, so opening a map takes
+   * one round trip.
    */
-  public async register(name: string, signed: { config_b64: string; sig: string }): Promise<void> {
-    await this.client.POST('/api/v1/maps/{name}/register', {
-      params: { path: { name } },
+  public async register(
+    name: string,
+    signed: { config_b64: string; sig: string },
+    preview: ViewPreview
+  ): Promise<MapStates> {
+    return this.client.POST('/api/v1/maps/{name}/register', {
+      params: { path: { name }, query: previewQuery(preview) },
       body: { config_b64: signed.config_b64, sig: signed.sig }
     })
   }
@@ -52,35 +76,16 @@ export class MapStatesApi {
    * it unsigned only for a name that means the caller's own map, and keys it
    * under the caller, where it can never poison a foreign map's shared loop.
    */
-  public async registerEdit(map: MapConfig): Promise<void> {
-    await this.client.POST('/api/v1/maps/{name}/register', {
-      params: { path: { name: map.name } },
+  public async registerEdit(map: MapConfig, preview: ViewPreview): Promise<MapStates> {
+    return this.client.POST('/api/v1/maps/{name}/register', {
+      params: { path: { name: map.name }, query: previewQuery(preview) },
       body: { config: daemonConfig(map) }
     })
   }
 
-  public async fetchStates(
-    name: string,
-    radarOverride?: RadarOverride | null,
-    folderOverride?: FolderTreeOverride | null
-  ): Promise<MapStates> {
+  public async fetchStates(name: string, preview: ViewPreview): Promise<MapStates> {
     return this.client.GET('/api/v1/maps/{name}/states', {
-      params: {
-        path: { name },
-        query: {
-          ...(radarOverride && {
-            radar_filter: radarOverride.filter,
-            radar_filter_value: radarOverride.filterValue
-          }),
-          ...(folderOverride && {
-            ft_override: true,
-            ft_root_folder: folderOverride.rootFolder,
-            ft_show_empty_folders: folderOverride.showEmptyFolders,
-            ft_only_hard_states: folderOverride.onlyHardStates,
-            ft_sites: folderOverride.sites
-          })
-        }
-      }
+      params: { path: { name }, query: previewQuery(preview) }
     })
   }
 

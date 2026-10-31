@@ -16,13 +16,16 @@ from typing import override
 
 import pytest
 from fake_connection import FakeConnection
+from fake_links import FakeLinkGui
 from fastapi.testclient import TestClient
 from router_client import RouterClientFactory
 
 from cmk.maps.backend.api.v1 import deps, maps
 from cmk.maps.backend.connections.base import GeoHost
 from cmk.maps.backend.core.auth import Principal
-from cmk.maps.backend.schemas.map import MapConfig, WorldmapView
+from cmk.maps.backend.core.ratelimit import rest_read_limiter
+from cmk.maps.backend.schemas.map import MapConfig, RadarView, WorldmapView
+from cmk.maps.backend.schemas.state import ObjectState
 from cmk.maps.backend.services import map_service, state_service
 
 ADMIN_PRINCIPAL = Principal(name="admin", may_edit=True, configure=True, see_all=True)
@@ -35,18 +38,85 @@ def _client(
     return router_client(
         maps.router,
         "/api/v1/maps",
-        overrides={deps.get_current_user: user, deps.get_map_owner: owner},
+        overrides={
+            deps.get_current_user: user,
+            deps.get_map_owner: owner,
+            deps.get_gui_auth: FakeLinkGui(),
+        },
     )
 
 
-def test_register_unsigned_own_map_returns_204(router_client: RouterClientFactory) -> None:
+def test_register_unsigned_own_is_cached(router_client: RouterClientFactory) -> None:
     client = _client(router_client, ADMIN_PRINCIPAL, owner=ADMIN_PRINCIPAL.name)
     resp = client.post(
         "/api/v1/maps/streamed/register",
         json={"config": {"name": "streamed", "alias": "Streamed"}},
     )
-    assert resp.status_code == HTTPStatus.NO_CONTENT
+    assert resp.status_code == HTTPStatus.OK
     assert map_service.get_map(ADMIN_PRINCIPAL.name, "streamed") is not None
+
+
+def test_register_with_the_read_budget_spent_still_caches_the_map(
+    router_client: RouterClientFactory,
+) -> None:
+    client = _client(router_client, ADMIN_PRINCIPAL, owner=ADMIN_PRINCIPAL.name)
+    for _ in range(rest_read_limiter._max):  # noqa: SLF001
+        rest_read_limiter.record(ADMIN_PRINCIPAL.name)
+    resp = client.post(
+        "/api/v1/maps/streamed/register",
+        json={"config": {"name": "streamed", "alias": "Streamed"}},
+    )
+    assert resp.status_code == HTTPStatus.TOO_MANY_REQUESTS
+    assert map_service.get_map(ADMIN_PRINCIPAL.name, "streamed") is not None
+
+
+def test_register_answers_with_the_states_the_caller_may_see(
+    router_client: RouterClientFactory,
+) -> None:
+    client = _client(router_client, Principal(name="bob", may_edit=True), owner="bob")
+    spy = _AuthScopeSpyConnection()
+    state_service.register_connection("spy", spy)
+    try:
+        resp = client.post(
+            "/api/v1/maps/mine/register",
+            json={
+                "config": {
+                    "name": "mine",
+                    "alias": "Mine",
+                    "connection_id": "spy",
+                    "objects": [{"id": "host:h1", "type": "host", "host_name": "localhost"}],
+                }
+            },
+        )
+    finally:
+        state_service.unregister_connection("spy")
+
+    assert resp.status_code == HTTPStatus.OK
+    assert [state["object_id"] for state in resp.json()["states"]] == ["host:h1"]
+    assert spy.hosts_query_auth_user == "bob"
+
+
+def test_register_keeps_the_saved_view_of_a_previewed_map(
+    router_client: RouterClientFactory,
+) -> None:
+    client = _client(router_client, ADMIN_PRINCIPAL, owner=ADMIN_PRINCIPAL.name)
+    resp = client.post(
+        "/api/v1/maps/radar/register",
+        params={"radar_filter": "all_hosts", "radar_filter_value": ""},
+        json={
+            "config": {
+                "name": "radar",
+                "alias": "Radar",
+                "view": {"type": "radar", "filter": "hostgroup", "filter_value": "web"},
+            }
+        },
+    )
+
+    assert resp.status_code == HTTPStatus.OK
+    cached = map_service.get_map(ADMIN_PRINCIPAL.name, "radar")
+    assert cached is not None
+    assert isinstance(cached.view, RadarView)
+    assert cached.view.filter == "hostgroup"
 
 
 def test_register_unsigned_for_a_map_the_user_does_not_see_is_404(
@@ -136,12 +206,13 @@ def test_register_signed_invalid_config_is_422_not_500(
 
 
 class _AuthScopeSpyConnection(FakeConnection):
-    """Records the auth_user active when the geo-host query runs."""
+    """Records the auth_user active when the geo-host and host-state queries run."""
 
     connection_id = "spy"
 
     def __init__(self) -> None:
         self.geo_query_auth_user: str | None = "NOT_CALLED"
+        self.hosts_query_auth_user: str | None = "NOT_CALLED"
         self._active_auth_user: str | None = None
 
     @asynccontextmanager
@@ -159,6 +230,13 @@ class _AuthScopeSpyConnection(FakeConnection):
     ) -> list[GeoHost]:
         self.geo_query_auth_user = self._active_auth_user
         return []
+
+    @override
+    async def get_hosts_states(
+        self, hostnames: list[str], only_hard: bool = False
+    ) -> dict[str, ObjectState]:
+        self.hosts_query_auth_user = self._active_auth_user
+        return await super().get_hosts_states(hostnames, only_hard)
 
 
 def test_auto_objects_scopes_geo_query_to_auth_user(

@@ -295,62 +295,10 @@ async def _broadcast_loop(map_key: str, links: LinkSource) -> None:
 _RADAR_FILTERS: set[str] = {"hostgroup", "servicegroup", "all_hosts", "all_services"}
 
 
-# Returns a pre-dumped Response (passed through untouched) instead of a model:
-# skips FastAPI's second full re-validation, which dominated initial load on
-# 100k+-host maps. response_model stays for the OpenAPI schema (api.ts codegen).
-@router.get("/maps/{name}/states", response_model=MapStates)
-async def get_map_states(
-    name: MapName,
-    auth: GuiAuthDep,
-    current_user: Principal = Depends(rate_limited_map_read),
-    radar_filter: str | None = None,
-    radar_filter_value: str | None = None,
-    ft_override: bool = False,
-    ft_root_folder: str = "",
-    ft_show_empty_folders: bool = True,
-    ft_only_hard_states: bool = False,
-    ft_sites: list[str] = Query(default_factory=list),
+async def map_states_response(
+    cfg: MapConfig, current_user: Principal, links: LinkSource
 ) -> Response:
-    cfg = registered_map(current_user, name)
-    # Settings-preview override for radar maps. Both query params arrive
-    # together so we never mix disk-state filter with a half-edited override.
-    if (
-        cfg.view.type == "radar"
-        and radar_filter is not None
-        and radar_filter_value is not None
-        and radar_filter in _RADAR_FILTERS
-    ):
-        cfg = cfg.model_copy(
-            update={
-                "view": RadarView(
-                    filter=cast(
-                        Literal["hostgroup", "servicegroup", "all_hosts", "all_services"],
-                        radar_filter,
-                    ),
-                    filter_value=radar_filter_value,
-                )
-            }
-        )
-    # Settings-preview override for foldertree maps: only the server-side view
-    # fields (the others are mirrored client-side and need no requery). Gated on
-    # an explicit flag so an empty root_folder reads as "(all)" not "unset".
-    # problems_only is forced off so the server never prunes healthy nodes — the
-    # client filters it reactively, so toggling it in the preview works both ways
-    # without a per-toggle tree rebuild.
-    if ft_override and isinstance(cfg.view, FolderTreeView):
-        cfg = cfg.model_copy(
-            update={
-                "view": cfg.view.model_copy(
-                    update={
-                        "root_folder": ft_root_folder,
-                        "show_empty_folders": ft_show_empty_folders,
-                        "only_hard_states": ft_only_hard_states,
-                        "sites": ft_sites,
-                        "problems_only": False,
-                    }
-                )
-            }
-        )
+    """The full states of ``cfg`` as the caller may see them, pre-dumped."""
     auth_user = resolve_auth_user(current_user)
     # Only foldertree maps consume folder_scope; skip the permission/contact-group
     # lookups for every other map type.
@@ -360,9 +308,99 @@ async def get_map_states(
         auth_user=auth_user,
         folder_scope=folder_scope,
         map_owner=current_user.map_key_owner,
-        links=auth,
+        links=links,
     )
     return Response(content=states.model_dump_json(), media_type="application/json")
+
+
+@dataclass(frozen=True)
+class ViewPreview:
+    """Unsaved view settings the settings preview shows states for."""
+
+    radar_filter: str | None
+    radar_filter_value: str | None
+    ft_override: bool
+    ft_root_folder: str
+    ft_show_empty_folders: bool
+    ft_only_hard_states: bool
+    ft_sites: list[str]
+
+    def apply(self, cfg: MapConfig) -> MapConfig:
+        # Settings-preview override for radar maps. Both query params arrive
+        # together so we never mix disk-state filter with a half-edited override.
+        if (
+            cfg.view.type == "radar"
+            and self.radar_filter is not None
+            and self.radar_filter_value is not None
+            and self.radar_filter in _RADAR_FILTERS
+        ):
+            cfg = cfg.model_copy(
+                update={
+                    "view": RadarView(
+                        filter=cast(
+                            Literal["hostgroup", "servicegroup", "all_hosts", "all_services"],
+                            self.radar_filter,
+                        ),
+                        filter_value=self.radar_filter_value,
+                    )
+                }
+            )
+        # Settings-preview override for foldertree maps: only the server-side view
+        # fields (the others are mirrored client-side and need no requery). Gated on
+        # an explicit flag so an empty root_folder reads as "(all)" not "unset".
+        # problems_only is forced off so the server never prunes healthy nodes — the
+        # client filters it reactively, so toggling it in the preview works both ways
+        # without a per-toggle tree rebuild.
+        if self.ft_override and isinstance(cfg.view, FolderTreeView):
+            cfg = cfg.model_copy(
+                update={
+                    "view": cfg.view.model_copy(
+                        update={
+                            "root_folder": self.ft_root_folder,
+                            "show_empty_folders": self.ft_show_empty_folders,
+                            "only_hard_states": self.ft_only_hard_states,
+                            "sites": self.ft_sites,
+                            "problems_only": False,
+                        }
+                    )
+                }
+            )
+        return cfg
+
+
+def view_preview(
+    radar_filter: str | None = None,
+    radar_filter_value: str | None = None,
+    ft_override: bool = False,
+    ft_root_folder: str = "",
+    ft_show_empty_folders: bool = True,
+    ft_only_hard_states: bool = False,
+    ft_sites: list[str] = Query(default_factory=list),
+) -> ViewPreview:
+    return ViewPreview(
+        radar_filter=radar_filter,
+        radar_filter_value=radar_filter_value,
+        ft_override=ft_override,
+        ft_root_folder=ft_root_folder,
+        ft_show_empty_folders=ft_show_empty_folders,
+        ft_only_hard_states=ft_only_hard_states,
+        ft_sites=ft_sites,
+    )
+
+
+# Returns a pre-dumped Response (passed through untouched) instead of a model:
+# skips FastAPI's second full re-validation, which dominated initial load on
+# 100k+-host maps. response_model stays for the OpenAPI schema (api.ts codegen).
+@router.get("/maps/{name}/states", response_model=MapStates)
+async def get_map_states(
+    name: MapName,
+    auth: GuiAuthDep,
+    current_user: Principal = Depends(rate_limited_map_read),
+    preview: ViewPreview = Depends(view_preview),
+) -> Response:
+    return await map_states_response(
+        preview.apply(registered_map(current_user, name)), current_user, auth
+    )
 
 
 @router.get("/maps/{name}/folder-host-services", response_model=list[FolderHostService])

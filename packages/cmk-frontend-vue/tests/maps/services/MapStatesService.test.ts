@@ -16,7 +16,7 @@ import { MapStatesService } from '@/maps/services/MapStatesService'
 import type { MapsAuthService } from '@/maps/services/MapsAuthService'
 import type { MapConfig, MapStates } from '@/maps/types/api'
 
-import { aMap, aMapAccess, aTopologyNode, anObject } from '../support/fixtures'
+import { aMap, aMapAccess, aState, aTopologyNode, anObject } from '../support/fixtures'
 
 // What the connection itself does — opening, falling back to polling, healing —
 // belongs to the shared stream client and is covered there. What is maps' own is
@@ -84,15 +84,15 @@ function newService(
   objectOverrides: Partial<
     Pick<MonitoringObjectsApi, 'fetchAggregationStates' | 'fetchAggregationTree'>
   > = {},
-  statesOverrides: Partial<Pick<MapStatesApi, 'register' | 'fetchStates'>> = {},
+  statesOverrides: Partial<Pick<MapStatesApi, 'register' | 'registerEdit' | 'fetchStates'>> = {},
   session: {
     refresh?: Pick<MapsAuthService, 'refresh'>['refresh']
     getSignedMap?: Pick<MapService, 'getSignedMap'>['getSignedMap']
   } = {}
 ): MapStatesService {
   const statesApi: Pick<MapStatesApi, 'register' | 'registerEdit' | 'fetchStates'> = {
-    register: vi.fn().mockResolvedValue(undefined),
-    registerEdit: vi.fn().mockResolvedValue(undefined),
+    register: vi.fn().mockResolvedValue(emptyStates),
+    registerEdit: vi.fn().mockResolvedValue(emptyStates),
     fetchStates: vi.fn().mockResolvedValue(emptyStates),
     ...statesOverrides
   }
@@ -488,6 +488,7 @@ describe('MapStatesService — overlapping connects', () => {
     const register = vi.fn(async () => {
       await Promise.resolve()
       registered = true
+      return emptyStates
     })
     const store = newService(null, {}, { register })
     const signed = { config_b64: 'x', sig: 'y' }
@@ -498,6 +499,114 @@ describe('MapStatesService — overlapping connects', () => {
     expect(registered).toBe(true)
     expect(register).toHaveBeenCalledTimes(1)
     await first
+  })
+
+  it('opens no stream for a connect a later one took over from', async () => {
+    let answerFirst: (states: MapStates) => void = () => undefined
+    const register = vi
+      .fn()
+      .mockReturnValueOnce(new Promise<MapStates>((resolve) => (answerFirst = resolve)))
+      .mockResolvedValue(emptyStates)
+    const store = newService(null, {}, { register })
+    const signed = { config_b64: 'x', sig: 'y' }
+
+    const first = store.connectToMap('back_map', signed)
+    await vi.waitFor(() => expect(register).toHaveBeenCalledOnce())
+    await store.connectToMap('other_map', signed)
+    await store.connectToMap('back_map', signed)
+    answerFirst(emptyStates)
+    await first
+
+    expect(FakeEventSource.instances.map((source) => source.url)).toEqual([
+      expect.stringContaining('other_map'),
+      expect.stringContaining('back_map')
+    ])
+  })
+
+  it('shows no error of a map that was left on the one opened', async () => {
+    let failFirst: (error: Error) => void = () => undefined
+    const register = vi
+      .fn()
+      .mockReturnValueOnce(new Promise<MapStates>((_resolve, reject) => (failFirst = reject)))
+      .mockResolvedValue(emptyStates)
+    const store = newService(null, {}, { register })
+    const signed = { config_b64: 'x', sig: 'y' }
+
+    const first = store.connectToMap('left_map', signed)
+    await vi.waitFor(() => expect(register).toHaveBeenCalledOnce())
+    await store.connectToMap('opened_map', signed)
+    failFirst(new Error('Forbidden'))
+    await expect(first).rejects.toThrow('Forbidden')
+
+    expect(store.loadError.value).toBeNull()
+  })
+})
+
+describe('MapStatesService — opening a map', () => {
+  beforeEach(() => {
+    FakeEventSource.instances = []
+    vi.stubGlobal('EventSource', FakeEventSource)
+  })
+
+  it('shows the states registering answered with, without asking again', async () => {
+    const register = vi.fn().mockResolvedValue({
+      ...emptyStates,
+      states: [aState({ object_id: 'h1', type: 'host', state: 'DOWN' })]
+    })
+    const fetchStates = vi.fn().mockResolvedValue(emptyStates)
+    const store = newService(null, {}, { register, fetchStates })
+
+    await store.connectToMap('b', { config_b64: 'x', sig: 'y' })
+
+    expect(store.getState('h1')?.state).toBe('DOWN')
+    expect(fetchStates).not.toHaveBeenCalled()
+  })
+
+  it('asks for the states itself when registering could not answer with them', async () => {
+    const register = vi.fn().mockRejectedValue(new CmkApiError('HTTP 429', null, '', 429))
+    const fetchStates = vi.fn().mockResolvedValue({
+      ...emptyStates,
+      states: [aState({ object_id: 'h1', type: 'host', state: 'UP' })]
+    })
+    const store = newService(null, {}, { register, fetchStates })
+
+    await store.connectToMap('b', { config_b64: 'x', sig: 'y' })
+
+    expect(store.getState('h1')?.state).toBe('UP')
+  })
+
+  it('keeps the states of the newest edit when an older one answers last', async () => {
+    let answerOlder: (states: MapStates) => void = () => undefined
+    const registerEdit = vi
+      .fn()
+      .mockReturnValueOnce(new Promise<MapStates>((resolve) => (answerOlder = resolve)))
+      .mockResolvedValueOnce({
+        ...emptyStates,
+        states: [aState({ object_id: 'h2', type: 'host', state: 'UP' })]
+      })
+    const store = newService(aMap({ name: 'b' }), {}, { registerEdit })
+    await store.connectToMap('b', { config_b64: 'x', sig: 'y' })
+
+    const older = store.reregister(aMap({ name: 'b' }))
+    await store.reregister(aMap({ name: 'b' }))
+    answerOlder(emptyStates)
+    await older
+
+    expect(store.getState('h2')?.state).toBe('UP')
+  })
+
+  it('asks registering for the states of a settings preview', async () => {
+    const registerEdit = vi.fn().mockResolvedValue(emptyStates)
+    const store = newService(aMap({ name: 'b' }), {}, { registerEdit })
+    await store.connectToMap('b', { config_b64: 'x', sig: 'y' })
+    store.radarOverride.value = { filter: 'hostgroup', filterValue: 'web' }
+
+    await store.reregister(aMap({ name: 'b' }))
+
+    expect(registerEdit).toHaveBeenCalledWith(expect.anything(), {
+      radar: { filter: 'hostgroup', filterValue: 'web' },
+      folder: null
+    })
   })
 })
 
@@ -512,7 +621,7 @@ describe('MapStatesService — a daemon that lost the map', () => {
 
   // The daemon keeps registrations in memory, so a restart forgets every map.
   it('registers the map again, signed afresh, and carries on', async () => {
-    const register = vi.fn().mockResolvedValue(undefined)
+    const register = vi.fn().mockResolvedValue(emptyStates)
     const fetchStates = vi.fn().mockResolvedValue(emptyStates)
     const getSignedMap = vi.fn().mockResolvedValue(freshlySigned)
     const store = newService(null, {}, { register, fetchStates }, { getSignedMap })
@@ -522,12 +631,12 @@ describe('MapStatesService — a daemon that lost the map', () => {
     await store.refresh()
 
     expect(getSignedMap).toHaveBeenCalledWith('b')
-    expect(register).toHaveBeenLastCalledWith('b', freshlySigned)
+    expect(register).toHaveBeenLastCalledWith('b', freshlySigned, { radar: null, folder: null })
     expect(store.connected.value).toBe(true)
   })
 
   it('checks the session instead of registering again when the daemon refuses it', async () => {
-    const register = vi.fn().mockResolvedValue(undefined)
+    const register = vi.fn().mockResolvedValue(emptyStates)
     const fetchStates = vi.fn().mockResolvedValue(emptyStates)
     const refresh = vi.fn().mockResolvedValue(false)
     const store = newService(null, {}, { register, fetchStates }, { refresh })
@@ -542,7 +651,7 @@ describe('MapStatesService — a daemon that lost the map', () => {
   })
 
   it('does not register again for a failure that is not about the map', async () => {
-    const register = vi.fn().mockResolvedValue(undefined)
+    const register = vi.fn().mockResolvedValue(emptyStates)
     const fetchStates = vi.fn().mockResolvedValue(emptyStates)
     const store = newService(null, {}, { register, fetchStates })
     await store.connectToMap('b', signed)
@@ -575,7 +684,7 @@ describe('MapStatesService — saved settings', () => {
 
   // The daemon takes a preview only of the caller's own map.
   it('registers the saved map signed, not as a preview', async () => {
-    const register = vi.fn().mockResolvedValue(undefined)
+    const register = vi.fn().mockResolvedValue(emptyStates)
     const getSignedMap = vi.fn().mockResolvedValue(freshlySigned)
     const store = newService(null, {}, { register }, { getSignedMap })
     await store.connectToMap('b', { config_b64: 'x', sig: 'y' })
@@ -583,6 +692,6 @@ describe('MapStatesService — saved settings', () => {
     await store.reregisterSavedWithIndicator()
 
     expect(getSignedMap).toHaveBeenCalledWith('b')
-    expect(register).toHaveBeenLastCalledWith('b', freshlySigned)
+    expect(register).toHaveBeenLastCalledWith('b', freshlySigned, { radar: null, folder: null })
   })
 })

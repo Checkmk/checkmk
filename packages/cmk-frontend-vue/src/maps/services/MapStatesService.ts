@@ -11,7 +11,7 @@ import { type EventStream, createEventStream } from 'cmk-ui-library/lib/sse/even
 import { type Ref, type ShallowRef, markRaw, ref, shallowRef, triggerRef } from 'vue'
 
 import type { ConnectionsApi } from '@/maps/api/connections'
-import type { MapStatesApi, RadarOverride } from '@/maps/api/mapStates'
+import type { MapStatesApi, RadarOverride, ViewPreview } from '@/maps/api/mapStates'
 import type { MonitoringObjectsApi } from '@/maps/api/monitoringObjects'
 import type { MapService } from '@/maps/services/MapService'
 import type { MapsAuthService } from '@/maps/services/MapsAuthService'
@@ -216,7 +216,9 @@ export class MapStatesService {
    * knows the map; and a site start rotates the secret that every signed config
    * is checked against.
    */
-  private registration: (() => Promise<void>) | null = null
+  private registration: (() => Promise<MapStates>) | null = null
+  private handOverSeq = 0
+  private connectRun = 0
   private folderTreeIndex = new Map<string, FolderTreeNode>()
   /** Previous foldertree host states, for deriving notifications. */
   private prevFolderHostStates: Map<string, string> | null = null
@@ -270,8 +272,11 @@ export class MapStatesService {
     signed?: { config_b64: string; sig: string }
   ): Promise<void> {
     const { _t } = usei18n()
+    this.disconnect()
+    // A later connect or disconnect owns the timer, the stream and the errors.
+    const run = this.connectRun
+    const superseded = () => run !== this.connectRun
     try {
-      this.disconnect()
       // What the last map's daemon said is not news about this one.
       this.lastUpdate.value = null
       this.deadSites.value = []
@@ -280,19 +285,31 @@ export class MapStatesService {
       try {
         if (signed) {
           // Signed afresh for a later hand-over: the key may have rotated by then.
-          this.registration = this.signedRegistration(mapName)
-          await this.api.register(mapName, signed)
+          await this.handOver(
+            mapName,
+            () => this.api.register(mapName, signed, this.viewPreview()),
+            this.signedRegistration(mapName)
+          )
+        } else {
+          await this.refresh()
         }
-        await this.refresh()
+        if (superseded()) {
+          return
+        }
         // Resolve aggregations now that the map's objects are loaded, then keep
         // them live on their own interval.
         void this.refreshAggregations()
         this.startAggregationTimer()
       } finally {
-        this.initialLoad.value = false
+        if (!superseded()) {
+          this.initialLoad.value = false
+        }
       }
       await this.openStream(mapName)
     } catch (e: unknown) {
+      if (superseded()) {
+        throw e
+      }
       // Also for a daemon that never answered: the caller reports it, but a map
       // that got no states needs the reason on screen, not only in a toast.
       this.loadError.value = e instanceof Error ? e.message : _t('Live connection failed')
@@ -301,30 +318,61 @@ export class MapStatesService {
   }
 
   /**
-   * Re-pushes a locally edited config and refetches.
+   * Re-pushes a locally edited config and shows the states it answers with.
    *
    * The daemon caches the map it was handed at connect time, so an edit that
    * changes the resolvable object set would otherwise show no state until a full
-   * reload. Idempotent and cheap (in-memory on the daemon).
+   * reload.
    */
   public async reregister(map: MapConfig): Promise<void> {
     if (!this.currentMap || map.name !== this.currentMap) {
       return
     }
-    await this.applyRegistration(() => this.api.registerEdit(map))
-  }
-
-  private signedRegistration(mapName: string): () => Promise<void> {
-    return async () => this.api.register(mapName, await this.maps.getSignedMap(mapName))
-  }
-
-  private async applyRegistration(registration: () => Promise<void>): Promise<void> {
-    this.registration = registration
-    await registration()
-    await this.refresh()
+    await this.handOver(this.currentMap, () => this.api.registerEdit(map, this.viewPreview()))
     // The new config may have added or removed aggregation objects; resolve now
     // rather than waiting for the next interval tick.
     void this.refreshAggregations()
+  }
+
+  private signedRegistration(mapName: string): () => Promise<MapStates> {
+    return async () =>
+      this.api.register(mapName, await this.maps.getSignedMap(mapName), this.viewPreview())
+  }
+
+  private viewPreview(): ViewPreview {
+    return { radar: this.radarOverride.value, folder: this.folderOverride.value }
+  }
+
+  /**
+   * Hands the map to the daemon and shows the states it answers with.
+   * ``later`` is what hands it over again to a daemon that lost it.
+   */
+  private async handOver(
+    mapName: string,
+    registration: () => Promise<MapStates>,
+    later: () => Promise<MapStates> = registration
+  ): Promise<void> {
+    this.registration = later
+    const handOver = ++this.handOverSeq
+    let registered: MapStates | null = null
+    try {
+      registered = await registration()
+    } catch (e: unknown) {
+      // Registered or not, a daemon that is busy or failed the states is asked
+      // for them as before; the fetch hands the map over again if it has to.
+      if (!(e instanceof CmkApiError && (e.statusCode === 429 || e.statusCode >= 500))) {
+        throw e
+      }
+    }
+    // A later hand-over, or another map, answers for the map now.
+    if (handOver !== this.handOverSeq || this.currentMap !== mapName) {
+      return
+    }
+    if (registered) {
+      this.applyStates(registered)
+    } else {
+      await this.refresh()
+    }
   }
 
   public dispose(): void {
@@ -332,6 +380,7 @@ export class MapStatesService {
   }
 
   public disconnect(): void {
+    this.connectRun++
     document.removeEventListener('visibilitychange', this.onVisibilityChange)
     this.clearHiddenTimer()
     this.paused = false
@@ -364,46 +413,15 @@ export class MapStatesService {
   /** Refetches the map's states now. */
   public async refresh(): Promise<void> {
     const { _t } = usei18n()
-    if (!this.currentMap) {
+    const mapAtStart = this.currentMap
+    if (!mapAtStart) {
       return
     }
-    const mapAtStart = this.currentMap
     try {
       const data = await this.fetchStates(mapAtStart)
-      if (this.currentMap !== mapAtStart) {
-        return
+      if (this.currentMap === mapAtStart) {
+        this.applyStates(data)
       }
-      const newStates: Record<string, ObjectState> = {}
-      const ts = Date.now() / 1000
-      for (const s of data.states) {
-        if (this.notificationsEnabled.value) {
-          notifyStateChange(s, this.states.value[s.object_id])
-        }
-        newStates[s.object_id] = s
-        if (s.perf_data) {
-          this.recordMetricValues(s.object_id, s.perf_data, ts)
-        }
-      }
-      for (const id of Object.keys(this.states.value)) {
-        // Aggregation entries are owned by the aggregation poll, not by the
-        // daemon, so they are never in `newStates` and must not be dropped.
-        if (!newStates[id] && this.states.value[id]?.type !== 'aggregation') {
-          delete this.states.value[id]
-        }
-      }
-      Object.assign(this.states.value, newStates)
-      this.lastUpdate.value = ts
-      this.connected.value = data.connection_ok
-      this.deadSites.value = data.dead_sites
-      this.runtime.value = data.runtime
-      this.setFolderTree(data.folder_tree ?? null)
-      if (this.notificationsEnabled.value) {
-        this.prevFolderHostStates = diffNotifyFolderTree(
-          this.folderTree.value,
-          this.prevFolderHostStates
-        )
-      }
-      this.loadError.value = null
     } catch (e: unknown) {
       if (this.currentMap !== mapAtStart) {
         return
@@ -413,12 +431,45 @@ export class MapStatesService {
     }
   }
 
+  private applyStates(data: MapStates): void {
+    const newStates: Record<string, ObjectState> = {}
+    const ts = Date.now() / 1000
+    for (const s of data.states) {
+      if (this.notificationsEnabled.value) {
+        notifyStateChange(s, this.states.value[s.object_id])
+      }
+      newStates[s.object_id] = s
+      if (s.perf_data) {
+        this.recordMetricValues(s.object_id, s.perf_data, ts)
+      }
+    }
+    for (const id of Object.keys(this.states.value)) {
+      // Aggregation entries are owned by the aggregation poll, not by the
+      // daemon, so they are never in `newStates` and must not be dropped.
+      if (!newStates[id] && this.states.value[id]?.type !== 'aggregation') {
+        delete this.states.value[id]
+      }
+    }
+    Object.assign(this.states.value, newStates)
+    this.lastUpdate.value = ts
+    this.connected.value = data.connection_ok
+    this.deadSites.value = data.dead_sites
+    this.runtime.value = data.runtime
+    this.setFolderTree(data.folder_tree ?? null)
+    if (this.notificationsEnabled.value) {
+      this.prevFolderHostStates = diffNotifyFolderTree(
+        this.folderTree.value,
+        this.prevFolderHostStates
+      )
+    }
+    this.loadError.value = null
+  }
+
   /**
    * The map's states, handing the map over again to a daemon that lost it (404).
    */
   private async fetchStates(mapName: string): Promise<MapStates> {
-    const fetch = () =>
-      this.api.fetchStates(mapName, this.radarOverride.value, this.folderOverride.value)
+    const fetch = () => this.api.fetchStates(mapName, this.viewPreview())
     // Taken now: by the time the error arrives, another map may have been opened.
     const registration = this.registration
     try {
@@ -434,14 +485,11 @@ export class MapStatesService {
       }
       // Another map, or a newer config of this one, was handed over meanwhile.
       const superseded = () => this.registration !== registration
-      await registration()
+      const states = await registration()
       if (superseded()) {
         throw e
       }
-      const states = await fetch()
-      if (!superseded()) {
-        this.restartStream()
-      }
+      this.restartStream()
       return states
     }
   }
@@ -479,7 +527,8 @@ export class MapStatesService {
     }
     this.initialLoad.value = true
     try {
-      await this.applyRegistration(this.signedRegistration(mapName))
+      await this.handOver(mapName, this.signedRegistration(mapName))
+      void this.refreshAggregations()
     } finally {
       this.initialLoad.value = false
     }

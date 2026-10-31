@@ -10,7 +10,7 @@ import { defineComponent, h } from 'vue'
 
 import type { SignedMap } from '@/maps/api/mapConfig'
 import MapViewComponent from '@/maps/map/MapView.vue'
-import type { MapAccess, MapConfig, MapRead, MapView } from '@/maps/types/api'
+import type { MapAccess, MapConfig, MapRead, MapStates, MapView } from '@/maps/types/api'
 
 import { aMap, aMapAccess, anObject, newMapView } from '../support/fixtures'
 import { aSession, fakeMapsServices, fullCapabilities, provideServices } from '../support/services'
@@ -442,12 +442,22 @@ describe('MapView – following a map object', () => {
   })
 })
 
+const noStates: MapStates = {
+  map_name: 'map1',
+  states: [],
+  generated_at: 1,
+  connection_ok: true,
+  dead_sites: [],
+  folder_tree: null,
+  runtime: { log_level: 'INFO', state_refresh_interval: 5 }
+}
+
 describe('MapView – unreachable sites', () => {
   beforeEach(() => {
     openMapPage()
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
-    vi.mocked(services.apis.mapStates.fetchStates).mockResolvedValue({
+    vi.mocked(services.apis.mapStates.register).mockResolvedValue({
       map_name: 'map1',
       states: [],
       generated_at: 1,
@@ -556,7 +566,7 @@ describe('MapView – saving the settings', () => {
   it('loads the hosts of a new automap source once the map is registered again', async () => {
     let registered: () => void = () => {}
     vi.mocked(services.apis.mapStates.register).mockReturnValue(
-      new Promise((resolve) => (registered = resolve))
+      new Promise((resolve) => (registered = () => resolve(noStates)))
     )
     vi.mocked(services.apis.mapStates.fetchAutoObjects).mockResolvedValue([])
 

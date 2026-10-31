@@ -18,7 +18,7 @@ from fastapi import Depends, HTTPException, Request, status
 from cmk.fastapi.gui_session import Rejected, SessionCookie, Unavailable
 from cmk.maps.backend.api.v1.types import MapName
 from cmk.maps.backend.core.auth import Forbidden, GuiAuth, NoMap, Principal
-from cmk.maps.backend.core.ratelimit import rest_read_limiter
+from cmk.maps.backend.core.ratelimit import RateLimiter, rest_read_limiter
 from cmk.maps.backend.schemas.map import MapConfig
 from cmk.maps.backend.services import map_service
 
@@ -28,6 +28,7 @@ __all__ = [
     "SessionCookieDep",
     "can_configure",
     "can_create_map",
+    "charge",
     "get_current_user",
     "get_gui_auth",
     "get_map_owner",
@@ -37,6 +38,7 @@ __all__ = [
     "registered_map",
     "require_connection_read",
     "resolve_auth_user",
+    "within_read_budget",
 ]
 
 session_cookie = SessionCookie()
@@ -115,19 +117,31 @@ def _rate_limited(user: Principal) -> Principal:
     unbounded topology / metric-history / search load, and one user's flood can't
     lock out another. See ``rest_read_limiter`` for the budget.
     """
-    key = user.name
-    if rest_read_limiter.is_blocked(key):
+    charge(rest_read_limiter, user.name)
+    return user
+
+
+def charge(limiter: RateLimiter, key: str) -> None:
+    """Count one call of *key* against *limiter*, or refuse it with 429."""
+    if limiter.is_blocked(key):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Rate limited",
-            headers={"Retry-After": str(int(rest_read_limiter.retry_after(key)) + 1)},
+            headers={"Retry-After": str(int(limiter.retry_after(key)) + 1)},
         )
-    rest_read_limiter.record(key)
-    return user
+    limiter.record(key)
 
 
 async def rate_limited_read(current_user: Principal = Depends(get_current_user)) -> Principal:
     return _rate_limited(current_user)
+
+
+async def within_read_budget(current_user: Principal = Depends(get_current_user)) -> bool:
+    """Whether the user's read budget holds this call, which it then counts."""
+    if rest_read_limiter.is_blocked(current_user.name):
+        return False
+    rest_read_limiter.record(current_user.name)
+    return True
 
 
 async def rate_limited_map_read(

@@ -17,24 +17,30 @@ Map background images and the image library are GUI-owned now (uploaded via
 handles files or the legacy format.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, ValidationError
 
 from cmk.maps.backend.api.v1.connections import auth_user_scope
 from cmk.maps.backend.api.v1.deps import (
     can_create_map,
+    charge,
     get_current_user,
     get_map_owner,
     get_map_viewer,
+    GuiAuthDep,
     registered_map,
     resolve_auth_user,
+    within_read_budget,
 )
+from cmk.maps.backend.api.v1.states import map_states_response, view_preview, ViewPreview
 from cmk.maps.backend.api.v1.types import MapName
 from cmk.maps.backend.core.auth import InvalidSignature, Principal, verify_map_config
+from cmk.maps.backend.core.ratelimit import rest_read_limiter
 from cmk.maps.backend.schemas.map import (
     MapConfig,
     MapElement,
 )
+from cmk.maps.backend.schemas.state import MapStates
 from cmk.maps.backend.services import map_service, state_service
 
 router = APIRouter()
@@ -60,14 +66,23 @@ class RegisterRequest(BaseModel):
     config: MapConfig | None = None
 
 
-@router.post("/{name}/register", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/{name}/register", response_model=MapStates)
 async def register_map(
     name: MapName,
     body: RegisterRequest,
+    auth: GuiAuthDep,
+    # Counted, never refused here: a spent budget still registers the map and
+    # refuses only its states.
+    within_budget: bool = Depends(within_read_budget),
     current_user: Principal = Depends(get_current_user),
     owner: str | None = Depends(get_map_owner),
-) -> None:
-    """Cache the map the caller opened so its live state can be streamed.
+    preview: ViewPreview = Depends(view_preview),
+) -> Response:
+    """Cache the map the caller opened so its live state can be streamed, and
+    answer with its full states, so opening a map takes one round trip. A
+    settings preview's unsaved view applies to the answer, not to the cache.
+    The call counts against the read budget; once it is spent, the map is
+    registered all the same, so its stream still runs, but its states are refused.
 
     The config is keyed by the map's real owner, as the GUI names it for the
     caller, never a client value. So every viewer of a published map shares one
@@ -100,7 +115,11 @@ async def register_map(
         if cfg.name != name:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Map name mismatch")
         map_service.register_map(owner, cfg)
-        return
+        if not within_budget:
+            charge(rest_read_limiter, current_user.name)
+        return await map_states_response(
+            preview.apply(cfg), current_user.viewing(owner, name), auth
+        )
     if body.config is not None:
         # Without the edit grant a read-only user could have the daemon poll an
         # arbitrary config — AuthUser still scopes the data, but it is an unowned
@@ -126,7 +145,11 @@ async def register_map(
         if body.config.name != name:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Map name mismatch")
         map_service.register_map(current_user.name, body.config)
-        return
+        if not within_budget:
+            charge(rest_read_limiter, current_user.name)
+        return await map_states_response(
+            preview.apply(body.config), current_user.viewing(current_user.name, name), auth
+        )
     raise HTTPException(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Missing map config"
     )

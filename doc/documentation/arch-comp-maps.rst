@@ -413,8 +413,10 @@ session cookie, see `Authentication`_.
      - **No authentication.** Returns ``{"status":"ok"}``.
    * - POST
      - ``v1/maps/{name}/register``
-     - Hands the daemon a map config to stream. See
-       `Map configs in the daemon`_.
+     - Hands the daemon a map config to stream and answers with its full
+       state. Takes the same settings-preview parameters as
+       ``v1/maps/{name}/states``; they change only the answer, not the stored
+       config. See `Map configs in the daemon`_.
    * - GET
      - ``v1/maps/{name}/states``
      - Full state of all objects of a registered map.
@@ -963,10 +965,10 @@ Limits
    * - Concurrent SSE streams
      - 6 per user, 40 per site (the site Apache has 64 worker processes, and
        each open stream holds one)
-   * - Daemon read routes (states, folder routes, topology, metric history,
-       object details)
-     - 240 per minute and user
-   * - Register, auto-objects, connection list, health
+   * - Daemon read routes (register, states, folder routes, topology, metric
+       history, object details)
+     - 240 per minute and user; a refused ``register`` still registers the map
+   * - Auto-objects, connection list, health
      - Not rate-limited
    * - Registered map configs
      - 1024 (LRU)
@@ -1065,7 +1067,6 @@ Opening a map
     spa -> daemon : POST v1/maps/{name}/register (session, signed config)
     daemon -> gui : identify session, resolve map access\n(site-internal secret, cached 60 s)
     daemon -> daemon : verify signature against the owner,\ncache config under (owner, name)
-    spa -> daemon : GET v1/maps/{name}/states (session)
     daemon -> ls : query with the user's AuthUser
     daemon --> spa : full state
     spa -> daemon : GET v1/sse/maps/{name} (session)
@@ -1092,7 +1093,8 @@ Editing and saving a map
 ------------------------
 
 When the user adds, removes or rebinds objects, the SPA re-registers the edited config
-unsigned with the daemon, so that new objects show their live state right away.
+unsigned with the daemon, so that new objects show their live state right away:
+the daemon answers the registration with the full state.
 Moving or restyling objects does not trigger this, except moving a location
 bundle, whose members include the hosts at its coordinates. The daemon
 accepts the unsigned config only for the user's own maps; while editing a

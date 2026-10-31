@@ -524,8 +524,9 @@ def test_sse_sends_each_message_as_an_event_with_its_name_and_data(app: FastAPI)
 
     events = [
         dict(line.split(": ", 1) for line in frame.splitlines())
-        for frame in received.decode().split("\n\n")[:2]
-    ]
+        for frame in received.decode().split("\n\n")
+        if frame and not frame.startswith(":")
+    ][:2]
     assert sorted((e["event"], json.loads(e["data"])["type"]) for e in events) == [
         ("state_update", "state_update"),
         ("topology_update", "topology_update"),

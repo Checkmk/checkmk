@@ -11,8 +11,8 @@ must not reconfigure logging or install tracing instrumentation. Everything
 that touches the running site lives in :mod:`cmk.maps.backend.main`.
 """
 
-from fastapi.middleware.gzip import GZipMiddleware
 from starlette.middleware.body_limit import RequestBodyLimitMiddleware
+from starlette.middleware.gzip import DEFAULT_EXCLUDED_CONTENT_TYPES
 from starlette.types import Lifespan
 
 from cmk.fastapi import FastAPI
@@ -22,7 +22,7 @@ from cmk.maps.backend.api.v1 import (
     maps,
     states,
 )
-from cmk.maps.backend.core.middleware import SecurityHeadersMiddleware
+from cmk.maps.backend.core.middleware import CompactGZipMiddleware, SecurityHeadersMiddleware
 from cmk.maps.backend.core.version import APP_VERSION
 
 # Apache's LimitRequestBody does not cover the proxied /maps/api path, and the
@@ -31,6 +31,12 @@ from cmk.maps.backend.core.version import APP_VERSION
 MAX_REQUEST_BODY_BYTES = 16 * 1024 * 1024
 
 _HEALTH_PATH = "/api/health"
+
+# Starlette excludes event streams by default. It flushes every chunk on its
+# own, though, so a compressed event still reaches the browser at once.
+_UNCOMPRESSED_CONTENT_TYPES = tuple(
+    t for t in DEFAULT_EXCLUDED_CONTENT_TYPES if t != "text/event-stream"
+)
 
 
 def create_app(*, lifespan: Lifespan[FastAPI] | None = None) -> FastAPI:
@@ -60,7 +66,14 @@ def create_app(*, lifespan: Lifespan[FastAPI] | None = None) -> FastAPI:
     app.add_middleware(RequestBodyLimitMiddleware, max_body_size=MAX_REQUEST_BODY_BYTES)
     app.add_middleware(RequestShapeMiddleware, exempt_paths=frozenset({_HEALTH_PATH}))
     app.add_middleware(SecurityHeadersMiddleware)
-    app.add_middleware(GZipMiddleware, minimum_size=1024)
+    # The fastest level: the large states compress almost as well as on the
+    # higher ones, and the event stream is compressed once per subscriber.
+    app.add_middleware(
+        CompactGZipMiddleware,
+        minimum_size=1024,
+        compresslevel=1,
+        exclude_content_types=_UNCOMPRESSED_CONTENT_TYPES,
+    )
 
     app.include_router(maps.router, prefix="/api/v1/maps", tags=["maps"])
     app.include_router(states.router, prefix="/api/v1", tags=["states"])

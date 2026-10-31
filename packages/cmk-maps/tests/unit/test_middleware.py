@@ -9,20 +9,24 @@ carry the hardening headers (nosniff, frame/referrer policy, and the strict
 CSP). These are pinned here so a future refactor cannot silently drop one.
 Request bodies are bounded before the session check, because the proxied path
 has no Apache body limit. A request the browser marks as sent by another site
-is refused before it reaches a route.
+is refused before it reaches a route. The event stream is gzip-compressed with
+every event flushed on its own, so compression never holds an event back.
 """
 
 import asyncio
+import random
+import zlib
 from http import HTTPStatus
 
 import pytest
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response, StreamingResponse
 from starlette.routing import Route
 from starlette.testclient import TestClient
-from starlette.types import Receive, Scope, Send
+from starlette.types import Message, Receive, Scope, Send
 
+from cmk.fastapi import FastAPI
 from cmk.maps.backend.app import create_app, MAX_REQUEST_BODY_BYTES
 from cmk.maps.backend.core.middleware import _CONTENT_SECURITY_POLICY, SecurityHeadersMiddleware
 
@@ -123,3 +127,76 @@ def test_the_health_check_answers_another_site() -> None:
     resp = client.get("/api/health", headers={"Sec-Fetch-Site": "cross-site"})
 
     assert resp.status_code == HTTPStatus.OK
+
+
+_EVENTS = [b'event: state_update\ndata: {"n": 1}\n\n', b'event: state_update\ndata: {"n": 2}\n\n']
+
+
+def _app_with_event_stream() -> FastAPI:
+    async def _events(_request: Request) -> StreamingResponse:
+        return StreamingResponse(iter(_EVENTS), media_type="text/event-stream")
+
+    app = create_app()
+    app.add_route("/events", _events)
+    return app
+
+
+@pytest.mark.parametrize(
+    "accept_encoding, content_encoding", [("gzip", "gzip"), ("identity", None)]
+)
+def test_event_stream_is_compressed_only_for_a_client_that_takes_gzip(
+    accept_encoding: str, content_encoding: str | None
+) -> None:
+    resp = TestClient(_app_with_event_stream()).get(
+        "/events", headers={"accept-encoding": accept_encoding}
+    )
+
+    assert resp.headers.get("content-encoding") == content_encoding
+    assert resp.content == b"".join(_EVENTS)
+
+
+def _gzipped_bodies(app: FastAPI, path: str) -> list[bytes]:
+    """The response's body chunks as sent, after checking they are gzipped."""
+    sent: list[Message] = []
+
+    async def _receive() -> Message:
+        return {"type": "http.request", "body": b"", "more_body": False}
+
+    async def _send(message: Message) -> None:
+        sent.append(message)
+
+    scope: Scope = {
+        "type": "http",
+        "asgi": {"version": "3.0", "spec_version": "2.4"},
+        "method": "GET",
+        "path": path,
+        "query_string": b"",
+        "headers": [(b"accept-encoding", b"gzip")],
+    }
+    asyncio.run(app(scope, _receive, _send))
+    start = next(m for m in sent if m["type"] == "http.response.start")
+    assert (b"content-encoding", b"gzip") in start["headers"]
+    return [m["body"] for m in sent if m["type"] == "http.response.body"]
+
+
+def test_each_event_can_be_read_as_soon_as_it_is_sent() -> None:
+    bodies = _gzipped_bodies(_app_with_event_stream(), "/events")
+    decompressor = zlib.decompressobj(zlib.MAX_WBITS | 16)
+
+    assert [decompressor.decompress(body) for body in bodies[: len(_EVENTS)]] == _EVENTS
+
+
+def test_compression_looks_back_no_further_than_its_small_window() -> None:
+    # Within reach of a 16 KiB window, out of reach of the 8 KiB one.
+    block = random.Random(0).randbytes(9 * 1024)
+
+    async def _repeated(_request: Request) -> Response:
+        return Response(block * 2, media_type="application/octet-stream")
+
+    app = create_app()
+    app.add_route("/repeated", _repeated)
+
+    body = b"".join(_gzipped_bodies(app, "/repeated"))
+
+    assert zlib.decompress(body, zlib.MAX_WBITS | 16) == block * 2
+    assert len(body) > len(block) * 2

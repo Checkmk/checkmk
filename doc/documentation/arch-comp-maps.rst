@@ -400,7 +400,9 @@ Maps daemon
 The site Apache forwards ``check_mk/maps/api`` to the daemon's Unix socket
 (``ProxyPass … flushpackets=on retry=0 timeout=3600``). The SPA uses the shared
 ``lib/fastapi-client``. Except for ``health``, every route needs the GUI
-session cookie, see `Authentication`_.
+session cookie, see `Authentication`_. Responses are gzip-compressed for clients
+that accept it, the event stream too: each event is flushed on its own, so it
+reaches the browser without delay.
 
 .. list-table::
    :header-rows: 1

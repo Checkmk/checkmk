@@ -669,6 +669,9 @@ async def sse_map_states(
     """
     sub = subscription.subscriber
     next_check = time.monotonic() + _SESSION_RECHECK_INTERVAL
+    # The browser takes the stream as open with its first bytes, which the
+    # compression holds back until there is an event to send.
+    yield SentEvent(comment="open")
     while True:
         if await request.is_disconnected():
             break

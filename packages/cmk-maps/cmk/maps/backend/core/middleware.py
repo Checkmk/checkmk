@@ -8,6 +8,11 @@ Kept as bare ASGI classes (not Starlette ``BaseHTTPMiddleware``) so header
 inspection can short-circuit without materialising a Request object.
 """
 
+import zlib
+from typing import override
+
+from starlette.datastructures import Headers
+from starlette.middleware.gzip import GZipMiddleware, GZipResponder
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 # The daemon serves only JSON and SSE — never script-bearing HTML (the SPA is
@@ -43,3 +48,37 @@ class SecurityHeadersMiddleware:
             await send(message)
 
         await self.app(scope, receive, send_with_headers)
+
+
+class _CompactGZipResponder(GZipResponder):
+    @property
+    @override
+    def compressor(self) -> zlib._Compress:
+        if self._compressor is None:
+            self._compressor = zlib.compressobj(
+                self.compresslevel, zlib.DEFLATED, 16 + 13, memLevel=6
+            )
+        return self._compressor
+
+
+class CompactGZipMiddleware(GZipMiddleware):
+    """``GZipMiddleware`` with a quarter of the compressor memory.
+
+    An event stream keeps its compressor for as long as the map is open, so its
+    size counts once per viewer. The JSON states compress as well with the
+    smaller window.
+    """
+
+    @override
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or "gzip" not in Headers(scope=scope).get("accept-encoding", ""):
+            await super().__call__(scope, receive, send)
+            return
+        responder = _CompactGZipResponder(
+            self.app,
+            self.minimum_size,
+            compresslevel=self.compresslevel,
+            thread_minimum_size=self.thread_minimum_size,
+            exclude_content_types=self.exclude_content_types,
+        )
+        await responder(scope, receive, send)

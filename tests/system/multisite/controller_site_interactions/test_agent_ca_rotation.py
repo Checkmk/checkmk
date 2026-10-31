@@ -37,7 +37,19 @@ from tests.testlib.system.site import Site
 pytestmark = pytest.mark.skip_if_faked_artifacts
 
 _AGENT_CA_PATH = Path("etc/ssl/agents/ca.pem")
-_CONTROLLER_REGISTRY_PATH = Path("/var/lib/cmk-agent/registered_connections.json")
+_CLASSIC_CONTROLLER_REGISTRY_PATH = Path("/var/lib/cmk-agent/registered_connections.json")
+
+
+def _controller_registry_path(agent_ctl: Path) -> Path:
+    """The registry of the controller, in the layout its package was installed in.
+
+    Like the controller itself, take a binary below <install dir>/package/bin for the single
+    directory layout.
+    """
+    binary = agent_ctl.resolve()
+    if binary.parent.parts[-2:] == ("package", "bin"):
+        return binary.parents[2] / "runtime/controller/registered_connections.json"
+    return _CLASSIC_CONTROLLER_REGISTRY_PATH
 
 
 def _generate_csr_pair(cn: str) -> tuple[PrivateKey, CertificateSigningRequest]:
@@ -74,7 +86,9 @@ class _AgentCtl:
 
     @property
     def certificate(self) -> Certificate:
-        registry = json.loads(run(["cat", _CONTROLLER_REGISTRY_PATH.as_posix()], sudo=True).stdout)
+        registry = json.loads(
+            run(["cat", _controller_registry_path(self.path).as_posix()], sudo=True).stdout
+        )
         (connection,) = (c for c in registry["pull"].values() if c["uuid"] == self.uuid_)
         return Certificate.load_pem(CertificatePEM(connection["certificate"]))
 

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
+from typing import Literal
 
 from cmk.ccc.version import Edition, edition
 from cmk.ec.syslog import SyslogFacility
@@ -132,6 +134,31 @@ def _syslog_forwarding() -> Dictionary:
     )
 
 
+def _migrate_cleanup(
+    value: object,
+) -> tuple[Literal["delete"], Literal["delete"]] | tuple[Literal["move"], str]:
+    match value:
+        case ("delete", "delete"):
+            return "delete", "delete"
+        case ("delete", None):
+            # created by 2.4.0p23 - 2.4.0p29 and 2.5.0b1 - 2.5.0p3
+            return "delete", "delete"
+        case ("move", str(folder)):
+            # 2.4.0 - 2.4.0p22 wrapped the repr of already migrated values into a "move"
+            # (possibly repeatedly), for example ("move", "('delete', 'delete')").
+            try:
+                wrapped = ast.literal_eval(folder)
+            except ValueError, SyntaxError:
+                return "move", folder
+            match wrapped:
+                case ("delete" | "move", _):
+                    return _migrate_cleanup(wrapped)
+                case _:
+                    return "move", folder
+        case _:
+            raise ValueError(f"Invalid cleanup value: {value!r}")
+
+
 def _forward_to_ec_form() -> Dictionary:
     return Dictionary(
         title=Title("Forward mails as events to Event Console"),
@@ -255,6 +282,7 @@ def _forward_to_ec_form() -> Dictionary:
                             ),
                         ),
                     ),
+                    migrate=_migrate_cleanup,
                 ),
             ),
         },

@@ -1,0 +1,109 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+    This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+    conditions defined in the file COPYING, which is part of this source code package.
+
+    Headless WMI provider for Checkmk, based on LibreHardwareMonitorLib.
+    Drop-in replacement for the OpenHardwareMonitorCLI.exe shipped by Checkmk.
+
+    Output (..\dist):
+      OpenHardwareMonitorCLI.exe   - the CLI (all dependencies except LHM embedded)
+      OpenHardwareMonitorLib.dll   - LibreHardwareMonitorLib.dll, renamed so the
+                                     Checkmk agent bakery can deploy it unchanged
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <!-- TODO(LHM rename): executable name expected by the agent (kExeModule in
+         agents/wnx/include/providers/ohm.h) and the bakery plugin. -->
+    <AssemblyName>OpenHardwareMonitorCLI</AssemblyName>
+    <RootNamespace>OpenHardwareMonitor.CLI</RootNamespace>
+    <LangVersion>7.3</LangVersion>
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <Version>1.1.0</Version>
+    <Product>LibreHardwareMonitorCLI for Checkmk</Product>
+    <Description>Headless LibreHardwareMonitor WMI provider (root\OpenHardwareMonitor) for the Checkmk Windows agent</Description>
+    <Copyright>Checkmk GmbH (GPLv2); WMI classes based on Open Hardware Monitor (MPL-2.0)</Copyright>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Nullable>disable</Nullable>
+
+    <!--
+      Where LibreHardwareMonitorLib comes from:
+        repo  (default) - compiled from source, ..\external\LibreHardwareMonitor
+                          (fetched by ..\build.cmd; needs the .NET 10 SDK)
+        nuget           - last stable release from nuget.org
+    -->
+    <LhmSource Condition="'$(LhmSource)' == ''">repo</LhmSource>
+    <LhmRepoDir Condition="'$(LhmRepoDir)' == ''">$(MSBuildProjectDirectory)\..\external\LibreHardwareMonitor</LhmRepoDir>
+    <LhmNuGetVersion Condition="'$(LhmNuGetVersion)' == ''">0.9.6</LhmNuGetVersion>
+  </PropertyGroup>
+
+  <!-- LibreHardwareMonitorLib from source (current repository state) -->
+  <ItemGroup Condition="'$(LhmSource)' == 'repo'">
+    <ProjectReference Include="$(LhmRepoDir)\LibreHardwareMonitorLib\LibreHardwareMonitorLib.csproj"
+                      SetTargetFramework="TargetFramework=net472"
+                      AdditionalProperties="Platform=x64;GeneratePackageOnBuild=false;GenerateDocumentationFile=false" />
+  </ItemGroup>
+
+  <!-- LibreHardwareMonitorLib from nuget.org. The package only contains a reference assembly in ref\;
+       the implementation is in runtimes\win-x64\lib, therefore a RuntimeIdentifier is needed. -->
+  <PropertyGroup Condition="'$(LhmSource)' == 'nuget'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(LhmSource)' == 'nuget'">
+    <PackageReference Include="LibreHardwareMonitorLib" Version="$(LhmNuGetVersion)" />
+  </ItemGroup>
+
+  <Target Name="CheckLhmSource" BeforeTargets="CollectPackageReferences;ResolveProjectReferences">
+    <Error Condition="'$(LhmSource)' != 'repo' And '$(LhmSource)' != 'nuget'" Text="LhmSource must be 'repo' or 'nuget'." />
+    <Error Condition="'$(LhmSource)' == 'repo' And !Exists('$(LhmRepoDir)\LibreHardwareMonitorLib\LibreHardwareMonitorLib.csproj')"
+           Text="LibreHardwareMonitor source not found in $(LhmRepoDir). Run ..\build.cmd (it fetches the repository) or build with -p:LhmSource=nuget." />
+  </Target>
+
+  <ItemGroup>
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Configuration.Install" />
+    <Reference Include="System.Management" />
+  </ItemGroup>
+
+  <!--
+    Embed every managed dependency (except LibreHardwareMonitorLib itself, which is
+    shipped as OpenHardwareMonitorLib.dll) into the EXE. They are loaded on demand by
+    EmbeddedAssemblyResolver. This way only the two files the Checkmk bakery knows
+    about are needed on the target host.
+  -->
+  <Target Name="EmbedDependencies" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <!-- Satellite assemblies (de-DE\DiskInfoToolkit.resources.dll, ...) are deliberately NOT embedded:
+           sensor/SMART names must not depend on the Windows display language of the host,
+           otherwise Checkmk service names would differ between German and English systems. -->
+      <_EmbedCandidate Include="@(ReferenceCopyLocalPaths)"
+                       Condition="'%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.Filename)' != 'LibreHardwareMonitorLib' And '%(ReferenceCopyLocalPaths.DestinationSubDirectory)' == '' And !$([System.String]::Copy('%(ReferenceCopyLocalPaths.Filename)').EndsWith('.resources'))" />
+      <EmbeddedResource Include="@(_EmbedCandidate)">
+        <LogicalName>deps.%(Filename)%(Extension)</LogicalName>
+        <WithCulture>false</WithCulture>
+        <Type>Non-Resx</Type>
+      </EmbeddedResource>
+    </ItemGroup>
+    <Message Importance="high" Text="Embedding dependency: %(_EmbedCandidate.Filename)%(_EmbedCandidate.Extension)" />
+  </Target>
+
+  <!-- Assemble the two-file drop-in package. -->
+  <Target Name="CreateDist" AfterTargets="Build">
+    <PropertyGroup>
+      <DistDir>$(MSBuildProjectDirectory)\..\dist\</DistDir>
+    </PropertyGroup>
+    <RemoveDir Directories="$(DistDir)" />
+    <Copy SourceFiles="$(OutDir)$(AssemblyName).exe" DestinationFolder="$(DistDir)" />
+    <!-- TODO(LHM rename): renamed only for the bakery plugin, see EmbeddedAssemblyResolver.LhmFileName -->
+    <Copy SourceFiles="$(OutDir)LibreHardwareMonitorLib.dll" DestinationFiles="$(DistDir)OpenHardwareMonitorLib.dll" />
+    <Copy SourceFiles="$(OutDir)$(AssemblyName).exe.config" DestinationFiles="$(DistDir)$(AssemblyName).exe.config.example" Condition="Exists('$(OutDir)$(AssemblyName).exe.config')" />
+    <Message Importance="high" Text="Checkmk drop-in package: $(DistDir)" />
+  </Target>
+
+</Project>

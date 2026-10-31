@@ -219,11 +219,12 @@ describe('MapService', () => {
     const store = newService()
     store.currentMap.value = sampleConfig
 
-    const fetchPromise = store.fetchMap('map1')
+    const onSigned = vi.fn()
+    const fetchPromise = store.fetchMap('map1', onSigned)
     expect(store.currentMap.value).toBeNull()
     await fetchPromise
     expect(store.currentMap.value).toEqual(sampleConfig)
-    expect(store.currentMapSig.value).toEqual({ config_b64: sampleConfigB64, sig: 'cw' })
+    expect(onSigned).toHaveBeenCalledWith({ config_b64: sampleConfigB64, sig: 'cw' })
   })
 
   it('fetchMap() sets error on failure', async () => {

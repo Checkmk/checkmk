@@ -523,6 +523,24 @@ describe('MapStatesService — overlapping connects', () => {
     ])
   })
 
+  it('opens a stream for a map returned to while its last connect still ran', async () => {
+    const register = vi
+      .fn()
+      .mockReturnValueOnce(new Promise<MapStates>(() => {}))
+      .mockResolvedValue(emptyStates)
+    const store = newService(null, {}, { register })
+    const signed = { config_b64: 'x', sig: 'y' }
+
+    void store.connectToMap('back_map', signed)
+    await vi.waitFor(() => expect(register).toHaveBeenCalledOnce())
+    store.disconnect()
+    await store.connectToMap('back_map', signed)
+
+    expect(FakeEventSource.instances.map((source) => source.url)).toEqual([
+      expect.stringContaining('back_map')
+    ])
+  })
+
   it('shows no error of a map that was left on the one opened', async () => {
     let failFirst: (error: Error) => void = () => undefined
     const register = vi

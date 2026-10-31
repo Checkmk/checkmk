@@ -14,11 +14,19 @@ import { fakeMapsServices, mountWithServices } from '../../support/services'
 
 let services: ReturnType<typeof fakeMapsServices>
 
+const SIGNED = { config_b64: 'x', sig: 'y' }
+
 /** A fetch per map name, resolved by the case in the order it wants. */
 function deferredFetches(): { resolve: (name: string) => void } {
   const pending = new Map<string, () => void>()
   vi.spyOn(services.maps, 'fetchMap').mockImplementation(
-    (name: string) => new Promise<void>((done) => pending.set(name, done))
+    (name, onSigned) =>
+      new Promise<void>((done) =>
+        pending.set(name, () => {
+          onSigned?.(SIGNED)
+          done()
+        })
+      )
   )
   return {
     resolve: (name: string) => {
@@ -43,6 +51,9 @@ function mountLifecycle(mapName: Ref<string>) {
 
 beforeEach(() => {
   services = fakeMapsServices()
+  vi.spyOn(services.maps, 'fetchMap').mockImplementation(async (_name, onSigned) => {
+    onSigned?.(SIGNED)
+  })
   vi.spyOn(services.states, 'connectToMap').mockResolvedValue(undefined)
   vi.spyOn(services.states, 'disconnect').mockImplementation(() => {})
   vi.spyOn(services.maps, 'flushSave').mockResolvedValue(undefined)
@@ -73,7 +84,28 @@ describe('useMapLifecycle', () => {
     fetches.resolve('dc1')
     await nextTick()
 
-    expect(services.states.connectToMap).toHaveBeenCalledWith('dc1', undefined)
+    expect(services.states.connectToMap).toHaveBeenCalledWith('dc1', SIGNED)
+  })
+
+  it('lets go of the map it leaves before the next one loads', async () => {
+    deferredFetches()
+    const mapName = ref('left')
+    mountLifecycle(mapName)
+    await nextTick()
+    vi.mocked(services.states.disconnect).mockClear()
+
+    mapName.value = 'next'
+    await nextTick()
+
+    expect(services.states.disconnect).toHaveBeenCalledOnce()
+  })
+
+  it('connects no map that could not be loaded', async () => {
+    vi.spyOn(services.maps, 'fetchMap').mockResolvedValue(undefined)
+    mountLifecycle(ref('gone'))
+    await settle()
+
+    expect(services.states.connectToMap).not.toHaveBeenCalled()
   })
 
   // Rotation and object clicks both swap the name under the same component,
@@ -91,7 +123,7 @@ describe('useMapLifecycle', () => {
     await nextTick()
 
     expect(services.states.connectToMap).toHaveBeenCalledTimes(1)
-    expect(services.states.connectToMap).toHaveBeenCalledWith('fast', undefined)
+    expect(services.states.connectToMap).toHaveBeenCalledWith('fast', SIGNED)
   })
 
   // The daemon inflates the auto-source hosts from the config it was handed,

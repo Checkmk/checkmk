@@ -52,13 +52,6 @@ export interface ViewChoices {
 export class MapService {
   public readonly maps: Ref<MapRead[]> = ref([])
   public readonly currentMap: Ref<MapConfig | null> = ref(null)
-  /**
-   * The GUI-signed blob for the open map, handed to the daemon at register time.
-   * Kept apart from ``currentMap`` because that one carries client-only extras
-   * (merged worldmap auto-objects) which must not be in the bytes the daemon
-   * verifies — it inflates those itself.
-   */
-  public readonly currentMapSig: Ref<{ config_b64: string; sig: string } | null> = ref(null)
   /** Ownership, sharing and the viewer's rights on the open map. */
   public readonly currentMapAccess: Ref<MapAccess | null> = ref(null)
   public readonly loading: Ref<boolean> = ref(false)
@@ -162,7 +155,6 @@ export class MapService {
     this.loading.value = true
     this.error.value = null
     this.currentMap.value = null
-    this.currentMapSig.value = null
     this.currentMapAccess.value = null
     this.autoObjects.value = 'none'
     try {
@@ -181,10 +173,11 @@ export class MapService {
           ? { ...object, map_title: signed.map_link_titles[object.map_name] ?? null }
           : object
       )
-      this.currentMapSig.value = { config_b64: signed.config_b64, sig: signed.sig }
       this.currentMapAccess.value = signed.access
       if (onSigned) {
-        onSigned(this.currentMapSig.value)
+        // The signed bytes, not ``currentMap``: that one gets client-only extras
+        // (merged worldmap auto-objects) the daemon inflates itself.
+        onSigned({ config_b64: signed.config_b64, sig: signed.sig })
         // Rendering a large map blocks the thread; yielding first lets the
         // connect reach the network before it.
         await new Promise((resolve) => setTimeout(resolve, 0))

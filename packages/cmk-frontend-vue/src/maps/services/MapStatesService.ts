@@ -277,9 +277,6 @@ export class MapStatesService {
     const run = this.connectRun
     const superseded = () => run !== this.connectRun
     try {
-      // What the last map's daemon said is not news about this one.
-      this.lastUpdate.value = null
-      this.deadSites.value = []
       this.currentMap = mapName
       this.initialLoad.value = true
       try {
@@ -381,6 +378,8 @@ export class MapStatesService {
 
   public disconnect(): void {
     this.connectRun++
+    // A connect that is let go of is no answer for the next one to the same map.
+    this.connecting = null
     document.removeEventListener('visibilitychange', this.onVisibilityChange)
     this.clearHiddenTimer()
     this.paused = false
@@ -395,6 +394,9 @@ export class MapStatesService {
     this.connected.value = false
     this.initialLoad.value = false
     this.loadError.value = null
+    // What the last map's daemon said is not news about the next one.
+    this.lastUpdate.value = null
+    this.deadSites.value = []
     this.states.value = {}
     this.metricValues.value = {}
     this.metricTitles.value = {}

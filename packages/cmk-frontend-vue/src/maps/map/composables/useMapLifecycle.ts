@@ -71,10 +71,17 @@ export function useMapLifecycle(source: {
     toast.error(error instanceof Error ? untranslated(error.message) : _t(fallback))
   }
 
+  let openedMap: string | null = null
   watchEffect((onCleanup) => {
     const name = source.mapName()
     source.rotation.stop()
     source.onMapChanged()
+    // The leaving map's states are not this one's, also while it loads or if it
+    // cannot be loaded.
+    if (name !== openedMap) {
+      states.disconnect()
+      openedMap = name
+    }
 
     // A slow fetch followed by a fast one would otherwise resume last and open
     // the stream for the map that is no longer on screen: everything read after
@@ -94,21 +101,26 @@ export function useMapLifecycle(source: {
     // what keeps this effect's dependencies intact. It starts as soon as the
     // signature is there, before the map is rendered.
     void (async () => {
-      let connecting: Promise<void> | undefined
+      // A holder: TypeScript would not see a plain variable set in the callback.
+      const run: { connecting?: Promise<void> } = {}
       await maps.fetchMap(name, (signed) => {
         if (!superseded) {
-          connecting = states.connectToMap(name, signed)
+          run.connecting = states.connectToMap(name, signed)
           // Awaited below; until then a failure must not count as unhandled.
-          connecting.catch(() => undefined)
+          run.connecting.catch(() => undefined)
         }
       })
       if (superseded) {
         return
       }
       source.rotation.schedule(maps.currentMap.value)
+      // A map that could not be loaded shows why, not a live connection.
+      if (!run.connecting) {
+        return
+      }
       let registered = true
       try {
-        await (connecting ?? states.connectToMap(name, maps.currentMapSig.value ?? undefined))
+        await run.connecting
       } catch (error: unknown) {
         // A run another one took over from shares its connect, and so its
         // failure: only the current run tells.

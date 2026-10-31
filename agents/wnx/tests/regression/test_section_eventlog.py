@@ -8,7 +8,6 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import contextlib
-import math
 import os
 import platform
 import re
@@ -32,7 +31,6 @@ class Globals:
     testsource = "Test source"
     testeventtype = "Warning"
     testdescription = "Something might happen!"
-    tolerance = 10
     testids = [1, 2, 3]
 
 
@@ -172,20 +170,19 @@ def expected_output_application_events_engine():
     )
 
 
-def last_records():
-    if platform.system() != "Windows":
-        return None
-    return {logtype: get_last_record(logtype) for logtype in ["Application"]}
+def remove_statefiles() -> None:
+    # The agent reads the first state file it finds, the one for the
+    # connection's IP before the general eventstate.txt, so neither may be
+    # left over from an earlier test.
+    for name in (Globals.statefile, Globals.local_statefile):
+        with contextlib.suppress(OSError):  # It may not exist yet.
+            os.unlink(os.path.join(Globals.statedir, name))
 
 
 @pytest.fixture
 def no_statefile():
     if platform.system() == "Windows":
-        try:
-            os.unlink(os.path.join(Globals.statedir, "eventstate.txt"))
-        except OSError:
-            # eventstate.txt may not exist if this is the first test to be run
-            pass
+        remove_statefiles()
     yield
 
 
@@ -196,6 +193,7 @@ def with_statefile(request):
             os.mkdir(Globals.statedir)
         except OSError:
             pass  # Directory may already exist.
+        remove_statefiles()
         with open(os.path.join(Globals.statedir, request.param), "w") as statefile:
             eventstate = {logtype: get_last_record(logtype) for logtype in logs}
             for logtype, state in eventstate.items():
@@ -205,29 +203,24 @@ def with_statefile(request):
 
 @pytest.fixture
 def verify_eventstate():
+    # Where the agent says it read the Application log up to: at least where
+    # the log ended just before the agent was asked (after the test's own
+    # events, as this fixture is set up after create_events and before
+    # actual_output), at most where it ends now. Other programs write to the
+    # log too, so the end now is only an upper bound.
+    windows = platform.system() == "Windows"
+    before = get_last_record(Globals.testlog) if windows else 0
     yield
-    if platform.system() == "Windows":
-        expected_eventstate = last_records()
+    if windows:
+        after = get_last_record(Globals.testlog)
         with open(os.path.join(Globals.statedir, Globals.statefile)) as statefile:
-            actual_eventstate = dict(get_log_state(line) for line in statefile)
-        for (expected_log, expected_state), (actual_log, actual_state) in zip(
-            sorted(expected_eventstate.items()), sorted(actual_eventstate.items())
-        ):
-            assert expected_log == actual_log
-            state_tolerance = 0 if expected_log == Globals.testlog else Globals.tolerance
-            assert math.fabs(expected_state - actual_state) <= state_tolerance, (
-                "expected state for log '%s' is %d, actual state %d, "
-                "state_tolerance %d"
-                % (
-                    expected_log,
-                    expected_state,
-                    actual_state,
-                    state_tolerance,
-                )
-            )
+            state = dict(get_log_state(line) for line in statefile).get(Globals.testlog)
+        assert state is not None and before <= state <= after, (
+            f"the agent's state for log '{Globals.testlog}' is {state}, "
+            f"expected from {before} (before the agent was asked) to {after} (now)"
+        )
 
 
-# disabled tests
 @pytest.mark.usefixtures("no_statefile", "verify_eventstate")
 def test_section_eventlog__no_statefile__no_events(
     request, testconfig, expected_output_no_events, actual_output, testfile

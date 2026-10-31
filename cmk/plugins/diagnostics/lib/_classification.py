@@ -142,6 +142,9 @@ def get_checkmk_file_info(rel_filepath: str, component: str | None = None) -> Ch
 # - log file entries are relative to "var/log".
 CheckmkFileInfoByNameMap: dict[str, CheckmkFileInfo] = {
     # config files
+    # Setup config domains save their settings to global.mk and sitespecific.mk by
+    # default (see ABCConfigDomain.config_file), so these two entries classify them
+    # wherever they live. Domains overriding config_file() need their own entry.
     "global.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_GLOBAL_SETTINGS,
@@ -204,15 +207,6 @@ CheckmkFileInfoByNameMap: dict[str, CheckmkFileInfo] = {
 
 CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
     # config files
-    "ai_control_plane.d/wato/global.mk": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity.sensitive,
-        description=(
-            "Contains the LLM provider settings of the AI control plane: provider, model, "
-            "base URL and the password store reference of the API key."
-        ),
-        encryption=CheckmkFileEncryption.none,
-    ),
     "apache.conf": CheckmkFileInfo(
         components=[],
         sensitivity=CheckmkFileSensitivity.insensitive,

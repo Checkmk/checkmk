@@ -4,11 +4,13 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type Ref, reactive, ref } from 'vue'
 
 import type { MapConfigApi, SignedMap } from '@/maps/api/mapConfig'
 import type { MapStatesApi } from '@/maps/api/mapStates'
 import { isAutoObjectId } from '@/maps/api/wire'
+import { saveFailureText } from '@/maps/shared/errorText'
 import type {
   CfgImport,
   FolderTreeView,
@@ -57,8 +59,9 @@ export class MapService {
    */
   public readonly currentMapSig: Ref<{ config_b64: string; sig: string } | null> = ref(null)
   public readonly loading: Ref<boolean> = ref(false)
-  public readonly saving: Ref<boolean> = ref(false)
   public readonly error: Ref<string | null> = ref(null)
+  /** Why the last save failed; the map stays open with it. */
+  public readonly saveError: Ref<{ text: TranslatedString } | null> = ref(null)
   /**
    * Where the open map's auto-source hosts are: ``loading`` from the load of a
    * geo map with an auto source until {@link loadAutoObjects} settles. Only
@@ -217,7 +220,7 @@ export class MapService {
       const map = this.pendingSaveMap
       this.pendingSaveMap = null
       if (map) {
-        void this.persist(map)
+        void this.persist(map).then((failure) => this.report(failure))
       }
     }, SAVE_DEBOUNCE_MS)
   }
@@ -230,17 +233,31 @@ export class MapService {
     void this.flushSave()
   }
 
-  /** Persists at once, cancelling a pending debounce — for navigating away. */
-  public async flushSave(): Promise<void> {
+  /**
+   * Persists at once, cancelling a pending debounce — for navigating away.
+   * Resolves to what failed, if anything did; ``quiet`` leaves telling the
+   * operator to a caller that answers the failure itself.
+   */
+  public async flushSave({ quiet = false }: { quiet?: boolean } = {}): Promise<unknown> {
     if (this.saveTimer) {
       clearTimeout(this.saveTimer)
       this.saveTimer = null
     }
     const map = this.pendingSaveMap
     this.pendingSaveMap = null
-    if (map) {
-      await this.persist(map)
+    const failure = map ? await this.persist(map) : null
+    if (!quiet) {
+      this.report(failure)
     }
+    return failure
+  }
+
+  private report(failure: unknown): void {
+    // A new one each time, so a save refused again for the same reason is told again.
+    this.saveError.value =
+      failure === null
+        ? null
+        : { text: saveFailureText(failure, usei18n()._t('Failed to save map')) }
   }
 
   public async createMap(
@@ -400,19 +417,16 @@ export class MapService {
     return { deleted, failed }
   }
 
-  private async persist(map: MapConfig): Promise<void> {
-    const { _t } = usei18n()
-    this.saving.value = true
+  /** Resolves to what failed, or ``null``. */
+  private async persist(map: MapConfig): Promise<unknown> {
     try {
       // Updated in place: the server resolves own/foreign/built-in by name and
       // preserves the stored visibility when it is omitted, which is what a
       // routine autosave wants.
       await this.api.update(map)
-      this.error.value = null
+      return null
     } catch (e: unknown) {
-      this.error.value = e instanceof Error ? e.message : _t('Failed to save map')
-    } finally {
-      this.saving.value = false
+      return e
     }
   }
 }

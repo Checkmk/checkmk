@@ -233,6 +233,46 @@ describe('MapService', () => {
     expect(saveRequests[0]!.config.alias).toBe('edited')
   })
 
+  it('flushSave() hands a refused save back quietly and keeps the map open', async () => {
+    server.use(
+      http.put('*/api/internal/objects/map/:name', () =>
+        HttpResponse.json(
+          { title: 'Invalid Livestatus filter', detail: "Object 'g': unknown column 'nme'" },
+          { status: 400 }
+        )
+      )
+    )
+    const store = newService()
+    await store.fetchMap('map1')
+    store.scheduleSave()
+
+    const failure = await store.flushSave({ quiet: true })
+
+    expect(failure).toBeInstanceOf(Error)
+    expect(store.saveError.value).toBeNull()
+    expect(store.error.value).toBeNull()
+    expect(store.currentMap.value?.name).toBe('map1')
+  })
+
+  it('a refused save in the background says why, not what the map failed to load', async () => {
+    server.use(
+      http.put('*/api/internal/objects/map/:name', () =>
+        HttpResponse.json(
+          { title: 'Invalid Livestatus filter', detail: "Object 'g': unknown column 'nme'" },
+          { status: 400 }
+        )
+      )
+    )
+    const store = newService()
+    await store.fetchMap('map1')
+    store.scheduleSave()
+
+    await vi.waitFor(() => expect(store.saveError.value).not.toBeNull(), { timeout: 2000 })
+
+    expect(store.saveError.value).toEqual({ text: "Object 'g': unknown column 'nme'" })
+    expect(store.error.value).toBeNull()
+  })
+
   it('cloneMap() keeps the clone out of the Monitor menu where its source is', async () => {
     const store = newService()
     await store.fetchMaps()

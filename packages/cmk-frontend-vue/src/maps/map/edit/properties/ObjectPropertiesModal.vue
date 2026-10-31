@@ -20,6 +20,7 @@ import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import { useDraggableCard } from '@/maps/map/edit/composables/useDraggableCard'
@@ -68,6 +69,8 @@ const props = defineProps<{
   checkmkUrl?: string | null
   /** Where the object it edits is on screen, for the card to open away from. */
   avoid?: AnchorRect | null
+  /** Why the last save was refused; the card stays open to correct it. */
+  saveError?: TranslatedString | null
 }>()
 
 const emit = defineEmits<{
@@ -236,7 +239,17 @@ const showsAppearance = computed(() => !['line', 'textbox', 'graph'].includes(ob
 const showsFilter = computed(() => leavesOutMembers(boundType.value))
 
 const saving = ref(false)
-const saveError = ref('')
+const formError = ref('')
+// Ours, or else the one the save came back with.
+const saveError = computed(() => formError.value || props.saveError || '')
+watch(
+  () => props.saveError,
+  (refused) => {
+    if (refused) {
+      saving.value = false
+    }
+  }
+)
 const confirmDelete = ref(false)
 
 // Escape on one of the card's own questions answers that question.
@@ -247,9 +260,9 @@ useEscapeClose(() => {
 })
 
 function save(): void {
-  saveError.value = ''
+  formError.value = ''
   if (weatherColorNeedsMetric(form.value, props.object)) {
-    saveError.value = _t('Pick a metric — weather coloring needs one to colorize the line.')
+    formError.value = _t('Pick a metric — weather coloring needs one to colorize the line.')
     return
   }
   saving.value = true

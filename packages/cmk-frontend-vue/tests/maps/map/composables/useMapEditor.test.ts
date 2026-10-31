@@ -255,6 +255,14 @@ describe('useMapEditor map links — the caption follows the target', () => {
 
     expect(link.map_title).toBeNull()
   })
+
+  it('puts the link back as it was, its title included', () => {
+    const { link, editor } = editorWithLink()
+
+    editor.updateObjectProperties('link1', { map_name: 'dc_2' })()
+
+    expect([link.map_name, link.map_title]).toEqual(['dc_1', 'Datacenter 1'])
+  })
 })
 
 describe('useMapEditor — geo coordinates', () => {

@@ -515,8 +515,10 @@ export function useMapEditor() {
     return (name && mapsStore.maps.value.find((m) => m.name === name)?.alias) || null
   }
 
-  function updateObjectProperties(id: string, updates: Record<string, unknown>) {
+  /** Applies ``updates``; what it returns puts the object back as it was. */
+  function updateObjectProperties(id: string, updates: Record<string, unknown>): () => void {
     const obj = mapsStore.currentMap.value?.objects.find((o) => o.id === id)
+    const before: MapElement | null = obj ? JSON.parse(JSON.stringify(obj)) : null
     if (obj) {
       Object.assign(obj, updates)
       if (getEffectiveObjectType(obj) === 'map') {
@@ -524,6 +526,16 @@ export function useMapEditor() {
       }
     }
     mapsStore.scheduleSave()
+    return () => {
+      if (obj && before) {
+        for (const key of Object.keys(obj)) {
+          if (!(key in before)) {
+            Reflect.deleteProperty(obj, key)
+          }
+        }
+        Object.assign(obj, before)
+      }
+    }
   }
 
   const placing = ref(false)

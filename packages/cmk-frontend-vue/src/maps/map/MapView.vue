@@ -19,6 +19,7 @@ so every painter below inherits one set of them.
 import CmkBreadcrumb, { type BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import {
   computed,
   defineAsyncComponent,
@@ -66,7 +67,7 @@ import {
   useToast
 } from '@/maps/services/context'
 import MapsConfirmDialog from '@/maps/shared/components/MapsConfirmDialog.vue'
-import { errorText } from '@/maps/shared/errorText'
+import { errorText, saveFailureText } from '@/maps/shared/errorText'
 import type { CommandTarget, MapElement, MapRead, ObjectState } from '@/maps/types/api'
 import type { AnchorRect } from '@/maps/utils/anchorRect'
 import { resolveCheckmkUrl } from '@/maps/utils/deploymentBase'
@@ -260,6 +261,18 @@ const selectedObjectAnchor = computed<AnchorRect | null>(() => {
 })
 
 const propsModalObject = ref<MapElement | null>(null)
+/** Why the properties could not be saved, shown on the card that is kept open. */
+const propsSaveError = ref<TranslatedString | null>(null)
+
+// A save in the background that fails leaves the map as it is on screen.
+watch(
+  () => mapsStore.saveError.value,
+  (failure) => {
+    if (failure) {
+      toast.error(failure.text)
+    }
+  }
+)
 
 /**
  * The object a click on the canvas just created, until its properties are saved.
@@ -349,6 +362,7 @@ function onSaveWorldmapViewport(at: WorldmapViewport) {
 function _closePropsModal() {
   propsModalObject.value = null
   justPlacedId.value = null
+  propsSaveError.value = null
 }
 
 /** Dismissing the modal: an object that only exists because of it goes with it. */
@@ -361,21 +375,25 @@ async function onPropsModalClose() {
 }
 
 async function onPropsModalSave(updates: Record<string, unknown>) {
-  if (!propsModalObject.value) {
+  const object = propsModalObject.value
+  if (!object) {
     _closePropsModal()
     return
   }
-  try {
-    justPlacedId.value = null
-    await editor.updateObjectProperties(propsModalObject.value.id, updates)
-  } catch (e) {
-    toast.error(errorText(e, _t('Save failed')))
-  } finally {
-    // Always close the modal so its local "saving" state resets even if
-    // the backend rejected the update — otherwise the Save button stays
-    // stuck on "Saving…" with no feedback.
-    _closePropsModal()
+  propsSaveError.value = null
+  // What else is still waiting goes first, so a failure below is this card's.
+  await mapsStore.flushSave()
+  const restore = editor.updateObjectProperties(object.id, updates)
+  const failure = await mapsStore.flushSave({ quiet: true })
+  if (failure !== null) {
+    // Taken back, so the next save does not carry what was refused; the card
+    // keeps the input to correct.
+    restore()
+    propsSaveError.value = saveFailureText(failure, _t('Save failed'), object.id)
+    return
   }
+  justPlacedId.value = null
+  _closePropsModal()
 }
 
 /** Deleting goes through the selection, whichever surface asked for it. */
@@ -1016,6 +1034,7 @@ function closeBulkAckModal(sent: boolean): void {
         :map-default-z="mapConfig?.default_z ?? 1"
         :checkmk-url="checkmkUrl"
         :avoid="selectedObjectAnchor"
+        :save-error="propsSaveError"
         @close="onPropsModalClose"
         @save="onPropsModalSave"
         @delete="onPropsModalDelete"

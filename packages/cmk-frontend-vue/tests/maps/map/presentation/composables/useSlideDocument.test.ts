@@ -4,7 +4,6 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { type MockInstance, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { nextTick } from 'vue'
 
 import { useSlideDocument } from '@/maps/map/presentation/composables/useSlideDocument'
 import { createElement } from '@/maps/map/presentation/elements'
@@ -93,22 +92,6 @@ describe('useSlideDocument', () => {
 
     await vi.advanceTimersByTimeAsync(500)
     expect(states.refresh).toHaveBeenCalledTimes(1)
-  })
-
-  it('stays silent on a stored slide and reports a rejected one', async () => {
-    withDoc()
-    services.maps.saving.value = true
-    await nextTick()
-    services.maps.saving.value = false
-    await nextTick()
-    expect(services.toasts.toasts.value).toEqual([])
-
-    services.maps.saving.value = true
-    await nextTick()
-    services.maps.error.value = 'boom'
-    services.maps.saving.value = false
-    await nextTick()
-    expect(services.toasts.toasts.value).toMatchObject([{ type: 'error', message: 'boom' }])
   })
 
   it('exposes shared lookups (byId, topLevelId, nextZ)', () => {

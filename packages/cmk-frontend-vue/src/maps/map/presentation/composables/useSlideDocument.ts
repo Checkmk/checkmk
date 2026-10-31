@@ -3,10 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
-import { useMaps, useStates, useToast } from '@/maps/services/context'
+import { useMaps, useStates } from '@/maps/services/context'
 import type {
   MapConfig,
   PresentationElement,
@@ -39,7 +38,6 @@ const STATE_REFRESH_DELAY = 400
  */
 export function useSlideDocument(config: () => MapConfig, onMapSwitch?: () => void) {
   const mapsStore = useMaps()
-  const toast = useToast()
   const statesStore = useStates()
 
   function initialView(): PresentationView {
@@ -93,15 +91,6 @@ export function useSlideDocument(config: () => MapConfig, onMapSwitch?: () => vo
     }
     refreshTimer = setTimeout(refreshStates, STATE_REFRESH_DELAY)
   }
-
-  // Saving is as silent as on the other map canvases; only a failure speaks up.
-  const saving = mapsStore.saving
-  watch(saving, (now, before) => {
-    const error = mapsStore.error.value
-    if (before && !now && error) {
-      toast.error(untranslated(error))
-    }
-  })
 
   function scheduleSave(): void {
     const map = mapsStore.currentMap.value

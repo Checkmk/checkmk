@@ -10,6 +10,7 @@ mirror and the opaque ``map_spec`` dict that the pagetype store persists.
 """
 
 import json
+from collections import Counter
 from collections.abc import Callable, Iterator, Mapping
 from http import HTTPStatus
 from typing import Final, get_args
@@ -41,6 +42,7 @@ from cmk.maps.rest_api.models.response_models import (
 )
 from cmk.maps.shared.filters import normalize_object_filter
 from cmk.maps.shared.map_payload import (
+    AUTO_OBJECT_ID_PREFIX,
     BackgroundPosition,
     BackgroundStyle,
     ClickAction,
@@ -295,6 +297,24 @@ def visibility_from_public(public: VisualPublic | None, hidden: bool) -> MapVisi
     if isinstance(public, tuple) and public[0] in ("contact_groups", "sites"):
         return MapVisibility(publish=public[0], groups=list(public[1]), hide_in_monitor_menu=hidden)
     return MapVisibility(publish="private", hide_in_monitor_menu=hidden)
+
+
+def validate_object_ids(config: MapConfig) -> None:
+    """Reject an object id the daemon uses for the objects it generates, which
+    would be shown twice or taken for one of them, and an id used twice."""
+    if any(obj.id.startswith(AUTO_OBJECT_ID_PREFIX) for obj in config.objects):
+        raise RestAPIRequestGeneralException(
+            status=HTTPStatus.BAD_REQUEST,
+            title="Reserved object id",
+            detail=f"Object ids starting with {AUTO_OBJECT_ID_PREFIX!r} are reserved.",
+        )
+    ids = Counter(obj.id for obj in config.objects)
+    if repeated := sorted(object_id for object_id, count in ids.items() if count > 1):
+        raise RestAPIRequestGeneralException(
+            status=HTTPStatus.BAD_REQUEST,
+            title="Duplicate object id",
+            detail=f"Each object needs its own id, used more than once: {', '.join(repeated)}",
+        )
 
 
 def validate_object_filters(spec: Mapping[str, object], stored: Mapping[str, object]) -> None:

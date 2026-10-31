@@ -36,8 +36,10 @@ from cmk.maps.shared.map_compat import (
     accept_legacy_backend_id,
     coerce_graph_metric,
     migrate_weathermap,
+    unique_ids,
 )
 from cmk.maps.shared.map_payload import (
+    AUTO_OBJECT_ID_PREFIX,
     DISPLAY_FIELD_DEFAULTS,
     LABEL_FIELD_DEFAULTS,
     MAP_FIELD_DEFAULTS,
@@ -166,7 +168,30 @@ def legacy_map_to_spec(
     _fill_map_defaults(spec)
     _bound_geo_view(spec)
     _caption_geo_objects(spec)
+    _drop_daemon_objects(spec)
+    _make_ids_unique(spec)
     return spec
+
+
+def _drop_daemon_objects(spec: dict[str, object]) -> None:
+    """A hand-edited board may hold an object the daemon adds itself, again."""
+    if isinstance(objects := spec.get("objects"), list):
+        spec["objects"] = [
+            obj
+            for obj in objects
+            if not (
+                isinstance(obj, dict) and str(obj.get("id", "")).startswith(AUTO_OBJECT_ID_PREFIX)
+            )
+        ]
+
+
+def _make_ids_unique(spec: dict[str, object]) -> None:
+    """A hand-edited board may repeat an object id."""
+    objects = [obj for obj in _dict_objects(spec) if isinstance(obj.get("id"), str)]
+    for obj, object_id in zip(
+        objects, unique_ids([str(obj["id"]) for obj in objects]), strict=True
+    ):
+        obj["id"] = object_id
 
 
 def _retarget_connections(spec: dict[str, object], foreign: frozenset[str]) -> None:

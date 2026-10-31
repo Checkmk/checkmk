@@ -243,6 +243,22 @@ def test_the_legacy_map_file_is_left_alone() -> None:
     assert path.read_text() == before
 
 
+def test_a_repeated_object_id_gets_an_id_of_its_own(admin: UserId) -> None:
+    board = _complete_map(objects=[_complete_object(id="o1"), _complete_object(id="o1")])
+
+    spec = _migrated(admin, "legacy", board).config.map_spec
+
+    assert [obj["id"] for obj in _objects(spec)] == ["o1", "o1_2"]
+
+
+def test_an_object_the_daemon_adds_is_left_to_the_daemon(admin: UserId) -> None:
+    board = _complete_map(objects=[_complete_object(id="auto:db01"), _complete_object(id="o1")])
+
+    spec = _migrated(admin, "legacy", board).config.map_spec
+
+    assert [obj["id"] for obj in _objects(spec)] == ["o1"]
+
+
 def test_legacy_backend_id_becomes_the_connection(admin: UserId) -> None:
     _write_connections(_REMOTE_CONNECTION)
     map_spec = _complete_map(backend_id="live_2")

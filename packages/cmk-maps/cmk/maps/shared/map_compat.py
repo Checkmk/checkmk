@@ -9,6 +9,8 @@ The legacy maps update action runs the same translation before it hands a
 board to the REST API, which does not translate.
 """
 
+from collections.abc import Sequence
+
 
 def accept_legacy_backend_id(data: object) -> object:
     """Move the pre-rename ``backend_id`` key to ``connection_id``, in place."""
@@ -37,3 +39,21 @@ def coerce_graph_metric(value: object) -> list[str] | None:
     if isinstance(value, list):
         return [s for s in value if isinstance(s, str)]
     return None
+
+
+def unique_ids(ids: Sequence[str]) -> list[str]:
+    """``ids`` with each repeat renamed ``<id>_<n>``; the first keeps its id, so
+    what referred to it still does."""
+    taken = set(ids)
+    seen: set[str] = set()
+    unique = []
+    for object_id in ids:
+        if object_id in seen:
+            n = 2
+            while f"{object_id}_{n}" in taken:
+                n += 1
+            object_id = f"{object_id}_{n}"
+            taken.add(object_id)
+        seen.add(object_id)
+        unique.append(object_id)
+    return unique

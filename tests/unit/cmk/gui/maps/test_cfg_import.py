@@ -901,6 +901,24 @@ def test_cfg_to_map_counter_id_without_object_id() -> None:
     assert [obj["id"] for obj in parsed_map["objects"]] == ["host_1", "host_2"]
 
 
+def test_cfg_to_map_repeated_object_id_gets_its_own_id() -> None:
+    content = (
+        "define host {\n    object_id = a\n    host_name = s1\n    x = 0\n    y = 0\n}\n"
+        "define host {\n    object_id = a\n    host_name = s2\n    x = 10\n    y = 10\n}\n"
+    )
+    parsed_map = cfg_to_map(content, "test")
+    assert [obj["id"] for obj in parsed_map["objects"]] == ["host_a", "host_a_2"]
+
+
+def test_cfg_to_map_object_id_matching_a_counter_id_gets_its_own_id() -> None:
+    content = (
+        "define host {\n    host_name = s1\n    x = 0\n    y = 0\n}\n"
+        "define host {\n    object_id = 1\n    host_name = s2\n    x = 10\n    y = 10\n}\n"
+    )
+    parsed_map = cfg_to_map(content, "test")
+    assert [obj["id"] for obj in parsed_map["objects"]] == ["host_1", "host_1_2"]
+
+
 def test_cfg_to_map_unknown_block_skipped() -> None:
     content = (
         "define futuretype {\n    foo = bar\n}\n"

@@ -30,6 +30,7 @@ from cmk.maps.shared.filters import (
     validate_member_pattern,
 )
 from cmk.maps.shared.geo import bounded_view, parse_degrees
+from cmk.maps.shared.map_compat import unique_ids
 from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH
 from cmk.maps.shared.map_payload import (
     FlowView,
@@ -1069,6 +1070,12 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
         # file (worldmap.db / geomap CSV) the text-only import can't read, so the
         # map is framed here and filled by the CLI importer.
         objects = []
+    # NagVis lets a cfg repeat an object_id, and an explicit one can match the
+    # counter of a block without one.
+    for obj, object_id in zip(
+        objects, unique_ids([obj.payload["id"] for obj in objects]), strict=True
+    ):
+        obj.payload["id"] = object_id
     map_cfg["objects"] = [obj.payload for obj in objects]
     return map_cfg
 

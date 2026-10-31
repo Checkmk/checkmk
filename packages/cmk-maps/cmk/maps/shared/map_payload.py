@@ -112,6 +112,9 @@ MapViewType = Literal[
 
 RadarFilter = Literal["hostgroup", "servicegroup", "all_hosts", "all_services"]
 
+# The daemon generates objects with this id prefix and never stores them.
+AUTO_OBJECT_ID_PREFIX: Final = "auto:"
+
 PresentationTheme = Literal["midnight", "paper", "ops", "aurora"]
 
 PresentationObjectType = Literal["host", "service", "hostgroup", "servicegroup", "aggregation"]

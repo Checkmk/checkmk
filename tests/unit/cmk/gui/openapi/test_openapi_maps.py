@@ -367,6 +367,21 @@ def test_a_filter_the_map_already_had_is_not_checked_again(
     )
 
 
+def test_an_object_id_the_daemon_generates_is_refused(clients: ClientRegistry) -> None:
+    map_spec = _map("map1", objects=[_host_object("auto:web-1")])
+
+    clients.Maps.create(config=map_spec, expect_ok=False).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
+def test_an_object_id_used_twice_is_refused(clients: ClientRegistry) -> None:
+    map_spec = _map("map1", objects=[_host_object("h1"), _host_object("h1")])
+
+    resp = clients.Maps.create(config=map_spec, expect_ok=False)
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert "h1" in resp.json["detail"]
+
+
 def test_object_rejects_null_for_non_nullable_line_fields(clients: ClientRegistry) -> None:
     # ``line_perfdata_label``/``line_weather_color`` are non-nullable in the daemon
     # map schema; the REST mirror must not advertise them as nullable (an explicit

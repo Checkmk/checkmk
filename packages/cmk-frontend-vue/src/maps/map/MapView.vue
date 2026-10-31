@@ -143,12 +143,18 @@ const isFolderTree = computed(() => mapConfig.value?.view.type === 'foldertree')
  * say it in their own flow; any map says it only once states have arrived, so
  * one still connecting does not read as lost.
  */
+const statesArrived = computed(() => statesStore.lastUpdate.value !== null)
+const liveStatus = computed<'connecting' | 'live' | 'offline' | null>(() => {
+  if (mapsStore.error.value) {
+    return null
+  }
+  if (!statesArrived.value && !statesStore.loadError.value) {
+    return 'connecting'
+  }
+  return statesStore.connected.value ? 'live' : 'offline'
+})
 const showsMapState = computed(
-  () =>
-    !isPreview.value &&
-    !isRadar.value &&
-    !isFolderTree.value &&
-    statesStore.lastUpdate.value !== null
+  () => !isPreview.value && !isRadar.value && !isFolderTree.value && statesArrived.value
 )
 const isPresentation = computed(() => mapConfig.value?.view.type === 'presentation')
 const showsDerivedContent = computed(() => derivesItsContent(mapConfig.value?.view))
@@ -810,7 +816,7 @@ function closeBulkAckModal(sent: boolean): void {
   <div ref="root" class="maps-map-view" role="region" :aria-label="_t('Map view')">
     <MapViewTopbar
       v-if="!isKiosk && !isPreview"
-      :connected="statesStore.connected.value"
+      :live-status="liveStatus"
       :can-edit="canEdit"
       :editing="editor.editMode.value"
       :rotation-seconds="rotationCountdown"

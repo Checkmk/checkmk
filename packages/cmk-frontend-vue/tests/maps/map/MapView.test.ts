@@ -212,6 +212,21 @@ describe('MapView – loading / error / read-only states', () => {
     expect(screen.queryByTestId('renderer-static')).toBeNull()
   })
 
+  it('reads as connecting, not offline, until the first states arrive', async () => {
+    vi.mocked(services.apis.mapConfig.get).mockReturnValue(new Promise<SignedMap>(() => {}))
+    renderMap()
+    await waitFor(() => expect(screen.getByText('Connecting…')).toBeInTheDocument())
+    expect(screen.queryByText('Offline')).toBeNull()
+  })
+
+  it('reports no connection for a map that could not be loaded', async () => {
+    vi.mocked(services.apis.mapConfig.get).mockRejectedValue(new Error('Map vanished'))
+    renderMap()
+    await waitFor(() => expect(screen.getByText('Map vanished')).toBeInTheDocument())
+    expect(screen.queryByText('Offline')).toBeNull()
+    expect(screen.queryByText('Connecting…')).toBeNull()
+  })
+
   it('surfaces the store error and renders no map when the fetch fails', async () => {
     vi.mocked(services.apis.mapConfig.get).mockRejectedValue(new Error('Map vanished'))
     renderMap()

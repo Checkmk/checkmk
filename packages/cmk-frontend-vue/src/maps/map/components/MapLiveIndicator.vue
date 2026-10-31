@@ -12,20 +12,31 @@ only failing silently.
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { computed } from 'vue'
 
 const { _t } = usei18n()
 
-defineProps<{ connected: boolean }>()
+const props = defineProps<{ status: 'connecting' | 'live' | 'offline' }>()
+
+const shown = computed(() => {
+  switch (props.status) {
+    case 'connecting':
+      return { className: 'maps-map-live-indicator--connecting', text: _t('Connecting…') }
+    case 'live':
+      return { className: 'maps-map-live-indicator--live', text: _t('Live') }
+  }
+  return {
+    className: 'maps-map-live-indicator--offline',
+    text: _t('Offline'),
+    title: _t('Connection lost — showing last known state')
+  }
+})
 </script>
 
 <template>
-  <div
-    class="maps-map-live-indicator"
-    :class="connected ? 'maps-map-live-indicator--live' : 'maps-map-live-indicator--offline'"
-    :title="connected ? undefined : _t('Connection lost — showing last known state')"
-  >
+  <div class="maps-map-live-indicator" :class="shown.className" :title="shown.title">
     <span class="maps-map-live-indicator__dot" />
-    {{ connected ? _t('Live') : _t('Offline') }}
+    {{ shown.text }}
   </div>
 </template>
 
@@ -42,8 +53,10 @@ defineProps<{ connected: boolean }>()
 }
 
 /* A working stream is no state of the monitored objects, so only its dot
-   takes the OK colour; a lost connection is a problem and stays tinted. */
-.maps-map-live-indicator--live {
+   takes the OK colour; a lost connection is a problem and stays tinted.
+   Connecting is neither yet. */
+.maps-map-live-indicator--live,
+.maps-map-live-indicator--connecting {
   color: var(--font-color);
   box-shadow: 0 0 0 1px var(--default-border-color);
 }

@@ -22,7 +22,8 @@ import MapRotationPill from './MapRotationPill.vue'
 const { _t } = usei18n()
 
 defineProps<{
-  connected: boolean
+  /** None for a map that could not be loaded: it has no connection to report. */
+  liveStatus: 'connecting' | 'live' | 'offline' | null
   /** Whether this operator may edit the map, and so open its settings. */
   canEdit?: boolean
   editing?: boolean
@@ -52,7 +53,7 @@ defineEmits<{
     >
       <slot name="status" />
 
-      <MapLiveIndicator :connected="connected" />
+      <MapLiveIndicator v-if="liveStatus" :status="liveStatus" />
       <MapModeBadges :editing="editing" />
       <MapRotationPill
         v-if="(rotationSeconds ?? 0) > 0"

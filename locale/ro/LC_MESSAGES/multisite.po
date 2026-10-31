@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-10-30 17:57+0000\n"
 "Language-Team: Romanian <https://translate.checkmk.com/projects/checkmk/"
@@ -1465,12 +1465,13 @@ msgid ""
 "collisions can occur if containers with the same name exist on more than one "
 "Docker Node."
 msgstr ""
-"<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>"
-"Piggybacktranslations</a>sunt efectuate înainte ca conectorul piggyback să "
-"creeze gazde. Utilizați acest lucru, de exemplu, într-o configurație cu mai "
-"multe noduri Docker pentru a prefixa containerele cu numele nodului Docker "
-"corespunzător. În caz contrar, pot apărea coliziuni de nume dacă există "
-"containere cu același nume pe mai multe noduri Docker."
+"<a href='wato.py?"
+"mode=edit_ruleset&varname=piggyback_translation'>Piggybacktranslations</"
+"a>sunt efectuate înainte ca conectorul piggyback să creeze gazde. Utilizați "
+"acest lucru, de exemplu, într-o configurație cu mai multe noduri Docker "
+"pentru a prefixa containerele cu numele nodului Docker corespunzător. În caz "
+"contrar, pot apărea coliziuni de nume dacă există containere cu același nume "
+"pe mai multe noduri Docker."
 
 msgid ""
 "<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
@@ -1480,12 +1481,13 @@ msgid ""
 "collisions can occur if containers with the same name exist on more than one "
 "Docker node."
 msgstr ""
-"<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>"
-"Piggybacktranslations</a>sunt efectuate înainte ca conectorul piggyback să "
-"creeze gazde. Utilizați acest lucru, de exemplu, într-o configurație cu mai "
-"multe noduri Docker pentru a prefixa containerele cu numele nodului Docker "
-"corespunzător. În caz contrar, pot apărea coliziuni de nume dacă există "
-"containere cu același nume pe mai multe noduri Docker."
+"<a href='wato.py?"
+"mode=edit_ruleset&varname=piggyback_translation'>Piggybacktranslations</"
+"a>sunt efectuate înainte ca conectorul piggyback să creeze gazde. Utilizați "
+"acest lucru, de exemplu, într-o configurație cu mai multe noduri Docker "
+"pentru a prefixa containerele cu numele nodului Docker corespunzător. În caz "
+"contrar, pot apărea coliziuni de nume dacă există containere cu același nume "
+"pe mai multe noduri Docker."
 
 #, python-format
 msgid "<b>%(client_name)s</b> is requesting access to this Checkmk site."
@@ -1917,12 +1919,12 @@ msgstr ""
 "transporta informațiile de stare colectate într-un site către site-ul "
 "central. Începând cu Checkmk 1.6 este posibil în mod nativ și foarte "
 "recomandat să se cripteze acest trafic Livestatus.</p> <p>Acest lucru poate "
-"fi activat folosind setarea globală <a "
-"href=\"wato.py?mode=edit_configvar&varname=site_livestatus_tcp\">>Accesul la "
-"Livestatus prin TCP</a>. Înainte de a activa acest lucru, trebuie să vă "
-"asigurați că toți clienții Livestatus sunt capabili să gestioneze "
-"comunicarea Livestatus criptată SSL. Aruncați o privire la <a "
-"href=\"werk.py?werk=7017\">werk #7017</a> pentru mai multe informații.</p>"
+"fi activat folosind setarea globală <a href=\"wato.py?"
+"mode=edit_configvar&varname=site_livestatus_tcp\">>Accesul la Livestatus "
+"prin TCP</a>. Înainte de a activa acest lucru, trebuie să vă asigurați că "
+"toți clienții Livestatus sunt capabili să gestioneze comunicarea Livestatus "
+"criptată SSL. Aruncați o privire la <a href=\"werk.py?werk=7017\">werk "
+"#7017</a> pentru mai multe informații.</p>"
 
 #, no-python-format
 msgid ""
@@ -8376,7 +8378,8 @@ msgid "Auto-detect instances"
 msgstr "Instanțe de autodetecție"
 
 msgid "Auto-detect instances, expect HTTPS on the following ports:"
-msgstr "Instanțele de autodetecție se așteaptă la HTTPS pe următoarele porturi:"
+msgstr ""
+"Instanțele de autodetecție se așteaptă la HTTPS pe următoarele porturi:"
 
 #, fuzzy
 msgid "Auto-detect proxy settings for this network"
@@ -10535,7 +10538,8 @@ msgid "Both"
 msgstr "Atât"
 
 msgid "Both - display the information for both pod and container levels"
-msgstr "Ambele - Afișează informațiile pentru ambele niveluri, pod și container"
+msgstr ""
+"Ambele - Afișează informațiile pentru ambele niveluri, pod și container"
 
 msgid "Both conditions must match (defensive)"
 msgstr ""
@@ -13267,7 +13271,8 @@ msgstr "Servicii schimbate"
 
 #, python-format
 msgid "Changed site-specific configuration variable %s to %s."
-msgstr "A fost schimbată variabila de configurare specifică site-ului %s în %s."
+msgstr ""
+"A fost schimbată variabila de configurare specifică site-ului %s în %s."
 
 msgid "Changes"
 msgstr "Modificări"
@@ -19891,7 +19896,8 @@ msgid "Default state if stopped auto-start services are found"
 msgstr "Stare implicită dacă se găsesc servicii de pornire automată oprite"
 
 msgid "Default state to report when tunnel cannot be found anymore"
-msgstr "Starea implicită de raportare atunci când tunelul nu mai poate fi găsit"
+msgstr ""
+"Starea implicită de raportare atunci când tunelul nu mai poate fi găsit"
 
 #, fuzzy
 msgid "Default status"
@@ -30530,10 +30536,10 @@ msgid ""
 "li><li><tt>$SERVICEPERFDATA$</li><li><tt>$EVENT_TXT$</li></ul>"
 msgstr ""
 "Aici aveți voie să utilizați toate macrocomenzile care sunt definite în "
-"contextul notificării.Cele mai importante sunt:<ul><li><tt>$HOSTNAME$</li>"
-"<li><tt>$SERVICEDESC$</li><li><tt>$SERVICESHORTSTATE$</li><li><tt>"
-"$SERVICEOUTPUT$</li><li><tt>$LONGSERVICEOUTPUT$</li><li><tt>"
-"$SERVICEPERFDATA$</li><li><tt><tt>$EVENT_TXT$</li></ul>"
+"contextul notificării.Cele mai importante sunt:<ul><li><tt>$HOSTNAME$</"
+"li><li><tt>$SERVICEDESC$</li><li><tt>$SERVICESHORTSTATE$</"
+"li><li><tt>$SERVICEOUTPUT$</li><li><tt>$LONGSERVICEOUTPUT$</"
+"li><li><tt>$SERVICEPERFDATA$</li><li><tt><tt>$EVENT_TXT$</li></ul>"
 
 msgid ""
 "Here, you can <i>restrict</i> the list of contacts that has been built up by "
@@ -30974,8 +30980,8 @@ msgstr ""
 "etichetele date. Numele pe care le introduceți aici sunt comparate cu o "
 "potrivire exactă în funcție de majuscule și minuscule. Alternativ, puteți "
 "utiliza expresii regulate dacă introduceți un tilde (<tt>~</tt>) ca prim "
-"caracter. Expresia regulată respectivă trebuie să se potrivească cu <i>"
-"începutul</i> numelor de gazdă în cauză."
+"caracter. Expresia regulată respectivă trebuie să se potrivească cu "
+"<i>începutul</i> numelor de gazdă în cauză."
 
 #, fuzzy
 msgid ""
@@ -31071,8 +31077,8 @@ msgid ""
 "available you have to configure a <a href=\"%s\">%s</a> first."
 msgstr ""
 "Aici puteți selecta o conexiune InfluxDB care să fie utilizată. Dacă nu este "
-"disponibilă nicio alegere, trebuie să configurați mai întâi o <a href=\"%s\">"
-"%s</a>."
+"disponibilă nicio alegere, trebuie să configurați mai întâi o <a "
+"href=\"%s\">%s</a>."
 
 msgid ""
 "Here, you can select default parameters that are being set for detected "
@@ -31083,11 +31089,10 @@ msgid ""
 msgstr ""
 "Aici puteți selecta parametrii impliciți care sunt setați pentru serviciile "
 "detectate. Notă: modalitatea preferată de setare a parametrilor este să "
-"utilizați setul de reguli <a "
-"href=\"wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset\"> State "
-"and Count of Processes</a> în schimb. O modificare acolo va fi activă "
-"imediat, în timp ce o modificare în această regulă necesită o redescoperire "
-"a serviciilor."
+"utilizați setul de reguli <a href=\"wato.py?"
+"varname=checkgroup_parameters:ps&mode=edit_ruleset\"> State and Count of "
+"Processes</a> în schimb. O modificare acolo va fi activă imediat, în timp ce "
+"o modificare în această regulă necesită o redescoperire a serviciilor."
 
 #, fuzzy
 msgid ""
@@ -31230,8 +31235,8 @@ msgid ""
 "tt>."
 msgstr ""
 "Aici puteți specifica un <tt>ORACLE_HOME</tt> pentru accesul la bazele de "
-"date la distanță. Dacă se omite acest gol, se va reveni la sistemul <tt>"
-"ORACLE_HOME</tt>."
+"date la distanță. Dacă se omite acest gol, se va reveni la sistemul "
+"<tt>ORACLE_HOME</tt>."
 
 msgid ""
 "Here, you can specify an <tt>TNS_ADMIN</tt> for the access to the "
@@ -31348,9 +31353,9 @@ msgid ""
 "joining service data or inventory tables</tt>. The joining of different "
 "inventory tables is based on these macros."
 msgstr ""
-"Aici trebuie să folosiți macrocomenzi care sunt definite mai sus mai jos <tt>"
-"Macros pentru îmbinarea datelor de serviciu sau a tabelelor de inventar</tt>"
-". Alăturarea diferitelor tabele de inventariere se bazează pe aceste "
+"Aici trebuie să folosiți macrocomenzi care sunt definite mai sus mai jos "
+"<tt>Macros pentru îmbinarea datelor de serviciu sau a tabelelor de inventar</"
+"tt>. Alăturarea diferitelor tabele de inventariere se bazează pe aceste "
 "macrocomenzi."
 
 msgid "Here, you need to insert the original file or path name."
@@ -37300,7 +37305,8 @@ msgid "Ingress packet drop"
 msgstr "Scăderea pachetelor de intrare"
 
 msgid "Inherit from report time range (reporting only)"
-msgstr "Moștenire din intervalul de timp al raportului (numai pentru raportare)"
+msgstr ""
+"Moștenire din intervalul de timp al raportului (numai pentru raportare)"
 
 #, fuzzy
 msgid "Inherit settings from"
@@ -54400,8 +54406,8 @@ msgid ""
 msgstr ""
 "Vă rugăm să luați în considerare configurarea seturilor de reguli pentru "
 "gazdă sau serviciu <a href=\"%s\">Escape HTML în ieșirea serviciului</a> sau "
-"<a href=\"%s\">Escape HTML în ieșirea gazdei</a> în loc de <a href=\"%s\">"
-"dezactivarea scăpării la nivel global</a>."
+"<a href=\"%s\">Escape HTML în ieșirea gazdei</a> în loc de <a "
+"href=\"%s\">dezactivarea scăpării la nivel global</a>."
 
 #, python-format
 msgid ""
@@ -63726,7 +63732,8 @@ msgid "Short"
 msgstr "Cel mai scurt"
 
 msgid "Short - Use the first 12 characters of the Docker container ID"
-msgstr "Scurt - Utilizați primele 12 caractere ale ID-ului containerului docker"
+msgstr ""
+"Scurt - Utilizați primele 12 caractere ale ID-ului containerului docker"
 
 #, fuzzy
 msgid "Short ID"
@@ -65594,10 +65601,9 @@ msgid ""
 "mode=edit_ruleset&varname=filesystem_groups'>File system grouping patterns</"
 "a> feature processes this file system."
 msgstr ""
-"Specifică modul în care <a "
-"href='wato.py?mode=edit_ruleset&varname=filesystem_groups'>Modele de grupare "
-"a sistemelor de fișiere</a> caracteristica procesează acest sistem de "
-"fișiere."
+"Specifică modul în care <a href='wato.py?"
+"mode=edit_ruleset&varname=filesystem_groups'>Modele de grupare a sistemelor "
+"de fișiere</a> caracteristica procesează acest sistem de fișiere."
 
 msgid "Specifies the database privilege role used when connecting to Oracle."
 msgstr ""
@@ -69739,8 +69745,8 @@ msgid ""
 "tt>, you can enforce the right version by setting this rule entry."
 msgstr ""
 "Agentul Checkmk UNIX va detecta o instalare Python 3 prin căutarea comenzii "
-"<tt>python3</tt>, iar o instalare Python 2 prin căutarea comenzilor <tt>"
-"python2</tt> sau <tt>python</tt>. Dacă acest lucru nu se potrivește cu "
+"<tt>python3</tt>, iar o instalare Python 2 prin căutarea comenzilor "
+"<tt>python2</tt> sau <tt>python</tt>. Dacă acest lucru nu se potrivește cu "
 "instalarea Python a gazdei dvs., de exemplu, dacă Python 3 este disponibil "
 "prin <tt>python</tt>, puteți impune versiunea corectă prin setarea acestei "
 "intrări de regulă."
@@ -70372,8 +70378,8 @@ msgstr ""
 msgid ""
 "The TCP port the SMTP server is listening on. The default is <tt>25</tt>."
 msgstr ""
-"Portul TCP pe care ascultă serverul SMTP. Valoarea implicită este <tt>25</tt>"
-"."
+"Portul TCP pe care ascultă serverul SMTP. Valoarea implicită este <tt>25</"
+"tt>."
 
 msgid ""
 "The URI of the request. This should start with '/' and not include the "
@@ -70778,10 +70784,10 @@ msgid ""
 "review and fix the file content or remove the file before you visit this "
 "page again.<br><br>The problematic entry is:<br>%s"
 msgstr ""
-"Jurnalul de audit nu poate fi afișat din cauza unei erori de sintaxă în "
-"%s.<br><br>Vă rugăm să revizuiți și să remediați conținutul fișierului sau "
-"să eliminați fișierul înainte de a vizita din nou această pagină.<br><br><br>"
-"Intrarea problematică este:<br>%s"
+"Jurnalul de audit nu poate fi afișat din cauza unei erori de sintaxă în %s."
+"<br><br>Vă rugăm să revizuiți și să remediați conținutul fișierului sau să "
+"eliminați fișierul înainte de a vizita din nou această pagină."
+"<br><br><br>Intrarea problematică este:<br>%s"
 
 msgid ""
 "The authentication context class reference (for example "
@@ -78395,9 +78401,9 @@ msgid ""
 msgstr ""
 "Această regulă vă permite să stabiliți limite privind vârsta copiilor de "
 "rezervă pentru diferite tipuri de copii de rezervă. Dacă agentul dvs. nu "
-"acceptă tipuri de copii de rezervă (de exemplu, <i>Log Backup</i>, <i>"
-"Database Diff Backup</i>, etc.), puteți utiliza opțiunea <i>Database Backup</"
-"i> pentru a seta o limită generală"
+"acceptă tipuri de copii de rezervă (de exemplu, <i>Log Backup</i>, "
+"<i>Database Diff Backup</i>, etc.), puteți utiliza opțiunea <i>Database "
+"Backup</i> pentru a seta o limită generală"
 
 msgid "This rule allows you to set percentual limits for sort overflows."
 msgstr ""
@@ -101405,12 +101411,6 @@ msgid ""
 "list."
 msgstr ""
 
-msgid "This prompt may not have been sent: %{prompt}"
-msgstr ""
-
-msgid "The answer ended before it was complete."
-msgstr ""
-
 msgid "What needs my attention right now?"
 msgstr ""
 
@@ -101423,6 +101423,16 @@ msgstr ""
 
 msgid "What should I do to fix the current problem?"
 msgstr ""
+
+#, fuzzy
+msgid "The assistant is not set up yet"
+msgstr "Eticheta '%s' există, dar nu este așteptată."
+
+#, fuzzy
+msgid "Ask your administrator to set up the AI assistant."
+msgstr ""
+"Vă rugăm să specificați numele de utilizator al administratorului de pe site-"
+"ul la distanță."
 
 #, fuzzy
 msgid "Suggested questions"
@@ -101475,6 +101485,36 @@ msgstr ""
 msgid "Cancelled"
 msgstr "Anulat"
 
+#, fuzzy
+msgid "Error: %{code}"
+msgstr "Eroare: %s"
+
+msgid "This prompt may not have been sent: %{prompt}"
+msgstr ""
+
+msgid "The answer ended before it was complete."
+msgstr ""
+
+msgid "The answer was cut off because it reached the length limit."
+msgstr ""
+
+msgid "The AI provider could not be reached or returned an error."
+msgstr ""
+
+#, fuzzy
+msgid "The AI provider stopped responding."
+msgstr "Acest site nu răspunde."
+
+msgid "The answer took too many steps and was stopped."
+msgstr ""
+
+msgid "The site refused the assistant access to its monitoring data."
+msgstr ""
+
+#, fuzzy
+msgid "The assistant could not reach the monitoring data of the site."
+msgstr "Autentificarea nu este permisă pe acest site."
+
 msgid "No chats yet"
 msgstr ""
 
@@ -101492,6 +101532,21 @@ msgstr ""
 msgid ""
 "This will permanently delete this chat and its messages. This action can’t "
 "be undone."
+msgstr ""
+
+#, fuzzy
+msgid "Select an AI provider and a model in the global settings."
+msgstr "Această opțiune a fost modificată în setările globale."
+
+#, fuzzy
+msgid "Open global settings"
+msgstr "Setări globale"
+
+#, fuzzy
+msgid "The AI provider setting is invalid. Correct it in the global settings."
+msgstr "Integrarea ntopng nu este activată în setările globale."
+
+msgid "The AI provider is configured but not activated yet."
 msgstr ""
 
 #, fuzzy
@@ -105359,10 +105414,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Subject Name"
 #~ msgstr "Denumirea secțiunii"
-
-#, fuzzy, python-format
-#~ msgid "The host %s is not monitored on this site"
-#~ msgstr "Autentificarea nu este permisă pe acest site."
 
 #, fuzzy
 #~ msgid "Set host visibility for contact groups"

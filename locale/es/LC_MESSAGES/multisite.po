@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-10-30 11:26+0000\n"
 "Language-Team: Spanish <https://translate.checkmk.com/projects/checkmk/"
@@ -1898,12 +1898,12 @@ msgstr ""
 "información de estados recopilada en un sitio al sitio central. Desde "
 "Checkmk 1.6, es posible de forma nativa y muy recomendable cifrar este "
 "tráfico de Livestatus.</p> <p>Esto se puede habilitar usando la "
-"configuración global <a "
-"href=\"wato.py?mode=edit_configvar&varname=site_livestatus_tcp\">Acceso a "
-"Livestatus a través de TCP</a>. Antes de habilitar esto, debe asegurarse de "
-"que todos sus clientes Livestatus puedan manejar la comunicación Livestatus "
-"cifrada con SSL. Mire esto <a href=\"werk.py?werk=7017\">werk #7017</a> para "
-"mayor información.</p>"
+"configuración global <a href=\"wato.py?"
+"mode=edit_configvar&varname=site_livestatus_tcp\">Acceso a Livestatus a "
+"través de TCP</a>. Antes de habilitar esto, debe asegurarse de que todos sus "
+"clientes Livestatus puedan manejar la comunicación Livestatus cifrada con "
+"SSL. Mire esto <a href=\"werk.py?werk=7017\">werk #7017</a> para mayor "
+"información.</p>"
 
 #, no-python-format
 msgid ""
@@ -2132,8 +2132,8 @@ msgstr ""
 "inventario sólo se activará si el grupo de control del proceso "
 "correspondiente coincide. Por ejemplo: se puede utilizar esta regla para "
 "excluir todos los procesos pertenecientes a un contenedor docker "
-"especificando la expresión \"%s\" (sin las comillas), y seleccionando "
-"\"%s\".</p>"
+"especificando la expresión \"%s\" (sin las comillas), y seleccionando \"%s\"."
+"</p>"
 
 #, fuzzy
 msgid ""
@@ -18133,7 +18133,8 @@ msgstr ""
 
 #, python-format
 msgid "Created new rule in rule set \"%s\" in folder \"%s\""
-msgstr "Creada nueva regla en el conjunto de reglas \"%s\" en la carpeta \"%s\""
+msgstr ""
+"Creada nueva regla en el conjunto de reglas \"%s\" en la carpeta \"%s\""
 
 #, python-format
 msgid "Created new rule pack with id %s"
@@ -19719,9 +19720,10 @@ msgstr ""
 "Estimado usuario de Checkmk,<br><br>La licencia para su sitio Checkmk '%s' "
 "expirará %s. Tras la expiración, no podrá 'Activar cambios'.<br><br>Si aún "
 "no ha ampliado su licencia, póngase en contacto con el equipo de ventas de "
-"Checkmk en %s para asegurarse de que su licencia se amplía a tiempo.<br><br>"
-"Si adquirió su licencia a través de un socio o revendedor de Checkmk, "
-"póngase en contacto con ellos.<br><br>Sinceramente, su servidor Checkmk"
+"Checkmk en %s para asegurarse de que su licencia se amplía a tiempo."
+"<br><br>Si adquirió su licencia a través de un socio o revendedor de "
+"Checkmk, póngase en contacto con ellos.<br><br>Sinceramente, su servidor "
+"Checkmk"
 
 #, fuzzy, python-format
 msgid ""
@@ -19958,7 +19960,8 @@ msgstr ""
 "lista de esta regla."
 
 msgid "Default state if stopped auto-start services are found"
-msgstr "Estado por defecto si se encuentran servicios de autoarranque detenidos"
+msgstr ""
+"Estado por defecto si se encuentran servicios de autoarranque detenidos"
 
 msgid "Default state to report when tunnel cannot be found anymore"
 msgstr ""
@@ -23623,7 +23626,8 @@ msgid "Driver date"
 msgstr "Fecha del controlador"
 
 msgid "Driver type to use instead of doing an auto-selection"
-msgstr "Tipo de conductor a utilizar en lugar de hacer una selección automática"
+msgstr ""
+"Tipo de conductor a utilizar en lugar de hacer una selección automática"
 
 #, fuzzy
 msgid "Driver version"
@@ -27325,8 +27329,8 @@ msgstr "Fallo en la representación del valor: %r"
 #, python-format
 msgid "Failed to search rule of rule set '%s' in folder '%s' (%r): %s"
 msgstr ""
-"Fallo al buscar la regla del conjunto de reglas '%s' en la carpeta '%s' (%r)"
-": %s"
+"Fallo al buscar la regla del conjunto de reglas '%s' en la carpeta '%s' "
+"(%r): %s"
 
 #, fuzzy, python-format
 msgid "Failed to search rule of rule set '%s': %s"
@@ -30656,10 +30660,10 @@ msgid ""
 "li><li><tt>$SERVICEPERFDATA$</li><li><tt>$EVENT_TXT$</li></ul>"
 msgstr ""
 "Aquí puede utilizar todas las macros definidas en el contexto de "
-"notificación.Las más importantes son:<ul><li><tt>$HOSTNAME$</li><li><tt>"
-"$SERVICEDESC$</li><li><tt>$SERVICESHORTSTATE$</li><li><tt>$SERVICEOUTPUT$</"
-"li><li><tt>$LONGSERVICEOUTPUT$</li><li><tt>$SERVICEPERFDATA$</li><li><tt>"
-"$EVENT_TXT$</li></ul>"
+"notificación.Las más importantes son:<ul><li><tt>$HOSTNAME$</"
+"li><li><tt>$SERVICEDESC$</li><li><tt>$SERVICESHORTSTATE$</"
+"li><li><tt>$SERVICEOUTPUT$</li><li><tt>$LONGSERVICEOUTPUT$</"
+"li><li><tt>$SERVICEPERFDATA$</li><li><tt>$EVENT_TXT$</li></ul>"
 
 msgid ""
 "Here, you can <i>restrict</i> the list of contacts that has been built up by "
@@ -31202,11 +31206,10 @@ msgid ""
 msgstr ""
 "Aquí puede seleccionar los parámetros por defecto que se están estableciendo "
 "para los servicios detectados. Nota: la forma preferida de establecer los "
-"parámetros es utilizar el conjunto de reglas <a "
-"href=\"wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset\"> Estado "
-"y recuento de procesos</a>. Un cambio allí se activará inmediatamente, "
-"mientras que un cambio en esta regla requiere un redescubrimiento de los "
-"servicios."
+"parámetros es utilizar el conjunto de reglas <a href=\"wato.py?"
+"varname=checkgroup_parameters:ps&mode=edit_ruleset\"> Estado y recuento de "
+"procesos</a>. Un cambio allí se activará inmediatamente, mientras que un "
+"cambio en esta regla requiere un redescubrimiento de los servicios."
 
 #, fuzzy
 msgid ""
@@ -31266,8 +31269,8 @@ msgid ""
 "tablespace name, separated by a dot, for example <b>pengt.TEMP</b>."
 msgstr ""
 "Aquí puede establecer espacios de tabla explícitos definiéndolos mediante el "
-"SID y el nombre del espacio de tabla, separados por un punto, por ejemplo <b>"
-"pengt.TEMP</b>"
+"SID y el nombre del espacio de tabla, separados por un punto, por ejemplo "
+"<b>pengt.TEMP</b>"
 
 msgid ""
 "Here, you can set host labels that automatically get created when "
@@ -38755,7 +38758,8 @@ msgid "It is still in use by"
 msgstr "Sigue siendo utilizado por"
 
 msgid "It is still in use by at least 1 rule in rule set:"
-msgstr "Sigue siendo utilizado por al menos una regla en el conjunto de reglas:"
+msgstr ""
+"Sigue siendo utilizado por al menos una regla en el conjunto de reglas:"
 
 msgid "It's not allowed to use a leading \"!\" here."
 msgstr "No está permitido usar un \"!\" inicial aquí."
@@ -43031,7 +43035,8 @@ msgid ""
 msgstr ""
 
 msgid "Makes the icon appear in the column instead of the drop-down menu."
-msgstr "Hace que el icono aparezca en la columna en lugar del menú desplegable."
+msgstr ""
+"Hace que el icono aparezca en la columna en lugar del menú desplegable."
 
 msgid "Man Page Browser"
 msgstr "Navegador de páginas de hombre"
@@ -46988,7 +46993,8 @@ msgid "Negative match (exclude matching hosts from the set)"
 msgstr "Coincidencia negativa (excluir del conjunto los hosts coincidentes)"
 
 msgid "Negative match (exclude matching services from the set)"
-msgstr "Coincidencia negativa (excluir del conjunto los servicios coincidentes)"
+msgstr ""
+"Coincidencia negativa (excluir del conjunto los servicios coincidentes)"
 
 #, fuzzy
 msgid "Negative values not allowed"
@@ -54649,8 +54655,8 @@ msgid ""
 msgstr ""
 "Considere la posibilidad de configurar los conjuntos de reglas del host o "
 "del servicio <a href=\"%s\">Escape HTML en la salida del servicio</a> o <a "
-"href=\"%s\">Escape HTML en la salida del host</a> en lugar de <a href=\"%s\">"
-"desactivar el escape globalmente</a>"
+"href=\"%s\">Escape HTML en la salida del host</a> en lugar de <a "
+"href=\"%s\">desactivar el escape globalmente</a>"
 
 #, python-format
 msgid ""
@@ -60899,7 +60905,8 @@ msgid "SNMP interface check with 32-bit counters (v1)"
 msgstr "Comprobación de la interfaz SNMP con contadores de 32 bits (v1)"
 
 msgid "SNMP interface check with 64-bit counters (using v2c)"
-msgstr "Comprobación de la interfaz SNMP con contadores de 64 bits (usando v2c)"
+msgstr ""
+"Comprobación de la interfaz SNMP con contadores de 64 bits (usando v2c)"
 
 #, python-format
 msgid "SNMP retries (<a href=\"%s\">Rules</a>)"
@@ -64003,7 +64010,8 @@ msgid "Short"
 msgstr "El más corto"
 
 msgid "Short - Use the first 12 characters of the Docker container ID"
-msgstr "Corto - Utiliza los primeros 12 caracteres del ID del contenedor docker"
+msgstr ""
+"Corto - Utiliza los primeros 12 caracteres del ID del contenedor docker"
 
 #, fuzzy
 msgid "Short ID"
@@ -65883,9 +65891,9 @@ msgid ""
 "mode=edit_ruleset&varname=filesystem_groups'>File system grouping patterns</"
 "a> feature processes this file system."
 msgstr ""
-"Especifica cómo la función <a "
-"href='wato.py?mode=edit_ruleset&varname=filesystem_groups'>Patrones de "
-"agrupación del sistema de archivos</a> procesa este sistema de archivos."
+"Especifica cómo la función <a href='wato.py?"
+"mode=edit_ruleset&varname=filesystem_groups'>Patrones de agrupación del "
+"sistema de archivos</a> procesa este sistema de archivos."
 
 msgid "Specifies the database privilege role used when connecting to Oracle."
 msgstr ""
@@ -66427,9 +66435,9 @@ msgstr ""
 "Utilizamos padrões da shell unix durante a correspondência, pelo que pode "
 "utilizar vários caracteres como marcadores de posição:<ul><li><tt>* </tt> "
 "corresponde a tudo</li><li><tt>?      </tt> corresponde a qualquer caractere "
-"único</li><li><tt>[seq] </tt> corresponde a qualquer caractere em seq</li>"
-"<li><tt>[!seq] </tt> corresponde a qualquer caractere que não esteja em seq</"
-"li></ul>"
+"único</li><li><tt>[seq] </tt> corresponde a qualquer caractere em seq</"
+"li><li><tt>[!seq] </tt> corresponde a qualquer caractere que não esteja em "
+"seq</li></ul>"
 
 msgid "Specify the protocol used to connect to the management board."
 msgstr ""
@@ -70196,8 +70204,8 @@ msgid ""
 "configured with this rule."
 msgstr ""
 "Las estadísticas de Data-Guard están disponibles en Oracle Enterprise "
-"Edition con Data-Guard activado. El parámetro <tt>init.ora</tt> <tt>"
-"dg_broker_start</tt> debe ser <tt>TRUE</tt> para esta comprobación. El "
+"Edition con Data-Guard activado. El parámetro <tt>init.ora</tt> "
+"<tt>dg_broker_start</tt> debe ser <tt>TRUE</tt> para esta comprobación. El "
 "retardo de aplicación y transporte se puede configurar con esta regla."
 
 msgid "The Directory (Tenant) ID of your Microsoft Entra ID instance."
@@ -73810,8 +73818,8 @@ msgstr ""
 
 msgid "The password cannot be changed (it is locked by the user connector)."
 msgstr ""
-"La contraseña no se puede cambiar (está bloqueada por el conector de usuario)"
-"."
+"La contraseña no se puede cambiar (está bloqueada por el conector de "
+"usuario)."
 
 #, fuzzy
 msgid ""
@@ -76110,9 +76118,9 @@ msgid ""
 msgstr ""
 "Esta acción invalida los datos de conexión almacenados y las conexiones de "
 "host dejarán de funcionar.<br>Sólo hay 2 razones para hacer esto:<ul><li>Ya "
-"no confías en este host y no quieres recibir ni obtener más datos.</li><li>"
-"Quieres restablecer la comunicación al modo heredado y sin cifrar (en cuyo "
-"caso también necesitas restablecer el controlador de agente en el host "
+"no confías en este host y no quieres recibir ni obtener más datos.</"
+"li><li>Quieres restablecer la comunicación al modo heredado y sin cifrar (en "
+"cuyo caso también necesitas restablecer el controlador de agente en el host "
 "supervisado (consulta la `cmk-agent-ctl help`).</li></ul>"
 
 msgid "This action will affect all pending changes you have made."
@@ -78678,9 +78686,9 @@ msgid ""
 msgstr ""
 "Esta regla le permite establecer límites en la antigüedad de las copias de "
 "seguridad para diferentes tipos de copia de seguridad. Si su agente no "
-"admite tipos de copia de seguridad (por ejemplo, <i>Respaldo de registro</i>"
-", <i>Respaldo de base de datos diferida</i>, etc.) puede utilizar la opción "
-"<i>Respaldo de base de datos</i> para establecer un límite general"
+"admite tipos de copia de seguridad (por ejemplo, <i>Respaldo de registro</"
+"i>, <i>Respaldo de base de datos diferida</i>, etc.) puede utilizar la "
+"opción <i>Respaldo de base de datos</i> para establecer un límite general"
 
 msgid "This rule allows you to set percentual limits for sort overflows."
 msgstr ""
@@ -79393,8 +79401,8 @@ msgstr ""
 msgid ""
 "This rule set is deprecated. Please use the rule set <i>\"%s\"</i> instead."
 msgstr ""
-"Este conjunto de reglas está obsoleto. Utilice el conjunto de reglas <i>"
-"\"%s\"</i> en su lugar."
+"Este conjunto de reglas está obsoleto. Utilice el conjunto de reglas "
+"<i>\"%s\"</i> en su lugar."
 
 msgid "This rule set is for configuring levels for global packet counters."
 msgstr ""
@@ -88584,13 +88592,13 @@ msgstr ""
 "Con esta opción se puede definir un filtro LDAP opcional que se utiliza "
 "durante las búsquedas LDAP. Se puede utilizar para manejar sólo un "
 "subconjunto de los usuarios por debajo del DN base dado.<br><br>Algunos "
-"ejemplos comunes:<br><br> Todos los objetos de usuario en LDAP:<br> <tt>(&"
-"(objectclass=user)(objectcategory=persona))</tt><br> Miembros de un "
+"ejemplos comunes:<br><br> Todos los objetos de usuario en LDAP:<br> "
+"<tt>(&(objectclass=user)(objectcategory=persona))</tt><br> Miembros de un "
 "grupo:<br> <tt>(&(objectclass=user)(objectcategory=person)(memberof=CN=cmk-"
-"users,OU=groups,DC=example,DC=com))</tt><br> Miembros de un grupo "
-"anidado:<br> <tt>(&(objectclass=user)(objectcategory=person)"
-"(memberof:1.2.840.113556.1.4.1941:=CN=cmk-users,OU=groups,DC=example,DC=com))"
-"</tt><br>"
+"users,OU=groups,DC=example,DC=com))</tt><br> Miembros de un grupo anidado:"
+"<br> <tt>(&(objectclass=user)(objectcategory=person)"
+"(memberof:1.2.840.113556.1.4.1941:=CN=cmk-"
+"users,OU=groups,DC=example,DC=com))</tt><br>"
 
 msgid ""
 "Using this option, you can define an optional LDAP filter which is used "
@@ -88600,8 +88608,8 @@ msgid ""
 msgstr ""
 "Con esta opción se puede definir un filtro LDAP opcional que se utiliza "
 "durante las búsquedas LDAP relacionadas con los grupos. Se puede utilizar "
-"para manejar sólo un subconjunto de los grupos por debajo del DN base "
-"dado.<br><br>e.g. <tt>(objectclass=group)</tt>"
+"para manejar sólo un subconjunto de los grupos por debajo del DN base dado."
+"<br><br>e.g. <tt>(objectclass=group)</tt>"
 
 #, fuzzy
 msgid ""
@@ -91204,10 +91212,10 @@ msgstr ""
 "Cuando el módulo de Configuración de la Consola de Eventos guarda las reglas "
 "en el archivo <tt>mkeventd.d/wato/rules.mk</tt> normalmente imprime la "
 "representación Python de la lista de reglas en una sola línea usando el "
-"generador de código Python nativo. Habilitando esta opción se cambia a <tt>"
-"pprint</tt>, que imprime todo con sangría. Aunque esto es un poco más lento "
-"para conjuntos de reglas grandes, simplifica la depuración y la edición "
-"manual."
+"generador de código Python nativo. Habilitando esta opción se cambia a "
+"<tt>pprint</tt>, que imprime todo con sangría. Aunque esto es un poco más "
+"lento para conjuntos de reglas grandes, simplifica la depuración y la "
+"edición manual."
 
 msgid ""
 "When the connection to the first server fails with connect specific errors "
@@ -101580,12 +101588,6 @@ msgid ""
 "list."
 msgstr ""
 
-msgid "This prompt may not have been sent: %{prompt}"
-msgstr ""
-
-msgid "The answer ended before it was complete."
-msgstr ""
-
 msgid "What needs my attention right now?"
 msgstr ""
 
@@ -101598,6 +101600,14 @@ msgstr ""
 
 msgid "What should I do to fix the current problem?"
 msgstr ""
+
+#, fuzzy
+msgid "The assistant is not set up yet"
+msgstr "La etiqueta '%s' existe pero no se espera."
+
+#, fuzzy
+msgid "Ask your administrator to set up the AI assistant."
+msgstr "Por favor, especifique su login de administrador en el sitio remoto."
 
 #, fuzzy
 msgid "Suggested questions"
@@ -101650,6 +101660,36 @@ msgstr ""
 msgid "Cancelled"
 msgstr "Cancelado"
 
+#, fuzzy
+msgid "Error: %{code}"
+msgstr "Error: %s"
+
+msgid "This prompt may not have been sent: %{prompt}"
+msgstr ""
+
+msgid "The answer ended before it was complete."
+msgstr ""
+
+msgid "The answer was cut off because it reached the length limit."
+msgstr ""
+
+msgid "The AI provider could not be reached or returned an error."
+msgstr ""
+
+#, fuzzy
+msgid "The AI provider stopped responding."
+msgstr "Este sitio no responde."
+
+msgid "The answer took too many steps and was stopped."
+msgstr ""
+
+msgid "The site refused the assistant access to its monitoring data."
+msgstr ""
+
+#, fuzzy
+msgid "The assistant could not reach the monitoring data of the site."
+msgstr "No se permite el inicio de sesión en este sitio."
+
 msgid "No chats yet"
 msgstr ""
 
@@ -101667,6 +101707,21 @@ msgstr ""
 msgid ""
 "This will permanently delete this chat and its messages. This action can’t "
 "be undone."
+msgstr ""
+
+#, fuzzy
+msgid "Select an AI provider and a model in the global settings."
+msgstr "Esta opción ha sido modificada en los ajustes globales."
+
+#, fuzzy
+msgid "Open global settings"
+msgstr "Configuración global"
+
+#, fuzzy
+msgid "The AI provider setting is invalid. Correct it in the global settings."
+msgstr "La integración de ntopng no está activada en la configuración global."
+
+msgid "The AI provider is configured but not activated yet."
 msgstr ""
 
 #, fuzzy
@@ -105524,10 +105579,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Subject Name"
 #~ msgstr "Nombre de la sección"
-
-#, fuzzy, python-format
-#~ msgid "The host %s is not monitored on this site"
-#~ msgstr "No se permite el inicio de sesión en este sitio."
 
 #, fuzzy
 #~ msgid "Set host visibility for contact groups"

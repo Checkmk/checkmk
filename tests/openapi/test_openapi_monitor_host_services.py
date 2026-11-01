@@ -1846,6 +1846,21 @@ class TestMonitorServiceOverview:
             assert self._get_overview_link(clients, mock_livestatus) is None
 
     @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_no_parameters_link_for_a_user_who_may_not_see_rulesets(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        load_config: Config,
+        set_config: SetConfig,
+    ) -> None:
+        # Setup grants the host, so only the missing permission withholds the link.
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+        roles = roles_without_permission(load_config, "admin", "wato.rulesets")
+
+        with set_config(roles=roles):
+            assert self._get_overview_link(clients, mock_livestatus) is None
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
     def test_links_discovery_of_a_host_setup_grants(
         self,
         clients: ClientRegistry,

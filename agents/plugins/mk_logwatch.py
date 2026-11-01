@@ -59,7 +59,7 @@ DUPLICATE_LINE_MESSAGE_FMT = "[the above message was repeated %d times]"
 
 MK_VARDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_VARDIR") or os.getenv("MK_STATEDIR") or "."
 
-MK_CONFDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_CONFDIR") or "."
+MK_CONFDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_CONFDIR") or "/etc/check_mk"
 
 REMOTE = (
     os.getenv("REMOTE")

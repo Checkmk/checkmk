@@ -62,7 +62,7 @@ def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     return args
 
 
-DEFAULT_CFG_FILE = Path(os.getenv("MK_CONFDIR", "")) / "mk_podman.cfg"
+DEFAULT_CFG_FILE = Path(os.getenv("MK_CONFDIR", "/etc/check_mk")) / "mk_podman.cfg"
 
 DEFAULT_CFG_SECTION = {
     "connection_method": "api",

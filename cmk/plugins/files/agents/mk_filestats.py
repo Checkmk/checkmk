@@ -133,7 +133,7 @@ def ensure_text(s):
     return s
 
 
-DEFAULT_CFG_FILE = os.path.join(os.getenv("MK_CONFDIR", ""), "filestats.cfg")
+DEFAULT_CFG_FILE = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "filestats.cfg")
 
 DEFAULT_CFG_SECTION = {"output": "file_stats", "subgroups_delimiter": "@"}
 

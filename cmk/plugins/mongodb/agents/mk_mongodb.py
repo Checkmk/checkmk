@@ -795,7 +795,7 @@ def section_logwatch(client):
     update_statefile(state_file, startup_warnings)
 
 
-DEFAULT_CFG_FILE = os.path.join(os.getenv("MK_CONFDIR", ""), "mk_mongodb.cfg")
+DEFAULT_CFG_FILE = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "mk_mongodb.cfg")
 
 LOGGER = logging.getLogger(__name__)
 

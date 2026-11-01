@@ -7,29 +7,40 @@ py_library(
     name = "update",
     testonly = True,
     srcs = glob(
-        include = ["**/*.py"],
-        exclude = ["**/nonfree/**"],
-    ) + select({
-        "//:gpl+nonfree_repo": glob(
-            include = ["**/nonfree/**/*.py"],
-            allow_empty = True,
-        ),
-        "//:gpl_repo": [],
-    }),
+        ["**/*.py"],
+        exclude = [
+            "helpers.py",
+            "pytest_plugin.py",
+        ],
+    ),
     imports = ["../../.."],
+    deps = [
+        ":helpers",
+        requirement("pytest"),
+        "//tests/testlib/common",
+        "//tests/testlib/pytest_helpers",
+        "//tests/testlib/system",
+    ],
+)
+
+# Shared with the non-free update tests below non-free/tests/system/update/.
+# Holds no conftest: both suites have one with the module name
+# tests.system.update.conftest.
+py_library(
+    name = "helpers",
+    testonly = True,
+    srcs = [
+        "helpers.py",
+        "pytest_plugin.py",
+    ],
+    imports = ["../../.."],
+    visibility = [
+        ":__subpackages__",
+        "//non-free/tests/system/update:__subpackages__",
+    ],
     deps = [
         requirement("pytest"),
         "//tests/testlib/common",
         "//tests/testlib/system",
-    ] + select({
-        "//:gpl+nonfree_repo": [
-            "//non-free/packages/cmk-otel-collector:testlib",
-            "//non-free/tests/testlib/system:clickhouse_version",
-            "//non-free/tests/testlib/system:data_backend",
-            "//non-free/tests/testlib/system:opentelemetry",
-            "//non-free/tests/testlib/system/licensing",
-            "//tests/testlib/pytest_helpers",
-        ],
-        "//:gpl_repo": [],
-    }),
+    ],
 )

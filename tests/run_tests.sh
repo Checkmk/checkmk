@@ -62,12 +62,6 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-system-multisite                   Run multisite system tests
   test-system-agent-updates               Run system tests for agent updates (needs a running systemd)
   test-system-update-community            Run update tests for community edition
-  test-system-update-pro                  Run update tests for pro edition
-  test-system-update-ultimate             Run update tests for ultimate edition
-  test-system-update-ultimatemt           Run update tests for ultimatemt edition
-  test-system-update-cloud                Run update tests for cloud edition
-  test-system-update-cross-edition-pro-to-ultimate
-  test-system-update-cross-edition-pro-to-ultimatemt
   test-system-update-cross-edition-community-to-ultimate
   test-system-update-cross-edition-community-to-pro
   test-system-plugins                     Run plugin system tests
@@ -400,47 +394,6 @@ test-system-update-community() {
         "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 5400
 }
 
-test-system-update-pro() {
-    _pytest --cmk-edition pro \
-        "$(realpath "$SCRIPT_DIR/system/update")/nonfree" \
-        "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 5400
-}
-
-test-system-update-ultimate() {
-    _pytest --cmk-edition ultimate \
-        "$(realpath "$SCRIPT_DIR/system/update")/nonfree" \
-        "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 9000
-}
-
-test-system-update-ultimatemt() {
-    _pytest --cmk-edition ultimatemt \
-        "$(realpath "$SCRIPT_DIR/system/update")/nonfree" \
-        "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 9000
-}
-
-test-system-update-cloud() {
-    _pytest --cmk-edition cloud \
-        "$(realpath "$SCRIPT_DIR/system/update")/nonfree" \
-        "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        --disable-interactive-mode --session-timeout 5400
-}
-
-test-system-update-cross-edition-pro-to-ultimate() {
-    _pytest --cmk-edition pro \
-        "$(realpath "$SCRIPT_DIR/system/update")/nonfree/pro/test_update.py" \
-        "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        --latest-base-version --target-edition=ultimate \
-        --disable-interactive-mode --session-timeout 5400
-}
-
-test-system-update-cross-edition-pro-to-ultimatemt() {
-    _pytest --cmk-edition pro \
-        "$(realpath "$SCRIPT_DIR/system/update")/nonfree/pro/test_update.py" \
-        "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        --latest-base-version --target-edition=ultimatemt \
-        --disable-interactive-mode --session-timeout 5400
-}
-
 test-system-update-cross-edition-community-to-pro() {
     _pytest --cmk-edition community \
         "$(realpath "$SCRIPT_DIR/system/update")/community/test_update.py" \
@@ -510,12 +463,6 @@ test-system-azure-docker() { _system-tests-docker test-system-azure; }
 test-system-multisite-docker() { _system-tests-docker test-system-multisite; }
 test-system-agent-updates-docker() { _system-tests-docker-systemd test-system-agent-updates; }
 test-system-update-community-docker() { _system-tests-docker test-system-update-community; }
-test-system-update-pro-docker() { _system-tests-docker test-system-update-pro; }
-test-system-update-ultimate-docker() { _system-tests-docker test-system-update-ultimate; }
-test-system-update-ultimatemt-docker() { _system-tests-docker test-system-update-ultimatemt; }
-test-system-update-cloud-docker() { _system-tests-docker test-system-update-cloud; }
-test-system-update-cross-edition-pro-to-ultimate-docker() { _system-tests-docker test-system-update-cross-edition-pro-to-ultimate; }
-test-system-update-cross-edition-pro-to-ultimatemt-docker() { _system-tests-docker test-system-update-cross-edition-pro-to-ultimatemt; }
 test-system-update-cross-edition-community-to-ultimate-docker() { _system-tests-docker test-system-update-cross-edition-community-to-ultimate; }
 test-system-update-cross-edition-community-to-pro-docker() { _system-tests-docker test-system-update-cross-edition-community-to-pro; }
 test-system-plugins-docker() { _system-tests-docker test-system-plugins; }

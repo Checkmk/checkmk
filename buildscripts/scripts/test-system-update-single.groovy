@@ -4,7 +4,8 @@
 
 String build_make_target(edition, cross_edition_target="") {
     switch (edition) {
-        // The make targets are written without the -docker suffix in tests/Makefile.
+        // The make targets are written without the -docker suffix in tests/run_tests.sh and
+        // non-free/tests/run_tests.sh.
         case 'cloud':
             return "test-system-update-cloud";
         case 'community':
@@ -70,6 +71,8 @@ void main() {
         distro = "ubuntu-24.04";
     }
     def make_target = build_make_target(edition, cross_edition_target);
+    // Only the community update tests are below tests/, the others below non-free/tests/.
+    def run_tests_script = edition == "community" ? "tests/run_tests.sh" : "non-free/tests/run_tests.sh";
 
     def setup_values = single_tests.common_prepare(
         version: params.VERSION,
@@ -116,6 +119,7 @@ void main() {
             distro: distro,
             branch_name: setup_values.safe_branch_name,
             make_target: "${make_target}",
+            run_tests_script: run_tests_script,
             test_filter: params.TEST_FILTER,
             faked_artifacts: fake_artifacts,
             // ultimate can hit 40min during the nightly runs (without wait time)

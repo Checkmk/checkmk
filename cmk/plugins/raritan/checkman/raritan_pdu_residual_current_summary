@@ -1,0 +1,32 @@
+title: Raritan PX2/PX3: Whole-Inlet Residual Current
+agents: snmp
+catalog: hw/environment/raritan
+license: GPLv2
+distribution: check_mk
+description:
+ This check reads native residual-current and RCM sensors for each whole inlet
+ from the PDU2-MIB inletSensorMeasurementsTable. Inlet-pole measurements are
+ handled independently by raritan_pdu_residual_current and are never added
+ together or used as replacements for whole-inlet data.
+
+ Combined, AC and DC residual currents have separate metrics. Enabled device
+ thresholds, precision, signed values and RCM states are handled by the same
+ evaluation as the inlet-pole check. A sole active upper device limit X becomes
+ WARN/CRIT X/X. Device WARN 0 with active CRIT X also uses X/X. Explicit rule
+ values remain unchanged and take precedence, including zero or disabled levels.
+ Rules and metrics use amperes; service output displays milliamperes.
+
+ Both checks use the residual_current rule and its missing-data/missing-levels
+ options. Unavailable optional sensors remain excluded. A normal available RCM
+ sensor can still result in OK without available numeric residual sensors.
+ The percentage metric uses load current from this exact inlet.
+
+item:
+ {{Summary}} for the standard PDU 1/inlet 1 case. Other whole-inlet items use
+ {{Inlet <ID>}}, with the PDU index added when multiple PDUs are detected.
+ Existing service names such as {{Residual Current Summary}} and
+ {{Residual Current Inlet 1}} are retained.
+
+discovery:
+ One service for each inlet with an available residual-current or RCM sensor.
+ No placeholder service is created without such sensors.

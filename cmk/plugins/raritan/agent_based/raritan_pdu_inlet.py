@@ -1,66 +1,73 @@
-#!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+"""Native inlet per-conductor measurements and their SNMP section."""
 
-# mypy: disable-error-code="explicit-any"
+from collections.abc import Sequence
 
-from collections.abc import Mapping, Sequence
-from typing import Any
-
-from cmk.agent_based.v2 import (
-    CheckPlugin,
-    CheckResult,
-    DiscoveryResult,
-    OIDEnd,
-    Service,
-    SNMPSection,
-    SNMPTree,
-    State,
-    StringTable,
-)
-from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingState, ReadingWithState
+from cmk.agent_based.v2 import CheckPlugin, OIDBytes, OIDEnd, SNMPSection, SNMPTree, StringByteTable
 from cmk.plugins.raritan.lib import (
+    check_pdu_electrical,
     DETECT_RARITAN,
-    elphase_from_readings,
-    STATE_MAPPING,
-    TYPE_MAPPING,
+    discover_pdu_electrical,
+    parse_electrical_section,
+    PduSensor,
+    PduSensorConfiguration,
+    PduSensorMeasurement,
+    SensorIndex,
+    parse_residual_section,
+    PduSection,
 )
 
-type Section = Mapping[str, ElPhase]
 
-
-def parse_raritan_pdu_inlet(string_table: Sequence[StringTable]) -> Section:
-    precisions = {oid_end: int(decimals) for oid_end, decimals in string_table[0]}
-    readings: dict[str, dict[str, ReadingWithState]] = {}
-    for oid_end, availability, sensor_state, value_str in string_table[1]:
-        if availability != "1":
-            continue
-        phase_id, sensor_type = oid_end.split(".")[2:4]
-        if sensor_type not in TYPE_MAPPING:
-            continue
-        key, _key_info = TYPE_MAPPING[sensor_type]
-        value = float(value_str) / 10 ** precisions[oid_end]
-        state, state_readable = STATE_MAPPING[sensor_state]
-        readings.setdefault(f"Phase {phase_id}", {})[key] = ReadingWithState(
-            value=value,
-            state=None if state is State.OK else ReadingState(state=state, text=state_readable),
+def parse_raritan_pdu_inlet(
+        string_table: Sequence[StringByteTable]
+) -> PduSection:
+    """Parse native inlet pole tables using the shared Pydantic models."""
+    configuration = [
+        PduSensorConfiguration.model_validate(dict(zip(PduSensorConfiguration.model_fields, row, strict=True)))
+        for row in string_table[0]
+    ]
+    measurements = [
+        PduSensorMeasurement.model_validate(dict(zip(PduSensorMeasurement.model_fields, row, strict=True)))
+        for row in string_table[1]
+    ]
+    config_by_index = {row.oid_end: row for row in configuration}
+    measurements_by_index = {row.oid_end: row for row in measurements}
+    # zip maps columns within a row; separate tables are joined by the full index.
+    sensors = tuple(
+        PduSensor(
+            index=SensorIndex.from_oid(oid),
+            configuration=config_by_index.get(oid),
+            measurement=measurements_by_index.get(oid),
         )
-    return {
-        phase: elphase_from_readings(phase_readings) for phase, phase_readings in readings.items()
-    }
-
-
-def check_raritan_pdu_inlet(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    if not item.startswith("Phase"):
-        item = f"Phase {item}"
-    if (elphase := section.get(item)) is None:
-        return
-    yield from check_elphase(params, elphase)
-
-
-def discover_raritan_pdu_inlet(section: Section) -> DiscoveryResult:
-    yield from (Service(item=item) for item in section)
+        for oid in sorted(
+            config_by_index.keys() | measurements_by_index.keys(),
+            key=lambda oid: tuple(map(int, oid.split("."))),
+        )
+    )
+    labels = [[str(oid), str(label)] for oid, label in string_table[2]]
+    lines = [[str(oid), str(line)] for oid, line in string_table[3]]
+    electrical = {}
+    electrical_error = None
+    try:
+        electrical = parse_electrical_section(
+            sensors, labels, lines, connector_kind="Inlet", poles=True,
+        )
+    except (ValueError, OverflowError) as exc:
+        electrical_error = f"{type(exc).__name__}: {exc}"
+    # Residual parsing remains independent of electrical conversion errors.
+    residual = {}
+    residual_error = None
+    try:
+        residual = parse_residual_section(sensors, labels, lines, poles=True)
+    except (ValueError, OverflowError) as exc:
+        residual_error = f"{type(exc).__name__}: {exc}"
+    return PduSection(
+        sensors=sensors,
+        electrical=electrical,
+        residual=residual,
+        electrical_error=electrical_error,
+        residual_error=residual_error,
+    )
 
 
 snmp_section_raritan_pdu_inlet = SNMPSection(
@@ -68,23 +75,57 @@ snmp_section_raritan_pdu_inlet = SNMPSection(
     detect=DETECT_RARITAN,
     fetch=[
         SNMPTree(
-            base=".1.3.6.1.4.1.13742.6.3.3.6.1",
-            oids=[OIDEnd(), "7"],
+            base=".1.3.6.1.4.1.13742.6.3.3.6.1",  # inletPoleSensorConfigurationEntry
+            oids=[
+                OIDEnd(),  # PDU.connector[.pole].sensorType
+                "6",  # units; 2 = amperes
+                "7",  # decimal digits
+                "23",  # unsigned upper critical threshold
+                "24",  # unsigned upper warning threshold
+                OIDBytes("25"),  # enabled lower/upper warning/critical thresholds
+                "27",  # signed minimum; negative selects signed readings and limits
+                "30",  # signed upper critical threshold
+                "31",  # signed upper warning threshold
+                "21",  # unsigned lower critical threshold
+                "22",  # unsigned lower warning threshold
+                "28",  # signed lower critical threshold
+                "29",  # signed lower warning threshold
+            ],
         ),
         SNMPTree(
-            base=".1.3.6.1.4.1.13742.6.5.2.4.1",
-            oids=[OIDEnd(), "2", "3", "4"],
+            base=".1.3.6.1.4.1.13742.6.5.2.4.1",  # inletPoleSensorMeasurementsEntry
+            oids=[
+                OIDEnd(),  # PDU.connector[.pole].sensorType
+                "2",  # availability
+                "3",  # state
+                "4",  # unsigned measurement
+                "6",  # signed measurement
+            ],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.13742.6.3.3.3.1",  # inletConfigurationEntry
+            oids=[
+                OIDEnd(),  # PDU.connector
+                "2",  # inletLabel
+            ],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.13742.6.3.3.5.1",  # inletPoleConfigurationEntry
+            oids=[
+                OIDEnd(),  # PDU.connector.pole
+                "1",  # inletPoleLine: 1=L1, 2=L2, 3=L3, 4=N, 5=DC+, 6=DC-
+            ],
         ),
     ],
     parse_function=parse_raritan_pdu_inlet,
 )
 
-
 check_plugin_raritan_pdu_inlet = CheckPlugin(
     name="raritan_pdu_inlet",
-    service_name="Input %s",
-    discovery_function=discover_raritan_pdu_inlet,
-    check_function=check_raritan_pdu_inlet,
+    sections=["raritan_pdu_inlet"],
+    service_name="Inlet %s",
+    discovery_function=discover_pdu_electrical,
+    check_function=check_pdu_electrical,
     check_ruleset_name="el_inphase",
     check_default_parameters={},
 )

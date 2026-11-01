@@ -944,7 +944,40 @@ def test_service_acknowledgement_goes_to_the_site_that_monitors_the_host(
     assert resp.status_code == HTTPStatus.NO_CONTENT
 
 
-def _acknowledge_service_of(host_name: str, service: str) -> dict[str, object]:
+def test_service_acknowledgement_skips_the_selected_services_without_a_problem(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    # The services page selects by query, so a selection may hold OK services. The core
+    # is told to acknowledge only the one with a problem; no command for Memory is expected.
+    mock_livestatus.add_table(
+        "services",
+        [
+            {"host_name": "heute", "description": "CPU load", "state": 2},
+            {"host_name": "heute", "description": "Memory", "state": 0},
+        ],
+    )
+    mock_livestatus.expect_query(
+        "GET services\nColumns: host_name description state\nFilter: host_name = heute"
+        "\nFilter: description = CPU load\nFilter: description = Memory\nOr: 2\nAnd: 2"
+    )
+    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = heute")
+    mock_livestatus.expect_query(
+        "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;heute;CPU load;...",
+        match_type="ellipsis",
+    )
+
+    with mock_livestatus(expect_status_query=True):
+        resp = clients.Acknowledge.request(
+            "post",
+            url="/domain-types/acknowledge/collections/service",
+            body=_acknowledge_service_of("heute", "CPU load", "Memory"),
+        )
+
+    assert resp.status_code == HTTPStatus.NO_CONTENT
+
+
+def _acknowledge_service_of(host_name: str, *services: str) -> dict[str, object]:
     # The query the services page builds: one host, any of the selected services.
     return {
         "acknowledge_type": "service_by_query",
@@ -952,7 +985,12 @@ def _acknowledge_service_of(host_name: str, service: str) -> dict[str, object]:
             "op": "and",
             "expr": [
                 {"op": "=", "left": "host_name", "right": host_name},
-                {"op": "or", "expr": [{"op": "=", "left": "description", "right": service}]},
+                {
+                    "op": "or",
+                    "expr": [
+                        {"op": "=", "left": "description", "right": service} for service in services
+                    ],
+                },
             ],
         },
         "sticky": False,

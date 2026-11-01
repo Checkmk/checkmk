@@ -836,9 +836,9 @@ cmk-dev-site==1.23.0 \
     # via
     #   -c requirements.txt
     #   cmk-werk-zeug
-cmk-werk-zeug==0.4.12 \
-    --hash=sha256:8eb2edf5bb4cdc24cc9aa559092c023858b8d217de04d3779cedfb0bcbc02af0 \
-    --hash=sha256:d4615dc419e5fa1c0a97ea6f992339558605e68ba1b641a5885b1459730422c2
+cmk-werk-zeug==0.4.14 \
+    --hash=sha256:0b8aa55a0c6b7fb86af1e6a6aaeeef06e412d4b1981f918887ca95880d3de4b0 \
+    --hash=sha256:a08bcea361430b9853b41bd10fc3ef8b4fd3b9d0af9f7bfdc048ed941ae9841c
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in

@@ -4179,8 +4179,8 @@
             "https://files.pythonhosted.org/packages/b6/86/26a987fbd7ca1bf3739cc7c801427e80cbff3d9d7bdf997697c90d6b54cb/cmk_dev_site-1.23.0.tar.gz": "sha256:46bd4082c48147335dec6e1bde9828673635fa5abb78822c39ba2931624b579b"
           },
           "cmk-werk-zeug": {
-            "https://files.pythonhosted.org/packages/0d/0f/2dfc06b7feac45d6639413af729438b19cb079e4cf545cecbdf2a64d13b9/cmk_werk_zeug-0.4.12.tar.gz": "sha256:d4615dc419e5fa1c0a97ea6f992339558605e68ba1b641a5885b1459730422c2",
-            "https://files.pythonhosted.org/packages/ba/2e/40ad1c5522f58852c2a827be8621655fe067604e532d36cf643869c2b79c/cmk_werk_zeug-0.4.12-py3-none-any.whl": "sha256:8eb2edf5bb4cdc24cc9aa559092c023858b8d217de04d3779cedfb0bcbc02af0"
+            "https://files.pythonhosted.org/packages/08/91/fcd2217f7c1a6b84af9b0a0ce0604b81ebac8c8a89cdc3a35003ffea6bd8/cmk_werk_zeug-0.4.14-py3-none-any.whl": "sha256:a08bcea361430b9853b41bd10fc3ef8b4fd3b9d0af9f7bfdc048ed941ae9841c",
+            "https://files.pythonhosted.org/packages/84/70/623c704157d4481b8777004e0e0478944b8f3540dcac09af2d31d28a0973/cmk_werk_zeug-0.4.14.tar.gz": "sha256:0b8aa55a0c6b7fb86af1e6a6aaeeef06e412d4b1981f918887ca95880d3de4b0"
           },
           "colorama": {
             "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl": "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6",

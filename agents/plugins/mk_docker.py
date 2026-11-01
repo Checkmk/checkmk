@@ -75,7 +75,7 @@ DEBUG = "--debug" in sys.argv[1:]
 
 VERSION = "0.1"
 
-DEFAULT_CFG_FILE = os.path.join(os.getenv("MK_CONFDIR", ""), "docker.cfg")
+DEFAULT_CFG_FILE = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "docker.cfg")
 
 DEFAULT_CFG_SECTION = {
     "base_url": "unix://var/run/docker.sock",

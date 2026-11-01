@@ -22,6 +22,7 @@ py_cmk_test(
     size = "small",
     srcs = [
         "test_requirements_files.py",
+        "test_requirements_utils.py",
         "test_windows_python_version.py",
     ],
     data = [

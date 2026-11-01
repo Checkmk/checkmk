@@ -18,7 +18,6 @@ meraki
 msal
 numpy
 oauthlib
-openapi-spec-validator
 opentelemetry-api
 opentelemetry-exporter-otlp
 opentelemetry-instrumentation-fastapi
@@ -59,7 +58,6 @@ requests-oauthlib
 roman
 setproctitle
 setuptools
-setuptools-scm
 starlette
 typing-extensions
 tzlocal

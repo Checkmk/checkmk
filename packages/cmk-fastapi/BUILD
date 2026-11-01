@@ -78,6 +78,7 @@ package_wheel(
 
 py_requirements_test(
     name = "requirements-test",
+    dev_requirements_in = "dev-requirements.in",
     libs = [
         ":cmk-fastapi",
     ],

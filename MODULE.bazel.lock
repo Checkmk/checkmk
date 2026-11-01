@@ -8798,10 +8798,6 @@
             "https://files.pythonhosted.org/packages/70/b3/c19426f783614d625699a4b247faf628ea9ab1db228674491767b417f9e1/setuptools-84.2.1.tar.gz": "sha256:3ff8b3b5492a0aa66960f4419365a86b84e013070d4313e4d4a6894f5d64d6bc",
             "https://files.pythonhosted.org/packages/ef/55/6dc6d6bb953bdfc52519a0059592c52b6e3b8ad51cf8256dffceb55b0610/setuptools-84.2.1-py3-none-any.whl": "sha256:ca140b45d5325a9478f880e351484f62fef15f336462e449ca0c03c873d589c2"
           },
-          "setuptools-scm": {
-            "https://files.pythonhosted.org/packages/85/d8/fc143f88819ccf10ba2388ba86732ee2de193e578234e25a783f6cc14bf7/setuptools_scm-10.3.4.tar.gz": "sha256:a69f28bfc245608781205e912faae437c2b2165773afa4e7b979d77447a69dd2",
-            "https://files.pythonhosted.org/packages/da/f5/54538a1f17ea753c42b0928dc2e62986d463f8c393340b9a1e602f2d4dd9/setuptools_scm-10.3.4-py3-none-any.whl": "sha256:82f34c3e3084fc2b57d397200637cc13f2338004052d2fee47baa5f0e902464e"
-          },
           "six": {
             "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz": "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81",
             "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl": "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"
@@ -9420,10 +9416,6 @@
           "vcrpy": {
             "https://files.pythonhosted.org/packages/2e/27/4a23141b26d604e5c1a67d5d9df726a517ca625499860bae4bf7a75b6faa/vcrpy-9.2.0-py3-none-any.whl": "sha256:a22f6f2cd47687e363c64ff77fbc7b7bbfbc036db793b4413faf6dd9d6718f93",
             "https://files.pythonhosted.org/packages/9a/5e/7e75478db669231809ba9f4197f3460d1a4603e5ecb1d894b967cca5a7e8/vcrpy-9.2.0.tar.gz": "sha256:c325fa276b175de06bc7afe1b2a45204dbe1fddd90d1b2a18ab14dff2e8e2e4a"
-          },
-          "vcs-versioning": {
-            "https://files.pythonhosted.org/packages/73/1d/ad4064bf12f4503bf61e65d74c93c523672776d25ee0a06aaf42ae09ef3f/vcs_versioning-2.6.0-py3-none-any.whl": "sha256:f8bebd1302ebc12e67ceb30fc7dd698ec969414b6fa43b30c3f14ac9b1e72c41",
-            "https://files.pythonhosted.org/packages/ad/e7/2a691db7d076b75d099fdba1a14cd966931f2aeb591e77f6d22f15097326/vcs_versioning-2.6.0.tar.gz": "sha256:22e9159288e2d8bca2fa6f6c31c34c9c66aec157f60e9e526f5d160d2516d60f"
           },
           "virtualenv": {
             "https://files.pythonhosted.org/packages/b2/24/20282bc8e69ff8dee680dc2b95e9dc81fa7e7894b14c1a8d06330e97fef7/virtualenv-21.15.1.tar.gz": "sha256:e79c90b8f601701599c25905e02839924fede2c798d52325670d24fbdaab74ee",

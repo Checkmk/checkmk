@@ -19,6 +19,7 @@ matplotlib # used by performance test plotting
 mypy # used by test/Makefile's test-mypy target
 mypy-protobuf # for mypy
 networkx # needed for py-import-cycles
+openapi-spec-validator  # validates the generated REST API specs in tests and bazel/tools
 pexpect # used for update testing
 pipfile # for generating import names during int tests
 playwright  # used for in-browser testing

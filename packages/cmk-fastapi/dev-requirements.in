@@ -2,3 +2,4 @@ httpx2
 openapi-spec-validator
 pytest
 pytest-asyncio
+typing-extensions  # only imported for type checking

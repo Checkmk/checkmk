@@ -137,6 +137,7 @@ py_doc_test(
 
 py_requirements_test(
     name = "requirements-test",
+    dev_requirements_in = "dev-requirements.in",
     libs = FAMILIES,
     requirements_in = "requirements.in",
 )

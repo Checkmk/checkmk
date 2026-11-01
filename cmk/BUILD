@@ -130,7 +130,6 @@ py_wheel(
         "msal",
         "numpy",
         "oauthlib",
-        "openapi-spec-validator",
         "opentelemetry-api",
         "opentelemetry-exporter-otlp",
         "opentelemetry-instrumentation-fastapi",
@@ -175,7 +174,6 @@ py_wheel(
         # "rrdtool",
         "setproctitle",
         "setuptools",
-        "setuptools-scm",
         "urllib3",
         "uvicorn",
         "watchdog",
@@ -222,9 +220,7 @@ py_requirements_test(
     ],
     known_unused = [
         "setuptools",  # pinned transitive dependency
-        "setuptools-scm",
         "pysmi",  # used outside of cmk/ in omd/packages/net-snmp/compile_mibs.py
-        "openapi-spec-validator",  # only imported by tests
     ],
     libs = [
         # cloud and ultimatemt each transitively pull in ultimate -> pro -> community,

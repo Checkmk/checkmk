@@ -87,14 +87,39 @@ def package_names_to_import_names() -> dict[str, list[str]]:
     return mapping
 
 
-def collect_third_party_imports(source_files: list[str]) -> set[str]:
-    """Return top-level third-party import names found in source files."""
+def _is_type_checking_guard(node: ast.If) -> bool:
+    test = node.test
+    return (isinstance(test, ast.Name) and test.id == "TYPE_CHECKING") or (
+        isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
+    )
+
+
+def _type_checking_only_nodes(tree: ast.AST) -> set[ast.AST]:
+    """Return all nodes in the body of `if TYPE_CHECKING:` blocks (not the else branch)."""
+    return {
+        child
+        for node in ast.walk(tree)
+        if isinstance(node, ast.If) and _is_type_checking_guard(node)
+        for stmt in node.body
+        for child in ast.walk(stmt)
+    }
+
+
+def collect_third_party_imports(source_files: list[str], *, runtime_only: bool = False) -> set[str]:
+    """Return top-level third-party import names found in source files.
+
+    With runtime_only, imports in `if TYPE_CHECKING:` blocks are skipped: they are only
+    needed for type checking, so they don't have to be shipped.
+    """
     imports: set[str] = set()
     for rel_path in source_files:
         py_file = bazel_repo_root() / rel_path
         with py_file.open("rb") as f, warnings.catch_warnings():
             tree = ast.parse(f.read(), str(py_file))
+        skipped = _type_checking_only_nodes(tree) if runtime_only else set()
         for node in ast.walk(tree):
+            if node in skipped:
+                continue
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     imports.add(alias.name.split(".")[0])

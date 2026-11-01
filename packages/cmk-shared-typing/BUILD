@@ -20,6 +20,7 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 load("//bazel/rules:shared_typing_generators.bzl", "json2python", "json2typescript")
 
 exports_files([
+    "dev-requirements.in",
     "requirements.in",
     "package.json",
 ])
@@ -392,9 +393,8 @@ sh_library(
 
 py_requirements_test(
     name = "requirements-test",
-    libs = [
-        ":cmk_shared_typing_formatter",
-        ":cmk_shared_typing_py",
-    ],
+    dev_libs = [":cmk_shared_typing_formatter"],
+    dev_requirements_in = "dev-requirements.in",
+    libs = [":cmk_shared_typing_py"],
     requirements_in = "requirements.in",
 )

@@ -71,12 +71,22 @@ def test_constraints() -> None:
 def test_no_development_packages_in_runtime_requirements() -> None:
     """Test that development/testing libraries are not included in runtime requirements"""
     runtime_requirements = parse_requirements_file(bazel_repo_root() / "runtime-requirements.txt")
-    forbidden_prefixes = ["pytest-", "types-"]
-    offending_packages = []
-    for package_name in runtime_requirements:
-        for prefix in forbidden_prefixes:
-            if package_name.startswith(prefix):
-                offending_packages.append(package_name)
+    forbidden_prefixes = ["pytest", "types-", "mypy-boto3-"]
+    # Build, code generation and test tools that were shipped by accident before
+    forbidden_packages = {
+        "black",
+        "datamodel-code-generator",
+        "isort",
+        "libcst",
+        "openapi-spec-validator",
+        "setuptools-scm",
+    }
+    offending_packages = [
+        package_name
+        for package_name in runtime_requirements
+        if package_name in forbidden_packages
+        or any(package_name.startswith(prefix) for prefix in forbidden_prefixes)
+    ]
     assert not offending_packages, (
         f"The following development/testing libraries should not be "
         f"in runtime requirements: {offending_packages}"

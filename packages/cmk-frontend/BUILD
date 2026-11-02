@@ -216,6 +216,7 @@ jest_cli_bin.jest_test(
         ":node_modules/mutation-observer",
         ":node_modules/ts-jest",
         ":node_modules/typescript",
+        "//packages/cmk-frontend/src/jquery",
     ],
 )
 

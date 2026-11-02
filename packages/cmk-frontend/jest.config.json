@@ -2,8 +2,13 @@
   "testEnvironment": "jsdom",
   "modulePaths": ["<rootDir>/src/js/modules"],
   "moduleNameMapper": {
-    "^@/(.*)$": "<rootDir>/src/js/$1"
+    "^@/(.*)$": "<rootDir>/src/js/$1",
+    "^script-loader!jquery$": "<rootDir>/src/js/tests/script_loader/jquery.mock.js",
+    "^script-loader!.*/jquery\\.mobile-1\\.4\\.5\\.min\\.js$": "<rootDir>/src/js/tests/script_loader/jquery_mobile.mock.js"
   },
+  "transformIgnorePatterns": [
+    "/node_modules/(?!(\\.aspect_rules_js/)?(d3|d3-[^/@]+|internmap|delaunator|robust-predicates)[@/])"
+  ],
   "setupFiles": ["<rootDir>/src/js/tests/globals.mock.js", "fake-indexeddb/auto"],
   "transform": {
     "^.+\\.[jt]s$": [

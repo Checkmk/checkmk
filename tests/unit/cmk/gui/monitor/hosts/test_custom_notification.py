@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import json
 from collections.abc import Sequence
 from http import HTTPStatus
@@ -10,6 +11,7 @@ from http import HTTPStatus
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.monitor.hosts._api._custom_notification import (
     _handle_custom_notification,
     CustomNotificationHostRef,
@@ -17,7 +19,7 @@ from cmk.gui.monitor.hosts._api._custom_notification import (
 )
 from cmk.gui.monitor.hosts._models import HostTarget
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
 
 
 class _FakeHostNotifier:
@@ -114,3 +116,27 @@ def test_refuses_an_empty_comment(aut_user_auth_wsgi_app: WebTestAppForCMK) -> N
     )
 
     assert resp.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_refuses_a_user_without_the_permission_to_send_custom_notifications(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+    set_config: SetConfig,
+    load_config: Config,
+) -> None:
+    roles = copy.deepcopy(load_config.roles)
+    roles["admin"]["permissions"] = {
+        **roles["admin"].get("permissions", {}),
+        "action.customnotification": False,
+    }
+
+    with set_config(roles=roles), mock_livestatus(expect_status_query=False):
+        aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/internal/monitor/hosts/actions/custom_notification",
+            params=json.dumps(
+                {"hosts": [{"site_id": "NO_SITE", "name": "heute"}], "comment": "Testing"}
+            ),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=HTTPStatus.FORBIDDEN,
+        )

@@ -311,7 +311,8 @@ allows = [
   # the payload of the section the telemetry metrics fetcher writes
   "cmk.telemetry.custom_query_section",
   "cmk.telemetry.host_name_template_validation",
-  "cmk.utils.macros",
+  # the service name a series gets, shared with the alert wizard's preview
+  "cmk.telemetry.service_name_template",
 ]
 
 [plugin_families.violations.datadog]
@@ -957,6 +958,7 @@ allows = [
   "cmk.checkengine.fetchers",
   "cmk.data_backend",
   "cmk.shared_typing.consolidation",
+  "cmk.utils.macros",
   "cmk.utils.paths",
 ]
 

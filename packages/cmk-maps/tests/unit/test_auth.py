@@ -33,6 +33,7 @@ _SECRET = Secret(b"0123456789abcdef0123456789abcdef")
 _ALL_PERMISSIONS = {
     "maps.use": True,
     "general.edit_map": True,
+    "general.edit_foreign_map": False,
     "maps.configure": False,
     "general.see_all": False,
     "wato.see_all_folders": True,

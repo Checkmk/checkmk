@@ -649,7 +649,7 @@ describe('MapStatesService — a daemon that lost the map', () => {
     await store.refresh()
 
     expect(getSignedMap).toHaveBeenCalledWith('b')
-    expect(register).toHaveBeenLastCalledWith('b', freshlySigned, { radar: null, folder: null })
+    expect(register).toHaveBeenLastCalledWith('b', freshlySigned, { radar: null, folder: null }, {})
     expect(store.connected.value).toBe(true)
   })
 
@@ -701,7 +701,7 @@ describe('MapStatesService — saved settings', () => {
   })
 
   // The daemon takes a preview only of the caller's own map.
-  it('registers the saved map signed, not as a preview', async () => {
+  it('registers the saved map signed, not as a preview, telling the open views', async () => {
     const register = vi.fn().mockResolvedValue(emptyStates)
     const getSignedMap = vi.fn().mockResolvedValue(freshlySigned)
     const store = newService(null, {}, { register }, { getSignedMap })
@@ -710,6 +710,61 @@ describe('MapStatesService — saved settings', () => {
     await store.reregisterSavedWithIndicator()
 
     expect(getSignedMap).toHaveBeenCalledWith('b')
-    expect(register).toHaveBeenLastCalledWith('b', freshlySigned, { radar: null, folder: null })
+    expect(register).toHaveBeenLastCalledWith(
+      'b',
+      freshlySigned,
+      { radar: null, folder: null },
+      { saved: true }
+    )
+  })
+})
+
+describe('MapStatesService — a saved map', () => {
+  beforeEach(() => {
+    FakeEventSource.instances = []
+    vi.stubGlobal('EventSource', FakeEventSource)
+  })
+
+  const saved = { config_b64: 's', sig: 'v2' }
+
+  it('hands the daemon the open map as it was saved', async () => {
+    const register = vi.fn().mockResolvedValue(emptyStates)
+    const store = newService(null, {}, { register })
+    await store.connectToMap('b', { config_b64: 'x', sig: 'v1' })
+
+    await store.registerSaved('b', saved)
+
+    expect(register).toHaveBeenLastCalledWith(
+      'b',
+      saved,
+      { radar: null, folder: null },
+      { saved: true }
+    )
+  })
+
+  it('hands the daemon a map saved on the way out of it', async () => {
+    const register = vi.fn().mockResolvedValue(emptyStates)
+    const store = newService(null, {}, { register })
+    await store.connectToMap('other', { config_b64: 'x', sig: 'v1' })
+
+    await store.registerSaved('b', saved)
+
+    expect(register).toHaveBeenLastCalledWith(
+      'b',
+      saved,
+      { radar: null, folder: null },
+      { saved: true }
+    )
+  })
+
+  it('tells which version the stream says was saved', async () => {
+    const listener = vi.fn()
+    const store = newService()
+    store.onMapSaved(listener)
+    await store.connectToMap('b', { config_b64: 'x', sig: 'v1' })
+
+    FakeEventSource.instances[0]!.emit('map_saved', { type: 'map_saved', map: 'b', sig: 'v2' })
+
+    expect(listener).toHaveBeenCalledWith('b', 'v2')
   })
 })

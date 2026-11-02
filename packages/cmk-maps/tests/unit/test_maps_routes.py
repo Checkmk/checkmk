@@ -9,9 +9,11 @@ legacy .cfg parsing live GUI-side (the visuals store and
 ``cmk.maps.gui._cfg_import``).
 """
 
+import json
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from http import HTTPStatus
+from pathlib import Path
 from typing import override
 
 import pytest
@@ -20,13 +22,16 @@ from fake_links import FakeLinkGui
 from fastapi.testclient import TestClient
 from router_client import RouterClientFactory
 
+from cmk.crypto.secrets import Secret
 from cmk.maps.backend.api.v1 import deps, maps
 from cmk.maps.backend.connections.base import GeoHost
 from cmk.maps.backend.core.auth import Principal
 from cmk.maps.backend.core.ratelimit import rest_read_limiter
+from cmk.maps.backend.core.sse import manager, Subscriber
 from cmk.maps.backend.schemas.map import MapConfig, RadarView, WorldmapView
 from cmk.maps.backend.schemas.state import ObjectState
 from cmk.maps.backend.services import map_service, state_service
+from cmk.maps.shared.map_signature import sign_config
 
 ADMIN_PRINCIPAL = Principal(name="admin", may_edit=True, configure=True, see_all=True)
 
@@ -203,6 +208,108 @@ def test_register_signed_invalid_config_is_422_not_500(
         "/api/v1/maps/streamed/register", json={"config_b64": "irrelevant", "sig": "irrelevant"}
     )
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+_SECRET = Secret(b"0123456789abcdef0123456789abcdef")
+
+
+def _register_signed(client: TestClient, alias: str, *, saved: bool = True) -> None:
+    signed = sign_config({"name": "streamed", "alias": alias}, _SECRET.hmac, owner="admin")
+    resp = client.post("/api/v1/maps/streamed/register", json={**signed, "saved": saved})
+    assert resp.status_code == HTTPStatus.OK
+
+
+def _saved_events(sub: Subscriber) -> list[dict[str, str]]:
+    events = []
+    while not sub.queue.empty():
+        event = sub.queue.get_nowait()
+        if event.event == "map_saved":
+            events.append(json.loads(event.raw_data or ""))
+    return events
+
+
+def test_open_views_hear_which_version_an_editor_registers(
+    router_client: RouterClientFactory, site_secret_file: Path
+) -> None:
+    site_secret_file.write_bytes(_SECRET.reveal())
+    client = _client(router_client, ADMIN_PRINCIPAL, owner="admin")
+    sub = manager.subscribe("admin\x00streamed", None)
+    try:
+        _register_signed(client, "v2")
+    finally:
+        manager.unsubscribe("admin\x00streamed", sub)
+
+    signed = sign_config({"name": "streamed", "alias": "v2"}, _SECRET.hmac, owner="admin")
+    assert _saved_events(sub) == [{"type": "map_saved", "map": "streamed", "sig": signed["sig"]}]
+
+
+def test_opening_a_map_tells_no_view(
+    router_client: RouterClientFactory, site_secret_file: Path
+) -> None:
+    site_secret_file.write_bytes(_SECRET.reveal())
+    client = _client(router_client, ADMIN_PRINCIPAL, owner="admin")
+    sub = manager.subscribe("admin\x00streamed", None)
+    try:
+        _register_signed(client, "v2", saved=False)
+    finally:
+        manager.unsubscribe("admin\x00streamed", sub)
+
+    assert _saved_events(sub) == []
+
+
+def test_an_editor_past_the_read_budget_tells_no_view(
+    router_client: RouterClientFactory, site_secret_file: Path
+) -> None:
+    site_secret_file.write_bytes(_SECRET.reveal())
+    client = _client(router_client, ADMIN_PRINCIPAL, owner="admin")
+    for _ in range(rest_read_limiter._max):  # noqa: SLF001
+        rest_read_limiter.record(ADMIN_PRINCIPAL.name)
+    sub = manager.subscribe("admin\x00streamed", None)
+    try:
+        signed = sign_config({"name": "streamed", "alias": "v2"}, _SECRET.hmac, owner="admin")
+        client.post("/api/v1/maps/streamed/register", json={**signed, "saved": True})
+    finally:
+        manager.unsubscribe("admin\x00streamed", sub)
+
+    assert _saved_events(sub) == []
+
+
+@pytest.mark.parametrize(
+    "viewer",
+    [
+        pytest.param(Principal(name="viewer", see_all=True), id="read-only"),
+        pytest.param(Principal(name="viewer", may_edit=True, see_all=True), id="editing own maps"),
+    ],
+)
+def test_a_viewer_registering_another_version_tells_no_view(
+    router_client: RouterClientFactory, site_secret_file: Path, viewer: Principal
+) -> None:
+    site_secret_file.write_bytes(_SECRET.reveal())
+    client = _client(router_client, viewer, owner="admin")
+    sub = manager.subscribe("admin\x00streamed", None)
+    try:
+        _register_signed(client, "v1")
+        _register_signed(client, "v2")
+    finally:
+        manager.unsubscribe("admin\x00streamed", sub)
+
+    assert _saved_events(sub) == []
+
+
+def test_open_views_hear_which_version_an_admin_saved_of_another_users_map(
+    router_client: RouterClientFactory, site_secret_file: Path
+) -> None:
+    site_secret_file.write_bytes(_SECRET.reveal())
+    other_admin = Principal(name="root", may_edit=True, may_edit_foreign=True, see_all=True)
+    client = _client(router_client, other_admin, owner="admin")
+    sub = manager.subscribe("admin\x00streamed", None)
+    try:
+        _register_signed(client, "v2")
+    finally:
+        manager.unsubscribe("admin\x00streamed", sub)
+
+    signed = sign_config({"name": "streamed", "alias": "v2"}, _SECRET.hmac, owner="admin")
+    assert _saved_events(sub) == [{"type": "map_saved", "map": "streamed", "sig": signed["sig"]}]
 
 
 class _AuthScopeSpyConnection(FakeConnection):

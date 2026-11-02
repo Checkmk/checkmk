@@ -44,6 +44,7 @@ from cmk.maps.backend.schemas.state import (
     ObjectTiming,
 )
 from cmk.maps.backend.schemas.stream import (
+    MapSavedMessage,
     StateUpdateMessage,
     StreamedMapStates,
     StreamMessage,
@@ -290,6 +291,13 @@ async def _broadcast_loop(map_key: str, links: LinkSource) -> None:
         state_service.drop_states_snapshot(map_key)
         state_service.drop_map_snapshots(_dead_sites_snapshots, map_key)
         logger.debug("Broadcast loop stopped for map '%(map)s'", {"map": name})
+
+
+def tell_map_saved(owner: str, name: str, sig: str) -> None:
+    """Tell every open view of the map which version is saved."""
+    map_key = _map_key(owner, name)
+    if subscribers := manager.get_subscribers(map_key):
+        manager.push(map_key, subscribers, MAP_EVENTS.encode(MapSavedMessage(map=name, sig=sig)))
 
 
 _RADAR_FILTERS: set[str] = {"hostgroup", "servicegroup", "all_hosts", "all_services"}

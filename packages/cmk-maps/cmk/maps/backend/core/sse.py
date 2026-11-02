@@ -92,6 +92,9 @@ class SubscriptionManager:
     def get_subscriber_count(self, the_map: str) -> int:
         return len(self._subscribers.get(the_map, ()))
 
+    def get_subscribers(self, the_map: str) -> list[Subscriber]:
+        return list(self._subscribers.get(the_map, ()))
+
     def get_subscribers_grouped(self, the_map: str) -> dict[str | None, list[Subscriber]]:
         # Grouped by ``group_key`` (auth_user + folder scope), not auth_user alone,
         # so users with different rendered output (e.g. admin vs see-all guest on a

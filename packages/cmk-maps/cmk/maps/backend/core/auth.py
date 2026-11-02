@@ -53,12 +53,14 @@ __all__ = [
 
 _USE_PERMISSION: Final = "maps.use"
 _EDIT_PERMISSION: Final = "general.edit_map"
+_EDIT_FOREIGN_PERMISSION: Final = "general.edit_foreign_map"
 _CONFIGURE_PERMISSION: Final = "maps.configure"
 _SEE_ALL_PERMISSION: Final = "general.see_all"
 _SEE_ALL_FOLDERS_PERMISSION: Final = "wato.see_all_folders"
 _PERMISSIONS: Final = (
     _USE_PERMISSION,
     _EDIT_PERMISSION,
+    _EDIT_FOREIGN_PERMISSION,
     _CONFIGURE_PERMISSION,
     _SEE_ALL_PERMISSION,
     _SEE_ALL_FOLDERS_PERMISSION,
@@ -85,6 +87,8 @@ class Principal:
     name: str
     # ``general.edit_map``: register unsigned editor previews, read the connection list.
     may_edit: bool = False
+    # ``general.edit_foreign_map``: save the map of another user.
+    may_edit_foreign: bool = False
     # ``maps.configure``: read the full connection details.
     configure: bool = False
     # ``see_all`` bypasses Livestatus contact-group filtering (general.see_all / admin).
@@ -98,6 +102,15 @@ class Principal:
     # viewer). ``None`` for requests about no map in particular.
     map_owner: str | None = None
     map_name: str | None = None
+
+    def may_save(self, owner: str) -> bool:
+        """Whether the GUI lets this user save the map ``owner`` owns.
+
+        A built-in map is never saved in place, but as the user's own.
+        """
+        if not owner:
+            return False
+        return self.may_edit if owner == self.name else self.may_edit_foreign
 
     def viewing(self, owner: str, name: str) -> Principal:
         return dataclasses.replace(self, map_owner=owner, map_name=name)
@@ -163,6 +176,7 @@ def _principal(identity: Identity) -> Principal:
     return Principal(
         name=identity.user_id,
         may_edit=identity.permissions[_EDIT_PERMISSION],
+        may_edit_foreign=identity.permissions[_EDIT_FOREIGN_PERMISSION],
         configure=identity.permissions[_CONFIGURE_PERMISSION],
         see_all=identity.permissions[_SEE_ALL_PERMISSION],
         folder_see_all=identity.permissions[_SEE_ALL_FOLDERS_PERMISSION],

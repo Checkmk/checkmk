@@ -3,11 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type Ref, reactive, ref } from 'vue'
 
-import type { MapConfigApi, SignedMap } from '@/maps/api/mapConfig'
+import type { MapConfigApi, SignedBytes, SignedMap } from '@/maps/api/mapConfig'
 import type { MapStatesApi } from '@/maps/api/mapStates'
 import { isAutoObjectId } from '@/maps/api/wire'
 import { saveFailureText } from '@/maps/shared/errorText'
@@ -27,10 +28,34 @@ import { getEffectiveObjectType } from '@/maps/utils/naming'
 
 /** Edits are optimistic and coalesced; this is how long a burst is collected. */
 const SAVE_DEBOUNCE_MS = 400
+/**
+ * An editor saves on every drop, and every open view fetches what it saved.
+ * Views collect the saves of a few seconds and spread their fetches, so a map
+ * on many walls does not send the GUI a burst per drop.
+ */
+const SHOW_SAVED_DELAY_MS = 2000
+const SHOW_SAVED_SPREAD_MS = 1000
 
 function withoutAutoObjects(objects: MapConfig['objects']): MapConfig['objects'] {
   return objects.filter((object) => !isAutoObjectId(object.id))
 }
+
+/**
+ * The map to render, its links captioned with the titles the GUI resolved.
+ * Stamped here rather than where a link is rendered, so the first paint and
+ * every place a link shows (caption, hover, context menu, aria label) agree.
+ */
+function captioned(signed: SignedMap): MapConfig {
+  const cfg = signed.config
+  cfg.objects = cfg.objects.map((object) =>
+    getEffectiveObjectType(object) === 'map' && object.map_name
+      ? { ...object, map_title: signed.map_link_titles[object.map_name] ?? null }
+      : object
+  )
+  return cfg
+}
+
+export type SavedListener = (name: string, signed: SignedBytes) => void
 
 /** The view fields an operator can change from the map itself. */
 export interface ViewChoices {
@@ -75,6 +100,8 @@ export class MapService {
   public readonly sessionViewChoices: Map<string, ViewChoices> = reactive(new Map())
 
   private saveTimer: ReturnType<typeof setTimeout> | null = null
+  private showSavedTimer: ReturnType<typeof setTimeout> | null = null
+  private lastSaved: { name: string; sig: string } | null = null
   /**
    * The map captured when the debounce was armed. Persisting this reference
    * rather than whatever is open when it fires means a map switch inside the
@@ -88,6 +115,10 @@ export class MapService {
    */
   private fetchSeq = 0
   private prefetched: { name: string; signed: Promise<SignedMap> } | null = null
+  /** The signature of the saved version the open map shows. */
+  private shownSig: string | null = null
+  private persists = 0
+  private readonly savedListeners = new Set<SavedListener>()
 
   public constructor(
     private readonly api: Pick<
@@ -146,16 +177,14 @@ export class MapService {
    * Loads a map. ``onSigned`` gets the signature before the map is rendered, so
    * the live connection starts without waiting for the canvas.
    */
-  public async fetchMap(
-    name: string,
-    onSigned?: (signed: { config_b64: string; sig: string }) => void
-  ): Promise<void> {
+  public async fetchMap(name: string, onSigned?: (signed: SignedBytes) => void): Promise<void> {
     const { _t } = usei18n()
     const seq = ++this.fetchSeq
     this.loading.value = true
     this.error.value = null
     this.currentMap.value = null
     this.currentMapAccess.value = null
+    this.shownSig = null
     this.autoObjects.value = 'none'
     try {
       const prefetched = this.prefetched?.name === name ? this.prefetched.signed : null
@@ -164,15 +193,7 @@ export class MapService {
       if (seq !== this.fetchSeq) {
         return
       }
-      const cfg = signed.config
-      // Stamping the resolved titles here rather than looking them up where a
-      // link is rendered gets the caption right in the first paint, and gets it
-      // right everywhere at once (caption, hover, context menu, aria label).
-      cfg.objects = cfg.objects.map((object) =>
-        getEffectiveObjectType(object) === 'map' && object.map_name
-          ? { ...object, map_title: signed.map_link_titles[object.map_name] ?? null }
-          : object
-      )
+      const cfg = captioned(signed)
       this.currentMapAccess.value = signed.access
       if (onSigned) {
         // The signed bytes, not ``currentMap``: that one gets client-only extras
@@ -187,6 +208,7 @@ export class MapService {
       }
       this.autoObjects.value = hasAutoSource(cfg.view) ? 'loading' : 'none'
       this.currentMap.value = cfg
+      this.shownSig = signed.sig
     } catch (e: unknown) {
       if (seq === this.fetchSeq) {
         this.error.value = e instanceof Error ? e.message : _t('Failed to load map')
@@ -196,6 +218,69 @@ export class MapService {
         this.loading.value = false
       }
     }
+  }
+
+  /**
+   * Shows the open map as it was saved elsewhere. A view that shows that
+   * version already, or holds edits it has not saved yet, keeps what it shows.
+   * A view that cannot load it keeps its own until the next save.
+   */
+  public showSaved(name: string, sig: string): void {
+    this.lastSaved = { name, sig }
+    this.showSavedTimer ??= setTimeout(
+      () => {
+        this.showSavedTimer = null
+        const saved = this.lastSaved!
+        this.lastSaved = null
+        this.loadSaved(saved.name, saved.sig).catch(() => undefined)
+      },
+      SHOW_SAVED_DELAY_MS + Math.random() * SHOW_SAVED_SPREAD_MS
+    )
+  }
+
+  /** Drops a save still waiting to be shown, for a view that left the map or edits it. */
+  public cancelShowSaved(): void {
+    if (this.showSavedTimer) {
+      clearTimeout(this.showSavedTimer)
+      this.showSavedTimer = null
+    }
+    this.lastSaved = null
+  }
+
+  /** ``sig`` ``null`` shows the stored version again even where it is shown already. */
+  private async loadSaved(name: string, sig: string | null): Promise<void> {
+    const unchanged = () =>
+      this.currentMap.value?.name !== name ||
+      (sig !== null && this.shownSig === sig) ||
+      this.pendingSaveMap !== null
+    if (unchanged()) {
+      return
+    }
+    const seq = this.fetchSeq
+    const persists = this.persists
+    const signed = await this.api.get(name)
+    if (
+      seq !== this.fetchSeq ||
+      persists !== this.persists ||
+      unchanged() ||
+      (sig !== null && signed.sig === this.shownSig)
+    ) {
+      return
+    }
+    const cfg = captioned(signed)
+    // The objects the daemon adds are not stored; they stay until it says otherwise.
+    cfg.objects.push(
+      ...this.currentMap.value!.objects.filter((object) => isAutoObjectId(object.id))
+    )
+    this.currentMapAccess.value = signed.access
+    this.currentMap.value = cfg
+    this.shownSig = signed.sig
+    await this.loadAutoObjects(name, true)
+  }
+
+  public onSaved(listener: SavedListener): () => void {
+    this.savedListeners.add(listener)
+    return () => this.savedListeners.delete(listener)
   }
 
   /**
@@ -265,7 +350,15 @@ export class MapService {
       const map = this.pendingSaveMap
       this.pendingSaveMap = null
       if (map) {
-        void this.persist(map).then((failure) => this.report(failure))
+        const saving = this.persist(map)
+        const persists = this.persists
+        void saving.then((failure) => {
+          this.report(failure)
+          if (isRefused(failure) && persists === this.persists) {
+            // Nothing else takes the refused edit back, so every later save would carry it.
+            this.loadSaved(map.name, null).catch(() => undefined)
+          }
+        })
       }
     }, SAVE_DEBOUNCE_MS)
   }
@@ -275,6 +368,7 @@ export class MapService {
    * is synchronous, and the request outliving the app is the point.
    */
   public dispose(): void {
+    this.cancelShowSaved()
     void this.flushSave()
   }
 
@@ -376,10 +470,11 @@ export class MapService {
     const base =
       this.currentMap.value?.name === name ? this.currentMap.value : await this.getMap(name)
     const merged: MapConfig = { ...base, ...updates }
-    const access = await this.api.update(merged, envelope)
+    const { access, signed } = await this.api.update(merged, envelope)
     if (this.currentMap.value?.name === name) {
       this.currentMap.value = merged
       this.currentMapAccess.value = access
+      this.shownSig = signed.sig
     }
     const row = this.maps.value.find((m) => m.name === name)
     if (row) {
@@ -462,14 +557,26 @@ export class MapService {
 
   /** Resolves to what failed, or ``null``. */
   private async persist(map: MapConfig): Promise<unknown> {
+    this.persists += 1
     try {
       // Updated in place: the server resolves own/foreign/built-in by name and
       // preserves the stored visibility when it is omitted, which is what a
       // routine autosave wants.
-      await this.api.update(map)
+      const { signed } = await this.api.update(map)
+      if (this.currentMap.value === map) {
+        this.shownSig = signed.sig
+      }
+      for (const listener of this.savedListeners) {
+        listener(map.name, signed)
+      }
       return null
     } catch (e: unknown) {
       return e
     }
   }
+}
+
+/** The server refused what was saved, unlike a save that did not get through. */
+function isRefused(failure: unknown): boolean {
+  return failure instanceof CmkApiError && [400, 422].includes(failure.statusCode)
 }

@@ -782,7 +782,8 @@ async function onSettingsUpdated() {
 useMapLifecycle({
   mapName: () => mapName.value,
   onMapChanged: () => editor.resetForNewMap(),
-  rotation: { stop: stopRotation, schedule: scheduleRotation }
+  rotation: { stop: stopRotation, schedule: scheduleRotation },
+  editing: () => editor.editMode.value
 })
 
 usePreviewBridge({ preview: () => isPreview.value })

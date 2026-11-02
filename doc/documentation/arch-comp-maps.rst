@@ -1102,8 +1102,14 @@ foreign or built-in map, the live preview of new objects fails.
 
 Saving sends ``PUT objects/map/{name}``. The GUI validates the config against the REST
 model, clamps the visibility and writes the owner's ``user_maps.mk`` under a
-file lock. The daemon streams the saved version once its signed config is
-registered again, at the latest when someone opens the map.
+file lock, and answers with the signed config, which the SPA registers with the
+daemon. If the user may save that map, as the GUI decides it (their own map
+with ``general.edit_map``, another user's with ``general.edit_foreign_map``),
+the daemon sends ``map_saved`` with the signature of that config to every open
+stream of the map. A view that shows another version and holds no unsaved
+edits loads the map again, so a viewer or a wall does not keep showing states
+under labels the map no longer has. A map saved through the REST API reaches
+open views only when it is opened again.
 
 Running a command
 -----------------

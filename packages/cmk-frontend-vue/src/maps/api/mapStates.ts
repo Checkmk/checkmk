@@ -10,6 +10,7 @@
  * keeps it in memory for as long as someone watches it. Everything here is
  * therefore about one already-registered map.
  */
+import type { SignedBytes } from '@/maps/api/mapConfig'
 import type { MapsDaemonClient } from '@/maps/api/transport'
 import { daemonConfig } from '@/maps/api/wire'
 import type {
@@ -61,12 +62,13 @@ export class MapStatesApi {
    */
   public async register(
     name: string,
-    signed: { config_b64: string; sig: string },
-    preview: ViewPreview
+    signed: SignedBytes,
+    preview: ViewPreview,
+    { saved = false }: { saved?: boolean } = {}
   ): Promise<MapStates> {
     return this.client.POST('/api/v1/maps/{name}/register', {
       params: { path: { name }, query: previewQuery(preview) },
-      body: { config_b64: signed.config_b64, sig: signed.sig }
+      body: { config_b64: signed.config_b64, sig: signed.sig, saved }
     })
   }
 
@@ -79,7 +81,7 @@ export class MapStatesApi {
   public async registerEdit(map: MapConfig, preview: ViewPreview): Promise<MapStates> {
     return this.client.POST('/api/v1/maps/{name}/register', {
       params: { path: { name: map.name }, query: previewQuery(preview) },
-      body: { config: daemonConfig(map) }
+      body: { config: daemonConfig(map), saved: false }
     })
   }
 

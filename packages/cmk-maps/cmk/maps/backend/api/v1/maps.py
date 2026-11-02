@@ -32,7 +32,12 @@ from cmk.maps.backend.api.v1.deps import (
     resolve_auth_user,
     within_read_budget,
 )
-from cmk.maps.backend.api.v1.states import map_states_response, view_preview, ViewPreview
+from cmk.maps.backend.api.v1.states import (
+    map_states_response,
+    tell_map_saved,
+    view_preview,
+    ViewPreview,
+)
 from cmk.maps.backend.api.v1.types import MapName
 from cmk.maps.backend.core.auth import InvalidSignature, Principal, verify_map_config
 from cmk.maps.backend.core.ratelimit import rest_read_limiter
@@ -64,6 +69,8 @@ class RegisterRequest(BaseModel):
     config_b64: str | None = None
     sig: str | None = None
     config: MapConfig | None = None
+    # The signed config was just saved, so the open views of the map compare versions.
+    saved: bool = False
 
 
 @router.post("/{name}/register", response_model=MapStates)
@@ -115,6 +122,8 @@ async def register_map(
         if cfg.name != name:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Map name mismatch")
         map_service.register_map(owner, cfg)
+        if body.saved and within_budget and current_user.may_save(owner):
+            tell_map_saved(owner, name, body.sig)
         if not within_budget:
             charge(rest_read_limiter, current_user.name)
         return await map_states_response(

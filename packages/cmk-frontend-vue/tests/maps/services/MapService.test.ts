@@ -6,7 +6,7 @@
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, delay, http } from 'msw'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MapConfigApi } from '@/maps/api/mapConfig'
 import { MapStatesApi } from '@/maps/api/mapStates'
@@ -294,6 +294,37 @@ describe('MapService', () => {
     expect(store.error.value).toBeNull()
   })
 
+  it('shows the stored map again after a save in the background was refused', async () => {
+    server.use(
+      http.put('*/api/internal/objects/map/:name', () =>
+        HttpResponse.json({ title: 'Bad Request', detail: 'refused' }, { status: 400 })
+      )
+    )
+    const store = newService()
+    await store.fetchMap('map1')
+    store.currentMap.value!.alias = 'refused'
+    store.scheduleSave()
+
+    await vi.waitFor(() => expect(store.currentMap.value?.alias).toBe('Map 1'), { timeout: 2000 })
+  })
+
+  it('keeps the edit of a save in the background that did not get through', async () => {
+    server.use(
+      http.put('*/api/internal/objects/map/:name', () =>
+        HttpResponse.json({ title: 'Service Unavailable', detail: 'restarting' }, { status: 503 })
+      )
+    )
+    const store = newService()
+    await store.fetchMap('map1')
+    store.currentMap.value!.alias = 'kept'
+    store.scheduleSave()
+
+    await vi.waitFor(() => expect(store.saveError.value).not.toBeNull(), { timeout: 2000 })
+
+    expect(getCalls).toEqual(['map1'])
+    expect(store.currentMap.value?.alias).toBe('kept')
+  })
+
   it('cloneMap() keeps the clone out of the Monitor menu where its source is', async () => {
     const store = newService()
     await store.fetchMaps()
@@ -417,6 +448,103 @@ describe('MapService', () => {
 
     expect(renderedWhenSigned).toBeNull()
     expect(store.currentMap.value).toEqual(sampleConfig)
+  })
+
+  it('flushSave() tells its listeners the signed bytes of the saved map', async () => {
+    const store = newService()
+    const listener = vi.fn()
+    store.onSaved(listener)
+    await store.fetchMap('map1')
+    store.scheduleSave()
+
+    await store.flushSave()
+
+    expect(listener).toHaveBeenCalledWith('map1', { config_b64: sampleConfigB64, sig: 'cw' })
+  })
+
+  describe('showSaved()', () => {
+    // Math.random is pinned to 0, so a view loads exactly this long after a save.
+    const delay = 2000
+
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+      vi.spyOn(Math, 'random').mockReturnValue(0)
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    function serveSavedVersion(sig: string): void {
+      server.use(
+        http.get('*/api/internal/objects/maps_signed_map/:name', ({ params }) => {
+          getCalls.push(String(params['name']))
+          return HttpResponse.json({ ...signedMapResponse, sig })
+        })
+      )
+    }
+
+    it('loads the open map again for another saved version', async () => {
+      const store = newService()
+      await store.fetchMap('map1')
+      store.currentMap.value!.alias = 'outdated'
+      serveSavedVersion('newer')
+
+      store.showSaved('map1', 'newer')
+      await vi.advanceTimersByTimeAsync(delay)
+
+      await vi.waitFor(() => expect(store.currentMap.value).toEqual(sampleConfig))
+      expect(getCalls).toEqual(['map1', 'map1'])
+    })
+
+    it('loads several saves in a row once, also while the editing goes on', async () => {
+      const store = newService()
+      await store.fetchMap('map1')
+      serveSavedVersion('second')
+
+      store.showSaved('map1', 'first')
+      await vi.advanceTimersByTimeAsync(delay / 2)
+      store.showSaved('map1', 'second')
+      expect(getCalls).toEqual(['map1'])
+      await vi.advanceTimersByTimeAsync(delay / 2)
+
+      await vi.waitFor(() => expect(store.currentMap.value).toEqual(sampleConfig))
+      expect(getCalls).toEqual(['map1', 'map1'])
+    })
+
+    it('keeps the version the map shows already', async () => {
+      const store = newService()
+      await store.fetchMap('map1')
+
+      store.showSaved('map1', 'cw')
+      await vi.advanceTimersByTimeAsync(delay)
+
+      expect(getCalls).toEqual(['map1'])
+    })
+
+    it('keeps edits not saved yet', async () => {
+      const store = newService()
+      await store.fetchMap('map1')
+
+      store.showSaved('map1', 'newer')
+      await vi.advanceTimersByTimeAsync(delay - 100)
+      store.scheduleSave()
+      await vi.advanceTimersByTimeAsync(100)
+
+      expect(getCalls).toEqual(['map1'])
+      await store.flushSave()
+    })
+
+    it('loads nothing once the view stops following saves', async () => {
+      const store = newService()
+      await store.fetchMap('map1')
+
+      store.showSaved('map1', 'newer')
+      store.cancelShowSaved()
+      await vi.advanceTimersByTimeAsync(delay)
+
+      expect(getCalls).toEqual(['map1'])
+    })
   })
 
   it('saveMapMetadata() shows the sharing the server stored, not the one asked for', async () => {

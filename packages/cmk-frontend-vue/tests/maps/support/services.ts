@@ -119,7 +119,10 @@ export function fakeMapsServices(
   // method that would use it is stubbed, so nothing leaves the test.
   const daemon = createMapsDaemonClient()
   const sessionApi = stubApi(new SessionApi(), { fetchSession: session })
-  const mapConfig = stubApi(new MapConfigApi(), { list: [], update: aMapAccess() })
+  const mapConfig = stubApi(new MapConfigApi(), {
+    list: [],
+    update: { access: aMapAccess(), signed: { config_b64: 'e30', sig: 'saved' } }
+  })
   const mapStates = stubApi(new MapStatesApi(daemon), {
     fetchAutoObjects: [],
     fetchFolderHostServices: [],

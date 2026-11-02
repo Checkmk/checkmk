@@ -62,5 +62,16 @@ class TopologyUpdateMessage(BaseModel):
     delta: TopologyDelta
 
 
+class MapSavedMessage(BaseModel):
+    """The version of the map that is saved, by the signature of its config. A
+    client showing another version loads it again."""
+
+    type: Literal["map_saved"] = "map_saved"
+    map: str
+    sig: str
+
+
 # What a client has to be able to handle on the stream.
-StreamMessage = Annotated[StateUpdateMessage | TopologyUpdateMessage, Field(discriminator="type")]
+StreamMessage = Annotated[
+    StateUpdateMessage | TopologyUpdateMessage | MapSavedMessage, Field(discriminator="type")
+]

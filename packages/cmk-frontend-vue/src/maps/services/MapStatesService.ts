@@ -11,6 +11,7 @@ import { type EventStream, createEventStream } from 'cmk-ui-library/lib/sse/even
 import { type Ref, type ShallowRef, markRaw, ref, shallowRef, triggerRef } from 'vue'
 
 import type { ConnectionsApi } from '@/maps/api/connections'
+import type { SignedBytes } from '@/maps/api/mapConfig'
 import type { MapStatesApi, RadarOverride, ViewPreview } from '@/maps/api/mapStates'
 import type { MonitoringObjectsApi } from '@/maps/api/monitoringObjects'
 import type { MapService } from '@/maps/services/MapService'
@@ -38,6 +39,7 @@ import { isProblemState } from '@/maps/utils/problemState'
 import { stateRank } from '@/maps/utils/stateColors'
 
 type MapEvent = FastApiEvent<paths, '/api/v1/sse/maps/{name}'>
+type MapSavedListener = (mapName: string, sig: string) => void
 type MapEventData<Name extends MapEvent['event']> = Extract<MapEvent, { event: Name }>['data']
 
 // Depth the detail drawer needs for the full leaf list even when the icon is
@@ -218,6 +220,8 @@ export class MapStatesService {
    */
   private registration: (() => Promise<MapStates>) | null = null
   private handOverSeq = 0
+  private savedRegistrations: Promise<void> = Promise.resolve()
+  private readonly mapSavedListeners = new Set<MapSavedListener>()
   private connectRun = 0
   private folderTreeIndex = new Map<string, FolderTreeNode>()
   /** Previous foldertree host states, for deriving notifications. */
@@ -248,10 +252,7 @@ export class MapStatesService {
    * Binds to a map: hands the daemon the signed config, loads the first states
    * and opens the stream.
    */
-  public connectToMap(
-    mapName: string,
-    signed?: { config_b64: string; sig: string }
-  ): Promise<void> {
+  public connectToMap(mapName: string, signed?: SignedBytes): Promise<void> {
     if (this.connecting?.map === mapName) {
       return this.connecting.done
     }
@@ -267,10 +268,7 @@ export class MapStatesService {
     return done
   }
 
-  private async connect(
-    mapName: string,
-    signed?: { config_b64: string; sig: string }
-  ): Promise<void> {
+  private async connect(mapName: string, signed?: SignedBytes): Promise<void> {
     const { _t } = usei18n()
     this.disconnect()
     // A later connect or disconnect owns the timer, the stream and the errors.
@@ -331,9 +329,41 @@ export class MapStatesService {
     void this.refreshAggregations()
   }
 
-  private signedRegistration(mapName: string): () => Promise<MapStates> {
+  /**
+   * Hands the daemon the open map as it was just saved, which tells every other
+   * view of it to show the saved version.
+   */
+  public registerSaved(mapName: string, signed: SignedBytes): Promise<void> {
+    // One after the other, so the daemon ends up with the version saved last.
+    const registered = this.savedRegistrations.then(() => {
+      if (this.currentMap !== mapName) {
+        // Saved on the way out: the views still open need to hear of it.
+        return this.api
+          .register(mapName, signed, { radar: null, folder: null }, { saved: true })
+          .then(() => undefined)
+      }
+      return this.handOver(
+        mapName,
+        () => this.api.register(mapName, signed, this.viewPreview(), { saved: true }),
+        this.signedRegistration(mapName)
+      )
+    })
+    this.savedRegistrations = registered.catch(() => undefined)
+    return registered
+  }
+
+  /** Called with the version of the open map the stream says is saved. */
+  public onMapSaved(listener: MapSavedListener): () => void {
+    this.mapSavedListeners.add(listener)
+    return () => this.mapSavedListeners.delete(listener)
+  }
+
+  private signedRegistration(
+    mapName: string,
+    options: { saved?: boolean } = {}
+  ): () => Promise<MapStates> {
     return async () =>
-      this.api.register(mapName, await this.maps.getSignedMap(mapName), this.viewPreview())
+      this.api.register(mapName, await this.maps.getSignedMap(mapName), this.viewPreview(), options)
   }
 
   private viewPreview(): ViewPreview {
@@ -529,7 +559,11 @@ export class MapStatesService {
     }
     this.initialLoad.value = true
     try {
-      await this.handOver(mapName, this.signedRegistration(mapName))
+      await this.handOver(
+        mapName,
+        this.signedRegistration(mapName, { saved: true }),
+        this.signedRegistration(mapName)
+      )
       void this.refreshAggregations()
     } finally {
       this.initialLoad.value = false
@@ -638,7 +672,12 @@ export class MapStatesService {
       url: () => resolveStreamUrl(mapName),
       handlers: {
         state_update: (msg) => this.applyStateUpdate(msg),
-        topology_update: (msg) => this.applyTopologyUpdate(msg)
+        topology_update: (msg) => this.applyTopologyUpdate(msg),
+        map_saved: (msg) => {
+          for (const listener of this.mapSavedListeners) {
+            listener(msg.map, msg.sig)
+          }
+        }
       },
       poll: {
         fetch: () => this.refresh(),

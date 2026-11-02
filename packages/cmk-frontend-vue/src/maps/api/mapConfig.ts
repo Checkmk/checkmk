@@ -18,15 +18,25 @@ import { uploadedFile } from '@/maps/api/upload'
 import { accessFromWire, mapListObjectToRead, mapRequestBody } from '@/maps/api/wire'
 import type { CfgImport, MapAccess, MapConfig, MapEnvelope, MapRead } from '@/maps/types/api'
 
+/** The bytes the GUI signed, which the daemon verifies verbatim. */
+export interface SignedBytes {
+  config_b64: string
+  sig: string
+}
+
+/** What a save stored: the viewer's access to the map and its signed bytes. */
+export interface SavedMap {
+  access: MapAccess
+  signed: SignedBytes
+}
+
 /**
  * A map as the daemon must receive it: the exact bytes the GUI signed, so a
  * viewer cannot substitute a tampered config for a foreign map, plus those bytes
  * parsed for rendering. ``config`` is never re-serialised back into a request.
  */
-export interface SignedMap {
+export interface SignedMap extends SignedBytes {
   config: MapConfig
-  config_b64: string
-  sig: string
   access: MapAccess
   /**
    * Titles of the maps this map links to, keyed by map id, resolved by the GUI
@@ -81,7 +91,7 @@ export class MapConfigApi {
    * ``If-Match: *`` opts out of optimistic locking: the SPA is the only editing
    * surface and carries the map's own ``version``.
    */
-  public async update(map: MapConfig, envelope?: MapEnvelope): Promise<MapAccess> {
+  public async update(map: MapConfig, envelope?: MapEnvelope): Promise<SavedMap> {
     const saved = unwrap(
       await client.PUT('/objects/map/{name}', {
         params: {
@@ -93,7 +103,10 @@ export class MapConfigApi {
     )
     // What was stored, not what was asked for: the server narrows the sharing
     // scope to what the user may publish, and saving a built-in makes it own.
-    return accessFromWire(saved.extensions)
+    return {
+      access: accessFromWire(saved.extensions),
+      signed: { config_b64: saved.extensions.config_b64, sig: saved.extensions.sig }
+    }
   }
 
   public async list(): Promise<MapRead[]> {

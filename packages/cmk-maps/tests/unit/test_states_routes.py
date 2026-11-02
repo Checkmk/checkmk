@@ -48,6 +48,7 @@ _SITE = "heute"
 _PERMISSIONS = {
     "maps.use": True,
     "general.edit_map": False,
+    "general.edit_foreign_map": False,
     "maps.configure": False,
     "general.see_all": False,
     "wato.see_all_folders": False,
@@ -167,6 +168,7 @@ def test_the_api_description_names_each_event_with_the_schema_of_its_data() -> N
     } == {
         "state_update": "#/components/schemas/StateUpdateMessage",
         "topology_update": "#/components/schemas/TopologyUpdateMessage",
+        "map_saved": "#/components/schemas/MapSavedMessage",
     }
 
 

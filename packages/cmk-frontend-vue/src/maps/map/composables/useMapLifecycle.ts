@@ -14,7 +14,7 @@
  * rotation, and reset whatever the previous map left behind.
  */
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
-import { onUnmounted, watch, watchEffect } from 'vue'
+import { onUnmounted, toRaw, watch, watchEffect } from 'vue'
 
 import { isAutoObjectId } from '@/maps/api/wire'
 import { useMaps, useStates, useToast } from '@/maps/services/context'
@@ -47,6 +47,10 @@ const RESOLVED_BY = [
   'weathermap_metric_out'
 ] as const satisfies readonly (keyof MapElement)[]
 
+function loadPart(key: string): string {
+  return key.slice(0, key.indexOf('\n'))
+}
+
 function resolvedBy(object: MapElement): string {
   const key: unknown[] = [object.id, ...RESOLVED_BY.map((field) => object[field])]
   if (object.bundle_kind === 'location') {
@@ -61,6 +65,8 @@ export function useMapLifecycle(source: {
   /** Clear what belongs to the map being left — selection, edit state, drafts. */
   onMapChanged: () => void
   rotation: { stop: () => void; schedule: (map: MapConfig | null) => void }
+  /** Whether the map is being edited here, which a version saved elsewhere does not interrupt. */
+  editing: () => boolean
 }): void {
   const { _t } = usei18n()
   const toast = useToast()
@@ -93,6 +99,7 @@ export function useMapLifecycle(source: {
     // so this can never write or drop the wrong one.
     onCleanup(() => {
       superseded = true
+      maps.cancelShowSaved()
       void maps.flushSave()
     })
 
@@ -156,20 +163,35 @@ export function useMapLifecycle(source: {
    * the map can change its objects, and every field watched costs memory on a
    * large map.
    */
+  // Edits change the open map in place, loading a version replaces it; so the
+  // key carries which map object it was read from.
+  const loads = new WeakMap<MapConfig, number>()
+  let loaded = 0
+  function loadOf(map: MapConfig): number {
+    const raw = toRaw(map)
+    let load = loads.get(raw)
+    if (load === undefined) {
+      load = ++loaded
+      loads.set(raw, load)
+    }
+    return load
+  }
+
   watch(
     () => {
       const map = maps.currentMap.value
       if (!map || !maps.mayEdit(map.name)) {
         return undefined
       }
-      return map.objects
+      const objects = map.objects
         .filter((object) => !isAutoObjectId(object.id))
         .map(resolvedBy)
         .join('\n')
+      return `${loadOf(map)}\n${objects}`
     },
-    (ids, previous) => {
-      // The initial load and the unload are not edits.
-      if (ids === undefined || previous === undefined) {
+    (key, previous) => {
+      // The initial load, the unload and another version are not edits.
+      if (key === undefined || previous === undefined || loadPart(key) !== loadPart(previous)) {
         return
       }
       const current = maps.currentMap.value
@@ -181,9 +203,27 @@ export function useMapLifecycle(source: {
     }
   )
 
+  const stopFollowingSaves = states.onMapSaved((name, sig) => {
+    if (!source.editing()) {
+      maps.showSaved(name, sig)
+    }
+  })
+  watch(source.editing, (editing) => {
+    if (editing) {
+      maps.cancelShowSaved()
+    }
+  })
+
+  const stopHandingOverSaves = maps.onSaved((name, signed) => {
+    states.registerSaved(name, signed).catch((error: unknown) => {
+      report(error, 'Live update failed')
+    })
+  })
+
   onUnmounted(() => {
     // Leaving inside the debounce window must not drop the last change.
-    void maps.flushSave()
+    stopFollowingSaves()
+    void maps.flushSave().finally(stopHandingOverSaves)
     states.disconnect()
   })
 }

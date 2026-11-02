@@ -44,7 +44,8 @@ function mountLifecycle(mapName: Ref<string>) {
     useMapLifecycle({
       mapName: () => mapName.value,
       onMapChanged: () => {},
-      rotation: { stop: () => {}, schedule: () => {} }
+      rotation: { stop: () => {}, schedule: () => {} },
+      editing: () => false
     })
   )
 }
@@ -257,5 +258,38 @@ describe('useMapLifecycle', () => {
     await settle()
 
     expect(services.states.reregister).not.toHaveBeenCalled()
+  })
+
+  it('drops a save waiting to be shown once the map is edited here', async () => {
+    const cancelShowSaved = vi.spyOn(services.maps, 'cancelShowSaved')
+    const editing = ref(false)
+    mountWithServices(services, () =>
+      useMapLifecycle({
+        mapName: () => 'dc1',
+        onMapChanged: () => {},
+        rotation: { stop: () => {}, schedule: () => {} },
+        editing: () => editing.value
+      })
+    )
+    await settle()
+    cancelShowSaved.mockClear()
+
+    editing.value = true
+    await settle()
+
+    expect(cancelShowSaved).toHaveBeenCalledOnce()
+  })
+
+  it('hands the daemon a map saved from here', async () => {
+    const registerSaved = vi.spyOn(services.states, 'registerSaved').mockResolvedValue(undefined)
+    vi.mocked(services.maps.flushSave).mockRestore()
+    services.maps.currentMap.value = aMap({ name: 'dc1' })
+    mountLifecycle(ref('dc1'))
+    await settle()
+
+    services.maps.scheduleSave()
+    await services.maps.flushSave()
+
+    expect(registerSaved).toHaveBeenCalledWith('dc1', { config_b64: 'e30', sig: 'saved' })
   })
 })

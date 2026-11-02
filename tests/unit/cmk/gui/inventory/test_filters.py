@@ -14,6 +14,7 @@ from cmk.gui.inventory.filters import (
     FilterInvFloat,
     FilterInvFloatChoice,
     FilterInvHasSoftwarePackage,
+    FilterInvtableDualChoice,
     FilterInvtableTextWithSortKey,
     FilterInvtableVersion,
     FilterInvText,
@@ -435,6 +436,34 @@ def test_filter_invtable_version_drops_a_row_without_version() -> None:
         {"ident": {"ident_until": "2.0"}},
         [{"ident": None}, {"ident": "1.0"}],
     ) == [{"ident": "1.0"}]
+
+
+@pytest.mark.parametrize(
+    "context, expected_rows",
+    [
+        pytest.param({}, [{"ident": "a"}, {"ident": "b"}, {"ident": "c"}], id="no-context"),
+        pytest.param(
+            {"ident": {"ident": " "}},
+            [{"ident": "a"}, {"ident": "b"}, {"ident": "c"}],
+            id="no-selection",
+        ),
+        pytest.param(
+            {"ident": {"ident": "a|c"}},
+            [{"ident": "a"}, {"ident": "c"}],
+            id="selection",
+        ),
+    ],
+)
+def test_filter_invtable_dual_choice(context: VisualContext, expected_rows: Rows) -> None:
+    assert (
+        FilterInvtableDualChoice(
+            inv_info="info",
+            ident="ident",
+            title="Title",
+            choices=[("a", "A"), ("b", "B"), ("c", "C")],
+        ).filter_table(context, [{"ident": "a"}, {"ident": "b"}, {"ident": "c"}])
+        == expected_rows
+    )
 
 
 def _make_host_with_package(package: Mapping[SDKey, SDValue]) -> Row:

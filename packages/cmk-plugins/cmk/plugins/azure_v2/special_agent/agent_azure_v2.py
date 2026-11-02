@@ -2381,7 +2381,7 @@ async def _collect_virtual_machines_resources(
 
             private_ip = nic["properties"]["ipConfigurations"][0]["properties"]["privateIPAddress"]
             vm_ip_map[vm_name] = private_ip
-        except (KeyError, IndexError):
+        except KeyError, IndexError:
             continue
 
     virtual_machines: list[AzureResource] = []
@@ -2406,7 +2406,6 @@ async def _collect_virtual_machines_resources(
             resource.labels["vm_ip"] = vm_ip
 
         resource.info["specific_info"] = {"statuses": statuses}
-
         # for backward compatibility
         resource.labels["vm_instance"] = True
 

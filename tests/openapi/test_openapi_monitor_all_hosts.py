@@ -106,11 +106,11 @@ class TestMonitorHostsQueryParamValidation:
         [
             pytest.param({}, id="empty payload"),
             pytest.param(
-                {"type": "condition", "field": "states", "op": "one_of", "value": []},
+                {"type": "condition", "field": "state", "op": "one_of", "value": []},
                 id="min length of 'one_of' condition",
             ),
             pytest.param(
-                {"type": "condition", "field": "states", "op": "one_of", "value": ["UP", "UP"]},
+                {"type": "condition", "field": "state", "op": "one_of", "value": ["UP", "UP"]},
                 id="uniqueness in 'one_of' condition",
             ),
             pytest.param(
@@ -124,7 +124,7 @@ class TestMonitorHostsQueryParamValidation:
             ),
             pytest.param(
                 {
-                    "type": "and",
+                    "type": "or",
                     "children": [
                         {"type": "condition", "field": "num_services", "op": "lte", "value": 10},
                     ],

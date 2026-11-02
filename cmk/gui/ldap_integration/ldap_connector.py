@@ -101,7 +101,6 @@ from cmk.gui.user_connection_config_types import (
     UserConnectionConfig,
 )
 from cmk.gui.userdb import (
-    active_connections,
     effective_authentication_connections,
     get_connection,
     get_ldap_connections,
@@ -117,7 +116,7 @@ from cmk.gui.userdb._connector import (
 from cmk.gui.userdb._roles import load_roles
 from cmk.gui.userdb._user_attribute import get_user_attributes, UserAttribute
 from cmk.gui.userdb._user_spec import add_internal_attributes, new_user_template
-from cmk.gui.userdb._user_sync_config import user_sync_config
+from cmk.gui.userdb._user_sync_config import effective_user_attribute_sync_connections
 from cmk.gui.userdb.store import (
     load_cached_profile,
     load_users,
@@ -1980,11 +1979,11 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         self._logger.info("SYNC STARTED")
 
-        if self.id not in [
-            connection[0] for connection in active_connections(active_config.user_connections)
-        ]:
+        if not self.is_sync_connection():
             self._logger.info(
-                '  SKIP SYNC connector "%(connector_id)s" is disabled', {"connector_id": self.id}
+                '  SKIP SYNC connector "%(connector_id)s" is not enabled for attribute '
+                "synchronization on this site",
+                {"connector_id": self.id},
             )
             return
 
@@ -2110,9 +2109,9 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
     @override
     def is_enabled(self) -> bool:
-        sync_config = user_sync_config()
-        # self._ldap_logger('Skipping disabled connection %s' % (self.id))
-        return not isinstance(sync_config, tuple) or self.id in sync_config[1]
+        if self._config["disabled"]:
+            return False
+        return self.is_authentication_connection() or self.is_sync_connection()
 
     def is_authentication_connection(self) -> bool:
         """True if this LDAP connector is listed for login authentication on the
@@ -2132,9 +2131,28 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             for entry in effective_authentication_connections(site_config)
         )
 
+    def is_sync_connection(self) -> bool:
+        """True if this LDAP connector takes part in the periodic user attribute
+        synchronization on the current site, i.e. ``user_attribute_sync_connections``
+        is ``"all"`` or lists ``self.id``.
+
+        A connector that is only listed in ``authentication_connections`` logs
+        users in (and syncs that one user during the login) but is left alone by
+        the background job.
+        """
+        sync_connections = effective_user_attribute_sync_connections()
+        if sync_connections == "all":
+            return True
+        if sync_connections == "disabled":
+            return False
+        return self.id in sync_connections
+
     @override
     def sync_is_needed(self) -> bool:
-        return self._get_last_sync_time() + self._get_cache_livetime() <= time.time()
+        return (
+            self.is_sync_connection()
+            and self._get_last_sync_time() + self._get_cache_livetime() <= time.time()
+        )
 
     def _get_last_sync_time(self) -> float:
         try:

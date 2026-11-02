@@ -96,8 +96,10 @@ SAML has no background synchronization; it updates a profile only during a login
 ``user_sync_config()`` maps the value onto the legacy shape that the LDAP connector and the synchronization job still consume.
 ``effective_user_attribute_sync_connections()`` reads the propagated global on a remote site and the site's own entry on the central site.
 
-.. note:: ``LDAPUserConnector.is_enabled()`` is still keyed off the *attribute sync* value, while password login (``check_credentials``) and user creation during the background synchronization are gated by ``is_authentication_connection()``.
-   A connection that the site excludes from ``authentication_connections`` therefore never logs anybody in on that site, even if it takes part in the periodic job (CMK-40326).
+.. note:: ``LDAPUserConnector.is_enabled()`` is true when the site uses the connection for either purpose: login (``is_authentication_connection()``) or the periodic attribute synchronization (``is_sync_connection()``).
+   Password login (``check_credentials``) and user creation during the background synchronization are gated by ``is_authentication_connection()``, the background job itself by ``is_sync_connection()``.
+   A connection listed for authentication but excluded from the attribute synchronization therefore logs users in (and synchronizes that one user during the login) but is left alone by the periodic job.
+   A connection excluded from authentication never logs anybody in on that site, even if it takes part in the periodic job (CMK-40326).
 
 Propagation to remote sites
 ###########################

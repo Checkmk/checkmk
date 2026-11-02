@@ -17,7 +17,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from http import HTTPStatus
 from time import time
-from typing import Literal, override
+from typing import cast, Literal, override
 from unittest import mock
 from unittest.mock import ANY, MagicMock
 
@@ -29,6 +29,7 @@ from pytest_mock import MockerFixture
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
+from cmk.gui.config import active_config
 from cmk.gui.ldap_integration.ldap_connector import (
     _sync_ldap_user,
     FetchedLDAPUser,
@@ -52,6 +53,7 @@ from cmk.gui.user_connection_config_types import (
     UserConnectionConfig,
 )
 from cmk.gui.userdb import (
+    check_credentials,
     get_user_attributes,
     load_users,
     UserAttribute,
@@ -253,8 +255,10 @@ class AnyOrderMatcher:
         return f"AnyOrderMatcher({self.args})"
 
 
-@pytest.mark.usefixtures("request_context")
-def test_do_sync(mocker: MockerFixture) -> None:
+@pytest.mark.usefixtures("request_context", "connection_configured")
+def test_do_sync(mocker: MockerFixture, set_config: SetConfig) -> None:
+    """One background sync: creates users new to LDAP, updates owned users, removes
+    owned users that left LDAP and leaves users of other connectors alone."""
     connector = LDAPUserConnector(_test_config)
     loaded_users: Users = {
         UserId("alice"): {"connector": "htpasswd"},
@@ -262,39 +266,44 @@ def test_do_sync(mocker: MockerFixture) -> None:
         UserId("david"): {"connector": connector.id, "alias": "dave"},
     }
     ldap_users = {
-        "carol": {"connector": connector.id},
-        "david": {"connector": connector.id},
-        "alice": {"connector": connector.id},
+        LdapUsername(name): FetchedLDAPUser(
+            dn=name, ldap_user_name=LdapUsername(name), ldap_user_spec={"dn": [name]}
+        )
+        for name in ("carol", "david", "alice")
     }
+    saved: list[Users] = []
 
-    def assert_expected_users(
-        users_to_save: Users,
+    def record_save(
+        profiles: Users,
         user_attributes: Sequence[tuple[str, UserAttribute]],
         user_connections: Sequence[UserConnectionConfig],
-        _now: datetime.datetime,
-        _pprint_value: bool,
-        _call_users_saved_hook: bool,
+        now: datetime.datetime,
+        pprint_value: bool,
+        call_users_saved_hook: bool,
+        /,
         changed_users: list[UserId] | Literal["all"] = "all",
     ) -> None:
-        assert UserId("alice") in users_to_save
-        assert users_to_save[UserId("alice")]["connector"] == "htpasswd"
-        assert UserId("bob") not in users_to_save
-        assert UserId("carol") in users_to_save
-        assert users_to_save[UserId("carol")]["connector"] == connector.id
-        assert users_to_save[UserId("carol")]["alias"] == "carol"
-        assert UserId("david") in users_to_save
-        assert users_to_save[UserId("david")]["alias"] == "dave"
-        assert UserId("alice@LDAP_SUFFIX") in users_to_save
-        assert users_to_save[UserId("alice@LDAP_SUFFIX")]["connector"] == connector.id
+        saved.append(profiles)
 
     mocker.patch.object(connector, "get_users", return_value=ldap_users)
-    connector.do_sync(
-        add_to_changelog=True,
-        only_username=None,
-        user_attributes=get_user_attributes([]),
-        load_users_func=lambda lock=False: loaded_users,  # noqa: ARG005
-        save_users_func=assert_expected_users,
-        default_user_profile={},
+    with set_config(ldap_quarantine_period=None):
+        connector.do_sync(
+            add_to_changelog=True,
+            only_username=None,
+            user_attributes=get_user_attributes([]),
+            load_users_func=lambda lock=False: loaded_users,  # noqa: ARG005
+            save_users_func=record_save,
+            default_user_profile={},
+        )
+
+    [users_to_save] = saved
+    assert users_to_save[UserId("alice")]["connector"] == "htpasswd", "foreign user untouched"
+    assert UserId("bob") not in users_to_save, "owned user that left LDAP is removed"
+    assert users_to_save[UserId("carol")]["connector"] == connector.id, "new LDAP user created"
+    assert users_to_save[UserId("carol")]["alias"] == "carol"
+    assert users_to_save[UserId("david")]["alias"] == "dave", "owned user keeps its data"
+    assert users_to_save[UserId("alice@LDAP_SUFFIX")]["connector"] == connector.id, (
+        "LDAP user clashing with a foreign user is created under the suffix"
     )
 
 
@@ -424,14 +433,8 @@ def test_check_credentials_not_found(mocker: MockerFixture) -> None:
     )
 
 
-def _local_site_with_authentication_connections(
-    value: AuthenticationConnectionsValue,
-) -> dict[SiteId, SiteConfiguration]:
-    return {
-        SiteId("NO_SITE"): SiteConfiguration(
-            {**no_site_configuration(), "authentication_connections": value}
-        )
-    }
+def _local_site(**overrides: object) -> dict[SiteId, SiteConfiguration]:
+    return {SiteId("NO_SITE"): cast(SiteConfiguration, {**no_site_configuration(), **overrides})}
 
 
 @pytest.mark.parametrize(
@@ -456,7 +459,7 @@ def test_valid_credentials_are_refused_when_site_excludes_connection_from_login(
         connector.connect()
     _mock_result3(mocker, connector, [("carol", {"uid": [b"CAROL_ID"]})])
 
-    with set_config(sites=_local_site_with_authentication_connections(authentication_connections)):
+    with set_config(sites=_local_site(authentication_connections=authentication_connections)):
         result = connector.check_credentials(
             UserId("carol"),
             Password("hunter2"),
@@ -478,7 +481,7 @@ def test_valid_credentials_are_accepted_when_site_lists_connection_for_login(
         _mock_result3(mocker, connector, [("carol", {"uid": [b"CAROL_ID"]})])
 
         with set_config(
-            sites=_local_site_with_authentication_connections([("ldap", _test_config["id"])])
+            sites=_local_site(authentication_connections=[("ldap", _test_config["id"])])
         ):
             result = connector.check_credentials(
                 UserId("carol"),
@@ -489,6 +492,162 @@ def test_valid_credentials_are_accepted_when_site_lists_connection_for_login(
             )
 
     assert result == UserId("carol_id")
+
+
+@pytest.mark.usefixtures("request_context")
+def test_authentication_only_connection_still_logs_users_in(
+    mock_ldap: MagicMock, set_config: SetConfig
+) -> None:
+    """A connection listed for authentication but left out of an explicit attribute
+    sync list must still verify credentials in the generic login path, which only
+    consults connections that are enabled on the site."""
+    mock_ldap.return_value.result3.return_value = (
+        0,
+        [("carol", {"uid": [b"CAROL_ID"]})],
+        0,
+        [ldap.controls.SimplePagedResultsControl()],  # type: ignore[no-untyped-call,unused-ignore]
+    )
+
+    with (
+        mock.patch("cmk.utils.password_store.extract", return_value="hunter2"),
+        set_config(
+            sites=_local_site(
+                authentication_connections=[("ldap", _test_config["id"])],
+                user_attribute_sync_connections=["some-other-connector"],
+            ),
+            user_connections=[_test_config],
+        ),
+    ):
+        result = check_credentials(
+            UserId("carol"),
+            Password("hunter2"),
+            get_user_attributes([]),
+            active_config.user_connections,
+            datetime.datetime.now(),
+            UserSpec(contactgroups=[], roles=["user"], force_authuser=False),
+            time_based_lock_out_enabled=False,
+            pprint_value=False,
+            debug=False,
+        )
+
+    assert result == UserId("carol_id")
+
+
+@pytest.mark.parametrize(
+    "site_overrides, expected",
+    [
+        pytest.param(
+            {
+                "authentication_connections": [("ldap", _test_config["id"])],
+                "user_attribute_sync_connections": ["some-other-connector"],
+            },
+            True,
+            id="authentication only",
+        ),
+        pytest.param(
+            {
+                "authentication_connections": "disabled",
+                "user_attribute_sync_connections": [_test_config["id"]],
+            },
+            True,
+            id="attribute sync only",
+        ),
+        pytest.param(
+            {
+                "authentication_connections": "disabled",
+                "user_attribute_sync_connections": "disabled",
+            },
+            False,
+            id="neither",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_connection_is_enabled_when_site_uses_it_for_login_or_sync(
+    set_config: SetConfig, site_overrides: dict[str, object], expected: bool
+) -> None:
+    with set_config(sites=_local_site(**site_overrides)):
+        assert LDAPUserConnector(_test_config).is_enabled() is expected
+
+
+@pytest.mark.usefixtures("request_context")
+def test_deactivated_connection_is_not_enabled_even_when_site_uses_it(
+    set_config: SetConfig,
+) -> None:
+    config = LDAPUserConnectionConfig({**_test_config, "disabled": True})
+    with set_config(
+        sites=_local_site(
+            authentication_connections=[("ldap", config["id"])],
+            user_attribute_sync_connections=[config["id"]],
+        )
+    ):
+        assert LDAPUserConnector(config).is_enabled() is False
+
+
+@pytest.mark.usefixtures("request_context")
+def test_background_sync_is_not_needed_for_authentication_only_connection(
+    set_config: SetConfig,
+) -> None:
+    with set_config(
+        sites=_local_site(
+            authentication_connections=[("ldap", _test_config["id"])],
+            user_attribute_sync_connections=["some-other-connector"],
+        )
+    ):
+        assert LDAPUserConnector(_test_config).sync_is_needed() is False
+
+
+@pytest.mark.usefixtures("request_context")
+def test_background_sync_is_needed_for_never_synced_sync_connection(
+    set_config: SetConfig,
+) -> None:
+    with set_config(
+        sites=_local_site(
+            authentication_connections="disabled",
+            user_attribute_sync_connections=[_test_config["id"]],
+        )
+    ):
+        assert LDAPUserConnector(_test_config).sync_is_needed() is True
+
+
+@pytest.mark.usefixtures("mock_ldap", "request_context")
+def test_background_sync_leaves_authentication_only_connection_alone(
+    set_config: SetConfig,
+) -> None:
+    """The periodic job must not touch the users of a connection that is only
+    listed for authentication, even when forced."""
+    saved: list[Users] = []
+
+    def record_save(
+        profiles: Users,
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+        user_connections: Sequence[UserConnectionConfig],
+        now: datetime.datetime,
+        pprint_value: bool,
+        call_users_saved_hook: bool,
+        /,
+        changed_users: list[UserId] | Literal["all"] = "all",
+    ) -> None:
+        saved.append(profiles)
+
+    with set_config(
+        sites=_local_site(
+            authentication_connections=[("ldap", _test_config["id"])],
+            user_attribute_sync_connections=["some-other-connector"],
+        )
+    ):
+        LDAPUserConnector(_test_config).do_sync(
+            add_to_changelog=False,
+            only_username=None,
+            user_attributes=[],
+            load_users_func=lambda lock=False: {  # noqa: ARG005
+                UserId("bob"): UserSpec(alias="bob", connector=_test_config["id"])
+            },
+            save_users_func=record_save,
+            default_user_profile=_ldap_default_user_profile(),
+        )
+
+    assert saved == []
 
 
 def test_remove_trailing_dot_from_hostname(mock_ldap: MagicMock) -> None:

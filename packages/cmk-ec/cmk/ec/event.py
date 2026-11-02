@@ -100,12 +100,15 @@ def create_event_from_syslog_message(
         )
     # TODO: Is it really never a domain name?
     ipaddress = "" if address is None else address[0]
+    # Replace what isn't UTF-8, e.g. Latin-1 text or a character the sender cut in half, instead
+    # of giving up on parsing the whole message.
+    line = scrub_string(message.decode("utf-8", "replace"))
     try:
-        event = parse_syslog_message_into_event(scrub_string(message.decode("utf-8")), ipaddress)
+        event = parse_syslog_message_into_event(line, ipaddress)
     except Exception:
         if logger:
             logger.info("could not parse message %(message)s", {"message": message})
-        event = _make_event(scrub_string(message.decode("utf-8", "replace")), ipaddress)
+        event = _make_event(line, ipaddress)
     if logger:
         width = max(len(k) for k in event) + 1
         logger.info(

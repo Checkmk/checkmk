@@ -313,8 +313,7 @@ def receive_datagram(sock: socket.socket) -> tuple[bytes, Any]:
     """Receives a datagram and its sender's address
 
     The buffer holds the largest UDP payload, as recvfrom() discards the part of a
-    datagram which doesn't fit into it. E.g. cutting off a syslog message could
-    split a UTF-8 character, and then we can't parse the message anymore.
+    datagram which doesn't fit into it, i.e. the end of a long syslog message.
     """
     return sock.recvfrom(65535)
 

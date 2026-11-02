@@ -418,6 +418,34 @@ def test_create_event_from_syslog_message(data: bytes, expected: Mapping[str, ob
     "data, expected",
     [
         pytest.param(
+            b"<78>May 26 13:45:01 Klapprechner CRON[8046]: 90\xb0C",
+            ("Klapprechner", "CRON", 6, "90\N{REPLACEMENT CHARACTER}C"),
+            id="syslog message with Latin-1 text",
+        ),
+        pytest.param(
+            b"<154>@1341847712;5;Contact Info; MyHost My Service: CRIT - 90\xb0C",
+            ("MyHost", "My Service", 2, "CRIT - 90\N{REPLACEMENT CHARACTER}C"),
+            id="notification with Latin-1 text",
+        ),
+        pytest.param(
+            b"<154>@1341847712;5;Contact Info; MyHost My Service: CRIT - 90\xc2",
+            ("MyHost", "My Service", 2, "CRIT - 90\N{REPLACEMENT CHARACTER}"),
+            id="notification with a character cut in half",
+        ),
+    ],
+)
+def test_message_that_is_not_utf8_is_parsed_nevertheless(
+    data: bytes, expected: tuple[str, str, int, str]
+) -> None:
+    event = create_event_from_syslog_message(data, ("127.0.0.1", 1234), None)
+
+    assert (event["host"], event["application"], event["priority"], event["text"]) == expected
+
+
+@pytest.mark.parametrize(
+    "data, expected",
+    [
+        pytest.param(
             b"May 26 13:45:01 Klapprechner CRON[8046]:  message",
             {
                 "priority": 5,

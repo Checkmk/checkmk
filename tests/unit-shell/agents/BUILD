@@ -52,6 +52,7 @@ sh_library(
         "test_korn_shell_93.sh",
         "test_manage_agent_user.sh",
         "test_manage_binaries.sh",
+        "test_migrate.sh",
         "test_z_shell.sh",
     ],
 )

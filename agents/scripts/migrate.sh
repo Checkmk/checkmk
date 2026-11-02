@@ -17,14 +17,53 @@ HERE
     exit 1
 }
 
+# Move the old runtime tree into the new one.
+#
+# A directory the new tree already has keeps the one the package created, with
+# the mode the package gave it, and the walk descends into it. A directory the
+# new tree does not have moves whole, mode included. Moving a directory onto an
+# existing one would replace it and carry the old mode along, which loses what
+# werk 22168 established: the old cache is 0755 where the new one has to be
+# 0750, and a collision can repeat at any depth.
+#
+# find walks a directory before its contents, so an entry whose parent has
+# already moved is gone by the time its own turn comes - hence the test.
 _migrate_runtime_dir() {
     old_runtime_dir="$1"
     new_runtime_dir="$2"
 
     [ -e "${old_runtime_dir}" ] && [ -e "${new_runtime_dir}" ] && [ "${old_runtime_dir}" != "${new_runtime_dir}" ] && {
         printf "Found runtime directory from previous agent installation at %s, migrating all runtime files to %s\n" "${old_runtime_dir}" "${new_runtime_dir}"
-        mv -f "${old_runtime_dir}"/* "${new_runtime_dir}"
-        rm -r "${old_runtime_dir}"
+
+        # shellcheck disable=SC2016  # the inner shell expands these, not this one
+        find "${old_runtime_dir}" -mindepth 1 -exec sh -c '
+            old_dir="$1"
+            new_dir="$2"
+            shift 2
+            for entry in "$@"; do
+                # A dangling symlink is still an entry to move, and -e alone
+                # follows the link and says it is not there.
+                [ -e "${entry}" ] || [ -L "${entry}" ] || continue
+                target="${new_dir}/${entry#"${old_dir}/"}"
+                # Anything whose target is already a directory stays put: a
+                # directory because the walk descends into it, a file because
+                # mv would move it inside that directory, where nothing reads
+                # it. What stays is reported below.
+                [ -d "${target}" ] && continue
+                # Whatever a failed parent left behind stays where it is, and
+                # reports once through that parent rather than once per child.
+                [ -d "${target%/*}" ] || continue
+                mv -f "${entry}" "${target}"
+            done
+        ' sh "${old_runtime_dir}" "${new_runtime_dir}" {} +
+
+        # Only the emptied directories go. A blind "rm -r" here would delete
+        # whatever could not be moved, which is the one outcome worse than
+        # leaving the old tree in place.
+        find "${old_runtime_dir}" -depth -type d -exec rmdir {} + 2>/dev/null
+        if [ -e "${old_runtime_dir}" ]; then
+            printf "Could not move everything out of %s, so it is kept. Move the rest by hand.\n" "${old_runtime_dir}"
+        fi
     }
 }
 

@@ -263,11 +263,9 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
         widget_id: _clamp_timeline_window(
             _migrate_timeline_time_range(
                 _migrate_alert_overview_time_range(
-                    _migrate_graph_time_range(
-                        _migrate_scatterplot_time_range(
-                            _migrate_inventory_link(
-                                _migrate_metric_time_range(widget), dashboard.get("owner")
-                            )
+                    migrate_widget_time_range(
+                        _migrate_inventory_link(
+                            _migrate_metric_time_range(widget), dashboard.get("owner")
                         )
                     )
                 )
@@ -311,6 +309,11 @@ def _migrate_alert_overview_time_range(widget: DashletConfig) -> DashletConfig:
     return cast(DashletConfig, {**widget, "time_range": time_range})
 
 
+def migrate_widget_time_range(widget: DashletConfig) -> DashletConfig:
+    """Turn the time range a widget stored in 2.5 into Inherit (follow the dashboard) or Override."""
+    return _migrate_graph_time_range(_migrate_scatterplot_time_range(widget))
+
+
 def _migrate_scatterplot_time_range(widget: DashletConfig) -> DashletConfig:
     if widget["type"] != "average_scatterplot":
         return widget
@@ -344,7 +347,9 @@ def _migrate_graph_time_range(widget: DashletConfig) -> DashletConfig:
     match raw.get("timerange"):
         case dict() as window:
             time_range = window
-        case window if window is not None and fixed:
+        case window if fixed:
+            # A graph stored without a timerange showed the last 25 hours
+            window = "25h" if window is None else window
             time_range = FixedWindow(type="range", window=cast(TimerangeValue, window))
         case _:
             time_range = DashboardWindow(type="dashboard")

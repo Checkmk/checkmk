@@ -609,6 +609,17 @@ class TestMigrateGraphTimeRange:
 
         assert result["widgets"]["w1"]["timerange"] == {"type": "dashboard"}  # type: ignore[typeddict-item]
 
+    def test_a_graph_without_a_timerange_that_did_not_follow_keeps_the_default_window(
+        self,
+    ) -> None:
+        dashboard = _responsive_dashboard(
+            {"type": "pnpgraph", "graph_render_options": {"fixed_timerange": True}}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["timerange"] == {"type": "range", "window": "25h"}  # type: ignore[typeddict-item]
+
     def test_a_migrated_time_range_stays_unchanged(self) -> None:
         time_range = {"type": "range", "window": "25h"}
         dashboard = _responsive_dashboard(

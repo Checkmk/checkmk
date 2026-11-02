@@ -26,6 +26,8 @@ from pydantic.fields import FieldInfo
 # KeyError there. Renaming it requires a dual-registration alias spanning a
 # major version boundary; see CMK-38694 / the 2026-09-09 revert of #22265.
 CONFIG_FILENAME: Final = "release_flag.json"
+# The flags changed in the GUI but not yet activated
+STAGED_CONFIG_FILENAME: Final = "_pending_release_flag.json"
 
 
 def experimental_field(

@@ -20,6 +20,7 @@ def test_available_diagnostics_plugins() -> None:
         "core_performance_metrics",
         "disk_usage",
         "environment_variables",
+        "experimental_flags",
         "file_sizes",
         "general_info",
         "gui_profiles",

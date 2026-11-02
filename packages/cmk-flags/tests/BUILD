@@ -7,5 +7,7 @@ py_cmk_test(
     deps = [
         "//packages/cmk-ccc:version",
         "//packages/cmk-flags",
+        "//packages/cmk-flags:plugins",
+        "//packages/cmk-plugin-apis:diagnostics",
     ],
 )

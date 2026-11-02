@@ -25,7 +25,7 @@ from pydantic.fields import FieldInfo
 
 from cmk.ccc import store
 from cmk.flags import CONFIG_FILENAME as EXPERIMENTAL_FLAGS_CONFIG_FILENAME
-from cmk.flags import ExperimentalFlagConfig, load_experimental_flags
+from cmk.flags import ExperimentalFlagConfig, load_experimental_flags, STAGED_CONFIG_FILENAME
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domain_name import (
@@ -45,7 +45,7 @@ from cmk.web.utils.icons import IconNames
 
 EXPERIMENTAL_FLAGS_CONFIG_ID: Final = EXPERIMENTAL_FLAGS
 EXPERIMENTAL_FLAGS_CONFIG_DIR: Final = default_config_dir
-EXPERIMENTAL_FLAGS_STAGED_FILENAME: Final = "_pending_release_flag.json"
+EXPERIMENTAL_FLAGS_STAGED_FILENAME: Final = STAGED_CONFIG_FILENAME
 
 
 def is_development_site(environ: Mapping[str, str] = os.environ) -> bool:

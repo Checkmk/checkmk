@@ -90,6 +90,7 @@ py_library(
         "//packages/cmk-ec:syslog",
         "//packages/cmk-events",
         "//packages/cmk-flags:gui",
+        "//packages/cmk-flags:plugins",
         "//packages/cmk-inventory:inventory",
         "//packages/cmk-inventory:plugins",
         "//packages/cmk-livestatus-client",

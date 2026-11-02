@@ -46,8 +46,23 @@ py_library(
     ],
 )
 
+py_library(
+    name = "plugins",
+    srcs = glob(["cmk/plugins/**/*.py"]),
+    imports = ["."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//packages/cmk-flags:__subpackages__",
+    ],
+    deps = [
+        ":cmk-flags",
+        "//packages/cmk-plugin-apis:diagnostics",
+    ],
+)
+
 _ALL = [
     "cmk-flags",
+    "plugins",
 ]
 
 py_wheel(

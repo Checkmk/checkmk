@@ -281,6 +281,9 @@ allows = [
 [plugin_families.violations.dcd]
 allows = ["@ccc", "cmk.dcd", "cmk.gui.config"]
 
+[plugin_families.violations.flags]
+allows = ["cmk.flags"]
+
 [plugin_families.violations.profiling]
 allows = ["cmk.profiling.backend"]
 

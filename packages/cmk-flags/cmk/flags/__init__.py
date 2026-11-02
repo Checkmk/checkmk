@@ -7,11 +7,13 @@ from cmk.flags._config import (
     experimental_field,
     ExperimentalFlagConfig,
     load_experimental_flags,
+    STAGED_CONFIG_FILENAME,
 )
 
 __all__ = [
     "CONFIG_FILENAME",
     "load_experimental_flags",
+    "STAGED_CONFIG_FILENAME",
     "experimental_field",
     "ExperimentalFlagConfig",
 ]

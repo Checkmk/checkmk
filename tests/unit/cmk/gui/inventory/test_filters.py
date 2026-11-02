@@ -412,6 +412,15 @@ def test_filter_invtable_text_with_sort_key_ignores_blank_bounds() -> None:
     ) == [{"ident": None}, {"ident": "a"}]
 
 
+def test_filter_invtable_text_with_sort_key_without_bounds_keeps_a_non_text_value() -> None:
+    assert FilterInvtableTextWithSortKey(
+        inv_info="info",
+        ident="ident",
+        title="Title",
+        sort_key=str,
+    ).filter_table({}, [{"ident": 1}]) == [{"ident": 1}]
+
+
 def _make_host_with_package(name: str) -> Row:
     return {
         "host_inventory": ImmutableTree(

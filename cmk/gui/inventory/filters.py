@@ -364,6 +364,9 @@ def _filter_rows_with_sort_key(
     from_value, until_value = (
         context.get(ident, {}).get(v, "").strip() for v in _request_vars(ident)
     )
+    if not from_value and not until_value:
+        return rows
+
     return [
         r
         for r in rows

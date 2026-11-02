@@ -72,6 +72,7 @@ class SiteStatus(TypedDict, total=False):
     Used to be: NewType("SiteStatus", Dict[str, Any]), feel free to add other
     attributes if you find them ;-)"""
 
+    core: Literal["cmc", "nagios"]
     core_pid: int
     exception: MKLivestatusQueryError
     livestatus_version: str

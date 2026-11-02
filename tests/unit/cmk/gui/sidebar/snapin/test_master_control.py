@@ -20,9 +20,6 @@ from cmk.gui.sites import SiteStatus
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.livestatus_client import MKLivestatusQueryError
 
-CMC_VERSION = "Check_MK 2.5.0"
-NAGIOS_VERSION = "Nagios 4.4.6"
-
 type SiteState = Literal[
     "online", "disabled", "down", "unreach", "dead", "waiting", "missing", "unknown"
 ]
@@ -56,9 +53,9 @@ class FakeLive:
 
 
 def _site_state(
-    state: SiteState, *, exception: str | None = None, program_version: str = CMC_VERSION
+    state: SiteState, *, exception: str | None = None, core: Literal["cmc", "nagios"] = "cmc"
 ) -> SiteStatus:
-    site_status = SiteStatus(state=state, program_version=program_version)
+    site_status = SiteStatus(state=state, core=core)
     if exception is not None:
         site_status["exception"] = MKLivestatusQueryError(exception)
     return site_status
@@ -157,6 +154,14 @@ def test_show_site_in_unknown_state_reports_the_exception(
     assert "Bad certificate" in rendered
 
 
+@pytest.mark.parametrize("state", ["down", "unreach", "waiting", "missing"])
+def test_show_site_that_is_not_online(monkeypatch: pytest.MonkeyPatch, state: SiteState) -> None:
+    """Only the status of a site that is online contains its core."""
+    rendered = _show_site(monkeypatch, site_state=SiteStatus(state=state))
+
+    assert sites.site_state_titles()[state] in rendered
+
+
 def test_show_site_without_status_columns(monkeypatch: pytest.MonkeyPatch) -> None:
     """The site answered the state query but not the status query - rendering toggles from
     missing data would show wrong switch positions."""
@@ -177,7 +182,7 @@ def test_show_site_hides_event_handlers_on_the_micro_core(monkeypatch: pytest.Mo
 def test_show_site_hides_alert_handlers_on_nagios(monkeypatch: pytest.MonkeyPatch) -> None:
     rendered = _show_site(
         monkeypatch,
-        site_state=_site_state("online", program_version=NAGIOS_VERSION),
+        site_state=_site_state("online", core="nagios"),
     )
 
     assert "Event handlers" in rendered

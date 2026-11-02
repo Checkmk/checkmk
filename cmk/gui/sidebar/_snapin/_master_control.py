@@ -142,7 +142,12 @@ class MasterControlSnapin(SidebarSnapin):
                 html.show_error(_("Site state is unknown"))
             return
 
-        is_cmc = site_state["program_version"].startswith("Check_MK ")
+        # Like the status columns, the core is known only for a site that is online.
+        if site_state["state"] != "online":
+            html.show_error(sites.site_state_titles()[site_state["state"]])
+            return
+
+        is_cmc = site_state["core"] == "cmc"
 
         try:
             site_info = site_status_info[site_id]

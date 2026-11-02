@@ -6,7 +6,7 @@
 
 from argparse import Namespace as Args
 from collections.abc import Mapping, Sequence
-from typing import Protocol
+from typing import override, Protocol
 
 import pytest
 
@@ -89,6 +89,7 @@ class EBSSections(Protocol):
         names: object | None,
         tags: OverallTags,
         tag_import: TagsOption = TagsImportPatternOption.import_all,
+        ec2_client: FakeEC2Client | None = None,
     ) -> EBSectionsOut: ...
 
 
@@ -98,6 +99,7 @@ def get_ebs_sections() -> EBSSections:
         names: object | None,
         tags: OverallTags,
         tag_import: TagsOption = TagsImportPatternOption.import_all,
+        ec2_client: FakeEC2Client | None = None,
     ) -> EBSectionsOut:
         region = "region"
         config = AWSConfig(
@@ -108,7 +110,7 @@ def get_ebs_sections() -> EBSSections:
         config.add_single_service_config("ec2_names", None)
         config.add_service_tags("ec2_tags", ([], []))
 
-        fake_ec2_client = FakeEC2Client()
+        fake_ec2_client = FakeEC2Client() if ec2_client is None else ec2_client
         fake_cloudwatch_client = FakeCloudwatchClient()
 
         distributor = ResultDistributor()
@@ -175,6 +177,37 @@ def test_agent_aws_ebs_limits(
             "block_store_space_sc1",
             "block_store_space_st1",
         ]
+
+
+class FakeEC2ClientWithProvisionedIops(FakeEC2Client):
+    @override
+    def describe_volumes(
+        self,
+        VolumeIds: object = None,
+        Filters: object = None,
+    ) -> Mapping[str, object]:
+        return {
+            "Volumes": [
+                {"VolumeType": "io1", "Size": 10, "Iops": 500},
+                {"VolumeType": "io1", "Size": 20, "Iops": 700},
+                {"VolumeType": "io2", "Size": 30, "Iops": 900},
+            ]
+        }
+
+
+def test_agent_aws_ebs_limits_count_the_iops_of_provisioned_volumes(
+    get_ebs_sections: EBSSections,
+) -> None:
+    _ec2_summary, ebs_limits, _ebs_summary, _ebs = get_ebs_sections(
+        None, (None, None), ec2_client=FakeEC2ClientWithProvisionedIops()
+    )
+
+    amounts = {limit.key: limit.amount for limit in ebs_limits.run().results[0].content}
+
+    assert amounts["block_store_space_io1"] == 30
+    assert amounts["block_store_iops_io1"] == 1200
+    assert amounts["block_store_space_io2"] == 30
+    assert amounts["block_store_iops_io2"] == 900
 
 
 @pytest.mark.parametrize("names,tags,found_ebs", ebs_params)

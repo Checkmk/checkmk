@@ -2078,7 +2078,7 @@ class EBSLimits(AWSSectionLimits):
                 "block_store_iops_io1",
                 "Provisioned IOPS SSD (io1) IO operations per second",
                 300000,
-                vol_storage_io1,
+                vol_iops_io1,
             ),
         )
         self._add_limit(
@@ -2096,7 +2096,7 @@ class EBSLimits(AWSSectionLimits):
                 "block_store_iops_io2",
                 "Provisioned IOPS SSD (io2) IO operations per second",
                 100000,
-                vol_storage_io2,
+                vol_iops_io2,
             ),
         )
         self._add_limit(

@@ -49,7 +49,7 @@ ALARM_STATE_MAPPING: Final = {
 class WlanController(NamedTuple):
     name: str
     type: str
-    software_version: str
+    software_version: str | None
     ip_address: str
     location: str | None
     group_name: str
@@ -81,7 +81,7 @@ def parse_cisco_prime_wlan_controller(string_table: StringTable) -> dict[str, Wl
         c["name"]: WlanController(
             name=c["name"],
             type=c["type"],
-            software_version=c["softwareVersion"],
+            software_version=c.get("softwareVersion"),
             ip_address=c["ipAddress"],
             location=c.get("location"),
             group_name=c["rfGroupName"],
@@ -114,7 +114,8 @@ def check_wlan_controller_metadata(item: str, section: dict[str, WlanController]
 
     yield Result(state=State.OK, notice=f"Name: {data.name}")
     yield Result(state=State.OK, summary=f"Type: {data.type}")
-    yield Result(state=State.OK, summary=f"Software version: {data.software_version}")
+    if data.software_version:
+        yield Result(state=State.OK, summary=f"Software version: {data.software_version}")
     yield Result(state=State.OK, notice=f"IP address: {data.ip_address}")
 
     if data.location:

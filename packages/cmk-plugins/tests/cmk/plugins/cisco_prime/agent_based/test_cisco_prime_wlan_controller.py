@@ -364,11 +364,6 @@ def test_check_wlan_controller_last_backup(
     assert list(result) == expected_result
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=KeyError,
-    reason="Crash report b6560206-f13e-11f0-b1c1-f1f8881cc12b: KeyError 'softwareVersion'",
-)
 def test_check_wlan_controller_metadata_without_software_version() -> None:
     # Cisco Prime returned a controller without a software version
     controller = {

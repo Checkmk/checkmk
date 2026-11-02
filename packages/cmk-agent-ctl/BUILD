@@ -53,6 +53,7 @@ rust_library(
         "src/updater/backend.rs",
         "src/updater/connection.rs",
         "src/updater/install.rs",
+        "src/updater/legacy_registration.rs",
         "src/updater/platform.rs",
         "src/updater/python_updater.rs",
         "src/updater/section.rs",

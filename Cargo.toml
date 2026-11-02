@@ -44,6 +44,7 @@ flate2 = "1.0"
 flexi_logger = { version = "0.29", default-features = false }
 futures = "0.3.31"
 gethostname = "0.5.0"
+hmac = "0.12"
 hostname-validator = "1.1.1"
 http = "1.2"
 httpdate = "*"

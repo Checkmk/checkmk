@@ -31,6 +31,7 @@
 mod backend;
 mod connection;
 mod install;
+mod legacy_registration;
 mod python_updater;
 pub mod section;
 mod source;
@@ -46,6 +47,7 @@ pub use backend::{
     UpdaterConfig, WritableUpdater,
 };
 pub use install::{InstallRequest, InstallResult, TrustAnchors};
+pub use legacy_registration::LegacyRegistration;
 pub use python_updater::PythonUpdater;
 
 /// The steps after a run that changed the registered connections, one per

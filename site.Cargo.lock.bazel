@@ -1,5 +1,5 @@
 {
-  "checksum": "1bc346af24f50c14874d595720d3200f01249e6bfedee6a82b6ab7a49def6a7c",
+  "checksum": "89664c384cecf6f006b2def379321e2f9cb625aab8484b0ef2baa2e03379a6c8",
   "conditions": {
     "aarch64-linux-android": [],
     "aarch64-pc-windows-gnullvm": [],
@@ -2549,6 +2549,10 @@
             {
               "id": "gethostname 0.5.0",
               "target": "gethostname"
+            },
+            {
+              "id": "hmac 0.12.1",
+              "target": "hmac"
             },
             {
               "id": "hostname-validator 1.1.1",
@@ -22802,6 +22806,7 @@
     "flexi_logger 0.29.8",
     "futures 0.3.31",
     "gethostname 0.5.0",
+    "hmac 0.12.1",
     "hostname-validator 1.1.1",
     "http 1.3.1",
     "httpdate 1.0.3",

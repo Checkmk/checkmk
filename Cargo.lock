@@ -557,6 +557,7 @@ dependencies = [
  "flate2",
  "flexi_logger",
  "gethostname",
+ "hmac",
  "hostname-validator",
  "http",
  "ipnet",

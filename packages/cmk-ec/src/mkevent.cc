@@ -182,9 +182,15 @@ int main(int argc, char **argv) {
                       << "': " << strerror(errno_saved) << std::endl;
             exit(1);
         }
+        // Write the message and its newline with a single write(): The Event
+        // Console takes each line from its event pipe as a message, and other
+        // programs write into the same pipe at the same time. A write() of at
+        // most PIPE_BUF bytes to a pipe is atomic, so nothing of theirs can
+        // come between our message and its newline then, which would mix up
+        // both messages.
+        const std::string line = std::string{message} + '\n';
         // TODO(sp) Handle errors and partial writes.
-        if (::write(fd, message, strlen(message)) < 0 ||
-            ::write(fd, "\n", 1) < 0) {
+        if (::write(fd, line.data(), line.size()) < 0) {
         }
     }
     ::close(fd);

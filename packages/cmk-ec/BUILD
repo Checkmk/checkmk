@@ -174,6 +174,7 @@ py_cmk_test(
         "MKEVENTD_OPEN514": "$(rootpath :mkeventd_open514)",
     },
     deps = [
+        ":cmk-ec",
         ":mib_compiler",
         ":mib_status",
         requirement("pysmi"),

@@ -33,6 +33,7 @@ import threading
 import time
 import traceback
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass, replace
 from logging import DEBUG, getLogger, Logger
 from pathlib import Path
 from types import FrameType
@@ -69,7 +70,12 @@ from .event import (
     scrub_string,
     translate_event_host,
 )
-from .helpers import ECLock, parse_bytes_into_syslog_messages
+from .helpers import (
+    ECLock,
+    parse_bytes_into_lines,
+    parse_bytes_into_syslog_messages,
+    parse_spool_file,
+)
 from .history import ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab, TimedHistory
 from .history_file import FileHistory
 from .history_mongo import MongoDBHistory
@@ -451,6 +457,16 @@ class SignalHandler:
         raise exception
 
 
+@dataclass(frozen=True, kw_only=True)
+class ClientConnection:
+    """A connection to the event socket or to the syslog socket (TCP)"""
+
+    sock: socket.socket
+    endpoint: str  # for log messages, e.g. "event socket"
+    address: tuple[str, int] | None  # None for the event socket
+    unprocessed: bytes = b""  # an incomplete message, waiting for the rest
+
+
 # .
 #   .--EventServer---------------------------------------------------------.
 #   |      _____                 _   ____                                  |
@@ -789,7 +805,7 @@ class EventServer(ECServerThread):
         # queued in the OS queue then, and when that is full, a client will get an error, which is
         # the right thing here.
         stream_sockets = [f for f in (self._syslog_tcp, self._eventsocket) if f is not None]
-        client_sockets: dict[FileDescr, tuple[socket.socket, tuple[str, int] | None, bytes]] = {}
+        client_sockets: dict[FileDescr, ClientConnection] = {}
         select_timeout = 1
         unprocessed_pipe_data = b""
         while not self._terminate_event.is_set():
@@ -816,47 +832,52 @@ class EventServer(ECServerThread):
                     raise ValueError(
                         f"Invalid remote address '{remote_address!r}' for event socket"
                     )
-                client_sockets[client_socket.fileno()] = (client_socket, None, b"")
+                client_sockets[client_socket.fileno()] = ClientConnection(
+                    sock=client_socket,
+                    endpoint="event socket",
+                    address=None,
+                )
 
             # Same for the TCP syslog socket
             if self._syslog_tcp is not None and self._syslog_tcp in readable:
                 client_socket, address = self._syslog_tcp.accept()
-                client_sockets[client_socket.fileno()] = (
-                    client_socket,
-                    parse_address("syslog socket (TCP)", address),
-                    b"",
+                endpoint = "syslog socket (TCP)"
+                client_sockets[client_socket.fileno()] = ClientConnection(
+                    sock=client_socket,
+                    endpoint=endpoint,
+                    address=parse_address(endpoint, address),
                 )
 
-            # Read data from existing event unix socket connections
-            # NOTE: We modify client_socket in the loop, so we need to copy below!
-            for fd, (cs, address, previous_data) in list(client_sockets.items()):
+            # Read data from existing connections to the event socket and syslog via TCP
+            # NOTE: We modify client_sockets in the loop, so we need to copy below!
+            for fd, client in list(client_sockets.items()):
                 if fd in readable:
                     try:
-                        new_data = cs.recv(4096)
+                        new_data = client.sock.recv(4096)
                     except Exception:
                         new_data = b""
-                        self._logger.exception("Exception during syslog socket_tcp recv")
+                        self._logger.exception(
+                            "Exception during recv from %(endpoint)s", {"endpoint": client.endpoint}
+                        )
 
                     if new_data:
                         messages, unprocessed = parse_bytes_into_syslog_messages(
-                            previous_data + new_data
+                            client.unprocessed + new_data
                         )
-                        self.process_syslog_messages(messages, address)
-                        client_sockets[fd] = (cs, address, unprocessed)
+                        self.process_syslog_messages(messages, client.address)
+                        client_sockets[fd] = replace(client, unprocessed=unprocessed)
                     else:  # the other side is gone, no more data will ever come
-                        del client_sockets[fd]  # discarding previous_data is OK, it's incomplete
-                        cs.close()  # do this *after* the bookkeeping above, close() can throw
+                        del client_sockets[fd]  # dropping the incomplete rest is OK
+                        client.sock.close()  # after the bookkeeping above, close() can throw
 
-            # Read data from pipe
+            # Read data from the pipe, without octet counting, see parse_bytes_into_lines() for why
             if pipe in readable:
                 try:
                     unprocessed_pipe_data += os.read(pipe, 4096)
                 except Exception:
                     self._logger.exception("General exception during pipe os.read")
 
-                messages, unprocessed_pipe_data = parse_bytes_into_syslog_messages(
-                    unprocessed_pipe_data
-                )
+                messages, unprocessed_pipe_data = parse_bytes_into_lines(unprocessed_pipe_data)
                 self.process_syslog_messages(messages, None)
 
             # Read events from builtin syslog server
@@ -876,7 +897,7 @@ class EventServer(ECServerThread):
             if spool_files := sorted(
                 self.settings.paths.spool_dir.value.glob("[!.]*"), key=lambda x: x.stat().st_mtime
             ):
-                self.process_syslog_messages(spool_files[0].read_bytes().splitlines(), None)
+                self.process_syslog_messages(parse_spool_file(spool_files[0].read_bytes()), None)
                 spool_files[0].unlink()
                 select_timeout = 0  # enable fast processing to process further files
             else:

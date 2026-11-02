@@ -15,9 +15,9 @@ The tests enforce that flags are removed before their deadline.
 """
 
 from pathlib import Path
-from typing import Annotated, cast, Final
+from typing import Annotated, Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 from pydantic.fields import FieldInfo
 
 # Kept as "release_flag.json" (not "experimental_flag.json"): this filename is
@@ -35,17 +35,14 @@ def experimental_field(
     remove_after: str,
     owner: str,
 ) -> FieldInfo:
-    return cast(
-        FieldInfo,
-        Field(
-            default=False,
-            json_schema_extra={
-                "description": description,
-                "remove_ticket": remove_ticket,
-                "remove_after": remove_after,
-                "owner": owner,
-            },
-        ),
+    return FieldInfo.from_field(
+        False,
+        json_schema_extra={
+            "description": description,
+            "remove_ticket": remove_ticket,
+            "remove_after": remove_after,
+            "owner": owner,
+        },
     )
 
 

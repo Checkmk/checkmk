@@ -515,6 +515,15 @@ _HOST_WITHOUT_PACKAGES: Row = {"host_inventory": ImmutableTree()}
             [_HOST_WITH_PACKAGE_A],
             id="the-upper-bound-spelled-with-another-zero",
         ),
+        pytest.param(
+            {
+                "invswpac_host_name": "package-a",
+                "invswpac_host_version_from": "1.00",
+                "invswpac_host_version_to": "1.00",
+            },
+            [_HOST_WITH_PACKAGE_A],
+            id="the-exact-version-spelled-with-another-zero",
+        ),
     ],
 )
 def test_filter_inv_has_software_package(

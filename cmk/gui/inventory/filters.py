@@ -905,8 +905,6 @@ def _find_package(
         if not from_version and not to_version:
             return True  # version not relevant
         version = package["version"]
-        if from_version == to_version and from_version != version:
-            continue
         if from_version and _version_is_lower(str(version), from_version):
             continue
         if to_version and _version_is_higher(str(version), to_version):

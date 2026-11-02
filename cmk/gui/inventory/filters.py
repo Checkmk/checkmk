@@ -12,13 +12,11 @@ from typing import override
 from cmk.gui import query_filters
 from cmk.gui.config import RequestCacheConfig
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_port_types
 from cmk.gui.num_split import cmp_version
 from cmk.gui.type_defs import (
-    FilterHeader,
     FilterHTTPVariables,
     Row,
     Rows,
@@ -651,97 +649,6 @@ class FilterInvtableDualChoice(Filter):
         )
 
     @override
-    def display(
-        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
-    ) -> None:
-        if not self._choices:
-            html.write_text_permissive(_("There are no elements for selection."))
-            return
-
-        selected_from_value = value.get(self._html_var, "").strip().split("|")
-        selected = []
-        unselected = []
-        for k, v in self._choices:
-            if k in selected_from_value:
-                selected.append((k, v))
-            else:
-                unselected.append((k, v))
-
-        select_func = "cmk.valuespecs.duallist_switch('unselected', '%s', %d);" % (
-            self._html_var,
-            0,
-        )
-        unselect_func = "cmk.valuespecs.duallist_switch('selected', '%s', %d);" % (
-            self._html_var,
-            0,
-        )
-
-        html.open_table(class_=["vs_duallist"])
-
-        html.open_tr()
-        html.open_td(class_="head")
-        html.write_text_permissive(_("Available"))
-        html.action_link(
-            ">",
-            click_action=ClickAction(
-                action="valuespec_duallist_switch",
-                arguments={
-                    "field_suffix": "unselected",
-                    "varprefix": self._html_var,
-                    "keeporder": False,
-                },
-            ),
-            class_=["control", "add"],
-        )
-        html.close_td()
-
-        html.open_td(class_="head")
-        html.write_text_permissive(_("Selected"))
-        html.action_link(
-            "<",
-            click_action=ClickAction(
-                action="valuespec_duallist_switch",
-                arguments={
-                    "field_suffix": "selected",
-                    "varprefix": self._html_var,
-                    "keeporder": False,
-                },
-            ),
-            class_=["control", "del"],
-        )
-        html.close_td()
-        html.close_tr()
-
-        html.open_tr()
-        for suffix, choices, func in [
-            ("unselected", unselected, select_func),
-            ("selected", selected, unselect_func),
-        ]:
-            html.open_td()
-            html.dropdown(
-                f"{self._html_var}_{suffix}",
-                choices,
-                deflt="",
-                multiple=True,
-                style="height: 64px",
-                ondblclick=func,
-                onchange="",
-                locked_choice=None,
-            )
-
-            html.close_td()
-        html.close_tr()
-
-        html.close_table()
-
-        html.hidden_field(
-            self._html_var,
-            "|".join([str(k) for k, v in selected]),
-            id_=self._html_var,
-            add_var=True,
-        )
-
-    @override
     def components(
         self, _request_cache: RequestCache[RequestCacheConfig]
     ) -> Iterable[FilterComponent]:
@@ -749,10 +656,6 @@ class FilterInvtableDualChoice(Filter):
             yield DualList(id=self._html_var, choices=dict(self._choices))
         else:
             yield StaticText(text=_("There are no elements for selection."))
-
-    @override
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return ""
 
     @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:

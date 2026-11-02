@@ -118,7 +118,7 @@ def test_check_proxmox_ve_vm_info_parse_function(info_section_model: SectionVMIn
             {
                 "proxmox_ve_vm_info.lock_duration.133": (
                     1738678610.0,
-                    LockState.BACKUP,
+                    "backup",
                 )
             },
             (
@@ -144,7 +144,7 @@ def test_check_proxmox_ve_vm_info_parse_function(info_section_model: SectionVMIn
             {
                 "proxmox_ve_vm_info.lock_duration.133": (
                     1738678610.0,
-                    LockState.SUSPENDED,
+                    "suspended",
                 )
             },
             (
@@ -217,3 +217,49 @@ def test_check_proxmox_ve_vm_info(
             )
         )
         assert results == expected_results
+
+
+@pytest.mark.parametrize(
+    "section,value_store,expected_lock",
+    [
+        pytest.param(VM_DATA_WITH_LOCK, {}, "backup", id="first_sight"),
+        pytest.param(
+            VM_DATA_WITH_UNKNOWN_LOCK,
+            {"proxmox_ve_vm_info.lock_duration.133": (1738678610.0, "backup")},
+            "some-future-lock",
+            id="lock_changed",
+        ),
+    ],
+)
+def test_check_proxmox_ve_vm_info_starts_tracking_lock(
+    section: SectionVMInfo,
+    value_store: MutableMapping[str, object],
+    expected_lock: str,
+) -> None:
+    now = datetime.datetime(2025, 2, 4, 16, 16, 50, tzinfo=ZoneInfo("CET"))
+    with time_machine.travel(now, tick=False):
+        tuple(
+            _check_proxmox_ve_vm_info_testable(
+                {"required_vm_status": "", "lock_duration": ("fixed", (15 * 60.0, 30 * 60.0))},
+                section,
+                value_store,
+            )
+        )
+    assert value_store == {"proxmox_ve_vm_info.lock_duration.133": (now.timestamp(), expected_lock)}
+
+
+def test_check_proxmox_ve_vm_info_restarts_tracking_after_lock_cleared() -> None:
+    params: Params = {"required_vm_status": "", "lock_duration": ("fixed", (15 * 60.0, 30 * 60.0))}
+    value_store: MutableMapping[str, object] = {}
+    first_lock = datetime.datetime(2025, 2, 4, 1, 0, 0, tzinfo=ZoneInfo("CET"))
+    next_lock = first_lock + datetime.timedelta(days=1)
+    for when, section in (
+        (first_lock, VM_DATA_WITH_LOCK),
+        (first_lock + datetime.timedelta(minutes=5), VM_DATA),
+        (next_lock, VM_DATA_WITH_LOCK),
+    ):
+        with time_machine.travel(when, tick=False):
+            tuple(_check_proxmox_ve_vm_info_testable(params, section, value_store))
+    assert value_store == {
+        "proxmox_ve_vm_info.lock_duration.133": (next_lock.timestamp(), "backup")
+    }

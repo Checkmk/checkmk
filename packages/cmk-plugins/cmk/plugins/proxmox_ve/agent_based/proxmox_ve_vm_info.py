@@ -62,30 +62,27 @@ def host_label_function(section: SectionVMInfo) -> HostLabelGenerator:
         yield HostLabel(f"cmk/pve/tag/{tag}", "yes")
 
 
+def _lock_name(lock: LockState | str) -> str:
+    return lock.value if isinstance(lock, LockState) else lock
+
+
 def _get_lock_duration(
     value_store: MutableMapping[str, Any],
     key: str,
     time: float,
-    value: LockState | str,
+    value: str,
 ) -> float | None:
-    last_state = value_store.get(key)
-    match last_state:
-        case (
-            float() | int() as last_time,
-            LockState() | str() as last_value,
-        ):
+    match value_store.get(key):
+        case (float() | int() as last_time, str() as last_value) if value == last_value:
             pass
         case _other:
+            value_store[key] = (time, value)
             return None
 
     if time <= last_time:
         raise GetLockDurationError("No duration available (time anomaly detected)")
 
-    if value == last_value:
-        return time - last_time
-
-    value_store[key] = (time, value)
-    return None
+    return time - last_time
 
 
 def _check_lock_state_and_duration(
@@ -95,16 +92,17 @@ def _check_lock_state_and_duration(
     now: float,
     lock_duration_params: NoLevelsT | FixedLevelsT[float],
 ) -> CheckResult:
+    lock_name = _lock_name(lock_value)
     lock_duration = _get_lock_duration(
         value_store=value_store,
         key=key,
         time=now,
-        value=lock_value,
+        value=lock_name,
     )
 
     yield Result(
         state=State.OK,
-        summary=f"Config lock: {lock_value.value if isinstance(lock_value, LockState) else lock_value}",
+        summary=f"Config lock: {lock_name}",
     )
 
     if lock_duration is None or lock_duration_params[0] == "no_levels":
@@ -138,7 +136,9 @@ def _check_proxmox_ve_vm_info_testable(
         section=UptimeSection(uptime_sec=section.uptime, message=None),
     )
 
+    lock_key = f"proxmox_ve_vm_info.lock_duration.{section.vmid}"
     if not section.lock:
+        value_store.pop(lock_key, None)
         yield Result(
             state=State.OK,
             notice="Config lock: none",
@@ -148,7 +148,7 @@ def _check_proxmox_ve_vm_info_testable(
     yield from _check_lock_state_and_duration(
         value_store=value_store,
         lock_value=section.lock,
-        key=f"proxmox_ve_vm_info.lock_duration.{section.vmid}",
+        key=lock_key,
         now=time.time(),
         lock_duration_params=params["lock_duration"],
     )

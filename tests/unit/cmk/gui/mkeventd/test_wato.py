@@ -3994,6 +3994,17 @@ def test_without_a_contact_group_no_notifications_go_to_the_event_console(
     assert not _notification_configuration().exists()
 
 
+@pytest.mark.usefixtures("request_context")
+def test_notifications_cannot_be_forwarded_to_an_ipv6_address() -> None:
+    visitor = get_visitor(
+        mkeventd_wato.form_spec(), VisitorOptions(migrate_values=True, mask_values=False)
+    )
+
+    errors = visitor.validate(RawDiskData({"remote": "2001:db8::1"}))
+
+    assert [(error.location, error.message) for error in errors] == [(["remote"], "IPv4 address")]
+
+
 def _validation_errors(config_variable: ConfigVariable, value: object) -> list[str]:
     context = GlobalSettingsContext(
         target_site_id=omd_site(),

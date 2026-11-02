@@ -6046,6 +6046,7 @@ def form_spec() -> DictionaryExtended:
                     custom_validate=[
                         HostAddressValidator(
                             allow_host_name=False,
+                            allow_ipv6_address=False,  # mkevent sends via IPv4 only
                             allow_empty=False,
                         )
                     ],

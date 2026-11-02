@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-30 11:25+0000\n"
+"PO-Revision-Date: 2026-11-02 08:21+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -22753,7 +22753,6 @@ msgstr "コメントを求めないでください"
 msgid "Do not backup historical data"
 msgstr "履歴データをバックアップしないでください"
 
-#, fuzzy
 msgid ""
 "Do not backup metric data (RRD files), the monitoring history and log files."
 msgstr ""
@@ -42691,7 +42690,6 @@ msgstr "VMsに関連するマップデータ"
 msgid "Map data to group host"
 msgstr "データをグループホストにマップします"
 
-#, fuzzy
 msgid "Map data to specific host (Piggyback)"
 msgstr "特定のホストにマップデータを割り当てる（ピギーバック）"
 
@@ -42865,7 +42863,6 @@ msgstr "現在区別されているコントローラーを優先コントロー
 msgid "Mark the nodes of the resources as preferred one"
 msgstr "リソースのノードを優先ノードとしてマークします"
 
-#, fuzzy
 msgid "Master"
 msgstr "マスター"
 
@@ -46369,7 +46366,6 @@ msgstr "NetApp SVM トラフィック"
 msgid "NetApp SnapVault / SnapMirror"
 msgstr "NetApp Snapvaults / Snapmirrorのラグタイム"
 
-#, fuzzy
 msgid "NetApp SnapVault discovery"
 msgstr "NetApp snapvaultディスカバリー"
 
@@ -71210,7 +71206,6 @@ msgstr ""
 "た、「ネットワークIDをホストプレフィックスとして使用」設定が適用されている場"
 "合、この設定は間接的にピギーバックヘッダーにも影響を与えます。"
 
-#, fuzzy
 msgid ""
 "The following sections utilize this setting:<ul><li>Wireless device "
 "statuses</li><li>Wireless Ethernet statuses</li></ul>"
@@ -75982,7 +75977,6 @@ msgstr ""
 "このチェックでは、標準のNagiosプラグインの<tt>check_smtp</tt>を使用して、SMTP"
 "サーバーの応答を確認します。"
 
-#, fuzzy
 msgid ""
 "This checks consecutive sync failures within the last 8 attempts by "
 "monitoring the 8-bit 'reachability' register within the Windows Time "
@@ -75997,7 +75991,6 @@ msgstr ""
 "がトリガーされます。例えばしきい値を４に設定すると、 <b>直近</b> の８回の試行"
 "のうち４回が連続して失敗した場合に、Checkmkがアラートを発します。"
 
-#, fuzzy
 msgid ""
 "This checks consecutive sync failures within the last 8 attempts by "
 "monitoring the 8-bit 'reachability' register within the Windows Time "
@@ -76008,9 +76001,9 @@ msgid ""
 msgstr ""
 "これは、Windows タイム サービス内の 8 ビット「Reachability」レジスタを監視す"
 "ることで、直近 8 回の試行における連続した同期失敗をチェックします。 <b>失敗し"
-"た試行の総数</b> が定義された閾値を超えた場合、警告または重大なアラートがトリ"
-"ガーされます。たとえば、閾値を 4 に設定すると、直近 8 回の試行のうち <b>いず"
-"れか</b> 4 回が失敗した場合に、Checkmk がアラートを発します。"
+"た試行の総数</b> が定義された閾値を超えた場合、警告または重大なアラートが"
+"トリガーされます。たとえば、閾値を 4 に設定すると、直近 8 回の試行のうち <b>"
+"いずれか</b> 4 回が失敗した場合に、Checkmk がアラートを発します。"
 
 msgid "This collection"
 msgstr "このコレクション"
@@ -77341,29 +77334,27 @@ msgstr ""
 "この権限は、既存のホストに対してエージェントコントローラーを登録することがで"
 "きます。"
 
-#, fuzzy
 msgid ""
 "This permission allows to register the Agent Controller for any new host in "
 "a folder the user is a contact of.<br>Note: This permission is not "
 "sufficient for registering the agent updater. This requires the additional "
 "permission <i>Enable agent updates on hosts & download monitoring agents</i>."
 msgstr ""
-"この権限により、ユーザーが連絡先のフォルダ内の新規ホストに対してエージェント"
-"コントローラーを登録できます。<br>注記：この権限だけではエージェントアップ"
-"データーの登録には不十分です。これには追加の権限<i>ホストでのエージェント更新"
-"の有効化と監視エージェントのダウンロード</i>が必要です。"
+"この権限により、ユーザーが連絡先のフォルダ内の新規ホストに対して"
+"エージェントコントローラーを登録できます。<br>注記：この権限だけでは"
+"エージェントアップデーターの登録には不十分です。これには追加の権限<i>ホストで"
+"のエージェント更新の有効化と監視エージェントのダウンロード</i>が必要です。"
 
-#, fuzzy
 msgid ""
 "This permission allows to register the Agent Controller for any new host."
 "<br>Note: This permission is not sufficient for registering the agent "
 "updater. This requires the additional permission <i>Enable agent updates on "
 "all hosts & download all monitoring agents</i>."
 msgstr ""
-"この権限により、新しいホストに対してエージェントコントローラーを登録できま"
-"す。<br>注記：この権限だけではエージェントアップデーターの登録には不十分で"
-"す。これには追加の権限<i>すべてのホストでエージェント更新を有効化し、すべての"
-"監視エージェントをダウンロードする</i>が必要です。"
+"この権限により、新しいホストに対してエージェントコントローラーを登録できます"
+"。<br>注記：この権限だけではエージェントアップデーターの登録には不十分です。"
+"これには追加の権限<i>すべてのホストでエージェント更新を有効化し、すべての監視"
+"エージェントをダウンロードする</i>が必要です。"
 
 msgid ""
 "This permission allows to revert pending changes. Beware that this holds "
@@ -77401,7 +77392,6 @@ msgstr ""
 "を使用できます。この権限がないと、Setupへのすべての項目（ボタン、リンク、ス"
 "ナップイン）は表示されなくなります。"
 
-#, fuzzy
 msgid ""
 "This permission allows viewing Relay configurations. Users with this "
 "permission can list and view Relay details."
@@ -78535,7 +78525,6 @@ msgstr ""
 "tt>: <tt>..\\agent\\plugins</tt></li><li><tt>lib/local</tt>: <tt>.."
 "\\agent\\local</tt></li></ul>"
 
-#, fuzzy
 msgid ""
 "This rule selects the ALLNET IP sensoric agent, which fetches /xml/"
 "sensordata.xml from the device by HTTP and extracts the needed monitoring "
@@ -78593,13 +78582,12 @@ msgstr ""
 msgid "This rule selects the special agent for Salesforce."
 msgstr "このルールは、Salesforceの特別なエージェントを選択します。"
 
-#, fuzzy
 msgid ""
 "This rule set allows to add embedded Python to the Windows agent "
 "installation."
 msgstr ""
 "このルールセットでは、Windowsエージェントのインストールに組込みのPythonを追加"
-"することがでできます。 "
+"することがでできます。"
 
 msgid ""
 "This rule set allows to choose which Python interpreter is used to run "
@@ -78668,7 +78656,6 @@ msgstr ""
 "このルールセットを使用すると、Azure NAT ゲートウェイのヘルス監視のレベルを設"
 "定できます"
 
-#, fuzzy
 msgid ""
 "This rule set allows you to configure levels for Azure NAT gateways packets, "
 "including thresholds for dropped packets."
@@ -78746,7 +78733,6 @@ msgstr ""
 "このルールセットを使用すると、Azure Redisのスループット監視レベルを設定できま"
 "す"
 
-#, fuzzy
 msgid ""
 "This rule set allows you to configure levels for Azure SQL database "
 "connections"
@@ -78754,7 +78740,6 @@ msgstr ""
 "このルールセットを使用すると、Azure SQL データベース接続のレベルを設定できま"
 "す"
 
-#, fuzzy
 msgid ""
 "This rule set allows you to configure levels for Azure firewall SNAT port "
 "utilization monitoring"
@@ -78762,7 +78747,6 @@ msgstr ""
 "このルールセットを使用すると、Azure RedisのCPU使用率監視のレベルを設定できま"
 "す"
 
-#, fuzzy
 msgid ""
 "This rule set allows you to configure levels for Azure firewall health "
 "monitoring"
@@ -78770,7 +78754,6 @@ msgstr ""
 "このルールセットを使用すると、Azure Firewallのヘルス監視のレベルを設定できま"
 "す"
 
-#, fuzzy
 msgid ""
 "This rule set allows you to configure levels for Azure firewall latency "
 "monitoring"
@@ -78778,7 +78761,6 @@ msgstr ""
 "このルールセットを使用すると、Azure Firewallのレイテンシー監視レベルを設定で"
 "きます"
 
-#, fuzzy
 msgid ""
 "This rule set allows you to configure levels for Azure firewall throughput "
 "monitoring"
@@ -78786,31 +78768,24 @@ msgstr ""
 "このルールセットを使用すると、Azure Firewallのスループット監視のレベルを設定"
 "できます"
 
-#, fuzzy
 msgid ""
 "This rule set allows you to configure levels for Azure subscription info."
 msgstr ""
 "このルールセットを使用すると、Azure サブスクリプション情報のレベルを設定でき"
 "ます。"
 
-#, fuzzy
 msgid "This rule set allows you to configure levels for the daily usage costs."
 msgstr ""
 "このルールセットで、日々のストレージの使用コストに関するレベルを設定すること"
 "ができます。"
 
-#, fuzzy
 msgid "This rule set allows you to configure levels for the database CPU usage"
-msgstr ""
-"このルールでは、データベースのCPU使用率のレベルを設定することができます"
+msgstr "このルールでは、データベースのCPU使用率のレベルを設定することができます"
 
-#, fuzzy
 msgid ""
 "This rule set allows you to configure levels for the database throughput"
-msgstr ""
-"このルールセットを使用すると、データベースの処理能力のレベルを設定できます"
+msgstr "このルールセットを使用すると、データベースの処理能力のレベルを設定できます"
 
-#, fuzzy
 msgid ""
 "This rule set allows you to configure levels for the deadlocks in the "
 "database"
@@ -78818,21 +78793,16 @@ msgstr ""
 "このルールセットでは、データベースのデッドロックのレベルを設定することができ"
 "ます"
 
-#, fuzzy
 msgid "This rule set allows you to configure levels for the storage data flows"
 msgstr "このルールセットでは、ストレージのデータフローのレベルを設定できます"
 
-#, fuzzy
 msgid ""
 "This rule set allows you to configure levels for the storage latency and "
 "availability"
-msgstr ""
-"このルールセットを使用すると、ストレージの遅延と可用性のレベルを設定できます"
+msgstr "このルールセットを使用すると、ストレージの遅延と可用性のレベルを設定できます"
 
-#, fuzzy
 msgid "This rule set allows you to configure levels for the storage usage"
-msgstr ""
-"このルールセットを使用すると、ストレージの使用量に関するレベルを設定できます"
+msgstr "このルールセットを使用すると、ストレージの使用量に関するレベルを設定できます"
 
 #, fuzzy
 msgid ""
@@ -78842,7 +78812,6 @@ msgstr ""
 "このルールセットを使用すると、前回の AD Connect 同期からの経過時間に対するレ"
 "ベルを設定できます。"
 
-#, fuzzy
 msgid ""
 "This rule set allows you to configure levels for the used storage space in "
 "percent"
@@ -79643,7 +79612,6 @@ msgstr ""
 "び出します。したがって、この設定により、非アクティブなエージェントの登録が一"
 "定時間後に失効することを保証できます。"
 
-#, fuzzy
 msgid ""
 "This setting will lead to a \"non-root agent deployment\". Both agent and "
 "Agent Controller will be operated under the configured agent user. "
@@ -79651,9 +79619,9 @@ msgid ""
 "package's resources."
 msgstr ""
 "この設定により、「非ルートエージェント展開」が実施されます。エージェントと"
-"エージェントコントローラーは、設定されたエージェントユーザーの下で動作しま"
-"す。さらに、エージェントパッケージは、エージェントパッケージのリソースに対し"
-"て適切な権限を設定します。"
+"エージェントコントローラーは、設定されたエージェントユーザーの下で動作します"
+"。さらに、エージェントパッケージは、エージェントパッケージのリソースに対して"
+"適切な権限を設定します。"
 
 msgid "This shared link is not valid."
 msgstr "この共有リンクは無効です。"
@@ -80070,7 +80038,6 @@ msgstr ""
 "ん。<br><b>注意:</b> このプラグインは、「Unified Oracle Plugin(ベータ版)」と"
 "併用することはできません。どちらか一方のみを設定してください。"
 
-#, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system."
 "<br>ARM architecture is not supported.<br><b>Note:</b> This plug-in cannot "
@@ -80078,9 +80045,9 @@ msgid ""
 "Please configure only one of the two."
 msgstr ""
 "これにより、ターゲットシステムにエージェントプラグイン <tt>mk_oracle</tt> が"
-"デプロイされます。<br>ARMアーキテクチャはサポートされていません。<br><b>注意:"
-"</b> このプラグインは、「Oracleデータベース(Linux, Solaris, AIX, Windows)」と"
-"併用することはできません。どちらか一方のみを設定してください。"
+"デプロイされます。<br>ARMアーキテクチャはサポートされていません。<br><b>注"
+"意:</b> このプラグインは、「Oracleデータベース(Linux, Solaris, AIX, Windows)"
+"」と併用することはできません。どちらか一方のみを設定してください。"
 
 msgid "This will deploy the agent plug-in <tt>mk_podman</tt>."
 msgstr "エージェントプラグイン<tt>mk_podman</tt>をデプロイします。"
@@ -81078,7 +81045,6 @@ msgstr ""
 "設定されていますが、独自のものを使ってもかまいません。エントリはヘッダー値と"
 "して有効な文字列である必要があります。"
 
-#, fuzzy
 msgid ""
 "To monitor Azure resources add this data source to <b>one</b> host. The data "
 "will be transported using the piggyback mechanism, so make sure to create "
@@ -81087,10 +81053,10 @@ msgid ""
 "the data source program."
 msgstr ""
 "Azureリソースを監視するには、このデータソースを<b> 1つの</b>ホストに追加しま"
-"す。データはピギーバックメカニズムを使用して転送されるため、監視対象のリソー"
-"スグループごとに1つのホストを作成してください。検出されたグループについては、"
-"データソースプログラムを所有するホストの<i> Azure Agent Info </i>サービスで確"
-"認できます。"
+"す。データはピギーバックメカニズムを使用して転送されるため、監視対象の"
+"リソースグループごとに1つのホストを作成してください。検出されたグループについ"
+"ては、データソースプログラムを所有するホストの<i> Azure Agent Info </i>"
+"サービスで確認できます。"
 
 msgid ""
 "To obtain the data required for this check, please configure the data source "
@@ -84169,7 +84135,6 @@ msgstr "アップ"
 msgid "UP & DOWN"
 msgstr "ダウン"
 
-#, fuzzy
 msgid "UP only"
 msgstr "UPのみ"
 
@@ -84619,7 +84584,6 @@ msgstr "メモリ内の非圧縮サイズ"
 msgid "Uncorrectable codewords"
 msgstr "修正不可能なコードワード"
 
-#, fuzzy
 msgid "Uncorrectable errors (ID 187)"
 msgstr "修正不能なエラー (ID 187)"
 
@@ -85464,19 +85428,15 @@ msgstr "1秒あたりの\"ESI警告\"の上位レベル"
 msgid "Upper levels for \"LRU nuked objects\" per second"
 msgstr "1秒あたりの\"LRU核兵器\"の上位レベル"
 
-#, fuzzy
 msgid "Upper levels for \"backend connections busy/too many\" per second"
 msgstr "1秒あたりの\"バックエンド接続がビジー/多すぎる\"の上位レベル"
 
-#, fuzzy
 msgid "Upper levels for \"backend connections failures\" per second"
 msgstr "1秒あたりの\"バックエンド接続失敗\"の上位レベル"
 
-#, fuzzy
 msgid ""
 "Upper levels for \"backend connections unhealthy/not attempted\" per second"
-msgstr ""
-"1秒あたりの\"バックエンド接続が正常でない/試行されていない\"の上位レベル"
+msgstr "1秒あたりの\"バックエンド接続が正常でない/試行されていない\"の上位レベル"
 
 msgid "Upper levels for \"cache misses\" per second"
 msgstr "1秒あたりの\"キャッシュミス\"の上位レベル"
@@ -85594,7 +85554,6 @@ msgstr "平均応答時間の上位レベル"
 msgid "Upper levels for backend"
 msgstr "バックエンドの上位レベル"
 
-#, fuzzy
 msgid "Upper levels for backend connection errors per second"
 msgstr "1秒あたりのバックエンド接続エラーの上位レベル"
 
@@ -86108,7 +86067,6 @@ msgstr "ユーザビリティ"
 msgid "Usage"
 msgstr "使用法"
 
-#, fuzzy
 msgid "Usage details"
 msgstr "使用方法詳細"
 
@@ -86644,7 +86602,6 @@ msgstr "システム全体のCAを使用する"
 msgid "Use the <a href=\"%s\">global parameters</a> for this connection"
 msgstr "この接続には<a href=\"%s\">グローバルパラメータ</a>を使用します"
 
-#, fuzzy
 msgid ""
 "Use the <tt>Podman</tt> CLI for all queries. This works out of the box "
 "without any socket configuration and is recommended when the Podman socket "
@@ -88390,7 +88347,6 @@ msgstr "アプリケーションを書き換える"
 msgid "Veeam backup status (Windows)"
 msgstr "Veeamバックアップステータス(Windows)"
 
-#, fuzzy
 msgid "Veeam tape backup jobs"
 msgstr "VEEAMテープバックアップジョブ"
 
@@ -89498,7 +89454,6 @@ msgstr "Webゲートウェイのその他の統計"
 msgid "Web gateway statistics"
 msgstr "Webゲートウェイ統計"
 
-#, fuzzy
 msgid "Web servers (IIS)"
 msgstr "Webサーバー(IIS)"
 
@@ -89559,7 +89514,6 @@ msgstr "ウェルカムページ"
 msgid "Welcome to Checkmk"
 msgstr "Checkmk へようこそ"
 
-#, fuzzy
 msgid "Welcome to Checkmk mobile."
 msgstr "Checkmk Mobileへようこそ。"
 
@@ -89626,7 +89580,6 @@ msgstr ""
 "い場合は、保持期間が経過するとアカウントは削除されます。 即時削除の動作をリス"
 "トアするには、このオプションを無効にしてください。"
 
-#, fuzzy
 msgid ""
 "When activated, the Agent Bakery will compress most of the agent packages. "
 "The compression applies to .deb packages, .rpm packages and to all .tar.gz "
@@ -89641,14 +89594,14 @@ msgid ""
 msgstr ""
 "アクティベートすると、エージェントベーカリーはエージェントパッケージのほとん"
 "どを圧縮します。圧縮は、.deb パッケージ、.rpm パッケージ、およびエージェント"
-"のベーカリーから得られるすべての .tar.gz パッケージに適用されます。注意: パッ"
-"ケージ名の変更を避けるために、圧縮されていない TAR パッケージも .tar.gz とい"
-"う接尾辞を持っています。技術的には、圧縮レベル 0 の gzip を使用して圧縮されて"
-"いますがカスタムファイルや独自のベーカリープラグインから生じる大きなファイル"
-"をデプロイするのでなければ、圧縮を有効にすることはお勧めしません。Checkmk が"
-"提供するすべての大きなファイル (数キロバイト以上のファイル、主にエージェント"
-"アップデータとエージェントコントローラ) は、あらかじめ圧縮されているので、圧"
-"縮を有効にするメリットはありません。"
+"のベーカリーから得られるすべての .tar.gz パッケージに適用されます。注意: "
+"パッケージ名の変更を避けるために、圧縮されていない TAR パッケージも .tar.gz "
+"という接尾辞を持っています。技術的には、圧縮レベル 0 の gzip を使用して圧縮さ"
+"れていますがカスタムファイルや独自のベーカリープラグインから生じる大きな"
+"ファイルをデプロイするのでなければ、圧縮を有効にすることはお勧めしません。"
+"Checkmk が提供するすべての大きなファイル (数キロバイト以上のファイル、主に"
+"エージェントアップデータとエージェントコントローラ) は、あらかじめ圧縮されて"
+"いるので、圧縮を有効にするメリットはありません。"
 
 msgid ""
 "When aggregation is turned on and the rule matches for two different "
@@ -90941,7 +90894,6 @@ msgstr "Windows タイム サービス (ステータス)"
 msgid "Windows Time service peers"
 msgstr "Windows タイム サービスピア"
 
-#, fuzzy
 msgid "Windows Time service peers summary"
 msgstr "Windows タイムサービス ピアのサマリー"
 
@@ -91002,7 +90954,6 @@ msgstr "Windows: MSI (.msi)"
 msgid "Wireless"
 msgstr "ワイヤレス"
 
-#, fuzzy
 msgid "Wireless Ethernet statuses"
 msgstr "ワイヤレスイーサネットの状態"
 
@@ -94240,11 +94191,9 @@ msgstr "平均"
 msgid "avg. duration"
 msgstr "平均. デュレーション"
 
-#, fuzzy
 msgid "azblob backend cache hits"
 msgstr "azblobバックエンドキャッシュヒット数"
 
-#, fuzzy
 msgid "azblob backend cache misses"
 msgstr "azblob バックエンドキャッシュ ミス数"
 
@@ -94791,7 +94740,6 @@ msgstr "グラフ"
 msgid "graph number %(source)d"
 msgstr "グラフ番号 %(source)d"
 
-#, fuzzy
 msgid "graphs"
 msgstr "グラフ"
 
@@ -96909,7 +96857,6 @@ msgstr "来年の始まり"
 msgid "not set"
 msgstr "現在ではない"
 
-#, fuzzy
 msgid "Timezone"
 msgstr "タイムゾーン"
 
@@ -97033,7 +96980,6 @@ msgstr "グループオペレーター"
 msgid "Select a value..."
 msgstr "ビューを選択..."
 
-#, fuzzy
 msgid "Any of"
 msgstr "任意の"
 
@@ -97590,18 +97536,15 @@ msgstr "全体の問題"
 msgid "Service: %{state}"
 msgstr "サービス状態"
 
-#, fuzzy
 msgid "unreachable"
 msgstr "到達不能"
 
 msgid "in downtime"
 msgstr "ダウンタイム中"
 
-#, fuzzy
 msgid "critical"
 msgstr "クリティカル"
 
-#, fuzzy
 msgid "warning"
 msgstr "警告"
 
@@ -98736,7 +98679,6 @@ msgstr "HW/SWインベントリプロパティを選択してください。"
 msgid "The selected HW/SW inventory property is invalid."
 msgstr "選択されたHW/SWインベントリプロパティは無効です。"
 
-#, fuzzy
 msgid "HW/SW inventory single value"
 msgstr "HW/SWインベントリのシングル値"
 
@@ -100061,11 +100003,9 @@ msgstr "ディジット"
 msgid "Rounding digits"
 msgstr "丸めモード"
 
-#, fuzzy
 msgid "Lower limit"
 msgstr "下限"
 
-#, fuzzy
 msgid "Upper limit"
 msgstr "上限"
 
@@ -100887,11 +100827,9 @@ msgstr "および%s以上"
 msgid "%{failed} of %{total} failed: %{sample}"
 msgstr "%{selected} 件中 %{total} 件を選択しました"
 
-#, fuzzy
 msgid "host group"
 msgstr "ホストグループ"
 
-#, fuzzy
 msgid "service group"
 msgstr "サービスグループ"
 
@@ -100978,7 +100916,6 @@ msgstr "通知は無効になっています"
 msgid "Could not disable notifications"
 msgstr "通知を無効にする"
 
-#, fuzzy
 msgid "Problem services"
 msgstr "問題のサービス"
 
@@ -101191,7 +101128,6 @@ msgstr "柔軟なダウンタイム"
 msgid "FLEX"
 msgstr "FLEX"
 
-#, fuzzy
 msgid "expires"
 msgstr "有効期限が切れます"
 
@@ -101252,7 +101188,6 @@ msgstr "概要 (depth %{depth})"
 msgid "Notif. period"
 msgstr "通知期間"
 
-#, fuzzy
 msgid "Children"
 msgstr "子"
 
@@ -101546,7 +101481,6 @@ msgstr "メトリックヒストリー"
 msgid "hostname"
 msgstr "バーチャルホスト名"
 
-#, fuzzy
 msgid "service description"
 msgstr "サービスの説明"
 
@@ -101565,7 +101499,6 @@ msgstr "モニタリングコア"
 msgid "Shows the state of"
 msgstr "状態を表示"
 
-#, fuzzy
 msgid "group name"
 msgstr "グループ名"
 
@@ -102146,7 +102079,6 @@ msgstr "ファン"
 msgid "Orbit"
 msgstr "Orbit"
 
-#, fuzzy
 msgid "Row"
 msgstr "行"
 
@@ -102293,7 +102225,6 @@ msgstr "ホストのインポート"
 msgid "Site unreachable — last known state"
 msgstr "ホストに到達できないか、不明なサービスがあります"
 
-#, fuzzy
 msgid "stale"
 msgstr "最新化要"
 
@@ -102570,7 +102501,6 @@ msgstr "応答を配信する"
 msgid "Distribute vertically"
 msgstr "分散監視"
 
-#, fuzzy
 msgid "Host / service"
 msgstr "ホスト/サービス"
 
@@ -102685,7 +102615,6 @@ msgstr "元に戻す"
 msgid "Redo"
 msgstr "やり直し"
 
-#, fuzzy
 msgid "Live status"
 msgstr "Livestatus"
 
@@ -103042,7 +102971,6 @@ msgstr "%{ids}を削除？"
 msgid "Delete %{type} \"%{name}\"?"
 msgstr "%{type} \"%{name}\" を削除しますか？"
 
-#, fuzzy
 msgid "Percent"
 msgstr "パーセント"
 
@@ -103267,7 +103195,6 @@ msgstr "サイト設定の検証に失敗しました。もう一度お試しく
 msgid "Select the metric for this service"
 msgstr "このサービスのパラメーターを表示および編集する"
 
-#, fuzzy
 msgid "No metric selected"
 msgstr "メトリックが選択されていません。"
 
@@ -103625,7 +103552,6 @@ msgstr "アプリケーションタイプ"
 msgid "Relation indicators"
 msgstr "連絡先の変更:"
 
-#, fuzzy
 msgid "Host names"
 msgstr "ホスト名"
 
@@ -105993,7 +105919,6 @@ msgstr "全てのトピックを表示"
 msgid "Toggle visibility"
 msgstr "グラフの可視性"
 
-#, fuzzy
 msgid "columns"
 msgstr "列"
 
@@ -106080,7 +106005,6 @@ msgstr "その他のオプション"
 msgid "Less than"
 msgstr "以下"
 
-#, fuzzy
 msgid "Between"
 msgstr "間"
 
@@ -106606,7 +106530,6 @@ msgstr "このホストのパラメーター"
 msgid "Close & run service discovery"
 msgstr "サービスディスカバリの実行と保存"
 
-#, fuzzy
 msgid "Add snap-in ${props.name}"
 msgstr "スナップイン ${props.name} を追加"
 
@@ -106636,7 +106559,6 @@ msgstr "サービス名テンプレート"
 msgid "Consolidation"
 msgstr "RRDの統合"
 
-#, fuzzy
 msgid "Group by"
 msgstr "グループ化"
 

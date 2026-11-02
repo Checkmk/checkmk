@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-30 10:15+0000\n"
+"PO-Revision-Date: 2026-11-02 08:21+0000\n"
 "Language-Team: Spanish <https://translate.checkmk.com/projects/checkmk/dev/"
 "es/>\n"
 "Language: es\n"
@@ -38921,7 +38921,6 @@ msgstr "Incidente"
 msgid "Include WAFs in front of CloudFront resources in the monitoring."
 msgstr "Incluya WAF delante de los recursos de CloudFront en la supervisión."
 
-#, fuzzy
 msgid "Include all nodes"
 msgstr "Incluir todos los nodos"
 
@@ -40133,7 +40132,6 @@ msgstr ""
 msgid "Invalid file type."
 msgstr "Tipo visual no válido"
 
-#, fuzzy
 msgid "Invalid filename."
 msgstr "Nombre de archivo no válido"
 
@@ -41094,7 +41092,6 @@ msgstr "Estadísticas de Jira"
 msgid "Jira workflow"
 msgstr "Flujo de trabajo de Jira"
 
-#, fuzzy
 msgid "Jitter"
 msgstr "jitter"
 
@@ -41242,7 +41239,6 @@ msgid "Kaspersky Anti-Virus (Linux)"
 msgstr "Kaspersky Anti-Virus (Linux)"
 
 #. weblate-flags: read-only, vendor-name
-#, fuzzy
 msgid "Kaspersky Anti-Virus time settings"
 msgstr "Configuración de tiempo de Kaspersky Anti-Virus"
 
@@ -42576,7 +42572,6 @@ msgstr "Niveles para el número de días hasta la expiración"
 msgid "Levels for number of down channels"
 msgstr "Niveles para el número de canales descendentes"
 
-#, fuzzy
 msgid "Levels for number of licenses"
 msgstr "Niveles para el número de licencias"
 
@@ -43483,7 +43478,6 @@ msgstr "Vista de enlace que muestra todos los hosts de un cliente\n"
 msgid "Link view showing all UNREACHABLE hosts of one customer\n"
 msgstr "Vista de enlace que muestra todos los hosts de un cliente\n"
 
-#, fuzzy
 msgid "Link view showing all UP hosts of one customer\n"
 msgstr "Vista de enlace que muestra todos los hosts de un cliente\n"
 
@@ -44498,11 +44492,9 @@ msgstr "Colas de correo de Lotus Domino"
 msgid "Lotus Domino task discovery"
 msgstr "Descubrimiento de tareas en Lotus Domino"
 
-#, fuzzy
 msgid "Lotus Domino transactions"
 msgstr "Transacciones de Lotus Domino"
 
-#, fuzzy
 msgid "Lotus Domino users"
 msgstr "Usuarios de Lotus Domino"
 
@@ -45692,7 +45684,6 @@ msgstr ""
 msgid "Map attribute 'Frozen'"
 msgstr "Atributo del mapa \"Congelado"
 
-#, fuzzy
 msgid "Map attribute 'State'"
 msgstr "Atributo del mapa \"Estado"
 
@@ -45920,7 +45911,6 @@ msgstr "Marcar el controlador distinguido actualmente como preferido"
 msgid "Mark the nodes of the resources as preferred one"
 msgstr "Marcar los nodos de los recursos como preferidos"
 
-#, fuzzy
 msgid "Master"
 msgstr "maestro"
 
@@ -47880,17 +47870,14 @@ msgid "Mobile: Table"
 msgstr "Móvil: Tabla"
 
 #. weblate-flags: read-only, vendor-name
-#, fuzzy
 msgid "MobileIron compliance"
 msgstr "Cumplimiento de Mobileiron"
 
 #. weblate-flags: read-only, vendor-name
-#, fuzzy
 msgid "MobileIron statistics"
 msgstr "Estadísticas de Mobileiron"
 
 #. weblate-flags: read-only, vendor-name
-#, fuzzy
 msgid "MobileIron versions"
 msgstr "Versiones de Mobileiron"
 
@@ -49289,7 +49276,6 @@ msgstr "Nombre de los paquetes del agente (Linux, UNIX)"
 msgid "Name of certificate"
 msgstr "Nombre del certificado"
 
-#, fuzzy
 msgid "Name of channel"
 msgstr "Nombre del canal"
 
@@ -49325,11 +49311,9 @@ msgstr "Nombre del usuario del sistema operativo"
 msgid "Name of plug-in"
 msgstr "Nombre del plugin"
 
-#, fuzzy
 msgid "Name of queue"
 msgstr "Nombre de la cola"
 
-#, fuzzy
 msgid "Name of queue manager"
 msgstr "Nombre del gestor de colas"
 
@@ -49708,7 +49692,6 @@ msgstr "Tráfico neto de datos"
 msgid "NetApp SnapVault / SnapMirror"
 msgstr "Tiempo de retraso de Snapvaults / Snapmirror de NetApp"
 
-#, fuzzy
 msgid "NetApp SnapVault discovery"
 msgstr "Descubrimiento de snapvault de NetApp"
 
@@ -51723,7 +51706,6 @@ msgstr "Número de sockets ICMP"
 msgid "Number of IP sets"
 msgstr "Número de conjuntos IP"
 
-#, fuzzy
 msgid "Number of Lotus Domino users"
 msgstr "Número de usuarios de Lotus Domino"
 
@@ -52434,7 +52416,6 @@ msgstr "Número de sesiones totales y en curso"
 msgid "Number of tracked transactions per second."
 msgstr "Número de conexiones nuevas por segundo"
 
-#, fuzzy
 msgid "Number of transactions per minute on a Lotus Domino server"
 msgstr "Número de transacciones por minuto en un servidor Lotus Domino"
 
@@ -52767,7 +52748,6 @@ msgstr "Latencia del disco"
 msgid "OSDs epoch levels and average"
 msgstr "Niveles de época de los OSDs y media"
 
-#, fuzzy
 msgid "OSN laser attenuation"
 msgstr "OSN Atenuación láser"
 
@@ -56349,7 +56329,6 @@ msgid ""
 "user certificate will not be used."
 msgstr ""
 
-#, fuzzy
 msgid "Path-patterns where to search for JAR files"
 msgstr "Patrones de ruta donde buscar archivos Jar"
 
@@ -61166,7 +61145,6 @@ msgstr ""
 msgid "Relative"
 msgstr "Relativo"
 
-#, fuzzy
 msgid "Relative URI under which Jolokia is visible"
 msgstr "URI relativo bajo el cual es visible Jolokia"
 
@@ -65310,7 +65288,6 @@ msgid ""
 "types as in the collector configuration."
 msgstr ""
 
-#, fuzzy
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
 "CronJobs are treated separately as they are usually quite short lived. Those "
@@ -72463,7 +72440,6 @@ msgstr "Sincronización de"
 msgid "Syncing broker certificates"
 msgstr "Certificado del router SAP"
 
-#, fuzzy
 msgid "Synology updates"
 msgstr "Actualizaciones de Synology"
 
@@ -83483,7 +83459,6 @@ msgstr ""
 "Esta regla se aplica al número de correos electrónicos que se encuentran "
 "actualmente en la cola de correo activa"
 
-#, fuzzy
 msgid ""
 "This rule is applied to the number of emails currently in the active mail "
 "queue."
@@ -83507,7 +83482,6 @@ msgstr ""
 "Esta regla se aplica al número de correos electrónicos que se encuentran "
 "actualmente en la cola de correo fallida"
 
-#, fuzzy
 msgid ""
 "This rule is applied to the number of emails currently in the failed mail "
 "queue."
@@ -83672,7 +83646,6 @@ msgid ""
 "local</tt>: <tt>..\\agent\\local</tt></li></ul>"
 msgstr ""
 
-#, fuzzy
 msgid ""
 "This rule selects the ALLNET IP sensoric agent, which fetches /xml/"
 "sensordata.xml from the device by HTTP and extracts the needed monitoring "
@@ -83730,13 +83703,12 @@ msgstr ""
 msgid "This rule selects the special agent for Salesforce."
 msgstr "Esta regla selecciona el agente especial para Salesforce."
 
-#, fuzzy
 msgid ""
 "This rule set allows to add embedded Python to the Windows agent "
 "installation."
 msgstr ""
 "Este conjunto de reglas permite añadir Python incrustado a la instalación "
-"del Agente de Windows. "
+"del Agente de Windows."
 
 msgid ""
 "This rule set allows to choose which Python interpreter is used to run "
@@ -86336,7 +86308,6 @@ msgid ""
 "for a header value."
 msgstr ""
 
-#, fuzzy
 msgid ""
 "To monitor Azure resources add this data source to <b>one</b> host. The data "
 "will be transported using the piggyback mechanism, so make sure to create "
@@ -92106,7 +92077,6 @@ msgstr "Usabilidad"
 msgid "Usage"
 msgstr "Uso"
 
-#, fuzzy
 msgid "Usage details"
 msgstr "Detalles de uso"
 
@@ -94639,7 +94609,6 @@ msgstr "Reescribir la aplicación"
 msgid "Veeam backup status (Windows)"
 msgstr "Estado de la copia de seguridad de Veeam (Windows)"
 
-#, fuzzy
 msgid "Veeam tape backup jobs"
 msgstr "Trabajos de copia de seguridad en cinta de VEEAM"
 
@@ -95359,7 +95328,6 @@ msgstr "Wagner OxyReduct"
 msgid "Wait for document body"
 msgstr "No esperes al cuerpo del documento"
 
-#, fuzzy
 msgid "Wait time between ping bulks:"
 msgstr "Tiempo de espera entre bultos PING:"
 
@@ -95785,7 +95753,6 @@ msgstr "Estadísticas varias de la pasarela web"
 msgid "Web gateway statistics"
 msgstr "Estadísticas de la pasarela web"
 
-#, fuzzy
 msgid "Web servers (IIS)"
 msgstr "Servidores web (IIS)"
 
@@ -95851,7 +95818,6 @@ msgstr "Consultar la página del manual"
 msgid "Welcome to Checkmk"
 msgstr "Bienvenido a Checkmk Mobile."
 
-#, fuzzy
 msgid "Welcome to Checkmk mobile."
 msgstr "Bienvenido a Checkmk Mobile."
 
@@ -100658,7 +100624,6 @@ msgstr "Autenticación"
 msgid "auto"
 msgstr "auto"
 
-#, fuzzy
 msgid "average"
 msgstr "Media"
 
@@ -101243,7 +101208,6 @@ msgstr "gráficos"
 msgid "graph number %(source)d"
 msgstr "número de gráfico %(source)d"
 
-#, fuzzy
 msgid "graphs"
 msgstr "Gráficos"
 
@@ -101457,9 +101421,9 @@ msgstr "parada inmediata"
 msgid "in"
 msgstr "on"
 
-#, fuzzy, python-format
+#, python-format
 msgid "in %(days)d days"
-msgstr " en %(days)d días"
+msgstr "en %(days)d días"
 
 #, python-format
 msgid "in %(reldays)d days"
@@ -104183,18 +104147,15 @@ msgstr "Problemas en total"
 msgid "Service: %{state}"
 msgstr "Estado del servicio"
 
-#, fuzzy
 msgid "unreachable"
 msgstr "Inalcanzable"
 
 msgid "in downtime"
 msgstr "En mantenimiento"
 
-#, fuzzy
 msgid "critical"
 msgstr "Crítico"
 
-#, fuzzy
 msgid "warning"
 msgstr "Advertencia"
 
@@ -105849,9 +105810,8 @@ msgstr "Ahorro de espacio"
 msgid "Loading ..."
 msgstr "Cargando..."
 
-#, fuzzy
 msgid "The value of this rule is not valid."
-msgstr "El valor de esta regla no es válido. "
+msgstr "El valor de esta regla no es válido."
 
 #, fuzzy
 msgid "Select operator"
@@ -106812,11 +106772,9 @@ msgstr ""
 msgid "Rounding digits"
 msgstr "Vainas para correr"
 
-#, fuzzy
 msgid "Lower limit"
 msgstr "límite inferior"
 
-#, fuzzy
 msgid "Upper limit"
 msgstr "límite superior"
 
@@ -107637,11 +107595,9 @@ msgstr " y %s '%s'"
 msgid "%{failed} of %{total} failed: %{sample}"
 msgstr "Inicio o fin de un tiempo de inactividad programado"
 
-#, fuzzy
 msgid "host group"
 msgstr "Grupos de acogida"
 
-#, fuzzy
 msgid "service group"
 msgstr "Grupos de servicios"
 
@@ -107729,7 +107685,6 @@ msgstr "Las notificaciones están desactivadas"
 msgid "Could not disable notifications"
 msgstr "activar las notificaciones"
 
-#, fuzzy
 msgid "Problem services"
 msgstr "servicios con problemas"
 
@@ -107935,7 +107890,6 @@ msgstr "Tiempo de inactividad flexible"
 msgid "FLEX"
 msgstr ""
 
-#, fuzzy
 msgid "expires"
 msgstr "Expira"
 
@@ -108278,7 +108232,6 @@ msgstr "Historia de la métrica"
 msgid "hostname"
 msgstr "Nombre del Vhost"
 
-#, fuzzy
 msgid "service description"
 msgstr "Descripción del servicio"
 
@@ -108298,7 +108251,6 @@ msgstr "Controlar el núcleo"
 msgid "Shows the state of"
 msgstr "Mostrar título"
 
-#, fuzzy
 msgid "group name"
 msgstr "Nombre del grupo"
 
@@ -109021,7 +108973,6 @@ msgstr "Importación de hosts"
 msgid "Site unreachable — last known state"
 msgstr "los hosts son inalcanzables o tienen servicios desconocidos"
 
-#, fuzzy
 msgid "stale"
 msgstr "Estancado"
 
@@ -109428,7 +109379,6 @@ msgstr ""
 msgid "Redo"
 msgstr ""
 
-#, fuzzy
 msgid "Live status"
 msgstr "Livestatus"
 
@@ -109783,7 +109733,6 @@ msgstr "Borrar %s"
 msgid "Delete %{type} \"%{name}\"?"
 msgstr "Borrar host"
 
-#, fuzzy
 msgid "Percent"
 msgstr "por ciento"
 
@@ -109997,9 +109946,8 @@ msgstr ""
 msgid "Services to be created"
 msgstr "Estados de los servicios"
 
-#, fuzzy
 msgid "Service:"
-msgstr "Servicio: "
+msgstr "Servicio:"
 
 #, fuzzy
 msgid "Target host:"
@@ -112665,7 +112613,6 @@ msgstr "Mostrar todos los temas"
 msgid "Toggle visibility"
 msgstr "Visibilidad del gráfico"
 
-#, fuzzy
 msgid "columns"
 msgstr "Columnas"
 

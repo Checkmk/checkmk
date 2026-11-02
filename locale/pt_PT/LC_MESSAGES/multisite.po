@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-31 14:47+0000\n"
+"PO-Revision-Date: 2026-11-02 08:21+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -27,9 +27,9 @@ msgstr "Pasta: %s"
 msgid " %(time)s, outage duration %(duration)s"
 msgstr " %(time)s, duração de indisponibilidade %(duration)s"
 
-#, fuzzy, python-format
+#, python-format
 msgid " %(title)s"
-msgstr "%(title)s"
+msgstr " %(title)s"
 
 #, python-format
 msgid " (%(count)d times)"
@@ -121,9 +121,8 @@ msgstr ""
 msgid " Finished at: %(time_ended)s."
 msgstr " Concluído em: %(time_ended)s."
 
-#, fuzzy
 msgid " Finished."
-msgstr "Acabado."
+msgstr " Acabado."
 
 msgid ""
 " If this action was not triggered by you, contact your administrator for "
@@ -1698,7 +1697,7 @@ msgstr ""
 msgid "6 months"
 msgstr "6 meses"
 
-#, fuzzy, no-python-format
+#, no-python-format
 msgid "68% - one standard deviation"
 msgstr "68% - Um desvio padrão"
 
@@ -1760,7 +1759,7 @@ msgstr "Níveis superiores de utilização dos pedidos"
 msgid "90th percentile latency over last hour"
 msgstr "Níveis superiores de utilização dos pedidos"
 
-#, fuzzy, no-python-format
+#, no-python-format
 msgid "95% - two standard deviations"
 msgstr "95% - Dois desvios padrão"
 
@@ -2181,7 +2180,6 @@ msgstr ""
 "do filtro da sincronização LDAP. Talvez você possa diminuir o escopo da "
 "sincronização para obter um número menor de usuários.</p>"
 
-#, fuzzy
 msgid ""
 "<p>Here you can specify a list of file name patterns to be sent by the agent "
 "in the section <tt>fileinfo</tt>. UNC paths with globbing patterns are used "
@@ -2195,15 +2193,15 @@ msgid ""
 msgstr ""
 "<p>Aqui pode especificar uma lista de padrões de nomes de ficheiros a serem "
 "enviados pelo agente na secção <tt>fileinfo</tt>. Caminhos UNC com padrões "
-"globbing são usados aqui, por exemplo, <tt>\\\\hostname\\share "
-"name\\*\\foo\\*.log</tt>. Não são permitidos caracteres curinga em nomes de "
-"host ou de compartilhamento. Por padrão, cada arquivo encontrado será "
-"monitorado quanto ao tamanho e idade. Ao criar grupos, pode, em alternativa, "
-"monitorizar uma colecção de ficheiros como uma entidade e monitorizar a "
-"contagem, o tamanho total, o maior, o mais pequeno, o mais antigo ou o mais "
-"recente ficheiro. Nota: se você especificar mais de uma regra de "
-"correspondência, então <b>todas</b> as regras de correspondência serão "
-"usadas para definir o padrão - não apenas a primeira.</p>"
+"globbing são usados aqui, por exemplo, <tt>\\\\hostname\\share name\\*\\foo\\"
+"*.log</tt>. Não são permitidos caracteres curinga em nomes de host ou de "
+"compartilhamento. Por padrão, cada arquivo encontrado será monitorado quanto "
+"ao tamanho e idade. Ao criar grupos, pode, em alternativa, monitorizar uma "
+"colecção de ficheiros como uma entidade e monitorizar a contagem, o tamanho "
+"total, o maior, o mais pequeno, o mais antigo ou o mais recente ficheiro. "
+"Nota: se você especificar mais de uma regra de correspondência, então <b>"
+"todas</b> as regras de correspondência serão usadas para definir o padrão - "
+"não apenas a primeira.</p>"
 
 #, fuzzy
 msgid ""
@@ -7222,7 +7220,6 @@ msgstr "Todos os comentários de serviço e anfitrião"
 msgid "All host- and service-downtimes"
 msgstr "Todos os horários de manutenção e de paragem de serviço"
 
-#, fuzzy
 msgid "All host- and service-downtimes (including IDs)"
 msgstr "Todos os horários de manutenção e serviço (incluindo ids)"
 
@@ -8445,7 +8442,6 @@ msgstr "estado Apache"
 msgid "Apache web servers (Linux)"
 msgstr "Servidores web Apache (Linux)"
 
-#, fuzzy
 msgid "App registrations"
 msgstr "Registos de aplicações"
 
@@ -10730,7 +10726,6 @@ msgstr "Unidade de rendimento da base de dados"
 msgid "Azure Traffic Manager QPS"
 msgstr "Qps do Gestor de Tráfego do Azure"
 
-#, fuzzy
 msgid "Azure Traffic Manager probe state"
 msgstr "Estado da sonda do Gestor de Tráfego do Azure"
 
@@ -10830,7 +10825,6 @@ msgstr "Assinaturas actuais"
 msgid "Azure subscription name"
 msgstr "Assinatura"
 
-#, fuzzy
 msgid "Azure usage details (costs)"
 msgstr "Detalhes de Utilização do Azure (Custos)"
 
@@ -11575,7 +11569,6 @@ msgstr "Bluecat HA Configurações"
 msgid "BlueCat NTP settings"
 msgstr "Bluecat NTP Configurações"
 
-#, fuzzy
 msgid "BlueCat command server settings"
 msgstr "Configurações do Bluecat Command Server"
 
@@ -14556,7 +14549,6 @@ msgstr "Cisco Meraki"
 msgid "Check Point tunnel status"
 msgstr "Estado do túnel Check Point"
 
-#, fuzzy
 msgid "Check SFTP service"
 msgstr "Verificar serviço SFTP"
 
@@ -16076,7 +16068,6 @@ msgstr "Cliente"
 msgid "Client ID"
 msgstr "Identificação do cliente"
 
-#, fuzzy
 msgid "Client ID / application ID"
 msgstr "ID do cliente / ID da aplicação"
 
@@ -19592,7 +19583,7 @@ msgstr "Criada nova regra #%d no conjunto de regras \"%s\" na pasta \"%s\""
 msgid "Created new rule in rule set \"%(ruleset)s\" in folder \"%(folder)s\""
 msgstr "Criada nova regra no conjunto de regras \"%s\" na pasta \"%s\""
 
-#, fuzzy, python-format
+#, python-format
 msgid "Created new rule pack with ID %(rule_pack_id)s"
 msgstr "Criado novo pacote de regras com id %(rule_pack_id)s"
 
@@ -24210,7 +24201,6 @@ msgstr "Não peça um comentário"
 msgid "Do not backup historical data"
 msgstr "Não faça backup dos dados históricos"
 
-#, fuzzy
 msgid ""
 "Do not backup metric data (RRD files), the monitoring history and log files."
 msgstr ""
@@ -27758,7 +27748,6 @@ msgstr "Excluir correspondência de espaços nominais"
 msgid "Exclude namespaces matching"
 msgstr "Excluir correspondência de espaços nominais"
 
-#, fuzzy
 msgid "Exclude nodes based on their role"
 msgstr "Excluir nós com base na sua função"
 
@@ -29163,7 +29152,6 @@ msgstr "Gráficos para núcleos individuais"
 msgid "Fetching sync state"
 msgstr "Estado de sincronização atraente"
 
-#, fuzzy
 msgid "Fibre Channel interfaces"
 msgstr "Interfaces de Fibra-canal"
 
@@ -30230,7 +30218,6 @@ msgstr "Gráficos de previsão"
 msgid "Forecast into the future"
 msgstr "Previsão para o futuro"
 
-#, fuzzy
 msgid "Forecast model configuration"
 msgstr "Configuração do Modelo de Previsão"
 
@@ -32367,7 +32354,6 @@ msgstr ""
 msgid "Here, you can configure timeout settings."
 msgstr "Aqui você pode configurar as configurações de tempo limite."
 
-#, fuzzy
 msgid ""
 "Here, you can configure whether and how the creation of RRD files is being "
 "logged (in the log file var/log/cmc.log)."
@@ -32847,7 +32833,6 @@ msgstr "Aqui você pode definir o número de vagas restantes em aberto"
 msgid "Here, you can set upper levels of busy workers."
 msgstr "Aqui você pode definir níveis superiores de trabalhadores ocupados"
 
-#, fuzzy
 msgid ""
 "Here, you can set which alert type is set, when the given access point is "
 "missing (might be powered off). The access point can be specified by the AP "
@@ -34670,7 +34655,6 @@ msgstr "Hospedeiro está em inatividade"
 msgid "Host is in group"
 msgstr "O anfitrião está no grupo"
 
-#, fuzzy
 msgid "Host is in scheduled downtime"
 msgstr "o anfitrião está em inactividade programada"
 
@@ -37163,7 +37147,6 @@ msgstr ""
 "permitidos reportados pelo agente. Isto é feito durante a monitorização pelo "
 "serviço 'Check_MK'."
 
-#, fuzzy
 msgid ""
 "If you cannot use the Agent Controllers encrypted TLS connections, you can "
 "resort to the old OpenSSH based symmetric encryption (if your host system "
@@ -38156,7 +38139,6 @@ msgid ""
 "In Checkmk Community, dashboard tokens can only be valid for up to one month."
 msgstr ""
 
-#, fuzzy
 msgid "In Sync"
 msgstr "inSync"
 
@@ -38671,7 +38653,6 @@ msgstr "Incidente"
 msgid "Include WAFs in front of CloudFront resources in the monitoring."
 msgstr "Incluir WAFs à frente dos recursos do CloudFront na monitorização."
 
-#, fuzzy
 msgid "Include all nodes"
 msgstr "Incluir todos os nós"
 
@@ -39875,7 +39856,6 @@ msgstr "Tipo de ficheiro inválido esperado %s recebido '%s'"
 msgid "Invalid file type."
 msgstr "Tipo de ficheiro inválido."
 
-#, fuzzy
 msgid "Invalid filename."
 msgstr "Nome de arquivo inválido"
 
@@ -40831,7 +40811,6 @@ msgstr "Estatísticas Jira"
 msgid "Jira workflow"
 msgstr "Fluxo de trabalho Jira"
 
-#, fuzzy
 msgid "Jitter"
 msgstr "agir de maneira nervosa"
 
@@ -40978,7 +40957,6 @@ msgid "Kaspersky Anti-Virus (Linux)"
 msgstr "Kaspersky Anti-Virus (Linux)"
 
 #. weblate-flags: read-only, vendor-name
-#, fuzzy
 msgid "Kaspersky Anti-Virus time settings"
 msgstr "Definições de tempo do Kaspersky Anti-Virus"
 
@@ -42309,7 +42287,6 @@ msgstr "Níveis para o número de dias até à expiração"
 msgid "Levels for number of down channels"
 msgstr "Níveis para o número de canais descendentes"
 
-#, fuzzy
 msgid "Levels for number of licenses"
 msgstr "Níveis de Número de Licenças"
 
@@ -44204,11 +44181,9 @@ msgstr "Filas de correio da Lotus Domino"
 msgid "Lotus Domino task discovery"
 msgstr "Descoberta da tarefa Lotus Domino"
 
-#, fuzzy
 msgid "Lotus Domino transactions"
 msgstr "Transações da Lotus Domino"
 
-#, fuzzy
 msgid "Lotus Domino users"
 msgstr "Usuários do Lotus Domino"
 
@@ -45388,7 +45363,6 @@ msgstr ""
 msgid "Map attribute 'Frozen'"
 msgstr "Atributo do Mapa 'Congelado"
 
-#, fuzzy
 msgid "Map attribute 'State'"
 msgstr "Atributo do Mapa 'State' (Estado)"
 
@@ -45615,7 +45589,6 @@ msgstr "Marcar o controlador actualmente distinguido como o preferido"
 msgid "Mark the nodes of the resources as preferred one"
 msgstr "Marcar os nós dos recursos como o preferido"
 
-#, fuzzy
 msgid "Master"
 msgstr "mestre"
 
@@ -47567,17 +47540,14 @@ msgid "Mobile: Table"
 msgstr "Móvel: Tabela"
 
 #. weblate-flags: read-only, vendor-name
-#, fuzzy
 msgid "MobileIron compliance"
 msgstr "Conformidade da Mobileiron"
 
 #. weblate-flags: read-only, vendor-name
-#, fuzzy
 msgid "MobileIron statistics"
 msgstr "Estatísticas da Mobileiron"
 
 #. weblate-flags: read-only, vendor-name
-#, fuzzy
 msgid "MobileIron versions"
 msgstr "Versões Mobileiron"
 
@@ -48959,7 +48929,6 @@ msgstr "Nome dos pacotes de agentes (Linux, UNIX)"
 msgid "Name of certificate"
 msgstr "Nome do certificado"
 
-#, fuzzy
 msgid "Name of channel"
 msgstr "Nome do Canal"
 
@@ -48995,11 +48964,9 @@ msgstr "Nome do usuário do sistema operacional"
 msgid "Name of plug-in"
 msgstr "Nome do plugin"
 
-#, fuzzy
 msgid "Name of queue"
 msgstr "Nome da Fila de espera"
 
-#, fuzzy
 msgid "Name of queue manager"
 msgstr "Nome do Gerente de Fila"
 
@@ -49375,7 +49342,6 @@ msgstr "Tráfego líquido de dados"
 msgid "NetApp SnapVault / SnapMirror"
 msgstr "NetApp Snapvaults / Tempo de atraso do Snapmirror"
 
-#, fuzzy
 msgid "NetApp SnapVault discovery"
 msgstr "Descoberta do NetApp snapvault"
 
@@ -51372,7 +51338,6 @@ msgstr "Número de tomadas ICMP"
 msgid "Number of IP sets"
 msgstr "Número de conjuntos IP"
 
-#, fuzzy
 msgid "Number of Lotus Domino users"
 msgstr "Número de usuários do Lotus Domino"
 
@@ -52077,7 +52042,6 @@ msgstr "Número de sessões totais e em curso"
 msgid "Number of tracked transactions per second."
 msgstr "Número de novas ligações por segundo"
 
-#, fuzzy
 msgid "Number of transactions per minute on a Lotus Domino server"
 msgstr "Número de Transações por Minuto em um Servidor Lotus Domino"
 
@@ -52395,7 +52359,6 @@ msgstr "Latência do disco"
 msgid "OSDs epoch levels and average"
 msgstr "Níveis de época e média de OSDs"
 
-#, fuzzy
 msgid "OSN laser attenuation"
 msgstr "Atenuação a laser OSN"
 
@@ -55952,7 +55915,6 @@ msgid ""
 "user certificate will not be used."
 msgstr ""
 
-#, fuzzy
 msgid "Path-patterns where to search for JAR files"
 msgstr "Caminhos-padrão onde procurar por arquivos Jar"
 
@@ -60738,7 +60700,6 @@ msgstr ""
 msgid "Relative"
 msgstr "Relativo"
 
-#, fuzzy
 msgid "Relative URI under which Jolokia is visible"
 msgstr "URI relativo sob o qual Jolokia é visível"
 
@@ -64848,7 +64809,6 @@ msgid ""
 "types as in the collector configuration."
 msgstr ""
 
-#, fuzzy
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
 "CronJobs are treated separately as they are usually quite short lived. Those "
@@ -71931,7 +71891,6 @@ msgstr "Sincronização"
 msgid "Syncing broker certificates"
 msgstr "certificado de roteador SAP"
 
-#, fuzzy
 msgid "Synology updates"
 msgstr "Atualizações de Sinologia"
 
@@ -82846,7 +82805,6 @@ msgstr ""
 "Esta regra é aplicada ao número de E-Mails actualmente na fila de correio "
 "activo"
 
-#, fuzzy
 msgid ""
 "This rule is applied to the number of emails currently in the active mail "
 "queue."
@@ -82870,7 +82828,6 @@ msgstr ""
 "Esta regra é aplicada ao número de E-Mails actualmente na fila de correio "
 "falhado"
 
-#, fuzzy
 msgid ""
 "This rule is applied to the number of emails currently in the failed mail "
 "queue."
@@ -83034,7 +82991,6 @@ msgid ""
 "local</tt>: <tt>..\\agent\\local</tt></li></ul>"
 msgstr ""
 
-#, fuzzy
 msgid ""
 "This rule selects the ALLNET IP sensoric agent, which fetches /xml/"
 "sensordata.xml from the device by HTTP and extracts the needed monitoring "
@@ -83092,13 +83048,12 @@ msgstr ""
 msgid "This rule selects the special agent for Salesforce."
 msgstr "Esta regra seleciona o agente especial para a Força de vendas."
 
-#, fuzzy
 msgid ""
 "This rule set allows to add embedded Python to the Windows agent "
 "installation."
 msgstr ""
 "Este conjunto de regras permite adicionar o Python incorporado à instalação "
-"do Windows Agent. "
+"do Windows Agent."
 
 msgid ""
 "This rule set allows to choose which Python interpreter is used to run "
@@ -85689,7 +85644,6 @@ msgid ""
 "for a header value."
 msgstr ""
 
-#, fuzzy
 msgid ""
 "To monitor Azure resources add this data source to <b>one</b> host. The data "
 "will be transported using the piggyback mechanism, so make sure to create "
@@ -91421,7 +91375,6 @@ msgstr "Usabilidade"
 msgid "Usage"
 msgstr "Utilização"
 
-#, fuzzy
 msgid "Usage details"
 msgstr "Detalhes de utilização"
 
@@ -93926,7 +93879,6 @@ msgstr "Reescrever aplicação"
 msgid "Veeam backup status (Windows)"
 msgstr "Estado do Veeam Backup (Windows)"
 
-#, fuzzy
 msgid "Veeam tape backup jobs"
 msgstr "Trabalhos de backup em fita VEEAM"
 
@@ -94638,7 +94590,6 @@ msgstr "OxyReduct Wagner"
 msgid "Wait for document body"
 msgstr "Não espere pelo corpo do documento"
 
-#, fuzzy
 msgid "Wait time between ping bulks:"
 msgstr "Tempo de espera entre os bulks PING:"
 
@@ -95060,7 +95011,6 @@ msgstr "Estatísticas diversas da Web gateway"
 msgid "Web gateway statistics"
 msgstr "Estatísticas da Web gateway"
 
-#, fuzzy
 msgid "Web servers (IIS)"
 msgstr "Servidores Web (IIS)"
 
@@ -95126,7 +95076,6 @@ msgstr "Consulte a página do manual"
 msgid "Welcome to Checkmk"
 msgstr "Bem-vindo à Checkmk Mobile."
 
-#, fuzzy
 msgid "Welcome to Checkmk mobile."
 msgstr "Bem-vindo à Checkmk Mobile."
 
@@ -99882,7 +99831,6 @@ msgstr "Adicionar a aplicação Authenticator"
 msgid "auto"
 msgstr "auto"
 
-#, fuzzy
 msgid "average"
 msgstr "Média"
 
@@ -100464,7 +100412,6 @@ msgstr "gráficos"
 msgid "graph number %(source)d"
 msgstr "número do gráfico %(source)d"
 
-#, fuzzy
 msgid "graphs"
 msgstr "Gráficos"
 
@@ -100678,9 +100625,9 @@ msgstr "parada imediata"
 msgid "in"
 msgstr "em"
 
-#, fuzzy, python-format
+#, python-format
 msgid "in %(days)d days"
-msgstr " em %(days)d dias"
+msgstr "em %(days)d dias"
 
 #, python-format
 msgid "in %(reldays)d days"
@@ -103391,18 +103338,15 @@ msgstr "Problemas no total"
 msgid "Service: %{state}"
 msgstr "Estado de serviço"
 
-#, fuzzy
 msgid "unreachable"
 msgstr "Inacessível"
 
 msgid "in downtime"
 msgstr "Em tempo de inatividade"
 
-#, fuzzy
 msgid "critical"
 msgstr "Crítico"
 
-#, fuzzy
 msgid "warning"
 msgstr "Advertência"
 
@@ -105051,9 +104995,8 @@ msgstr "Poupança de espaço"
 msgid "Loading ..."
 msgstr "A carregar..."
 
-#, fuzzy
 msgid "The value of this rule is not valid."
-msgstr "O valor desta regra não é válido. "
+msgstr "O valor desta regra não é válido."
 
 #, fuzzy
 msgid "Select operator"
@@ -106014,11 +105957,9 @@ msgstr ""
 msgid "Rounding digits"
 msgstr "Cápsulas de corrida"
 
-#, fuzzy
 msgid "Lower limit"
 msgstr "limite mínimo"
 
-#, fuzzy
 msgid "Upper limit"
 msgstr "limite máximo"
 
@@ -106839,11 +106780,9 @@ msgstr " e %s '%s'"
 msgid "%{failed} of %{total} failed: %{sample}"
 msgstr "Início ou fim de um período de inatividade programado"
 
-#, fuzzy
 msgid "host group"
 msgstr "Grupo de acolhimento"
 
-#, fuzzy
 msgid "service group"
 msgstr "Grupo de serviços"
 
@@ -106931,7 +106870,6 @@ msgstr "Notificações são desativadas"
 msgid "Could not disable notifications"
 msgstr "Desactivar as notificações"
 
-#, fuzzy
 msgid "Problem services"
 msgstr "serviços problemáticos"
 
@@ -107137,7 +107075,6 @@ msgstr "Tempo de paragem flexível"
 msgid "FLEX"
 msgstr ""
 
-#, fuzzy
 msgid "expires"
 msgstr "Expira"
 
@@ -107196,7 +107133,6 @@ msgstr ""
 msgid "Notif. period"
 msgstr "Período de Notificação"
 
-#, fuzzy
 msgid "Children"
 msgstr "crianças"
 
@@ -107480,7 +107416,6 @@ msgstr "História da métrica"
 msgid "hostname"
 msgstr "Nome do fantasma"
 
-#, fuzzy
 msgid "service description"
 msgstr "Descrição do serviço"
 
@@ -107500,7 +107435,6 @@ msgstr "Núcleo de monitorização"
 msgid "Shows the state of"
 msgstr "Mostrar Estado de"
 
-#, fuzzy
 msgid "group name"
 msgstr "Nome do grupo"
 
@@ -108223,7 +108157,6 @@ msgstr "Anfitriões de Importação"
 msgid "Site unreachable — last known state"
 msgstr "o anfitrião está inacessível ou tem serviços desconhecidos"
 
-#, fuzzy
 msgid "stale"
 msgstr "Está datado"
 
@@ -108512,7 +108445,6 @@ msgstr "Distribuir a resposta"
 msgid "Distribute vertically"
 msgstr "Monitoramento distribuído"
 
-#, fuzzy
 msgid "Host / service"
 msgstr "Anfitrião/Serviço"
 
@@ -108632,7 +108564,6 @@ msgstr ""
 msgid "Redo"
 msgstr ""
 
-#, fuzzy
 msgid "Live status"
 msgstr "Livestatus"
 
@@ -108987,7 +108918,6 @@ msgstr "Eliminar %s"
 msgid "Delete %{type} \"%{name}\"?"
 msgstr "Eliminar o anfitrião"
 
-#, fuzzy
 msgid "Percent"
 msgstr "percentual"
 
@@ -109198,9 +109128,8 @@ msgstr ""
 msgid "Services to be created"
 msgstr "Estados de serviços"
 
-#, fuzzy
 msgid "Service:"
-msgstr "Serviço: "
+msgstr "Serviço:"
 
 #, fuzzy
 msgid "Target host:"
@@ -111850,7 +111779,6 @@ msgstr "Mostrar todos os tópicos"
 msgid "Toggle visibility"
 msgstr "Visibilidade gráfica"
 
-#, fuzzy
 msgid "columns"
 msgstr "Colunas"
 
@@ -112451,7 +112379,6 @@ msgstr "Nome do serviço"
 msgid "Consolidation"
 msgstr "consolidação do RRD"
 
-#, fuzzy
 msgid "Group by"
 msgstr "grupo por"
 

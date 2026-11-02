@@ -565,6 +565,26 @@ def test_fetch_counts_only_a_modified_setting_as_manually_switched(
     ] == [expected]
 
 
+@pytest.mark.usefixtures("request_context")
+def test_fetch_counts_passive_checks_a_user_switched_off_as_disabled() -> None:
+    row = {
+        **_service_row("CPU load"),
+        "accept_passive_checks": 0,
+        "modified_attributes_list": ["passive_checks_enabled"],
+    }
+    with expect_single_query("GET services", tables={"services": [row]}) as live:
+        services = LiveStatusHostServicesRepository(connection=live).fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=None,
+            query="",
+            sorters=[],
+            filters=ServiceFilter(""),
+            fields=frozenset(),
+        )
+
+    assert [service.passive_checks_disabled for service in services] == [True]
+
+
 @pytest.mark.parametrize(
     "in_check_period, in_passive_check_period, expected",
     [
@@ -833,6 +853,17 @@ def test_get_overview_of_a_service_the_relay_does_not_run_is_not_scheduled_by_th
     mock_livestatus: MockLiveStatusConnection, row: dict[str, object]
 ) -> None:
     assert not _get_overview(mock_livestatus, row).scheduled_by_relay
+
+
+@pytest.mark.usefixtures("request_context")
+def test_get_overview_counts_passive_checks_a_user_switched_off_as_disabled(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    row = _overview_row(
+        accept_passive_checks=0, modified_attributes_list=["passive_checks_enabled"]
+    )
+
+    assert _get_overview(mock_livestatus, row).passive_checks_disabled
 
 
 def test_all_services_fetch_has_no_host_filter() -> None:

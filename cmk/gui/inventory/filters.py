@@ -475,12 +475,21 @@ class FilterInvTextWithSortKey(_FilterTextRange):
         return bool(value.get(self.htmlvars[0], "").strip().lower())
 
 
+def _make_filter_row_choice(inventory_path: InventoryPath) -> Callable[[str, Row], bool]:
+    def keep_row(selection: str, row: Row) -> bool:
+        value = row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key)
+        return value is not None and str(value) == selection
+
+    return keep_row
+
+
 class FilterInvChoice(_FilterInvOption):
     def __init__(
         self,
         *,
         ident: str,
         title: str,
+        inventory_path: InventoryPath,
         options: Sequence[tuple[str, str]],
         is_show_more: bool = True,
     ) -> None:
@@ -490,9 +499,9 @@ class FilterInvChoice(_FilterInvOption):
             info="host",
             query_filter=query_filters.SingleOptionQuery(
                 ident=ident,
-                options=list(options),
+                options=[*options, ("", _("(ignore)"))],
                 filter_code=lambda _x: "",
-                filter_row=lambda selection, row: (selection == "yes") == row.get(ident),
+                filter_row=_make_filter_row_choice(inventory_path),
             ),
             is_show_more=is_show_more,
             group=FilterGroup.INVENTORY,

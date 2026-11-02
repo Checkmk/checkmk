@@ -545,6 +545,7 @@ def _make_attribute_filter(
             return FilterInvChoice(
                 ident=filter_ident,
                 title=long_title,
+                inventory_path=inventory_path,
                 options=[(str(k), _make_str(v)) for k, v in field_from_api.mapping.items()],
                 is_show_more=True,
             )

@@ -9,6 +9,7 @@ import pytest
 
 from cmk.gui.inventory.filters import (
     FilterInvBool,
+    FilterInvChoice,
     FilterInvFloat,
     FilterInvFloatChoice,
     FilterInvHasSoftwarePackage,
@@ -266,6 +267,62 @@ def test_filter_inv_bool(context: VisualContext, rows: Rows, expected_rows: Rows
                 SDKey("key"),
             ),
         ).filter_table(context, rows)
+        == expected_rows
+    )
+
+
+@pytest.mark.parametrize(
+    "context, expected_rows",
+    [
+        pytest.param(
+            {},
+            [
+                {"host_inventory": _make_host_inventory_tree(1)},
+                {"host_inventory": _make_host_inventory_tree(2)},
+                {"host_inventory": _make_host_inventory_tree(None)},
+            ],
+            id="no-context",
+        ),
+        pytest.param(
+            {"ident": {"ident": ""}},
+            [
+                {"host_inventory": _make_host_inventory_tree(1)},
+                {"host_inventory": _make_host_inventory_tree(2)},
+                {"host_inventory": _make_host_inventory_tree(None)},
+            ],
+            id="ignore",
+        ),
+        pytest.param(
+            {"ident": {"ident": "1"}},
+            [{"host_inventory": _make_host_inventory_tree(1)}],
+            id="select-first",
+        ),
+        pytest.param(
+            {"ident": {"ident": "2"}},
+            [{"host_inventory": _make_host_inventory_tree(2)}],
+            id="select-last",
+        ),
+    ],
+)
+def test_filter_inv_choice(context: VisualContext, expected_rows: Rows) -> None:
+    assert (
+        FilterInvChoice(
+            ident="ident",
+            title="Title",
+            inventory_path=InventoryPath(
+                (SDNodeName("path-to-node"),),
+                TreeSource.attributes,
+                SDKey("key"),
+            ),
+            options=[("1", "One"), ("2", "Two")],
+        ).filter_table(
+            context,
+            [
+                {"host_inventory": _make_host_inventory_tree(1)},
+                {"host_inventory": _make_host_inventory_tree(2)},
+                {"host_inventory": _make_host_inventory_tree(None)},
+            ],
+        )
         == expected_rows
     )
 

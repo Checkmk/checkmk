@@ -3,21 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.gui.inventory.filters import (
-    _find_package,
     FilterInvBool,
     FilterInvFloat,
     FilterInvFloatChoice,
+    FilterInvHasSoftwarePackage,
 )
-from cmk.gui.type_defs import Rows, VisualContext
+from cmk.gui.type_defs import Row, Rows, VisualContext
 from cmk.inventory.raw_paths import InventoryPath, TreeSource
 from cmk.inventory.trees import (
     ImmutableAttributes,
+    ImmutableTable,
     ImmutableTree,
     SDKey,
     SDNodeName,
@@ -270,52 +270,130 @@ def test_filter_inv_bool(context: VisualContext, rows: Rows, expected_rows: Rows
     )
 
 
-_PACKAGE_A = {"name": "package-a", "version": "2.0"}
+def _make_host_with_package(name: str) -> Row:
+    return {
+        "host_inventory": ImmutableTree(
+            nodes_by_name={
+                SDNodeName("software"): ImmutableTree(
+                    nodes_by_name={
+                        SDNodeName("packages"): ImmutableTree(
+                            table=ImmutableTable(
+                                key_columns=[SDKey("name")],
+                                rows_by_ident={
+                                    (name,): {SDKey("name"): name, SDKey("version"): "1.0"}
+                                },
+                            )
+                        )
+                    }
+                )
+            }
+        )
+    }
+
+
+_HOST_WITH_PACKAGE_A = _make_host_with_package("package-a")
+_HOST_WITH_PACKAGE_B = _make_host_with_package("package-b")
+_HOST_WITHOUT_PACKAGES: Row = {"host_inventory": ImmutableTree()}
 
 
 @pytest.mark.parametrize(
-    "packages, name, from_version, to_version, expected",
+    "filter_vars, expected_rows",
     [
-        pytest.param([_PACKAGE_A], "package-a", "", "", True, id="name-without-bounds"),
-        pytest.param([_PACKAGE_A], "package-b", "", "", False, id="another-name"),
-        pytest.param([], "package-a", "", "", False, id="no-packages"),
-        pytest.param([_PACKAGE_A], "package-a", "2.0", "2.0", True, id="the-exact-version"),
-        pytest.param([_PACKAGE_A], "package-a", "3.0", "3.0", False, id="another-exact-version"),
-        pytest.param([_PACKAGE_A], "package-a", "1.0", "", True, id="above-the-lower-bound"),
-        pytest.param([_PACKAGE_A], "package-a", "3.0", "", False, id="below-the-lower-bound"),
-        pytest.param([_PACKAGE_A], "package-a", "", "3.0", True, id="below-the-upper-bound"),
-        pytest.param([_PACKAGE_A], "package-a", "", "1.0", False, id="above-the-upper-bound"),
-        pytest.param([_PACKAGE_A], "package-a", "1.0", "3.0", True, id="between-the-bounds"),
-        pytest.param([_PACKAGE_A], "package-a", "3.0", "4.0", False, id="beneath-the-bounds"),
         pytest.param(
-            [_PACKAGE_A], re.compile("^package"), "", "", True, id="a-regex-matching-the-name"
+            {}, [_HOST_WITH_PACKAGE_A, _HOST_WITH_PACKAGE_B, _HOST_WITHOUT_PACKAGES], id="no-name"
+        ),
+        pytest.param({"invswpac_host_name": "package-a"}, [_HOST_WITH_PACKAGE_A], id="exact-name"),
+        pytest.param({"invswpac_host_name": "package-c"}, [], id="another-name"),
+        pytest.param(
+            {"invswpac_host_name": "^package", "invswpac_host_match": "regex"},
+            [_HOST_WITH_PACKAGE_A, _HOST_WITH_PACKAGE_B],
+            id="a-regex-matching-names",
         ),
         pytest.param(
-            [_PACKAGE_A], re.compile("^other"), "", "", False, id="a-regex-matching-no-name"
+            {"invswpac_host_name": "^other", "invswpac_host_match": "regex"},
+            [],
+            id="a-regex-matching-no-name",
         ),
         pytest.param(
-            [{"name": "package-a", "version": "1.0"}],
-            "package-a",
-            "1.00",
-            "",
-            True,
+            {"invswpac_host_name": "package-a", "invswpac_host_negate": "on"},
+            [_HOST_WITH_PACKAGE_B, _HOST_WITHOUT_PACKAGES],
+            id="negate",
+        ),
+        pytest.param(
+            {
+                "invswpac_host_name": "package-a",
+                "invswpac_host_version_from": "1.0",
+                "invswpac_host_version_to": "1.0",
+            },
+            [_HOST_WITH_PACKAGE_A],
+            id="the-exact-version",
+        ),
+        pytest.param(
+            {
+                "invswpac_host_name": "package-a",
+                "invswpac_host_version_from": "2.0",
+                "invswpac_host_version_to": "2.0",
+            },
+            [],
+            id="another-exact-version",
+        ),
+        pytest.param(
+            {"invswpac_host_name": "package-a", "invswpac_host_version_from": "0.5"},
+            [_HOST_WITH_PACKAGE_A],
+            id="above-the-lower-bound",
+        ),
+        pytest.param(
+            {"invswpac_host_name": "package-a", "invswpac_host_version_from": "2.0"},
+            [],
+            id="below-the-lower-bound",
+        ),
+        pytest.param(
+            {"invswpac_host_name": "package-a", "invswpac_host_version_to": "2.0"},
+            [_HOST_WITH_PACKAGE_A],
+            id="below-the-upper-bound",
+        ),
+        pytest.param(
+            {"invswpac_host_name": "package-a", "invswpac_host_version_to": "0.5"},
+            [],
+            id="above-the-upper-bound",
+        ),
+        pytest.param(
+            {
+                "invswpac_host_name": "package-a",
+                "invswpac_host_version_from": "0.5",
+                "invswpac_host_version_to": "2.0",
+            },
+            [_HOST_WITH_PACKAGE_A],
+            id="between-the-bounds",
+        ),
+        pytest.param(
+            {
+                "invswpac_host_name": "package-a",
+                "invswpac_host_version_from": "2.0",
+                "invswpac_host_version_to": "3.0",
+            },
+            [],
+            id="beneath-the-bounds",
+        ),
+        pytest.param(
+            {"invswpac_host_name": "package-a", "invswpac_host_version_from": "1.00"},
+            [_HOST_WITH_PACKAGE_A],
             id="the-lower-bound-spelled-with-another-zero",
         ),
         pytest.param(
-            [{"name": "package-a", "version": "1.0"}],
-            "package-a",
-            "",
-            "1.00",
-            True,
+            {"invswpac_host_name": "package-a", "invswpac_host_version_to": "1.00"},
+            [_HOST_WITH_PACKAGE_A],
             id="the-upper-bound-spelled-with-another-zero",
         ),
     ],
 )
-def test_find_package(
-    packages: Sequence[Mapping[str, SDValue]],
-    name: str | re.Pattern[str],
-    from_version: str,
-    to_version: str,
-    expected: bool,
+def test_filter_inv_has_software_package(
+    filter_vars: Mapping[str, str], expected_rows: Rows
 ) -> None:
-    assert _find_package(packages, name, from_version, to_version) is expected
+    assert (
+        FilterInvHasSoftwarePackage().filter_table(
+            {"invswpac": filter_vars},
+            [_HOST_WITH_PACKAGE_A, _HOST_WITH_PACKAGE_B, _HOST_WITHOUT_PACKAGES],
+        )
+        == expected_rows
+    )

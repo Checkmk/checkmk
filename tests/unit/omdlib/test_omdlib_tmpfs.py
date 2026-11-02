@@ -6,7 +6,7 @@
 
 from pathlib import Path
 
-from omdlib.tmpfs import _restore_tmpfs_dump, add_to_fstab, save_tmpfs_dump
+from omdlib.tmpfs import _restore_tmpfs_dump, add_to_fstab, remove_from_fstab, save_tmpfs_dump
 from omdlib.utils import delete_directory_contents
 
 
@@ -59,6 +59,19 @@ def test_add_to_fstab_empty(tmp_path: Path) -> None:
     assert fstab_path.open().read() == (
         f"tmpfs  {real_tmp_dir} tmpfs noauto,user,mode=751,uid=unit,gid=unit 0 0\n"
     )
+
+
+def test_remove_from_fstab_keeps_mode(tmp_path: Path) -> None:
+    fstab_path = tmp_path / "fstab"
+    real_tmp_dir = str(tmp_path / "opt/omd/sites/unit/tmp")
+    fstab_path.write_text(
+        "# system fstab bla\n"
+        f"tmpfs  {real_tmp_dir} tmpfs noauto,user,mode=751,uid=unit,gid=unit 0 0\n"
+    )
+    fstab_path.chmod(0o600)
+    remove_from_fstab("unit", real_tmp_dir, fstab_path)
+    assert fstab_path.stat().st_mode & 0o777 == 0o600
+    assert fstab_path.read_text() == "# system fstab bla\n"
 
 
 def test_tmpfs_save_then_restore(tmp_path: Path) -> None:

@@ -9,6 +9,7 @@ import errno
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -243,6 +244,7 @@ def remove_from_fstab(
         (path_new_fstab := Path(str(fstab_path) + ".new")).open(mode="w") as newtab,
         fstab_path.open() as current_fstab,
     ):
+        shutil.copymode(fstab_path, path_new_fstab)
         for line in current_fstab:
             if "uid=%s," % site_name in line and site_tmp_dir in line:
                 continue

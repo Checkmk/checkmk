@@ -14,6 +14,8 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import HostServicesApp from '@/monitoring/host-services/HostServicesApp.vue'
+import { CHECK_POLL_INTERVAL_MS } from '@/monitoring/shared/components/action/actions/reschedule'
+import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 
 type ApiServiceEntry = components['schemas']['HostServiceEntry']
 type ApiHostEntry = components['schemas']['HostEntry']
@@ -989,7 +991,11 @@ test('reads the host of the page alongside its services', async () => {
   )
 })
 
-describe('the host slide-in', () => {
+/**
+ * Gives the page a size for the tests of the surrounding describe, so the rows lay out, and with
+ * `slideIns` a content area for the slide-ins to open in.
+ */
+function layOutThePage({ slideIns }: { slideIns: boolean }): void {
   const originalOffsetHeight = Object.getOwnPropertyDescriptor(
     HTMLElement.prototype,
     'offsetHeight'
@@ -997,12 +1003,13 @@ describe('the host slide-in', () => {
   const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
 
   beforeEach(() => {
-    const contentArea = document.createElement('div')
-    contentArea.id = 'content_area'
-    document.body.appendChild(contentArea)
+    if (slideIns) {
+      const contentArea = document.createElement('div')
+      contentArea.id = 'content_area'
+      document.body.appendChild(contentArea)
+    }
     Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
     Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
-    vi.spyOn(client, 'GET').mockReturnValue(new Promise(() => {}) as never)
   })
 
   afterEach(() => {
@@ -1012,6 +1019,14 @@ describe('the host slide-in', () => {
     if (originalOffsetWidth) {
       Object.defineProperty(HTMLElement.prototype, 'offsetWidth', originalOffsetWidth)
     }
+  })
+}
+
+describe('the host slide-in', () => {
+  layOutThePage({ slideIns: true })
+
+  beforeEach(() => {
+    vi.spyOn(client, 'GET').mockReturnValue(new Promise(() => {}) as never)
   })
 
   test('opens when the host name in the page header is clicked', async () => {
@@ -1181,25 +1196,7 @@ test('asks whether the host may be opened in Setup when the page offers host Set
 })
 
 describe('with the rows laid out', () => {
-  const originalOffsetHeight = Object.getOwnPropertyDescriptor(
-    HTMLElement.prototype,
-    'offsetHeight'
-  )
-  const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
-
-  beforeEach(() => {
-    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
-    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
-  })
-
-  afterEach(() => {
-    if (originalOffsetHeight) {
-      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', originalOffsetHeight)
-    }
-    if (originalOffsetWidth) {
-      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', originalOffsetWidth)
-    }
-  })
+  layOutThePage({ slideIns: false })
 
   test('asks for the AI explanation of a row with its host and service state', async () => {
     host = makeApiHost({ state: 'DOWN' })
@@ -1405,4 +1402,181 @@ test('archives the events of the host of the selected services after confirming 
     '/monitor/hosts/actions/archive_events',
     expect.objectContaining({ body: { hosts: [{ site_id: 'local', name: 'web-1' }] } })
   )
+})
+
+/*
+ * Rescheduling from the page, and what its outcome does to the listing. The refresh mechanism
+ * itself is covered on the service; what is covered here is which outcome arms it.
+ */
+
+const RESCHEDULE: MonitoringAction = {
+  ident: 'reschedule',
+  title: 'Reschedule active checks',
+  icon: 'reload'
+}
+
+const SERVICES_LISTING = '/monitor/hosts/{hostname}/services'
+const SERVICE_OVERVIEW = '/monitor/hosts/{hostname}/service'
+const RESCHEDULE_COMMAND = '/monitor/services/actions/reschedule'
+
+/** When the site rescheduled the checks; a check that last ran since then has run again. */
+const RESCHEDULED_AT = 1784023200
+
+/** A service row with the backend's reschedule offer; no target means it cannot be rescheduled. */
+function reschedulable(name: string, target?: string): ApiServiceEntry {
+  return {
+    ...makeApiEntry(),
+    name,
+    reschedule: {
+      label: 'Reschedule check',
+      tooltip: 'Reschedule check',
+      icon_name: 'reload',
+      ...(target === undefined ? {} : { target })
+    }
+  }
+}
+
+/** Whether the check rescheduled has run yet; it runs at once unless a test holds it back. */
+let rescheduledCheckRan = true
+
+/** The overview of a service, whose check has run since it was rescheduled or not yet. */
+function checkedOverview(name: string): components['schemas']['ServiceOverviewResponse'] {
+  return {
+    name,
+    host_name: 'web-1',
+    site_id: 'local',
+    state: 'OK',
+    is_flapping: false,
+    stale: false,
+    modes: [],
+    host_alias: 'web-1',
+    host_state: 'UP',
+    host_modes: [],
+    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-1',
+    legacy_service_status_link: 'view.py?view_name=service&site=local&host=web-1',
+    legacy_service_parameters_link: 'wato.py?mode=object_parameters&host=web-1',
+    legacy_service_discovery_link: null,
+    legacy_service_graphs_link: 'view.py?view_name=service_graphs&site=local&host=web-1',
+    contact_groups: [],
+    summary: 'OK',
+    long_output: '',
+    last_check: rescheduledCheckRan ? RESCHEDULED_AT + 1 : RESCHEDULED_AT - 60,
+    last_state_change: RESCHEDULED_AT - 3600,
+    current_attempt: 1,
+    max_check_attempts: 3,
+    next_check: RESCHEDULED_AT + 60,
+    scheduled_by_relay: false,
+    tags: {},
+    labels: {}
+  }
+}
+
+/**
+ * Answers the endpoints this flow touches; any other POST is a wiring mistake, not a test case.
+ * Every read the service panel makes other than of the overview stays open.
+ */
+function mockBackend(services: ApiServiceEntry[]): void {
+  rescheduledCheckRan = true
+  vi.spyOn(client, 'GET').mockImplementation(((
+    path: string,
+    init: { params: { query: { service_name: string } } }
+  ) => {
+    if (path === SERVICE_OVERVIEW) {
+      return Promise.resolve({
+        data: checkedOverview(init.params.query.service_name),
+        error: undefined,
+        response: new Response()
+      })
+    }
+    return new Promise(() => {})
+  }) as never)
+  postSpy.mockImplementation((path: string, init: { body: { services: unknown[] } }) => {
+    if (path === HOSTS_PATH) {
+      return Promise.resolve(hostsResponse()) as never
+    }
+    if (path === SERVICES_LISTING) {
+      return Promise.resolve(
+        servicesResponse(services, { matched: services.length, total: services.length })
+      ) as never
+    }
+    if (path === RESCHEDULE_COMMAND) {
+      return Promise.resolve({
+        data: {
+          rescheduled: init.body.services.length,
+          scheduled_at: RESCHEDULED_AT,
+          wait_timeout: 10
+        },
+        error: undefined,
+        response: new Response()
+      }) as never
+    }
+    throw new Error(`unexpected POST to ${path}`)
+  })
+}
+
+function listingReads(): number {
+  return postSpy.mock.calls.filter(([path]: [string]) => path === SERVICES_LISTING).length
+}
+
+describe('rescheduling', () => {
+  describe('a moment after it was accepted', () => {
+    /*
+     * The clock is faked to hold the deferred refresh still, which rules out every
+     * testing-library waiter: they advance a faked clock themselves and would fire the very
+     * timer under test.
+     */
+    async function renderWithTheClockHeld(services: ApiServiceEntry[]) {
+      vi.useFakeTimers()
+      const user = userEvent.setup({ advanceTimers: (ms: number) => vi.advanceTimersByTime(ms) })
+      mockBackend(services)
+      renderApp({ actions: [RESCHEDULE] })
+      await vi.advanceTimersByTimeAsync(0)
+      return user
+    }
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    // Several checks are spread out, so the reschedule does not wait for them to run.
+    test('re-reads the services after a reschedule from the action bar', async () => {
+      const user = await renderWithTheClockHeld([
+        reschedulable('CPU load', 'CPU load'),
+        reschedulable('Memory', 'Memory')
+      ])
+      await user.click(screen.getByRole('checkbox', { name: 'Select all rows' }))
+      await user.click(screen.getByRole('button', { name: RESCHEDULE.title }))
+      await vi.advanceTimersByTimeAsync(0)
+      await user.click(screen.getByRole('button', { name: 'Reschedule checks' }))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(screen.getByText('Rescheduled 2 checks')).toBeInTheDocument()
+      expect(listingReads()).toBe(1)
+
+      await vi.advanceTimersByTimeAsync(ACTION_REFRESH_DELAY_MS)
+
+      expect(listingReads()).toBe(2)
+    })
+
+    describe('from the service panel', () => {
+      layOutThePage({ slideIns: true })
+
+      // Rescheduling the one service on show waits for its check to run.
+      test('re-reads the services only once the check rescheduled from the service panel ran', async () => {
+        const user = await renderWithTheClockHeld([reschedulable('CPU load', 'CPU load')])
+        rescheduledCheckRan = false
+        await user.click(screen.getByRole('button', { name: 'CPU load' }))
+        await vi.advanceTimersByTimeAsync(0)
+        await user.click(
+          within(screen.getByRole('dialog')).getByRole('button', { name: 'Reschedule check' })
+        )
+        await vi.advanceTimersByTimeAsync(CHECK_POLL_INTERVAL_MS + ACTION_REFRESH_DELAY_MS)
+        expect(listingReads()).toBe(1)
+
+        rescheduledCheckRan = true
+        await vi.advanceTimersByTimeAsync(CHECK_POLL_INTERVAL_MS + ACTION_REFRESH_DELAY_MS)
+
+        expect(listingReads()).toBe(2)
+      })
+    })
+  })
 })

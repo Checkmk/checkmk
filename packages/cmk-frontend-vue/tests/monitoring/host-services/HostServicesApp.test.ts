@@ -1519,6 +1519,45 @@ function listingReads(): number {
 }
 
 describe('rescheduling', () => {
+  async function rescheduleTheSelection(services: ApiServiceEntry[]): Promise<void> {
+    const user = userEvent.setup()
+    mockBackend(services)
+    renderApp({ actions: [RESCHEDULE] })
+    await screen.findByText(`Total rows: ${services.length}`)
+
+    await user.click(screen.getByRole('checkbox', { name: 'Select all rows' }))
+    await user.click(screen.getByRole('button', { name: RESCHEDULE.title }))
+    // Several rows open the form, which asks over how many minutes to spread the checks.
+    await user.click(await screen.findByRole('button', { name: 'Reschedule checks' }))
+    await vi.waitFor(rescheduledServices)
+  }
+
+  function rescheduledServices(): unknown {
+    const call = postSpy.mock.calls.find(([path]: [string]) => path === RESCHEDULE_COMMAND)
+    if (call === undefined) {
+      throw new Error('no reschedule was sent')
+    }
+    return (call[1] as { body: { services: unknown } }).body.services
+  }
+
+  test('reschedules the Check_MK service once for the services it produces', async () => {
+    await rescheduleTheSelection([
+      reschedulable('CPU load', 'Check_MK'),
+      reschedulable('Memory', 'Check_MK'),
+      reschedulable('Check_MK', 'Check_MK')
+    ])
+
+    expect(rescheduledServices()).toEqual([
+      { site_id: 'local', host_name: 'web-1', name: 'Check_MK' }
+    ])
+  })
+
+  test('leaves a service that cannot be rescheduled out of the reschedule', async () => {
+    await rescheduleTheSelection([reschedulable('HTTP', 'HTTP'), reschedulable('Mount options')])
+
+    expect(rescheduledServices()).toEqual([{ site_id: 'local', host_name: 'web-1', name: 'HTTP' }])
+  })
+
   describe('a moment after it was accepted', () => {
     /*
      * The clock is faked to hold the deferred refresh still, which rules out every

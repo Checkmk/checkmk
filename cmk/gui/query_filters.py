@@ -372,10 +372,13 @@ def version_in_range(
 ) -> Rows:
     values = context.get(ident, {})
     from_version, to_version = (values.get(v, "").strip() for v in request_vars)
+    if not from_version and not to_version:
+        return rows
 
     new_rows = []
     for row in rows:
-        version = row.get(ident, "")
+        if (version := row.get(ident)) is None:
+            continue
         if from_version and cmp_version(version, from_version) == -1:
             continue
         if to_version and cmp_version(version, to_version) == 1:

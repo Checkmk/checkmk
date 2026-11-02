@@ -429,6 +429,13 @@ def test_filter_invtable_version_ignores_blank_bounds() -> None:
     ) == [{"ident": "1.0"}]
 
 
+def test_filter_invtable_version_drops_a_row_without_version() -> None:
+    assert FilterInvtableVersion(inv_info="info", ident="ident", title="Title").filter_table(
+        {"ident": {"ident_until": "2.0"}},
+        [{"ident": None}, {"ident": "1.0"}],
+    ) == [{"ident": "1.0"}]
+
+
 def _make_host_with_package(name: str) -> Row:
     return {
         "host_inventory": ImmutableTree(

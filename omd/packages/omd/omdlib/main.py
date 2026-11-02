@@ -591,10 +591,10 @@ def _patch_template_file(
                 os.system(f"su - {new_site.name} -c 'cd {thedir} ; bash -i'")  # nosec B605 # BNS:2b5952
     # remove unnecessary files
     try:
-        os.remove(dst + ".skel." + old_site_name)
-        os.remove(dst + ".skel." + new_site.name)
-        os.remove(dst + ".orig")
-        os.remove(dst + ".rej")
+        Path(dst + ".skel." + old_site_name).unlink(missing_ok=True)
+        Path(dst + ".skel." + new_site.name).unlink(missing_ok=True)
+        Path(dst + ".orig").unlink(missing_ok=True)
+        Path(dst + ".rej").unlink(missing_ok=True)
     except Exception:
         pass
 

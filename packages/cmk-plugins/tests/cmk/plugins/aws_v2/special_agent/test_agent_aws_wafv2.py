@@ -393,3 +393,29 @@ def test_agent_aws_wafv2_web_acl_metrics_go_to_a_host_per_web_acl_and_scope(
         f"Name-1_{expected_suffix}",
         f"Name-2_{expected_suffix}",
     ]
+
+
+@pytest.mark.parametrize(
+    ("is_regional", "expected_suffix", "expected_region"),
+    [
+        pytest.param(True, "region", {"cmk/aws/region": "region"}, id="regional"),
+        pytest.param(False, "CloudFront", {}, id="global"),
+    ],
+)
+def test_agent_aws_wafv2_web_acl_hosts_get_the_resource_labels(
+    is_regional: bool, expected_suffix: str, expected_region: Mapping[str, str]
+) -> None:
+    wafv2_sections = create_sections(None, (None, None), is_regional)
+    wafv2_sections["wafv2_summary"].run()
+
+    results = wafv2_sections["wafv2_web_acl"].run().results
+
+    host = f"Name-2_{expected_suffix}"  # the third web ACL has no tags
+    assert {result.piggyback_hostname: result.piggyback_host_labels for result in results}[
+        host
+    ] == {
+        "cmk/aws/service": "wafv2",
+        "cmk/aws/name": "Name-2",
+        "cmk/aws/resource_id": "Id-2",
+        **expected_region,
+    }

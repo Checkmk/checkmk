@@ -671,3 +671,24 @@ def test_agent_aws_elbv2_filters_tags(
 
     for result in elb_summary_results:
         assert list(result.content[0]["TagsForCmkLabels"].keys()) == expected_tags
+
+
+def test_agent_aws_elbv2_load_balancer_hosts_get_the_resource_labels(
+    get_elbv2_sections: ELBv2Sections,
+) -> None:
+    elbv2_sections = get_elbv2_sections()
+    elbv2_sections.elbv2_summary.run()
+    elbv2_application, _http, _lambda = elbv2_sections.elbv2_application
+
+    results = elbv2_application.run().results
+
+    # The tags reach the host through the elbv2_generic_labels section.
+    assert {result.piggyback_hostname: result.piggyback_host_labels for result in results} == {
+        f"DNSName-{i}": {
+            "cmk/aws/service": "elbv2",
+            "cmk/aws/name": f"LoadBalancerName-{i}",
+            "cmk/aws/resource_id": f"LoadBalancerName-{i}",
+            "cmk/aws/region": "region",
+        }
+        for i in range(3)
+    }

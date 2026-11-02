@@ -20,6 +20,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
 from cmk.plugins.aws_v2.special_agent.hosts import TargetHost
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.dynamodb import (
+    DynamoDB,
     DynamoDBLimits,
     DynamoDBSummary,
     DynamoDBTable,
@@ -87,7 +88,8 @@ class FakeDynamoDBClient:
         return {"Tags": tags, "NextToken": "string"}
 
 
-DynamobSectionsOut = dict[str, DynamoDBLimits | DynamoDBSummary | DynamoDBTable]
+DynamoDBSection = DynamoDBLimits | DynamoDBSummary | DynamoDBTable | DynamoDB
+DynamobSectionsOut = dict[str, DynamoDBSection]
 
 
 class DynamobSections(Protocol):
@@ -122,14 +124,17 @@ def get_dynamodb_sections() -> DynamobSections:
         dynamodb_limits = DynamoDBLimits(fake_dynamodb_client, region, config, distributor)
         dynamodb_summary = DynamoDBSummary(fake_dynamodb_client, region, config, distributor)
         dynamodb_table = DynamoDBTable(fake_cloudwatch_client, region, config)
+        dynamodb = DynamoDB(fake_dynamodb_client, region, config)
 
         distributor.add(dynamodb_limits.name, dynamodb_summary)
         distributor.add(dynamodb_summary.name, dynamodb_table)
+        distributor.add(dynamodb_summary.name, dynamodb)
 
         return {
             "dynamodb_limits": dynamodb_limits,
             "dynamodb_summary": dynamodb_summary,
             "dynamodb_table": dynamodb_table,
+            "dynamodb": dynamodb,
         }
 
     return _create_dynamodb_sections
@@ -221,7 +226,7 @@ def test_agent_aws_dynamodb_limits(
 
 
 def _test_summary(
-    dynamodb_summary: DynamoDBLimits | DynamoDBSummary | DynamoDBTable,
+    dynamodb_summary: DynamoDBSection,
     found_instances: Sequence[str],
 ) -> None:
     dynamodb_summary_results = dynamodb_summary.run().results
@@ -264,7 +269,7 @@ def test_agent_aws_dynamodb_summary_wo_limits(
 
 
 def _test_table(
-    dynamodb_table: DynamoDBLimits | DynamoDBSummary | DynamoDBTable,
+    dynamodb_table: DynamoDBSection,
     found_instances: Sequence[str],
 ) -> None:
     dynamodb_table_results = dynamodb_table.run().results
@@ -347,3 +352,29 @@ def test_agent_aws_dynamodb_table_metrics_go_to_a_host_per_table_and_region(
         "TableName-1_region",
         "TableName-2_region",
     ]
+
+
+def test_agent_aws_dynamodb_table_hosts_get_the_resource_labels(
+    get_dynamodb_sections: DynamobSections,
+) -> None:
+    dynamodb_sections = get_dynamodb_sections(None, (None, None))
+    dynamodb_sections["dynamodb_summary"].run()
+
+    results = dynamodb_sections["dynamodb"].run().results
+
+    # The third table has no tags.
+    tags = {
+        "cmk/aws/tag/Key-0": "Value-0",
+        "cmk/aws/tag/Key-1": "Value-1",
+        "cmk/aws/tag/Key-2": "Value-2",
+    }
+    assert {result.piggyback_hostname: result.piggyback_host_labels for result in results} == {
+        f"TableName-{i}_region": {
+            "cmk/aws/service": "dynamodb",
+            "cmk/aws/name": f"TableName-{i}",
+            "cmk/aws/resource_id": f"TableId-{i}",
+            "cmk/aws/region": "region",
+            **(tags if i < 2 else {}),
+        }
+        for i in range(3)
+    }

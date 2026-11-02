@@ -428,26 +428,70 @@ def test_agent_aws_cloudfront_puts_each_distribution_on_its_own_host(
 
 
 @pytest.mark.parametrize(
-    "host_assignment, expected_labels",
+    ("names", "expected_labels"),
     [
-        pytest.param(CloudFrontHostAssignment.account, None, id="aws host"),
-        pytest.param(CloudFrontHostAssignment.origin_domain, None, id="origin domain host"),
         pytest.param(
-            CloudFrontHostAssignment.distribution,
+            ["E2RAYOVSSL6ZM3"],
+            {
+                "cmk/aws/service": "cloudfront",
+                "cmk/aws/resource_id": "E2RAYOVSSL6ZM3",
+            },
+            id="one distribution",
+        ),
+        pytest.param(
+            None,
             {"cmk/aws/service": "cloudfront"},
-            id="distribution host",
+            id="several distributions share the origin",
         ),
     ],
 )
-def test_agent_aws_cloudfront_labels_only_distribution_hosts(
+def test_agent_aws_cloudfront_origin_hosts_get_the_resource_labels(
     get_cloudfront_sections: CloudFrontSections,
-    host_assignment: CloudFrontHostAssignment,
-    expected_labels: Mapping[str, str] | None,
+    names: Sequence[str] | None,
+    expected_labels: Mapping[str, str],
 ) -> None:
-    cloudfront_summary, cloudfront = get_cloudfront_sections(None, (None, None), host_assignment)
+    cloudfront_summary, cloudfront = get_cloudfront_sections(
+        names, (None, None), CloudFrontHostAssignment.origin_domain
+    )
     cloudfront_summary.run()
 
-    cloudfront_results = cloudfront.run().results
+    results = cloudfront.run().results
 
-    assert cloudfront_results
-    assert all(result.piggyback_host_labels == expected_labels for result in cloudfront_results)
+    assert [result.piggyback_host_labels for result in results] == [expected_labels]
+
+
+def test_agent_aws_cloudfront_distribution_hosts_get_the_resource_labels(
+    get_cloudfront_sections: CloudFrontSections,
+) -> None:
+    cloudfront_summary, cloudfront = get_cloudfront_sections(
+        None, (None, None), CloudFrontHostAssignment.distribution
+    )
+    cloudfront_summary.run()
+
+    results = cloudfront.run().results
+
+    assert {result.piggyback_hostname: result.piggyback_host_labels for result in results} == {
+        "E2RAYOVSSL6ZM3": {
+            "cmk/aws/service": "cloudfront",
+            "cmk/aws/resource_id": "E2RAYOVSSL6ZM3",
+        },
+        "EWN6C0UT7HBX0": {
+            "cmk/aws/service": "cloudfront",
+            "cmk/aws/resource_id": "EWN6C0UT7HBX0",
+            "cmk/aws/tag/test-tag-key2": "test-tag-value2",
+            "cmk/aws/tag/test-tag-key": "test-tag-value",
+        },
+    }
+
+
+def test_agent_aws_cloudfront_on_the_account_host_gets_no_resource_labels(
+    get_cloudfront_sections: CloudFrontSections,
+) -> None:
+    cloudfront_summary, cloudfront = get_cloudfront_sections(
+        None, (None, None), CloudFrontHostAssignment.account
+    )
+    cloudfront_summary.run()
+
+    results = cloudfront.run().results
+
+    assert [result.piggyback_host_labels for result in results] == [None]

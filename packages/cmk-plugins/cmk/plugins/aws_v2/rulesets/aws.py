@@ -660,14 +660,16 @@ def configuration_regions_and_tags() -> Mapping[str, DictElement]:
             parameter_form=CascadingSingleChoice(
                 title=Title("Import tags as host labels"),
                 help_text=Help(
-                    "Enable this option to import the AWS tags for EC2 and ELB instances "
-                    "as host labels for the respective piggyback hosts. The label syntax "
-                    "is 'cmk/aws/tag/{key}:{value}'.<br>Additionally, the piggyback hosts "
-                    "for EC2 instances are given the host label 'cmk/aws/ec2:instance', "
-                    "which is done independent of this option.<br>You can further restrict "
-                    "the imported tags by specifying a pattern which Checkmk searches for "
-                    "in the key of the AWS tag, or you can disable the import of AWS tags "
-                    "altogether."
+                    "Enable this option to import the AWS tags of the monitored resources "
+                    "as host labels for their piggyback hosts. The label syntax is "
+                    "'cmk/aws/tag/{key}:{value}'.<br>Independent of this option, every AWS "
+                    "piggyback host is given the host label 'cmk/aws/account', and the host "
+                    "of a resource is given labels for its service, name, resource ID and "
+                    "region, for example 'cmk/aws/service:rds'. The piggyback hosts for EC2 "
+                    "instances are also given the host label 'cmk/aws/ec2:instance'.<br>You "
+                    "can further restrict the imported tags by specifying a pattern which "
+                    "Checkmk searches for in the key of the AWS tag, or you can disable the "
+                    "import of AWS tags altogether."
                 ),
                 elements=[
                     CascadingSingleChoiceElement(

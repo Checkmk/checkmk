@@ -15,6 +15,7 @@ from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig, Tags
+from ..labels import resource_labels
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -411,14 +412,28 @@ class WAFV2WebACL(AWSSectionCloudwatch):
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-        content_by_piggyback_hosts: dict[str, list[dict[str, object]]] = {}
+        content_by_piggyback_hosts: dict[hosts.TargetHost, list[dict[str, object]]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
-        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+        return AWSComputedContent(
+            [
+                AWSSectionResult(host, rows, _web_acl_labels(colleague_contents.content.get(host)))
+                for host, rows in content_by_piggyback_hosts.items()
+            ],
+            raw_content.cache_timestamp,
+        )
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [
-            AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in computed_content.content.items()
-        ]
+        return list(computed_content.content)
+
+
+def _web_acl_labels(web_acl: Mapping[str, Any] | None) -> Mapping[str, str]:
+    if web_acl is None:
+        # The web ACL is gone from the summary since its metrics were cached.
+        return {"cmk/aws/service": "wafv2"}
+    # A web ACL in front of CloudFront is global. Its "Region" is "CloudFront".
+    region = None if web_acl["Region"] == "CloudFront" else web_acl["Region"]
+    return resource_labels(
+        "wafv2", web_acl["Name"], web_acl["Id"], region, web_acl["TagsForCmkLabels"]
+    )

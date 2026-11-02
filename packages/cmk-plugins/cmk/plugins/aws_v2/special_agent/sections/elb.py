@@ -9,12 +9,13 @@
 # mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping, Sequence
-from typing import override
+from typing import Any, override
 
 from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig, Tags
+from ..labels import resource_labels
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -412,14 +413,35 @@ class ELB(AWSSectionCloudwatch):
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-        content_by_piggyback_hosts: dict[str, list[str]] = {}
+        content_by_piggyback_hosts: dict[hosts.TargetHost, list[str]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
-        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+        return AWSComputedContent(
+            [
+                AWSSectionResult(
+                    host,
+                    rows,
+                    self._load_balancer_labels(colleague_contents.content.get(host)),
+                )
+                for host, rows in content_by_piggyback_hosts.items()
+            ],
+            raw_content.cache_timestamp,
+        )
+
+    def _load_balancer_labels(self, load_balancer: Mapping[str, Any] | None) -> Mapping[str, str]:
+        if load_balancer is None:
+            # The load balancer is gone from the summary since its metrics were cached.
+            return self.host_labels
+        # The tags reach the host through the elb_generic_labels section.
+        # A classic load balancer has no ID of its own.
+        return resource_labels(
+            "elb",
+            load_balancer["LoadBalancerName"],
+            load_balancer["LoadBalancerName"],
+            self._region,
+            {},
+        )
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [
-            AWSSectionResult(piggyback_hostname, rows, self.host_labels)
-            for piggyback_hostname, rows in computed_content.content.items()
-        ]
+        return list(computed_content.content)

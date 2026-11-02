@@ -6,13 +6,14 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import Sequence
-from typing import override
+from collections.abc import Mapping, Sequence
+from typing import Any, override
 
 from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig
+from ..labels import resource_labels
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -274,6 +275,38 @@ class ELBv2TargetGroups(AWSSection):
         ]
 
 
+def _load_balancer_results(
+    region: str,
+    rows: Sequence[Mapping[str, Any]],
+    load_balancers: Mapping[hosts.TargetHost, Mapping[str, Any]],
+) -> list[AWSSectionResult]:
+    """One result per load balancer host. The label of each metric is the host."""
+    rows_by_host: dict[hosts.TargetHost, list[Mapping[str, Any]]] = {}
+    for row in rows:
+        rows_by_host.setdefault(row["Label"], []).append(row)
+    return [
+        AWSSectionResult(host, host_rows, _load_balancer_labels(region, load_balancers.get(host)))
+        for host, host_rows in rows_by_host.items()
+    ]
+
+
+def _load_balancer_labels(
+    region: str, load_balancer: Mapping[str, Any] | None
+) -> Mapping[str, str] | None:
+    if load_balancer is None:
+        # The load balancer is gone from the summary since its metrics were cached.
+        return None
+    # The tags reach the host through the elbv2_generic_labels section.
+    return resource_labels(
+        "elbv2",
+        load_balancer["LoadBalancerName"],
+        # A load balancer has no ID of its own, only its ARN.
+        load_balancer["LoadBalancerName"],
+        region,
+        {},
+    )
+
+
 class ELBv2Application(AWSSectionCloudwatch):
     @property
     @override
@@ -352,17 +385,14 @@ class ELBv2Application(AWSSectionCloudwatch):
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-        content_by_piggyback_hosts: dict[str, list[str]] = {}
-        for row in raw_content.content:
-            content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
-        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+        return AWSComputedContent(
+            _load_balancer_results(self._region, raw_content.content, colleague_contents.content),
+            raw_content.cache_timestamp,
+        )
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [
-            AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in computed_content.content.items()
-        ]
+        return list(computed_content.content)
 
 
 class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
@@ -586,14 +616,11 @@ class ELBv2Network(AWSSectionCloudwatch):
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-        content_by_piggyback_hosts: dict[str, list[str]] = {}
-        for row in raw_content.content:
-            content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
-        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+        return AWSComputedContent(
+            _load_balancer_results(self._region, raw_content.content, colleague_contents.content),
+            raw_content.cache_timestamp,
+        )
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [
-            AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in computed_content.content.items()
-        ]
+        return list(computed_content.content)

@@ -14,7 +14,8 @@ from typing import override
 from botocore.client import BaseClient
 
 from .. import hosts
-from ..config import AWSConfig, CloudFrontHostAssignment
+from ..config import AWSConfig
+from ..labels import resource_labels
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -189,6 +190,7 @@ class CloudFront(AWSSectionCloudwatch):
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         content_by_host = defaultdict(list)
+        distributions_by_host: dict[hosts.TargetHost, set[str]] = defaultdict(set)
         origin_domain_by_distribution = self._get_origin_domain_by_distribution(
             colleague_contents.content
         )
@@ -200,16 +202,42 @@ class CloudFront(AWSSectionCloudwatch):
                 )
             )
             content_by_host[piggyback_host].append(distribution_data)
-        return AWSComputedContent(content_by_host, raw_content.cache_timestamp)
+            distributions_by_host[piggyback_host].add(distribution_id)
+
+        distributions = {d["Id"]: d for d in colleague_contents.content or [] if "Id" in d}
+        account_host = self._target_host(hosts.AccountScope())
+        return AWSComputedContent(
+            [
+                AWSSectionResult(
+                    host,
+                    content,
+                    None
+                    if host == account_host
+                    else _cloudfront_host_labels(
+                        [distributions.get(d) for d in distributions_by_host[host]]
+                    ),
+                )
+                for host, content in content_by_host.items()
+            ],
+            raw_content.cache_timestamp,
+        )
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        host_labels = (
-            {"cmk/aws/service": "cloudfront"}
-            if self._config.host_naming.cloudfront is CloudFrontHostAssignment.distribution
-            else None
-        )
-        return [
-            AWSSectionResult(piggyback_host, content, host_labels)
-            for piggyback_host, content in computed_content.content.items()
-        ]
+        return list(computed_content.content)
+
+
+def _cloudfront_host_labels(distributions: Sequence[Mapping | None]) -> Mapping[str, str]:
+    """The labels of a host of CloudFront distributions.
+
+    Several distributions can share the host of their origin domain, so a host stands for
+    one distribution only if it has one. CloudFront is global and has no region. A
+    distribution has no name either.
+    """
+    match distributions:
+        case [Mapping() as distribution]:
+            return resource_labels(
+                "cloudfront", None, distribution["Id"], None, distribution["TagsForCmkLabels"]
+            )
+        case _:
+            return {"cmk/aws/service": "cloudfront"}

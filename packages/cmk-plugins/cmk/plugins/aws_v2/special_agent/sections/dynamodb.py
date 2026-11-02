@@ -9,12 +9,13 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import override
+from typing import Any, override
 
 from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig, Tags
+from ..labels import resource_labels
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -79,10 +80,6 @@ class DynamoDB(AWSSection):
     def granularity(self) -> int:
         return 300
 
-    @property
-    def host_labels(self) -> Mapping[str, str]:
-        return {"cmk/aws/service": "dynamodb"}
-
     @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, str]] | None:
         (colleague_contents,) = args
@@ -99,18 +96,31 @@ class DynamoDB(AWSSection):
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-        content_by_piggyback_hosts: dict[str, list[str]] = {}
+        content_by_piggyback_hosts: dict[hosts.TargetHost, list[str]] = {}
         for row in colleague_contents.content:
             content_by_piggyback_hosts.setdefault(row, []).append(row)
 
-        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+        return AWSComputedContent(
+            [
+                AWSSectionResult(host, rows, self._table_labels(colleague_contents.content[host]))
+                for host, rows in content_by_piggyback_hosts.items()
+            ],
+            raw_content.cache_timestamp,
+        )
+
+    def _table_labels(self, table: Mapping[str, Any]) -> Mapping[str, str]:
+        # No check plugin reads the dynamodb_generic_labels section, so the tags go here.
+        return resource_labels(
+            "dynamodb",
+            table["TableName"],
+            table["TableId"],
+            table["Region"],
+            table["TagsForCmkLabels"],
+        )
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [
-            AWSSectionResult(piggyback_hostname, rows, self.host_labels)
-            for piggyback_hostname, rows in computed_content.content.items()
-        ]
+        return list(computed_content.content)
 
 
 class DynamoDBLabelsGeneric(AWSSectionLabels):

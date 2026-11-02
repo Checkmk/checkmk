@@ -43,8 +43,14 @@ ACCOUNT_HOST = TargetHost("123456789012")
 
 
 class FakeEC2Client:
-    def __init__(self, skip_entities: Mapping[str, Collection[str]] | None = None) -> None:
+    def __init__(
+        self,
+        skip_entities: Mapping[str, Collection[str]] | None = None,
+        name_tags: Mapping[str, str] | None = None,
+    ) -> None:
         self._skip_entities: Mapping[str, Collection[str]] = skip_entities if skip_entities else {}
+        # The Name tag of some instances, by instance ID.
+        self._name_tags: Mapping[str, str] = name_tags or {}
 
     def describe_instances(
         self,
@@ -59,6 +65,9 @@ class FakeEC2Client:
             if instance["InstanceId"] == "InstanceId-0":
                 continue
             instance["Tags"] = []
+        for instance in instances:
+            if (name := self._name_tags.get(instance["InstanceId"])) is not None:
+                instance["Tags"] = [*instance["Tags"], {"Key": "Name", "Value": name}]
 
         return {
             "Reservations": [
@@ -128,6 +137,7 @@ class EC2Sections(Protocol):
         skip_entities: Mapping[str, Collection[str]] | None = None,
         tag_import: TagsOption = TagsImportPatternOption.import_all,
         naming_convention: NamingConvention = NamingConvention.ip_region_instance,
+        name_tags: Mapping[str, str] | None = None,
     ) -> EC2SectionsOut: ...
 
 
@@ -139,6 +149,7 @@ def get_ec2_sections() -> EC2Sections:
         skip_entities: Mapping[str, Collection[str]] | None = None,
         tag_import: TagsOption = TagsImportPatternOption.import_all,
         naming_convention: NamingConvention = NamingConvention.ip_region_instance,
+        name_tags: Mapping[str, str] | None = None,
     ) -> EC2SectionsOut:
         region = "region"
         config = AWSConfig("hostname", Args(), ([], []), naming_convention, tag_import).for_account(
@@ -146,7 +157,7 @@ def get_ec2_sections() -> EC2Sections:
         )
         config.add_single_service_config("ec2_names", names)
         config.add_service_tags("ec2_tags", tags)
-        fake_ec2_client = FakeEC2Client(skip_entities)
+        fake_ec2_client = FakeEC2Client(skip_entities, name_tags)
         fake_cloudwatch_client = FakeCloudwatchClient()
         fake_service_quotas_client = FakeServiceQuotasClient()
 
@@ -521,3 +532,35 @@ def test_agent_aws_ec2_limits_go_to_the_account_host_of_a_listed_account() -> No
     ec2_limits_results = ec2_limits.run().results
 
     assert [result.piggyback_hostname for result in ec2_limits_results] == ["333333333333"]
+
+
+@pytest.mark.parametrize(
+    ("name_tags", "expected_name"),
+    [
+        pytest.param({"InstanceId-0": "web-server"}, {"cmk/aws/name": "web-server"}, id="Name tag"),
+        pytest.param({}, {}, id="no Name tag"),
+    ],
+)
+def test_agent_aws_ec2_instance_hosts_get_the_resource_labels(
+    get_ec2_sections: EC2Sections,
+    name_tags: Mapping[str, str],
+    expected_name: Mapping[str, str],
+) -> None:
+    _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections(
+        name_tags=name_tags
+    )
+    ec2_summary.run()
+
+    results = ec2.run().results
+
+    # The tags reach the host through the ec2_labels section.
+    host = "PrivateIpAddress-0-region-InstanceId-0"
+    assert {result.piggyback_hostname: result.piggyback_host_labels for result in results}[
+        host
+    ] == {
+        "cmk/aws/ec2": "instance",
+        "cmk/aws/service": "ec2",
+        **expected_name,
+        "cmk/aws/resource_id": "InstanceId-0",
+        "cmk/aws/region": "region",
+    }

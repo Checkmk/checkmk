@@ -10,7 +10,7 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
-from typing import override
+from typing import Any, override
 
 from botocore.client import BaseClient
 
@@ -23,6 +23,7 @@ from cmk.plugins.aws_v2.constants import (
 
 from .. import hosts
 from ..config import AWSConfig, LOGGER
+from ..labels import resource_labels
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -690,14 +691,33 @@ class EC2(AWSSectionCloudwatch):
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-        content_by_piggyback_hosts: dict[str, list[str]] = {}
+        content_by_piggyback_hosts: dict[hosts.TargetHost, list[str]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
-        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+        return AWSComputedContent(
+            [
+                AWSSectionResult(
+                    host, rows, self._instance_labels(colleague_contents.content.get(host))
+                )
+                for host, rows in content_by_piggyback_hosts.items()
+            ],
+            raw_content.cache_timestamp,
+        )
+
+    def _instance_labels(self, instance: Mapping[str, Any] | None) -> Mapping[str, str]:
+        if instance is None:
+            # The instance is gone from the summary since its metrics were cached.
+            return self.host_labels
+        # The tags reach the host through the ec2_labels section.
+        # An instance has no name of its own. The AWS console shows its Name tag.
+        name = next(
+            (tag["Value"] for tag in instance.get("Tags", []) if tag["Key"] == "Name"), None
+        )
+        return {
+            **self.host_labels,
+            **resource_labels("ec2", name, instance["InstanceId"], self._region, {}),
+        }
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [
-            AWSSectionResult(piggyback_hostname, rows, self.host_labels)
-            for piggyback_hostname, rows in computed_content.content.items()
-        ]
+        return list(computed_content.content)

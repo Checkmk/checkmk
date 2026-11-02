@@ -12,6 +12,12 @@ import * as graphs from "./modules/graphs";
 // with a patched version of jQuery mobile to make it compatible with jQuery:
 // https://github.com/jquery/jquery-mobile/issues/8662#issuecomment-687738965
 require("script-loader!jquery");
+
+$(document).bind("mobileinit", function () {
+    $["mobile"].ajaxEnabled = false;
+    $["mobile"].hashListeningEnabled = false;
+});
+
 require("script-loader!../jquery/jquery.mobile-1.4.5.min.js");
 
 /* Disable data-ajax per default, as it makes problems in most
@@ -23,11 +29,6 @@ $(document).ready(function () {
     $("div.success").addClass("ui-shadow");
     $("div.really").addClass("ui-shadow");
     $("div.warning").addClass("ui-shadow");
-});
-
-$(document).bind("mobileinit", function () {
-    $["mobile"].ajaxEnabled = false;
-    $["mobile"].hashListeningEnabled = false;
 });
 
 // Never allow the mobile page to be opened in an iframe. Redirect top page to the current content page.

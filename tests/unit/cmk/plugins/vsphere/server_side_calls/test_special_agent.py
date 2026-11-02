@@ -147,3 +147,25 @@ def test_vsphere_argument_parsing(
 ) -> None:
     """Tests if all required arguments are present."""
     assert list(special_agent_vsphere(raw_params, host_config)) == [expected_args]
+
+
+def test_custom_cert_server_name_has_host_macros_replaced() -> None:
+    raw_params = {
+        "direct": (QueryType.VCENTER, ["hostsystem"]),
+        "skip_placeholder_vms": False,
+        "ssl": ("custom_hostname", "$HOSTNAME$.example.com"),
+        "secret": Secret(23),
+        "spaces": "cut",
+        "user": "username",
+        "snapshots_on_host": False,
+    }
+    host_config = HostConfig(
+        name="vcenter",
+        ipv4_config=IPv4Config(address="1.2.3.4"),
+        macros={"$HOSTNAME$": "vcenter"},
+    )
+
+    (command,) = special_agent_vsphere(raw_params, host_config)
+
+    arguments = list(command.command_arguments)
+    assert arguments[arguments.index("--cert-server-name") + 1] == "vcenter.example.com"

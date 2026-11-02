@@ -8,7 +8,12 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    replace_macros,
+    SpecialAgentCommand,
+    SpecialAgentConfig,
+)
 from cmk.server_side_calls.v1._utils import Secret
 
 from ..lib import InfoSelection, QueryType
@@ -77,7 +82,10 @@ def commands_function(  # pylint: disable=too-many-branches
     elif params.ssl[0] == "hostname":
         command_arguments += ["--cert-server-name", host_config.name]
     else:
-        command_arguments += ["--cert-server-name", params.ssl[1]]
+        command_arguments += [
+            "--cert-server-name",
+            replace_macros(params.ssl[1], host_config.macros),
+        ]
 
     try:
         command_arguments.append(host_config.primary_ip_config.address)

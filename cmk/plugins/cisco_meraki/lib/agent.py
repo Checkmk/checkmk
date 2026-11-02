@@ -187,7 +187,7 @@ class MerakiOrganisation:
                     if piggyback := self._get_device_piggyback(serial, devices_by_serial):
                         network = networks.get(raw_statuses["networkId"])
                         uplink_statuses = UplinkStatuses(
-                            networkName=network["organizationName"] if network else "",
+                            networkName=network["name"] if network else "",
                             usageByInterface=usage_by_serial.get(serial, {}),
                             **raw_statuses,
                         )

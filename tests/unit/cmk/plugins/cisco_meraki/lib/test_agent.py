@@ -259,6 +259,20 @@ class TestMerakiOrganizationUsageBySerial:
 
 
 class TestMerakiOrganizationApplianceUplinks:
+    def test_uplink_status_reports_network_name(self) -> None:
+        config = MerakiConfig.build(agent.parse_arguments([*_DEFAULT_ARGS, "--no-cache"]))
+        org = MerakiOrganisation(
+            config=config,
+            client=MerakiClient(FakeMerakiSDK(), config),
+            organisation=RawOrganizationFactory.build(
+                id="123", name="Org-123", api={"enabled": True}
+            ),
+        )
+
+        uplinks = [s for s in org.query() if s.name == "cisco_meraki_org_appliance_uplinks"]
+
+        assert {s.data["networkName"] for s in uplinks} == {"one"}
+
     def test_uplink_status_of_unlisted_network_is_reported(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

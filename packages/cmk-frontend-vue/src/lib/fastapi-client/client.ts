@@ -166,7 +166,8 @@ function settle(result: { data?: unknown; error?: unknown; response: Response })
     throw new CmkApiError(
       describeError(result.error, result.response.status),
       null,
-      `${result.response.url}\nSTATUS ${result.response.status}: ${result.response.statusText}`
+      `${result.response.url}\nSTATUS ${result.response.status}: ${result.response.statusText}`,
+      result.response.status
     )
   }
   // 204/205 carry no body by definition; anything else with no data is the caller's own shape.

@@ -97,7 +97,7 @@ class VeeamApiError(RuntimeError):
     def _code_and_message(response: requests.Response) -> tuple[str, str]:
         try:
             body = response.json()
-        except json.JSONDecodeError:
+        except requests.JSONDecodeError:
             return "", response.text.strip() or (response.reason or "")
         if not isinstance(body, dict):
             return "", str(body)

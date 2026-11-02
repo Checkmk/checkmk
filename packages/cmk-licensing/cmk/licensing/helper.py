@@ -12,6 +12,7 @@ from uuid import UUID
 
 from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import SiteId
+from cmk.licensing.basics.paths import get_licensing_log_file_path
 
 # Threads of one process, for example the jobs of the UI job scheduler, may set up the licensing
 # logger at the same time.
@@ -22,12 +23,13 @@ def get_licensing_logger() -> logging.Logger:
     return logging.getLogger("cmk.licensing")
 
 
-def _init_logging(log_dir: Path) -> logging.Logger:
-    log_dir.mkdir(parents=True, exist_ok=True)
+def _init_logging(omd_root: Path) -> logging.Logger:
+    log_file = get_licensing_log_file_path(omd_root)
+    log_file.parent.mkdir(parents=True, exist_ok=True)
 
     # logrotate rotates licensing.log while a long-lived process keeps the handler. The handler
     # reopens the file when its inode changes.
-    handler = WatchedFileHandler(filename=log_dir / "licensing.log", encoding="utf-8")
+    handler = WatchedFileHandler(filename=log_file, encoding="utf-8")
     handler.setFormatter(CMKFormatter(with_process=True))
 
     logger = get_licensing_logger()
@@ -38,21 +40,21 @@ def _init_logging(log_dir: Path) -> logging.Logger:
     return logger
 
 
-def init_logging_if_missing(log_dir: Path) -> logging.Logger:
-    """Return the licensing logger, set up to write to licensing.log in log_dir.
+def init_logging_if_missing(omd_root: Path) -> logging.Logger:
+    """Return the licensing logger, set up to write to licensing.log of the site.
 
-    The first call in a process adds a handler for that file. Later calls for the same log_dir
+    The first call in a process adds a handler for that file. Later calls for the same site
     return the logger unchanged. They neither open the file again nor remove handlers that other
     code added. Callers can therefore call this function every time they need the logger."""
     logger = get_licensing_logger()
-    log_file = log_dir.absolute() / "licensing.log"
+    log_file = get_licensing_log_file_path(omd_root).absolute()
     with _SETUP_LOCK:
         if any(
             isinstance(handler, WatchedFileHandler) and Path(handler.baseFilename) == log_file
             for handler in logger.handlers
         ):
             return logger
-        return _init_logging(log_dir)
+        return _init_logging(omd_root)
 
 
 def load_instance_id(file_path: Path) -> UUID | None:

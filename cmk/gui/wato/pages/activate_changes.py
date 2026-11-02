@@ -423,7 +423,7 @@ class ModeActivateChanges(WatoMode):
         self._changes.load(list(activation_sites(active_config.sites)))
         self._license_usage_report_validity = get_license_usage_report_validity(
             omd_root=paths.omd_root,
-            logger=init_logging_if_missing(paths.log_dir),
+            logger=init_logging_if_missing(paths.omd_root),
         )
         self._quick_setup_origin = request.get_ascii_input(self.VAR_ORIGIN) == "quick_setup"
 

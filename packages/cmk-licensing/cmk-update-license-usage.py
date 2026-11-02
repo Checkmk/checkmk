@@ -52,7 +52,7 @@ def _omd_root() -> Path:
 def main() -> int:
     args = _parse_arguments()
     omd_root = _omd_root()
-    logger = init_logging_if_missing(omd_root / "var" / "log")
+    logger = init_logging_if_missing(omd_root)
 
     if args.force:
         get_next_run_file_path(omd_root).unlink(missing_ok=True)

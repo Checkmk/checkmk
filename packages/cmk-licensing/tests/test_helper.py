@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from cmk.licensing.basics.paths import get_licensing_log_file_path
 from cmk.licensing.helper import get_licensing_logger, init_logging_if_missing
 
 
@@ -35,31 +36,31 @@ def test_log_handler_is_set_up_once(licensing_logger: logging.Logger, tmp_path: 
 
 
 @pytest.mark.usefixtures("licensing_logger")
-def test_log_handler_follows_another_log_directory(tmp_path: Path) -> None:
+def test_log_handler_follows_another_site(tmp_path: Path) -> None:
     init_logging_if_missing(tmp_path / "old")
 
     init_logging_if_missing(tmp_path / "new").warning("a message")
 
-    assert "a message" in (tmp_path / "new" / "licensing.log").read_text()
-    assert "a message" not in (tmp_path / "old" / "licensing.log").read_text()
+    assert "a message" in get_licensing_log_file_path(tmp_path / "new").read_text()
+    assert "a message" not in get_licensing_log_file_path(tmp_path / "old").read_text()
 
 
 @pytest.mark.usefixtures("licensing_logger")
 def test_deleted_log_file_is_created_again(tmp_path: Path) -> None:
     logger = init_logging_if_missing(tmp_path)
-    (tmp_path / "licensing.log").unlink()
+    get_licensing_log_file_path(tmp_path).unlink()
 
     logger.warning("a message")
 
-    assert "a message" in (tmp_path / "licensing.log").read_text()
+    assert "a message" in get_licensing_log_file_path(tmp_path).read_text()
 
 
 @pytest.mark.usefixtures("licensing_logger")
 def test_log_file_created_again_by_another_process_is_written(tmp_path: Path) -> None:
     logger = init_logging_if_missing(tmp_path)
-    (tmp_path / "licensing.log").unlink()
-    (tmp_path / "licensing.log").touch()
+    get_licensing_log_file_path(tmp_path).unlink()
+    get_licensing_log_file_path(tmp_path).touch()
 
     logger.warning("a message")
 
-    assert "a message" in (tmp_path / "licensing.log").read_text()
+    assert "a message" in get_licensing_log_file_path(tmp_path).read_text()

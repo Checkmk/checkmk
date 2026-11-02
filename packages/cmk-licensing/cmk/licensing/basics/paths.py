@@ -26,6 +26,8 @@ _NEXT_ONLINE_VERIFICATION_FILE = f"{_LICENSING_DIR}/next_online_verification"
 _LICENSING_SETTINGS_FILE = "etc/check_mk/multisite.d/licensing_settings.mk"
 _LICENSING_NOTIFICATION_SETTINGS_FILE = "etc/check_mk/licensing.d/notification_settings.mk"
 
+_LICENSING_LOG_FILE = "var/log/licensing.log"
+
 
 def get_licensing_dir(omd_root: Path) -> Path:
     return omd_root / _LICENSING_DIR
@@ -93,3 +95,7 @@ def get_licensing_settings_file_path(omd_root: Path) -> Path:
 
 def get_licensing_notification_settings_file_path(omd_root: Path) -> Path:
     return omd_root / _LICENSING_NOTIFICATION_SETTINGS_FILE
+
+
+def get_licensing_log_file_path(omd_root: Path) -> Path:
+    return omd_root / _LICENSING_LOG_FILE

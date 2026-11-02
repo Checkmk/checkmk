@@ -4,20 +4,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from datetime import datetime
 from pathlib import Path
+from typing import cast
 from unittest.mock import ANY
 
 import pytest
 
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.crypto.password import PasswordPolicy
 from cmk.crypto.password_hashing import PasswordHash
+from cmk.gui import userdb
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.user_connection_config_types import LDAPUserConnectionConfig
+from cmk.gui.userdb import get_user_attributes
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
@@ -28,6 +34,7 @@ from cmk.gui.wato.pages.users import (
     ModeEditUser,
     ModeUsers,
 )
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
 @pytest.mark.usefixtures("request_context")
@@ -69,6 +76,49 @@ def test_edit_user_keeps_the_stored_connector(test_edition: Edition) -> None:
         "an edit must not reassign the owning connector -- doing so would "
         "migrate the user to local authentication and orphan them from LDAP/SAML"
     )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_edit_user_can_disable_the_login_of_a_connector_managed_user(
+    test_edition: Edition, set_config: SetConfig
+) -> None:
+    """An administrator may disable the login of an LDAP or SAML user in Setup;
+    the lock is not owned by the connector (CMK-40515)."""
+    user_id = UserId("directory_user")
+    ldap_connection = cast(
+        LDAPUserConnectionConfig,
+        {"type": "ldap", "id": "ldap_corp", "disabled": False, "active_plugins": {}},
+    )
+    with set_config(user_connections=[ldap_connection]):
+        users = userdb.load_users(lock=True)
+        users[user_id] = UserSpec(alias="Directory User", connector="ldap_corp", locked=False)
+        userdb.save_users(
+            users,
+            get_user_attributes([]),
+            [],
+            now=datetime.now(),
+            pprint_value=False,
+            call_users_saved_hook=False,
+            changed_users=[user_id],
+        )
+        request.set_var("edit", str(user_id))
+        request.set_var("locked", "1")
+        request.set_var("authmethod", "secret")
+        mode = ModeEditUser(
+            test_edition,
+            PageContext(
+                config=Config(),
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+            ),
+        )
+
+        user_attrs = UserSpec()
+        mode._get_security_userattrs(user_attrs, PasswordPolicy(12, None, False, Path("")))  # noqa: SLF001
+
+    assert user_attrs["locked"] is True
 
 
 @pytest.mark.usefixtures("request_context")

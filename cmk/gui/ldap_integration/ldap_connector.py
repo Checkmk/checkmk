@@ -502,15 +502,17 @@ def _sync_plugins_existing_user(
     ldap_user_connector: LDAPUserConnector,
     user_attributes: Sequence[tuple[str, UserAttribute]],
 ) -> None:
+    # Reactivate first: the plug-ins then see the unlocked user and, if the account
+    # is disabled in the directory, lock it again right away with the AD marker set.
+    reactivated = _reactivate_quarantined_user(
+        checkmk_user_id, checkmk_user_copy, ldap_user_connector, sync_user_result
+    )
+
     ldap_user_connector.execute_active_sync_plugins(
         checkmk_user_id,
         ldap_user_spec,
         checkmk_user_copy,
         user_attributes,
-    )
-
-    reactivated = _reactivate_quarantined_user(
-        checkmk_user_id, checkmk_user_copy, ldap_user_connector, sync_user_result
     )
 
     if checkmk_user_copy == users[checkmk_user_id]:
@@ -561,14 +563,16 @@ def _reactivate_quarantined_user(
 ) -> bool:
     """A previously quarantined user reappeared in LDAP: unlock and clear quarantine.
 
-    Only clears ``locked`` when our own ``ldap_quarantine`` marker is present, so a
-    lock set manually by an administrator for other reasons is never lifted here.
+    Only clears ``locked`` when our own ``ldap_quarantine`` marker is present and the
+    user was not already locked when the quarantine started, so a lock set manually
+    by an administrator for other reasons is never lifted here (CMK-40515).
     """
-    if checkmk_user_copy.get("ldap_quarantine") is None:
+    if (quarantine := checkmk_user_copy.get("ldap_quarantine")) is None:
         return False
 
     del checkmk_user_copy["ldap_quarantine"]
-    checkmk_user_copy["locked"] = False
+    if not quarantine.get("locked_before_quarantine", False):
+        checkmk_user_copy["locked"] = False
     sync_user_result.changes.append(
         _("LDAP [%(connection_id)s]: Reactivated quarantined user %(user_id)s")
         % {"connection_id": ldap_user_connector.id, "user_id": checkmk_user_id}
@@ -1925,7 +1929,11 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 # Already quarantined; the cleanup cron job handles expiry.
                 continue
 
-            user["ldap_quarantine"] = QuarantineInfo(quarantined_on=now, connection_id=self.id)
+            user["ldap_quarantine"] = QuarantineInfo(
+                quarantined_on=now,
+                connection_id=self.id,
+                locked_before_quarantine=bool(user.get("locked", False)),
+            )
             user["locked"] = True
             sync_users_result.changes.append(
                 _("LDAP [%(connection_id)s]: Quarantined user %(user_id)s")
@@ -2707,12 +2715,12 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
     @property
     @override
     def multisite_attributes(self) -> list[str]:
-        return ["ldap_pw_last_changed"]
+        return ["ldap_pw_last_changed", "ldap_locked_in_ad"]
 
     @property
     @override
     def non_contact_attributes(self) -> list[str]:
-        return ["ldap_pw_last_changed"]
+        return ["ldap_pw_last_changed", "ldap_locked_in_ad"]
 
     @override
     def needed_attributes(
@@ -2742,11 +2750,24 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
         if connection._is_active_directory() and ldap_user.get("useraccountcontrol"):  # noqa: SLF001
             # see http://www.selfadsi.de/ads-attributes/user-userAccountControl.htm for details
             locked_in_ad = bool(int(ldap_user["useraccountcontrol"][0]) & 2)
-            locked_in_cmk = user["locked"]
+            locked_in_cmk = user.get("locked", False)
+            locked_by_ad = user.get("ldap_locked_in_ad", False)
 
-            if locked_in_ad != locked_in_cmk:
+            if locked_in_ad and not locked_in_cmk:
+                # A disabled AD account locks the Checkmk user; remember that the
+                # directory, not an administrator, set the lock.
                 return {
-                    "locked": locked_in_ad,
+                    "locked": True,
+                    "ldap_locked_in_ad": True,
+                    "serial": user.get("serial", 0) + 1,
+                }
+            if not locked_in_ad and locked_by_ad:
+                # Only the lock the directory set is lifted again. A lock an
+                # administrator set in Checkmk must keep the user out, whatever the
+                # account state in the directory is (CMK-40515).
+                return {
+                    "locked": False,
+                    "ldap_locked_in_ad": False,
                     "serial": user.get("serial", 0) + 1,
                 }
 

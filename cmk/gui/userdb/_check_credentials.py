@@ -243,4 +243,4 @@ def _show_exception(connection_id: str, title: str, e: Exception, debug: bool = 
 
 
 def user_locked(user_id: UserId, user_spec: UserSpec) -> bool:  # noqa: ARG001
-    return user_spec["locked"]
+    return user_spec.get("locked", False)

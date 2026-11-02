@@ -13,7 +13,13 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.events.notify_types import EventRule
-from cmk.gui.type_defs import LastLoginInfo, SessionInfo, TwoFactorCredentials, UserSpec
+from cmk.gui.type_defs import (
+    LastLoginInfo,
+    QuarantineInfo,
+    SessionInfo,
+    TwoFactorCredentials,
+    UserSpec,
+)
 from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.userdb.store import load_users, save_users
 from cmk.gui.userdb.user_attributes import ContextualHelpIcon, ForceAuthUserUserAttribute
@@ -46,6 +52,10 @@ def _fully_populated_userspec(user_id: UserId) -> UserSpec:
             "email": "happy@example.com",
             "language": "de",
             "ldap_pw_last_changed": "2024-01-01T00:00:00",
+            "ldap_locked_in_ad": True,
+            "ldap_quarantine": QuarantineInfo(
+                quarantined_on=1700000000, connection_id="ldap_corp", locked_before_quarantine=False
+            ),
             "two_factor_credentials": TwoFactorCredentials(
                 webauthn_credentials={},
                 backup_codes=[],

@@ -15,7 +15,14 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.events.notify_types import DisabledNotificationsOptions, EventRule
-from cmk.gui.type_defs import LastLoginInfo, SessionId, SessionInfo, TwoFactorCredentials, UserSpec
+from cmk.gui.type_defs import (
+    LastLoginInfo,
+    QuarantineInfo,
+    SessionId,
+    SessionInfo,
+    TwoFactorCredentials,
+    UserSpec,
+)
 from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.utils.object_diff import make_diff
 
@@ -172,6 +179,11 @@ class UserData:
     last_pw_change: int | _MissingValueSentinel
 
     ldap_pw_last_changed: str | None  # On attribute sync, this is added, then removed.
+    # Markers an LDAP connection sets on the users it owns. They must survive an edit in
+    # Setup or via the REST API: losing them turns a lock the directory set into one only
+    # an administrator can lift (CMK-40515). None means "absent".
+    ldap_locked_in_ad: bool | None
+    ldap_quarantine: QuarantineInfo | None
     num_failed_logins: int
     serial: int
 
@@ -245,6 +257,8 @@ class UserData:
             ("email", self.email),
             ("language", self.language),
             ("ldap_pw_last_changed", self.ldap_pw_last_changed),
+            ("ldap_locked_in_ad", self.ldap_locked_in_ad),
+            ("ldap_quarantine", self.ldap_quarantine),
             ("two_factor_credentials", self.two_factor_credentials),
             # notification fields
             ("host_notification_options", self.host_notification_options),
@@ -343,6 +357,8 @@ class UserData:
             last_login=userspec.get("last_login"),
             last_pw_change=userspec.get("last_pw_change", MISSING),
             ldap_pw_last_changed=userspec.get("ldap_pw_last_changed"),
+            ldap_locked_in_ad=userspec.get("ldap_locked_in_ad"),
+            ldap_quarantine=userspec.get("ldap_quarantine"),
             locked=userspec.get("locked", False),
             nav_hide_icons_title=userspec.get("nav_hide_icons_title", MISSING),
             notification_method=userspec.get("notification_method"),

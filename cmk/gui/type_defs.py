@@ -248,6 +248,9 @@ class LastLoginInfo(TypedDict, total=False):
 class QuarantineInfo(TypedDict):
     quarantined_on: int
     connection_id: str
+    # The user was already locked (by an administrator) when the quarantine started,
+    # so reactivation must not unlock it. Absent in records written before CMK-40515.
+    locked_before_quarantine: NotRequired[bool]
 
 
 # TODO: verify if the 'idea' is the same as notify_types.DisabledNotificationsOptions
@@ -350,6 +353,9 @@ class UserSpec(TypedDict, total=False):
     graph_default_refresh_time: NotRequired[int | None]
     contextual_help_icon: NotRequired[Literal["hide_icon"] | None]
     ldap_pw_last_changed: NotRequired[str]  # On attribute sync, this is added, then removed.
+    # The AD "authentication expiration" plug-in locked the user because the account is
+    # disabled in the directory; only such a lock is lifted again when the account is enabled.
+    ldap_locked_in_ad: NotRequired[bool]
     ldap_quarantine: NotRequired[QuarantineInfo | None]
     navbar_changes_action: NotRequired[Literal["full_page", "slideout"] | None]
     created_on_version: NotRequired[str]  # The Checkmk version string when the user was created

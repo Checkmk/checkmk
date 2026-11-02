@@ -242,6 +242,11 @@ Now that SAML and LDAP can both authenticate on the same site, a single person m
 * *An orphaned owning connection locks the user out.*
   A user whose owning connection has been deleted cannot log in, and no new record is created for them.
 
+* *The login lock always wins.*
+  An administrator can disable the login of any user in Setup or via the REST API, whoever owns the record (CMK-40515).
+  Both login paths honour the lock: the password login in ``check_credentials``, the SAML login in ``ensure_user_may_login`` on the ACS page.
+  A sync never lifts a lock an administrator set: the AD "authentication expiration" plug-in only unlocks a user it locked itself (marker ``ldap_locked_in_ad``), and quarantine reactivation only unlocks a user that was not locked before the quarantine (``locked_before_quarantine`` in ``QuarantineInfo``).
+
 SAML profile updates are written only when something actually changed (``_is_changed_profile()``), because saving invalidates the user cache and is expensive.
 Both creation and update emit a ``UserManagementEvent`` security event and add a pending change scoped to all activation sites.
 

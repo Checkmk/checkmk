@@ -6,7 +6,7 @@
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
 
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from datetime import datetime
 from typing import cast
 
@@ -17,9 +17,11 @@ from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
+from cmk.gui.ldap_integration.ldap_connector import LDAPUserConnector, LDAPUserSpec
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser
 from cmk.gui.session_context import _UserContext, SuperUserContext
-from cmk.gui.type_defs import UserSpec
+from cmk.gui.type_defs import QuarantineInfo, UserSpec
+from cmk.gui.user_connection_config_types import LDAPUserConnectionConfig, UserConnectionConfig
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.userdb.userdata import UserDataDiff
 from cmk.gui.watolib.paths import wato_var_dir
@@ -34,6 +36,7 @@ from cmk.gui.watolib.users import (
     remove_custom_attribute_from_all_users,
 )
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
 def _test_pending_changes() -> PendingChanges:
@@ -473,3 +476,120 @@ def test_audit_text_reports_an_empty_diff_as_nothing_changed() -> None:
     diff = UserDataDiff("", credentials_changed=False)
 
     assert make_user_diff_text(diff) == "Nothing was changed."
+
+
+# .--login lock-----------------------------------------------------------.
+# |   An administrator may disable the login of any user, including one   |
+# |   owned by an LDAP or SAML connection; the connectors then refuse to  |
+# |   log the person in. CMK-40515.                                       |
+# '----------------------------------------------------------------------'
+
+_LDAP_CONNECTION = cast(
+    LDAPUserConnectionConfig,
+    {"type": "ldap", "id": "ldap_corp", "disabled": False, "active_plugins": {}},
+)
+
+
+# An Active Directory connection with the "Authentication expiration" plug-in,
+# the one that locks and unlocks users following the account state in AD.
+_AD_CONNECTION = cast(
+    LDAPUserConnectionConfig,
+    {
+        "type": "ldap",
+        "id": "ad_corp",
+        "disabled": False,
+        "directory_type": ("ad", {"connect_to": ("discover", {"domain": "corp.de"})}),
+        "active_plugins": {"auth_expire": {}},
+    },
+)
+_AD_ACCOUNT_ENABLED: LDAPUserSpec = {"useraccountcontrol": ["512"], "pwdlastset": ["1"]}
+
+
+def _create(
+    user_id: UserId, spec: UserSpec, connections: Sequence[UserConnectionConfig] = ()
+) -> None:
+    create_user(
+        user_id,
+        spec,
+        default_sites,
+        get_user_attributes([]),
+        connections,
+        pending_changes=_test_pending_changes(),
+        use_git=False,
+        acting_user=LoggedInSuperUser(),
+        pprint_value=False,
+    )
+
+
+def _edit(
+    user_id: UserId, spec: UserSpec, connections: Sequence[UserConnectionConfig] = ()
+) -> None:
+    edit_user(
+        user_id,
+        spec,
+        default_sites,
+        get_user_attributes([]),
+        connections,
+        pending_changes=_test_pending_changes(),
+        use_git=False,
+        acting_user=LoggedInSuperUser(),
+        pprint_value=False,
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_lock_of_connector_managed_user_can_be_toggled(set_config: SetConfig) -> None:
+    with set_config(user_connections=[_LDAP_CONNECTION]):
+        _create(USER1_ID, UserSpec(alias="user1", connector="ldap_corp", locked=False, roles=[]))
+
+        _edit(USER1_ID, UserSpec(alias="user1", connector="ldap_corp", locked=True, roles=[]))
+
+        assert userdb.load_users()[USER1_ID]["locked"] is True
+
+
+def _edited_copy(user_id: UserId, **changes: object) -> UserSpec:
+    """Setup and the REST API both edit a copy of the stored record."""
+    return cast(UserSpec, {**userdb.load_users()[user_id], **changes})
+
+
+@pytest.mark.usefixtures("request_context")
+def test_editing_a_user_keeps_the_lock_the_directory_set(set_config: SetConfig) -> None:
+    """AD disables the account, an administrator edits the user, AD enables the account."""
+    with set_config(user_connections=[_AD_CONNECTION]):
+        _create(
+            USER1_ID,
+            UserSpec(
+                alias="user1", connector="ad_corp", locked=True, ldap_locked_in_ad=True, roles=[]
+            ),
+            connections=[_AD_CONNECTION],
+        )
+
+        _edit(USER1_ID, _edited_copy(USER1_ID, alias="User One"), connections=[_AD_CONNECTION])
+
+        user = userdb.load_users()[USER1_ID]
+        LDAPUserConnector(_AD_CONNECTION).execute_active_sync_plugins(
+            USER1_ID, _AD_ACCOUNT_ENABLED, user, get_user_attributes([])
+        )
+        assert user["locked"] is False
+
+
+@pytest.mark.usefixtures("request_context")
+def test_editing_a_user_keeps_the_quarantine_marker(set_config: SetConfig) -> None:
+    quarantine = QuarantineInfo(
+        quarantined_on=123, connection_id="ldap_corp", locked_before_quarantine=False
+    )
+    with set_config(user_connections=[_LDAP_CONNECTION]):
+        _create(
+            USER1_ID,
+            UserSpec(
+                alias="user1",
+                connector="ldap_corp",
+                locked=True,
+                ldap_quarantine=quarantine,
+                roles=[],
+            ),
+        )
+
+        _edit(USER1_ID, _edited_copy(USER1_ID, alias="User One"))
+
+        assert userdb.load_users()[USER1_ID]["ldap_quarantine"] == quarantine

@@ -59,6 +59,18 @@ def test_vanished_user_is_quarantined(
 
 
 @pytest.mark.usefixtures("request_context", "_no_security_log")
+def test_quarantine_remembers_a_lock_set_before(
+    connector: LDAPUserConnector, sync_result: SyncUsersResult, set_config: SetConfig
+) -> None:
+    users = Users({UserId("bob"): _synced_user(locked=True)})
+
+    with set_config(ldap_quarantine_period=30 * 86400):
+        connector._quarantine_or_remove_users_no_longer_in_ldap(users, {}, sync_result)  # noqa: SLF001
+
+    assert users[UserId("bob")]["ldap_quarantine"]["locked_before_quarantine"] is True
+
+
+@pytest.mark.usefixtures("request_context", "_no_security_log")
 def test_already_quarantined_user_is_left_untouched(
     connector: LDAPUserConnector, sync_result: SyncUsersResult, set_config: SetConfig
 ) -> None:
@@ -116,6 +128,24 @@ def test_reactivate_clears_quarantine_and_unlocks(
     assert "ldap_quarantine" not in user
     assert user["locked"] is False
     assert any("Reactivated quarantined user bob" in change for change in sync_result.changes)
+
+
+@pytest.mark.usefixtures("_no_security_log")
+def test_reactivate_keeps_a_lock_set_before_the_quarantine(
+    connector: LDAPUserConnector, sync_result: SyncUsersResult
+) -> None:
+    """An administrator disabled the login before the user vanished from LDAP;
+    reappearing in the directory must not lift that lock (CMK-40515)."""
+    user = _synced_user(locked=True)
+    user["ldap_quarantine"] = QuarantineInfo(
+        quarantined_on=123, connection_id=_CONNECTION_ID, locked_before_quarantine=True
+    )
+
+    reactivated = _reactivate_quarantined_user(UserId("bob"), user, connector, sync_result)
+
+    assert reactivated is True
+    assert "ldap_quarantine" not in user
+    assert user["locked"] is True
 
 
 @pytest.mark.usefixtures("_no_security_log")

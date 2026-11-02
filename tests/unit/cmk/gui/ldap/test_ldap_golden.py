@@ -33,6 +33,7 @@ from cmk.gui.config import active_config
 from cmk.gui.ldap_integration.ldap_connector import (
     _sync_ldap_user,
     FetchedLDAPUser,
+    LDAPAttributePluginAuthExpire,
     LDAPAttributePluginGroupAttributes,
     LDAPAttributePluginGroupsToRoles,
     LDAPUserConnector,
@@ -40,7 +41,7 @@ from cmk.gui.ldap_integration.ldap_connector import (
     LDAPUserSpec,
     SyncUsersResult,
 )
-from cmk.gui.type_defs import Users, UserSpec
+from cmk.gui.type_defs import QuarantineInfo, Users, UserSpec
 from cmk.gui.user_connection_config_types import (
     ActivePlugins,
     Fixed,
@@ -56,6 +57,7 @@ from cmk.gui.userdb import (
     check_credentials,
     get_user_attributes,
     load_users,
+    save_users,
     UserAttribute,
     UserConnectionConfigFile,
 )
@@ -650,6 +652,105 @@ def test_background_sync_leaves_authentication_only_connection_alone(
     assert saved == []
 
 
+# .--login lock-----------------------------------------------------------.
+# |   An administrator disables the login of an LDAP user in Checkmk; the  |
+# |   directory may then still authenticate the person, but the generic   |
+# |   login path refuses them, and no sync lifts the lock. CMK-40515.      |
+# '----------------------------------------------------------------------'
+
+
+@pytest.mark.usefixtures("request_context")
+def test_locked_ldap_user_cannot_log_in_with_valid_directory_credentials(
+    mock_ldap: MagicMock, set_config: SetConfig
+) -> None:
+    user_id = UserId("carol_id")
+    users = load_users(lock=True)
+    users[user_id] = UserSpec(alias="Carol", connector=_test_config["id"], locked=True, roles=[])
+    save_users(
+        users,
+        get_user_attributes([]),
+        [],
+        now=datetime.datetime.now(),
+        pprint_value=False,
+        call_users_saved_hook=False,
+        changed_users=[user_id],
+    )
+    mock_ldap.return_value.result3.return_value = (
+        0,
+        [("carol", {"uid": [b"CAROL_ID"]})],
+        0,
+        [ldap.controls.SimplePagedResultsControl()],  # type: ignore[no-untyped-call,unused-ignore]
+    )
+
+    with (
+        mock.patch("cmk.utils.password_store.extract", return_value="hunter2"),
+        set_config(user_connections=[_test_config]),
+    ):
+        result = check_credentials(
+            UserId("carol"),
+            Password("hunter2"),
+            get_user_attributes([]),
+            active_config.user_connections,
+            datetime.datetime.now(),
+            UserSpec(contactgroups=[], roles=["user"], force_authuser=False),
+            time_based_lock_out_enabled=False,
+            pprint_value=False,
+            debug=False,
+        )
+
+    assert result is False
+
+
+_AD_ACCOUNT_ENABLED = ["512"]  # NORMAL_ACCOUNT
+_AD_ACCOUNT_DISABLED = ["514"]  # NORMAL_ACCOUNT | ACCOUNTDISABLE
+
+
+def _ad_connector() -> LDAPUserConnector:
+    return LDAPUserConnector(
+        cast(
+            LDAPUserConnectionConfig,
+            {
+                **_test_config,
+                "directory_type": ("ad", {"connect_to": ("discover", {"domain": "corp.de"})}),
+            },
+        )
+    )
+
+
+def _auth_expire_sync(user: UserSpec, useraccountcontrol: list[str]) -> dict:
+    return LDAPAttributePluginAuthExpire().sync_func(
+        _ad_connector(),
+        {"attr": "pwdlastset"},
+        UserId("bob"),
+        {"useraccountcontrol": useraccountcontrol, "pwdlastset": ["1"]},
+        user,
+        [],
+    )
+
+
+def test_disabled_ad_account_locks_the_user() -> None:
+    result = _auth_expire_sync(UserSpec(locked=False, serial=3), _AD_ACCOUNT_DISABLED)
+
+    assert result == {"locked": True, "ldap_locked_in_ad": True, "serial": 4}
+
+
+def test_enabled_ad_account_lifts_the_lock_the_directory_set() -> None:
+    result = _auth_expire_sync(
+        UserSpec(locked=True, ldap_locked_in_ad=True, serial=4), _AD_ACCOUNT_ENABLED
+    )
+
+    assert result == {"locked": False, "ldap_locked_in_ad": False, "serial": 5}
+
+
+def test_enabled_ad_account_keeps_the_lock_an_administrator_set() -> None:
+    """A user disabled in Setup stays locked, whatever the directory says."""
+    result = _auth_expire_sync(
+        UserSpec(locked=True, serial=4, ldap_pw_last_changed="1"), _AD_ACCOUNT_ENABLED
+    )
+
+    assert result == {}
+
+
 def test_remove_trailing_dot_from_hostname(mock_ldap: MagicMock) -> None:
     cfg = LDAPUserConnectionConfig(
         id="test-trailing-dot-server",
@@ -882,6 +983,57 @@ def test_ldap_sync(mocker: MockerFixture, sync_ldap_data: SyncLdapData) -> None:
     assert sync_ldap_data.change_str in sync_user_result.changes[0]
     assert len(sync_user_result.security_events) == 1
     assert sync_user_result.security_events[0] == sync_ldap_data.security_event
+
+
+@pytest.mark.usefixtures("request_context")
+def test_quarantined_user_reappearing_disabled_in_ad_stays_locked() -> None:
+    """Reactivation lifts the quarantine lock, the AD plug-in must lock again in the same pass."""
+    connector = LDAPUserConnector(
+        cast(
+            LDAPUserConnectionConfig,
+            {
+                **_test_config,
+                "directory_type": ("ad", {"connect_to": ("discover", {"domain": "corp.de"})}),
+                "active_plugins": ActivePlugins(auth_expire=SyncAttribute()),
+            },
+        )
+    )
+    bob = UserId("bob")
+    users = Users(
+        {
+            bob: UserSpec(
+                alias="bob",
+                connector=connector.id,
+                locked=True,
+                roles=["user"],
+                serial=0,
+                ldap_quarantine=QuarantineInfo(
+                    quarantined_on=1, connection_id=connector.id, locked_before_quarantine=False
+                ),
+            )
+        }
+    )
+
+    _sync_ldap_user(
+        fetched_ldap_user=FetchedLDAPUser(
+            dn="bob",
+            ldap_user_name=LdapUsername("bob"),
+            ldap_user_spec={
+                "dn": ["bob"],
+                "useraccountcontrol": _AD_ACCOUNT_DISABLED,
+                "pwdlastset": ["1"],
+            },
+        ),
+        users=users,
+        ldap_user_connector=connector,
+        sync_users_result=SyncUsersResult(sync_start_time=time(), fetched_users={}),
+        user_attributes=[],
+        default_user_profile=UserSpec(contactgroups=[], roles=["user"], force_authuser=False),
+    )
+
+    assert "ldap_quarantine" not in users[bob]
+    assert users[bob]["locked"] is True
+    assert users[bob]["ldap_locked_in_ad"] is True
 
 
 _test_config_with_auth_expire = LDAPUserConnectionConfig(

@@ -49,7 +49,7 @@ def check_redfish_fans(item: str, section: RedfishAPIData) -> CheckResult:
     for key in section:
         fans = section[key].get("Fans", None)
         if fans is None:
-            return
+            continue
 
         for fan_data in fans:
             fan_name = _fan_item_name(fan_data)

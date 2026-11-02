@@ -16,15 +16,24 @@ from cmk.plugins.redfish.agent_based.redfish_psu import (
 from cmk.plugins.redfish.lib import parse_redfish_multiple, RedfishAPIData
 
 
-def _power_section(*supplies: dict[str, Any]) -> RedfishAPIData:
-    entry = {
-        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Power",
+def _power_entry(chassis: str, *supplies: dict[str, Any]) -> dict[str, Any]:
+    entry: dict[str, Any] = {
+        "@odata.id": f"/redfish/v1/Chassis/{chassis}/Power",
         "@odata.type": "#Power.v1_7_1.Power",
         "Id": "Power",
-        "PowerSupplies": list(supplies),
     }
-    string_table: StringTable = [[json.dumps(entry)]]
+    if supplies:
+        entry["PowerSupplies"] = list(supplies)
+    return entry
+
+
+def _section(*entries: dict[str, Any]) -> RedfishAPIData:
+    string_table: StringTable = [[json.dumps(entry)] for entry in entries]
     return parse_redfish_multiple(string_table)
+
+
+def _power_section(*supplies: dict[str, Any]) -> RedfishAPIData:
+    return _section(_power_entry("System.Embedded.1", *supplies))
 
 
 def test_discovery_does_not_crash_on_missing_name() -> None:
@@ -133,3 +142,15 @@ def test_check_unparsable_line_input_voltage() -> None:
         )
         in results
     )
+
+
+def test_check_continues_past_a_chassis_without_power_supplies() -> None:
+    section = _section(
+        _power_entry("1"),
+        _power_entry(
+            "2",
+            {"Name": "PS1", "PowerOutputWatts": 100.0, "Status": {"State": "Enabled"}},
+        ),
+    )
+
+    assert list(check_redfish_psu("0-PS1", section))[1] == Metric("output_power", 100.0)

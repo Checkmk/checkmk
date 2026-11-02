@@ -53,7 +53,7 @@ def check_redfish_psu(item: str, section: RedfishAPIData) -> CheckResult:
     for key in section:
         psus = section[key].get("PowerSupplies", None)
         if psus is None:
-            return
+            continue
 
         for count, psu_data in enumerate(psus):
             if _psu_service_item(count, psu_data) == item:

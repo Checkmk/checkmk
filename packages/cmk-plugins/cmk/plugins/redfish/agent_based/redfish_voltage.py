@@ -40,7 +40,7 @@ def check_redfish_voltage(item: str, section: RedfishAPIData) -> CheckResult:
     for key in section:
         voltages = section[key].get("Voltages", None)
         if voltages is None:
-            return
+            continue
 
         for voltage_data in voltages:
             if voltage_data.get("Name") == item:

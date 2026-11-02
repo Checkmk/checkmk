@@ -13,15 +13,24 @@ from cmk.plugins.redfish.lib import parse_redfish_multiple, RedfishAPIData
 _HEALTHY = {"Health": "OK", "State": "Enabled"}
 
 
-def _thermal_section(*fans: Mapping[str, object]) -> RedfishAPIData:
-    entry = {
-        "@odata.id": "/redfish/v1/Chassis/1/Thermal",
+def _thermal_entry(chassis: str, *fans: Mapping[str, object]) -> dict[str, object]:
+    entry: dict[str, object] = {
+        "@odata.id": f"/redfish/v1/Chassis/{chassis}/Thermal",
         "@odata.type": "#Thermal.v1_4_0.Thermal",
         "Id": "Thermal",
-        "Fans": list(fans),
     }
-    string_table: StringTable = [[json.dumps(entry)]]
+    if fans:
+        entry["Fans"] = list(fans)
+    return entry
+
+
+def _section(*entries: Mapping[str, object]) -> RedfishAPIData:
+    string_table: StringTable = [[json.dumps(entry)] for entry in entries]
     return parse_redfish_multiple(string_table)
+
+
+def _thermal_section(*fans: Mapping[str, object]) -> RedfishAPIData:
+    return _section(_thermal_entry("1", *fans))
 
 
 def test_fans_are_discovered_without_a_leading_fan_in_their_name() -> None:
@@ -87,6 +96,19 @@ def test_fan_speed_without_unit_is_assumed_to_be_rpm() -> None:
         Result(state=State.OK, summary="No unit found assume RPM!"),
         Result(state=State.OK, notice="Component State: Normal, This resource is enabled."),
     ]
+
+
+def test_check_continues_past_a_chassis_without_fans() -> None:
+    section = _section(
+        _thermal_entry("1"),
+        _thermal_entry(
+            "2", {"Name": "Fan 1", "Reading": 3000, "ReadingUnits": "RPM", "Status": _HEALTHY}
+        ),
+    )
+
+    assert list(check_redfish_fans("1", section))[0] == Result(
+        state=State.OK, summary="Speed: 3000.0 rpm"
+    )
 
 
 def test_fan_below_its_lower_critical_threshold_is_crit() -> None:

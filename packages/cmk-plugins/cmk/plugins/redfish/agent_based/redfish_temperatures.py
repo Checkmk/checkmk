@@ -44,7 +44,7 @@ def check_redfish_temperatures(
     for key in section:
         temps = section[key].get("Temperatures", None)
         if temps is None:
-            return
+            continue
 
         for temp_data in temps:
             if temp_data.get("Name") == item:

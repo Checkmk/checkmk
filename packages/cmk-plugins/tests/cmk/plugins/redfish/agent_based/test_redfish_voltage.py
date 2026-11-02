@@ -95,6 +95,17 @@ def test_voltage_reading_is_reported_with_its_metric() -> None:
     ]
 
 
+def test_check_continues_past_a_chassis_without_voltages() -> None:
+    section = _power_section(
+        _power_entry("1"),
+        _power_entry("2", {"Name": "PS1 Voltage", "ReadingVolts": 230, "Status": _HEALTHY}),
+    )
+
+    assert list(check_redfish_voltage("PS1 Voltage", section))[1] == Result(
+        state=State.OK, summary="Value: 230.0 V"
+    )
+
+
 def test_voltage_above_its_upper_critical_threshold_is_crit() -> None:
     section = _power_section(
         _power_entry(

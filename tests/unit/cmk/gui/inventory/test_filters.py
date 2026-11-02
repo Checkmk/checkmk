@@ -437,7 +437,7 @@ def test_filter_invtable_version_drops_a_row_without_version() -> None:
     ) == [{"ident": "1.0"}]
 
 
-def _make_host_with_package(name: str) -> Row:
+def _make_host_with_package(package: Mapping[SDKey, SDValue]) -> Row:
     return {
         "host_inventory": ImmutableTree(
             nodes_by_name={
@@ -446,9 +446,7 @@ def _make_host_with_package(name: str) -> Row:
                         SDNodeName("packages"): ImmutableTree(
                             table=ImmutableTable(
                                 key_columns=[SDKey("name")],
-                                rows_by_ident={
-                                    (name,): {SDKey("name"): name, SDKey("version"): "1.0"}
-                                },
+                                rows_by_ident={(package[SDKey("name")],): package},
                             )
                         )
                     }
@@ -458,8 +456,12 @@ def _make_host_with_package(name: str) -> Row:
     }
 
 
-_HOST_WITH_PACKAGE_A = _make_host_with_package("package-a")
-_HOST_WITH_PACKAGE_B = _make_host_with_package("package-b")
+_HOST_WITH_PACKAGE_A = _make_host_with_package(
+    {SDKey("name"): "package-a", SDKey("version"): "1.0"}
+)
+_HOST_WITH_PACKAGE_B = _make_host_with_package(
+    {SDKey("name"): "package-b", SDKey("version"): "1.0"}
+)
 _HOST_WITHOUT_PACKAGES: Row = {"host_inventory": ImmutableTree()}
 
 
@@ -605,6 +607,25 @@ def test_filter_inv_has_software_package_rejects_an_invalid_regex() -> None:
             {"invswpac": {"invswpac_host_name": "(", "invswpac_host_match": "regex"}},
             [_HOST_WITH_PACKAGE_A],
         )
+
+
+@pytest.mark.parametrize(
+    "package",
+    [
+        pytest.param({SDKey("name"): "package-a", SDKey("version"): None}, id="no-version"),
+        pytest.param({SDKey("name"): "package-a"}, id="missing-version"),
+    ],
+)
+def test_filter_inv_has_software_package_skips_a_package_without_version(
+    package: Mapping[SDKey, SDValue],
+) -> None:
+    assert (
+        FilterInvHasSoftwarePackage().filter_table(
+            {"invswpac": {"invswpac_host_name": "package-a", "invswpac_host_version_from": "1.0"}},
+            [_make_host_with_package(package)],
+        )
+        == []
+    )
 
 
 def test_filter_inv_has_software_package_needs_no_inventory_for_a_blank_name() -> None:

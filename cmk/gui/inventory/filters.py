@@ -909,7 +909,8 @@ def _find_package(
             continue
         if not from_version and not to_version:
             return True  # version not relevant
-        version = package["version"]
+        if (version := package.get("version")) is None:
+            continue
         if from_version and _version_is_lower(str(version), from_version):
             continue
         if to_version and _version_is_higher(str(version), to_version):

@@ -90,3 +90,18 @@ def test_check_azure_sync(
     assert list(azure_ad.check_azure_sync("Standardverzeichnis", params, parsed)) == [
         (expected_status, expected_message, []),
     ]
+
+
+@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4532")
+@time_machine.travel(datetime.datetime.fromisoformat("1970-02-01T00:00:01Z"))
+def test_check_azure_sync_in_the_future() -> None:
+    parsed = azure_ad.parse_azure_ad(STRING_TABLE)
+    assert list(
+        azure_ad.check_azure_sync("Standardverzeichnis", {"age": (3600, 7200)}, parsed)
+    ) == [
+        (
+            0,
+            "Last synchronization appears to be 15 minutes 0 seconds in the future"
+            " (check your system time)",
+        ),
+    ]

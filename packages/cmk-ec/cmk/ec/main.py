@@ -73,9 +73,15 @@ from .event import (
 )
 from .helpers import (
     ECLock,
-    parse_bytes_into_lines,
-    parse_bytes_into_syslog_messages,
+    EVENT_PIPE,
+    EVENT_SOCKET,
+    Framing,
+    Incomplete,
+    next_messages,
     parse_spool_file,
+    SYSLOG_VIA_TCP,
+    Truncated,
+    Unprocessed,
 )
 from .history import (
     ActiveHistoryPeriod,
@@ -562,7 +568,15 @@ class ClientConnection:
     sock: socket.socket
     endpoint: str  # for log messages, e.g. "event socket"
     address: tuple[str, int] | None  # None for the event socket
-    unprocessed: bytes = b""  # an incomplete message, waiting for the rest
+    framing: Framing
+    unprocessed: Unprocessed = Incomplete()
+
+    @property
+    def source(self) -> str:
+        """Where its messages come from, for log messages"""
+        if self.address is None:
+            return self.endpoint
+        return f"{self.endpoint}, host {self.address[0]}, port {self.address[1]}"
 
 
 # .
@@ -615,7 +629,7 @@ class EventServer(ECServerThread):
         self._idle_timeout = idle_timeout
         self._pipe: FileDescr | None = None
         # Kept for the next data from the pipe, also when serve() restarts, like the pipe itself
-        self._unprocessed_pipe_data = b""
+        self._unprocessed_pipe: Unprocessed = Incomplete()
         # The connections to the event socket and to syslog via TCP, kept with their incomplete
         # messages when serve() restarts, like the pipe
         self._client_sockets: dict[FileDescr, ClientConnection] = {}
@@ -970,6 +984,7 @@ class EventServer(ECServerThread):
                     sock=client_socket,
                     endpoint="event socket",
                     address=None,
+                    framing=EVENT_SOCKET,
                 )
 
             # Same for the TCP syslog socket
@@ -980,6 +995,7 @@ class EventServer(ECServerThread):
                     sock=client_socket,
                     endpoint=endpoint,
                     address=parse_address(endpoint, address),
+                    framing=SYSLOG_VIA_TCP,
                 )
 
             # Read data from existing connections to the event socket and syslog via TCP
@@ -987,7 +1003,9 @@ class EventServer(ECServerThread):
             for fd, client in list(self._client_sockets.items()):
                 if fd in readable:
                     try:
-                        new_data = client.sock.recv(4096)
+                        # Much at once, so a long message, e.g. a log record from the OpenTelemetry
+                        # collector on the event socket, takes few reads.
+                        new_data = client.sock.recv(65536)
                     except Exception:
                         new_data = b""
                         self._logger.exception(
@@ -995,28 +1013,33 @@ class EventServer(ECServerThread):
                         )
 
                     if new_data:
-                        messages, unprocessed = parse_bytes_into_syslog_messages(
-                            client.unprocessed + new_data
+                        messages, unprocessed = next_messages(
+                            client.framing, client.unprocessed, new_data
                         )
                         # Before processing the messages, so that a restart by an error goes on
                         # right after them
                         self._client_sockets[fd] = replace(client, unprocessed=unprocessed)
-                        self.process_syslog_messages(messages, client.address)
+                        self.process_syslog_messages(
+                            self._warning_about_truncated(messages, client.source), client.address
+                        )
                     else:  # the other side is gone, no more data will ever come
                         del self._client_sockets[fd]  # dropping the incomplete rest is OK
                         client.sock.close()  # after the bookkeeping above, close() can throw
 
-            # Read data from the pipe, without octet counting, see parse_bytes_into_lines() for why
+            # Read data from the pipe, without octet counting, see EVENT_PIPE for why
             if self._pipe is not None and self._pipe in readable:
                 try:
-                    self._unprocessed_pipe_data += os.read(self._pipe, 4096)
+                    data = os.read(self._pipe, 4096)
                 except Exception:
+                    data = b""
                     self._logger.exception("General exception during pipe os.read")
 
-                messages, self._unprocessed_pipe_data = parse_bytes_into_lines(
-                    self._unprocessed_pipe_data
+                messages, self._unprocessed_pipe = next_messages(
+                    EVENT_PIPE, self._unprocessed_pipe, data
                 )
-                self.process_syslog_messages(messages, None)
+                self.process_syslog_messages(
+                    self._warning_about_truncated(messages, "event pipe"), None
+                )
 
             # Read events from builtin syslog server
             if self._syslog_udp is not None and self._syslog_udp in readable:
@@ -1054,7 +1077,9 @@ class EventServer(ECServerThread):
                         self._put_aside_spool_file(spool_file, e)
                 else:
                     self._lacking_resources_for = (None, 0)
-                    self.process_syslog_messages(lines, None)
+                    self.process_syslog_messages(
+                        self._warning_about_truncated(lines, f"spool file {spool_file}"), None
+                    )
             else:
                 select_timeout = self._idle_timeout  # restore default select timeout
 
@@ -1175,6 +1200,23 @@ class EventServer(ECServerThread):
                 messages, address, self._logger if self._config["debug_rules"] else None
             )
         )
+
+    def _warning_about_truncated(self, messages: Iterable[bytes], source: str) -> Iterator[bytes]:
+        """
+        Passes the messages on, warning about each one which its framing truncated: Each of these
+        took more than MAX_MESSAGE_SIZE bytes, so there is at most one warning per 64 KiB received.
+        """
+        for message in messages:
+            if isinstance(message, Truncated):
+                self._logger.warning(
+                    "Truncated a message to %(size)d bytes from %(source)s: %(start)r",
+                    {
+                        "size": len(message),
+                        "source": source,
+                        "start": message[:60].decode("utf-8", "replace"),
+                    },
+                )
+            yield message
 
     def do_housekeeping(self) -> None:
         # In replication slave mode (when not took over), the master handles the events. Every sync

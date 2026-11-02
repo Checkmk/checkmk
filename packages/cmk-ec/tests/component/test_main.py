@@ -20,7 +20,7 @@ import pytest
 import cmk.ec.export as ec
 from cmk.ccc.site import SiteId
 from cmk.ec.config import Config
-from cmk.ec.helpers import ECLock
+from cmk.ec.helpers import ECLock, MAX_EVENT_SOCKET_MESSAGE_SIZE, MAX_MESSAGE_SIZE
 from cmk.ec.history import History
 from cmk.ec.main import (
     create_history,
@@ -169,6 +169,15 @@ def _send_to_event_socket(settings: ec.Settings, data: bytes) -> None:
         event_socket.sendall(data)
 
 
+# Each with the source it names in log messages and the longest message it takes
+_SENDERS = [
+    pytest.param(_write_to_event_pipe, "event pipe", MAX_MESSAGE_SIZE, id="event pipe"),
+    pytest.param(
+        _send_to_event_socket, "event socket", MAX_EVENT_SOCKET_MESSAGE_SIZE, id="event socket"
+    ),
+]
+
+
 def _event_texts(event_status: EventStatus) -> list[str]:
     with event_status.lock:
         return [event["text"] for event in event_status.events()]
@@ -211,6 +220,40 @@ def test_wrong_octet_count_on_the_event_pipe_holds_back_no_message_of_another_pr
         "999 <14>not as long as announced",
         "from another program",
     ]
+
+
+@pytest.mark.parametrize("send, _source, max_size", _SENDERS)
+def test_overlong_line_from_the_event_pipe_or_socket_is_truncated_across_reads(
+    event_console: _EventConsole,
+    send: Callable[[ec.Settings, bytes], None],
+    _source: str,
+    max_size: int,
+) -> None:
+    # The event server reads at most 4096 bytes at a time from the pipe and 64 KiB from a socket,
+    # so this checks that it keeps what it hasn't processed between its reads, up to the longest
+    # message it takes from each. The unit tests cover the framings themselves.
+    send(event_console.settings, b"x" * (max_size + 1) + b"\nnext\n")
+
+    assert _texts_of_events(event_console.event_status, 2) == ["x" * max_size, "next"]
+
+
+def _warning_about_truncating_xs(source: str, size: int) -> str:
+    """The warning about truncating a message of x's from the given source to the given size"""
+    return f"Truncated a message to {size} bytes from {source}: {'x' * 60!r}"
+
+
+@pytest.mark.parametrize("send, source, max_size", _SENDERS)
+def test_overlong_line_from_the_event_pipe_or_socket_is_warned_about(
+    event_console: _EventConsole,
+    caplog: pytest.LogCaptureFixture,
+    send: Callable[[ec.Settings, bytes], None],
+    source: str,
+    max_size: int,
+) -> None:
+    send(event_console.settings, b"x" * (max_size + 1) + b"\nnext\n")
+    _texts_of_events(event_console.event_status, 2)
+
+    assert _logged_warnings(caplog) == [_warning_about_truncating_xs(source, max_size)]
 
 
 def _fds_open_on(path: Path) -> int:
@@ -405,6 +448,21 @@ def test_spool_file_too_big_to_read_at_once_is_hidden(event_console: _EventConso
     incomplete.rename(spool_dir / "too_big")
 
     assert _eventually((spool_dir / ".too_big.unreadable").exists)
+
+
+def test_overlong_line_from_a_spool_file_is_warned_about(
+    event_console: _EventConsole, caplog: pytest.LogCaptureFixture
+) -> None:
+    settings, event_status = event_console
+    spool_dir = settings.paths.spool_dir.value
+    spool_dir.mkdir(parents=True)
+
+    _add_spool_file(spool_dir, b"x" * (MAX_MESSAGE_SIZE + 1) + b"\n")
+    _texts_of_events(event_status, 1)
+
+    assert _logged_warnings(caplog) == [
+        _warning_about_truncating_xs(f"spool file {spool_dir / 'file'}", MAX_MESSAGE_SIZE)
+    ]
 
 
 def _reading_spool_files_after(*actions: Callable[[Path], object]) -> _SpoolFileReader:

@@ -21,12 +21,8 @@ from typing import Any, NamedTuple
 from cmk.gui.inventory.filters import (
     FilterInvFloat,
     FilterInvFloatChoice,
-    FilterInvtableAdminStatus,
     FilterInvtableAgeRange,
-    FilterInvtableAvailable,
     FilterInvtableIntegerRange,
-    FilterInvtableInterfaceType,
-    FilterInvtableOperStatus,
     FilterInvtableText,
     FilterInvtableVersion,
     FilterInvText,
@@ -73,40 +69,6 @@ _INV_INDEX_FILTER = FilterInvtableIntegerRange(
     unit_choices={},
 )
 
-# FilterInvtableOperStatus / AdminStatus / Available hard-code the column name
-# they read from the row (`invinterface_oper_status` / `_admin_status` /
-# `_available`) — see cmk/gui/query_filters.py:if_oper_status_filter_table and
-# the inline lambdas in cmk/gui/inventory/filters.py:797-836. Test rows must
-# use those names; the filter is still constructed locally here (not via the
-# plug-in registry).
-_INV_OPER_STATUS_FILTER = FilterInvtableOperStatus(
-    inv_info="invtest",
-    ident="invinterface_oper_status",
-    title="Synthetic operational-status filter",
-)
-
-_INV_ADMIN_STATUS_FILTER = FilterInvtableAdminStatus(
-    inv_info="invtest",
-    ident="invinterface_admin_status",
-    title="Synthetic administrative-status filter",
-)
-
-_INV_AVAILABLE_FILTER = FilterInvtableAvailable(
-    inv_info="invtest",
-    ident="invinterface_available",
-    title="Synthetic available filter",
-)
-
-_INV_PORT_TYPE_FILTER = FilterInvtableInterfaceType(
-    inv_info="invtest",
-    ident="invtest_port_type",
-    title="Synthetic interface-type filter",
-)
-
-# FilterInvtableAgeRange has the request-var shape used by the test data
-# (`_from`/`_from_prefix`/`_until`/`_until_prefix`). The sibling
-# FilterInvtableTimestampAsAge uses a different `_days`-suffixed shape; the
-# original test (when registered via inventory_ui) was the AgeRange variant.
 _INV_LAST_CHANGE_FILTER = FilterInvtableAgeRange(
     inv_info="invtest",
     ident="invtest_last_change",
@@ -471,179 +433,7 @@ filter_table_tests = [
             {"invtest_index": 5},
         ],
     ),
-    # Testing base class FilterInvtableOperStatus (synthetic filter)
-    FilterTableTest(
-        ident=_INV_OPER_STATUS_FILTER.ident,
-        filter=_INV_OPER_STATUS_FILTER,
-        request_vars=[],
-        rows=[
-            {"invinterface_oper_status": 1},
-            {"invinterface_oper_status": 3},
-            {"invinterface_oper_status": 5},
-        ],
-        expected_rows=[
-            {"invinterface_oper_status": 1},
-            {"invinterface_oper_status": 3},
-            {"invinterface_oper_status": 5},
-        ],
-    ),
-    FilterTableTest(
-        ident=_INV_OPER_STATUS_FILTER.ident,
-        filter=_INV_OPER_STATUS_FILTER,
-        request_vars=[
-            ("invinterface_oper_status_1", ""),
-            ("invinterface_oper_status_3", "on"),
-            ("invinterface_oper_status_5", ""),
-        ],
-        rows=[
-            {"invinterface_oper_status": 1},
-            {"invinterface_oper_status": 3},
-            {"invinterface_oper_status": 5},
-        ],
-        expected_rows=[
-            {"invinterface_oper_status": 3},
-        ],
-    ),
-    FilterTableTest(
-        ident=_INV_OPER_STATUS_FILTER.ident,
-        filter=_INV_OPER_STATUS_FILTER,
-        request_vars=[
-            ("invinterface_oper_status_1", ""),
-            ("invinterface_oper_status_3", ""),
-            ("invinterface_oper_status_5", ""),
-        ],
-        rows=[
-            {"invinterface_oper_status": 1},
-            {"invinterface_oper_status": 3},
-            {"invinterface_oper_status": 5},
-        ],
-        expected_rows=[],
-    ),
-    FilterTableTest(
-        ident=_INV_OPER_STATUS_FILTER.ident,
-        filter=_INV_OPER_STATUS_FILTER,
-        request_vars=[
-            ("invinterface_oper_status_1", ""),
-            ("invinterface_oper_status_3", "on"),
-        ],
-        rows=[
-            {"invinterface_oper_status": 1},
-            {"invinterface_oper_status": 3},
-            {"invinterface_oper_status": 5},
-        ],
-        expected_rows=[
-            {"invinterface_oper_status": 3},
-            {"invinterface_oper_status": 5},
-        ],
-    ),
-    # Testing base class FilterInvtableAdminStatus (synthetic filter).
-    # Backed by SingleOptionQuery: the single request var carries the chosen
-    # status ("1" up, "2" down, "-1" ignore).
-    FilterTableTest(
-        ident=_INV_ADMIN_STATUS_FILTER.ident,
-        filter=_INV_ADMIN_STATUS_FILTER,
-        request_vars=[
-            (_INV_ADMIN_STATUS_FILTER.ident, "1"),
-        ],
-        rows=[
-            {"invinterface_admin_status": "1"},
-            {"invinterface_admin_status": "2"},
-        ],
-        expected_rows=[
-            {"invinterface_admin_status": "1"},
-        ],
-    ),
-    FilterTableTest(
-        ident=_INV_ADMIN_STATUS_FILTER.ident,
-        filter=_INV_ADMIN_STATUS_FILTER,
-        request_vars=[
-            (_INV_ADMIN_STATUS_FILTER.ident, "2"),
-        ],
-        rows=[
-            {"invinterface_admin_status": "1"},
-            {"invinterface_admin_status": "2"},
-        ],
-        expected_rows=[
-            {"invinterface_admin_status": "2"},
-        ],
-    ),
-    FilterTableTest(
-        ident=_INV_ADMIN_STATUS_FILTER.ident,
-        filter=_INV_ADMIN_STATUS_FILTER,
-        request_vars=[
-            (_INV_ADMIN_STATUS_FILTER.ident, "-1"),
-        ],
-        rows=[
-            {"invinterface_admin_status": "1"},
-            {"invinterface_admin_status": "2"},
-        ],
-        expected_rows=[
-            {"invinterface_admin_status": "1"},
-            {"invinterface_admin_status": "2"},
-        ],
-    ),
-    # Testing base class FilterInvtableAvailable (synthetic filter).
-    # Backed by SingleOptionQuery: "no" → keep used (False), "yes" → keep
-    # free (True), "" → ignore.
-    FilterTableTest(
-        ident=_INV_AVAILABLE_FILTER.ident,
-        filter=_INV_AVAILABLE_FILTER,
-        request_vars=[
-            (_INV_AVAILABLE_FILTER.ident, "no"),
-        ],
-        rows=[
-            {"invinterface_available": False},
-            {"invinterface_available": True},
-        ],
-        expected_rows=[
-            {"invinterface_available": False},
-        ],
-    ),
-    FilterTableTest(
-        ident=_INV_AVAILABLE_FILTER.ident,
-        filter=_INV_AVAILABLE_FILTER,
-        request_vars=[
-            (_INV_AVAILABLE_FILTER.ident, "yes"),
-        ],
-        rows=[
-            {"invinterface_available": False},
-            {"invinterface_available": True},
-        ],
-        expected_rows=[
-            {"invinterface_available": True},
-        ],
-    ),
-    FilterTableTest(
-        ident=_INV_AVAILABLE_FILTER.ident,
-        filter=_INV_AVAILABLE_FILTER,
-        request_vars=[],
-        rows=[
-            {"invinterface_available": False},
-            {"invinterface_available": True},
-        ],
-        expected_rows=[
-            {"invinterface_available": False},
-            {"invinterface_available": True},
-        ],
-    ),
-    # Testing base class FilterInvtableInterfaceType (synthetic filter)
-    FilterTableTest(
-        ident=_INV_PORT_TYPE_FILTER.ident,
-        filter=_INV_PORT_TYPE_FILTER,
-        request_vars=[
-            ("invtest_port_type", "2|3|10"),
-        ],
-        rows=[
-            {"invtest_port_type": "1"},
-            {"invtest_port_type": "2"},
-            {"invtest_port_type": "10"},
-        ],
-        expected_rows=[
-            {"invtest_port_type": "2"},
-            {"invtest_port_type": "10"},
-        ],
-    ),
-    # Testing base class FilterInvtableTimestampAsAge (synthetic filter)
+    # Testing base class FilterInvtableAgeRange (synthetic filter)
     FilterTableTest(
         ident=_INV_LAST_CHANGE_FILTER.ident,
         filter=_INV_LAST_CHANGE_FILTER,

@@ -1141,7 +1141,6 @@ class ColumnDisplayHintOfView:
         | FilterInvtableIntegerRange
         | FilterInvtableText
         | FilterInvtableTextWithSortKey
-        | FilterInvtableTimestampAsAge
         | FilterInvtableVersion
     )
 

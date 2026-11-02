@@ -998,11 +998,12 @@ def log_class_filter(value: FilterHTTPVariables) -> FilterHeader:
     return lq_logic("Filter: class =", toggled, "Or")
 
 
+# Legacy display hint plug-ins may import this function. Keep it until the
+# legacy display hint API is removed in 3.1.0.
 def if_oper_status_filter_table(ident: str, context: VisualContext, rows: Rows) -> Rows:
     values = context.get(ident, {})
 
     def _add_row(row: Row) -> bool:
-        # Apply filter if and only if a filter value is set
         if (oper_status := row.get("invinterface_oper_status")) is not None and (
             filter_key := "%s_%d" % (ident, oper_status)
         ) in values:

@@ -15,7 +15,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
-from cmk.gui.ifaceoper import interface_oper_states, interface_port_types
+from cmk.gui.ifaceoper import interface_port_types
 from cmk.gui.num_split import cmp_version
 from cmk.gui.type_defs import (
     FilterHeader,
@@ -26,10 +26,8 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.visuals.filter import (
     CheckboxRowFilter,
-    DualListFilter,
     Filter,
     FilterGroup,
-    FilterNumberRange,
     FilterOption,
     InputTextFilter,
 )
@@ -48,6 +46,30 @@ from cmk.inventory.trees import SDValue
 from cmk.inventory_ui.v1 import Comparable
 from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.speaklater import LazyString
+
+
+# Legacy display hints name the following filter classes and the hint
+# parser replaces each by a generic table filter. Keep the names until the
+# legacy display hint API is removed in 3.1.0.
+class FilterInvtableTimestampAsAge: ...
+
+
+class FilterInvtableOperStatus: ...
+
+
+class FilterInvtableAdminStatus: ...
+
+
+class FilterInvtableAvailable: ...
+
+
+class FilterInvtableInterfaceType: ...
+
+
+# Legacy display hint plug-ins may import this function. Keep it until the
+# legacy display hint API is removed in 3.1.0.
+def port_types(_info: str) -> list[tuple[str, str]]:
+    return [(str(k), str(v)) for k, v in sorted(interface_port_types().items(), key=lambda t: t[0])]
 
 
 # Filter tables
@@ -743,25 +765,6 @@ class FilterInvtableDualChoice(Filter):
         return rows  # No types selected, filter is unused
 
 
-class FilterInvtableTimestampAsAge(FilterNumberRange):
-    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
-        super().__init__(
-            title=title,
-            sort_index=800,
-            info=inv_info,
-            query_filter=query_filters.NumberRangeQuery(
-                ident=ident,
-                filter_livestatus=False,
-                filter_row=query_filters.column_age_in_range,
-                request_var_suffix="_days",
-                bound_rescaling=3600 * 24,
-            ),
-            unit="days",
-            is_show_more=False,
-            group=FilterGroup.INVENTORY,
-        )
-
-
 class FilterInvtableVersion(_FilterTextRange):
     def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
         super().__init__(
@@ -772,100 +775,6 @@ class FilterInvtableVersion(_FilterTextRange):
             until_label=_("Max.&nbsp;Version:"),
             rows_filter=partial(query_filters.version_in_range, ident, list(_request_vars(ident))),
         )
-
-
-class FilterInvtableOperStatus(CheckboxRowFilter):
-    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
-        super().__init__(
-            title=title,
-            sort_index=800,
-            info=inv_info,
-            query_filter=query_filters.MultipleOptionsQuery(
-                ident=ident,
-                options=[
-                    (ident + "_" + str(state), title)
-                    for state, title in interface_oper_states().items()
-                    # needed because of silly types
-                    # skip artificial state 8 (degraded) and 9 (admin down)
-                    if isinstance(state, int) and state < 8
-                ],
-                rows_filter=partial(query_filters.if_oper_status_filter_table, ident),
-            ),
-            group=FilterGroup.INVENTORY,
-        )
-
-
-class FilterInvtableAdminStatus(FilterOption):
-    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
-        super().__init__(
-            title=title,
-            sort_index=800,
-            info=inv_info,
-            query_filter=query_filters.SingleOptionQuery(
-                ident=ident,
-                options=[
-                    ("1", _("up")),
-                    ("2", _("down")),
-                    ("-1", _("(ignore)")),
-                ],
-                filter_code=lambda _x: "",
-                filter_row=lambda selection, row: (
-                    str(row.get("invinterface_admin_status", "")) == selection
-                ),
-            ),
-            group=FilterGroup.INVENTORY,
-        )
-
-
-class FilterInvtableAvailable(FilterOption):
-    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
-        super().__init__(
-            title=title,
-            sort_index=800,
-            info=inv_info,
-            query_filter=query_filters.SingleOptionQuery(
-                ident=ident,
-                options=[
-                    ("no", _("used")),
-                    ("yes", _("free")),
-                    ("", _("(ignore)")),
-                ],
-                filter_code=lambda _x: "",
-                filter_row=lambda selection, row: (
-                    (selection == "yes") == row.get("invinterface_available")
-                ),
-            ),
-            group=FilterGroup.INVENTORY,
-        )
-
-
-def port_types(_info: str) -> list[tuple[str, str]]:
-    return [(str(k), str(v)) for k, v in sorted(interface_port_types().items(), key=lambda t: t[0])]
-
-
-class FilterInvtableInterfaceType(DualListFilter):
-    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
-        super().__init__(
-            title=title,
-            sort_index=800,
-            info=inv_info,
-            query_filter=query_filters.MultipleQuery(ident=ident, op="="),
-            options=port_types,
-            group=FilterGroup.INVENTORY,
-        )
-
-    @override
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return ""
-
-    @override
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        value = context.get(self.query_filter.ident, {})
-        selection = self.query_filter.selection(value)
-
-        if not selection:
-            return rows  # No types selected, filter is unused
-        return [row for row in rows if str(row[self.query_filter.column]) in selection]
 
 
 class FilterHasInv(_FilterInvOption):

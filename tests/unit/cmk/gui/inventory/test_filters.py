@@ -8,6 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.inventory import filters
 from cmk.gui.inventory.filters import (
     FilterInvBool,
     FilterInvChoice,
@@ -30,6 +31,19 @@ from cmk.inventory.trees import (
     SDNodeName,
     SDValue,
 )
+
+
+def test_legacy_display_hint_filter_names_exist() -> None:
+    assert all(
+        hasattr(filters, name)
+        for name in (
+            "FilterInvtableAdminStatus",
+            "FilterInvtableAvailable",
+            "FilterInvtableInterfaceType",
+            "FilterInvtableOperStatus",
+            "FilterInvtableTimestampAsAge",
+        )
+    )
 
 
 def _make_host_inventory_tree(value: SDValue) -> ImmutableTree:

@@ -20,6 +20,7 @@ sh_library(
     name = "tests_sh",
     srcs = [
         "find_modified_lock_files",
+        "manual_test_upgrade_from_25.sh",
         "setup_openldap.sh",
         "setup_postfix.sh",
         "teardown_openldap.sh",

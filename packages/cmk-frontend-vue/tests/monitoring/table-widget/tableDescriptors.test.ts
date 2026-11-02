@@ -77,9 +77,9 @@ describe('HostsTableDescriptor', () => {
 const SERVICE_TABLE_COLUMNS = [
   'state',
   'modes',
-  'host_name',
   'name',
   'summary',
+  'host_name',
   'last_state_change',
   'last_check',
   'labels',
@@ -112,11 +112,19 @@ describe('ServicesTableDescriptor', () => {
       .filter((column) => column.shownByDefault)
       .map((column) => column.id)
 
-    expect(shown).toEqual(['state', 'modes', 'host_name', 'name', 'summary'])
+    expect(shown).toEqual(['state', 'modes', 'name', 'summary', 'host_name'])
   })
 
   it('renders every column the backend offers for the services table', () => {
     const rendered = new ServicesTableDescriptor().columns(SERVICE_TABLE_COLUMNS).map(columnId)
+
+    expect(rendered).toEqual(SERVICE_TABLE_COLUMNS)
+  })
+
+  it('renders the columns in the order of the row, whatever order they are picked in', () => {
+    const rendered = new ServicesTableDescriptor()
+      .columns([...SERVICE_TABLE_COLUMNS].reverse())
+      .map(columnId)
 
     expect(rendered).toEqual(SERVICE_TABLE_COLUMNS)
   })

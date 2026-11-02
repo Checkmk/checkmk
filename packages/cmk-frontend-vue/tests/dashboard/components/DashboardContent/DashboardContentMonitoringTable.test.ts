@@ -48,6 +48,35 @@ const VALUE: ComputedMonitoringTable = {
   unreachable_sites: []
 }
 
+const SERVICES_CONTENT: MonitoringTableContent = {
+  ...CONTENT,
+  table: 'services',
+  columns: ['host_name', 'name', 'summary'],
+  sort: []
+}
+
+const SERVICES_VALUE: ComputedMonitoringTable = {
+  table: 'services',
+  rows: [
+    {
+      name: 'Check_MK',
+      host_name: 'today',
+      site_id: 'today',
+      host_state: 'UP',
+      state: 'OK',
+      is_flapping: false,
+      stale: false,
+      summary: '[agent] Success',
+      last_check: null,
+      last_state_change: null
+    }
+  ],
+  matched: 1,
+  total: 1,
+  unapplied_filters: [],
+  unreachable_sites: []
+}
+
 const CMK_TOKEN = '0:the-token'
 
 let value: ComputedMonitoringTable = VALUE
@@ -91,9 +120,9 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-async function renderWidget(tick = 0) {
+async function renderWidget(content: MonitoringTableContent = CONTENT) {
   const rendered = render(DashboardContentMonitoringTable, {
-    props: makeContentProps(CONTENT, { tick })
+    props: makeContentProps(content)
   })
   await nextTick()
   deliverSize(800, 400)
@@ -231,6 +260,29 @@ describe('DashboardContentMonitoringTable', () => {
 
     expect(await screen.findByText('heute')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'heute' })).not.toBeInTheDocument()
+  })
+
+  it('shows every service value under its own header, whatever order the columns have', async () => {
+    value = SERVICES_VALUE
+    await renderWidget({ ...SERVICES_CONTENT, columns: ['host_name', 'summary', 'name'] })
+    await screen.findByText('Check_MK')
+
+    const headers = screen.getAllByRole('columnheader').map((header) => header.textContent?.trim())
+    const cells = screen.getAllByRole('cell').map((cell) => cell.textContent?.trim())
+    expect(Object.fromEntries(headers.map((header, index) => [header, cells[index]]))).toEqual({
+      Service: 'Check_MK',
+      Summary: '[agent] Success',
+      Host: expect.stringContaining('today')
+    })
+  })
+
+  it('shows the host of a service as text, not as a link', async () => {
+    value = SERVICES_VALUE
+    await renderWidget(SERVICES_CONTENT)
+    await screen.findByText('Check_MK')
+
+    expect(screen.getByRole('cell', { name: /today/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /today/ })).not.toBeInTheDocument()
   })
 
   it('keeps its links from navigating away in the wizard preview', async () => {

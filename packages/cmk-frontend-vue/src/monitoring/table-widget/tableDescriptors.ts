@@ -32,9 +32,10 @@ export interface MonitoringTableColumn {
 export abstract class MonitoringTableDescriptor<T> {
   abstract readonly rowComponent: Component
 
-  /** The columns the backend offers for this table, in the order the row renders them. */
+  /** The columns the backend offers for this table. */
   abstract readonly columnIds: readonly string[]
 
+  /** The columns of the full page, in the order the row renders them. */
   protected abstract allColumns(): ColumnDef<T>[]
 
   abstract rowKey(row: T): string
@@ -42,27 +43,28 @@ export abstract class MonitoringTableDescriptor<T> {
   abstract truncatedHint(shown: number, matched: number): string
 
   catalog(): MonitoringTableColumn[] {
-    const byId = new Map(this.allColumns().map((column) => [columnId(column), column]))
-    return this.columnIds.flatMap((id) => {
-      const column = byId.get(id)
-      return column
-        ? [
-            {
-              id,
-              title: typeof column.header === 'string' ? column.header : id,
-              sortable: column.enableSorting !== false,
-              shownByDefault: !column.meta?.hidden
-            }
-          ]
-        : []
-    })
+    return this.inRowOrder(this.columnIds).map(([id, column]) => ({
+      id,
+      title: typeof column.header === 'string' ? column.header : id,
+      sortable: column.enableSorting !== false,
+      shownByDefault: !column.meta?.hidden
+    }))
   }
 
+  // The row draws its cells in a fixed order, so the headers follow it, whatever order `ids` has.
   columns(ids: readonly string[]): ColumnDef<T>[] {
-    const byId = new Map(this.allColumns().map((column) => [columnId(column), column]))
-    return ids.flatMap((id) => {
-      const column = byId.get(id)
-      return column ? [{ ...column, enableColumnFilter: false, enableHiding: false }] : []
+    return this.inRowOrder(ids).map(([, column]) => ({
+      ...column,
+      enableColumnFilter: false,
+      enableHiding: false
+    }))
+  }
+
+  private inRowOrder(ids: readonly string[]): [string, ColumnDef<T>][] {
+    const wanted = new Set(ids)
+    return this.allColumns().flatMap<[string, ColumnDef<T>]>((column) => {
+      const id = columnId(column)
+      return id !== undefined && wanted.has(id) ? [[id, column]] : []
     })
   }
 }
@@ -121,9 +123,9 @@ export class ServicesTableDescriptor extends MonitoringTableDescriptor<ServiceEn
   readonly columnIds = [
     'state',
     'modes',
-    'host_name',
     'name',
     'summary',
+    'host_name',
     'last_state_change',
     'last_check',
     'labels',

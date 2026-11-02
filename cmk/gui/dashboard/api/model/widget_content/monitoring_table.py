@@ -30,7 +30,8 @@ class MonitoringTableContent(BaseWidgetContent):
         description="The monitoring table to display.", example="hosts"
     )
     columns: Annotated[list[str], MinLen(1)] = api_field(
-        description="The columns to display, in this order. Allowed columns per table: "
+        description="The columns to display. The table shows them in the order of the allowed "
+        "columns, whatever order they are given in. Allowed columns per table: "
         + "; ".join(
             f"{name}: {', '.join(spec.catalog.column_ids)}"
             for name, spec in MONITORING_TABLES.items()

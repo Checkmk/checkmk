@@ -32,9 +32,9 @@ HOST_SERVICES_TABLE: Final[ColumnCatalog[ServiceOptionalField, ServiceSort]] = C
 )
 
 SERVICE_TABLE: Final[ColumnCatalog[ServiceOptionalField, ServiceSort]] = ColumnCatalog(
-    # The host follows state and modes, where the service rows of All services draw it.
+    # The host follows the summary, where the service rows of All services draw it.
     {
-        **{key: _HOST_SERVICES_COLUMNS[key] for key in ("state", "modes")},
+        **{key: _HOST_SERVICES_COLUMNS[key] for key in ("state", "modes", "name", "summary")},
         "host_name": TableColumn(_l("Host")),
         **_HOST_SERVICES_COLUMNS,
     },

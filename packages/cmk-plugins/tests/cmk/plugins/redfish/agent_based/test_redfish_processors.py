@@ -5,14 +5,11 @@
 
 import json
 
-import pytest
-
 from cmk.agent_based.v2 import Result, State
 from cmk.plugins.redfish.agent_based.redfish_processors import check_redfish_processors
 from cmk.plugins.redfish.lib import parse_redfish_multiple
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4986")
 def test_check_redfish_processors_model_with_line_break() -> None:
     section = parse_redfish_multiple(
         [

@@ -153,6 +153,10 @@ function cancel(): void {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
+
+  /* Room for the focus outline of the fields, which overflow would clip otherwise. */
+  margin: calc(-1 * var(--dimension-3));
+  padding: var(--dimension-3);
 }
 
 .monitoring-action-form-pane__confirm {

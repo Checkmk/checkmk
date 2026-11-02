@@ -5,6 +5,7 @@
 
 import hashlib
 import logging
+from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from uuid import UUID
 
@@ -19,7 +20,7 @@ def get_licensing_logger() -> logging.Logger:
 def init_logging(log_dir: Path) -> logging.Logger:
     log_dir.mkdir(parents=True, exist_ok=True)
 
-    handler = logging.FileHandler(filename=log_dir / "licensing.log", encoding="utf-8")
+    handler = WatchedFileHandler(filename=log_dir / "licensing.log", encoding="utf-8")
     handler.setFormatter(CMKFormatter(with_process=True))
 
     logger = get_licensing_logger()

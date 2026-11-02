@@ -35,6 +35,16 @@ _STRING_TABLE_WITHOUT_CALL_INFORMATION = [
 ]
 
 
+_STRING_TABLE_WITHOUT_NAMES = [
+    [
+        ["1", "1", "0", "IPG_SBC", "", ""],
+        ["2", "1", "0", "", "", ""],
+        ["3", "1", "0", "", "", "Disconnected"],
+    ],
+    [],
+]
+
+
 def _parsed_section(string_table: Sequence[StringTable]) -> Mapping[str, IPGroup]:
     section = parse_audiocodes_ipgroup(string_table)
     assert section
@@ -59,7 +69,7 @@ def test_discovery_function() -> None:
                 Result(
                     state=State.OK,
                     summary="Status: active",
-                    details="IP group name: N11 intern, Type: Server, IP group index: 0, Description: None, Proxy set connectivity: Connected",
+                    details="IP group name: N11 intern, Type: Server, IP group index: 0, Proxy set connectivity: Connected",
                 ),
                 Result(state=State.OK, summary="Active calls in: 12"),
                 Metric("audiocodes_ipgroup_active_calls_in", 12.0),
@@ -75,7 +85,7 @@ def test_discovery_function() -> None:
                 Result(
                     state=State.OK,
                     summary="Status: active",
-                    details="IP group name: N13 extern, Type: Server, IP group index: 5, Description: None, Proxy set connectivity: NA",
+                    details="IP group name: N13 extern, Type: Server, IP group index: 5, Proxy set connectivity: NA",
                 ),
             ],
             id="Connect status is not available, but overall state is OK",
@@ -87,7 +97,7 @@ def test_discovery_function() -> None:
                 Result(
                     state=State.CRIT,
                     summary="Status: notInService",
-                    details="IP group name: CSIP HAN, Type: Gateway, IP group index: 7, Description: None, Proxy set connectivity: Disconnected",
+                    details="IP group name: CSIP HAN, Type: Gateway, IP group index: 7, Proxy set connectivity: Disconnected",
                 ),
             ],
             id="Bad status. Overall state is CRIT",
@@ -99,7 +109,7 @@ def test_discovery_function() -> None:
                 Result(
                     state=State.OK,
                     summary="Status: active",
-                    details="IP group name: N11 intern, Type: Server, IP group index: 0, Description: None, Proxy set connectivity: Connected",
+                    details="IP group name: N11 intern, Type: Server, IP group index: 0, Proxy set connectivity: Connected",
                 ),
             ],
             id="OK. No call information available",
@@ -112,3 +122,51 @@ def test_check_function(
     expected: CheckResult,
 ) -> None:
     assert list(check_audiocodes_ipgroup(item, _parsed_section(string_table))) == expected
+
+
+def test_item_without_name_falls_back_to_description_then_index() -> None:
+    section = _parsed_section(_STRING_TABLE_WITHOUT_NAMES)
+
+    services = list(discover_audiocodes_ipgroup(section))
+
+    assert services == [
+        Service(item="1 IPG_SBC"),
+        Service(item="2"),
+        Service(item="3"),
+    ]
+
+
+def test_item_uses_name_rather_than_description() -> None:
+    section = _parsed_section([[["1", "1", "0", "IPG description", "IPG name", "Connected"]], []])
+
+    services = list(discover_audiocodes_ipgroup(section))
+
+    assert services == [Service(item="1 IPG name")]
+
+
+def test_active_ip_group_without_reported_connectivity_is_ok() -> None:
+    section = _parsed_section(_STRING_TABLE_WITHOUT_NAMES)
+
+    results = list(check_audiocodes_ipgroup("1 IPG_SBC", section))
+
+    assert results == [
+        Result(
+            state=State.OK,
+            summary="Status: active",
+            details="Type: Server, IP group index: 1, Description: IPG_SBC, Proxy set connectivity: not reported by the device",
+        ),
+    ]
+
+
+def test_active_ip_group_with_bad_connectivity_is_crit() -> None:
+    section = _parsed_section(_STRING_TABLE_WITHOUT_NAMES)
+
+    results = list(check_audiocodes_ipgroup("3", section))
+
+    assert results == [
+        Result(
+            state=State.CRIT,
+            summary="Status: active",
+            details="Type: Server, IP group index: 3, Proxy set connectivity: Disconnected",
+        ),
+    ]

@@ -9,8 +9,11 @@
 //! on the host - the receiver authenticates the host by the client certificate
 //! of the connection, whose common name is the connection's UUID.
 
+use super::legacy_registration::LegacyRegistration;
+use crate::agent_receiver_api::{RegistrationStatusV2, RegistrationStatusV2Response};
 use crate::config::{ConnectionMode, Registry, TrustedConnectionWithRemote};
-use crate::site_spec::SiteID;
+use crate::site_spec::{self, SiteID};
+use anyhow::{bail, Result as AnyhowResult};
 
 /// A registered connection considered for agent updates.
 pub struct UpdateConnection<'a> {
@@ -49,6 +52,104 @@ pub(super) fn candidates(registry: &Registry) -> impl Iterator<Item = UpdateConn
 /// the connection was deleted or replaced by a new registration.
 pub fn select(registry: &Registry, uuid: uuid::Uuid) -> Option<UpdateConnection<'_>> {
     candidates(registry).find(|candidate| candidate.connection.trust.uuid == uuid)
+}
+
+/// The connection that `registration` was made for, which the migration
+/// proves it through: its server and site are the ones of the
+/// registration, verbatim, as the controller passes them on to the Python
+/// updater (CMK-18329), and its site has registered this host under the same
+/// name.
+///
+/// # Errors
+///
+/// If no connection matches. The error says what each asked site answered.
+pub(super) fn migration_candidate<'a>(
+    registry: &'a Registry,
+    registration: &LegacyRegistration,
+    api: &impl RegistrationStatusV2,
+) -> AnyhowResult<UpdateConnection<'a>> {
+    let (matching, others): (Vec<_>, Vec<_>) = candidates(registry).partition(|candidate| {
+        candidate.site_id.server == registration.server
+            && candidate.site_id.site == registration.site
+    });
+    if matching.is_empty() {
+        if others.is_empty() {
+            bail!(
+                "Could not migrate {registration}: the controller has no registered connection \
+                 to migrate it through"
+            );
+        }
+        bail!(
+            "Could not migrate {registration}: no registered connection is to {}/{}",
+            registration.server,
+            registration.site
+        );
+    }
+    let (knowing, not_knowing): (Vec<_>, Vec<_>) = host_names(matching, api)
+        .into_iter()
+        .partition(|(_, answer)| knows_the_host(answer, registration));
+    match knowing.into_iter().next() {
+        Some((candidate, _)) => Ok(candidate),
+        None => bail!(
+            "Could not migrate {registration}: {}",
+            described(&not_knowing)
+        ),
+    }
+}
+
+/// A connection, and the host name that its site has registered its UUID for.
+type HostNameAnswer<'a> = (UpdateConnection<'a>, AnyhowResult<Option<String>>);
+
+fn host_names<'a>(
+    connections: Vec<UpdateConnection<'a>>,
+    api: &impl RegistrationStatusV2,
+) -> Vec<HostNameAnswer<'a>> {
+    connections
+        .into_iter()
+        .map(|connection| {
+            let answer = registered_host_name(connection.site_id, connection.connection, api);
+            (connection, answer)
+        })
+        .collect()
+}
+
+fn knows_the_host(
+    answer: &AnyhowResult<Option<String>>,
+    registration: &LegacyRegistration,
+) -> bool {
+    matches!(answer, Ok(Some(host_name)) if *host_name == registration.host_name)
+}
+
+fn described(answers: &[HostNameAnswer<'_>]) -> String {
+    answers
+        .iter()
+        .map(|(connection, answer)| match answer {
+            Ok(Some(host_name)) => {
+                format!("{} registered this host as {host_name}", connection.site_id)
+            }
+            Ok(None) => format!(
+                "{} has no registration of this connection",
+                connection.site_id
+            ),
+            Err(error) => format!(
+                "could not ask {} for the host name of its connection: {error:#}",
+                connection.site_id
+            ),
+        })
+        .collect::<Vec<_>>()
+        .join("; ")
+}
+
+pub(super) fn registered_host_name(
+    site_id: &SiteID,
+    connection: &TrustedConnectionWithRemote,
+    api: &impl RegistrationStatusV2,
+) -> AnyhowResult<Option<String>> {
+    let url = site_spec::make_site_url(site_id, &connection.receiver_port)?;
+    Ok(match api.registration_status_v2(&url, &connection.trust)? {
+        RegistrationStatusV2Response::Registered(registered) => Some(registered.hostname),
+        RegistrationStatusV2Response::NotRegistered => None,
+    })
 }
 
 #[cfg(test)]

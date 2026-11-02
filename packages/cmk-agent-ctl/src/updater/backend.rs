@@ -10,6 +10,7 @@
 use super::connection;
 #[cfg(unix)]
 use super::install;
+use super::legacy_registration::LegacyRegistration;
 #[cfg(windows)]
 use super::platform::parse_key_value;
 use super::section;
@@ -722,6 +723,63 @@ impl WritableUpdater {
         self.state.pending_hash = None;
         self.state.save(&self.state_path)
     }
+
+    /// Prove the registration of the Python agent updater to the site of the
+    /// matching connection, on a host without an update source. The
+    /// site answers the status request only after it has authorized the UUID
+    /// of the connection, which then becomes the update source.
+    ///
+    /// # Returns
+    ///
+    /// The new source, or `None` when there is nothing to migrate.
+    ///
+    /// # Errors
+    ///
+    /// If the state file of the Python updater fails to load, if no connection
+    /// matches its registration, or if the site does not accept the proof.
+    pub fn migrate(
+        &mut self,
+        registry: &Registry,
+        api: &(impl agent_receiver_api::AgentUpdate + agent_receiver_api::RegistrationStatusV2),
+    ) -> AnyhowResult<Option<UpdateSource>> {
+        if !self.is_operational() || self.has_source(registry) {
+            return Ok(None);
+        }
+        let Some(registration) = LegacyRegistration::load(&self.python_updater_state_path)? else {
+            return Ok(None);
+        };
+        let selected = connection::migration_candidate(registry, &registration, api)?;
+        let uuid = selected.connection.trust.uuid;
+        let proof = registration.migration_proof(selected.site_id, &uuid);
+        let status = self
+            .request_status(
+                api,
+                &selected,
+                Some(agent_receiver_api::LegacyRegistrationBody {
+                    host_name: &registration.host_name,
+                    proof: &proof,
+                }),
+            )
+            .with_context(|| format!("Could not migrate {registration}"))?;
+        if let UpdateAvailabilityStatus::Unavailable = status {
+            bail!(
+                "Could not migrate {registration}: {} serves no agent updates",
+                selected.site_id
+            );
+        }
+        let source = UpdateSource {
+            uuid,
+            available: true,
+        };
+        log::info!(
+            "Migrated the registration of the Python agent updater to {}, connection {uuid} \
+             is the update source",
+            selected.site_id
+        );
+        self.state.source = Some(source.clone());
+        self.state.save(&self.state_path)?;
+        Ok(Some(source))
+    }
 }
 
 /// The update configuration, as this run found it.
@@ -756,6 +814,10 @@ pub struct Updater {
     /// Where the privileged install step reports how the installation went.
     #[cfg(unix)]
     install_result_path: PathBuf,
+
+    /// Where the Python agent updater keeps the registration that the
+    /// migration proves.
+    python_updater_state_path: PathBuf,
 }
 
 impl Updater {
@@ -802,6 +864,7 @@ impl Updater {
             package_dir: paths.updater_package_dir.clone(),
             #[cfg(unix)]
             install_result_path: paths.install_result_path.clone(),
+            python_updater_state_path: paths.python_updater_state_path.clone(),
         }
     }
 
@@ -972,14 +1035,15 @@ impl Updater {
     /// # Returns
     ///
     /// `true` when the updater is in a position to contact a site:
-    /// operational, activated, and a connection was selected.
+    /// operational, activated, and a connection was selected or the
+    /// registration of the Python updater awaits its migration.
     pub fn handle_update_cycle(&self, registry: &Registry) -> bool {
         if !self.is_activated() {
             log::info!("Skipping the agent update: automatic agent updates are deactivated");
             return false;
         }
         let Some(selected) = self.find_update_connection(registry) else {
-            return false;
+            return self.awaits_migration(registry);
         };
         log::info!(
             "{} of the registered connections can serve agent updates, using the {} \
@@ -992,6 +1056,25 @@ impl Updater {
             selected.connection.trust.uuid
         );
         true
+    }
+
+    /// A host without an update source whose Python updater was registered.
+    /// A state file that fails to load counts as well, so that the cycle
+    /// records why.
+    fn awaits_migration(&self, registry: &Registry) -> bool {
+        self.is_operational()
+            && !self.has_source(registry)
+            && !matches!(
+                LegacyRegistration::load(&self.python_updater_state_path),
+                Ok(None)
+            )
+    }
+
+    fn has_source(&self, registry: &Registry) -> bool {
+        self.state
+            .source
+            .as_ref()
+            .is_some_and(|source| connection::select(registry, source.uuid).is_some())
     }
 
     /// Ask the site which agent package it has for this host.
@@ -1244,6 +1327,15 @@ impl Updater {
         api: &impl agent_receiver_api::AgentUpdate,
         selected: &connection::UpdateConnection<'_>,
     ) -> AnyhowResult<UpdateAvailabilityStatus> {
+        self.request_status(api, selected, None)
+    }
+
+    fn request_status(
+        &self,
+        api: &impl agent_receiver_api::AgentUpdate,
+        selected: &connection::UpdateConnection<'_>,
+        legacy_registration: Option<agent_receiver_api::LegacyRegistrationBody<'_>>,
+    ) -> AnyhowResult<UpdateAvailabilityStatus> {
         let agent_info = self
             .agent_info
             .as_ref()
@@ -1256,6 +1348,7 @@ impl Updater {
                 platform: &agent_info.platform,
                 installed_aghash: &agent_info.hash,
                 last_error: self.reported_last_error(),
+                legacy_registration,
             },
         ) {
             Ok(status) => Ok(UpdateAvailabilityStatus::Available(status)),
@@ -1494,6 +1587,7 @@ mod tests {
     const SOURCE_SITE: &str = "server/site";
     const OTHER_SITE: &str = "other-server/site";
     const STATE_FILE: &str = "state.json";
+    const PYTHON_UPDATER_STATE_FILE: &str = "cmk-update-agent.state";
     const PACKAGE_DIR: &str = "update";
     #[cfg(unix)]
     const INSTALL_RESULT_FILE: &str = "agent-install-result.json";
@@ -2459,6 +2553,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             package_dir: PathBuf::from(PACKAGE_DIR),
             #[cfg(unix)]
             install_result_path: PathBuf::from(INSTALL_RESULT_FILE),
+            python_updater_state_path: PathBuf::from(PYTHON_UPDATER_STATE_FILE),
         }
     }
 
@@ -2477,13 +2572,15 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         }
     }
 
-    /// An updater that writes its state into `dir`.
+    /// An updater that writes its state into `dir`, and finds the state of the
+    /// Python updater there.
     fn updater_in(dir: &tempfile::TempDir, state: UpdateState) -> Updater {
         Updater {
             state,
             state_path: dir.path().join(STATE_FILE),
             #[cfg(unix)]
             install_result_path: dir.path().join(INSTALL_RESULT_FILE),
+            python_updater_state_path: dir.path().join(PYTHON_UPDATER_STATE_FILE),
             ..updater(some_config(), some_agent_info())
         }
     }
@@ -2585,6 +2682,34 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         };
 
         assert!(!updater(Some(config), some_agent_info()).handle_update_cycle(&registry.registry));
+    }
+
+    /// CMK-39502: the daemon runs the cycle on a host without an update source
+    /// whose Python updater was registered, so that the cycle migrates it.
+    #[test]
+    fn test_maybe_update_agent_without_a_source_migrates() {
+        let dir = tempfile::TempDir::new().unwrap();
+        write_python_updater_state(&dir);
+
+        assert!(updater_in(&dir, UpdateState::default())
+            .handle_update_cycle(&registry_with_one_connection().registry));
+    }
+
+    /// CMK-39502: with automatic updates deactivated, the daemon migrates
+    /// nothing either.
+    #[test]
+    fn test_maybe_update_agent_when_deactivated_does_not_migrate() {
+        let dir = tempfile::TempDir::new().unwrap();
+        write_python_updater_state(&dir);
+        let updater = Updater {
+            config: ConfigState::Loaded(UpdaterConfig {
+                activated: false,
+                ..some_config().unwrap()
+            }),
+            ..updater_in(&dir, UpdateState::default())
+        };
+
+        assert!(!updater.handle_update_cycle(&registry_with_one_connection().registry));
     }
 
     /// The parts of a status request a test looks at, owned: the body borrows
@@ -3788,5 +3913,376 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         assert_eq!(path, dir.path().join("fedcba9876543210.deb"));
         assert_eq!(fs::read(&path).unwrap(), PACKAGE);
+    }
+
+    const PYTHON_UPDATER_SECRET: &str = "the-host-secret-of-the-legacy-registration";
+
+    /// The Python updater was registered as `myhost` with the site of
+    /// [`registry_with_one_connection`].
+    fn write_python_updater_state(dir: &tempfile::TempDir) -> PathBuf {
+        write(
+            dir,
+            PYTHON_UPDATER_STATE_FILE,
+            &format!(
+                "{{'host_name': 'myhost', 'server': 'server', 'site': 'site', \
+                 'host_secret': '{PYTHON_UPDATER_SECRET}', 'protocol': 'https'}}\n"
+            ),
+        )
+    }
+
+    /// Fake sites that have registered the connections of `host_names`, and
+    /// answer or refuse the status request. Remember what they were asked.
+    #[derive(Default)]
+    struct MigrationApi {
+        host_names: Vec<(uuid::Uuid, &'static str)>,
+        unreachable: Vec<uuid::Uuid>,
+        refusal: Option<http::StatusCode>,
+        status_bodies: RefCell<Vec<serde_json::Value>>,
+        registration_queries: RefCell<usize>,
+    }
+
+    impl MigrationApi {
+        fn knowing(host_names: &[(&UpdateSource, &'static str)]) -> Self {
+            Self {
+                host_names: host_names
+                    .iter()
+                    .map(|(source, host_name)| (source.uuid, *host_name))
+                    .collect(),
+                ..Default::default()
+            }
+        }
+
+        fn refusing(self, status: http::StatusCode) -> Self {
+            Self {
+                refusal: Some(status),
+                ..self
+            }
+        }
+
+        fn status_bodies(&self) -> Vec<serde_json::Value> {
+            self.status_bodies.borrow().clone()
+        }
+    }
+
+    impl agent_receiver_api::RegistrationStatusV2 for MigrationApi {
+        fn registration_status_v2(
+            &self,
+            _base_url: &reqwest::Url,
+            connection: &TrustedConnection,
+        ) -> AnyhowResult<agent_receiver_api::RegistrationStatusV2Response> {
+            *self.registration_queries.borrow_mut() += 1;
+            if self.unreachable.contains(&connection.uuid) {
+                bail!("connection refused");
+            }
+            Ok(
+                match self
+                    .host_names
+                    .iter()
+                    .find(|(uuid, _)| *uuid == connection.uuid)
+                {
+                    Some((_, host_name)) => {
+                        agent_receiver_api::RegistrationStatusV2Response::Registered(
+                            agent_receiver_api::RegistrationStatusV2ResponseRegistered {
+                                hostname: String::from(*host_name),
+                                connection_mode: ConnectionMode::Pull,
+                            },
+                        )
+                    }
+                    None => agent_receiver_api::RegistrationStatusV2Response::NotRegistered,
+                },
+            )
+        }
+    }
+
+    impl agent_receiver_api::AgentUpdate for MigrationApi {
+        fn update_status(
+            &self,
+            _base_url: &reqwest::Url,
+            _connection: &TrustedConnection,
+            body: &agent_receiver_api::UpdateStatusBody<'_>,
+        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse, agent_receiver_api::ApiError>
+        {
+            self.status_bodies
+                .borrow_mut()
+                .push(serde_json::to_value(body).unwrap());
+            match self.refusal {
+                Some(code) => Err(refused(code)),
+                None => Ok(offered(None)),
+            }
+        }
+
+        fn download_agent(
+            &self,
+            _base_url: &reqwest::Url,
+            _connection: &TrustedConnection,
+            _body: &agent_receiver_api::AgentDownloadBody<'_>,
+        ) -> AnyhowResult<Vec<u8>, agent_receiver_api::ApiError> {
+            unreachable!("the migration downloads nothing")
+        }
+    }
+
+    fn state_source(updater: &Updater) -> Option<UpdateSource> {
+        UpdateState::load_missing_safe(&updater.state_path)
+            .unwrap()
+            .source
+    }
+
+    /// CMK-39502: the connection whose site accepted the proof becomes the
+    /// update source.
+    #[test]
+    fn test_migrate_makes_the_matching_connection_the_source() {
+        let dir = tempfile::TempDir::new().unwrap();
+        write_python_updater_state(&dir);
+        let mut updater = writable_in(&dir, UpdateState::default());
+
+        let source = updater
+            .migrate(
+                &registry_with_one_connection().registry,
+                &MigrationApi::knowing(&[(&some_source(), "myhost")]),
+            )
+            .unwrap();
+
+        assert_eq!(source, Some(some_source()));
+        assert_eq!(state_source(&updater), Some(some_source()));
+    }
+
+    /// CMK-39502, TC-AU-052: the status request carries the host name and the
+    /// proof for the site and the UUID of the connection, never the secret.
+    #[test]
+    fn test_migrate_sends_the_proof_instead_of_the_secret() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let state_path = write_python_updater_state(&dir);
+        let api = MigrationApi::knowing(&[(&some_source(), "myhost")]);
+
+        writable_in(&dir, UpdateState::default())
+            .migrate(&registry_with_one_connection().registry, &api)
+            .unwrap();
+
+        let proof = LegacyRegistration::load(&state_path)
+            .unwrap()
+            .unwrap()
+            .migration_proof(
+                &crate::site_spec::SiteID::from_str(SOURCE_SITE).unwrap(),
+                &some_source().uuid,
+            );
+        let bodies = api.status_bodies();
+        assert_eq!(bodies.len(), 1);
+        assert_eq!(
+            bodies[0]["legacy_registration"],
+            serde_json::json!({"host_name": "myhost", "proof": proof})
+        );
+        assert!(!bodies[0].to_string().contains(PYTHON_UPDATER_SECRET));
+    }
+
+    /// CMK-39502: a host with an update source has nothing to migrate.
+    #[test]
+    fn test_migrate_with_a_source_asks_nobody() {
+        let dir = tempfile::TempDir::new().unwrap();
+        write_python_updater_state(&dir);
+        let api = MigrationApi::knowing(&[(&some_source(), "myhost")]);
+        let mut updater = writable_in(
+            &dir,
+            UpdateState {
+                source: Some(some_source()),
+                ..Default::default()
+            },
+        );
+
+        assert_eq!(
+            updater
+                .migrate(&registry_with_one_connection().registry, &api)
+                .unwrap(),
+            None
+        );
+        assert_eq!(*api.registration_queries.borrow(), 0);
+        assert!(api.status_bodies().is_empty());
+    }
+
+    /// CMK-39502: a source counts only while the registry holds its connection.
+    #[test]
+    fn test_migrate_when_the_connection_of_the_source_is_gone() {
+        let dir = tempfile::TempDir::new().unwrap();
+        write_python_updater_state(&dir);
+        let mut updater = writable_in(
+            &dir,
+            UpdateState {
+                source: Some(other_source()),
+                ..Default::default()
+            },
+        );
+
+        let source = updater
+            .migrate(
+                &registry_with_one_connection().registry,
+                &MigrationApi::knowing(&[(&some_source(), "myhost")]),
+            )
+            .unwrap();
+
+        assert_eq!(source, Some(some_source()));
+    }
+
+    /// CMK-39502: without a registered Python updater there is nothing to
+    /// migrate.
+    #[test]
+    fn test_migrate_without_a_python_updater() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let api = MigrationApi::knowing(&[(&some_source(), "myhost")]);
+
+        assert_eq!(
+            writable_in(&dir, UpdateState::default())
+                .migrate(&registry_with_one_connection().registry, &api)
+                .unwrap(),
+            None
+        );
+        assert!(api.status_bodies().is_empty());
+    }
+
+    /// CMK-39502: a connection to the server and the site of the Python
+    /// updater's registration is the only candidate, although another site
+    /// knows the host as well.
+    #[test]
+    fn test_migrate_through_the_matching_connection_only() {
+        let dir = tempfile::TempDir::new().unwrap();
+        write_python_updater_state(&dir);
+        let api = MigrationApi::knowing(&[(&some_source(), "myhost"), (&other_source(), "myhost")]);
+        let registry = registry_with_the_connections_of(&[
+            (OTHER_SITE, &other_source()),
+            (SOURCE_SITE, &some_source()),
+        ]);
+
+        let source = writable_in(&dir, UpdateState::default())
+            .migrate(&registry.registry, &api)
+            .unwrap();
+
+        assert_eq!(source, Some(some_source()));
+        assert_eq!(api.status_bodies().len(), 1);
+    }
+
+    /// CMK-39502: a connection to another site is no candidate, although that
+    /// site knows the host.
+    #[test]
+    fn test_migrate_not_through_another_site() {
+        let dir = tempfile::TempDir::new().unwrap();
+        write_python_updater_state(&dir);
+        let api = MigrationApi::knowing(&[(&other_source(), "myhost")]);
+
+        let error = writable_in(&dir, UpdateState::default())
+            .migrate(
+                &registry_with_the_connections_of(&[(OTHER_SITE, &other_source())]).registry,
+                &api,
+            )
+            .unwrap_err();
+
+        assert!(format!("{error:#}").contains("no registered connection is to server/site"));
+        assert!(api.status_bodies().is_empty());
+    }
+
+    /// CMK-39502: the site of the registration knows the host under another
+    /// name, so no connection is a candidate and nothing is sent. The error
+    /// shows both names.
+    #[test]
+    fn test_migrate_under_another_host_name() {
+        let dir = tempfile::TempDir::new().unwrap();
+        write_python_updater_state(&dir);
+        let api = MigrationApi::knowing(&[(&some_source(), "myhost.example.com")]);
+        let mut updater = writable_in(&dir, UpdateState::default());
+
+        let error = updater
+            .migrate(&registry_with_one_connection().registry, &api)
+            .unwrap_err();
+
+        let error = format!("{error:#}");
+        assert!(error.contains("host myhost at server/site"), "{error}");
+        assert!(
+            error.contains("server/site registered this host as myhost.example.com"),
+            "{error}"
+        );
+        assert!(api.status_bodies().is_empty());
+        assert_eq!(state_source(&updater), None);
+    }
+
+    #[test]
+    fn test_migrate_without_a_registered_connection() {
+        let dir = tempfile::TempDir::new().unwrap();
+        write_python_updater_state(&dir);
+
+        let error = writable_in(&dir, UpdateState::default())
+            .migrate(&TestRegistry::new().registry, &MigrationApi::default())
+            .unwrap_err();
+
+        assert!(format!("{error:#}").contains("the controller has no registered connection"));
+    }
+
+    #[test]
+    fn test_migrate_names_the_site_that_did_not_answer() {
+        let dir = tempfile::TempDir::new().unwrap();
+        write_python_updater_state(&dir);
+        let api = MigrationApi {
+            unreachable: vec![some_source().uuid],
+            ..Default::default()
+        };
+
+        let error = writable_in(&dir, UpdateState::default())
+            .migrate(&registry_with_one_connection().registry, &api)
+            .unwrap_err();
+
+        assert!(format!("{error:#}").contains(
+            "could not ask server/site for the host name of its connection: connection refused"
+        ));
+    }
+
+    /// CMK-39502: a refused proof leaves the host without a source, and the
+    /// next cycle tries again.
+    #[test]
+    fn test_migrate_refused() {
+        let dir = tempfile::TempDir::new().unwrap();
+        write_python_updater_state(&dir);
+        let api = MigrationApi::knowing(&[(&some_source(), "myhost")])
+            .refusing(http::StatusCode::FORBIDDEN);
+        let registry = registry_with_one_connection();
+        let mut updater = writable_in(&dir, UpdateState::default());
+
+        let error = updater.migrate(&registry.registry, &api).unwrap_err();
+        assert!(format!("{error:#}").contains("Agent update status request to server/site failed"));
+        assert_eq!(state_source(&updater), None);
+
+        assert!(updater.migrate(&registry.registry, &api).is_err());
+        assert_eq!(api.status_bodies().len(), 2);
+    }
+
+    /// CMK-39502: without a source, there is no source to mark unavailable.
+    #[test]
+    fn test_migrate_to_a_site_without_agent_updates() {
+        let dir = tempfile::TempDir::new().unwrap();
+        write_python_updater_state(&dir);
+        let mut updater = writable_in(&dir, UpdateState::default());
+
+        let error = updater
+            .migrate(
+                &registry_with_one_connection().registry,
+                &MigrationApi::knowing(&[(&some_source(), "myhost")])
+                    .refusing(http::StatusCode::NOT_IMPLEMENTED),
+            )
+            .unwrap_err();
+
+        assert!(format!("{error:#}").contains("serves no agent updates"));
+        assert_eq!(state_source(&updater), None);
+    }
+
+    /// CMK-39502: the migration only reads the state of the Python updater.
+    #[test]
+    fn test_migrate_leaves_the_state_of_the_python_updater_alone() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let state_path = write_python_updater_state(&dir);
+        let before = fs::read(&state_path).unwrap();
+
+        writable_in(&dir, UpdateState::default())
+            .migrate(
+                &registry_with_one_connection().registry,
+                &MigrationApi::knowing(&[(&some_source(), "myhost")]),
+            )
+            .unwrap();
+
+        assert_eq!(fs::read(&state_path).unwrap(), before);
     }
 }

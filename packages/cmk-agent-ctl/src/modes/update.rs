@@ -79,7 +79,7 @@ pub fn update(
 fn update_through(
     updater: &mut WritableUpdater,
     registry: &Registry,
-    api: &impl agent_receiver_api::AgentUpdate,
+    api: &(impl agent_receiver_api::AgentUpdate + agent_receiver_api::RegistrationStatusV2),
     signature: SignatureCheck,
 ) -> AnyhowResult<()> {
     if !updater.is_configured()? {
@@ -96,15 +96,24 @@ fn update_through(
     result
 }
 
-/// Settle the pending installation, then fetch and hand over what the site
-/// offers.
+/// Settle the pending installation, migrate the registration of the Python
+/// updater on a host without an update source, then fetch and hand over what
+/// the site offers.
 fn run_cycle(
     updater: &mut WritableUpdater,
     registry: &Registry,
-    api: &impl agent_receiver_api::AgentUpdate,
+    api: &(impl agent_receiver_api::AgentUpdate + agent_receiver_api::RegistrationStatusV2),
     signature: SignatureCheck,
 ) -> AnyhowResult<()> {
     updater.settle_pending_install()?;
+
+    if let Some(source) = updater.migrate(registry, api)? {
+        println!(
+            "Migrated the registration of the Python agent updater, connection {} is the update \
+             source",
+            source.uuid
+        );
+    }
 
     let fetched = updater.fetch_update(registry, api, signature)?;
 
@@ -422,7 +431,8 @@ mod tests {
     mod update_cycle {
         use super::*;
         use crate::agent_receiver_api::{
-            AgentDownloadBody, AgentUpdate, ApiError, UpdateStatusBody, UpdateStatusResponse,
+            AgentDownloadBody, AgentUpdate, ApiError, RegistrationStatusV2,
+            RegistrationStatusV2Response, UpdateStatusBody, UpdateStatusResponse,
         };
         use crate::config::test_helpers::TestRegistry;
         use crate::config::{ConnectionMode, JSONLoader, TrustedConnection};
@@ -475,6 +485,16 @@ mod tests {
                 _body: &AgentDownloadBody<'_>,
             ) -> AnyhowResult<Vec<u8>, ApiError> {
                 panic!("the site offered no package")
+            }
+        }
+
+        impl RegistrationStatusV2 for ScriptedApi {
+            fn registration_status_v2(
+                &self,
+                _base_url: &reqwest::Url,
+                _connection: &TrustedConnection,
+            ) -> AnyhowResult<RegistrationStatusV2Response> {
+                panic!("the host has an update source, so nothing migrates")
             }
         }
 
@@ -535,7 +555,7 @@ mod tests {
 
             /// One cycle. The `update` mode and the daemon both load the
             /// updater afresh for each cycle.
-            fn cycle(&self, api: &impl AgentUpdate) -> AnyhowResult<()> {
+            fn cycle(&self, api: &(impl AgentUpdate + RegistrationStatusV2)) -> AnyhowResult<()> {
                 let mut updater = Updater::writable(&self.paths).unwrap();
                 update_through(
                     &mut updater,

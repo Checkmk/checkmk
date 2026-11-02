@@ -92,6 +92,16 @@ impl LegacyRegistration {
     }
 }
 
+impl fmt::Display for LegacyRegistration {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "the registration of the Python agent updater, host {} at {}/{}",
+            self.host_name, self.server, self.site
+        )
+    }
+}
+
 impl fmt::Debug for LegacyRegistration {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("LegacyRegistration")

@@ -5,6 +5,7 @@
 //! The registration of the Python agent updater, which the controller runs as a
 //! subprocess after its own registration (CMK-18329).
 
+use super::connection;
 use crate::agent_receiver_api;
 use crate::config::UpdaterRegistration;
 use crate::constants::CMK_UPDATE_AGENT_CMD;
@@ -240,16 +241,12 @@ fn get_registered_hostname(
         }
     };
 
-    let site_url = site_spec::make_site_url(site_id, &connection.receiver_port)?;
-    let response = agent_rec_api.registration_status_v2(&site_url, &connection.trust)?;
-
-    match response {
-        agent_receiver_api::RegistrationStatusV2Response::Registered(r) => Ok(r.hostname),
-        _ => bail!(
+    connection::registered_host_name(site_id, connection, agent_rec_api)?.with_context(|| {
+        format!(
             "Cannot get hostname from registration status response for site {}. Skipping updater registration.",
             site_id
-        ),
-    }
+        )
+    })
 }
 
 fn _prepare_register_updater_cmd(

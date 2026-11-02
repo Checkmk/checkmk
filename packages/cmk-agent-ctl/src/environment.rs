@@ -32,6 +32,10 @@ pub struct PathResolver {
     /// Owned and written by the controller.
     pub updater_state_path: PathBuf,
 
+    /// Holds the registration of the Python agent updater. Read-only for the
+    /// controller.
+    pub python_updater_state_path: PathBuf,
+
     /// Part of the installed agent package, read-only for the controller.
     /// In the classic layout on Linux this points outside the controller's own
     /// directory and may be unreadable for the user the controller runs as.
@@ -75,6 +79,16 @@ impl PathResolver {
             registry_path: home_dir.join(constants::REGISTRY_FILE),
             updater_config_path: home_dir.join(constants::UPDATER_CONFIG_FILE),
             updater_state_path: home_dir.join(constants::UPDATER_STATE_FILE),
+            python_updater_state_path: if cfg!(windows) {
+                home_dir
+                    .join("config")
+                    .join(constants::PYTHON_UPDATER_STATE_FILE)
+            } else {
+                // The default `STATE_DIR_LINUX` of the Python updater. A guess like
+                // `agent_info_path`, for the same reason.
+                Path::new("/var/lib/check_mk_agent/cmk-update-agent")
+                    .join(constants::PYTHON_UPDATER_STATE_FILE)
+            },
             agent_info_path: if cfg!(windows) {
                 home_dir.join("install").join(constants::AGENT_INFO_FILE)
             } else {
@@ -114,6 +128,9 @@ impl PathResolver {
             registry_path: runtime_dir.join(constants::REGISTRY_FILE),
             updater_config_path: config_dir.join(constants::UPDATER_CONFIG_FILE),
             updater_state_path: runtime_dir.join(constants::UPDATER_STATE_FILE),
+            python_updater_state_path: install_dir
+                .join("runtime/cmk-update-agent")
+                .join(constants::PYTHON_UPDATER_STATE_FILE),
             agent_info_path: agent_dir.join(constants::AGENT_INFO_FILE),
             updater_package_dir: runtime_dir.join(constants::UPDATER_PACKAGE_DIR),
             install_result_path: runtime_dir.join(constants::INSTALL_RESULT_FILE),
@@ -153,7 +170,15 @@ mod tests {
                 paths.agent_info_path,
                 home_dir.join("install").join("checkmk.dat")
             );
+            assert_eq!(
+                paths.python_updater_state_path,
+                home_dir.join("config").join("cmk-update-agent.state")
+            );
         } else {
+            assert_eq!(
+                paths.python_updater_state_path,
+                PathBuf::from("/var/lib/check_mk_agent/cmk-update-agent/cmk-update-agent.state")
+            );
             // Not below `home_dir`: the classic Linux layout keeps the agent info
             // in a fixed system directory.
             assert_eq!(
@@ -187,6 +212,10 @@ mod tests {
         assert_eq!(
             paths.updater_state_path,
             install_dir.join("runtime/controller/agent-update-state.json")
+        );
+        assert_eq!(
+            paths.python_updater_state_path,
+            install_dir.join("runtime/cmk-update-agent/cmk-update-agent.state")
         );
         assert_eq!(
             paths.agent_info_path,

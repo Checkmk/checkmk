@@ -185,6 +185,17 @@ pub struct UpdateStatusBody<'a> {
     /// Error of the last update attempt, which the site quotes back in its
     /// deployment views.
     pub last_error: Option<&'a str>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub legacy_registration: Option<LegacyRegistrationBody<'a>>,
+}
+
+/// The registration of the Python agent updater, proven without its
+/// `host_secret`.
+#[derive(Serialize)]
+pub struct LegacyRegistrationBody<'a> {
+    pub host_name: &'a str,
+    pub proof: &'a str,
 }
 
 /// One signature of the offered agent package.
@@ -723,9 +734,29 @@ mod test_api {
                 platform: "linux_deb",
                 installed_aghash: &AGENT_HASH.parse().unwrap(),
                 last_error: Some("boom"),
+                legacy_registration: None,
             })
             .unwrap(),
             r#"{"platform":"linux_deb","installed_aghash":"0123456789abcdef","last_error":"boom"}"#
+        );
+    }
+
+    /// CMK-39502: the migration sends the host name and the proof of the Python
+    /// updater's registration with the status request.
+    #[test]
+    fn test_update_status_body_serialization_with_a_legacy_registration() {
+        assert_eq!(
+            serde_json::to_value(UpdateStatusBody {
+                platform: "linux_deb",
+                installed_aghash: &AGENT_HASH.parse().unwrap(),
+                last_error: None,
+                legacy_registration: Some(LegacyRegistrationBody {
+                    host_name: "myhost",
+                    proof: "3646567c",
+                }),
+            })
+            .unwrap()["legacy_registration"],
+            serde_json::json!({"host_name": "myhost", "proof": "3646567c"})
         );
     }
 

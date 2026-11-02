@@ -31,6 +31,8 @@ pub const CONFIG_FILE: &str = "cmk-agent-ctl.toml";
 // bakery plugins cannot write one file.
 pub const UPDATER_CONFIG_FILE: &str = "cmk-agent-ctl-update.toml";
 pub const UPDATER_STATE_FILE: &str = "agent-update-state.json";
+/// Written by the Python agent updater, read by the migration from it.
+pub const PYTHON_UPDATER_STATE_FILE: &str = "cmk-update-agent.state";
 /// The outcome of one run of the privileged install step, written by it and
 /// read by the controller. Linux only: no other platform has that step.
 #[cfg(unix)]

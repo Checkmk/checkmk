@@ -32,6 +32,7 @@ mod backend;
 mod connection;
 mod install;
 mod legacy_registration;
+mod python_literal;
 mod python_updater;
 pub mod section;
 mod source;

@@ -55,6 +55,7 @@ rust_library(
         "src/updater/install.rs",
         "src/updater/legacy_registration.rs",
         "src/updater/platform.rs",
+        "src/updater/python_literal.rs",
         "src/updater/python_updater.rs",
         "src/updater/section.rs",
         "src/updater/source.rs",

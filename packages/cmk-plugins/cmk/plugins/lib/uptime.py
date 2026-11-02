@@ -90,7 +90,8 @@ def parse_snmp_uptime(string_table: StringTable) -> Section | None:
     if not string_table:
         return None
 
-    ticks = string_table[0][1] or string_table[0][0]
+    sys_ticks, hr_ticks = string_table[0][0], string_table[0][1]
+    ticks = sys_ticks if hr_ticks.startswith("-") else (hr_ticks or sys_ticks)
 
     if ticks == "0":
         return Section(0, None)
@@ -99,9 +100,11 @@ def parse_snmp_uptime(string_table: StringTable) -> Section | None:
         return None
 
     try:
-        return Section(int(ticks[:-2]), None)
+        seconds = int(ticks[:-2])
     except Exception:
         pass
+    else:
+        return Section(seconds, None) if seconds >= 0 else None
 
     try:
         days, h, m, s = ticks.split(":")

@@ -14,7 +14,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cctype>
 #include <cerrno>
 #include <chrono>
 #include <cstdint>
@@ -29,7 +28,15 @@
 #include <utility>
 #include <vector>
 
+#include "active_checks/arguments.h"
+#include "active_checks/deadline.h"
+
 namespace {
+
+using check_mkevents::Clock;
+using check_mkevents::Deadline;
+using check_mkevents::parse_number;
+using check_mkevents::parse_port;
 
 enum class State { ok = 0, warn = 1, crit = 2, unknown = 3 };
 
@@ -99,64 +106,57 @@ void print_line(const std::string &output) {
     exit_with(state);
 }
 
-constexpr int timeout_seconds = 20;
+constexpr std::chrono::seconds default_timeout{20};
 
-[[noreturn]] void io_error(const std::string &message) {
+// The caller saves errno first, as building the message may change it.
+[[noreturn]] void io_error(const std::string &message, int err,
+                           Deadline deadline) {
     // All our sockets have timeouts, which expire with one of these errors.
-    const auto err = errno;
     const std::string reason =
         err == EAGAIN || err == EWOULDBLOCK || err == EINPROGRESS
-            ? "timeout after " + std::to_string(timeout_seconds) + " seconds"
+            ? deadline.timeout_message()
             : std::generic_category().message(err);
     reply_and_exit(State::unknown, message + " (" + reason + ")");
-}
-
-// The exchange with the event console, from connecting to reading the whole
-// answer, shares one deadline, so the timeouts of its steps don't add up.
-std::chrono::steady_clock::time_point deadline() {
-    static const auto deadline = std::chrono::steady_clock::now() +
-                                 std::chrono::seconds{timeout_seconds};
-    return deadline;
 }
 
 // A socket timeout only expires while a call waits, so a peer that keeps
 // sending or reading would keep a loop of such calls going past the deadline.
 // That's why the loop checks the deadline before each call, reporting a timeout
 // with the message of the call.
-void check_deadline(const std::string &message) {
-    if (std::chrono::steady_clock::now() >= deadline()) {
-        reply_and_exit(State::unknown, message + " (timeout after " +
-                                           std::to_string(timeout_seconds) +
-                                           " seconds)");
+void check_deadline(const std::string &message, Deadline deadline) {
+    if (deadline.has_passed()) {
+        reply_and_exit(State::unknown,
+                       message + " (" + deadline.timeout_message() + ")");
     }
 }
 
 // Limits the next blocking call on the socket to the time left until the
 // deadline, via the timeout option SO_RCVTIMEO for receiving or SO_SNDTIMEO for
 // sending. Linux uses the send timeout for connect(), too.
-void limit_to_deadline(int sock, int option) {
+void limit_to_deadline(int sock, int option, Deadline deadline) {
     using std::chrono::duration_cast;
     using std::chrono::microseconds;
     using std::chrono::seconds;
     // A timeout of zero would mean no timeout at all.
     const auto left =
-        std::max(duration_cast<microseconds>(deadline() -
-                                             std::chrono::steady_clock::now()),
+        std::max(duration_cast<microseconds>(deadline.end() - Clock::now()),
                  microseconds{1});
     const auto left_seconds = duration_cast<seconds>(left);
     const timeval tv{.tv_sec = left_seconds.count(),
                      .tv_usec = (left - left_seconds).count()};
     if (setsockopt(sock, SOL_SOCKET, option, &tv, sizeof(tv)) == -1) {
-        io_error("Cannot set socket timeout");
+        const int err = errno;
+        io_error("Cannot set socket timeout", err, deadline);
     }
 }
 
-int create_socket(int domain) {
+int create_socket(int domain, Deadline deadline) {
     const int sock = ::socket(domain, SOCK_STREAM, 0);
     if (sock == -1) {
-        io_error("Cannot create client socket");
+        const int err = errno;
+        io_error("Cannot create client socket", err, deadline);
     }
-    limit_to_deadline(sock, SO_SNDTIMEO);  // for connect()
+    limit_to_deadline(sock, SO_SNDTIMEO, deadline);  // for connect()
     return sock;
 }
 
@@ -248,9 +248,10 @@ std::vector<std::string_view> split_columns(std::string_view line) {
 [[noreturn]] void usage() {
     reply_and_exit(
         State::unknown,
-        "Usage: check_mkevents [-s SOCKETPATH] [-H REMOTE[:PORT]] [-a] [-l] [-L] [-q] [--] HOST [APPLICATION]\n"
+        "Usage: check_mkevents [-s SOCKETPATH] [-H REMOTE[:PORT]] [-t SECONDS] [-a] [-l] [-L] [-q] [--] HOST [APPLICATION]\n"
         " -s    connect via this UNIX socket, by default $OMD_ROOT/tmp/run/mkeventd/status.\n"
         " -H    connect via TCP, e.g. to myhost:6558.\n"
+        " -t    time out after SECONDS, 20 by default.\n"
         " -a    do not take acknowledged events into account.\n"
         " -l    show last log message in summary/short output.\n"
         " -L    show last log message in details/long output.\n"
@@ -259,22 +260,8 @@ std::vector<std::string_view> split_columns(std::string_view line) {
         " HOST  may be a hostname, an IP address or hostname/IP-address.");
 }
 
-// Parses a port number from 1 to 65535, leading zeros don't count.
-std::optional<uint16_t> parse_port(const std::string &s) {
-    if (!std::ranges::all_of(
-            s, [](unsigned char c) { return std::isdigit(c) != 0; })) {
-        return {};
-    }
-    const auto digits = s.substr(std::min(s.find_first_not_of('0'), s.size()));
-    if (digits.empty() || digits.size() > 5) {
-        return {};
-    }
-    const auto port = std::stoul(digits);  // can't throw for at most 5 digits
-    if (port > 65535) {
-        return {};
-    }
-    return static_cast<uint16_t>(port);
-}
+// More than an hour makes no sense for a check.
+constexpr unsigned long max_timeout_seconds = 3600;
 
 // Parses a remote address like "myhost:6558", the port is optional and may be
 // empty.
@@ -375,6 +362,7 @@ std::string host_filter(const std::string &spec, bool quoted) {
 struct Options {
     const char *remote_host = nullptr;
     std::string unixsocket_path;
+    std::chrono::seconds timeout = default_timeout;
     bool ignore_acknowledged = false;
     bool last_log_in_summary = false;
     bool last_log_in_details = false;
@@ -389,7 +377,7 @@ Options parse_options(int argc, char **argv) {
     // "+" ends the options at HOST, so APPLICATION may start with a dash.
     int option = 0;
     // NOLINTNEXTLINE(concurrency-mt-unsafe)
-    while ((option = getopt(argc, argv, "+s:H:alLq")) != -1) {
+    while ((option = getopt(argc, argv, "+s:H:t:alLq")) != -1) {
         switch (option) {
             case 's':
                 options.unixsocket_path = optarg;
@@ -397,6 +385,18 @@ Options parse_options(int argc, char **argv) {
             case 'H':
                 options.remote_host = optarg;
                 break;
+            case 't': {
+                const auto seconds = parse_number(optarg, max_timeout_seconds);
+                if (!seconds) {
+                    reply_and_exit(State::unknown,
+                                   "Invalid timeout '" + std::string{optarg} +
+                                       "', expected 1 to " +
+                                       std::to_string(max_timeout_seconds) +
+                                       " seconds");
+                }
+                options.timeout = std::chrono::seconds{*seconds};
+                break;
+            }
             case 'a':
                 options.ignore_acknowledged = true;
                 break;
@@ -424,7 +424,7 @@ Options parse_options(int argc, char **argv) {
     return options;
 }
 
-int connect_via_tcp(const std::string &remote) {
+int connect_via_tcp(const std::string &remote, Deadline deadline) {
     const auto [remote_hostaddress, remote_port] = parse_remote(remote);
     // NOLINTNEXTLINE(concurrency-mt-unsafe)
     const struct hostent *he = gethostbyname(remote_hostaddress.c_str());
@@ -443,7 +443,7 @@ int connect_via_tcp(const std::string &remote) {
     }
     // NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic,concurrency-mt-unsafe)
 
-    const int sock = create_socket(AF_INET);
+    const int sock = create_socket(AF_INET, deadline);
 
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
@@ -453,13 +453,15 @@ int connect_via_tcp(const std::string &remote) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
                   sizeof(sockaddr_in)) == -1) {
+        const int err = errno;
         io_error("Cannot connect to event console at " + remote_hostipaddress +
-                 ":" + std::to_string(remote_port));
+                     ":" + std::to_string(remote_port),
+                 err, deadline);
     }
     return sock;
 }
 
-int connect_via_unix_socket(std::string unixsocket_path) {
+int connect_via_unix_socket(std::string unixsocket_path, Deadline deadline) {
     // Get omd environment
     if (unixsocket_path.empty()) {
         // NOLINTNEXTLINE(concurrency-mt-unsafe)
@@ -482,12 +484,14 @@ int connect_via_unix_socket(std::string unixsocket_path) {
     unixsocket_path.copy(&addr.sun_path[0], sizeof(addr.sun_path) - 1);
     addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
 
-    const int sock = create_socket(AF_UNIX);
+    const int sock = create_socket(AF_UNIX, deadline);
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
                   sizeof(addr)) == -1) {
-        io_error("Cannot connect to event daemon via UNIX socket " +
-                 unixsocket_path);
+        const int err = errno;
+        io_error(
+            "Cannot connect to event daemon via UNIX socket " + unixsocket_path,
+            err, deadline);
     }
     return sock;
 }
@@ -510,49 +514,53 @@ std::string make_query(const char *host, bool host_spec_quoted,
     return query;
 }
 
-void send_query(int sock, const std::string &query) {
+void send_query(int sock, const std::string &query, Deadline deadline) {
     const std::string message = "Cannot send query to event console";
     std::string_view rest{query};
     while (!rest.empty()) {
-        check_deadline(message);
-        limit_to_deadline(sock, SO_SNDTIMEO);
+        check_deadline(message, deadline);
+        limit_to_deadline(sock, SO_SNDTIMEO, deadline);
         // Report a closed connection instead of dying from SIGPIPE.
         const ssize_t bytes_written =
             ::send(sock, rest.data(), rest.size(), MSG_NOSIGNAL);
         if (bytes_written == -1) {
-            if (closed_by_peer(errno)) {
+            const int err = errno;
+            if (closed_by_peer(err)) {
                 no_answer(query);
             }
-            if (errno != EINTR) {
-                io_error(message);
+            if (err != EINTR) {
+                io_error(message, err, deadline);
             }
         } else {
             rest.remove_prefix(bytes_written);
         }
     }
     if (shutdown(sock, SHUT_WR) == -1) {
-        if (closed_by_peer(errno)) {
+        const int err = errno;
+        if (closed_by_peer(err)) {
             no_answer(query);
         }
-        io_error("Cannot shutdown socket to event console");
+        io_error("Cannot shutdown socket to event console", err, deadline);
     }
 }
 
-std::string receive_response(int sock, const std::string &query) {
+std::string receive_response(int sock, const std::string &query,
+                             Deadline deadline) {
     const std::string message = "Error while reading response";
     std::string response;
     std::array<char, 65536> response_chunk{};
     while (true) {
-        check_deadline(message);
-        limit_to_deadline(sock, SO_RCVTIMEO);
+        check_deadline(message, deadline);
+        limit_to_deadline(sock, SO_RCVTIMEO, deadline);
         const ssize_t bytes_read =
             ::read(sock, response_chunk.data(), response_chunk.size());
         if (bytes_read == -1) {
-            if (closed_by_peer(errno) && response.empty()) {
+            const int err = errno;
+            if (closed_by_peer(err) && response.empty()) {
                 no_answer(query);
             }
-            if (errno != EINTR) {
-                io_error(message);
+            if (err != EINTR) {
+                io_error(message, err, deadline);
             }
         } else if (bytes_read == 0) {
             break;
@@ -675,13 +683,16 @@ std::vector<Event> parse_events(const std::string &response,
 }  // namespace
 
 int main(int argc, char **argv) {
+    const auto start = Clock::now();
     const auto options = parse_options(argc, argv);
-    const int sock = options.remote_host != nullptr
-                         ? connect_via_tcp(options.remote_host)
-                         : connect_via_unix_socket(options.unixsocket_path);
+    const Deadline deadline{.start = start, .timeout = options.timeout};
+    const int sock =
+        options.remote_host != nullptr
+            ? connect_via_tcp(options.remote_host, deadline)
+            : connect_via_unix_socket(options.unixsocket_path, deadline);
     const auto query =
         make_query(options.host, options.host_spec_quoted, options.application);
-    send_query(sock, query);
-    const auto response = receive_response(sock, query);
+    send_query(sock, query, deadline);
+    const auto response = receive_response(sock, query, deadline);
     reply_with_events(parse_events(response, query), options);
 }

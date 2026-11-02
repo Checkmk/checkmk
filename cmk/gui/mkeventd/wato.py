@@ -5687,6 +5687,20 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
                 ),
             ),
             (
+                "timeout",
+                Integer(
+                    title=_("Timeout"),
+                    help=_(
+                        "The check gives up after this time, 20 seconds by default. The check "
+                        "timeout of the monitoring core, 60 seconds by default, must be longer."
+                    ),
+                    unit=_("seconds"),
+                    minvalue=1,
+                    maxvalue=3600,
+                    default_value=20,
+                ),
+            ),
+            (
                 "show_last_log",
                 DropdownChoice(
                     title=_("Show last log message"),
@@ -5705,7 +5719,7 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
                 ),
             ),
         ],
-        optional_keys=["application", "remote", "ignore_acknowledged", "item"],
+        optional_keys=["application", "remote", "timeout", "ignore_acknowledged", "item"],
         ignored_keys=["less_verbose"],  # is deprecated
     )
 

@@ -54,6 +54,11 @@ from cmk.server_side_calls.v1 import HostConfig
             ["-H", "myhost:6559", "--", "foobar"],
             id="remote host with its own port after colons",
         ),
+        pytest.param(
+            {"hostspec": "foobar", "show_last_log": "no", "timeout": 30},
+            ["-t", "30", "--", "foobar"],
+            id="timeout",
+        ),
     ],
 )
 def test_check_mkevents_argument_parsing(

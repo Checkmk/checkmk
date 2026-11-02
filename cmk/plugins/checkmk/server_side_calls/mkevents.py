@@ -21,6 +21,7 @@ class MKEventsParams(BaseModel):
     hostspec: str | list[str]
     show_last_log: str
     remote: str | tuple[str, int] | None = None
+    timeout: int | None = None
     ignore_acknowledged: bool = False
     application: str | None = None
     item: str | None = None
@@ -60,6 +61,9 @@ def generate_mkevents_command(
             args += ["-H", _remote_address(replace_macros(ipaddress, host_config.macros), port)]
         elif params.remote:
             args += ["-s", replace_macros(params.remote, host_config.macros)]
+
+    if params.timeout is not None:
+        args += ["-t", str(params.timeout)]
 
     if params.ignore_acknowledged:
         args.append("-a")

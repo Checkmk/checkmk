@@ -82,7 +82,7 @@ VARIABLES:
     ########## packages ########################################################
 
     - NAME: CHANGED_CC_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep -e '^packages/livestatus/' -e '^packages/neb/' -e '^packages/unixcat/' -e '^non-free/packages/cmc/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep -e '^active_checks/' -e '^packages/livestatus/' -e '^packages/neb/' -e '^packages/unixcat/' -e '^non-free/packages/cmc/' || true"
 
     - NAME: CHANGED_RUST_WORKSPACE_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep -E '^(Cargo\\..*|\\.cargo/config\\.toml|packages/[^/]+/BUILD)$' || true"

@@ -1,6 +1,39 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("//bazel/rules:pkg.bzl", "pkg_tar")
-load("//bazel/rules:xcomp/cc.bzl", "cc_binary")
+load("//bazel/rules:xcomp/cc.bzl", "cc_binary", "cc_library", "cc_test")
+
+cc_library(
+    name = "deadline",
+    hdrs = ["deadline.h"],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
+)
+
+cc_library(
+    name = "arguments",
+    srcs = ["arguments.cc"],
+    hdrs = ["arguments.h"],
+    copts = [
+        "-std=c++20",
+        "-g",
+        "-O3",
+        "-Wall",
+        "-Wextra",
+    ],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
+)
+
+cc_test(
+    name = "test_arguments",
+    size = "small",
+    srcs = ["test/test_arguments.cc"],
+    copts = ["-std=c++20"],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
+    tags = ["cpp"],
+    deps = [
+        ":arguments",
+        "@gtest//:gtest_main",
+    ],
+)
 
 cc_binary(
     name = "check_mkevents",
@@ -17,6 +50,10 @@ cc_binary(
     ],
     platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     visibility = ["//tests/integration/active_checks:__pkg__"],
+    deps = [
+        ":arguments",
+        ":deadline",
+    ],
 )
 
 pkg_files(

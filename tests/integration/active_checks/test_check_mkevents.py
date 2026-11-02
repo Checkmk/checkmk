@@ -113,7 +113,7 @@ class _AnswerAfterTheDeadlineHandler(socketserver.BaseRequestHandler):
         # waiting, like with an Event Console sending faster than the check reads.
         os.kill(pid, signal.SIGSTOP)
         try:
-            time.sleep(21)  # more than the timeout of the check
+            time.sleep(_SHORT_TIMEOUT + 0.5)  # more than the timeout of the check
             self.request.sendall(b"event_phase\tevent_state\tevent_text\n")
             self.request.shutdown(socket.SHUT_WR)
         finally:
@@ -123,11 +123,45 @@ class _AnswerAfterTheDeadlineHandler(socketserver.BaseRequestHandler):
 @contextmanager
 def _serving(server: socketserver.BaseServer) -> Iterator[None]:
     with server:
-        threading.Thread(target=server.serve_forever, daemon=True).start()
+        # shutdown() waits for the next poll, by default up to half a second.
+        threading.Thread(
+            target=server.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True
+        ).start()
         try:
             yield
         finally:
             server.shutdown()
+
+
+def _accept_queue_length(listener: socket.socket) -> int:
+    # For a listener, tcpi_unacked of struct tcp_info is its accept queue length.
+    info = listener.getsockopt(socket.IPPROTO_TCP, socket.TCP_INFO, 32)
+    length: int = struct.unpack_from("I", info, 24)[0]
+    return length
+
+
+@contextmanager
+def _unresponsive_listener(address: str) -> Iterator[socket.socket]:
+    """A listener with a full accept queue, so the kernel drops connection attempts"""
+    with (
+        socket.create_server((address, 0), backlog=0) as listener,
+        socket.socket(listener.family) as filler,
+    ):
+        filler.connect(listener.getsockname())
+        # Under load, the kernel may queue the filler only after connect() has returned.
+        while _accept_queue_length(listener) == 0:
+            time.sleep(0.001)
+        yield listener
+
+
+@contextmanager
+def _unresponsive_unix_listener(socket_path: Path) -> Iterator[None]:
+    """A UNIX listener with a full accept queue, so connecting waits, even when late"""
+    with socket.socket(socket.AF_UNIX) as listener, socket.socket(socket.AF_UNIX) as filler:
+        listener.bind(str(socket_path))
+        listener.listen(0)
+        filler.connect(str(socket_path))
+        yield
 
 
 @pytest.fixture(name="socket_path")
@@ -135,6 +169,10 @@ def fixture_socket_path() -> Iterator[Path]:
     # The temporary directories of Bazel are too deep for the path of a UNIX socket.
     with tempfile.TemporaryDirectory(dir="/tmp") as directory:
         yield Path(directory) / "status"
+
+
+# The timeout for tests waiting for the check to time out, with slack for a loaded machine
+_SHORT_TIMEOUT = 2
 
 
 def _run_check(*args: str) -> subprocess.CompletedProcess[str]:
@@ -345,39 +383,53 @@ def test_backslash_is_part_of_the_host_without_quoting(socket_path: Path) -> Non
 
 
 def test_connecting_to_an_unresponsive_event_console_times_out() -> None:
-    with socket.create_server(("127.0.0.1", 0), backlog=0) as server, socket.socket() as client:
+    with _unresponsive_listener("127.0.0.1") as server:
         port = server.getsockname()[1]
-        # Fill the accept queue, so the kernel drops further connection attempts.
-        client.connect(("127.0.0.1", port))
 
-        result = _run_check("-H", f"127.0.0.1:{port}", "myhost")
+        result = _run_check("-t", str(_SHORT_TIMEOUT), "-H", f"127.0.0.1:{port}", "myhost")
 
     assert (result.returncode, result.stdout) == (
         3,
         (
             f"UNKNOWN - Cannot connect to event console at 127.0.0.1:{port}"
-            " (timeout after 20 seconds)\n"
+            f" (timeout after {_SHORT_TIMEOUT} seconds)\n"
+        ),
+    )
+
+
+def test_connecting_via_unix_socket_to_an_unresponsive_event_console_times_out(
+    socket_path: Path,
+) -> None:
+    with _unresponsive_unix_listener(socket_path):
+        result = _run_check("-t", "1", "-s", str(socket_path), "myhost")
+
+    assert (result.returncode, result.stdout) == (
+        3,
+        (
+            f"UNKNOWN - Cannot connect to event daemon via UNIX socket {socket_path}"
+            " (timeout after 1 second)\n"
         ),
     )
 
 
 def test_slowly_answering_event_console_times_out(socket_path: Path) -> None:
     with _serving(socketserver.UnixStreamServer(str(socket_path), _TrickleHandler)):
-        result = _run_check("-s", str(socket_path), "myhost")
+        # A byte per second, so only a timeout for the whole answer expires.
+        result = _run_check("-t", str(_SHORT_TIMEOUT), "-s", str(socket_path), "myhost")
 
     assert (result.returncode, result.stdout) == (
         3,
-        "UNKNOWN - Error while reading response (timeout after 20 seconds)\n",
+        f"UNKNOWN - Error while reading response (timeout after {_SHORT_TIMEOUT} seconds)\n",
     )
 
 
 def test_reading_stops_at_the_deadline_although_data_is_waiting(socket_path: Path) -> None:
     with _serving(socketserver.UnixStreamServer(str(socket_path), _AnswerAfterTheDeadlineHandler)):
-        result = _run_check("-s", str(socket_path), "myhost")
+        result = _run_check("-t", str(_SHORT_TIMEOUT), "-s", str(socket_path), "myhost")
 
     assert (result.returncode, result.stdout) == (
         3,
-        "UNKNOWN - Error while reading response (timeout after 20 seconds)\n",
+        f"UNKNOWN - Error while reading response (timeout after {_SHORT_TIMEOUT} seconds)\n",
     )
 
 
@@ -433,6 +485,15 @@ def test_leading_zeros_of_the_port_dont_count() -> None:
     assert (result.returncode, result.stdout) == (
         3,
         "UNKNOWN - Cannot connect to event console at 224.0.0.1:6558 (Network is unreachable)\n",
+    )
+
+
+def test_invalid_timeout_is_reported() -> None:
+    result = _run_check("-t", "0", "myhost")
+
+    assert (result.returncode, result.stdout) == (
+        3,
+        "UNKNOWN - Invalid timeout '0', expected 1 to 3600 seconds\n",
     )
 
 

@@ -597,11 +597,6 @@ def test_parse_arguments_connection_test_flag() -> None:
     assert parse_arguments(["myhost"]).connection_test is False
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report 3c2937ac-9a06-11f1-86ff-c77d868429e2: ValueError 'import' LockState",
-)
 def test_create_vm_sections_reports_import_lock() -> None:
     # Proxmox VE locks a VM with "import" while the import wizard runs
     section_name, section = next(

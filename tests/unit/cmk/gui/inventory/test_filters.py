@@ -13,6 +13,7 @@ from cmk.gui.inventory.filters import (
     FilterInvFloat,
     FilterInvFloatChoice,
     FilterInvHasSoftwarePackage,
+    FilterInvText,
     FilterInvTextWithSortKey,
 )
 from cmk.gui.type_defs import Row, Rows, VisualContext
@@ -326,6 +327,24 @@ def test_filter_inv_choice(context: VisualContext, expected_rows: Rows) -> None:
         )
         == expected_rows
     )
+
+
+def test_filter_inv_text_skips_a_missing_attribute() -> None:
+    assert FilterInvText(
+        ident="ident",
+        title="Title",
+        inventory_path=InventoryPath(
+            (SDNodeName("path-to-node"),),
+            TreeSource.attributes,
+            SDKey("key"),
+        ),
+    ).filter_table(
+        {"ident": {"ident": "no"}},
+        [
+            {"host_inventory": _make_host_inventory_tree("Novell")},
+            {"host_inventory": _make_host_inventory_tree(None)},
+        ],
+    ) == [{"host_inventory": _make_host_inventory_tree("Novell")}]
 
 
 @pytest.mark.parametrize(

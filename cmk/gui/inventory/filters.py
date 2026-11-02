@@ -300,13 +300,8 @@ def _make_filter_row_text(
         regex = query_filters.re_ignorecase(filtertext, column)
 
         def filt(row: Row) -> bool:
-            return bool(
-                regex.search(
-                    str(
-                        row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key)
-                    )
-                )
-            )
+            value = row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key)
+            return value is not None and bool(regex.search(str(value)))
 
         return filt
 

@@ -2406,6 +2406,7 @@ async def _collect_virtual_machines_resources(
             resource.labels["vm_ip"] = vm_ip
 
         resource.info["specific_info"] = {"statuses": statuses}
+
         # for backward compatibility
         resource.labels["vm_instance"] = True
 

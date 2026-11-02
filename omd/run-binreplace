@@ -13,4 +13,4 @@ bazel run //omd:venv
 # shellcheck source=/dev/null
 source "$VENV_DIR"/bin/activate
 
-cmk-dev binreplace "$@"
+binreplace "$@"

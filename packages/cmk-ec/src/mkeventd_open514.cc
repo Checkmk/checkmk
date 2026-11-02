@@ -149,7 +149,8 @@ int main(int argc, char **argv) {
         "filesystem?)");
   }
 
-  // Drop privileges
+  // Drop root privileges when installed SUID root, see the setuid fallback in
+  // omd/debian/postinst.in. execv() drops the capability anyway.
   if (getuid() != geteuid() && seteuid(getuid())) {
     perror("Cannot drop privileges");
     exit(1);

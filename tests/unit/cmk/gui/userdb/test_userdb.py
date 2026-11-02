@@ -263,6 +263,24 @@ def test_on_failed_login_with_locking(user_id: UserId) -> None:
     assert userdb.user_locked(user_id, load_user(user_id))
 
 
+def test_on_failed_login_logs_remaining_attempts(
+    user_id: UserId, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level("WARNING", logger="cmk.web.auth"):
+        userdb.on_failed_login(
+            user_id,
+            get_user_attributes([]),
+            [],
+            now=datetime.now(),
+            lock_on_logon_failures=3,
+            time_based_lock_out_enabled=False,
+            log_logon_failures=True,
+            pprint_value=False,
+        )
+
+    assert "locked: No, failed logins until locked: 2" in caplog.text
+
+
 def test_on_failed_login_locking_disabled(user_id: UserId) -> None:
     now = datetime.now()
     user_attributes = get_user_attributes([])

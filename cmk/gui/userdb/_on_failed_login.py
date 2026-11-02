@@ -80,7 +80,7 @@ def on_failed_login(
 
     if log_logon_failures:
         if user:
-            log_msg_until_locked = str(bool(lock_on_logon_failures) - user["num_failed_logins"])
+            log_msg_until_locked = str(lock_on_logon_failures - user["num_failed_logins"])
             if not user["locked"]:
                 log_msg_locked = "No"
             elif log_msg_until_locked == "0":

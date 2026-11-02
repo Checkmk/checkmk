@@ -349,8 +349,8 @@ def _filter_with_sort_key(
 
     sortable_value = sort_key(value)
 
-    above_from = not from_value or sort_key(from_value) < sortable_value
-    below_until = not until_value or sortable_value < sort_key(until_value)
+    above_from = not from_value or not sortable_value < sort_key(from_value)
+    below_until = not until_value or not sort_key(until_value) < sortable_value
     return above_from and below_until
 
 

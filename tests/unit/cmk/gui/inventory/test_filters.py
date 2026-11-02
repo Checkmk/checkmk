@@ -13,6 +13,7 @@ from cmk.gui.inventory.filters import (
     FilterInvFloat,
     FilterInvFloatChoice,
     FilterInvHasSoftwarePackage,
+    FilterInvtableTextWithSortKey,
     FilterInvText,
     FilterInvTextWithSortKey,
 )
@@ -371,6 +372,31 @@ def test_filter_inv_text_with_sort_key_needs_inventory_for_any_bound(
             sort_key=str,
         ).need_inventory(value)
         is expected
+    )
+
+
+@pytest.mark.parametrize(
+    "context, expected_rows",
+    [
+        pytest.param({}, [{"ident": "a"}, {"ident": "b"}, {"ident": "c"}], id="no-bounds"),
+        pytest.param({"ident": {"ident_from": "b"}}, [{"ident": "b"}, {"ident": "c"}], id="from"),
+        pytest.param({"ident": {"ident_until": "b"}}, [{"ident": "a"}, {"ident": "b"}], id="until"),
+        pytest.param(
+            {"ident": {"ident_from": "b", "ident_until": "b"}}, [{"ident": "b"}], id="from-until"
+        ),
+    ],
+)
+def test_filter_invtable_text_with_sort_key_includes_its_bounds(
+    context: VisualContext, expected_rows: Rows
+) -> None:
+    assert (
+        FilterInvtableTextWithSortKey(
+            inv_info="info",
+            ident="ident",
+            title="Title",
+            sort_key=str,
+        ).filter_table(context, [{"ident": "a"}, {"ident": "b"}, {"ident": "c"}])
+        == expected_rows
     )
 
 

@@ -42,9 +42,7 @@ class HostAddressValidator:
         list_of_messages: list[Message] = list(self._allowed_type_names())
         full_message = Message("")
         for idx, message in enumerate(list_of_messages):
-            full_message += (
-                message + Message(", ") if idx < len(list_of_messages) - 1 else Message("")
-            )
+            full_message += message + Message(", ") if idx < len(list_of_messages) - 1 else message
 
         raise ValidationError(full_message)
 

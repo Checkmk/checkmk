@@ -236,6 +236,8 @@ def _chrome(
     # The map's own title, so a tab or a history entry says which map it is.
     if shown is not None:
         return shown.title() or shown.name(), Breadcrumb(), None
+    if _rotates(ctx):
+        return _("Maps"), Breadcrumb(), None
     if _shows_images(ctx) and user.may("maps.configure"):
         breadcrumb = images_breadcrumb()
         return _("Images"), breadcrumb, images_page_menu(breadcrumb)
@@ -253,7 +255,15 @@ def _shown_map(ctx: PageContext) -> MapPage | None:
     # view the SPA shows.
     if _shows_images(ctx) or not (name := ctx.request.get_str_input("name")):
         return None
+    # A rotation, such as a wall's, moves on past a map it cannot show, so it
+    # starts on one too and says so there.
+    if _rotates(ctx):
+        return get_permitted_map(name)
     return _require_visible_map(name)
+
+
+def _rotates(ctx: PageContext) -> bool:
+    return bool(ctx.request.get_str_input("rotation"))
 
 
 def _shows_images(ctx: PageContext) -> bool:

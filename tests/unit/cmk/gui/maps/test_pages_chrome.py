@@ -53,6 +53,14 @@ def test_empty_map_name_shows_the_list(request_context: None, with_admin_login: 
     assert _shown_map(_ctx()) is None
 
 
+def test_a_rotation_starts_on_a_map_it_cannot_show(
+    request_context: None, with_admin_login: UserId
+) -> None:
+    request.set_var("name", "gone")
+    request.set_var("rotation", "wall")
+    assert _shown_map(_ctx()) is None
+
+
 def test_list_layout_is_the_global_default_until_one_is_chosen(
     request_context: None, with_admin_login: UserId
 ) -> None:

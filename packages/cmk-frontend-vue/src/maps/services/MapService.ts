@@ -122,6 +122,17 @@ export class MapService {
   }
 
   /**
+   * The map list for a view that does not show it: it raises no spinner and
+   * leaves the shown map's error alone.
+   */
+  public async ensureMaps(): Promise<MapRead[]> {
+    if (this.maps.value.length === 0) {
+      this.maps.value = await this.api.list()
+    }
+    return this.maps.value
+  }
+
+  /**
    * Starts loading a map before the view that shows it is mounted, so the
    * request runs alongside the view's code and the session. ``fetchMap`` takes it
    * over once for the same name.

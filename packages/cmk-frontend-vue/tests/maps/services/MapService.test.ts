@@ -193,6 +193,15 @@ describe('MapService', () => {
     expect(store.error.value).toBeNull()
   })
 
+  it("fetches the list for another view without touching the shown map's error", async () => {
+    const store = newService()
+    store.error.value = 'Map vanished'
+    expect(await store.ensureMaps()).toEqual(sampleMaps)
+    await store.ensureMaps()
+    expect(listCalls).toBe(1)
+    expect(store.error.value).toBe('Map vanished')
+  })
+
   it('fetchMaps() sets error on failure', async () => {
     server.use(
       http.get('*/api/internal/domain-types/map/collections/all', () =>

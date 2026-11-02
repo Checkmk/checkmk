@@ -21,7 +21,7 @@ function map(name: string, rotationInterval: number, pools: string[] = []): MapR
 }
 
 let services: ReturnType<typeof fakeMapsServices>
-let store: { maps: { value: MapRead[] }; fetchMaps: MockInstance }
+let store: { maps: { value: MapRead[] }; list: MockInstance }
 let navigate: MockInstance
 
 // The composable registers lifecycle hooks, so it must run inside a component
@@ -36,7 +36,7 @@ function mountRotation(mapName: Ref<string>, editMode: Ref<boolean> = ref(false)
 beforeEach(() => {
   vi.useFakeTimers()
   services = fakeMapsServices()
-  store = { maps: services.maps.maps, fetchMaps: vi.spyOn(services.maps, 'fetchMaps') }
+  store = { maps: services.maps.maps, list: vi.mocked(services.apis.mapConfig.list) }
   navigate = vi.spyOn(services.nav, 'navigate').mockImplementation(() => {})
 })
 
@@ -88,13 +88,11 @@ describe('useMapRotation — rotation', () => {
   })
 
   it('fetches maps on demand when the store is empty', async () => {
-    store.fetchMaps.mockImplementationOnce(async () => {
-      store.maps.value = [map('a', 3), map('b', 3)]
-    })
+    store.list.mockResolvedValueOnce([map('a', 3), map('b', 3)])
     const { api } = mountRotation(ref('a'))
     api.scheduleRotation(map('a', 1))
     await vi.advanceTimersByTimeAsync(1000)
-    expect(store.fetchMaps).toHaveBeenCalledOnce()
+    expect(store.list).toHaveBeenCalledOnce()
     expect(navigate).toHaveBeenCalledWith({ view: 'map', name: 'b', kiosk: false, rotation: null })
   })
 
@@ -225,9 +223,52 @@ describe('useMapRotation — interval', () => {
     expect(api.rotationCountdown.value).toBe(0)
   })
 
-  it('starts no countdown without a map', () => {
+  it('starts no countdown for an unknown map outside a pool', async () => {
     const { api } = mountRotation(ref('a'))
     api.scheduleRotation(null)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(api.rotationCountdown.value).toBe(0)
+  })
+
+  it('moves on from a map that could not be loaded by its listed interval', async () => {
+    store.maps.value = [map('a', 3)]
+    const { api } = mountRotation(ref('a'))
+    api.scheduleRotation(null)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(api.rotationCountdown.value).toBe(3)
+  })
+
+  it('looks up a map that could not be loaded in a list fetched for it', async () => {
+    store.list.mockResolvedValueOnce([map('a', 3)])
+    const { api } = mountRotation(ref('a'))
+    api.scheduleRotation(null)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(api.rotationCountdown.value).toBe(3)
+  })
+
+  it("moves on from an unlisted map in a pool by the pool's interval", async () => {
+    services.nav.state.rotation = 'noc'
+    const { api } = mountRotation(ref('gone'))
+    api.scheduleRotation(null)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(api.rotationCountdown.value).toBe(60)
+  })
+
+  it('moves on from a map gone from its pool to the one map left in it', async () => {
+    services.nav.state.rotation = 'noc'
+    store.maps.value = [map('b', 0, ['noc'])]
+    const { api } = mountRotation(ref('gone'))
+    api.scheduleRotation(null)
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(navigate).toHaveBeenCalledWith({ view: 'map', name: 'b', kiosk: false, rotation: 'noc' })
+  })
+
+  it('starts no countdown that a stop overtook while the list loaded', async () => {
+    store.list.mockResolvedValueOnce([map('a', 3)])
+    const { api } = mountRotation(ref('a'))
+    api.scheduleRotation(null)
+    api.stopRotation()
+    await vi.advanceTimersByTimeAsync(0)
     expect(api.rotationCountdown.value).toBe(0)
   })
 })

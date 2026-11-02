@@ -964,12 +964,8 @@ class EventServer(ECServerThread):
 
             # Accept new connection on event unix socket
             if self._eventsocket in readable:
-                client_socket, remote_address = self._eventsocket.accept()
-                # We have a AF_UNIX socket, so the remote address is a str, which is always ''.
-                if not (isinstance(remote_address, str) and remote_address == ""):
-                    raise ValueError(
-                        f"Invalid remote address '{remote_address!r}' for event socket"
-                    )
+                # We don't need the address of the client, which is "" only if it's unbound.
+                client_socket, _ = self._eventsocket.accept()
                 self._client_sockets[client_socket.fileno()] = ClientConnection(
                     sock=client_socket,
                     endpoint="event socket",

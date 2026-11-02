@@ -753,3 +753,17 @@ def test_spool_file_which_cannot_be_removed_is_not_processed(
 
     assert ignored
     assert _event_texts(event_status) == []
+
+
+def test_event_socket_takes_messages_from_a_client_bound_to_a_path(
+    event_console: _EventConsole,
+) -> None:
+    settings, event_status = event_console
+    event_socket = settings.paths.event_socket.value
+
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+        client.bind(str(event_socket.with_name("client")))
+        client.connect(str(event_socket))
+        client.sendall(b"from a bound client\n")
+
+    assert _texts_of_events(event_status, 1) == ["from a bound client"]

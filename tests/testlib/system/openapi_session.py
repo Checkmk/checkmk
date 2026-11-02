@@ -917,8 +917,10 @@ class HostsAPI(BaseAPI):
             if (not ignore or host_name not in ignore) and (not allow or host_name in allow)
         ]
 
-    def delete(self, hostname: str) -> None:
+    def delete(self, hostname: str, ignore_missing: bool = False) -> None:
         response = self.session.delete(f"/objects/host_config/{hostname}")
+        if ignore_missing and response.status_code == HTTPStatus.NOT_FOUND:
+            return
         if response.status_code != HTTPStatus.NO_CONTENT:
             raise UnexpectedResponse.from_response(response)
 

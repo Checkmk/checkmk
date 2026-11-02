@@ -195,6 +195,8 @@ class ECServerThread(threading.Thread):
         slave_status: SlaveStatus,
         profiling_enabled: bool,
         profile_file: Path,
+        *,
+        restart_delay: float = 1.0,
     ) -> None:
         super().__init__(name=name)
         self.settings = settings
@@ -202,6 +204,9 @@ class ECServerThread(threading.Thread):
         self._slave_status = slave_status
         self._profiling_enabled = profiling_enabled
         self._profile_file = profile_file
+        # How long run() waits before it restarts serve() after an exception. Only tests pass a
+        # shorter one, to take less time.
+        self._restart_delay = restart_delay
         self._terminate_event = threading.Event()
         self._logger = logger
 
@@ -219,7 +224,7 @@ class ECServerThread(threading.Thread):
                 self._logger.exception("Exception in %(name)s server", {"name": self.name})
                 if self.settings.options.debug:
                     raise
-                time.sleep(1)
+                time.sleep(self._restart_delay)
         self._logger.info("Terminated")
 
     def terminate(self) -> None:
@@ -498,6 +503,7 @@ class EventServer(ECServerThread):
         omd_site: SiteId,
         *,
         create_pipes_and_sockets: bool = True,
+        restart_delay: float = 1.0,
     ) -> None:
         super().__init__(
             name="EventServer",
@@ -507,7 +513,14 @@ class EventServer(ECServerThread):
             slave_status=slave_status,
             profiling_enabled=settings.options.profile_event,
             profile_file=settings.paths.event_server_profile.value,
+            restart_delay=restart_delay,
         )
+        self._pipe: FileDescr | None = None
+        # Kept for the next data from the pipe, also when serve() restarts, like the pipe itself
+        self._unprocessed_pipe_data = b""
+        # The connections to the event socket and to syslog via TCP, kept with their incomplete
+        # messages when serve() restarts, like the pipe
+        self._client_sockets: dict[FileDescr, ClientConnection] = {}
         self._syslog_udp: socket.socket | None = None
         self._syslog_tcp: socket.socket | None = None
         self._snmp_trap_socket: socket.socket | None = None
@@ -541,6 +554,8 @@ class EventServer(ECServerThread):
             return
 
         self.create_pipe()
+        # Like the sockets, the pipe stays open when serve() restarts after an exception.
+        self._pipe = self.open_pipe()
         self.open_eventsocket()
         self.open_syslog_udp()
         self.open_syslog_tcp()
@@ -793,11 +808,23 @@ class EventServer(ECServerThread):
         return os.open(str(self.settings.paths.event_pipe.value), os.O_RDWR | os.O_NONBLOCK)
 
     @override
+    def run(self) -> None:
+        try:
+            super().run()
+        finally:
+            # Only now, as serve() keeps them open when it restarts
+            if self._pipe is not None:
+                os.close(self._pipe)
+                self._pipe = None
+            for client in self._client_sockets.values():
+                client.sock.close()
+            self._client_sockets.clear()
+
+    @override
     def serve(self) -> None:
-        pipe = self.open_pipe()
         # We just read()/recvfrom() these, so we create no new FDs via them.
         pipe_and_datagram_sockets = [
-            f for f in (pipe, self._syslog_udp, self._snmp_trap_socket) if f is not None
+            f for f in (self._pipe, self._syslog_udp, self._snmp_trap_socket) if f is not None
         ]
         # We use accept() on these FDs, so we must be careful to avoid creating too many additional
         # FDs. We use an arbitrary limit below (less than the usual 1024 FD_SETSIZE limit), so we
@@ -805,15 +832,13 @@ class EventServer(ECServerThread):
         # queued in the OS queue then, and when that is full, a client will get an error, which is
         # the right thing here.
         stream_sockets = [f for f in (self._syslog_tcp, self._eventsocket) if f is not None]
-        client_sockets: dict[FileDescr, ClientConnection] = {}
         select_timeout = 1
-        unprocessed_pipe_data = b""
         while not self._terminate_event.is_set():
             try:
                 readable: list[FileDescr | socket.socket] = select.select(
                     pipe_and_datagram_sockets
-                    + (stream_sockets if len(client_sockets) < 900 else [])
-                    + list(client_sockets.keys()),
+                    + (stream_sockets if len(self._client_sockets) < 900 else [])
+                    + list(self._client_sockets.keys()),
                     [],
                     [],
                     select_timeout,
@@ -832,7 +857,7 @@ class EventServer(ECServerThread):
                     raise ValueError(
                         f"Invalid remote address '{remote_address!r}' for event socket"
                     )
-                client_sockets[client_socket.fileno()] = ClientConnection(
+                self._client_sockets[client_socket.fileno()] = ClientConnection(
                     sock=client_socket,
                     endpoint="event socket",
                     address=None,
@@ -842,15 +867,15 @@ class EventServer(ECServerThread):
             if self._syslog_tcp is not None and self._syslog_tcp in readable:
                 client_socket, address = self._syslog_tcp.accept()
                 endpoint = "syslog socket (TCP)"
-                client_sockets[client_socket.fileno()] = ClientConnection(
+                self._client_sockets[client_socket.fileno()] = ClientConnection(
                     sock=client_socket,
                     endpoint=endpoint,
                     address=parse_address(endpoint, address),
                 )
 
             # Read data from existing connections to the event socket and syslog via TCP
-            # NOTE: We modify client_sockets in the loop, so we need to copy below!
-            for fd, client in list(client_sockets.items()):
+            # NOTE: We modify self._client_sockets in the loop, so we need to copy below!
+            for fd, client in list(self._client_sockets.items()):
                 if fd in readable:
                     try:
                         new_data = client.sock.recv(4096)
@@ -864,20 +889,24 @@ class EventServer(ECServerThread):
                         messages, unprocessed = parse_bytes_into_syslog_messages(
                             client.unprocessed + new_data
                         )
+                        # Before processing the messages, so that a restart by an error goes on
+                        # right after them
+                        self._client_sockets[fd] = replace(client, unprocessed=unprocessed)
                         self.process_syslog_messages(messages, client.address)
-                        client_sockets[fd] = replace(client, unprocessed=unprocessed)
                     else:  # the other side is gone, no more data will ever come
-                        del client_sockets[fd]  # dropping the incomplete rest is OK
+                        del self._client_sockets[fd]  # dropping the incomplete rest is OK
                         client.sock.close()  # after the bookkeeping above, close() can throw
 
             # Read data from the pipe, without octet counting, see parse_bytes_into_lines() for why
-            if pipe in readable:
+            if self._pipe is not None and self._pipe in readable:
                 try:
-                    unprocessed_pipe_data += os.read(pipe, 4096)
+                    self._unprocessed_pipe_data += os.read(self._pipe, 4096)
                 except Exception:
                     self._logger.exception("General exception during pipe os.read")
 
-                messages, unprocessed_pipe_data = parse_bytes_into_lines(unprocessed_pipe_data)
+                messages, self._unprocessed_pipe_data = parse_bytes_into_lines(
+                    self._unprocessed_pipe_data
+                )
                 self.process_syslog_messages(messages, None)
 
             # Read events from builtin syslog server

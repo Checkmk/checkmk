@@ -33,16 +33,18 @@ _TARGETS = [
 ]
 
 
+# No role has these permissions by default, not even the admin.
+_GRANTED = {
+    "action.notifications": True,
+    "action.enablechecks": True,
+    "action.clearmodattr": True,
+}
+
+
 @pytest.fixture(name="granted")
 def fixture_granted(set_config: SetConfig, load_config: Config) -> Iterator[None]:
-    # No role has these permissions by default, not even the admin.
     roles = copy.deepcopy(load_config.roles)
-    roles["admin"]["permissions"] = {
-        **roles["admin"].get("permissions", {}),
-        "action.notifications": True,
-        "action.enablechecks": True,
-        "action.clearmodattr": True,
-    }
+    roles["admin"]["permissions"] = {**roles["admin"].get("permissions", {}), **_GRANTED}
     with set_config(roles=roles):
         yield
 
@@ -139,3 +141,63 @@ def test_sends_the_reset_to_the_site_of_the_service(
 
     assert resp.status_code == HTTPStatus.OK, resp.text
     assert resp.json == {"modified": 1}
+
+
+@pytest.mark.parametrize(
+    "action, body, permission",
+    [
+        pytest.param(
+            "toggle_attribute",
+            {"attribute": "notifications", "enabled": False},
+            "action.notifications",
+            id="toggling notifications",
+        ),
+        pytest.param(
+            "toggle_attribute",
+            {"attribute": "active_checks", "enabled": False},
+            "action.enablechecks",
+            id="toggling active checks",
+        ),
+        pytest.param(
+            "toggle_attribute",
+            {"attribute": "passive_checks", "enabled": False},
+            "action.enablechecks",
+            id="toggling passive checks",
+        ),
+        pytest.param(
+            "reset_modified_attributes",
+            {},
+            "action.clearmodattr",
+            id="resetting modified attributes",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("with_admin_login")
+def test_a_command_is_refused_without_its_own_permission(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+    set_config: SetConfig,
+    load_config: Config,
+    action: str,
+    body: dict[str, object],
+    permission: str,
+) -> None:
+    roles = copy.deepcopy(load_config.roles)
+    roles["admin"]["permissions"] = {
+        **roles["admin"].get("permissions", {}),
+        **_GRANTED,
+        permission: False,
+    }
+
+    with set_config(roles=roles), mock_livestatus(expect_status_query=False):
+        aut_user_auth_wsgi_app.post(
+            f"/NO_SITE/check_mk/api/internal/monitor/services/actions/{action}",
+            params=json.dumps(
+                {
+                    "services": [{"site_id": "NO_SITE", "host_name": "heute", "name": "CPU load"}],
+                    **body,
+                }
+            ),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=HTTPStatus.FORBIDDEN,
+        )

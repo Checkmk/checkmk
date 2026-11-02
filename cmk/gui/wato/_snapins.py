@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from typing import override, TypedDict
 
 from cmk.gui import site_config, sites
@@ -338,6 +339,15 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
             "interaction with any other snap-in."
         )
 
+    @staticmethod
+    def target_views(
+        permitted_views: Mapping[str, ViewSpec], default_target_name: str
+    ) -> list[tuple[str, ViewSpec]]:
+        return [
+            (name, ViewSpec({**view, "hidden": False}) if name == default_target_name else view)
+            for name, view in permitted_views.items()
+        ]
+
     @override
     def show(self, config: Config) -> None:
         user_permissions = UserPermissions.from_config(config, all_permissions())
@@ -353,13 +363,11 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         # Render link target selection
         #
         # Apply some view specific filters
-        views_to_show: list[tuple[str, ViewSpec]] = []
         dflt_target_name: str = "allhosts"
-        dflt_topic_name: str = ""
-        for name, view in get_permitted_views().items():
-            views_to_show.append((name, view))
-            if name == dflt_target_name:
-                dflt_topic_name = view["topic"]
+        views_to_show = self.target_views(get_permitted_views(), dflt_target_name)
+        dflt_topic_name = next(
+            (view["topic"] for name, view in views_to_show if name == dflt_target_name), ""
+        )
 
         selected_topic_name: str
         selected_target_name: str

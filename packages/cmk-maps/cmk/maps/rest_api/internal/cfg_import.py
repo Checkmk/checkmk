@@ -10,6 +10,7 @@ saves through the Maps REST API like any other map. The parser lives in
 ``_base64_decoder``).
 """
 
+from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     APIVersion,
@@ -34,6 +35,15 @@ def parse_cfg_v1(body: MapsCfgImportRequest) -> MapsCfgImportResponse:
     # Importing produces a map to save, so it needs the pagetype create grant.
     user.need_permission("general.edit_map")
     map_config, warnings = parse_cfg_upload(body.filename, body.content)
+    # An upload is the map file alone; the update migration brings the image along.
+    if background := map_config.get("background_image"):
+        warnings.append(
+            _(
+                "The background image %(image)s is not part of the map file. After saving "
+                "the map, upload it in the map's settings under Background image."
+            )
+            % {"image": background}
+        )
     return MapsCfgImportResponse(map_config=dict(map_config), warnings=warnings)
 
 

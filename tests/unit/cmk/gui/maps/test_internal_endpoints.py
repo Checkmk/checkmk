@@ -264,3 +264,15 @@ def test_a_background_is_removed(clients: ClientRegistry) -> None:
 
 def test_a_nagvis_cfg_parses_into_a_draft(clients: ClientRegistry) -> None:
     assert clients.Maps.parse_cfg("floor.cfg", _CFG).json["map"]["alias"] == "Imported"
+
+
+def test_a_nagvis_cfg_names_the_background_it_does_not_bring(clients: ClientRegistry) -> None:
+    resp = clients.Maps.parse_cfg("floor.cfg", b"define global {\n    map_image = plan.png\n}\n")
+
+    assert any("plan.png" in warning for warning in resp.json["warnings"])
+
+
+def test_a_nagvis_cfg_without_a_background_does_not_mention_one(clients: ClientRegistry) -> None:
+    assert not any(
+        "background" in w for w in clients.Maps.parse_cfg("floor.cfg", _CFG).json["warnings"]
+    )

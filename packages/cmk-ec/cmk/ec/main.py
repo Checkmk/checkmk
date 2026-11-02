@@ -28,6 +28,7 @@ import re
 import select
 import signal
 import socket
+import stat
 import sys
 import threading
 import time
@@ -342,6 +343,85 @@ def receive_datagram(sock: socket.socket) -> tuple[bytes, Any]:
     return sock.recvfrom(65535)
 
 
+def _mtime_of_regular_file(path: Path) -> float | None:
+    """
+    The modification time of a regular file, possibly behind a symbolic link, with a single stat(),
+    as the event server lists the spool directory again for each spool file it processes
+    """
+    try:
+        status = path.stat()
+    except OSError:  # e.g. a broken symbolic link, or removed in the meantime
+        return None
+    return status.st_mtime if stat.S_ISREG(status.st_mode) else None
+
+
+# Errors reading or removing a spool file which are no fault of the file and go away again, e.g.
+# when another thread took the last free file descriptor right after we listed the spool directory
+_LACK_OF_FILE_DESCRIPTORS = frozenset({errno.EMFILE, errno.ENFILE})
+
+# How often in a row the event server tries to read a spool file it lacks the memory for: Unlike
+# file descriptors, memory may never suffice for a big file, e.g. under a limit of the address
+# space, and then the file mustn't hold back the newer ones forever.
+MAX_TRIES_LACKING_MEMORY = 5
+
+# Far more than its writers spool at once, e.g. about 1 MiB per file when forwarding log messages,
+# but little enough to read a spool file at once: With an object for each line, reading one takes
+# about 2.5 times its size for syslog messages, and up to 15 times for the shortest lines.
+MAX_SPOOL_FILE_SIZE = 16 * 1024 * 1024
+
+
+def _open_without_blocking(path: str | os.PathLike[str], flags: int) -> int:
+    """Like open() opens a file, but a FIFO without waiting for a writer to open it, too"""
+    return os.open(path, flags | os.O_NONBLOCK)
+
+
+def _rename_without_replacing(path: Path, target: Path) -> None:
+    """
+    Like rename(), but failing with EEXIST instead of replacing the target, as Python offers no
+    RENAME_NOREPLACE. Only the event server puts spool files aside, so no target appears meanwhile.
+    """
+    if target.exists(follow_symlinks=False):
+        raise FileExistsError(errno.EEXIST, os.strerror(errno.EEXIST), str(target))
+    path.rename(target)
+
+
+def _error_text(error: OSError | MemoryError) -> str:
+    """For log messages, as Python raises a MemoryError without any text"""
+    return "out of memory" if isinstance(error, MemoryError) else str(error)
+
+
+def read_spool_file(path: Path) -> Iterator[bytes] | None:
+    """
+    Its messages, see parse_spool_file(), but None if it is no regular file anymore, e.g. replaced
+    by a FIFO or a directory since the spool directory was listed, and EFBIG for a file too big to
+    read at once, also if it has grown since
+    """
+    try:
+        with open(path, "rb", opener=_open_without_blocking) as file:
+            # What we opened, as the path may lead to something else by now
+            status = os.fstat(file.fileno())
+            if not stat.S_ISREG(status.st_mode):
+                return None
+            if status.st_size > MAX_SPOOL_FILE_SIZE:
+                raise OSError(errno.EFBIG, f"{os.strerror(errno.EFBIG)}, {status.st_size} bytes")
+            # Only opening a FIFO mustn't block: On some file systems, e.g. FUSE ones, reading a
+            # regular file without blocking may return only a part of it.
+            os.set_blocking(file.fileno(), True)
+            # A byte more than its size shows whether it has grown since, and only then we read on,
+            # up to a byte more than the limit: Reading that much right away would allocate it.
+            data = file.read(status.st_size + 1)
+            if len(data) > status.st_size:
+                data += file.read(MAX_SPOOL_FILE_SIZE - status.st_size)
+                if len(data) > MAX_SPOOL_FILE_SIZE:
+                    raise OSError(
+                        errno.EFBIG,
+                        f"{os.strerror(errno.EFBIG)}, more than {MAX_SPOOL_FILE_SIZE} bytes",
+                    )
+            return parse_spool_file(data)
+    except IsADirectoryError:  # Unlike for a FIFO, Python's open() refuses a directory itself.
+        return None
+
+
 def terminate(
     terminate_main_event: threading.Event,
     event_server: EventServer,
@@ -516,6 +596,8 @@ class EventServer(ECServerThread):
         omd_site: SiteId,
         *,
         create_pipes_and_sockets: bool = True,
+        idle_timeout: float = 1.0,
+        read_spool_file: Callable[[Path], Iterable[bytes] | None] = read_spool_file,
         restart_delay: float = 1.0,
     ) -> None:
         super().__init__(
@@ -528,6 +610,9 @@ class EventServer(ECServerThread):
             profile_file=settings.paths.event_server_profile.value,
             restart_delay=restart_delay,
         )
+        # How long serve() waits for messages before it looks for spool files again, as nothing
+        # wakes it up for these. Only tests pass a shorter one, to take less time.
+        self._idle_timeout = idle_timeout
         self._pipe: FileDescr | None = None
         # Kept for the next data from the pipe, also when serve() restarts, like the pipe itself
         self._unprocessed_pipe_data = b""
@@ -537,6 +622,21 @@ class EventServer(ECServerThread):
         self._syslog_udp: socket.socket | None = None
         self._syslog_tcp: socket.socket | None = None
         self._snmp_trap_socket: socket.socket | None = None
+        # Spool files we can neither process nor rename, e.g. immutable ones (chattr +i): Ignored
+        # while they are there, also when serve() restarts, they hold back no other ones.
+        self._ignored_spool_files: set[Path] = set()
+        # Entries of the spool directory other than regular files: Warned about only once while
+        # they are there, also when serve() restarts.
+        self._skipped_spool_entries: set[Path] = set()
+        # The spool file we last lacked the resources to read, which we warn about only once while
+        # we try it again and again, and how many of these tries in a row lacked memory
+        self._lacking_resources_for: tuple[Path | None, int] = (None, 0)
+        # Until when, by time.monotonic(), we take no spool file after lacking the resources for
+        # one: The select() timeout alone gives them no time to be freed while messages arrive.
+        self._no_spool_files_until = 0.0
+        # Only tests pass another one, to make something happen right between listing the spool
+        # directory and reading a file from it, which can't be timed.
+        self._read_spool_file = read_spool_file
 
         self._rules: list[Rule] = []
         self._rule_by_id: dict[str | None, Rule] = {}
@@ -845,7 +945,7 @@ class EventServer(ECServerThread):
         # queued in the OS queue then, and when that is full, a client will get an error, which is
         # the right thing here.
         stream_sockets = [f for f in (self._syslog_tcp, self._eventsocket) if f is not None]
-        select_timeout = 1
+        select_timeout = self._idle_timeout
         while not self._terminate_event.is_set():
             try:
                 readable: list[FileDescr | socket.socket] = select.select(
@@ -936,14 +1036,114 @@ class EventServer(ECServerThread):
                     self.create_events_from_trap(message, parse_address("SNMP trap", address))
                 )
 
-            if spool_files := sorted(
-                self.settings.paths.spool_dir.value.glob("[!.]*"), key=lambda x: x.stat().st_mtime
-            ):
-                self.process_syslog_messages(parse_spool_file(spool_files[0].read_bytes()), None)
-                spool_files[0].unlink()
+            if (spool_file := self._next_spool_file()) is not None:
                 select_timeout = 0  # enable fast processing to process further files
+                try:
+                    if (lines := self._read_spool_file(spool_file)) is None:
+                        # No regular file anymore, so skip it like _next_spool_file(), and a new
+                        # file of that name starts afresh.
+                        self._lacking_resources_for = (None, 0)
+                        continue
+                    # Before processing it, so no error can make us process it again. Having read
+                    # it, we process it even if it's gone already.
+                    spool_file.unlink(missing_ok=True)
+                except FileNotFoundError:
+                    # Removed in the meantime, so there is nothing to process, and a new file of
+                    # that name starts afresh.
+                    self._lacking_resources_for = (None, 0)
+                except (OSError, MemoryError) as e:
+                    if self._try_again_later(spool_file, e):
+                        select_timeout = self._idle_timeout  # Give the resources time to be freed.
+                    else:
+                        self._put_aside_spool_file(spool_file, e)
+                else:
+                    self._lacking_resources_for = (None, 0)
+                    self.process_syslog_messages(lines, None)
             else:
-                select_timeout = 1  # restore default select timeout
+                select_timeout = self._idle_timeout  # restore default select timeout
+
+    def _next_spool_file(self) -> Path | None:
+        """
+        The oldest regular file in the spool directory which isn't ignored, if any: Reading a
+        directory would fail, and reading a FIFO would block, so it skips any other entry.
+
+        It forgets the ignored files and skipped entries which are gone, so a new file with the same
+        name is neither ignored nor skipped without a warning.
+
+        After lacking the resources for a spool file, it takes none until it is time to try again.
+        """
+        if time.monotonic() < self._no_spool_files_until:
+            return None
+        paths = list(self.settings.paths.spool_dir.value.glob("[!.]*"))
+        self._ignored_spool_files.intersection_update(paths)
+        self._skipped_spool_entries.intersection_update(paths)
+        candidates: list[tuple[float, Path]] = []
+        for path in paths:
+            if path in self._ignored_spool_files:
+                continue
+            if (mtime := _mtime_of_regular_file(path)) is None:
+                self._warn_about_skipped_spool_entry(path)
+            else:
+                candidates.append((mtime, path))
+        return min(candidates)[1] if candidates else None
+
+    def _warn_about_skipped_spool_entry(self, path: Path) -> None:
+        """Only once while it is there, as we skip it each time we list the spool directory"""
+        # Not if it is gone, i.e. if it was a spool file removed right after we listed it
+        if path not in self._skipped_spool_entries and path.exists(follow_symlinks=False):
+            self._skipped_spool_entries.add(path)
+            self._logger.warning(
+                "Skipping %(path)s in the spool directory while it leads to no regular file",
+                {"path": path},
+            )
+
+    def _try_again_later(self, spool_file: Path, error: OSError | MemoryError) -> bool:
+        """
+        Whether reading the spool file failed for lack of resources, which may be freed again, so
+        we try it again after the idle timeout, even if messages wake us up before. But memory may
+        never suffice for a big file, so we give up on it after MAX_TRIES_LACKING_MEMORY tries in a
+        row lacking it.
+        """
+        last_file, tries_lacking_memory = self._lacking_resources_for
+        if last_file != spool_file:
+            tries_lacking_memory = 0
+        # Python's own allocations fail with a MemoryError, the kernel's with ENOMEM.
+        if isinstance(error, MemoryError) or error.errno == errno.ENOMEM:
+            tries_lacking_memory += 1
+            try_again = tries_lacking_memory < MAX_TRIES_LACKING_MEMORY
+        else:
+            try_again = error.errno in _LACK_OF_FILE_DESCRIPTORS
+        if not try_again:
+            self._lacking_resources_for = (None, 0)  # So a new file of that name starts afresh.
+            return False
+        if last_file != spool_file:  # Only once for each file, as we try it again and again
+            self._logger.warning(
+                "Cannot process spool file %(path)s now, trying again later: %(error)s",
+                {"path": spool_file, "error": _error_text(error)},
+            )
+        self._lacking_resources_for = (spool_file, tries_lacking_memory)
+        self._no_spool_files_until = time.monotonic() + self._idle_timeout
+        return True
+
+    def _put_aside_spool_file(self, spool_file: Path, error: OSError | MemoryError) -> None:
+        """
+        Keeps it for the admin, but hidden or ignored, so it holds back no spool file after it, and
+        a file put aside earlier under the same name is kept, too
+        """
+        hidden = spool_file.with_name(f".{spool_file.name}.unreadable")
+        try:
+            _rename_without_replacing(spool_file, hidden)
+        except OSError as rename_error:
+            self._ignored_spool_files.add(spool_file)
+            self._logger.error(  # noqa: TRY400 # not our fault, so no stack trace
+                "Cannot process spool file %(path)s, ignoring it: %(error)s (%(rename_error)s)",
+                {"path": spool_file, "error": _error_text(error), "rename_error": rename_error},
+            )
+        else:
+            self._logger.error(
+                "Cannot process spool file %(path)s, renamed it to %(hidden)s: %(error)s",
+                {"path": spool_file, "hidden": hidden.name, "error": _error_text(error)},
+            )
 
     def create_events_from_trap(self, data: bytes, address: tuple[str, int]) -> Iterator[Event]:
         try:

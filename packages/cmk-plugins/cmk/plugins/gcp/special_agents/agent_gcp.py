@@ -24,6 +24,7 @@ from typing import Any, assert_never, Protocol, Self
 
 import google.protobuf.duration_pb2 as duration
 from google.api_core.exceptions import (
+    Cancelled,
     InternalServerError,
     InvalidArgument,
     PermissionDenied,
@@ -499,9 +500,10 @@ def time_series(client: ClientProtocol, service: Service) -> Sequence[Result]:
         except PermissionDenied:
             raise
         except Exception as e:
-            # ResourceExhausted (429) is a rate limit error, InternalServerError (500) is a
-            # transient GCP error. Both are non-fatal: skip the metric and continue.
-            if isinstance(e, (ResourceExhausted, InternalServerError)):
+            # ResourceExhausted (429) is a rate limit error, InternalServerError (500) and
+            # Cancelled (499) are transient GCP errors. All are non-fatal: skip the metric and
+            # continue.
+            if isinstance(e, (ResourceExhausted, InternalServerError, Cancelled)):
                 exc_type, exception, traceback = sys.exc_info()
                 gcp_serializer(
                     [

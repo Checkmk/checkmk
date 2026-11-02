@@ -65,6 +65,9 @@ watch(model, (values) => emit('update:valid', hasComment(values)), {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-3);
+  padding: var(--spacing);
+  border-radius: var(--border-radius);
+  background: var(--ux-theme-3);
 }
 
 .monitoring-comment-form__label {

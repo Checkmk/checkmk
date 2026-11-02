@@ -5,6 +5,21 @@ license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state and color of AudioCodes LEDs.
+ It evaluates all LEDs of the modules, fan trays and power supplies.
+ The check ignores LEDs without a color and gray LEDs.
+
+ The color of an LED sets the state: green is OK,
+ yellow, orange and blue are WARN, red is CRIT.
+ An LED with an undefined color is UNKN.
+ On a MediaPack MP-124, a flashing red LED is OK.
+ According to the MP-124 documentation, only the Data LED flashes red.
+ It shows that the device receives RTP packets.
+
+ On a MediaPack MP-124, the check ignores the LEDs of the channels above
+ the number of ports that the device reports.
+ If SRTP is enabled, the MP-124 can show these LEDs red.
+
+ If the device does not report the name of a module, the check shows the module type.
 
 discovery:
  One service is created.

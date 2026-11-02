@@ -1,0 +1,9 @@
+###ROOT###/var/log/automatic-host-removal.log {
+	weekly
+	missingok
+	rotate 7
+	compress
+	delaycompress
+	notifempty
+	create 640 ###SITE### ###SITE###
+}

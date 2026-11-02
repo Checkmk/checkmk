@@ -79,7 +79,7 @@ def _last_job_runs_file_path() -> Path:
 def _load_last_job_runs() -> dict[str, datetime.datetime]:
     return {
         ident: datetime.datetime.fromtimestamp(ts, tz=datetime.UTC)
-        for ident, ts in store.load_object_from_file_explicit(
+        for ident, ts in store.load_object_from_file(
             _last_job_runs_file_path(),
             default={},
             debug=False,

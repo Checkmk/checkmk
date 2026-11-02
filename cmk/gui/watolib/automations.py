@@ -884,7 +884,7 @@ class LastKnownCentralSiteVersionStore:
     def read_obj(self) -> LastKnownCentralSiteVersion | None:
         return (
             LastKnownCentralSiteVersion.model_validate_json(raw.decode())
-            if (raw := self._io.read_explicit(debug=False))
+            if (raw := self._io.read(debug=False))
             else None
         )
 

@@ -94,7 +94,7 @@ class JobStatusStore:
         return data
 
     def read_raw(self) -> dict[str, object]:
-        status: dict[str, object] = store.load_object_from_file_explicit(
+        status: dict[str, object] = store.load_object_from_file(
             self._jobstatus_path, default={}, lock=True, debug=False
         )
         return status

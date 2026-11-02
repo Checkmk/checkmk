@@ -15,7 +15,7 @@ from pathlib import Path
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
-from cmk.ccc.store import DimSerializer, load_object_from_file_explicit
+from cmk.ccc.store import DimSerializer, load_object_from_file
 from cmk.events.notification_result import NotificationContext
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
@@ -166,7 +166,7 @@ def read_notify_host_file(
 ) -> NotificationHostConfig:
     host_file_path: Path = make_notify_host_file_path(config_path, host_name)
     return NotificationHostConfig(
-        **load_object_from_file_explicit(
+        **load_object_from_file(
             path=host_file_path,
             default={"host_labels": {}, "service_labels": {}, "tags": {}, "descendants": ()},
             debug=False,

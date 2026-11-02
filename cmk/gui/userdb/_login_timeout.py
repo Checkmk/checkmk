@@ -149,7 +149,7 @@ class LoginTimeoutStore:
         yield from self._io.locked()
 
     def _read(self) -> TimeoutData:
-        raw = self._io.read_explicit(debug=False)
+        raw = self._io.read(debug=False)
         return TimeoutData.model_validate(json.loads(raw)) if raw else TimeoutData()
 
     def _write(self, data: TimeoutData) -> None:

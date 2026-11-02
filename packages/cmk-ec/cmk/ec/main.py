@@ -4082,9 +4082,7 @@ def load_master_config(settings: Settings, config: ConfigFromWATO, logger: Logge
     try:
         # Like a missing file, an empty one left behind by an interrupted save yields None.
         if (
-            master_config := cmk.ccc.store.load_object_from_file_explicit(
-                path, default=None, debug=False
-            )
+            master_config := cmk.ccc.store.load_object_from_file(path, default=None, debug=False)
         ) is None:
             logger.info("Replication: no previously saved master state available")
             return False
@@ -4183,9 +4181,7 @@ def update_slave_status(
     if is_replication_slave(config):
         try:
             # Like a missing file, an empty one left behind by an interrupted save yields None.
-            saved_status = cmk.ccc.store.load_object_from_file_explicit(
-                path, default=None, debug=False
-            )
+            saved_status = cmk.ccc.store.load_object_from_file(path, default=None, debug=False)
             if saved_status is not None:
                 slave_status.update(saved_status)
         except Exception:  # e.g. a file edited by hand

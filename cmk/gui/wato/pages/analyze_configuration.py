@@ -364,9 +364,7 @@ class ModeAnalyzeConfig(WatoMode):
         store.save_object_to_file(self._ack_path, acknowledgements)
 
     def _load_acknowledgements(self, lock: bool = False) -> dict[object, object]:
-        return store.load_object_from_file_explicit(
-            self._ack_path, default={}, lock=lock, debug=False
-        )
+        return store.load_object_from_file(self._ack_path, default={}, lock=lock, debug=False)
 
 
 @dataclasses.dataclass(frozen=True)

@@ -40,9 +40,7 @@ def test_a_retired_mode_redirects_to_its_settings_page(
 
 def _config_generation() -> int:
     return int(
-        store.load_object_from_file_explicit(
-            wato_var_dir() / "config-generation.mk", default=0, debug=True
-        )
+        store.load_object_from_file(wato_var_dir() / "config-generation.mk", default=0, debug=True)
     )
 
 

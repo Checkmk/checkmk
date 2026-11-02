@@ -81,7 +81,7 @@ def _load_fingerprint_index(base_dir: Path) -> dict[str, str]:
     """Read the fingerprint→dir_name index from disk. Returns an empty dict if absent."""
     try:
         result: dict[str, str] = json.loads(
-            store.load_text_from_file_explicit(base_dir / _FINGERPRINT_INDEX_FILE, debug=False)
+            store.load_text_from_file(base_dir / _FINGERPRINT_INDEX_FILE, debug=False)
         )
         return result
     except Exception:

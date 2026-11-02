@@ -448,7 +448,7 @@ def _serialize_spec(
 
 def _read_spec(target: EndpointTarget, version: APIVersion) -> dict[str, Any]:
     path = spec_path(target, version)
-    spec = store.load_object_from_file_explicit(path, default={}, debug=False)
+    spec = store.load_object_from_file(path, default={}, debug=False)
     if not spec:
         raise ValueError(f"Failed to load spec from {path}")
     return spec

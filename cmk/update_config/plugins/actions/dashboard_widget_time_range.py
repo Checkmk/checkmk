@@ -59,7 +59,7 @@ class MigrateDashboardWidgetTimeRange(UpdateAction):
         migrated = 0
         for user_dir in user_directories(profile_dir):
             path = user_dir / "user_dashboards.mk"
-            dashboards = store.load_object_from_file_explicit(path, default={}, debug=debug)
+            dashboards = store.load_object_from_file(path, default={}, debug=debug)
             try:
                 converted = _with_migrated_time_ranges(_as_dict(dashboards, "the dashboards"))
             except (TypeError, KeyError) as exc:

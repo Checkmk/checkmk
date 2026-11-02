@@ -27,9 +27,7 @@ def claim_due_run(omd_root: Path, now: float) -> bool:
     state_file = omd_root / "var/check_mk/crash_upload_next_run"
     with store.locked(state_file):
         try:
-            due_at: int | None = int(
-                store.load_text_from_file_explicit(state_file, default="", debug=False)
-            )
+            due_at: int | None = int(store.load_text_from_file(state_file, default="", debug=False))
         except ValueError:
             due_at = None
 

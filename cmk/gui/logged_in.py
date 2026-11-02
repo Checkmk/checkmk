@@ -651,7 +651,7 @@ def load_user_file(
     # case a file is corrupted for some reason we rather start over with the default instead of
     # failing at some random places.
     try:
-        return store.load_object_from_file_explicit(path, default=deflt, lock=lock, debug=False)
+        return store.load_object_from_file(path, default=deflt, lock=lock, debug=False)
     except ValueError, SyntaxError:
         return deflt
 

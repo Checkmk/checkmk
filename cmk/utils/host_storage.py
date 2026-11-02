@@ -282,7 +282,7 @@ class StandardHostsStorage(ABCHostsStorage[str]):
 
     @override
     def _read(self, file_path: Path, *, debug: bool) -> str:
-        return store.load_text_from_file_explicit(file_path, debug=debug)
+        return store.load_text_from_file(file_path, debug=debug)
 
 
 class PickleHostsStorage(ABCHostsStorage[HostsData]):
@@ -301,7 +301,7 @@ class PickleHostsStorage(ABCHostsStorage[HostsData]):
     def _read(self, file_path: Path, *, debug: bool) -> HostsData:
         return store.ObjectStore(
             file_path, serializer=store.PickleSerializer[HostsData]()
-        ).read_obj_explicit(default={}, debug=debug)
+        ).read_obj(default={}, debug=debug)
 
 
 class RawHostsStorage(ABCHostsStorage[HostsData]):
@@ -316,7 +316,7 @@ class RawHostsStorage(ABCHostsStorage[HostsData]):
 
     @override
     def _read(self, file_path: Path, *, debug: bool) -> HostsData:
-        return store.load_object_from_file_explicit(file_path, default={}, debug=debug)
+        return store.load_object_from_file(file_path, default={}, debug=debug)
 
 
 @cache

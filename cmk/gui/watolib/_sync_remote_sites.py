@@ -122,7 +122,7 @@ class LastAuditLogTimestampsStore:
         self._path = path
 
     def load(self) -> dict[SiteId, int]:
-        raw_timestamps = store.load_text_from_file_explicit(
+        raw_timestamps = store.load_text_from_file(
             self._path,
             default="{}",
             debug=False,

@@ -234,7 +234,7 @@ class AutomationUserFile:
         self.path = profile_dir / user_id / "automation_user.mk"
 
     def load(self) -> bool:
-        value = store.load_object_from_file_explicit(self.path, default=False, debug=False)
+        value = store.load_object_from_file(self.path, default=False, debug=False)
         if not isinstance(value, bool):
             raise TypeError(value)
         return value

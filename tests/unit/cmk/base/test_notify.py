@@ -2498,7 +2498,7 @@ def test_notification_is_spooled_for_local_delivery() -> None:
     )
 
     (spool_file,) = notify.notification_spooldir.iterdir()
-    spooled = store.load_object_from_file_explicit(spool_file, default={}, debug=True)
+    spooled = store.load_object_from_file(spool_file, default={}, debug=True)
     assert (spooled["plugin"], spooled["context"]["CONTACTNAME"]) == ("my_script", "harry")
 
 
@@ -2611,10 +2611,7 @@ def test_forwarded_spool_file_is_processed_by_local_rules(tmp_path: Path) -> Non
     )
 
     (spool_file,) = notify.notification_spooldir.iterdir()
-    assert (
-        store.load_object_from_file_explicit(spool_file, default={}, debug=True)["plugin"]
-        == "my_script"
-    )
+    assert store.load_object_from_file(spool_file, default={}, debug=True)["plugin"] == "my_script"
 
 
 def _stored_bulk_notification(

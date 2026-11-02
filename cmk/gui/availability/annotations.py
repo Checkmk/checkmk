@@ -40,7 +40,7 @@ def load_annotations(lock: bool = False) -> AVAnnotations:
 
     return cast(
         AVAnnotations,
-        store.load_object_from_file_explicit(path, default={}, lock=lock, debug=False),
+        store.load_object_from_file(path, default={}, lock=lock, debug=False),
     )
 
 

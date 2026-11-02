@@ -169,7 +169,7 @@ def admin_maps(
     with store.locked(maps_path):
         # As they are on disk: ``MapPage.load`` skips one it cannot deserialize, and
         # writing that set back would drop it.
-        own: dict[str, dict[str, object]] = store.load_object_from_file_explicit(
+        own: dict[str, dict[str, object]] = store.load_object_from_file(
             maps_path, default={}, debug=debug
         )
         for source, name in pending.items():

@@ -108,7 +108,7 @@ class FileIo(Protocol):
 
     def write(self, data: bytes) -> None: ...
 
-    def read_explicit(self, *, debug: bool) -> bytes: ...
+    def read(self, *, debug: bool) -> bytes: ...
 
     def locked(self) -> Iterator[None]: ...
 
@@ -147,7 +147,7 @@ class RealIo:
         finally:
             release_lock(self.path)
 
-    def read_explicit(self, *, debug: bool) -> bytes:
+    def read(self, *, debug: bool) -> bytes:
         try:
             _raise_for_permissions(self.path)
             return self.path.read_bytes()
@@ -199,6 +199,6 @@ class ObjectStore[TObject]:
     def write_obj(self, obj: TObject) -> None:
         return self._io.write(self._serializer.serialize(obj))
 
-    def read_obj_explicit(self, *, default: TObject, debug: bool) -> TObject:
-        raw = self._io.read_explicit(debug=debug)
+    def read_obj(self, *, default: TObject, debug: bool) -> TObject:
+        raw = self._io.read(debug=debug)
         return self._serializer.deserialize(raw) if raw else default

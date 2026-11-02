@@ -331,7 +331,7 @@ def _set_version_headers(edition: Edition) -> None:
 def _get_login_secret(create_on_demand: bool = False) -> str | None:
     path = cmk.utils.paths.var_dir / "wato/automation_secret.mk"
 
-    secret = store.load_object_from_file_explicit(path, default=None, debug=False)
+    secret = store.load_object_from_file(path, default=None, debug=False)
     if secret is not None:
         return secret
 

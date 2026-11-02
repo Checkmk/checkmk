@@ -161,7 +161,7 @@ class TokenStore:
     def _read(self) -> _SerializedTokens:
         return (
             _SerializedTokens.model_validate_json(raw.decode())
-            if (raw := self._io.read_explicit(debug=False))
+            if (raw := self._io.read(debug=False))
             else _SerializedTokens()
         )
 

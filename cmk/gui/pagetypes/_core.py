@@ -2483,7 +2483,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
 
 def _no_bi_aggregate_active() -> bool:
     return bool(
-        not store.load_object_from_file_explicit(
+        not store.load_object_from_file(
             cmk.utils.paths.var_dir / "wato/num_enabled_aggregations", default=None, debug=False
         )
     )

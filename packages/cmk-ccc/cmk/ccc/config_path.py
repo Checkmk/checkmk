@@ -87,7 +87,7 @@ def _increment_to_next_serial(base: Path, *, debug: bool) -> int:
     root = VersionedConfigPath.make_root_path(base)
     store = ObjectStore(root / "serial.mk", serializer=DimSerializer())
     with store.locked():
-        old_serial: int = store.read_obj_explicit(default=0, debug=debug)
+        old_serial: int = store.read_obj(default=0, debug=debug)
         new_serial = old_serial + 1
         store.write_obj(new_serial)
     # TODO: The fact that this can be interpreted as an int

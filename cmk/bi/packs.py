@@ -299,9 +299,9 @@ class BIAggregationPacks:
             self._cleanup_and_load_packs(bi_sample_packs)
             return
         self._cleanup_and_load_packs(
-            store.load_object_from_file_explicit(
-                self._bi_configuration_file, default=None, debug=False
-            )["packs"]
+            store.load_object_from_file(self._bi_configuration_file, default=None, debug=False)[
+                "packs"
+            ]
         )
 
     def _cleanup_and_load_packs(self, packs_data: Iterable[BIPackConfig]) -> None:
@@ -334,11 +334,7 @@ class BIAggregationPacks:
     @classmethod
     def get_num_enabled_aggregations(cls) -> int:
         try:
-            return int(
-                store.load_text_from_file_explicit(
-                    cls._num_enabled_aggregations_path(), debug=False
-                )
-            )
+            return int(store.load_text_from_file(cls._num_enabled_aggregations_path(), debug=False))
         except TypeError, ValueError:
             return 0
 

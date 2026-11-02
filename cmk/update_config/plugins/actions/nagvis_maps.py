@@ -232,7 +232,7 @@ class MigrateNagVisMaps(UpdateAction):
         maps_dir = nagvis_maps_dir()
         if not maps_dir.is_dir():
             return
-        record = store.load_object_from_file_explicit(_record_path(), default={}, debug=debug)
+        record = store.load_object_from_file(_record_path(), default={}, debug=debug)
         outcomes: dict[str, str] = record.get("maps", {})
         files = [path for path in sorted(maps_dir.glob("*.cfg")) if path.stem not in outcomes]
         if not files:

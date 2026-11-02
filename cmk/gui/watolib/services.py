@@ -1376,7 +1376,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
             return (
                 int(self._preview_store.path.stat().st_mtime),
                 ServiceDiscoveryPreviewResult.deserialize(
-                    self._preview_store.read_obj_explicit(default="", debug=False)
+                    self._preview_store.read_obj(default="", debug=False)
                 ),
             )
         except FileNotFoundError, ValueError:

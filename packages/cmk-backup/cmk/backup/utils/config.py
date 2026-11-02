@@ -21,7 +21,7 @@ from pydantic import BaseModel, PrivateAttr
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
-from cmk.ccc.store import load_object_from_file_explicit, save_object_to_file
+from cmk.ccc.store import load_object_from_file, save_object_to_file
 from cmk.ccc.version import is_cma
 from cmk.utils.paths import default_config_dir
 
@@ -37,7 +37,7 @@ class SiteConfig(BaseModel, frozen=True):
     @classmethod
     def load(cls, path: Path) -> SiteConfig:
         return cls.model_construct(
-            **load_object_from_file_explicit(
+            **load_object_from_file(
                 path,
                 default={
                     "targets": {},

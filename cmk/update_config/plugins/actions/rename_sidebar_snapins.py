@@ -29,7 +29,7 @@ class RenameSidebarSnapins(UpdateAction):
         renamed = 0
         for user_dir in user_directories(profile_dir):
             path = user_dir / "sidebar.mk"
-            config = store.load_object_from_file_explicit(path, default=None, debug=debug)
+            config = store.load_object_from_file(path, default=None, debug=debug)
             if not isinstance(config, dict) or not isinstance(
                 snapins := config.get("snapins"), list
             ):

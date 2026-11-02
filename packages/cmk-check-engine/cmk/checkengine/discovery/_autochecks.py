@@ -60,7 +60,7 @@ class AutochecksStore:
 
     def read(self, *, debug: bool) -> Sequence[AutocheckEntry]:
         try:
-            return self._store.read_obj_explicit(default=[], debug=debug)
+            return self._store.read_obj(default=[], debug=debug)
         except (ValueError, TypeError, KeyError, AttributeError, SyntaxError) as exc:
             raise MKGeneralException(
                 f"Unable to parse autochecks of host {self._host_name}"

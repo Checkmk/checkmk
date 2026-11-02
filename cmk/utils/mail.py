@@ -18,7 +18,7 @@ from email.utils import formatdate, parseaddr
 from pathlib import Path
 
 from cmk.ccc import version as cmk_version
-from cmk.ccc.store import load_text_from_file_explicit
+from cmk.ccc.store import load_text_from_file
 from cmk.utils import paths
 
 
@@ -140,7 +140,7 @@ def _sendmail_path() -> str:
 def default_from_address() -> str:
     environ_default = os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
     if cmk_version.is_cma():
-        return load_text_from_file_explicit(
+        return load_text_from_file(
             Path("/etc/nullmailer/default-from"), default=environ_default, debug=False
         ).replace("\n", "")
 

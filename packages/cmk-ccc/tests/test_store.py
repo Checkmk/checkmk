@@ -38,7 +38,7 @@ class FakeIo(FileIo):
         self._data = data
 
     @override
-    def read_explicit(self, *, debug: bool) -> bytes:
+    def read(self, *, debug: bool) -> bytes:
         return self._data
 
     @override
@@ -51,7 +51,7 @@ def test_object_store(io: type[FileIo], exists: bool, tmp_path: Path) -> None:
     test_file = tmp_path / "hurz"
     a = ObjectStore(test_file, serializer=TextSerializer(), io=io)
     a.write_obj("aaaaa")
-    assert a.read_obj_explicit(default="", debug=False) == "aaaaa"
+    assert a.read_obj(default="", debug=False) == "aaaaa"
     assert test_file.exists() == exists
     test_file.unlink(missing_ok=True)
 
@@ -59,7 +59,7 @@ def test_object_store(io: type[FileIo], exists: bool, tmp_path: Path) -> None:
 def test_object_store_fake_io() -> None:
     a = ObjectStore(Path("  "), serializer=TextSerializer(), io=FakeIo)
     a.write_obj("aaaaa")
-    assert a.read_obj_explicit(default="", debug=False) == "aaaaa"
+    assert a.read_obj(default="", debug=False) == "aaaaa"
 
 
 @pytest.mark.parametrize("io,exists", [(RealIo, True), (FakeIo, False)])
@@ -70,7 +70,7 @@ def test_object_store_locked(io: type[FileIo], exists: bool, tmp_path: Path) -> 
         a.write_obj("aaaaa")
         with a.locked():
             a.write_obj("bbbbb")
-    assert a.read_obj_explicit(default="", debug=False) == "bbbbb"
+    assert a.read_obj(default="", debug=False) == "bbbbb"
     assert test_file.exists() == exists
     test_file.unlink(missing_ok=True)
 
@@ -79,21 +79,21 @@ def test_object_store_locked(io: type[FileIo], exists: bool, tmp_path: Path) -> 
 def test_object_store_default(io: type[FileIo], tmp_path: Path) -> None:
     test_file = tmp_path / "locked_hurz"
     a = ObjectStore(test_file, serializer=TextSerializer(), io=io)
-    assert a.read_obj_explicit(default="zz", debug=False) == "zz"
+    assert a.read_obj(default="zz", debug=False) == "zz"
 
 
 def test_load_data_from_file_not_existing(tmp_path: Path) -> None:
-    data = store.load_object_from_file_explicit(tmp_path / "x", default=None, debug=False)
+    data = store.load_object_from_file(tmp_path / "x", default=None, debug=False)
     assert data is None
 
-    data = store.load_object_from_file_explicit(tmp_path / "x", default="DEFAULT", debug=False)
+    data = store.load_object_from_file(tmp_path / "x", default="DEFAULT", debug=False)
     assert data == "DEFAULT"
 
 
 def test_load_data_from_file_empty(tmp_path: Path) -> None:
     locked_file = tmp_path / "test"
     locked_file.write_text("", encoding="utf-8")
-    data = store.load_object_from_file_explicit(tmp_path / "x", default="DEF", debug=False)
+    data = store.load_object_from_file(tmp_path / "x", default="DEF", debug=False)
     assert data == "DEF"
 
 
@@ -101,7 +101,7 @@ def test_load_data_not_locked(tmp_path: Path) -> None:
     locked_file = tmp_path / "locked_file"
     locked_file.write_text("[1, 2]", encoding="utf-8")
 
-    store.load_object_from_file_explicit(locked_file, default=None, debug=False)
+    store.load_object_from_file(locked_file, default=None, debug=False)
     assert store.have_lock(locked_file) is False
 
 
@@ -109,7 +109,7 @@ def test_load_data_from_file_locking(tmp_path: Path) -> None:
     locked_file = tmp_path / "locked_file"
     locked_file.write_text("[1, 2]", encoding="utf-8")
 
-    data = store.load_object_from_file_explicit(locked_file, default=None, lock=True, debug=False)
+    data = store.load_object_from_file(locked_file, default=None, lock=True, debug=False)
     assert data == [1, 2]
     assert store.have_lock(locked_file) is True
 
@@ -124,7 +124,7 @@ def test_load_data_from_not_permitted_file(tmp_path: Path) -> None:
     os.chmod(str(locked_file), 0o200)
 
     with pytest.raises(MKGeneralException) as e:
-        store.load_object_from_file_explicit(locked_file, default=None, debug=False)
+        store.load_object_from_file(locked_file, default=None, debug=False)
     assert str(locked_file) in f"{e!s}"
     assert "Permission denied" in f"{e!s}"
 
@@ -133,7 +133,7 @@ def test_load_data_from_file_dict(tmp_path: Path) -> None:
     locked_file = tmp_path / "test"
     locked_file.write_bytes(repr({"1": 2, "ä": "ß"}).encode())
 
-    data = store.load_object_from_file_explicit(locked_file, default=None, debug=False)
+    data = store.load_object_from_file(locked_file, default=None, debug=False)
     assert isinstance(data, dict)
     assert data["1"] == 2
     assert isinstance(data["ä"], str)
@@ -162,7 +162,7 @@ def test_save_data_to_file_pretty(tmp_path: Path) -> None:
     }
     store.save_object_to_file(path, data, pprint_value=True)
     assert Path(path).read_text().count("\n") > 4
-    assert store.load_object_from_file_explicit(path, default=None, debug=False) == data
+    assert store.load_object_from_file(path, default=None, debug=False) == data
 
 
 def test_save_data_to_file_not_pretty(tmp_path: Path) -> None:
@@ -178,7 +178,7 @@ def test_save_data_to_file_not_pretty(tmp_path: Path) -> None:
     }
     store.save_object_to_file(path, data)
     assert Path(path).read_text().count("\n") == 1
-    assert store.load_object_from_file_explicit(path, default=None, debug=False) == data
+    assert store.load_object_from_file(path, default=None, debug=False) == data
 
 
 @pytest.mark.parametrize(
@@ -193,7 +193,7 @@ def test_save_data_to_file_not_pretty(tmp_path: Path) -> None:
 def test_save_data_to_file(tmp_path: Path, data: None | Sequence[str | int]) -> None:
     path = tmp_path / "lala"
     store.save_object_to_file(path, data)
-    assert store.load_object_from_file_explicit(path, default=None, debug=False) == data
+    assert store.load_object_from_file(path, default=None, debug=False) == data
 
 
 @pytest.mark.parametrize(
@@ -205,14 +205,14 @@ def test_save_data_to_file(tmp_path: Path, data: None | Sequence[str | int]) -> 
 def test_save_text_to_file(tmp_path: Path, data: str) -> None:
     path = tmp_path / "lala"
     store.save_text_to_file(path, data)
-    assert store.load_text_from_file_explicit(path, debug=False) == data
+    assert store.load_text_from_file(path, debug=False) == data
 
 
 def test_load_object_from_file_null_bytes(tmp_path: Path) -> None:
     """A file containing null bytes should return default, not crash with SyntaxError."""
     path = tmp_path / "corrupted.mk"
     path.write_bytes(b"\x00" * 100)
-    data = store.load_object_from_file_explicit(path, default=[], debug=False)
+    data = store.load_object_from_file(path, default=[], debug=False)
     assert data == []
 
 
@@ -222,11 +222,11 @@ def test_load_world_writable_file(tmp_path: Path, permissions: int) -> None:
     store.save_text_to_file(path, "")
     os.chmod(path, permissions)
     with pytest.raises(MKGeneralException, match="Refusing to read world writable file"):
-        store.load_bytes_from_file_explicit(path, default=b"", debug=False)
+        store.load_bytes_from_file(path, default=b"", debug=False)
     with pytest.raises(MKGeneralException, match="Refusing to read world writable file"):
-        store.load_object_from_file_explicit(path, default=object(), debug=False)
+        store.load_object_from_file(path, default=object(), debug=False)
     with pytest.raises(MKGeneralException, match="Refusing to read world writable file"):
-        store.load_text_from_file_explicit(path, default="", debug=False)
+        store.load_text_from_file(path, default="", debug=False)
 
 
 @pytest.mark.parametrize(
@@ -238,7 +238,7 @@ def test_load_world_writable_file(tmp_path: Path, permissions: int) -> None:
 def test_save_bytes_to_file(tmp_path: Path, data: bytes) -> None:
     path = tmp_path / "lala"
     store.save_bytes_to_file(path, data)
-    assert store.load_bytes_from_file_explicit(path, default=b"", debug=False) == data
+    assert store.load_bytes_from_file(path, default=b"", debug=False) == data
 
 
 def test_save_mk_file(tmp_path: Path) -> None:
@@ -784,11 +784,11 @@ def test_load_object_from_unreadable_file_reraises_in_debug_mode(tmp_path: Path)
     (unreadable := tmp_path / "directory").mkdir()
 
     with pytest.raises(IsADirectoryError):
-        store.load_object_from_file_explicit(unreadable, default=None, debug=True)
+        store.load_object_from_file(unreadable, default=None, debug=True)
 
 
 def test_load_object_from_unreadable_file_names_the_file(tmp_path: Path) -> None:
     (unreadable := tmp_path / "directory").mkdir()
 
     with pytest.raises(MKGeneralException, match="directory"):
-        store.load_object_from_file_explicit(unreadable, default=None, debug=False)
+        store.load_object_from_file(unreadable, default=None, debug=False)

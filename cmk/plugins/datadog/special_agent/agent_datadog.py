@@ -30,7 +30,7 @@ import pydantic
 import requests
 from dateutil import parser as dateutil_parser
 
-from cmk.ccc.store import load_text_from_file_explicit, save_text_to_file
+from cmk.ccc.store import load_text_from_file, save_text_to_file
 from cmk.ec.syslog import forward_to_unix_socket, SyslogMessage
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
@@ -319,7 +319,7 @@ class IDStore[TID: (str, int)]:
     def read(self) -> frozenset[TID]:
         return frozenset(
             json.loads(
-                load_text_from_file_explicit(
+                load_text_from_file(
                     self.path,
                     default="[]",
                     debug=False,

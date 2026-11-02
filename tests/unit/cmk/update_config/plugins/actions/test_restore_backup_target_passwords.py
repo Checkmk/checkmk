@@ -9,7 +9,7 @@ import pytest
 
 import cmk.update_config.plugins.actions.restore_backup_target_passwords as action_module
 from cmk.backup.utils.config import CMASystemConfig, Config, SiteConfig
-from cmk.ccc.store import load_object_from_file_explicit, save_object_to_file
+from cmk.ccc.store import load_object_from_file, save_object_to_file
 from cmk.update_config.internal import ExpiryVersion
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,7 +69,7 @@ def test_restore_action_rewrites_formspec_secret_to_password_id(
 
     _run_action()
 
-    stored = load_object_from_file_explicit(backup_mk, default={}, debug=True)
+    stored = load_object_from_file(backup_mk, default={}, debug=True)
     assert stored["targets"]["t1"]["remote"][1]["remote"]["secret"] == ("password", "secret")
 
 

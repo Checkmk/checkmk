@@ -111,7 +111,7 @@ class PlainVerificationResponse:
 
 def load_plain_verification_response(omd_root: Path) -> PlainVerificationResponse | None:
     if not (
-        raw_dump := store.load_bytes_from_file_explicit(
+        raw_dump := store.load_bytes_from_file(
             get_verification_response_file_path(omd_root), default=b"", debug=False
         )
     ):

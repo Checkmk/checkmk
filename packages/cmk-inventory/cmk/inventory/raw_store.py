@@ -56,11 +56,9 @@ def rename(
 
 
 def load_tree_from_tree_path(tree_path: TreePath, *, debug: bool) -> ImmutableTree:
-    if raw_tree := store.load_text_from_file_explicit(tree_path.path, debug=debug):
+    if raw_tree := store.load_text_from_file(tree_path.path, debug=debug):
         return deserialize_tree(json.loads(raw_tree))
-    if raw_tree := store.load_object_from_file_explicit(
-        tree_path.legacy, default=None, debug=debug
-    ):
+    if raw_tree := store.load_object_from_file(tree_path.legacy, default=None, debug=debug):
         return deserialize_tree(raw_tree)
     return ImmutableTree()
 
@@ -94,9 +92,7 @@ def archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName, *, de
         tree_path_gz.legacy.unlink(missing_ok=True)
         return
 
-    if raw_tree := store.load_object_from_file_explicit(
-        tree_path.legacy, default=None, debug=debug
-    ):
+    if raw_tree := store.load_object_from_file(tree_path.legacy, default=None, debug=debug):
         inv_paths.archive_host(host_name).mkdir(parents=True, exist_ok=True)
         store.save_text_to_file(archive_tree.path, json.dumps(raw_tree))
         tree_path.legacy.unlink(missing_ok=True)

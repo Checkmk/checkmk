@@ -1029,7 +1029,7 @@ class ABCWATOInfoStorage:
 class StandardWATOInfoStorage(ABCWATOInfoStorage):
     @override
     def read(self, file_path: Path) -> WATOFolderInfo:
-        return store.load_object_from_file_explicit(file_path, default={}, debug=False)
+        return store.load_object_from_file(file_path, default={}, debug=False)
 
     @override
     def write(self, file_path: Path, data: WATOFolderInfo) -> None:
@@ -1044,7 +1044,7 @@ class _PickleWATOInfoStorage(ABCWATOInfoStorage):
             return None
         return store.ObjectStore(
             pickle_path, serializer=store.PickleSerializer[WATOFolderInfo]()
-        ).read_obj_explicit(default={}, debug=False)
+        ).read_obj(default={}, debug=False)
 
     def _file_valid(self, pickle_path: Path, file_path: Path) -> bool:
         # The experimental file must not be older than the corresponding .wato
@@ -4049,7 +4049,7 @@ class FolderLookupCache:
         if not cache_path.exists() or cache_path.stat().st_size == 0:
             self.build()
         try:
-            return store.load_object_from_pickle_file_explicit(cache_path, default={}, debug=False)
+            return store.load_object_from_pickle_file(cache_path, default={}, debug=False)
         except (TypeError, pickle.UnpicklingError) as e:
             logger.warning(
                 "Unable to read folder_lookup_cache from disk: %(error)s", {"error": str(e)}

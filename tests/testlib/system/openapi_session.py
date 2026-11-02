@@ -182,6 +182,7 @@ class CMKOpenApiSession(requests.Session):
         self.dashboard = DashboardAPI(self)
         self.autocomplete = AutocompleteAPI(self)
         self.custom_service = CustomServiceAPI(self)
+        self.alerts = AlertsAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -2793,6 +2794,70 @@ class CustomServiceAPI(BaseAPI):
     def delete(self, configuration_name: str, missing_ok: bool = False) -> None:
         response = self.session.delete(
             f"objects/custom_service/{configuration_name}", api_version=APIVersion.UNSTABLE
+        )
+        if missing_ok and response.status_code == HTTPStatus.NOT_FOUND:
+            return
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class AlertsAPI(BaseAPI):
+    """Alerts on custom services; only registered at ``APIVersion.UNSTABLE``.
+
+    An alert is addressed by its configuration name. The "Add alert" wizard derives it from
+    the alert name, e.g. ``alert_1`` from "Alert #1".
+    """
+
+    def create(
+        self,
+        configuration_name: str,
+        alert_name: str,
+        service_match: Mapping[str, object],
+        thresholds: Mapping[str, object],
+        conditions: Mapping[str, object] | None = None,
+    ) -> dict[str, Any]:
+        body: dict[str, object] = {
+            "configuration_name": configuration_name,
+            "alert_name": alert_name,
+            "service_match": service_match,
+            "thresholds": thresholds,
+        }
+        if conditions is not None:
+            body["conditions"] = conditions
+        response = self.session.post(
+            "domain-types/telemetry_alert/collections/all",
+            api_version=APIVersion.UNSTABLE,
+            json=body,
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        parsed = response.json()
+        if not isinstance(parsed, dict):
+            raise UnexpectedResponse(
+                response.status_code, f"expected a JSON object, got {parsed!r}"
+            )
+        return parsed
+
+    def get_all(self) -> list[dict[str, Any]]:
+        """The readable alerts; an alert whose configuration cannot be read is left out."""
+        response = self.session.get(
+            "domain-types/telemetry_alert/collections/all", api_version=APIVersion.UNSTABLE
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    def get(self, configuration_name: str) -> dict[str, Any] | None:
+        """The alert named `configuration_name`, or None if there is none.
+
+        Looked up in the collection: the REST API has no endpoint for a single alert.
+        """
+        return next((alert for alert in self.get_all() if alert["id"] == configuration_name), None)
+
+    def delete(self, configuration_name: str, missing_ok: bool = False) -> None:
+        response = self.session.delete(
+            f"objects/telemetry_alert/{configuration_name}", api_version=APIVersion.UNSTABLE
         )
         if missing_ok and response.status_code == HTTPStatus.NOT_FOUND:
             return

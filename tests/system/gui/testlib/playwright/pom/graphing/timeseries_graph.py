@@ -101,6 +101,14 @@ class TimeSeriesGraph:
         return self.root.locator(".graphing-time-series-graph__pan-zone")
 
     @property
+    def horizontal_lines(self) -> Locator:
+        """The dashed lines drawn across the plot at a fixed value, e.g. levels.
+
+        Unlike the curves, they are SVG elements, one per line.
+        """
+        return self.root.locator(".graphing-time-series-graph__horizontal-lines line")
+
+    @property
     def reset_zoom_button(self) -> Locator:
         return self.root.get_by_role("button", name="Reset zoom")
 
@@ -317,6 +325,16 @@ class GraphPanel:
         """
         row = self.legend_rows.filter(has_text=title)
         return row.locator(".graphing-graph-legend__stat").nth(list(GraphStat).index(stat))
+
+    @property
+    def legend_line_rows(self) -> Locator:
+        """One row per horizontal line or shaded region, listed in the table footer."""
+        return self.legend.locator("tfoot .graphing-graph-legend__line-row")
+
+    def legend_line_value(self, title: str) -> Locator:
+        """The value cell of the horizontal line titled exactly `title`, e.g. "Warning"."""
+        row = self.legend_line_rows.filter(has=self.page.get_by_text(title, exact=True))
+        return row.locator(".graphing-graph-legend__stat")
 
     def notice(self, message: str) -> Locator:
         """The message shown instead of data, e.g. "No metric selected"."""

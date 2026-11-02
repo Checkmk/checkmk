@@ -8,12 +8,11 @@
 """How the agent logs in to AWS.
 
 The agent logs in once per run as the "hub": with an access key or with the boto3
-default credential chain, optionally followed by one AssumeRole into a role whose
-account is then monitored.
+default credential chain. Without spokes, it monitors the account of the login.
 
-To monitor several accounts, the hub assumes a "spoke" role of the same name in each of
-them. Every spoke is exactly one AssumeRole away from the login identity: an assumed role
-cannot be combined with spokes, because that would chain roles.
+To monitor other accounts, the hub assumes a "spoke" role of the same name in each of
+them. Every spoke is exactly one AssumeRole away from the login identity, so roles are
+never chained.
 
 The spoke accounts are either listed in the rule or, for an organization, found by
 ListAccounts on every run. The hub calls ListAccounts itself, or it assumes an account list
@@ -50,17 +49,8 @@ class DefaultCredentials:
 
 
 @dataclass(frozen=True)
-class AssumedRole:
-    """The role the login assumes right away. Its account is the one monitored."""
-
-    arn: str
-    external_id: str | None = None
-
-
-@dataclass(frozen=True)
 class HubCredentials:
     login: AccessKey | DefaultCredentials
-    role: AssumedRole | None = None
     session_name: str = "checkmk"
 
 
@@ -129,25 +119,6 @@ def _assume_role(
     ), account_id
 
 
-def _create_hub_session(
-    hub: HubCredentials, region: str, config: botocore.config.Config | None
-) -> tuple[boto3.session.Session, str | None]:
-    """The hub session, and its account if the AssumeRole answer already told it."""
-    if hub.role is None:
-        return _login_session(hub.login, region), None
-    try:
-        return _assume_role(
-            _login_session(hub.login, region),
-            hub.role.arn,
-            hub.role.external_id,
-            hub.session_name,
-            region,
-            config,
-        )
-    except Exception as e:
-        raise AwsAccessError(describe_credential_failure(e))
-
-
 def _is_active(account: Mapping[str, str]) -> bool:
     # AWS replaces Status with State, which also knows PENDING_ACTIVATION and CLOSED.
     return account.get("State", account.get("Status")) == "ACTIVE"
@@ -166,14 +137,13 @@ class AwsCredentials:
 
     One base session is built, and every region shares it. Credentials are therefore
     resolved once per run instead of once per region. That costs nothing with a static
-    access key, but with AssumeRole it is one STS call instead of N, and with the boto3
-    credential provider chain it is one provider lookup instead of N. A
-    `credential_process` or IAM Roles Anywhere setup pays a subprocess or a signed HTTPS
-    round trip for each of those lookups.
+    access key, but with the boto3 credential provider chain it is one provider lookup
+    instead of N. A `credential_process` or IAM Roles Anywhere setup pays a subprocess or
+    a signed HTTPS round trip for each of those lookups.
 
     The base session is pinned to the global service region. Clients override the region
     individually, so a shared session does not force a shared region. Keeping the base
-    session in the configured global region also keeps the AssumeRole STS call inside the
+    session in the configured global region also keeps the AssumeRole STS calls inside the
     partition being monitored, which is what us-gov-* and cn-* setups need.
 
     With spoke accounts, each account gets one more session from its role, also built
@@ -187,8 +157,6 @@ class AwsCredentials:
         client_config: botocore.config.Config | None,
         spokes: SpokeAccounts | None = None,
     ) -> None:
-        if hub.role is not None and spokes is not None:
-            raise ValueError("An assumed role cannot be combined with spoke accounts")
         self._hub = hub
         self._spokes = spokes
         self._global_service_region = global_service_region
@@ -203,13 +171,11 @@ class AwsCredentials:
         The sessions of spoke accounts come from open_account().
         """
         if self._session is None:
-            self._session, self._account_id = _create_hub_session(
-                self._hub, self._global_service_region, self._client_config
-            )
+            self._session = _login_session(self._hub.login, self._global_service_region)
         return self._session
 
     def session_account_id(self) -> str:
-        """The account of session(): the login's account, or the role's with an assumed role.
+        """The account of session(), the login's account.
 
         At most one STS call per run.
         """
@@ -217,7 +183,6 @@ class AwsCredentials:
             # The session is built inside the try on purpose. It does not resolve
             # credentials, but it does read the shared config, so a missing AWS_PROFILE or
             # an unparsable config file raises here rather than at the client call below.
-            # With an assumed role, building it already tells the account.
             session = self.session()
             if (account_id := self._account_id) is None:
                 with CLIENT_LOCK:
@@ -288,7 +253,6 @@ class AwsCredentials:
 
     def _spoke_account(self, account_id: str, spokes: SpokeAccounts) -> AwsAccount:
         try:
-            # Without an assumed role, session() is the login identity itself.
             login = self.session()
             partition = login.get_partition_for_region(self._global_service_region)
             session, assumed_account_id = _assume_role(

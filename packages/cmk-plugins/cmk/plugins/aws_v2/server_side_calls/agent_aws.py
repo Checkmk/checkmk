@@ -16,11 +16,6 @@ class AccessKey(BaseModel):
     secret_access_key: Secret
 
 
-class AssumeRole(BaseModel):
-    role_arn_id: str
-    external_id: str | None = None
-
-
 class AccountList(BaseModel):
     account_ids: list[str]
     role_name: str
@@ -81,7 +76,6 @@ ServiceSelection = (
 class AwsParams(BaseModel):
     auth: (
         tuple[Literal["access_key"], AccessKeyLogin]
-        | tuple[Literal["sts"], AssumeRole]
         | tuple[Literal["none"], DefaultCredentials | None]
     )
     global_service_region: str = "default"
@@ -109,20 +103,14 @@ def _service_from_formspec_name(formspec_name: str) -> str:
     return "lambda" if formspec_name == "aws_lambda" else formspec_name
 
 
-def _auth_args(auth: AccessKey | AssumeRole | DefaultCredentials | None) -> list[str | Secret]:
+def _auth_args(auth: AccessKey | DefaultCredentials | None) -> list[str | Secret]:
     if isinstance(auth, AccessKey):
         return ["--access-key-identity", auth.access_key_id, "--secret-id", auth.secret_access_key]
-    if isinstance(auth, AssumeRole):
-        args: list[str | Secret] = ["--assume-role", "--role-arn", auth.role_arn_id]
-        if auth.external_id:
-            args += ["--external-id", auth.external_id]
-        return args
     return []
 
 
-def _account_args(login: AccessKey | AssumeRole | DefaultCredentials | None) -> list[str]:
-    # Only the logins without a role can monitor several accounts.
-    if not isinstance(login, AccessKeyLogin | DefaultCredentials):
+def _account_args(login: AccessKeyLogin | DefaultCredentials | None) -> list[str]:
+    if login is None:
         return []
     accounts = login.accounts[1]
     if isinstance(accounts, AccountList):

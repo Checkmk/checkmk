@@ -40,7 +40,6 @@ from .config import (
 )
 from .credentials import (
     AccessKey,
-    AssumedRole,
     AwsAccount,
     AwsCredentials,
     CLIENT_LOCK,
@@ -292,17 +291,6 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     # Each of these decides which accounts the run monitors.
     account_modes = parser.add_mutually_exclusive_group()
     account_modes.add_argument(
-        "--assume-role",
-        action="store_true",
-        help="Use STS AssumeRole to assume a different IAM role. It cannot be combined with"
-        " --account or --organization: their roles are assumed directly from the credentials,"
-        " not through another role.",
-    )
-    parser.add_argument("--role-arn", help="The ARN of the IAM role to assume")
-    parser.add_argument(
-        "--external-id", help="Unique identifier to assume a role in another account"
-    )
-    account_modes.add_argument(
         "--account",
         dest="accounts",
         action="append",
@@ -464,8 +452,6 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     args = parser.parse_args(argv)
     if args.access_key_identity and args.secret is None and args.secret_id is None:
         parser.error("--access-key-identity requires --secret or --secret-id")
-    if args.assume_role and not args.role_arn:
-        parser.error("--assume-role requires --role-arn")
     spokes = args.accounts or args.organization
     if spokes and not args.spoke_role_name:
         parser.error("--account and --organization require --spoke-role-name")
@@ -663,8 +649,7 @@ def _hub_credentials_from_args(args: argparse.Namespace) -> HubCredentials:
         if args.access_key_identity
         else DefaultCredentials()
     )
-    role = AssumedRole(args.role_arn, args.external_id or None) if args.assume_role else None
-    return HubCredentials(login, role, role_session_name(os.environ.get("OMD_SITE")))
+    return HubCredentials(login, role_session_name(os.environ.get("OMD_SITE")))
 
 
 def _spoke_accounts_from_args(args: argparse.Namespace) -> SpokeAccounts | None:

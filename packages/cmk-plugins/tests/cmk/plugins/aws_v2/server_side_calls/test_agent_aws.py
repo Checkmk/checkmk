@@ -38,19 +38,6 @@ def test_access_key_is_passed_as_secret() -> None:
     ]
 
 
-def test_role_is_assumed_with_its_external_id() -> None:
-    arguments = _arguments(auth=("sts", {"role_arn_id": "my_role", "external_id": "my_id"}))
-
-    assert arguments == [
-        "--assume-role",
-        "--role-arn",
-        "my_role",
-        "--external-id",
-        "my_id",
-        *_HOST_ARGS,
-    ]
-
-
 def test_proxy_password_is_passed_as_secret() -> None:
     arguments = _arguments(
         proxy_details={

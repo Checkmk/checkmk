@@ -10,7 +10,6 @@ import pytest
 from cmk.plugins.aws_v2.special_agent.config import AwsAccessError
 from cmk.plugins.aws_v2.special_agent.credentials import (
     AccessKey,
-    AssumedRole,
     AwsCredentials,
     DefaultCredentials,
     HubCredentials,
@@ -26,8 +25,6 @@ from cmk.testlib.aws_v2.fake_sts import (
     MANAGEMENT_ACCOUNT,
     NO_LIST_KEY_ID,
     ORGANIZATION_ACCOUNT_NAMES,
-    ROLE,
-    ROLE_ACCOUNT,
     temporary_key_id,
 )
 
@@ -53,41 +50,6 @@ def test_no_role_makes_no_assume_role_call(fake_sts: FakeSts) -> None:
     _session_account_id(HubCredentials(AccessKey("AKIAHUB", "secret")))
 
     assert fake_sts.assume_role_calls == []
-
-
-@pytest.mark.usefixtures("fake_sts")
-def test_access_key_with_assumed_role_ends_in_the_role_account() -> None:
-    hub = HubCredentials(AccessKey("AKIAHUB", "secret"), AssumedRole(ROLE))
-
-    assert _session_account_id(hub) == ROLE_ACCOUNT
-
-
-@pytest.mark.usefixtures("fake_sts")
-def test_default_credentials_with_assumed_role_end_in_the_role_account(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "AKIAENV")
-    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "secret")
-
-    assert (
-        _session_account_id(HubCredentials(DefaultCredentials(), AssumedRole(ROLE))) == ROLE_ACCOUNT
-    )
-
-
-def test_role_is_assumed_with_its_arn_and_external_id(fake_sts: FakeSts) -> None:
-    _session_account_id(
-        HubCredentials(AccessKey("AKIAHUB", "secret"), AssumedRole(ROLE, "tenant-42"))
-    )
-
-    [call] = fake_sts.assume_role_calls
-    assert (call.params["RoleArn"], call.params["ExternalId"]) == (ROLE, "tenant-42")
-
-
-def test_role_without_external_id_omits_it(fake_sts: FakeSts) -> None:
-    _session_account_id(HubCredentials(AccessKey("AKIAHUB", "secret"), AssumedRole(ROLE)))
-
-    [call] = fake_sts.assume_role_calls
-    assert "ExternalId" not in call.params
 
 
 SPOKES = SpokeAccounts(["333333333333", "444444444444"], "CheckmkMonitoring")

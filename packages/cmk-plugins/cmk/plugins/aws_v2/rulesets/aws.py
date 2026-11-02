@@ -368,32 +368,6 @@ def configuration_access_key() -> Mapping[str, DictElement]:
     }
 
 
-def _assume_role() -> Mapping[str, DictElement]:
-    return {
-        "role_arn_id": DictElement(
-            parameter_form=String(
-                title=Title("The ARN of the IAM role to assume"),
-                help_text=Help("The Amazon Resource Name (ARN) of the role to assume."),
-                field_size=FieldSize.LARGE,
-                custom_validate=(validators.LengthInRange(min_value=1),),
-            ),
-            required=True,
-        ),
-        "external_id": DictElement(
-            parameter_form=String(
-                title=Title("External ID"),
-                help_text=Help(
-                    "A unique identifier that might be required when you assume a role in another "
-                    "account. If the administrator of the account to which the role belongs provided "
-                    "you with an external ID, then provide that value in the External ID parameter. "
-                ),
-                field_size=FieldSize.LARGE,
-                custom_validate=(validators.LengthInRange(min_value=1),),
-            ),
-        ),
-    }
-
-
 def _accounts() -> Mapping[str, DictElement]:
     return {
         "accounts": DictElement(
@@ -553,15 +527,11 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                     "<tt>~/.aws</tt> of the site user, and the instance profile or EKS Pod Identity "
                     "when Checkmk runs on AWS. Recommended on AWS, because AWS renews the "
                     "instance profile and EKS Pod Identity credentials itself.<br>"
-                    "The default AWS credentials can be combined with an IAM role. The agent then "
-                    "assumes this role and monitors the account the role belongs to. The AWS "
-                    "CloudTrail log shows these calls with the session name "
-                    "<tt>checkmk-&lt;site&gt;</tt>.<br>"
-                    "To assume a role with an access key, choose <b>Access key</b>, then "
-                    "<b>Explicit list of account IDs</b> under <b>Accounts</b>, and enter the "
-                    "account and the name of the role.<br>"
-                    "Only the choices without an IAM role can monitor a list of accounts: each "
-                    "account role must be assumed directly from the credentials."
+                    "To monitor through an IAM role, choose <b>Explicit list of account IDs</b> "
+                    "under <b>Accounts</b>, and enter the account and the name of the role. The "
+                    "agent then assumes the role in that account. The AWS CloudTrail log shows "
+                    "these calls with the session name "
+                    "<tt>checkmk-&lt;site&gt;</tt>."
                 ),
                 elements=[
                     CascadingSingleChoiceElement(
@@ -575,11 +545,6 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                         name="none",
                         title=Title("Default AWS credentials"),
                         parameter_form=Dictionary(elements=_accounts()),
-                    ),
-                    CascadingSingleChoiceElement(
-                        name="sts",
-                        title=Title("Default AWS credentials + IAM role"),
-                        parameter_form=Dictionary(elements=_assume_role()),
                     ),
                 ],
                 prefill=DefaultValue("access_key"),

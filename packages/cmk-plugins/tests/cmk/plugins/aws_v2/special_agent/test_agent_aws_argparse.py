@@ -160,11 +160,6 @@ def test_account_without_spoke_role_name_is_rejected() -> None:
         parse_arguments([*REQUIRED_ARGS, "--account", "333333333333"])
 
 
-def test_account_with_assumed_role_is_rejected() -> None:
-    with pytest.raises(SystemExit):
-        parse_arguments([*ACCOUNT_ARGS, "--assume-role", "--role-arn", "arn:aws:iam::1:role/Other"])
-
-
 @pytest.mark.parametrize(
     "spoke_args",
     [
@@ -175,11 +170,6 @@ def test_account_with_assumed_role_is_rejected() -> None:
 def test_spoke_options_without_account_are_rejected(spoke_args: Sequence[str]) -> None:
     with pytest.raises(SystemExit):
         parse_arguments([*REQUIRED_ARGS, *spoke_args])
-
-
-def test_assume_role_without_role_arn_is_rejected() -> None:
-    with pytest.raises(SystemExit):
-        parse_arguments([*REQUIRED_ARGS, "--assume-role"])
 
 
 ORGANIZATION_ARGS = [*REQUIRED_ARGS, "--organization", "--spoke-role-name", "CheckmkMonitoring"]
@@ -208,10 +198,6 @@ def test_organization_options_are_parsed() -> None:
     [
         pytest.param([*REQUIRED_ARGS, "--organization"], id="without role name"),
         pytest.param([*ORGANIZATION_ARGS, "--account", "333333333333"], id="with account"),
-        pytest.param(
-            [*ORGANIZATION_ARGS, "--assume-role", "--role-arn", "arn:aws:iam::1:role/Other"],
-            id="with assumed role",
-        ),
         pytest.param(
             [*ACCOUNT_ARGS, "--exclude-account", "333333333333"], id="exclusion without it"
         ),

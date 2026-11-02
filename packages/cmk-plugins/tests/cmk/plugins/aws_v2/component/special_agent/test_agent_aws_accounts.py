@@ -22,8 +22,6 @@ from cmk.testlib.aws_v2.fake_sts import (
     NO_LIST_KEY_ID,
     NOT_ENABLED_REGION,
     ORGANIZATION_ACCOUNT_NAMES,
-    ROLE,
-    ROLE_ACCOUNT,
     SCP_DENIED_ACCOUNT,
     SignedRequest,
     temporary_key_id,
@@ -361,14 +359,6 @@ def test_single_account_leaves_only_the_agent_info_on_the_rule_host(
         "<<<aws_v2_agent_info:sep(0)>>>",
         f'{{"status": "ok", "account": "{HUB_ACCOUNT}"}}',
     ]
-
-
-def test_assumed_role_account_gets_its_own_host(
-    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    args = [*SINGLE_ACCOUNT_ARGS, "--assume-role", "--role-arn", ROLE]
-
-    assert _hosts(fake_sts, monkeypatch, capsys, args) == {None, ROLE_ACCOUNT}
 
 
 def _two_regions_with_s3(parallel_jobs: int) -> list[str]:

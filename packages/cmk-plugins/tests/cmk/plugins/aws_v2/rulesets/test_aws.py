@@ -102,7 +102,7 @@ def _account_list_elements() -> Mapping[str, DictElement[object]]:
     return _account_choice_elements("list")
 
 
-def test_only_logins_without_a_role_offer_an_account_list() -> None:
+def test_every_login_offers_an_account_list() -> None:
     offering = {
         name
         for name, form in _login_forms().items()

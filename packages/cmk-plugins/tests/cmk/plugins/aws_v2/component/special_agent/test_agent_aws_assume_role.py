@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.plugins.aws_v2.special_agent.agent_aws_v2 import agent_aws_main, parse_arguments
-from cmk.testlib.aws_v2.fake_sts import FakeSts, ROLE, TEMPORARY_KEY_ID
+from cmk.testlib.aws_v2.fake_sts import FakeSts, ROLE, ROLE_ACCOUNT, TEMPORARY_KEY_ID
 
 # Keyless: no --access-key-identity and no --secret, so boto3 walks the provider chain.
 KEYLESS_ARGS = [
@@ -24,33 +24,18 @@ KEYLESS_ARGS = [
 ACCESS_KEY_ARGS = [*KEYLESS_ARGS, "--access-key-identity", "AKIAHUB", "--secret", "secret"]
 
 
-def test_role_options_reach_the_assume_role_call(fake_sts: FakeSts) -> None:
-    role_args = ["--assume-role", "--role-arn", ROLE, "--external-id", "tenant-42"]
-
-    exit_code = agent_aws_main(parse_arguments([*ACCESS_KEY_ARGS, *role_args, "--connection-test"]))
-
-    assert exit_code == 0
-    [call] = fake_sts.assume_role_calls
-    assert (call.params["RoleArn"], call.params["ExternalId"]) == (ROLE, "tenant-42")
+# The role of ROLE_ACCOUNT, named like the fake's ROLE.
+ONE_ACCOUNT_ARGS = ["--account", ROLE_ACCOUNT, "--spoke-role-name", "CheckmkMonitoring"]
 
 
 def test_empty_external_id_is_not_sent(fake_sts: FakeSts) -> None:
-    role_args = ["--assume-role", "--role-arn", ROLE, "--external-id", ""]
+    role_args = [*ONE_ACCOUNT_ARGS, "--spoke-external-id", ""]
 
     exit_code = agent_aws_main(parse_arguments([*ACCESS_KEY_ARGS, *role_args, "--connection-test"]))
 
     assert exit_code == 0
     [call] = fake_sts.assume_role_calls
-    assert "ExternalId" not in call.params
-
-
-def test_role_arn_without_assume_role_flag_assumes_nothing(fake_sts: FakeSts) -> None:
-    exit_code = agent_aws_main(
-        parse_arguments([*ACCESS_KEY_ARGS, "--role-arn", ROLE, "--connection-test"])
-    )
-
-    assert exit_code == 0
-    assert fake_sts.assume_role_calls == []
+    assert (call.params["RoleArn"], "ExternalId" in call.params) == (ROLE, False)
 
 
 def test_assume_role_names_the_session_after_the_site(
@@ -59,9 +44,7 @@ def test_assume_role_names_the_session_after_the_site(
     monkeypatch.setenv("OMD_SITE", "mysite")
 
     exit_code = agent_aws_main(
-        parse_arguments(
-            [*ACCESS_KEY_ARGS, "--assume-role", "--role-arn", ROLE, "--connection-test"]
-        )
+        parse_arguments([*ACCESS_KEY_ARGS, *ONE_ACCOUNT_ARGS, "--connection-test"])
     )
 
     assert exit_code == 0
@@ -75,9 +58,7 @@ def test_assume_role_outside_a_site_names_the_session_checkmk(
     monkeypatch.delenv("OMD_SITE", raising=False)
 
     exit_code = agent_aws_main(
-        parse_arguments(
-            [*ACCESS_KEY_ARGS, "--assume-role", "--role-arn", ROLE, "--connection-test"]
-        )
+        parse_arguments([*ACCESS_KEY_ARGS, *ONE_ACCOUNT_ARGS, "--connection-test"])
     )
 
     assert exit_code == 0
@@ -100,9 +81,7 @@ def test_one_assume_role_serves_every_region(
         "AKIAHUB",
         "--secret",
         "secret",
-        "--assume-role",
-        "--role-arn",
-        ROLE,
+        *ONE_ACCOUNT_ARGS,
         "--service",
         "sns",
         *region_args,

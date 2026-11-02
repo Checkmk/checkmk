@@ -9,6 +9,7 @@ from http import HTTPStatus
 import pytest
 
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.gui.monitor.services._api._list_services import _handle_list_all_services
 from cmk.gui.monitor.services._models import HostState, ServiceFilter
 from cmk.livestatus_client.testing import MockLiveStatusConnection
@@ -221,3 +222,21 @@ def test_list_all_services_rejects_a_site_that_does_not_exist(
         )
 
     assert resp.json["detail"] == "Site 'gone' does not exist."
+
+
+def test_list_all_services_restricts_every_query_to_a_user_who_cannot_see_all(
+    logged_in_wsgi_app: WebTestAppForCMK,
+    with_user: tuple[UserId, str],
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table("services", [])
+    # The total, the rows and, because of the search, the matched count.
+    for _ in range(3):
+        mock_livestatus.expect_query(
+            ["GET services", f"AuthUser: {with_user[0]}"], match_type="loose"
+        )
+
+    with mock_livestatus:
+        logged_in_wsgi_app.post(
+            _URL, params=json.dumps({"q": "CPU"}), headers=_HEADERS, status=HTTPStatus.OK
+        )

@@ -28,6 +28,7 @@ _LICENSING_NOTIFICATION_SETTINGS_FILE = "etc/check_mk/licensing.d/notification_s
 
 _LICENSING_LOG_FILE = "var/log/licensing.log"
 _CA_CERTIFICATE_FILE = "share/check_mk/licensing/ca-certificate.pem"
+_TRIAL_MODE_SELECTION_FILE = "var/check_mk/trial_mode_selection.json"
 
 
 def get_licensing_dir(omd_root: Path) -> Path:
@@ -104,3 +105,7 @@ def get_licensing_log_file_path(omd_root: Path) -> Path:
 
 def get_ca_certificate_file_path(omd_root: Path) -> Path:
     return omd_root / _CA_CERTIFICATE_FILE
+
+
+def get_trial_mode_selection_file_path(omd_root: Path) -> Path:
+    return omd_root / _TRIAL_MODE_SELECTION_FILE

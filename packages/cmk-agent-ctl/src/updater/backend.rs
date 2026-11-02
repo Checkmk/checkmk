@@ -724,10 +724,10 @@ impl WritableUpdater {
         self.state.save(&self.state_path)
     }
 
-    /// Prove the registration of the Python agent updater to the site of the
-    /// matching connection, on a host without an update source. The
-    /// site answers the status request only after it has authorized the UUID
-    /// of the connection, which then becomes the update source.
+    /// Prove the registration of the Python agent updater to the sites of its
+    /// candidate connections in turn, on a host without an update source.
+    /// The first connection whose site accepts the proof becomes the update
+    /// source.
     ///
     /// # Returns
     ///
@@ -736,7 +736,7 @@ impl WritableUpdater {
     /// # Errors
     ///
     /// If the state file of the Python updater fails to load, if no connection
-    /// matches its registration, or if the site does not accept the proof.
+    /// is a candidate, or if no site accepts the proof.
     pub fn migrate(
         &mut self,
         registry: &Registry,
@@ -748,37 +748,27 @@ impl WritableUpdater {
         let Some(registration) = LegacyRegistration::load(&self.python_updater_state_path)? else {
             return Ok(None);
         };
-        let selected = connection::migration_candidate(registry, &registration, api)?;
-        let uuid = selected.connection.trust.uuid;
-        let proof = registration.migration_proof(selected.site_id, &uuid);
-        let status = self
-            .request_status(
-                api,
-                &selected,
-                Some(agent_receiver_api::LegacyRegistrationBody {
-                    host_name: &registration.host_name,
-                    proof: &proof,
-                }),
-            )
-            .with_context(|| format!("Could not migrate {registration}"))?;
-        if let UpdateAvailabilityStatus::Unavailable = status {
-            bail!(
-                "Could not migrate {registration}: {} serves no agent updates",
-                selected.site_id
+        let mut failures = Vec::new();
+        for selected in connection::migration_candidates(registry, &registration, api)? {
+            if let Err(error) = self.prove(api, &selected, &registration) {
+                failures.push(format!("{error:#}"));
+                continue;
+            }
+            let source = UpdateSource {
+                uuid: selected.connection.trust.uuid,
+                available: true,
+            };
+            log::info!(
+                "Migrated the registration of the Python agent updater to {}, connection {} \
+                 is the update source",
+                selected.site_id,
+                source.uuid
             );
+            self.state.source = Some(source.clone());
+            self.state.save(&self.state_path)?;
+            return Ok(Some(source));
         }
-        let source = UpdateSource {
-            uuid,
-            available: true,
-        };
-        log::info!(
-            "Migrated the registration of the Python agent updater to {}, connection {uuid} \
-             is the update source",
-            selected.site_id
-        );
-        self.state.source = Some(source.clone());
-        self.state.save(&self.state_path)?;
-        Ok(Some(source))
+        bail!("Could not migrate {registration}: {}", failures.join("; "))
     }
 }
 
@@ -1328,6 +1318,29 @@ impl Updater {
         selected: &connection::UpdateConnection<'_>,
     ) -> AnyhowResult<UpdateAvailabilityStatus> {
         self.request_status(api, selected, None)
+    }
+
+    /// The site answers the status request only after it has authorized the
+    /// UUID of `selected`.
+    fn prove(
+        &self,
+        api: &impl agent_receiver_api::AgentUpdate,
+        selected: &connection::UpdateConnection<'_>,
+        registration: &LegacyRegistration,
+    ) -> AnyhowResult<()> {
+        let proof = registration.migration_proof(selected.site_id, &selected.connection.trust.uuid);
+        let status = self.request_status(
+            api,
+            selected,
+            Some(agent_receiver_api::LegacyRegistrationBody {
+                host_name: &registration.host_name,
+                proof: &proof,
+            }),
+        )?;
+        if let UpdateAvailabilityStatus::Unavailable = status {
+            bail!("{} serves no agent updates", selected.site_id);
+        }
+        Ok(())
     }
 
     fn request_status(
@@ -3937,6 +3950,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         host_names: Vec<(uuid::Uuid, &'static str)>,
         unreachable: Vec<uuid::Uuid>,
         refusal: Option<http::StatusCode>,
+        refusals: Vec<(uuid::Uuid, http::StatusCode)>,
         status_bodies: RefCell<Vec<serde_json::Value>>,
         registration_queries: RefCell<usize>,
     }
@@ -3957,6 +3971,11 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
                 refusal: Some(status),
                 ..self
             }
+        }
+
+        fn refusing_through(mut self, source: &UpdateSource, status: http::StatusCode) -> Self {
+            self.refusals.push((source.uuid, status));
+            self
         }
 
         fn status_bodies(&self) -> Vec<serde_json::Value> {
@@ -3998,14 +4017,20 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         fn update_status(
             &self,
             _base_url: &reqwest::Url,
-            _connection: &TrustedConnection,
+            connection: &TrustedConnection,
             body: &agent_receiver_api::UpdateStatusBody<'_>,
         ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse, agent_receiver_api::ApiError>
         {
             self.status_bodies
                 .borrow_mut()
                 .push(serde_json::to_value(body).unwrap());
-            match self.refusal {
+            let refusal = self.refusal.or_else(|| {
+                self.refusals
+                    .iter()
+                    .find(|(uuid, _)| *uuid == connection.uuid)
+                    .map(|(_, code)| *code)
+            });
+            match refusal {
                 Some(code) => Err(refused(code)),
                 None => Ok(offered(None)),
             }
@@ -4156,25 +4181,134 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         assert_eq!(source, Some(some_source()));
         assert_eq!(api.status_bodies().len(), 1);
+        assert_eq!(*api.registration_queries.borrow(), 1);
     }
 
-    /// CMK-39502: a connection to another site is no candidate, although that
-    /// site knows the host.
+    /// CMK-39502: the site of the matching connection refuses the proof, and no
+    /// other site gets it.
     #[test]
-    fn test_migrate_not_through_another_site() {
+    fn test_migrate_through_a_refusing_matching_connection_only() {
         let dir = tempfile::TempDir::new().unwrap();
         write_python_updater_state(&dir);
-        let api = MigrationApi::knowing(&[(&other_source(), "myhost")]);
+        let api = MigrationApi::knowing(&[(&some_source(), "myhost"), (&other_source(), "myhost")])
+            .refusing_through(&some_source(), http::StatusCode::FORBIDDEN);
+        let registry = registry_with_the_connections_of(&[
+            (OTHER_SITE, &other_source()),
+            (SOURCE_SITE, &some_source()),
+        ]);
+
+        assert!(writable_in(&dir, UpdateState::default())
+            .migrate(&registry.registry, &api)
+            .is_err());
+        assert_eq!(api.status_bodies().len(), 1);
+    }
+
+    /// CMK-39502: the site of the matching connection does not answer, so the
+    /// connection may still be the one, and no other site gets the proof.
+    #[test]
+    fn test_migrate_without_an_answer_from_the_matching_site() {
+        let dir = tempfile::TempDir::new().unwrap();
+        write_python_updater_state(&dir);
+        let api = MigrationApi {
+            unreachable: vec![some_source().uuid],
+            ..MigrationApi::knowing(&[(&other_source(), "myhost")])
+        };
+        let registry = registry_with_the_connections_of(&[
+            (OTHER_SITE, &other_source()),
+            (SOURCE_SITE, &some_source()),
+        ]);
 
         let error = writable_in(&dir, UpdateState::default())
-            .migrate(
-                &registry_with_the_connections_of(&[(OTHER_SITE, &other_source())]).registry,
-                &api,
-            )
+            .migrate(&registry.registry, &api)
             .unwrap_err();
 
-        assert!(format!("{error:#}").contains("no registered connection is to server/site"));
+        assert!(format!("{error:#}")
+            .contains("could not ask server/site for the host name of its connection"));
         assert!(api.status_bodies().is_empty());
+    }
+
+    /// CMK-39502, TC-AU-052: without a connection to the server and the site
+    /// of the registration, a site that knows the host gets the proof for its
+    /// own site and the UUID of its connection. This covers a Python updater
+    /// registered with the central site and a controller registered with a
+    /// remote site.
+    #[test]
+    fn test_migrate_through_another_site_that_knows_the_host() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let state_path = write_python_updater_state(&dir);
+        let api = MigrationApi::knowing(&[(&other_source(), "myhost")]);
+
+        let source = writable_in(&dir, UpdateState::default())
+            .migrate(
+                &registry_with_the_connections_of(&[("remote-server/remote", &other_source())])
+                    .registry,
+                &api,
+            )
+            .unwrap();
+
+        let proof = LegacyRegistration::load(&state_path)
+            .unwrap()
+            .unwrap()
+            .migration_proof(
+                &crate::site_spec::SiteID::from_str("remote-server/remote").unwrap(),
+                &other_source().uuid,
+            );
+        assert_eq!(source, Some(other_source()));
+        assert_eq!(
+            api.status_bodies()[0]["legacy_registration"]["proof"],
+            proof
+        );
+    }
+
+    fn third_source() -> UpdateSource {
+        UpdateSource {
+            uuid: uuid::Uuid::from_str("2da62f8f-9e4a-4b1b-8b3a-1c1a0b0f1a03").unwrap(),
+            available: true,
+        }
+    }
+
+    /// CMK-39502: the sites that know the host get the proof in turn, until one
+    /// accepts it.
+    #[test]
+    fn test_migrate_tries_the_sites_that_know_the_host_in_turn() {
+        let dir = tempfile::TempDir::new().unwrap();
+        write_python_updater_state(&dir);
+        let api =
+            MigrationApi::knowing(&[(&other_source(), "myhost"), (&third_source(), "myhost")])
+                .refusing_through(&other_source(), http::StatusCode::FORBIDDEN);
+        let registry = registry_with_the_connections_of(&[
+            ("b-server/b", &third_source()),
+            ("a-server/a", &other_source()),
+        ]);
+
+        let source = writable_in(&dir, UpdateState::default())
+            .migrate(&registry.registry, &api)
+            .unwrap();
+
+        assert_eq!(source, Some(third_source()));
+        assert_eq!(api.status_bodies().len(), 2);
+    }
+
+    /// CMK-39502: the error of a migration that no site accepts names every site.
+    #[test]
+    fn test_migrate_refused_by_every_site() {
+        let dir = tempfile::TempDir::new().unwrap();
+        write_python_updater_state(&dir);
+        let api =
+            MigrationApi::knowing(&[(&other_source(), "myhost"), (&third_source(), "myhost")])
+                .refusing(http::StatusCode::FORBIDDEN);
+        let registry = registry_with_the_connections_of(&[
+            ("a-server/a", &other_source()),
+            ("b-server/b", &third_source()),
+        ]);
+
+        let error = writable_in(&dir, UpdateState::default())
+            .migrate(&registry.registry, &api)
+            .unwrap_err();
+
+        let error = format!("{error:#}");
+        assert!(error.contains("request to a-server/a failed"), "{error}");
+        assert!(error.contains("request to b-server/b failed"), "{error}");
     }
 
     /// CMK-39502: the site of the registration knows the host under another

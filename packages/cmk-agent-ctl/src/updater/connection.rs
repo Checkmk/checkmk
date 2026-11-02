@@ -54,47 +54,58 @@ pub fn select(registry: &Registry, uuid: uuid::Uuid) -> Option<UpdateConnection<
     candidates(registry).find(|candidate| candidate.connection.trust.uuid == uuid)
 }
 
-/// The connection that `registration` was made for, which the migration
-/// proves it through: its server and site are the ones of the
-/// registration, verbatim, as the controller passes them on to the Python
-/// updater (CMK-18329), and its site has registered this host under the same
-/// name.
+/// The connections that the migration proves `registration` through, in turn.
+///
+/// The connection that the registration was made for is the only one: its
+/// server and site are the ones of the registration, verbatim, as the
+/// controller passes them on to the Python updater (CMK-18329), and its site
+/// has registered this host under the same name. Without it, every connection
+/// whose site has registered this host under that name is one, for a Python
+/// updater that was registered by hand with another site of the setup.
 ///
 /// # Errors
 ///
-/// If no connection matches. The error says what each asked site answered.
-pub(super) fn migration_candidate<'a>(
+/// If no connection is a candidate. The error says what each asked site
+/// answered.
+pub(super) fn migration_candidates<'a>(
     registry: &'a Registry,
     registration: &LegacyRegistration,
     api: &impl RegistrationStatusV2,
-) -> AnyhowResult<UpdateConnection<'a>> {
+) -> AnyhowResult<Vec<UpdateConnection<'a>>> {
     let (matching, others): (Vec<_>, Vec<_>) = candidates(registry).partition(|candidate| {
         candidate.site_id.server == registration.server
             && candidate.site_id.site == registration.site
     });
-    if matching.is_empty() {
-        if others.is_empty() {
-            bail!(
-                "Could not migrate {registration}: the controller has no registered connection \
-                 to migrate it through"
-            );
-        }
+    if matching.is_empty() && others.is_empty() {
         bail!(
-            "Could not migrate {registration}: no registered connection is to {}/{}",
-            registration.server,
-            registration.site
+            "Could not migrate {registration}: the controller has no registered connection to \
+             migrate it through"
         );
     }
-    let (knowing, not_knowing): (Vec<_>, Vec<_>) = host_names(matching, api)
+    let mut answers = host_names(matching, api);
+    // A matching connection whose site did not answer may be the one, and a
+    // source chosen without it would stay.
+    if !answers
+        .iter()
+        .any(|(_, answer)| knows_the_host(answer, registration))
+        && answers.iter().all(|(_, answer)| answer.is_ok())
+    {
+        answers.extend(host_names(others, api));
+    }
+    let (mut knowing, not_knowing): (Vec<_>, Vec<_>) = answers
         .into_iter()
         .partition(|(_, answer)| knows_the_host(answer, registration));
-    match knowing.into_iter().next() {
-        Some((candidate, _)) => Ok(candidate),
-        None => bail!(
+    if knowing.is_empty() {
+        bail!(
             "Could not migrate {registration}: {}",
             described(&not_knowing)
-        ),
+        );
     }
+    knowing.sort_by_key(|(candidate, _)| candidate.site_id.to_string());
+    Ok(knowing
+        .into_iter()
+        .map(|(candidate, _)| candidate)
+        .collect())
 }
 
 /// A connection, and the host name that its site has registered its UUID for.

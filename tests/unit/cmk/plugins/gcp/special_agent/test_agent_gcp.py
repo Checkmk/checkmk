@@ -321,11 +321,6 @@ class RaisingMonitoringClient(FakeMonitoringClient):
         raise self._exception
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=RuntimeError,
-    reason="Crash report b1b2a1a0-ce74-11f1-b453-77faed89378a: RuntimeError 499 CANCELLED",
-)
 def test_time_series_reports_cancelled_requests_instead_of_crashing(
     capsys: pytest.CaptureFixture[str],
 ) -> None:

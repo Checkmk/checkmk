@@ -39,7 +39,6 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.rulesets.v1 import form_specs as fs
 from cmk.rulesets.v1 import Help, Label, Title
-from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.paths import default_config_dir, omd_root
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames
@@ -138,7 +137,7 @@ class ConfigDomainExperimentalFlags(ABCConfigDomain):
         pass
 
     @override
-    def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def create_artifacts(self, settings: SerializedSettings | None = None) -> list[str]:
         # Move the final flags in place in the create artifacts stage, so consumers
         # can use them in the activate stage.
         staged = self.config_file(site_specific=False)
@@ -160,13 +159,13 @@ class ConfigDomainExperimentalFlags(ABCConfigDomain):
     @override
     def activate(
         self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
-    ) -> ConfigurationWarnings:
+    ) -> list[str]:
         if not self._flags_changed:
             return []
         self._flags_changed = False
         return self._restart_site()
 
-    def _restart_site(self) -> ConfigurationWarnings:
+    def _restart_site(self) -> list[str]:
         completed_process = subprocess.run(
             ["omd", "restart"],
             stdin=subprocess.DEVNULL,

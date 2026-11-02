@@ -7,6 +7,7 @@ py_library(
     testonly = True,
     srcs = ["conftest.py"],
     tags = [
+        "deballast-keep=//packages/cmk-flags:gui",  # loaded by name as a GuiFeaturePlugin
         "deballast-keep=//packages/cmk-maps:registration",  # FIXME: test exercises feature specific code
     ],
     visibility = ["//tests/unit/cmk/gui:__subpackages__"],
@@ -17,6 +18,7 @@ py_library(
         "//cmk/gui/utils:middle",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:password_store",
+        "//packages/cmk-flags:gui",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-maps:registration",
         "//tests/testlib/unit",
@@ -195,7 +197,6 @@ py_cmk_test(
         "//cmk/gui:session_context",
         "//cmk/gui:visual_link",
         "//cmk/gui/data_source",
-        "//cmk/gui/experimental_flags",
         "//cmk/gui/form_specs",
         "//cmk/gui/global_settings",
         "//cmk/gui/graphing",

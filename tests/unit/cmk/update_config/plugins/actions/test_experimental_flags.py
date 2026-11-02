@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from cmk.flags import CONFIG_FILENAME
-from cmk.gui.experimental_flags import global_config
+from cmk.flags.gui import global_config
 from cmk.update_config.plugins.actions import experimental_flags  # noqa: F401
 from cmk.update_config.registry import update_action_registry
 

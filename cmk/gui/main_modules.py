@@ -84,25 +84,33 @@ def load_feature_plugins(module_paths: Iterable[str], ctx: RegistrationContext) 
             plugin.register(ctx)
 
 
-# Available in every edition, so it is listed for every one of them.
+# Available in every edition, so they are listed for every one of them.
+_EXPERIMENTAL_FLAGS_REGISTRATION = "cmk.flags.gui.registration"
 _MAPS_REGISTRATION = "cmk.maps.registration"
 
 # TODO: flatten this into Sequence[str]. For this we need to block the imports first
 _FEATURE_PLUGIN_MODULES: Mapping[Edition, Sequence[str]] = {
-    Edition.COMMUNITY: [_MAPS_REGISTRATION],
-    Edition.PRO: [_MAPS_REGISTRATION, "cmk.mcp.gui.registration"],
+    Edition.COMMUNITY: [_EXPERIMENTAL_FLAGS_REGISTRATION, _MAPS_REGISTRATION],
+    Edition.PRO: [
+        _EXPERIMENTAL_FLAGS_REGISTRATION,
+        _MAPS_REGISTRATION,
+        "cmk.mcp.gui.registration",
+    ],
     Edition.ULTIMATE: [
         "cmk.data_backend.telemetry_metrics.gui._registration_ultimate",
+        _EXPERIMENTAL_FLAGS_REGISTRATION,
         _MAPS_REGISTRATION,
         "cmk.mcp.gui.registration",
     ],
     Edition.ULTIMATEMT: [
         "cmk.data_backend.telemetry_metrics.gui._registration_ultimate",
+        _EXPERIMENTAL_FLAGS_REGISTRATION,
         _MAPS_REGISTRATION,
         "cmk.mcp.gui.registration",
     ],
     Edition.CLOUD: [
         "cmk.data_backend.telemetry_metrics.gui._registration_cloud",
+        _EXPERIMENTAL_FLAGS_REGISTRATION,
         _MAPS_REGISTRATION,
         "cmk.mcp.gui.registration",
     ],

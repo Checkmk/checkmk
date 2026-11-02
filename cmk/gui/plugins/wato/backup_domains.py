@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.paths
-from cmk.gui.experimental_flags.global_config import EXPERIMENTAL_FLAGS_STAGED_FILENAME
 from cmk.gui.i18n import _
 from cmk.gui.watolib.backup_snapshots import backup_domains
 
@@ -23,8 +22,6 @@ backup_domains.update(
                 ("file", "local.mk"),
                 ("file", "mkeventd.mk"),
                 ("file", "backup.mk"),
-                # Staged experimental flags, so that discarding changes reverts them.
-                ("file", EXPERIMENTAL_FLAGS_STAGED_FILENAME),
                 ("dir", "conf.d"),
                 ("dir", "multisite.d"),
                 ("dir", "mkeventd.d"),

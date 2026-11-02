@@ -16,7 +16,6 @@ from cmk.gui import (
     crash_reporting,
     default_permissions,
     deprecations,
-    experimental_flags,
     global_settings,
     help_menu,
     hooks,
@@ -349,12 +348,6 @@ def register(
         config_variable_registry,
         config_variable_group_registry,
         replication_path_registry,
-    )
-    experimental_flags.register(
-        config_domain_registry,
-        config_variable_registry,
-        config_variable_group_registry,
-        show_in_global_settings=experimental_flags.global_config.is_development_site(),
     )
     quick_setup_registration.register(
         automation_command_registry,

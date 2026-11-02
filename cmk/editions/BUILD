@@ -86,6 +86,7 @@ py_library(
         "//packages/cmk-ec:event",
         "//packages/cmk-ec:syslog",
         "//packages/cmk-events",
+        "//packages/cmk-flags:gui",
         "//packages/cmk-inventory:inventory",
         "//packages/cmk-inventory:plugins",
         "//packages/cmk-livestatus-client",

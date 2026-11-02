@@ -33,7 +33,7 @@ field: it fixes the type to ``bool``, defaults it to ``False``, and attaches:
     domain ..> file: activate()
     reader ..> file: load_experimental_flags()
 
-``ConfigDomainExperimentalFlags`` (``cmk/gui/experimental_flags/global_config.py``) is
+``ConfigDomainExperimentalFlags`` (``packages/cmk-flags/cmk/flags/gui/global_config.py``) is
 the only writer of both files. Every other consumer only reads ``release_flag.json``,
 through ``cmk.flags.load_experimental_flags``.
 

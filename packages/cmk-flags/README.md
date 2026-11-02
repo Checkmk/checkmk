@@ -7,9 +7,10 @@ branches without exposing it to users.
 Each flag is a field on the single `ExperimentalFlagConfig` model and is persisted as
 JSON in `$OMD_ROOT/etc/check_mk/release_flag.json`.
 
-This package owns only the flag _model_ and its loader.
-Surfacing flags in the GUI, generating site settings, and syncing them to remote
-sites live in the consuming components, not here.
+The `cmk.flags` module owns only the flag _model_ and its loader.
+The GUI integration (config domain, generated global settings, backup domain)
+lives in `cmk.flags.gui`, a separate Bazel target that `cmk.gui` discovers as a
+`GuiFeaturePlugin`.
 
 > **Legacy naming:** flags used to be called "release flags". The code is now
 > named "experimental flags", but the file (`release_flag.json`) and the
@@ -54,7 +55,7 @@ if flags.new_monitoring_views:
 ```
 
 The GUI shows the flags in the global settings only on development sites, as
-defined by `is_development_site()` in `cmk/gui/experimental_flags/global_config.py`.
+defined by `is_development_site()` in `packages/cmk-flags/cmk/flags/gui/global_config.py`.
 Flags already set in `release_flag.json` stay in effect either way.
 
 A changed flag takes effect only once it is activated, and discarding changes reverts it.

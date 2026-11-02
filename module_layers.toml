@@ -847,6 +847,19 @@ allows = [
 [components."cmk.flags"]
 allows = []
 
+# GUI integration for the experimental flags. Lives in the cmk-flags package but
+# imports cmk.gui internals (like cmk.maps.gui).
+[components."cmk.flags.gui"]
+allows = [
+  "@ccc",
+  "@plugin_apis",
+  "cmk.flags",
+  "cmk.gui",
+  "cmk.gui_plugins.internal",
+  "cmk.utils.paths",
+  "cmk.web.utils",
+]
+
 [components."cmk.gui.cmkcert"]
 allows = [
   "@ccc",
@@ -1713,6 +1726,7 @@ allows = [
   "cmk.gui",
   "cmk.inventory",
   "cmk.licensing",
+  "cmk.flags.gui",
   "cmk.maps.gui",
   "cmk.maps.rest_api",
   "cmk.maps.shared",

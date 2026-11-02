@@ -82,6 +82,7 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-ec",
+        "//packages/cmk-flags:gui",
         "//packages/cmk-maps:gui",
         "//packages/cmk-maps:rest_api",
         "//packages/cmk-maps:shared",

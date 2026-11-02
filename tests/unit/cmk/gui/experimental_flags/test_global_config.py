@@ -8,9 +8,9 @@ from collections.abc import Iterator
 import pytest
 
 from cmk.flags import ExperimentalFlagConfig
-from cmk.gui import experimental_flags
+from cmk.flags import gui as experimental_flags
+from cmk.flags.gui.global_config import is_development_site
 from cmk.gui.config import Config
-from cmk.gui.experimental_flags.global_config import is_development_site
 from cmk.gui.global_settings.pages import global_settings
 from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.watolib.config_domain_name import (

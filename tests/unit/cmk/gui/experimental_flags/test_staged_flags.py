@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 
 from cmk.flags import CONFIG_FILENAME, load_experimental_flags
-from cmk.gui.experimental_flags import global_config
-from cmk.gui.experimental_flags.global_config import (
+from cmk.flags.gui import global_config
+from cmk.flags.gui.global_config import (
     ConfigDomainExperimentalFlags,
     EXPERIMENTAL_FLAGS_STAGED_FILENAME,
 )

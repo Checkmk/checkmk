@@ -24,6 +24,28 @@ py_library(
     ],
 )
 
+py_library(
+    name = "gui",
+    srcs = glob(["cmk/flags/gui/**/*.py"]),
+    imports = ["."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":cmk-flags",
+        requirement("pydantic"),
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui/watolib",
+        "//cmk/gui/watolib:config_infra",
+        "//cmk/gui_plugins/internal",
+        "//cmk/utils:paths",
+        "//packages/cmk-ccc:store",
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-web/cmk/web/utils",
+    ],
+)
+
 _ALL = [
     "cmk-flags",
 ]
@@ -35,6 +57,7 @@ py_wheel(
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = _ALL + [
+        ":gui",
         ":py_typed",
     ],
 )
@@ -57,6 +80,6 @@ package_wheel(
 
 py_requirements_test(
     name = "requirements-test",
-    libs = _ALL,
+    libs = _ALL + [":gui"],
     requirements_in = "requirements.in",
 )

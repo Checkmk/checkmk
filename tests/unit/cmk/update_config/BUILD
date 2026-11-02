@@ -53,6 +53,7 @@ py_cmk_test(
         "//packages/cmk-backup:utils",
         "//packages/cmk-ccc:store",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-flags:gui",
         "//packages/cmk-maps:registration",
         "//packages/cmk-mkp-tool",
         "//packages/cmk-plugin-apis:discover_plugins",

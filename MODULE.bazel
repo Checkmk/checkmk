@@ -321,8 +321,8 @@ http_file(
 http_file(
     name = "otel_collector_custom_builder",
     executable = True,
-    sha256 = "80c4bc4fa2c8050adb5901ddca2fd4b4f5c7c4db77c15a3c6cb27d85375c1bc6",
-    url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv0.161.0/ocb_0.161.0_linux_amd64",
+    sha256 = "6fd899cf8794803bb0d9ea0a055fdaabd2e7e8304de3872fd9aaec3f0cd7f18c",
+    url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv0.165.0/ocb_0.165.0_linux_amd64",
 )
 
 # Configure apt for relay distro packages

@@ -70,7 +70,6 @@ def port_types(_info: str) -> list[tuple[str, str]]:
     return [(str(k), str(v)) for k, v in sorted(interface_port_types().items(), key=lambda t: t[0])]
 
 
-# Filter tables
 def _make_filter_row_bool(inventory_path: InventoryPath) -> Callable[[bool, Row], bool]:
     def keep_row(on: bool, row: Row) -> bool:
         return row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key) is on
@@ -125,8 +124,6 @@ def _bound_labels() -> tuple[str, str]:
 
 
 class _FilterNumberRange(Filter):
-    """Filter for choosing a range in which a certain integer lies"""
-
     def __init__(
         self,
         *,
@@ -344,8 +341,6 @@ def _filter_rows_with_sort_key(
 
 
 class _FilterTextRange(Filter):
-    """Filter for choosing a range two sortable texts lie in"""
-
     def __init__(
         self,
         *,
@@ -476,7 +471,6 @@ def _filter_rows_table_choice(ident: str, context: VisualContext, rows: Rows) ->
     filter_vars = context.get(ident, {})
 
     def _add_row(row: Row) -> bool:
-        # Apply filter if and only if a filter value is set
         if (value := row.get(ident)) is not None and (
             filter_key := f"{ident}_{value}"
         ) in filter_vars:
@@ -612,7 +606,7 @@ class FilterInvtableDualChoice(Filter):
             if v
         ]:
             return [row for row in rows if str(row[self._html_var]) in selection]
-        return rows  # No types selected, filter is unused
+        return rows
 
 
 class FilterInvtableVersion(_FilterTextRange):
@@ -656,7 +650,7 @@ def _find_package(
         elif not name.search(str(package["name"])):
             continue
         if not from_version and not to_version:
-            return True  # version not relevant
+            return True
         if (version := package.get("version")) is None:
             continue
         if from_version and cmp_version(str(version), from_version) == -1:

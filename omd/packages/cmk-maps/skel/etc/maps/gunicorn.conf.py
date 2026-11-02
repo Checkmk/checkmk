@@ -26,8 +26,9 @@ bind = f"unix:{omd_root}/tmp/run/maps.sock"
 
 # uvicorn ASGI worker: the app is async (SSE, httpx). gunicorn owns the process
 # lifecycle (master/worker supervision, graceful reload, pidfile, SIGUSR1 log
-# reopen); the uvicorn worker runs the actual ASGI server.
-worker_class = "uvicorn_worker.UvicornWorker"
+# reopen); the uvicorn worker runs the actual ASGI server and ends the open map
+# streams when it stops, so they do not hold up a stop, restart or reload.
+worker_class = "cmk.maps.backend.server.worker.MapsWorker"
 
 # Graceful worker-shutdown window on SIGTERM before the master force-kills them.
 # cmk-maps-server waits slightly longer than this before escalating to SIGKILL.

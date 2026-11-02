@@ -632,4 +632,6 @@ async def sse_map_states(
             event = await asyncio.wait_for(sub.queue.get(), timeout=_SESSION_RECHECK_INTERVAL)
         except TimeoutError:
             continue
+        except asyncio.QueueShutDown:
+            break
         yield event

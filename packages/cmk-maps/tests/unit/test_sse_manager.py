@@ -14,6 +14,8 @@ rather than relying on pytest-asyncio.
 
 import asyncio
 
+import pytest
+
 from cmk.fastapi.sse import SentEvent
 from cmk.maps.backend.core.sse import Subscriber, SubscriptionManager
 from cmk.maps.backend.schemas.stream import StreamMessage
@@ -120,5 +122,31 @@ def test_push_healthy_queue_does_not_flag_overflow() -> None:
         mgr.push("map1", [sub], _event("m1"))
         assert sub.overflowed is False
         assert sub.queue.get_nowait() == _event("m1")
+
+    asyncio.run(scenario())
+
+
+def test_push_to_a_closed_stream_is_dropped_without_an_overflow() -> None:
+    async def scenario() -> None:
+        mgr = SubscriptionManager()
+        sub = mgr.subscribe("map1", "a")
+        mgr.close_all()
+
+        mgr.push("map1", [sub], _event("late"))
+
+        assert sub.overflowed is False
+
+    asyncio.run(scenario())
+
+
+def test_a_stream_that_subscribes_after_the_close_is_closed_too() -> None:
+    async def scenario() -> None:
+        mgr = SubscriptionManager()
+        mgr.close_all()
+
+        sub = mgr.subscribe("map1", "a")
+
+        with pytest.raises(asyncio.QueueShutDown):
+            sub.queue.get_nowait()
 
     asyncio.run(scenario())

@@ -50,6 +50,7 @@ class Subscriber:
 class SubscriptionManager:
     def __init__(self) -> None:
         self._subscribers: dict[str, set[Subscriber]] = {}
+        self._closed = False
 
     def subscribe(
         self,
@@ -63,6 +64,9 @@ class SubscriptionManager:
             folder_scope=folder_scope,
             group_key=group_key if group_key is not None else auth_user,
         )
+        # A request accepted before the daemon began stopping can subscribe after it.
+        if self._closed:
+            sub.queue.shutdown(immediate=True)
         self._subscribers.setdefault(the_map, set()).add(sub)
         logger.debug(
             "SSE subscribe map=%(map)s user=%(user)s key=%(key)s total=%(total)d",
@@ -112,6 +116,8 @@ class SubscriptionManager:
         for sub in targets:
             try:
                 sub.queue.put_nowait(event)
+            except asyncio.QueueShutDown:
+                pass
             except asyncio.QueueFull:
                 if not sub.overflowed:
                     logger.warning(
@@ -120,6 +126,15 @@ class SubscriptionManager:
                         {"map": the_map},
                     )
                 sub.overflowed = True
+
+    def close_all(self) -> None:
+        """End every open stream at once, because the daemon is stopping."""
+        if self._closed:
+            return
+        self._closed = True
+        for subs in self._subscribers.values():
+            for sub in subs:
+                sub.queue.shutdown(immediate=True)
 
 
 manager = SubscriptionManager()

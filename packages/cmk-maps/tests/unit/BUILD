@@ -22,5 +22,6 @@ py_cmk_test(
         requirement("httpx2"),
         requirement("python-multipart"),
         requirement("starlette"),
+        requirement("uvicorn"),
     ],
 )

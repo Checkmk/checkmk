@@ -106,6 +106,7 @@ def _clear_stream_state() -> Iterator[None]:
     and per-map broadcast bookkeeping so streams don't bleed across tests."""
     yield
     manager._subscribers.clear()  # noqa: SLF001
+    manager._closed = False  # noqa: SLF001
     states._broadcast_tasks.clear()  # noqa: SLF001
     states._dead_sites_snapshots.clear()  # noqa: SLF001
 
@@ -561,6 +562,18 @@ def test_sse_releases_the_subscriber_and_stream_slot_when_the_subscriber_overflo
     free_slots = _free_stream_slots("alice")
 
     asyncio.run(_stream_map_b1(app, "alice", on_event=_overflow_the_subscribers_of_b1))
+
+    assert (
+        manager.get_subscriber_count(states._map_key("alice", "b1")),  # noqa: SLF001
+        _free_stream_slots("alice"),
+    ) == (0, free_slots)
+
+
+def test_sse_releases_the_subscriber_and_stream_slot_when_the_daemon_stops(app: FastAPI) -> None:
+    map_service.register_map("alice", MapConfig(name="b1"))
+    free_slots = _free_stream_slots("alice")
+
+    asyncio.run(_stream_map_b1(app, "alice", on_event=manager.close_all))
 
     assert (
         manager.get_subscriber_count(states._map_key("alice", "b1")),  # noqa: SLF001

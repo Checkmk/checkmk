@@ -246,8 +246,6 @@ py_requirements_test(
     name = "requirements-test",
     known_unused = [
         "gunicorn",  # started by the init.d script, not imported
-        "uvicorn",  # ASGI server run by gunicorn, not imported
-        "uvicorn-worker",  # gunicorn worker class referenced by name, not imported
     ],
     libs = [
         ":backend",

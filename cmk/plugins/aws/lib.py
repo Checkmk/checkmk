@@ -154,6 +154,7 @@ def check_aws_limits(
     for resource_key, resource_title, limit, amount, human_readable_func in parsed_region_data:
         parameter = params.get(resource_key, None)
         warn, crit = (None, None)
+        param_absolute_limit = None
         if (
             isinstance(parameter, tuple)
             and len(parameter) == 2

@@ -69,7 +69,7 @@ def _to_formspec_single_migration(
             ),
         )
 
-    if len(values[key]) == 2 and values[key][0] == "set_levels":
+    if len(values[key]) == 2 and values[key][0] in ("set_levels", "no_levels"):
         return values[key]
 
     raise ValueError(

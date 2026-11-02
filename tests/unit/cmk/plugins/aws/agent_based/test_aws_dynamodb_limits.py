@@ -61,6 +61,39 @@ def test_check_aws_dynamodb_limits_with_region_data() -> None:
     assert results[5].state == State.CRIT
 
 
+def test_check_aws_dynamodb_limits_no_levels() -> None:
+    item = "us-east-1"
+    small_read_capacity: AWSLimits = {
+        "absolute": ("aws_limit_value", 10),
+        "percentage": {"warn": 75.0, "crit": 90.0},
+    }
+    section = {
+        item: [
+            ["number_of_tables", "Number of tables", 256, 200, lambda x: f"{x} tables"],
+            ["read_capacity", "Read Capacity", 80000, 60000, lambda x: f"{x} RCU"],
+            ["write_capacity", "Write Capacity", 80000, 49990, lambda x: f"{x} WCU"],
+        ],
+    }
+
+    results = list(
+        check_aws_dynamodb_limits(
+            item,
+            {
+                "number_of_tables": ("no_levels", None),
+                "read_capacity": ("set_levels", small_read_capacity),
+                "write_capacity": ("no_levels", None),
+            },
+            section,
+        )
+    )
+
+    states = [r.state for r in results if isinstance(r, Result)]
+    assert states == [State.OK, State.CRIT, State.OK]
+    last = results[-1]
+    assert isinstance(last, Result)
+    assert "49990 WCU (of max. 80000 WCU)" in last.details
+
+
 def test_discover_aws_dynamodb_limits() -> None:
     services = list(discover_aws_dynamodb_limits(section={"us-east-1": [], "us-west-2": []}))
     assert len(services) == 2

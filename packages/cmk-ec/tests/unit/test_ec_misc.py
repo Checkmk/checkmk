@@ -5,6 +5,7 @@
 """Test different EC standalone helper functions"""
 
 import ipaddress
+import socket
 
 import pytest
 
@@ -13,6 +14,7 @@ from cmk.ec.main import (
     allowed_ip,
     create_event_from_trap,
     parse_address,
+    receive_datagram,
     replace_groups,
     unmap_ipv4_address,
 )
@@ -304,3 +306,15 @@ def test_trap_sender_becomes_the_host() -> None:
     event = create_event_from_trap([], "192.0.2.1")
 
     assert (event["host"], event["ipaddress"]) == ("192.0.2.1", "192.0.2.1")
+
+
+def test_datagram_of_largest_udp_size_is_received_completely() -> None:
+    # The largest payload of a UDP datagram over IPv4
+    message = b"x" * 65507
+    sender, receiver = socket.socketpair(socket.AF_UNIX, socket.SOCK_DGRAM)
+    with sender, receiver:
+        sender.send(message)
+
+        received, _ = receive_datagram(receiver)
+
+    assert received == message

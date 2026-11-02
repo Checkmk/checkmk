@@ -309,6 +309,16 @@ def parse_address(what: str, address: object) -> tuple[str, int]:
     return unmap_ipv4_address(address[0]), address[1]
 
 
+def receive_datagram(sock: socket.socket) -> tuple[bytes, Any]:
+    """Receives a datagram and its sender's address
+
+    The buffer holds the largest UDP payload, as recvfrom() discards the part of a
+    datagram which doesn't fit into it. E.g. cutting off a syslog message could
+    split a UTF-8 character, and then we can't parse the message anymore.
+    """
+    return sock.recvfrom(65535)
+
+
 def terminate(
     terminate_main_event: threading.Event,
     event_server: EventServer,
@@ -852,14 +862,14 @@ class EventServer(ECServerThread):
 
             # Read events from builtin syslog server
             if self._syslog_udp is not None and self._syslog_udp in readable:
-                message, address = self._syslog_udp.recvfrom(4096)
+                message, address = receive_datagram(self._syslog_udp)
                 self.process_syslog_messages(
                     [message], parse_address("syslog socket (UDP)", address)
                 )
 
             # Read events from builtin snmptrap server
             if self._snmp_trap_socket is not None and self._snmp_trap_socket in readable:
-                message, address = self._snmp_trap_socket.recvfrom(65535)
+                message, address = receive_datagram(self._snmp_trap_socket)
                 self.process_potential_event_instrumented(
                     self.create_events_from_trap(message, parse_address("SNMP trap", address))
                 )

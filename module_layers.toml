@@ -2188,6 +2188,7 @@ allows = [
   "cmk.telemetry.host_name_template",
   "cmk.telemetry.host_name_template_resolution",
   "cmk.telemetry.host_name_template_validation",
+  "cmk.telemetry.service_name_template",
   "cmk.utils.global_ident_type",
   "cmk.utils.paths",
 ]

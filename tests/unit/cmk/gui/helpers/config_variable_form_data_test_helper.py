@@ -2367,7 +2367,9 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
     "mkeventd_notify_facility": choice_cases(5, 99),
     "mkeventd_notify_remotehost": [
         CasePass("disabled", None),
-        CasePass("configured", "central.example.com"),
+        CasePass("configured", "10.1.2.3"),
+        CaseFail("host-name", "ec.example.com"),
+        CaseFail("ipv6-address", "2001:db8::1"),
         CaseFail("not-a-string", 123),
     ],
     "mkeventd_pprint_rules": CHECKBOX_CASES,

@@ -5374,14 +5374,20 @@ ConfigVariableEventConsoleNotifyContactgroup = ConfigVariable(
     need_restart=True,
 )
 
+# For the notifications that mkevent sends to a remote Event Console, via IPv4 only
+_validate_remote_event_console = HostAddressValidator(
+    allow_host_name=False, allow_ipv6_address=False, allow_empty=False
+)
+
 ConfigVariableEventConsoleNotifyRemoteHost = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_notify_remotehost",
     form_spec=lambda context: OptionalChoice(  # noqa: ARG005
         parameter_form=String(
-            label=Label("Host running Event Console"),
+            label=Label("IPv4 address of remote Event Console"),
             prefill=DefaultValue(""),
+            custom_validate=[_validate_remote_event_console],
         ),
         title=Title("Send notifications to remote Event Console"),
         help_text=Help(
@@ -6043,13 +6049,7 @@ def form_spec() -> DictionaryExtended:
                         "If you set this parameter then the notifications will be sent via "
                         "syslog/UDP (port 514) to a remote Event Console or syslog server."
                     ),
-                    custom_validate=[
-                        HostAddressValidator(
-                            allow_host_name=False,
-                            allow_ipv6_address=False,  # mkevent sends via IPv4 only
-                            allow_empty=False,
-                        )
-                    ],
+                    custom_validate=[_validate_remote_event_console],
                 )
             ),
         },

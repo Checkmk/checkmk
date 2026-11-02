@@ -2,7 +2,7 @@
 
 /// file: test-system-agent-updates.groovy
 
-/// Runs tests/system/agent_updates/. The job starts a sibling container on the host docker
+/// Runs non-free/tests/system/agent_updates/. The job starts a sibling container on the host docker
 /// daemon, so it runs on a classic build node rather than in a k8s pod.
 void main() {
     check_job_parameters([
@@ -78,6 +78,7 @@ void main() {
                         distro: distro,
                         branch_name: setup_values.safe_branch_name,
                         make_target: make_target,
+                        run_tests_script: "non-free/tests/run_tests.sh",
                         test_filter: params.TEST_FILTER,
                         faked_artifacts: fake_artifacts,
                         timeout: 60,

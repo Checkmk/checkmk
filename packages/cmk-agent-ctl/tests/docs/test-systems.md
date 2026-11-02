@@ -29,7 +29,7 @@ flowchart LR
 | Bazel test sandbox             | the Rust and Python unit tests, the Rust integration tests        |
 | Wine in the Bazel sandbox      | the Windows test binaries of the controller and the Windows agent |
 | Test container without systemd | the multisite and singlesite suites                               |
-| Test container with systemd    | `tests/system/agent_updates/`                                     |
+| Test container with systemd    | `non-free/tests/system/agent_updates/`                            |
 | Windows build nodes            | the Windows agent and controller builds, with their tests         |
 
 <!-- TODO: add the virtual machine for cases that need kernel enforcement, and Windows end to end, once it exists. -->
@@ -61,7 +61,7 @@ the private cgroup namespace, and cgroup v2.
 The command is the same as in CI:
 
 ```bash
-tests/run_tests.sh test-system-agent-updates-docker
+non-free/tests/run_tests.sh test-system-agent-updates-docker
 ```
 
 These environment variables select what is tested:
@@ -84,8 +84,8 @@ before it could log anything.
 To look around in the container yourself, open a shell in it:
 
 ```bash
-tests/run_tests.sh test-system-agent-updates-docker-debug
+non-free/tests/run_tests.sh test-system-agent-updates-docker-debug
 ```
 
 systemd runs as PID 1 in that shell's container, so `systemctl` and `journalctl` work.
-`tests/run_tests.sh test-system-agent-updates` runs the suite from there.
+`non-free/tests/run_tests.sh test-system-agent-updates` runs the suite from there.

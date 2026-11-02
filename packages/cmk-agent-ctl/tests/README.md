@@ -27,8 +27,8 @@ at the repository root.
 | Integration | The built controller: CLI, pull mode, status                                          | `tests/test_cli.rs`, `tests/test_pull.rs`, `tests/test_status.rs`, helpers in `tests/common/` | `//packages/cmk-agent-ctl:cmk-agent-ctl-lib-external`                       |
 | Integration | The Rust unit and integration tests above, cross-built for Windows and run under Wine | as above                                                                                      | `//packages/cmk-agent-ctl:cmk-agent-ctl-tests-wine`, tagged `manual`        |
 | Integration | The `install-agent` mode, with stand-ins for `dpkg` and `rpm`                         | `tests/scripts/smoke-install-agent.sh`                                                        | `//packages/cmk-agent-ctl:smoke_install_agent`                              |
-| System      | The deployment of the site's agent package on a host with systemd                     | `tests/system/agent_updates/`                                                                 | `tests/run_tests.sh test-system-agent-updates-docker`                       |
-| System      | Privileged install step: trust anchors, unit lifetime, privileges, update permission  | `tests/system/agent_updates/install_step/`                                                    | `tests/run_tests.sh test-system-agent-updates-docker`                       |
+| System      | The deployment of the site's agent package on a host with systemd                     | `non-free/tests/system/agent_updates/`                                                        | `non-free/tests/run_tests.sh test-system-agent-updates-docker`              |
+| System      | Privileged install step: trust anchors, unit lifetime, privileges, update permission  | `non-free/tests/system/agent_updates/install_step/`                                           | `non-free/tests/run_tests.sh test-system-agent-updates-docker`              |
 | System      | Registration and status against real sites                                            | `tests/system/multisite/agents/`, `tests/system/multisite/controller_site_interactions/`      | `tests/run_tests.sh test-system-multisite-docker`                           |
 
 Several other system suites install the agent as a prerequisite, through the helpers in
@@ -50,7 +50,7 @@ bazel test //packages/cmk-agent-ctl:cmk-agent-ctl-tests-wine   # Windows, under 
 they run on, so they run in a container:
 
 ```bash
-tests/run_tests.sh test-system-agent-updates-docker
+non-free/tests/run_tests.sh test-system-agent-updates-docker
 ```
 
 The suite needs a host that runs systemd and that it may change. The `-docker` target provides

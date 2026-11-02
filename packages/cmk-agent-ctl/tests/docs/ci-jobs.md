@@ -48,7 +48,7 @@ flowchart TD
 | Job                                             | What concerns the controller                                         | Where               |
 | :---------------------------------------------- | :------------------------------------------------------------------- | :------------------ |
 | `cv/test-gerrit-single`, stage "All unit tests" | the Linux Rust tests and the Python unit tests around the controller | Kubernetes pod      |
-| `cv/test-system-agent-updates`                  | the suite `tests/system/agent_updates/`                              | classic Docker node |
+| `cv/test-system-agent-updates`                  | the suite `non-free/tests/system/agent_updates/`                     | classic Docker node |
 | `winagt-build-cmk-agent-ctl`                    | builds the controller and runs its Rust tests on Windows             | Windows node        |
 | `cv/winagt-test-build`                          | builds the Windows agent, `watest` included                          | Windows node        |
 
@@ -83,7 +83,7 @@ None of these jobs runs with faked artifacts. In the Pro jobs, the cases that ne
 edition skip themselves.
 
 The nightly build chain of the Pro edition also runs `test-system-agent-updates`, the suite
-`tests/system/agent_updates/`, twice: on `ubuntu-24.04` for the baked deb and on `almalinux-10`
+`non-free/tests/system/agent_updates/`, twice: on `ubuntu-24.04` for the baked deb and on `almalinux-10`
 for the baked rpm. The baked package is the same in every edition that bakes, so one edition
 suffices. The job runs on a classic Docker node, because its test container boots systemd. The
 heavy trigger does not run it.

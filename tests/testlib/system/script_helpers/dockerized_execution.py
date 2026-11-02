@@ -173,7 +173,7 @@ def execute_tests_in_container(
                 This container runs systemd as PID 1. Start the test of your choice, for example:
 
                 Run the agent update system tests:
-                    tests/run_tests.sh test-system-agent-updates
+                    non-free/tests/run_tests.sh test-system-agent-updates
 
                 Inspect the units the agent package deploys:
                     systemctl status cmk-agent-ctl-daemon.service check-mk-agent.socket

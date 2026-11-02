@@ -58,7 +58,6 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-system-azure                       Run system tests for azure (ultimate edition)
   test-system-oauth                       Run system tests for the oauth authorization server (pro edition)
   test-system-multisite                   Run multisite system tests
-  test-system-agent-updates               Run system tests for agent updates (needs a running systemd)
   test-system-update-community            Run update tests for community edition
   test-system-update-cross-edition-community-to-ultimate
   test-system-update-cross-edition-community-to-pro
@@ -356,13 +355,6 @@ test-system-multisite() {
         "$(realpath "$SCRIPT_DIR/system/multisite")"
 }
 
-# Requires a running systemd, so use the -docker variant unless you know what you are doing.
-test-system-agent-updates() {
-    _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/system/agent_updates")" \
-        --session-timeout 3600
-}
-
 test-extension-compatibility() {
     _pytest -vv "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/extension_compatibility")"
@@ -443,7 +435,6 @@ test-system-redfish-docker() { _system-tests-docker test-system-redfish; }
 test-system-otel-docker() { _system-tests-docker test-system-otel; }
 test-system-azure-docker() { _system-tests-docker test-system-azure; }
 test-system-multisite-docker() { _system-tests-docker test-system-multisite; }
-test-system-agent-updates-docker() { _system-tests-docker-systemd test-system-agent-updates; }
 test-system-update-community-docker() { _system-tests-docker test-system-update-community; }
 test-system-update-cross-edition-community-to-ultimate-docker() { _system-tests-docker test-system-update-cross-edition-community-to-ultimate; }
 test-system-update-cross-edition-community-to-pro-docker() { _system-tests-docker test-system-update-cross-edition-community-to-pro; }
@@ -462,7 +453,6 @@ test-extension-compatibility-docker() { _system-tests-docker test-extension-comp
 # Debug variants
 test-system-singlesite-docker-debug() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" debug; }
 test-system-multisite-docker-debug() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" debug; }
-test-system-agent-updates-docker-debug() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" --systemd debug; }
 container-debug-docker() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" debug; }
 
 # Siteless test -docker variants

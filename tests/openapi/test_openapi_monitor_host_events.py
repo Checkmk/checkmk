@@ -17,9 +17,12 @@ from cmk.gui.monitor.hosts._api._events import (
     _SECONDS_PER_DAY,
 )
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.testlib.unit.gui.openapi_monitoring import site_configurations
+from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 _SITE_ID = "NO_SITE"
+_OTHER_SITE_ID = "remote"
 
 _HOSTNAME = "web-server-01"
 
@@ -79,13 +82,16 @@ def _expected_since(days: int = _DEFAULT_TIME_WINDOW_DAYS) -> int:
 
 
 def _expect_host_exists(
-    mock_livestatus: MockLiveStatusConnection, *, auth_user: UserId | None = None
+    mock_livestatus: MockLiveStatusConnection,
+    *,
+    auth_user: UserId | None = None,
+    site: str = _SITE_ID,
 ) -> None:
     # A user without "See all host and services" makes sites.live() add an AuthUser line.
     restriction = [] if auth_user is None else [f"AuthUser: {auth_user}"]
     mock_livestatus.expect_query(
         ["GET hosts", "Columns: name", f"Filter: name = {_HOSTNAME}", "Limit: 1", *restriction],
-        sites=[_SITE_ID],
+        sites=[site],
     )
 
 
@@ -95,6 +101,7 @@ def _expect_event_query(
     service_name: str | None = None,
     since: int | None = None,
     limit: int = _DEFAULT_LIMIT,
+    site: str = _SITE_ID,
 ) -> None:
     service_filter = (
         [] if service_name is None else [f"Filter: service_description = {service_name}"]
@@ -114,7 +121,7 @@ def _expect_event_query(
             "OrderBy: time desc",
             f"Limit: {limit + 1}",
         ],
-        sites=[_SITE_ID],
+        sites=[site],
     )
 
 
@@ -340,6 +347,27 @@ class TestMonitorHostEvents:
             resp = clients.MonitorHosts.get_events(_HOSTNAME, site_id=_SITE_ID)
 
         assert resp.json["events"][0]["state_info"] == "SOFT"
+
+    @time_machine.travel(_NOW)
+    def test_only_the_named_site_is_asked_for_the_events(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        set_config: SetConfig,
+    ) -> None:
+        # The queries are expected on the named site only; one reaching another site fails.
+        mock_livestatus.add_table("hosts", _HOSTS, site=_OTHER_SITE_ID)
+        mock_livestatus.add_table("log", [], site=_OTHER_SITE_ID)
+        _expect_host_exists(mock_livestatus, site=_OTHER_SITE_ID)
+        _expect_event_query(mock_livestatus, site=_OTHER_SITE_ID)
+
+        with (
+            set_config(sites=site_configurations([_SITE_ID, _OTHER_SITE_ID, "local"])),
+            mock_livestatus(),
+        ):
+            resp = clients.MonitorHosts.get_events(_HOSTNAME, site_id=_OTHER_SITE_ID)
+
+        assert resp.status_code == HTTPStatus.OK
 
 
 class TestMonitorHostEventsVisibility:

@@ -5350,6 +5350,22 @@ class AlertClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def preview_data(
+        self,
+        service_match: Mapping[str, Any],
+        requested_time_range: Mapping[str, int],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/preview_data/invoke",
+            body={
+                "service_match": dict(service_match),
+                "requested_time_range": dict(requested_time_range),
+            },
+            expect_ok=expect_ok,
+        )
+
 
 class PagetypeTopicClient(RestApiClient):
     domain: DomainType = "pagetype_topic"

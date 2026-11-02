@@ -297,6 +297,7 @@ _WATEST_QEMU_TIERS = [
         ],
         data = [
             "watest/qemu-excluded-tests.txt",
+            "watest/watest-qemu.cmd",
             "watest/watest-qemu-share.ps1",
             ":watest-windows",
             ":watest_data",

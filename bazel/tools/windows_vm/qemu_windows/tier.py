@@ -4,19 +4,21 @@
 """Runs a *-qemu test tier's payload in a Windows test VM.
 
 A tier's runner (qemu_test, bazel/rules/xcomp/qemu_test.bzl) stages what its
-payload needs into a Stage, with a task.cmd, and ends with run(), which
-copies the stage into the guest as C:\\bzl-NAME-<pid>-<time> and runs task.cmd
-there in the guest's autologon console session, as the Administrator with
-the elevated token (session.run_in_session): run-as spawns and COM services
-such as Windows Update need that session, and the guest agent itself runs as
-LocalSystem in session 0.
+payload needs into a Stage, with the script that runs it, and ends with
+run(), which copies the stage into the guest as C:\\bzl-NAME-<pid>-<time> and
+runs the script there in the guest's autologon console session, as the
+Administrator with the elevated token (session.run_in_session): run-as
+spawns and COM services such as Windows Update need that session, and the
+guest agent itself runs as LocalSystem in session 0.
 
-task.cmd runs in that directory, with its path in QEMU_GDIR and its name,
-unique per run, in QEMU_RID. Its exit code (ERRORLEVEL at its end, or exit /b
-N) is the result: 0 passes, anything else fails, including the NTSTATUS of a
-crash. It must not call plain `exit`, which would end the wrapper that
-records the result. Its output is printed once it has finished. The stage is
-deleted once it is in the guest: task.cmd can hold credentials.
+The script, a .cmd or a .ps1 that Windows PowerShell runs, runs in that
+directory, with its path in QEMU_GDIR and its name, unique per run, in
+QEMU_RID. Its exit code (ERRORLEVEL at its end, exit /b N, or a .ps1's
+exit N) is the result: 0 passes, anything else fails, including the
+NTSTATUS of a crash. A .cmd must not call plain `exit`, which would end the
+wrapper that records the result. Its output is printed once it has
+finished. The stage is deleted once it is in the guest: the script can hold
+credentials.
 
 Every test gets its own VM: the saved state of the Server Core test image
 (windows_vm_state.bzl), resumed on a throwaway disk layer in TEST_TMPDIR
@@ -28,7 +30,7 @@ Environment:
                       saved state, the host CPU fingerprint that state is
                       keyed on, the VM's size and the image's Eval expiry
   TEST_TIMEOUT        set by Bazel: the test's timeout in seconds (the
-                      target's timeout, or --test_timeout). task.cmd gets
+                      target's timeout, or --test_timeout). The script gets
                       what the VM's start and the staging leave of it, less
                       TEARDOWN.
 """
@@ -39,8 +41,8 @@ import shutil
 import sys
 import tarfile
 import time
-from collections.abc import Sequence
-from pathlib import Path
+from collections.abc import Mapping, Sequence
+from pathlib import Path, PureWindowsPath
 
 from qemu_windows import process, state
 from qemu_windows.errors import VmError
@@ -52,8 +54,8 @@ from qemu_windows.stage import Stage
 # imports this module.
 _STARTED = time.monotonic()
 
-# What run() keeps of Bazel's timeout after task.cmd's share: to end a
-# task.cmd that ran out of time, print its output so far and end the VM,
+# What run() keeps of Bazel's timeout after the script's share: to end a
+# script that ran out of time, print its output so far and end the VM,
 # before Bazel's SIGTERM.
 TEARDOWN = 60.0
 
@@ -62,10 +64,17 @@ def run(
     name: str,
     stage: Stage,
     *,
+    script: str,
+    args: Sequence[str] = (),
+    env: Mapping[str, str] | None = None,
     collect: Sequence[str] = (),
 ) -> int:
-    """Runs the stage's task.cmd in the guest: the test's exit code.
+    """Runs the stage's script in the guest: the test's exit code.
 
+    script: the stage path of the .cmd or .ps1 to run, with args.
+    args: go into qemu-task.cmd as given: quote one with spaces or & | < >,
+      and avoid ^, which call doubles even in quotes; % expands, as in env.
+    env: variables to set for it; values can use QEMU_GDIR and QEMU_RID.
     collect: files of QEMU_GDIR to copy into the test's undeclared outputs.
     """
     # The payload's output before the verdict that follows it; a Bazel
@@ -77,32 +86,49 @@ def run(
             _vm,
             guest,
         ):
-            return _run(guest, stage.root, rid, collect)
+            return _run(guest, stage.root, rid, wrapper(rid, script, args, env or {}), collect)
     except VmError as e:
         sys.stderr.write(f"error: {e}\n")
         return 1
 
 
 def payload_timeout(test_timeout: float, elapsed: float) -> float:
-    """Seconds task.cmd gets elapsed s into a test with Bazel's
+    """Seconds the script gets elapsed s into a test with Bazel's
     test_timeout: the rest, less TEARDOWN."""
     return max(test_timeout - elapsed - TEARDOWN, 0.0)
+
+
+def wrapper(rid: str, script: str, args: Sequence[str], env: Mapping[str, str]) -> str:
+    """qemu-task.cmd, which runs script in C:\\rid with env: its exit code is
+    the script's, as that of the wrapper's last command."""
+    gdir = rf"C:\{rid}"
+    path = rf"{gdir}\{PureWindowsPath(script)}"
+    command = (
+        f'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "{path}"'
+        if script.endswith(".ps1")
+        else f'call "{path}"'
+    )
+    return "\n".join(
+        [
+            "@echo off",
+            f'set "QEMU_RID={rid}"',
+            f'set "QEMU_GDIR={gdir}"',
+            *(f'set "{name}={value}"' for name, value in env.items()),
+            f'cd /d "{gdir}"',
+            " ".join([command, *args]),
+        ]
+    )
 
 
 def _run(
     guest: Guest,
     stage: Path,
     rid: str,
+    task: str,
     collect: Sequence[str],
 ) -> int:
     gdir = rf"C:\{rid}"
-    environment = [f"set QEMU_RID={rid}", f"set QEMU_GDIR={gdir}"]
-    # The task's working directory and variables. Its exit code is that of
-    # the last command, the call.
-    Stage(stage).write(
-        "qemu-task.cmd",
-        "\n".join(["@echo off", *environment, f"cd /d {gdir}", rf"call {gdir}\task.cmd"]),
-    )
+    Stage(stage).write("qemu-task.cmd", task)
     try:
         _put_stage(guest, stage, gdir)
         timeout = payload_timeout(
@@ -112,7 +138,7 @@ def _run(
             output = run_in_session(guest, rf"{gdir}\qemu-task.cmd", timeout)
         except SessionError as e:
             sys.stdout.write(e.log)
-            sys.stderr.write(f"error: task.cmd: {e}\n")
+            sys.stderr.write(f"error: qemu-task.cmd: {e}\n")
             return 1
         sys.stdout.write(output)
         return 0

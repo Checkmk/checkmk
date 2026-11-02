@@ -6,6 +6,7 @@
 # mypy: disable-error-code="type-arg"
 
 
+import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.agent_based.v2 import Metric, Result, State
@@ -107,6 +108,24 @@ def test_cron_job_status_time_outputs() -> None:
             "kube_cron_job_status_since_completion",
             "kube_cron_job_status_since_schedule",
         }
+    )
+
+
+@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4980")
+def test_cron_job_status_last_successful_completion_in_the_future() -> None:
+    latest_job = CronJobLatestJobFactory.build()
+    cron_job_status = CronJobStatusFactory.build(last_successful_time=Timestamp(6.0))
+
+    check_result = list(
+        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)  # noqa: SLF001
+    )
+
+    assert (
+        Result(
+            state=State.UNKNOWN,
+            summary="Last successful completion is 4 seconds in the future (check the system time)",
+        )
+        in check_result
     )
 
 

@@ -53,7 +53,6 @@ AGENT PLUGIN TESTS
 SYSTEM TESTS (local / -docker variant available for each)
   test-system-singlesite                  Run single site system tests locally
   test-system-singlesite-k8s              Run single site system tests (not requires_non_root_user)
-  test-system-singlesite-non-root         Run single site system tests (requires_non_root_user)
   test-system-redfish                     Run system tests for redfish
   test-system-mk-oracle                   Run system tests for the mk_oracle agent plugins
   test-system-otel                        Run system tests for otel (ultimate edition)
@@ -314,12 +313,6 @@ test-system-singlesite-k8s() {
         -m "not requires_non_root_user" --session-timeout 9000
 }
 
-test-system-singlesite-non-root() {
-    _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/system/singlesite")" \
-        -m requires_non_root_user --session-timeout 600
-}
-
 test-system-redfish() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/system/redfish")" \
@@ -455,7 +448,6 @@ _dockerable-test-docker() {
 # System test -docker variants
 test-system-singlesite-docker() { _system-tests-docker test-system-singlesite; }
 test-system-singlesite-k8s-docker() { _system-tests-docker test-system-singlesite-k8s; }
-test-system-singlesite-non-root-docker() { _system-tests-docker test-system-singlesite-non-root; }
 test-system-redfish-docker() { _system-tests-docker test-system-redfish; }
 test-system-otel-docker() { _system-tests-docker test-system-otel; }
 test-system-azure-docker() { _system-tests-docker test-system-azure; }

@@ -30,7 +30,6 @@ void main() {
         "test-system-singlesite-cloud",
         "test-system-singlesite-pro",
         "test-system-singlesite-ultimatemt",
-        "test-system-singlesite-single-node",
         "test-system-plugins",
         "test-system-plugins-piggyback",
         "test-system-relay",

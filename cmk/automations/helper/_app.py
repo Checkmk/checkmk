@@ -77,7 +77,8 @@ class _State:
         self.last_reload_at = time_right_before_reload
 
     def reload_if_required(self) -> bool:
-        """Reload the configuration if the cache reports a newer change than our last reload.
+        """Reload the configuration if the cache reports a newer change than our last reload, or
+        that changes may have gone unnoticed.
 
         Returns whether a reload happened. Raises on failure.
         """

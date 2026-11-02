@@ -27,7 +27,10 @@ py_binary(
 
 py_cmk_test(
     name = "unit",
-    size = "small",
+    size = "medium",
     srcs = glob(["tests/*.py"]),
-    deps = [":bazel_devserver"],
+    deps = [
+        ":bazel_devserver",
+        requirement("watchdog"),
+    ],
 )

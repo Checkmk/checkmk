@@ -2988,6 +2988,7 @@
   "pkg:pypi/vcs-versioning@2.5.0": "MIT",
   "pkg:pypi/vcs-versioning@2.6.0": "MIT",
   "pkg:pypi/watchdog@6.0.0": "Apache-2.0",
+  "pkg:pypi/watchdog@7.0.0": "Apache-2.0",
   "pkg:pypi/websocket-client@1.9.0": "Apache-2.0",
   "pkg:pypi/websocket-client@1.9.2": "Apache-2.0",
   "pkg:pypi/websockets@16.1.1": "BSD-3-Clause",

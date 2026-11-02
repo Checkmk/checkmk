@@ -1321,17 +1321,17 @@ actionable if you know what breaks.
    `automations.py:check_mk_local_automation_serialized` selects `HelperExecutor` over
    `SubprocessExecutor` — and that helper calls `reload_if_required` before every automation
    (`automations/helper/_app.py`), reloading when the watcher's last detected change is newer than
-   the last reload; the watcher's schedule covers `etc/check_mk/conf.d` for `*.mk`
+   the last reload; the watcher's schedule covers `etc/check_mk/conf.d` for `**/*.mk`
    (`automations/helper/_config.py`). So a pending "Disabled services" or discovery-parameters rule
    takes effect on **the scan that triggered the sync** — but only eventually, and by way of three
    hops with no happens-before edge between them: `_update_config_on_remote_site` writes the file,
    `_AutomationWatcherHandler._store_last_detected_change` records it into redis asynchronously, and
    `reload_if_required` compares `last_reload` against `get_last_detected_change()`
    (`automations/helper/_cache.py`) whenever the next automation happens to arrive. Note what
-   `_watcher.py`'s comment above `InotifyBuffer.delay = 0.0` is and is not: it describes watchdog's
-   move-pairing delay and then sets it to zero, so it documents a hazard the code **eliminates**,
-   not this residual one — its value here is as evidence that the maintainers thought the window
-   real enough to tune away.
+   `_watcher.py`'s comment above `InotifyMoveEventGrouper.delay` is and is not: it describes
+   watchdog's move-pairing delay and then cuts it to 50 ms, so it documents a hazard the code
+   **bounds**, not this residual one — its value here is as evidence that the maintainers thought
+   the window real enough to shrink it.
 
    A second and unrelated mechanism can defeat the same expectation.
    `ServiceDiscoveryBackgroundJob.get_result` prefers a stored preview over recomputing (`elif
@@ -1482,7 +1482,7 @@ second precondition on an already narrow case.
 One note for §7, stated no more strongly than it has been established. The gap is asymmetric **in
 the steady state**: on a local host the labels land in the very directory the analysis reads and
 the automation helper watches it (`automations/helper/_config.py` schedules
-`var/check_mk/discovered_host_labels` for `*.mk`), whereas on a remote host the central copy is
+`var/check_mk/discovered_host_labels` for `**/*.mk`), whereas on a remote host the central copy is
 simply older and no reload can repair a file that has not been written. Whether a Tier 4 assertion
 could **see** that is a separate question and is not established: Tier 4 observes a single request,
 and within one `perform_fix_all` the local path is racy too, by the same watcher race B-F2.1

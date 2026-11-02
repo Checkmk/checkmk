@@ -36,6 +36,13 @@ def test_reload_required(cache: Cache) -> None:
     assert cache.reload_required(0.0)
 
 
+def test_reload_required_after_the_last_reload_while_changes_are_unwatched(cache: Cache) -> None:
+    cache.store_last_detected_change(1.0)
+    cache.store_changes_unwatched(unwatched=True)
+
+    assert cache.reload_required(2.0)
+
+
 def test_reload_required_returns_true_on_cache_error(cache: Cache) -> None:
     """When Redis is unavailable, reload_required must return True (force reload) instead of raising."""
     broken_client = MagicMock()

@@ -25,6 +25,7 @@ class Schedule(BaseModel, frozen=True):
     path: Path
     ignore_directories: bool
     recursive: bool
+    # glob patterns, matched against the whole absolute path of a changed file
     patterns: Sequence[str] | None = None
 
 
@@ -78,31 +79,31 @@ def default_config(
                     ignore_directories=True,
                     recursive=False,
                     path=omd_root / "etc" / "check_mk",
-                    patterns=["main.mk", "local.mk", "final.mk", "experimental.mk"],
+                    patterns=["**/main.mk", "**/local.mk", "**/final.mk", "**/experimental.mk"],
                 ),
                 Schedule(
                     path=omd_root / "etc" / "check_mk" / "conf.d",
                     ignore_directories=True,
                     recursive=True,
-                    patterns=["*.mk", "*.pkl"],
+                    patterns=["**/*.mk", "**/*.pkl"],
                 ),
                 Schedule(
                     path=omd_root / "var" / "check_mk" / "autochecks",
                     ignore_directories=True,
                     recursive=True,
-                    patterns=["*.mk"],
+                    patterns=["**/*.mk"],
                 ),
                 Schedule(
                     path=omd_root / "var" / "check_mk" / "discovered_host_labels",
                     ignore_directories=True,
                     recursive=True,
-                    patterns=["*.mk"],
+                    patterns=["**/*.mk"],
                 ),
                 Schedule(
                     path=omd_root / "var" / "check_mk",
                     ignore_directories=True,
                     recursive=False,
-                    patterns=["stored_passwords"],
+                    patterns=["**/stored_passwords"],
                 ),
             ]
         ),

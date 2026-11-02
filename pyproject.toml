@@ -93,7 +93,8 @@ max-complexity = 64 # TODO: This is far too much, we need to lower this!
 
 # Files allowed to import one of these modules suppress TID251 with a noqa
 # comment. The large modules have to be imported inside the functions using
-# them (TID253), unless the importing process always uses them.
+# them (TID253), unless the importing process always uses them. So do the
+# modules whose import has side effects, even then.
 [tool.ruff.lint.flake8-tidy-imports]
 banned-module-level-imports = [
   "cmk.gui.wato.pages.timeperiods_ical",
@@ -103,6 +104,8 @@ banned-module-level-imports = [
   "pypdf",
   "recurring_ical_events",
   "reportlab",
+  # It starts a thread on import, so a later fork() breaks it.
+  "watchdog.observers",
 ]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]

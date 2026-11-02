@@ -41,7 +41,6 @@ packages/check-http/src/cli.rs
 packages/check-http/src/main.rs
 packages/check-http/src/pwstore.rs
 packages/cmk-agent-ctl/src/main.rs
-packages/cmk-ec/src/mkevent.cc
 packages/mk-oracle/deploy-docker
 packages/mk-oracle/deploy-run
 packages/mk-oracle/run_legacy.sh

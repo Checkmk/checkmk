@@ -7,43 +7,30 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 #include <cctype>
 #include <cerrno>
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <iostream>
+#include <optional>
+#include <span>
 #include <string>
+#include <string_view>
+#include <system_error>
+#include <utility>
 
-/* Methods for specified the path to the pipe of
-   mkeventd:
+// mkevent finds the event pipe of mkeventd via -P PATH, else via OMD_ROOT, else
+// via its own path in a site, e.g. /omd/sites/mysite/bin/mkevent.
 
-   1. Run mkevent within the environment of a
-      OMD site -> will find pipe itself
+namespace {
 
-   2. Specify pipe with -P PATH before message
-
-   3. Run mkeventd with absolute path in a site,
-      e.g. /omd/sites/mysite/bin/mkevent -> will
-      find pipe itself
-
-   4. Uses hardcoded path /var/run/mkeventd.pipe.
-
-*/
-
-int file_exists(const std::string &path) {
-    struct stat st;
-    return static_cast<int>(stat(path.c_str(), &st) == 0);
-}
-
-char *append_str(const char *str, char *dest) {
-    size_t len = strlen(str);
-    memcpy(dest, str, len);
-    return dest + len;
+// NOLINTBEGIN(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-pro-bounds-array-to-pointer-decay,cppcoreguidelines-pro-bounds-constant-array-index,cppcoreguidelines-pro-bounds-pointer-arithmetic,misc-const-correctness)
+char *append_str(std::string_view str, char *dest) {
+    memcpy(dest, str.data(), str.size());
+    return dest + str.size();
 }
 
 char *append_int(long n, char *dest) {
@@ -56,131 +43,170 @@ char *append_int(long n, char *dest) {
     } while ((n /= 10) > 0);
     return append_str(b, dest);
 }
+// NOLINTEND(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-pro-bounds-array-to-pointer-decay,cppcoreguidelines-pro-bounds-constant-array-index,cppcoreguidelines-pro-bounds-pointer-arithmetic,misc-const-correctness)
+
+std::string default_pipe_path(std::string_view program) {
+    // NOLINTNEXTLINE(concurrency-mt-unsafe)
+    if (const char *omd_root = getenv("OMD_ROOT")) {
+        return std::string{omd_root} + "/tmp/run/mkeventd/events";
+    }
+    constexpr std::string_view bin_mkevent{"/bin/mkevent"};
+    if (program.starts_with("/omd/sites/") && program.ends_with(bin_mkevent)) {
+        program.remove_suffix(bin_mkevent.size());
+        return std::string{program} + "/tmp/run/mkeventd/events";
+    }
+    return {};
+}
+
+int syslog_priority(int state, bool is_host) {
+    if (state == 0) {
+        return 5;
+    }
+    if (is_host) {
+        state += 1;  // shift host states in order to map service states
+    }
+    if (state == 1) {
+        return 4;  // warn
+    }
+    if (state == 3) {
+        return 3;  // map UNKNOWN/UNREAD to err
+    }
+    return 2;  // CRIT/DOWN goes to crit
+}
+
+struct Notification {
+    std::string remote;  // empty for the local Event Console
+    std::string message;
+};
+
+// Parses the arguments after -n: FACILITY REMOTE STATE HOST SERVICE MESSAGE SL
+// CONTACT [HOST_SL HOST_CONTACT], SERVICE is empty for host notifications.
+// Returns nothing for too few arguments.
+std::optional<Notification> parse_notification(std::span<char *const> args) {
+    if (args.size() < 8) {
+        return {};
+    }
+    const int facility = atoi(args[0]);
+    const int state = atoi(args[2]);
+    const std::string_view hostname{args[3]};
+    const std::string_view service{args[4]};
+    const std::string_view text{args[5]};
+    const char *sl_text = args[6];
+    std::string_view contact{args[7]};
+
+    // If this is a service and sl/contact is unset then we use the values of
+    // the host that are coming as HOST_SL and HOST_CONTACT.
+    if (std::string_view{sl_text}.starts_with('$') && args.size() > 9) {
+        sl_text = args[8];
+    }
+    if (contact.starts_with('$') && args.size() > 9) {
+        contact = args[9];
+    }
+    if (contact.starts_with('$')) {
+        contact = "";
+    }
+
+    // NOLINTBEGIN(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-pro-bounds-array-to-pointer-decay,cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    char message[8192];
+    char *w = message;
+    *w++ = '<';
+    w = append_int((static_cast<long>(facility) << 3) +
+                       syslog_priority(state, service.empty()),
+                   w);
+    *w++ = '>';
+    *w++ = '@';
+    w = append_int(std::time(nullptr), w);
+    *w++ = ';';
+    w = append_int(atoi(sl_text), w);
+    *w++ = ';';
+    w = append_str(contact, w);
+    *w++ = ';';
+    *w++ = ' ';
+    w = append_str(hostname, w);
+    *w++ = ' ';
+    w = append_str(service.empty() ? "HOST" : service, w);
+    *w++ = ':';
+    *w++ = ' ';
+    w = append_str(text, w);
+    *w = 0;
+    return Notification{.remote = args[1], .message = message};
+    // NOLINTEND(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-pro-bounds-array-to-pointer-decay,cppcoreguidelines-pro-bounds-pointer-arithmetic)
+}
+
+void print_usage() {
+    std::cerr << "Usage: mkevent [-P PIPE] 'Text of the message'\n";
+}
+
+}  // namespace
 
 int main(int argc, char **argv) {
-    if (argc < 2) {
-        std::cerr << "Usage: mkevent [-P PIPE] 'Text of the messsage'"
-                  << std::endl;
-        exit(1);
+    auto args = std::span{argv, static_cast<size_t>(argc)};
+    if (args.size() < 2) {
+        print_usage();
+        return 1;
     }
+    const std::string_view program{args[0]};
 
+    // Path to pipe can be specified with -P
     std::string path_to_pipe;
-
-    /* Path to pipe can be specified with -P */
-    if (argc > 2 && (strcmp(argv[1], "-P") == 0)) {
-        path_to_pipe = argv[2];
-        argc -= 2;
-        argv += 2;
+    if (std::string_view{args[1]} == "-P") {
+        if (args.size() < 4) {
+            print_usage();
+            return 1;
+        }
+        path_to_pipe = args[2];
+        args = args.subspan(2);
     }
-
     if (path_to_pipe.empty()) {
-        if (const char *omd_root = getenv("OMD_ROOT")) {
-            path_to_pipe = std::string(omd_root) + "/tmp/run/mkeventd/events";
-        } else if (strncmp(argv[0], "/omd/sites/", 11) == 0) {
-            // cut off /bin/mkevent
-            path_to_pipe = std::string(argv[0], strlen(argv[0]) - 12) +
-                           "/tmp/run/mkeventd/events";
-        }
+        path_to_pipe = default_pipe_path(program);
     }
 
-    /* Nagios notification mode is triggered with option -n */
-    char message[8192];
-    const char *remote = "";
-
-    if (argc > 9 && (strcmp(argv[1], "-n") == 0)) {
-        /* Arguments: -n FACILITY REMOTE STATE HOST SERVICE MESSAGE */
-        /* SERVICE is empty for host notification */
-        int facility = atoi(argv[2]);
-        remote = argv[3];
-        int state = atoi(argv[4]);
-        char *hostname = argv[5];
-        char *service = argv[6];
-        char *text = argv[7];
-        char *sl_text = argv[8];
-        const char *contact = argv[9];
-
-        /* If this is a service and sl/contact is unset then we use
-           the values of the host that are coming as arg 10 and 11 */
-        if (sl_text[0] == '$' && argc > 11) {
-            sl_text = argv[10];
-        }
-        if (contact[0] == '$' && argc > 11) {
-            contact = argv[11];
-        }
-
-        int sl = atoi(sl_text);
-        if (contact[0] == '$') {
-            contact = "";
-        }
-
-        int priority;
-        if (state == 0) {
-            priority = 5;
-        } else {
-            if (service[0] == 0) {
-                state += 1;  // shift host states in order to map service states
-            }
-            if (state == 1) {
-                priority = 4;  // warn
-            } else if (state == 3) {
-                priority = 3;  // map UNKNOWN/UNREAD to err
-            } else {
-                priority = 2;  // CRIT/DOWN goes to crit
-            }
-        }
-
-        char *w = message;
-        *w++ = '<';
-        w = append_int((static_cast<long>(facility) << 3) + priority, w);
-        *w++ = '>';
-        *w++ = '@';
-        w = append_int(time(nullptr), w);
-        *w++ = ';';
-        w = append_int(sl, w);
-        *w++ = ';';
-        w = append_str(contact, w);
-        *w++ = ';';
-        *w++ = ' ';
-        w = append_str(hostname, w);
-        *w++ = ' ';
-        w = append_str(service[0] != 0 ? service : "HOST", w);
-        *w++ = ':';
-        *w++ = ' ';
-        w = append_str(text, w);
-        *w = 0;
+    // Nagios notification mode is triggered with option -n
+    std::string remote;
+    std::string message;
+    if (auto notification = std::string_view{args[1]} == "-n"
+                                ? parse_notification(args.subspan(2))
+                                : std::nullopt) {
+        remote = std::move(notification->remote);
+        message = std::move(notification->message);
     } else {
-        strncpy(message, argv[1], sizeof(message) - 1);
+        // NOLINTBEGIN(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-pro-bounds-array-to-pointer-decay)
+        char buffer[8192];
+        strncpy(buffer, args[1], sizeof(buffer) - 1);
+        message = buffer;
+        // NOLINTEND(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-pro-bounds-array-to-pointer-decay)
     }
 
-    /* If we have a remote host, send the message via syslog to it. */
-    int fd;
-    if (remote[0] != 0) {
-        if (isdigit(remote[0]) == 0) {
-            std::cerr
-                << "ERROR: Please specify the remote host as IPv4 address, not '"
-                << remote << "'" << std::endl;
-            exit(1);
+    // If we have a remote host, send the message to it via syslog.
+    int fd = -1;
+    if (!remote.empty()) {
+        if (std::isdigit(static_cast<unsigned char>(remote[0])) == 0) {
+            std::cerr << "ERROR: Please specify the remote host as IPv4 "
+                         "address, not '"
+                      << remote << "'\n";
+            return 1;
         }
         fd = ::socket(AF_INET, SOCK_DGRAM, 0);
         if (fd == -1) {
-            std::cerr << "ERROR: could not create socket" << std::endl;
-            exit(1);
+            std::cerr << "ERROR: could not create socket\n";
+            return 1;
         }
         sockaddr_in servaddr{};
         servaddr.sin_family = AF_INET;
-        servaddr.sin_addr.s_addr = inet_addr(remote);
+        servaddr.sin_addr.s_addr = ::inet_addr(remote.c_str());
         servaddr.sin_port = htons(514);
-        ::sendto(fd, message, strlen(message), 0,
+        ::sendto(fd, message.data(), message.size(), 0,
                  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
                  reinterpret_cast<struct sockaddr *>(&servaddr),
                  sizeof(servaddr));
     } else {
-        fd = open(path_to_pipe.c_str(), O_WRONLY);
-        if (fd < 0) {
-            int errno_saved = errno;
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
+        fd = ::open(path_to_pipe.c_str(), O_WRONLY);
+        if (fd == -1) {
+            const int err = errno;
             std::cerr << "Cannot open event pipe '" << path_to_pipe
-                      << "': " << strerror(errno_saved) << std::endl;
-            exit(1);
+                      << "': " << std::generic_category().message(err) << '\n';
+            return 1;
         }
         // Write the message and its newline with a single write(): The Event
         // Console takes each line from its event pipe as a message, and other
@@ -188,7 +214,7 @@ int main(int argc, char **argv) {
         // most PIPE_BUF bytes to a pipe is atomic, so nothing of theirs can
         // come between our message and its newline then, which would mix up
         // both messages.
-        const std::string line = std::string{message} + '\n';
+        const std::string line = message + '\n';
         // TODO(sp) Handle errors and partial writes.
         if (::write(fd, line.data(), line.size()) < 0) {
         }

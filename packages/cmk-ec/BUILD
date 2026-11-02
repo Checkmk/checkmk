@@ -169,9 +169,11 @@ py_cmk_test(
     srcs = glob(["tests/component/**/*.py"]),
     args = ["packages/cmk-ec/tests/component"],
     data = [
+        ":mkevent",
         ":mkeventd_open514",
     ],
     env = {
+        "MKEVENT": "$(rootpath :mkevent)",
         "MKEVENTD_OPEN514": "$(rootpath :mkeventd_open514)",
     },
     deps = [
@@ -245,6 +247,7 @@ cc_binary(
     name = "mkevent",
     srcs = ["src/mkevent.cc"],
     copts = [
+        "-std=c++20",
         "-g",
         "-O3",
         "-Wall",
@@ -254,7 +257,6 @@ cc_binary(
         "static_libstdcpp",
     ],
     platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
-    tags = ["no-lint"],
 )
 
 cc_binary(

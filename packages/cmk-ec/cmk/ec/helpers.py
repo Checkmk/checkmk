@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 import threading
 from collections.abc import Callable, Iterable, Iterator
 from logging import Logger
@@ -30,38 +31,17 @@ def parse_bytes(length: int, tokens: Tokens) -> ParseResult[bytes]:
     return bytes(msg), tokens[length:]
 
 
-def parse_one_of(expected: bytes, tokens: Tokens) -> ParseResult[bytes]:
-    byte, rest = parse_bytes(1, tokens)
-    if byte is Failure or byte not in expected:
-        return Failure, tokens
-    return byte, rest
-
-
-# Shorter: partial(parse_one_of, b"0123456789")
-def parse_digit(tokens: Tokens) -> ParseResult[bytes]:
-    return parse_one_of(b"0123456789", tokens)
-
-
-def zero_or_more[T](parser: Parser[T], tokens: Tokens) -> ParseResult[list[T]]:
-    result: list[T] = []
-    while True:
-        value, tokens = parser(tokens)
-        if value is Failure:
-            return result, tokens
-        result.append(value)
+# RFC 6587 doesn't limit MSG-LEN, but int() refuses more than 4300 digits, and no syslog message
+# comes near the gigabyte of 9 digits. Matching no more digits than that, a longer number takes no
+# time to refuse, even when its line is parsed again for each new part of it.
+_MSG_LEN = re.compile(rb"([1-9][0-9]{0,8}) ")
 
 
 def parse_msg_len(tokens: Tokens) -> ParseResult[int]:
-    digit, rest1 = parse_one_of(b"123456789", tokens)
-    if digit is Failure:
+    """MSG-LEN = NONZERO-DIGIT *DIGIT, see RFC 6587, but a longer number than 9 digits fails"""
+    if (match := _MSG_LEN.match(tokens)) is None:
         return Failure, tokens
-    digits, rest2 = zero_or_more(parse_digit, rest1)
-    if digits is Failure:
-        return Failure, tokens
-    spc, rest3 = parse_one_of(b" ", rest2)
-    if spc is Failure:
-        return Failure, tokens
-    return int(b"".join([digit] + digits)), rest3
+    return int(match[1]), tokens[match.end() :]
 
 
 def parse_non_transparent_frame(tokens: Tokens) -> ParseResult[bytes]:
@@ -71,18 +51,14 @@ def parse_non_transparent_frame(tokens: Tokens) -> ParseResult[bytes]:
     return Failure, tokens
 
 
+_PRI = re.compile(rb"<[0-9]{1,3}>")
+
+
 def parse_pri(tokens: Tokens) -> ParseResult[bytes]:
     """PRI = "<" PRIVAL ">", PRIVAL = 1*3DIGIT, see RFC 5424"""
-    opening, rest1 = parse_one_of(b"<", tokens)
-    if opening is Failure:
+    if (match := _PRI.match(tokens)) is None:
         return Failure, tokens
-    digits, rest2 = zero_or_more(parse_digit, rest1)
-    if digits is Failure or not 1 <= len(digits) <= 3:
-        return Failure, tokens
-    closing, rest3 = parse_one_of(b">", rest2)
-    if closing is Failure:
-        return Failure, tokens
-    return b"".join([opening, *digits, closing]), rest3
+    return match[0], tokens[match.end() :]
 
 
 def parse_syslog_msg_len(tokens: Tokens) -> ParseResult[int]:
@@ -142,9 +118,9 @@ def parse_bytes_into_syslog_messages(data: bytes) -> tuple[Iterable[bytes], byte
     Parse a bunch of bytes received via syslog over TCP or via the event socket into separate
     messages and an unparsed rest.
 
-    This method handles Octet counting (if a message starts with a number, a space and a syslog
-    priority, see parse_syslog_msg_len()) and Non-Transparent framing (if '\n' is used as a
-    separator).
+    This method handles Octet counting (if a message starts with a number of at most 9 digits,
+    a space and a syslog priority, see parse_syslog_msg_len()) and Non-Transparent framing (if
+    '\n' is used as a separator).
     See the RFC doc: https://www.rfc-editor.org/rfc/rfc6587#section-3.4:
 
     Octet counting:

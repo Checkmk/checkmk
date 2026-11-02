@@ -137,3 +137,22 @@ def test_newline_after_an_octet_counted_syslog_message_is_no_message() -> None:
 )
 def test_incomplete_syslog_message_waits_for_its_rest(data: bytes) -> None:
     assert parse_bytes_into_syslog_messages(b"done\n" + data) == ([b"done"], data)
+
+
+def test_number_with_9_digits_is_an_octet_count() -> None:
+    data = b"999999999 <14>x\n"
+
+    assert parse_bytes_into_syslog_messages(data) == ([], data)
+
+
+@pytest.mark.parametrize(
+    "number",
+    (
+        pytest.param(b"1234567890", id="10 digits"),
+        pytest.param(b"1" * 4301, id="more digits than int() takes"),
+    ),
+)
+def test_number_with_more_than_9_digits_is_part_of_a_line(number: bytes) -> None:
+    line = number + b" <14>x"
+
+    assert parse_bytes_into_syslog_messages(line + b"\n") == ([line], b"")

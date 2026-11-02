@@ -940,7 +940,7 @@ class FilterInvHasSoftwarePackage(Filter):
 
     @override
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
-        return bool(value.get(self._varprefix + "name"))
+        return bool(value.get(self._varprefix + "name", "").strip())
 
     @override
     def display(
@@ -1018,12 +1018,13 @@ class FilterInvHasSoftwarePackage(Filter):
     @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
-        name: str | re.Pattern[str] = value.get(self._varprefix + "name", "")
-        if not name:
+        if not value.get(self._varprefix + "name", "").strip():
             return rows
 
-        from_version = value.get(self._varprefix + "version_from", "")
-        to_version = value.get(self._varprefix + "version_to", "")
+        name: str | re.Pattern[str] = value[self._varprefix + "name"]
+
+        from_version = value.get(self._varprefix + "version_from", "").strip()
+        to_version = value.get(self._varprefix + "version_to", "").strip()
         negate = bool(value.get(self._varprefix + "negate", ""))
         match = value.get(self._varprefix + "match", "")
         if match == "regex":

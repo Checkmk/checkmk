@@ -469,6 +469,11 @@ _HOST_WITHOUT_PACKAGES: Row = {"host_inventory": ImmutableTree()}
         pytest.param(
             {}, [_HOST_WITH_PACKAGE_A, _HOST_WITH_PACKAGE_B, _HOST_WITHOUT_PACKAGES], id="no-name"
         ),
+        pytest.param(
+            {"invswpac_host_name": " "},
+            [_HOST_WITH_PACKAGE_A, _HOST_WITH_PACKAGE_B, _HOST_WITHOUT_PACKAGES],
+            id="blank-name",
+        ),
         pytest.param({"invswpac_host_name": "package-a"}, [_HOST_WITH_PACKAGE_A], id="exact-name"),
         pytest.param({"invswpac_host_name": "package-c"}, [], id="another-name"),
         pytest.param(
@@ -485,6 +490,11 @@ _HOST_WITHOUT_PACKAGES: Row = {"host_inventory": ImmutableTree()}
             {"invswpac_host_name": "^(?!package-a)", "invswpac_host_match": "regex"},
             [_HOST_WITH_PACKAGE_B],
             id="a-regex-looking-ahead",
+        ),
+        pytest.param(
+            {"invswpac_host_name": "package-a ", "invswpac_host_match": "regex"},
+            [],
+            id="a-regex-ending-in-a-blank",
         ),
         pytest.param(
             {"invswpac_host_name": "package-a", "invswpac_host_negate": "on"},
@@ -566,6 +576,15 @@ _HOST_WITHOUT_PACKAGES: Row = {"host_inventory": ImmutableTree()}
             [_HOST_WITH_PACKAGE_A],
             id="the-exact-version-spelled-with-another-zero",
         ),
+        pytest.param(
+            {
+                "invswpac_host_name": "package-a",
+                "invswpac_host_version_from": " ",
+                "invswpac_host_version_to": " ",
+            },
+            [_HOST_WITH_PACKAGE_A],
+            id="blank-bounds",
+        ),
     ],
 )
 def test_filter_inv_has_software_package(
@@ -586,3 +605,7 @@ def test_filter_inv_has_software_package_rejects_an_invalid_regex() -> None:
             {"invswpac": {"invswpac_host_name": "(", "invswpac_host_match": "regex"}},
             [_HOST_WITH_PACKAGE_A],
         )
+
+
+def test_filter_inv_has_software_package_needs_no_inventory_for_a_blank_name() -> None:
+    assert FilterInvHasSoftwarePackage().need_inventory({"invswpac_host_name": " "}) is False

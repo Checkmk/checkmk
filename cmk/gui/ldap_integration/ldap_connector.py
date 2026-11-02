@@ -1742,6 +1742,17 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         default_user_profile: UserSpec,
     ) -> CheckCredentialsResult:
         """This function only validates credentials, no locked checking or similar"""
+        if not self.is_authentication_connection():
+            # The site does not list this connection in its
+            # authentication_connections: it must not log anybody in here, no
+            # matter whether the user exists in the directory.
+            self._logger.info(
+                '  SKIP LOGIN connector "%(connector_id)s" is not enabled for '
+                "authentication on this site",
+                {"connector_id": self.id},
+            )
+            return None
+
         # Suffix based connection enforcement only applies to users that are
         # not yet assigned to a connection
         user_connection_id = self._connection_id_of_user(user_id)
@@ -2108,10 +2119,12 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         current site, i.e. ``authentication_connections`` contains
         ``("ldap", self.id)``.
 
+        Only such connectors verify credentials in ``check_credentials``.
         Connectors that only appear in ``user_attribute_sync_connections`` (and
         not here) update existing users and remove users they own when those
-        leave LDAP, but must not create new users during the periodic background
-        sync (user creation is reserved for authentication connections).
+        leave LDAP, but must neither log users in nor create new users during
+        the periodic background sync (user creation is reserved for
+        authentication connections).
         """
         site_config = active_config.sites[omd_site()]
         return any(

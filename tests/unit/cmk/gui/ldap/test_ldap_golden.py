@@ -26,6 +26,7 @@ import ldap.ldapobject  # type: ignore[import-untyped,unused-ignore]
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
 from cmk.gui.ldap_integration.ldap_connector import (
@@ -61,6 +62,8 @@ from cmk.gui.userdb.user_attributes import (
     TemperatureUnitUserAttribute,
 )
 from cmk.gui.utils.security_log_events import UserManagementEvent
+from cmk.livestatus_client import AuthenticationConnectionsValue, SiteConfiguration
+from tests.testlib.unit.fake_site import no_site_configuration
 from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
 
 
@@ -110,6 +113,14 @@ _test_config = LDAPUserConnectionConfig(
 )
 
 
+@pytest.fixture(name="connection_configured")
+def fixture_connection_configured(set_config: SetConfig) -> Iterator[None]:
+    """Register the test connection, so the local site (which lists every configured
+    connection for login by default) lets it verify credentials."""
+    with set_config(user_connections=[_test_config]):
+        yield
+
+
 @pytest.mark.parametrize(
     "config",
     [
@@ -145,11 +156,11 @@ def test_connect(mock_ldap: MagicMock) -> None:
     mock_ldap.assert_called_with("ldap://internet")  # most recent
 
     # assumes "ldap_golden_unknown_password" is not in the password store, hence the 'None'.
-    connector._ldap_obj.simple_bind_s.assert_called_with(  # type: ignore[union-attr]  # noqa: SLF001
+    connector._ldap_obj.simple_bind_s.assert_called_with(  # type: ignore[union-attr,unused-ignore]  # noqa: SLF001
         cfg["bind"][0], None
     )
-    assert connector._ldap_obj.protocol_version == cfg["version"]  # type: ignore[union-attr]  # noqa: SLF001
-    assert connector._ldap_obj.network_timeout == cfg["connect_timeout"]  # type: ignore[union-attr]  # noqa: SLF001
+    assert connector._ldap_obj.protocol_version == cfg["version"]  # type: ignore[union-attr,unused-ignore]  # noqa: SLF001
+    assert connector._ldap_obj.network_timeout == cfg["connect_timeout"]  # type: ignore[union-attr,unused-ignore]  # noqa: SLF001
 
 
 def _mock_result3(
@@ -165,7 +176,7 @@ def _mock_result3(
             0,
             ldap_result,
             0,
-            [ldap.controls.SimplePagedResultsControl()],  # type: ignore[no-untyped-call]
+            [ldap.controls.SimplePagedResultsControl()],  # type: ignore[no-untyped-call,unused-ignore]
         ),
     )
 
@@ -319,7 +330,7 @@ def test_ldap_sync_leaves_saml_owned_user_without_ldap_entry_untouched() -> None
     assert result.changes == [], "no change should be recorded for an untouched user"
 
 
-@pytest.mark.usefixtures("mock_ldap", "request_context")
+@pytest.mark.usefixtures("mock_ldap", "request_context", "connection_configured")
 def test_check_credentials_valid(mocker: MockerFixture) -> None:
     connector = LDAPUserConnector(_test_config)
     with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
@@ -371,7 +382,7 @@ def test_login_of_an_unknown_ldap_user_syncs_it(
     assert UserId("carol") in load_users()
 
 
-@pytest.mark.usefixtures("mock_ldap")
+@pytest.mark.usefixtures("mock_ldap", "request_context", "connection_configured")
 def test_check_credentials_invalid(mocker: MockerFixture) -> None:
     connector = LDAPUserConnector(_test_config)
     with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
@@ -392,7 +403,7 @@ def test_check_credentials_invalid(mocker: MockerFixture) -> None:
         )
 
 
-@pytest.mark.usefixtures("mock_ldap")
+@pytest.mark.usefixtures("mock_ldap", "request_context", "connection_configured")
 def test_check_credentials_not_found(mocker: MockerFixture) -> None:
     connector = LDAPUserConnector(_test_config)
     with mock.patch("cmk.utils.password_store.extract", return_value=None):
@@ -411,6 +422,73 @@ def test_check_credentials_not_found(mocker: MockerFixture) -> None:
         )
         is None
     )
+
+
+def _local_site_with_authentication_connections(
+    value: AuthenticationConnectionsValue,
+) -> dict[SiteId, SiteConfiguration]:
+    return {
+        SiteId("NO_SITE"): SiteConfiguration(
+            {**no_site_configuration(), "authentication_connections": value}
+        )
+    }
+
+
+@pytest.mark.parametrize(
+    "authentication_connections",
+    [
+        pytest.param("disabled", id="site login disabled"),
+        pytest.param(("all", ["saml"]), id="only SAML connections allowed"),
+        pytest.param([("ldap", "some-other-connector")], id="other connection listed"),
+    ],
+)
+@pytest.mark.usefixtures("mock_ldap", "request_context")
+def test_valid_credentials_are_refused_when_site_excludes_connection_from_login(
+    mocker: MockerFixture,
+    set_config: SetConfig,
+    authentication_connections: AuthenticationConnectionsValue,
+) -> None:
+    """A connection the site does not list in ``authentication_connections`` must not
+    log anybody in, even if the user exists in the directory and the password is
+    correct (CMK-40326)."""
+    connector = LDAPUserConnector(_test_config)
+    with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
+        connector.connect()
+    _mock_result3(mocker, connector, [("carol", {"uid": [b"CAROL_ID"]})])
+
+    with set_config(sites=_local_site_with_authentication_connections(authentication_connections)):
+        result = connector.check_credentials(
+            UserId("carol"),
+            Password("hunter2"),
+            get_user_attributes([]),
+            [_test_config],
+            default_user_profile={},
+        )
+
+    assert result is None
+
+
+@pytest.mark.usefixtures("mock_ldap", "request_context")
+def test_valid_credentials_are_accepted_when_site_lists_connection_for_login(
+    mocker: MockerFixture, set_config: SetConfig
+) -> None:
+    connector = LDAPUserConnector(_test_config)
+    with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
+        connector.connect()
+        _mock_result3(mocker, connector, [("carol", {"uid": [b"CAROL_ID"]})])
+
+        with set_config(
+            sites=_local_site_with_authentication_connections([("ldap", _test_config["id"])])
+        ):
+            result = connector.check_credentials(
+                UserId("carol"),
+                Password("hunter2"),
+                get_user_attributes([]),
+                [_test_config],
+                default_user_profile={},
+            )
+
+    assert result == UserId("carol_id")
 
 
 def test_remove_trailing_dot_from_hostname(mock_ldap: MagicMock) -> None:
@@ -683,7 +761,7 @@ _test_config_with_auth_expire = LDAPUserConnectionConfig(
 )
 
 
-@pytest.mark.usefixtures("mock_ldap", "request_context")
+@pytest.mark.usefixtures("mock_ldap", "request_context", "connection_configured")
 def test_check_credentials_with_auth_expire(mocker: MockerFixture) -> None:
     """Login with auth_expire plugin enabled must request all needed LDAP attributes.
 

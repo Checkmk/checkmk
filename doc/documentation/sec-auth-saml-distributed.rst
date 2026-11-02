@@ -96,8 +96,8 @@ SAML has no background synchronization; it updates a profile only during a login
 ``user_sync_config()`` maps the value onto the legacy shape that the LDAP connector and the synchronization job still consume.
 ``effective_user_attribute_sync_connections()`` reads the propagated global on a remote site and the site's own entry on the central site.
 
-.. note:: ``LDAPUserConnector.is_enabled()`` is still keyed off the *attribute sync* value, while user creation during the background synchronization is gated by ``is_authentication_connection()``.
-   A connection that is listed for authentication but excluded from the attribute synchronization therefore still authenticates users interactively; it merely does not take part in the periodic job.
+.. note:: ``LDAPUserConnector.is_enabled()`` is still keyed off the *attribute sync* value, while password login (``check_credentials``) and user creation during the background synchronization are gated by ``is_authentication_connection()``.
+   A connection that the site excludes from ``authentication_connections`` therefore never logs anybody in on that site, even if it takes part in the periodic job (CMK-40326).
 
 Propagation to remote sites
 ###########################
@@ -116,7 +116,7 @@ The remote site receives a concrete list, with the metadata and ACS URLs already
 
 At runtime ``effective_authentication_connections()`` branches on ``is_distributed_setup_remote_site()``.
 A remote site returns ``active_config.authentication_connections`` (the propagated global), the central site resolves its own ``sites.mk`` entry.
-Everything downstream goes through this single function: the login page buttons, the SAML endpoints, the LDAP user creation gate and the user preservation list.
+Everything downstream goes through this single function: the login page buttons, the SAML endpoints, the LDAP login and user creation gates and the user preservation list.
 Both site roles therefore behave identically without special cases.
 
 Users created on a remote site

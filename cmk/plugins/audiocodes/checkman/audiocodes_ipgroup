@@ -7,8 +7,15 @@ description:
  This check plugin monitors the status of the IP Groups from the AudioCodes device(s).
  If information about the active calls in and out of the IP Group is available, it will be displayed.
 
+ The service is OK if the IP Group is active and the proxy set connectivity is
+ "Connected" or "NA". If the device does not report the proxy set connectivity,
+ the service evaluates only the status of the IP Group: an active IP Group is OK.
+ In all other cases, the service is CRIT.
+
 discovery:
  One service per IP Group is created.
 
 item:
  The item consists of the IP Group index and name.
+ If the device does not report a name, the item uses the description instead.
+ If the device reports neither, the item is the index only.

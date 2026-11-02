@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.agent_based.v2 import (
@@ -43,12 +43,14 @@ class Attributes:
     status: str
     type: str
     description: str | None
-    name: str
-    connect_status: str
+    name: str | None
+    connect_status: str | None
 
     @property
     def item(self) -> str:
-        return f"{self.index} {self.name}"
+        if label := self.name or self.description:
+            return f"{self.index} {label}"
+        return str(self.index)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -129,13 +131,7 @@ def check_audiocodes_ipgroup(item: str, section: Mapping[str, IPGroup]) -> Check
     yield Result(
         state=_check_ipgroup_state(ipgroup),
         summary=f"Status: {ipgroup.attributes.status}",
-        details=(
-            f"IP group name: {ipgroup.attributes.name}, "
-            f"Type: {ipgroup.attributes.type}, "
-            f"IP group index: {ipgroup.attributes.index}, "
-            f"Description: {ipgroup.attributes.description}, "
-            f"Proxy set connectivity: {ipgroup.attributes.connect_status}"
-        ),
+        details=", ".join(_describe_attributes(ipgroup.attributes)),
     )
     yield from _check_ipgroup_calls_information(ipgroup.active_calls)
 
@@ -155,14 +151,24 @@ def _parse_attributes(attributes: Sequence[str]) -> Attributes:
         status=_READABLE_STATUS[status],
         type=_READABLE_TYPE[ipgroup_type],
         description=description if description else None,
-        name=name,
-        connect_status=connect_status,
+        name=name if name else None,
+        connect_status=connect_status if connect_status else None,
     )
+
+
+def _describe_attributes(attributes: Attributes) -> Iterator[str]:
+    if attributes.name is not None:
+        yield f"IP group name: {attributes.name}"
+    yield f"Type: {attributes.type}"
+    yield f"IP group index: {attributes.index}"
+    if attributes.description is not None:
+        yield f"Description: {attributes.description}"
+    yield f"Proxy set connectivity: {attributes.connect_status or 'not reported by the device'}"
 
 
 def _check_ipgroup_state(ipgroup: IPGroup) -> State:
     if ipgroup.attributes.status == "active" and (
-        ipgroup.attributes.connect_status in ("Connected", "NA")
+        ipgroup.attributes.connect_status in (None, "Connected", "NA")
     ):
         return State.OK
     return State.CRIT

@@ -6,9 +6,10 @@
 import datetime
 import json
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any
+from typing import Any, override
 
 import pytest
+from google.api_core.exceptions import Cancelled
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation
 from google.cloud.monitoring_v3.types import TimeSeries
@@ -276,6 +277,35 @@ def test_asset_serialization(
     assert json.loads(lines[1]) == {"config": list(agent_gcp.SERVICES)}
     for line in lines[2:]:
         agent_gcp.Asset.deserialize(line)
+
+
+class RaisingMonitoringClient(FakeMonitoringClient):
+    def __init__(self, exception: Exception) -> None:
+        super().__init__()
+        self._exception = exception
+
+    @override
+    def list_time_series(self, request: Any) -> Iterable[TimeSeries]:
+        raise self._exception
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=RuntimeError,
+    reason="Crash report b1b2a1a0-ce74-11f1-b453-77faed89378a: RuntimeError 499 CANCELLED",
+)
+def test_time_series_reports_cancelled_requests_instead_of_crashing(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # GCP cancelled the list_time_series request (gRPC 499), e.g. because it timed out
+    exception = Cancelled("request cancelled")  # type: ignore[no-untyped-call,unused-ignore]
+    client = FakeClient("test", RaisingMonitoringClient(exception), FakeAssetClient())
+
+    assert agent_gcp.time_series(client, agent_gcp.RUN) == []
+
+    lines = capsys.readouterr().out.splitlines()
+    assert lines.count("<<<gcp_exceptions:sep(0)>>>") == len(agent_gcp.RUN.metrics)
+    assert f"Cancelled:Metric: {agent_gcp.RUN.metrics[0].name}:499 request cancelled" in lines
 
 
 @pytest.fixture(name="asset_and_piggy_back_sections")

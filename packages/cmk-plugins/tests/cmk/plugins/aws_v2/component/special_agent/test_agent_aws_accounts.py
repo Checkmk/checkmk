@@ -77,12 +77,19 @@ def test_every_account_writes_to_its_own_host(
     list_mode_output: dict[str | None, list[str]],
 ) -> None:
     labels = {
-        host: lines[lines.index("<<<labels:sep(0)>>>") + 1]
+        host: json.loads(lines[lines.index("<<<labels:sep(0)>>>") + 1])
         for host, lines in list_mode_output.items()
         if host is not None
     }
 
-    assert labels == {account: f'{{"cmk/aws/account": "{account}"}}' for account in ACCOUNTS}
+    assert labels == {
+        account: {
+            "cmk/aws/account": account,
+            "cmk/aws/resource_id": account,
+            "cmk/aws/entity": "account",
+        }
+        for account in ACCOUNTS
+    }
 
 
 def test_list_mode_writes_only_the_agent_info_to_the_rule_host(

@@ -338,6 +338,14 @@ class AWSSections(abc.ABC):
         """Labels every host will be labelled with regardless of type"""
         return {"cmk/aws/account": self.account_id}
 
+    def _collect_account_host_labels(self) -> Mapping[str, str]:
+        """Labels of the host that stands for the account"""
+        return {
+            **self._collect_static_host_labels(),
+            "cmk/aws/resource_id": self.account_id,
+            "cmk/aws/entity": "account",
+        }
+
     def _is_piggyback_host_result(self, section_result: AWSSectionResult) -> bool:
         # "" guards against an empty host name in the AWS data or in older cache files.
         return section_result.piggyback_hostname not in {"", self._hostname}
@@ -366,7 +374,8 @@ class AWSSections(abc.ABC):
     def _write_host_labels(self, results: Results) -> None:
         static_host_labels = self._collect_static_host_labels()
         self._write_to_host(
-            self._account_host, f"<<<labels:sep(0)>>>\n{json.dumps(static_host_labels)}\n"
+            self._account_host,
+            f"<<<labels:sep(0)>>>\n{json.dumps(self._collect_account_host_labels())}\n",
         )
 
         piggyback_host_labels = self._collect_piggyback_host_labels(results, static_host_labels)

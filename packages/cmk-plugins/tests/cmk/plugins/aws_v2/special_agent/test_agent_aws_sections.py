@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 import io
+import json
 from argparse import Namespace as Args
 from collections.abc import Sequence
 from datetime import datetime
@@ -107,7 +108,10 @@ class TestAWSHostLabelSections:
                 [
                     "<<<<test-account>>>>",
                     "<<<labels:sep(0)>>>",
-                    '{"cmk/aws/account": "test-account"}',
+                    (
+                        '{"cmk/aws/account": "test-account", "cmk/aws/resource_id": "test-account",'
+                        ' "cmk/aws/entity": "account"}'
+                    ),
                     "<<<<>>>>",
                 ],
                 id="standard_aws_host_label",
@@ -123,7 +127,10 @@ class TestAWSHostLabelSections:
                 [
                     "<<<<test-account>>>>",
                     "<<<labels:sep(0)>>>",
-                    '{"cmk/aws/account": "test-account"}',
+                    (
+                        '{"cmk/aws/account": "test-account", "cmk/aws/resource_id": "test-account",'
+                        ' "cmk/aws/entity": "account"}'
+                    ),
                     "<<<<>>>>",
                 ],
                 id="no_piggyback_label",
@@ -146,7 +153,10 @@ class TestAWSHostLabelSections:
                 [
                     "<<<<test-account>>>>",
                     "<<<labels:sep(0)>>>",
-                    '{"cmk/aws/account": "test-account"}',
+                    (
+                        '{"cmk/aws/account": "test-account", "cmk/aws/resource_id": "test-account",'
+                        ' "cmk/aws/entity": "account"}'
+                    ),
                     "<<<<>>>>",
                     "<<<<test-piggyback>>>>",
                     "<<<labels:sep(0)>>>",
@@ -166,7 +176,10 @@ class TestAWSHostLabelSections:
                 [
                     "<<<<test-account>>>>",
                     "<<<labels:sep(0)>>>",
-                    '{"cmk/aws/account": "test-account"}',
+                    (
+                        '{"cmk/aws/account": "test-account", "cmk/aws/resource_id": "test-account",'
+                        ' "cmk/aws/entity": "account"}'
+                    ),
                     "<<<<>>>>",
                     "<<<<test-web-acl>>>>",
                     "<<<labels:sep(0)>>>",
@@ -250,20 +263,24 @@ def test_account_host_gets_its_labels_once(capsys: pytest.CaptureFixture[str]) -
     assert capsys.readouterr().out.splitlines() == [
         "<<<<333333333333>>>>",
         "<<<labels:sep(0)>>>",
-        '{"cmk/aws/account": "333333333333"}',
+        (
+            '{"cmk/aws/account": "333333333333", "cmk/aws/resource_id": "333333333333",'
+            ' "cmk/aws/entity": "account"}'
+        ),
         "<<<<>>>>",
     ]
 
 
-def test_account_host_receives_the_labels(capsys: pytest.CaptureFixture[str]) -> None:
+def test_account_host_receives_the_account_labels(capsys: pytest.CaptureFixture[str]) -> None:
     _account_host_sections()._write_host_labels({})  # noqa: SLF001
 
-    assert capsys.readouterr().out.splitlines() == [
-        "<<<<333333333333>>>>",
-        "<<<labels:sep(0)>>>",
-        '{"cmk/aws/account": "333333333333"}',
-        "<<<<>>>>",
-    ]
+    host, header, labels, end = capsys.readouterr().out.splitlines()
+    assert (host, header, end) == ("<<<<333333333333>>>>", "<<<labels:sep(0)>>>", "<<<<>>>>")
+    assert json.loads(labels) == {
+        "cmk/aws/account": "333333333333",
+        "cmk/aws/resource_id": "333333333333",
+        "cmk/aws/entity": "account",
+    }
 
 
 def test_run_writes_only_into_the_given_output(capsys: pytest.CaptureFixture[str]) -> None:

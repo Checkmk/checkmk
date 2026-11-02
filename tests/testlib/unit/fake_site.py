@@ -30,6 +30,7 @@ import cmk.utils.caching
 import cmk.utils.paths
 from cmk.ccc.site import omd_site, SiteId
 from cmk.crash import make_crash_report_base_path
+from cmk.licensing.helper import get_licensing_logger
 from cmk.schema_manager import discover_db_migrations, ensure_schema
 from cmk.schema_manager.backend.sqlite import Sqlite
 from cmk.utils import redis
@@ -323,6 +324,7 @@ def cleanup_omd_root_after_test() -> Iterator[None]:
     try:
         _report_crashes()
     finally:
+        _remove_licensing_log_handlers()
         # Ensure there is no file left over in the unit test fake site
         # to prevent tests involving each other
         for entry in cmk.utils.paths.omd_root.iterdir():
@@ -336,6 +338,17 @@ def cleanup_omd_root_after_test() -> Iterator[None]:
                     entry.unlink()
             except OSError as e:
                 logger.debug("Failed to cleanup %s after test: %s. Keep going anyway", entry, e)
+
+
+def _remove_licensing_log_handlers() -> None:
+    """Remove the handlers of the licensing logger, which write to licensing.log in the fake site.
+
+    The cleanup deletes that file and its directory. Without a handler, the next test that uses
+    the licensing logger sets it up again, which creates the directory and the file anew."""
+    licensing_logger = get_licensing_logger()
+    for handler in licensing_logger.handlers[:]:
+        licensing_logger.removeHandler(handler)
+        handler.close()
 
 
 def prevent_livestatus_connect() -> Iterator[None]:

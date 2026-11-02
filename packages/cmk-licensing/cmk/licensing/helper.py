@@ -5,6 +5,7 @@
 
 import hashlib
 import logging
+import threading
 from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from uuid import UUID
@@ -12,14 +13,20 @@ from uuid import UUID
 from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import SiteId
 
+# Threads of one process, for example the jobs of the UI job scheduler, may set up the licensing
+# logger at the same time.
+_SETUP_LOCK = threading.Lock()
+
 
 def get_licensing_logger() -> logging.Logger:
     return logging.getLogger("cmk.licensing")
 
 
-def init_logging(log_dir: Path) -> logging.Logger:
+def _init_logging(log_dir: Path) -> logging.Logger:
     log_dir.mkdir(parents=True, exist_ok=True)
 
+    # logrotate rotates licensing.log while a long-lived process keeps the handler. The handler
+    # reopens the file when its inode changes.
     handler = WatchedFileHandler(filename=log_dir / "licensing.log", encoding="utf-8")
     handler.setFormatter(CMKFormatter(with_process=True))
 
@@ -29,6 +36,23 @@ def init_logging(log_dir: Path) -> logging.Logger:
     logger.propagate = False
 
     return logger
+
+
+def init_logging_if_missing(log_dir: Path) -> logging.Logger:
+    """Return the licensing logger, set up to write to licensing.log in log_dir.
+
+    The first call in a process adds a handler for that file. Later calls for the same log_dir
+    return the logger unchanged. They neither open the file again nor remove handlers that other
+    code added. Callers can therefore call this function every time they need the logger."""
+    logger = get_licensing_logger()
+    log_file = log_dir.absolute() / "licensing.log"
+    with _SETUP_LOCK:
+        if any(
+            isinstance(handler, WatchedFileHandler) and Path(handler.baseFilename) == log_file
+            for handler in logger.handlers
+        ):
+            return logger
+        return _init_logging(log_dir)
 
 
 def load_instance_id(file_path: Path) -> UUID | None:

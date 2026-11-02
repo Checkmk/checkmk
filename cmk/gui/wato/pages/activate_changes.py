@@ -83,7 +83,7 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.gui.watolib.sites import site_management_registry
-from cmk.licensing.helper import init_logging
+from cmk.licensing.helper import init_logging_if_missing
 from cmk.licensing.registry import get_licensing_user_effect
 from cmk.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
@@ -423,7 +423,7 @@ class ModeActivateChanges(WatoMode):
         self._changes.load(list(activation_sites(active_config.sites)))
         self._license_usage_report_validity = get_license_usage_report_validity(
             omd_root=paths.omd_root,
-            logger=init_logging(paths.log_dir),
+            logger=init_logging_if_missing(paths.log_dir),
         )
         self._quick_setup_origin = request.get_ascii_input(self.VAR_ORIGIN) == "quick_setup"
 

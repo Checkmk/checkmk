@@ -15,7 +15,7 @@ from cmk.licensing.basics.paths import (
 )
 from cmk.licensing.helper import (
     hash_site_id,
-    init_logging,
+    init_logging_if_missing,
     load_instance_id,
 )
 from cmk.licensing.usage import (
@@ -52,7 +52,7 @@ def _omd_root() -> Path:
 def main() -> int:
     args = _parse_arguments()
     omd_root = _omd_root()
-    logger = init_logging(omd_root / "var" / "log")
+    logger = init_logging_if_missing(omd_root / "var" / "log")
 
     if args.force:
         get_next_run_file_path(omd_root).unlink(missing_ok=True)

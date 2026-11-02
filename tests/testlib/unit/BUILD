@@ -48,6 +48,7 @@ py_library(
         "//packages/cmk-ccc:version",
         "//packages/cmk-crash:crash",
         "//packages/cmk-crypto",
+        "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-ruleset-matcher",
         "//packages/cmk-schema-manager",

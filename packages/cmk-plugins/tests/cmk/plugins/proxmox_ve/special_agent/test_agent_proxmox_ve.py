@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from cmk.plugins.proxmox_ve.special_agent.agent_proxmox_ve import (
+    _create_vm_sections,
     hostname_matches_node,
     node_piggyback_host,
 )
@@ -588,3 +589,34 @@ def test_hostname_matches_node(hostname: str, node: str, expected: bool) -> None
 )
 def test_node_piggyback_host(hostname: str, node: str, nodes: list[str], expected: str) -> None:
     assert node_piggyback_host(hostname, node, nodes) == expected
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=ValueError,
+    reason="Crash report 3c2937ac-9a06-11f1-86ff-c77d868429e2: ValueError 'import' LockState",
+)
+def test_create_vm_sections_reports_import_lock() -> None:
+    # Proxmox VE locks a VM with "import" while the import wizard runs
+    section_name, section = next(
+        iter(
+            _create_vm_sections(
+                vmid="100",
+                vm={
+                    "node": "pve1",
+                    "type": "qemu",
+                    "status": "stopped",
+                    "name": "vm1",
+                    "uptime": 0,
+                },
+                config_lock_data={"100": {"lock": "import"}},
+                logged_backup_data={},
+                snapshot_data={},
+                node_cluster_mapping={},
+            )
+        )
+    )
+
+    assert section_name == "proxmox_ve_vm_info"
+    assert isinstance(section, dict)
+    assert section["lock"] == "import"

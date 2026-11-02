@@ -451,6 +451,16 @@ def _create_node_sections(
         )
 
 
+def _parse_lock_state(vmid: str, lock_str: str | None) -> LockState | None:
+    if not lock_str:
+        return None
+    try:
+        return LockState(lock_str)
+    except ValueError:
+        LOGGER.warning("VM %s: ignoring unknown config lock %r", vmid, lock_str)
+        return None
+
+
 def _create_vm_sections(
     vmid: str,
     vm: Any,
@@ -459,8 +469,7 @@ def _create_vm_sections(
     snapshot_data: Mapping[str, object],
     node_cluster_mapping: Mapping[str, object],
 ) -> Iterable[tuple[str, object]]:
-    lock_str = config_lock_data.get(vmid, {}).get("lock")
-    lock_state = LockState(lock_str) if lock_str else None
+    lock_state = _parse_lock_state(vmid, config_lock_data.get(vmid, {}).get("lock"))
     yield (
         "proxmox_ve_vm_info",
         SectionVMInfo(

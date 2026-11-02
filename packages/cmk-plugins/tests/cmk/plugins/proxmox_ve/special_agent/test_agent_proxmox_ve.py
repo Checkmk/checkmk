@@ -615,3 +615,28 @@ def test_create_vm_sections_reports_import_lock() -> None:
     assert section_name == "proxmox_ve_vm_info"
     assert isinstance(section, dict)
     assert section["lock"] == "import"
+
+
+def test_create_vm_sections_ignores_unknown_lock() -> None:
+    section_name, section = next(
+        iter(
+            _create_vm_sections(
+                vmid="100",
+                vm={
+                    "node": "pve1",
+                    "type": "qemu",
+                    "status": "stopped",
+                    "name": "vm1",
+                    "uptime": 0,
+                },
+                config_lock_data={"100": {"lock": "some-future-lock"}},
+                logged_backup_data={},
+                snapshot_data={},
+                node_cluster_mapping={},
+            )
+        )
+    )
+
+    assert section_name == "proxmox_ve_vm_info"
+    assert isinstance(section, dict)
+    assert section["lock"] is None

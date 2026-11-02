@@ -153,10 +153,12 @@ class Perfdata(NamedTuple):
     boundaries: tuple[float | None, float | None] | None
 
 
-def _stringify_identifiers(obj: dict[str, Any]) -> dict[str, Any]:
-    for key in _IDENTIFIER_KEYS:
-        if (value := obj.get(key)) is not None:
-            obj[key] = str(value)
+def _normalize_values(obj: dict[str, Any]) -> dict[str, Any]:
+    for key, value in obj.items():
+        if key in _IDENTIFIER_KEYS and value is not None:
+            obj[key] = value = str(value)
+        if isinstance(value, str):
+            obj[key] = " ".join(value.splitlines())
     return obj
 
 
@@ -169,7 +171,7 @@ def parse_redfish_multiple(string_table: StringTable) -> RedfishAPIData:
 
     parsed: dict[str, Mapping[str, Any]] = {}
     for line in string_table:
-        entry = json.loads(line[0], object_hook=_stringify_identifiers)
+        entry = json.loads(line[0], object_hook=_normalize_values)
         # error entry
         # {"error": "Storage data could not be fetched\n"}
         if entry.get("error"):

@@ -129,5 +129,6 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 <style scoped>
 .db-component__container {
   padding-left: 6px;
+  padding-top: 6px;
 }
 </style>

@@ -171,7 +171,7 @@ const copyInternalDashboardLink = async (): Promise<void> => {
         >
           <template #trailing>
             <div class="db-menu-header__filter">
-              <div class="db-menu-header__separator" />
+              <div class="db-menu-header__separator db-menu-header__filter-separator" />
               <MenuButton :disabled="isInteractionDisabled" @click="emit('open-runtime-filter')">
                 <CmkIcon name="filter" size="large" />
                 <span>{{ _t('Filter') }}</span>
@@ -355,11 +355,15 @@ const copyInternalDashboardLink = async (): Promise<void> => {
 }
 
 .db-menu-header__separator {
+  flex-shrink: 0;
   align-self: stretch;
-  width: var(--dimension-1);
-  padding: 0 var(--dimension-5) 0 var(--dimension-5);
-  background-color: var(--color-mid-grey-60);
-  background-clip: content-box;
+  margin: 0 var(--dimension-2);
+  border-left: var(--dimension-1) solid var(--color-mid-grey-60);
+}
+
+.db-menu-header__filter-separator {
+  margin-left: var(--dimension-3);
+  margin-right: var(--dimension-4);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

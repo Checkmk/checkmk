@@ -108,9 +108,10 @@ def parse_snmp_uptime_pair(string_table: StringTable) -> UptimePair | None:
             return None
 
         try:
-            return int(raw_value[:-2])
+            seconds = int(raw_value[:-2])
         except Exception:
             return None
+        return seconds if seconds >= 0 else None
 
     try:
         return UptimePair(

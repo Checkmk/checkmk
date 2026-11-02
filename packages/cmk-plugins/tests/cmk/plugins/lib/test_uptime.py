@@ -140,11 +140,6 @@ def test_parse_snmp_uptime_parses_with_only_sys_up_timestamp() -> None:
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report e279d6b6-d12e-11f1-b32d-0050569e8de8: ValueError negative timespan",
-)
 def test_check_snmp_uptime_ignores_negative_hr_system_up_time() -> None:
     # The device reports hrSystemUptime as a signed 32 bit value, which turns
     # negative after about 248 days of uptime. sysUpTime is still valid.

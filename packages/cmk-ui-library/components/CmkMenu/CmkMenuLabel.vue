@@ -33,6 +33,14 @@ const shrinkFactors = computed(() => {
   )
 })
 
+const lines = computed(() =>
+  [1, 2]
+    .map((line) =>
+      parts.map((part, index) => ({ part, index })).filter(({ part }) => (part.line ?? 1) === line)
+    )
+    .filter((line) => line.length > 0)
+)
+
 function isTruncated(): boolean {
   return (partElements.value ?? []).some((element) => element.scrollWidth > element.clientWidth)
 }
@@ -55,16 +63,18 @@ watch(
   >
     <CmkTooltipTrigger as-child>
       <span class="cmk-menu-label">
-        <template v-for="(part, index) in parts" :key="index">
-          <span v-if="index > 0" class="cmk-menu-label__separator"> – </span>
-          <span
-            ref="part"
-            class="cmk-menu-label__part"
-            :class="{ 'cmk-menu-label__part--bold': part.bold }"
-            :style="{ flexShrink: shrinkFactors[index] }"
-            >{{ part.text }}</span
-          >
-        </template>
+        <span v-for="(line, lineIndex) in lines" :key="lineIndex" class="cmk-menu-label__line">
+          <template v-for="({ part, index }, position) in line" :key="index">
+            <span v-if="position > 0" class="cmk-menu-label__separator"> – </span>
+            <span
+              ref="part"
+              class="cmk-menu-label__part"
+              :class="{ 'cmk-menu-label__part--bold': part.bold }"
+              :style="{ flexShrink: shrinkFactors[index] }"
+              >{{ part.text }}</span
+            >
+          </template>
+        </span>
       </span>
     </CmkTooltipTrigger>
     <CmkTooltipContent side="top" align="start" :avoid-collisions="true" use-portal>
@@ -77,6 +87,12 @@ watch(
 .cmk-menu-label {
   display: flex;
   flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cmk-menu-label__line {
+  display: flex;
   min-width: 0;
 }
 

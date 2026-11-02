@@ -15,6 +15,8 @@ export interface CmkMenuLabelPart {
   bold?: boolean
   /** Parts with a lower value give up width first; parts without one never truncate. */
   truncateOrder?: number
+  /** Once any item uses line 2, every row of the menu gets the two-line height. */
+  line?: 1 | 2
 }
 
 interface CmkMenuItemBase {

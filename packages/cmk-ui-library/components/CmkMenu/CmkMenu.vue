@@ -31,7 +31,6 @@ import CmkMenuLabel from './CmkMenuLabel.vue'
 import type { CmkMenuItem } from './types'
 
 const SEARCH_FROM_ITEM_COUNT = 9
-const LIST_MAX_HEIGHT = 'calc(9 * var(--dimension-9))'
 
 const { _t } = usei18n()
 
@@ -71,8 +70,17 @@ const entries = computed(() =>
   items.map((item, key) => ({
     key,
     item,
-    fullLabel: item.label.map((part) => part.text).join(' – ')
+    fullLabel: [...item.label]
+      .sort((a, b) => (a.line ?? 1) - (b.line ?? 1))
+      .map((part) => part.text)
+      .join(' – ')
   }))
+)
+
+const twoLine = computed(() => items.some((item) => item.label.some((part) => part.line === 2)))
+
+const listMaxHeight = computed(
+  () => `calc(9 * var(${twoLine.value ? '--dimension-12' : '--dimension-9'}))`
 )
 
 const showSearch = computed(() => searchable || entries.value.length >= SEARCH_FROM_ITEM_COUNT)
@@ -124,6 +132,7 @@ function onItemFocus(key: number, event: FocusEvent): void {
     <DropdownMenuPortal :to="floatingTarget ?? 'body'">
       <DropdownMenuContent
         class="cmk-menu"
+        :class="{ 'cmk-menu--two-line': twoLine }"
         side="bottom"
         align="start"
         :side-offset="4"
@@ -141,7 +150,7 @@ function onItemFocus(key: number, event: FocusEvent): void {
           />
         </div>
         <CmkTooltipProvider>
-          <CmkScrollContainer :max-height="LIST_MAX_HEIGHT">
+          <CmkScrollContainer :max-height="listMaxHeight">
             <template v-for="entry in visibleEntries" :key="entry.key">
               <DropdownMenuItem
                 v-if="'value' in entry.item"
@@ -151,7 +160,11 @@ function onItemFocus(key: number, event: FocusEvent): void {
                 @focus="onItemFocus(entry.key, $event)"
                 @blur="keyboardFocusedKey = null"
               >
-                <CmkColorSwatch v-if="entry.item.color" :color="entry.item.color" />
+                <CmkColorSwatch
+                  v-if="entry.item.color"
+                  class="cmk-menu__swatch"
+                  :color="entry.item.color"
+                />
                 <CmkMenuLabel
                   :parts="entry.item.label"
                   :full-label="entry.fullLabel"
@@ -173,7 +186,11 @@ function onItemFocus(key: number, event: FocusEvent): void {
                   @focus="onItemFocus(entry.key, $event)"
                   @blur="keyboardFocusedKey = null"
                 >
-                  <CmkColorSwatch v-if="entry.item.color" :color="entry.item.color" />
+                  <CmkColorSwatch
+                    v-if="entry.item.color"
+                    class="cmk-menu__swatch"
+                    :color="entry.item.color"
+                  />
                   <CmkMenuLabel
                     :parts="entry.item.label"
                     :full-label="entry.fullLabel"
@@ -195,7 +212,11 @@ function onItemFocus(key: number, event: FocusEvent): void {
                   @focus="onItemFocus(entry.key, $event)"
                   @blur="keyboardFocusedKey = null"
                 >
-                  <CmkColorSwatch v-if="entry.item.color" :color="entry.item.color" />
+                  <CmkColorSwatch
+                    v-if="entry.item.color"
+                    class="cmk-menu__swatch"
+                    :color="entry.item.color"
+                  />
                   <CmkMenuLabel
                     :parts="entry.item.label"
                     :full-label="entry.fullLabel"
@@ -217,7 +238,11 @@ function onItemFocus(key: number, event: FocusEvent): void {
                   />
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal :to="floatingTarget ?? 'body'">
-                  <DropdownMenuSubContent class="cmk-menu cmk-menu--submenu" :side-offset="1">
+                  <DropdownMenuSubContent
+                    class="cmk-menu cmk-menu--submenu"
+                    :class="{ 'cmk-menu--two-line': twoLine }"
+                    :side-offset="1"
+                  >
                     <DropdownMenuItem
                       v-for="(link, index) in entry.item.links"
                       :key="index"
@@ -313,6 +338,20 @@ function onItemFocus(key: number, event: FocusEvent): void {
   overflow: hidden;
   line-height: var(--dimension-9);
   text-overflow: ellipsis;
+}
+
+.cmk-menu--two-line {
+  .cmk-menu__item {
+    height: var(--dimension-12);
+
+    .cmk-menu__swatch {
+      height: var(--dimension-10);
+    }
+  }
+
+  .cmk-menu__link {
+    line-height: var(--dimension-12);
+  }
 }
 
 .cmk-menu__empty {

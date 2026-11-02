@@ -43,13 +43,18 @@ const HOSTS = [
 const SERVICES: [string, string][] = [
   ['CPU load', 'Load average 1'],
   ['Memory', 'RAM used'],
-  ['Interface eth0', 'Bandwidth in'],
+  ['Interface eth0', 'Bandwidth in, averaged over the last fifteen minutes'],
   ['Filesystem /var', 'Used space']
 ]
 
 const ITEM_COUNTS = { few: 5, many: 12 }
 
-const ITEM_KINDS = { links: 'Links', values: 'Values' }
+const ITEM_KINDS = {
+  links: 'Links, one line',
+  twoLineLinks: 'Links, two lines',
+  mixedLinks: 'Links, mixed lines',
+  values: 'Values'
+}
 
 const DEMO_ITEMS: CmkMenuItem[] = HOSTS.map((host, index) => {
   const [service, metric] = SERVICES[index % SERVICES.length]!
@@ -66,17 +71,34 @@ const DEMO_ITEMS: CmkMenuItem[] = HOSTS.map((host, index) => {
     label: [
       { text: host, truncateOrder: 1 },
       { text: service, truncateOrder: 2 },
-      { text: metric, bold: true }
+      { text: metric, bold: true, truncateOrder: 3 }
     ],
     links
   }
 })
+
+// The bold metric moves to line 2, below host and service.
+const DEMO_TWO_LINE_ITEMS: CmkMenuItem[] = DEMO_ITEMS.map((item) => ({
+  ...item,
+  label: item.label.map((part) => (part.bold ? { ...part, line: 2 as const } : part))
+}))
+
+const DEMO_MIXED_ITEMS: CmkMenuItem[] = DEMO_ITEMS.map((item, index) =>
+  index % 2 === 0 ? DEMO_TWO_LINE_ITEMS[index]! : item
+)
 
 const DEMO_VALUE_ITEMS: CmkMenuItem[] = HOSTS.map((_, index) => ({
   label: [{ text: `Custom graph ${index + 1}` }],
   value: `custom_graph_${index + 1}`,
   icon: 'clone'
 }))
+
+const DEMO_ITEMS_BY_KIND: Record<keyof typeof ITEM_KINDS, CmkMenuItem[]> = {
+  links: DEMO_ITEMS,
+  twoLineLinks: DEMO_TWO_LINE_ITEMS,
+  mixedLinks: DEMO_MIXED_ITEMS,
+  values: DEMO_VALUE_ITEMS
+}
 
 export const a11yData = [
   {
@@ -129,7 +151,7 @@ export const panelConfig = {
     title: 'Item kind',
     options: listOptions<keyof typeof ITEM_KINDS>(ITEM_KINDS),
     initialState: 'links' as const,
-    help: 'Links navigate; values are emitted with select, e.g. to pick a graph.'
+    help: 'Links navigate (metric inline, on a second line, or mixed); values are emitted with select, e.g. to pick a graph.'
   },
   triggerText: {
     type: 'string' as const,
@@ -180,10 +202,7 @@ watch(pickValues, (values) => {
   propState.value.triggerText = values ? 'Clone custom graph' : ''
 })
 const items = computed(() =>
-  (pickValues.value ? DEMO_VALUE_ITEMS : DEMO_ITEMS).slice(
-    0,
-    ITEM_COUNTS[propState.value.itemCount]
-  )
+  DEMO_ITEMS_BY_KIND[propState.value.itemKind].slice(0, ITEM_COUNTS[propState.value.itemCount])
 )
 const selected = ref<string | null>(null)
 </script>

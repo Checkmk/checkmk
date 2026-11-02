@@ -136,6 +136,27 @@ test('an open submenu follows reordered links, even when two share a URL', async
   ).toEqual(['Docs', 'Graph', 'Service', 'Host'])
 })
 
+test('a line 2 part renders apart from line 1, without a separator in between', async () => {
+  const item: CmkMenuLinkItem = anItem('web01')
+  item.label[2] = { text: 'Load average 1', bold: true, line: 2 }
+  await openMenu([item])
+
+  expect(screen.getByText('web01').parentElement).toHaveTextContent(/^web01 – CPU load$/)
+  expect(screen.getByText('Load average 1').parentElement).toHaveTextContent(/^Load average 1$/)
+})
+
+test('a two-line item is named by its lines in display order, however its parts are listed', async () => {
+  const item: CmkMenuLinkItem = anItem('web01')
+  item.label = [
+    { text: 'Load average 1', bold: true, line: 2 },
+    { text: 'web01', truncateOrder: 1 },
+    { text: 'CPU load', truncateOrder: 2 }
+  ]
+  await openMenu([item])
+
+  expectItemsNamed(['web01 – CPU load – Load average 1'])
+})
+
 function valueItem(title: string, value: string): CmkMenuItem {
   return { label: [{ text: title }], value }
 }

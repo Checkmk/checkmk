@@ -13,7 +13,7 @@ const items: CmkMenuItem[] = [
     label: [
       { text: 'web01', truncateOrder: 1 },
       { text: 'CPU load', truncateOrder: 2 },
-      { text: 'Load average 1', bold: true }
+      { text: 'Load average 1', bold: true, truncateOrder: 3, line: 2 }
     ],
     links: [{ title: 'Host status', url: 'view.py?view_name=host&host=web01' }]
   },
@@ -22,7 +22,7 @@ const items: CmkMenuItem[] = [
     label: [
       { text: 'db01', truncateOrder: 1 },
       { text: 'Memory', truncateOrder: 2 },
-      { text: 'RAM used', bold: true }
+      { text: 'RAM used', bold: true, truncateOrder: 3, line: 2 }
     ],
     links: [
       { title: 'Host status', url: 'view.py?view_name=host&host=db01' },

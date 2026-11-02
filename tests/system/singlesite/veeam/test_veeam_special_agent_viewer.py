@@ -20,6 +20,9 @@ from tests.testlib.common.utils2 import ServiceInfo
 
 from .helpers import BACKUP_SERVER_HOST_NAME, VeeamAccount
 
+# Temporary skip the tests on Cloud as it is not supported yet
+pytestmark = pytest.mark.skip_if_edition("cloud")
+
 # The sections a Viewer may not read, with the endpoint each is denied on.
 DENIED_SECTIONS: Mapping[str, str] = {
     "veeam_server_info": "/api/v1/serverInfo",

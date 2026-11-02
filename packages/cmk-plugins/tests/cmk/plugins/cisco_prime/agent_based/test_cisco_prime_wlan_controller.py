@@ -362,3 +362,44 @@ def test_check_wlan_controller_last_backup(
 ) -> None:
     result = check_wlan_controller_last_backup(item, params, section)
     assert list(result) == expected_result
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=KeyError,
+    reason="Crash report b6560206-f13e-11f0-b1c1-f1f8881cc12b: KeyError 'softwareVersion'",
+)
+def test_check_wlan_controller_metadata_without_software_version() -> None:
+    # Cisco Prime returned a controller without a software version
+    controller = {
+        "alarmStatus": "CLEARED",
+        "apCount": 3,
+        "clientCount": 5,
+        "ipAddress": "10.0.0.1",
+        "name": "wlc1",
+        "reachabilityStatus": True,
+        "rfGroupName": "rf-01",
+        "type": "Cisco 3504 Wireless LAN Controller",
+    }
+    section = parse_cisco_prime_wlan_controller(
+        [
+            [
+                json.dumps(
+                    {
+                        "queryResponse": {
+                            "entity": [
+                                {"@dtoType": "wlanControllersDTO", "wlanControllersDTO": controller}
+                            ]
+                        }
+                    }
+                )
+            ]
+        ]
+    )
+
+    assert list(check_wlan_controller_metadata("wlc1", section)) == [
+        Result(state=State.OK, notice="Name: wlc1"),
+        Result(state=State.OK, summary="Type: Cisco 3504 Wireless LAN Controller"),
+        Result(state=State.OK, notice="IP address: 10.0.0.1"),
+        Result(state=State.OK, summary="Group name: rf-01"),
+    ]

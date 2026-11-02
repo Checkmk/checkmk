@@ -3,49 +3,14 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
-import { networkAwareFetch } from 'cmk-ui-library/lib/networkAwareFetch'
-import { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
-import createClient from 'openapi-fetch'
+import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import type { HorizontalLine, Metric, TimeRange } from '@/graphing/components/TimeSeriesGraph'
 import type { RequestedTimeRange } from '@/graphing/types'
 import type { ServiceNameMatch } from '@/mode-alerts/types'
 
-const PREVIEW_PATH = '/domain-types/telemetry_alert/actions/preview_data/invoke'
-
-interface PreviewRequest {
-  service_name_match: ServiceNameMatch
-  service_name_pattern: string
-  requested_time_range: TimeRange
-  consolidation_function: 'min' | 'max' | 'avg'
-}
-
-export interface Preview {
-  time_range: TimeRange
-  metrics: Metric[]
-  horizontal_lines: HorizontalLine[]
-  notice: string | null
-  warnings: string[]
-  errors: string[]
-}
-
-// TODO(CMK-40260): drop these and use the shared client once the endpoint is in the spec.
-interface PreviewPaths {
-  [PREVIEW_PATH]: {
-    post: {
-      requestBody: { content: { 'application/json': PreviewRequest } }
-      responses: { 200: { content: { 'application/json': Preview } } }
-    }
-  }
-}
-
-const previewClient = createClient<PreviewPaths, 'application/json'>({
-  baseUrl: new URL('api/internal', document.location.href).href,
-  credentials: 'include',
-  headers: { Accept: 'application/json' },
-  fetch: networkAwareFetch
-})
+export type Preview = components['schemas']['AlertPreviewModel']
 
 function problemDetail(error: CmkApiError): string {
   const body = error.body
@@ -64,12 +29,11 @@ export async function fetchPreview(
   const requestedTimeRange = { start: range.start, end: range.end, step }
   try {
     return unwrap(
-      await previewClient.POST(PREVIEW_PATH, {
+      await client.POST('/domain-types/telemetry_alert/actions/preview_data/invoke', {
+        params: { header: { 'Content-Type': 'application/json' } },
         body: {
-          service_name_match: match,
-          service_name_pattern: pattern,
-          requested_time_range: requestedTimeRange,
-          consolidation_function: 'max'
+          service_match: { mode: match, pattern },
+          requested_time_range: requestedTimeRange
         }
       })
     )

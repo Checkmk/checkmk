@@ -42,8 +42,7 @@ const DURATION: Metric = {
 }
 
 interface PreviewRequest {
-  service_name_match: string
-  service_name_pattern: string
+  service_match: { mode: string; pattern: string }
   requested_time_range: { start: number; end: number; step: number }
 }
 
@@ -114,7 +113,7 @@ test('the graph shows the metric of the services the alert applies to', async ()
 
   expect(await screen.findByRole('button', { name: 'web01 HTTP request duration' })).toBeVisible()
   expect(requests).toMatchObject([
-    { service_name_match: 'exact', service_name_pattern: 'HTTP request duration' }
+    { service_match: { mode: 'exact', pattern: 'HTTP request duration' } }
   ])
 })
 

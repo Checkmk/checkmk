@@ -81,6 +81,14 @@ def pop_crash_report_file(crash_type: str, file_name: str) -> bytes | None:
     return content
 
 
+def pop_crash_report_id(crash_type: str) -> str:
+    """Return the ID of the only crash report of the given type, then delete that report"""
+    if (crash_info := pop_crash_report_file(crash_type, "crash.info")) is None:
+        raise AssertionError(f"The {crash_type} crash report has no crash.info")
+    crash_id: str = json.loads(crash_info)["id"]
+    return crash_id
+
+
 def fake_paths() -> None:
     """Patch `cmk.utils.paths.*` into a temp directory so the tests run isolated"""
     from pytest import MonkeyPatch

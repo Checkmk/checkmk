@@ -44,8 +44,8 @@ GW_SEVERITY_MAPPING = {
 class OperationalState:
     op_state: OPState
     gw_severity: GWSeverity
-    error_message: str
-    error_id: str
+    error_message: str | None
+    error_id: str | None
 
 
 def parse_audiocodes_overall_operational_state(
@@ -58,8 +58,8 @@ def parse_audiocodes_overall_operational_state(
     return OperationalState(
         op_state=OPERATIONAL_STATE_MAPPING[op_state],
         gw_severity=GW_SEVERITY_MAPPING[gw_severity],
-        error_message=error_message,
-        error_id=error_id,
+        error_message=error_message if error_message else None,
+        error_id=error_id if error_id not in ("", "0") else None,
     )
 
 
@@ -90,17 +90,16 @@ def check_audiocodes_overall_operational_state(
 ) -> CheckResult:
     yield Result(
         state=section.gw_severity.state,
-        summary=f"Gateway: {section.gw_severity.name}",
+        summary=f"Highest alarm severity: {section.gw_severity.name}",
     )
     yield Result(
         state=section.op_state.state,
-        notice=f"Highest alarm severity: {section.op_state.name}",
-        details=(
-            f"Error message: {section.error_message or '(empty)'}\nError ID: {section.error_id or '(empty)'}"
-        )
-        if section.error_message or section.error_id
-        else None,
+        notice=f"Operational state: {section.op_state.name}",
     )
+    if section.error_message is not None:
+        yield Result(state=State.OK, notice=f"Error message: {section.error_message}")
+    if section.error_id is not None:
+        yield Result(state=State.OK, notice=f"Error ID: {section.error_id}")
 
 
 check_plugin_audiocodes_overall_operational_state = CheckPlugin(

@@ -26,30 +26,45 @@ def test_discovery_function() -> None:
         pytest.param(
             [["2", "0", "", "0"]],
             [
-                Result(state=State.OK, summary="Gateway: No alarm"),
-                Result(state=State.OK, notice="Error message: (empty)\nError ID: 0"),
+                Result(state=State.OK, summary="Highest alarm severity: No alarm"),
+                Result(state=State.OK, notice="Operational state: Enabled"),
             ],
-            id="Everything OK. No Error messages",
+            id="no alarm, error ID 0 is not shown",
+        ),
+        pytest.param(
+            [["2", "4", "", "0"]],
+            [
+                Result(state=State.CRIT, summary="Highest alarm severity: Major"),
+                Result(state=State.OK, notice="Operational state: Enabled"),
+            ],
+            id="major alarm without error message",
         ),
         pytest.param(
             [["1", "2", "Some error message", "1"]],
             [
-                Result(state=State.WARN, summary="Gateway: Warning"),
-                Result(
-                    state=State.CRIT,
-                    summary="Highest alarm severity: Disabled",
-                    details="Error message: Some error message\nError ID: 1",
-                ),
+                Result(state=State.WARN, summary="Highest alarm severity: Warning"),
+                Result(state=State.CRIT, summary="Operational state: Disabled"),
+                Result(state=State.OK, notice="Error message: Some error message"),
+                Result(state=State.OK, notice="Error ID: 1"),
             ],
-            id="CRIT operational state, WARN gw severity, error message",
+            id="disabled device with error message and error ID",
+        ),
+        pytest.param(
+            [["2", "0", "NOTIC:some log", "0"]],
+            [
+                Result(state=State.OK, summary="Highest alarm severity: No alarm"),
+                Result(state=State.OK, notice="Operational state: Enabled"),
+                Result(state=State.OK, notice="Error message: NOTIC:some log"),
+            ],
+            id="error message without error ID",
         ),
         pytest.param(
             [["2", "0", "", ""]],
             [
-                Result(state=State.OK, summary="Gateway: No alarm"),
-                Result(state=State.OK, notice="Highest alarm severity: Enabled"),
+                Result(state=State.OK, summary="Highest alarm severity: No alarm"),
+                Result(state=State.OK, notice="Operational state: Enabled"),
             ],
-            id="OK operational state, OK gw severity, no error message",
+            id="empty error ID is not shown",
         ),
     ],
 )

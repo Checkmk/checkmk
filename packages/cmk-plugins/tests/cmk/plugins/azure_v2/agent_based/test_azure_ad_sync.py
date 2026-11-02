@@ -99,3 +99,18 @@ def test_discover_sync(string_table: StringTable, expected: DiscoveryResult) -> 
 def test_check_azure_sync(params: Mapping[str, Any], expected_result: CheckResult) -> None:  # type: ignore[misc]
     parsed = parse_azure_ad(STRING_TABLE)
     assert list(check_azure_ad_sync("Standardverzeichnis", params, parsed)) == expected_result
+
+
+@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4532")
+@time_machine.travel(datetime.datetime.fromisoformat("1970-02-01T00:00:01Z"))
+def test_check_azure_sync_in_the_future() -> None:
+    parsed = parse_azure_ad(STRING_TABLE)
+    assert list(
+        check_azure_ad_sync("Standardverzeichnis", {"age": ("fixed", (3600, 7200))}, parsed)
+    ) == [
+        Result(
+            state=State.OK,
+            summary="Last synchronization appears to be 15 minutes 0 seconds in the future"
+            " (check your system time)",
+        ),
+    ]

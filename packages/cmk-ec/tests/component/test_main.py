@@ -275,3 +275,14 @@ def test_event_server_restarted_after_an_error_keeps_a_client_with_the_start_of_
 
     assert "Exception in EventServer server" in caplog.text
     assert texts == ["before the restart", "the start of a message and its rest"]
+
+
+def test_event_server_processes_messages_although_writing_the_history_fails(
+    event_console: _EventConsole,
+) -> None:
+    settings, event_status = event_console
+    _make_adding_history_entries_fail(settings)
+
+    _write_to_event_pipe(settings, b"first\nsecond\n")
+
+    assert _texts_of_events(event_status, 2) == ["first", "second"]

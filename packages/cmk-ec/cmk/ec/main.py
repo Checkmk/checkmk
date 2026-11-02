@@ -76,7 +76,15 @@ from .helpers import (
     parse_bytes_into_syslog_messages,
     parse_spool_file,
 )
-from .history import ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab, TimedHistory
+from .history import (
+    ActiveHistoryPeriod,
+    ErrorLoggingHistory,
+    get_logfile,
+    History,
+    HistoryWhat,
+    quote_tab,
+    TimedHistory,
+)
 from .history_file import FileHistory
 from .history_mongo import MongoDBHistory
 from .history_sqlite import SQLiteHistory, SQLiteSettings
@@ -266,9 +274,14 @@ def create_history(
     event_columns: Columns,
     history_columns: Columns,
 ) -> History:
-    """Factory for History objects based on the current configuration, optionally augmented with timing information."""
+    """Factory for History objects based on the current configuration, logging the errors of adding
+    entries, and optionally augmented with timing information."""
     history_logger = logger.getChild("EventStatus")
-    history = create_history_raw(settings, config, history_logger, event_columns, history_columns)
+    history = ErrorLoggingHistory(
+        create_history_raw(settings, config, history_logger, event_columns, history_columns),
+        history_logger,
+        debug=settings.options.debug,
+    )
     return TimedHistory(history, history_logger) if history_logger.isEnabledFor(DEBUG) else history
 
 
@@ -3206,12 +3219,15 @@ class EventStatus:
     def remove_event(self, event: Event, delete_reason: HistoryWhat, user: str = "") -> None:
         try:
             self._events.remove(event)
-            self._history.add(event, delete_reason, user)
-            self._count_event_remove(event)
         except ValueError:
             self._logger.exception(
                 "Cannot remove event %(event_id)d: not present", {"event_id": event["id"]}
             )
+            return
+        # Before adding its history entry, so it no longer counts for the event limits even if that
+        # raises, e.g. in debug mode.
+        self._count_event_remove(event)
+        self._history.add(event, delete_reason, user)
 
     # protected by self.lock
     def remove_oldest_event(self, ty: LimitKind, event: Event) -> None:
@@ -4054,7 +4070,7 @@ def reload_configuration(
     status_server.reload_configuration(config, new_history)
     # Once a status query still reading it is answered, only the event server may still use the
     # previous history, e.g. to record an action it started before the reload. With SQLite,
-    # recording that then fails, which the action logs, while MongoDB reconnects.
+    # recording that then fails, which the history logs, while MongoDB reconnects.
     with event_status.lock:
         try:
             history.close()

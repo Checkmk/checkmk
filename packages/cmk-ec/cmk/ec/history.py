@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
+import threading
 import time
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from logging import Logger
 from pathlib import Path
@@ -94,6 +95,139 @@ class TimedHistory(History):
     def close(self) -> None:
         with self._timing("close"):
             return self._history.close()
+
+
+# The least time between two reminders of errors adding history entries which keep happening
+_REMINDER_INTERVAL = 60.0  # seconds
+
+type _KindOfError = tuple[type[Exception], int | None]
+
+
+def _kind_of_error(error: Exception) -> _KindOfError:
+    """
+    Its type, and for an OSError its number and for an SQLite error its result code, e.g. to tell a
+    locked database from a full disk, but not its message, which may change with each try for the
+    same cause, e.g. for an unreachable MongoDB
+    """
+    match error:
+        case OSError():
+            return type(error), error.errno
+        case _:
+            # Looked up by name, so the other history backends don't need to import sqlite3. And
+            # sqlite3 raises some errors itself, without a result code, e.g. for a closed database.
+            return type(error), getattr(error, "sqlite_errorcode", None)
+
+
+class ErrorLoggingHistory(History):
+    """Decorate History.add() to log its errors instead of raising them.
+
+    Processing an event shouldn't fail because its history entry can't be written, e.g. on a full
+    disk: Its rule's actions would be skipped, and the event server would restart.
+
+    So that e.g. an unreachable database doesn't flood the log, it logs a series of such errors
+    briefly: Each kind of error once with a stack trace, then at most every _REMINDER_INTERVAL a
+    reminder with the number of entries missing so far, and their final number once adding entries
+    works again or the history is closed. After closing, nothing ends a series anymore, so it logs
+    each error on its own.
+
+    In debug mode, it raises the errors, like the rest of the Event Console does.
+    """
+
+    def __init__(
+        self,
+        history: History,
+        logger: Logger,
+        *,
+        debug: bool,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
+        self._history = history
+        self._logger = logger
+        self._debug = debug
+        # Only tests pass a clock: Reminders use the monotonic clock, so that changing the system
+        # time doesn't affect them, and time_machine can't fake that one.
+        self._clock = clock
+        # Several threads add entries, e.g. the event server and the status server.
+        self._lock = threading.Lock()
+        # The current series of errors, i.e. since adding an entry failed after it worked
+        self._kinds_of_errors: set[_KindOfError] = set()
+        self._missing = 0
+        self._next_reminder = 0.0
+        # Only what was under way while reloading the configuration still adds entries afterwards.
+        self._closed = False
+
+    @override
+    def flush(self) -> None:
+        self._history.flush()
+
+    @override
+    def housekeeping(self) -> None:
+        self._history.housekeeping()
+
+    @override
+    def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
+        try:
+            self._history.add(event, what, who, addinfo)
+        except Exception as e:
+            if self._debug:
+                raise
+            self._log_error(event, what, e)
+        else:
+            # Without errors, the usual case, take the lock only to end a series of them.
+            if self._missing and (missing := self._end_errors()):
+                self._logger.warning(
+                    "Adding entries to the history works again, %(missing)d entries are missing",
+                    {"missing": missing},
+                )
+
+    def _log_error(self, event: Event, what: HistoryWhat, error: Exception) -> None:
+        with self._lock:
+            if self._closed:
+                self._logger.error(
+                    "Cannot add the %(what)s entry of event %(event_id)s to the closed history: "
+                    "%(error)s",
+                    {"what": what, "event_id": event.get("id"), "error": error},
+                )
+                return
+            self._missing += 1
+            now = self._clock()
+            if (kind := _kind_of_error(error)) not in self._kinds_of_errors:
+                self._kinds_of_errors.add(kind)
+                self._logger.error(
+                    "Cannot add the %(what)s entry of event %(event_id)s to the history: %(error)s",
+                    {"what": what, "event_id": event.get("id"), "error": error},
+                    exc_info=error,
+                )
+            elif now >= self._next_reminder:
+                self._logger.error(
+                    "Still cannot add entries to the history, %(missing)d missing so far: %(error)s",
+                    {"missing": self._missing, "error": error},
+                )
+            else:
+                return
+            self._next_reminder = now + _REMINDER_INTERVAL
+
+    def _end_errors(self) -> int:
+        """Ends the current series of errors, returning the number of entries missing by it"""
+        with self._lock:
+            missing, self._missing = self._missing, 0
+            self._kinds_of_errors.clear()
+            return missing
+
+    @override
+    def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
+        return self._history.get(query)
+
+    @override
+    def close(self) -> None:
+        with self._lock:
+            self._closed = True
+        if missing := self._end_errors():
+            self._logger.warning(
+                "Closing the history after errors adding entries, %(missing)d entries are missing",
+                {"missing": missing},
+            )
+        self._history.close()
 
 
 def _log_event(

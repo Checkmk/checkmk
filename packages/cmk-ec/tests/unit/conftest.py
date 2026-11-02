@@ -23,7 +23,7 @@ from cmk.ec.history_file import FileHistory
 from cmk.ec.history_mongo import MongoDBHistory
 from cmk.ec.history_sqlite import SQLiteHistory, SQLiteSettings
 from cmk.ec.main import (
-    create_history,
+    create_history_raw,
     default_slave_status_master,
     EventServer,
     EventStatus,
@@ -71,7 +71,7 @@ def fixture_config() -> Config:
 
 @pytest.fixture(name="history")
 def fixture_history(settings: ec.Settings, config: Config) -> FileHistory:
-    history = create_history(
+    history = create_history_raw(
         settings,
         config | {"archive_mode": "file"},
         logging.getLogger("cmk.mkeventd"),
@@ -96,7 +96,7 @@ def fixture_history_mongo(settings: ec.Settings, config: Config) -> Iterator[Mon
         "cmk.ec.history_mongo._mongodb_local_connection_opts",
         mock.Mock(return_value=connection_opts),
     ):
-        history = create_history(
+        history = create_history_raw(
             settings,
             config | {"archive_mode": "mongodb"},
             logging.getLogger("cmk.mkeventd"),

@@ -27,6 +27,7 @@ _LICENSING_SETTINGS_FILE = "etc/check_mk/multisite.d/licensing_settings.mk"
 _LICENSING_NOTIFICATION_SETTINGS_FILE = "etc/check_mk/licensing.d/notification_settings.mk"
 
 _LICENSING_LOG_FILE = "var/log/licensing.log"
+_CA_CERTIFICATE_FILE = "share/check_mk/licensing/ca-certificate.pem"
 
 
 def get_licensing_dir(omd_root: Path) -> Path:
@@ -99,3 +100,7 @@ def get_licensing_notification_settings_file_path(omd_root: Path) -> Path:
 
 def get_licensing_log_file_path(omd_root: Path) -> Path:
     return omd_root / _LICENSING_LOG_FILE
+
+
+def get_ca_certificate_file_path(omd_root: Path) -> Path:
+    return omd_root / _CA_CERTIFICATE_FILE

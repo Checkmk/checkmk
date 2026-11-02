@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
 from typing import override
@@ -120,6 +120,10 @@ def _request_vars(ident: str) -> Sequence[str]:
     return [f"{ident}_from", f"{ident}_until"]
 
 
+def _bound_labels() -> tuple[str, str]:
+    return _("From:"), _("To:")
+
+
 class _FilterNumberRange(Filter):
     """Filter for choosing a range in which a certain integer lies"""
 
@@ -135,21 +139,13 @@ class _FilterNumberRange(Filter):
         self._unit_choices = unit_choices
         self._filter_row = filter_row
 
-        self._html_var_from = f"{ident}_from"
-        self._html_var_from_prefix = f"{ident}_from_prefix"
-        self._html_var_until = f"{ident}_until"
-        self._html_var_until_prefix = f"{ident}_until_prefix"
+        self._bound_vars = [(var, f"{var}_prefix") for var in _request_vars(ident)]
         super().__init__(
             ident=ident,
             title=title,
             sort_index=800,
             info=inv_info,
-            htmlvars=[
-                self._html_var_from,
-                self._html_var_from_prefix,
-                self._html_var_until,
-                self._html_var_until_prefix,
-            ],
+            htmlvars=[var for bound_vars in self._bound_vars for var in bound_vars],
             link_columns=[],
             group=FilterGroup.INVENTORY,
         )
@@ -163,53 +159,25 @@ class _FilterNumberRange(Filter):
         unit_choices = [(n, c.unit) for n, c in self._unit_choices.items()]
 
         html.open_table()
-
-        html.open_tr()
-        html.open_td()
-        html.write_text_permissive(_("From:") + "&nbsp;")
-        html.close_td()
-
-        html.open_td()
-        html.text_input(
-            varname=self._html_var_from,
-            default_value=value.get(self._html_var_from, ""),
-            style="width: 80px;",
-        )
-        html.close_td()
-
-        if unit_choices:
+        for (var, prefix_var), label in zip(self._bound_vars, _bound_labels()):
+            html.open_tr()
             html.open_td()
-            html.dropdown(
-                self._html_var_from_prefix,
-                unit_choices,
-                deflt=value.get(self._html_var_from_prefix, ""),
+            html.write_text_permissive(label + "&nbsp;")
+            html.close_td()
+
+            html.open_td()
+            html.text_input(
+                varname=var,
+                default_value=value.get(var, ""),
+                style="width: 80px;",
             )
             html.close_td()
-        html.close_tr()
 
-        html.open_tr()
-        html.open_td()
-        html.write_text_permissive(_("To:") + "&nbsp;")
-        html.close_td()
-
-        html.open_td()
-        html.text_input(
-            varname=self._html_var_until,
-            default_value=value.get(self._html_var_until, ""),
-            style="width: 80px;",
-        )
-        html.close_td()
-
-        if unit_choices:
-            html.open_td()
-            html.dropdown(
-                self._html_var_until_prefix,
-                unit_choices,
-                deflt=value.get(self._html_var_until_prefix, ""),
-            )
-            html.close_td()
-        html.close_tr()
-
+            if unit_choices:
+                html.open_td()
+                html.dropdown(prefix_var, unit_choices, deflt=value.get(prefix_var, ""))
+                html.close_td()
+            html.close_tr()
         html.close_table()
 
     @override
@@ -217,31 +185,15 @@ class _FilterNumberRange(Filter):
         self, _request_cache: RequestCache[RequestCacheConfig]
     ) -> Iterable[FilterComponent]:
         unit_choices = {n: c.unit for n, c in self._unit_choices.items()}
-
-        def _from() -> Iterator[TextInput | Dropdown]:
-            yield TextInput(
-                id=self._html_var_from,
-                label=_("From:"),
-            )
-            if unit_choices:
-                yield Dropdown(
-                    id=self._html_var_from_prefix,
-                    choices=unit_choices,
+        for (var, prefix_var), label in zip(self._bound_vars, _bound_labels()):
+            text_input = TextInput(id=var, label=label)
+            yield HorizontalGroup(
+                components=(
+                    [text_input, Dropdown(id=prefix_var, choices=unit_choices)]
+                    if unit_choices
+                    else [text_input]
                 )
-
-        def _to() -> Iterator[TextInput | Dropdown]:
-            yield TextInput(
-                id=self._html_var_until,
-                label=_("To:"),
             )
-            if unit_choices:
-                yield Dropdown(
-                    id=self._html_var_until_prefix,
-                    choices=unit_choices,
-                )
-
-        yield HorizontalGroup(components=list(_from()))
-        yield HorizontalGroup(components=list(_to()))
 
     def _get_bound(self, var: str, var_prefix: str | None) -> int | float | None:
         if var_prefix is not None and (choice := self._unit_choices.get(var_prefix)):
@@ -254,18 +206,13 @@ class _FilterNumberRange(Filter):
             return None
 
     def _get_bounds(self, filter_vars: FilterHTTPVariables) -> _MaybeBounds:
-        return (
-            (
-                None
-                if (var := filter_vars.get(self._html_var_from)) is None
-                else self._get_bound(var, filter_vars.get(self._html_var_from_prefix))
-            ),
-            (
-                None
-                if (var := filter_vars.get(self._html_var_until)) is None
-                else self._get_bound(var, filter_vars.get(self._html_var_until_prefix))
-            ),
+        from_bound, until_bound = (
+            None
+            if (value := filter_vars.get(var)) is None
+            else self._get_bound(value, filter_vars.get(prefix_var))
+            for var, prefix_var in self._bound_vars
         )
+        return from_bound, until_bound
 
     @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:

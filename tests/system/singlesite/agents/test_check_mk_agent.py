@@ -5,13 +5,15 @@
 
 import logging
 import subprocess
-from getpass import getuser
+import tempfile
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils2 import execute
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +24,7 @@ def _write_script(script_dir: Path) -> None:
     if script_file.exists():
         return
     script_file.write_text('#!/usr/bin/env bash\necho "WHOAMI: $(whoami)"', encoding="UTF-8")
-    script_file.chmod(0o4744)  # necessary to be executable by anyone
+    script_file.chmod(0o755)  # necessary to be executable by anyone
 
 
 def _write_config(runas_user: str, mk_confdir: Path, script_dir: Path) -> None:
@@ -31,15 +33,24 @@ def _write_config(runas_user: str, mk_confdir: Path, script_dir: Path) -> None:
     cfg_file.write_text(f"local {runas_user} {script_dir.as_posix()}", encoding="UTF-8")
 
 
-@pytest.mark.requires_non_root_user
+@pytest.fixture(name="script_dir")
+def fixture_script_dir() -> Iterator[Path]:
+    # unlike tmp_path, this is reachable by the unprivileged user running the script
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        script_dir = Path(tmp_dir)
+        script_dir.chmod(0o755)
+        yield script_dir
+
+
 @pytest.mark.parametrize("runas_user", ["root", "user"])
-def test_cmk_agent_run_runas_executor(runas_user: str, tmp_path: Path) -> None:
-    # the actual username
-    runas_user_name = getuser() if runas_user == "user" else runas_user
+def test_cmk_agent_run_runas_executor(
+    runas_user: str, site: Site, script_dir: Path, tmp_path: Path
+) -> None:
+    # the actual username, the site user being a non-root user available in any environment
+    runas_user_name = site.id if runas_user == "user" else runas_user
     # the argument for the runas.cfg
     runas_user_arg = "-" if runas_user_name == "root" else runas_user_name
 
-    script_dir = tmp_path / "scripts"
     mk_confdir = tmp_path / "config"
     _write_script(script_dir=script_dir)
     _write_config(runas_user=runas_user_arg, mk_confdir=mk_confdir, script_dir=script_dir)

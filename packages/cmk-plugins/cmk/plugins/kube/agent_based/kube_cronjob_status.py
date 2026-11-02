@@ -211,6 +211,19 @@ def _cron_job_status(
         yield Result(state=State.UNKNOWN, summary="Latest job: Suspended")
         return
 
+    if (
+        job_status in (JobStatusType.PENDING, JobStatusType.RUNNING)
+        and (time_since_start := current_time - job_start_time) < 0
+    ):
+        yield Result(
+            state=State.UNKNOWN,
+            summary=(
+                f"Latest job: start time is {render.timespan(-time_since_start)}"
+                " in the future (check the system time)"
+            ),
+        )
+        return
+
     match job_status:
         case JobStatusType.COMPLETED:
             state = State.OK
@@ -258,8 +271,18 @@ def _last_successful_completion(
         yield Result(state=State.OK, summary="No successfully completed job")
         return
 
+    if (time_since := current_time - last_successful_time) < 0:
+        yield Result(
+            state=State.UNKNOWN,
+            summary=(
+                f"Last successful completion is {render.timespan(-time_since)}"
+                " in the future (check the system time)"
+            ),
+        )
+        return
+
     yield from check_levels_v1(
-        current_time - last_successful_time,
+        time_since,
         metric_name="kube_cron_job_status_since_completion",
         label="Time since last successful completion",
         render_func=render.timespan,
@@ -271,8 +294,18 @@ def _last_schedule(current_time: Timestamp, last_schedule_time: Timestamp | None
         yield Result(state=State.OK, summary="Job is yet to be scheduled")
         return
 
+    if (time_since := current_time - last_schedule_time) < 0:
+        yield Result(
+            state=State.UNKNOWN,
+            summary=(
+                f"Last schedule is {render.timespan(-time_since)}"
+                " in the future (check the system time)"
+            ),
+        )
+        return
+
     yield from check_levels_v1(
-        current_time - last_schedule_time,
+        time_since,
         metric_name="kube_cron_job_status_since_schedule",
         label="Time since last schedule",
         render_func=render.timespan,

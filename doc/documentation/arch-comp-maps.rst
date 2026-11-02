@@ -1142,8 +1142,10 @@ Site integration
   directive of its own.
 * **Site Apache** runs the prefork MPM with at most 64 worker processes. Every
   open SSE stream holds one of them, hence the stream limits above. The system
-  Apache in front of the site proxies with a 120 s timeout; the daemon sends a
-  keep-alive comment every 30 s so that open streams stay under it.
+  Apache in front of the site proxies with a 120 s timeout. The daemon writes a
+  keep-alive comment to an idle stream every 5 s: it keeps open streams under
+  that timeout, and both Apaches notice a closed browser tab only when they
+  write, so its worker is freed after 7 to 25 s.
 * **Logs** in ``var/log/maps/`` are rotated by OMD's logrotate (seven
   generations).
 

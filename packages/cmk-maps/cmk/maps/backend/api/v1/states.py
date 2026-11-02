@@ -71,6 +71,10 @@ _dead_sites_snapshots: dict[tuple[str, str | None], list[str]] = {}
 # How often an open stream asks whether its session still holds. The answer is
 # cached, so the GUI is asked again only once it has expired.
 _SESSION_RECHECK_INTERVAL = 30.0
+# Each proxy in front of the daemon notices a closed browser tab only when it
+# writes, so an idle stream is written to on this beat.
+_KEEPALIVE_INTERVAL = 5.0
+_KEEPALIVE: SentEvent[StreamMessage] = SentEvent(comment="ping")
 
 
 async def _fetch_topology_for_user(
@@ -635,9 +639,9 @@ async def sse_map_states(
                 break
             next_check = time.monotonic() + _SESSION_RECHECK_INTERVAL
         try:
-            event = await asyncio.wait_for(sub.queue.get(), timeout=_SESSION_RECHECK_INTERVAL)
+            event = await asyncio.wait_for(sub.queue.get(), timeout=_KEEPALIVE_INTERVAL)
         except TimeoutError:
-            continue
+            event = _KEEPALIVE
         except asyncio.QueueShutDown:
             break
         yield event

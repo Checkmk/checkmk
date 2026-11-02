@@ -465,17 +465,24 @@ async def _stream_map_b1(
     user: str,
     *,
     leave_after_events: int | None = None,
+    leave_after_keepalives: int | None = None,
     on_event: Callable[[], None] = lambda: None,
 ) -> bytes:
     """Drives the stream of map b1 as a client that calls on_event for each event it
-    receives and leaves once it has received leave_after_events events, and returns what
-    it received. TestClient cannot: it waits for the response to end, which an open
-    stream never does."""
+    receives and leaves once it has received leave_after_events events or
+    leave_after_keepalives keep-alive comments, and returns what it received.
+    TestClient cannot: it waits for the response to end, which an open stream never
+    does."""
     received = bytearray()
     left = asyncio.Event()
 
     def leave_when_done() -> None:
-        if leave_after_events is not None and received.count(b"\n\n") >= leave_after_events:
+        frames = bytes(received).split(b"\n\n")[:-1]
+        comments = sum(1 for frame in frames if frame.startswith(b":"))
+        keepalives = frames.count(b": ping")
+        if (leave_after_events is not None and len(frames) - comments >= leave_after_events) or (
+            leave_after_keepalives is not None and keepalives >= leave_after_keepalives
+        ):
             left.set()
 
     async def receive() -> Message:
@@ -521,6 +528,15 @@ def test_sse_sends_each_message_as_an_event_with_its_name_and_data(app: FastAPI)
         ("state_update", "state_update"),
         ("topology_update", "topology_update"),
     ]
+
+
+def test_sse_writes_to_an_idle_stream(app: FastAPI, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(states, "_KEEPALIVE_INTERVAL", 0.01)
+    map_service.register_map("alice", MapConfig(name="b1"))
+
+    received = asyncio.run(_stream_map_b1(app, "alice", leave_after_keepalives=1))
+
+    assert b": ping\n\n" in received
 
 
 def _free_stream_slots(user: str) -> int:

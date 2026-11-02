@@ -371,7 +371,7 @@ def version_in_range(
     ident: str, request_vars: list[str], context: VisualContext, rows: Rows
 ) -> Rows:
     values = context.get(ident, {})
-    from_version, to_version = (values.get(v) for v in request_vars)
+    from_version, to_version = (values.get(v, "").strip() for v in request_vars)
 
     new_rows = []
     for row in rows:

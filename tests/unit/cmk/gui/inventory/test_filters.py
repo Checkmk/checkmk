@@ -14,6 +14,7 @@ from cmk.gui.inventory.filters import (
     FilterInvFloatChoice,
     FilterInvHasSoftwarePackage,
     FilterInvtableTextWithSortKey,
+    FilterInvtableVersion,
     FilterInvText,
     FilterInvTextWithSortKey,
 )
@@ -419,6 +420,13 @@ def test_filter_invtable_text_with_sort_key_without_bounds_keeps_a_non_text_valu
         title="Title",
         sort_key=str,
     ).filter_table({}, [{"ident": 1}]) == [{"ident": 1}]
+
+
+def test_filter_invtable_version_ignores_blank_bounds() -> None:
+    assert FilterInvtableVersion(inv_info="info", ident="ident", title="Title").filter_table(
+        {"ident": {"ident_from": " ", "ident_until": " "}},
+        [{"ident": "1.0"}],
+    ) == [{"ident": "1.0"}]
 
 
 def _make_host_with_package(name: str) -> Row:

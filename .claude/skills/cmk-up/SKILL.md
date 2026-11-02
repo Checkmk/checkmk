@@ -47,6 +47,70 @@ Read both before writing a playbook.
 - Output: `<KEY>/<KEY>.yaml` in the current directory, side files in the same
   folder. Crash without ticket: `crash-<id8>/crash-<id8>.yaml`.
 
+## Layout: ultra-readable
+
+A playbook is read far more often than written. Lay it out by hand, never run
+a YAML formatter over it, keep lines under 100 columns.
+
+- Tabular data is a table: sibling items with the same keys (services, users,
+  rule conditions, groups) get one flow mapping per line, keys in the same
+  order, padded so each key and value starts in the same column. Numbers
+  right-aligned.
+- Trailing comments of a block start in one column; so do the descriptions in
+  the header (`# phase build:      ...`).
+- Short mappings (`attributes`, `omd_config`, `versions`): values aligned.
+- A blank line between sites, between hosts that carry a block, between phases.
+- Python (generator expressions, `value_raw`, `python3 -c` programs,
+  `imports:` files) is code and laid out as such:
+  - no one-liner beyond ~60 characters: a block scalar (`|`, `>-` for
+    `value_raw`) with one clause per line (`{`, `for ...`, `if ...`, `}`)
+  - dict and tuple literals one entry per line, keys and values aligned,
+    closing brackets on their own line
+  - `imports:` files: type hints, a docstring per function, doctests seeded
+    with `random.Random(0)`, aligned constant tables at the top
+
+<!-- prettier-ignore -->
+```yaml
+imports:
+  hg: ./hostgen.py
+
+sites:
+
+  v300:
+
+    hosts:
+
+      web-01:   # the three answers side by side
+        attributes: {ipaddress: 10.0.0.11, tag_agent: all-agents}
+        services:
+          - {name: CPU load,        state: OK,   summary: "15 min load: 0.4"}
+          - {name: Filesystem /var, state: WARN, summary: "82% used"}
+          - {name: Interface eth0,  state: CRIT, summary: "link down"}
+
+    rules:
+      - id: bi-agent
+        ruleset: special_agents:bi
+        value_raw: >-
+          {
+              'options': [
+                  {
+                      'site':        ('local', None),
+                      'filter':      {'aggr_group_prefix': ['SUP30337']},
+                      'assignments': {'querying_host': 'querying_host'},
+                  },
+              ],
+          }
+
+  v301:
+
+    hosts: |
+      {
+          name: {"services": hg.services(random, 3)}
+          for name in hg.names(random, 8)
+          if not name.startswith("tmp")
+      }
+```
+
 ## A: from a Jira ticket or a description
 
 1. Read the ticket with the `jira:jira-read-ticket` skill: description,

@@ -41,13 +41,19 @@ phases:
           winmssql-1:   # the active FCI node
             attributes: {tag_agent: all-agents}
             services:
-              - {name: MSSQL Connections MSSQLSERVER master, state: OK,
-                 summary: "Connections: 12", perfdata: connections=12}
-              - {name: Uptime, state: OK, summary: up since 12 days}
+              - name:     MSSQL Connections MSSQLSERVER master
+                state:    OK
+                summary:  "Connections: 12"
+                perfdata: connections=12
+              - name:     Uptime
+                state:    OK
+                summary:  up since 12 days
+
           winmssql-2:   # passive node
             attributes: {tag_agent: all-agents}
             services:
               - {name: Uptime, state: OK, summary: up since 12 days}
+
           mssql-cluster:
             nodes: [winmssql-1, winmssql-2]
             attributes: {tag_agent: all-agents, ipaddress: 127.0.0.2}
@@ -114,9 +120,15 @@ phases:
             id: bi-agent
             ruleset: special_agents:bi
             value_raw: >-
-              {'options': [{'site': ('local', None),
-                            'filter': {'aggr_group_prefix': ['SUP30337']},
-                            'assignments': {'querying_host': 'querying_host'}}]}
+              {
+                  'options': [
+                      {
+                          'site':        ('local', None),
+                          'filter':      {'aggr_group_prefix': ['SUP30337']},
+                          'assignments': {'querying_host': 'querying_host'},
+                      },
+                  ],
+              }
             conditions:
               host_name: {match_on: [winmssql-1], operator: one_of}
 
@@ -152,31 +164,31 @@ sites:
 
     hosts:
 
-      byproduct:   # check_mk-local -> "Reschedule 'Check_MK' service"
+      byproduct:      # check_mk-local -> "Reschedule 'Check_MK' service"
         services:
           - {name: Load, state: OK, summary: a byproduct of the agent check}
 
-      cached:      # cached_at set -> greyed out, cache age on hover
+      cached:         # cached_at set -> greyed out, cache age on hover
         services:
           - {name: Old data, state: WARN, summary: from a cache, cached: 300}
 
-      cached-local:  # the blind spot: a cached *local* check marks the line, not
-        services:    # the header, so the core never sees it -> Check_MK redirect
-          - name: Old data
-            state: WARN
+      cached-local:   # the blind spot: a cached *local* check marks the line, not
+        services:     # the header, so the core never sees it -> Check_MK redirect
+          - name:    Old data
+            state:   WARN
             summary: from a cached local check
-            cached: {interval: 300, form: line}
+            cached:  {interval: 300, form: line}
 
-      passive:     # no active check -> greyed out, "checked passively"
+      passive:        # no active check -> greyed out, "checked passively"
         services:
-          - {name: Heartbeat, state: CRIT, summary: nothing arrived, passive: true}
-          - {name: Plain, state: OK, summary: agent data next to it}
+          - {name: Heartbeat, state: CRIT, summary: nothing arrived,       passive: true}
+          - {name: Plain,     state: OK,   summary: agent data next to it}
 
-      remote:      # a shadow object -> no reschedule offered at all (CMC only, sudo)
-        shadow: true
+      remote:         # a shadow object -> no reschedule offered at all (CMC only, sudo)
+        shadow:     true
         attributes: {alias: Mirrored from elsewhere, ipaddress: 10.1.2.3}
         services:
-          - {name: Mirror A, state: OK, summary: fine over there}
+          - {name: Mirror A, state: OK,   summary: fine over there}
           - {name: Mirror B, state: CRIT, summary: broken over there}
 ```
 

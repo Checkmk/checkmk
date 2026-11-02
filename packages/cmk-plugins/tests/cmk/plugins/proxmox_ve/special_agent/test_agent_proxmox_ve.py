@@ -597,8 +597,14 @@ def test_parse_arguments_connection_test_flag() -> None:
     assert parse_arguments(["myhost"]).connection_test is False
 
 
-def test_create_vm_sections_reports_import_lock() -> None:
-    # Proxmox VE locks a VM with "import" while the import wizard runs
+@pytest.mark.parametrize(
+    "lock",
+    [
+        pytest.param("import", id="import_lock"),
+        pytest.param("some-future-lock", id="unknown_lock"),
+    ],
+)
+def test_create_vm_sections_reports_lock(lock: str) -> None:
     section_name, section = next(
         iter(
             _create_vm_sections(
@@ -610,7 +616,7 @@ def test_create_vm_sections_reports_import_lock() -> None:
                     "name": "vm1",
                     "uptime": 0,
                 },
-                config_lock_data={"100": {"lock": "import"}},
+                config_lock_data={"100": {"lock": lock}},
                 logged_backup_data={},
                 snapshot_data={},
                 node_cluster_mapping={},
@@ -620,4 +626,4 @@ def test_create_vm_sections_reports_import_lock() -> None:
 
     assert section_name == "proxmox_ve_vm_info"
     assert isinstance(section, dict)
-    assert section["lock"] == "import"
+    assert section["lock"] == lock

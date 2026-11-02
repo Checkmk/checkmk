@@ -66,13 +66,13 @@ def _get_lock_duration(
     value_store: MutableMapping[str, Any],
     key: str,
     time: float,
-    value: LockState,
+    value: LockState | str,
 ) -> float | None:
     last_state = value_store.get(key)
     match last_state:
         case (
             float() | int() as last_time,
-            LockState() as last_value,
+            LockState() | str() as last_value,
         ):
             pass
         case _other:
@@ -81,7 +81,7 @@ def _get_lock_duration(
     if time <= last_time:
         raise GetLockDurationError("No duration available (time anomaly detected)")
 
-    if value is last_value:
+    if value == last_value:
         return time - last_time
 
     value_store[key] = (time, value)
@@ -90,7 +90,7 @@ def _get_lock_duration(
 
 def _check_lock_state_and_duration(
     value_store: MutableMapping[str, Any],
-    lock_value: LockState,
+    lock_value: LockState | str,
     key: str,
     now: float,
     lock_duration_params: NoLevelsT | FixedLevelsT[float],
@@ -104,7 +104,7 @@ def _check_lock_state_and_duration(
 
     yield Result(
         state=State.OK,
-        summary=f"Config lock: {lock_value.value}",
+        summary=f"Config lock: {lock_value.value if isinstance(lock_value, LockState) else lock_value}",
     )
 
     if lock_duration is None or lock_duration_params[0] == "no_levels":

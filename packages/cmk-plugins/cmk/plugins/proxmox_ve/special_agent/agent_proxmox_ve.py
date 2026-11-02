@@ -464,7 +464,7 @@ def _create_vm_sections(
     node_cluster_mapping: Mapping[str, object],
 ) -> Iterable[tuple[str, object]]:
     lock_str = config_lock_data.get(vmid, {}).get("lock")
-    lock_state = LockState(lock_str) if lock_str else None
+    lock_state = LockState.parse(lock_str) if lock_str else None
     yield (
         "proxmox_ve_vm_info",
         SectionVMInfo(

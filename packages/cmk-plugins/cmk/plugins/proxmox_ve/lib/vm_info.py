@@ -24,6 +24,13 @@ class LockState(Enum):
     SUSPENDING = "suspending"
     SUSPENDED = "suspended"
 
+    @classmethod
+    def parse(cls, raw: str) -> LockState | str:
+        try:
+            return cls(raw)
+        except ValueError:
+            return raw
+
 
 class SectionVMInfo(BaseModel, frozen=True):
     vmid: str
@@ -33,5 +40,5 @@ class SectionVMInfo(BaseModel, frozen=True):
     name: str
     tags: tuple[str, ...] = ()
     uptime: int = Field(default=0, ge=0)
-    lock: LockState | None = None
+    lock: LockState | str | None = Field(default=None, union_mode="left_to_right")
     cluster: str | None = None

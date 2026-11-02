@@ -38,6 +38,8 @@ VM_DATA_WITH_LOCK = SectionVMInfo(
     lock=LockState.BACKUP,
 )
 
+VM_DATA_WITH_UNKNOWN_LOCK = VM_DATA.model_copy(update={"lock": "some-future-lock"})
+
 
 @pytest.mark.parametrize(
     "tags,expected_tag_labels",
@@ -61,7 +63,9 @@ def test_host_label_function_tags(
     ]
 
 
-@pytest.mark.parametrize("info_section_model", [VM_DATA, VM_DATA_WITH_LOCK])
+@pytest.mark.parametrize(
+    "info_section_model", [VM_DATA, VM_DATA_WITH_LOCK, VM_DATA_WITH_UNKNOWN_LOCK]
+)
 def test_check_proxmox_ve_vm_info_parse_function(info_section_model: SectionVMInfo) -> None:
     assert (
         parse_proxmox_ve_vm_info([[json.dumps(info_section_model.model_dump(mode="json"))]])
@@ -151,6 +155,32 @@ def test_check_proxmox_ve_vm_info_parse_function(info_section_model: SectionVMIn
                 Result(state=State.OK, summary="Uptime: 3 hours 25 minutes"),
                 Metric("uptime", 12345.0),
                 Result(state=State.OK, summary="Config lock: backup"),
+            ),
+        ),
+        (
+            {
+                "required_vm_status": None,
+                "lock_duration": ("fixed", (15 * 60.0, 30 * 60.0)),
+            },
+            VM_DATA_WITH_UNKNOWN_LOCK,
+            {
+                "proxmox_ve_vm_info.lock_duration.133": (
+                    1738678610.0,
+                    "some-future-lock",
+                )
+            },
+            (
+                Result(state=State.OK, summary="VM ID: 133"),
+                Result(state=State.OK, summary="Status: running"),
+                Result(state=State.OK, summary="Type: qemu, Host: pve-dc4-001"),
+                Result(state=State.OK, summary="Up since 2025-02-04 12:51:05"),
+                Result(state=State.OK, summary="Uptime: 3 hours 25 minutes"),
+                Metric("uptime", 12345.0),
+                Result(state=State.OK, summary="Config lock: some-future-lock"),
+                Result(
+                    state=State.CRIT,
+                    summary="Config lock duration: 1 hour 0 minutes (warn/crit at 15 minutes 0 seconds/30 minutes 0 seconds)",
+                ),
             ),
         ),
         (

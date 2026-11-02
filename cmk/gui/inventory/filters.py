@@ -334,24 +334,24 @@ class FilterInvText(InputTextFilter):
         return bool(value.get(self.htmlvars[0], "").strip().lower())
 
 
-def _filter_with_sort_key(
+def _sort_key_in_range(
     *,
     value: SDValue,
-    from_value: str | None,
-    until_value: str | None,
     sort_key: Callable[[str], Comparable],
+    lower: Comparable | None,
+    upper: Comparable | None,
 ) -> bool:
     if value is None:
-        return not from_value and not until_value
+        return False
 
     if not isinstance(value, str):
         raise TypeError(value)
 
     sortable_value = sort_key(value)
 
-    above_from = not from_value or not sortable_value < sort_key(from_value)
-    below_until = not until_value or not sort_key(until_value) < sortable_value
-    return above_from and below_until
+    above_lower = lower is None or not sortable_value < lower
+    below_upper = upper is None or not upper < sortable_value
+    return above_lower and below_upper
 
 
 def _filter_rows_with_sort_key(
@@ -367,15 +367,12 @@ def _filter_rows_with_sort_key(
     if not from_value and not until_value:
         return rows
 
+    lower = sort_key(from_value) if from_value else None
+    upper = sort_key(until_value) if until_value else None
     return [
         r
         for r in rows
-        if _filter_with_sort_key(
-            value=value_of(r),
-            from_value=from_value,
-            until_value=until_value,
-            sort_key=sort_key,
-        )
+        if _sort_key_in_range(value=value_of(r), sort_key=sort_key, lower=lower, upper=upper)
     ]
 
 

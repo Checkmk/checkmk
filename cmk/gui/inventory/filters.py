@@ -472,7 +472,7 @@ class FilterInvTextWithSortKey(_FilterTextRange):
 
     @override
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
-        return bool(value.get(self.htmlvars[0], "").strip().lower())
+        return any(value.get(var, "").strip().lower() for var in self.htmlvars)
 
 
 def _make_filter_row_choice(inventory_path: InventoryPath) -> Callable[[str, Row], bool]:

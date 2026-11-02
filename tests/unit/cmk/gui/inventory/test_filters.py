@@ -13,6 +13,7 @@ from cmk.gui.inventory.filters import (
     FilterInvFloat,
     FilterInvFloatChoice,
     FilterInvHasSoftwarePackage,
+    FilterInvTextWithSortKey,
 )
 from cmk.gui.type_defs import Row, Rows, VisualContext
 from cmk.inventory.raw_paths import InventoryPath, TreeSource
@@ -324,6 +325,33 @@ def test_filter_inv_choice(context: VisualContext, expected_rows: Rows) -> None:
             ],
         )
         == expected_rows
+    )
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        pytest.param({}, False, id="no-bounds"),
+        pytest.param({"ident_from": "a"}, True, id="from"),
+        pytest.param({"ident_until": "a"}, True, id="until"),
+        pytest.param({"ident_from": " ", "ident_until": " "}, False, id="blank-bounds"),
+    ],
+)
+def test_filter_inv_text_with_sort_key_needs_inventory_for_any_bound(
+    value: Mapping[str, str], expected: bool
+) -> None:
+    assert (
+        FilterInvTextWithSortKey(
+            ident="ident",
+            title="Title",
+            inventory_path=InventoryPath(
+                (SDNodeName("path-to-node"),),
+                TreeSource.attributes,
+                SDKey("key"),
+            ),
+            sort_key=str,
+        ).need_inventory(value)
+        is expected
     )
 
 

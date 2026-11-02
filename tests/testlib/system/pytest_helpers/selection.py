@@ -53,10 +53,6 @@ def pytest_configure(config: pytest.Config) -> None:
         "skip_if_medium_chain: skip test when --medium-chain is set. For tests "
         "that cannot work pre-submit, not for tests that merely fail",
     )
-    config.addinivalue_line(
-        "markers",
-        "requires_non_root_user: Tests that require a non-root user to be executed.",
-    )
 
 
 @pytest.hookimpl(tryfirst=True)  # the limit applies to the collection, before any sharding

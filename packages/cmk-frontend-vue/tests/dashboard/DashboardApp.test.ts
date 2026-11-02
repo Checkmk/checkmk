@@ -19,6 +19,10 @@ import {
   type DashboardMetadata
 } from '@/dashboard/types/dashboard'
 import type { DashboardPageProperties } from '@/dashboard/types/page'
+import type {
+  ResponsiveGridWidgetLayout,
+  ResponsiveGridWidgetLayouts
+} from '@/dashboard/types/widget'
 
 // reka's dialog warns about the missing DialogTitle of the bare slide-in, which fails the test.
 vi.mock('cmk-ui-library/components/CmkSlideIn', () => ({
@@ -46,8 +50,8 @@ const API = `${location.protocol}//${location.host}/api/internal`
 const OWNER = 'harry'
 const SOURCE_ID = 'anchored_source'
 const SOURCE_TITLE = 'Anchored dashboard to migrate'
-const SOURCE_TEXT = 'Content of the anchored dashboard'
 const REFUSAL = 'Dashboard ID already exists'
+const CLONE_ENDPOINT = `${API}/domain-types/dashboard_responsive_grid/actions/clone_from_relative_grid/invoke`
 
 const constants: DashboardConstants = {
   responsive_grid_breakpoints: {
@@ -103,6 +107,30 @@ const generalSettings = {
   visibility: { hide_in_monitor_menu: false, hide_in_drop_down_menus: false, share: 'no' }
 }
 
+function staticTextWidget(
+  title: string,
+  position: { x: number; y: number },
+  size: { width: number; height: number }
+) {
+  return {
+    general_settings: {
+      title: { text: title, render_mode: 'with_background' },
+      render_background: true
+    },
+    content: { type: 'static_text', text: `Content of ${title}` },
+    filter_context: { uses_infos: [], filters: {} },
+    layout: { type: 'relative_grid', position, size }
+  }
+}
+
+// Relative grid units are 10 px raster cells: two widgets side by side above one as wide as both.
+const sourceWidgets = {
+  top_left: staticTextWidget('Top left', { x: 1, y: 1 }, { width: 40, height: 30 }),
+  top_right: staticTextWidget('Top right', { x: 41, y: 1 }, { width: 40, height: 30 }),
+  bottom: staticTextWidget('Bottom', { x: 1, y: 31 }, { width: 80, height: 30 })
+}
+const SOURCE_TEXT = sourceWidgets.bottom.content.text
+
 const sourceDashboard = {
   owner: OWNER,
   last_modified_at: '2026-10-01T00:00:00Z',
@@ -115,17 +143,7 @@ const sourceDashboard = {
     mandatory_context_filters: []
   },
   layout: { type: 'relative_grid' },
-  widgets: {
-    note: {
-      general_settings: {
-        title: { text: 'Note', render_mode: 'with_background' },
-        render_background: true
-      },
-      content: { type: 'static_text', text: SOURCE_TEXT },
-      filter_context: { uses_infos: [], filters: {} },
-      layout: { type: 'relative_grid', position: { x: 1, y: 1 }, size: { width: 30, height: 10 } }
-    }
-  }
+  widgets: sourceWidgets
 }
 
 const pageProperties: DashboardPageProperties = {
@@ -166,7 +184,11 @@ function emptyCollection(domainType: string) {
   return HttpResponse.json({ domainType, id: 'all', links: [], value: [] })
 }
 
-useMswServer(
+function refusal() {
+  return HttpResponse.json({ title: 'Bad Request', status: 400, detail: REFUSAL }, { status: 400 })
+}
+
+const server = useMswServer(
   http.get(`${API}/domain-types/visual_filter/collections/all`, () =>
     emptyCollection('visual_filter')
   ),
@@ -202,7 +224,14 @@ useMswServer(
       domainType: 'dashboard',
       id: 'titles',
       links: [],
-      extensions: { titles: { note: 'Note' } }
+      extensions: {
+        titles: Object.fromEntries(
+          Object.entries(sourceWidgets).map(([widgetId, widget]) => [
+            widgetId,
+            widget.general_settings.title.text
+          ])
+        )
+      }
     })
   ),
   http.get(`${API}/objects/constant/dashboard`, () =>
@@ -232,10 +261,7 @@ useMswServer(
       extensions: sourceDashboard
     })
   ),
-  http.post(
-    `${API}/domain-types/dashboard_responsive_grid/actions/clone_from_relative_grid/invoke`,
-    () => HttpResponse.json({ title: 'Bad Request', status: 400, detail: REFUSAL }, { status: 400 })
-  )
+  http.post(CLONE_ENDPOINT, refusal)
 )
 
 // The page loads core-js, whose structuredClone copies the reactive proxies the app clones;
@@ -246,6 +272,36 @@ beforeEach(() => {
   // Vue logs an "experimental feature" notice whenever <Suspense> renders, which fails the test.
   vi.spyOn(console, 'info').mockImplementation(() => {})
 })
+
+function captureMigrationRequests(): {
+  widget_layouts: Record<string, ResponsiveGridWidgetLayouts>
+}[] {
+  const sentBodies: { widget_layouts: Record<string, ResponsiveGridWidgetLayouts> }[] = []
+  server.use(
+    http.post(CLONE_ENDPOINT, async ({ request }) => {
+      sentBodies.push(
+        (await request.json()) as { widget_layouts: Record<string, ResponsiveGridWidgetLayouts> }
+      )
+      // Accepting the clone would navigate to the copy, which jsdom cannot do.
+      return refusal()
+    })
+  )
+  return sentBodies
+}
+
+function placementAtWidestBreakpoint(
+  layouts: ResponsiveGridWidgetLayouts
+): ResponsiveGridWidgetLayout {
+  return layouts.layouts['default']!['XL']!
+}
+
+function endColumnOf(placement: ResponsiveGridWidgetLayout): number {
+  return placement.position.x + placement.size.columns
+}
+
+function endRowOf(placement: ResponsiveGridWidgetLayout): number {
+  return placement.position.y + placement.size.rows
+}
 
 async function migrateTheDashboard(): Promise<void> {
   const user = userEvent.setup()
@@ -271,5 +327,20 @@ describe('DashboardApp', () => {
 
     await screen.findByRole('alert')
     expect(screen.getByText(SOURCE_TEXT)).toBeInTheDocument()
+  })
+
+  it('sends the measured arrangement of the widgets with the migration', async () => {
+    const sentBodies = captureMigrationRequests()
+
+    await migrateTheDashboard()
+
+    await screen.findByRole('alert')
+    const [{ widget_layouts: widgetLayouts }] = sentBodies as [(typeof sentBodies)[number]]
+    const topLeft = placementAtWidestBreakpoint(widgetLayouts['top_left']!)
+    const topRight = placementAtWidestBreakpoint(widgetLayouts['top_right']!)
+    const bottom = placementAtWidestBreakpoint(widgetLayouts['bottom']!)
+    expect(topRight.position).toEqual({ x: endColumnOf(topLeft), y: topLeft.position.y })
+    expect(bottom.position).toEqual({ x: topLeft.position.x, y: endRowOf(topLeft) })
+    expect(endColumnOf(bottom)).toBe(endColumnOf(topRight))
   })
 })

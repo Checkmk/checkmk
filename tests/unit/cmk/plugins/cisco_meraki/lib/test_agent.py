@@ -15,7 +15,11 @@ from cmk.plugins.cisco_meraki.lib import agent
 from cmk.plugins.cisco_meraki.lib.agent import MerakiOrganisation, MerakiRunContext
 from cmk.plugins.cisco_meraki.lib.clients import MerakiClient
 from cmk.plugins.cisco_meraki.lib.config import _RequiredSections, MerakiConfig
-from tests.unit.cmk.plugins.cisco_meraki.lib.factories import DeviceFactory, RawOrganizationFactory
+from tests.unit.cmk.plugins.cisco_meraki.lib.factories import (
+    DeviceFactory,
+    RawOrganizationFactory,
+    RawUplinkStatusesFactory,
+)
 
 from .fakes import FakeMerakiSDK
 
@@ -252,3 +256,35 @@ class TestMerakiOrganizationUsageBySerial:
         assert usage_by_serial["S123-2"] == {
             "wan1": {"sent": 300, "received": 400},
         }
+
+
+class TestMerakiOrganizationApplianceUplinks:
+    @pytest.mark.xfail(
+        strict=True,
+        raises=KeyError,
+        reason="Crash report 58f59024-cdff-11f1-b453-77faed89378a: KeyError network id",
+    )
+    def test_uplink_status_of_unlisted_network_is_reported(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # The uplink status refers to a network that the networks query did not return.
+        sdk = FakeMerakiSDK()
+        monkeypatch.setattr(
+            sdk.appliance,
+            "getOrganizationApplianceUplinkStatuses",
+            lambda *_args, **_kwargs: [
+                RawUplinkStatusesFactory.build(networkId="L_unlisted", serial="S123-1")
+            ],
+        )
+        config = MerakiConfig.build(agent.parse_arguments([*_DEFAULT_ARGS, "--no-cache"]))
+        org = MerakiOrganisation(
+            config=config,
+            client=MerakiClient(sdk, config),
+            organisation=RawOrganizationFactory.build(
+                id="123", name="Org-123", api={"enabled": True}
+            ),
+        )
+
+        uplinks = [s for s in org.query() if s.name == "cisco_meraki_org_appliance_uplinks"]
+
+        assert [(s.piggyback, s.data["networkName"]) for s in uplinks] == [("dev1", "")]

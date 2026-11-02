@@ -259,11 +259,6 @@ class TestMerakiOrganizationUsageBySerial:
 
 
 class TestMerakiOrganizationApplianceUplinks:
-    @pytest.mark.xfail(
-        strict=True,
-        raises=KeyError,
-        reason="Crash report 58f59024-cdff-11f1-b453-77faed89378a: KeyError network id",
-    )
     def test_uplink_status_of_unlisted_network_is_reported(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

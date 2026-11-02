@@ -112,7 +112,6 @@ def test_cron_job_status_time_outputs() -> None:
     )
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4980")
 def test_cron_job_status_last_successful_completion_in_the_future() -> None:
     latest_job = CronJobLatestJobFactory.build()
     cron_job_status = CronJobStatusFactory.build(last_successful_time=Timestamp(6.0))
@@ -128,6 +127,52 @@ def test_cron_job_status_last_successful_completion_in_the_future() -> None:
         )
         in check_result
     )
+
+
+def test_cron_job_status_last_schedule_in_the_future() -> None:
+    latest_job = CronJobLatestJobFactory.build()
+    cron_job_status = CronJobStatusFactory.build(last_schedule_time=Timestamp(6.0))
+
+    check_result = list(
+        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)
+    )
+
+    assert (
+        Result(
+            state=State.UNKNOWN,
+            summary="Last schedule is 4 seconds in the future (check the system time)",
+        )
+        in check_result
+    )
+
+
+@pytest.mark.parametrize(
+    "job_status",
+    [
+        pytest.param(kube_cronjob_status.JobStatusType.PENDING, id="pending"),
+        pytest.param(kube_cronjob_status.JobStatusType.RUNNING, id="running"),
+    ],
+)
+def test_cron_job_status_latest_job_start_in_the_future(
+    job_status: kube_cronjob_status.JobStatusType,
+) -> None:
+    result = list(
+        kube_cronjob_status._cron_job_status(
+            current_time=Timestamp(2.0),
+            pending_levels=None,
+            running_levels=None,
+            job_status=job_status,
+            job_pod=JobPodFactory.build(),
+            job_start_time=Timestamp(6.0),
+        )
+    )
+
+    assert result == [
+        Result(
+            state=State.UNKNOWN,
+            summary="Latest job: Start is 4 seconds in the future (check the system time)",
+        )
+    ]
 
 
 def test_cron_job_status_with_running_job_and_previously_completed_job() -> None:

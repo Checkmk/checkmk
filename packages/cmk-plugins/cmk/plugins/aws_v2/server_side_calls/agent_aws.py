@@ -21,9 +21,6 @@ class AssumeRole(BaseModel):
     external_id: str | None = None
 
 
-class AccessKeyAndAssumeRole(AccessKey, AssumeRole): ...
-
-
 class AccountList(BaseModel):
     account_ids: list[str]
     role_name: str
@@ -84,7 +81,6 @@ ServiceSelection = (
 class AwsParams(BaseModel):
     auth: (
         tuple[Literal["access_key"], AccessKeyLogin]
-        | tuple[Literal["access_key_sts"], AccessKeyAndAssumeRole]
         | tuple[Literal["sts"], AssumeRole]
         | tuple[Literal["none"], DefaultCredentials | None]
     )
@@ -114,15 +110,14 @@ def _service_from_formspec_name(formspec_name: str) -> str:
 
 
 def _auth_args(auth: AccessKey | AssumeRole | DefaultCredentials | None) -> list[str | Secret]:
-    # AccessKeyAndAssumeRole is both, so it gets the arguments of both.
-    args: list[str | Secret] = []
     if isinstance(auth, AccessKey):
-        args += ["--access-key-identity", auth.access_key_id, "--secret-id", auth.secret_access_key]
+        return ["--access-key-identity", auth.access_key_id, "--secret-id", auth.secret_access_key]
     if isinstance(auth, AssumeRole):
-        args += ["--assume-role", "--role-arn", auth.role_arn_id]
+        args: list[str | Secret] = ["--assume-role", "--role-arn", auth.role_arn_id]
         if auth.external_id:
             args += ["--external-id", auth.external_id]
-    return args
+        return args
+    return []
 
 
 def _account_args(login: AccessKey | AssumeRole | DefaultCredentials | None) -> list[str]:

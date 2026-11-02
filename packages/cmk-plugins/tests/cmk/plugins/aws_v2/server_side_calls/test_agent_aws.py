@@ -51,30 +51,6 @@ def test_role_is_assumed_with_its_external_id() -> None:
     ]
 
 
-def test_access_key_and_role_are_both_passed() -> None:
-    arguments = _arguments(
-        auth=(
-            "access_key_sts",
-            {
-                "access_key_id": "my_key_id",
-                "secret_access_key": Secret(0),
-                "role_arn_id": "my_role",
-            },
-        )
-    )
-
-    assert arguments == [
-        "--access-key-identity",
-        "my_key_id",
-        "--secret-id",
-        Secret(0),
-        "--assume-role",
-        "--role-arn",
-        "my_role",
-        *_HOST_ARGS,
-    ]
-
-
 def test_proxy_password_is_passed_as_secret() -> None:
     arguments = _arguments(
         proxy_details={
@@ -231,12 +207,19 @@ def test_connection_test_is_requested() -> None:
 def test_agent_accepts_the_arguments_of_every_option() -> None:
     arguments = _arguments(
         auth=(
-            "access_key_sts",
+            "access_key",
             {
                 "access_key_id": "my_key_id",
                 "secret_access_key": Secret(0),
-                "role_arn_id": "my_role",
-                "external_id": "my_id",
+                "accounts": (
+                    "organization",
+                    {
+                        "role_name": "CheckmkMonitoring",
+                        "external_id": "my_id",
+                        "excluded_account_ids": ["333333333333"],
+                        "account_list_role_arn": "arn:aws:iam::888888888888:role/List",
+                    },
+                ),
             },
         ),
         proxy_details={

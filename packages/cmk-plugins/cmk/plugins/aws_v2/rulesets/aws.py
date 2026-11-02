@@ -553,9 +553,13 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                     "<tt>~/.aws</tt> of the site user, and the instance profile or EKS Pod Identity "
                     "when Checkmk runs on AWS. Recommended on AWS, because AWS renews the "
                     "instance profile and EKS Pod Identity credentials itself.<br>"
-                    "Both can be combined with an IAM role. The agent then assumes this role and "
-                    "monitors the account the role belongs to. The AWS CloudTrail log shows these "
-                    "calls with the session name <tt>checkmk-&lt;site&gt;</tt>.<br>"
+                    "The default AWS credentials can be combined with an IAM role. The agent then "
+                    "assumes this role and monitors the account the role belongs to. The AWS "
+                    "CloudTrail log shows these calls with the session name "
+                    "<tt>checkmk-&lt;site&gt;</tt>.<br>"
+                    "To assume a role with an access key, choose <b>Access key</b>, then "
+                    "<b>Explicit list of account IDs</b> under <b>Accounts</b>, and enter the "
+                    "account and the name of the role.<br>"
                     "Only the choices without an IAM role can monitor a list of accounts: each "
                     "account role must be assumed directly from the credentials."
                 ),
@@ -565,13 +569,6 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                         title=Title("Access key"),
                         parameter_form=Dictionary(
                             elements={**configuration_access_key(), **_accounts()}
-                        ),
-                    ),
-                    CascadingSingleChoiceElement(
-                        name="access_key_sts",
-                        title=Title("Access key + IAM role"),
-                        parameter_form=Dictionary(
-                            elements={**configuration_access_key(), **_assume_role()}
                         ),
                     ),
                     CascadingSingleChoiceElement(

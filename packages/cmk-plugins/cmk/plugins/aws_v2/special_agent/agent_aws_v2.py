@@ -315,7 +315,9 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         " --organization. Without it, the credentials list them themselves.",
     )
     parser.add_argument(
-        "--spoke-role-name", help="The name of the role to assume in every monitored account"
+        "--spoke-role-name",
+        help="The name of the role to assume in every monitored account. A role with a path"
+        " gets the path in front, for example monitoring/CheckmkMonitoring.",
     )
     parser.add_argument(
         "--spoke-external-id",

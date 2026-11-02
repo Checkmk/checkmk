@@ -122,12 +122,38 @@ def test_account_id_needs_exactly_twelve_digits(account_id: str) -> None:
             validate(account_id)
 
 
-def test_role_name_with_a_path_is_rejected() -> None:
+@pytest.mark.parametrize(
+    "name",
+    [
+        pytest.param("CheckmkMonitoring", id="name"),
+        pytest.param("monitoring/CheckmkMonitoring", id="path"),
+        pytest.param("ops/monitoring/CheckmkMonitoring", id="nested path"),
+    ],
+)
+def test_role_name_accepts_a_path(name: str) -> None:
+    role_name = _parameter_form(_account_list_elements(), "role_name", String)
+
+    for validate in role_name.custom_validate or ():
+        validate(name)
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        pytest.param("/monitoring/CheckmkMonitoring", id="leading slash"),
+        pytest.param("monitoring/", id="no name"),
+        pytest.param("monitoring//CheckmkMonitoring", id="empty path part"),
+        pytest.param("Checkmk Monitoring", id="space"),
+        pytest.param("Mönitoring", id="non-ascii letter"),
+        pytest.param("CheckmkMonitoring\n", id="trailing newline"),
+    ],
+)
+def test_role_name_rejects_a_malformed_path(name: str) -> None:
     role_name = _parameter_form(_account_list_elements(), "role_name", String)
 
     with pytest.raises(ValidationError):
         for validate in role_name.custom_validate or ():
-            validate("monitoring/CheckmkMonitoring")
+            validate(name)
 
 
 def test_account_ids_must_be_unique() -> None:

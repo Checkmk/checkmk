@@ -482,12 +482,21 @@ def _spoke_role() -> Mapping[str, DictElement]:
         "role_name": DictElement(
             parameter_form=String(
                 title=Title("Name of the role in every account"),
-                help_text=Help("For example <tt>CheckmkMonitoring</tt>."),
+                help_text=Help(
+                    "For example <tt>CheckmkMonitoring</tt>. If the role has a path, put the "
+                    "path in front of the name, without the leading slash, for example "
+                    "<tt>monitoring/CheckmkMonitoring</tt>."
+                ),
                 custom_validate=(
                     validators.MatchRegex(
-                        r"^[\w+=,.@-]{1,64}$",
+                        # \x21-\x2e\x30-\x7e is the printable ASCII range without "/".
+                        # AWS allows it in a role path, see the Path parameter in
+                        # https://docs.aws.amazon.com/IAM/latest/APIReference/API_CreateRole.html
+                        r"^([\x21-\x2e\x30-\x7e]+/)*[A-Za-z0-9_+=,.@-]{1,64}\Z",
                         Message(
-                            "An IAM role name has 1 to 64 characters: letters, digits and _+=,.@-"
+                            "An IAM role name has 1 to 64 characters: letters, digits and "
+                            "_+=,.@-. A path in front of it ends with a slash and does not start "
+                            "with one, for example monitoring/CheckmkMonitoring."
                         ),
                     ),
                 ),

@@ -142,6 +142,13 @@ def test_spoke_role_arn_uses_the_partition_of_the_region(
     assert call.params["RoleArn"] == f"arn:{partition}:iam::333333333333:role/CheckmkMonitoring"
 
 
+def test_spoke_role_path_is_part_of_the_arn(fake_sts: FakeSts) -> None:
+    _spoke_accounts(SpokeAccounts(["333333333333"], "monitoring/CheckmkMonitoring"))
+
+    [call] = fake_sts.assume_role_calls
+    assert call.params["RoleArn"] == "arn:aws:iam::333333333333:role/monitoring/CheckmkMonitoring"
+
+
 def test_spoke_without_external_id_omits_it(fake_sts: FakeSts) -> None:
     _spoke_accounts(SpokeAccounts(["333333333333"], "CheckmkMonitoring"))
 

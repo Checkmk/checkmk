@@ -7011,10 +7011,6 @@
             "https://files.pythonhosted.org/packages/19/14/cf3a6b6448849656e1e5f4e2101f3988dc6789724050096aba1bc5ccf592/opentelemetry_api-1.45.2.tar.gz": "sha256:d7b0008e21e5fd61cbe7a7f34ca3b6905a78ab677d9bc395e299359c75cda6b4",
             "https://files.pythonhosted.org/packages/a9/2d/610db864d7513158cebb8f36cc88e67e73bd6c7aa1905ef18d89e1281c81/opentelemetry_api-1.45.2-py3-none-any.whl": "sha256:2cbd737377e710ee740d261c94e93fa0f08e6d037c18f17513cc0a2d94479a34"
           },
-          "opentelemetry-container-distro": {
-            "https://files.pythonhosted.org/packages/1e/e5/deb4d762d20d8622fc008ebd1aa5d23ef2cf77abae4653b90555f13f8a1c/opentelemetry-container-distro-0.2.0.tar.gz": "sha256:09db86b66cb1a5d9a20ee9e2fb8d265c9a72321f3f09651a77c071cc79d5a9e4",
-            "https://files.pythonhosted.org/packages/c5/19/9fdd8bc8c0f5668e3ca30ae4c8022bed2b853347296923bcce4a9abb3d91/opentelemetry_container_distro-0.2.0-py3-none-any.whl": "sha256:61817f99edb46fed168c0eec784b45986b702d95a24fda475a9bb10a652e56b7"
-          },
           "opentelemetry-exporter-http-transport": {
             "https://files.pythonhosted.org/packages/a1/b2/c622a101f31c0e6670b82f4264c4e77c161bce415bc6fc158fda0b82e218/opentelemetry_exporter_http_transport-0.66b2-py3-none-any.whl": "sha256:fd5f5b490c099acda1cd7b909d5e8981436bf18cc8c6098d302d114c271720e9",
             "https://files.pythonhosted.org/packages/a6/e6/dbeb3e217418071656232a4028c791060d219f218cef1249b664049d12c0/opentelemetry_exporter_http_transport-0.66b2.tar.gz": "sha256:66d6ed810a515432c8891da9a834464332fd70badeca45bdeeae81b4280c903b"
@@ -7070,18 +7066,6 @@
           "opentelemetry-proto": {
             "https://files.pythonhosted.org/packages/24/9c/1aa4ce60e9bc72af20dc49c92cc0566825092d92b3d6a277439fb5fb7c01/opentelemetry_proto-1.45.2.tar.gz": "sha256:bd8d23cf770605b0af9b7be2071d26a464fea289d35429abfd2a66226114ad64",
             "https://files.pythonhosted.org/packages/7e/0d/a0b8f2b9efe2ec1abdf639d3696db9b1563ebeb11d91aac08ba7341e9122/opentelemetry_proto-1.45.2-py3-none-any.whl": "sha256:03a7ca1b43f89fd5b965d5975902bb2515c0c86e2428b456836e9a6149c6235a"
-          },
-          "opentelemetry-resourcedetector-docker": {
-            "https://files.pythonhosted.org/packages/38/bb/f30a59fd8cb41fac8d7d91ad48179e33f011eb8a7d43b1f38a93050803b7/opentelemetry-resourcedetector-docker-0.4.0.tar.gz": "sha256:2723c8c7e63d78eabd9c6ebf7cca7570f4b73d3db18687544073f3c8f280c0bb",
-            "https://files.pythonhosted.org/packages/6b/c8/5c7737286172dcfe3c23280d1159b60d0c7f07ffe9a2cff25ade89cfbb79/opentelemetry_resourcedetector_docker-0.4.0-py3-none-any.whl": "sha256:0313ef1678f8af895b4da00b1643567fd50238ffbf2480ce56a6e73d9c7ff32c"
-          },
-          "opentelemetry-resourcedetector-kubernetes": {
-            "https://files.pythonhosted.org/packages/79/e7/0e3d3905971fdf543cc72e77f2997b00df541b1cc6188a9df47ad8174205/opentelemetry-resourcedetector-kubernetes-0.3.0.tar.gz": "sha256:854472ff856c305dc29f033a8f784f9a7f513cb60eb690d2af4a4a572b165019",
-            "https://files.pythonhosted.org/packages/99/c8/cee782a9fb57ab6bfc8fa8c0c43b1d293fab7d932b6f947f563f4ec0d887/opentelemetry_resourcedetector_kubernetes-0.3.0-py3-none-any.whl": "sha256:0abb30217cd71112a48076f86e648de2438003276548e78bf48e4f7a6f4ea219"
-          },
-          "opentelemetry-resourcedetector-process": {
-            "https://files.pythonhosted.org/packages/46/c1/ad691893544068a008f94e0dcc39e641adf6c9ccaf13414f23c1ffbe5bbf/opentelemetry-resourcedetector-process-0.3.0.tar.gz": "sha256:74f51704e40ec73bda088f710f69029802a8c96a06fb0b12e597cdd03fdfe0e9",
-            "https://files.pythonhosted.org/packages/4b/ae/d8f71b176eff48d7b56bc5dc54ecbb0dff4ab2f022682a2e24ca1eeb4d09/opentelemetry_resourcedetector_process-0.3.0-py3-none-any.whl": "sha256:59d770d89c93e873e87ac925b86cfde8a53a0ec04b5418be8d6293f94f42de0f"
           },
           "opentelemetry-sdk": {
             "https://files.pythonhosted.org/packages/7b/1a/74a21d4d6969fb8b432ac397e66112a8167a6deb267ea4559dbaf2fe91ef/opentelemetry_sdk-1.45.2.tar.gz": "sha256:7eec4de13dd21ff3a1670dcb0e02079e692736f94d733dfdce5af461d884248d",
@@ -8036,10 +8020,6 @@
           "pytest-mock": {
             "https://files.pythonhosted.org/packages/97/c2/28b9f5b955ff2bcd4727a6f768e2ca9b586cd7c37b95ea5f7b9b873ac7b3/pytest_mock-3.17.0.tar.gz": "sha256:e36576e0985e01027e999891e7a966c67822d40c89ef1b4c8b6e22737e3590b4",
             "https://files.pythonhosted.org/packages/e8/ea/47fbdc8f37410956fd445720e927589b1e2a47772c5f28109f0ce2fa26d9/pytest_mock-3.17.0-py3-none-any.whl": "sha256:1b82aa4b37137248bd687055e109723debeb07b489de1565297dc9589c5f2d6b"
-          },
-          "pytest-opentelemetry": {
-            "https://files.pythonhosted.org/packages/27/9d/96d2d688369ae707587bc307e186f546355ec0c221b3d3e2feca2bf803f9/pytest_opentelemetry-1.1.0-py3-none-any.whl": "sha256:1fe96eea020bb0cdad3d590c8978908acd75a35d689659cc9b6600740de66812",
-            "https://files.pythonhosted.org/packages/bd/87/a7ab2173103c7a911952d6cc0a430fd6fcd8313bc869b1d80777d8203c3a/pytest_opentelemetry-1.1.0.tar.gz": "sha256:4e6d552ce90e01dfa33c913ea843ca8a01f306219b4ce36cd7b79d070a82f0c4"
           },
           "pytest-playwright": {
             "https://files.pythonhosted.org/packages/09/15/ab14dfdfd6756389e0a5467417863cf6fffa18ecfba0a68bfdc15dc5895a/pytest_playwright-0.10.0-py3-none-any.whl": "sha256:8314d1af726e2c15531635902ece3ee47ed83f5a75c937a7eda8686d3dae6c0d",

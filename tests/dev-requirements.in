@@ -38,7 +38,6 @@ pytest-html  # used to generate HTML reports for test suites
 pytest-mock  # used by quite a few unit/integration tests via the mocker fixture
 pytest-random-order  # used to test resiliency
 pytest-check # used to queue failed assertions and continue test execution
-pytest-opentelemetry # instrument pytest runs
 pytest-playwright # used for the GUI system tests
 pytest-repeat # used to rerun system tests
 pytest-rerunfailures # used to rerun flaky tests

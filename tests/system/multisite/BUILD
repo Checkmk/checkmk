@@ -25,7 +25,6 @@ py_library(
         requirement("pysaml2"),
         requirement("python-dateutil"),
         requirement("requests"),
-        requirement("opentelemetry-instrumentation-requests"),
         "//cmk/gui:app",
         "//packages/cmk-wsgi",
         "//tests/testlib/common",

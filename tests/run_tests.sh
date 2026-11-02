@@ -367,8 +367,7 @@ test-system-oauth() {
 }
 
 test-system-multisite() {
-    OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \
-        _pytest --export-traces "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
+    _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/system/multisite")"
 }
 

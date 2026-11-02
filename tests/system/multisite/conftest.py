@@ -14,7 +14,6 @@ from shutil import which
 from typing import Literal
 
 import pytest
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 from tests.system.multisite.utils import get_cre_agent_path
 from tests.testlib.common.utils2 import is_containerized, run
@@ -52,11 +51,6 @@ def pytest_exception_interact(
 
 
 logger = logging.getLogger(__name__)
-
-
-@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
-def instrument_requests() -> None:
-    RequestsInstrumentor().instrument()
 
 
 @pytest.fixture(name="central_site", scope="session")

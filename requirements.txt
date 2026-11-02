@@ -3779,7 +3779,6 @@ opentelemetry-api==1.45.2 \
     #   anthropic
     #   fastapi
     #   mcp
-    #   opentelemetry-container-distro
     #   opentelemetry-exporter-http-transport
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
@@ -3793,11 +3792,6 @@ opentelemetry-api==1.45.2 \
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
     #   pydantic-ai-slim
-    #   pytest-opentelemetry
-opentelemetry-container-distro==0.2.0 \
-    --hash=sha256:09db86b66cb1a5d9a20ee9e2fb8d265c9a72321f3f09651a77c071cc79d5a9e4 \
-    --hash=sha256:61817f99edb46fed168c0eec784b45986b702d95a24fda475a9bb10a652e56b7
-    # via pytest-opentelemetry
 opentelemetry-exporter-http-transport[requests]==0.66b2 \
     --hash=sha256:66d6ed810a515432c8891da9a834464332fd70badeca45bdeeae81b4280c903b \
     --hash=sha256:fd5f5b490c099acda1cd7b909d5e8981436bf18cc8c6098d302d114c271720e9
@@ -3808,7 +3802,6 @@ opentelemetry-exporter-otlp==1.45.2 \
     # via
     #   -r cmk/requirements.in
     #   -r packages/cmk-trace/requirements.in
-    #   opentelemetry-container-distro
 opentelemetry-exporter-otlp-common==0.66b2 \
     --hash=sha256:06f5a9b88638e310efa1f1d206cdf6b75393e112aba4e174a963416192bd1028 \
     --hash=sha256:ace86efb75489f925f1ef809856ae5f0c7db534e4afdc624530222228b1236a5
@@ -3836,7 +3829,6 @@ opentelemetry-instrumentation==0.66b2 \
     --hash=sha256:02b094150e53b76f5906d75e628dbb3833bbc6e62fa109b5c7ba0c081865e923 \
     --hash=sha256:fa9ccfdab147a14af8107d19ef0a7b5015675273c5adced7a1fc38f28b42ec4c
     # via
-    #   opentelemetry-container-distro
     #   opentelemetry-instrumentation-asgi
     #   opentelemetry-instrumentation-fastapi
     #   opentelemetry-instrumentation-httpx
@@ -3885,18 +3877,6 @@ opentelemetry-proto==1.45.2 \
     #   opentelemetry-exporter-otlp-proto-common
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-opentelemetry-resourcedetector-docker==0.4.0 \
-    --hash=sha256:0313ef1678f8af895b4da00b1643567fd50238ffbf2480ce56a6e73d9c7ff32c \
-    --hash=sha256:2723c8c7e63d78eabd9c6ebf7cca7570f4b73d3db18687544073f3c8f280c0bb
-    # via opentelemetry-container-distro
-opentelemetry-resourcedetector-kubernetes==0.3.0 \
-    --hash=sha256:0abb30217cd71112a48076f86e648de2438003276548e78bf48e4f7a6f4ea219 \
-    --hash=sha256:854472ff856c305dc29f033a8f784f9a7f513cb60eb690d2af4a4a572b165019
-    # via opentelemetry-container-distro
-opentelemetry-resourcedetector-process==0.3.0 \
-    --hash=sha256:59d770d89c93e873e87ac925b86cfde8a53a0ec04b5418be8d6293f94f42de0f \
-    --hash=sha256:74f51704e40ec73bda088f710f69029802a8c96a06fb0b12e597cdd03fdfe0e9
-    # via opentelemetry-container-distro
 opentelemetry-sdk==1.45.2 \
     --hash=sha256:7eec4de13dd21ff3a1670dcb0e02079e692736f94d733dfdce5af461d884248d \
     --hash=sha256:ff974ea70ee4f1d51e2ec152db37c2b626c7bf82bb3f7d86114fd8704e7199c6
@@ -3905,14 +3885,9 @@ opentelemetry-sdk==1.45.2 \
     #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r packages/cmk-trace/requirements.in
-    #   opentelemetry-container-distro
     #   opentelemetry-exporter-otlp-common
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-    #   opentelemetry-resourcedetector-docker
-    #   opentelemetry-resourcedetector-kubernetes
-    #   opentelemetry-resourcedetector-process
-    #   pytest-opentelemetry
 opentelemetry-semantic-conventions==0.66b2 \
     --hash=sha256:4cbe61e5f9275d57ab31708446e7938ef4291ebbe6a7fca6f7a629c5acae87d8 \
     --hash=sha256:7da5f1a5dc4383eb66711d4d3d3e71824d9403ac1559fea021cc103c1a4c4976
@@ -3926,11 +3901,7 @@ opentelemetry-semantic-conventions==0.66b2 \
     #   opentelemetry-instrumentation-redis
     #   opentelemetry-instrumentation-requests
     #   opentelemetry-instrumentation-wsgi
-    #   opentelemetry-resourcedetector-docker
-    #   opentelemetry-resourcedetector-kubernetes
-    #   opentelemetry-resourcedetector-process
     #   opentelemetry-sdk
-    #   pytest-opentelemetry
 opentelemetry-util-http==0.66b2 \
     --hash=sha256:7ba066ea609202e474679ddf1d0f753a1e6619bd206b36afaecba4bbb86e25d0 \
     --hash=sha256:c4bb5d6744e60353bcaa3e325bc529a1515346b51cb4d9c8e5b730579337e06d
@@ -4392,7 +4363,6 @@ psutil==7.2.2 \
     #   -r non-free/packages/cmk-liveproxyd/requirements.in
     #   -r non-free/packages/cmk-otel-collector/requirements.in
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
-    #   opentelemetry-resourcedetector-process
 psycopg==3.3.6 \
     --hash=sha256:a1db9f7148b06a28606767efaca51fa6f9398c5c0a3810519be69d7000bdb631 \
     --hash=sha256:c081f2250df751a943036e42db6df4571c66cd0aabe8291a7a506512b12007d2
@@ -5042,7 +5012,6 @@ pytest==9.2.0 \
     #   pytest-html
     #   pytest-metadata
     #   pytest-mock
-    #   pytest-opentelemetry
     #   pytest-playwright
     #   pytest-random-order
     #   pytest-recording
@@ -5096,10 +5065,6 @@ pytest-mock==3.17.0 \
     #   -r packages/cmk-logwatch/dev-requirements.in
     #   -r packages/cmk-notification-plugins/dev-requirements.in
     #   -r tests/dev-requirements.in
-pytest-opentelemetry==1.1.0 \
-    --hash=sha256:1fe96eea020bb0cdad3d590c8978908acd75a35d689659cc9b6600740de66812 \
-    --hash=sha256:4e6d552ce90e01dfa33c913ea843ca8a01f306219b4ce36cd7b79d070a82f0c4
-    # via -r tests/dev-requirements.in
 pytest-playwright==0.10.0 \
     --hash=sha256:47baf574dfb120bb53675d05c9784f8bf94e04c6dd7477dc56159ce732191952 \
     --hash=sha256:8314d1af726e2c15531635902ece3ee47ed83f5a75c937a7eda8686d3dae6c0d

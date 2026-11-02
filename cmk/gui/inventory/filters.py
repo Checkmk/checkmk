@@ -361,7 +361,9 @@ def _filter_rows_with_sort_key(
     context: VisualContext,
     rows: Rows,
 ) -> Rows:
-    from_value, until_value = (context.get(ident, {}).get(v) for v in _request_vars(ident))
+    from_value, until_value = (
+        context.get(ident, {}).get(v, "").strip() for v in _request_vars(ident)
+    )
     return [
         r
         for r in rows

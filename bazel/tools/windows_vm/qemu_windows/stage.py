@@ -4,8 +4,8 @@
 """The files a *-qemu test tier's payload needs in the guest.
 
 A tier's runner (qemu_test, bazel/rules/xcomp/qemu_test.bzl) copies them from
-its runfiles into a Stage, with a task.cmd that runs the payload, and hands
-the Stage to tier.run(), which copies it into the guest.
+its runfiles into a Stage, with the script that runs the payload, and hands
+the Stage to tier.run(), which copies it into the guest and runs the script.
 """
 
 import shutil

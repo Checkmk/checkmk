@@ -75,15 +75,13 @@ def main(argv: list[str]) -> int:
     stage.add(exe, "watest.exe")
     # The share FileInfoTest.Unc and FileInfoTest.Unicode read.
     stage.add(Path("agents/wnx/watest/watest-qemu-share.ps1"), "watest-qemu-share.ps1")
-    stage.write(
-        "task.cmd",
-        "@echo off\n"
-        "set WNX_TEST_ROOT=%~dp0\n"
-        'powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0watest-qemu-share.ps1"'
-        " || (echo error: creating the shared_public share failed& exit /b 1)\n"
-        f'watest.exe "--gtest_filter={positive}:-{":".join(negative)}"\n',
+    stage.write("watest-qemu.cmd", Path("agents/wnx/watest/watest-qemu.cmd").read_text())
+    return tier.run(
+        f"watest-{name}",
+        stage,
+        script="watest-qemu.cmd",
+        args=[f'"--gtest_filter={positive}:-{":".join(negative)}"'],
     )
-    return tier.run(f"watest-{name}", stage)
 
 
 if __name__ == "__main__":

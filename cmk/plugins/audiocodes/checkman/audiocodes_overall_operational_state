@@ -5,6 +5,10 @@ license: GPLv2
 distribution: check_mk
 description:
  This check monitors the operational state of an AudioCodes device.
+ The state of the service comes from the highest alarm severity and the operational state
+ that the device reports.
+
+ The service "System events" shows the active alarms that the device reports.
 
 discovery:
  One service is created.

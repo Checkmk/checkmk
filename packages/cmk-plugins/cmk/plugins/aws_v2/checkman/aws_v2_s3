@@ -4,22 +4,19 @@ catalog: cloud/aws
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the objects of AWS/S3 buckets and reports
+ This check monitors the objects of an AWS/S3 bucket and reports
+
+ - the bucket size, in total and per storage class
 
  - the number of objects
 
- - the summarized size
-
- - the largest object of a bucket
+ - the location and the tags of the bucket
 
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS) v2}.
 
  There are no default levels. Upper levels on the bucket size
- are configurable via the rule "AWS v2/S3 Bucket Objects".
-
-item:
- Name of the instance
+ are configurable via the rule "AWS v2/S3 bucket objects".
 
 discovery:
  Each bucket is a piggyback host with the name {<bucket name>}.

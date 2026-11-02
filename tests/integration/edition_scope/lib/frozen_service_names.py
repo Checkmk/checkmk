@@ -339,7 +339,7 @@ FROZEN_SERVICE_NAMES: Final[Mapping[str, str]] = {
     "aws_v2_rds_transaction_logs_usage": "AWS/RDS %s Transaction Logs Usage",
     "aws_v2_reservation_utilization": "AWS/CE Total Reservation Utilization",
     "aws_v2_route53": "AWS/Route53 %s",
-    "aws_v2_s3": "AWS/S3 Objects %s",
+    "aws_v2_s3": "AWS/S3 Objects",
     "aws_v2_s3_limits": "AWS/S3 Limits %s",
     "aws_v2_s3_requests": "AWS/S3 Requests %s",
     "aws_v2_s3_requests_http_errors": "AWS/S3 HTTP Errors %s",

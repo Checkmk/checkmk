@@ -483,7 +483,7 @@ rule_spec_aws_v2_s3_buckets_objects = CheckParameters(
     title=Title("AWS v2/S3 bucket objects"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_s3_buckets,
-    condition=HostAndItemCondition(item_title=Title("Bucket name")),
+    condition=HostCondition(),
 )
 
 

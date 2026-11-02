@@ -22,9 +22,10 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.aws_v2.lib import discover_aws_generic, parse_aws
+from cmk.plugins.aws_v2.lib import discover_aws_generic_single, parse_aws
 
-Section = Mapping[str, Mapping[str, Any]]
+Bucket = Mapping[str, Any]
+Section = Mapping[str, Bucket]
 
 
 def parse_aws_s3(string_table: StringTable) -> Section:
@@ -45,15 +46,17 @@ def parse_aws_s3(string_table: StringTable) -> Section:
     return parsed
 
 
-def discover_aws_s3(section: Section) -> DiscoveryResult:
-    yield from discover_aws_generic(section, ["BucketSizeBytes", "NumberOfObjects"])
+def parse_aws_s3_bucket(string_table: StringTable) -> Bucket | None:
+    # Each bucket is a host of its own, so the section has the metrics of one bucket.
+    return next(iter(parse_aws_s3(string_table).values()), None)
 
 
-def check_aws_s3_objects(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    if not (metrics := section.get(item)):
-        return
+def discover_aws_s3(section: Bucket) -> DiscoveryResult:
+    yield from discover_aws_generic_single(section, ["BucketSizeBytes", "NumberOfObjects"])
 
-    bucket_sizes = metrics["BucketSizeBytes"]
+
+def check_aws_s3_objects(params: Mapping[str, Any], section: Bucket) -> CheckResult:
+    bucket_sizes = section["BucketSizeBytes"]
     storage_infos = [
         f"{storage_type}: {render.bytes(value)}" for storage_type, value in bucket_sizes.items()
     ]
@@ -68,14 +71,14 @@ def check_aws_s3_objects(item: str, params: Mapping[str, Any], section: Section)
     if storage_infos:
         yield Result(state=State.OK, summary=", ".join(storage_infos))
 
-    num_objects = sum(metrics["NumberOfObjects"].values())
+    num_objects = sum(section["NumberOfObjects"].values())
     yield Result(state=State.OK, summary=f"Number of objects: {int(num_objects)}")
     yield Metric("aws_num_objects", num_objects)
 
-    if location := metrics.get("LocationConstraint"):
+    if location := section.get("LocationConstraint"):
         yield Result(state=State.OK, summary=f"Location: {location}")
 
-    tag_infos = [f"{tag['Key']}: {tag['Value']}" for tag in metrics.get("Tagging", {})]
+    tag_infos = [f"{tag['Key']}: {tag['Value']}" for tag in section.get("Tagging", {})]
     if tag_infos:
         yield Result(state=State.OK, summary=f"[Tags] {', '.join(tag_infos)}")
 
@@ -87,13 +90,13 @@ agent_section_aws_v2_s3 = AgentSection(
 
 agent_section_aws_v2_s3_bucket = AgentSection(
     name="aws_v2_s3_bucket",
-    parse_function=parse_aws_s3,
+    parse_function=parse_aws_s3_bucket,
 )
 
 
 check_plugin_aws_v2_s3 = CheckPlugin(
     name="aws_v2_s3",
-    service_name="AWS/S3 Objects %s",
+    service_name="AWS/S3 Objects",
     sections=["aws_v2_s3_bucket"],
     discovery_function=discover_aws_s3,
     check_function=check_aws_s3_objects,

@@ -395,6 +395,30 @@ describe('MapStatesService — why state is missing', () => {
     expect(store.loadError.value).toBe('Maps daemon unreachable')
   })
 
+  it('knows no state of a map the core never answered for', async () => {
+    const coreDown = { ...emptyStates, connection_ok: false }
+    const store = newService(null, {}, { fetchStates: vi.fn().mockResolvedValue(coreDown) })
+
+    await store.connectToMap('b')
+
+    expect(store.lastUpdate.value).not.toBeNull()
+    expect(store.liveStatus.value).toBe('unreachable')
+  })
+
+  it('keeps what it knew once the core stops answering', async () => {
+    const fetchStates = vi
+      .fn()
+      .mockResolvedValueOnce(emptyStates)
+      .mockResolvedValue({ ...emptyStates, connection_ok: false })
+    const store = newService(null, {}, { fetchStates })
+    await store.connectToMap('b')
+    expect(store.liveStatus.value).toBe('live')
+
+    await store.refresh()
+
+    expect(store.liveStatus.value).toBe('lost')
+  })
+
   it('clears the reason once a fetch comes back', async () => {
     const fetchStates = vi
       .fn()

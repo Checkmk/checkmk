@@ -13,25 +13,23 @@ import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
-import { type DeadSiteHosts, deadSitesMessage } from './deadSites'
+import type { LiveStatus } from '@/maps/services/MapStatesService'
+
+import { type DeadSiteHosts, connectionMessage, deadSitesMessage } from './deadSites'
 
 const { _t } = usei18n()
 
 const props = defineProps<{
-  connected: boolean
+  status: LiveStatus
   deadSites: string[]
   deadSiteHosts: DeadSiteHosts
 }>()
 
+const connectionText = computed(() => connectionMessage(_t, props.status))
 const deadSitesText = computed(() => deadSitesMessage(_t, props.deadSites, props.deadSiteHosts))
 </script>
 
 <template>
-  <CmkAlert
-    v-if="!connected"
-    variant="warning"
-    size="small"
-    :text="_t('Connection lost — showing last known state')"
-  />
+  <CmkAlert v-if="connectionText" variant="warning" size="small" :text="connectionText" />
   <CmkAlert v-else-if="deadSites.length" variant="warning" :text="deadSitesText" />
 </template>

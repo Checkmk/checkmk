@@ -321,6 +321,14 @@ describe('FolderTreeMapView (list mode)', () => {
     expect(screen.queryAllByRole('treeitem')).toHaveLength(0)
   })
 
+  it('says why no folder tree comes when the daemon never answered', async () => {
+    const { services } = renderTree({ withTree: false })
+    services.states.loadError.value = 'Maps daemon unreachable'
+
+    expect(await screen.findByText('No connection — states unknown')).toBeInTheDocument()
+    expect(screen.queryByText('Waiting for folder data…')).not.toBeInTheDocument()
+  })
+
   it('collapses the folder via keyboard: focus the chevron, press Enter', async () => {
     const user = userEvent.setup()
     renderTree()

@@ -136,24 +136,9 @@ const isWorldmap = computed(() => mapConfig.value?.view.type === 'worldmap')
 const isFlowmap = computed(() => mapConfig.value?.view.type === 'flow')
 const isRadar = computed(() => mapConfig.value?.view.type === 'radar')
 const isFolderTree = computed(() => mapConfig.value?.view.type === 'foldertree')
-/**
- * Whether the map's own chrome says what is not current. Radar and folder tree
- * say it in their own flow; any map says it only once states have arrived, so
- * one still connecting does not read as lost.
- */
-const statesArrived = computed(() => statesStore.lastUpdate.value !== null)
-const liveStatus = computed<'connecting' | 'live' | 'offline' | null>(() => {
-  if (mapsStore.error.value) {
-    return null
-  }
-  if (!statesArrived.value && !statesStore.loadError.value) {
-    return 'connecting'
-  }
-  return statesStore.connected.value ? 'live' : 'offline'
-})
-const showsMapState = computed(
-  () => !isPreview.value && !isRadar.value && !isFolderTree.value && statesArrived.value
-)
+const liveStatus = computed(() => (mapsStore.error.value ? null : statesStore.liveStatus.value))
+/** Whether the map's own chrome says what is not current; radar and folder tree say it in their own flow. */
+const showsMapState = computed(() => !isPreview.value && !isRadar.value && !isFolderTree.value)
 const isPresentation = computed(() => mapConfig.value?.view.type === 'presentation')
 const showsDerivedContent = computed(() => derivesItsContent(mapConfig.value?.view))
 
@@ -931,7 +916,7 @@ function closeBulkAckModal(sent: boolean): void {
       <MapStateAlert
         v-if="isKiosk && showsMapState && mapConfig"
         class="maps-map-view__state-alert"
-        :connected="statesStore.connected.value"
+        :status="statesStore.liveStatus.value"
         :dead-sites="statesStore.deadSites.value"
         :dead-site-hosts="deadSiteHostsOf(mapConfig.view)"
       />

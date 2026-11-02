@@ -306,15 +306,21 @@ function closeBulkModal(): void {
       <!-- In flow rather than floating: a banner over the drawing would cover
            the very tiles it is warning about. -->
       <MapStateAlert
-        v-if="!preview && root && config"
-        :connected="states.connected.value"
+        v-if="!preview && config"
+        :status="states.liveStatus.value"
         :dead-sites="states.deadSites.value"
         :dead-site-hosts="deadSiteHostsOf(config.view)"
       />
 
-      <div v-if="!root" class="maps-folder-tree-map-view__note">
-        {{ _t('Waiting for folder data…') }}
-      </div>
+      <template v-if="!root">
+        <!-- The alert above already says why no folder data comes. -->
+        <div
+          v-if="preview || states.liveStatus.value !== 'unreachable'"
+          class="maps-folder-tree-map-view__note"
+        >
+          {{ _t('Waiting for folder data…') }}
+        </div>
+      </template>
       <div v-else-if="!root.children.length" class="maps-folder-tree-map-view__note">
         {{
           _t(

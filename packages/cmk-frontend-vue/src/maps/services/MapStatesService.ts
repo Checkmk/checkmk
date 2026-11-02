@@ -8,7 +8,16 @@ import { CmkApiError } from 'cmk-ui-library/lib/error'
 import type { FastApiEvent } from 'cmk-ui-library/lib/fastapi-client/client'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { type EventStream, createEventStream } from 'cmk-ui-library/lib/sse/eventStream'
-import { type Ref, type ShallowRef, markRaw, ref, shallowRef, triggerRef } from 'vue'
+import {
+  type Ref,
+  type ShallowRef,
+  computed,
+  markRaw,
+  ref,
+  shallowRef,
+  triggerRef,
+  watch
+} from 'vue'
 
 import type { ConnectionsApi } from '@/maps/api/connections'
 import type { SignedBytes } from '@/maps/api/mapConfig'
@@ -124,6 +133,12 @@ const STREAM_REPROBE_INTERVAL_MS = 60_000
 const HIDDEN_STREAM_GRACE_MS = 5_000
 
 /**
+ * What the map's states are worth: none yet, current, the last known ones, or
+ * none ever, the connection having failed before any arrived.
+ */
+export type LiveStatus = 'connecting' | 'live' | 'lost' | 'unreachable'
+
+/**
  * The live state of the open map.
  *
  * The daemon pushes state and topology over one event stream and the service
@@ -154,6 +169,17 @@ export class MapStatesService {
    * otherwise sit on a spinner that never stops, so it shows this instead.
    */
   public readonly loadError: Ref<string | null> = ref(null)
+  // A snapshot taken without the monitoring core holds no state worth keeping.
+  private readonly hadLiveStates = ref(false)
+  public readonly liveStatus = computed((): LiveStatus => {
+    if (this.connected.value) {
+      return 'live'
+    }
+    if (this.hadLiveStates.value) {
+      return 'lost'
+    }
+    return this.lastUpdate.value === null && !this.loadError.value ? 'connecting' : 'unreachable'
+  })
   /**
    * Counts the refreshes after a command, for what is fetched beside the
    * stream -- an object's comments and downtimes -- to follow along.
@@ -242,7 +268,15 @@ export class MapStatesService {
     >,
     private readonly auth: Pick<MapsAuthService, 'refresh'>,
     private readonly maps: Pick<MapService, 'currentMap' | 'getSignedMap'>
-  ) {}
+  ) {
+    watch(
+      this.connected,
+      (connected) => {
+        this.hadLiveStates.value ||= connected
+      },
+      { flush: 'sync' }
+    )
+  }
 
   public getState(objectId: string): ObjectState | undefined {
     return this.states.value[objectId]
@@ -426,6 +460,7 @@ export class MapStatesService {
     this.loadError.value = null
     // What the last map's daemon said is not news about the next one.
     this.lastUpdate.value = null
+    this.hadLiveStates.value = false
     this.deadSites.value = []
     this.states.value = {}
     this.metricValues.value = {}

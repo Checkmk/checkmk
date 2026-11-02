@@ -15,6 +15,8 @@ is not disabled.
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
+import type { LiveStatus } from '@/maps/services/MapStatesService'
+
 import MapLiveIndicator from './MapLiveIndicator.vue'
 import MapModeBadges from './MapModeBadges.vue'
 import MapRotationPill from './MapRotationPill.vue'
@@ -23,7 +25,7 @@ const { _t } = usei18n()
 
 defineProps<{
   /** None for a map that could not be loaded: it has no connection to report. */
-  liveStatus: 'connecting' | 'live' | 'offline' | null
+  liveStatus: LiveStatus | null
   /** Whether this operator may edit the map, and so open its settings. */
   canEdit?: boolean
   editing?: boolean

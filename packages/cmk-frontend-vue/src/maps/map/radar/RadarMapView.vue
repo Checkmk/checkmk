@@ -120,7 +120,7 @@ const counts = computed(() => radarStateCounts(matching.value))
                cards would cover the very states it is warning about. -->
           <MapStateAlert
             v-if="!preview && config"
-            :connected="statesStore.connected.value"
+            :status="statesStore.liveStatus.value"
             :dead-sites="statesStore.deadSites.value"
             :dead-site-hosts="deadSiteHostsOf(config.view)"
           />

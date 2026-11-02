@@ -14,9 +14,13 @@ only failing silently.
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
+import type { LiveStatus } from '@/maps/services/MapStatesService'
+
+import { connectionMessage } from './deadSites'
+
 const { _t } = usei18n()
 
-const props = defineProps<{ status: 'connecting' | 'live' | 'offline' }>()
+const props = defineProps<{ status: LiveStatus }>()
 
 const shown = computed(() => {
   switch (props.status) {
@@ -28,7 +32,7 @@ const shown = computed(() => {
   return {
     className: 'maps-map-live-indicator--offline',
     text: _t('Offline'),
-    title: _t('Connection lost — showing last known state')
+    title: connectionMessage(_t, props.status) ?? undefined
   }
 })
 </script>

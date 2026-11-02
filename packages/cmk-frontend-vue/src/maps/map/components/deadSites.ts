@@ -5,6 +5,7 @@
  */
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
+import type { LiveStatus } from '@/maps/services/MapStatesService'
 import type { MapView } from '@/maps/types/api'
 import type { TranslateFn } from '@/maps/utils/dropdownOptions'
 import { hasAutoSource } from '@/maps/utils/model'
@@ -37,4 +38,12 @@ export function deadSitesMessage(
     return _t('Site unreachable: %{sites} — its hosts show no current state', { sites })
   }
   return _t('Site unreachable: %{sites} — its hosts are missing from the map', { sites })
+}
+
+/** Why the map's states are not current; none while they are, or may still come. */
+export function connectionMessage(_t: TranslateFn, status: LiveStatus): TranslatedString | null {
+  if (status === 'lost') {
+    return _t('Connection lost — showing last known state')
+  }
+  return status === 'unreachable' ? _t('No connection — states unknown') : null
 }

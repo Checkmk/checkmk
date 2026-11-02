@@ -508,6 +508,18 @@ describe('MapView – unreachable sites', () => {
       await screen.findByText('Site unreachable: remote — its hosts show no current state')
     ).toBeInTheDocument()
   })
+  it('tells a wall whose daemon never answered that no state is known', async () => {
+    services.nav.replace({ view: 'map', name: 'map1', kiosk: true })
+    vi.mocked(services.apis.mapStates.register).mockRejectedValue(new Error('Daemon unreachable'))
+    vi.mocked(services.apis.mapStates.fetchStates).mockRejectedValue(
+      new Error('Daemon unreachable')
+    )
+    opensMap(newMapView('static'))
+    renderMap()
+
+    expect(await screen.findByText('No connection — states unknown')).toBeInTheDocument()
+    expect(screen.queryByText(/last known state/)).toBeNull()
+  })
 })
 
 describe('MapView – saving the settings', () => {

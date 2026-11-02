@@ -146,10 +146,13 @@ describe('RadarMapView', () => {
     expect(screen.getByText('Daemon unreachable')).toBeInTheDocument()
   })
 
-  it('warns that the connection dropped while it keeps the last known states up', () => {
-    renderRadar(sampleStates, { connected: false })
+  it('warns that the connection dropped while it keeps the last known states up', async () => {
+    const { services } = renderRadar(sampleStates)
+    services.states.connected.value = false
 
-    expect(screen.getByText('Connection lost — showing last known state')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Connection lost — showing last known state')
+    ).toBeInTheDocument()
     expect(screen.getAllByRole('button')).toHaveLength(3)
   })
 

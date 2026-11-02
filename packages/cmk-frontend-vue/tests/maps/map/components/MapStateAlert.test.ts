@@ -11,7 +11,7 @@ import MapStateAlert from '@/maps/map/components/MapStateAlert.vue'
 describe('MapStateAlert', () => {
   it('names the unreachable sites and what became of their hosts', () => {
     render(MapStateAlert, {
-      props: { connected: true, deadSites: ['paris', 'nyc'], deadSiteHosts: 'missing' }
+      props: { status: 'live', deadSites: ['paris', 'nyc'], deadSiteHosts: 'missing' }
     })
 
     expect(
@@ -22,16 +22,24 @@ describe('MapStateAlert', () => {
   // Without the daemon nothing about the sites is current either.
   it('says the connection is lost rather than which sites are unreachable', () => {
     render(MapStateAlert, {
-      props: { connected: false, deadSites: ['paris'], deadSiteHosts: 'no-state' }
+      props: { status: 'lost', deadSites: ['paris'], deadSiteHosts: 'no-state' }
     })
 
     expect(screen.getByText('Connection lost — showing last known state')).toBeInTheDocument()
     expect(screen.queryByText(/Site unreachable/)).toBeNull()
   })
 
-  it('says nothing while everything is reachable', () => {
+  it('claims no last known state when none ever arrived', () => {
+    render(MapStateAlert, {
+      props: { status: 'unreachable', deadSites: [], deadSiteHosts: 'no-state' }
+    })
+
+    expect(screen.getByText('No connection — states unknown')).toBeInTheDocument()
+  })
+
+  it.each(['live', 'connecting'] as const)('says nothing while %s', (status) => {
     const { container } = render(MapStateAlert, {
-      props: { connected: true, deadSites: [], deadSiteHosts: 'no-state' }
+      props: { status, deadSites: [], deadSiteHosts: 'no-state' }
     })
 
     expect(container.textContent).toBe('')

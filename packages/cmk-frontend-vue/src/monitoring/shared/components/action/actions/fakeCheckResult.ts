@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { MonitoringActionIdent } from 'cmk-shared-typing/typescript/monitoring/action_ident'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
@@ -15,7 +16,7 @@ import type { ActionTargetKind, MonitoringAction } from '../types'
 import FakeCheckResultForm, { type FakeCheckResultValues } from './FakeCheckResultForm.vue'
 import { commandFailed } from './feedback'
 
-export const FAKE_CHECK_RESULT_ACTION_ID = 'fake_check_result'
+export const FAKE_CHECK_RESULT_ACTION_ID = 'fake_check_result' satisfies MonitoringActionIdent
 
 export interface FakeCheckResultKindConfig<Target> {
   targetKind: ActionTargetKind

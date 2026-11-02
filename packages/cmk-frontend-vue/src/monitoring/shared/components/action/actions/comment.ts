@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { MonitoringActionIdent } from 'cmk-shared-typing/typescript/monitoring/action_ident'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
@@ -12,7 +13,7 @@ import type { MonitoringAction } from '../types'
 import CommentForm, { type CommentValues } from './CommentForm.vue'
 import { commandFailed } from './feedback'
 
-export const COMMENT_ACTION_ID = 'add_comment'
+export const COMMENT_ACTION_ID = 'add_comment' satisfies MonitoringActionIdent
 
 export interface CommentKindConfig<Target> {
   comment(api: CommentApi, targets: Target[], comment: string): Promise<number>

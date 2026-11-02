@@ -31,6 +31,7 @@ from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.type_defs import FilterName, VisualContext
 from cmk.gui.visuals.filter import filter_registry
+from cmk.shared_typing.monitoring.action_ident import MonitoringActionIdent
 from cmk.web.utils import permission_verification as permissions
 
 from ._family import DASHBOARD_FAMILY
@@ -71,7 +72,9 @@ class UnappliedFilter:
 
 @api_model
 class MonitoringTableAction:
-    ident: str = api_field(description="The ID of the command.", example="reschedule")
+    ident: MonitoringActionIdent = api_field(
+        description="The ID of the command.", example="reschedule"
+    )
     title: str = api_field(description="The title of the command.", example="Reschedule")
     icon: str = api_field(description="The icon of the command.", example="reload")
 

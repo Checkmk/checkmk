@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Iterator
+from dataclasses import dataclass
 
 from cmk.gui.logged_in import LoggedInUser
+from cmk.web.utils.speaklater import LazyString
 
 from ._legacy import LegacyCommand, LegacyCommandSource
 from ._registry import (
@@ -14,6 +16,15 @@ from ._registry import (
     MonitorCommandRegistry,
     MonitorObjectType,
 )
+
+
+@dataclass(frozen=True, kw_only=True)
+class OfferedCommand[I: str]:
+    """A command offered to the user, under the ident its caller named it by."""
+
+    ident: I
+    title: LazyString
+    icon: str
 
 
 class MonitorCommands:
@@ -33,12 +44,12 @@ class MonitorCommands:
     def use_legacy_source(self, source: LegacyCommandSource) -> None:
         self._legacy = source
 
-    def permitted_for(
+    def permitted_for[I: str](
         self,
         user: LoggedInUser,
         object_type: MonitorObjectType,
-        idents: Iterable[str],
-    ) -> list[MonitorCommand]:
+        idents: Iterable[I],
+    ) -> list[OfferedCommand[I]]:
         """The named commands the user may run on this object type, prominent ones first.
 
         Callers name the commands they support instead of taking everything on offer, so a
@@ -47,20 +58,25 @@ class MonitorCommands:
         """
         available = self._available()
         commands = [
-            command
+            (ident, command)
             for ident in idents
             if (command := available.get(ident)) is not None
             and command.applies_to(object_type)
             and command.is_permitted_for(user)
         ]
-        return sorted(commands, key=lambda command: 0 if command.is_prominent else 1)
+        return [
+            OfferedCommand(ident=ident, title=command.title, icon=command.icon)
+            for ident, command in sorted(
+                commands, key=lambda offered: 0 if offered[1].is_prominent else 1
+            )
+        ]
 
-    def permitted_actions(
+    def permitted_actions[I: str](
         self,
         user: LoggedInUser,
         object_type: MonitorObjectType,
-        idents: Iterable[str],
-    ) -> list[MonitorCommand]:
+        idents: Iterable[I],
+    ) -> list[OfferedCommand[I]]:
         """Like permitted_for, but also requires the general permission to act at all."""
         if not user.may("general.act"):
             return []

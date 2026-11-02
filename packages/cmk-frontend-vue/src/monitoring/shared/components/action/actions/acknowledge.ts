@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { getLocalTimeZone, now } from '@internationalized/date'
+import type { MonitoringActionIdent } from 'cmk-shared-typing/typescript/monitoring/action_ident'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
@@ -16,7 +17,7 @@ import type { ActionTargetKind, MonitoringAction } from '../types'
 import AcknowledgeForm, { type AcknowledgeValues } from './AcknowledgeForm.vue'
 import { commandFailed } from './feedback'
 
-export const ACK_ACTION_ID = 'acknowledge'
+export const ACK_ACTION_ID = 'acknowledge' satisfies MonitoringActionIdent
 
 /** The setup pages the form links to; the server omits what the user may not edit. */
 export interface AcknowledgeLinks {

@@ -12,9 +12,9 @@ from cmk.gui.monitor.command import (
     host_setup_links,
     HOST_SUPPORTED_ACTIONS,
     HostSetupLink,
-    MonitorCommand,
     MonitorCommands,
     MonitorObjectType,
+    OfferedCommand,
 )
 from cmk.gui.monitor.hosts.table import (
     HOST_TABLE,
@@ -34,6 +34,7 @@ from cmk.gui.monitor.table_widget import TableCatalog, TableRows
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.gui.watolib.hosts_and_folders import FolderReader
+from cmk.shared_typing.monitoring.action_ident import MonitoringActionIdent
 
 
 class MonitoringTableSource[R](Protocol):
@@ -65,12 +66,12 @@ class RowOffer:
     """What the page of an object type offers to do with one of its objects."""
 
     object_type: MonitorObjectType
-    supported_actions: tuple[str, ...]
+    supported_actions: tuple[MonitoringActionIdent, ...]
     links: Callable[[ApiContext], Sequence[HostSetupLink]] = _no_links
 
     def actions(
         self, api_context: ApiContext, commands: MonitorCommands
-    ) -> Sequence[MonitorCommand]:
+    ) -> Sequence[OfferedCommand[MonitoringActionIdent]]:
         """The commands the reader may run on the object."""
         if _reads_shared_dashboard(api_context):
             return []

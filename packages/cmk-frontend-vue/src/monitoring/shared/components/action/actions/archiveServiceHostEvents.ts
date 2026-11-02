@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { MonitoringActionIdent } from 'cmk-shared-typing/typescript/monitoring/action_ident'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 import { ArchiveEventsApi } from '@/monitoring/shared/api/actions/archiveEvents'
@@ -11,7 +12,7 @@ import type { MonitoringAction } from '@/monitoring/shared/components/action/typ
 
 import { createConfirmedAction } from './confirmed'
 
-export const ARCHIVE_EVENTS_ACTION_ID = 'ec_archive_events_of_host'
+export const ARCHIVE_EVENTS_ACTION_ID = 'ec_archive_events_of_host' satisfies MonitoringActionIdent
 
 /** The hosts of the services, each once. */
 export function hostsOf(services: readonly ServiceRef[]): HostRef[] {

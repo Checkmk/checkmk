@@ -38,10 +38,12 @@ from cmk.shared_typing.monitoring.all_services import (
     DowntimeRecurrence,
     DowntimeUntilKeyword,
     Edition,
+    HostActionIdent,
     MonitoringAction,
     MonitoringAllServicesApp,
     MonitoringPageLinkButton,
     RowAction,
+    ServiceActionIdent,
     Site,
 )
 from cmk.utils import paths
@@ -106,7 +108,9 @@ class MonitorAllServicesPage(Page):
                     export_event=EXPORT_EVENT,
                     actions=[
                         MonitoringAction(
-                            ident=command.ident, title=str(command.title), icon=command.icon
+                            ident=ServiceActionIdent(command.ident),
+                            title=str(command.title),
+                            icon=command.icon,
                         )
                         for command in self._commands.permitted_actions(
                             user, "service", SERVICE_SUPPORTED_ACTIONS
@@ -114,7 +118,9 @@ class MonitorAllServicesPage(Page):
                     ],
                     host_actions=[
                         MonitoringAction(
-                            ident=command.ident, title=str(command.title), icon=command.icon
+                            ident=HostActionIdent(command.ident),
+                            title=str(command.title),
+                            icon=command.icon,
                         )
                         for command in self._commands.permitted_actions(
                             user, "host", HOST_SUPPORTED_ACTIONS

@@ -15,6 +15,7 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui/livestatus_utils/commands",
         "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web/cmk/web/utils",
     ],
 )

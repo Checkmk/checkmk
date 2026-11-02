@@ -47,10 +47,12 @@ from cmk.shared_typing.monitoring.host_services import (
     DowntimeRecurrence,
     DowntimeUntilKeyword,
     Edition,
+    HostActionIdent,
     MonitoringAction,
     MonitoringHostServicesApp,
     MonitoringPageLinkButton,
     RowAction,
+    ServiceActionIdent,
 )
 from cmk.utils import paths
 from cmk.web.utils.urls import makeuri_contextless
@@ -102,7 +104,11 @@ class MonitorHostServicesPage(Page):
 
     def _permitted_actions(self) -> list[MonitoringAction]:
         return [
-            MonitoringAction(ident=command.ident, title=str(command.title), icon=command.icon)
+            MonitoringAction(
+                ident=ServiceActionIdent(command.ident),
+                title=str(command.title),
+                icon=command.icon,
+            )
             for command in self._commands.permitted_actions(
                 user, "service", SERVICE_SUPPORTED_ACTIONS
             )
@@ -110,7 +116,11 @@ class MonitorHostServicesPage(Page):
 
     def _permitted_host_actions(self) -> list[MonitoringAction]:
         return [
-            MonitoringAction(ident=command.ident, title=str(command.title), icon=command.icon)
+            MonitoringAction(
+                ident=HostActionIdent(command.ident),
+                title=str(command.title),
+                icon=command.icon,
+            )
             for command in self._commands.permitted_actions(user, "host", HOST_SUPPORTED_ACTIONS)
         ]
 

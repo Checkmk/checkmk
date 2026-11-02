@@ -5,6 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, within } from '@testing-library/vue'
+import type { MonitoringActionIdent } from 'cmk-shared-typing/typescript/monitoring/action_ident'
 import type {
   MonitoringAction,
   MonitoringHostServicesApp
@@ -1325,7 +1326,12 @@ test('offers the further service commands in the "More" menu, the missing ones d
   renderApp({
     actions: [
       { ident: 'acknowledge', title: 'Acknowledge problems', icon: 'ack' },
-      { ident: 'not_implemented', title: 'Not implemented', icon: 'archive' }
+      // A command outside the shared types, as a newer backend could send, that no page implements.
+      {
+        ident: 'not_implemented' as MonitoringActionIdent,
+        title: 'Not implemented',
+        icon: 'archive'
+      }
     ]
   })
 

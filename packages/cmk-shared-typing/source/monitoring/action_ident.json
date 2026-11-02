@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Monitoring Action Ident",
+  "description": "The commands a monitoring page may offer on a host or service.",
+  "anyOf": [{ "$ref": "#/$defs/host_action_ident" }, { "$ref": "#/$defs/service_action_ident" }],
+  "$defs": {
+    "host_action_ident": {
+      "title": "Host Action Ident",
+      "description": "The commands a monitoring page may offer on a host, in the order it offers them.",
+      "type": "string",
+      "enum": [
+        "acknowledge",
+        "schedule_downtimes",
+        "reschedule",
+        "remove_acknowledgments",
+        "remove_downtimes_hosts_services",
+        "send_custom_notification",
+        "add_comment",
+        "fake_check_result",
+        "notifications",
+        "toggle_active_checks",
+        "toggle_passive_checks",
+        "clear_modified_attributes"
+      ]
+    },
+    "service_action_ident": {
+      "title": "Service Action Ident",
+      "description": "The commands a monitoring page may offer on a service, in the order it offers them.",
+      "type": "string",
+      "enum": [
+        "acknowledge",
+        "reschedule",
+        "schedule_downtimes",
+        "remove_acknowledgments",
+        "remove_downtimes_hosts_services",
+        "send_custom_notification",
+        "add_comment",
+        "fake_check_result",
+        "notifications",
+        "toggle_active_checks",
+        "toggle_passive_checks",
+        "clear_modified_attributes",
+        "ec_archive_events_of_host"
+      ]
+    }
+  }
+}

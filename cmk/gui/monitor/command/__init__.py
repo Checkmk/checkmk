@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._commands import monitor_commands, MonitorCommands
+from ._commands import monitor_commands, MonitorCommands, OfferedCommand
 from ._downtime import downtime_recurrences, DowntimeRecurrence, DowntimeRecurrences
 from ._fake_check_result import fake_check_output
 from ._host import host_setup_links, HOST_SUPPORTED_ACTIONS, HostSetupLink
@@ -48,4 +48,5 @@ __all__ = [
     "MonitorCommands",
     "MonitorObjectType",
     "notification_rules_url",
+    "OfferedCommand",
 ]

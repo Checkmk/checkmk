@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { MonitoringActionIdent } from 'cmk-shared-typing/typescript/monitoring/action_ident'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -13,7 +14,7 @@ import type { ActionOutcome, MonitoringAction } from '../types'
 import RescheduleForm, { type RescheduleValues } from './RescheduleForm.vue'
 import { commandFailed } from './feedback'
 
-export const RESCHEDULE_ACTION_ID = 'reschedule'
+export const RESCHEDULE_ACTION_ID = 'reschedule' satisfies MonitoringActionIdent
 
 const DEFAULT_SPREAD_MINUTES = 5
 

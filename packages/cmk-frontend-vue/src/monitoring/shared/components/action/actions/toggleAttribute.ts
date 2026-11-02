@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { MonitoringActionIdent } from 'cmk-shared-typing/typescript/monitoring/action_ident'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
@@ -16,11 +17,11 @@ import ToggleAttributeForm, { type ToggleAttributeValues } from './ToggleAttribu
 import { commandFailed } from './feedback'
 
 /** The legacy command each attribute is switched by. */
-export const TOGGLE_ACTION_IDS: Readonly<Record<ModifiableAttribute, string>> = {
+export const TOGGLE_ACTION_IDS = {
   notifications: 'notifications',
   active_checks: 'toggle_active_checks',
   passive_checks: 'toggle_passive_checks'
-}
+} as const satisfies Readonly<Record<ModifiableAttribute, MonitoringActionIdent>>
 
 export interface ToggleKindConfig<Target> {
   attribute: ModifiableAttribute

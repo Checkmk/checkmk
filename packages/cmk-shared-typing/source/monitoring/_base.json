@@ -80,7 +80,7 @@
     "monitoring_action": {
       "type": "object",
       "properties": {
-        "ident": { "type": "string" },
+        "ident": { "$ref": "action_ident.json" },
         "title": { "type": "string" },
         "icon": { "type": "string" }
       },

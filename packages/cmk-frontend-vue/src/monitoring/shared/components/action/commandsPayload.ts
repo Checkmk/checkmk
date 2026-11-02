@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { MonitoringActionIdent } from 'cmk-shared-typing/typescript/monitoring/action_ident'
+
 import type { DowntimeRecurrenceOption } from './actions/ScheduleDowntimeForm.vue'
 
 /**
@@ -10,7 +12,7 @@ import type { DowntimeRecurrenceOption } from './actions/ScheduleDowntimeForm.vu
  * which page's generated module it arrived in.
  */
 export interface MonitoringCommandsPayload {
-  actions?: { ident: string; title: string; icon: string }[] | undefined
+  actions?: { ident: MonitoringActionIdent; title: string; icon: string }[] | undefined
   acknowledge_presets_url?: string | null | undefined
   notification_rules_url?: string | null | undefined
   acknowledge_defaults?:

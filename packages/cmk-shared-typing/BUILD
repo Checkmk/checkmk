@@ -47,6 +47,7 @@ SOURCES_COMMON = [
     "mode_host.json",
     "mode_host_relation_detection.json",
     "mode_oauth2_connection.json",
+    "monitoring/action_ident.json",
     "monitoring/all_hosts.json",
     "monitoring/all_services.json",
     "monitoring/host_services.json",

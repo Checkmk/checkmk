@@ -3,13 +3,15 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { MonitoringActionIdent } from 'cmk-shared-typing/typescript/monitoring/action_ident'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 import type { MonitoringAction } from '../types'
 import { type ConfirmedKindConfig, createConfirmedAction } from './confirmed'
 
-export const REMOVE_ACK_ACTION_ID = 'remove_acknowledgments'
-export const REMOVE_DOWNTIMES_ACTION_ID = 'remove_downtimes_hosts_services'
+export const REMOVE_ACK_ACTION_ID = 'remove_acknowledgments' satisfies MonitoringActionIdent
+export const REMOVE_DOWNTIMES_ACTION_ID =
+  'remove_downtimes_hosts_services' satisfies MonitoringActionIdent
 
 /** Removes the acknowledgements of the targets, which the page narrows to acknowledged ones. */
 export function createRemoveAcknowledgementsAction<Target>(

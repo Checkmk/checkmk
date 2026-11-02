@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { MonitoringActionIdent } from 'cmk-shared-typing/typescript/monitoring/action_ident'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
@@ -15,7 +16,8 @@ import type { ActionTargetKind, MonitoringAction } from '../types'
 import CustomNotificationForm, { type CustomNotificationValues } from './CustomNotificationForm.vue'
 import { commandFailed } from './feedback'
 
-export const CUSTOM_NOTIFICATION_ACTION_ID = 'send_custom_notification'
+export const CUSTOM_NOTIFICATION_ACTION_ID =
+  'send_custom_notification' satisfies MonitoringActionIdent
 
 export interface CustomNotificationKindConfig<Target> {
   targetKind: ActionTargetKind

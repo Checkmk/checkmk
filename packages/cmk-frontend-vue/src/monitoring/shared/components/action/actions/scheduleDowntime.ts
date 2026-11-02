@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { MonitoringActionIdent } from 'cmk-shared-typing/typescript/monitoring/action_ident'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
@@ -19,7 +20,7 @@ import ScheduleDowntimeForm, {
 } from './ScheduleDowntimeForm.vue'
 import { commandFailed } from './feedback'
 
-export const SCHEDULE_DOWNTIME_ACTION_ID = 'schedule_downtimes'
+export const SCHEDULE_DOWNTIME_ACTION_ID = 'schedule_downtimes' satisfies MonitoringActionIdent
 
 /**
  * The payload's durations, structurally typed so this stays free of the generated modules.

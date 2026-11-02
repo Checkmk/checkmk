@@ -149,6 +149,16 @@ Interfaces
   share. ``ColumnCatalog`` implements the column catalog ``TableCatalog``
   and ``ListingParser`` turns a request body into a ``TableListing``; the
   hosts and services packages only plug in their columns and models.
+* ``cmk.shared_typing.monitoring.action_ident`` (generated from
+  ``packages/cmk-shared-typing/source/monitoring/action_ident.json``): the
+  contract between backend and frontend for the commands that the
+  monitoring pages and the monitoring tables of the dashboards offer on a
+  host or a service. It is the only list of their IDs, in the order they
+  are offered: the backend offers ``HOST_SUPPORTED_ACTIONS`` and
+  ``SERVICE_SUPPORTED_ACTIONS`` straight from the generated enums, and the
+  frontend types its actions with them. Every ID needs a command in the
+  command registry for its object type and an action in the frontend; a
+  unit test fails if the backend has no command for one.
 
 Coexistence
 -----------
@@ -190,3 +200,11 @@ Risks and technical debts
   ``cmk.gui.monitor.shared``, to filter services by their host, so a change to
   the host filters also reaches the services listing. A new host condition is
   only accepted there once ``validate_host_columns_only`` lets it in.
+* ``cmk.gui.monitor.command``, and through it the monitoring tables of the
+  dashboards, depends on the page types of ``cmk.shared_typing.monitoring``:
+  which commands the backend offers is declared in the schema
+  ``action_ident.json``, not in ``cmk.gui.monitor``. Adding a command to the
+  pages starts with editing that schema. This is on purpose, because the
+  list is a contract that neither side can change on its own, but it is the
+  one place where the commands do not stay independent of the page
+  transport.

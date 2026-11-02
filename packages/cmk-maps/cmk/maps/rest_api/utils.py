@@ -12,6 +12,7 @@ mirror and the opaque ``map_spec`` dict that the pagetype store persists.
 import json
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager
 from http import HTTPStatus
 from typing import Final, get_args
 
@@ -477,6 +478,32 @@ def resolve_map_link_titles(
     return titles
 
 
+def permitted_map_or_404(name: str) -> MapPage:
+    if (page := get_permitted_map(name)) is None:
+        raise RestAPIRequestGeneralException(
+            status=HTTPStatus.NOT_FOUND,
+            title=f"The map {name!r} does not exist",
+            detail="No map with this name is visible to you.",
+        )
+    return page
+
+
+@contextmanager
+def representable_map(name: str) -> Iterator[None]:
+    # A stored spec that no longer fits the model (legacy/half-written map, as
+    # the list tolerates via ``_list_view``) is a recoverable data state, so
+    # answer 409 instead of crashing with an unhandled 500.
+    try:
+        yield
+    except ValidationError as exc:
+        raise RestAPIRequestGeneralException(
+            status=HTTPStatus.CONFLICT,
+            title=f"The map {name!r} cannot be represented",
+            detail="Its stored configuration is incompatible with the current map "
+            "model and likely needs to be migrated or re-saved.",
+        ) from exc
+
+
 def resolved_spec(page: MapPage) -> dict[str, object]:
     # Fold the authoritative pagetype name into the config, so a stored spec
     # whose ``name`` drifted from the pagetype key (a clone/rename/migration)
@@ -487,9 +514,6 @@ def resolved_spec(page: MapPage) -> dict[str, object]:
 def serialize_map(page: MapPage, *, can_edit: bool, can_delete: bool) -> MapObject:
     cfg = page.config
     spec = resolved_spec(page)
-    # Sign the resolved config so the SPA can relay {config_b64, sig} to the Maps
-    # daemon's register endpoint (verified there against the owner the GUI names for the map) — the
-    # same bytes the daemon renders.
     signed = sign_map_config(spec, owner=str(cfg.owner))
     return MapObject(
         domainType="map",

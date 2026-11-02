@@ -282,8 +282,8 @@ OpenAPI types, not from hand-written copies.
      - Lists the maps the user may see (``map.<name>`` checked per map).
    * - GET
      - ``objects/map/{name}``
-     - Returns one map, including its **signed config** (``config_b64``,
-       ``sig``) that the SPA hands to the daemon.
+     - Returns one map: the parsed config, plus its **signed config**
+       (``config_b64``, ``sig``).
    * - POST
      - ``domain-types/map/collections/all``
      - Needs ``general.edit_map``. Name must match ``[a-zA-Z0-9_-]{1,100}``;
@@ -320,6 +320,12 @@ OpenAPI types, not from hand-written copies.
      - ``domain-types/maps_access/actions/resolve/invoke``
      - **Only for the daemon** (site-internal secret, no session). Which map a
        user sees under a name, and its owner. See `Authentication`_.
+   * - GET
+     - ``objects/maps_signed_map/{name}``
+     - Needs ``maps.use``; 404 for a map the user may not see. Returns the
+       **signed config** (``config_b64``, ``sig``) that the SPA renders from
+       and hands to the daemon, and the user's rights on the map. 409 for a
+       stored config the current map model no longer accepts. Writes nothing.
    * - POST
      - ``domain-types/maps_link_targets/actions/resolve/invoke``
      - **Only for the daemon** (site-internal secret, no session). Which maps
@@ -1049,8 +1055,13 @@ Opening a map
 
     User -> spa : open maps.py
     spa -> gui : GET maps.py (session)
-    spa -> gui : GET objects/map/{name}
-    gui --> spa : map + signed config
+    par
+        spa -> gui : GET maps_signed_map/{name}
+        gui --> spa : signed config + rights
+    else
+        spa -> gui : GET maps_session/collections/all
+        gui --> spa : user and capabilities
+    end
     spa -> daemon : POST v1/maps/{name}/register (session, signed config)
     daemon -> gui : identify session, resolve map access\n(site-internal secret, cached 60 s)
     daemon -> daemon : verify signature against the owner,\ncache config under (owner, name)
@@ -1066,9 +1077,11 @@ Opening a map
         daemon -> gui : identify session, resolve map access\n(when the cached answer expired)
     end
 
-A subscriber group is all viewers with the same AuthUser (for folder-tree
-maps also the same folder scope); users with ``general.see_all`` are queried
-without AuthUser.
+The diagram shows a map opened directly by URL: the SPA fetches the map while
+it fetches the session at start. A map opened from the map list is fetched
+first and registered once its signature is there. A subscriber group is all
+viewers with the same AuthUser (for folder-tree maps also the same folder
+scope); users with ``general.see_all`` are queried without AuthUser.
 
 A hidden browser tab closes its stream after five seconds and reopens it when
 it becomes visible again. If the stream cannot be opened at all, the SPA falls

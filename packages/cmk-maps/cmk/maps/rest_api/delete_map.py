@@ -20,9 +20,9 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
 from cmk.maps.gui._images import delete_background_files
-from cmk.maps.gui.store import delete_map, get_permitted_map
+from cmk.maps.gui.store import delete_map
 from cmk.maps.rest_api.endpoint_family import MAPS_FAMILY
-from cmk.maps.rest_api.utils import map_etag, RW_PERMISSIONS
+from cmk.maps.rest_api.utils import map_etag, permitted_map_or_404, RW_PERMISSIONS
 
 
 def delete_map_v1(
@@ -39,13 +39,7 @@ def delete_map_v1(
     # need the edit permission, foreign maps need "delete foreign maps". The map
     # is removed from its actual owner's store, so an admin can delete a foreign
     # map without forking it first.
-    page = get_permitted_map(name)
-    if page is None:
-        raise RestAPIRequestGeneralException(
-            status=HTTPStatus.NOT_FOUND,
-            title=f"The map {name!r} does not exist",
-            detail="No map with this name is visible to you.",
-        )
+    page = permitted_map_or_404(name)
     if not page.may_delete():
         raise RestAPIRequestGeneralException(
             status=HTTPStatus.FORBIDDEN,

@@ -23,12 +23,13 @@ from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException, RestAPIRequestGeneralException
 from cmk.maps.gui._pages import _authorized_public
-from cmk.maps.gui.store import get_own_map, get_permitted_map, save_map
+from cmk.maps.gui.store import get_own_map, save_map
 from cmk.maps.rest_api.endpoint_family import MAPS_FAMILY
 from cmk.maps.rest_api.models.request_models import MapRequest
 from cmk.maps.rest_api.models.response_models import MapObject
 from cmk.maps.rest_api.utils import (
     map_etag,
+    permitted_map_or_404,
     public_request_from_visibility,
     RW_PERMISSIONS,
     serialize_map,
@@ -67,13 +68,7 @@ def update_map_v1(
     # map is edited in place (needs "edit foreign maps"); an own map or a built-in
     # is written under the session user, so customizing a built-in transparently
     # creates an own override.
-    page = get_permitted_map(name)
-    if page is None:
-        raise RestAPIRequestGeneralException(
-            status=HTTPStatus.NOT_FOUND,
-            title=f"The map {name!r} does not exist",
-            detail="No map with this name is visible to you.",
-        )
+    page = permitted_map_or_404(name)
     owner = page.config.owner
     if owner and str(owner) != str(user_id):
         if not page.may_edit():

@@ -221,7 +221,12 @@ describe('useMapEditor placing — the draft it was armed for', () => {
 // link the operator re-points in the editor would keep captioning itself with
 // the previous target until the map is loaded again.
 describe('useMapEditor map links — the caption follows the target', () => {
-  function editorWithLink(): { link: MapElement; editor: MapEditor } {
+  function editorWithLink(
+    listed: { name: string; alias: string }[] = [
+      { name: 'dc_1', alias: 'Datacenter 1' },
+      { name: 'dc_2', alias: 'Datacenter 2' }
+    ]
+  ): { link: MapElement; editor: MapEditor } {
     const services = fakeMapsServices()
     const link = makeObject({
       id: 'link1',
@@ -230,10 +235,7 @@ describe('useMapEditor map links — the caption follows the target', () => {
       map_title: 'Datacenter 1'
     })
     services.maps.currentMap.value = { objects: [link] } as unknown as MapConfig
-    services.maps.maps.value = [
-      { name: 'dc_1', alias: 'Datacenter 1' },
-      { name: 'dc_2', alias: 'Datacenter 2' }
-    ] as typeof services.maps.maps.value
+    services.maps.maps.value = listed as typeof services.maps.maps.value
     return {
       link,
       editor: runWithServices(services, () => useMapEditor())
@@ -254,6 +256,14 @@ describe('useMapEditor map links — the caption follows the target', () => {
     editor.updateObjectProperties('link1', { map_name: 'private_map' })
 
     expect(link.map_title).toBeNull()
+  })
+
+  it('keeps the title of the map it still links to while the list is not loaded', () => {
+    const { link, editor } = editorWithLink([])
+
+    editor.updateObjectProperties('link1', { start_ref: null, end_ref: null })
+
+    expect(link.map_title).toBe('Datacenter 1')
   })
 
   it('puts the link back as it was, its title included', () => {

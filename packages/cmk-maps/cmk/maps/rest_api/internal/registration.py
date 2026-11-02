@@ -41,6 +41,7 @@ from cmk.maps.rest_api.internal.object_lookups import (
 )
 from cmk.maps.rest_api.internal.session import ENDPOINT_SHOW_SESSION
 from cmk.maps.rest_api.internal.settings import ENDPOINT_SHOW_AUTHORING_SETTINGS
+from cmk.maps.rest_api.internal.signed_maps import ENDPOINT_SHOW_SIGNED_MAP
 
 
 def register(
@@ -68,6 +69,7 @@ def register(
     versioned_endpoint_registry.register(ENDPOINT_SHOW_SESSION)
     versioned_endpoint_registry.register(ENDPOINT_RESOLVE_ACCESS)
     versioned_endpoint_registry.register(ENDPOINT_RESOLVE_LINK_TARGETS)
+    versioned_endpoint_registry.register(ENDPOINT_SHOW_SIGNED_MAP)
     versioned_endpoint_registry.register(ENDPOINT_RUN_COMMAND)
     versioned_endpoint_registry.register(ENDPOINT_SHOW_FORM_SCHEMA)
     versioned_endpoint_registry.register(ENDPOINT_PARSE_FORM)

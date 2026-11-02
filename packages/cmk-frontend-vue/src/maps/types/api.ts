@@ -205,6 +205,14 @@ export interface MapRead {
 
 export type MapPublic = boolean | ['contact_groups' | 'sites', string[]]
 
+/** What the GUI keeps beside a map's config: who owns it, who sees it, what the viewer may do. */
+export type MapAccess = Required<
+  Pick<
+    MapRead,
+    'owner' | 'is_builtin' | 'can_edit' | 'can_delete' | 'public' | 'hide_in_monitor_menu'
+  >
+>
+
 /**
  * What the pagetype keeps beside the map: who may see it and whether the
  * Monitor menu links it. Sent whole or not at all — left out, it stays as

@@ -10,9 +10,9 @@ import { defineComponent, h } from 'vue'
 
 import type { SignedMap } from '@/maps/api/mapConfig'
 import MapViewComponent from '@/maps/map/MapView.vue'
-import type { MapConfig, MapRead, MapView } from '@/maps/types/api'
+import type { MapAccess, MapConfig, MapRead, MapView } from '@/maps/types/api'
 
-import { aListedMap, aMap, anObject, newMapView } from '../support/fixtures'
+import { aMap, aMapAccess, anObject, newMapView } from '../support/fixtures'
 import { aSession, fakeMapsServices, fullCapabilities, provideServices } from '../support/services'
 
 // connectToMap opens an EventSource; jsdom has none. A minimal stand-in keeps the
@@ -52,7 +52,11 @@ const stubs = {
   teleport: true
 }
 
-function signedMap(view: MapView, extra: Partial<MapConfig> = {}): SignedMap {
+function signedMap(
+  view: MapView,
+  extra: Partial<MapConfig> = {},
+  access: Partial<MapAccess> = {}
+): SignedMap {
   const config: MapConfig = aMap({
     name: 'map1',
     alias: 'Map 1',
@@ -65,7 +69,7 @@ function signedMap(view: MapView, extra: Partial<MapConfig> = {}): SignedMap {
     objects: [],
     ...extra
   })
-  return { config, config_b64: 'cfg', sig: 'sig', owner: '', map_link_titles: {} }
+  return { config, config_b64: 'cfg', sig: 'sig', access: aMapAccess(access), map_link_titles: {} }
 }
 
 let services: ReturnType<typeof fakeMapsServices>
@@ -76,8 +80,12 @@ function openMapPage(): void {
   window.history.replaceState({}, '', '/site/check_mk/maps.py?name=map1')
 }
 
-function opensMap(view: MapView, extra: Partial<MapConfig> = {}): void {
-  vi.mocked(services.apis.mapConfig.get).mockResolvedValue(signedMap(view, extra))
+function opensMap(
+  view: MapView,
+  extra: Partial<MapConfig> = {},
+  access: Partial<MapAccess> = {}
+): void {
+  vi.mocked(services.apis.mapConfig.get).mockResolvedValue(signedMap(view, extra, access))
 }
 
 function renderMap(extraStubs: Record<string, unknown> = {}) {
@@ -236,8 +244,7 @@ describe('MapView – loading / error / read-only states', () => {
   })
 
   it('offers no settings, and no badge saying so, for a map the user may not edit', async () => {
-    opensMap(newMapView('static'))
-    services.maps.maps.value = [aListedMap({ name: 'map1', can_edit: false })]
+    opensMap(newMapView('static'), {}, { can_edit: false })
     renderMap()
     await waitFor(() => expect(screen.getByTestId('renderer-static')).toBeInTheDocument())
     expect(screen.queryByRole('button', { name: 'Map settings' })).toBeNull()
@@ -246,7 +253,6 @@ describe('MapView – loading / error / read-only states', () => {
 
   it('offers the settings for a map the user may edit', async () => {
     opensMap(newMapView('static'))
-    services.maps.maps.value = [aListedMap({ name: 'map1', can_edit: true })]
     renderMap()
     await waitFor(() => expect(screen.getByTestId('renderer-static')).toBeInTheDocument())
     expect(screen.getByRole('button', { name: 'Map settings' })).toBeInTheDocument()
@@ -307,8 +313,7 @@ describe('MapView – opened from the map list', () => {
   }
 
   function renderOpened(view: MapView, canEdit: boolean) {
-    opensMap(view)
-    services.maps.maps.value = [aListedMap({ name: 'map1', can_edit: canEdit })]
+    opensMap(view, {}, { can_edit: canEdit })
     const { global: provided } = provideServices(services)
     return render(MapViewComponent, {
       global: { ...provided, stubs: { ...stubs, MapSettingsModal: settingsProbe } }
@@ -351,10 +356,11 @@ describe('MapView – opened from the map list', () => {
 })
 
 describe('MapView – what the settings slide-in is handed', () => {
-  // Ownership and sharing live on the map-list row, not in the daemon config
-  // the canvas renders from. A settings form built from the config alone reads
-  // as private and saves that back, so renaming a map shared with everyone
-  // would quietly unpublish it -- and its Delete button would never appear.
+  // Ownership and sharing travel beside the signed config, not inside the
+  // daemon config the canvas renders from. A settings form built from the
+  // config alone reads as private and saves that back, so renaming a map
+  // shared with everyone would quietly unpublish it -- and its Delete button
+  // would never appear.
   let handedMap: MapRead | null
 
   const openSettingsTopbar = defineComponent({
@@ -379,18 +385,8 @@ describe('MapView – what the settings slide-in is handed', () => {
     vi.stubGlobal('EventSource', FakeEventSource)
   })
 
-  it('carries the sharing and delete rights over from the map list', async () => {
-    opensMap(newMapView('static'))
-    services.maps.maps.value = [
-      {
-        name: 'map1',
-        alias: 'Map 1',
-        owner: 'cmkadmin',
-        public: true,
-        can_edit: true,
-        can_delete: true
-      }
-    ] as typeof services.maps.maps.value
+  it('carries the sharing and delete rights over from the opened map', async () => {
+    opensMap(newMapView('static'), {}, { owner: 'cmkadmin', public: true, can_delete: true })
 
     const { global: provided } = provideServices(services)
     render(MapViewComponent, {
@@ -545,7 +541,6 @@ describe('MapView – saving the settings', () => {
 
   async function saveSettings(): Promise<void> {
     opensMap(newMapView('static'))
-    services.maps.maps.value = [aListedMap({ name: 'map1', can_edit: true })]
     const { global: provided } = provideServices(services)
     render(MapViewComponent, {
       global: {

@@ -11,11 +11,12 @@
  * the calls ride the GUI session like every other page. The daemon owns only
  * live state and never stores a map.
  */
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
 import { uploadedFile } from '@/maps/api/upload'
-import { mapListObjectToRead, mapRequestBody } from '@/maps/api/wire'
-import type { CfgImport, MapConfig, MapEnvelope, MapRead } from '@/maps/types/api'
+import { accessFromWire, mapListObjectToRead, mapRequestBody } from '@/maps/api/wire'
+import type { CfgImport, MapAccess, MapConfig, MapEnvelope, MapRead } from '@/maps/types/api'
 
 /**
  * A map as the daemon must receive it: the exact bytes the GUI signed, so a
@@ -26,7 +27,7 @@ export interface SignedMap {
   config: MapConfig
   config_b64: string
   sig: string
-  owner: string
+  access: MapAccess
   /**
    * Titles of the maps this map links to, keyed by map id, resolved by the GUI
    * against the viewer's permissions. It travels beside the signed bytes, never
@@ -35,13 +36,7 @@ export interface SignedMap {
   map_link_titles: Record<string, string>
 }
 
-/** The signed map as it crosses the wire, in the show response's ``extensions``. */
-export interface RawSignedMap {
-  config_b64: string
-  sig: string
-  owner: string
-  map_link_titles?: Record<string, string>
-}
+type RawSignedMap = components['schemas']['MapsSignedMapResponse']
 
 /**
  * Decodes a base64url (unpadded, ``-``/``_``) payload to a UTF-8 string. Map
@@ -54,13 +49,13 @@ function b64urlToString(b64url: string): string {
   return new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)))
 }
 
-export function decodeSignedMap(raw: RawSignedMap): SignedMap {
+function decodeSignedMap(raw: RawSignedMap): SignedMap {
   return {
     config: JSON.parse(b64urlToString(raw.config_b64)) as MapConfig,
     config_b64: raw.config_b64,
     sig: raw.sig,
-    owner: raw.owner,
-    map_link_titles: raw.map_link_titles ?? {}
+    access: accessFromWire(raw),
+    map_link_titles: raw.map_link_titles
   }
 }
 
@@ -86,8 +81,8 @@ export class MapConfigApi {
    * ``If-Match: *`` opts out of optimistic locking: the SPA is the only editing
    * surface and carries the map's own ``version``.
    */
-  public async update(map: MapConfig, envelope?: MapEnvelope): Promise<void> {
-    unwrap(
+  public async update(map: MapConfig, envelope?: MapEnvelope): Promise<MapAccess> {
+    const saved = unwrap(
       await client.PUT('/objects/map/{name}', {
         params: {
           path: { name: map.name },
@@ -96,6 +91,9 @@ export class MapConfigApi {
         body: mapRequestBody(map, envelope)
       })
     )
+    // What was stored, not what was asked for: the server narrows the sharing
+    // scope to what the user may publish, and saving a built-in makes it own.
+    return accessFromWire(saved.extensions)
   }
 
   public async list(): Promise<MapRead[]> {
@@ -103,12 +101,14 @@ export class MapConfigApi {
     return collection.value.map(mapListObjectToRead)
   }
 
+  /**
+   * The map as the SPA opens it: only the signed bytes, which the daemon verifies
+   * verbatim, and the viewer's access to it.
+   */
   public async get(name: string): Promise<SignedMap> {
-    const map = unwrap(await client.GET('/objects/map/{name}', { params: { path: { name } } }))
-    // ``extensions`` carries {config_b64, sig, owner}: the typed
-    // ``extensions.config`` is deliberately not re-serialised, so the daemon
-    // verifies exactly what the GUI signed.
-    return decodeSignedMap(map.extensions)
+    return decodeSignedMap(
+      unwrap(await client.GET('/objects/maps_signed_map/{name}', { params: { path: { name } } }))
+    )
   }
 
   /** Deletes a map. Built-ins are refused and a foreign map needs the permission. */

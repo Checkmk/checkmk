@@ -15,6 +15,7 @@ import type {
   ConnectionConfig,
   FolderTreeNode,
   GroupMember,
+  MapAccess,
   MapConfig,
   MapElement,
   MapRead,
@@ -86,6 +87,19 @@ export function aListedMap(overrides: Partial<MapRead> = {}): MapRead {
     render_mode: 'default',
     hide_in_monitor_menu: false,
     owner: 'me',
+    ...overrides
+  }
+}
+
+/** What the GUI grants the viewer of an open map: by default an own, editable one. */
+export function aMapAccess(overrides: Partial<MapAccess> = {}): MapAccess {
+  return {
+    owner: 'me',
+    is_builtin: false,
+    can_edit: true,
+    can_delete: true,
+    public: false,
+    hide_in_monitor_menu: false,
     ...overrides
   }
 }

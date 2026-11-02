@@ -18,6 +18,7 @@ import type { components as DaemonComponents } from 'cmk-shared-typing/typescrip
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 
 import type {
+  MapAccess,
   MapConfig,
   MapElement,
   MapEnvelope,
@@ -301,7 +302,6 @@ export function mapListObjectToRead(obj: MapListObjectWire): MapRead {
     rotation_pools: s.rotation_pools ?? [],
     sort_order: s.sort_order ?? 0,
     version: s.version ?? 0,
-    hide_in_monitor_menu: ext.visibility.hide_in_monitor_menu,
     render_mode: s.render_mode ?? 'default',
     background_image: s.background_image ?? null,
     background_color: s.background_color ?? null,
@@ -311,11 +311,24 @@ export function mapListObjectToRead(obj: MapListObjectWire): MapRead {
     hover_template: s.hover_template ?? null,
     context_template: s.context_template ?? null,
     default_z: s.default_z ?? 1,
-    can_edit: ext.can_edit,
-    can_delete: ext.can_delete,
+    ...accessFromWire(ext)
+  }
+}
+
+/** What the viewer may do with a map, from any response that carries it. */
+export function accessFromWire(
+  ext: Pick<
+    Schemas['MapsSignedMapResponse'],
+    'owner' | 'is_builtin' | 'can_edit' | 'can_delete' | 'visibility'
+  >
+): MapAccess {
+  return {
     owner: ext.owner,
     is_builtin: ext.is_builtin,
-    public: visibilityToPublic(ext.visibility)
+    can_edit: ext.can_edit,
+    can_delete: ext.can_delete,
+    public: visibilityToPublic(ext.visibility),
+    hide_in_monitor_menu: ext.visibility.hide_in_monitor_menu
   }
 }
 

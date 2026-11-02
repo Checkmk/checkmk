@@ -2363,6 +2363,9 @@ class MapsClient(RestApiClient):
     def get_session(self, expect_ok: bool = True) -> Response:
         return self._internal_get("/domain-types/maps_session/collections/all", None, expect_ok)
 
+    def get_signed_map(self, name: str, expect_ok: bool = True) -> Response:
+        return self._internal_get(f"/objects/maps_signed_map/{name}", None, expect_ok)
+
     def resolve_access(
         self,
         body: dict[str, Any],

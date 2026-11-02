@@ -9,7 +9,7 @@ import { useMapViewState } from '@/maps/map/composables/useMapViewState'
 import type { MapsServices } from '@/maps/services/context'
 import type { MapConfig } from '@/maps/types/api'
 
-import { aListedMap } from '../../support/fixtures'
+import { aMapAccess } from '../../support/fixtures'
 import { fakeMapsServices, runWithServices } from '../../support/services'
 
 /** The choices are held on the map service, so each case gets a fresh set. */
@@ -23,7 +23,7 @@ function aMap(name: string): MapConfig {
 
 function openMap(config: MapConfig, canEdit: boolean, preview = false): MapsServices {
   const services = fakeMapsServices()
-  services.maps.maps.value = [aListedMap({ name: config.name, can_edit: canEdit })]
+  services.maps.currentMapAccess.value = aMapAccess({ can_edit: canEdit })
   services.maps.currentMap.value = config
   services.nav.state.preview = preview
   return services

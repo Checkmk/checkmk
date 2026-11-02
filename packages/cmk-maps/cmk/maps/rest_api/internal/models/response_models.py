@@ -14,6 +14,7 @@ from typing import Literal
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.maps.gui._capabilities import CommandVerb
 from cmk.maps.gui._settings import MapListView, RenderMode
+from cmk.maps.rest_api.models.response_models import MapVisibility
 from cmk.maps.shared.map_payload import LineStyle
 from cmk.maps.shared.states import BIStateName
 
@@ -585,4 +586,27 @@ class MapsLinkTarget:
 class MapsLinkTargetsResponse:
     targets: list[MapsLinkTarget] = api_field(
         description="The maps the user sees under the names. A name they see no map under is absent."
+    )
+
+
+@api_model
+class MapsSignedMapResponse:
+    """A map as the SPA opens it: the signed bytes and the viewer's access to it."""
+
+    owner: str = api_field(description="User id that owns this map ('' for built-ins).")
+    visibility: MapVisibility = api_field(description="The map's sharing scope.")
+    is_builtin: bool = api_field(description="Whether this is a shipped built-in map.")
+    can_edit: bool = api_field(description="Whether the requesting user may edit this map.")
+    can_delete: bool = api_field(description="Whether the requesting user may delete this map.")
+    config_b64: str = api_field(
+        description="The map config as canonically-serialized base64url bytes, "
+        "GUI-signed for the Maps daemon (relay verbatim to the register endpoint)."
+    )
+    sig: str = api_field(
+        description="HMAC signature over ``config_b64`` the Maps daemon verifies "
+        "before trusting the config for its live-state broadcast."
+    )
+    map_link_titles: dict[str, str] = api_field(
+        description="Titles of the maps this map links to, keyed by map id. Only maps "
+        "the requesting user may see appear here.",
     )

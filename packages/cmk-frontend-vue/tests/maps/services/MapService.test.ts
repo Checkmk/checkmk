@@ -125,6 +125,17 @@ const mapObjectResponse = {
   links: []
 }
 
+const signedMapResponse = {
+  owner: '',
+  visibility: { publish: 'private', hide_in_monitor_menu: false },
+  is_builtin: false,
+  can_edit: true,
+  can_delete: true,
+  config_b64: sampleConfigB64,
+  sig: 'cw',
+  map_link_titles: {}
+}
+
 // Per-test request log, so the assertions about avoided round-trips
 // ("no extra list() fetch") keep working at the network boundary.
 let listCalls: number
@@ -137,9 +148,9 @@ const server = useMswServer(
     listCalls += 1
     return HttpResponse.json(listResponse)
   }),
-  http.get('*/api/internal/objects/map/:name', ({ params }) => {
+  http.get('*/api/internal/objects/maps_signed_map/:name', ({ params }) => {
     getCalls.push(String(params['name']))
-    return HttpResponse.json(mapObjectResponse)
+    return HttpResponse.json(signedMapResponse)
   }),
   http.post('*/api/internal/domain-types/map/collections/all', async ({ request }) => {
     saveRequests.push(JSON.parse(await request.text()))
@@ -208,7 +219,7 @@ describe('MapService', () => {
 
   it('fetchMap() sets error on failure', async () => {
     server.use(
-      http.get('*/api/internal/objects/map/:name', () =>
+      http.get('*/api/internal/objects/maps_signed_map/:name', () =>
         HttpResponse.json({ title: 'Not Found', detail: 'Not found' }, { status: 404 })
       )
     )
@@ -288,7 +299,7 @@ describe('MapService', () => {
   it('fetchMap() staleness guard: a slower earlier load never overwrites a newer map', async () => {
     const store = newService()
     server.use(
-      http.get('*/api/internal/objects/map/:name', async ({ params }) => {
+      http.get('*/api/internal/objects/maps_signed_map/:name', async ({ params }) => {
         const name = String(params['name'])
         if (name === 'slow') {
           await delay(50)
@@ -298,11 +309,7 @@ describe('MapService', () => {
           .replace(/\+/g, '-')
           .replace(/\//g, '_')
           .replace(/=+$/, '')
-        return HttpResponse.json({
-          ...mapObjectResponse,
-          id: name,
-          extensions: { ...mapObjectResponse.extensions, config: cfg, config_b64: b64 }
-        })
+        return HttpResponse.json({ ...signedMapResponse, config_b64: b64 })
       })
     )
     // Start the slow map first, then a fast one — the fast load resolves first
@@ -325,20 +332,16 @@ describe('MapService', () => {
       ]
     })
     server.use(
-      http.get('*/api/internal/objects/map/:name', () =>
+      http.get('*/api/internal/objects/maps_signed_map/:name', () =>
         HttpResponse.json({
-          ...mapObjectResponse,
-          extensions: {
-            ...mapObjectResponse.extensions,
-            config: cfg,
-            config_b64: btoa(JSON.stringify(cfg))
-              .replace(/\+/g, '-')
-              .replace(/\//g, '_')
-              .replace(/=+$/, ''),
-            // ``private-map`` is one the requesting user may not see, so the
-            // server left it out.
-            map_link_titles: { 'dc-2': 'Datacenter 2' }
-          }
+          ...signedMapResponse,
+          config_b64: btoa(JSON.stringify(cfg))
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, ''),
+          // ``private-map`` is one the requesting user may not see, so the
+          // server left it out.
+          map_link_titles: { 'dc-2': 'Datacenter 2' }
         })
       )
     )
@@ -349,6 +352,74 @@ describe('MapService', () => {
     expect(objects[0]!.map_title).toBe('Datacenter 2')
     expect(objects[1]!.map_title).toBeNull()
     expect(objects[2]).not.toHaveProperty('map_title')
+  })
+
+  it('fetchMap() takes over a prefetched map instead of loading it again', async () => {
+    const store = newService()
+
+    store.prefetch('map1')
+    await store.fetchMap('map1')
+
+    expect(getCalls).toEqual(['map1'])
+    expect(store.currentMap.value).toEqual(sampleConfig)
+  })
+
+  it('fetchMap() loads a map other than the prefetched one itself', async () => {
+    const store = newService()
+
+    store.prefetch('other')
+    await store.fetchMap('map1')
+
+    expect(getCalls).toEqual(['other', 'map1'])
+    expect(store.currentMap.value).toEqual(sampleConfig)
+  })
+
+  it('fetchMap() loads a map again whose prefetch failed', async () => {
+    const store = newService()
+    let failFirst = true
+    server.use(
+      http.get('*/api/internal/objects/maps_signed_map/:name', ({ params }) => {
+        getCalls.push(String(params['name']))
+        if (failFirst) {
+          failFirst = false
+          return HttpResponse.json({ title: 'Unavailable' }, { status: 503 })
+        }
+        return HttpResponse.json(signedMapResponse)
+      })
+    )
+
+    store.prefetch('map1')
+    await vi.waitFor(() => expect(getCalls).toEqual(['map1']))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await store.fetchMap('map1')
+
+    expect(getCalls).toEqual(['map1', 'map1'])
+    expect(store.currentMap.value).toEqual(sampleConfig)
+  })
+
+  it('fetchMap() hands out the signature before the map is rendered', async () => {
+    const store = newService()
+    let renderedWhenSigned: MapConfig | null | undefined
+
+    await store.fetchMap('map1', () => {
+      renderedWhenSigned = store.currentMap.value
+    })
+
+    expect(renderedWhenSigned).toBeNull()
+    expect(store.currentMap.value).toEqual(sampleConfig)
+  })
+
+  it('saveMapMetadata() shows the sharing the server stored, not the one asked for', async () => {
+    const store = newService()
+    await store.fetchMap('map1')
+
+    // The server narrowed the requested scope; the save response is private.
+    await store.saveMapMetadata('map1', {}, { public: true, hide_in_monitor_menu: true })
+
+    expect(store.currentMapAccess.value).toMatchObject({
+      public: false,
+      hide_in_monitor_menu: false
+    })
   })
 
   it('createMap() persists via the REST API and appends in place', async () => {

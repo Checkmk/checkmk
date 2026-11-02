@@ -16,7 +16,7 @@ import { MapStatesService } from '@/maps/services/MapStatesService'
 import type { MapsAuthService } from '@/maps/services/MapsAuthService'
 import type { MapConfig, MapStates } from '@/maps/types/api'
 
-import { aMap, aTopologyNode, anObject } from '../support/fixtures'
+import { aMap, aMapAccess, aTopologyNode, anObject } from '../support/fixtures'
 
 // What the connection itself does — opening, falling back to polling, healing —
 // belongs to the shared stream client and is covered there. What is maps' own is
@@ -75,7 +75,7 @@ const freshlySigned: SignedMap = {
   config: aMap({ name: 'b' }),
   config_b64: 'fresh',
   sig: 'fresh-sig',
-  owner: '',
+  access: aMapAccess({ owner: '' }),
   map_link_titles: {}
 }
 

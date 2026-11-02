@@ -5,8 +5,6 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from pydantic import ValidationError
-
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     APIVersion,
@@ -20,11 +18,15 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
-from cmk.gui.openapi.utils import RestAPIRequestGeneralException
-from cmk.maps.gui.store import get_permitted_map
 from cmk.maps.rest_api.endpoint_family import MAPS_FAMILY
 from cmk.maps.rest_api.models.response_models import MapObject
-from cmk.maps.rest_api.utils import map_etag, PERMISSIONS, serialize_map
+from cmk.maps.rest_api.utils import (
+    map_etag,
+    PERMISSIONS,
+    permitted_map_or_404,
+    representable_map,
+    serialize_map,
+)
 
 
 def show_map_v1(
@@ -35,25 +37,9 @@ def show_map_v1(
 ) -> ApiResponse[MapObject]:
     """Show a map"""
     user.need_permission("maps.use")
-    page = get_permitted_map(name)
-    if page is None:
-        raise RestAPIRequestGeneralException(
-            status=HTTPStatus.NOT_FOUND,
-            title=f"The map {name!r} does not exist",
-            detail="No map with this name is visible to you.",
-        )
-    try:
+    page = permitted_map_or_404(name)
+    with representable_map(name):
         body = serialize_map(page, can_edit=page.may_edit(), can_delete=page.may_delete())
-    except ValidationError as exc:
-        # A stored spec that no longer fits the model (legacy/half-written map, as
-        # the list tolerates via ``utils._list_view``) is a recoverable data state,
-        # so answer 409 instead of crashing with an unhandled 500.
-        raise RestAPIRequestGeneralException(
-            status=HTTPStatus.CONFLICT,
-            title=f"The map {name!r} cannot be represented",
-            detail="Its stored configuration is incompatible with the current map "
-            "model and likely needs to be migrated or re-saved.",
-        ) from exc
     return ApiResponse(
         status_code=HTTPStatus.OK,
         body=body,

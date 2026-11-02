@@ -107,29 +107,27 @@ const isPreview = computed(() => nav.state.preview)
 const { openKioskInNewTab, exitFullscreen } = useMapFullscreen(mapName, isKiosk)
 
 const mapConfig = computed(() => mapsStore.currentMap.value)
-const mapListEntry = computed(() => mapsStore.maps.value.find((b) => b.name === mapName.value))
 const canEdit = computed(() => mapsStore.mayEdit(mapName.value))
 /**
- * The open map as the settings form wants it: the daemon config, plus the
- * envelope only the map-list entry carries — ownership, sharing and the right
- * to delete.
+ * The open map as the settings form wants it: the daemon config, plus what the
+ * GUI keeps beside it — ownership, sharing and the right to delete.
  *
- * Both halves are required. The form saves ``public`` on every save, so an
- * envelope guessed from a missing list entry would read as private and
- * unpublish a shared map on an unrelated edit — hence ``null`` until the list
- * is there, which is also when there is nothing to authorize editing against.
+ * Both halves are required. The form saves ``public`` on every save, so a
+ * guessed sharing scope would read as private and unpublish a shared map on an
+ * unrelated edit — hence ``null`` until the map is loaded.
  */
 const mapConfigAsRead = computed<MapRead | null>(() => {
   const cfg = mapConfig.value
-  const listed = mapListEntry.value
-  if (!cfg || !listed) {
+  const access = mapsStore.currentMapAccess.value
+  if (!cfg || !access) {
     return null
   }
   const { objects, ...rest } = cfg
   return {
-    ...listed,
     ...rest,
+    ...access,
     icon_size: cfg.icon_size ?? null,
+    rotation_pools: cfg.rotation_pools ?? [],
     view_type: cfg.view.type,
     object_count: objects.length
   }
@@ -792,11 +790,6 @@ usePreviewBridge({ preview: () => isPreview.value })
 onMounted(() => {
   if (auth.canConfigure.value || auth.canCreateMaps.value) {
     void connectionsStore.fetch()
-  }
-  // The map list carries the per-map edit capability; loading it even on a
-  // direct deep link is what gives a non-admin editor their edit affordances.
-  if (mapsStore.maps.value.length === 0) {
-    void mapsStore.fetchMaps()
   }
 })
 

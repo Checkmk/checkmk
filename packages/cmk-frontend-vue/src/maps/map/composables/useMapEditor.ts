@@ -520,9 +520,12 @@ export function useMapEditor() {
     const obj = mapsStore.currentMap.value?.objects.find((o) => o.id === id)
     const before: MapElement | null = obj ? JSON.parse(JSON.stringify(obj)) : null
     if (obj) {
+      const linkedBefore = obj.map_name
       Object.assign(obj, updates)
       if (getEffectiveObjectType(obj) === 'map') {
-        obj.map_title = linkedMapTitle(obj.map_name)
+        // A map opened by its link has not loaded the list.
+        const kept = obj.map_name === linkedBefore ? (obj.map_title ?? null) : null
+        obj.map_title = linkedMapTitle(obj.map_name) ?? kept
       }
     }
     mapsStore.scheduleSave()

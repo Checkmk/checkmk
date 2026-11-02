@@ -9,7 +9,7 @@ import { type Ref, nextTick, ref } from 'vue'
 import { useMapLifecycle } from '@/maps/map/composables/useMapLifecycle'
 import type { MapElement } from '@/maps/types/api'
 
-import { aListedMap, aMap, anObject } from '../../support/fixtures'
+import { aMap, aMapAccess, anObject } from '../../support/fixtures'
 import { fakeMapsServices, mountWithServices } from '../../support/services'
 
 let services: ReturnType<typeof fakeMapsServices>
@@ -146,7 +146,7 @@ describe('useMapLifecycle', () => {
 
   it('does not re-register the map for its auto-source hosts', async () => {
     vi.spyOn(services.maps, 'fetchMap').mockResolvedValue(undefined)
-    services.maps.maps.value = [aListedMap({ name: 'world', can_edit: true })]
+    services.maps.currentMapAccess.value = aMapAccess()
     services.maps.currentMap.value = aMap({
       name: 'world',
       objects: [anObject({ id: 'core', type: 'host' })]
@@ -162,7 +162,7 @@ describe('useMapLifecycle', () => {
 
   it('re-registers the map when a dynamic group is given another filter', async () => {
     vi.spyOn(services.maps, 'fetchMap').mockResolvedValue(undefined)
-    services.maps.maps.value = [aListedMap({ name: 'groups', can_edit: true })]
+    services.maps.currentMapAccess.value = aMapAccess()
     services.maps.currentMap.value = aMap({
       name: 'groups',
       objects: [anObject({ id: 'g1', type: 'dyngroup', object_types: 'host', object_filter: null })]
@@ -178,7 +178,7 @@ describe('useMapLifecycle', () => {
 
   it('does not re-register the map of a user who may not edit it', async () => {
     vi.spyOn(services.maps, 'fetchMap').mockResolvedValue(undefined)
-    services.maps.maps.value = [aListedMap({ name: 'groups', can_edit: false })]
+    services.maps.currentMapAccess.value = aMapAccess({ can_edit: false })
     services.maps.currentMap.value = aMap({
       name: 'groups',
       objects: [anObject({ id: 'g1', type: 'dyngroup', object_types: 'host', object_filter: null })]
@@ -197,7 +197,7 @@ describe('useMapLifecycle', () => {
     ['moved', (bundle: MapElement) => (bundle.lat = 51)]
   ])('re-registers the map when a location bundle is %s', async (_case, edit) => {
     vi.spyOn(services.maps, 'fetchMap').mockResolvedValue(undefined)
-    services.maps.maps.value = [aListedMap({ name: 'world', can_edit: true })]
+    services.maps.currentMapAccess.value = aMapAccess()
     services.maps.currentMap.value = aMap({
       name: 'world',
       objects: [anObject({ id: 'b1', type: 'dyngroup', bundle_kind: 'location', lat: 50, lng: 8 })]
@@ -213,7 +213,7 @@ describe('useMapLifecycle', () => {
 
   it('does not re-register the map for a moved object', async () => {
     vi.spyOn(services.maps, 'fetchMap').mockResolvedValue(undefined)
-    services.maps.maps.value = [aListedMap({ name: 'groups', can_edit: true })]
+    services.maps.currentMapAccess.value = aMapAccess()
     services.maps.currentMap.value = aMap({
       name: 'groups',
       objects: [anObject({ id: 'g1', type: 'dyngroup', object_types: 'host' })]

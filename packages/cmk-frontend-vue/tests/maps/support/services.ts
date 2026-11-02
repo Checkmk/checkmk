@@ -40,6 +40,8 @@ import { ToastService } from '@/maps/services/ToastService'
 import { MAPS_SERVICES, type MapsApis, type MapsServices } from '@/maps/services/context'
 import { MAPS_PAGE_MENU_EVENT } from '@/maps/shared/pageMenu'
 
+import { aMapAccess } from './fixtures'
+
 /** Capabilities of a user who may do everything, as a starting point. */
 export function fullCapabilities(overrides: Partial<MapsCapabilities> = {}): MapsCapabilities {
   return {
@@ -117,7 +119,7 @@ export function fakeMapsServices(
   // method that would use it is stubbed, so nothing leaves the test.
   const daemon = createMapsDaemonClient()
   const sessionApi = stubApi(new SessionApi(), { fetchSession: session })
-  const mapConfig = stubApi(new MapConfigApi(), { list: [] })
+  const mapConfig = stubApi(new MapConfigApi(), { list: [], update: aMapAccess() })
   const mapStates = stubApi(new MapStatesApi(daemon), {
     fetchAutoObjects: [],
     fetchFolderHostServices: [],

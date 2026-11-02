@@ -33,7 +33,8 @@ import { provideMapsPageMenuEvent } from '@/maps/shared/pageMenu'
 // Lazy, so the heavy views (leaflet, d3) stay in their own chunks and load only
 // when one is actually opened.
 const homeView = defineAsyncComponent(() => import('@/maps/home/HomeView.vue'))
-const mapView = defineAsyncComponent(() => import('@/maps/map/MapView.vue'))
+const loadMapView = () => import('@/maps/map/MapView.vue')
+const mapView = defineAsyncComponent(loadMapView)
 const imagesView = defineAsyncComponent(() => import('@/maps/image-library/ImagesView.vue'))
 
 const props = defineProps<MapsApp>()
@@ -54,11 +55,17 @@ onUnmounted(() => {
   disposeMapsServices(services)
 })
 
-const { auth, settings, nav } = services
+const { auth, settings, nav, maps } = services
 
+const openedMap = nav.state.view === 'map' ? nav.state.name : null
 // A lost session bounces to the Checkmk login from inside the service.
 void auth.init()
 void settings.load()
+// The view waits for the session, but neither its code nor the map does.
+if (openedMap !== null) {
+  void loadMapView()
+  maps.prefetch(openedMap)
+}
 
 const VIEWS: Record<NavState['view'], Component> = {
   home: homeView,

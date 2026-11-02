@@ -18,6 +18,7 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.maps.rest_api import utils
+from cmk.maps.rest_api.internal import signed_maps
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
@@ -523,6 +524,59 @@ def test_normal_user_may_view_but_not_edit_or_delete_foreign_map(
         clients.Maps.delete(admin_shared_map, etag="star", expect_ok=False).assert_status_code(
             HTTPStatus.FORBIDDEN
         )
+
+
+def test_signed_map_carries_the_signed_bytes_without_the_parsed_copy(
+    clients: ClientRegistry,
+) -> None:
+    clients.Maps.create(config=_STATIC_MAP)
+    shown = clients.Maps.get("map1").json["extensions"]
+
+    signed = clients.Maps.get_signed_map("map1").json
+
+    assert "config" not in signed
+    assert {key: signed[key] for key in ("config_b64", "sig", "owner", "visibility")} == {
+        key: shown[key] for key in ("config_b64", "sig", "owner", "visibility")
+    }
+    assert signed["can_edit"] is True
+
+
+def test_signed_map_grants_a_viewer_no_rights_on_a_foreign_map(
+    clients: ClientRegistry,
+    admin_shared_map: str,
+    with_automation_user: tuple[UserId, str],
+    with_automation_user_not_admin: tuple[UserId, str],
+) -> None:
+    with _acting_as(clients, with_automation_user_not_admin, with_automation_user):
+        signed = clients.Maps.get_signed_map(admin_shared_map).json
+
+    assert signed["can_edit"] is False
+    assert signed["can_delete"] is False
+
+
+def test_signed_map_of_a_map_hidden_from_the_user_is_not_found(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    with_automation_user_not_admin: tuple[UserId, str],
+) -> None:
+    clients.Maps.create(config=_STATIC_MAP)
+
+    with _acting_as(clients, with_automation_user_not_admin, with_automation_user):
+        resp = clients.Maps.get_signed_map("map1", expect_ok=False)
+
+    resp.assert_status_code(HTTPStatus.NOT_FOUND)
+
+
+def test_signed_map_with_unrepresentable_stored_spec_returns_clean_409(
+    clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    clients.Maps.create(config=_STATIC_MAP)
+
+    def _raise_validation_error(_spec: object) -> object:
+        return utils._MAP_ADAPTER.validate_python({"name": "broken"})  # noqa: SLF001
+
+    monkeypatch.setattr(signed_maps, "map_from_spec", _raise_validation_error)
+    clients.Maps.get_signed_map("map1", expect_ok=False).assert_status_code(HTTPStatus.CONFLICT)
 
 
 def test_guest_may_not_create_map(

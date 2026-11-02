@@ -112,16 +112,35 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
     })
   })
 
-  it('fetches a map and decodes the GUI-signed map from extensions', async () => {
+  it('opens a map from its signed bytes and keeps the access beside them', async () => {
+    const signedMap: components['schemas']['MapsSignedMapResponse'] = {
+      owner: 'alice',
+      visibility: { publish: 'contact_groups', groups: ['ops'], hide_in_monitor_menu: true },
+      is_builtin: false,
+      can_edit: true,
+      can_delete: false,
+      config_b64: base64url(staticMap),
+      sig: 'deadbeef',
+      map_link_titles: {}
+    }
     server.use(
-      restApiHttp.get('/objects/map/{name}', ({ response }) => response(200).json(storedMap))
+      restApiHttp.get('/objects/maps_signed_map/{name}', ({ response }) =>
+        response(200).json(signedMap)
+      )
     )
 
     const signed = await api.get('map1')
 
-    expect(signed.owner).toBe('alice')
     expect(signed.sig).toBe('deadbeef')
     expect(signed.config).toEqual(staticMap)
+    expect(signed.access).toEqual({
+      owner: 'alice',
+      is_builtin: false,
+      can_edit: true,
+      can_delete: false,
+      public: ['contact_groups', ['ops']],
+      hide_in_monitor_menu: true
+    })
   })
 
   it('creates a map with a JSON POST to the collection', async () => {

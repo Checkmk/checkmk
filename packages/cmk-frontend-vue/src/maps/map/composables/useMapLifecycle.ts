@@ -89,18 +89,26 @@ export function useMapLifecycle(source: {
       void maps.flushSave()
     })
 
-    // Connecting has to wait for the map (and its signature), so the async
-    // chain runs in a voided call — the name above is still read
-    // synchronously, which is what keeps this effect's dependencies intact.
+    // Connecting has to wait for the map's signature, so the async chain runs
+    // in a voided call — the name above is still read synchronously, which is
+    // what keeps this effect's dependencies intact. It starts as soon as the
+    // signature is there, before the map is rendered.
     void (async () => {
-      await maps.fetchMap(name)
+      let connecting: Promise<void> | undefined
+      await maps.fetchMap(name, (signed) => {
+        if (!superseded) {
+          connecting = states.connectToMap(name, signed)
+          // Awaited below; until then a failure must not count as unhandled.
+          connecting.catch(() => undefined)
+        }
+      })
       if (superseded) {
         return
       }
       source.rotation.schedule(maps.currentMap.value)
       let registered = true
       try {
-        await states.connectToMap(name, maps.currentMapSig.value ?? undefined)
+        await (connecting ?? states.connectToMap(name, maps.currentMapSig.value ?? undefined))
       } catch (error: unknown) {
         // A run another one took over from shares its connect, and so its
         // failure: only the current run tells.

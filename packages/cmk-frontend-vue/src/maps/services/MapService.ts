@@ -14,6 +14,7 @@ import { saveFailureText } from '@/maps/shared/errorText'
 import type {
   CfgImport,
   FolderTreeView,
+  MapAccess,
   MapBulkDeleteResult,
   MapConfig,
   MapEnvelope,
@@ -58,6 +59,8 @@ export class MapService {
    * verifies — it inflates those itself.
    */
   public readonly currentMapSig: Ref<{ config_b64: string; sig: string } | null> = ref(null)
+  /** Ownership, sharing and the viewer's rights on the open map. */
+  public readonly currentMapAccess: Ref<MapAccess | null> = ref(null)
   public readonly loading: Ref<boolean> = ref(false)
   public readonly error: Ref<string | null> = ref(null)
   /** Why the last save failed; the map stays open with it. */
@@ -91,6 +94,7 @@ export class MapService {
    * a rapid switch. The view is reused across maps rather than remounted.
    */
   private fetchSeq = 0
+  private prefetched: { name: string; signed: Promise<SignedMap> } | null = null
 
   public constructor(
     private readonly api: Pick<
@@ -117,16 +121,43 @@ export class MapService {
     }
   }
 
-  public async fetchMap(name: string): Promise<void> {
+  /**
+   * Starts loading a map before the view that shows it is mounted, so the
+   * request runs alongside the view's code and the session. ``fetchMap`` takes it
+   * over once for the same name.
+   */
+  public prefetch(name: string): void {
+    const signed = this.api.get(name)
+    this.prefetched = { name, signed }
+    // The session may still recover (its fetch retries); a load that failed
+    // before that is not the answer for the map.
+    signed.catch(() => {
+      if (this.prefetched?.signed === signed) {
+        this.prefetched = null
+      }
+    })
+  }
+
+  /**
+   * Loads a map. ``onSigned`` gets the signature before the map is rendered, so
+   * the live connection starts without waiting for the canvas.
+   */
+  public async fetchMap(
+    name: string,
+    onSigned?: (signed: { config_b64: string; sig: string }) => void
+  ): Promise<void> {
     const { _t } = usei18n()
     const seq = ++this.fetchSeq
     this.loading.value = true
     this.error.value = null
     this.currentMap.value = null
     this.currentMapSig.value = null
+    this.currentMapAccess.value = null
     this.autoObjects.value = 'none'
     try {
-      const signed = await this.api.get(name)
+      const prefetched = this.prefetched?.name === name ? this.prefetched.signed : null
+      this.prefetched = null
+      const signed = await (prefetched ?? this.api.get(name))
       if (seq !== this.fetchSeq) {
         return
       }
@@ -140,6 +171,16 @@ export class MapService {
           : object
       )
       this.currentMapSig.value = { config_b64: signed.config_b64, sig: signed.sig }
+      this.currentMapAccess.value = signed.access
+      if (onSigned) {
+        onSigned(this.currentMapSig.value)
+        // Rendering a large map blocks the thread; yielding first lets the
+        // connect reach the network before it.
+        await new Promise((resolve) => setTimeout(resolve, 0))
+        if (seq !== this.fetchSeq) {
+          return
+        }
+      }
       this.autoObjects.value = hasAutoSource(cfg.view) ? 'loading' : 'none'
       this.currentMap.value = cfg
     } catch (e: unknown) {
@@ -195,11 +236,11 @@ export class MapService {
   }
 
   /**
-   * The per-map pagetype capability the backend stamps on the map-list entry:
-   * admin rights ride in via "edit foreign maps", not via configure/admin status.
+   * The pagetype capability the backend stamps on the open map: admin rights
+   * ride in via "edit foreign maps", not via configure/admin status.
    */
   public mayEdit(name: string): boolean {
-    return this.maps.value.find((entry) => entry.name === name)?.can_edit === true
+    return this.currentMap.value?.name === name && this.currentMapAccess.value?.can_edit === true
   }
 
   public async getMap(name: string): Promise<MapConfig> {
@@ -331,9 +372,10 @@ export class MapService {
     const base =
       this.currentMap.value?.name === name ? this.currentMap.value : await this.getMap(name)
     const merged: MapConfig = { ...base, ...updates }
-    await this.api.update(merged, envelope)
+    const access = await this.api.update(merged, envelope)
     if (this.currentMap.value?.name === name) {
       this.currentMap.value = merged
+      this.currentMapAccess.value = access
     }
     const row = this.maps.value.find((m) => m.name === name)
     if (row) {
@@ -352,10 +394,7 @@ export class MapService {
       row.context_template = merged.context_template ?? null
       row.view = merged.view
       row.view_type = merged.view.type
-      if (envelope !== undefined) {
-        row.public = envelope.public
-        row.hide_in_monitor_menu = envelope.hide_in_monitor_menu
-      }
+      Object.assign(row, access)
     }
     return merged
   }

@@ -90,6 +90,7 @@ DomainType = Literal[
     "maps_metric_info",
     "maps_perf_metrics",
     "maps_settings",
+    "maps_signed_map",
     "maps_site",
     "maps_session",
     "master_control",

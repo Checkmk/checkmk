@@ -6,7 +6,6 @@
 import json
 
 import pytest
-from pydantic import ValidationError
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State
 from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_ha_manager_status import (
@@ -332,7 +331,6 @@ def test_check_proxmox_ve_ha_manager_status(
     assert list(check_proxmox_ve_ha_manager_status(item, params, section)) == expected_result
 
 
-@pytest.mark.xfail(strict=True, raises=ValidationError, reason="Crash group 4778")
 def test_check_proxmox_ve_ha_manager_status_lrm_without_timestamp() -> None:
     section = parse_proxmox_ve_ha_manager_status(
         [
@@ -358,3 +356,39 @@ def test_check_proxmox_ve_ha_manager_status_lrm_without_timestamp() -> None:
         Result(state=State.OK, summary="Quorum status: OK"),
         Result(state=State.CRIT, summary='Node "pve-1" status: UNABLE TO READ LRM STATUS'),
     ]
+
+
+@pytest.mark.parametrize(
+    "status, expected_result",
+    [
+        pytest.param(
+            "pve-1 (idle)",
+            Result(state=State.OK, summary='Node "pve-1" status: IDLE'),
+            id="idle",
+        ),
+        pytest.param(
+            "pve-1 (active)",
+            Result(state=State.OK, summary='Node "pve-1" status: ACTIVE'),
+            id="active",
+        ),
+    ],
+)
+def test_check_proxmox_ve_ha_manager_status_lrm_status_without_date(
+    status: str, expected_result: Result
+) -> None:
+    section = parse_proxmox_ve_ha_manager_status(
+        [
+            [
+                json.dumps(
+                    [
+                        {"id": "quorum", "node": "pve-1", "status": "OK", "type": "quorum"},
+                        {"id": "lrm:pve-1", "node": "pve-1", "status": status, "type": "lrm"},
+                    ]
+                )
+            ]
+        ]
+    )
+
+    assert list(
+        check_proxmox_ve_ha_manager_status("pve-1", {"differing_service_state": 2}, section)
+    ) == [Result(state=State.OK, summary="Quorum status: OK"), expected_result]

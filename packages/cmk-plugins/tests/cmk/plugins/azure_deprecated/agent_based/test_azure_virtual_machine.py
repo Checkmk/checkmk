@@ -313,7 +313,6 @@ def test_check_azure_virtual_machines_no_item() -> None:
         list(check_azure_virtual_machine(item="VM-test-1", params={}, section={}))
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4866")
 def test_check_azure_virtual_machine_multi_line_status_message() -> None:
     section = {
         "VM-test-1": Resource(

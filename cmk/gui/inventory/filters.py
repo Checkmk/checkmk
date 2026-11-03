@@ -643,14 +643,6 @@ class FilterHasInv(_FilterInvOption):
         )
 
 
-def _version_is_lower(a: str | None, b: str | None) -> bool:
-    return cmp_version(a, b) == -1
-
-
-def _version_is_higher(a: str | None, b: str | None) -> bool:
-    return cmp_version(a, b) == 1
-
-
 def _find_package(
     packages: Sequence[Mapping[str, SDValue]],
     name: str | re.Pattern[str],
@@ -667,9 +659,9 @@ def _find_package(
             return True  # version not relevant
         if (version := package.get("version")) is None:
             continue
-        if from_version and _version_is_lower(str(version), from_version):
+        if from_version and cmp_version(str(version), from_version) == -1:
             continue
-        if to_version and _version_is_higher(str(version), to_version):
+        if to_version and cmp_version(str(version), to_version) == 1:
             continue
         return True
     return False
@@ -775,18 +767,14 @@ class FilterInvHasSoftwarePackage(Filter):
     @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
-        if not value.get(self._varprefix + "name", "").strip():
+        name = value.get(self._varprefix + "name", "")
+        if not name.strip():
             return rows
 
-        name: str | re.Pattern[str] = value[self._varprefix + "name"]
-
-        from_version = value.get(self._varprefix + "version_from", "").strip()
-        to_version = value.get(self._varprefix + "version_to", "").strip()
-        negate = bool(value.get(self._varprefix + "negate", ""))
-        match = value.get(self._varprefix + "match", "")
-        if match == "regex":
+        package_name: str | re.Pattern[str] = name
+        if value.get(self._varprefix + "match", "") == "regex":
             try:
-                name = re.compile(name)
+                package_name = re.compile(name)
             except re.error:
                 raise MKUserError(
                     self._varprefix + "name",
@@ -796,11 +784,17 @@ class FilterInvHasSoftwarePackage(Filter):
                         "if you want to search for a single backslash."
                     ),
                 )
-
-        new_rows = []
-        for row in rows:
-            packages = row["host_inventory"].get_rows(("software", "packages"))
-            is_in = _find_package(packages, name, from_version, to_version)
-            if is_in != negate:
-                new_rows.append(row)
-        return new_rows
+        from_version = value.get(self._varprefix + "version_from", "").strip()
+        to_version = value.get(self._varprefix + "version_to", "").strip()
+        negate = bool(value.get(self._varprefix + "negate", ""))
+        return [
+            row
+            for row in rows
+            if _find_package(
+                row["host_inventory"].get_rows(("software", "packages")),
+                package_name,
+                from_version,
+                to_version,
+            )
+            != negate
+        ]

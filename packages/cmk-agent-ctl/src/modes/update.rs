@@ -70,15 +70,24 @@ pub fn update(
     client_config: &ClientConfig,
     signature: SignatureCheck,
 ) -> AnyhowResult<()> {
+    let api = agent_receiver_api::Api {
+        use_proxy: client_config.use_proxy,
+    };
+    update_through(updater, registry, &api, signature)
+}
+
+fn update_through(
+    updater: &mut WritableUpdater,
+    registry: &Registry,
+    api: &impl agent_receiver_api::AgentUpdate,
+    signature: SignatureCheck,
+) -> AnyhowResult<()> {
     if !updater.is_configured()? {
         println!("Agent updates are not configured for this host");
         return Ok(());
     }
-    let api = agent_receiver_api::Api {
-        use_proxy: client_config.use_proxy,
-    };
 
-    let result = run_cycle(updater, registry, &api, signature);
+    let result = run_cycle(updater, registry, api, signature);
     if let Err(error) = &result {
         if let Err(save_error) = updater.record_error(error) {
             warn!("Could not record the error in the update state: {save_error:#}");
@@ -92,7 +101,7 @@ pub fn update(
 fn run_cycle(
     updater: &mut WritableUpdater,
     registry: &Registry,
-    api: &agent_receiver_api::Api,
+    api: &impl agent_receiver_api::AgentUpdate,
     signature: SignatureCheck,
 ) -> AnyhowResult<()> {
     updater.settle_pending_install()?;
@@ -405,5 +414,192 @@ mod tests {
             report_fetch(&FetchOutcome::NotPossible),
             "No agent update is possible for this host, run with -v for the reason"
         );
+    }
+
+    /// The update cycle against a mock of the site. The agent info of the
+    /// single directory deployment exists on Unix only.
+    #[cfg(unix)]
+    mod update_cycle {
+        use super::*;
+        use crate::agent_receiver_api::{
+            AgentDownloadBody, AgentUpdate, ApiError, UpdateStatusBody, UpdateStatusResponse,
+        };
+        use crate::config::test_helpers::TestRegistry;
+        use crate::config::{ConnectionMode, JSONLoader, TrustedConnection};
+        use crate::environment::SetupMode;
+        use crate::updater::{UpdateSource, UpdateState};
+        use std::cell::RefCell;
+        use std::fs;
+
+        const SOURCE_UUID: &str = "8f0e3a1c-5b2d-4e6f-9a7b-0c1d2e3f4a5b";
+
+        /// A site that answers each status request with the next of `answers`,
+        /// and records the `last_error` that each request reports.
+        struct ScriptedApi {
+            answers: RefCell<Vec<Result<UpdateStatusResponse, ApiError>>>,
+            reported_errors: RefCell<Vec<Option<String>>>,
+        }
+
+        impl ScriptedApi {
+            fn new(answers: Vec<Result<UpdateStatusResponse, ApiError>>) -> Self {
+                Self {
+                    answers: RefCell::new(answers),
+                    reported_errors: RefCell::new(Vec::new()),
+                }
+            }
+
+            fn reported_errors(&self) -> Vec<Option<String>> {
+                self.reported_errors.borrow().clone()
+            }
+        }
+
+        impl AgentUpdate for ScriptedApi {
+            fn update_status(
+                &self,
+                _base_url: &reqwest::Url,
+                _connection: &TrustedConnection,
+                body: &UpdateStatusBody<'_>,
+            ) -> AnyhowResult<UpdateStatusResponse, ApiError> {
+                self.reported_errors
+                    .borrow_mut()
+                    .push(body.last_error.map(String::from));
+                let mut answers = self.answers.borrow_mut();
+                assert!(!answers.is_empty(), "the site was asked once too often");
+                answers.remove(0)
+            }
+
+            fn download_agent(
+                &self,
+                _base_url: &reqwest::Url,
+                _connection: &TrustedConnection,
+                _body: &AgentDownloadBody<'_>,
+            ) -> AnyhowResult<Vec<u8>, ApiError> {
+                panic!("the site offered no package")
+            }
+        }
+
+        fn no_package() -> Result<UpdateStatusResponse, ApiError> {
+            Ok(UpdateStatusResponse { target_agent: None })
+        }
+
+        /// A host in a single directory deployment, whose update source is the
+        /// one connection of its registry.
+        struct Host {
+            _dir: tempfile::TempDir,
+            paths: PathResolver,
+            registry: TestRegistry,
+        }
+
+        impl Host {
+            fn new() -> Self {
+                let dir = tempfile::TempDir::new().unwrap();
+                let paths = PathResolver::new(SetupMode::SingleDir, dir.path());
+                for path in [
+                    &paths.updater_config_path,
+                    &paths.updater_state_path,
+                    &paths.agent_info_path,
+                ] {
+                    fs::create_dir_all(path.parent().unwrap()).unwrap();
+                }
+                fs::write(
+                    &paths.updater_config_path,
+                    "activated = true\ninterval = 60\n",
+                )
+                .unwrap();
+                fs::write(
+                    &paths.agent_info_path,
+                    format!(r#"{{"hash": "{INSTALLED_HASH}", "platform": "linux_deb"}}"#),
+                )
+                .unwrap();
+                let source = UpdateSource {
+                    uuid: SOURCE_UUID.parse().unwrap(),
+                    available: true,
+                };
+                let registry = TestRegistry::new().add_connection(
+                    &ConnectionMode::Pull,
+                    "server/site",
+                    source.uuid,
+                );
+                UpdateState {
+                    source: Some(source),
+                    ..Default::default()
+                }
+                .save(&paths.updater_state_path)
+                .unwrap();
+                Self {
+                    _dir: dir,
+                    paths,
+                    registry,
+                }
+            }
+
+            /// One cycle. The `update` mode and the daemon both load the
+            /// updater afresh for each cycle.
+            fn cycle(&self, api: &impl AgentUpdate) -> AnyhowResult<()> {
+                let mut updater = Updater::writable(&self.paths).unwrap();
+                update_through(
+                    &mut updater,
+                    &self.registry.registry,
+                    api,
+                    SignatureCheck::Required,
+                )
+            }
+
+            fn state(&self) -> UpdateState {
+                UpdateState::load(&self.paths.updater_state_path).unwrap()
+            }
+        }
+
+        /// TC-AU-006: a site that does not answer at all
+        #[test]
+        fn test_a_site_that_does_not_answer_is_asked_again_by_the_next_cycle() {
+            let host = Host::new();
+            let first_silent_then_answering = ScriptedApi::new(vec![
+                Err(ApiError::Other(anyhow::anyhow!("connection refused"))),
+                no_package(),
+            ]);
+
+            let failed = host.cycle(&first_silent_then_answering);
+            let failed_state = host.state();
+            let retried = host.cycle(&first_silent_then_answering);
+
+            assert!(failed.is_err(), "{failed:?}");
+            let error = failed_state.last_error.clone().unwrap_or_default();
+            assert!(error.contains("connection refused"), "{error:?}");
+            assert!(
+                failed_state.source.as_ref().unwrap().available,
+                "{failed_state:?}"
+            );
+            assert!(retried.is_ok(), "{retried:?}");
+            assert_eq!(
+                first_silent_then_answering.reported_errors(),
+                [None, Some(error)]
+            );
+            let state = host.state();
+            assert_eq!(state.last_error, None);
+            assert!(state.source.unwrap().available);
+        }
+
+        /// TC-AU-070: a source latched unavailable by a 501 does not resume when the site answers again
+        #[test]
+        fn test_a_source_latched_by_501_stays_latched() {
+            let host = Host::new();
+            let first_501_then_upgraded = ScriptedApi::new(vec![
+                Err(ApiError::Status {
+                    status: http::StatusCode::NOT_IMPLEMENTED,
+                    body: None,
+                }),
+                no_package(),
+            ]);
+
+            let first = host.cycle(&first_501_then_upgraded);
+            let second = host.cycle(&first_501_then_upgraded);
+
+            assert!(first.is_ok(), "{first:?}");
+            assert!(second.is_ok(), "{second:?}");
+            assert_eq!(first_501_then_upgraded.reported_errors().len(), 1);
+            let state = host.state();
+            assert!(!state.source.as_ref().unwrap().available, "{state:?}");
+        }
     }
 }

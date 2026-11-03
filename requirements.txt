@@ -900,9 +900,9 @@ cmk-dev-site==1.23.0 \
     --hash=sha256:46bd4082c48147335dec6e1bde9828673635fa5abb78822c39ba2931624b579b \
     --hash=sha256:c0695e79f30617b62382fe7199a3e58ff2a73e9a879895a16468388ebc243479
     # via cmk-werk-zeug
-cmk-werk-zeug==0.4.14 \
-    --hash=sha256:0b8aa55a0c6b7fb86af1e6a6aaeeef06e412d4b1981f918887ca95880d3de4b0 \
-    --hash=sha256:a08bcea361430b9853b41bd10fc3ef8b4fd3b9d0af9f7bfdc048ed941ae9841c
+cmk-werk-zeug==0.4.16 \
+    --hash=sha256:7053538cc1312638e97555d3795b94336e05b1fc130a8ed104eca7ae2137bcb1 \
+    --hash=sha256:bc9cfe5812e03efc85d22476a4c2a6e2c96740d75976df16995865258cb18436
     # via
     #   -r non-free/packages/cmk-dev-ai/requirements.in
     #   -r tests/dev-requirements.in

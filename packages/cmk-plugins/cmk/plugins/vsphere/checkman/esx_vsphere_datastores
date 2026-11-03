@@ -13,7 +13,12 @@ description:
  filesystem grouping.
 
 item:
- The logical name of the filesystem (not the mountpoint!)
+ The logical name of the filesystem (not the mountpoint!). If several
+ datastores share a name, the volume ID of each datastore is appended,
+ for example "datastore1 563b3611-f9333855-cfa1-00215e221152".
 
 discovery:
- One service is created for each datastore.
+ One service is created for each datastore. Datastore names are only unique
+ within a vSphere datacenter, so a vCenter with several datacenters can
+ report several datastores with the same name. These get the volume ID
+ from their URL appended to their item.

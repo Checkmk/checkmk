@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections import defaultdict
+from collections import Counter
 from collections.abc import Mapping
 from typing import Any, NotRequired, TypedDict
 
@@ -35,6 +35,9 @@ from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PA
 # type    VMFS
 # uncommitted 51973812224
 # url /vmfs/volumes/513df1e9-12fd7366-ac5a-e41f13e69eaa
+#
+# Datastore names are only unique within a vSphere datacenter. When several
+# datastores share a name, each item gets the volume ID from its url appended.
 
 
 class Store(TypedDict):
@@ -42,28 +45,47 @@ class Store(TypedDict):
     capacity: NotRequired[int]
     freeSpace: NotRequired[int]
     uncommitted: NotRequired[int]
+    url: NotRequired[str]
 
 
 type Section = Mapping[str, Store]
 
 
+def _volume_id(url: str) -> str:
+    return url.rstrip("/").rsplit("/", 1)[-1]
+
+
+def _item(name: str, store: Store, name_is_shared: bool) -> str:
+    if name_is_shared and (url := store.get("url")):
+        return f"{name} {_volume_id(url)}"
+    return name
+
+
 def parse_esx_vsphere_datastores(string_table: StringTable) -> Section:
-    stores: dict[str, Store] = defaultdict(Store)
-    name = ""
+    named_stores: list[tuple[str, Store]] = []
     for line in string_table:
         if line[0].startswith("["):
-            name = line[0][1:-1]
+            named_stores.append((line[0][1:-1], Store()))
+            continue
+        if not named_stores:
             continue
 
+        _name, store = named_stores[-1]
         match line:
             case "accessible" as key, value:
-                stores[name][key] = value.lower() == "true"
+                store[key] = value.lower() == "true"
             case "capacity" | "freeSpace" | "uncommitted" as key, value:
-                stores[name][key] = int(value)
+                store[key] = int(value)
+            case "url", value:
+                store["url"] = value
             case _:
                 pass
 
-    return stores
+    stores_per_name = Counter(name for name, _store in named_stores)
+    return {
+        _item(name, store, name_is_shared=stores_per_name[name] > 1): store
+        for name, store in named_stores
+    }
 
 
 def check_esx_vsphere_datastores(

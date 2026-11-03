@@ -132,6 +132,7 @@ class LambdaFunction:
 @dataclass(frozen=True)
 class ECSCluster:
     name: str
+    region: str
 
 
 # Each of these resources always goes to a piggyback host of its own.
@@ -290,7 +291,7 @@ def _lambda_function_host(function: LambdaFunction) -> TargetHost:
 
 
 def _ecs_cluster_host(cluster: ECSCluster) -> TargetHost:
-    return TargetHost(cluster.name)
+    return _hostname_from_name_and_region(cluster.name, cluster.region)
 
 
 def _hostname_from_name_and_region(name: str, region: str) -> TargetHost:

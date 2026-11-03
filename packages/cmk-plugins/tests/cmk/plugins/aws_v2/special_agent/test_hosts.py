@@ -117,7 +117,9 @@ def test_ec2_instance_without_a_name_has_no_host(
         pytest.param(S3Bucket("bucket"), "bucket", id="s3 bucket"),
         pytest.param(SNSTopic("topic", "eu-central-1"), "topic_eu-central-1", id="sns topic"),
         pytest.param(LambdaFunction("function"), "function", id="lambda function"),
-        pytest.param(ECSCluster("cluster"), "cluster", id="ecs cluster"),
+        pytest.param(
+            ECSCluster("cluster", "eu-central-1"), "cluster_eu-central-1", id="ecs cluster"
+        ),
     ],
 )
 def test_resource_goes_to_a_host_of_its_own(resource: PiggybackResource, expected: str) -> None:
@@ -127,6 +129,12 @@ def test_resource_goes_to_a_host_of_its_own(resource: PiggybackResource, expecte
 def test_sns_topics_with_the_same_name_in_two_regions_go_to_two_hosts() -> None:
     assert target_host(SNSTopic("topic", "eu-central-1"), DEFAULT_NAMING) != target_host(
         SNSTopic("topic", "us-east-1"), DEFAULT_NAMING
+    )
+
+
+def test_ecs_clusters_with_the_same_name_in_two_regions_go_to_two_hosts() -> None:
+    assert target_host(ECSCluster("cluster", "eu-central-1"), DEFAULT_NAMING) != target_host(
+        ECSCluster("cluster", "us-east-1"), DEFAULT_NAMING
     )
 
 

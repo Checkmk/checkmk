@@ -328,7 +328,7 @@ class ECS(AWSSectionCloudwatch):
     def _cluster_result(
         self, name: str, rows: Sequence[Mapping[str, object]], cluster: Cluster | None
     ) -> AWSSectionResult:
-        host = self._target_host(hosts.ECSCluster(name))
+        host = self._target_host(hosts.ECSCluster(name, self._region))
         if cluster is None:
             # The cluster is gone from the summary since its metrics were cached.
             return AWSSectionResult(host, rows, AwsResource(service="ecs"))

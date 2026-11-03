@@ -477,7 +477,7 @@ def test_agent_aws_ecs_metrics_go_to_the_host_of_their_cluster(
 
     assert {
         result.piggyback_hostname: {row["Label"] for row in result.content} for result in results
-    } == {"cluster-test1": {"cluster-test1"}, "cluster-test2": {"cluster-test2"}}
+    } == {"cluster-test1_region": {"cluster-test1"}, "cluster-test2_region": {"cluster-test2"}}
 
 
 def test_agent_aws_ecs_cluster_hosts_get_the_resource_labels(
@@ -489,7 +489,7 @@ def test_agent_aws_ecs_cluster_hosts_get_the_resource_labels(
     results = ecs.run().results
 
     assert {result.piggyback_hostname: result.piggyback_host_labels for result in results} == {
-        "cluster-test1": {
+        "cluster-test1_region": {
             "cmk/aws/service": "ecs",
             "cmk/aws/name": "cluster-test1",
             "cmk/aws/resource_id": "cluster-test1",
@@ -497,7 +497,7 @@ def test_agent_aws_ecs_cluster_hosts_get_the_resource_labels(
             "cmk/aws/tag/tag1": "true",
             "cmk/aws/tag/tag2": "2",
         },
-        "cluster-test2": {
+        "cluster-test2_region": {
             "cmk/aws/service": "ecs",
             "cmk/aws/name": "cluster-test2",
             "cmk/aws/resource_id": "cluster-test2",

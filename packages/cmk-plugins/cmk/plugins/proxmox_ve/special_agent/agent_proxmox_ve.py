@@ -480,7 +480,7 @@ def _create_vm_sections(
             tags=tuple(tag for tag in vm.get("tags", "").split(";") if tag),
             status=vm["status"],
             name=vm["name"],
-            uptime=vm["uptime"],
+            uptime=vm["uptime"] if vm["uptime"] >= 0 else None,
             lock=lock_state,
             cluster=str(node_cluster_mapping[vm["node"]])
             if vm["node"] in node_cluster_mapping

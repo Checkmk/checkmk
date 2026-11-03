@@ -39,6 +39,6 @@ class SectionVMInfo(BaseModel, frozen=True):
     type: Literal["qemu", "lxc"]
     name: str
     tags: tuple[str, ...] = ()
-    uptime: int = Field(default=0, ge=0)
+    uptime: int | None = Field(default=0, ge=0)
     lock: LockState | str | None = Field(default=None, union_mode="left_to_right")
     cluster: str | None = None

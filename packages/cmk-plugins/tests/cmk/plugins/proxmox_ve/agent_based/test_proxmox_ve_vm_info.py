@@ -263,3 +263,20 @@ def test_check_proxmox_ve_vm_info_restarts_tracking_after_lock_cleared() -> None
     assert value_store == {
         "proxmox_ve_vm_info.lock_duration.133": (next_lock.timestamp(), "backup")
     }
+
+
+def test_check_proxmox_ve_vm_info_unknown_uptime() -> None:
+    results = tuple(
+        _check_proxmox_ve_vm_info_testable(
+            {"required_vm_status": "", "lock_duration": ("no_levels", None)},
+            VM_DATA.model_copy(update={"uptime": None}),
+            {},
+        )
+    )
+
+    assert results == (
+        Result(state=State.OK, summary="VM ID: 133"),
+        Result(state=State.OK, summary="Status: running"),
+        Result(state=State.OK, summary="Type: qemu, Host: pve-dc4-001"),
+        Result(state=State.OK, notice="Config lock: none"),
+    )

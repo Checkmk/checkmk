@@ -10,6 +10,7 @@ from contextlib import ExitStack
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from cmk.plugins.proxmox_ve.special_agent.agent_proxmox_ve import (
     _backup_timezone,
@@ -682,3 +683,29 @@ def test_json_cached_data_starts_over_on_truncated_cache(
         assert setdefault("task-1", lambda: ["log line"]) == ["log line"]
 
     assert json.loads(storage.read("backup_logs", "")) == {"task-1": ["log line"]}
+
+
+@pytest.mark.xfail(strict=True, raises=ValidationError, reason="Crash group 4975")
+def test_create_vm_sections_unknown_uptime() -> None:
+    section_name, section = next(
+        iter(
+            _create_vm_sections(
+                vmid="100",
+                vm={
+                    "node": "pve1",
+                    "type": "lxc",
+                    "status": "running",
+                    "name": "ct1",
+                    "uptime": -1,
+                },
+                config_lock_data={},
+                logged_backup_data={},
+                snapshot_data={},
+                node_cluster_mapping={},
+            )
+        )
+    )
+
+    assert section_name == "proxmox_ve_vm_info"
+    assert isinstance(section, dict)
+    assert section["uptime"] is None

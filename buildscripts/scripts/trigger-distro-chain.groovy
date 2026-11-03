@@ -83,6 +83,11 @@ void main() {
         CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
     ];
     def success = true;
+    /* groovylint-disable DuplicateMapLiteral */
+    def test_system_multisite_parameters = job_parameters_packages + [USE_CASE: "daily_tests"];
+    def test_system_singlesite_parameters = job_parameters_packages + [USE_CASE: "daily_tests"];
+    def test_system_update_parameters = job_parameters_packages + [USE_CASE: "daily_update_tests"];
+    /* groovylint-enable DuplicateMapLiteral */
 
     run_docker_integration_test = [
         run_docker_integration_test,
@@ -98,6 +103,34 @@ void main() {
         distro in distros_system_agent_update_test,
         edition == "pro",
     ].every { it };
+
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        // editions.yml may defines different distros for testing than for building
+        def selected_distros_multisite = versioning.get_distros(
+            edition: edition,
+            use_case: "daily_tests",
+        );
+        def selected_distros_singlesite = versioning.get_distros(
+            edition: edition,
+            use_case: "daily_tests",
+        );
+        def selected_distros_update = versioning.get_distros(
+            edition: edition,
+            use_case: "daily_update_tests",
+        );
+        run_multi_site_test = [
+            run_multi_site_test,
+            distro in selected_distros_multisite,
+        ].every { it };
+        run_single_site_test = [
+            run_single_site_test,
+            distro in selected_distros_singlesite,
+        ].every { it };
+        run_update_test = [
+            run_update_test,
+            distro in selected_distros_update,
+        ].every { it };
+    }
 
     print(
         """
@@ -215,7 +248,7 @@ void main() {
                         use_upstream_build: true,
                         force_build: force_build,
                         relative_job_name: "${builders_base_folder}/test-system-multisite-single",
-                        build_params: job_parameters_packages,
+                        build_params: test_system_multisite_parameters,
                         build_params_no_check: job_parameters_no_check,
                         download: false,
                     );
@@ -231,7 +264,7 @@ void main() {
                         use_upstream_build: true,
                         force_build: force_build,
                         relative_job_name: "${builders_base_folder}/test-system-singlesite-single",
-                        build_params: job_parameters_packages,
+                        build_params: test_system_singlesite_parameters,
                         build_params_no_check: job_parameters_no_check,
                         download: false,
                     );
@@ -247,7 +280,7 @@ void main() {
                         use_upstream_build: true,
                         force_build: force_build,
                         relative_job_name: "${builders_base_folder}/test-system-update-single",
-                        build_params: job_parameters_packages,
+                        build_params: test_system_update_parameters,
                         build_params_no_check: job_parameters_no_check,
                         download: false,
                     );

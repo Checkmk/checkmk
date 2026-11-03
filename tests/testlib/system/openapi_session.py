@@ -2798,6 +2798,14 @@ class CustomServiceAPI(BaseAPI):
         if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
 
+    def list_names(self) -> list[str]:
+        response = self.session.get(
+            "domain-types/custom_service/collections/all", api_version=APIVersion.UNSTABLE
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return [str(service["id"]) for service in response.json()["value"]]
+
     def get(self, configuration_name: str) -> dict[str, Any]:
         response = self.session.get(
             f"objects/custom_service/{configuration_name}", api_version=APIVersion.UNSTABLE

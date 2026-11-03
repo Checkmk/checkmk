@@ -280,7 +280,8 @@ rust_doc(
 # The lib unit tests, cross compiled for Windows: the legacy Windows
 # job's unfiltered `cargo test` runs these on Windows too (they cover
 # permissions_windows.rs and the registry/platform code). Executed
-# under Wine by :mk-oracle-tests-wine.
+# under Wine by :mk-oracle-tests-wine and, for parity with that job,
+# inside the real-Windows QEMU VM by :mk-oracle-tests-qemu below.
 rust_test(
     name = "mk-oracle-lib-test-internal-windows",
     compile_data = [
@@ -351,6 +352,7 @@ pkg_files(
     name = "qemu_tests_root",
     testonly = True,
     srcs = [
+        ":mk-oracle-lib-test-internal-windows",
         ":qemu_tests_script",
         ":test_mk_oracle_bin-windows",
         ":test_ora_discovery-windows",

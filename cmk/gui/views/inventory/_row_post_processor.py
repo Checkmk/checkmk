@@ -136,18 +136,19 @@ def _join_inventory_rows(
 def _extract_table_rows(
     join_cells: Sequence[JoinCell], rows: Rows
 ) -> Mapping[_MasterKey, Sequence[_FoundTableRow]]:
-    painter_macros_by_path_and_ident: dict[tuple[SDPath, str], list[tuple[str, str]]] = {}
+    painter_macros_by_column: dict[tuple[SDPath, str, SDKey], list[tuple[str, str]]] = {}
     for join_cell in join_cells:
         if (
             (params := join_cell.painter_parameters()) is None
             or not (cols_to_match := params.get("columns_to_match"))
             or not (path := params.get("path_to_table"))
+            or not (column_to_display := params.get("column_to_display"))
         ):
             continue
 
         for macro_column_name, macro in cols_to_match:
-            painter_macros_by_path_and_ident.setdefault(
-                (path, join_cell.painter_name()), []
+            painter_macros_by_column.setdefault(
+                (path, join_cell.painter_name(), SDKey(column_to_display)), []
             ).append((macro_column_name, macro))
 
     table_rows_by_master_key: dict[_MasterKey, list[_FoundTableRow]] = {}
@@ -155,10 +156,10 @@ def _extract_table_rows(
         if (master_key := _MasterKey.make(row)) in table_rows_by_master_key:
             continue
 
-        for (path, ident), painter_macros in painter_macros_by_path_and_ident.items():
+        for (path, ident, column), painter_macros in painter_macros_by_column.items():
             if tree := row["host_inventory"].get_tree(path):
                 table_rows_by_master_key.setdefault(master_key, []).extend(
-                    list(_find_table_rows(ident, painter_macros, tree.table.rows))
+                    list(_find_table_rows(ident, column, painter_macros, tree.table.rows))
                 )
 
     return table_rows_by_master_key
@@ -188,19 +189,12 @@ class _FoundTableRow:
 
 def _find_table_rows(
     ident: str,
+    column: SDKey,
     painter_macros: Sequence[tuple[str, str]],
     table_rows: Sequence[Mapping[SDKey, SDValue]],
 ) -> Iterator[_FoundTableRow]:
-    def _find_column_value_of_ident(
-        ident: str, table_row: Mapping[SDKey, SDValue]
-    ) -> str | int | float | None:
-        for key, value in table_row.items():
-            if ident.endswith(key):
-                return value
-        return None
-
     for table_row in table_rows:
-        if (column_value := _find_column_value_of_ident(ident, table_row)) is None:
+        if (column_value := table_row.get(column)) is None:
             continue
 
         yield _FoundTableRow(

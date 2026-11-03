@@ -7,7 +7,7 @@ from typing import override
 
 from cmk.gui.config import Config
 from cmk.gui.painter import JoinCell, painter_registry
-from cmk.gui.type_defs import ColumnSpec, PainterParameters
+from cmk.gui.type_defs import ColumnSpec, PainterParameters, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.inventory._row_post_processor import _join_inventory_rows
 from cmk.inventory.serialization import deserialize_tree
@@ -16,12 +16,13 @@ from cmk.web.utils.request_cache import RequestCache
 from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
-def test_row_post_processor() -> None:
-    class _FakeJoinCell(JoinCell):
-        @override
-        def painter_parameters(self) -> PainterParameters | None:
-            return self._painter_params
+class _FakeJoinCell(JoinCell):
+    @override
+    def painter_parameters(self) -> PainterParameters | None:
+        return self._painter_params
 
+
+def test_row_post_processor() -> None:
     rows = [
         {
             "site": "mysite",
@@ -303,3 +304,69 @@ def test_row_post_processor() -> None:
         assert row["invorainstance_version"] == expected_row["invorainstance_version"]
         assert row["JOIN"] == expected_row["JOIN"]
         assert row["host_inventory"] == expected_row["host_inventory"]
+
+
+def _make_join_cell(
+    name: str, column_to_display: str, columns_to_match: list[tuple[str, str]]
+) -> _FakeJoinCell:
+    return _FakeJoinCell(
+        ColumnSpec(
+            name=name,
+            parameters=PainterParameters(
+                path_to_table=(SDNodeName("packages"),),
+                column_to_display=column_to_display,
+                columns_to_match=columns_to_match,
+            ),
+            join_value=name,
+            _column_type="join_inv_column",
+        ),
+        "",
+        painter_registry,
+        make_painter_context(UserPermissions({}, {}, {}, [])),
+        RequestCache(Config()),
+    )
+
+
+def _make_package_row() -> Row:
+    return {
+        "site": "mysite",
+        "host_name": "my-host-name",
+        "invinstance_package": "pkg",
+        "invinstance_version": "1.0",
+        "host_inventory": deserialize_tree(
+            {
+                "Attributes": {},
+                "Nodes": {
+                    "packages": {
+                        "Attributes": {},
+                        "Nodes": {},
+                        "Table": {
+                            "KeyColumns": ["name", "version"],
+                            "Rows": [
+                                {"name": "pkg", "version": "1.0", "short_name": "p"},
+                                {"name": "pkg", "version": "2.0", "short_name": "q"},
+                            ],
+                        },
+                    },
+                },
+                "Table": {},
+            }
+        ),
+    }
+
+
+def test_join_inventory_rows_displays_the_chosen_column() -> None:
+    row = _make_package_row()
+    _join_inventory_rows(
+        view_macros=[("package", "$PACKAGE$"), ("version", "$VERSION$")],
+        view_join_cells=[
+            _make_join_cell(
+                "invpackages_short_name",
+                "short_name",
+                [("version", "$VERSION$")],
+            )
+        ],
+        view_datasource_ident="invinstance",
+        rows=[row],
+    )
+    assert row["JOIN"] == {"invpackages_short_name": {"invpackages_short_name": "p"}}

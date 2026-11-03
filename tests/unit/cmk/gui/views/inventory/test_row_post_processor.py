@@ -370,3 +370,20 @@ def test_join_inventory_rows_displays_the_chosen_column() -> None:
         rows=[row],
     )
     assert row["JOIN"] == {"invpackages_short_name": {"invpackages_short_name": "p"}}
+
+
+def test_join_inventory_rows_needs_all_criteria_to_match() -> None:
+    row = _make_package_row()
+    _join_inventory_rows(
+        view_macros=[("package", "$PACKAGE$"), ("version", "$VERSION$")],
+        view_join_cells=[
+            _make_join_cell(
+                "invpackages_short_name",
+                "short_name",
+                [("name", "$PACKAGE$"), ("version", "$VERSION$")],
+            )
+        ],
+        view_datasource_ident="invinstance",
+        rows=[row],
+    )
+    assert row["JOIN"] == {"invpackages_short_name": {"invpackages_short_name": "p"}}

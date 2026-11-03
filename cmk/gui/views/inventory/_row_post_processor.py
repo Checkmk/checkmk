@@ -179,11 +179,12 @@ class _MasterKey:
 class _FoundTableRow:
     ident: str
     column_value: str | int | float
-    macros: Mapping[str, str | int | float]
+    macros: Mapping[str, SDValue]
 
     def matches(self, row_values_by_macro: Mapping[str, str | int | float]) -> bool:
-        return any(
-            self.macros.get(macro) == row_value for macro, row_value in row_values_by_macro.items()
+        return all(
+            value is not None and row_values_by_macro.get(macro) == value
+            for macro, value in self.macros.items()
         )
 
 
@@ -201,8 +202,7 @@ def _find_table_rows(
             ident=ident,
             column_value=column_value,
             macros={
-                macro: macro_table_value
+                macro: table_row.get(SDKey(macro_column_name))
                 for macro_column_name, macro in painter_macros
-                if (macro_table_value := table_row.get(SDKey(macro_column_name))) is not None
             },
         )

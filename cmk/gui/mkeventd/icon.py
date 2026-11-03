@@ -71,17 +71,23 @@ def _render_mkeventd_icon(
     if not host:
         return None
 
+    monitored = _is_monitored_host_spec(args[0], row)
+    link_host = row["host_name"] if monitored else host
     url_vars = [
-        ("view_name", "ec_events_of_monhost"),
+        ("view_name", "ec_events_of_monhost" if monitored else "ec_events_of_host"),
         ("site", row["site"]),
-        ("host", row["host_name"]),
+        ("host", link_host),
+        *([] if monitored else [("event_host", host)]),
     ]
 
-    title = _("Events of host %(host_name)s") % {"host_name": row["host_name"]}
+    title = _("Events of host %(host_name)s") % {"host_name": link_host}
 
     if len(args) >= 2:
         app = args[1].strip("'").replace("\\\\", "\\").replace("\\!", "!")
-        title = _('Events of application "%(app)s" on host %(host)s') % {"app": app, "host": host}
+        title = _('Events of application "%(app)s" on host %(host)s') % {
+            "app": app,
+            "host": link_host,
+        }
         url_vars.append(("event_application", app))
 
     return (
@@ -97,9 +103,24 @@ MkeventdIcon = Icon(
     toplevel=False,
     sort_index=30,
     columns=["check_command"],
-    host_columns=["address", "name"],
+    host_columns=["address", "alias", "name"],
     render=_render_mkeventd_icon,
 )
+
+
+def _is_monitored_host_spec(hostspec: str, row: Row) -> bool:
+    """Macros in the host spec are resolved when the command line is built, so
+    compare with the monitored host's name, address and alias - case-insensitively,
+    like the event_host filter of the EC"""
+    own = {
+        "$HOSTNAME$",
+        "$HOSTADDRESS$",
+        "$HOSTALIAS$",
+        row["host_name"],
+        row["host_address"],
+        row["host_alias"],
+    }
+    return {part.lower() for part in hostspec.split("/")} <= {name.lower() for name in own}
 
 
 def _get_hostname(args: Sequence[str], row: Row) -> str:

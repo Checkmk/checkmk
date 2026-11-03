@@ -25,6 +25,7 @@ _SITE_ID = "NO_SITE"
 _ACTION_MENU_HOST_ROW = {
     "host_name": "heute",
     "host_address": "127.0.0.1",
+    "host_alias": "heute",
     "host_filename": "/wato/hosts.mk",
     "host_check_type": 0,
     "host_check_command": "check-mk-host-smart",

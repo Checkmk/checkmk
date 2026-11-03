@@ -8,13 +8,12 @@ import { type ComputedRef, computed, ref, watchEffect } from 'vue'
 
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
+import { CELL_PADDING } from './MonitoringTableContext'
 import { iconListWidth } from './iconList'
 
 export const MODE_COLUMN_ID = 'modes'
 
 export const MODE_ICONS_PER_ROW = 3
-
-const CELL_PADDING = 16
 
 export const MODE_COLUMN_MIN_WIDTH = 56
 export const MODE_COLUMN_MAX_WIDTH = 152

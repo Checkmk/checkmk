@@ -29,7 +29,7 @@ import {
 } from './MonitoringTableContext'
 import FilterDropdown from './filter/FilterDropdown.vue'
 import type { ColumnFilterValue, SortDirection } from './filter/types'
-import { headerFitWidth } from './headerFit'
+import { headerFitWidth, sortButtonFitWidth } from './headerFit'
 
 const { _t } = usei18n()
 
@@ -58,10 +58,7 @@ function measureFitWidths(): void {
   // right away when it shows up again, before anything resizes.
   const widths: HeaderFitWidths = { ...reportedFitWidths }
   for (const cell of thead.value.querySelectorAll<HTMLElement>('th[data-fit-header]')) {
-    // Only the standalone label fills its cell; in the other header variants the measurement would
-    // grow with the column and keep it from ever shrinking back.
-    const label = cell.querySelector<HTMLElement>('.monitoring-table-header__label--standalone')
-    const width = label ? headerFitWidth(cell, label) : null
+    const width = cellFitWidth(cell)
     if (width !== null) {
       widths[cell.dataset.fitHeader!] = width
     }
@@ -70,6 +67,21 @@ function measureFitWidths(): void {
     reportedFitWidths = widths
     emit('fit-widths', widths)
   }
+}
+
+// Only the standalone label and the sort button fill their cell; in the label group the measurement
+// would grow with the column and keep it from ever shrinking back.
+function cellFitWidth(cell: HTMLElement): number | null {
+  const standalone = cell.querySelector<HTMLElement>('.monitoring-table-header__label--standalone')
+  if (standalone) {
+    return headerFitWidth(cell, standalone)
+  }
+  const button = cell.querySelector<HTMLElement>('.monitoring-table-header__header-button')
+  const label = button?.querySelector<HTMLElement>('.monitoring-table-header__label')
+  if (!button || !label) {
+    return null
+  }
+  return sortButtonFitWidth(cell, button, label)
 }
 
 function sameWidths(a: HeaderFitWidths, b: HeaderFitWidths): boolean {
@@ -347,20 +359,34 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
               <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
             </span>
 
+            <!-- A column that fits its header keeps room for these while they are not shown, so it
+            does not change width once sorted by. -->
             <CmkMultitoneIcon
-              v-if="header.column.getIsSorted() !== false"
+              v-if="
+                header.column.getIsSorted() !== false || header.column.columnDef.meta?.fitHeader
+              "
               name="arrow-down"
               class="monitoring-table-header__sort-icon"
+              :class="{
+                'monitoring-table-header__reserved': header.column.getIsSorted() === false
+              }"
               :rotate="header.column.getIsSorted() === 'asc' ? 180 : 0"
               primary-color="font"
               aria-hidden="true"
               size="xsmall"
             />
             <span
-              v-if="sortPosition(header.getContext().table, header.column) !== null"
+              v-if="
+                sortPosition(header.getContext().table, header.column) !== null ||
+                header.column.columnDef.meta?.fitHeader
+              "
               class="monitoring-table-header__sort-position"
+              :class="{
+                'monitoring-table-header__reserved':
+                  sortPosition(header.getContext().table, header.column) === null
+              }"
               aria-hidden="true"
-              >{{ sortPosition(header.getContext().table, header.column) }}</span
+              >{{ sortPosition(header.getContext().table, header.column) ?? 0 }}</span
             >
           </button>
           <span
@@ -613,5 +639,14 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
   flex-shrink: 0;
   margin-left: calc(-1 * var(--dimension-2));
   font-size: var(--font-size-small);
+
+  /* Any position is as wide as the reserved one. */
+  font-variant-numeric: tabular-nums;
+}
+
+/* Measured as if shown, but takes up no room. */
+.monitoring-table-header__reserved {
+  position: absolute;
+  visibility: hidden;
 }
 </style>

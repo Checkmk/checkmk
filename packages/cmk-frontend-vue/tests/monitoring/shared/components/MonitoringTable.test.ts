@@ -725,8 +725,9 @@ describe('a column that fits its header', () => {
     { id: 'actions', header: 'Actions', enableSorting: false, minSize: 56 }
   ]
 
-  // jsdom does no layout: every header cell is 60px wide, of which its label gets 20px,
-  // while the label's text needs `textWidth`.
+  // jsdom does no layout: every header cell is 60px wide, of which a sort button gets 40px and
+  // its label 20px, while the label's text needs `textWidth`. The sort icon is 10px wide, the sort
+  // position 6px.
   let textWidth: number
 
   function resizeHeader(): void {
@@ -744,8 +745,17 @@ describe('a column that fits its header', () => {
       if (this.tagName === 'TH') {
         return { width: 60 } as DOMRect
       }
+      if (this.classList.contains('monitoring-table-header__header-button')) {
+        return { width: 40 } as DOMRect
+      }
       if (this.classList.contains('monitoring-table-header__label')) {
         return { width: 20 } as DOMRect
+      }
+      if (this.classList.contains('monitoring-table-header__sort-icon')) {
+        return { width: 10 } as DOMRect
+      }
+      if (this.classList.contains('monitoring-table-header__sort-position')) {
+        return { width: 6 } as DOMRect
       }
       return elementRect.call(this)
     })
@@ -800,13 +810,24 @@ describe('a column that fits its header', () => {
     expect(probedWidth('mode')).toBe(90)
   })
 
-  test('is not widened when its header can be sorted', async () => {
+  test.each<{ sorting: string; sortState: SortingState }>([
+    { sorting: 'not sorted by', sortState: [] },
+    { sorting: 'sorted by', sortState: [{ id: 'mode', desc: false }] },
+    {
+      sorting: 'sorted by after another column',
+      sortState: [
+        { id: 'actions', desc: false },
+        { id: 'mode', desc: true }
+      ]
+    }
+  ])('keeps room for its sort icon and position while $sorting', async ({ sortState }) => {
     mountTable({
-      columns: [{ ...FIT_COLUMNS[0]!, accessorKey: 'name', enableSorting: true }, FIT_COLUMNS[1]!]
+      columns: [{ ...FIT_COLUMNS[0]!, accessorKey: 'name', enableSorting: true }, FIT_COLUMNS[1]!],
+      sortState
     })
     await nextTick()
 
-    expect(probedWidth('mode')).toBe(56)
+    expect(probedWidth('mode')).toBe(60 - 40 + 50 + 10 + 6)
   })
 })
 

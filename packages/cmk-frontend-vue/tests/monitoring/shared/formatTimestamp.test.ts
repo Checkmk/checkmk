@@ -66,6 +66,15 @@ describe('formatDisplayTimestamp', () => {
     expect(formatDisplayTimestamp(NOW - 0.35, options)).toBe('350 ms')
   })
 
+  test.each([
+    [0.9996, '1.00 s'],
+    [9.996, '10.0 s']
+  ])('rel renders an age of %s s, which rounds up into the next range, as %s', (age, expected) => {
+    const options: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'rel' }
+
+    expect(formatDisplayTimestamp(NOW - age, options)).toBe(expected)
+  })
+
   test('rel renders a future timestamp prefixed with "in"', () => {
     const options: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'rel' }
 

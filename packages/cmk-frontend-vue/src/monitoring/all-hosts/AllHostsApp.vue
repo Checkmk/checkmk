@@ -20,6 +20,11 @@ import HostSlideIn from '@/monitoring/shared/components/HostSlideIn.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
+import {
+  timestampColumnsAsShown,
+  useCellTextWidth,
+  useTimestampColumnWidth
+} from '@/monitoring/shared/components/timestampColumns'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import {
   displayOptionsWriter,
@@ -29,7 +34,6 @@ import {
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
 import { labelCondition } from '@/monitoring/shared/labels'
 import { hostRefOf } from '@/monitoring/shared/objectRefs'
-import { filterTimestampsAsShown } from '@/monitoring/shared/timestampFilters'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import { IMMEDIATE_HOST_COMMAND_IDS, useHostActions } from '@/monitoring/shared/useHostActions'
 
@@ -163,16 +167,25 @@ const displayOptions = usePersistentRef(
   (stored) => seedDisplayOptions(initialDisplayOptions, sanitizeDisplayOptions(stored))
 )
 
+const root = useTemplateRef<HTMLElement>('root')
+
+const timestampColumnWidth = useTimestampColumnWidth(
+  () => displayOptions.value,
+  useCellTextWidth(root)
+)
+
 const tableColumns = computed(() =>
   sizeModeColumn(
-    filterTimestampsAsShown(columns, displayOptions.value.timestampFormat),
+    timestampColumnsAsShown(
+      columns,
+      displayOptions.value.timestampFormat,
+      timestampColumnWidth.value
+    ),
     modeColumnSize.value
   )
 )
 
 const toolbar = useTemplateRef<{ focus: () => void }>('toolbar')
-
-const root = useTemplateRef<HTMLElement>('root')
 
 const typeToFocus = useTypeToFocus(root)
 useFallbackKeys(root, () => root.value?.querySelector<HTMLElement>('.monitoring-table'))

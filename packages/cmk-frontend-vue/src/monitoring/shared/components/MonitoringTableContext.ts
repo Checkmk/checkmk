@@ -25,9 +25,9 @@ declare module '@tanstack/vue-table' {
     selectColumn?: boolean
     hidden?: boolean
     /**
-     * The column is never narrower than its header needs to show its label in full. Only for
-     * columns that can't be sorted and have no `headerHelp`, since only there the label fills its
-     * cell, and only in tables with column pinning.
+     * The column is never narrower than its header needs to show its label in full, along with
+     * its sort icon, even while it is not sorted by, and its filter button. Not for columns with
+     * `headerHelp`, and only in tables with column pinning.
      */
     fitHeader?: boolean
     /** The stretch column absorbs all remaining width. Ignored by MonitoringTable. */
@@ -82,6 +82,9 @@ export const MONITORING_TABLE_STATE: InjectionKey<MonitoringTableState> =
 
 /** The width, per column id, that each `fitHeader` column needs to show its label in full. */
 export type HeaderFitWidths = Record<string, number>
+
+/** The horizontal padding of a cell around its content. */
+export const CELL_PADDING = 16
 
 export const TABLE_BORDER_SPACING = 1
 export const TABLE_BORDER_SPACING_PX = `${TABLE_BORDER_SPACING}px`

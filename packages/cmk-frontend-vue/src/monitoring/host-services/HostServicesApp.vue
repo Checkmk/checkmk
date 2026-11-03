@@ -30,6 +30,11 @@ import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTab
 import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
+import {
+  timestampColumnsAsShown,
+  useCellTextWidth,
+  useTimestampColumnWidth
+} from '@/monitoring/shared/components/timestampColumns'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import {
   displayOptionsWriter,
@@ -38,7 +43,6 @@ import {
 } from '@/monitoring/shared/displayOptionsState/urlState'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
 import { serviceCommand, serviceRefOf } from '@/monitoring/shared/objectRefs'
-import { filterTimestampsAsShown } from '@/monitoring/shared/timestampFilters'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import { useHostActions } from '@/monitoring/shared/useHostActions'
 import { IMMEDIATE_SERVICE_COMMAND_IDS } from '@/monitoring/shared/useServiceActions'
@@ -181,19 +185,25 @@ const displayOptions = usePersistentRef(
   (stored) => seedDisplayOptions(initialDisplayOptions, sanitizeDisplayOptions(stored))
 )
 
+const root = useTemplateRef<HTMLElement>('root')
+
+const timestampColumnWidth = useTimestampColumnWidth(
+  () => displayOptions.value,
+  useCellTextWidth(root)
+)
+
 const tableColumns = computed(() =>
   sizeModeColumn(
-    filterTimestampsAsShown(
+    timestampColumnsAsShown(
       uncapNameWithoutSummary(columns, hostServicesService.columnVisibility.value),
-      displayOptions.value.timestampFormat
+      displayOptions.value.timestampFormat,
+      timestampColumnWidth.value
     ),
     modeColumnSize.value
   )
 )
 
 const toolbar = useTemplateRef<{ focus: () => void }>('toolbar')
-
-const root = useTemplateRef<HTMLElement>('root')
 
 const typeToFocus = useTypeToFocus(root)
 useFallbackKeys(root, () => root.value?.querySelector<HTMLElement>('.monitoring-table'))

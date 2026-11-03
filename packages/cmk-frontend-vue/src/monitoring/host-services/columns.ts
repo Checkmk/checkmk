@@ -257,6 +257,7 @@ export function useHostServicesColumns<Row extends HostServiceEntry = HostServic
       accessorKey: 'last_state_change',
       header: _t('State age'),
       sortDescFirst: true,
+      // Replaced by `timestampColumnsAsShown` where it can size by the Timestamp Format.
       minSize: 120,
       maxSize: 200,
       meta: {
@@ -269,6 +270,7 @@ export function useHostServicesColumns<Row extends HostServiceEntry = HostServic
       accessorKey: 'last_check',
       header: _t('Check age'),
       sortDescFirst: true,
+      // Replaced by `timestampColumnsAsShown` where it can size by the Timestamp Format.
       minSize: 120,
       maxSize: 200,
       meta: {

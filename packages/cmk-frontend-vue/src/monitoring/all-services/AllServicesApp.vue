@@ -35,6 +35,11 @@ import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/acti
 import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
+import {
+  timestampColumnsAsShown,
+  useCellTextWidth,
+  useTimestampColumnWidth
+} from '@/monitoring/shared/components/timestampColumns'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import {
   displayOptionsWriter,
@@ -55,7 +60,6 @@ import {
 import { useServiceListing } from '@/monitoring/shared/services/useServiceListing'
 import { buildTableStateSchema } from '@/monitoring/shared/tableState/schema'
 import { readTableStateFromUrl, tableStateWriter } from '@/monitoring/shared/tableState/urlState'
-import { filterTimestampsAsShown } from '@/monitoring/shared/timestampFilters'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import {
   type SlideInListing,
@@ -141,19 +145,25 @@ const displayOptions = usePersistentRef(
   (stored) => seedDisplayOptions(initialDisplayOptions, sanitizeDisplayOptions(stored))
 )
 
+const root = useTemplateRef<HTMLElement>('root')
+
+const timestampColumnWidth = useTimestampColumnWidth(
+  () => displayOptions.value,
+  useCellTextWidth(root)
+)
+
 const tableColumns = computed(() =>
   sizeModeColumn(
-    filterTimestampsAsShown(
+    timestampColumnsAsShown(
       uncapNameWithoutSummary(columns, allServicesService.columnVisibility.value),
-      displayOptions.value.timestampFormat
+      displayOptions.value.timestampFormat,
+      timestampColumnWidth.value
     ),
     modeColumnSize.value
   )
 )
 
 const toolbar = useTemplateRef<{ focus: () => void }>('toolbar')
-
-const root = useTemplateRef<HTMLElement>('root')
 
 const typeToFocus = useTypeToFocus(root)
 useFallbackKeys(root, () => root.value?.querySelector<HTMLElement>('.monitoring-table'))

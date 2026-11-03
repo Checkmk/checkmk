@@ -103,7 +103,10 @@ class ClientSession:
         storage = Storage(AGENT, hostname)
         if (raw := storage.read("session", None)) is None:
             return None
-        raw_json = json.loads(raw)
+        try:
+            raw_json = json.loads(raw)
+        except json.JSONDecodeError:
+            return None
         return cls(location=str(raw_json["location"]), session=str(raw_json["session"]))
 
     def savef(self, hostname: str) -> None:

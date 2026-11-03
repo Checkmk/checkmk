@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import os
 from collections.abc import Mapping
 from contextlib import ExitStack
@@ -21,6 +22,7 @@ from cmk.plugins.proxmox_ve.special_agent.libbackups import (
     BackupInfo,
     BackupTask,
     collect_vm_backup_info,
+    JsonCachedData,
 )
 from cmk.server_side_programs.v1 import Storage
 
@@ -654,3 +656,17 @@ def test_backup_timezone_of_vm_not_in_all_vms_falls_back_to_first_node() -> None
 
 def test_backup_timezone_without_any_node_timezone() -> None:
     assert _backup_timezone("100", {"100": {"node": "pve1"}}, {}) == "UTC"
+
+
+@pytest.mark.xfail(strict=True, raises=json.JSONDecodeError, reason="Crash group 4930")
+def test_json_cached_data_starts_over_on_truncated_cache(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
+    storage = Storage("proxmox_ve", "myhost")
+    storage.write("backup_logs", '{\n  "task-1": [\n    {')
+
+    with JsonCachedData(storage, "backup_logs", lambda _key, _data: False) as setdefault:
+        assert setdefault("task-1", lambda: ["log line"]) == ["log line"]
+
+    assert json.loads(storage.read("backup_logs", "")) == {"task-1": ["log line"]}

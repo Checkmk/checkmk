@@ -742,3 +742,19 @@ def test_parse_ps_lnx(
 ) -> None:
     now = 1540375342
     assert ps_section._parse_ps_lnx(now, string_table) == expected_result
+
+
+@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 4740")
+def test_parse_ps_lnx_reports_cut_off_line() -> None:
+    with pytest.raises(ValueError, match="cut off"):
+        ps_section._parse_ps_lnx(
+            1705152576,
+            [
+                ["[time]"],
+                ["1705152576"],
+                ["[processes]"],
+                ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
+                ["-", "root", "3342", "1604", "00:00:00", "00:00", "59928", "cat"],
+                ["0::/system.slice/omd.service", "site", "7297"],
+            ],
+        )

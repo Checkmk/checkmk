@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.lib.node_exporter import NodeExporter, PromQLMetric
+import pytest
+from pydantic import ValidationError
+
+from cmk.plugins.lib.node_exporter import NodeExporter, NodeExporterQuery, PromQLMetric
 
 
 def test_process_kernel_info() -> None:
@@ -1257,3 +1260,19 @@ def test_process_kernel_info() -> None:
             ("pgmajfault", pgmajfault),
         ],
     ) == {"minikube": expected}
+
+
+@pytest.mark.xfail(strict=True, raises=ValidationError, reason="Crash group 4940")
+def test_cpu_summary_skips_node_without_load() -> None:
+    def get_promql(promql_expression: str) -> list[PromQLMetric]:
+        if promql_expression == NodeExporterQuery.instance_node_cpus_count:
+            return [
+                {"value": 8.0, "labels": {"instance": "node-a"}},
+                {"value": 8.0, "labels": {"instance": "node-b"}},
+            ]
+        return [{"value": 0.5, "labels": {"instance": "node-a"}}]
+
+    assert NodeExporter(get_promql).cpu_summary() == {
+        "node-a": "<<<prometheus_cpu_v1:sep(0)>>>\n"
+        '{"load1":0.5,"load5":0.5,"load15":0.5,"num_cpus":8}'
+    }

@@ -10,6 +10,7 @@ This module provides a collection of utility functions and context managers for 
 the Checkmk agent in various environments.
 """
 
+import ast
 import contextlib
 import json
 import logging
@@ -267,6 +268,47 @@ def register_controller(
         ],
         sudo=True,
     )
+
+
+def register_python_updater(
+    updater: PurePosixPath,
+    site: Site,
+    hostname: HostName,
+    host: HostUnderTest = _LOCAL_HOST,
+) -> None:
+    """Register the Python agent updater at site.
+
+    The updater writes its state file on the host. The site writes the deployment file of the host.
+    """
+    host.run(
+        [
+            updater.as_posix(),
+            "register",
+            "--non-interactive",
+            "--server",
+            site.http_address,
+            "--site",
+            site.id,
+            "--protocol",
+            site.http_proto,
+            "--hostname",
+            hostname,
+            "--user",
+            "cmkadmin",
+            "--password",
+            site.admin_password,
+        ],
+        sudo=True,
+    )
+
+
+def read_python_updater_state(
+    state_file: PurePosixPath, host: HostUnderTest = _LOCAL_HOST
+) -> Mapping[str, object]:
+    # The Python agent updater writes its state file as a Python literal, not as JSON.
+    state = ast.literal_eval(host.run(["cat", state_file.as_posix()], sudo=True).stdout)
+    assert isinstance(state, dict)
+    return state
 
 
 def wait_until_host_receives_data(

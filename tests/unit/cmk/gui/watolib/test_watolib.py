@@ -222,7 +222,6 @@ def test_registered_configvars() -> None:
         "rule_optimizer",
         "selection_livetime",
         "service_view_grouping",
-        "oauth_sessions",
         "session_mgmt",
         "show_livestatus_errors",
         "show_mode",
@@ -356,6 +355,7 @@ def test_registered_configvars() -> None:
             "site_liveproxyd",
             "site_mcp_server",
             "site_mcp_trace_forward",
+            "oauth_sessions",
             "ntop_connection",
         ]
 

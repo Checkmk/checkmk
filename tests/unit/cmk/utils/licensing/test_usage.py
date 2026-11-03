@@ -8,8 +8,10 @@ import logging
 import os
 import time
 from collections.abc import Mapping, Sequence
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
+from typing import Final
 from uuid import UUID
 
 import pytest
@@ -37,9 +39,36 @@ from cmk.licensing.usage import (
     LocalLicenseUsageHistory,
     Now,
     save_extensions,
+    save_license_usage_report,
     try_update_license_usage,
 )
 from cmk.utils import man_pages
+
+_SAMPLE: Final = LicenseUsageSample(
+    instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
+    site_hash="site-hash",
+    version="2.5.0p1",
+    edition="cce",
+    platform="Ubuntu 24.04",
+    is_cma=False,
+    sample_time=1700006400,
+    timezone="UTC",
+    num_hosts=1,
+    num_hosts_cloud=2,
+    num_hosts_shadow=3,
+    num_hosts_excluded=4,
+    num_services=5,
+    num_services_cloud=6,
+    num_services_shadow=7,
+    num_services_excluded=8,
+    num_synthetic_tests=9,
+    num_synthetic_tests_excluded=10,
+    num_synthetic_kpis=11,
+    num_synthetic_kpis_excluded=12,
+    num_active_metric_series=13,
+    extension_ntop=True,
+)
+_OLDER_SAMPLE: Final = replace(_SAMPLE, sample_time=1699920000, num_hosts=14)
 
 
 @pytest.fixture(name="omd_root")
@@ -48,47 +77,19 @@ def omd_root_fixture(tmp_path: Path) -> Path:
 
 
 def test_try_update_license_usage(omd_root: Path) -> None:
-    instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
-    site_hash = "site-hash"
-
     try_update_license_usage(
         Now(dt=datetime.fromtimestamp(time.mktime(time.localtime(time.time() * 2))), tz=""),
-        instance_id,
-        site_hash,
-        lambda *args, **kwargs: LicenseUsageSample(  # noqa: ARG005
-            instance_id=instance_id,
-            site_hash=site_hash,
-            version="",
-            edition="",
-            platform="A very long string with len>50 describing the plat",
-            is_cma=False,
-            sample_time=1,
-            timezone="",
-            num_hosts=2,
-            num_hosts_cloud=1,
-            num_hosts_shadow=6,
-            num_hosts_excluded=3,
-            num_services=4,
-            num_services_cloud=2,
-            num_services_shadow=7,
-            num_services_excluded=5,
-            num_synthetic_tests=1,
-            num_synthetic_tests_excluded=2,
-            num_synthetic_kpis=3,
-            num_synthetic_kpis_excluded=4,
-            num_active_metric_series=52,
-            extension_ntop=True,
-        ),
+        _SAMPLE.instance_id,
+        _SAMPLE.site_hash,
+        lambda *args, **kwargs: _SAMPLE,  # noqa: ARG005
         omd_root=omd_root,
     )
-    assert (
-        len(
-            LocalLicenseUsageHistory.parse(
-                load_raw_license_usage_report(get_license_usage_report_file_path(omd_root))
-            )
-        )
-        == 1
+
+    history = LocalLicenseUsageHistory.parse(
+        load_raw_license_usage_report(get_license_usage_report_file_path(omd_root))
     )
+
+    assert list(history) == [_SAMPLE]
 
 
 def test_try_update_license_usage_livestatus_socket_error(omd_root: Path) -> None:
@@ -144,37 +145,11 @@ def test_try_update_license_usage_livestatus_not_found_error(omd_root: Path) -> 
 
 
 def test_try_update_license_usage_next_run_ts_not_reached(omd_root: Path) -> None:
-    instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
-    site_hash = "site-hash"
-
     try_update_license_usage(
         Now(dt=datetime.fromtimestamp(time.mktime(time.localtime(-1))), tz=""),
-        instance_id,
-        site_hash,
-        lambda *args, **kwargs: LicenseUsageSample(  # noqa: ARG005
-            instance_id=instance_id,
-            site_hash=site_hash,
-            version="",
-            edition="",
-            platform="A very long string with len>50 describing the plat",
-            is_cma=False,
-            sample_time=1,
-            timezone="",
-            num_hosts=2,
-            num_hosts_cloud=1,
-            num_hosts_shadow=6,
-            num_hosts_excluded=3,
-            num_services=4,
-            num_services_cloud=2,
-            num_services_shadow=7,
-            num_services_excluded=5,
-            num_synthetic_tests=1,
-            num_synthetic_tests_excluded=2,
-            num_synthetic_kpis=3,
-            num_synthetic_kpis_excluded=4,
-            num_active_metric_series=52,
-            extension_ntop=True,
-        ),
+        _SAMPLE.instance_id,
+        _SAMPLE.site_hash,
+        lambda *args, **kwargs: _SAMPLE,  # noqa: ARG005
         omd_root=omd_root,
     )
     assert (
@@ -1010,6 +985,64 @@ def test_license_usage_report_from_remote() -> None:
             }
         )
     assert str(e.value) == "Unknown protocol version for the usage history: '-1'"
+
+
+def test_saved_history_parses_back_unchanged(tmp_path: Path) -> None:
+    history = LocalLicenseUsageHistory([_SAMPLE, _OLDER_SAMPLE])
+    report_file_path = tmp_path / "history.json"
+    save_license_usage_report(
+        report_file_path,
+        RawLicenseUsageReport(VERSION=CURRENT_USAGE_HISTORY_VERSION, history=history.for_report()),
+    )
+
+    parsed = LocalLicenseUsageHistory.parse(load_raw_license_usage_report(report_file_path))
+
+    assert list(parsed) == list(history)
+
+
+def test_parse_rejects_a_sample_without_site_hash() -> None:
+    raw_sample = {k: v for k, v in _SAMPLE.for_report().items() if k != "site_hash"}
+
+    with pytest.raises(ValueError):
+        LocalLicenseUsageHistory.parse(
+            {"VERSION": CURRENT_USAGE_HISTORY_VERSION, "history": [raw_sample]}
+        )
+
+
+def test_parse_gives_samples_before_1_5_no_instance_id() -> None:
+    history = LocalLicenseUsageHistory.parse({"VERSION": "1.3", "history": [_SAMPLE.for_report()]})
+
+    assert [sample.instance_id for sample in history] == [None]
+
+
+@pytest.mark.parametrize(
+    "raw_report",
+    [
+        pytest.param(None, id="none"),
+        pytest.param({}, id="empty"),
+        pytest.param({"VERSION": CURRENT_USAGE_HISTORY_VERSION}, id="without history"),
+        pytest.param({"VERSION": CURRENT_USAGE_HISTORY_VERSION, "history": []}, id="empty history"),
+    ],
+)
+def test_parse_of_report_without_samples_gives_empty_history(raw_report: object) -> None:
+    assert len(LocalLicenseUsageHistory.parse(raw_report)) == 0
+
+
+def test_parse_rejects_an_unknown_version_even_without_samples() -> None:
+    with pytest.raises(ValueError):
+        LocalLicenseUsageHistory.parse({"VERSION": "-1", "history": []})
+
+
+@pytest.mark.parametrize(
+    "raw_report",
+    [
+        pytest.param([("VERSION", CURRENT_USAGE_HISTORY_VERSION)], id="list"),
+        pytest.param("report", id="string"),
+    ],
+)
+def test_parse_rejects_a_report_that_is_not_a_dict(raw_report: object) -> None:
+    with pytest.raises(TypeError, match="Wrong report type"):
+        LocalLicenseUsageHistory.parse(raw_report)
 
 
 def test_history_add_sample() -> None:

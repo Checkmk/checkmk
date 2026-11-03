@@ -881,6 +881,85 @@ def test_discovery_dom(section_dom: ct.Section) -> None:
     )
 
 
+@pytest.mark.parametrize(
+    "alias_mapping",
+    [
+        pytest.param(
+            [["1192.0", ".1.3.6.1.2.1.2.2.1.1.2"], ["3056.0", ".1.3.6.1.2.1.2.2.1.1.14"]],
+            id="port mapped first",
+        ),
+        pytest.param(
+            [["3056.0", ".1.3.6.1.2.1.2.2.1.1.14"], ["1192.0", ".1.3.6.1.2.1.2.2.1.1.2"]],
+            id="management port mapped first",
+        ),
+    ],
+)
+def test_discovery_dom_uses_admin_state_of_closest_interface(
+    alias_mapping: StringTable,
+) -> None:
+    # IOS XR 25.2: the management port is mapped directly below the mother board
+    section = ct.parse_cisco_temperature(
+        [
+            [
+                ["35", "1", "0/RP0/CPU0-Mother Board"],
+                ["451", "35", "0/RP0/CPU0-QSFP_DD Optics Port 0"],
+                ["1192", "451", "0/RP0/CPU0-HundredGigE0/0/0/0"],
+                ["801", "451", "0/RP0/CPU0-QSFP bay 0"],
+                ["2457601", "801", "HundredGigE0/0/0/0"],
+                ["2457870", "2457601", "HundredGigE0/0/0/0-Tx Lane 0 Power"],
+                ["3056", "35", "0/RP0/CPU0-MgmtEth0/RP0/CPU0/0"],
+            ],
+            [["2457870", "14", "9", "1", "-14", "1"]],
+            [],
+            [],
+            [
+                ["2", "HundredGigE0/0/0/0", "1"],
+                ["14", "MgmtEth0/RP0/CPU0/0", "2"],
+            ],
+            alias_mapping,
+        ]
+    )
+
+    services = list(ct.discover_cisco_temperature_dom({"admin_states": ["1"]}, section))
+
+    assert services == [Service(item="HundredGigE0/0/0/0-Tx Lane 0 Power")]
+
+
+def test_discovery_dom_uses_admin_state_of_enclosing_interface_outside_ports() -> None:
+    section = ct.parse_cisco_temperature(
+        [
+            [
+                ["35", "1", "0/RP0/CPU0-Mother Board"],
+                ["451", "35", "0/RP0/CPU0-QSFP_DD Optics Port 0"],
+                ["1192", "451", "0/RP0/CPU0-HundredGigE0/0/0/0"],
+                ["801", "451", "0/RP0/CPU0-QSFP bay 0"],
+                ["2457601", "801", "HundredGigE0/0/0/0"],
+                ["2457870", "2457601", "HundredGigE0/0/0/0-Tx Lane 0 Power"],
+                ["3056", "35", "0/RP0/CPU0-MgmtEth0/RP0/CPU0/0"],
+                ["3060", "35", "0/RP0/CPU0-Board Power"],
+            ],
+            [
+                ["2457870", "14", "9", "1", "-14", "1"],
+                ["3060", "14", "9", "1", "-20", "1"],
+            ],
+            [],
+            [],
+            [
+                ["2", "HundredGigE0/0/0/0", "1"],
+                ["14", "MgmtEth0/RP0/CPU0/0", "2"],
+            ],
+            [
+                ["1192.0", ".1.3.6.1.2.1.2.2.1.1.2"],
+                ["3056.0", ".1.3.6.1.2.1.2.2.1.1.14"],
+            ],
+        ]
+    )
+
+    services = list(ct.discover_cisco_temperature_dom({"admin_states": ["2"]}, section))
+
+    assert services == [Service(item="0/RP0/CPU0-Board Power")]
+
+
 def test_discovery_not_ok_sensors(section_not_ok_sensors: ct.Section) -> None:
     assert not list(ct.discover_cisco_temperature(section_not_ok_sensors))
     assert not list(

@@ -92,7 +92,7 @@ class Profile:
             f.write(
                 "#!/usr/bin/env python3\n"
                 "import pstats\n"
-                f'stats = pstats.Stats("{self._profile_file}")\n'
+                f"stats = pstats.Stats({str(self._profile_file)!r})\n"
                 "stats.sort_stats('cumtime').print_stats()\n"
             )
         script_path.chmod(0o755)

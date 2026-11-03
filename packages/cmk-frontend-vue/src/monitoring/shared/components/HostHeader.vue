@@ -20,6 +20,7 @@ import HostStateDisplay from '@/monitoring/shared/components/HostStateDisplay.vu
 import StateModeIcons from '@/monitoring/shared/components/StateModeIcons.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 import SlideInHeader from '@/monitoring/shared/components/slide-in/SlideInHeader.vue'
+import { hostRefOf } from '@/monitoring/shared/objectRefs'
 
 const props = withDefaults(
   defineProps<{
@@ -36,7 +37,7 @@ const emit = defineEmits<{
   (event: 'titleClick', mouseEvent: MouseEvent): void
 }>()
 
-const hostRef = computed<HostRef>(() => ({ site_id: props.host.site_id, name: props.host.name }))
+const hostRef = computed(() => hostRefOf(props.host))
 
 function onSelect(action: CellAction): void {
   emit('command', { id: action.id, host: hostRef.value })

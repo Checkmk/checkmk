@@ -8,7 +8,7 @@ import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
-import type { HostOverview, HostRef } from '@/monitoring/shared/api/types'
+import type { HostOverview } from '@/monitoring/shared/api/types'
 import ServiceSummaryBar from '@/monitoring/shared/components/ServiceSummaryBar.vue'
 import type { LabelCellItem } from '@/monitoring/shared/components/cell/labelCellItem'
 import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips.vue'
@@ -16,6 +16,7 @@ import OverviewDetailList from '@/monitoring/shared/components/slide-in/Overview
 import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { toNameItems, toTagItems } from '@/monitoring/shared/labels'
+import { hostRefOf } from '@/monitoring/shared/objectRefs'
 import type { ColumnCondition } from '@/monitoring/shared/services/MonitoringService'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
@@ -35,7 +36,7 @@ const props = withDefaults(
 
 const { _t } = usei18n()
 
-const hostRef = computed<HostRef>(() => ({ site_id: props.data.site_id, name: props.data.name }))
+const hostRef = computed(() => hostRefOf(props.data))
 
 const tagChips = computed(() => toTagItems(props.data.tags))
 const contactGroupChips = computed(() => toNameItems(props.data.contact_groups))

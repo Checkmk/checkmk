@@ -28,6 +28,7 @@ import {
 } from '@/monitoring/shared/displayOptionsState/urlState'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
 import { labelCondition } from '@/monitoring/shared/labels'
+import { hostRefOf } from '@/monitoring/shared/objectRefs'
 import { filterTimestampsAsShown } from '@/monitoring/shared/timestampFilters'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import { IMMEDIATE_HOST_COMMAND_IDS, useHostActions } from '@/monitoring/shared/useHostActions'
@@ -214,12 +215,8 @@ function rowKey(row: HostEntry): string {
   return `${row.site_id}/${row.name}`
 }
 
-function hostRef(row: HostEntry): HostRef {
-  return { site_id: row.site_id, name: row.name }
-}
-
 function hostActionTargets(rows: HostEntry[], actionId: string): HostRef[] {
-  return rowsToActOn(rows, actionId).map(hostRef)
+  return rowsToActOn(rows, actionId).map(hostRefOf)
 }
 
 function hostSelectionLabel(count: number): TranslatedString {
@@ -337,7 +334,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :columns="tableColumns"
         :column-pinning="columnPinning"
         :get-row-key="rowKey"
-        :get-action-target="hostRef"
+        :get-action-target="hostRefOf"
         :get-action-targets="hostActionTargets"
         :immediate-action-ids="IMMEDIATE_HOST_COMMAND_IDS"
         :selection-label="hostSelectionLabel"

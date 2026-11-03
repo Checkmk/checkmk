@@ -42,6 +42,7 @@ import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import EventHistoryApp from '@/monitoring/shared/events/EventHistoryApp.vue'
 import { fetchEvents } from '@/monitoring/shared/events/api'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
+import { hostRefOf } from '@/monitoring/shared/objectRefs'
 import type { ColumnCondition } from '@/monitoring/shared/services/MonitoringService'
 import { useSlideInActions } from '@/monitoring/shared/services/useSlideInActions'
 import type { DisplayOptions } from '@/monitoring/shared/types'
@@ -88,9 +89,7 @@ const hostApi = new HostApi()
 
 const open = computed(() => props.host !== null)
 
-const targets = computed<HostRef[]>(() =>
-  props.host ? [{ site_id: props.host.site_id, name: props.host.name }] : []
-)
+const targets = computed<HostRef[]>(() => (props.host ? [hostRefOf(props.host)] : []))
 
 // Only the actions the user may run and that this page actually implements reach the buttons.
 const slideInActions = computed(() =>
@@ -228,8 +227,7 @@ const actionMenuLoader = computed<(() => Promise<CellAction[]>) | undefined>(() 
   if (!host) {
     return undefined
   }
-  const hostRef: HostRef = { site_id: host.site_id, name: host.name }
-  return () => props.loadActionMenu(hostRef)
+  return () => props.loadActionMenu(hostRefOf(host))
 })
 
 const tabs = computed<SlideInTab[]>(() => {
@@ -248,7 +246,7 @@ const tabs = computed<SlideInTab[]>(() => {
         displayOptions: props.displayOptions,
         filterLabelsBy: props.filterLabelsBy
       },
-      load: () => loadOverview({ site_id: host.site_id, name: host.name })
+      load: () => loadOverview(hostRefOf(host))
     },
     {
       id: 'history',
@@ -256,7 +254,7 @@ const tabs = computed<SlideInTab[]>(() => {
       component: markRaw(EventHistoryApp),
       skeleton: markRaw(TableSkeleton),
       props: { subject: 'host' },
-      load: () => fetchEvents({ site_id: host.site_id, name: host.name })
+      load: () => fetchEvents(hostRefOf(host))
     }
   ]
 })

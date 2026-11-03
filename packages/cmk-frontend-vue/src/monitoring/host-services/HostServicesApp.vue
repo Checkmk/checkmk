@@ -37,6 +37,7 @@ import {
   seedDisplayOptions
 } from '@/monitoring/shared/displayOptionsState/urlState'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
+import { serviceCommand, serviceRefOf } from '@/monitoring/shared/objectRefs'
 import { filterTimestampsAsShown } from '@/monitoring/shared/timestampFilters'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import { useHostActions } from '@/monitoring/shared/useHostActions'
@@ -355,7 +356,7 @@ useUrlSync([
 ])
 
 function serviceOfHost(description: string): ServiceRef {
-  return { host, description }
+  return serviceRefOf(host, description)
 }
 
 function serviceRef(row: HostServiceEntry): ServiceRef {
@@ -369,13 +370,6 @@ function serviceActionTargets(rows: HostServiceEntry[], actionId: string): Servi
     return rowsToActOn(rows, actionId).map(serviceRef)
   }
   return [...new Set(rows.flatMap((row) => row.reschedule?.target ?? []))].map(serviceOfHost)
-}
-
-function onServiceCommand(
-  runCommand: (command: { id: string; target: ServiceRef }) => void,
-  command: { id: string; target: string }
-): void {
-  runCommand({ id: command.id, target: serviceOfHost(command.target) })
 }
 
 function explainService(service: HostServiceEntry): void {
@@ -455,7 +449,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
             :ai-explain="aiExplain && hostServicesService.hostEntry.value !== null"
             @open="openSlideIn"
             @open-graphs="openServiceGraphs"
-            @command="onServiceCommand(onCommand, $event)"
+            @command="onCommand(serviceCommand(host, $event))"
             @explain="explainService"
           />
         </template>

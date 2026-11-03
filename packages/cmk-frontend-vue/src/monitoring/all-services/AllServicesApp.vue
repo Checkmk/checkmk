@@ -46,6 +46,7 @@ import { buildFilterUrlSchema } from '@/monitoring/shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '@/monitoring/shared/filterState/urlState'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
 import { tableKeyboardHints } from '@/monitoring/shared/keyboardHints'
+import { hostRefOfService, serviceCommand, serviceRefOf } from '@/monitoring/shared/objectRefs'
 import {
   buildColumnStorageKey,
   buildDisplayOptionsStorageKey,
@@ -86,10 +87,6 @@ const props = defineProps<MonitoringAllServicesApp>()
 const serviceListing = useServiceListing(props)
 
 const aiExplain = props.ai_explain ?? false
-
-function hostOf(service: ServiceEntry): HostRef {
-  return { name: service.host_name, site_id: service.site_id }
-}
 
 const columns = useAllServicesColumns({
   includeSelect: serviceListing.mayActOnSelection,
@@ -186,7 +183,7 @@ const slideInService = ref<ServiceEntry | null>(null)
 const slideInTabId = ref<string | undefined>(undefined)
 const NO_HOST: HostRef = { name: '', site_id: '' }
 const slideInHost = computed<HostRef>(() =>
-  slideInService.value === null ? NO_HOST : hostOf(slideInService.value)
+  slideInService.value === null ? NO_HOST : hostRefOfService(slideInService.value)
 )
 
 function loadSlideInActionMenu(service: string): Promise<CellAction[]> {
@@ -248,7 +245,7 @@ const SERVICE_SLIDE_IN: SlideInUrlDescriptor<ServiceEntry, ServiceRef> = {
     if (!name || !siteId || !description) {
       return null
     }
-    return { host: { name, site_id: siteId }, description }
+    return serviceRefOf({ site_id: siteId, name }, description)
   },
   matches: (service, identity) =>
     service.name === identity.description &&
@@ -327,7 +324,7 @@ useUrlSync([
 ])
 
 function serviceRef(row: ServiceEntry): ServiceRef {
-  return { host: hostOf(row), description: row.name }
+  return serviceRefOf(hostRefOfService(row), row.name)
 }
 
 function serviceActionTargets(rows: ServiceEntry[], actionId: string): ServiceRef[] {
@@ -338,7 +335,7 @@ function serviceActionTargets(rows: ServiceEntry[], actionId: string): ServiceRe
   for (const row of rows) {
     const description = row.reschedule?.target
     if (description !== undefined) {
-      const target = { host: hostOf(row), description }
+      const target = serviceRefOf(hostRefOfService(row), description)
       targets.set(JSON.stringify([target.host.site_id, target.host.name, description]), target)
     }
   }
@@ -394,19 +391,13 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
             :table-row="tableRow"
             :may-reschedule="serviceListing.mayReschedule"
             :load-action-menu="
-              (service: string) => serviceListing.loadActionMenu(hostOf(row), service)
+              (service: string) => serviceListing.loadActionMenu(hostRefOfService(row), service)
             "
             :display-options="displayOptions"
             @open="openServiceSlideIn(row)"
             @open-graphs="openServiceGraphs(row)"
             @open-host="openHostSlideIn"
-            @command="
-              (command) =>
-                onCommand({
-                  id: command.id,
-                  target: { host: hostOf(row), description: command.target }
-                })
-            "
+            @command="(command) => onCommand(serviceCommand(hostRefOfService(row), command))"
           />
         </template>
         <template #display-options="{ close }">

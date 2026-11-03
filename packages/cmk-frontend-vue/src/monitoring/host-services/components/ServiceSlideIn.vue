@@ -37,6 +37,7 @@ import SlideInActions from '@/monitoring/shared/components/slide-in/SlideInActio
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import EventHistoryApp from '@/monitoring/shared/events/EventHistoryApp.vue'
 import { fetchEvents } from '@/monitoring/shared/events/api'
+import { serviceRefOf } from '@/monitoring/shared/objectRefs'
 import { useSlideInActions } from '@/monitoring/shared/services/useSlideInActions'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
@@ -147,7 +148,7 @@ const slideInActions = computed<CellAction[]>(() => [
 ])
 
 function serviceOfHost(description: string): ServiceRef {
-  return { host: props.host, description }
+  return serviceRefOf(props.host, description)
 }
 
 const targets = computed<ServiceRef[]>(() =>

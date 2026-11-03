@@ -29,6 +29,7 @@ import {
   toNameItems,
   toTagItems
 } from '@/monitoring/shared/labels'
+import { hostRefOf } from '@/monitoring/shared/objectRefs'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const props = withDefaults(
@@ -66,7 +67,7 @@ const relationsLabel = computed(() => {
 
 const SERVICE_COUNT_MIN_WIDTH = 35
 
-const hostRef = computed<HostRef>(() => ({ site_id: props.row.site_id, name: props.row.name }))
+const hostRef = computed(() => hostRefOf(props.row))
 
 const actionButtons = computed<CellAction[]>(() =>
   (props.row.setup_access === true ? props.rowActions : []).map((action) => ({

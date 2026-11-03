@@ -790,6 +790,12 @@ def _make_rule() -> EventRule:
             False,
             id="site not in allowed list",
         ),
+        pytest.param(
+            _make_rule() | {"match_site": []},
+            {"OMD_SITE": "site_a"},
+            False,
+            id="empty list matches no site",
+        ),
     ],
 )
 def test_event_match_site(rule: EventRule, context: EventContext, expected_none: bool) -> None:

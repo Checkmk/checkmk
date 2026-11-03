@@ -1939,17 +1939,19 @@ def test_user_notification_rules_are_ordered_by_contact_name() -> None:
 
 
 @pytest.mark.parametrize(
-    "rule, expected_sites",
+    "rule, authorized_sites, expected_sites",
     [
-        pytest.param(_make_rule(), ["site_a"], id="authorized sites become the site condition"),
-        pytest.param(_make_rule() | {"match_site": ["site_b"]}, ["site_b"], id="explicit site condition is kept"),
+        pytest.param(_make_rule(), ["site_a", "site_b"], ["site_a", "site_b"], id="authorized sites become the site condition"),
+        pytest.param(_make_rule() | {"match_site": ["site_b", "site_c"]}, ["site_a", "site_b"], ["site_b"], id="site condition is limited to authorized sites"),
+        pytest.param(_make_rule() | {"match_site": ["site_c"]}, ["site_a", "site_b"], [], id="no authorized site left"),
+        pytest.param(_make_rule() | {"match_site": ["site_c"]}, None, ["site_c"], id="user authorized for all sites"),
     ],
 )  # fmt: skip
 def test_user_notification_rules_respect_authorized_sites(
-    rule: EventRule, expected_sites: list[str]
+    rule: EventRule, authorized_sites: list[str] | None, expected_sites: list[str]
 ) -> None:
     contacts = {
-        "bob": Contact({"notification_rules": [rule], "authorized_sites": ["site_a"]}),
+        "bob": Contact({"notification_rules": [rule], "authorized_sites": authorized_sites}),
     }
 
     (user_rule,) = notify.user_notification_rules(contacts)
@@ -2049,6 +2051,35 @@ def test_rule_contacts_skip_contacts_with_disabled_notifications(
         )
         == expected
     )
+
+
+_PERSONAL_RULE: Final = _make_rule() | {
+    "contact": "alice",
+    "contact_users": ["alice"],
+    "notify_plugin": ("mail", NotificationParameterID("params")),
+}
+
+
+@pytest.mark.parametrize(
+    "rule, contacts_value, matches",
+    [
+        pytest.param(_PERSONAL_RULE, "alice,bob", True, id="owner is a contact of the object"),
+        pytest.param(_PERSONAL_RULE, "bob", False, id="owner is no contact of the object"),
+        pytest.param(_PERSONAL_RULE, "?", False, id="contacts of the object are unknown"),
+        pytest.param(_PERSONAL_RULE, "", False, id="object has no contacts"),
+        pytest.param(_PERSONAL_RULE | {"notify_plugin": ("mail", None)}, "bob", True, id="cancelling rule"),
+        pytest.param(_make_rule(), "bob", True, id="global rule"),
+    ],
+)  # fmt: skip
+def test_personal_rule_only_matches_objects_of_its_owner(
+    rule: EventRule, contacts_value: str, matches: bool
+) -> None:
+    assert (
+        notify.rbn_match_personal_rule_scope(
+            rule, EventContext({"CONTACTS": contacts_value}), False, {}
+        )
+        is None
+    ) == matches
 
 
 def test_contact_information_of_contact_dicts_includes_custom_macros() -> None:
@@ -2355,6 +2386,7 @@ def _do_notify(
     args: list[str],
     notification_config: notify.NotificationConfig,
     timeperiods_active: Mapping[str, bool] | None = None,
+    config_contacts: Mapping[ContactName, Contact] = _HARRY,
 ) -> int | None:
     return notify.do_notify(
         {},
@@ -2363,7 +2395,7 @@ def _do_notify(
         define_servicegroups={},
         get_http_proxy=_environment_proxy,
         ensure_nagios=lambda _site: None,
-        config_contacts=_HARRY,
+        config_contacts=config_contacts,
         keepalive=False,
         all_timeperiods={},
         timeperiods_active={} if timeperiods_active is None else timeperiods_active,
@@ -2512,6 +2544,29 @@ def test_fallback_address_is_notified_when_no_rule_matches(tmp_path: Path) -> No
     _install_plugin("my_script", tmp_path)
 
     _do_notify([], _notification_config([], fallback_email="fb@example.com"))
+
+    assert _sent_to(tmp_path) == ["fb@example.com"]
+
+
+@pytest.mark.usefixtures(
+    "core_notification", "release_locks", "no_monitoring_core", "isolated_logging"
+)
+def test_fallback_address_is_notified_when_only_a_foreign_personal_rule_applies(
+    tmp_path: Path,
+) -> None:
+    _install_plugin("my_script", tmp_path)
+    contacts = {
+        ContactName("harry"): Contact(
+            {
+                "email": "harry@example.com",
+                "notification_rules": [_make_add_rule(contact_users=["harry"])],
+            }
+        )
+    }
+
+    _do_notify(
+        [], _notification_config([], fallback_email="fb@example.com"), config_contacts=contacts
+    )
 
     assert _sent_to(tmp_path) == ["fb@example.com"]
 

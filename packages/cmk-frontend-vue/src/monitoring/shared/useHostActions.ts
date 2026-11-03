@@ -31,7 +31,7 @@ import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell
 
 /** What a page sends about the host commands and the Setup links it offers. */
 export interface HostActionsPayload extends MonitoringCommandsPayload {
-  row_actions?: { ident: string; title: string; icon: string; url: string }[] | undefined
+  links?: { ident: string; title: string; icon: string; url: string }[] | undefined
 }
 
 export interface HostActions {
@@ -65,7 +65,7 @@ export function useHostActions(payload: HostActionsPayload): HostActions {
     icon: ACTION_ICON_OVERRIDES[action.ident] ?? (action.icon as SimpleIcons)
   }))
 
-  const rowActions: CellAction[] = (payload.row_actions ?? []).map((action) => ({
+  const rowActions: CellAction[] = (payload.links ?? []).map((action) => ({
     id: action.ident,
     label: action.title as TranslatedString,
     icon: action.icon as SimpleIcons,

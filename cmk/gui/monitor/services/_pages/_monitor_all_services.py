@@ -42,7 +42,7 @@ from cmk.shared_typing.monitoring.all_services import (
     MonitoringAction,
     MonitoringAllServicesApp,
     MonitoringPageLinkButton,
-    RowAction,
+    RowLink,
     ServiceActionIdent,
     Site,
 )
@@ -126,8 +126,8 @@ class MonitorAllServicesPage(Page):
                             user, "host", HOST_SUPPORTED_ACTIONS
                         )
                     ],
-                    host_row_actions=[
-                        RowAction(ident=link.ident, title=link.title, icon=link.icon, url=link.url)
+                    host_links=[
+                        RowLink(ident=link.ident, title=link.title, icon=link.icon, url=link.url)
                         for link in host_setup_links(ctx.config, user)
                     ],
                     downtime_recurrences=[

@@ -50,7 +50,7 @@ from cmk.shared_typing.monitoring.all_hosts import (
     MonitoringAction,
     MonitoringAllHostsApp,
     MonitoringPageLinkButton,
-    RowAction,
+    RowLink,
     Site,
 )
 from cmk.utils import paths
@@ -152,8 +152,8 @@ class MonitorAllHostsPage(Page):
                         DowntimeRecurrence(recur=recurrence.recur, title=recurrence.title)
                         for recurrence in self._recurrences.offered()
                     ],
-                    row_actions=[
-                        RowAction(ident=link.ident, title=link.title, icon=link.icon, url=link.url)
+                    links=[
+                        RowLink(ident=link.ident, title=link.title, icon=link.icon, url=link.url)
                         for link in host_setup_links(ctx.config, user)
                     ],
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),

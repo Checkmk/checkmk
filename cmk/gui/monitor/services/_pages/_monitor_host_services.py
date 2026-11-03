@@ -51,7 +51,7 @@ from cmk.shared_typing.monitoring.host_services import (
     MonitoringAction,
     MonitoringHostServicesApp,
     MonitoringPageLinkButton,
-    RowAction,
+    RowLink,
     ServiceActionIdent,
 )
 from cmk.utils import paths
@@ -62,9 +62,9 @@ _ALL_HOSTS_PERMISSION = "view.allhosts"
 _RULESETS_PERMISSION = "wato.rulesets"
 
 
-def _row_actions(
+def _row_links(
     config: Config, hostname: HostName, *, setup_access: Callable[[], bool]
-) -> list[RowAction]:
+) -> list[RowLink]:
     """The links a row offers on the service it shows.
 
     The host is the page, so it is part of the address already; the service is not, and travels as
@@ -76,7 +76,7 @@ def _row_actions(
     if not config.wato_enabled or not user.may(_RULESETS_PERMISSION) or not setup_access():
         return []
     return [
-        RowAction(
+        RowLink(
             ident="parameters",
             title=_("Parameters"),
             icon="rulesets",
@@ -184,7 +184,7 @@ class MonitorHostServicesPage(Page):
                         DowntimeRecurrence(recur=recurrence.recur, title=recurrence.title)
                         for recurrence in self._recurrences.offered()
                     ],
-                    row_actions=_row_actions(
+                    links=_row_links(
                         ctx.config,
                         hostname,
                         setup_access=lambda: self._setup_folders(ctx.config, user).may_read_host(
@@ -192,8 +192,8 @@ class MonitorHostServicesPage(Page):
                         ),
                     ),
                     host_actions=self._permitted_host_actions(),
-                    host_row_actions=[
-                        RowAction(ident=link.ident, title=link.title, icon=link.icon, url=link.url)
+                    host_links=[
+                        RowLink(ident=link.ident, title=link.title, icon=link.icon, url=link.url)
                         for link in host_setup_links(ctx.config, user)
                     ],
                     acknowledge_presets_url=acknowledge_presets_url(ctx.config),

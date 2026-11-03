@@ -1163,7 +1163,7 @@ describe('the host slide-in', () => {
 test('asks whether the host may be opened in Setup when the page offers host Setup links', async () => {
   mockServices([makeApiEntry()])
   renderApp({
-    host_row_actions: [
+    host_links: [
       {
         ident: 'edit',
         title: 'Edit host',

@@ -27,9 +27,9 @@
       "items": { "$ref": "monitoring/_base.json#/$defs/monitoring_action" },
       "default": []
     },
-    "host_row_actions": {
+    "host_links": {
       "type": "array",
-      "items": { "$ref": "monitoring/_base.json#/$defs/row_action" },
+      "items": { "$ref": "monitoring/_base.json#/$defs/row_link" },
       "default": []
     },
     "export_event": {

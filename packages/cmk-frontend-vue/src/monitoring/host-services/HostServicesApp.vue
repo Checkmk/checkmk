@@ -105,7 +105,7 @@ const serviceListing = useServiceListing(props)
 
 // Always-visible inline buttons (parameters). Their url keeps the {service} placeholder,
 // resolved per row in HostServicesRow.
-const rowActionButtons: CellAction[] = (props.row_actions ?? []).map((action) => ({
+const rowActionButtons: CellAction[] = (props.links ?? []).map((action) => ({
   id: action.ident,
   label: action.title as TranslatedString,
   icon: action.icon as SimpleIcons,
@@ -121,7 +121,7 @@ function loadActionMenu(service: string): Promise<CellAction[]> {
 const hostActions = useHostActions({
   ...props,
   actions: props.host_actions,
-  row_actions: props.host_row_actions
+  links: props.host_links
 })
 
 // What the host slide-in reads on the host of the page beyond what its header shows.

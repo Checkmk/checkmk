@@ -159,10 +159,7 @@ export class HostsTableDescriptor extends MonitoringTableDescriptor<
   rowActions(
     offer: MonitoringTableActionOffer
   ): MonitoringTableRowActions<HostEntry, RowCommandTarget<typeof HostRow>> {
-    const { rowActions, loadActionMenu, registry } = useHostActions({
-      actions: offer.actions,
-      row_actions: offer.links
-    })
+    const { rowActions, loadActionMenu, registry } = useHostActions(offer)
     return {
       rowProps: () =>
         ({ rowActions, loadActionMenu }) satisfies Partial<ComponentProps<typeof HostRow>>,

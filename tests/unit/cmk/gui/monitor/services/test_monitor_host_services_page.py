@@ -23,7 +23,7 @@ from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
 from cmk.gui.monitor.services._pages._monitor_host_services import (
     _host_url,
     _make_breadcrumb,
-    _row_actions,
+    _row_links,
     MonitorHostServicesPage,
 )
 from cmk.gui.page_menu import PageMenu, PageMenuEntry, PageMenuLink
@@ -138,38 +138,38 @@ def test_breadcrumb_drops_all_hosts_without_permission_for_it() -> None:
 
 
 @pytest.mark.usefixtures("with_user_login")
-def test_row_actions_link_the_parameters_of_the_service_in_the_row() -> None:
+def test_row_links_link_the_parameters_of_the_service_in_the_row() -> None:
     config = Config()
     config.wato_enabled = True
 
     assert [
-        (action.ident, action.url)
-        for action in _row_actions(config, HostName("web-1"), setup_access=lambda: True)
+        (link.ident, link.url)
+        for link in _row_links(config, HostName("web-1"), setup_access=lambda: True)
     ] == [("parameters", "wato.py?mode=object_parameters&host=web-1&service={service}")]
 
 
 @pytest.mark.usefixtures("with_user_login")
-def test_row_actions_are_dropped_where_setup_is_off() -> None:
+def test_row_links_are_dropped_where_setup_is_off() -> None:
     config = Config()
     config.wato_enabled = False
 
-    assert _row_actions(config, HostName("web-1"), setup_access=lambda: True) == []
+    assert _row_links(config, HostName("web-1"), setup_access=lambda: True) == []
 
 
 @pytest.mark.usefixtures("user_without_permissions")
-def test_row_actions_are_dropped_without_the_rulesets_permission() -> None:
+def test_row_links_are_dropped_without_the_rulesets_permission() -> None:
     config = Config()
     config.wato_enabled = True
 
-    assert _row_actions(config, HostName("web-1"), setup_access=lambda: True) == []
+    assert _row_links(config, HostName("web-1"), setup_access=lambda: True) == []
 
 
 @pytest.mark.usefixtures("with_user_login")
-def test_row_actions_are_dropped_for_a_host_the_user_may_not_open_in_setup() -> None:
+def test_row_links_are_dropped_for_a_host_the_user_may_not_open_in_setup() -> None:
     config = Config()
     config.wato_enabled = True
 
-    assert _row_actions(config, HostName("web-1"), setup_access=lambda: False) == []
+    assert _row_links(config, HostName("web-1"), setup_access=lambda: False) == []
 
 
 def _build_page_menu(breadcrumb: Breadcrumb | None = None) -> PageMenu:

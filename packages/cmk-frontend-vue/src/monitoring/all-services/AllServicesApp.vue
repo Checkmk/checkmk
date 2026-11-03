@@ -223,7 +223,7 @@ function closeServiceSlideIn(): void {
 const hostActions = useHostActions({
   ...props,
   actions: props.host_actions ?? [],
-  row_actions: props.host_row_actions ?? []
+  links: props.host_links ?? []
 })
 const slideInHostEntry = ref<HostSlideInSubject | null>(null)
 const hostSlideInTabId = ref<string | undefined>(undefined)

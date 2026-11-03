@@ -13,9 +13,9 @@
       "items": { "$ref": "#/$defs/monitoring_action" },
       "default": []
     },
-    "row_actions": {
+    "links": {
       "type": "array",
-      "items": { "$ref": "#/$defs/row_action" },
+      "items": { "$ref": "#/$defs/row_link" },
       "default": []
     },
     "may_ignore_hard_limit": {
@@ -98,7 +98,7 @@
       "type": "string",
       "enum": ["community", "pro", "ultimate", "ultimatemt", "cloud"]
     },
-    "row_action": {
+    "row_link": {
       "type": "object",
       "properties": {
         "ident": { "type": "string" },

@@ -47,6 +47,7 @@ class MemoryType(Enum):
     ddr3 = "24"
     fbd2 = "25"
     ddr4 = "26"
+    ddr5 = "27"
 
     def monitoring_state(self) -> State:
         return State.OK

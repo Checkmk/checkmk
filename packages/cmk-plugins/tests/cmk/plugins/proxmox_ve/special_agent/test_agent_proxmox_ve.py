@@ -658,7 +658,6 @@ def test_backup_timezone_without_any_node_timezone() -> None:
     assert _backup_timezone("100", {"100": {"node": "pve1"}}, {}) == "UTC"
 
 
-@pytest.mark.xfail(strict=True, raises=json.JSONDecodeError, reason="Crash group 4930")
 def test_json_cached_data_starts_over_on_truncated_cache(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -14,13 +14,18 @@ from cmk.product_usage.schema import ProductUsagePayload
 
 
 def collect_data(
-    var_dir: Path, cmk_config_dir: Path, omd_root: Path, logger: logging.Logger
+    var_dir: Path,
+    cmk_config_dir: Path,
+    omd_root: Path,
+    logger: logging.Logger,
+    *,
+    payload_type: type[ProductUsagePayload],
 ) -> ProductUsagePayload:
     logger.info("Collection starts")
 
     site_info = site_info_collector.collect(cmk_config_dir, var_dir, omd_root)
 
-    return ProductUsagePayload(
+    return payload_type(
         timestamp=int(time.time()),
         id=site_info.id,
         count_hosts=site_info.count_hosts,

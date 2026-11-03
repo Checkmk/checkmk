@@ -7,11 +7,11 @@ import datetime
 import json
 import uuid
 
-from cmk.product_usage.schema import ProductUsagePayload
+from cmk.product_usage.schema import CloudTrialPayload, ProductUsagePayload
 
 
-def test_product_usage_payload_dump_with_metadata_json() -> None:
-    payload = {
+def _product_usage_data() -> dict[str, object]:
+    return {
         "id": str(uuid.uuid4()),
         "count_hosts": 10,
         "count_services": 20,
@@ -33,6 +33,10 @@ def test_product_usage_payload_dump_with_metadata_json() -> None:
         },
     }
 
+
+def test_product_usage_payload_dump_with_metadata_json() -> None:
+    payload = _product_usage_data()
+
     json_payload = ProductUsagePayload.model_validate(payload).model_dump_with_metadata_json()
 
     actual_payload = json.loads(json_payload)
@@ -44,3 +48,21 @@ def test_product_usage_payload_dump_with_metadata_json() -> None:
     }
     assert "data" in actual_payload
     assert actual_payload["data"] == payload
+
+
+def test_cloud_trial_payload_carries_product_usage_data_and_null_trial_signals() -> None:
+    payload = _product_usage_data()
+
+    json_payload = CloudTrialPayload.model_validate(payload).model_dump_with_metadata_json()
+
+    assert json.loads(json_payload) == {
+        "metadata": {"version": "v1", "namespace": "checkmk", "name": "cloud_trial_analytics"},
+        "data": {
+            **payload,
+            "site_created_at": None,
+            "count_users": None,
+            "sessions": None,
+            "audit_log": None,
+            "count_hosts_default_services_only": None,
+        },
+    }

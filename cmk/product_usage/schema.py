@@ -156,3 +156,49 @@ class ProductUsagePayload(SelfDescribingModel, ProductUsageData):
         "namespace": "checkmk",
         "name": "product_usage_analytics",
     }
+
+
+class CloudTrialPayload(ProductUsagePayload):
+    metadata: typing.ClassVar[Metadata] = {
+        "version": "v1",
+        "namespace": "checkmk",
+        "name": "cloud_trial_analytics",
+    }
+
+    site_created_at: None = pydantic.Field(
+        default=None,
+        description="Unix timestamp in seconds of when the site was created.",
+        examples=[None],
+    )
+    count_users: None = pydantic.Field(
+        default=None,
+        description=(
+            "The number of interactive users, counted by business and non-business email"
+            " address domain. Addresses and domains are never collected."
+        ),
+        examples=[None],
+    )
+    sessions: None = pydantic.Field(
+        default=None,
+        description=(
+            "Every stored login session with its start and last activity timestamps."
+            " Sessions are not attributed to a user."
+        ),
+        examples=[None],
+    )
+    audit_log: None = pydantic.Field(
+        default=None,
+        description=(
+            "The number of audit log entries and the timestamp of the newest entry per actor"
+            " class: interactive, automation and platform."
+        ),
+        examples=[None],
+    )
+    count_hosts_default_services_only: None = pydantic.Field(
+        default=None,
+        description=(
+            "The number of hosts with no services beyond Check_MK and Check_MK Discovery."
+            " Hosts without services count too."
+        ),
+        examples=[None],
+    )

@@ -68,3 +68,15 @@ run_binary(
     tool = ":manifest_generator",
     visibility = ["//visibility:public"],
 )
+
+run_binary(
+    name = "cloud_trial_manifest",
+    testonly = True,
+    outs = ["cloud_trial_manifest.json"],
+    args = [
+        "--cloud-trial",
+        "$(execpath cloud_trial_manifest.json)",
+    ],
+    tool = ":manifest_generator",
+    visibility = ["//visibility:public"],
+)

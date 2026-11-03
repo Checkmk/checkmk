@@ -5,18 +5,27 @@
 
 import json
 import uuid
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from pathlib import Path
 
 import jsonschema
 import pytest
 
-from cmk.product_usage.manifest import build_manifest, main
-from cmk.product_usage.schema import GrafanaUsageData, ProductUsagePayload
+from cmk.product_usage.manifest import build_cloud_trial_manifest, build_manifest, main
+from cmk.product_usage.schema import CloudTrialPayload, GrafanaUsageData, ProductUsagePayload
+
+type BuildManifest = Callable[[], dict[str, object]]
+
+PAYLOAD_MANIFESTS = [
+    pytest.param(ProductUsagePayload, build_manifest, id="product usage"),
+    pytest.param(CloudTrialPayload, build_cloud_trial_manifest, id="cloud trial"),
+]
 
 
-def _payload(grafana: GrafanaUsageData | None) -> ProductUsagePayload:
-    return ProductUsagePayload(
+def _payload(
+    payload_type: type[ProductUsagePayload], grafana: GrafanaUsageData | None
+) -> ProductUsagePayload:
+    return payload_type(
         id=uuid.UUID("0f8fad5b-d9cb-469f-a165-70867728950e"),
         count_hosts=1,
         count_services=2,
@@ -37,15 +46,27 @@ def _undocumented_fields(schema: Mapping[str, object], path: str) -> Iterator[st
             yield f"{path}.{name}"
 
 
-def test_manifest_cli_writes_a_valid_json_schema(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("flags", "manifest"),
+    [
+        pytest.param([], build_manifest, id="product usage"),
+        pytest.param(["--cloud-trial"], build_cloud_trial_manifest, id="cloud trial"),
+    ],
+)
+def test_manifest_cli_writes_a_valid_json_schema(
+    tmp_path: Path, flags: list[str], manifest: BuildManifest
+) -> None:
     manifest_path = tmp_path / "manifest.json"
 
-    exit_code = main([str(manifest_path)])
+    exit_code = main([*flags, str(manifest_path)])
 
     assert exit_code == 0
-    jsonschema.Draft202012Validator.check_schema(json.loads(manifest_path.read_text()))
+    written = json.loads(manifest_path.read_text())
+    jsonschema.Draft202012Validator.check_schema(written)
+    assert written == manifest()
 
 
+@pytest.mark.parametrize(("payload_type", "manifest"), PAYLOAD_MANIFESTS)
 @pytest.mark.parametrize(
     "grafana",
     [
@@ -56,25 +77,36 @@ def test_manifest_cli_writes_a_valid_json_schema(tmp_path: Path) -> None:
         ),
     ],
 )
-def test_transmitted_payload_conforms_to_manifest(grafana: GrafanaUsageData | None) -> None:
-    document = json.loads(_payload(grafana).model_dump_with_metadata_json())
+def test_transmitted_payload_conforms_to_manifest(
+    payload_type: type[ProductUsagePayload],
+    manifest: BuildManifest,
+    grafana: GrafanaUsageData | None,
+) -> None:
+    document = json.loads(_payload(payload_type, grafana).model_dump_with_metadata_json())
 
-    jsonschema.validate(document, build_manifest())
+    jsonschema.validate(document, manifest())
 
 
 def test_payload_with_foreign_metadata_violates_manifest() -> None:
-    document = json.loads(_payload(None).model_dump_with_metadata_json())
+    document = json.loads(_payload(ProductUsagePayload, None).model_dump_with_metadata_json())
     document["metadata"]["version"] = "v0"
 
     with pytest.raises(jsonschema.ValidationError):
         jsonschema.validate(document, build_manifest())
 
 
-def test_every_field_has_description_and_example() -> None:
-    manifest = build_manifest()
-    properties = manifest["properties"]
+@pytest.mark.parametrize(
+    "manifest",
+    [
+        pytest.param(build_manifest, id="product usage"),
+        pytest.param(build_cloud_trial_manifest, id="cloud trial"),
+    ],
+)
+def test_every_field_has_description_and_example(manifest: BuildManifest) -> None:
+    built = manifest()
+    properties = built["properties"]
     assert isinstance(properties, Mapping)
-    definitions = manifest["$defs"]
+    definitions = built["$defs"]
     assert isinstance(definitions, Mapping)
 
     undocumented = [
@@ -89,15 +121,18 @@ def test_every_field_has_description_and_example() -> None:
     assert undocumented == []
 
 
-def test_field_examples_form_a_payload_conforming_to_manifest() -> None:
-    manifest = build_manifest()
-    properties = manifest["properties"]
+@pytest.mark.parametrize(("payload_type", "manifest"), PAYLOAD_MANIFESTS)
+def test_field_examples_form_a_payload_conforming_to_manifest(
+    payload_type: type[ProductUsagePayload], manifest: BuildManifest
+) -> None:
+    built = manifest()
+    properties = built["properties"]
     assert isinstance(properties, Mapping)
     data_properties = properties["data"]["properties"]
 
     document = {
-        "metadata": ProductUsagePayload.metadata,
+        "metadata": payload_type.metadata,
         "data": {name: field["examples"][0] for name, field in data_properties.items()},
     }
 
-    jsonschema.validate(document, manifest)
+    jsonschema.validate(document, built)

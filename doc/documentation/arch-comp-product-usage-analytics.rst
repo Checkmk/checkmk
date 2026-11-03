@@ -93,7 +93,7 @@ Collection and transmission
 On each cron invocation, ``should_run_collection_on_schedule`` only lets collection proceed once a stored ``next_run`` timestamp has passed.
 That schedule is staggered per site: the first run after enabling analytics picks a random point within the next 23.5 hours (``create_next_random_ts``), so freshly opted-in sites do not all transmit at the same moment; since cron runs every 30 minutes, that run starts within 24 hours.
 Every following run is fixed at 30 days after the previous one, or 7 days on a Cloud site in trial (``create_next_ts``).
-The CLI checks whether a site is a Cloud trial (``is_cloud_trial``) only when it plans the next run: it reads the license state only on Cloud sites, through the commercial Cloud licensing handler, and falls back to the 30-day interval if that read fails.
+The CLI checks whether a site is a Cloud trial (``is_cloud_trial``) once per run that collects or plans the next run, and uses that one answer for both the payload and the interval: it reads the license state only on Cloud sites, through the commercial Cloud licensing handler, and falls back to the product usage payload and the 30-day interval if that read fails.
 
 **What a due run collects:**
 
@@ -103,6 +103,7 @@ The CLI checks whether a site is a Cloud trial (``is_cloud_trial``) only when it
 * The last recorded Grafana-usage snapshot, if any.
 
 The result is wrapped in a ``SelfDescribingModel`` envelope (``{"metadata": {version, namespace, name}, "data": {...}}``) and stored as ``var/check_mk/product_usage/product_usage_<timestamp>.json``.
+A Cloud trial site sends ``CloudTrialPayload`` (``cloud_trial_analytics``) instead of ``ProductUsagePayload`` (``product_usage_analytics``): the same data plus trial signals, which are still ``null``.
 
 **Transmission and retry.**
 Transmission uploads every stored file, oldest first, and deletes a file only once its POST gets a successful response, so a failed upload's file survives to be retried.
@@ -193,7 +194,7 @@ This edition additionally supplies its own hint text for the global-settings for
 
 **``cloud``.**
 This edition treats analytics as opt-out rather than opt-in: deploy tooling outside this repository sets the global setting to ``enabled`` when provisioning a cloud site, and the edition calls ``disable_product_usage_analytics_popup()`` to suppress the sidebar popup, since consent is already decided before an admin ever sees it.
-Cloud sites in trial run every 7 days instead of every 30 days; to tell, the CLI reads the license state through the commercial Cloud licensing handler, which makes ``cmk.licensing`` a dependency of the CLI (see `Collection and transmission`_).
+Cloud sites in trial run every 7 days instead of every 30 days and send the Cloud trial payload; to tell, the CLI reads the license state through the commercial Cloud licensing handler, which makes ``cmk.licensing`` a dependency of the CLI (see `Collection and transmission`_).
 The underlying collection, config and transmission machinery is otherwise unaffected.
 
 **Distributed setups.**

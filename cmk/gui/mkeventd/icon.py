@@ -13,7 +13,6 @@ from cmk.utils.tags import TagID
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.site_config import get_site_config
-from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.views.icon import Icon
@@ -38,7 +37,7 @@ class MkeventdIcon(Icon):
         return ["check_command"]
 
     def host_columns(self) -> list[str]:
-        return ["address", "name"]
+        return ["address", "alias", "name"]
 
     def render(
         self,
@@ -82,7 +81,7 @@ class MkeventdIcon(Icon):
                 args = args[:i] + args[i + 2 :]
 
         if len(args) >= 1:
-            host = _get_hostname(args, row)
+            host = args[0]
 
         # If we have no host then the command line from the check_command seems
         # to be garbled. Better show nothing in this case.
@@ -98,17 +97,20 @@ class MkeventdIcon(Icon):
             site = get_site_config(active_config, row["site"])
             url_prefix = site["url_prefix"] + "check_mk/"
 
+        monitored = _is_monitored_host_spec(args[0], row)
+        link_host = row["host_name"] if monitored else host
         url_vars = [
-            ("view_name", "ec_events_of_monhost"),
+            ("view_name", "ec_events_of_monhost" if monitored else "ec_events_of_host"),
             ("site", row["site"]),
-            ("host", row["host_name"]),
+            ("host", link_host),
+            *([] if monitored else [("event_host", host)]),
         ]
 
-        title = _("Events of Host %s") % (row["host_name"])
+        title = _("Events of Host %s") % link_host
 
         if len(args) >= 2:
             app = args[1].strip("'").replace("\\\\", "\\").replace("\\!", "!")
-            title = _('Events of Application "%s" on Host %s') % (app, host)
+            title = _('Events of Application "%s" on Host %s') % (app, link_host)
             url_vars.append(("event_application", app))
 
         url = "view.py?" + urlencode_vars(url_vars)
@@ -116,12 +118,16 @@ class MkeventdIcon(Icon):
         return "mkeventd", title, url_prefix + url
 
 
-def _get_hostname(args: Sequence[str], row: Row) -> str:
-    args_splitted = args[0].split("/")
-    if args_splitted[0] == "$HOSTNAME$":
-        return row["host_name"]
-    if args_splitted[0] == "$HOSTADDRESS$":
-        return row["host_address"]
-    if args_splitted[0] == "$HOSTALIAS$":
-        return get_alias_of_host(row["site"], row["host_name"])
-    return args[0]
+def _is_monitored_host_spec(hostspec: str, row: Row) -> bool:
+    """Macros in the host spec are resolved when the command line is built, so
+    compare with the monitored host's name, address and alias - case-insensitively,
+    like the event_host filter of the EC"""
+    own = {
+        "$HOSTNAME$",
+        "$HOSTADDRESS$",
+        "$HOSTALIAS$",
+        row["host_name"],
+        row["host_address"],
+        row["host_alias"],
+    }
+    return {part.lower() for part in hostspec.split("/")} <= {name.lower() for name in own}

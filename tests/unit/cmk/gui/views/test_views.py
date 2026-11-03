@@ -1179,6 +1179,7 @@ def test_view_page(
                     "action_url_expanded": "",
                     "active_checks_enabled": 1,
                     "address": "127.0.0.1",
+                    "alias": "heute",
                     "check_command": "check-mk-host-smart",
                     "check_type": 0,
                     "comments_with_extra_info": "",
@@ -1231,7 +1232,7 @@ def test_view_page(
     live.expect_query(
         "GET hosts\n"
         "Columns: host_accept_passive_checks host_acknowledged host_action_url_expanded "
-        "host_active_checks_enabled host_address host_check_command host_check_type "
+        "host_active_checks_enabled host_address host_alias host_check_command host_check_type "
         "host_comments_with_extra_info host_custom_variable_names host_custom_variable_values "
         "host_downtimes host_downtimes_with_extra_info host_filename host_has_been_checked "
         "host_icon_image host_in_check_period host_in_notification_period host_in_service_period "

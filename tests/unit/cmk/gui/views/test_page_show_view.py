@@ -36,6 +36,7 @@ def test_get_needed_regular_columns(view: View) -> None:
             "host_action_url_expanded",
             "host_active_checks_enabled",
             "host_address",
+            "host_alias",
             "host_check_command",
             "host_check_type",
             "host_comments_with_extra_info",

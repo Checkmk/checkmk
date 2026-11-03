@@ -23,6 +23,7 @@ import type {
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
 import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
+import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
 export interface HostColumnOptions {
@@ -127,7 +128,7 @@ export function buildHostColumnPinning({
 }: Pick<HostColumnOptions, 'includeSelect'>): ColumnPinningState {
   return {
     left: [...(includeSelect ? ['select'] : []), 'state', MODE_COLUMN_ID, 'name'],
-    right: ['actions']
+    right: [ACTIONS_COLUMN_ID]
   }
 }
 
@@ -537,7 +538,7 @@ export function buildHostColumns({
         ]
       : []),
     {
-      id: 'actions',
+      id: ACTIONS_COLUMN_ID,
       header: _t('Actions'),
       enableSorting: false,
       minSize: 75,

@@ -17,6 +17,7 @@ import type {
   StringInputWithCheckboxListFilter
 } from '@/monitoring/shared/components/filter/types'
 import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
+import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
 export interface AllServicesColumnOptions extends HostServicesColumnOptions {
@@ -34,7 +35,7 @@ export function buildAllServicesColumnPinning({
 }: HostServicesColumnOptions): ColumnPinningState {
   return {
     left: [...(includeSelect ? ['select'] : []), 'state', MODE_COLUMN_ID, 'name'],
-    right: ['actions']
+    right: [ACTIONS_COLUMN_ID]
   }
 }
 

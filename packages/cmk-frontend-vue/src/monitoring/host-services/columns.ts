@@ -24,6 +24,7 @@ import type {
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
 import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
+import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
 /**
@@ -83,7 +84,7 @@ export function buildHostServicesColumnPinning({
 }: HostServicesColumnOptions): ColumnPinningState {
   return {
     left: [...(includeSelect ? ['select'] : []), 'state', MODE_COLUMN_ID, 'name'],
-    right: ['actions']
+    right: [ACTIONS_COLUMN_ID]
   }
 }
 
@@ -325,7 +326,7 @@ export function useHostServicesColumns<Row extends HostServiceEntry = HostServic
       meta: { justify: 'center' }
     },
     {
-      id: 'actions',
+      id: ACTIONS_COLUMN_ID,
       header: _t('Actions'),
       enableSorting: false,
       enableHiding: false,

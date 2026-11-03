@@ -12,3 +12,6 @@ export const ACTION_REFRESH_DELAY_MS = 1000
 
 export const ACTION_DATE_TIME_SETTINGS: DateTimePickerSettings = { hourCycle: 24 }
 export const ACTION_PANE_MIN_WIDTH = '520px'
+
+/** The column of a row's action buttons and its action menu. */
+export const ACTIONS_COLUMN_ID = 'actions'

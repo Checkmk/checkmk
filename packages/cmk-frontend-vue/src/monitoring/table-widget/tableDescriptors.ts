@@ -13,6 +13,7 @@ import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
 import { useAllServicesColumns } from '@/monitoring/all-services/columns'
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
 import type { HostEntry, ServiceEntry } from '@/monitoring/shared/api/types'
+import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
 export type MonitoringTableName = components['schemas']['MonitoringTableContent']['table']
@@ -138,7 +139,7 @@ export class ServicesTableDescriptor extends MonitoringTableDescriptor<ServiceEn
 
   protected allColumns(): ColumnDef<ServiceEntry>[] {
     return useAllServicesColumns({ sites: [], includeSelect: false }).filter(
-      (column) => columnId(column) !== 'actions'
+      (column) => columnId(column) !== ACTIONS_COLUMN_ID
     )
   }
 

@@ -20,6 +20,7 @@ import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import GraphsLink from '@/monitoring/shared/components/graphs/GraphsLink.vue'
 import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
+import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 import {
@@ -273,8 +274,8 @@ const lastStateChange = computed(() =>
   <StringCell v-if="hasColumn('customer')" column-id="customer" :value="row.customer" />
 
   <ActionsCell
-    v-if="(loadActionMenu || actionButtons.length > 0) && hasColumn('actions')"
-    column-id="actions"
+    v-if="(loadActionMenu || actionButtons.length > 0) && hasColumn(ACTIONS_COLUMN_ID)"
+    :column-id="ACTIONS_COLUMN_ID"
     :actions="actionButtons"
     :max-visible="actionButtons.length"
     :load="loadActionMenu ? () => loadActionMenu!(hostRef) : undefined"

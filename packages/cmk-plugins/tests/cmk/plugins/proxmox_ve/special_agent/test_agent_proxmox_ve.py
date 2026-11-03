@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from cmk.plugins.proxmox_ve.special_agent.agent_proxmox_ve import (
+    _backup_timezone,
     _create_vm_sections,
     hostname_matches_node,
     node_piggyback_host,
@@ -627,3 +628,25 @@ def test_create_vm_sections_reports_lock(lock: str) -> None:
     assert section_name == "proxmox_ve_vm_info"
     assert isinstance(section, dict)
     assert section["lock"] == lock
+
+
+def test_backup_timezone_of_the_vms_node() -> None:
+    assert (
+        _backup_timezone(
+            "100",
+            {"100": {"node": "pve2"}},
+            {"pve1": "Europe/Berlin", "pve2": "America/New_York"},
+        )
+        == "America/New_York"
+    )
+
+
+def test_backup_timezone_of_vm_not_in_all_vms_falls_back_to_first_node() -> None:
+    assert (
+        _backup_timezone(
+            "100",
+            {},
+            {"pve1": "Europe/Berlin", "pve2": "America/New_York"},
+        )
+        == "Europe/Berlin"
+    )

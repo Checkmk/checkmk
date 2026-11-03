@@ -178,7 +178,6 @@ def check_veeam_backup_jobs_now(
 agent_section_veeam_backup_jobs = AgentSection(
     name="veeam_backup_jobs",
     parse_function=parse_veeam_backup_jobs,
-    supersedes=["veeam_jobs"],
 )
 
 check_plugin_veeam_backup_jobs = CheckPlugin(

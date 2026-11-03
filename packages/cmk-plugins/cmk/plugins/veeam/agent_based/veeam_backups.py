@@ -258,7 +258,6 @@ def check_veeam_backups_now(item: str, params: CheckParameters, section: Section
 agent_section_veeam_backups = AgentSection(
     name="veeam_backups",
     parse_function=parse_veeam_backups,
-    supersedes=["veeam_client"],
 )
 
 check_plugin_veeam_backups = CheckPlugin(

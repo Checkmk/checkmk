@@ -56,6 +56,29 @@ class RetentionInterval:
         return self.valid_until + self.retention_interval
 
 
+def sort_missing_values_first(
+    compare: Callable[[SDValue, SDValue], int],
+) -> Callable[[SDValue, SDValue], int]:
+    def wrapper(val_a: SDValue, val_b: SDValue) -> int:
+        if val_a is None:
+            return 0 if val_b is None else -1
+
+        if val_b is None:
+            return 1
+
+        return compare(val_a, val_b)
+
+    return wrapper
+
+
+def compare_sd_values(val_a: SDValue, val_b: SDValue) -> int:
+    if isinstance(val_a, str) and isinstance(val_b, str):
+        return (val_a > val_b) - (val_a < val_b)
+    if isinstance(val_a, int | float) and isinstance(val_b, int | float):
+        return (val_a > val_b) - (val_a < val_b)
+    raise TypeError(val_a, val_b)
+
+
 def parse_visible_raw_path(raw_path: str) -> SDPath:
     return tuple(SDNodeName(part) for part in raw_path.split(".") if part)
 

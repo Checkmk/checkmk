@@ -14,8 +14,6 @@ from cmk.gui.inventory.filters import (
 )
 from cmk.gui.views.inventory import inv_display_hints, NodeDisplayHint, TableWithView
 from cmk.gui.views.inventory._display_hints import (
-    _cmp_inv_generic,
-    _decorate_sort_function,
     _make_title_function,
     _PaintBool,
     _PaintChoice,
@@ -35,7 +33,13 @@ from cmk.gui.views.inventory._paint_functions import (
     inv_paint_generic,
 )
 from cmk.inventory.raw_paths import InventoryPath, parse_internal_raw_path, TreeSource
-from cmk.inventory.trees import SDKey, SDNodeName, SDPath, SDValue
+from cmk.inventory.trees import (
+    compare_sd_values,
+    SDKey,
+    SDNodeName,
+    SDPath,
+    sort_missing_values_first,
+)
 from cmk.inventory_ui.v1 import AgeNotation as AgeNotationFromAPI
 from cmk.inventory_ui.v1 import Alignment as AlignmentFromAPI
 from cmk.inventory_ui.v1 import BackgroundColor as BackgroundColorFromAPI
@@ -54,30 +58,6 @@ from cmk.inventory_ui.v1 import TextField as TextFieldFromAPI
 from cmk.inventory_ui.v1 import TimeNotation as TimeNotationFromAPI
 from cmk.inventory_ui.v1 import Title as TitleFromAPI
 from cmk.inventory_ui.v1 import Unit as UnitFromAPI
-
-
-@pytest.mark.parametrize(
-    "val_a, val_b, result",
-    [
-        (None, None, 0),
-        (None, 0, -1),
-        (0, None, 1),
-        (0, 0, 0),
-        (1, 0, 1),
-        (0, 1, -1),
-    ],
-)
-def test__cmp_inv_generic(val_a: SDValue, val_b: SDValue, result: int) -> None:
-    assert _decorate_sort_function(_cmp_inv_generic)(val_a, val_b) == result
-
-
-def test__cmp_inv_generic_compares_strings() -> None:
-    assert _decorate_sort_function(_cmp_inv_generic)("a", "b") == -1
-
-
-def test__cmp_inv_generic_rejects_mixed_types() -> None:
-    with pytest.raises(TypeError):
-        _decorate_sort_function(_cmp_inv_generic)("a", 1)
 
 
 @pytest.mark.parametrize(
@@ -288,7 +268,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                 short_title="Key",
                 long_title="Key",
                 paint_function=_wrap_paint_function(inv_paint_generic),
-                sort_function=_decorate_sort_function(_cmp_inv_generic),
+                sort_function=sort_missing_values_first(compare_sd_values),
                 filter=FilterInvText(
                     ident="inv_key",
                     title="Key",
@@ -310,7 +290,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                 short_title="Key",
                 long_title="Node ➤ Key",
                 paint_function=_wrap_paint_function(inv_paint_generic),
-                sort_function=_decorate_sort_function(_cmp_inv_generic),
+                sort_function=sort_missing_values_first(compare_sd_values),
                 filter=FilterInvText(
                     ident="inv_path_to_node_key",
                     title="Node ➤ Key",
@@ -349,7 +329,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
                 paint_function=_wrap_paint_function(inv_paint_generic),
-                sort_function=_decorate_sort_function(_cmp_inv_generic),
+                sort_function=sort_missing_values_first(compare_sd_values),
                 filter=FilterInvText(
                     ident="inv_foo_bar",
                     title="Foo ➤ Bar",
@@ -370,7 +350,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 short_title="Product",
                 long_title="System ➤ Product",
                 paint_function=_wrap_paint_function(inv_paint_generic),
-                sort_function=_decorate_sort_function(_cmp_inv_generic),
+                sort_function=sort_missing_values_first(compare_sd_values),
                 filter=FilterInvText(
                     ident="inv_hardware_system_product",
                     title="System ➤ Product",
@@ -638,8 +618,8 @@ def test_render_choice_does_not_style_a_value_of_another_type() -> None:
 
 def test_sort_text() -> None:
     text_field = TextFieldFromAPI(TitleFromAPI("A title"), sort_key=int)
-    assert _decorate_sort_function(_SortFunctionText(text_field))("1", "2") == -1
-    assert _decorate_sort_function(_SortFunctionText(text_field))("2", "1") == 1
+    assert sort_missing_values_first(_SortFunctionText(text_field))("1", "2") == -1
+    assert sort_missing_values_first(_SortFunctionText(text_field))("2", "1") == 1
 
 
 def test_sort_choice() -> None:
@@ -650,8 +630,8 @@ def test_sort_choice() -> None:
             1: LabelFromAPI("One"),
         },
     )
-    assert _decorate_sort_function(_SortFunctionChoice(choice_field))(1, 2) == 1
-    assert _decorate_sort_function(_SortFunctionChoice(choice_field))(2, 1) == -1
+    assert sort_missing_values_first(_SortFunctionChoice(choice_field))(1, 2) == 1
+    assert sort_missing_values_first(_SortFunctionChoice(choice_field))(2, 1) == -1
 
 
 def test__make_title_function_of_a_callable_legacy_title() -> None:

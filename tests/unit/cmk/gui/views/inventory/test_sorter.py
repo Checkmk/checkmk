@@ -7,15 +7,13 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.inventory.filters import FilterInvText
 from cmk.gui.views.inventory._display_hints import (
-    _cmp_inv_generic,
-    _decorate_sort_function,
     _wrap_paint_function,
     AttributeDisplayHint,
 )
 from cmk.gui.views.inventory._paint_functions import inv_paint_generic
 from cmk.gui.views.inventory._sorter import attribute_sorter_from_hint
 from cmk.inventory.raw_paths import InventoryPath, TreeSource
-from cmk.inventory.trees import ImmutableTree, SDKey
+from cmk.inventory.trees import compare_sd_values, ImmutableTree, SDKey, sort_missing_values_first
 from cmk.web.utils.request_cache import RequestCache
 
 
@@ -28,7 +26,7 @@ def test_attribute_sorter_ranks_two_missing_values_equal() -> None:
         short_title="Product",
         long_title=long_title,
         paint_function=_wrap_paint_function(inv_paint_generic),
-        sort_function=_decorate_sort_function(_cmp_inv_generic),
+        sort_function=sort_missing_values_first(compare_sd_values),
         filter=FilterInvText(
             ident=name,
             title=long_title,

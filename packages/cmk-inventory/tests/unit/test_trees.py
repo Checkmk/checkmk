@@ -12,6 +12,7 @@ from cmk.inventory.serialization import (
     deserialize_tree,
 )
 from cmk.inventory.trees import (
+    compare_sd_values,
     ImmutableTree,
     make_retention_filter_choices,
     MutableTree,
@@ -22,6 +23,8 @@ from cmk.inventory.trees import (
     SDNodeName,
     SDPath,
     SDRetentionFilterChoices,
+    SDValue,
+    sort_missing_values_first,
 )
 
 from ._fixtures import (
@@ -580,3 +583,39 @@ def test_immutable_trees_with_different_content_are_unequal(
 )
 def test_a_tree_is_unequal_to_a_non_tree(tree: MutableTree | ImmutableTree) -> None:
     assert tree != "tree"
+
+
+def _always_two(_val_a: SDValue, _val_b: SDValue) -> int:
+    return 2
+
+
+@pytest.mark.parametrize(
+    "val_a, val_b, result",
+    [
+        pytest.param(None, None, 0, id="both-missing"),
+        pytest.param(None, 0, -1, id="first-missing"),
+        pytest.param(0, None, 1, id="second-missing"),
+        pytest.param(0, 0, 2, id="none-missing"),
+    ],
+)
+def test_sort_missing_values_first(val_a: SDValue, val_b: SDValue, result: int) -> None:
+    assert sort_missing_values_first(_always_two)(val_a, val_b) == result
+
+
+@pytest.mark.parametrize(
+    "val_a, val_b, result",
+    [
+        pytest.param(0, 0, 0, id="equal-numbers"),
+        pytest.param(1, 0, 1, id="greater-number"),
+        pytest.param(0, 1, -1, id="smaller-number"),
+        pytest.param("a", "b", -1, id="smaller-text"),
+        pytest.param("b", "a", 1, id="greater-text"),
+    ],
+)
+def test_compare_sd_values(val_a: SDValue, val_b: SDValue, result: int) -> None:
+    assert compare_sd_values(val_a, val_b) == result
+
+
+def test_compare_sd_values_rejects_mixed_types() -> None:
+    with pytest.raises(TypeError):
+        compare_sd_values("a", 1)

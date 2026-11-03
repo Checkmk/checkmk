@@ -39,7 +39,14 @@ from cmk.gui.inventory.filters import (
 )
 from cmk.gui.log import logger
 from cmk.inventory.raw_paths import InventoryPath, parse_internal_raw_path, TreeSource
-from cmk.inventory.trees import SDKey, SDNodeName, SDPath, SDValue
+from cmk.inventory.trees import (
+    compare_sd_values,
+    SDKey,
+    SDNodeName,
+    SDPath,
+    SDValue,
+    sort_missing_values_first,
+)
 from cmk.inventory_ui.v1 import AgeNotation as AgeNotationFromAPI
 from cmk.inventory_ui.v1 import Alignment as AlignmentFromAPI
 from cmk.inventory_ui.v1 import AutoPrecision as AutoPrecisionFromAPI
@@ -429,9 +436,9 @@ def _make_sort_function(
 ) -> SortFunction:
     match field_from_api:
         case BoolFieldFromAPI():
-            return _cmp_inv_generic
+            return compare_sd_values
         case NumberFieldFromAPI():
-            return _cmp_inv_generic
+            return compare_sd_values
         case TextFieldFromAPI():
             return _SortFunctionText(field_from_api)
         case ChoiceFieldFromAPI():
@@ -568,7 +575,7 @@ def _parse_attr_field_from_api(
         short_title=title,
         long_title=long_title,
         paint_function=_make_paint_function(field_from_api),
-        sort_function=_decorate_sort_function(_make_sort_function(field_from_api)),
+        sort_function=sort_missing_values_first(_make_sort_function(field_from_api)),
         filter=_make_attribute_filter(
             field_from_api,
             filter_ident=name,
@@ -686,7 +693,7 @@ def _parse_col_field_of_view_from_api(
         short_title=title,
         long_title=long_title,
         paint_function=_make_paint_function(field_from_api),
-        sort_function=_decorate_sort_function(_make_sort_function(field_from_api)),
+        sort_function=sort_missing_values_first(_make_sort_function(field_from_api)),
         filter=_make_column_filter(
             field_from_api,
             table_view_name=table_view_name,
@@ -783,31 +790,6 @@ def _get_paint_function(legacy_hint: InventoryHintSpec) -> tuple[str, PaintFunct
         data_type = legacy_hint["paint"]
         return data_type, inv_paint_functions[PAINT_FUNCTION_NAME_PREFIX + data_type]["func"]
     return "str", inv_paint_functions["inv_paint_generic"]["func"]
-
-
-def _make_sort_function_of_legacy_hint(legacy_hint: InventoryHintSpec) -> SortFunction:
-    return _decorate_sort_function(legacy_hint.get("sort", _cmp_inv_generic))
-
-
-def _decorate_sort_function(sort_function: SortFunction) -> SortFunction:
-    def wrapper(val_a: SDValue, val_b: SDValue) -> int:
-        if val_a is None:
-            return 0 if val_b is None else -1
-
-        if val_b is None:
-            return 1
-
-        return sort_function(val_a, val_b)
-
-    return wrapper
-
-
-def _cmp_inv_generic(val_a: SDValue, val_b: SDValue) -> int:
-    if isinstance(val_a, str) and isinstance(val_b, str):
-        return (val_a > val_b) - (val_a < val_b)
-    if isinstance(val_a, int | float) and isinstance(val_b, int | float):
-        return (val_a > val_b) - (val_a < val_b)
-    raise TypeError(val_a, val_b)
 
 
 def _make_title_function(legacy_hint: InventoryHintSpec) -> Callable[[str], str]:
@@ -966,7 +948,7 @@ def _parse_attr_field_from_legacy(
         ),
         long_title=long_title,
         paint_function=_wrap_paint_function(paint_function),
-        sort_function=_make_sort_function_of_legacy_hint(legacy_hint),
+        sort_function=sort_missing_values_first(legacy_hint.get("sort", compare_sd_values)),
         filter=_make_attribute_filter_from_legacy_hint(
             path=path,
             key=key,
@@ -1168,7 +1150,7 @@ def _parse_col_field_from_legacy_of_view(
         ),
         long_title=long_title,
         paint_function=_wrap_paint_function(paint_function),
-        sort_function=_make_sort_function_of_legacy_hint(legacy_hint),
+        sort_function=sort_missing_values_first(legacy_hint.get("sort", compare_sd_values)),
         filter=_parse_col_filter_from_legacy(
             table_view_name=table_view_name,
             filter_ident=name,
@@ -1274,7 +1256,7 @@ class NodeDisplayHint:
                 paint_function=_wrap_paint_function(
                     inv_paint_functions["inv_paint_generic"]["func"]
                 ),
-                sort_function=_decorate_sort_function(_cmp_inv_generic),
+                sort_function=sort_missing_values_first(compare_sd_values),
                 filter=_make_attribute_filter_from_legacy_hint(
                     path=self.path,
                     key=key,

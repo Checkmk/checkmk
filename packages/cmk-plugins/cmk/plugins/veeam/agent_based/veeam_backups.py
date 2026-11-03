@@ -74,8 +74,10 @@ class CheckParameters(TypedDict):
 
 
 _RATE_PATTERN = re.compile(
-    r"^\s*(?P<value>\d+(?:\.\d+)?)\s*(?P<unit>[KMGTP]?B)?(?:/s)?\s*$", re.IGNORECASE
+    r"^\s*(?P<value>\d+(?:[.,]\d+)?)\s*(?P<unit>[KMGTP]?B)?(?:/s)?\s*$", re.IGNORECASE
 )
+# "1,234" could be either a decimal or a thousands separator.
+_THOUSANDS_COMMA = re.compile(r"\d+,\d{3}")
 
 # TODO: confirm the real format and unit base of processingRate against actual API
 # traffic. Decimal (SI) prefixes are assumed here (the API's "MB" = 10^6); if the
@@ -94,10 +96,13 @@ _RATE_UNIT_FACTORS = {
 def _parse_processing_rate_bps(processing_rate: str | None) -> float | Unparsable | None:
     if not processing_rate or processing_rate.upper() == "N/A":
         return None
-    if (match := _RATE_PATTERN.match(processing_rate)) is None:
+    if (match := _RATE_PATTERN.match(processing_rate)) is None or _THOUSANDS_COMMA.fullmatch(
+        match["value"]
+    ):
         return Unparsable(processing_rate)
     factor = _RATE_UNIT_FACTORS[(match["unit"] or "B").upper()]
-    return float(match["value"]) * factor
+    # The VBR server formats the value in its own locale, e.g. "78,6 MB".
+    return float(match["value"].replace(",", ".")) * factor
 
 
 def _parse_end_time(end_time: str | None) -> float | Unparsable | None:

@@ -275,6 +275,8 @@ def test_check_veeam_backups_unparsable_duration_is_omitted() -> None:
         pytest.param("1.5 KB/s", 1_500.0, id="kilobytes"),
         pytest.param("2 GB/s", 2_000_000_000.0, id="gigabytes"),
         pytest.param("18.3 mb/s", 18_300_000.0, id="lowercase"),
+        pytest.param("78,6 MB", 78_600_000.0, id="decimal comma"),
+        pytest.param("1,234 MB", Unparsable("1,234 MB"), id="ambiguous thousands comma"),
         pytest.param("N/A", None, id="not available"),
         pytest.param("fast", Unparsable("fast"), id="garbage"),
         pytest.param(None, None, id="missing"),

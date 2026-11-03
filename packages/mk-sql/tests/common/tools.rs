@@ -101,6 +101,25 @@ connection:
     }
 }
 
+/// Checks the computer name the endpoint's server reports: the local
+/// computer's for a loopback endpoint, otherwise the first label of the
+/// endpoint's host name. For an IP address only a non-empty name can be
+/// checked.
+pub fn assert_computer_name(reported: &str, endpoint_host: &str) {
+    let expected = match endpoint_host {
+        "localhost" | "127.0.0.1" | "::1" | "." => std::env::var("COMPUTERNAME").ok(),
+        host if host.parse::<std::net::IpAddr>().is_ok() => None,
+        host => host.split('.').next().map(str::to_owned),
+    };
+    match expected {
+        Some(expected) => assert!(
+            reported.eq_ignore_ascii_case(&expected),
+            "the server reports computer name `{reported}`, expected `{expected}` for endpoint host `{endpoint_host}`"
+        ),
+        None => assert!(!reported.is_empty(), "the server reports no computer name"),
+    }
+}
+
 pub fn get_remote_sql_from_env_var() -> Option<SqlDbEndpoint> {
     if let Ok(content) = std::env::var(SQL_DB_ENDPOINT) {
         let x: Vec<&str> = content.split(SQL_DB_ENDPOINT_SPLITTER).collect();

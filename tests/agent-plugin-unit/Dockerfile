@@ -7,6 +7,10 @@ FROM ${DOCKER_REGISTRY}/python:${PYTHON_VERSION_MAJ_MIN}
 
 # Yes, really again the same ARG: https://ryandaniels.ca/blog/docker-dockerfile-arg-from-arg-trouble/
 ARG PYTHON_VERSION_MAJ_MIN
+# Install from the Nexus PyPI proxy instead of pypi.org, so pypi.org outages do not fail
+# the image build. This image is only built inside the company network anyway, its base
+# image comes from DOCKER_REGISTRY.
+ARG PIP_INDEX_URL=https://artifacts.lan.tribe29.com/repository/pypi-proxy/simple
 
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 
@@ -14,11 +18,13 @@ ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${
 # https://redgreenrepeat.com/2018/04/13/how-to-conditionally-copy-file-in-dockerfile/
 COPY --from=slim /usr/local/lib/python3.9/distutils optional_file* /usr/lib/python3.9/distutils
 
+# get-pip.py comes through bazel-registry, which serves its cached copy when
+# bootstrap.pypa.io is down.
 RUN \
     if [ "$PYTHON_VERSION_MAJ_MIN" = "2.7" ] || [ "$PYTHON_VERSION_MAJ_MIN" = "3.4" ] || [ "$PYTHON_VERSION_MAJ_MIN" = "3.5" ] || [ "$PYTHON_VERSION_MAJ_MIN" = "3.6" ] || [ "$PYTHON_VERSION_MAJ_MIN" = "3.7" ] || [ "$PYTHON_VERSION_MAJ_MIN" = "3.8" ] || [ "$PYTHON_VERSION_MAJ_MIN" = "3.9" ]; then \
-        GET_PIP_URL="https://bootstrap.pypa.io/pip/$PYTHON_VERSION_MAJ_MIN/get-pip.py" ; \
+        GET_PIP_URL="https://bazel-registry.lan.checkmk.net/bootstrap.pypa.io/pip/$PYTHON_VERSION_MAJ_MIN/get-pip.py" ; \
     else \
-    GET_PIP_URL="https://bootstrap.pypa.io/get-pip.py" ; \
+    GET_PIP_URL="https://bazel-registry.lan.checkmk.net/bootstrap.pypa.io/get-pip.py" ; \
     fi && \
     if [ "$PYTHON_VERSION_MAJ_MIN" = "3.4" ]; then \
     PYMONGO="pymongo==3.12" ; \

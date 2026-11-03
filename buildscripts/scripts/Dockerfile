@@ -24,6 +24,11 @@ RUN apk update && \
     apk add bash git make coreutils grep && \
     rm -rf /var/cache/apk/*
 
+# Install from the Nexus PyPI proxy instead of pypi.org, so pypi.org outages do not fail
+# the image build. This image is only built inside the company network anyway, its base
+# image comes from the internal registry.
+ARG PIP_INDEX_URL=https://artifacts.lan.tribe29.com/repository/pypi-proxy/simple
+
 # install checkmk-dev-tools to run ci-artifacts
 # install pyyaml to parse editions.yml and stages.yml
 RUN pip3 install --break-system-packages \

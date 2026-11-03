@@ -744,7 +744,6 @@ def test_parse_ps_lnx(
     assert ps_section._parse_ps_lnx(now, string_table) == expected_result  # noqa: SLF001
 
 
-@pytest.mark.xfail(strict=True, raises=KeyError, reason="Crash group 4740")
 def test_parse_ps_lnx_reports_cut_off_line() -> None:
     with pytest.raises(ValueError, match="cut off"):
         ps_section._parse_ps_lnx(  # noqa: SLF001

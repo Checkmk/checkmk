@@ -107,6 +107,12 @@ class History:
     corrupted: Sequence[Path]
 
 
+def sort_corrupted_history_files(
+    archive_dir: Path, corrupted_history_files: Sequence[Path]
+) -> Sequence[str]:
+    return sorted([str(fp.relative_to(archive_dir.parent)) for fp in set(corrupted_history_files)])
+
+
 class HistoryStore:
     def __init__(self, omd_root: Path) -> None:
         self.inv_paths = InventoryPaths(omd_root)

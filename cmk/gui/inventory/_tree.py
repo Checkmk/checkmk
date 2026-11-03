@@ -5,7 +5,6 @@
 
 
 from collections.abc import Iterable, Sequence
-from pathlib import Path
 
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
@@ -27,7 +26,7 @@ from cmk.inventory.filtering import (
     PermittedPath,
     SDFilterChoice,
 )
-from cmk.inventory.history import HistoryEntry, HistoryStore
+from cmk.inventory.history import HistoryEntry, HistoryStore, sort_corrupted_history_files
 from cmk.inventory.store import InventoryStore
 from cmk.inventory.trees import ImmutableTree
 
@@ -179,12 +178,6 @@ def load_latest_delta_tree(history_store: HistoryStore, hostname: HostName) -> I
     return history.entries[0].delta_tree if history.entries else ImmutableDeltaTree()
 
 
-def _sort_corrupted_history_files(
-    archive_dir: Path, corrupted_history_files: Sequence[Path]
-) -> Sequence[str]:
-    return sorted([str(fp.relative_to(archive_dir.parent)) for fp in set(corrupted_history_files)])
-
-
 def load_delta_tree(
     history_store: HistoryStore, hostname: HostName, timestamp: int
 ) -> tuple[ImmutableDeltaTree, Sequence[str]]:
@@ -199,7 +192,7 @@ def load_delta_tree(
         )
     return (
         history.entries[0].delta_tree if history.entries else ImmutableDeltaTree(),
-        _sort_corrupted_history_files(history_store.inv_paths.archive_dir, history.corrupted),
+        sort_corrupted_history_files(history_store.inv_paths.archive_dir, history.corrupted),
     )
 
 
@@ -207,6 +200,6 @@ def get_history(
     history_store: HistoryStore, hostname: HostName
 ) -> tuple[Sequence[HistoryEntry], Sequence[str]]:
     history = history_store.load(hostname, delta_tree_filters=_permitted_filter_choices())
-    return history.entries, _sort_corrupted_history_files(
+    return history.entries, sort_corrupted_history_files(
         history_store.inv_paths.archive_dir, history.corrupted
     )

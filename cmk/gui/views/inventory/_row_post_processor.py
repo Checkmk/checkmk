@@ -7,15 +7,10 @@
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 
-from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.html import html
-from cmk.gui.i18n import _
-from cmk.gui.inventory import load_tree
+from cmk.gui.inventory import load_tree_of_host, report_corrupted_trees
 from cmk.gui.painter import Cell, JoinCell
 from cmk.gui.type_defs import Row, Rows, ViewSpec
-from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
 from cmk.gui.visuals.filter import Filter
 from cmk.inventory.trees import ImmutableTree, SDKey, SDPath, SDValue
@@ -71,30 +66,20 @@ def _add_inventory_data(rows: Rows) -> None:
         if "host_name" not in row:
             continue
 
-        try:
-            row["host_inventory"] = load_tree(
-                host_name=HostName(row["host_name"]),
+        if (
+            tree := load_tree_of_host(
+                raw_host_name=row["host_name"],
                 raw_status_data_tree=row.get("host_structured_status", b""),
+                debug=active_config.debug,
             )
-        except Exception as e:
-            if active_config.debug:
-                html.show_warning("%s" % e)
-            # The inventory row may be joined with other rows (perf-o-meter, ...).
-            # Therefore we initialize the corrupt inventory tree with an empty tree
-            # in order to display all other rows.
+        ) is None:
             row["host_inventory"] = ImmutableTree()
             hosts_with_corrupted_trees.add(row["host_name"])
+        else:
+            row["host_inventory"] = tree
 
     if hosts_with_corrupted_trees:
-        user_errors.add(
-            MKUserError(
-                "load_structured_data_tree",
-                _(
-                    "Cannot load HW/SW inventory of %(hosts)s. Please remove the corrupted inventory or status data tree files."
-                )
-                % {"hosts": ", ".join(sorted(hosts_with_corrupted_trees))},
-            )
-        )
+        report_corrupted_trees(hosts_with_corrupted_trees)
 
 
 def _join_inventory_rows(

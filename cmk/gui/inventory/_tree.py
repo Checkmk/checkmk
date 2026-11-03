@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
 from typing import Literal
 
@@ -15,10 +15,12 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui import sites, userdb
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.hooks import request_memoize
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.watolib.groups_io import NothingOrChoices, PermittedPath
 from cmk.inventory.delta import ImmutableDeltaTree
 from cmk.inventory.filtering import filter_tree, SDFilterChoice
@@ -140,6 +142,31 @@ def load_tree(*, host_name: HostName, raw_status_data_tree: bytes) -> ImmutableT
         return filter_tree(merged_tree, filters)
 
     return merged_tree
+
+
+def load_tree_of_host(
+    *, raw_host_name: str, raw_status_data_tree: bytes, debug: bool
+) -> ImmutableTree | None:
+    try:
+        return load_tree(
+            host_name=HostName(raw_host_name), raw_status_data_tree=raw_status_data_tree
+        )
+    except Exception as e:
+        if debug:
+            html.show_warning("%s" % e)
+        return None
+
+
+def report_corrupted_trees(raw_host_names: Iterable[str]) -> None:
+    user_errors.add(
+        MKUserError(
+            "load_inventory_tree",
+            _(
+                "Cannot load HW/SW inventory of %(hosts)s. Please remove the corrupted inventory or status data tree files."
+            )
+            % {"hosts": ", ".join(sorted(raw_host_names))},
+        )
+    )
 
 
 def get_raw_status_data_via_livestatus(site: SiteId | None, host_name: HostName) -> bytes:

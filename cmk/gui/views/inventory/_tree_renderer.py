@@ -447,17 +447,10 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
         )
 
 
-# Ajax call for fetching parts of the tree
-def ajax_inv_render_tree(ctx: PageContext) -> None:
-    site_id = SiteId(http_request.get_ascii_input_mandatory("site"))
-    host_name = http_request.get_validated_type_input_mandatory(HostName, "host")
-    inventory.verify_permission(site_id, host_name)
-
-    raw_path = http_request.get_ascii_input_mandatory("raw_path", "")
-    show_internal_tree_paths = bool(http_request.var("show_internal_tree_paths"))
-
-    tree: ImmutableTree | ImmutableDeltaTree
-    if tree_id := http_request.get_ascii_input_mandatory("tree_id", ""):
+def _load_tree_to_render(
+    site_id: SiteId, host_name: HostName, tree_id: str, debug: bool
+) -> ImmutableTree | ImmutableDeltaTree | None:
+    if tree_id:
         tree, corrupted_history_files = inventory.load_delta_tree(
             HistoryStore(cmk.utils.paths.omd_root),
             host_name,
@@ -476,27 +469,32 @@ def ajax_inv_render_tree(ctx: PageContext) -> None:
                     },
                 )
             )
-            return
-    else:
-        raw_status_data_tree = inventory.get_raw_status_data_via_livestatus(site_id, host_name)
-        try:
-            tree = inventory.load_tree(
-                host_name=host_name,
-                raw_status_data_tree=raw_status_data_tree,
-            )
-        except Exception as e:
-            if ctx.config.debug:
-                html.show_warning("%s" % e)
-            user_errors.add(
-                MKUserError(
-                    "load_inventory_tree",
-                    _(
-                        "Cannot load HW/SW inventory of %(host_name)s. Please remove the corrupted inventory or status data tree files."
-                    )
-                    % {"host_name": host_name},
-                )
-            )
-            return
+            return None
+        return tree
+
+    if (
+        loaded_tree := inventory.load_tree_of_host(
+            raw_host_name=host_name,
+            raw_status_data_tree=inventory.get_raw_status_data_via_livestatus(site_id, host_name),
+            debug=debug,
+        )
+    ) is None:
+        inventory.report_corrupted_trees([host_name])
+    return loaded_tree
+
+
+# Ajax call for fetching parts of the tree
+def ajax_inv_render_tree(ctx: PageContext) -> None:
+    site_id = SiteId(http_request.get_ascii_input_mandatory("site"))
+    host_name = http_request.get_validated_type_input_mandatory(HostName, "host")
+    inventory.verify_permission(site_id, host_name)
+
+    raw_path = http_request.get_ascii_input_mandatory("raw_path", "")
+    show_internal_tree_paths = bool(http_request.var("show_internal_tree_paths"))
+
+    tree_id = http_request.get_ascii_input_mandatory("tree_id", "")
+    if (tree := _load_tree_to_render(site_id, host_name, tree_id, ctx.config.debug)) is None:
+        return
 
     TreeRenderer(
         site_id=site_id,

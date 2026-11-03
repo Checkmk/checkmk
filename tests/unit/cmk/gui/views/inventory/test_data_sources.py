@@ -13,6 +13,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
 from cmk.gui.views.inventory._data_sources import RowTableInventory, RowTableInventoryHistory
 from cmk.inventory.raw_paths import parse_internal_raw_path
@@ -106,6 +107,15 @@ class RowTableInventoryTest2(RowTableInventory):
         return LivestatusResponse([LivestatusRow(["this_site", "this_hostname", "foobar"])])
 
 
+class RowTableInventoryOfInvalidHostNames(RowTableInventory):
+    @staticmethod
+    @override
+    def _get_raw_data(only_sites: OnlySites, query: str) -> LivestatusResponse:
+        return LivestatusResponse(
+            [LivestatusRow(["this_site", "host b"]), LivestatusRow(["this_site", "host a"])]
+        )
+
+
 class RowTableInventoryHistoryTest1(RowTableInventoryHistory):
     @staticmethod
     @override
@@ -142,6 +152,19 @@ def test_query_row_table_inventory_add_columns(view: View) -> None:
     rows, _len_rows = row_table.query(view.datasource, [], ["host_foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS + ["host_foo"])
+
+
+@pytest.mark.usefixtures("request_context")
+def test_query_row_table_inventory_reports_all_unloadable_trees_once(view: View) -> None:
+    RowTableInventoryOfInvalidHostNames("invtesttable", parse_internal_raw_path(".foo.bar:")).query(
+        view.datasource, [], [], {}, "", None, None, []
+    )
+    assert dict(user_errors) == {
+        "load_inventory_tree": (
+            "Cannot load HW/SW inventory of host a, host b. Please remove the corrupted"
+            " inventory or status data tree files."
+        )
+    }
 
 
 @pytest.mark.usefixtures("request_context")

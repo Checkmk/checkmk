@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-11-02 08:21+0000\n"
 "Language-Team: Italian <https://translate.checkmk.com/projects/checkmk/dev/"
@@ -2220,11 +2220,11 @@ msgid ""
 msgstr ""
 "<p> Qui è possibile specificare un elenco di modelli di nomi di file che "
 "l'agente deve inviare nella sezione <tt>fileinfo</tt>. In questo caso "
-"vengono utilizzati percorsi UNC con pattern di globbing, ad esempio <tt>\\h"
-"ostname\\share name\\*\\foo\\*.log</tt>. I caratteri jolly non sono ammessi "
-"nei nomi di host o di condivisione. Per impostazione predefinita, ogni file "
-"trovato viene monitorato per dimensione ed età. Creando dei gruppi è "
-"possibile monitorare un insieme di file come entità e monitorare il "
+"vengono utilizzati percorsi UNC con pattern di globbing, ad esempio "
+"<tt>\\hostname\\share name\\*\\foo\\*.log</tt>. I caratteri jolly non sono "
+"ammessi nei nomi di host o di condivisione. Per impostazione predefinita, "
+"ogni file trovato viene monitorato per dimensione ed età. Creando dei gruppi "
+"è possibile monitorare un insieme di file come entità e monitorare il "
 "conteggio, la dimensione totale, il file più grande, più piccolo, più "
 "vecchio o più recente. Nota: se si specifica più di una regola di "
 "corrispondenza, <b>tutte</b> le regole di corrispondenza saranno utilizzate "
@@ -6198,20 +6198,6 @@ msgstr ""
 
 msgid "After the configured time notification plug-ins are being interrupted."
 msgstr "Dopol'intervallo configurato i plugin di notifica vengono interrotti."
-
-msgid ""
-"After the download, upload the license usage report to the Checkmk customer "
-"portal.<br>Navigate to 'My Licenses' in the customer portal and select your "
-"active license. Click on 'Upload' under 'Licensing Information Upload' and "
-"complete the dialog.<br>If everything is correct, you will receive the "
-"license information file which is then containing your license details."
-msgstr ""
-"Dopo lo scaricamento, caricare il rapporto sull'utilizzo della licenza nel "
-"portale clienti di Checkmk.<br>Navigare su 'Subscription' nel portale "
-"clienti e selezionare l'abbonamento attivo. Fare clic su \"Carica\" sotto "
-"\"Carica informazioni sulla licenza\" e completare la finestra di dialogo."
-"<br>Se tutto è corretto, si riceverà il file di risposta alla verifica "
-"contenente i dettagli dell'abbonamento."
 
 msgid ""
 "After the download, upload the verification request to the Checkmk customer "
@@ -17427,12 +17413,6 @@ msgid "Configure your cluster for Checkmk monitoring"
 msgstr "Mappare gli stati del monitor con gli stati di monitoraggio di Checkmk"
 
 #, python-format
-msgid "Configure your preferred way of license usage submission in %(link)s"
-msgstr ""
-"Configura il tuo metodo preferito per l'invio dell'utilizzo della licenza in "
-"%(link)s"
-
-#, python-format
 msgid "Configure your preferred way of license verification in %(link)s"
 msgstr ""
 "Configura il tuo metodo preferito per la verifica della licenza in %(link)s"
@@ -21755,6 +21735,10 @@ msgstr "Cancellare dopo"
 msgid "Delete aggregations"
 msgstr "Cancellare le aggregazioni"
 
+#, fuzzy, python-format
+msgid "Delete alert %(title)s"
+msgstr "Cancellare %(title)s"
+
 #, python-format
 msgid "Delete alert handler rule #%(nr)d"
 msgstr "Cancellare regola di gestione degli avvisi #%(nr)d"
@@ -22039,6 +22023,10 @@ msgstr "Cancellare questo tasto"
 
 msgid "Delete this aggregation"
 msgstr "Cancellare questa aggregazione"
+
+#, fuzzy
+msgid "Delete this alert"
+msgstr "Cancellare questo elemento"
 
 msgid "Delete this alert handler rule"
 msgstr "Cancellare questa regola di gestione degli avvisi"
@@ -24629,9 +24617,6 @@ msgstr "Scaricare il nome del file"
 #, fuzzy, python-format
 msgid "Download generic Checkmk agent for folder %(folder)s"
 msgstr "Scaricare l'agente Checkmk generico per la cartella %s"
-
-msgid "Download license usage report"
-msgstr "Scarica il rapporto sull'uso della licenza"
 
 #, fuzzy
 msgid "Download product usage data"
@@ -29852,15 +29837,6 @@ msgstr ""
 #, python-format
 msgid "For more help have a look at the %(link)s."
 msgstr "Per ulteriore aiuto, visita il %(link)s"
-
-#, fuzzy
-msgid ""
-"For offline submission, we need to add the license details to your license "
-"usage report. To do this, you must first download your license usage report."
-msgstr ""
-"Per l'invio offline, è necessario aggiungere i dettagli dell'abbonamento al "
-"rapporto di utilizzo della licenza. A tal fine, è necessario scaricare il "
-"rapporto di utilizzo della licenza."
 
 #, fuzzy
 msgid ""
@@ -36619,6 +36595,15 @@ msgid ""
 msgstr ""
 
 msgid ""
+"If this checkbox is activated and a data backend is configured for Synthetic "
+"Monitoring, traces and log records received via OTLP with the resource "
+"attribute service.name set to robotmk are stored in that data backend. These "
+"log records are then not forwarded to the Event Console.<br>Without such a "
+"data backend, nothing is stored and the log records still reach the Event "
+"Console."
+msgstr ""
+
+msgid ""
 "If this checkbox is activated, log messages received via OTLP are converted "
 "into syslog format and forwarded to the Event Console.<br>The Event Console "
 "is optimized for handling critical events, not for processing high-frequency "
@@ -38417,16 +38402,6 @@ msgstr "In questa cartella"
 
 #, fuzzy
 msgid ""
-"In this form, use 'Select file' to select the license information file you "
-"have downloaded from the customer portal. Click on 'Upload response' to "
-"complete the submission."
-msgstr ""
-"In questo modulo, utilizzare \"Seleziona file\" per selezionare il file di "
-"informazioni sulla licenza scaricato nel portale clienti. Fare clic su "
-"\"Carica risposta\" per completare l'invio."
-
-#, fuzzy
-msgid ""
 "In this form, use 'Select file' to select the verification response file you "
 "have downloaded from the customer portal. Click on 'Upload response' to "
 "complete the verification."
@@ -39625,6 +39600,10 @@ msgstr "hash di configurazione non valido"
 msgid "Invalid credentials"
 msgstr "Credenziali non valide"
 
+#, fuzzy, python-format
+msgid "Invalid custom graph definition: %(error)s"
+msgstr "Espressione regolare non valida: %s"
+
 #, fuzzy
 msgid "Invalid data"
 msgstr "Identità non valida"
@@ -40379,6 +40358,10 @@ msgstr "Articoli"
 
 msgid "Iterator age"
 msgstr "Età dell'iteratore"
+
+#, fuzzy
+msgid "Its configuration bundle and generated rule are deleted as well."
+msgstr "Questo gruppo non esiste."
 
 #, fuzzy
 msgid "Its configuration bundle no longer exists."
@@ -42700,9 +42683,6 @@ msgstr ""
 
 msgid "License usage"
 msgstr "Uso della licenza"
-
-msgid "License usage submission"
-msgstr "Presentazione dell'uso della licenza"
 
 msgid "License verification"
 msgstr "Verifica della licenza"
@@ -50123,9 +50103,6 @@ msgstr "Non è disponibile alcuna istantanea da ripristinare."
 msgid "No status host"
 msgstr "Nessun host di stato"
 
-msgid "No submission performed yet"
-msgstr "Non è stato ancora effettuato alcun invio"
-
 msgid "No successful synchronization so far."
 msgstr "Nessuna sincronizzazione riuscita finora."
 
@@ -52249,9 +52226,6 @@ msgstr "Sequenze offline in"
 msgid "Offline sequences out"
 msgstr "Sequenze offline fuori"
 
-msgid "Offline submission"
-msgstr "Invio offline"
-
 msgid "Offline to spare ratio"
 msgstr "Rapporto tra offline e ricambio"
 
@@ -52543,9 +52517,6 @@ msgstr "Online (%(version_info)s)"
 
 msgid "Online licensing credentials are not configured"
 msgstr "Credenziali per la verifica online della licenza non configurate"
-
-msgid "Online submission"
-msgstr "Invio online"
 
 msgid "Online verification"
 msgstr "Verifica online"
@@ -56277,10 +56248,6 @@ msgstr "Verifica online delle licenze"
 #, fuzzy
 msgid "Performing license test verification..."
 msgstr "Verifica online delle licenze"
-
-#, fuzzy
-msgid "Performing test authentication..."
-msgstr "Test di autenticazione"
 
 msgid "Period"
 msgstr "Periodo"
@@ -64880,6 +64847,10 @@ msgstr "Inviare dati HTTP POST"
 msgid "Send MCP usage data to Checkmk"
 msgstr "Stato della mappa GCP da controllare mk"
 
+#, fuzzy
+msgid "Send Synthetic Monitoring data to the data backend"
+msgstr "Configurazione dello stile selezionato"
+
 msgid "Send custom notification"
 msgstr "Inviare una notifica personalizzata"
 
@@ -67431,6 +67402,10 @@ msgstr ""
 "che hanno già attivato questa opzione mantengono la comunicazione non "
 "criptata per motivi di compatibilità. Tuttavia, si consiglia vivamente di "
 "passare a una comunicazione criptata."
+
+msgid ""
+"Since alerts generate rules, you need the permission to edit these rules."
+msgstr ""
 
 msgid ""
 "Since all nodes yield metrics with the same name, Checkmk has to decide "
@@ -71235,12 +71210,6 @@ msgstr "Soggetto per le notifiche di servizio"
 msgid "Submit"
 msgstr "Invia"
 
-msgid "Submit license usage offline"
-msgstr "Invia l'utilizzo della licenza offline"
-
-msgid "Submit license usage online"
-msgstr "Invia l'utilizzo della licenza online"
-
 msgid "Submit report"
 msgstr "Invia rapporto"
 
@@ -71249,10 +71218,6 @@ msgstr "Invia la richiesta e ricevi la risposta"
 
 msgid "Submitting crash report..."
 msgstr "Invio del rapporto sull'incidente..."
-
-#, fuzzy
-msgid "Submitting license usage online..."
-msgstr "Invia l'utilizzo della licenza online"
 
 msgid "Subnet groups"
 msgstr "Gruppi di sottorete"
@@ -72652,9 +72617,6 @@ msgstr "Test"
 msgid "Test a self-defined notification against your rule set."
 msgstr "Testate una notifica autodefinita rispetto al vostro set di regole."
 
-msgid "Test authentication"
-msgstr "Test di autenticazione"
-
 #, fuzzy
 msgid "Test configuration"
 msgstr "Configurazione dell'host"
@@ -74047,6 +74009,10 @@ msgid ""
 msgstr ""
 "I titoli delle aggregazioni non sono unici. \"%(title)s\" è creato "
 "dall'aggregazione <b>%(aggr_id)s</b> e <b>%(other_aggr_id)s</b>"
+
+#, fuzzy, python-format
+msgid "The alert \"%(name)s\" does not exist any more."
+msgstr "Il set di regole \"%s\" non esiste."
 
 msgid ""
 "The application using this token will no longer be able to access the API "
@@ -90312,9 +90278,6 @@ msgstr "Carica il file MIB"
 msgid "Upload key"
 msgstr "Carica la chiave"
 
-msgid "Upload license information file"
-msgstr "Caricare il file delle informazioni sulla licenza"
-
 msgid "Upload new:"
 msgstr "Carica nuovo:"
 
@@ -90323,9 +90286,6 @@ msgstr "Caricare o eliminare le icone personalizzate"
 
 msgid "Upload package"
 msgstr "Carica il pacchetto"
-
-msgid "Upload report in the customer portal"
-msgstr "Caricare il rapporto nel portale clienti"
 
 msgid "Upload request in the customer portal"
 msgstr "Caricare il rapporto nel portale clienti"
@@ -108789,6 +108749,10 @@ msgid "No state"
 msgstr "Stato del nodo"
 
 #, fuzzy
+msgid "Nothing to preview"
+msgstr "Niente di registrato"
+
+#, fuzzy
 msgid "Failed to create the alert."
 msgstr "Fallito il rendering del valore:"
 
@@ -113646,6 +113610,85 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "After the download, upload the license usage report to the Checkmk "
+#~ "customer portal.<br>Navigate to 'My Licenses' in the customer portal and "
+#~ "select your active license. Click on 'Upload' under 'Licensing "
+#~ "Information Upload' and complete the dialog.<br>If everything is correct, "
+#~ "you will receive the license information file which is then containing "
+#~ "your license details."
+#~ msgstr ""
+#~ "Dopo lo scaricamento, caricare il rapporto sull'utilizzo della licenza "
+#~ "nel portale clienti di Checkmk.<br>Navigare su 'Subscription' nel portale "
+#~ "clienti e selezionare l'abbonamento attivo. Fare clic su \"Carica\" sotto "
+#~ "\"Carica informazioni sulla licenza\" e completare la finestra di dialogo."
+#~ "<br>Se tutto è corretto, si riceverà il file di risposta alla verifica "
+#~ "contenente i dettagli dell'abbonamento."
+
+#, python-format
+#~ msgid "Configure your preferred way of license usage submission in %(link)s"
+#~ msgstr ""
+#~ "Configura il tuo metodo preferito per l'invio dell'utilizzo della licenza "
+#~ "in %(link)s"
+
+#~ msgid "Download license usage report"
+#~ msgstr "Scarica il rapporto sull'uso della licenza"
+
+#, fuzzy
+#~ msgid ""
+#~ "For offline submission, we need to add the license details to your "
+#~ "license usage report. To do this, you must first download your license "
+#~ "usage report."
+#~ msgstr ""
+#~ "Per l'invio offline, è necessario aggiungere i dettagli dell'abbonamento "
+#~ "al rapporto di utilizzo della licenza. A tal fine, è necessario scaricare "
+#~ "il rapporto di utilizzo della licenza."
+
+#, fuzzy
+#~ msgid ""
+#~ "In this form, use 'Select file' to select the license information file "
+#~ "you have downloaded from the customer portal. Click on 'Upload response' "
+#~ "to complete the submission."
+#~ msgstr ""
+#~ "In questo modulo, utilizzare \"Seleziona file\" per selezionare il file "
+#~ "di informazioni sulla licenza scaricato nel portale clienti. Fare clic su "
+#~ "\"Carica risposta\" per completare l'invio."
+
+#~ msgid "License usage submission"
+#~ msgstr "Presentazione dell'uso della licenza"
+
+#~ msgid "No submission performed yet"
+#~ msgstr "Non è stato ancora effettuato alcun invio"
+
+#~ msgid "Offline submission"
+#~ msgstr "Invio offline"
+
+#~ msgid "Online submission"
+#~ msgstr "Invio online"
+
+#, fuzzy
+#~ msgid "Performing test authentication..."
+#~ msgstr "Test di autenticazione"
+
+#~ msgid "Submit license usage offline"
+#~ msgstr "Invia l'utilizzo della licenza offline"
+
+#~ msgid "Submit license usage online"
+#~ msgstr "Invia l'utilizzo della licenza online"
+
+#, fuzzy
+#~ msgid "Submitting license usage online..."
+#~ msgstr "Invia l'utilizzo della licenza online"
+
+#~ msgid "Test authentication"
+#~ msgstr "Test di autenticazione"
+
+#~ msgid "Upload license information file"
+#~ msgstr "Caricare il file delle informazioni sulla licenza"
+
+#~ msgid "Upload report in the customer portal"
+#~ msgstr "Caricare il rapporto nel portale clienti"
 
 #~ msgid "Archive all events of this host?"
 #~ msgstr "Archiviare tutti gli eventi di questo host?"

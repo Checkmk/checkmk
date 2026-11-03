@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-11-02 08:21+0000\n"
 "Language-Team: Romanian <https://translate.checkmk.com/projects/checkmk/dev/"
@@ -2220,15 +2220,15 @@ msgid ""
 msgstr ""
 "<p>Aici puteți specifica o listă de modele de nume de fișiere care să fie "
 "trimise de către agent în secțiunea <tt>fileinfo</tt>. Aici se utilizează "
-"căi UNC cu modele de globbing, de exemplu: <tt>\\\\hostname\\share name\\*\\f"
-"oo\\*.log</tt>. Nu sunt permise caractere wildcards în numele de gazdă sau "
-"de partajare. În mod implicit, fiecare fișier găsit va fi monitorizat în "
-"ceea ce privește dimensiunea și vechimea. Prin crearea de grupuri, puteți, "
-"alternativ, să monitorizați o colecție de fișiere ca entitate și să "
-"monitorizați numărul, dimensiunea totală, cel mai mare, cel mai mic, cel mai "
-"vechi sau cel mai nou fișier. Notă: dacă specificați mai multe reguli de "
-"potrivire, atunci <b>toate regulile de potrivire</b> vor fi utilizate pentru "
-"definirea modelului - nu doar prima.</p>"
+"căi UNC cu modele de globbing, de exemplu: <tt>\\\\hostname\\share "
+"name\\*\\foo\\*.log</tt>. Nu sunt permise caractere wildcards în numele de "
+"gazdă sau de partajare. În mod implicit, fiecare fișier găsit va fi "
+"monitorizat în ceea ce privește dimensiunea și vechimea. Prin crearea de "
+"grupuri, puteți, alternativ, să monitorizați o colecție de fișiere ca "
+"entitate și să monitorizați numărul, dimensiunea totală, cel mai mare, cel "
+"mai mic, cel mai vechi sau cel mai nou fișier. Notă: dacă specificați mai "
+"multe reguli de potrivire, atunci <b>toate regulile de potrivire</b> vor fi "
+"utilizate pentru definirea modelului - nu doar prima.</p>"
 
 #, fuzzy
 msgid ""
@@ -6295,21 +6295,6 @@ msgid "After the configured time notification plug-ins are being interrupted."
 msgstr ""
 "După expirarea timpului configurat, plugin-urile de notificare sunt "
 "întrerupte."
-
-#, fuzzy
-msgid ""
-"After the download, upload the license usage report to the Checkmk customer "
-"portal.<br>Navigate to 'My Licenses' in the customer portal and select your "
-"active license. Click on 'Upload' under 'Licensing Information Upload' and "
-"complete the dialog.<br>If everything is correct, you will receive the "
-"license information file which is then containing your license details."
-msgstr ""
-"După descărcare, încărcați raportul de utilizare a licenței în portalul "
-"clienților Checkmk.<br>Navigați la 'Abonament' în portalul clienților și "
-"selectați abonamentul dvs. activ. Faceți clic pe 'Upload' sub 'Upload "
-"License Information' și completați dialogul.<br>Dacă totul este corect, veți "
-"primi acum fișierul cu informații despre licență care conține detaliile "
-"abonamentului dvs."
 
 #, fuzzy
 msgid ""
@@ -17656,12 +17641,6 @@ msgid "Configure your cluster for Checkmk monitoring"
 msgstr "Maparea stărilor de monitorizare cu stările de monitorizare Checkmk"
 
 #, python-format
-msgid "Configure your preferred way of license usage submission in %(link)s"
-msgstr ""
-"Configurați modalitatea preferată de transmitere a utilizării licenței în "
-"%(link)s"
-
-#, python-format
 msgid "Configure your preferred way of license verification in %(link)s"
 msgstr "Configurați modul preferat de verificare a licenței în %(link)s."
 
@@ -22015,6 +21994,10 @@ msgstr "Ștergeți după"
 msgid "Delete aggregations"
 msgstr "Ștergerea agregărilor"
 
+#, fuzzy, python-format
+msgid "Delete alert %(title)s"
+msgstr "Ștergeți %(title)s"
+
 #, python-format
 msgid "Delete alert handler rule #%(nr)d"
 msgstr "Ștergeți regula de gestionare a alertelor #%(nr)d"
@@ -22301,6 +22284,10 @@ msgstr "Ștergeți această cheie"
 
 msgid "Delete this aggregation"
 msgstr "Ștergeți această agregare"
+
+#, fuzzy
+msgid "Delete this alert"
+msgstr "Ștergeți acest element"
 
 msgid "Delete this alert handler rule"
 msgstr "Ștergeți această regulă de gestionare a alertelor"
@@ -24876,9 +24863,6 @@ msgstr "Descărcați numele fișierului"
 #, fuzzy, python-format
 msgid "Download generic Checkmk agent for folder %(folder)s"
 msgstr "Descărcați Checkmk Agent generic pentru folderul %s."
-
-msgid "Download license usage report"
-msgstr "Descărcați raportul de utilizare a licențelor"
 
 #, fuzzy
 msgid "Download product usage data"
@@ -30121,15 +30105,6 @@ msgstr ""
 #, python-format
 msgid "For more help have a look at the %(link)s."
 msgstr ""
-
-#, fuzzy
-msgid ""
-"For offline submission, we need to add the license details to your license "
-"usage report. To do this, you must first download your license usage report."
-msgstr ""
-"Pentru transmiterea offline, trebuie să adăugăm detaliile abonamentului la "
-"raportul de utilizare a licenței. Pentru a face acest lucru, trebuie mai "
-"întâi să descărcați raportul de utilizare a licenței."
 
 #, fuzzy
 msgid ""
@@ -36905,6 +36880,15 @@ msgid ""
 msgstr ""
 
 msgid ""
+"If this checkbox is activated and a data backend is configured for Synthetic "
+"Monitoring, traces and log records received via OTLP with the resource "
+"attribute service.name set to robotmk are stored in that data backend. These "
+"log records are then not forwarded to the Event Console.<br>Without such a "
+"data backend, nothing is stored and the log records still reach the Event "
+"Console."
+msgstr ""
+
+msgid ""
 "If this checkbox is activated, log messages received via OTLP are converted "
 "into syslog format and forwarded to the Event Console.<br>The Event Console "
 "is optimized for handling critical events, not for processing high-frequency "
@@ -38720,16 +38704,6 @@ msgstr "În acest dosar"
 
 #, fuzzy
 msgid ""
-"In this form, use 'Select file' to select the license information file you "
-"have downloaded from the customer portal. Click on 'Upload response' to "
-"complete the submission."
-msgstr ""
-"În acest formular, utilizați 'Selectați fișierul' pentru a selecta fișierul "
-"cu informații despre licență pe care l-ați descărcat în portalul clienților. "
-"Faceți clic pe 'Încărcați răspunsul' pentru a finaliza trimiterea."
-
-#, fuzzy
-msgid ""
 "In this form, use 'Select file' to select the verification response file you "
 "have downloaded from the customer portal. Click on 'Upload response' to "
 "complete the verification."
@@ -39930,6 +39904,10 @@ msgstr "Hash de configurare invalid"
 msgid "Invalid credentials"
 msgstr "Acreditări invalide"
 
+#, fuzzy, python-format
+msgid "Invalid custom graph definition: %(error)s"
+msgstr "Expresie regulată invalidă: %s."
+
 #, fuzzy
 msgid "Invalid data"
 msgstr "Identificator invalid"
@@ -40692,6 +40670,10 @@ msgstr "Articole"
 
 msgid "Iterator age"
 msgstr "Iterator age"
+
+#, fuzzy
+msgid "Its configuration bundle and generated rule are deleted as well."
+msgstr "Acest grup nu există."
 
 #, fuzzy
 msgid "Its configuration bundle no longer exists."
@@ -43011,9 +42993,6 @@ msgstr "Licența a expirat: Reînnoiți licența acum"
 
 msgid "License usage"
 msgstr "Utilizarea licenței"
-
-msgid "License usage submission"
-msgstr "Prezentarea utilizării licenței"
 
 msgid "License verification"
 msgstr "Verificarea licenței"
@@ -50468,9 +50447,6 @@ msgstr "Nu este disponibil niciun instantaneu pentru restaurare."
 msgid "No status host"
 msgstr "Nici o gazdă de stare"
 
-msgid "No submission performed yet"
-msgstr "Încă nu s-a efectuat nicio depunere"
-
 msgid "No successful synchronization so far."
 msgstr "Până acum nu s-a reușit sincronizarea."
 
@@ -52608,9 +52584,6 @@ msgstr "Secvențe offline în"
 msgid "Offline sequences out"
 msgstr "Secvențe offline out"
 
-msgid "Offline submission"
-msgstr "Trimitere offline"
-
 msgid "Offline to spare ratio"
 msgstr "Raportul între offline și rezervă"
 
@@ -52902,9 +52875,6 @@ msgstr "Online (%(version_info)s)"
 
 msgid "Online licensing credentials are not configured"
 msgstr "Nu sunt configurate acreditările de licențiere online"
-
-msgid "Online submission"
-msgstr "Trimitere online"
 
 msgid "Online verification"
 msgstr "Verificare online"
@@ -56632,10 +56602,6 @@ msgstr "Verificarea online a licențelor"
 #, fuzzy
 msgid "Performing license test verification..."
 msgstr "Verificarea online a licențelor"
-
-#, fuzzy
-msgid "Performing test authentication..."
-msgstr "Test de autentificare"
 
 msgid "Period"
 msgstr "Perioada"
@@ -65281,6 +65247,10 @@ msgstr "Trimiteți date HTTP POST"
 msgid "Send MCP usage data to Checkmk"
 msgstr "Starea GCP pentru a verifica mk"
 
+#, fuzzy
+msgid "Send Synthetic Monitoring data to the data backend"
+msgstr "Configurația stilului selectat"
+
 msgid "Send custom notification"
 msgstr "Trimiteți o notificare personalizată"
 
@@ -67885,6 +67855,10 @@ msgstr ""
 "deja această opțiune activată păstrează comunicarea necriptată din motive de "
 "compatibilitate. Cu toate acestea, este foarte recomandat să migreze la o "
 "comunicare criptată."
+
+msgid ""
+"Since alerts generate rules, you need the permission to edit these rules."
+msgstr ""
 
 msgid ""
 "Since all nodes yield metrics with the same name, Checkmk has to decide "
@@ -71714,12 +71688,6 @@ msgstr "Subiect pentru notificările de serviciu"
 msgid "Submit"
 msgstr "Trimiteți"
 
-msgid "Submit license usage offline"
-msgstr "Trimiteți utilizarea licenței offline"
-
-msgid "Submit license usage online"
-msgstr "Trimiteți utilizarea licenței online"
-
 msgid "Submit report"
 msgstr "Trimiteți raportul"
 
@@ -71728,10 +71696,6 @@ msgstr "Trimiteți o cerere și primiți un răspuns"
 
 msgid "Submitting crash report..."
 msgstr "Transmiterea raportului de accident..."
-
-#, fuzzy
-msgid "Submitting license usage online..."
-msgstr "Trimiteți utilizarea licenței online"
 
 msgid "Subnet groups"
 msgstr "Grupuri de subrețele"
@@ -73137,9 +73101,6 @@ msgid "Test a self-defined notification against your rule set."
 msgstr ""
 "Testați o notificare definită de dumneavoastră în funcție de setul de reguli."
 
-msgid "Test authentication"
-msgstr "Test de autentificare"
-
 #, fuzzy
 msgid "Test configuration"
 msgstr "Configurație gazdă"
@@ -74535,6 +74496,10 @@ msgid ""
 msgstr ""
 "Titlurile agregării nu sunt unice. \"%(title)s\" este creat prin agregarea "
 "<b>%(aggr_id)s</b> și <b>%(other_aggr_id)s</b>."
+
+#, fuzzy, python-format
+msgid "The alert \"%(name)s\" does not exist any more."
+msgstr "Setul de reguli \"%s\" nu există."
 
 msgid ""
 "The application using this token will no longer be able to access the API "
@@ -84146,9 +84111,9 @@ msgid ""
 "and also for ping checks on ping-only-hosts. For the host checks only the "
 "CRITICAL state is relevant, the WARNING levels are ignored."
 msgstr ""
-"Această regulă setează parametrii pentru verificările de gazdă (prin <tt>"
-"check_icmp</tt>) și, de asemenea, pentru verificările PING pe gazdele de tip "
-"ping-only-hosts. Pentru verificările gazdă este relevantă doar starea "
+"Această regulă setează parametrii pentru verificările de gazdă (prin "
+"<tt>check_icmp</tt>) și, de asemenea, pentru verificările PING pe gazdele de "
+"tip ping-only-hosts. Pentru verificările gazdă este relevantă doar starea "
 "critică, nivelurile de avertizare sunt ignorate."
 
 msgid ""
@@ -86066,8 +86031,8 @@ msgid ""
 "discovered groups in the <i>Azure agent info</i> service of the host owning "
 "the data source program."
 msgstr ""
-"Pentru a monitoriza resursele Azure, adăugați această sursă de date la <b>"
-"una</b> gazdă. Datele vor fi transportate utilizând mecanismul piggyback, "
+"Pentru a monitoriza resursele Azure, adăugați această sursă de date la "
+"<b>una</b> gazdă. Datele vor fi transportate utilizând mecanismul piggyback, "
 "așa că asigurați-vă că creați o gazdă pentru fiecare grup de resurse "
 "monitorizat. Puteți afla informații despre grupurile descoperite în "
 "serviciul <i>Azure Agent Info</i> al gazdei care deține programul datasource."
@@ -90829,9 +90794,6 @@ msgstr "Încărcați fișierul MIB"
 msgid "Upload key"
 msgstr "Încărcați cheia"
 
-msgid "Upload license information file"
-msgstr "Încărcați fișierul cu informații despre licență"
-
 msgid "Upload new:"
 msgstr "Încărcați un nou fișier:"
 
@@ -90840,9 +90802,6 @@ msgstr "Încărcați sau ștergeți pictograme personalizate"
 
 msgid "Upload package"
 msgstr "Încărcați pachetul"
-
-msgid "Upload report in the customer portal"
-msgstr "Încărcați raportul în portalul clienților"
 
 msgid "Upload request in the customer portal"
 msgstr "Încărcați cererea în portalul clienților"
@@ -93304,13 +93263,13 @@ msgstr ""
 "Această opțiune vă permite să definiți un filtru LDAP opțional care este "
 "utilizat în timpul căutărilor LDAP. Acesta poate fi utilizat pentru a "
 "gestiona numai un subset de utilizatori sub DN-ul de bază dat.Câteva exemple "
-"comune:<br><br><br><br> Toate obiectele utilizator din LDAP:<br> <tt>(&"
-"(objectclass=user)(objectcategory=person))</tt><br> Membrii unui grup:<br> "
-"<tt>(&(objectclass=user)(objectcategory=person)(memberof=CN=cmk-"
-"users,OU=groups,DC=example,DC=com))</tt><br> Membrii unui grup "
-"imbricate:<br> <tt>(&(objectclass=user)(objectcategory=person)"
-"(memberof:1.2.840.113556.1.4.1941:=CN=cmk-users,OU=groups,DC=example,DC=com))"
-"</tt><br>"
+"comune:<br><br><br><br> Toate obiectele utilizator din LDAP:<br> "
+"<tt>(&(objectclass=user)(objectcategory=person))</tt><br> Membrii unui grup:"
+"<br> <tt>(&(objectclass=user)(objectcategory=person)(memberof=CN=cmk-"
+"users,OU=groups,DC=example,DC=com))</tt><br> Membrii unui grup imbricate:"
+"<br> <tt>(&(objectclass=user)(objectcategory=person)"
+"(memberof:1.2.840.113556.1.4.1941:=CN=cmk-"
+"users,OU=groups,DC=example,DC=com))</tt><br>"
 
 msgid ""
 "Using this option, you can define an optional LDAP filter which is used "
@@ -93320,8 +93279,8 @@ msgid ""
 msgstr ""
 "Cu ajutorul acestei opțiuni puteți defini un filtru LDAP opțional care este "
 "utilizat în timpul căutărilor LDAP legate de grup. Acesta poate fi utilizat "
-"pentru a gestiona numai un subset de grupuri sub DN-ul de bază dat.<br><br>"
-"de exemplu <tt>(objectclass=group)</tt>"
+"pentru a gestiona numai un subset de grupuri sub DN-ul de bază dat."
+"<br><br>de exemplu <tt>(objectclass=group)</tt>"
 
 #, fuzzy
 msgid ""
@@ -95620,8 +95579,8 @@ msgstr ""
 "posibilă utilizarea comunicării Livestatus criptate. Site-urile create cu "
 "versiunea 1.6 vor folosi automat comunicarea criptată în mod implicit. Site-"
 "urile create cu versiunile anterioare trebuie să fie configurate manual "
-"pentru a activa criptarea. Aruncați o privire la <a "
-"href=\"werk.py?werk=7017\">werk #7017</a> pentru informații suplimentare."
+"pentru a activa criptarea. Aruncați o privire la <a href=\"werk.py?"
+"werk=7017\">werk #7017</a> pentru informații suplimentare."
 
 #, fuzzy
 msgid ""
@@ -109399,6 +109358,10 @@ msgid "No state"
 msgstr "Starea nodului"
 
 #, fuzzy
+msgid "Nothing to preview"
+msgstr "Nimic înregistrat"
+
+#, fuzzy
 msgid "Failed to create the alert."
 msgstr "Nu a reușit să redea valoarea:"
 
@@ -114354,6 +114317,87 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "After the download, upload the license usage report to the Checkmk "
+#~ "customer portal.<br>Navigate to 'My Licenses' in the customer portal and "
+#~ "select your active license. Click on 'Upload' under 'Licensing "
+#~ "Information Upload' and complete the dialog.<br>If everything is correct, "
+#~ "you will receive the license information file which is then containing "
+#~ "your license details."
+#~ msgstr ""
+#~ "După descărcare, încărcați raportul de utilizare a licenței în portalul "
+#~ "clienților Checkmk.<br>Navigați la 'Abonament' în portalul clienților și "
+#~ "selectați abonamentul dvs. activ. Faceți clic pe 'Upload' sub 'Upload "
+#~ "License Information' și completați dialogul.<br>Dacă totul este corect, "
+#~ "veți primi acum fișierul cu informații despre licență care conține "
+#~ "detaliile abonamentului dvs."
+
+#, python-format
+#~ msgid "Configure your preferred way of license usage submission in %(link)s"
+#~ msgstr ""
+#~ "Configurați modalitatea preferată de transmitere a utilizării licenței în "
+#~ "%(link)s"
+
+#~ msgid "Download license usage report"
+#~ msgstr "Descărcați raportul de utilizare a licențelor"
+
+#, fuzzy
+#~ msgid ""
+#~ "For offline submission, we need to add the license details to your "
+#~ "license usage report. To do this, you must first download your license "
+#~ "usage report."
+#~ msgstr ""
+#~ "Pentru transmiterea offline, trebuie să adăugăm detaliile abonamentului "
+#~ "la raportul de utilizare a licenței. Pentru a face acest lucru, trebuie "
+#~ "mai întâi să descărcați raportul de utilizare a licenței."
+
+#, fuzzy
+#~ msgid ""
+#~ "In this form, use 'Select file' to select the license information file "
+#~ "you have downloaded from the customer portal. Click on 'Upload response' "
+#~ "to complete the submission."
+#~ msgstr ""
+#~ "În acest formular, utilizați 'Selectați fișierul' pentru a selecta "
+#~ "fișierul cu informații despre licență pe care l-ați descărcat în portalul "
+#~ "clienților. Faceți clic pe 'Încărcați răspunsul' pentru a finaliza "
+#~ "trimiterea."
+
+#~ msgid "License usage submission"
+#~ msgstr "Prezentarea utilizării licenței"
+
+#~ msgid "No submission performed yet"
+#~ msgstr "Încă nu s-a efectuat nicio depunere"
+
+#~ msgid "Offline submission"
+#~ msgstr "Trimitere offline"
+
+#~ msgid "Online submission"
+#~ msgstr "Trimitere online"
+
+#, fuzzy
+#~ msgid "Performing test authentication..."
+#~ msgstr "Test de autentificare"
+
+#~ msgid "Submit license usage offline"
+#~ msgstr "Trimiteți utilizarea licenței offline"
+
+#~ msgid "Submit license usage online"
+#~ msgstr "Trimiteți utilizarea licenței online"
+
+#, fuzzy
+#~ msgid "Submitting license usage online..."
+#~ msgstr "Trimiteți utilizarea licenței online"
+
+#~ msgid "Test authentication"
+#~ msgstr "Test de autentificare"
+
+#~ msgid "Upload license information file"
+#~ msgstr "Încărcați fișierul cu informații despre licență"
+
+#~ msgid "Upload report in the customer portal"
+#~ msgstr "Încărcați raportul în portalul clienților"
 
 #~ msgid "Archive all events of this host?"
 #~ msgstr "Arhivați toate evenimentele acestei gazde?"

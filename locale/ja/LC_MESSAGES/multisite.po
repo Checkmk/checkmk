@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-11-02 08:21+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
@@ -6011,19 +6011,6 @@ msgstr ""
 
 msgid "After the configured time notification plug-ins are being interrupted."
 msgstr "設定された時間の後、通知プラグインは中断される。"
-
-msgid ""
-"After the download, upload the license usage report to the Checkmk customer "
-"portal.<br>Navigate to 'My Licenses' in the customer portal and select your "
-"active license. Click on 'Upload' under 'Licensing Information Upload' and "
-"complete the dialog.<br>If everything is correct, you will receive the "
-"license information file which is then containing your license details."
-msgstr ""
-"ダウンロード後、ライセンス使用レポートをCheckmkカスタマーポータルにアップロー"
-"ドします。<br>カスタマーポータルの'My Licenses'に移動し、アクティブなライセン"
-"スを選択します。'Licensing Information Upload'の下にある'Upload'をクリック"
-"し、ダイアログを完了します。<br>すべてが正常であれば、ライセンスの詳細を含む"
-"ライセンス情報ファイルが送信されます。"
 
 msgid ""
 "After the download, upload the verification request to the Checkmk customer "
@@ -16528,10 +16515,6 @@ msgid "Configure your cluster for Checkmk monitoring"
 msgstr "Checkmk 監視用にクラスタを設定する"
 
 #, python-format
-msgid "Configure your preferred way of license usage submission in %(link)s"
-msgstr "ライセンス使用状況の送信方法を %(link)s で設定します"
-
-#, python-format
 msgid "Configure your preferred way of license verification in %(link)s"
 msgstr "ライセンス検証の優先方法を %(link)s で構成する"
 
@@ -20635,6 +20618,10 @@ msgstr "後に削除"
 msgid "Delete aggregations"
 msgstr "集計を削除する"
 
+#, fuzzy, python-format
+msgid "Delete alert %(title)s"
+msgstr "%(title)s を削除"
+
 #, python-format
 msgid "Delete alert handler rule #%(nr)d"
 msgstr "アラートハンドラルール #%(nr)dを削除"
@@ -20908,6 +20895,10 @@ msgstr "このリレーを削除します"
 
 msgid "Delete this aggregation"
 msgstr "この集計を削除します"
+
+#, fuzzy
+msgid "Delete this alert"
+msgstr "このクライアントを削除"
 
 msgid "Delete this alert handler rule"
 msgstr "このアラートハンドラルールを削除します"
@@ -23285,9 +23276,6 @@ msgstr "ファイル名をダウンロード"
 #, python-format
 msgid "Download generic Checkmk agent for folder %(folder)s"
 msgstr "フォルダ %(folder)sの汎用Checkmkエージェントをダウンロード"
-
-msgid "Download license usage report"
-msgstr "ライセンス使用状況レポートをダウンロードする"
 
 msgid "Download product usage data"
 msgstr "製品利用データをダウンロードする"
@@ -28328,14 +28316,6 @@ msgstr ""
 #, python-format
 msgid "For more help have a look at the %(link)s."
 msgstr "詳しくは%(link)sをご覧ください。"
-
-msgid ""
-"For offline submission, we need to add the license details to your license "
-"usage report. To do this, you must first download your license usage report."
-msgstr ""
-"オフラインで提出するには、ライセンスの詳細を使用状況レポートに追加する必要が"
-"あります。これを行うには、まずライセンス使用レポートをダウンロードする必要が"
-"あります。"
 
 msgid ""
 "For offline verification, we need to verify your license in the customer "
@@ -34565,6 +34545,15 @@ msgstr ""
 "て、root以外のユーザーコンテキストを設定することが重要です。"
 
 msgid ""
+"If this checkbox is activated and a data backend is configured for Synthetic "
+"Monitoring, traces and log records received via OTLP with the resource "
+"attribute service.name set to robotmk are stored in that data backend. These "
+"log records are then not forwarded to the Event Console.<br>Without such a "
+"data backend, nothing is stored and the log records still reach the Event "
+"Console."
+msgstr ""
+
+msgid ""
 "If this checkbox is activated, log messages received via OTLP are converted "
 "into syslog format and forwarded to the Event Console.<br>The Event Console "
 "is optimized for handling critical events, not for processing high-frequency "
@@ -36277,15 +36266,6 @@ msgid "In this folder"
 msgstr "このフォルダ内"
 
 msgid ""
-"In this form, use 'Select file' to select the license information file you "
-"have downloaded from the customer portal. Click on 'Upload response' to "
-"complete the submission."
-msgstr ""
-"このフォームでは、「ファイルを選択」を使用して、カスタマーポータルからダウン"
-"ロードしたライセンス情報ファイルを選択します。「Upload response」をクリックし"
-"て送信を完了します。"
-
-msgid ""
 "In this form, use 'Select file' to select the verification response file you "
 "have downloaded from the customer portal. Click on 'Upload response' to "
 "complete the verification."
@@ -37417,6 +37397,10 @@ msgstr "無効な構成ハッシュ"
 msgid "Invalid credentials"
 msgstr "無効な資格情報"
 
+#, fuzzy, python-format
+msgid "Invalid custom graph definition: %(error)s"
+msgstr "無効な正規表現: %(error)s"
+
 msgid "Invalid data"
 msgstr "無効なデータ"
 
@@ -38129,6 +38113,10 @@ msgstr "アイテム"
 
 msgid "Iterator age"
 msgstr "イテレータ時間"
+
+#, fuzzy
+msgid "Its configuration bundle and generated rule are deleted as well."
+msgstr "生成されたルールも同様に削除されます。"
 
 #, fuzzy
 msgid "Its configuration bundle no longer exists."
@@ -40279,9 +40267,6 @@ msgstr ""
 
 msgid "License usage"
 msgstr "ライセンスの使用法"
-
-msgid "License usage submission"
-msgstr "License usageの提出"
 
 msgid "License verification"
 msgstr "ライセンス検証"
@@ -47248,9 +47233,6 @@ msgstr "復元可能なスナップショットはありません。"
 msgid "No status host"
 msgstr "ステータスホストなし"
 
-msgid "No submission performed yet"
-msgstr "まだ提出されていません"
-
 msgid "No successful synchronization so far."
 msgstr "これまでのところ、同期は成功していません。"
 
@@ -49226,9 +49208,6 @@ msgstr "のオフラインシーケンス"
 msgid "Offline sequences out"
 msgstr "オフラインシーケンスアウト"
 
-msgid "Offline submission"
-msgstr "オフラインでの提出"
-
 msgid "Offline to spare ratio"
 msgstr "オフラインとスペアの比率"
 
@@ -49499,9 +49478,6 @@ msgstr "オンライン (%(version_info)s)"
 
 msgid "Online licensing credentials are not configured"
 msgstr "オンラインライセンス認証が設定されていない"
-
-msgid "Online submission"
-msgstr "オンラインでの提出"
 
 msgid "Online verification"
 msgstr "オンライン検証"
@@ -52911,9 +52887,6 @@ msgstr "ライセンスオンライン検証を実行中..."
 
 msgid "Performing license test verification..."
 msgstr "ライセンスのテスト検証を実行中..."
-
-msgid "Performing test authentication..."
-msgstr "テスト認証を実行中..."
 
 msgid "Period"
 msgstr "ピリオド"
@@ -61015,6 +60988,10 @@ msgstr "HTTP POSTデータを送信する"
 msgid "Send MCP usage data to Checkmk"
 msgstr "MCPの使用状況データをCheckmkに送信する"
 
+#, fuzzy
+msgid "Send Synthetic Monitoring data to the data backend"
+msgstr "メトリックバックエンドからデータをクエリするためのポート。"
+
 msgid "Send custom notification"
 msgstr "カスタム通知の送信"
 
@@ -63431,6 +63408,13 @@ msgstr ""
 "有効になっています。すでにこのオプションが有効になっているサイトは、互換性の"
 "理由から通信を暗号化しないままにしています。しかし、暗号化通信に移行すること"
 "を強く推奨します。"
+
+#, fuzzy
+msgid ""
+"Since alerts generate rules, you need the permission to edit these rules."
+msgstr ""
+"カスタムサービスはルールを生成するため、このページにアクセスするには、これら"
+"のルールを編集する権限が必要です。"
 
 msgid ""
 "Since all nodes yield metrics with the same name, Checkmk has to decide "
@@ -67045,12 +67029,6 @@ msgstr "サービス通知の件名"
 msgid "Submit"
 msgstr "サブミット"
 
-msgid "Submit license usage offline"
-msgstr "ライセンスの使用状況をオフラインで提出する"
-
-msgid "Submit license usage online"
-msgstr "ライセンスの使用状況をオンラインで提出する"
-
 msgid "Submit report"
 msgstr "レポートを送信する"
 
@@ -67059,9 +67037,6 @@ msgstr "リクエストの送信と回答の取得"
 
 msgid "Submitting crash report..."
 msgstr "クラッシュレポートを送信しています..."
-
-msgid "Submitting license usage online..."
-msgstr "ライセンスの使用状況をオンラインで提出中..."
 
 msgid "Subnet groups"
 msgstr "サブネットグループ"
@@ -68352,9 +68327,6 @@ msgstr "テスト"
 
 msgid "Test a self-defined notification against your rule set."
 msgstr "ルールセットに対して自分で定義した通知をテストする。"
-
-msgid "Test authentication"
-msgstr "テスト認証"
 
 msgid "Test configuration"
 msgstr "テスト構成"
@@ -69733,6 +69705,10 @@ msgid ""
 msgstr ""
 "集計タイトルは一意ではありません。\"%(title)s\"は、<b>%(aggr_id)s</b> と "
 "<b>%(other_aggr_id)s</b>の集計によって作成されます"
+
+#, fuzzy, python-format
+msgid "The alert \"%(name)s\" does not exist any more."
+msgstr "カスタムサービス \"%(name)s\" は現在存在しません。"
 
 msgid ""
 "The application using this token will no longer be able to access the API "
@@ -76001,9 +75977,9 @@ msgid ""
 msgstr ""
 "これは、Windows タイム サービス内の 8 ビット「Reachability」レジスタを監視す"
 "ることで、直近 8 回の試行における連続した同期失敗をチェックします。 <b>失敗し"
-"た試行の総数</b> が定義された閾値を超えた場合、警告または重大なアラートが"
-"トリガーされます。たとえば、閾値を 4 に設定すると、直近 8 回の試行のうち <b>"
-"いずれか</b> 4 回が失敗した場合に、Checkmk がアラートを発します。"
+"た試行の総数</b> が定義された閾値を超えた場合、警告または重大なアラートがトリ"
+"ガーされます。たとえば、閾値を 4 に設定すると、直近 8 回の試行のうち <b>いず"
+"れか</b> 4 回が失敗した場合に、Checkmk がアラートを発します。"
 
 msgid "This collection"
 msgstr "このコレクション"
@@ -77340,10 +77316,10 @@ msgid ""
 "sufficient for registering the agent updater. This requires the additional "
 "permission <i>Enable agent updates on hosts & download monitoring agents</i>."
 msgstr ""
-"この権限により、ユーザーが連絡先のフォルダ内の新規ホストに対して"
-"エージェントコントローラーを登録できます。<br>注記：この権限だけでは"
-"エージェントアップデーターの登録には不十分です。これには追加の権限<i>ホストで"
-"のエージェント更新の有効化と監視エージェントのダウンロード</i>が必要です。"
+"この権限により、ユーザーが連絡先のフォルダ内の新規ホストに対してエージェント"
+"コントローラーを登録できます。<br>注記：この権限だけではエージェントアップ"
+"データーの登録には不十分です。これには追加の権限<i>ホストでのエージェント更新"
+"の有効化と監視エージェントのダウンロード</i>が必要です。"
 
 msgid ""
 "This permission allows to register the Agent Controller for any new host."
@@ -77351,10 +77327,10 @@ msgid ""
 "updater. This requires the additional permission <i>Enable agent updates on "
 "all hosts & download all monitoring agents</i>."
 msgstr ""
-"この権限により、新しいホストに対してエージェントコントローラーを登録できます"
-"。<br>注記：この権限だけではエージェントアップデーターの登録には不十分です。"
-"これには追加の権限<i>すべてのホストでエージェント更新を有効化し、すべての監視"
-"エージェントをダウンロードする</i>が必要です。"
+"この権限により、新しいホストに対してエージェントコントローラーを登録できま"
+"す。<br>注記：この権限だけではエージェントアップデーターの登録には不十分で"
+"す。これには追加の権限<i>すべてのホストでエージェント更新を有効化し、すべての"
+"監視エージェントをダウンロードする</i>が必要です。"
 
 msgid ""
 "This permission allows to revert pending changes. Beware that this holds "
@@ -78780,11 +78756,13 @@ msgstr ""
 "ができます。"
 
 msgid "This rule set allows you to configure levels for the database CPU usage"
-msgstr "このルールでは、データベースのCPU使用率のレベルを設定することができます"
+msgstr ""
+"このルールでは、データベースのCPU使用率のレベルを設定することができます"
 
 msgid ""
 "This rule set allows you to configure levels for the database throughput"
-msgstr "このルールセットを使用すると、データベースの処理能力のレベルを設定できます"
+msgstr ""
+"このルールセットを使用すると、データベースの処理能力のレベルを設定できます"
 
 msgid ""
 "This rule set allows you to configure levels for the deadlocks in the "
@@ -78799,10 +78777,12 @@ msgstr "このルールセットでは、ストレージのデータフローの
 msgid ""
 "This rule set allows you to configure levels for the storage latency and "
 "availability"
-msgstr "このルールセットを使用すると、ストレージの遅延と可用性のレベルを設定できます"
+msgstr ""
+"このルールセットを使用すると、ストレージの遅延と可用性のレベルを設定できます"
 
 msgid "This rule set allows you to configure levels for the storage usage"
-msgstr "このルールセットを使用すると、ストレージの使用量に関するレベルを設定できます"
+msgstr ""
+"このルールセットを使用すると、ストレージの使用量に関するレベルを設定できます"
 
 #, fuzzy
 msgid ""
@@ -79619,9 +79599,9 @@ msgid ""
 "package's resources."
 msgstr ""
 "この設定により、「非ルートエージェント展開」が実施されます。エージェントと"
-"エージェントコントローラーは、設定されたエージェントユーザーの下で動作します"
-"。さらに、エージェントパッケージは、エージェントパッケージのリソースに対して"
-"適切な権限を設定します。"
+"エージェントコントローラーは、設定されたエージェントユーザーの下で動作しま"
+"す。さらに、エージェントパッケージは、エージェントパッケージのリソースに対し"
+"て適切な権限を設定します。"
 
 msgid "This shared link is not valid."
 msgstr "この共有リンクは無効です。"
@@ -80045,9 +80025,9 @@ msgid ""
 "Please configure only one of the two."
 msgstr ""
 "これにより、ターゲットシステムにエージェントプラグイン <tt>mk_oracle</tt> が"
-"デプロイされます。<br>ARMアーキテクチャはサポートされていません。<br><b>注"
-"意:</b> このプラグインは、「Oracleデータベース(Linux, Solaris, AIX, Windows)"
-"」と併用することはできません。どちらか一方のみを設定してください。"
+"デプロイされます。<br>ARMアーキテクチャはサポートされていません。<br><b>注意:"
+"</b> このプラグインは、「Oracleデータベース(Linux, Solaris, AIX, Windows)」と"
+"併用することはできません。どちらか一方のみを設定してください。"
 
 msgid "This will deploy the agent plug-in <tt>mk_podman</tt>."
 msgstr "エージェントプラグイン<tt>mk_podman</tt>をデプロイします。"
@@ -81053,10 +81033,10 @@ msgid ""
 "the data source program."
 msgstr ""
 "Azureリソースを監視するには、このデータソースを<b> 1つの</b>ホストに追加しま"
-"す。データはピギーバックメカニズムを使用して転送されるため、監視対象の"
-"リソースグループごとに1つのホストを作成してください。検出されたグループについ"
-"ては、データソースプログラムを所有するホストの<i> Azure Agent Info </i>"
-"サービスで確認できます。"
+"す。データはピギーバックメカニズムを使用して転送されるため、監視対象のリソー"
+"スグループごとに1つのホストを作成してください。検出されたグループについては、"
+"データソースプログラムを所有するホストの<i> Azure Agent Info </i>サービスで確"
+"認できます。"
 
 msgid ""
 "To obtain the data required for this check, please configure the data source "
@@ -85242,9 +85222,6 @@ msgstr "アップロードされたファイル"
 msgid "Upload key"
 msgstr "キーをアップロード"
 
-msgid "Upload license information file"
-msgstr "ライセンス情報ファイルのアップロード"
-
 msgid "Upload new:"
 msgstr "新規アップロード:"
 
@@ -85253,9 +85230,6 @@ msgstr "カスタムアイコンのアップロードと削除"
 
 msgid "Upload package"
 msgstr "パッケージをアップロード"
-
-msgid "Upload report in the customer portal"
-msgstr "カスタマーポータルでレポートをアップロード"
 
 msgid "Upload request in the customer portal"
 msgstr "カスタマーポータルでリクエストをアップロード"
@@ -85436,7 +85410,8 @@ msgstr "1秒あたりの\"バックエンド接続失敗\"の上位レベル"
 
 msgid ""
 "Upper levels for \"backend connections unhealthy/not attempted\" per second"
-msgstr "1秒あたりの\"バックエンド接続が正常でない/試行されていない\"の上位レベル"
+msgstr ""
+"1秒あたりの\"バックエンド接続が正常でない/試行されていない\"の上位レベル"
 
 msgid "Upper levels for \"cache misses\" per second"
 msgstr "1秒あたりの\"キャッシュミス\"の上位レベル"
@@ -89594,14 +89569,14 @@ msgid ""
 msgstr ""
 "アクティベートすると、エージェントベーカリーはエージェントパッケージのほとん"
 "どを圧縮します。圧縮は、.deb パッケージ、.rpm パッケージ、およびエージェント"
-"のベーカリーから得られるすべての .tar.gz パッケージに適用されます。注意: "
-"パッケージ名の変更を避けるために、圧縮されていない TAR パッケージも .tar.gz "
-"という接尾辞を持っています。技術的には、圧縮レベル 0 の gzip を使用して圧縮さ"
-"れていますがカスタムファイルや独自のベーカリープラグインから生じる大きな"
-"ファイルをデプロイするのでなければ、圧縮を有効にすることはお勧めしません。"
-"Checkmk が提供するすべての大きなファイル (数キロバイト以上のファイル、主に"
-"エージェントアップデータとエージェントコントローラ) は、あらかじめ圧縮されて"
-"いるので、圧縮を有効にするメリットはありません。"
+"のベーカリーから得られるすべての .tar.gz パッケージに適用されます。注意: パッ"
+"ケージ名の変更を避けるために、圧縮されていない TAR パッケージも .tar.gz とい"
+"う接尾辞を持っています。技術的には、圧縮レベル 0 の gzip を使用して圧縮されて"
+"いますがカスタムファイルや独自のベーカリープラグインから生じる大きなファイル"
+"をデプロイするのでなければ、圧縮を有効にすることはお勧めしません。Checkmk が"
+"提供するすべての大きなファイル (数キロバイト以上のファイル、主にエージェント"
+"アップデータとエージェントコントローラ) は、あらかじめ圧縮されているので、圧"
+"縮を有効にするメリットはありません。"
 
 msgid ""
 "When aggregation is turned on and the rule matches for two different "
@@ -102982,6 +102957,10 @@ msgid "No state"
 msgstr "ノードの状態"
 
 #, fuzzy
+msgid "Nothing to preview"
+msgstr "何も記録されません"
+
+#, fuzzy
 msgid "Failed to create the alert."
 msgstr "値のレンダリングに失敗しました:"
 
@@ -108077,6 +108056,78 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid ""
+#~ "After the download, upload the license usage report to the Checkmk "
+#~ "customer portal.<br>Navigate to 'My Licenses' in the customer portal and "
+#~ "select your active license. Click on 'Upload' under 'Licensing "
+#~ "Information Upload' and complete the dialog.<br>If everything is correct, "
+#~ "you will receive the license information file which is then containing "
+#~ "your license details."
+#~ msgstr ""
+#~ "ダウンロード後、ライセンス使用レポートをCheckmkカスタマーポータルにアップ"
+#~ "ロードします。<br>カスタマーポータルの'My Licenses'に移動し、アクティブな"
+#~ "ライセンスを選択します。'Licensing Information Upload'の下にある'Upload'を"
+#~ "クリックし、ダイアログを完了します。<br>すべてが正常であれば、ライセンスの"
+#~ "詳細を含むライセンス情報ファイルが送信されます。"
+
+#, python-format
+#~ msgid "Configure your preferred way of license usage submission in %(link)s"
+#~ msgstr "ライセンス使用状況の送信方法を %(link)s で設定します"
+
+#~ msgid "Download license usage report"
+#~ msgstr "ライセンス使用状況レポートをダウンロードする"
+
+#~ msgid ""
+#~ "For offline submission, we need to add the license details to your "
+#~ "license usage report. To do this, you must first download your license "
+#~ "usage report."
+#~ msgstr ""
+#~ "オフラインで提出するには、ライセンスの詳細を使用状況レポートに追加する必要"
+#~ "があります。これを行うには、まずライセンス使用レポートをダウンロードする必"
+#~ "要があります。"
+
+#~ msgid ""
+#~ "In this form, use 'Select file' to select the license information file "
+#~ "you have downloaded from the customer portal. Click on 'Upload response' "
+#~ "to complete the submission."
+#~ msgstr ""
+#~ "このフォームでは、「ファイルを選択」を使用して、カスタマーポータルからダウ"
+#~ "ンロードしたライセンス情報ファイルを選択します。「Upload response」をク"
+#~ "リックして送信を完了します。"
+
+#~ msgid "License usage submission"
+#~ msgstr "License usageの提出"
+
+#~ msgid "No submission performed yet"
+#~ msgstr "まだ提出されていません"
+
+#~ msgid "Offline submission"
+#~ msgstr "オフラインでの提出"
+
+#~ msgid "Online submission"
+#~ msgstr "オンラインでの提出"
+
+#~ msgid "Performing test authentication..."
+#~ msgstr "テスト認証を実行中..."
+
+#~ msgid "Submit license usage offline"
+#~ msgstr "ライセンスの使用状況をオフラインで提出する"
+
+#~ msgid "Submit license usage online"
+#~ msgstr "ライセンスの使用状況をオンラインで提出する"
+
+#~ msgid "Submitting license usage online..."
+#~ msgstr "ライセンスの使用状況をオンラインで提出中..."
+
+#~ msgid "Test authentication"
+#~ msgstr "テスト認証"
+
+#~ msgid "Upload license information file"
+#~ msgstr "ライセンス情報ファイルのアップロード"
+
+#~ msgid "Upload report in the customer portal"
+#~ msgstr "カスタマーポータルでレポートをアップロード"
 
 #~ msgid "Archive all events of this host?"
 #~ msgstr "ホストの全イベントをアーカイブしますか?"

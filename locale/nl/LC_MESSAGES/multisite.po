@@ -4,11 +4,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-11-02 08:21+0000\n"
-"Language-Team: Dutch <https://translate.checkmk.com/projects/checkmk/dev/nl/>"
-"\n"
+"Language-Team: Dutch <https://translate.checkmk.com/projects/checkmk/dev/nl/"
+">\n"
 "Language: nl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2195,15 +2195,15 @@ msgid ""
 msgstr ""
 "<p>Hier kunt u een lijst van bestandsnaampatronen opgeven die door de agent "
 "moeten worden verzonden in de sectie <tt>fileinfo</tt>. UNC paden met "
-"globbing patronen worden hier gebruikt, bijv. <tt>hostnaamnaam*foo*.log</tt>"
-". Jokertekens zijn niet toegestaan in host- of sharenamen. Standaard wordt "
-"elk gevonden bestand gecontroleerd op grootte en leeftijd. Door groepen te "
-"maken kunt u als alternatief een verzameling bestanden als een entiteit "
-"monitoren en het aantal, de totale grootte, het grootste, kleinste oudste of "
-"nieuwste bestand monitoren. Opmerking: als u meer dan één "
+"globbing patronen worden hier gebruikt, bijv. <tt>hostnaamnaam*foo*.log</"
+"tt>. Jokertekens zijn niet toegestaan in host- of sharenamen. Standaard "
+"wordt elk gevonden bestand gecontroleerd op grootte en leeftijd. Door "
+"groepen te maken kunt u als alternatief een verzameling bestanden als een "
+"entiteit monitoren en het aantal, de totale grootte, het grootste, kleinste "
+"oudste of nieuwste bestand monitoren. Opmerking: als u meer dan één "
 "overeenstemmingsregel opgeeft, dan zullen <b>alle</b> overeenstemmingsregels "
-"gebruikt worden voor het definiëren van het patroon - niet alleen de "
-"eerste.</p>"
+"gebruikt worden voor het definiëren van het patroon - niet alleen de eerste."
+"</p>"
 
 #, fuzzy
 msgid ""
@@ -6270,20 +6270,6 @@ msgstr ""
 #, fuzzy
 msgid "After the configured time notification plug-ins are being interrupted."
 msgstr "Na de geconfigureerde tijd worden de plugins onderbroken."
-
-#, fuzzy
-msgid ""
-"After the download, upload the license usage report to the Checkmk customer "
-"portal.<br>Navigate to 'My Licenses' in the customer portal and select your "
-"active license. Click on 'Upload' under 'Licensing Information Upload' and "
-"complete the dialog.<br>If everything is correct, you will receive the "
-"license information file which is then containing your license details."
-msgstr ""
-"Na het downloaden uploadt u het licentiegebruiksrapport naar het Checkmk "
-"klantenportaal.<br>Navigeer naar 'Abonnement' in het klantenportaal en "
-"selecteer uw actieve abonnement. Klik op 'Upload' onder 'Licentie informatie "
-"uploaden' en vul het dialoogvenster in.<br>Als alles correct is, ontvangt u "
-"nu het licentie informatie bestand met daarin uw abonnement gegevens."
 
 #, fuzzy
 msgid ""
@@ -17575,10 +17561,6 @@ msgid "Configure your cluster for Checkmk monitoring"
 msgstr "Monitor toestanden toewijzen aan Checkmk monitor toestanden"
 
 #, python-format
-msgid "Configure your preferred way of license usage submission in %(link)s"
-msgstr ""
-
-#, python-format
 msgid "Configure your preferred way of license verification in %(link)s"
 msgstr ""
 
@@ -21924,6 +21906,10 @@ msgstr "Verwijderen na"
 msgid "Delete aggregations"
 msgstr "Aggregaties verwijderen"
 
+#, fuzzy, python-format
+msgid "Delete alert %(title)s"
+msgstr "Verwijder %(title)s"
+
 #, python-format
 msgid "Delete alert handler rule #%(nr)d"
 msgstr "Verwijder waarschuwingsregel #%(nr)d"
@@ -22212,6 +22198,10 @@ msgstr "Verwijder deze toets"
 
 msgid "Delete this aggregation"
 msgstr "Verwijder deze aggregatie"
+
+#, fuzzy
+msgid "Delete this alert"
+msgstr "Verwijder dit element"
 
 msgid "Delete this alert handler rule"
 msgstr "Verwijder deze alert handler regel"
@@ -24769,9 +24759,6 @@ msgstr "Bestandsnaam downloaden"
 #, fuzzy, python-format
 msgid "Download generic Checkmk agent for folder %(folder)s"
 msgstr "Download generieke Checkmk Agent voor map %s"
-
-msgid "Download license usage report"
-msgstr "Licentie gebruiksrapport downloaden"
 
 #, fuzzy
 msgid "Download product usage data"
@@ -29985,15 +29972,6 @@ msgstr ""
 #, python-format
 msgid "For more help have a look at the %(link)s."
 msgstr ""
-
-#, fuzzy
-msgid ""
-"For offline submission, we need to add the license details to your license "
-"usage report. To do this, you must first download your license usage report."
-msgstr ""
-"Voor offline indiening moeten we de abonnementsgegevens toevoegen aan uw "
-"licentiegebruiksrapport. Hiervoor moet u eerst uw licentiegebruiksrapport "
-"downloaden."
 
 #, fuzzy
 msgid ""
@@ -36766,6 +36744,15 @@ msgid ""
 msgstr ""
 
 msgid ""
+"If this checkbox is activated and a data backend is configured for Synthetic "
+"Monitoring, traces and log records received via OTLP with the resource "
+"attribute service.name set to robotmk are stored in that data backend. These "
+"log records are then not forwarded to the Event Console.<br>Without such a "
+"data backend, nothing is stored and the log records still reach the Event "
+"Console."
+msgstr ""
+
+msgid ""
 "If this checkbox is activated, log messages received via OTLP are converted "
 "into syslog format and forwarded to the Event Console.<br>The Event Console "
 "is optimized for handling critical events, not for processing high-frequency "
@@ -38551,16 +38538,6 @@ msgstr "In deze map"
 
 #, fuzzy
 msgid ""
-"In this form, use 'Select file' to select the license information file you "
-"have downloaded from the customer portal. Click on 'Upload response' to "
-"complete the submission."
-msgstr ""
-"Gebruik in dit formulier 'Selecteer bestand' om het licentie-"
-"informatiebestand te selecteren dat u in het klantenportaal hebt gedownload. "
-"Klik op 'Antwoord uploaden' om de indiening te voltooien."
-
-#, fuzzy
-msgid ""
 "In this form, use 'Select file' to select the verification response file you "
 "have downloaded from the customer portal. Click on 'Upload response' to "
 "complete the verification."
@@ -39754,6 +39731,10 @@ msgstr "Ongeldige configuratie hash"
 msgid "Invalid credentials"
 msgstr "Ongeldige inloggegevens"
 
+#, fuzzy, python-format
+msgid "Invalid custom graph definition: %(error)s"
+msgstr "Ongeldige reguliere expressie: %s"
+
 #, fuzzy
 msgid "Invalid data"
 msgstr "Ongeldige ident"
@@ -40513,6 +40494,10 @@ msgstr "Artikelen"
 
 msgid "Iterator age"
 msgstr "Iterator leeftijd"
+
+#, fuzzy
+msgid "Its configuration bundle and generated rule are deleted as well."
+msgstr "Deze groep bestaat niet."
 
 #, fuzzy
 msgid "Its configuration bundle no longer exists."
@@ -42846,10 +42831,6 @@ msgstr "Licentie verlopen: Licentie nu vernieuwen"
 
 msgid "License usage"
 msgstr "Licentiegebruik"
-
-#, fuzzy
-msgid "License usage submission"
-msgstr "Laatste licentiegebruik indiening"
 
 msgid "License verification"
 msgstr "Verificatie van het rijbewijs"
@@ -50290,9 +50271,6 @@ msgstr "Geen informatie beschikbaar"
 msgid "No status host"
 msgstr "Geen status host"
 
-msgid "No submission performed yet"
-msgstr "Nog geen indiening uitgevoerd"
-
 msgid "No successful synchronization so far."
 msgstr "Geen succesvolle synchronisatie tot nu toe."
 
@@ -52434,9 +52412,6 @@ msgstr "Offline sequenties in"
 msgid "Offline sequences out"
 msgstr "Offline sequenties uit"
 
-msgid "Offline submission"
-msgstr "Offline indiening"
-
 msgid "Offline to spare ratio"
 msgstr "Offline/reserve verhouding"
 
@@ -52727,9 +52702,6 @@ msgstr "Online (%(version_info)s)"
 
 msgid "Online licensing credentials are not configured"
 msgstr ""
-
-msgid "Online submission"
-msgstr "Online indienen"
 
 msgid "Online verification"
 msgstr "Online verificatie"
@@ -56459,10 +56431,6 @@ msgstr "Online verificatie van vergunningen"
 #, fuzzy
 msgid "Performing license test verification..."
 msgstr "Online verificatie van vergunningen"
-
-#, fuzzy
-msgid "Performing test authentication..."
-msgstr "Token authenticatie"
 
 msgid "Period"
 msgstr "Periode"
@@ -65054,6 +65022,10 @@ msgstr "HTTP POST-gegevens verzenden"
 msgid "Send MCP usage data to Checkmk"
 msgstr "Kaart GCP status te controleren mk"
 
+#, fuzzy
+msgid "Send Synthetic Monitoring data to the data backend"
+msgstr "Configuratie toestand toevoegen"
+
 msgid "Send custom notification"
 msgstr "Aangepaste kennisgeving verzenden"
 
@@ -67609,6 +67581,10 @@ msgstr ""
 "al hebben ingeschakeld houden de communicatie onversleuteld om "
 "compatibiliteitsredenen. Het wordt echter ten zeerste aanbevolen om over te "
 "stappen op versleutelde communicatie."
+
+msgid ""
+"Since alerts generate rules, you need the permission to edit these rules."
+msgstr ""
 
 msgid ""
 "Since all nodes yield metrics with the same name, Checkmk has to decide "
@@ -71397,12 +71373,6 @@ msgstr "Onderwerp voor dienstmededelingen"
 msgid "Submit"
 msgstr "Indienen"
 
-msgid "Submit license usage offline"
-msgstr "Licentiegebruik offline indienen"
-
-msgid "Submit license usage online"
-msgstr "Licentiegebruik online indienen"
-
 msgid "Submit report"
 msgstr "Verslag indienen"
 
@@ -71411,10 +71381,6 @@ msgstr "Verzoek indienen en antwoord krijgen"
 
 msgid "Submitting crash report..."
 msgstr "Het indienen van een crash rapport..."
-
-#, fuzzy
-msgid "Submitting license usage online..."
-msgstr "Licentiegebruik online indienen"
 
 msgid "Subnet groups"
 msgstr "Subnetgroepen"
@@ -72837,10 +72803,6 @@ msgid "Test a self-defined notification against your rule set."
 msgstr "Maak een kopie van deze notificatieregel"
 
 #, fuzzy
-msgid "Test authentication"
-msgstr "Token authenticatie"
-
-#, fuzzy
 msgid "Test configuration"
 msgstr "Host configuratie"
 
@@ -74239,6 +74201,10 @@ msgid ""
 msgstr ""
 "De aggregatietitels zijn niet uniek. \"%(title)s\" is gemaakt door "
 "aggregatie <b>%(aggr_id)s</b> en <b>%(other_aggr_id)s</b>"
+
+#, fuzzy, python-format
+msgid "The alert \"%(name)s\" does not exist any more."
+msgstr "De regelset \"%s\" bestaat niet."
 
 msgid ""
 "The application using this token will no longer be able to access the API "
@@ -85654,9 +85620,9 @@ msgstr ""
 "Om Azure resources te monitoren voeg deze datasource toe aan <b>een</b> "
 "host. De gegevens zullen worden getransporteerd met behulp van het piggyback-"
 "mechanisme, dus zorg ervoor dat u een host maakt voor elke gemonitorde "
-"resourcegroep. U kunt meer te weten komen over de ontdekte groepen in de <i>"
-"Azure Agent Info</i> service van de host die eigenaar is van het datasource "
-"programma."
+"resourcegroep. U kunt meer te weten komen over de ontdekte groepen in de "
+"<i>Azure Agent Info</i> service van de host die eigenaar is van het "
+"datasource programma."
 
 msgid ""
 "To obtain the data required for this check, please configure the data source "
@@ -90493,10 +90459,6 @@ msgstr "Upload MIB-bestand"
 msgid "Upload key"
 msgstr "Upload sleutel"
 
-#, fuzzy
-msgid "Upload license information file"
-msgstr "Voeg contextinformatie toe aan titel"
-
 msgid "Upload new:"
 msgstr "Upload nieuw:"
 
@@ -90505,10 +90467,6 @@ msgstr "Aangepaste pictogrammen uploaden of verwijderen"
 
 msgid "Upload package"
 msgstr "Pakket uploaden"
-
-#, fuzzy
-msgid "Upload report in the customer portal"
-msgstr "Upload aangepast logo"
 
 #, fuzzy
 msgid "Upload request in the customer portal"
@@ -108979,6 +108937,10 @@ msgid "No state"
 msgstr "Toestand knooppunt"
 
 #, fuzzy
+msgid "Nothing to preview"
+msgstr "Niets gelogd"
+
+#, fuzzy
 msgid "Failed to create the alert."
 msgstr "Mislukt om waarde te renderen:"
 
@@ -113823,6 +113785,84 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "After the download, upload the license usage report to the Checkmk "
+#~ "customer portal.<br>Navigate to 'My Licenses' in the customer portal and "
+#~ "select your active license. Click on 'Upload' under 'Licensing "
+#~ "Information Upload' and complete the dialog.<br>If everything is correct, "
+#~ "you will receive the license information file which is then containing "
+#~ "your license details."
+#~ msgstr ""
+#~ "Na het downloaden uploadt u het licentiegebruiksrapport naar het Checkmk "
+#~ "klantenportaal.<br>Navigeer naar 'Abonnement' in het klantenportaal en "
+#~ "selecteer uw actieve abonnement. Klik op 'Upload' onder 'Licentie "
+#~ "informatie uploaden' en vul het dialoogvenster in.<br>Als alles correct "
+#~ "is, ontvangt u nu het licentie informatie bestand met daarin uw "
+#~ "abonnement gegevens."
+
+#~ msgid "Download license usage report"
+#~ msgstr "Licentie gebruiksrapport downloaden"
+
+#, fuzzy
+#~ msgid ""
+#~ "For offline submission, we need to add the license details to your "
+#~ "license usage report. To do this, you must first download your license "
+#~ "usage report."
+#~ msgstr ""
+#~ "Voor offline indiening moeten we de abonnementsgegevens toevoegen aan uw "
+#~ "licentiegebruiksrapport. Hiervoor moet u eerst uw licentiegebruiksrapport "
+#~ "downloaden."
+
+#, fuzzy
+#~ msgid ""
+#~ "In this form, use 'Select file' to select the license information file "
+#~ "you have downloaded from the customer portal. Click on 'Upload response' "
+#~ "to complete the submission."
+#~ msgstr ""
+#~ "Gebruik in dit formulier 'Selecteer bestand' om het licentie-"
+#~ "informatiebestand te selecteren dat u in het klantenportaal hebt "
+#~ "gedownload. Klik op 'Antwoord uploaden' om de indiening te voltooien."
+
+#, fuzzy
+#~ msgid "License usage submission"
+#~ msgstr "Laatste licentiegebruik indiening"
+
+#~ msgid "No submission performed yet"
+#~ msgstr "Nog geen indiening uitgevoerd"
+
+#~ msgid "Offline submission"
+#~ msgstr "Offline indiening"
+
+#~ msgid "Online submission"
+#~ msgstr "Online indienen"
+
+#, fuzzy
+#~ msgid "Performing test authentication..."
+#~ msgstr "Token authenticatie"
+
+#~ msgid "Submit license usage offline"
+#~ msgstr "Licentiegebruik offline indienen"
+
+#~ msgid "Submit license usage online"
+#~ msgstr "Licentiegebruik online indienen"
+
+#, fuzzy
+#~ msgid "Submitting license usage online..."
+#~ msgstr "Licentiegebruik online indienen"
+
+#, fuzzy
+#~ msgid "Test authentication"
+#~ msgstr "Token authenticatie"
+
+#, fuzzy
+#~ msgid "Upload license information file"
+#~ msgstr "Voeg contextinformatie toe aan titel"
+
+#, fuzzy
+#~ msgid "Upload report in the customer portal"
+#~ msgstr "Upload aangepast logo"
 
 #, fuzzy
 #~ msgid "Archive all events of this host?"

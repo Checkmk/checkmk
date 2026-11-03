@@ -6202,20 +6202,6 @@ msgstr ""
 "Nach der eingestellten Zeit werden Benachrichtigungs-Plugins abgebrochen."
 
 msgid ""
-"After the download, upload the license usage report to the Checkmk customer "
-"portal.<br>Navigate to 'My Licenses' in the customer portal and select your "
-"active license. Click on 'Upload' under 'Licensing Information Upload' and "
-"complete the dialog.<br>If everything is correct, you will receive the "
-"license information file which is then containing your license details."
-msgstr ""
-"Nach dem Download laden Sie den Lizenznutzungsbericht in das Checkmk-"
-"Kundenportal hoch.<br>Navigieren Sie im Kundenportal zu 'Meine Lizenzen' und "
-"wählen Sie Ihre aktive Lizenz aus. Klicken Sie auf 'Hochladen' unter "
-"'Lizenzinformationen hochladen' und füllen Sie den Dialog aus.<br>Wenn alles "
-"korrekt ist, erhalten Sie jetzt die Lizenzinformationsdatei mit Ihren "
-"Lizenzdetails."
-
-msgid ""
 "After the download, upload the verification request to the Checkmk customer "
 "portal.<br>Navigate to 'My Licenses' in the customer portal and select your "
 "active license. Click on 'Upload' under 'Licensing Information Upload' and "
@@ -17072,12 +17058,6 @@ msgid "Configure your cluster for Checkmk monitoring"
 msgstr "Zuordnung von Monitor-Zustand auf Checkmk-Zustand"
 
 #, python-format
-msgid "Configure your preferred way of license usage submission in %(link)s"
-msgstr ""
-"Konfigurieren Sie die von Ihnen bevorzugte Art der Übermittlung der "
-"Lizenznutzung in %(link)s"
-
-#, python-format
 msgid "Configure your preferred way of license verification in %(link)s"
 msgstr ""
 "Konfigurieren Sie Ihre bevorzugte Art der Lizenzverifizierung in %(link)s"
@@ -21309,6 +21289,10 @@ msgstr "Löschen nach"
 msgid "Delete aggregations"
 msgstr "Lösche Aggregationen"
 
+#, fuzzy, python-format
+msgid "Delete alert %(title)s"
+msgstr "Lösche %(title)s"
+
 #, python-format
 msgid "Delete alert handler rule #%(nr)d"
 msgstr "Alert-Handler Regel #%(nr)d löschen"
@@ -21591,6 +21575,10 @@ msgstr "Dieses Relay löschen"
 
 msgid "Delete this aggregation"
 msgstr "Dieses Aggregat löschen"
+
+#, fuzzy
+msgid "Delete this alert"
+msgstr "Dieses Element löschen"
 
 msgid "Delete this alert handler rule"
 msgstr "Diese Alert Handler-Regel löschen"
@@ -24031,9 +24019,6 @@ msgstr "Dateinamen herunterladen"
 #, python-format
 msgid "Download generic Checkmk agent for folder %(folder)s"
 msgstr "Generischen Checkmk-Agent für Ordner %(folder)s herunterladen"
-
-msgid "Download license usage report"
-msgstr "Lizenznutzungsbericht herunterladen"
 
 msgid "Download product usage data"
 msgstr "Daten zur Produktnutzung herunterladen"
@@ -29193,14 +29178,6 @@ msgstr ""
 #, python-format
 msgid "For more help have a look at the %(link)s."
 msgstr "Weitere Hilfe finden Sie unter %(link)s."
-
-msgid ""
-"For offline submission, we need to add the license details to your license "
-"usage report. To do this, you must first download your license usage report."
-msgstr ""
-"Für die Offline-Übermittlung müssen wir die Lizenzdetails zu Ihrem "
-"Lizenznutzungsbericht hinzufügen. Zu diesem Zweck müssen Sie zunächst Ihren "
-"Lizenznutzungsbericht herunterladen."
 
 msgid ""
 "For offline verification, we need to verify your license in the customer "
@@ -35598,6 +35575,15 @@ msgid ""
 "agent package (Linux; Solaris and AIX: experimental)\" rule."
 msgstr ""
 
+msgid ""
+"If this checkbox is activated and a data backend is configured for Synthetic "
+"Monitoring, traces and log records received via OTLP with the resource "
+"attribute service.name set to robotmk are stored in that data backend. These "
+"log records are then not forwarded to the Event Console.<br>Without such a "
+"data backend, nothing is stored and the log records still reach the Event "
+"Console."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If this checkbox is activated, log messages received via OTLP are converted "
@@ -37414,16 +37400,6 @@ msgid "In this folder"
 msgstr "In diesem Ordner"
 
 msgid ""
-"In this form, use 'Select file' to select the license information file you "
-"have downloaded from the customer portal. Click on 'Upload response' to "
-"complete the submission."
-msgstr ""
-"Wählen Sie in diesem Formular 'Datei auswählen', um die "
-"Lizenzinformationsdatei auszuwählen, die Sie aus dem Kundenportal "
-"heruntergeladen haben. Klicken Sie auf 'Antwort hochladen', um die "
-"Übermittlung abzuschließen."
-
-msgid ""
 "In this form, use 'Select file' to select the verification response file you "
 "have downloaded from the customer portal. Click on 'Upload response' to "
 "complete the verification."
@@ -38587,6 +38563,10 @@ msgstr "Ungültiger Konfigurationshashwert"
 msgid "Invalid credentials"
 msgstr "Anmeldedaten sind ungültig"
 
+#, fuzzy, python-format
+msgid "Invalid custom graph definition: %(error)s"
+msgstr "Ungültiger regulärer Ausdruck: %(error)s"
+
 msgid "Invalid data"
 msgstr "Ungültige Daten"
 
@@ -39323,6 +39303,10 @@ msgstr "Items"
 
 msgid "Iterator age"
 msgstr "Alter des Iterators"
+
+#, fuzzy
+msgid "Its configuration bundle and generated rule are deleted as well."
+msgstr "Diese Gruppe existiert nicht."
 
 #, fuzzy
 msgid "Its configuration bundle no longer exists."
@@ -41520,9 +41504,6 @@ msgstr ""
 
 msgid "License usage"
 msgstr "Lizenznutzung"
-
-msgid "License usage submission"
-msgstr "Übermittlung der Lizenznutzung"
 
 msgid "License verification"
 msgstr "Lizenzverifizierung"
@@ -48638,9 +48619,6 @@ msgstr "Kein Snapshot für Wiederherstellung verfügbar."
 msgid "No status host"
 msgstr "Kein Status-Host"
 
-msgid "No submission performed yet"
-msgstr "Noch keine Übermittlung erfolgt"
-
 msgid "No successful synchronization so far."
 msgstr "Keine erfolgreiche Synchronisation bisher."
 
@@ -50687,9 +50665,6 @@ msgstr "Offlinesequenzen eingehend"
 msgid "Offline sequences out"
 msgstr "Offlinesequenzen ausgehend"
 
-msgid "Offline submission"
-msgstr "Offline-Übertragung"
-
 msgid "Offline to spare ratio"
 msgstr "Verhältnis von offline zu spare"
 
@@ -50969,9 +50944,6 @@ msgstr "Online (%(version_info)s)"
 
 msgid "Online licensing credentials are not configured"
 msgstr "Die Anmeldedaten für die Online-Lizenzierung sind nicht konfiguriert"
-
-msgid "Online submission"
-msgstr "Online-Übertragung"
 
 msgid "Online verification"
 msgstr "Online-Verifizierung"
@@ -54427,9 +54399,6 @@ msgstr "Online-Verifizierung der Lizenzierung wird durchgeführt..."
 
 msgid "Performing license test verification..."
 msgstr "Test-Verifizierung der Lizenzierung wird durchgeführt..."
-
-msgid "Performing test authentication..."
-msgstr "Test-Authentifizierung wird durchgeführt..."
 
 msgid "Period"
 msgstr "Periode"
@@ -62737,6 +62706,10 @@ msgstr "HTTP POST Daten senden"
 msgid "Send MCP usage data to Checkmk"
 msgstr "Traces von Checkmk senden"
 
+#, fuzzy
+msgid "Send Synthetic Monitoring data to the data backend"
+msgstr "Der Port zum Abfragen von Daten aus dem Metrik-Backend."
+
 msgid "Send custom notification"
 msgstr "Benutzerdefinierte Benachrichtigung senden"
 
@@ -65216,6 +65189,13 @@ msgstr ""
 "aktiviert haben, halten die Kommunikation aus Kompatibilitätsgründen "
 "unverschlüsselt. Es wird jedoch dringend empfohlen, auf eine verschlüsselte "
 "Kommunikation umzusteigen."
+
+#, fuzzy
+msgid ""
+"Since alerts generate rules, you need the permission to edit these rules."
+msgstr ""
+"Da verwaltete Roboter in Bakery-Regeln verwendet werden, benötigen Sie die "
+"Berechtigung zur Bearbeitung dieser Regeln, um auf diese Seite zuzugreifen."
 
 msgid ""
 "Since all nodes yield metrics with the same name, Checkmk has to decide "
@@ -68972,12 +68952,6 @@ msgstr "Betreffzeile für Service-Benachrichtigungen"
 msgid "Submit"
 msgstr "Anwenden"
 
-msgid "Submit license usage offline"
-msgstr "Lizenznutzung offline übermitteln"
-
-msgid "Submit license usage online"
-msgstr "Lizenznutzung online übermitteln"
-
 msgid "Submit report"
 msgstr "Bericht abschicken"
 
@@ -68986,9 +68960,6 @@ msgstr "Anfrage übermitteln und Antwort erhalten"
 
 msgid "Submitting crash report..."
 msgstr "Absturzbericht wird übermittelt..."
-
-msgid "Submitting license usage online..."
-msgstr "Lizenznutzung wird online übermittelt..."
 
 msgid "Subnet groups"
 msgstr "Subnetzgruppen"
@@ -70322,9 +70293,6 @@ msgstr "Test"
 msgid "Test a self-defined notification against your rule set."
 msgstr ""
 "Testen Sie eine selbst-definierte Benachrichtigung anhand Ihres Regelsatzes."
-
-msgid "Test authentication"
-msgstr "Test-Authentifizierung"
 
 msgid "Test configuration"
 msgstr "Konfiguration testen"
@@ -71786,6 +71754,10 @@ msgid ""
 msgstr ""
 "Die Aggregatstitel sind nicht eindeutig. \"%(title)s\" wird durch "
 "Aggregation <b>%(aggr_id)s</b> und <b>%(other_aggr_id)s</b> erstellt"
+
+#, fuzzy, python-format
+msgid "The alert \"%(name)s\" does not exist any more."
+msgstr "Der Regelsatz \"%(name)s\" existiert nicht."
 
 msgid ""
 "The application using this token will no longer be able to access the API "
@@ -87787,9 +87759,6 @@ msgstr "Hochgeladene Dateien"
 msgid "Upload key"
 msgstr "Schlüssel hochladen"
 
-msgid "Upload license information file"
-msgstr "Lizenzinformationsdatei hochladen"
-
 msgid "Upload new:"
 msgstr "Neues hochladen:"
 
@@ -87798,9 +87767,6 @@ msgstr "Laden Sie benutzerdefinierte Icons hoch oder löschen Sie Icons"
 
 msgid "Upload package"
 msgstr "Paket hochladen"
-
-msgid "Upload report in the customer portal"
-msgstr "Bericht in das Kundenportal hochladen"
 
 msgid "Upload request in the customer portal"
 msgstr "Anfrage in das Kundenportal hochladen"
@@ -105810,6 +105776,10 @@ msgid "No state"
 msgstr "Knoten-Zustand"
 
 #, fuzzy
+msgid "Nothing to preview"
+msgstr "Es wurde nichts protokolliert"
+
+#, fuzzy
 msgid "Failed to create the alert."
 msgstr "Fehler beim Darstellen des Werts:"
 
@@ -110778,6 +110748,82 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid ""
+#~ "After the download, upload the license usage report to the Checkmk "
+#~ "customer portal.<br>Navigate to 'My Licenses' in the customer portal and "
+#~ "select your active license. Click on 'Upload' under 'Licensing "
+#~ "Information Upload' and complete the dialog.<br>If everything is correct, "
+#~ "you will receive the license information file which is then containing "
+#~ "your license details."
+#~ msgstr ""
+#~ "Nach dem Download laden Sie den Lizenznutzungsbericht in das Checkmk-"
+#~ "Kundenportal hoch.<br>Navigieren Sie im Kundenportal zu 'Meine Lizenzen' "
+#~ "und wählen Sie Ihre aktive Lizenz aus. Klicken Sie auf 'Hochladen' unter "
+#~ "'Lizenzinformationen hochladen' und füllen Sie den Dialog aus.<br>Wenn "
+#~ "alles korrekt ist, erhalten Sie jetzt die Lizenzinformationsdatei mit "
+#~ "Ihren Lizenzdetails."
+
+#, python-format
+#~ msgid "Configure your preferred way of license usage submission in %(link)s"
+#~ msgstr ""
+#~ "Konfigurieren Sie die von Ihnen bevorzugte Art der Übermittlung der "
+#~ "Lizenznutzung in %(link)s"
+
+#~ msgid "Download license usage report"
+#~ msgstr "Lizenznutzungsbericht herunterladen"
+
+#~ msgid ""
+#~ "For offline submission, we need to add the license details to your "
+#~ "license usage report. To do this, you must first download your license "
+#~ "usage report."
+#~ msgstr ""
+#~ "Für die Offline-Übermittlung müssen wir die Lizenzdetails zu Ihrem "
+#~ "Lizenznutzungsbericht hinzufügen. Zu diesem Zweck müssen Sie zunächst "
+#~ "Ihren Lizenznutzungsbericht herunterladen."
+
+#~ msgid ""
+#~ "In this form, use 'Select file' to select the license information file "
+#~ "you have downloaded from the customer portal. Click on 'Upload response' "
+#~ "to complete the submission."
+#~ msgstr ""
+#~ "Wählen Sie in diesem Formular 'Datei auswählen', um die "
+#~ "Lizenzinformationsdatei auszuwählen, die Sie aus dem Kundenportal "
+#~ "heruntergeladen haben. Klicken Sie auf 'Antwort hochladen', um die "
+#~ "Übermittlung abzuschließen."
+
+#~ msgid "License usage submission"
+#~ msgstr "Übermittlung der Lizenznutzung"
+
+#~ msgid "No submission performed yet"
+#~ msgstr "Noch keine Übermittlung erfolgt"
+
+#~ msgid "Offline submission"
+#~ msgstr "Offline-Übertragung"
+
+#~ msgid "Online submission"
+#~ msgstr "Online-Übertragung"
+
+#~ msgid "Performing test authentication..."
+#~ msgstr "Test-Authentifizierung wird durchgeführt..."
+
+#~ msgid "Submit license usage offline"
+#~ msgstr "Lizenznutzung offline übermitteln"
+
+#~ msgid "Submit license usage online"
+#~ msgstr "Lizenznutzung online übermitteln"
+
+#~ msgid "Submitting license usage online..."
+#~ msgstr "Lizenznutzung wird online übermittelt..."
+
+#~ msgid "Test authentication"
+#~ msgstr "Test-Authentifizierung"
+
+#~ msgid "Upload license information file"
+#~ msgstr "Lizenzinformationsdatei hochladen"
+
+#~ msgid "Upload report in the customer portal"
+#~ msgstr "Bericht in das Kundenportal hochladen"
 
 #~ msgid "Archive all events of this host?"
 #~ msgstr "Alle Ereignisse von diesem Host archivieren?"

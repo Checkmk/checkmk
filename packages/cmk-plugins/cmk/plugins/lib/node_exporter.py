@@ -411,6 +411,7 @@ class NodeExporter:
                 "prometheus_cpu_v1:sep(0)", [CPULoad.model_validate(raw).model_dump_json()]
             )
             for node, raw in node_to_raw.items()
+            if raw.keys() >= CPULoad.model_fields.keys()
         }
 
     def _retrieve_cpu(self) -> list[tuple[str, list[PromQLMetric]]]:

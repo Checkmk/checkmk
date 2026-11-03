@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-from pydantic import ValidationError
-
 from cmk.plugins.lib.node_exporter import NodeExporter, NodeExporterQuery, PromQLMetric
 
 
@@ -1262,7 +1259,6 @@ def test_process_kernel_info() -> None:
     ) == {"minikube": expected}
 
 
-@pytest.mark.xfail(strict=True, raises=ValidationError, reason="Crash group 4940")
 def test_cpu_summary_skips_node_without_load() -> None:
     def get_promql(promql_expression: str) -> list[PromQLMetric]:
         if promql_expression == NodeExporterQuery.instance_node_cpus_count:

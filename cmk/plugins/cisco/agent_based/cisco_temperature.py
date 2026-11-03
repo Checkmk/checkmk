@@ -445,10 +445,18 @@ def _map_admin_states_container(
         and sensor_oid.endswith(".0")
     }
 
-    for sensor_oid, admin_status in sensor_oid_admin_status_map.items():
-        for contained_in in _get_contained_sensor_ids(
-            sensor_oid, set(sensor_oid_admin_status_map.keys()), container
-        ):
+    targets = [
+        (
+            _get_contained_sensor_ids(
+                sensor_oid, set(sensor_oid_admin_status_map.keys()), container
+            ),
+            admin_status,
+        )
+        for sensor_oid, admin_status in sensor_oid_admin_status_map.items()
+    ]
+    # The narrowest subtree is the closest interface, so it must be applied last
+    for contained_ids, admin_status in sorted(targets, key=lambda t: len(t[0]), reverse=True):
+        for contained_in in contained_ids:
             admin_states_dict[contained_in] = admin_status
     return admin_states_dict
 

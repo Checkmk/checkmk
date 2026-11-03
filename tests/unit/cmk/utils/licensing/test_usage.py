@@ -40,6 +40,7 @@ from cmk.licensing.usage import (
     LicenseUsageReportValidity,
     load_raw_license_usage_report,
     LocalLicenseUsageHistory,
+    make_sample,
     Now,
     save_extensions,
     save_license_usage_report,
@@ -243,6 +244,25 @@ def test__parse_cloud_hosts_or_services(
     hosts_or_services_cloud_counter = HostsOrServicesCloudCounter.make(livestatus_response)
     assert hosts_or_services_cloud_counter.hosts == expected_hosts
     assert hosts_or_services_cloud_counter.services == excepted_services
+
+
+def test_make_sample_cuts_platform_to_50_characters() -> None:
+    sample = make_sample(
+        _NOW,
+        UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
+        "site-hash",
+        version="2.5.0p1",
+        cmk_edition="ultimate",
+        platform="p" * 60,
+        is_cma=False,
+        hosts_counter=HostsOrServicesCounter(num=0, num_shadow=0, num_excluded=0),
+        services_counter=HostsOrServicesCounter(num=0, num_shadow=0, num_excluded=0),
+        cloud_counter=HostsOrServicesCloudCounter(hosts=0, services=0),
+        feature_counters={},
+        extensions=LicenseUsageExtensions(ntop=False),
+    )
+
+    assert sample.platform == "p" * 50
 
 
 def test_hosts_or_services_counter_maps_stats_columns_to_fields() -> None:

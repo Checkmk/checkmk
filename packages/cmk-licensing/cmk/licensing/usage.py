@@ -41,6 +41,7 @@ from cmk.licensing.export import (
     RawLicenseUsageExtensions,
     RawLicenseUsageReport,
     RawLicenseUsageSample,
+    restrict_platform,
 )
 from cmk.licensing.helper import (
     hash_site_id,
@@ -208,7 +209,7 @@ def make_sample(
         site_hash=site_hash,
         version=version,
         edition=_cmk_edition_to_licensing_edition(cmk_edition),
-        platform=platform,
+        platform=restrict_platform(platform),
         is_cma=is_cma,
         num_hosts=hosts_counter.num,
         num_hosts_cloud=cloud_counter.hosts,

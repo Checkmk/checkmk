@@ -135,8 +135,8 @@ class LicenseUsageSample:
 #   '----------------------------------------------------------------------'
 
 
-def _parse_platform(platform: str) -> str:
-    # Restrict platform string to 50 chars due to the restriction of the license DB field.
+def restrict_platform(platform: str) -> str:
+    # Restrict platform string to 50 chars due to the restriction of the license service protocol.
     return platform[:50]
 
 
@@ -200,7 +200,7 @@ def parse_sample(
         site_hash=site_hash,
         version=raw["version"],
         edition=raw["edition"],
-        platform=_parse_platform(raw["platform"]),
+        platform=restrict_platform(raw["platform"]),
         is_cma=raw["is_cma"],
         sample_time=raw["sample_time"],
         timezone=raw["timezone"],

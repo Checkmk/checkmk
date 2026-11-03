@@ -20,7 +20,6 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.views.command import commands
 from cmk.gui.views.command.base import Command, CommandSpec
 from cmk.gui.views.command.commands import (
-    _acknowledgement_needs_removal,
     _query_downtime_ids_for_leaf,
     CommandAcknowledge,
     CommandAddComment,
@@ -77,50 +76,19 @@ from tests.testlib.unit.gui.global_settings import logged_in
 from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.unit.cmk.gui.helpers.setup_mode_test_helper import set_request_vars
 
-COMMENT_TABLE = [
-    # Host comments
-    {"comment_id": 11, "entry_type": 4, "is_service": 0},
-    {"comment_id": 12, "entry_type": 4, "is_service": 0},
-    {"comment_id": 13, "entry_type": 0, "is_service": 0},
-    # Service comments
-    {"comment_id": 21, "entry_type": 4, "is_service": 1},
-    {"comment_id": 22, "entry_type": 4, "is_service": 1},
-    {"comment_id": 23, "entry_type": 0, "is_service": 1},
+ACK_COMMENT_TABLE = [
+    {"host_name": "myhost", "service_description": "", "id": 11, "entry_type": 4},
+    {"host_name": "myhost", "service_description": "", "id": 13, "entry_type": 1},
+    {"host_name": "otherhost", "service_description": "", "id": 14, "entry_type": 4},
+    {"host_name": "myhost", "service_description": "CPU load", "id": 21, "entry_type": 4},
+    {"host_name": "myhost", "service_description": "CPU load", "id": 22, "entry_type": 4},
+    {"host_name": "myhost", "service_description": "CPU load", "id": 23, "entry_type": 1},
+    {"host_name": "myhost", "service_description": "Memory", "id": 24, "entry_type": 4},
 ]
-
-
-@pytest.mark.parametrize(
-    "cmdtag, comments_to_remove, removal_expected",
-    [
-        ("HOST", {"11"}, False),
-        ("HOST", {"11", "12"}, True),
-        ("HOST", {"11", "12", "13"}, True),
-        ("SVC", {"21"}, False),
-        ("SVC", {"21", "22"}, True),
-        ("SVC", {"21", "22", "23"}, True),
-    ],
-)
-@pytest.mark.usefixtures("request_context")
-def test_acknowledgement_needs_removal(
-    mock_livestatus: MockLiveStatusConnection,
-    cmdtag: Literal["HOST", "SVC"],
-    comments_to_remove: set[str],
-    removal_expected: bool,
-) -> None:
-    live = mock_livestatus
-    live.add_table("comments", COMMENT_TABLE)
-    live.expect_query(
-        [
-            "GET comments",
-            "Columns: comment_id",
-            "Filter: is_service = ...",
-            "Filter: entry_type = 4",
-            "ColumnHeaders: off",
-        ],
-        match_type="ellipsis",
-    )
-    with live():
-        assert _acknowledgement_needs_removal(cmdtag, comments_to_remove) == removal_expected
+REMOTE_ACK_COMMENT_TABLE = [
+    {"host_name": "myhost", "service_description": "", "id": 31, "entry_type": 4},
+    {"host_name": "myhost", "service_description": "CPU load", "id": 32, "entry_type": 4},
+]
 
 
 @pytest.mark.usefixtures("request_context")
@@ -786,35 +754,60 @@ def test_the_remove_comment_confirmation_names_the_author() -> None:
     assert "alice" in str(dialog.additions)
 
 
-@pytest.mark.usefixtures("request_context")
-def test_removing_the_last_acknowledgment_comment_also_removes_the_acknowledgment(
-    with_user: tuple[UserId, str], mock_livestatus: MockLiveStatusConnection
-) -> None:
+def _delete_ack_comments(
+    user_id: UserId, mock_livestatus: MockLiveStatusConnection, row: Row, comment_ids: Sequence[int]
+) -> list[CommandSpec]:
     set_request_vars(_delete_comments="1")
     rows: list[Row] = [
-        {**SERVICE_ROW, "comment_id": 21, "comment_entry_type": 4, "comment_author": "alice"},
-        {**SERVICE_ROW, "comment_id": 22, "comment_entry_type": 4, "comment_author": "bob"},
+        {**row, "comment_id": comment_id, "comment_entry_type": 4, "comment_author": "alice"}
+        for comment_id in comment_ids
     ]
-    mock_livestatus.add_table("comments", COMMENT_TABLE)
+    mock_livestatus.add_table("comments", ACK_COMMENT_TABLE, site="local")
+    mock_livestatus.add_table("comments", REMOTE_ACK_COMMENT_TABLE, site="remote")
     mock_livestatus.expect_query(
         [
             "GET comments",
-            "Columns: comment_id",
-            "Filter: is_service = 1",
+            "Columns: host_name service_description id",
             "Filter: entry_type = 4",
             "AuthUser: ...",
-            "ColumnHeaders: off",
         ],
         match_type="ellipsis",
     )
 
     with mock_livestatus():
-        issued = _issue(with_user[0], ["action.addcomment"], "comment", rows[0], rows)
+        return _issue(user_id, ["action.addcomment"], "comment", rows[0], rows)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_deleting_all_ack_comments_of_a_service_removes_its_ack_despite_other_services(
+    with_user: tuple[UserId, str], mock_livestatus: MockLiveStatusConnection
+) -> None:
+    issued = _delete_ack_comments(with_user[0], mock_livestatus, SERVICE_ROW, [21, 22])
 
     assert issued == [
         RemoveServiceAcknowledgement(HostName("myhost"), "CPU load"),
         DeleteServiceComment(21),
     ]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_deleting_the_ack_comment_of_a_host_removes_its_ack_despite_other_hosts(
+    with_user: tuple[UserId, str], mock_livestatus: MockLiveStatusConnection
+) -> None:
+    host_row: Row = {**HOST_ROW, "service_description": ""}
+
+    issued = _delete_ack_comments(with_user[0], mock_livestatus, host_row, [11])
+
+    assert issued == [RemoveHostAcknowledgement(HostName("myhost")), DeleteHostComment(11)]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_deleting_one_of_several_ack_comments_keeps_the_ack(
+    with_user: tuple[UserId, str], mock_livestatus: MockLiveStatusConnection
+) -> None:
+    issued = _delete_ack_comments(with_user[0], mock_livestatus, SERVICE_ROW, [21])
+
+    assert issued == [DeleteServiceComment(21)]
 
 
 @pytest.mark.usefixtures("request_context")

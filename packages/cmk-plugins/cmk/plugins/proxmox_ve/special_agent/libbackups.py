@@ -469,10 +469,15 @@ def JsonCachedData(
 ) -> Generator[Callable[[str, Any], Any]]:
     """Store JSON-serializable data on filesystem and provide it if available"""
 
-    cache = json.loads(storage.read(key=storage_key, default="{}") or "{}")
+    dirty = False
+    try:
+        cache = json.loads(storage.read(key=storage_key, default="{}") or "{}")
+    except json.JSONDecodeError as exc:
+        LOGGER.warning("Cache: discarding unreadable file %r: %s", storage_key, exc)
+        cache = {}
+        dirty = True
     LOGGER.debug("Cache: loaded %d elements", len(cache))
 
-    dirty = False
     # note: this must not be a generator - otherwise we modify a dict while iterating it
     for key in [k for k, data in cache.items() if cutoff_condition(k, data)]:
         dirty = True

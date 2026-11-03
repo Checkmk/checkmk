@@ -132,6 +132,7 @@
     --border-color-subtle: var(--color-mid-grey-10);
     --border-color-muted: var(--color-mid-grey-20);
     --border-color-strong: var(--color-mid-grey-50);
+    --interactive-neutral: var(--color-mid-grey-50);
     --border-color-table: var(--color-conference-grey-10);
     --background-subtle: var(--ux-theme-2);
     --background-hover-wash: var(--color-conference-grey-10);
@@ -266,6 +267,7 @@
     --border-color-subtle: var(--color-mid-grey-90);
     --border-color-muted: var(--color-mid-grey-80);
     --border-color-strong: var(--color-mid-grey-70);
+    --interactive-neutral: var(--color-mid-grey-60);
     --border-color-table: var(--color-white-0);
     --background-subtle: var(--ux-theme-2);
     --background-hover-wash: var(--color-white-10);

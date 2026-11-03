@@ -15,7 +15,12 @@ from cmk.gui.valuespec import Percentage, TextInput, Tuple
 
 def _item_spec_esx_vsphere_datastores():
     return TextInput(
-        title=_("Datastore name"), help=_("The name of the datastore"), allow_empty=False
+        title=_("Datastore name"),
+        help=_(
+            "The name of the datastore. If several datastores share a name, "
+            "it is followed by the volume ID of the datastore."
+        ),
+        allow_empty=False,
     )
 
 

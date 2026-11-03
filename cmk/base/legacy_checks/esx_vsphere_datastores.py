@@ -6,6 +6,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from collections import Counter
+from collections.abc import Mapping
+from typing import Any
+
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
@@ -21,29 +25,49 @@ check_info = {}
 # type    VMFS
 # uncommitted 51973812224
 # url /vmfs/volumes/513df1e9-12fd7366-ac5a-e41f13e69eaa
+#
+# Datastore names are only unique within a vSphere datacenter. When several
+# datastores share a name, each item gets the volume ID from its url appended.
+
+
+def _volume_id(url: str) -> str:
+    return url.rstrip("/").rsplit("/", 1)[-1]
+
+
+def _item(name: str, store: Mapping[str, Any], name_is_shared: bool) -> str:
+    if name_is_shared and (url := store.get("url")):
+        return f"{name} {_volume_id(url)}"
+    return name
 
 
 def parse_esx_vsphere_datastores(string_table):
-    stores = {}
+    named_stores = []
     for line in string_table:
         if line[0].startswith("["):
-            name = line[0][1:-1]
-            store = {}
-            stores[name] = store
-        else:
-            # Seems that the url attribute can have an empty value
-            if len(line) == 1:
-                key = line[0].strip()
-                value = None
-            else:
-                key, value = line
+            named_stores.append((line[0][1:-1], {}))
+            continue
+        if not named_stores:
+            continue
 
-            if key == "accessible" and value is not None:
-                value = value.lower() == "true"
-            elif key in ["capacity", "freeSpace", "uncommitted"] and value is not None:
-                value = int(value)
-            store[key] = value
-    return stores
+        _name, store = named_stores[-1]
+        # Seems that the url attribute can have an empty value
+        if len(line) == 1:
+            key = line[0].strip()
+            value = None
+        else:
+            key, value = line
+
+        if key == "accessible" and value is not None:
+            value = value.lower() == "true"
+        elif key in ["capacity", "freeSpace", "uncommitted"] and value is not None:
+            value = int(value)
+        store[key] = value
+
+    stores_per_name = Counter(name for name, _store in named_stores)
+    return {
+        _item(name, store, name_is_shared=stores_per_name[name] > 1): store
+        for name, store in named_stores
+    }
 
 
 def check_esx_vsphere_datastores(item, params, parsed):

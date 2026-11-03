@@ -430,3 +430,10 @@ def test_bgp_peer_discover(data: StringByteTable, result: DiscoveryResult) -> No
 )
 def test_bgp_peer_check(item: str, section: bgp_peer.Section, result: CheckResult) -> None:
     assert list(bgp_peer.check_bgp_peer(item, bgp_peer.DEFAULT_BGP_PEER_PARAMS, section)) == result
+
+
+@pytest.mark.xfail(strict=True, raises=IndexError, reason="Crash group 4708")
+def test_bgp_peer_parse_skips_row_without_address() -> None:
+    data: StringByteTable = [[[], [], "", [], "", "", "", "", "", ""], *DATA_SIMPLE]
+
+    assert bgp_peer.parse_bgp_peer([data]) == bgp_peer.parse_bgp_peer([DATA_SIMPLE])

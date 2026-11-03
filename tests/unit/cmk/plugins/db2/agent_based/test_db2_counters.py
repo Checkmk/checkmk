@@ -260,7 +260,6 @@ def test_check_counter_without_value() -> None:
     ]
 
 
-@pytest.mark.xfail(strict=True, raises=IndexError, reason="Crash group 4697")
 def test_check_db2_counters_error_message_on_two_lines() -> None:
     section = parse_db2_counters(
         [

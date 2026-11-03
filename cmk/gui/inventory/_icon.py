@@ -25,6 +25,28 @@ def _has_inventory(host_name: HostName) -> bool:
     return (tree_path.path.exists() or tree_path.legacy.exists()) if host_name else False
 
 
+def _is_inventory_row(what: Literal["host", "service"], row: Row) -> bool:
+    return what == "host" or row.get("service_check_command", "").startswith(
+        "check_mk_active-cmk_inv!"
+    )
+
+
+def _link_to_view(
+    row: Row, user_permissions: UserPermissions, view_name: str, title: str
+) -> tuple[StaticIcon, str, str] | None:
+    if not user.may("view.inv_host"):
+        return None
+    url = url_to_visual(
+        row,
+        VisualLinkSpec("views", view_name),
+        user_permissions,
+        request=request,
+        force=False,
+    )
+    assert url is not None
+    return StaticIcon(IconNames.inventory), title, url
+
+
 def _render_inventory_icon(
     what: Literal["host", "service"],
     row: Row,
@@ -33,26 +55,8 @@ def _render_inventory_icon(
     user_permissions: UserPermissions,
     _icon_config: IconConfig,
 ) -> None | tuple[StaticIcon | DynamicIcon, str, str]:
-    if (
-        what == "host"
-        or row.get("service_check_command", "").startswith("check_mk_active-cmk_inv!")
-    ) and _has_inventory(row["host_name"]):
-        if not user.may("view.inv_host"):
-            return None
-
-        v = url_to_visual(
-            row,
-            VisualLinkSpec("views", "inv_host"),
-            user_permissions,
-            request=request,
-            force=False,
-        )
-        assert v is not None
-        return (
-            StaticIcon(IconNames.inventory),
-            _("Show HW/SW inventory tree"),
-            v,
-        )
+    if _is_inventory_row(what, row) and _has_inventory(row["host_name"]):
+        return _link_to_view(row, user_permissions, "inv_host", _("Show HW/SW inventory tree"))
     return None
 
 
@@ -86,25 +90,9 @@ def _render_inventory_history_icon(
     user_permissions: UserPermissions,
     _icon_config: IconConfig,
 ) -> None | tuple[StaticIcon | DynamicIcon, str, str]:
-    if (
-        what == "host"
-        or row.get("service_check_command", "").startswith("check_mk_active-cmk_inv!")
-    ) and _has_inventory_history(row["host_name"]):
-        if not user.may("view.inv_host"):
-            return None
-
-        v = url_to_visual(
-            row,
-            VisualLinkSpec("views", "inv_host_history"),
-            user_permissions,
-            request=request,
-            force=False,
-        )
-        assert v is not None
-        return (
-            StaticIcon(IconNames.inventory),
-            _("Show HW/SW inventory history"),
-            v,
+    if _is_inventory_row(what, row) and _has_inventory_history(row["host_name"]):
+        return _link_to_view(
+            row, user_permissions, "inv_host_history", _("Show HW/SW inventory history")
         )
     return None
 

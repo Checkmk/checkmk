@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 
-"""This file is synced from the check_mk repo to the cmk-license repo."""
-
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass

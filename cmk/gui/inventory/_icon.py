@@ -7,7 +7,6 @@ from collections.abc import Mapping, Sequence
 from typing import Literal
 
 import cmk.utils.paths
-from cmk.ccc.hostaddress import HostName
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
@@ -15,19 +14,15 @@ from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import Icon, IconConfig
 from cmk.gui.visual_link import url_to_visual
-from cmk.inventory.paths import InventoryPaths
+from cmk.inventory.paths import has_history, has_inventory_tree, InventoryPaths
 from cmk.ruleset_matcher.tags import TagID
 from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 
 
-def _has_inventory(host_name: HostName) -> bool:
-    tree_path = InventoryPaths(cmk.utils.paths.omd_root).inventory_tree(host_name)
-    return (tree_path.path.exists() or tree_path.legacy.exists()) if host_name else False
-
-
-def _is_inventory_row(what: Literal["host", "service"], row: Row) -> bool:
-    return what == "host" or row.get("service_check_command", "").startswith(
-        "check_mk_active-cmk_inv!"
+def _is_inventory_row_of_a_host(what: Literal["host", "service"], row: Row) -> bool:
+    return bool(row["host_name"]) and (
+        what == "host"
+        or row.get("service_check_command", "").startswith("check_mk_active-cmk_inv!")
     )
 
 
@@ -55,7 +50,9 @@ def _render_inventory_icon(
     user_permissions: UserPermissions,
     _icon_config: IconConfig,
 ) -> None | tuple[StaticIcon | DynamicIcon, str, str]:
-    if _is_inventory_row(what, row) and _has_inventory(row["host_name"]):
+    if _is_inventory_row_of_a_host(what, row) and has_inventory_tree(
+        InventoryPaths(cmk.utils.paths.omd_root), row["host_name"]
+    ):
         return _link_to_view(row, user_permissions, "inv_host", _("Show HW/SW inventory tree"))
     return None
 
@@ -68,20 +65,6 @@ InventoryIcon = Icon(
 )
 
 
-def _has_inventory_history(host_name: HostName) -> bool:
-    if not host_name:
-        return False
-    inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
-    for directory in [inv_paths.archive_host(host_name), inv_paths.delta_cache_host(host_name)]:
-        try:
-            has_history_entries = any(directory.iterdir())
-        except FileNotFoundError:
-            has_history_entries = False
-        if has_history_entries:
-            return True
-    return False
-
-
 def _render_inventory_history_icon(
     what: Literal["host", "service"],
     row: Row,
@@ -90,7 +73,9 @@ def _render_inventory_history_icon(
     user_permissions: UserPermissions,
     _icon_config: IconConfig,
 ) -> None | tuple[StaticIcon | DynamicIcon, str, str]:
-    if _is_inventory_row(what, row) and _has_inventory_history(row["host_name"]):
+    if _is_inventory_row_of_a_host(what, row) and has_history(
+        InventoryPaths(cmk.utils.paths.omd_root), row["host_name"]
+    ):
         return _link_to_view(
             row, user_permissions, "inv_host_history", _("Show HW/SW inventory history")
         )

@@ -112,6 +112,24 @@ def collect_files(directory: Path) -> Sequence[Path]:
         return []
 
 
+def has_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> bool:
+    tree_path = inv_paths.inventory_tree(host_name)
+    return tree_path.path.exists() or tree_path.legacy.exists()
+
+
+def _has_files(directory: Path) -> bool:
+    try:
+        return any(directory.iterdir())
+    except FileNotFoundError:
+        return False
+
+
+def has_history(inv_paths: InventoryPaths, host_name: HostName) -> bool:
+    return _has_files(inv_paths.archive_host(host_name)) or _has_files(
+        inv_paths.delta_cache_host(host_name)
+    )
+
+
 def parse_archive_timestamp(file_path: Path) -> int:
     return int(file_path.with_suffix("").name)
 

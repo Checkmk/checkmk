@@ -11,6 +11,8 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName, HostNameValidationError
 from cmk.inventory.paths import (
+    has_history,
+    has_inventory_tree,
     InventoryPaths,
     parse_archive_timestamp,
     parse_delta_cache_timestamps,
@@ -163,3 +165,42 @@ def test_tree_paths_refuse_a_host_name_leaving_their_directory(
 ) -> None:
     with pytest.raises(HostNameValidationError):
         path_of(InventoryPaths(tmp_path), host_name)
+
+
+def test_has_inventory_tree(tmp_path: Path) -> None:
+    inv_paths = InventoryPaths(tmp_path)
+    inv_paths.inventory_dir.mkdir(parents=True)
+    inv_paths.inventory_tree(HostName("host")).path.touch()
+    assert has_inventory_tree(inv_paths, HostName("host"))
+
+
+def test_has_inventory_tree_of_a_legacy_file(tmp_path: Path) -> None:
+    inv_paths = InventoryPaths(tmp_path)
+    inv_paths.inventory_dir.mkdir(parents=True)
+    inv_paths.inventory_tree(HostName("host")).legacy.touch()
+    assert has_inventory_tree(inv_paths, HostName("host"))
+
+
+def test_has_no_inventory_tree(tmp_path: Path) -> None:
+    assert not has_inventory_tree(InventoryPaths(tmp_path), HostName("host"))
+
+
+@pytest.mark.parametrize(
+    "make_directory",
+    [
+        pytest.param(InventoryPaths.archive_host, id="archive"),
+        pytest.param(InventoryPaths.delta_cache_host, id="delta-cache"),
+    ],
+)
+def test_has_history(
+    tmp_path: Path, make_directory: Callable[[InventoryPaths, HostName], Path]
+) -> None:
+    inv_paths = InventoryPaths(tmp_path)
+    directory = make_directory(inv_paths, HostName("host"))
+    directory.mkdir(parents=True)
+    (directory / "123.json").touch()
+    assert has_history(inv_paths, HostName("host"))
+
+
+def test_has_no_history(tmp_path: Path) -> None:
+    assert not has_history(InventoryPaths(tmp_path), HostName("host"))

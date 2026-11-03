@@ -5,7 +5,7 @@
 
 
 from collections.abc import Iterable, Mapping, Sequence
-from typing import override
+from typing import override, TypedDict
 
 from cmk.ccc.user import UserId
 from cmk.gui.data_source import DataSourceRegistry, RowTable
@@ -15,7 +15,9 @@ from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
     FilterName,
+    LinkFromSpec,
     SingleInfos,
+    ViewSpec,
     VisualContext,
     VisualLinkSpec,
 )
@@ -27,6 +29,7 @@ from cmk.gui.visuals.filter.components import FilterComponent
 from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
 from cmk.inventory.raw_paths import InventoryPath, TreeSource
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, StaticIcon
+from cmk.web.utils.speaklater import LazyString
 
 from ._data_sources import ABCDataSourceInventory, RowTableInventory
 from ._display_hints import (
@@ -82,125 +85,144 @@ def _register_sorter(sorter_registry: SorterRegistry, from_hint: SorterFromHint)
     )
 
 
+def _icon_of_table(table: TableWithView) -> DynamicIcon:
+    if not isinstance(table.icon, StaticIcon):
+        return table.icon
+    main_icon = DynamicIconName(table.icon.icon.value)
+    if table.icon.emblem is None:
+        return main_icon
+    return {"icon": main_icon, "emblem": table.icon.emblem}
+
+
+class _TableViewSpecifics(TypedDict):
+    name: str
+    title: str | LazyString
+    description: str | LazyString
+    hidden: bool
+    mustsearch: bool
+    link_from: LinkFromSpec
+    painters: Sequence[ColumnSpec]
+    context: VisualContext
+    icon: DynamicIcon | None
+    single_infos: SingleInfos
+
+
+def _table_view_spec(table: TableWithView, specifics: _TableViewSpecifics) -> ViewSpec:
+    return {
+        "name": specifics["name"],
+        "title": specifics["title"],
+        "description": specifics["description"],
+        "hidden": specifics["hidden"],
+        "mustsearch": specifics["mustsearch"],
+        "link_from": specifics["link_from"],
+        "painters": specifics["painters"],
+        "context": specifics["context"],
+        "icon": specifics["icon"],
+        "single_infos": specifics["single_infos"],
+        "hidebutton": False,
+        "datasource": table.name,
+        "topic": "inventory",
+        "sort_index": 30,
+        "public": True,
+        "layout": "table",
+        "num_columns": 1,
+        "browser_reload": 0,
+        "column_headers": "pergroup",
+        "user_sortable": True,
+        "play_sounds": False,
+        "force_checkboxes": False,
+        "mobile": False,
+        "group_painters": [],
+        "sorters": [],
+        "is_show_more": table.is_show_more,
+        "owner": UserId.builtin(),
+        "add_context_to_title": True,
+        "packaged": False,
+        "main_menu_search_terms": [],
+    }
+
+
+def _search_view_spec(
+    table: TableWithView, painters: Sequence[ColumnSpec], context: VisualContext
+) -> ViewSpec:
+    return _table_view_spec(
+        table,
+        {
+            "name": table.name + "_search",
+            "title": _l("Search %(title)s") % {"title": table.long_title},
+            "description": (
+                _l("A view for searching in the inventory data for %(title)s")
+                % {"title": table.long_title}
+            ),
+            "hidden": False,
+            "mustsearch": True,
+            "link_from": {},
+            "painters": [
+                ColumnSpec(
+                    name="host",
+                    link_spec=VisualLinkSpec(type_name="views", name="inv_host"),
+                ),
+                *painters,
+            ],
+            "context": {
+                **{
+                    f: {}
+                    for f in [
+                        "siteopt",
+                        "hostregex",
+                        "hostgroups",
+                        "opthostgroup",
+                        "opthost_contactgroup",
+                        "host_address",
+                        "host_tags",
+                        "hostalias",
+                        "host_favorites",
+                    ]
+                },
+                **context,
+            },
+            "icon": None,
+            "single_infos": [],
+        },
+    )
+
+
+def _host_view_spec(
+    table: TableWithView, painters: Sequence[ColumnSpec], context: VisualContext
+) -> ViewSpec:
+    return _table_view_spec(
+        table,
+        {
+            "name": make_table_view_name_of_host(table.name),
+            "title": table.long_title,
+            "description": (
+                _l("A view for the %(title)s of one host") % {"title": table.long_title}
+            ),
+            "hidden": True,
+            "mustsearch": False,
+            "link_from": {
+                "single_infos": ["host"],
+                "has_inventory_tree": table.path,
+            },
+            "painters": painters,
+            "context": context,
+            "icon": _icon_of_table(table),
+            "single_infos": ["host"],
+        },
+    )
+
+
 def _register_views(
     table: TableWithView,
     painters: Sequence[ColumnSpec],
     filters: Iterable[FilterName],
 ) -> None:
-    """Declare two views: one for searching globally. And one for the items of one host"""
     context: VisualContext = {f: {} for f in filters}
-
-    # View for searching for items
-    search_view_name = table.name + "_search"
-    multisite_builtin_views[search_view_name] = {
-        # General options
-        "title": _l("Search %(title)s") % {"title": table.long_title},
-        "description": (
-            _l("A view for searching in the inventory data for %(title)s")
-            % {"title": table.long_title}
-        ),
-        "hidden": False,
-        "hidebutton": False,
-        "mustsearch": True,
-        # Columns
-        "painters": [
-            ColumnSpec(
-                name="host",
-                link_spec=VisualLinkSpec(type_name="views", name="inv_host"),
-            ),
-            *painters,
-        ],
-        # Filters
-        "context": {
-            **{
-                f: {}
-                for f in [
-                    "siteopt",
-                    "hostregex",
-                    "hostgroups",
-                    "opthostgroup",
-                    "opthost_contactgroup",
-                    "host_address",
-                    "host_tags",
-                    "hostalias",
-                    "host_favorites",
-                ]
-            },
-            **context,
-        },
-        "name": search_view_name,
-        "link_from": {},
-        "icon": None,
-        "single_infos": [],
-        "datasource": table.name,
-        "topic": "inventory",
-        "sort_index": 30,
-        "public": True,
-        "layout": "table",
-        "num_columns": 1,
-        "browser_reload": 0,
-        "column_headers": "pergroup",
-        "user_sortable": True,
-        "play_sounds": False,
-        "force_checkboxes": False,
-        "mobile": False,
-        "group_painters": [],
-        "sorters": [],
-        "is_show_more": table.is_show_more,
-        "owner": UserId.builtin(),
-        "add_context_to_title": True,
-        "packaged": False,
-        "main_menu_search_terms": [],
-    }
-
-    # View for the items of one host
-    host_view_name = make_table_view_name_of_host(table.name)
-    if isinstance(table.icon, StaticIcon):
-        main_icon: DynamicIconName = DynamicIconName(table.icon.icon.value)
-        if table.icon.emblem is not None:
-            icon: DynamicIcon = {"icon": main_icon, "emblem": table.icon.emblem}
-        else:
-            icon = main_icon
-    else:
-        icon = table.icon
-    multisite_builtin_views[host_view_name] = {
-        # General options
-        "title": table.long_title,
-        "description": _l("A view for the %(title)s of one host") % {"title": table.long_title},
-        "hidden": True,
-        "hidebutton": False,
-        "mustsearch": False,
-        "link_from": {
-            "single_infos": ["host"],
-            "has_inventory_tree": table.path,
-        },
-        # Columns
-        "painters": painters,
-        # Filters
-        "context": context,
-        "icon": icon,
-        "name": host_view_name,
-        "single_infos": ["host"],
-        "datasource": table.name,
-        "topic": "inventory",
-        "sort_index": 30,
-        "public": True,
-        "layout": "table",
-        "num_columns": 1,
-        "browser_reload": 0,
-        "column_headers": "pergroup",
-        "user_sortable": True,
-        "play_sounds": False,
-        "force_checkboxes": False,
-        "mobile": False,
-        "group_painters": [],
-        "sorters": [],
-        "is_show_more": table.is_show_more,
-        "owner": UserId.builtin(),
-        "add_context_to_title": True,
-        "packaged": False,
-        "main_menu_search_terms": [],
-    }
+    for view_spec in (
+        _search_view_spec(table, painters, context),
+        _host_view_spec(table, painters, context),
+    ):
+        multisite_builtin_views[view_spec["name"]] = view_spec
 
 
 def _register_table_view(

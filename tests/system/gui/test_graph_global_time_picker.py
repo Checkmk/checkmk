@@ -12,7 +12,6 @@ server-side, and the picker is mounted by the page rather than by any single Vue
 
 import logging
 import re
-from collections.abc import Iterator, Mapping
 from typing import Final
 
 import pytest
@@ -21,7 +20,6 @@ from playwright.sync_api import expect
 from tests.system.gui.testlib.playwright.pom.graphing.fixtures import open_service_graphs
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
-from tests.testlib.system.site import ADMIN_USER, Site
 
 logger = logging.getLogger(__name__)
 
@@ -40,28 +38,6 @@ def _mark_document(graphs: ServiceGraphs) -> None:
 
 def _document_survived(graphs: ServiceGraphs) -> bool:
     return bool(graphs.page.evaluate("window.__cmkGlobalTimePickerMarker === true"))
-
-
-@pytest.fixture(name="preferred_default_range")
-def fixture_preferred_default_range(test_site: Site) -> Iterator[None]:
-    """`OTHER_PRESET` as the "Global time picker default range" of `ADMIN_USER`, whom the
-    browser logs in as - not of the automation user the REST client acts as."""
-
-    def set_default_time_range(time_range: Mapping[str, str | int]) -> None:
-        user = test_site.openapi.users.get(ADMIN_USER)
-        assert user is not None, f"The site has no {ADMIN_USER} to set the preference on"
-        _user_spec, etag = user
-        test_site.openapi.users.edit(
-            ADMIN_USER,
-            {"interface_options": {"time_picker": {"default_time_range": time_range}}},
-            etag,
-        )
-
-    set_default_time_range({"option": "individual", "duration": 25 * 60 * 60})
-    try:
-        yield
-    finally:
-        set_default_time_range({"option": "default"})
 
 
 def test_one_preset_selection_moves_every_graph_on_the_page(

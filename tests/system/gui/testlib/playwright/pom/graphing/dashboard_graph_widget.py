@@ -64,6 +64,12 @@ class DashboardGraphWidget:
         )
 
     @property
+    def timestamp(self) -> Locator:
+        """The graph time in the figure's header, shown only if the widget's render options
+        ask for it."""
+        return self.figure.locator(".graphing-graph-timestamp")
+
+    @property
     def notice(self) -> Locator:
         """The notice the figure shows in place of the graph it could not load.
 

@@ -19,7 +19,7 @@ from tests.system.gui.testlib.playwright.pom.page import MainArea
 
 logger = logging.getLogger(__name__)
 
-_PICKER_SELECTOR = "div.graphing-global-time-picker"
+GLOBAL_TIME_PICKER_SELECTOR = "div.graphing-global-time-picker"
 
 
 class GlobalTimePicker:
@@ -30,7 +30,7 @@ class GlobalTimePicker:
 
     @property
     def root(self) -> Locator:
-        return self._main_area.locator(_PICKER_SELECTOR)
+        return self._main_area.locator(GLOBAL_TIME_PICKER_SELECTOR)
 
     @property
     def trigger(self) -> Locator:
@@ -56,8 +56,17 @@ class GlobalTimePicker:
 
     @property
     def overflow(self) -> Locator:
-        """The "More time ranges" control, present only when the chips do not all fit."""
-        return self.root.locator("div.graphing-dynamic-presets__overflow")
+        """The time range dropdown: "More time ranges" beside the chips, present only when they
+        do not all fit, or "Time ranges" alone in the condensed picker of a dashboard header."""
+        return self.root.locator("div.lib-time-range-preset-row__overflow")
+
+    @property
+    def dropdown_selection(self) -> Locator:
+        """What the dropdown's trigger reads: the active preset in the condensed picker.
+
+        Not the trigger itself, whose text also holds its visually hidden label.
+        """
+        return self.overflow.locator(".cmk-chip-select__label")
 
     def select_preset(self, name: str) -> None:
         """Click a preset chip, falling back to the overflow list when it does not fit.

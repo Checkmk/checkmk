@@ -11,6 +11,9 @@ from playwright.sync_api import expect, Locator, Page
 
 from tests.system.gui.testlib.playwright.dropdown import DropdownHelper, DropdownOptions
 from tests.system.gui.testlib.playwright.pom.sidebar.base_sidebar import SidebarHelper
+from tests.system.gui.testlib.playwright.pom.sidebar.widget_time_range_settings import (
+    WidgetTimeRangeSettings,
+)
 
 # A selection region restricted to one host or service offers that one field instead of the
 # 'Add filter' menu, and the field carries no accessible name of its own.
@@ -186,6 +189,35 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
     def save_widget_button(self) -> Locator:
         """Locator property of 'Save widget' button."""
         return self.locator().get_by_role("button", name="Save widget")
+
+    @property
+    def preview_title(self) -> Locator:
+        """The title the visualization stage's preview gives the widget, as the dashboard will."""
+        return self.locator().locator(".db-content-container__title")
+
+    @property
+    def time_range_settings(self) -> WidgetTimeRangeSettings:
+        """The 'Time range' field of the visualization stage."""
+        return WidgetTimeRangeSettings(self.locator())
+
+    def expand_collapsed_panels(self) -> None:
+        """Open every settings panel of the stage that starts out collapsed, such as
+        'Additional graph options', so all the options it offers are rendered."""
+        headers = self.locator().locator("button.cmk-catalog-panel__header")
+        collapsed = headers.and_(self.locator().locator("[aria-expanded='false']"))
+        # Bounded and confirmed per click: a header re-read before Vue re-rendered would be
+        # clicked again and collapse back.
+        for _ in range(collapsed.count()):
+            header = collapsed.first
+            panel_id = header.get_attribute("aria-controls")
+            header.click()
+            expect(
+                headers.and_(self.locator().locator(f"[aria-controls='{panel_id}']")),
+                message=f"The settings panel '{panel_id}' did not open",
+            ).to_have_attribute("aria-expanded", "true")
+        expect(collapsed, message="A settings panel of the stage is still collapsed").to_have_count(
+            0
+        )
 
     @property
     def _add_filter_section(self) -> Locator:

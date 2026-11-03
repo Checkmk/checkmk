@@ -266,6 +266,33 @@ def fixture_graph_collection(
         test_site.delete_file(collections_of_user)
 
 
+@pytest.fixture(name="preferred_default_range")
+def fixture_preferred_default_range(test_site: Site) -> Iterator[None]:
+    """25 hours, the "Last 25 h" preset, as the "Global time picker default range" of
+    `ADMIN_USER`, whom the browser logs in as - not of the automation user the REST client
+    acts as.
+
+    Except on the cloud edition, whose browser signs in as the user the test IdP hardcodes:
+    a test relying on this has to skip there.
+    """
+
+    def set_default_time_range(time_range: Mapping[str, str | int]) -> None:
+        user = test_site.openapi.users.get(ADMIN_USER)
+        assert user is not None, f"The site has no {ADMIN_USER} to set the preference on"
+        _user_spec, etag = user
+        test_site.openapi.users.edit(
+            ADMIN_USER,
+            {"interface_options": {"time_picker": {"default_time_range": time_range}}},
+            etag,
+        )
+
+    set_default_time_range({"option": "individual", "duration": 25 * 60 * 60})
+    try:
+        yield
+    finally:
+        set_default_time_range({"option": "default"})
+
+
 @pytest.fixture(name="javascript_errors")
 def fixture_javascript_errors(dashboard_page: MainDashboard) -> Iterator[list[str]]:
     """Uncaught page errors raised while the test runs."""

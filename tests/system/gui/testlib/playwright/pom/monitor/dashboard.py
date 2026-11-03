@@ -10,6 +10,9 @@ from typing import override
 from playwright.sync_api import expect, Locator
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
+from tests.system.gui.testlib.playwright.pom.graphing.global_time_picker import (
+    GLOBAL_TIME_PICKER_SELECTOR,
+)
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
 from tests.system.gui.testlib.playwright.pom.sidebar.create_dashboard_sidebar import (
     CloneDashboardSidebar,
@@ -67,6 +70,11 @@ class BaseDashboard(CmkPage):
         This is the place where dashboard title is checked.
         """
         return self._menu_header.get_by_role("textbox")
+
+    @property
+    def header_time_picker(self) -> Locator:
+        """The global time picker in the top menu of the dashboard."""
+        return self._menu_header.locator(GLOBAL_TIME_PICKER_SELECTOR)
 
     def get_menu_button(self, button_name: str) -> Locator:
         """Get button of the top menu by its name.

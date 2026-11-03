@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.user import UserId
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _l
 from cmk.gui.type_defs import ColumnSpec, SorterSpec, ViewSpec, VisualLinkSpec
 from cmk.web.utils.icons import DynamicIconName
 
@@ -28,8 +28,8 @@ _INV_VIEW_HOST = ViewSpec(
         # General options
         "datasource": "hosts",
         "topic": "inventory",
-        "title": _("Inventory of host"),
-        "description": _("The complete hardware and software inventory of a host"),
+        "title": _l("Inventory of host"),
+        "description": _l("The complete hardware and software inventory of a host"),
         "icon": DynamicIconName("inventory"),
         "hidebutton": False,
         "public": True,
@@ -78,8 +78,8 @@ _INV_VIEW_HOST_CPU = ViewSpec(
         "datasource": "hosts",
         "topic": "inventory",
         "sort_index": 10,
-        "title": _("CPU inventory of all hosts"),
-        "description": _("A list of all hosts with some CPU related inventory data"),
+        "title": _l("CPU inventory of all hosts"),
+        "description": _l("A list of all hosts with some CPU related inventory data"),
         "public": True,
         "hidden": False,
         "hidebutton": False,
@@ -139,8 +139,8 @@ _INV_VIEW_HOST_PORTS = ViewSpec(
         "datasource": "hosts",
         "topic": "inventory",
         "sort_index": 20,
-        "title": _("Switch port statistics"),
-        "description": _(
+        "title": _l("Switch port statistics"),
+        "description": _l(
             "A list of all hosts with statistics about total, used and free networking interfaces"
         ),
         "public": True,
@@ -194,8 +194,10 @@ _INV_VIEW_HOST_HISTORY = ViewSpec(
         # General options
         "datasource": "invhist",
         "topic": "inventory",
-        "title": _("Inventory history of host"),
-        "description": _("The history of changes in the hardware and software inventory of a host"),
+        "title": _l("Inventory history of host"),
+        "description": _l(
+            "The history of changes in the hardware and software inventory of a host"
+        ),
         "icon": {
             "icon": DynamicIconName("inventory"),
             "emblem": "time",

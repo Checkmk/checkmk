@@ -5,13 +5,19 @@
 
 # mypy: disable-error-code="explicit-any"
 
+import json
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.prism.agent_based.prism_vms import check_prism_vms, discovery_prism_vms
+from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.plugins.prism.agent_based.prism_vms import (
+    check_prism_vms,
+    discovery_prism_vms,
+    parse_prism_vms_v2,
+)
 
 SECTION = {
     "SRV-EX-03-restore": {
@@ -82,7 +88,7 @@ def test_discovery_prism_vms(  # type: ignore[misc]
                 Result(state=State.WARN, summary="with status off - on Host None"),
                 Result(
                     state=State.OK,
-                    notice="Memory 32.0 GiB,\nDescription None,\nProtetion Domain None",
+                    notice="Memory 32.0 GiB,\nDescription None",
                 ),
             ],
             id="If the VM is not in expected state, the check result is WARN.",
@@ -95,7 +101,7 @@ def test_discovery_prism_vms(  # type: ignore[misc]
                 Result(state=State.OK, summary="with status on - on Host SRV-AHV-01"),
                 Result(
                     state=State.OK,
-                    notice="Memory 16.0 GiB,\nDescription None,\nProtetion Domain None",
+                    notice="Memory 16.0 GiB,\nDescription None",
                 ),
             ],
             id="If the VM is in expected state, the check result is OK.",
@@ -118,3 +124,65 @@ def test_check_prism_vms(  # type: ignore[misc]
         )
         == expected_check_result
     )
+
+
+# What the v4 agent writes for the 161 VMs recorded on a Prism Central 7.5 lab
+RECORDED_V4_SECTION = [
+    [
+        (
+            Path(__file__).parent.parent
+            / "special_agent"
+            / "v4_fixtures"
+            / "section_prism_vms_v2.json"
+        ).read_text()
+    ]
+]
+
+
+def test_v4_vms_sharing_a_name_get_a_service_each() -> None:
+    section = parse_prism_vms_v2(RECORDED_V4_SECTION)
+
+    items = [service.item or "" for service in discovery_prism_vms(section)]
+
+    assert (len(items), [item for item in items if item.startswith("vm-119 ")]) == (
+        161,
+        ["vm-119 (f9d9ed69)", "vm-119 (5fcd68a4)"],
+    )
+
+
+def test_v4_running_vm_shows_its_host() -> None:
+    section = parse_prism_vms_v2(RECORDED_V4_SECTION)
+
+    assert list(check_prism_vms("vm-001 (1f195358)", {"system_state": "on"}, section)) == [
+        Result(state=State.OK, summary="with status on - on Host host-2"),
+        Result(
+            state=State.OK,
+            notice="Memory 76.0 GiB,\nDescription description of vm-001",
+        ),
+    ]
+
+
+def test_v4_vm_that_is_off_runs_on_no_host() -> None:
+    section = parse_prism_vms_v2(RECORDED_V4_SECTION)
+
+    results = list(check_prism_vms("vm-018 (1e187b3a)", {"system_state": "on"}, section))
+
+    assert results[0] == Result(state=State.WARN, summary="with status off - on Host None")
+
+
+def _v4_vm(power_state: str) -> StringTable:
+    vm = {
+        "extId": "1f195358-b250-426c-9567-797cdf5e7303",
+        "name": "vm",
+        "powerState": power_state,
+        "memorySizeBytes": 1024**3,
+    }
+    return [[json.dumps([vm])]]
+
+
+def test_v4_undetermined_power_state_is_unknown() -> None:
+    section = parse_prism_vms_v2(_v4_vm("UNDETERMINED"))
+
+    results = list(check_prism_vms("vm (1f195358)", {"system_state": "on"}, section))
+
+    assert results[0] == Result(state=State.UNKNOWN, summary="with status unknown - on Host None")

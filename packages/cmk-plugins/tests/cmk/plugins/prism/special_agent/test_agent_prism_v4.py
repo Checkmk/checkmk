@@ -26,6 +26,7 @@ from cmk.plugins.prism.special_agent.agent_prism_v4 import (
     fetch_alerts,
     fetch_containers,
     fetch_hosts,
+    fetch_vms,
     FetchContext,
     Fetcher,
     FetchSchedule,
@@ -33,9 +34,10 @@ from cmk.plugins.prism.special_agent.agent_prism_v4 import (
     run_fetchers,
     Section,
     Unroutable,
+    VMS_PATH,
     write_sections,
 )
-from cmk.plugins.prism.special_agent.v4_client import PrismV4Client, PrismV4Error
+from cmk.plugins.prism.special_agent.v4_client import JsonObject, PrismV4Client, PrismV4Error
 from cmk.server_side_programs.v1 import AgentMessages
 
 from .v4_testing import (
@@ -123,6 +125,22 @@ def _serve_recorded_containers(
         api.get(v4_url(f"{CONTAINER_STATS_PATH}/{ext_id}"), json=stats)
 
 
+def _serve_recorded_vms(api: responses.RequestsMock) -> None:
+    """The 161 VMs of the lab (anonymised) on two pages"""
+    for page_number in (0, 1):
+        api.get(
+            v4_url(VMS_PATH),
+            json=_recorded(f"vmm_ahv_config_vms_page{page_number}.json"),
+            match=[page_matcher(page_number)],
+        )
+
+
+def _recorded_host_list() -> list[JsonObject]:
+    """The hosts of the lab (anonymised), as agent_prism_v4_main lists them"""
+    assert isinstance(hosts := recorded_hosts()["data"], list)
+    return hosts
+
+
 def _container_names_and_messages(
     sections: Sequence[Section], messages: AgentMessages
 ) -> tuple[list[object], list[tuple[str, str]]]:
@@ -148,7 +166,10 @@ def _routing() -> ClusterRouting:
     return ClusterRouting.from_clusters(clusters, AgentMessages())
 
 
-def _context(messages: AgentMessages | None = None) -> FetchContext:
+def _context(
+    messages: AgentMessages | None = None,
+    hosts: Sequence[JsonObject] | PrismV4Error = (),
+) -> FetchContext:
     client = PrismV4Client(
         BASE_URL,
         USERNAME,
@@ -157,7 +178,9 @@ def _context(messages: AgentMessages | None = None) -> FetchContext:
         timeout=10,
         deadline=time.monotonic() + 60,
     )
-    return FetchContext(client, [], _routing(), AgentMessages() if messages is None else messages)
+    return FetchContext(
+        client, [], _routing(), AgentMessages() if messages is None else messages, hosts
+    )
 
 
 def _sections_of(*sections: Section) -> Fetcher:
@@ -370,12 +393,8 @@ def test_failed_slow_data_is_due_again_on_the_next_run() -> None:
     assert schedule.is_due(failing)
 
 
-def test_hosts_go_to_their_cluster_with_only_the_checked_fields(
-    api: responses.RequestsMock,
-) -> None:
-    api.get(v4_url(HOSTS_PATH), json=recorded_hosts(), match=[page_matcher(0)])
-
-    assert fetch_hosts(_context()) == [
+def test_hosts_go_to_their_cluster_with_only_the_checked_fields() -> None:
+    assert fetch_hosts(_context(hosts=_recorded_host_list())) == [
         Section(
             "prism_hosts_v2",
             [
@@ -397,16 +416,19 @@ def test_hosts_go_to_their_cluster_with_only_the_checked_fields(
     ]
 
 
-def test_hosts_without_a_cluster_are_not_routed(api: responses.RequestsMock) -> None:
-    api.get(
-        v4_url(HOSTS_PATH),
-        json=page([{"hostName": "host-1"}], has_next=False),
-        match=[page_matcher(0)],
-    )
+def test_hosts_without_a_cluster_are_not_routed() -> None:
+    assert [
+        section.target for section in fetch_hosts(_context(hosts=[{"hostName": "host-1"}]))
+    ] == [Unroutable("hosts without a cluster")]
 
-    assert [section.target for section in fetch_hosts(_context())] == [
-        Unroutable("hosts without a cluster")
-    ]
+
+def test_failed_host_listing_is_reported_by_the_hosts_fetcher() -> None:
+    error = PrismV4Error("clustermgmt/v4.0/config/hosts: HTTP 403 Permission denied")
+
+    with pytest.raises(PrismV4Error) as raised:
+        fetch_hosts(_context(hosts=error))
+
+    assert raised.value is error
 
 
 def _alerts_by_target(sections: Sequence[Section]) -> dict[object, list[object]]:
@@ -528,6 +550,7 @@ def test_v4_agent_queries_only_the_v4_api(api: responses.RequestsMock) -> None:
     api.get(v4_url(HOSTS_PATH), json=recorded_hosts(), match=[page_matcher(0)])
     api.get(v4_url(ALERTS_PATH), json=recorded_alerts(), match=[page_matcher(0)])
     _serve_recorded_containers(api)
+    _serve_recorded_vms(api)
 
     agent_prism_main(parse_arguments(_v4_args()))
 
@@ -539,6 +562,9 @@ def test_v4_agent_queries_only_the_v4_api(api: responses.RequestsMock) -> None:
             ALERTS_PATH,
             CONTAINERS_PATH,
             *(f"{CONTAINER_STATS_PATH}/{ext_id}" for ext_id in RECORDED_CONTAINERS),
+            # Two pages
+            VMS_PATH,
+            VMS_PATH,
         )
     )
 
@@ -695,6 +721,62 @@ def test_container_sample_without_an_integer_is_left_out(
     assert [sample["timestamp"] for sample in containers[2]["stats"]["storageCapacityBytes"]] == [
         f"2026-10-28T{hour:02d}:00:00Z" for hour in range(14, 3, -1)
     ]
+
+
+def test_vms_section_holds_only_the_monitored_fields_per_cluster(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_recorded_vms(api)
+
+    sections = fetch_vms(_context(hosts=_recorded_host_list()))
+
+    assert sections == [
+        Section(
+            "prism_vms_v2",
+            json.loads((FIXTURES / "section_prism_vms_v2.json").read_text()),
+            "cluster-a",
+        )
+    ]
+
+
+def test_vms_are_reported_without_host_names_if_the_host_listing_failed(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_recorded_vms(api)
+
+    sections = fetch_vms(_context(hosts=PrismV4Error("clustermgmt/v4.0/config/hosts: timed out")))
+
+    assert isinstance(vms := sections[0].payload, list)
+    assert (len(vms), [vm["name"] for vm in vms if "hostName" in vm]) == (161, [])
+
+
+def test_vm_that_does_not_fit_the_model_is_skipped_with_an_info(
+    api: responses.RequestsMock,
+) -> None:
+    recorded = _recorded("vmm_ahv_config_vms_page0.json")
+    assert isinstance(listed := recorded["data"], list)
+    api.get(
+        v4_url(VMS_PATH),
+        json=page([{"name": "broken", "powerState": "ON"}, listed[0]], has_next=False),
+        match=[page_matcher(0)],
+    )
+    messages = AgentMessages()
+
+    sections = fetch_vms(_context(messages, _recorded_host_list()))
+
+    assert isinstance(vms := sections[0].payload, list)
+    assert ([vm["name"] for vm in vms], list(messages)) == (
+        ["vm-001"],
+        [
+            (
+                "info",
+                (
+                    "Skipped VM 'broken': Prism Central reports no valid "
+                    "extId, memorySizeBytes, cluster for it"
+                ),
+            )
+        ],
+    )
 
 
 def test_v4_agent_reports_unreachable_cluster_list_in_one_line(

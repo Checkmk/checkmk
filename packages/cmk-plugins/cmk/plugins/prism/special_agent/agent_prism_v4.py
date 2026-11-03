@@ -30,6 +30,9 @@ from cmk.plugins.prism.v4_models import (
     StorageContainer,
     StorageContainerStats,
     StorageContainerWithStats,
+    V4Model,
+    Vm,
+    VmWithHostName,
 )
 from cmk.server_side_programs.v1 import AgentMessages, Storage
 
@@ -119,6 +122,9 @@ class FetchContext:
     clusters: Sequence[JsonObject]
     routing: ClusterRouting
     messages: AgentMessages
+    # Listed once for all fetchers. If the listing failed, fetch_hosts reports the error and
+    # fetch_vms reports the VMs without host names.
+    hosts: Sequence[JsonObject] | PrismV4Error = ()
 
 
 @dataclass(frozen=True)
@@ -139,9 +145,10 @@ def _cluster_uuid(host: JsonObject) -> str | None:
 
 
 def fetch_hosts(context: FetchContext) -> Sequence[Section]:
-    # No $select: it drops hypervisor/acropolisConnectionState (Prism Central 7.5)
+    if isinstance(context.hosts, PrismV4Error):
+        raise context.hosts
     by_cluster: dict[str | None, list[dict[str, object]]] = {}
-    for host in context.client.list_all(HOSTS_PATH):
+    for host in context.hosts:
         by_cluster.setdefault(_cluster_uuid(host), []).append(
             Host.model_validate(host).to_section()
         )
@@ -181,24 +188,23 @@ CONTAINER_STATS_WINDOW = timedelta(hours=12)
 CONTAINER_STATS_SAMPLING = timedelta(hours=1)
 
 
-def _fitting_containers(
-    raw_containers: Iterable[JsonObject],
+def _parse_valid[M: V4Model](
+    model: type[M],
+    raw_entities: Iterable[JsonObject],
+    what: str,
+    id_key: str,
     messages: AgentMessages,
-) -> list[StorageContainer]:
-    containers: list[StorageContainer] = []
-    for raw in raw_containers:
+) -> list[M]:
+    entities: list[M] = []
+    for raw in raw_entities:
         try:
-            containers.append(StorageContainer.model_validate(raw))
+            entities.append(model.model_validate(raw))
         except ValidationError as e:
             fields = ", ".join(".".join(map(str, error["loc"])) for error in e.errors())
-            name = raw.get("name") or raw.get("containerExtId")
-            container = (
-                f"storage container '{name}'" if name else "a storage container without a name"
-            )
-            messages.add_info(
-                f"Skipped {container}: Prism Central reports no valid {fields} for it"
-            )
-    return containers
+            name = raw.get("name") or raw.get(id_key)
+            entity = f"{what} '{name}'" if name else f"a {what} without a name"
+            messages.add_info(f"Skipped {entity}: Prism Central reports no valid {fields} for it")
+    return entities
 
 
 # The rate limits of the client set the pace, this only bounds the calls in flight: together
@@ -233,7 +239,8 @@ def _container_stats(
 def fetch_containers(context: FetchContext) -> Sequence[Section]:
     """A container that is gone, doesn't fit the model or has no usage stats is left out,
     the others are reported"""
-    containers = _fitting_containers(
+    containers = _parse_valid(
+        StorageContainer,
         context.client.list_all(
             CONTAINERS_PATH,
             {
@@ -242,6 +249,8 @@ def fetch_containers(context: FetchContext) -> Sequence[Section]:
                 )
             },
         ),
+        "storage container",
+        "containerExtId",
         context.messages,
     )
     if not containers:
@@ -285,10 +294,57 @@ def fetch_containers(context: FetchContext) -> Sequence[Section]:
     ]
 
 
+VMS_PATH = "vmm/v4.0/ahv/config/vms"
+VM_SELECT = "extId,name,powerState,description,memorySizeBytes,host/extId,cluster/extId"
+
+
+def _host_names(hosts: Sequence[JsonObject] | PrismV4Error) -> dict[str, str]:
+    if isinstance(hosts, PrismV4Error):
+        return {}
+    return {
+        ext_id: host_name
+        for host in hosts
+        if isinstance(ext_id := host.get("extId"), str)
+        and isinstance(host_name := host.get("hostName"), str)
+    }
+
+
+def fetch_vms(context: FetchContext) -> Sequence[Section]:
+    """A VM that doesn't fit the model is left out, the others are reported"""
+    vms = _parse_valid(
+        Vm,
+        context.client.list_all(VMS_PATH, {"$select": VM_SELECT}),
+        "VM",
+        "extId",
+        context.messages,
+    )
+    if not vms:
+        return []
+    host_names = _host_names(context.hosts)
+
+    by_cluster: dict[str, list[dict[str, object]]] = {}
+    for vm in vms:
+        by_cluster.setdefault(vm.cluster.ext_id, []).append(
+            VmWithHostName(
+                extId=vm.ext_id,
+                name=vm.name,
+                powerState=vm.power_state,
+                description=vm.description,
+                memorySizeBytes=vm.memory_size_bytes,
+                hostName=None if vm.host is None else host_names.get(vm.host.ext_id),
+            ).to_section()
+        )
+    return [
+        Section("prism_vms_v2", cluster_vms, context.routing.host_for(cluster_id))
+        for cluster_id, cluster_vms in by_cluster.items()
+    ]
+
+
 SECTION_FETCHERS: Sequence[Fetcher] = (
     Fetcher("hosts", fetch_hosts),
     Fetcher("alerts", fetch_alerts),
     Fetcher("containers", fetch_containers),
+    Fetcher("vms", fetch_vms),
 )
 
 
@@ -432,6 +488,14 @@ def agent_prism_v4_main(
         sys.stderr.write(f"Could not fetch the clusters from Prism Central: {e}\n")
         return 1
     LOGGER.info("got %(count)d clusters", {"count": len(clusters)})
+    hosts: Sequence[JsonObject] | PrismV4Error
+    try:
+        # No $select: it drops hypervisor/acropolisConnectionState (Prism Central 7.5)
+        hosts = client.list_all(HOSTS_PATH)
+    except PrismV4Error as e:
+        if debug:
+            raise
+        hosts = e
 
     messages = AgentMessages()
     schedule = FetchSchedule(
@@ -440,7 +504,9 @@ def agent_prism_v4_main(
         clock=time.time,
     )
     result = run_fetchers(
-        FetchContext(client, clusters, ClusterRouting.from_clusters(clusters, messages), messages),
+        FetchContext(
+            client, clusters, ClusterRouting.from_clusters(clusters, messages), messages, hosts
+        ),
         SECTION_FETCHERS,
         schedule,
         messages,

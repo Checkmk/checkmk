@@ -20,6 +20,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.prism.lib import load_json, PRISM_POWER_STATES
+from cmk.plugins.prism.v4_models import VmsWithHostNames, VmWithHostName
 
 Section = Mapping[str, Mapping[str, Any]]
 
@@ -35,6 +36,34 @@ def parse_prism_vms(string_table: StringTable) -> Section:
 agent_section_prism_vms = AgentSection(
     name="prism_vms",
     parse_function=parse_prism_vms,
+)
+
+
+def _power_state_v2(vm: VmWithHostName) -> str:
+    return "unknown" if vm.power_state == "UNDETERMINED" else vm.power_state.lower()
+
+
+def parse_prism_vms_v2(string_table: StringTable) -> Section:
+    if not string_table:
+        return {}
+    # Prism doesn't keep VM names unique, the start of the extId tells VMs apart
+    return {
+        f"{vm.name} ({vm.ext_id[:8]})": {
+            "vmName": vm.name,
+            "powerState": _power_state_v2(vm),
+            "description": vm.description,
+            "hostName": vm.host_name,
+            "memoryCapacityInBytes": vm.memory_size_bytes,
+            "protectionDomainName": None,
+        }
+        for vm in VmsWithHostNames.model_validate_json(string_table[0][0]).root
+    }
+
+
+agent_section_prism_vms_v2 = AgentSection(
+    name="prism_vms_v2",
+    parsed_section_name="prism_vms",
+    parse_function=parse_prism_vms_v2,
 )
 
 
@@ -66,10 +95,10 @@ def check_prism_vms(item: str, params: Mapping[str, Any], section: Section) -> C
     message = f"with status {state_text} - on Host {host_name}"
     yield Result(state=State(state), summary=message)
 
-    yield Result(
-        state=State(0),
-        notice=f"Memory {memory},\nDescription {vm_desc},\nProtetion Domain {prot_domain}",
-    )
+    notice = f"Memory {memory},\nDescription {vm_desc}"
+    if prot_domain is not None:
+        notice += f",\nProtection Domain {prot_domain}"
+    yield Result(state=State(0), notice=notice)
 
 
 check_plugin_prism_vms = CheckPlugin(

@@ -150,3 +150,33 @@ class StorageContainerWithStats(V4Model):
 
 class StorageContainersWithStats(RootModel[list[StorageContainerWithStats]]):
     model_config = ConfigDict(frozen=True)
+
+
+class Reference(V4Model):
+    ext_id: str = Field(alias="extId")
+
+
+class Vm(V4Model):
+    """An item of the AHV VM list"""
+
+    ext_id: str = Field(alias="extId")
+    name: str
+    power_state: str = Field(alias="powerState")
+    description: str | None = None
+    memory_size_bytes: int = Field(alias="memorySizeBytes")
+    # A VM that is off runs on no host
+    host: Reference | None = None
+    cluster: Reference
+
+
+class VmWithHostName(V4Model):
+    ext_id: str = Field(alias="extId")
+    name: str
+    power_state: str = Field(alias="powerState")
+    description: str | None = None
+    memory_size_bytes: int = Field(alias="memorySizeBytes")
+    host_name: str | None = Field(None, alias="hostName")
+
+
+class VmsWithHostNames(RootModel[list[VmWithHostName]]):
+    model_config = ConfigDict(frozen=True)

@@ -1,0 +1,1153 @@
+[
+  {
+    "extId": "1f195358-b250-426c-9567-797cdf5e7303",
+    "name": "vm-001",
+    "powerState": "ON",
+    "description": "description of vm-001",
+    "memorySizeBytes": 81604378624,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "4ddc0717-7efd-481f-9376-ea479cb90a35",
+    "name": "vm-002",
+    "powerState": "ON",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "1fe72fa5-5038-4411-46f1-435551389703",
+    "name": "vm-003",
+    "powerState": "ON",
+    "description": "description of vm-003",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "b66daeb5-bb04-444e-7643-6e7f26b45f3a",
+    "name": "vm-004",
+    "powerState": "ON",
+    "description": "description of vm-004",
+    "memorySizeBytes": 25769803776,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "23a2bee4-646c-41e4-7c35-6795ed9eaea1",
+    "name": "vm-005",
+    "powerState": "ON",
+    "description": "description of vm-005",
+    "memorySizeBytes": 25769803776,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "a725d6c8-92eb-4cb3-4ffe-02cba4f8848a",
+    "name": "vm-006",
+    "powerState": "ON",
+    "description": "description of vm-006",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "cc5178a3-974f-433f-7b12-457b351be6a4",
+    "name": "vm-007",
+    "powerState": "ON",
+    "description": "description of vm-007",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "05b6c3da-3ef6-49ca-477e-791839f2d4a4",
+    "name": "vm-008",
+    "powerState": "ON",
+    "description": "description of vm-008",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "436a7d5c-de70-4112-5297-f236975719a3",
+    "name": "vm-009",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "7d30bf41-22a4-43ba-516b-905ebbd390bd",
+    "name": "vm-010",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "f8950fba-d87c-41ca-76cf-cbdca3887bd1",
+    "name": "vm-011",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "a92eae81-ef77-4d3e-423c-f70377858372",
+    "name": "vm-012",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "fa4c56a2-7534-4cfb-51ed-640d194b2643",
+    "name": "vm-013",
+    "powerState": "ON",
+    "description": "description of vm-013",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "001e57f2-f0cb-4833-4396-c698601963e9",
+    "name": "vm-014",
+    "powerState": "ON",
+    "memorySizeBytes": 21474836480,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "613e0a69-ad19-4499-7e65-9d34eb5d8b89",
+    "name": "vm-015",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "ca16bdf8-2364-494a-5268-28a588f04725",
+    "name": "vm-016",
+    "powerState": "ON",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "ece0f994-8abf-4ada-763c-8024750606ca",
+    "name": "vm-017",
+    "powerState": "ON",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "1e187b3a-2c9b-4e9e-5433-42f12adbc654",
+    "name": "vm-018",
+    "powerState": "OFF",
+    "memorySizeBytes": 34359738368
+  },
+  {
+    "extId": "e88d4e32-9e43-46ee-562c-2b7898d3867a",
+    "name": "vm-019",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "3ea9d7e9-8fa1-41da-58bf-77c94f79df6a",
+    "name": "vm-020",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "4f3b1ec9-bcb5-4f72-4411-fa78edc97c1b",
+    "name": "vm-021",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "442a66e9-0097-4eaf-448f-73e3830737c6",
+    "name": "vm-022",
+    "powerState": "ON",
+    "memorySizeBytes": 34359738368,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "707a72fd-ae49-4dba-7605-4695f33f9d26",
+    "name": "vm-023",
+    "powerState": "OFF",
+    "memorySizeBytes": 21474836480
+  },
+  {
+    "extId": "95b0e93e-c9aa-4e5b-4678-86733de0a2b8",
+    "name": "vm-024",
+    "powerState": "OFF",
+    "description": "description of vm-024",
+    "memorySizeBytes": 17179869184
+  },
+  {
+    "extId": "c7d0691d-fc34-4b5c-6727-f709d9bdad27",
+    "name": "vm-025",
+    "powerState": "ON",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "7491e8a1-4257-48df-7a1c-46fb135bc70a",
+    "name": "vm-026",
+    "powerState": "ON",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "df35f86a-0a59-44c0-5824-923b841fe834",
+    "name": "vm-027",
+    "powerState": "OFF",
+    "memorySizeBytes": 17179869184
+  },
+  {
+    "extId": "726ad254-0890-48f9-b2d3-50347a3afbf2",
+    "name": "vm-028",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "67b64b19-1dee-4a84-5cb4-28549ad1e3ab",
+    "name": "vm-029",
+    "powerState": "ON",
+    "description": "description of vm-029",
+    "memorySizeBytes": 25769803776,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "99a117a8-9c75-4bc3-5a53-a438e2e82b95",
+    "name": "vm-030",
+    "powerState": "ON",
+    "description": "description of vm-030",
+    "memorySizeBytes": 25769803776,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "88317ccb-a3bd-4261-5574-693b984edf98",
+    "name": "vm-031",
+    "powerState": "ON",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "9450b294-246b-4d6c-4f63-7db262989091",
+    "name": "vm-032",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "df9ff28c-350e-425d-7790-c8aa82d09776",
+    "name": "vm-033",
+    "powerState": "OFF",
+    "memorySizeBytes": 34359738368
+  },
+  {
+    "extId": "d907af96-3b30-4cc4-492d-e0f376dbe023",
+    "name": "vm-034",
+    "powerState": "OFF",
+    "memorySizeBytes": 17179869184
+  },
+  {
+    "extId": "bcb327db-5504-437d-7657-bb16d718b326",
+    "name": "vm-035",
+    "powerState": "OFF",
+    "memorySizeBytes": 17179869184
+  },
+  {
+    "extId": "c4a0699d-d885-494d-7067-b155c06f10a8",
+    "name": "vm-036",
+    "powerState": "OFF",
+    "memorySizeBytes": 17179869184
+  },
+  {
+    "extId": "70a491c6-6274-40a9-5082-337417ec48c8",
+    "name": "vm-037",
+    "powerState": "OFF",
+    "memorySizeBytes": 4294967296
+  },
+  {
+    "extId": "58880359-493a-474e-6513-98c143130c2a",
+    "name": "vm-038",
+    "powerState": "ON",
+    "description": "description of vm-038",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "69b35050-f548-45a5-694a-18561f208a3b",
+    "name": "vm-039",
+    "powerState": "ON",
+    "description": "description of vm-039",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "89ba11dc-977d-408b-5a73-01e8bd1416c6",
+    "name": "vm-040",
+    "powerState": "ON",
+    "description": "description of vm-040",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "4b1acdb6-b4cd-4392-7785-944f72c85dd2",
+    "name": "vm-041",
+    "powerState": "ON",
+    "memorySizeBytes": 21474836480,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "580c6821-f311-4818-4a11-ccd97385f726",
+    "name": "vm-042",
+    "powerState": "ON",
+    "description": "description of vm-042",
+    "memorySizeBytes": 34359738368,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "2cf20cae-81cd-4b3f-60e3-4de23a2334ee",
+    "name": "vm-043",
+    "powerState": "ON",
+    "memorySizeBytes": 21474836480,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "c9dcc9be-3256-4b47-6ba5-e441cefee280",
+    "name": "vm-044",
+    "powerState": "ON",
+    "description": "description of vm-044",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "7d9c90c3-7fa6-4b8c-5d7b-fd89b8130c6c",
+    "name": "vm-045",
+    "powerState": "ON",
+    "description": "description of vm-045",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "c2bd5442-63ec-45a8-6d98-633bc99f9e85",
+    "name": "vm-046",
+    "powerState": "ON",
+    "description": "description of vm-046",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "cbbcc0e9-336d-4e35-505f-eea09da99a43",
+    "name": "vm-047",
+    "powerState": "ON",
+    "memorySizeBytes": 6442450944,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "aa0cc121-d72e-4a50-5994-a5d73617cd31",
+    "name": "vm-048",
+    "powerState": "ON",
+    "description": "description of vm-048",
+    "memorySizeBytes": 34359738368,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "45a708ad-6d9a-4180-7d11-ee4687762798",
+    "name": "vm-049",
+    "powerState": "ON",
+    "description": "description of vm-049",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "48145cfe-41bc-4c77-4c0c-f317cd03ed5b",
+    "name": "vm-050",
+    "powerState": "ON",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "737a6749-3620-4f71-772b-205f5c99057f",
+    "name": "vm-051",
+    "powerState": "OFF",
+    "description": "description of vm-051",
+    "memorySizeBytes": 8589934592
+  },
+  {
+    "extId": "bacd8b4a-b843-4e96-7c92-ef337c38420a",
+    "name": "vm-052",
+    "powerState": "ON",
+    "description": "description of vm-052",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "f54b768f-68aa-45a4-6cba-474e4de03b11",
+    "name": "vm-053",
+    "powerState": "ON",
+    "memorySizeBytes": 19327352832,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "a865bd97-fc78-40f5-417d-44312c41ca4c",
+    "name": "vm-054",
+    "powerState": "ON",
+    "description": "description of vm-054",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "e2b1a1a7-a97b-40ed-7030-bd83c3cd7c63",
+    "name": "vm-055",
+    "powerState": "ON",
+    "description": "description of vm-055",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "74d69696-cbd2-429c-5176-d894d94d1272",
+    "name": "vm-056",
+    "powerState": "ON",
+    "description": "description of vm-056",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "3d446540-74e2-4740-463a-914f363ca99a",
+    "name": "vm-057",
+    "powerState": "ON",
+    "description": "description of vm-057",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "9db24786-b64c-4ab9-5e0f-bb9f01d59594",
+    "name": "vm-058",
+    "powerState": "ON",
+    "description": "description of vm-058",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "010dc0c4-0452-4d88-5e11-d4fc74549425",
+    "name": "vm-059",
+    "powerState": "ON",
+    "description": "description of vm-059",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "e609eb43-874b-4340-5eb6-8b69fed37fee",
+    "name": "vm-060",
+    "powerState": "ON",
+    "description": "description of vm-060",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "f47cb4ed-2bd1-4a77-57c0-c91b774f055e",
+    "name": "vm-061",
+    "powerState": "ON",
+    "description": "description of vm-061",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "9d6f687f-2362-4e9c-66f7-56fc29a7c7ca",
+    "name": "vm-062",
+    "powerState": "ON",
+    "description": "description of vm-062",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "adbdf6e8-bf44-4e94-45c0-f8e91e0ffb59",
+    "name": "vm-063",
+    "powerState": "ON",
+    "description": "description of vm-063",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "9f6c26cc-63f2-4e95-5d8b-6d82c28be729",
+    "name": "vm-064",
+    "powerState": "ON",
+    "description": "description of vm-064",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "a10a81bb-4842-4ef2-464a-af6ba4b3d8ff",
+    "name": "vm-065",
+    "powerState": "ON",
+    "description": "description of vm-065",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "da7df464-f340-4203-6a77-f0745811add0",
+    "name": "vm-066",
+    "powerState": "OFF",
+    "description": "description of vm-066",
+    "memorySizeBytes": 8589934592
+  },
+  {
+    "extId": "52ef8f4b-4f67-4176-72c8-12189e5d97cb",
+    "name": "vm-067",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "99cdbf92-7647-4fd3-63b8-3bdf6031d833",
+    "name": "vm-068",
+    "powerState": "ON",
+    "description": "description of vm-068",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "2220d7fb-0e38-4165-5879-2acaf4625229",
+    "name": "vm-069",
+    "powerState": "OFF",
+    "description": "description of vm-069",
+    "memorySizeBytes": 8589934592
+  },
+  {
+    "extId": "5570f96a-91ae-4043-4644-45e2860a1b90",
+    "name": "vm-070",
+    "powerState": "ON",
+    "description": "description of vm-070",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "e6e4b8a9-0723-4510-7015-fdce64c2579b",
+    "name": "vm-071",
+    "powerState": "ON",
+    "description": "description of vm-071",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "8bdd1e1a-88c2-44ad-62a1-d8e3e68a6701",
+    "name": "vm-072",
+    "powerState": "ON",
+    "description": "description of vm-072",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "d26ebd24-ad88-4187-a72a-f137452bd121",
+    "name": "vm-073",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "317d52b3-dc4c-4e8f-8b06-ade882061f0c",
+    "name": "vm-074",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "526e0cfe-52cb-4dfb-78d0-f2ddce8c6434",
+    "name": "vm-075",
+    "powerState": "ON",
+    "description": "description of vm-075",
+    "memorySizeBytes": 34359738368,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "e05aa2f1-f291-4adb-5920-76c7f340193c",
+    "name": "vm-076",
+    "powerState": "ON",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "f5c3faf5-826a-4205-6a79-c7ad2c9da7f7",
+    "name": "vm-077",
+    "powerState": "ON",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "4c6d44ab-3678-4a54-4539-6ec4ddbf5c7c",
+    "name": "vm-078",
+    "powerState": "ON",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "3c3e639b-9d8c-42ca-60e6-7046e95edb26",
+    "name": "vm-079",
+    "powerState": "ON",
+    "memorySizeBytes": 34359738368,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "3951ab57-c16e-4f79-4bd4-f2b223723ae4",
+    "name": "vm-080",
+    "powerState": "ON",
+    "memorySizeBytes": 103079215104,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "f2b2e847-cb33-40dd-411d-38219fa41168",
+    "name": "vm-081",
+    "powerState": "ON",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "7befc17f-3e6f-4898-45b5-b73fb61405c1",
+    "name": "vm-082",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "2ab91bce-ebb5-4dbe-7110-9d08ae94b377",
+    "name": "vm-083",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "eb19aed2-b08e-41bc-506f-368f9c3c3560",
+    "name": "vm-084",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "d310c1b5-c48b-4448-65fc-a61a78e12569",
+    "name": "vm-085",
+    "powerState": "OFF",
+    "memorySizeBytes": 17179869184
+  },
+  {
+    "extId": "d6e0c71b-b427-4487-60d6-ca2f0952555a",
+    "name": "vm-086",
+    "powerState": "ON",
+    "description": "description of vm-086",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "5a16cbd1-f744-4650-51f3-a49e7fa4aaa8",
+    "name": "vm-087",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "fcbcc0ad-38e6-4cf7-4057-be7bc9a03beb",
+    "name": "vm-088",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "6a64cd5e-f58d-451c-7d60-e3965ffa929b",
+    "name": "vm-089",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "dc5132c2-cba1-4773-499d-4cfe3bccf7c4",
+    "name": "vm-090",
+    "powerState": "ON",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "55c56560-e8f6-472b-78ab-307c80ab5439",
+    "name": "vm-091",
+    "powerState": "ON",
+    "memorySizeBytes": 34359738368,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "f412d61d-64ef-4937-545b-296feaa2c37d",
+    "name": "vm-092",
+    "powerState": "ON",
+    "memorySizeBytes": 21474836480,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "973f4208-6ab2-44e5-7d36-26a4c4b329a8",
+    "name": "vm-093",
+    "powerState": "OFF",
+    "memorySizeBytes": 8589934592
+  },
+  {
+    "extId": "31cf83c6-7624-4565-774b-2c603f0dcc9a",
+    "name": "vm-094",
+    "powerState": "OFF",
+    "memorySizeBytes": 8589934592
+  },
+  {
+    "extId": "cbb7f556-c0df-417c-7c4d-8c62bf19bfc0",
+    "name": "vm-095",
+    "powerState": "ON",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "f0863b6f-e237-478e-76c0-a97ac42a5d73",
+    "name": "vm-096",
+    "powerState": "ON",
+    "memorySizeBytes": 10737418240,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "a4f82174-723d-4401-7ef1-ff59829e105d",
+    "name": "vm-097",
+    "powerState": "ON",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "ad8eccce-4a16-45e4-50b6-40703eb3978e",
+    "name": "vm-098",
+    "powerState": "ON",
+    "memorySizeBytes": 10737418240,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "7c917600-7831-45a3-4d9e-43b431a35134",
+    "name": "vm-099",
+    "powerState": "ON",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "27fc6a2a-70fb-4e8c-7169-cad3f2c72e87",
+    "name": "vm-100",
+    "powerState": "OFF",
+    "description": "description of vm-100",
+    "memorySizeBytes": 8589934592
+  },
+  {
+    "extId": "e36375b4-cc0e-4806-5bb1-1e71417b827f",
+    "name": "vm-101",
+    "powerState": "OFF",
+    "memorySizeBytes": 8589934592
+  },
+  {
+    "extId": "81dfd976-ec94-410b-41fa-80a3e6aa1221",
+    "name": "vm-102",
+    "powerState": "OFF",
+    "description": "description of vm-102",
+    "memorySizeBytes": 8589934592
+  },
+  {
+    "extId": "62a71159-adfc-4847-59e0-508fb9e2c638",
+    "name": "vm-103",
+    "powerState": "OFF",
+    "description": "description of vm-103",
+    "memorySizeBytes": 34359738368
+  },
+  {
+    "extId": "d1b12842-f4cf-4054-54ff-6209b3c602f2",
+    "name": "vm-104",
+    "powerState": "ON",
+    "description": "description of vm-104",
+    "memorySizeBytes": 34359738368,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "183ab144-bf8c-4e3d-40ee-68bd9d43042a",
+    "name": "vm-105",
+    "powerState": "ON",
+    "description": "description of vm-105",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "8340d15d-37e5-4060-4f32-c0c3a8346378",
+    "name": "vm-106",
+    "powerState": "ON",
+    "description": "description of vm-106",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "c015cde8-5d20-488b-4b57-203c5984af71",
+    "name": "vm-107",
+    "powerState": "ON",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "0eb75f05-3582-4d7d-6bb3-b743d1413cc6",
+    "name": "vm-108",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "c5da893a-7067-4ba9-6494-880d63503e37",
+    "name": "vm-109",
+    "powerState": "ON",
+    "description": "description of vm-109",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "fc18ac40-a877-4cd5-a832-8c5066a8051f",
+    "name": "vm-110",
+    "powerState": "ON",
+    "memorySizeBytes": 34359738368,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "6074e762-bcf6-4d5b-9917-6fcee03f386d",
+    "name": "vm-111",
+    "powerState": "ON",
+    "memorySizeBytes": 34359738368,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "bfafb28f-5da3-45b1-9a1a-f20ad9893364",
+    "name": "vm-112",
+    "powerState": "ON",
+    "memorySizeBytes": 34359738368,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "da405027-058d-4d91-6f19-21689efdbdab",
+    "name": "vm-113",
+    "powerState": "ON",
+    "memorySizeBytes": 21474836480,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "e2e38c93-08aa-4647-5e1e-2cca05af4b4f",
+    "name": "vm-114",
+    "powerState": "ON",
+    "memorySizeBytes": 21474836480,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "432d609a-03f5-434e-515d-ae7d27cc3570",
+    "name": "vm-115",
+    "powerState": "ON",
+    "memorySizeBytes": 21474836480,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "4c7299e6-aae2-4448-79e6-40f862a7d630",
+    "name": "vm-116",
+    "powerState": "OFF",
+    "memorySizeBytes": 34359738368
+  },
+  {
+    "extId": "89c72045-d8f0-47fb-6e4b-da7052e84f02",
+    "name": "vm-117",
+    "powerState": "ON",
+    "memorySizeBytes": 34359738368,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "429b70ae-d974-40a9-bad3-ca5b15c1d219",
+    "name": "vm-118",
+    "powerState": "OFF",
+    "memorySizeBytes": 35433480192
+  },
+  {
+    "extId": "f9d9ed69-8f47-4ce8-8032-6f201640221f",
+    "name": "vm-119",
+    "powerState": "OFF",
+    "memorySizeBytes": 35433480192
+  },
+  {
+    "extId": "5fcd68a4-b5d8-42ef-ae42-f75ec768bb35",
+    "name": "vm-119",
+    "powerState": "OFF",
+    "memorySizeBytes": 35433480192
+  },
+  {
+    "extId": "a7add369-c6ff-4061-57fd-d2dc508b3bcf",
+    "name": "vm-120",
+    "powerState": "OFF",
+    "memorySizeBytes": 68719476736
+  },
+  {
+    "extId": "cdc4c84e-f18a-470a-59ea-f27275091ca5",
+    "name": "vm-121",
+    "powerState": "ON",
+    "memorySizeBytes": 21474836480,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "cc88fea4-ef6e-4ab2-7296-d6983b744551",
+    "name": "vm-122",
+    "powerState": "ON",
+    "memorySizeBytes": 21474836480,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "559ec996-a78e-40e6-7098-79c077555916",
+    "name": "vm-123",
+    "powerState": "ON",
+    "memorySizeBytes": 6442450944,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "ddc84667-dc48-4ad1-6373-666323412e42",
+    "name": "vm-124",
+    "powerState": "ON",
+    "memorySizeBytes": 6442450944,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "25080d64-cf64-4ab9-7260-e8a755e8f2e4",
+    "name": "vm-125",
+    "powerState": "OFF",
+    "memorySizeBytes": 6442450944
+  },
+  {
+    "extId": "3813fa4d-93c7-47b1-8c58-b51c7fc7c39a",
+    "name": "vm-126",
+    "powerState": "ON",
+    "memorySizeBytes": 34359738368,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "bfbfdb86-6a99-44f8-4f96-5a47de72d61c",
+    "name": "vm-127",
+    "powerState": "ON",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "0c9b7634-dfcb-4ff0-7a19-b79f60675fbb",
+    "name": "vm-128",
+    "powerState": "ON",
+    "memorySizeBytes": 21474836480,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "e658efef-ca23-4854-5b6f-81a3a8d67e0c",
+    "name": "vm-129",
+    "powerState": "ON",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "e2fe3368-4c0f-4678-6547-8975aa472eb2",
+    "name": "vm-130",
+    "powerState": "ON",
+    "memorySizeBytes": 21474836480,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "7ddad8f7-f330-4e48-77a8-e6852881c0b2",
+    "name": "vm-131",
+    "powerState": "ON",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "392d3bf0-b52b-4b0e-4bf9-2c4eeb3c59cf",
+    "name": "vm-132",
+    "powerState": "OFF",
+    "description": "description of vm-132",
+    "memorySizeBytes": 4294967296
+  },
+  {
+    "extId": "190bc4ec-acad-443c-5b70-e9e5bb702709",
+    "name": "vm-133",
+    "powerState": "OFF",
+    "description": "description of vm-133",
+    "memorySizeBytes": 4294967296
+  },
+  {
+    "extId": "71413fc0-962f-43d8-6074-a0c1026cf97a",
+    "name": "vm-134",
+    "powerState": "OFF",
+    "description": "description of vm-134",
+    "memorySizeBytes": 4294967296
+  },
+  {
+    "extId": "ba537122-8ad8-4ffc-7537-7cc4b23ba4fd",
+    "name": "vm-135",
+    "powerState": "OFF",
+    "description": "description of vm-135",
+    "memorySizeBytes": 4294967296
+  },
+  {
+    "extId": "f7c795b3-4f91-4826-5f11-7f388d0b3038",
+    "name": "vm-136",
+    "powerState": "ON",
+    "memorySizeBytes": 19327352832,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "306f369e-1920-4938-8ad6-52f1d96888e5",
+    "name": "vm-137",
+    "powerState": "OFF",
+    "memorySizeBytes": 35433480192
+  },
+  {
+    "extId": "16495d08-b061-4a49-a7aa-e5182331c6b3",
+    "name": "vm-138",
+    "powerState": "OFF",
+    "memorySizeBytes": 35433480192
+  },
+  {
+    "extId": "a32bc735-612d-4547-96b1-1eaa08d68bfe",
+    "name": "vm-138",
+    "powerState": "OFF",
+    "memorySizeBytes": 35433480192
+  },
+  {
+    "extId": "acc75d64-39ab-46c1-6797-14c5402235c2",
+    "name": "vm-139",
+    "powerState": "ON",
+    "description": "description of vm-139",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "1fc9fbba-2bf8-4254-589e-f73788283acc",
+    "name": "vm-140",
+    "powerState": "OFF",
+    "description": "description of vm-140",
+    "memorySizeBytes": 4294967296
+  },
+  {
+    "extId": "1c44a198-c3d9-48ba-6a70-96d002a98eb3",
+    "name": "vm-141",
+    "powerState": "OFF",
+    "description": "description of vm-141",
+    "memorySizeBytes": 4294967296
+  },
+  {
+    "extId": "b9642b1e-c9b6-475c-7189-a81df292238d",
+    "name": "vm-142",
+    "powerState": "ON",
+    "memorySizeBytes": 38654705664,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "dc84bef6-f637-4ce9-7a58-567bcc7ed76b",
+    "name": "vm-143",
+    "powerState": "ON",
+    "description": "description of vm-143",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "95f908ea-a995-4e88-6755-e9e9bc64bc3d",
+    "name": "vm-144",
+    "powerState": "ON",
+    "description": "description of vm-144",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "2edef079-0be9-4550-ae91-4d0c42e4c354",
+    "name": "vm-145",
+    "powerState": "ON",
+    "memorySizeBytes": 34359738368,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "aaeb67c4-3b2a-4b00-90b1-3ea7e1eee3ef",
+    "name": "vm-146",
+    "powerState": "OFF",
+    "description": "description of vm-146",
+    "memorySizeBytes": 9663676416
+  },
+  {
+    "extId": "916aff77-1794-4a26-b27f-73ed2a4cfb69",
+    "name": "vm-147",
+    "powerState": "ON",
+    "memorySizeBytes": 8589934592,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "58efd9b7-96da-48f4-728f-52e93a0d792a",
+    "name": "vm-148",
+    "powerState": "OFF",
+    "description": "description of vm-148",
+    "memorySizeBytes": 8589934592
+  },
+  {
+    "extId": "449e0abc-b551-4f91-b6cb-48b64778b542",
+    "name": "vm-149",
+    "powerState": "ON",
+    "memorySizeBytes": 5368709120,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "21f94e07-787b-4973-837b-e5ca2ec97d6d",
+    "name": "vm-150",
+    "powerState": "OFF",
+    "memorySizeBytes": 5368709120
+  },
+  {
+    "extId": "4880a219-c9d4-42e2-86d3-890cb1805109",
+    "name": "vm-150",
+    "powerState": "OFF",
+    "memorySizeBytes": 5368709120
+  },
+  {
+    "extId": "fa3465e1-9fc7-49b8-5e75-b7135c5ae39e",
+    "name": "vm-151",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "edeaa8a7-ce9c-4b91-4f56-39ce3fc94638",
+    "name": "vm-152",
+    "powerState": "ON",
+    "memorySizeBytes": 17179869184,
+    "hostName": "host-3"
+  },
+  {
+    "extId": "7eb0dfd3-eb87-4c6f-669b-1d090be65137",
+    "name": "vm-153",
+    "powerState": "ON",
+    "description": "description of vm-153",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "be29f482-3fcb-408d-4d6f-33e7d3393cf1",
+    "name": "vm-154",
+    "powerState": "ON",
+    "description": "description of vm-154",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-1"
+  },
+  {
+    "extId": "4baf53f7-bb8a-4c04-58b9-9fb967e5e807",
+    "name": "vm-155",
+    "powerState": "ON",
+    "description": "description of vm-155",
+    "memorySizeBytes": 4294967296,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "16c93e0c-52d3-45ee-5952-4247c29cb036",
+    "name": "vm-156",
+    "powerState": "ON",
+    "memorySizeBytes": 5368709120,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "6173bf48-9a77-4b76-650a-594a2399fd6d",
+    "name": "vm-157",
+    "powerState": "ON",
+    "memorySizeBytes": 5368709120,
+    "hostName": "host-2"
+  },
+  {
+    "extId": "88538ef2-ad2d-4298-513c-af87844f90d0",
+    "name": "vm-158",
+    "powerState": "OFF",
+    "memorySizeBytes": 17179869184
+  }
+]

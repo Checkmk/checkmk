@@ -375,7 +375,11 @@ def parse_bgp_peer(string_table: Sequence[StringByteTable]) -> Section:
         return _clean_address(oid_elements[1:])
 
     _check_string_table(string_table)
-    return {remote_addr(str(entry[-1])): _create_item_data(entry) for entry in string_table[0]}
+    return {
+        remote_addr(str(entry[-1])): _create_item_data(entry)
+        for entry in string_table[0]
+        if entry[-1]
+    }
 
 
 def parse_bgp_peer_cisco_2(string_table: Sequence[StringByteTable]) -> Section:
@@ -389,7 +393,11 @@ def parse_bgp_peer_cisco_2(string_table: Sequence[StringByteTable]) -> Section:
         return _clean_address(oid_elements)
 
     _check_string_table(string_table)
-    return {remote_addr(str(entry[-1])): _create_item_data(entry) for entry in string_table[0]}
+    return {
+        remote_addr(str(entry[-1])): _create_item_data(entry)
+        for entry in string_table[0]
+        if entry[-1]
+    }
 
 
 def parse_bgp_peer_cisco_3(string_table: Sequence[StringByteTable]) -> Section:
@@ -404,7 +412,11 @@ def parse_bgp_peer_cisco_3(string_table: Sequence[StringByteTable]) -> Section:
         return _clean_address(oid_elements[1:])
 
     _check_string_table(string_table)
-    return {remote_addr(str(entry[-1])): _create_item_data(entry) for entry in string_table[0]}
+    return {
+        remote_addr(str(entry[-1])): _create_item_data(entry)
+        for entry in string_table[0]
+        if entry[-1]
+    }
 
 
 def _parse_ietf_remote_addr(oid_end: str) -> str:

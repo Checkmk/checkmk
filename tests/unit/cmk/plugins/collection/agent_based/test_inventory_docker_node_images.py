@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+
 import pytest
 
 from cmk.agent_based.v2 import TableRow
@@ -241,4 +243,14 @@ def test_inventory_docker_node_images_no_size_at_all() -> None:
                 },
             ),
         ]
+    )
+
+
+@pytest.mark.xfail(strict=True, raises=json.JSONDecodeError, reason="Crash group 4871")
+def test_inventory_docker_node_images_cut_off_container() -> None:
+    complete = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
+    cut_off = [*complete, ['{"Id": "4f1c2d3e4b5a", "Name": "/traefik", "Args": ["--entryPo']]
+
+    assert list(inventory_docker_node_images(parse_docker_node_images(cut_off))) == list(
+        inventory_docker_node_images(parse_docker_node_images(complete))
     )

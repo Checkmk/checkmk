@@ -41,9 +41,8 @@ class ABCDataSourceInventory(ABCDataSource):
 
 
 class ABCRowTable(RowTable):
-    def __init__(self, info_names: Sequence[str], add_host_columns: Sequence[ColumnName]) -> None:
+    def __init__(self, add_host_columns: Sequence[ColumnName]) -> None:
         super().__init__()
-        self._info_names = info_names
         self._add_host_columns = add_host_columns
 
     @override
@@ -58,8 +57,6 @@ class ABCRowTable(RowTable):
         limit: object,
         all_active_filters: Sequence[Filter],
     ) -> tuple[Rows, int] | Rows:
-        self._add_declaration_errors()
-
         # Create livestatus filter for filtering out hosts
         host_columns = [
             "host_name",
@@ -110,20 +107,15 @@ class ABCRowTable(RowTable):
     def _get_rows(self, hostrow: Row) -> Sequence[Row] | None:
         raise NotImplementedError
 
-    def _add_declaration_errors(self) -> None:
-        pass
-
 
 class RowTableInventory(ABCRowTable):
     def __init__(self, info_name: str, inventory_path: InventoryPath) -> None:
-        super().__init__([info_name], ["host_structured_status", "host_childs"])
+        super().__init__(["host_structured_status", "host_childs"])
+        self._info_name = info_name
         self._inventory_path = inventory_path
 
     @override
     def _get_rows(self, hostrow: Row) -> Sequence[Row] | None:
-        if not (self._info_names and (info_name := self._info_names[0])):
-            return []
-
         if (
             tree := load_tree_of_host(
                 raw_host_name=hostrow["host_name"],
@@ -137,16 +129,15 @@ class RowTableInventory(ABCRowTable):
         for table_row in tree.get_tree(self._inventory_path.path).table.rows_with_retentions:
             row: Row = {}
             for key, (value, retention_interval) in table_row.items():
-                row[f"{info_name}_{key}"] = value
-                row[f"{info_name}_{key}_retention_interval"] = retention_interval
+                row[f"{self._info_name}_{key}"] = value
+                row[f"{self._info_name}_{key}_retention_interval"] = retention_interval
             rows.append(row)
         return rows
 
 
 class RowTableInventoryHistory(ABCRowTable):
     def __init__(self) -> None:
-        super().__init__(["invhist"], [])
-        self._inventory_path = None
+        super().__init__([])
 
     @override
     def _get_rows(self, hostrow: Row) -> Sequence[Row] | None:

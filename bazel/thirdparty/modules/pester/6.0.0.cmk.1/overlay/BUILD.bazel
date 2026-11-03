@@ -1,0 +1,22 @@
+# The Pester framework for the Windows agent plugins' PowerShell unit tests
+# (agents/windows/unit_tests_ps1:pester-qemu stages it into the test VM).
+# A .nupkg is a zip; the module manifest (Pester.psd1) sits at the root.
+filegroup(
+    name = "module",
+    srcs = glob(
+        ["**"],
+        exclude = [
+            "BUILD.bazel",
+            "MODULE.bazel",
+            "REPO.bazel",
+        ],
+    ),
+    visibility = ["//visibility:public"],
+)
+
+# Anchor for deriving the module directory in actions.
+filegroup(
+    name = "manifest",
+    srcs = ["Pester.psd1"],
+    visibility = ["//visibility:public"],
+)

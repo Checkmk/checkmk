@@ -8,7 +8,10 @@ exports_files(
         "windows_tasks.ps1",
         "windows_updates.ps1",
     ],
-    visibility = ["//agents/windows/plugins:__pkg__"],
+    visibility = [
+        "//agents/windows/plugins:__pkg__",
+        "//agents/windows/unit_tests_ps1:__pkg__",
+    ],
 )
 
 filegroup(

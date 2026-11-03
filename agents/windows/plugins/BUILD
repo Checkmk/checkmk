@@ -28,7 +28,10 @@ filegroup(
         "*.ps1",
         "*.vbs",
     ]),
-    visibility = ["//agents/wnx:__subpackages__"],
+    visibility = [
+        "//agents/windows/unit_tests_ps1:__pkg__",
+        "//agents/wnx:__subpackages__",
+    ],
 )
 
 filegroup(

@@ -1,0 +1,10 @@
+{
+  "integrity": "sha256-I42ao3pV17Svy2YkXzb8dBB3TAZ/7EAITgDupHTemGI=",
+  "url": "https://artifacts.lan.tribe29.com/repository/upstream-archives/pester.6.0.0.nupkg",
+  "mirror_urls": ["https://www.powershellgallery.com/api/v2/package/Pester/6.0.0"],
+  "archive_type": "zip",
+  "overlay": {
+    "BUILD.bazel": "sha256-rp1XMWz0E42u7eT70tC8o+JeVQamlP6SZgOFw7wyhtg=",
+    "MODULE.bazel": "sha256-hmASVdLP+TqD2Ev62w/couGPxgKxjukLx4V/W6Fs2/E="
+  }
+}

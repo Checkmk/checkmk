@@ -36,7 +36,11 @@ fn bin_command_path_impl() -> OsString {
 #[cfg(feature = "build_system_bazel")]
 fn bin_command_path_impl() -> OsString {
     let cwd = std::env::current_dir().unwrap();
+    #[cfg(not(windows))]
     let relative_path: std::path::PathBuf = ["packages", "mk-oracle", "mk-oracle"].iter().collect();
+    #[cfg(windows)]
+    let relative_path: std::path::PathBuf =
+        ["packages", "mk-oracle", "mk-oracle.exe"].iter().collect();
     let path = cwd.join(relative_path);
     assert!(path.is_file());
     path.into()

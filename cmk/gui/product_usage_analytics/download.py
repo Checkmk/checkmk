@@ -11,6 +11,7 @@ from cmk.gui.http import ContentDispositionType, response
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.product_usage.collection import collect_data
+from cmk.product_usage.schema import ProductUsagePayload
 from cmk.utils import paths
 
 
@@ -29,6 +30,7 @@ class PageDownloadProductUsage(Page):
             paths.check_mk_config_dir,
             paths.omd_root,
             logger,
+            payload_type=ProductUsagePayload,
         )
 
         filename = "checkmk_product_usage.json"

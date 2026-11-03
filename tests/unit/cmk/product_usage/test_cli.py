@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import logging
+import uuid
 from typing import Literal
 from unittest import mock
 from unittest.mock import MagicMock
@@ -11,9 +13,12 @@ from unittest.mock import MagicMock
 import pytest
 
 import cmk.product_usage.cli as product_usage_cli
+import cmk.product_usage.collectors.checks as checks_collector
+import cmk.product_usage.collectors.site_info as site_info_collector
 from cmk.ccc.version import Edition
 from cmk.product_usage.config import load_product_usage_config, ProductUsageAnalyticsSettings
 from cmk.product_usage.exceptions import ConfigError
+from cmk.product_usage.schema import SiteInfo
 from cmk.utils import http_proxy_config, paths
 from cmk.utils.licensing.handler import LicenseState
 
@@ -145,6 +150,42 @@ def test_parse_args_upload_only() -> None:
     assert product_usage_cli.parse_args(["--upload"]) == product_usage_cli.ProductUsageRequest(
         upload=True
     )
+
+
+@pytest.mark.parametrize(
+    ("cloud_trial", "payload_name"),
+    [
+        pytest.param(True, "cloud_trial_analytics", id="cloud trial"),
+        pytest.param(False, "product_usage_analytics", id="any other site"),
+    ],
+)
+def test_dry_run_writes_the_cloud_trial_payload_only_on_a_cloud_trial_site(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    cloud_trial: bool,
+    payload_name: str,
+) -> None:
+    monkeypatch.setattr(product_usage_cli, "init_logging", MagicMock())
+    monkeypatch.setattr(product_usage_cli, "is_cloud_trial", MagicMock(return_value=cloud_trial))
+    monkeypatch.setattr(
+        site_info_collector,
+        "collect",
+        MagicMock(
+            return_value=SiteInfo(
+                id=uuid.UUID("0f8fad5b-d9cb-469f-a165-70867728950e"),
+                count_hosts=1,
+                count_services=2,
+                count_folders=3,
+                edition="cloud",
+                cmk_version="2.5.0-2026.01.06",
+            )
+        ),
+    )
+    monkeypatch.setattr(checks_collector, "collect", MagicMock(return_value={}))
+
+    assert product_usage_cli.main(["--dry-run"]) == 0
+
+    assert json.loads(capsys.readouterr().out)["metadata"]["name"] == payload_name
 
 
 def test_cloud_site_in_trial_is_a_cloud_trial() -> None:

@@ -32,6 +32,7 @@ from cmk.product_usage.schedule import (
     should_run_collection_on_schedule,
     store_next_run_ts,
 )
+from cmk.product_usage.schema import CloudTrialPayload, ProductUsagePayload
 from cmk.product_usage.transmission import transmit_data
 from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
@@ -94,12 +95,19 @@ def main(args: Sequence[str]) -> int:
 
             logger.info("Scheduled run starts")
 
+        cloud_trial = (request.collect or request.schedule) and is_cloud_trial(
+            edition=edition(paths.omd_root),
+            read_license_state=_read_cloud_license_state,
+            logger=logger,
+        )
+
         if request.collect:
             data = collect_data(
                 paths.var_dir,
                 paths.check_mk_config_dir,
                 paths.omd_root,
                 logger,
+                payload_type=CloudTrialPayload if cloud_trial else ProductUsagePayload,
             )
             if request.write_to_stdout:
                 sys.stdout.write(
@@ -115,13 +123,7 @@ def main(args: Sequence[str]) -> int:
             transmit_data(paths.var_dir, logger, proxy_config=proxy_config)
 
         if request.schedule:
-            interval = next_run_interval(
-                cloud_trial=is_cloud_trial(
-                    edition=edition(paths.omd_root),
-                    read_license_state=_read_cloud_license_state,
-                    logger=logger,
-                )
-            )
+            interval = next_run_interval(cloud_trial=cloud_trial)
             next_scheduled_run_at = create_next_ts(now, interval=interval)
             logger.info(
                 "Planning the next execution at %s, in %s days",

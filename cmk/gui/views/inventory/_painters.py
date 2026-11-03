@@ -59,29 +59,20 @@ def add_sites_of_same_named_hosts(rows: Sequence[Row]) -> Sequence[Row]:
     ]
 
 
-class MultipleInventoryTreesError(Exception):
-    pass
-
-
-def _validate_inventory_tree_uniqueness(row: Row) -> None:
-    raw_hostname = row.get("host_name")
-    assert isinstance(raw_hostname, str)
-
-    if len(sites_with_same_named_hosts := row.get(SITES_OF_SAME_NAMED_HOSTS, [])) > 1:
-        raise MultipleInventoryTreesError(
-            _(
-                "Cannot display inventory tree of host '%(host_name)s': found this host on multiple sites: %(sites)s"
-            )
-            % {"host_name": raw_hostname, "sites": ", ".join(sites_with_same_named_hosts)}
-        )
+def _is_host_name_on_several_sites(row: Row) -> bool:
+    return len(row.get(SITES_OF_SAME_NAMED_HOSTS, [])) > 1
 
 
 def _multiple_trees_cell(row: Row) -> CellSpec | None:
-    try:
-        _validate_inventory_tree_uniqueness(row)
-    except MultipleInventoryTreesError as error:
-        return "", HTMLWriter.render_div(str(error), class_="error")
-    return None
+    if not _is_host_name_on_several_sites(row):
+        return None
+    return "", HTMLWriter.render_div(
+        _(
+            "Cannot display inventory tree of host '%(host_name)s': found this host on multiple sites: %(sites)s"
+        )
+        % {"host_name": row["host_name"], "sites": ", ".join(row[SITES_OF_SAME_NAMED_HOSTS])},
+        class_="error",
+    )
 
 
 def _get_inventory_tree(row: Row) -> ImmutableTree:
@@ -151,9 +142,7 @@ class PainterOptionShowInternalTreePaths(PainterOption):
 def _compute_data_inventory_tree(
     row: Row, _user: LoggedInUser, _context: PainterContext
 ) -> ImmutableTree:
-    try:
-        _validate_inventory_tree_uniqueness(row)
-    except MultipleInventoryTreesError:
+    if _is_host_name_on_several_sites(row):
         return ImmutableTree()
 
     return _get_inventory_tree(row)
@@ -218,9 +207,7 @@ def make_invhist_time_painter() -> InternalPainter:
 def _compute_data_invhist_delta(
     row: Row, _user: LoggedInUser, _context: PainterContext
 ) -> ImmutableDeltaTree:
-    try:
-        _validate_inventory_tree_uniqueness(row)
-    except MultipleInventoryTreesError:
+    if _is_host_name_on_several_sites(row):
         return ImmutableDeltaTree()
 
     return _get_delta_tree(row)
@@ -314,9 +301,7 @@ def make_invhist_changed_painter() -> InternalPainter:
 
 
 def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:
-    try:
-        _validate_inventory_tree_uniqueness(row)
-    except MultipleInventoryTreesError:
+    if _is_host_name_on_several_sites(row):
         return None
     return _get_inventory_tree(row).get_tree(path).attributes
 
@@ -484,9 +469,7 @@ def make_inventory_column_painter(hint: ColumnDisplayHintOfView) -> InternalPain
 
 
 def _compute_node_painter_data(row: Row, path: SDPath) -> ImmutableTree:
-    try:
-        _validate_inventory_tree_uniqueness(row)
-    except MultipleInventoryTreesError:
+    if _is_host_name_on_several_sites(row):
         return ImmutableTree()
 
     return _get_inventory_tree(row).get_tree(path)

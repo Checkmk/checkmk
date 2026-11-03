@@ -121,7 +121,7 @@ agent_section_veeam_repositories = AgentSection(
 
 check_plugin_veeam_repositories = CheckPlugin(
     name="veeam_repositories",
-    service_name="Backup repository %s",
+    service_name="Veeam Backup repository %s",
     discovery_function=discovery_veeam_repositories,
     check_function=check_veeam_repositories,
     check_ruleset_name="filesystem",

@@ -131,7 +131,7 @@ agent_section_veeam_protection_groups = AgentSection(
 
 check_plugin_veeam_protection_groups = CheckPlugin(
     name="veeam_protection_groups",
-    service_name="Protection group %s",
+    service_name="Veeam Protection group %s",
     discovery_function=discovery_veeam_protection_groups,
     check_function=check_veeam_protection_groups,
     check_ruleset_name="veeam_protection_groups",

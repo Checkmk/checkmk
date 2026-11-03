@@ -131,7 +131,7 @@ agent_section_veeam_proxies = AgentSection(
 
 check_plugin_veeam_proxies = CheckPlugin(
     name="veeam_proxies",
-    service_name="Backup proxy %s",
+    service_name="Veeam Backup proxy %s",
     discovery_function=discovery_veeam_proxies,
     check_function=check_veeam_proxies,
     check_ruleset_name="veeam_proxies",

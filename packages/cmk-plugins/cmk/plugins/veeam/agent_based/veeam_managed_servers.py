@@ -158,7 +158,7 @@ agent_section_veeam_managed_servers = AgentSection(
 
 check_plugin_veeam_managed_servers = CheckPlugin(
     name="veeam_managed_servers",
-    service_name="Managed server %s",
+    service_name="Veeam Managed server %s",
     discovery_function=discovery_veeam_managed_servers,
     check_function=check_veeam_managed_servers,
     check_ruleset_name="veeam_managed_servers",

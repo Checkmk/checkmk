@@ -65,7 +65,7 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
             r"Auto update: enabled\b",
         ],
     ),
-    "Backup job Disabled_Windows_AP": ExpectedServiceResult(
+    "Veeam Backup job Disabled_Windows_AP": ExpectedServiceResult(
         0,
         [
             r"Status: Disabled\b",
@@ -75,7 +75,7 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
             r"Type: WindowsAgentBackupServerPolicy\b",
         ],
     ),
-    "Backup job Failing_job": ExpectedServiceResult(
+    "Veeam Backup job Failing_job": ExpectedServiceResult(
         2,  # CRIT
         [
             r"Result: Failed\b",
@@ -84,10 +84,10 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
             r"Type: LinuxAgentBackupServerPolicy\b",
         ],
     ),
-    "Backup job File_Backup_Job": ExpectedServiceResult(
+    "Veeam Backup job File_Backup_Job": ExpectedServiceResult(
         0, [r"Result: Success\b", r"Objects: 4\b", r"Type: FileBackup\b"]
     ),
-    "Backup job Never_run_job": ExpectedServiceResult(
+    "Veeam Backup job Never_run_job": ExpectedServiceResult(
         0,
         [
             r"No run has happened yet\b",
@@ -96,7 +96,7 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
             r"Type: FileBackup\b",
         ],
     ),
-    "Backup job Successful_job": ExpectedServiceResult(
+    "Veeam Backup job Successful_job": ExpectedServiceResult(
         0,
         [
             r"Result: Success\b",
@@ -105,24 +105,24 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
             r"Type: LinuxAgentBackup\b",
         ],
     ),
-    "Configuration backup": ExpectedServiceResult(
+    "Veeam Configuration backup": ExpectedServiceResult(
         0, [r"Restore points kept: 10\b", r"Encryption: disabled\b"]
     ),
-    "Backup proxy Backup Proxy": ExpectedServiceResult(
+    "Veeam Backup proxy Backup Proxy": ExpectedServiceResult(
         0, [r"\bGeneral purpose\b", r"\bOnline\b", r"Host: This server\b"]
     ),
-    "Backup proxy VMware Backup Proxy": ExpectedServiceResult(
+    "Veeam Backup proxy VMware Backup Proxy": ExpectedServiceResult(
         0, [r"\bVMware vSphere\b", r"\bOnline\b", r"Host: This server\b"]
     ),
-    "Backup repository Performance Extent - Backup Repository on Linux (22d8ed25)": (
+    "Veeam Backup repository Performance Extent - Backup Repository on Linux (22d8ed25)": (
         ExpectedServiceResult(0, [r"Host: 172\.31\.26\.65\b", r"Path: /backups\b"])
     ),
-    "Backup repository WinLocal - Default Backup Repository (88788f9e)": ExpectedServiceResult(
+    "Veeam Backup repository WinLocal - Default Backup Repository (88788f9e)": ExpectedServiceResult(
         0,
         # Nagios doubles the backslash.
         [rf"Host: {re.escape(BACKUP_SERVER_NAME)}\b", r"Path: c:\\+backup\b"],
     ),
-    "Scale-out repository Scale-out Backup Repository": ExpectedServiceResult(
+    "Veeam Scale-out repository Scale-out Backup Repository": ExpectedServiceResult(
         0,
         [
             r"Extent Backup Repository on Linux: Normal\b",
@@ -131,18 +131,18 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
             r"Placement policy: DataLocality\b",
         ],
     ),
-    "Protection group Manually Added": ExpectedServiceResult(
+    "Veeam Protection group Manually Added": ExpectedServiceResult(
         0,  # A disabled protection group is OK by default.
         [r"\bManually added\b", r"\b1 configured computer\b", r"\bDisabled\b"],
     ),
-    "Protection group PG-Linux-Test": ExpectedServiceResult(
+    "Veeam Protection group PG-Linux-Test": ExpectedServiceResult(
         0, [r"\bIndividual computers\b", r"\b1 configured computer\b"]
     ),
-    "Protection group PG-Windows-Test": ExpectedServiceResult(
+    "Veeam Protection group PG-Windows-Test": ExpectedServiceResult(
         0, [r"\bIndividual computers\b", r"\b1 configured computer\b"]
     ),
-    "Managed server 172.31.26.65": ExpectedServiceResult(0, [r"\bLinux\b", r"\bAvailable\b"]),
-    f"Managed server {BACKUP_SERVER_NAME}": ExpectedServiceResult(
+    "Veeam Managed server 172.31.26.65": ExpectedServiceResult(0, [r"\bLinux\b", r"\bAvailable\b"]),
+    f"Veeam Managed server {BACKUP_SERVER_NAME}": ExpectedServiceResult(
         0,
         [
             r"\bMicrosoft Windows\b",
@@ -157,8 +157,8 @@ EXPECTED_PROTECTED_MACHINE_SERVICES: Mapping[str, ExpectedServiceResult | None] 
         0, [r"\[piggyback\] Successfully processed from source 'veeam-server'"]
     ),
     "Check_MK Discovery": None,
-    "Backup Successful_job": ExpectedServiceResult(0, [r"Status: Success\b"]),
-    "Restore points": ExpectedServiceResult(
+    "Veeam Backup Successful_job": ExpectedServiceResult(0, [r"Status: Success\b"]),
+    "Veeam Restore points": ExpectedServiceResult(
         0,
         [
             r"\bMalware status: Clean\b",

@@ -183,7 +183,7 @@ agent_section_veeam_backup_jobs = AgentSection(
 
 check_plugin_veeam_backup_jobs = CheckPlugin(
     name="veeam_backup_jobs",
-    service_name="Backup job %s",
+    service_name="Veeam Backup job %s",
     discovery_function=discovery_veeam_backup_jobs,
     discovery_ruleset_name="discovery_veeam_backup_jobs",
     discovery_default_parameters=DEFAULT_DISCOVERY_PARAMETERS,

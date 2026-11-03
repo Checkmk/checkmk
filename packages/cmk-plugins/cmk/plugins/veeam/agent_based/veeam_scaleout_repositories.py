@@ -178,7 +178,7 @@ agent_section_veeam_scaleout_repositories = AgentSection(
 
 check_plugin_veeam_scaleout_repositories = CheckPlugin(
     name="veeam_scaleout_repositories",
-    service_name="Scale-out repository %s",
+    service_name="Veeam Scale-out repository %s",
     discovery_function=discovery_veeam_scaleout_repositories,
     check_function=check_veeam_scaleout_repositories,
     check_ruleset_name="veeam_scaleout_repositories",

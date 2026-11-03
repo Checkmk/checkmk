@@ -12,7 +12,7 @@ description:
 
  This check does not report capacity. A scale-out repository has no
  capacity of its own; capacity lives on its extents, which appear as
- separate {Backup repository} services.
+ separate {Veeam Backup repository} services.
 
  Each performance extent can report zero or more statuses at the same
  time. {Normal}, {Pending} and {Sealed} are {OK} by default. {Evacuate},

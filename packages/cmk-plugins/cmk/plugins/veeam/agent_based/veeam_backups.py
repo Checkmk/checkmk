@@ -263,7 +263,7 @@ agent_section_veeam_backups = AgentSection(
 
 check_plugin_veeam_backups = CheckPlugin(
     name="veeam_backups",
-    service_name="Backup %s",
+    service_name="Veeam Backup %s",
     discovery_function=discovery_veeam_backups,
     check_function=check_veeam_backups_now,
     check_ruleset_name="veeam_backup",

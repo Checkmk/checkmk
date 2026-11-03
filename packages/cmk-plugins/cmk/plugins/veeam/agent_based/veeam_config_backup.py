@@ -116,7 +116,7 @@ agent_section_veeam_config_backup = AgentSection(
 
 check_plugin_veeam_config_backup = CheckPlugin(
     name="veeam_config_backup",
-    service_name="Configuration backup",
+    service_name="Veeam Configuration backup",
     discovery_function=discovery_veeam_config_backup,
     check_function=check_veeam_config_backup_now,
     check_ruleset_name="veeam_config_backup",

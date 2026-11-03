@@ -176,7 +176,7 @@ agent_section_veeam_restore_points = AgentSection(
 
 check_plugin_veeam_restore_points = CheckPlugin(
     name="veeam_restore_points",
-    service_name="Restore points",
+    service_name="Veeam Restore points",
     discovery_function=discovery_veeam_restore_points,
     check_function=check_veeam_restore_points_now,
     check_ruleset_name="veeam_restore_points",

@@ -103,7 +103,7 @@ agent_section_veeam_replicas = AgentSection(
 
 check_plugin_veeam_replicas = CheckPlugin(
     name="veeam_replicas",
-    service_name="Replica %s",
+    service_name="Veeam Replica %s",
     discovery_function=discovery_veeam_replicas,
     check_function=check_veeam_replicas,
     check_ruleset_name="veeam_replicas",

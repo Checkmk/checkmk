@@ -33,24 +33,24 @@ DENIED_SECTIONS: Mapping[str, str] = {
     "veeam_config_backup": "/api/v1/configBackup",
 }
 
-# Without the services of the denied sections: Veeam License, Configuration backup and
-# Protection group.
+# Without the services of the denied sections: Veeam License, Veeam Configuration backup
+# and Veeam Protection group.
 EXPECTED_BACKUP_SERVER_SERVICES = {
     "Check_MK",
     "Check_MK Discovery",
     "Check_MK HW/SW Inventory",
-    "Backup job Disabled_Windows_AP",
-    "Backup job Failing_job",
-    "Backup job File_Backup_Job",
-    "Backup job Never_run_job",
-    "Backup job Successful_job",
-    "Backup proxy Backup Proxy",
-    "Backup proxy VMware Backup Proxy",
-    "Backup repository Performance Extent - Backup Repository on Linux (22d8ed25)",
-    "Backup repository WinLocal - Default Backup Repository (88788f9e)",
-    "Scale-out repository Scale-out Backup Repository",
-    "Managed server 172.31.26.65",
-    "Managed server EC2AMAZ-C4O89E0",
+    "Veeam Backup job Disabled_Windows_AP",
+    "Veeam Backup job Failing_job",
+    "Veeam Backup job File_Backup_Job",
+    "Veeam Backup job Never_run_job",
+    "Veeam Backup job Successful_job",
+    "Veeam Backup proxy Backup Proxy",
+    "Veeam Backup proxy VMware Backup Proxy",
+    "Veeam Backup repository Performance Extent - Backup Repository on Linux (22d8ed25)",
+    "Veeam Backup repository WinLocal - Default Backup Repository (88788f9e)",
+    "Veeam Scale-out repository Scale-out Backup Repository",
+    "Veeam Managed server 172.31.26.65",
+    "Veeam Managed server EC2AMAZ-C4O89E0",
 }
 
 _DENIED_SECTION_WARNING = re.compile(

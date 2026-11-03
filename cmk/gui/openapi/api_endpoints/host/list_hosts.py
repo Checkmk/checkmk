@@ -27,7 +27,7 @@ from ._utils import (
     PERMISSIONS,
 )
 from .models.request_models import ListHostsBody
-from .models.response_models import HostStatusCollectionModel
+from .models.response_models import HostStatusCollectionExtensions, HostStatusCollectionModel
 
 
 def list_hosts_v1(
@@ -49,6 +49,12 @@ def list_hosts_v1(
     if contains_inventory_column(columns):
         result = fixup_inventory_column(result)
 
+    # Read the dead sites only after the query ran: a site that fails during it is added then.
+    value = [host_object(entry["name"], entry) for entry in result]
+    unreachable_sites = [
+        site_id for site_id in sorted(live.dead_sites()) if not body.sites or site_id in body.sites
+    ]
+
     return HostStatusCollectionModel(
         domainType="host",
         id="host",
@@ -61,7 +67,8 @@ def list_hosts_v1(
                 type="application/json",
             )
         ],
-        value=[host_object(entry["name"], entry) for entry in result],
+        value=value,
+        extensions=HostStatusCollectionExtensions(unreachable_sites=unreachable_sites),
     )
 
 

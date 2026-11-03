@@ -80,6 +80,24 @@ class ServiceParametersWithHost(ServiceParameters):
     )
 
 
+class ServiceCollectionExtensions(BaseSchema):
+    unreachable_sites = fields.List(
+        fields.String(),
+        description=(
+            "The IDs of the sites that could not be reached. Their services are missing from the "
+            "collection."
+        ),
+        example=["remote_1"],
+    )
+
+
+class ServiceCollection(response_schemas.DomainObjectCollection):
+    extensions = fields.Nested(  # type: ignore[assignment]
+        ServiceCollectionExtensions,
+        description="Additional attributes alongside the collection.",
+    )
+
+
 PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(
         [
@@ -169,7 +187,7 @@ def show_service(params: Mapping[str, Any]) -> Response:
     path_params=[HOST_NAME],
     tag_group="Monitoring",
     request_schema=ServiceParameters,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=ServiceCollection,
     permissions_required=PERMISSIONS,
     update_config_generation=False,
 )
@@ -188,7 +206,7 @@ def _list_host_services(params: Mapping[str, Any]) -> Response:
     method="post",
     tag_group="Monitoring",
     request_schema=ServiceParametersWithHost,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=ServiceCollection,
     permissions_required=PERMISSIONS,
     update_config_generation=False,
 )
@@ -214,7 +232,11 @@ def _list_services(params: Mapping[str, Any]) -> Response:
     if query_expr:
         q = q.filter(query_expr)
 
-    result = q.iterate(live)
+    result = list(q.iterate(live))
+    # Read the dead sites only after the query ran: a site that fails during it is added then.
+    unreachable_sites = [
+        site_id for site_id in sorted(live.dead_sites()) if not only_sites or site_id in only_sites
+    ]
 
     return serve_json(
         constructors.collection_object(
@@ -241,6 +263,7 @@ def _list_services(params: Mapping[str, Any]) -> Response:
                 )
                 for entry in result
             ],
+            extensions={"unreachable_sites": unreachable_sites},
         )
     )
 

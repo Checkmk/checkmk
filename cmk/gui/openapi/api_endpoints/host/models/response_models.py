@@ -5,6 +5,7 @@
 
 from typing import Literal
 
+from cmk.ccc.site import SiteId
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
@@ -20,8 +21,22 @@ class HostStatusObjectModel(TitledDomainObjectModel):
 
 
 @api_model
+class HostStatusCollectionExtensions:
+    unreachable_sites: list[SiteId] = api_field(
+        description=(
+            "The IDs of the sites that could not be reached. Their hosts are missing from the "
+            "collection."
+        ),
+        example=["remote_1"],
+    )
+
+
+@api_model
 class HostStatusCollectionModel(DomainObjectCollectionModel):
     domainType: Literal["host"] = api_field(
         description="The domain type of the objects in the collection"
     )
     value: list[HostStatusObjectModel] = api_field(description="A list of host status objects")
+    extensions: HostStatusCollectionExtensions = api_field(  # type: ignore[assignment]
+        description="Additional attributes alongside the collection."
+    )

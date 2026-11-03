@@ -38,3 +38,45 @@ def test_list_hosts_does_not_commit_the_setup_git_repo(
 
     assert resp.status_code == HTTPStatus.OK, resp.text
     assert setup_git_commit_subjects(config_dir) == ["Initialized GIT for Checkmk"]
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_list_hosts_names_a_site_that_does_not_answer(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table("hosts", [])
+    mock_livestatus.make_site_unreachable("remote")
+    mock_livestatus.expect_query(["GET hosts", "Columns: name"], match_type="loose")
+
+    with mock_livestatus:
+        resp = aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/1.0/domain-types/host/collections/all",
+            params=json.dumps({"columns": ["name"]}),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=HTTPStatus.OK,
+        )
+
+    assert resp.json["extensions"]["unreachable_sites"] == ["remote"]
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_list_hosts_leaves_out_an_unreachable_site_it_was_not_asked_for(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table("hosts", [])
+    mock_livestatus.make_site_unreachable("remote")
+    mock_livestatus.expect_query(
+        ["GET hosts", "Columns: name"], match_type="loose", sites=["NO_SITE"]
+    )
+
+    with mock_livestatus:
+        resp = aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/1.0/domain-types/host/collections/all",
+            params=json.dumps({"columns": ["name"], "sites": ["NO_SITE"]}),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=HTTPStatus.OK,
+        )
+
+    assert resp.json["extensions"]["unreachable_sites"] == []

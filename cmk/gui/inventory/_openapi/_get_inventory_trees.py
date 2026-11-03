@@ -57,7 +57,7 @@ def _transform_inventory_tree(tree: ImmutableTree) -> Tree:
 @api_model
 class HostInventoryTree:
     host_name: str = api_field(
-        description="The HW/SW Inventory tree of the host",
+        description="The name of the host",
     )
     inventory_tree: Tree = api_field(
         description="The HW/SW Inventory tree of the host",

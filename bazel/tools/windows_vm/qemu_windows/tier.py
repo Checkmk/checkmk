@@ -3,11 +3,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Runs a *-qemu test tier's payload in a Windows test VM.
 
-A tier's runner (qemu_test, bazel/rules/xcomp/qemu_test.bzl) stages what its
-payload needs into a Stage, with the script that runs it, and ends with
-run(), which copies the stage into the guest as C:\\bzl-NAME-<pid>-<time> and
-runs the script there in the guest's autologon console session, as the
-Administrator with the elevated token (session.run_in_session): run-as
+A tier's stage is what its payload needs in the guest: an archive Bazel
+builds (qemu_test's stage, bazel/rules/xcomp/qemu_test.bzl). The runner ends
+with run(), which extracts it in the guest as C:\\bzl-NAME-<pid>-<time> and
+runs the stage's script there in the guest's autologon console session, as
+the Administrator with the elevated token (session.run_in_session): run-as
 spawns and COM services such as Windows Update need that session, and the
 guest agent itself runs as LocalSystem in session 0.
 
@@ -17,8 +17,7 @@ QEMU_RID. Its exit code (ERRORLEVEL at its end, exit /b N, or a .ps1's
 exit N) is the result: 0 passes, anything else fails, including the
 NTSTATUS of a crash. A .cmd must not call plain `exit`, which would end the
 wrapper that records the result. Its output is printed once it has
-finished. The stage is deleted once it is in the guest: the script can hold
-credentials.
+finished.
 
 Every test gets its own VM: the saved state of the Server Core test image
 (windows_vm_state.bzl), resumed on a throwaway disk layer in TEST_TMPDIR
@@ -26,6 +25,8 @@ Every test gets its own VM: the saved state of the Server Core test image
 the payload left in the guest.
 
 Environment:
+  QEMU_STAGE          set by qemu_test() with a stage: the runfiles path of
+                      the archive Bazel built of it
   QEMU_WINDOWS_*      set by qemu_test(): the QEMU build, the image, its
                       saved state, the host CPU fingerprint that state is
                       keyed on, the VM's size and the image's Eval expiry
@@ -37,18 +38,16 @@ Environment:
 
 import contextlib
 import os
-import shutil
 import sys
-import tarfile
 import time
 from collections.abc import Mapping, Sequence
 from pathlib import Path, PureWindowsPath
 
+from python.runfiles import runfiles
 from qemu_windows import process, state
 from qemu_windows.errors import VmError
 from qemu_windows.guest import Guest, ps_quote
 from qemu_windows.session import run_in_session, SessionError
-from qemu_windows.stage import Stage
 
 # Bazel's timeout counts from the test's start, about when the runner
 # imports this module.
@@ -62,7 +61,6 @@ TEARDOWN = 60.0
 
 def run(
     name: str,
-    stage: Stage,
     *,
     script: str,
     args: Sequence[str] = (),
@@ -86,7 +84,7 @@ def run(
             _vm,
             guest,
         ):
-            return _run(guest, stage.root, rid, wrapper(rid, script, args, env or {}), collect)
+            return _run(guest, rid, wrapper(rid, script, args, env or {}), collect)
     except VmError as e:
         sys.stderr.write(f"error: {e}\n")
         return 1
@@ -98,9 +96,21 @@ def payload_timeout(test_timeout: float, elapsed: float) -> float:
     return max(test_timeout - elapsed - TEARDOWN, 0.0)
 
 
+def read_list(path: Path) -> list[str]:
+    """The entries of a list file (test exclusions and the like): one per
+    line, surrounding whitespace removed, blank lines and lines starting
+    with '#' left out."""
+    return [
+        entry
+        for line in path.read_text().splitlines()
+        if (entry := line.strip()) and not entry.startswith("#")
+    ]
+
+
 def wrapper(rid: str, script: str, args: Sequence[str], env: Mapping[str, str]) -> str:
     """qemu-task.cmd, which runs script in C:\\rid with env: its exit code is
-    the script's, as that of the wrapper's last command."""
+    the script's, as that of the wrapper's last command. CRLF line ends, which
+    cmd.exe's batch parser needs."""
     gdir = rf"C:\{rid}"
     path = rf"{gdir}\{PureWindowsPath(script)}"
     command = (
@@ -108,7 +118,7 @@ def wrapper(rid: str, script: str, args: Sequence[str], env: Mapping[str, str]) 
         if script.endswith(".ps1")
         else f'call "{path}"'
     )
-    return "\n".join(
+    return "\r\n".join(
         [
             "@echo off",
             f'set "QEMU_RID={rid}"',
@@ -120,17 +130,11 @@ def wrapper(rid: str, script: str, args: Sequence[str], env: Mapping[str, str]) 
     )
 
 
-def _run(
-    guest: Guest,
-    stage: Path,
-    rid: str,
-    task: str,
-    collect: Sequence[str],
-) -> int:
+def _run(guest: Guest, rid: str, task: str, collect: Sequence[str]) -> int:
     gdir = rf"C:\{rid}"
-    Stage(stage).write("qemu-task.cmd", task)
     try:
-        _put_stage(guest, stage, gdir)
+        _put_stage(guest, gdir)
+        guest.write(rf"{gdir}\qemu-task.cmd", task.encode())
         timeout = payload_timeout(
             float(os.environ.get("TEST_TIMEOUT", "900")), time.monotonic() - _STARTED
         )
@@ -146,20 +150,27 @@ def _run(
         _collect(guest, gdir, collect)
 
 
-def _put_stage(guest: Guest, stage: Path, gdir: str) -> None:
-    """The stage into gdir, as one archive: one file to copy is faster than
-    many. The stage is gone afterwards, also on the host."""
-    archive = stage.with_name(f"{stage.name}.tgz")
-    try:
-        with tarfile.open(archive, "w:gz", compresslevel=1) as tar:
-            tar.add(stage, arcname=".")
-        shutil.rmtree(stage)
-        guest.powershell(f"New-Item -ItemType Directory -Path {ps_quote(gdir)} | Out-Null")
+def _put_stage(guest: Guest, gdir: str) -> None:
+    """gdir, with the stage extracted into it if the test has one."""
+    guest.powershell(f"New-Item -ItemType Directory -Path {ps_quote(gdir)} | Out-Null")
+    if archive := _built_stage():
         guest.put(archive, rf"{gdir}\stage.tgz")
-    finally:
-        archive.unlink(missing_ok=True)
-    guest.run(["tar.exe", "-xzf", rf"{gdir}\stage.tgz", "-C", gdir])
-    guest.powershell(f"Remove-Item -LiteralPath {ps_quote(rf'{gdir}\stage.tgz')}")
+        guest.run(["tar.exe", "-xf", rf"{gdir}\stage.tgz", "-C", gdir])
+        guest.powershell(f"Remove-Item -LiteralPath {ps_quote(rf'{gdir}\stage.tgz')}")
+
+
+def _built_stage() -> Path | None:
+    """The archive Bazel built of the stage (QEMU_STAGE), if the test has one."""
+    if not (path := os.environ.get("QEMU_STAGE")):
+        return None
+    # Directory-based runfiles return the path whether it exists or not.
+    if (
+        (files := runfiles.Create()) is None
+        or (located := files.Rlocation(path)) is None
+        or not Path(located).is_file()
+    ):
+        raise VmError(f"the stage {path} is not in the test's runfiles")
+    return Path(located)
 
 
 def _collect(guest: Guest, gdir: str, names: Sequence[str]) -> None:

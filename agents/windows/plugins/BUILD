@@ -19,6 +19,18 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+# The plugins without the subdirectories, as the agent's test roots get them
+# (run_tests.ps1's xcopy plugins\*.*).
+filegroup(
+    name = "top_level_plugins",
+    srcs = glob([
+        "*.bat",
+        "*.ps1",
+        "*.vbs",
+    ]),
+    visibility = ["//agents/wnx:__subpackages__"],
+)
+
 filegroup(
     name = "msi_cmk_plugin_files",
     srcs = [

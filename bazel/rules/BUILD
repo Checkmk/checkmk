@@ -157,6 +157,12 @@ py_binary(
     visibility = ["//visibility:public"],
 )
 
+# The crlf_files() action.
+py_binary(
+    name = "crlf_files",
+    srcs = ["crlf_files.py"],
+)
+
 py_cmk_test(
     name = "unit",
     size = "small",

@@ -2,7 +2,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from qemu_windows.tier import wrapper
+from pathlib import Path
+
+from qemu_windows.tier import read_list, wrapper
 
 
 def test_calls_a_cmd_script_with_its_args() -> None:
@@ -32,3 +34,23 @@ def test_quotes_env_values_so_cmd_exe_metacharacters_stay_literal() -> None:
     lines = wrapper("bzl-int-1-2", "run.cmd", [], {"CMK_VERSION": "2.5.0 & co"}).splitlines()
 
     assert 'set "CMK_VERSION=2.5.0 & co"' in lines
+
+
+def test_has_the_crlf_line_ends_cmd_exe_needs() -> None:
+    task = wrapper("bzl-reg-1-2", "run.cmd", [], {"BASE": "x"})
+
+    assert task.count("\r\n") == task.count("\n") > 0
+
+
+def test_list_files_drop_comments_blanks_and_whitespace(tmp_path: Path) -> None:
+    path = tmp_path / "excluded.txt"
+    path.write_bytes(b"# why\r\n\r\n  Test.One \r\n#Test.Two\nTest.Three\n")
+
+    assert read_list(path) == ["Test.One", "Test.Three"]
+
+
+def test_comment_only_list_file_is_empty(tmp_path: Path) -> None:
+    path = tmp_path / "excluded.txt"
+    path.write_text("# nothing excluded\n")
+
+    assert not read_list(path)

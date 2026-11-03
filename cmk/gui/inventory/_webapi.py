@@ -86,7 +86,6 @@ def page_host_inv_api(ctx: PageContext) -> None:
 
         resp = {"result_code": 0, "result": result}
 
-    # I added MKGeneralException during a refactoring, but I did not check if it is needed.
     except (MKException, MKGeneralException) as e:
         resp = {"result_code": 1, "result": "%s" % e}
 

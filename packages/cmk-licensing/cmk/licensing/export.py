@@ -11,7 +11,7 @@ import abc
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, tzinfo
 from typing import Literal, override, TypedDict
 from uuid import UUID
 
@@ -600,26 +600,31 @@ class RawMonthlyServiceAggregation(TypedDict):
 
 
 class MonthlyServiceAverages:
-    today = datetime.today()
+    today: datetime
+    _tz: tzinfo
 
     def __init__(
         self,
         subscription_details: SubscriptionDetailsForAggregation,
         short_samples: Sequence[tuple[int, int]],
+        tz: tzinfo,
     ) -> None:
         self._subscription_details = subscription_details
-        self._daily_services = self._calculate_daily_services(short_samples)
+        self._daily_services = self._calculate_daily_services(short_samples, tz)
         self._monthly_service_averages: list[MonthlyServiceAverage] = []
+        self._tz = tz
+        self.today = datetime.now(tz)
 
     @staticmethod
     def _calculate_daily_services(
         short_samples: Sequence[tuple[int, int]],
+        tz: tzinfo,
     ) -> Sequence[MonthlyServiceAverage]:
         daily_services: dict[datetime, Counter[str]] = {}
         for sample_time, num_services in short_samples:
-            sample_date = datetime.fromtimestamp(sample_time)
+            sample_date = datetime.fromtimestamp(sample_time, tz=tz)
             daily_services.setdefault(
-                datetime(sample_date.year, sample_date.month, sample_date.day),
+                datetime(sample_date.year, sample_date.month, sample_date.day, tzinfo=tz),
                 Counter(),
             ).update(num_services=num_services)
 
@@ -654,14 +659,16 @@ class MonthlyServiceAverages:
             return
 
         monthly_services: dict[datetime, Counter[str]] = {}
-        month_start = datetime.fromtimestamp(self._subscription_details.start).replace(
+        month_start = datetime.fromtimestamp(self._subscription_details.start, tz=self._tz).replace(
             hour=0,
             minute=0,
             second=0,
             microsecond=0,
         )
         month_end = month_start + relativedelta(months=+1)
-        subscription_end_date = datetime.fromtimestamp(self._subscription_details.end).replace(
+        subscription_end_date = datetime.fromtimestamp(
+            self._subscription_details.end, tz=self._tz
+        ).replace(
             hour=0,
             minute=0,
             second=0,
@@ -673,7 +680,7 @@ class MonthlyServiceAverages:
                 month_start = month_end
                 month_end = month_start + relativedelta(months=+1)
 
-            if month_end >= MonthlyServiceAverages.today or month_end > subscription_end_date:
+            if month_end >= self.today or month_end > subscription_end_date:
                 # Skip last, incomplete month (subscription_end_date excl.)
                 break
 

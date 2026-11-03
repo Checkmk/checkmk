@@ -6,7 +6,8 @@
 # mypy: disable-error-code="type-arg"
 
 import json
-from collections.abc import Mapping
+from collections.abc import Iterable, Iterator, Mapping, Sequence
+from typing import Any
 
 from cmk.agent_based.v2 import AgentSection, InventoryPlugin, InventoryResult, StringTable, TableRow
 from cmk.plugins.docker import lib as docker
@@ -18,9 +19,9 @@ def parse_docker_node_images(string_table: StringTable) -> Section:
     docker.ensure_valid_docker_header(string_table)
 
     subsections = _split_subsections(string_table[1:])
-    i_images = (json.loads(i[0]) for i in subsections.get("images", []))
+    i_images = _load_json_rows(subsections.get("images", []))
     images = {i["Id"]: i for i in i_images if i is not None}
-    i_containers = (json.loads(c[0]) for c in subsections.get("containers", []))
+    i_containers = _load_json_rows(subsections.get("containers", []))
     containers = {c["Id"]: c for c in i_containers if c is not None}
 
     running_images = [c["Image"] for c in containers.values()]
@@ -29,6 +30,14 @@ def parse_docker_node_images(string_table: StringTable) -> Section:
         image["amount_containers"] = running_images.count(image_id)
 
     return {"images": images, "containers": containers}
+
+
+def _load_json_rows(rows: Iterable[Sequence[str]]) -> Iterator[Any]:
+    for row in rows:
+        try:
+            yield json.loads(row[0])
+        except json.JSONDecodeError:
+            continue
 
 
 def _split_subsections(string_table: StringTable) -> dict[str, list[list[str]]]:

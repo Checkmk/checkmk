@@ -158,11 +158,39 @@ def _parse_extensions(raw: Mapping[str, object]) -> LicenseUsageExtensions:
     return LicenseUsageExtensions(ntop=parsed_extensions["extension_ntop"])
 
 
-def _parse_sample_v1_1(instance_id: UUID | None, site_hash: str, raw: object) -> LicenseUsageSample:
+def _version_tuple(version: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in version.split("."))
+
+
+def _at_least(
+    protocol_version: AllowedUsageHistoryVersions, required_version: AllowedUsageHistoryVersions
+) -> bool:
+    return _version_tuple(protocol_version) >= _version_tuple(required_version)
+
+
+def _count(
+    raw: Mapping[str, int],
+    protocol_version: AllowedUsageHistoryVersions,
+    key: str,
+    since: AllowedUsageHistoryVersions,
+) -> int:
+    return raw[key] if _at_least(protocol_version, since) else 0
+
+
+def _parse_sample(
+    protocol_version: AllowedUsageHistoryVersions,
+    instance_id: UUID | None,
+    site_hash: str,
+    raw: object,
+) -> LicenseUsageSample:
     if not isinstance(raw, dict):
-        raise TypeError("Parse sample 1.1/1.2/1.3: Wrong sample type: %r" % type(raw))
+        raise TypeError(f"Parse sample {protocol_version}: Wrong sample type: {type(raw)!r}")
+    if _at_least(protocol_version, "1.5"):
+        if not (raw_instance_id := raw.get("instance_id")):
+            raise ValueError(f"Parse sample {protocol_version}: No such instance ID")
+        instance_id = UUID(raw_instance_id)
     if not (site_hash := raw.get("site_hash", site_hash)):
-        raise ValueError("Parse sample 1.1/1.2/1.3: No such site hash")
+        raise ValueError(f"Parse sample {protocol_version}: No such site hash")
     return LicenseUsageSample(
         instance_id=instance_id,
         site_hash=site_hash,
@@ -173,53 +201,29 @@ def _parse_sample_v1_1(instance_id: UUID | None, site_hash: str, raw: object) ->
         sample_time=raw["sample_time"],
         timezone=raw["timezone"],
         num_hosts=raw["num_hosts"],
-        num_hosts_cloud=0,
-        num_hosts_shadow=0,
-        num_hosts_excluded=raw["num_hosts_excluded"],
+        num_hosts_cloud=_count(raw, protocol_version, "num_hosts_cloud", since="2.0"),
+        num_hosts_shadow=(
+            # Renamed from num_shadow_hosts in 2.0.
+            raw["num_hosts_shadow"]
+            if _at_least(protocol_version, "2.0")
+            else _count(raw, protocol_version, "num_shadow_hosts", since="1.4")
+        ),
+        num_hosts_excluded=_count(raw, protocol_version, "num_hosts_excluded", since="1.1"),
         num_services=raw["num_services"],
-        num_services_cloud=0,
-        num_services_shadow=0,
-        num_services_excluded=raw["num_services_excluded"],
-        num_synthetic_tests=0,
-        num_synthetic_tests_excluded=0,
-        num_synthetic_kpis=0,
-        num_synthetic_kpis_excluded=0,
-        num_active_metric_series=0,
-        extension_ntop=_parse_extensions(raw).ntop,
-    )
-
-
-def _parse_sample_v2_0(
-    _instance_id: UUID | None, site_hash: str, raw: object
-) -> LicenseUsageSample:
-    if not isinstance(raw, dict):
-        raise TypeError("Parse sample 2.0/2.1: Wrong sample type: %r" % type(raw))
-    if not (raw_instance_id := raw.get("instance_id")):
-        raise ValueError("Parse sample 2.0/2.1: No such instance ID")
-    if not (site_hash := raw.get("site_hash", site_hash)):
-        raise ValueError("Parse sample 2.0/2.1: No such site hash")
-    return LicenseUsageSample(
-        instance_id=UUID(raw_instance_id),
-        site_hash=site_hash,
-        version=raw["version"],
-        edition=raw["edition"],
-        platform=_parse_platform(raw["platform"]),
-        is_cma=raw["is_cma"],
-        sample_time=raw["sample_time"],
-        timezone=raw["timezone"],
-        num_hosts=raw["num_hosts"],
-        num_hosts_cloud=raw["num_hosts_cloud"],
-        num_hosts_shadow=raw["num_hosts_shadow"],
-        num_hosts_excluded=raw["num_hosts_excluded"],
-        num_services=raw["num_services"],
-        num_services_cloud=raw["num_services_cloud"],
-        num_services_shadow=raw["num_services_shadow"],
-        num_services_excluded=raw["num_services_excluded"],
-        num_synthetic_tests=0,
-        num_synthetic_tests_excluded=0,
-        num_synthetic_kpis=0,
-        num_synthetic_kpis_excluded=0,
-        num_active_metric_series=0,
+        num_services_cloud=_count(raw, protocol_version, "num_services_cloud", since="2.0"),
+        num_services_shadow=_count(raw, protocol_version, "num_services_shadow", since="2.0"),
+        num_services_excluded=_count(raw, protocol_version, "num_services_excluded", since="1.1"),
+        num_synthetic_tests=_count(raw, protocol_version, "num_synthetic_tests", since="3.0"),
+        num_synthetic_tests_excluded=_count(
+            raw, protocol_version, "num_synthetic_tests_excluded", since="3.0"
+        ),
+        num_synthetic_kpis=_count(raw, protocol_version, "num_synthetic_kpis", since="3.1"),
+        num_synthetic_kpis_excluded=_count(
+            raw, protocol_version, "num_synthetic_kpis_excluded", since="3.1"
+        ),
+        num_active_metric_series=_count(
+            raw, protocol_version, "num_active_metric_series", since="3.2"
+        ),
         extension_ntop=_parse_extensions(raw).ntop,
     )
 
@@ -236,34 +240,7 @@ class ParserV1_0(Parser):
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
-        if not isinstance(raw, dict):
-            raise TypeError("Parse sample 1.0: Wrong sample type: %r" % type(raw))
-        if not (site_hash := raw.get("site_hash", site_hash)):
-            raise ValueError("Parse sample 1.0: No such site hash")
-        return LicenseUsageSample(
-            instance_id=instance_id,
-            site_hash=site_hash,
-            version=raw["version"],
-            edition=raw["edition"],
-            platform=_parse_platform(raw["platform"]),
-            is_cma=raw["is_cma"],
-            sample_time=raw["sample_time"],
-            timezone=raw["timezone"],
-            num_hosts=raw["num_hosts"],
-            num_hosts_cloud=0,
-            num_hosts_shadow=0,
-            num_hosts_excluded=0,
-            num_services=raw["num_services"],
-            num_services_cloud=0,
-            num_services_shadow=0,
-            num_services_excluded=0,
-            num_synthetic_tests=0,
-            num_synthetic_tests_excluded=0,
-            num_synthetic_kpis=0,
-            num_synthetic_kpis_excluded=0,
-            num_active_metric_series=0,
-            extension_ntop=_parse_extensions(raw).ntop,
-        )
+        return _parse_sample("1.0", instance_id, site_hash, raw)
 
 
 class ParserV1_1(Parser):
@@ -271,7 +248,7 @@ class ParserV1_1(Parser):
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
-        return _parse_sample_v1_1(instance_id, site_hash, raw)
+        return _parse_sample("1.1", instance_id, site_hash, raw)
 
 
 class ParserV1_2(Parser):
@@ -279,7 +256,7 @@ class ParserV1_2(Parser):
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
-        return _parse_sample_v1_1(instance_id, site_hash, raw)
+        return _parse_sample("1.2", instance_id, site_hash, raw)
 
 
 class ParserV1_3(Parser):
@@ -287,7 +264,7 @@ class ParserV1_3(Parser):
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
-        return _parse_sample_v1_1(instance_id, site_hash, raw)
+        return _parse_sample("1.3", instance_id, site_hash, raw)
 
 
 class ParserV1_4(Parser):
@@ -295,71 +272,15 @@ class ParserV1_4(Parser):
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
-        if not isinstance(raw, dict):
-            raise TypeError("Parse sample 1.4: Wrong sample type: %r" % type(raw))
-        if not (site_hash := raw.get("site_hash", site_hash)):
-            raise ValueError("Parse sample 1.4: No such site hash")
-        return LicenseUsageSample(
-            instance_id=instance_id,
-            site_hash=site_hash,
-            version=raw["version"],
-            edition=raw["edition"],
-            platform=_parse_platform(raw["platform"]),
-            is_cma=raw["is_cma"],
-            sample_time=raw["sample_time"],
-            timezone=raw["timezone"],
-            num_hosts=raw["num_hosts"],
-            num_hosts_cloud=0,
-            num_hosts_shadow=raw["num_shadow_hosts"],
-            num_hosts_excluded=raw["num_hosts_excluded"],
-            num_services=raw["num_services"],
-            num_services_cloud=0,
-            num_services_shadow=0,
-            num_services_excluded=raw["num_services_excluded"],
-            num_synthetic_tests=0,
-            num_synthetic_tests_excluded=0,
-            num_synthetic_kpis=0,
-            num_synthetic_kpis_excluded=0,
-            num_active_metric_series=0,
-            extension_ntop=_parse_extensions(raw).ntop,
-        )
+        return _parse_sample("1.4", instance_id, site_hash, raw)
 
 
 class ParserV1_5(Parser):
     @override
     def parse_sample(
-        self, _instance_id: UUID | None, site_hash: str, raw: object
+        self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
-        if not isinstance(raw, dict):
-            raise TypeError("Parse sample 1.5: Wrong sample type: %r" % type(raw))
-        if not (raw_instance_id := raw.get("instance_id")):
-            raise ValueError("Parse sample 1.5: No such instance ID")
-        if not (site_hash := raw.get("site_hash", site_hash)):
-            raise ValueError("Parse sample 1.5: No such site hash")
-        return LicenseUsageSample(
-            instance_id=UUID(raw_instance_id),
-            site_hash=site_hash,
-            version=raw["version"],
-            edition=raw["edition"],
-            platform=_parse_platform(raw["platform"]),
-            is_cma=raw["is_cma"],
-            sample_time=raw["sample_time"],
-            timezone=raw["timezone"],
-            num_hosts=raw["num_hosts"],
-            num_hosts_cloud=0,
-            num_hosts_shadow=raw["num_shadow_hosts"],
-            num_hosts_excluded=raw["num_hosts_excluded"],
-            num_services=raw["num_services"],
-            num_services_cloud=0,
-            num_services_shadow=0,
-            num_services_excluded=raw["num_services_excluded"],
-            num_synthetic_tests=0,
-            num_synthetic_tests_excluded=0,
-            num_synthetic_kpis=0,
-            num_synthetic_kpis_excluded=0,
-            num_active_metric_series=0,
-            extension_ntop=_parse_extensions(raw).ntop,
-        )
+        return _parse_sample("1.5", instance_id, site_hash, raw)
 
 
 class ParserV2_0(Parser):
@@ -367,7 +288,7 @@ class ParserV2_0(Parser):
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
-        return _parse_sample_v2_0(instance_id, site_hash, raw)
+        return _parse_sample("2.0", instance_id, site_hash, raw)
 
 
 class ParserV2_1(Parser):
@@ -375,117 +296,15 @@ class ParserV2_1(Parser):
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
-        return _parse_sample_v2_0(instance_id, site_hash, raw)
+        return _parse_sample("2.1", instance_id, site_hash, raw)
 
 
 class ParserV3_0(Parser):
     @override
     def parse_sample(
-        self, _instance_id: UUID | None, site_hash: str, raw: object
+        self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
-        if not isinstance(raw, dict):
-            raise TypeError("Parse sample 3.0: Wrong sample type: %r" % type(raw))
-        if not (raw_instance_id := raw.get("instance_id")):
-            raise ValueError("Parse sample 3.0: No such instance ID")
-        if not (site_hash := raw.get("site_hash", site_hash)):
-            raise ValueError("Parse sample 3.0: No such site hash")
-        extensions = _parse_extensions(raw)
-        return LicenseUsageSample(
-            instance_id=UUID(raw_instance_id),
-            site_hash=site_hash,
-            version=raw["version"],
-            edition=raw["edition"],
-            platform=_parse_platform(raw["platform"]),
-            is_cma=raw["is_cma"],
-            sample_time=raw["sample_time"],
-            timezone=raw["timezone"],
-            num_hosts=raw["num_hosts"],
-            num_hosts_cloud=raw["num_hosts_cloud"],
-            num_hosts_shadow=raw["num_hosts_shadow"],
-            num_hosts_excluded=raw["num_hosts_excluded"],
-            num_services=raw["num_services"],
-            num_services_cloud=raw["num_services_cloud"],
-            num_services_shadow=raw["num_services_shadow"],
-            num_services_excluded=raw["num_services_excluded"],
-            num_synthetic_tests=raw["num_synthetic_tests"],
-            num_synthetic_tests_excluded=raw["num_synthetic_tests_excluded"],
-            num_synthetic_kpis=0,
-            num_synthetic_kpis_excluded=0,
-            num_active_metric_series=0,
-            extension_ntop=extensions.ntop,
-        )
-
-
-def _parse_sample_v3_1(
-    _instance_id: UUID | None, site_hash: str, raw: object
-) -> LicenseUsageSample:
-    if not isinstance(raw, dict):
-        raise TypeError("Parse sample 3.1: Wrong sample type: %r" % type(raw))
-    if not (raw_instance_id := raw.get("instance_id")):
-        raise ValueError("Parse sample 3.1: No such instance ID")
-    if not (site_hash := raw.get("site_hash", site_hash)):
-        raise ValueError("Parse sample 3.1: No such site hash")
-    extensions = _parse_extensions(raw)
-    return LicenseUsageSample(
-        instance_id=UUID(raw_instance_id),
-        site_hash=site_hash,
-        version=raw["version"],
-        edition=raw["edition"],
-        platform=_parse_platform(raw["platform"]),
-        is_cma=raw["is_cma"],
-        sample_time=raw["sample_time"],
-        timezone=raw["timezone"],
-        num_hosts=raw["num_hosts"],
-        num_hosts_cloud=raw["num_hosts_cloud"],
-        num_hosts_shadow=raw["num_hosts_shadow"],
-        num_hosts_excluded=raw["num_hosts_excluded"],
-        num_services=raw["num_services"],
-        num_services_cloud=raw["num_services_cloud"],
-        num_services_shadow=raw["num_services_shadow"],
-        num_services_excluded=raw["num_services_excluded"],
-        num_synthetic_tests=raw["num_synthetic_tests"],
-        num_synthetic_tests_excluded=raw["num_synthetic_tests_excluded"],
-        num_synthetic_kpis=raw["num_synthetic_kpis"],
-        num_synthetic_kpis_excluded=raw["num_synthetic_kpis_excluded"],
-        num_active_metric_series=0,
-        extension_ntop=extensions.ntop,
-    )
-
-
-def _parse_sample_v3_2(
-    _instance_id: UUID | None, site_hash: str, raw: object
-) -> LicenseUsageSample:
-    if not isinstance(raw, dict):
-        raise TypeError("Parse sample 3.2: Wrong sample type: %r" % type(raw))
-    if not (raw_instance_id := raw.get("instance_id")):
-        raise ValueError("Parse sample 3.2: No such instance ID")
-    if not (site_hash := raw.get("site_hash", site_hash)):
-        raise ValueError("Parse sample 3.2: No such site hash")
-    extensions = _parse_extensions(raw)
-    return LicenseUsageSample(
-        instance_id=UUID(raw_instance_id),
-        site_hash=site_hash,
-        version=raw["version"],
-        edition=raw["edition"],
-        platform=_parse_platform(raw["platform"]),
-        is_cma=raw["is_cma"],
-        sample_time=raw["sample_time"],
-        timezone=raw["timezone"],
-        num_hosts=raw["num_hosts"],
-        num_hosts_cloud=raw["num_hosts_cloud"],
-        num_hosts_shadow=raw["num_hosts_shadow"],
-        num_hosts_excluded=raw["num_hosts_excluded"],
-        num_services=raw["num_services"],
-        num_services_cloud=raw["num_services_cloud"],
-        num_services_shadow=raw["num_services_shadow"],
-        num_services_excluded=raw["num_services_excluded"],
-        num_synthetic_tests=raw["num_synthetic_tests"],
-        num_synthetic_tests_excluded=raw["num_synthetic_tests_excluded"],
-        num_synthetic_kpis=raw["num_synthetic_kpis"],
-        num_synthetic_kpis_excluded=raw["num_synthetic_kpis_excluded"],
-        num_active_metric_series=raw["num_active_metric_series"],
-        extension_ntop=extensions.ntop,
-    )
+        return _parse_sample("3.0", instance_id, site_hash, raw)
 
 
 class ParserV3_1(Parser):
@@ -493,7 +312,7 @@ class ParserV3_1(Parser):
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
-        return _parse_sample_v3_1(instance_id, site_hash, raw)
+        return _parse_sample("3.1", instance_id, site_hash, raw)
 
 
 class ParserV3_2(Parser):
@@ -501,7 +320,7 @@ class ParserV3_2(Parser):
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
-        return _parse_sample_v3_2(instance_id, site_hash, raw)
+        return _parse_sample("3.2", instance_id, site_hash, raw)
 
 
 def make_sample_parser(protocol_version: AllowedUsageHistoryVersions) -> Parser:

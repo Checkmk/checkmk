@@ -83,11 +83,6 @@ void main() {
         CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
     ];
     def success = true;
-    /* groovylint-disable DuplicateMapLiteral */
-    def test_system_multisite_parameters = job_parameters_packages + [USE_CASE: "daily_tests"];
-    def test_system_singlesite_parameters = job_parameters_packages + [USE_CASE: "daily_tests"];
-    def test_system_update_parameters = job_parameters_packages + [USE_CASE: "daily_update_tests"];
-    /* groovylint-enable DuplicateMapLiteral */
 
     run_docker_integration_test = [
         run_docker_integration_test,
@@ -248,7 +243,7 @@ void main() {
                         use_upstream_build: true,
                         force_build: force_build,
                         relative_job_name: "${builders_base_folder}/test-system-multisite-single",
-                        build_params: test_system_multisite_parameters,
+                        build_params: job_parameters_packages,
                         build_params_no_check: job_parameters_no_check,
                         download: false,
                     );
@@ -264,7 +259,7 @@ void main() {
                         use_upstream_build: true,
                         force_build: force_build,
                         relative_job_name: "${builders_base_folder}/test-system-singlesite-single",
-                        build_params: test_system_singlesite_parameters,
+                        build_params: job_parameters_packages,
                         build_params_no_check: job_parameters_no_check,
                         download: false,
                     );
@@ -280,7 +275,7 @@ void main() {
                         use_upstream_build: true,
                         force_build: force_build,
                         relative_job_name: "${builders_base_folder}/test-system-update-single",
-                        build_params: test_system_update_parameters,
+                        build_params: job_parameters_packages,
                         build_params_no_check: job_parameters_no_check,
                         download: false,
                     );

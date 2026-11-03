@@ -93,9 +93,9 @@ def _get_permitted_inventory_paths() -> Sequence[PermittedPath] | None:
 
 def _permitted_filter_choices() -> Sequence[SDFilterChoice] | None:
     return (
-        make_filter_choices_from_permitted_paths(permitted_paths)
-        if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
-        else None
+        None
+        if (permitted_paths := _get_permitted_inventory_paths()) is None
+        else make_filter_choices_from_permitted_paths(permitted_paths)
     )
 
 

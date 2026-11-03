@@ -27,13 +27,16 @@ from cmk.licensing.export import (
     LicenseUsageSample,
     RawLicenseUsageReport,
 )
+from cmk.licensing.helper import rot47
 from cmk.licensing.usage import (
     _load_extensions,
     _parse_extensions,
     _serialize_dump,
     CLOUD_SERVICE_PREFIXES,
+    deserialize_dump,
     get_license_usage_report_validity,
     HostsOrServicesCloudCounter,
+    HostsOrServicesCounter,
     LicenseUsageReportValidity,
     load_raw_license_usage_report,
     LocalLicenseUsageHistory,
@@ -69,6 +72,23 @@ _SAMPLE: Final = LicenseUsageSample(
     extension_ntop=True,
 )
 _OLDER_SAMPLE: Final = replace(_SAMPLE, sample_time=1699920000, num_hosts=14)
+_NOW: Final = Now(dt=datetime(2023, 11, 15, 12, 0), tz="UTC")
+
+
+def _sample_at(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSample:
+    return replace(
+        _SAMPLE, instance_id=instance_id, site_hash=site_hash, sample_time=int(now.dt.timestamp())
+    )
+
+
+def _fail_to_create_sample(*_args: object, **_kwargs: object) -> LicenseUsageSample:
+    raise livestatus.MKLivestatusSocketError
+
+
+def _load_history(omd_root: Path) -> LocalLicenseUsageHistory:
+    return LocalLicenseUsageHistory.parse(
+        load_raw_license_usage_report(get_license_usage_report_file_path(omd_root))
+    )
 
 
 @pytest.fixture(name="omd_root")
@@ -163,11 +183,56 @@ def test_try_update_license_usage_next_run_ts_not_reached(omd_root: Path) -> Non
 
 
 @pytest.mark.parametrize(
+    "next_update, expected_num_samples",
+    [
+        pytest.param(datetime(2023, 11, 16, 7, 59), 1, id="next day before 8 am"),
+        pytest.param(datetime(2023, 11, 16, 16, 0), 2, id="next day at 4 pm"),
+    ],
+)
+def test_update_waits_until_next_day_between_8_am_and_4_pm(
+    omd_root: Path, next_update: datetime, expected_num_samples: int
+) -> None:
+    try_update_license_usage(
+        _NOW, _SAMPLE.instance_id, _SAMPLE.site_hash, _sample_at, omd_root=omd_root
+    )
+
+    try_update_license_usage(
+        Now(dt=next_update, tz="UTC"),
+        _SAMPLE.instance_id,
+        _SAMPLE.site_hash,
+        _sample_at,
+        omd_root=omd_root,
+    )
+
+    assert len(_load_history(omd_root)) == expected_num_samples
+
+
+def test_failed_update_is_retried_at_the_next_call(omd_root: Path) -> None:
+    with pytest.raises(livestatus.MKLivestatusSocketError):
+        try_update_license_usage(
+            _NOW, _SAMPLE.instance_id, _SAMPLE.site_hash, _fail_to_create_sample, omd_root=omd_root
+        )
+
+    try_update_license_usage(
+        _NOW, _SAMPLE.instance_id, _SAMPLE.site_hash, _sample_at, omd_root=omd_root
+    )
+
+    assert len(_load_history(omd_root)) == 1
+
+
+def test_update_without_instance_id_is_rejected(omd_root: Path) -> None:
+    with pytest.raises(ValueError):
+        try_update_license_usage(_NOW, None, _SAMPLE.site_hash, _sample_at, omd_root=omd_root)
+
+
+@pytest.mark.parametrize(
     "livestatus_response,expected_hosts,excepted_services",
     [
         pytest.param([["host", "not_cloud_check"]], 0, 0, id="no_cloud"),
         pytest.param([["host", "gcp_run_cpu"], ["host", "gcp_run_cpu"]], 1, 2, id="cloud"),
         pytest.param([["host", "gcp_run_cpu"], ["host", "not_cloud_check"]], 1, 2, id="mixed"),
+        pytest.param([["host", "check_mk-aws_ec2"]], 1, 1, id="check_mk prefix"),
+        pytest.param([["h1", "aws_ec2"], ["h2", "azure_vm"], ["h3", "df"]], 2, 2, id="per host"),
     ],
 )
 def test__parse_cloud_hosts_or_services(
@@ -178,6 +243,12 @@ def test__parse_cloud_hosts_or_services(
     hosts_or_services_cloud_counter = HostsOrServicesCloudCounter.make(livestatus_response)
     assert hosts_or_services_cloud_counter.hosts == expected_hosts
     assert hosts_or_services_cloud_counter.services == excepted_services
+
+
+def test_hosts_or_services_counter_maps_stats_columns_to_fields() -> None:
+    assert HostsOrServicesCounter.make([[3, 2, 1]]) == HostsOrServicesCounter(
+        num=3, num_shadow=2, num_excluded=1
+    )
 
 
 def test_serialize_license_usage_report() -> None:
@@ -1045,6 +1116,18 @@ def test_parse_rejects_a_report_that_is_not_a_dict(raw_report: object) -> None:
         LocalLicenseUsageHistory.parse(raw_report)
 
 
+@pytest.mark.parametrize(
+    "raw_dump",
+    [
+        pytest.param(b"", id="empty"),
+        pytest.param(rot47('{"VERSION": ').encode(), id="invalid JSON"),
+        pytest.param(rot47("[]").encode(), id="not a JSON object"),
+    ],
+)
+def test_deserialize_dump_reads_anything_but_a_json_object_as_empty(raw_dump: bytes) -> None:
+    assert deserialize_dump(raw_dump) == {}
+
+
 def test_history_add_sample() -> None:
     history = LocalLicenseUsageHistory([])
     for idx in range(450):
@@ -1194,6 +1277,10 @@ def test_save_load_extensions(expected_extensions: LicenseUsageExtensions, omd_r
     save_extensions(expected_extensions, omd_root=omd_root)
 
     assert _load_extensions(omd_root=omd_root) == expected_extensions
+
+
+def test_extensions_never_saved_have_ntop_disabled(omd_root: Path) -> None:
+    assert _load_extensions(omd_root=omd_root) == LicenseUsageExtensions(ntop=False)
 
 
 @pytest.mark.parametrize(

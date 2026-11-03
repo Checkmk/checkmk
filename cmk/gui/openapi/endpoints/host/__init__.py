@@ -89,6 +89,24 @@ class SingleHostParameters(BaseSchema):
     )
 
 
+class HostCollectionExtensions(BaseSchema):
+    unreachable_sites = fields.List(
+        fields.String(),
+        description=(
+            "The IDs of the sites that could not be reached. Their hosts are missing from the "
+            "collection."
+        ),
+        example=["remote_1"],
+    )
+
+
+class HostCollection(response_schemas.DomainObjectCollection):
+    extensions = fields.Nested(  # type: ignore[assignment]
+        HostCollectionExtensions,
+        description="Additional attributes alongside the collection.",
+    )
+
+
 PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(
         [
@@ -119,10 +137,19 @@ def _list_hosts(params: Mapping[str, Any]) -> Response:
     if contains_inventory_column(columns):
         result = fixup_inventory_column(result)
 
+    # Read the dead sites only after the query ran: a site that fails during it is added then.
+    value = [_host_object(entry["name"], entry) for entry in result]
+    unreachable_sites = [
+        site_id
+        for site_id in sorted(live.dead_sites())
+        if not sites_to_query or site_id in sites_to_query
+    ]
+
     return serve_json(
         constructors.collection_object(
             domain_type="host",
-            value=[_host_object(entry["name"], entry) for entry in result],
+            value=value,
+            extensions={"unreachable_sites": unreachable_sites},
         )
     )
 
@@ -151,7 +178,7 @@ def list_hosts_deprecated(params: Mapping[str, Any]) -> Response:
     tag_group="Monitoring",
     blacklist_in=["swagger-ui"],
     request_schema=HostParameters,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=HostCollection,
     permissions_required=PERMISSIONS,
     update_config_generation=False,
 )

@@ -8,6 +8,10 @@
 # shell's "*" does not match, a directory that exists on both sides, and the
 # modes of such a directory, which the package sets and the migration must not
 # undo.
+#
+# The script also runs on Solaris, from an SVR4 postinstall script. The last two
+# cases cover what that adds: another shell, and an exit code that must not
+# abort the package transaction.
 
 TESTEE="${UNIT_SH_AGENTS_DIR}/scripts/migrate.sh"
 
@@ -44,10 +48,14 @@ tearDown() {
 }
 
 _migrate() {
+    _migrate_with /bin/sh
+}
+
+_migrate_with() {
     PATH="${STUBS}:${PATH}" \
         MK_INSTALLDIR="${INSTALLDIR}" \
         OLD_MK_VARDIR="${OLD_VARDIR}" \
-        /bin/sh "${TESTEE}"
+        "$1" "${TESTEE}"
 }
 
 test_hidden_file_is_moved() {
@@ -127,6 +135,47 @@ test_what_cannot_be_moved_is_kept() {
 
     assertTrue "the data that could not move was deleted" \
         "[ -f '${OLD_VARDIR}/spool/precious' ]"
+}
+
+test_a_symlinked_directory_in_the_new_tree_is_not_followed() {
+    # Descending through it would carry the old runtime data out of the tree.
+    mkdir -p "${WORK}/elsewhere" "${OLD_VARDIR}/linked"
+    printf 'precious\n' >"${OLD_VARDIR}/linked/precious"
+    ln -s "${WORK}/elsewhere" "${RUNTIME}/linked"
+
+    _migrate >/dev/null 2>&1
+
+    assertFalse "the migration wrote outside the runtime tree" \
+        "[ -e '${WORK}/elsewhere/precious' ]"
+    assertTrue "the data that could not move was deleted" \
+        "[ -f '${OLD_VARDIR}/linked/precious' ]"
+}
+
+test_exit_code_is_zero_when_something_could_not_be_moved() {
+    # The SVR4 postinstall script of the Solaris package calls this, and a
+    # non-zero exit code there can abort the whole pkgadd transaction.
+    mkdir -p "${OLD_VARDIR}/spool"
+    printf 'precious\n' >"${OLD_VARDIR}/spool/precious"
+    printf 'in the way\n' >"${RUNTIME}/spool"
+
+    _migrate >/dev/null 2>&1
+
+    assertEquals "exit code" "0" "$?"
+}
+
+test_migration_runs_under_korn_shell() {
+    # Solaris resolves "sh" to ksh93. There is no Solaris 10 Bourne shell to
+    # test against here, so ksh is the closest stand-in available.
+    ksh -c "" >/dev/null 2>&1 || startSkipping
+
+    printf 'from the old tree\n' >"${OLD_VARDIR}/cache/old_entry"
+    printf 'kept\n' >"${OLD_VARDIR}/.hidden"
+
+    _migrate_with ksh >/dev/null 2>&1
+
+    assertEquals "exit code" "0" "$?"
+    assertTrue "the old entry did not arrive" "[ -f '${RUNTIME}/cache/old_entry' ]"
+    assertTrue "hidden file did not arrive" "[ -f '${RUNTIME}/.hidden' ]"
 }
 
 # shellcheck disable=SC1090

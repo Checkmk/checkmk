@@ -9,6 +9,11 @@
 
 LEGACY_HOMEDIR="/var/lib/cmk-agent"
 
+# Linux calls this script with /bin/sh, Solaris with bash. Hence, stick to POSIX sh.
+# The runtime tree is walked with globs rather than with find, because Solaris has no
+# "find -mindepth", and "find -exec sh -c" would run Solaris 10's legacy Bourne shell,
+# which has no "${var#pattern}".
+
 usage() {
     cat >&2 <<HERE
 Usage: ${0}
@@ -25,9 +30,6 @@ HERE
 # existing one would replace it and carry the old mode along, which loses what
 # werk 22168 established: the old cache is 0755 where the new one has to be
 # 0750, and a collision can repeat at any depth.
-#
-# find walks a directory before its contents, so an entry whose parent has
-# already moved is gone by the time its own turn comes - hence the test.
 _migrate_runtime_dir() {
     old_runtime_dir="$1"
     new_runtime_dir="$2"
@@ -35,37 +37,59 @@ _migrate_runtime_dir() {
     [ -e "${old_runtime_dir}" ] && [ -e "${new_runtime_dir}" ] && [ "${old_runtime_dir}" != "${new_runtime_dir}" ] && {
         printf "Found runtime directory from previous agent installation at %s, migrating all runtime files to %s\n" "${old_runtime_dir}" "${new_runtime_dir}"
 
-        # shellcheck disable=SC2016  # the inner shell expands these, not this one
-        find "${old_runtime_dir}" -mindepth 1 -exec sh -c '
-            old_dir="$1"
-            new_dir="$2"
-            shift 2
-            for entry in "$@"; do
-                # A dangling symlink is still an entry to move, and -e alone
-                # follows the link and says it is not there.
-                [ -e "${entry}" ] || [ -L "${entry}" ] || continue
-                target="${new_dir}/${entry#"${old_dir}/"}"
-                # Anything whose target is already a directory stays put: a
-                # directory because the walk descends into it, a file because
-                # mv would move it inside that directory, where nothing reads
-                # it. What stays is reported below.
-                [ -d "${target}" ] && continue
-                # Whatever a failed parent left behind stays where it is, and
-                # reports once through that parent rather than once per child.
-                [ -d "${target%/*}" ] || continue
-                mv -f "${entry}" "${target}"
-            done
-        ' sh "${old_runtime_dir}" "${new_runtime_dir}" {} +
+        _move_directory_contents "${old_runtime_dir}" "${new_runtime_dir}"
 
-        # Only the emptied directories go. A blind "rm -r" here would delete
-        # whatever could not be moved, which is the one outcome worse than
-        # leaving the old tree in place.
-        find "${old_runtime_dir}" -depth -type d -exec rmdir {} + 2>/dev/null
+        # Only an emptied directory goes. Deleting whatever could not be moved
+        # is the one outcome worse than leaving the old tree in place.
+        rmdir "${old_runtime_dir}" 2>/dev/null
         if [ -e "${old_runtime_dir}" ]; then
             printf "Could not move everything out of %s, so it is kept. Move the rest by hand.\n" "${old_runtime_dir}"
         fi
     }
 }
+
+# Move every entry of one directory into another, descending into the
+# directories the target side already has.
+_move_directory_contents() (
+    source_dir=$1
+    target_dir=$2
+
+    # Require real directories. Following a symlink would carry the runtime data
+    # out of the tree, and the find this replaced did not follow one either.
+    if [ ! -d "$source_dir" ] || [ -L "$source_dir" ] ||
+        [ ! -d "$target_dir" ] || [ -L "$target_dir" ]; then
+        return 1
+    fi
+
+    # "*" matches no dotfile, and every pattern stays literal when it matches
+    # nothing, so each candidate is tested before it is used.
+    for entry in "$source_dir"/* "$source_dir"/.[!.]* "$source_dir"/..?*; do
+        # A dangling symlink is still an entry to move, and -e alone follows
+        # the link and says it is not there.
+        [ -e "$entry" ] || [ -L "$entry" ] || continue
+
+        entry_target=$target_dir/${entry##*/}
+
+        if [ ! -d "$entry_target" ]; then
+            mv -f "$entry" "$entry_target"
+            continue
+        fi
+
+        # The target is a directory, so it keeps the mode the package gave it
+        # and the walk descends instead of moving onto it. Anything that is not
+        # a directory itself would land inside it, where nothing reads it, and a
+        # symlink on either side would lead out of the tree. Both stay behind,
+        # and _migrate_runtime_dir reports them from what the old tree still has.
+        if [ -L "$entry_target" ] || [ ! -d "$entry" ] || [ -L "$entry" ]; then
+            continue
+        fi
+
+        _move_directory_contents "$entry" "$entry_target"
+
+        # Only an emptied directory goes.
+        rmdir "$entry" 2>/dev/null
+    done
+)
 
 _migrate_controller_registration() {
     old_homedir="$1"
@@ -111,9 +135,17 @@ _migrate_home() {
 }
 
 main() {
-    [ -n "${MK_INSTALLDIR}" ] && _migrate_runtime_dir "${OLD_MK_VARDIR}" "${MK_INSTALLDIR}/runtime"
-    [ -n "${MK_INSTALLDIR}" ] && _migrate_controller_registration "${LEGACY_HOMEDIR}" "${MK_INSTALLDIR}/runtime/controller"
-    [ -n "${MK_INSTALLDIR}" ] && _migrate_home "${LEGACY_HOMEDIR}" "${MK_INSTALLDIR}/runtime/controller"
+    [ -n "${MK_INSTALLDIR}" ] && {
+        _migrate_runtime_dir "${OLD_MK_VARDIR}" "${MK_INSTALLDIR}/runtime"
+        # Neither of these two finds anything on Solaris: the legacy home
+        # directory only ever exists on Linux.
+        _migrate_controller_registration "${LEGACY_HOMEDIR}" "${MK_INSTALLDIR}/runtime/controller"
+        _migrate_home "${LEGACY_HOMEDIR}" "${MK_INSTALLDIR}/runtime/controller"
+    }
+
+    # We're called from package manager scriptlets, where a non-zero exit code may abort the
+    # whole transaction. Individual failures are reported above, but must not be fatal.
+    exit 0
 }
 
 main "$@"

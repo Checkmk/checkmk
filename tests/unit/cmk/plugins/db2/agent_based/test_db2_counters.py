@@ -258,3 +258,21 @@ def test_check_counter_without_value() -> None:
         Result(state=State.UNKNOWN, summary="Deadlocks: no value reported"),
         Result(state=State.UNKNOWN, summary="Lockwaits: no value reported"),
     ]
+
+
+@pytest.mark.xfail(strict=True, raises=IndexError, reason="Crash group 4697")
+def test_check_db2_counters_error_message_on_two_lines() -> None:
+    section = parse_db2_counters(
+        [
+            ["TIMESTAMP", "1426610763"],
+            ["db2inst1:DEV", "deadlocks", "SQL20249NThestatementwasnotprocessed"],
+            ['"NULLID.SQLC2P31"needstobeexplicitlyrebound.'],
+            ["db2inst1:DEV", "lockwaits", "SQL20249NThestatementwasnotprocessed"],
+            ['"NULLID.SQLC2P31"needstobeexplicitlyrebound.'],
+        ]
+    )
+
+    assert list(_check_db2_counters({}, "db2inst1:DEV", {}, section)) == [
+        Result(state=State.CRIT, summary="Invalid value: SQL20249NThestatementwasnotprocessed"),
+        Result(state=State.CRIT, summary="Invalid value: SQL20249NThestatementwasnotprocessed"),
+    ]

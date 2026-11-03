@@ -213,6 +213,7 @@ rust_binary(
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
+    visibility = ["//tests/integration/agent_update:__pkg__"],
     deps = all_crate_deps() + [":cmk-agent-ctl-lib"],
 )
 

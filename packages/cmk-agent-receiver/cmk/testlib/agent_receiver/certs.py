@@ -121,8 +121,10 @@ def _generate_site_certs(site_name: str) -> _SiteCerts:
             organization=f"Checkmk Site {site_name}",
             expiry=_CERT_EXPIRY,
             key_size=_KEY_SIZE,
+            # Real site certificates carry the site name as a DNS SAN (cmk/utils/certs.py).
+            # The agent controller verifies the certificate for its CN, and webpki matches only SANs.
             subject_alternative_names=SubjectAlternativeNames(
-                [SAN.ip_address(IPv4Address("127.0.0.1"))]
+                [SAN.dns_name(site_name), SAN.ip_address(IPv4Address("127.0.0.1"))]
             ),
             # set_up_site_certs logs the issuance in each site it sets up.
             cert_log=Path(os.devnull),

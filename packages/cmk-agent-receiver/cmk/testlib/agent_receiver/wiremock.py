@@ -5,10 +5,10 @@
 
 from collections.abc import Mapping
 from http import HTTPMethod, HTTPStatus
-from typing import Literal
+from typing import Literal, Self
 
 import httpx2
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 PatternType = Literal["matchesJsonSchema", "equalTo", "matches", "equalToJson"]
 AllowedHeader = Literal["Content-Type", "Authorization"]
@@ -27,8 +27,15 @@ class Request(BaseModel):
 class Response(BaseModel):
     status: int
     body: str | None = None
+    base64Body: str | None = None
     headers: Mapping[str, str] = Field(default_factory=dict)
     fixedDelayMilliseconds: int | None = None
+
+    @model_validator(mode="after")
+    def _at_most_one_body(self) -> Self:
+        if self.body is not None and self.base64Body is not None:
+            raise ValueError("Wiremock uses either body or base64Body, not both")
+        return self
 
 
 class WMapping(BaseModel):

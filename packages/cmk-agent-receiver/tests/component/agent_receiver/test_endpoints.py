@@ -70,19 +70,16 @@ def _site_answers(
 
 
 def _site_sends_package(wiremock: Wiremock, site: AgentReceiverSite, package: bytes) -> None:
-    # The Response model of the testlib only carries text bodies.
-    httpx2.post(
-        f"{wiremock.admin_url}/mappings",
-        json={
-            "request": {"method": "POST", "url": _site_path(site, "download")},
-            "response": {
-                "status": HTTPStatus.OK,
-                "base64Body": base64.b64encode(package).decode("ascii"),
-                "headers": {"Content-Type": "application/x-deb"},
-            },
-        },
-        timeout=1,
-    ).raise_for_status()
+    _site_answers(
+        wiremock,
+        site,
+        "download",
+        Response(
+            status=HTTPStatus.OK,
+            base64Body=base64.b64encode(package).decode("ascii"),
+            headers={"Content-Type": "application/x-deb"},
+        ),
+    )
 
 
 def _forwarded(wiremock: Wiremock, site: AgentReceiverSite, action: str) -> list[FoundRequests]:

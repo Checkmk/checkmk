@@ -42,6 +42,10 @@ class AgentReceiverRunner:
         return self._site
 
     @property
+    def port(self) -> int:
+        return self._port
+
+    @property
     def base_url(self) -> str:
         return f"https://127.0.0.1:{self._port}"
 

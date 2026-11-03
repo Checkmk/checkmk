@@ -138,7 +138,10 @@ py_library(
         "@wiremock_standalone//file",
     ],
     imports = ["."],
-    visibility = ["//packages/cmk-agent-receiver/tests:__subpackages__"],
+    visibility = [
+        "//packages/cmk-agent-receiver/tests:__subpackages__",
+        "//tests/integration/agent_update:__pkg__",
+    ],
     deps = [
         ":cmk-agent-receiver",
         "//packages/cmk-crypto",

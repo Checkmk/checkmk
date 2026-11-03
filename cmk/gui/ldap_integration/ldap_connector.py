@@ -3131,7 +3131,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPAttributePlugin):
         if not roles:
             return {}
 
-        return {"roles": roles}
+        return {"roles": list(dict.fromkeys(roles))}
 
     def fetch_needed_groups_for_groups_to_roles(
         self,

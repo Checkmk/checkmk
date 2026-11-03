@@ -21,13 +21,18 @@ from cmk.plugins.prism.special_agent.v4_client import (
     PrismV4Client,
     PrismV4Error,
 )
-from cmk.plugins.prism.v4_models import Host
+from cmk.plugins.prism.v4_models import Alert, Host
 from cmk.server_side_programs.v1 import AgentMessages, Storage
 
 LOGGER = logging.getLogger(__name__)
 
 CLUSTERS_PATH = "clustermgmt/v4.0/config/clusters"
 HOSTS_PATH = "clustermgmt/v4.0/config/hosts"
+ALERTS_PATH = "monitoring/v4.0/serviceability/alerts"
+ALERTS_QUERY = {
+    "$filter": "isResolved eq false and isAcknowledged eq false",
+    "$select": "severity,message,creationTime,parameters,clusterUUID,sourceEntity",
+}
 
 # The Checkmk service timeout (60 s by default) is shared with the other data sources. A call
 # started just before the end of the budget can wait up to 15 s for Retry-After on top
@@ -141,7 +146,27 @@ def fetch_hosts(context: FetchContext) -> Sequence[Section]:
     ]
 
 
-SECTION_FETCHERS: Sequence[Fetcher] = (Fetcher("hosts", fetch_hosts),)
+def fetch_alerts(context: FetchContext) -> Sequence[Section]:
+    # Every cluster gets a section, so its service turns OK once its alerts are gone
+    by_target: dict[Target, list[dict[str, object]]] = {
+        None: [],
+        **{target: [] for target in context.routing.targets.values()},
+    }
+    for alert in context.client.list_all(ALERTS_PATH, ALERTS_QUERY):
+        cluster_id = alert.get("clusterUUID")
+        target = (
+            context.routing.host_for(cluster_id)
+            if isinstance(cluster_id, str)
+            else Unroutable("alerts without a cluster")
+        )
+        by_target.setdefault(target, []).append(Alert.model_validate(alert).to_section())
+    return [Section("prism_alerts_v2", alerts, target) for target, alerts in by_target.items()]
+
+
+SECTION_FETCHERS: Sequence[Fetcher] = (
+    Fetcher("hosts", fetch_hosts),
+    Fetcher("alerts", fetch_alerts),
+)
 
 
 class TextStore(Protocol):

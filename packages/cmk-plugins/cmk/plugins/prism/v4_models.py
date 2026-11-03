@@ -8,7 +8,7 @@
 The v4 agent writes them to the prism_*_v2 sections, the parse functions read them back.
 """
 
-from pydantic import BaseModel, ConfigDict, Field, RootModel
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
 
 class V4Model(BaseModel):
@@ -32,4 +32,35 @@ class Host(V4Model):
 
 
 class Hosts(RootModel[list[Host]]):
+    model_config = ConfigDict(frozen=True)
+
+
+class AlertParameterValue(V4Model):
+    string_value: str | None = Field(None, alias="stringValue")
+    int_value: int | None = Field(None, alias="intValue")
+
+    def as_text(self) -> str | None:
+        if self.string_value is not None:
+            return self.string_value
+        return None if self.int_value is None else str(self.int_value)
+
+
+class AlertParameter(V4Model):
+    param_name: str | None = Field(None, alias="paramName")
+    param_value: AlertParameterValue = Field(AlertParameterValue(), alias="paramValue")
+
+
+class AlertSource(V4Model):
+    type: str | None = None
+
+
+class Alert(V4Model):
+    severity: str
+    message: str
+    creation_time: AwareDatetime = Field(alias="creationTime")
+    parameters: list[AlertParameter] = []
+    source_entity: AlertSource | None = Field(None, alias="sourceEntity")
+
+
+class Alerts(RootModel[list[Alert]]):
     model_config = ConfigDict(frozen=True)

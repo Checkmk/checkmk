@@ -9,14 +9,17 @@ from collections.abc import Callable, Sequence
 from datetime import timedelta
 from http import HTTPStatus
 from pathlib import Path
+from urllib.parse import parse_qsl, urlsplit
 
 import pytest
 import responses
 
 from cmk.plugins.prism.special_agent.agent_prism import agent_prism_main, parse_arguments
 from cmk.plugins.prism.special_agent.agent_prism_v4 import (
+    ALERTS_PATH,
     ClusterRouting,
     CLUSTERS_PATH,
+    fetch_alerts,
     fetch_hosts,
     FetchContext,
     Fetcher,
@@ -58,6 +61,11 @@ def recorded_clusters() -> dict[str, object]:
 def recorded_hosts() -> dict[str, object]:
     """The host list of the same lab: the three hosts of cluster-a"""
     return _recorded("clustermgmt_config_hosts.json")
+
+
+def recorded_alerts() -> dict[str, object]:
+    """Open alerts of the same lab: three on Prism Central, one on cluster-a"""
+    return _recorded("monitoring_serviceability_alerts.json")
 
 
 CLUSTER_ID = "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
@@ -339,16 +347,130 @@ def test_hosts_without_a_cluster_are_not_routed(api: responses.RequestsMock) -> 
     ]
 
 
+def _alerts_by_target(sections: Sequence[Section]) -> dict[object, list[object]]:
+    by_target: dict[object, list[object]] = {}
+    for section in sections:
+        assert section.name == "prism_alerts_v2"
+        assert isinstance(section.payload, list)
+        by_target[section.target] = [alert["message"] for alert in section.payload]
+    return by_target
+
+
+def test_alerts_go_to_their_cluster_or_prism_central(api: responses.RequestsMock) -> None:
+    api.get(v4_url(ALERTS_PATH), json=recorded_alerts(), match=[page_matcher(0)])
+
+    assert _alerts_by_target(fetch_alerts(_context())) == {
+        None: [
+            (
+                "Disk space usage for {mount_path} on {entity} {ip_address} has exceeded "
+                "{threshold}%. {ref_msg}"
+            ),
+            "{alert_msg}",
+            "Fileserver not reachable from PC",
+        ],
+        "cluster-a": ["Host {hypervisor_address} appears to have failed. {failover_host_info}"],
+    }
+
+
+def _sent_query(api: responses.RequestsMock) -> dict[str, str]:
+    return dict(parse_qsl(urlsplit(api.calls[0].request.url or "").query))
+
+
+def test_alerts_are_fetched_unresolved_and_unacknowledged_only(
+    api: responses.RequestsMock,
+) -> None:
+    api.get(v4_url(ALERTS_PATH), json=page([], has_next=False), match=[page_matcher(0)])
+
+    fetch_alerts(_context())
+
+    assert _sent_query(api)["$filter"] == ("isResolved eq false and isAcknowledged eq false")
+
+
+def test_alerts_are_fetched_with_only_the_checked_fields(api: responses.RequestsMock) -> None:
+    api.get(v4_url(ALERTS_PATH), json=page([], has_next=False), match=[page_matcher(0)])
+
+    fetch_alerts(_context())
+
+    assert set(_sent_query(api)["$select"].split(",")) == {
+        "severity",
+        "message",
+        "creationTime",
+        "parameters",
+        "clusterUUID",
+        "sourceEntity",
+    }
+
+
+def test_cluster_without_alerts_gets_an_empty_section(api: responses.RequestsMock) -> None:
+    api.get(v4_url(ALERTS_PATH), json=page([], has_next=False), match=[page_matcher(0)])
+
+    assert _alerts_by_target(fetch_alerts(_context())) == {None: [], "cluster-a": []}
+
+
+def test_prism_central_gets_an_alerts_section_even_if_not_listed_as_cluster(
+    api: responses.RequestsMock,
+) -> None:
+    api.get(v4_url(ALERTS_PATH), json=page([], has_next=False), match=[page_matcher(0)])
+    context = FetchContext(_context().client, [], ClusterRouting({}))
+
+    assert fetch_alerts(context) == [Section("prism_alerts_v2", [], None)]
+
+
+def test_alert_keeps_only_the_checked_fields(api: responses.RequestsMock) -> None:
+    alert = {
+        "extId": "a1",
+        "clusterUUID": CLUSTER_ID,
+        "isResolved": False,
+        "title": "Host failed",
+        "severity": "CRITICAL",
+        "message": "Host {host} failed",
+        "creationTime": "2026-08-11T19:48:53.264196Z",
+        "sourceEntity": {"type": "node", "name": "host-1", "extId": "h1"},
+        "parameters": [
+            {
+                "$objectType": "monitoring.v4.common.Parameter",
+                "paramName": "host",
+                "paramValue": {
+                    "$objectType": "monitoring.v4.common.StringValue",
+                    "stringValue": "host-1",
+                },
+            }
+        ],
+    }
+    api.get(v4_url(ALERTS_PATH), json=page([alert], has_next=False), match=[page_matcher(0)])
+
+    sections = {section.target: section.payload for section in fetch_alerts(_context())}
+
+    assert sections["cluster-a"] == [
+        {
+            "severity": "CRITICAL",
+            "message": "Host {host} failed",
+            "creationTime": "2026-08-11T19:48:53.264196Z",
+            "parameters": [{"paramName": "host", "paramValue": {"stringValue": "host-1"}}],
+            "sourceEntity": {"type": "node"},
+        }
+    ]
+
+
+def test_alerts_without_a_cluster_are_not_routed(api: responses.RequestsMock) -> None:
+    alert = {"severity": "INFO", "message": "m", "creationTime": "2026-08-11T19:48:53Z"}
+    api.get(v4_url(ALERTS_PATH), json=page([alert], has_next=False), match=[page_matcher(0)])
+
+    assert Unroutable("alerts without a cluster") in [
+        section.target for section in fetch_alerts(_context())
+    ]
+
+
 def test_v4_agent_queries_only_the_v4_api(api: responses.RequestsMock) -> None:
     api.get(v4_url(CLUSTERS_PATH), json=recorded_clusters(), match=[page_matcher(0)])
     api.get(v4_url(HOSTS_PATH), json=recorded_hosts(), match=[page_matcher(0)])
+    api.get(v4_url(ALERTS_PATH), json=recorded_alerts(), match=[page_matcher(0)])
 
     agent_prism_main(parse_arguments(_v4_args()))
 
-    assert [call.request.url for call in api.calls] == [
-        f"{BASE_URL}/api/{CLUSTERS_PATH}?%24page=0&%24limit=100",
-        f"{BASE_URL}/api/{HOSTS_PATH}?%24page=0&%24limit=100",
-    ]
+    assert sorted(call.request.path_url.split("?")[0] for call in api.calls) == sorted(
+        f"/api/{path}" for path in (CLUSTERS_PATH, HOSTS_PATH, ALERTS_PATH)
+    )
 
 
 def test_v4_agent_reports_unreachable_cluster_list_in_one_line(

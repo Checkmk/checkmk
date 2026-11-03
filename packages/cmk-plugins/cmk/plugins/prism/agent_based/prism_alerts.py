@@ -7,6 +7,8 @@
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping, Sequence
+from contextlib import suppress
+from datetime import datetime, timedelta, UTC
 from typing import Any
 
 from cmk.agent_based.v2 import (
@@ -20,40 +22,86 @@ from cmk.agent_based.v2 import (
 )
 from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.prism.lib import load_json
+from cmk.plugins.prism.v4_models import Alert, Alerts
 
 Section = Sequence[Mapping[Any, Any]]
 Params = Mapping[str, object]
 
+PRISM_CENTRAL_VM = "Prism Central VM"
+
+
+def _alert(
+    context: dict[str, Any], message: str, timestamp: int, severity: str
+) -> Mapping[str, Any]:
+    with suppress(KeyError):
+        message = message.format(**context)
+    return {
+        **context,
+        "timestamp": timestamp,
+        "severity": severity,
+        "message": message.replace("\n", ", "),
+    }
+
+
+def _legacy_context(entity: Mapping[str, Any]) -> dict[str, Any]:
+    context = dict(zip(entity["context_types"], entity["context_values"]))
+    if any(
+        affected.get("entity_type") == "prism_central_vm"
+        for affected in entity.get("affected_entities") or []
+    ):
+        context["vm_type"] = PRISM_CENTRAL_VM
+    return context
+
 
 def parse_prism_alerts(string_table: StringTable) -> Section:
-    parsed = []
-    data = load_json(string_table)
-
-    for entity in data.get("entities", {}):
-        full_context = dict(zip(entity["context_types"], entity["context_values"]))
-        if any(
-            affected.get("entity_type") == "prism_central_vm"
-            for affected in entity.get("affected_entities") or []
-        ):
-            full_context["vm_type"] = "Prism Central VM"
-
-        try:
-            message = entity["message"].format(**full_context)
-        except KeyError:
-            message = entity["message"]
-
-        full_context["timestamp"] = entity["created_time_stamp_in_usecs"]
-        full_context["severity"] = entity["severity"]
-        full_context["message"] = message.replace("\n", ", ")
-
-        parsed.append(full_context)
-
-    return parsed
+    return [
+        _alert(
+            _legacy_context(entity),
+            entity["message"],
+            entity["created_time_stamp_in_usecs"],
+            entity["severity"],
+        )
+        for entity in load_json(string_table).get("entities", {})
+    ]
 
 
 agent_section_prism_alerts = AgentSection(
     name="prism_alerts",
     parse_function=parse_prism_alerts,
+)
+
+_SEVERITIES = {"INFO": "kInfo", "WARNING": "kWarning", "CRITICAL": "kCritical"}
+_EPOCH = datetime.fromtimestamp(0, UTC)
+
+
+def _context(alert: Alert) -> dict[str, Any]:
+    context: dict[str, Any] = {
+        parameter.param_name: value
+        for parameter in alert.parameters
+        if parameter.param_name is not None
+        and (value := parameter.param_value.as_text()) is not None
+    }
+    if alert.source_entity is not None and alert.source_entity.type == "prism_central_vm":
+        context["vm_type"] = PRISM_CENTRAL_VM
+    return context
+
+
+def parse_prism_alerts_v2(string_table: StringTable) -> Section:
+    return [
+        _alert(
+            _context(alert),
+            alert.message,
+            (alert.creation_time - _EPOCH) // timedelta(microseconds=1),
+            _SEVERITIES.get(alert.severity, alert.severity),
+        )
+        for alert in Alerts.model_validate_json(string_table[0][0]).root
+    ]
+
+
+agent_section_prism_alerts_v2 = AgentSection(
+    name="prism_alerts_v2",
+    parsed_section_name="prism_alerts",
+    parse_function=parse_prism_alerts_v2,
 )
 
 
@@ -73,7 +121,7 @@ def to_string(timestamp: str) -> str:
 
 def check_prism_alerts(params: Params, section: Section) -> CheckResult:
     valid_alerts = (
-        [e for e in section if e.get("vm_type") == "Prism Central VM"]
+        [e for e in section if e.get("vm_type") == PRISM_CENTRAL_VM]
         if params.get("prism_central_only")
         else section
     )

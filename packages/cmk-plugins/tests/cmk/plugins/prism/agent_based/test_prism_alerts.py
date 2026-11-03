@@ -14,7 +14,11 @@ import pytest
 from pytest import MonkeyPatch
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.prism.agent_based.prism_alerts import check_prism_alerts, parse_prism_alerts
+from cmk.plugins.prism.agent_based.prism_alerts import (
+    check_prism_alerts,
+    parse_prism_alerts,
+    parse_prism_alerts_v2,
+)
 
 SECTION = [
     {
@@ -202,6 +206,75 @@ def test_prism_central_only_keeps_alerts_of_the_prism_central_vm() -> None:
     assert list(check_prism_alerts({"prism_central_only": True}, section))[0] == Result(
         state=State.OK, summary="1 alerts"
     )
+
+
+def _v4_parameter(name: str | None, value: Mapping[str, object]) -> dict[str, object]:
+    return {"paramName": name, "paramValue": value} if name else {"paramValue": value}
+
+
+# Written by the v4 agent for a Prism Central 7.5 lab (anonymised)
+V4_PC_VM_ALERT = {
+    "severity": "WARNING",
+    "message": "Disk space usage for {mount_path} on {entity} has exceeded {threshold}%.",
+    "creationTime": "2026-11-03T01:55:52.063552Z",
+    "parameters": [
+        _v4_parameter("mount_path", {"stringValue": "/home/log/audit"}),
+        _v4_parameter(None, {"stringValue": "/home/log/audit"}),
+        _v4_parameter("entity", {"stringValue": "PCVM"}),
+        _v4_parameter("threshold", {"stringValue": "75"}),
+        _v4_parameter("service_vm_id", {"intValue": 2}),
+        _v4_parameter("message", {}),
+    ],
+    "sourceEntity": {"type": "prism_central_vm"},
+}
+V4_CLUSTER_ALERT = {
+    "severity": "CRITICAL",
+    "message": "{alert_msg}",
+    "creationTime": "2026-10-21T13:19:22.749634Z",
+    "parameters": [_v4_parameter("alert_msg", {"stringValue": "Admin password\nhas expired."})],
+    "sourceEntity": {"type": "cluster"},
+}
+
+
+def _parse_v4(*alerts: Mapping[str, object]) -> Sequence[Mapping[Any, Any]]:
+    return parse_prism_alerts_v2([[json.dumps(alerts)]])
+
+
+def test_v4_alert_gives_the_same_section_as_legacy() -> None:
+    # The legacy v2 API's answer for the same alert
+    legacy = {
+        "entities": [
+            {
+                "context_types": ["mount_path", "entity", "threshold", "service_vm_id", "vm_type"],
+                "context_values": ["/home/log/audit", "PCVM", "75", "2", "Prism Central VM"],
+                "created_time_stamp_in_usecs": 1793670952063552,
+                "message": V4_PC_VM_ALERT["message"],
+                "severity": "kWarning",
+            }
+        ]
+    }
+
+    assert _parse_v4(V4_PC_VM_ALERT) == parse_prism_alerts([[json.dumps(legacy)]])
+
+
+def test_v4_critical_alert_is_crit_with_its_message_filled_in(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(time, "localtime", time.gmtime)
+
+    assert list(check_prism_alerts({}, _parse_v4(V4_PC_VM_ALERT, V4_CLUSTER_ALERT)))[:2] == [
+        Result(state=State.CRIT, summary="2 alerts"),
+        Result(
+            state=State.OK,
+            summary="Last worst on 2026-10-21 13:19:22: 'Admin password, has expired.'",
+        ),
+    ]
+
+
+def test_v4_prism_central_only_keeps_the_alert_of_the_prism_central_vm() -> None:
+    assert list(
+        check_prism_alerts(
+            {"prism_central_only": True}, _parse_v4(V4_PC_VM_ALERT, V4_CLUSTER_ALERT)
+        )
+    )[0] == Result(state=State.WARN, summary="1 alerts")
 
 
 def test_alert_about_the_prism_central_vm_counts_as_prism_central() -> None:

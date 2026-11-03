@@ -39,6 +39,8 @@ def parse_db2_counters(string_table: StringTable) -> Section:
             node_infos = []
             # Perl not installed
             timestamp = int(line[1]) if len(line) >= 2 else None
+        elif len(line) < 2:
+            continue
         elif line[1] == "node":
             node_infos.append(" ".join(line[2:]))
         # Some databases run in DPF mode. Means that the database is split over several nodes

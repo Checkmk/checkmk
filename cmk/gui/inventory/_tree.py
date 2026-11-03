@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Literal
 
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
@@ -21,37 +20,16 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.watolib.groups_io import NothingOrChoices, PermittedPath
 from cmk.inventory.delta import ImmutableDeltaTree
-from cmk.inventory.filtering import filter_tree, SDFilterChoice
+from cmk.inventory.filtering import (
+    filter_tree,
+    make_filter_choices_from_permitted_paths,
+    PermittedPath,
+    SDFilterChoice,
+)
 from cmk.inventory.history import HistoryEntry, HistoryStore
 from cmk.inventory.store import InventoryStore
-from cmk.inventory.trees import ImmutableTree, parse_visible_raw_path, SDKey, SDNodeName
-
-
-def _transform_attribute[T](
-    f: Callable[[str], T], x: NothingOrChoices | None
-) -> Literal["nothing", "all"] | Sequence[T]:
-    if x is None:
-        return "all"
-    if x == "nothing":
-        return x
-    return [f(y) for y in x[1]]  # choices
-
-
-def make_filter_choices_from_permitted_paths(
-    permitted_paths: Sequence[PermittedPath],
-) -> Sequence[SDFilterChoice]:
-    return [
-        SDFilterChoice(
-            path=parse_visible_raw_path(entry["visible_raw_path"]),
-            pairs=_transform_attribute(SDKey, entry.get("attributes")),
-            columns=_transform_attribute(SDKey, entry.get("columns")),
-            nodes=_transform_attribute(SDNodeName, entry.get("nodes")),
-        )
-        for entry in permitted_paths
-        if entry.get("visible_raw_path")
-    ]
+from cmk.inventory.trees import ImmutableTree
 
 
 @request_memoize()

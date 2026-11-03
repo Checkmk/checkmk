@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import cast, Literal, NotRequired, override, TypedDict
 
@@ -13,6 +13,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.sites import live
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoMultiConfigFile
+from cmk.inventory.filtering import PermittedPath
 from cmk.utils import paths
 
 ContactGroupUsageFinder = Callable[[GroupName, GlobalSettings], list[tuple[str, str]]]
@@ -25,16 +26,6 @@ class ContactGroupUsageFinderRegistry(Registry[ContactGroupUsageFinder]):
 
 
 contact_group_usage_finder_registry = ContactGroupUsageFinderRegistry()
-
-NothingOrChoices = Literal["nothing"] | tuple[Literal["choices"], Sequence[str]]
-
-
-class PermittedPath(TypedDict):
-    visible_raw_path: str
-    attributes: NotRequired[NothingOrChoices]
-    columns: NotRequired[NothingOrChoices]
-    nodes: NotRequired[NothingOrChoices]
-
 
 InventoryPaths = Literal["allow_all", "forbid_all"] | tuple[Literal["paths"], list[PermittedPath]]
 

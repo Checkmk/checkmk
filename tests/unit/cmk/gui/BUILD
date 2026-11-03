@@ -127,7 +127,6 @@ py_cmk_test(
         "//cmk/gui/search:matchers",
         "//cmk/gui/utils:middle",
         "//cmk/gui/views:components",
-        "//cmk/gui/watolib:groups_io",
         "//cmk/product_usage",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:exceptions",

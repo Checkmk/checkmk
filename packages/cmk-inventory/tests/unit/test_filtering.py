@@ -13,6 +13,8 @@ from cmk.inventory.filtering import (
     filter_delta_tree,
     filter_tree,
     make_filter_choices_from_api_request_paths,
+    make_filter_choices_from_permitted_paths,
+    PermittedPath,
     SDFilterChoice,
 )
 from cmk.inventory.trees import SDKey, SDNodeName
@@ -493,3 +495,97 @@ def test_filter_networking_tree_empty() -> None:
     assert len(filtered.get_tree((SDNodeName("networking"),))) == 0
     assert len(filtered.get_tree((SDNodeName("hardware"),))) == 0
     assert len(filtered.get_tree((SDNodeName("software"),))) == 0
+
+
+@pytest.mark.parametrize(
+    "entry, expected_filter_choice",
+    [
+        (
+            {
+                "visible_raw_path": "path.to.node",
+            },
+            SDFilterChoice(
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
+                pairs="all",
+                columns="all",
+                nodes="all",
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "nodes": ("choices", ["node"]),
+            },
+            SDFilterChoice(
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
+                pairs="all",
+                columns="all",
+                nodes=[SDNodeName("node")],
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "attributes": ("choices", ["key"]),
+            },
+            SDFilterChoice(
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
+                pairs=[SDKey("key")],
+                columns="all",
+                nodes="all",
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "columns": ("choices", ["key"]),
+            },
+            SDFilterChoice(
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
+                pairs="all",
+                columns=[SDKey("key")],
+                nodes="all",
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "nodes": "nothing",
+            },
+            SDFilterChoice(
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
+                pairs="all",
+                columns="all",
+                nodes="nothing",
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "attributes": "nothing",
+            },
+            SDFilterChoice(
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
+                pairs="nothing",
+                columns="all",
+                nodes="all",
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "columns": "nothing",
+            },
+            SDFilterChoice(
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
+                pairs="all",
+                columns="nothing",
+                nodes="all",
+            ),
+        ),
+    ],
+)
+def test_make_filter_choices_from_permitted_paths(
+    entry: PermittedPath, expected_filter_choice: SDFilterChoice
+) -> None:
+    assert make_filter_choices_from_permitted_paths([entry])[0] == expected_filter_choice

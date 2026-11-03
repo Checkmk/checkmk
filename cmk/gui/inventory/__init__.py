@@ -30,7 +30,6 @@ from ._tree import (
     load_latest_delta_tree,
     load_tree,
     load_tree_of_host,
-    make_filter_choices_from_permitted_paths,
     report_corrupted_trees,
     verify_permission,
 )
@@ -50,7 +49,6 @@ __all__ = [
     "load_latest_delta_tree",
     "load_tree",
     "load_tree_of_host",
-    "make_filter_choices_from_permitted_paths",
     "register",
     "report_corrupted_trees",
     "vs_element_inventory_visible_raw_path",

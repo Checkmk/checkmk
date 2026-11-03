@@ -28,7 +28,6 @@ py_library(
         "//cmk/gui/visuals",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
-        "//cmk/gui/watolib:groups_io",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",

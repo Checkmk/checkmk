@@ -130,6 +130,7 @@ py_library(
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-inventory:model",
     ],
 )
 

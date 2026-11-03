@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping, Sequence, Set
+from collections.abc import Callable, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, NotRequired, TypedDict
 
 from ._choices import consolidate_filter_funcs, get_filtered_dict
 from .delta import ImmutableDeltaAttributes, ImmutableDeltaTable, ImmutableDeltaTree
@@ -14,6 +14,7 @@ from .trees import (
     ImmutableAttributes,
     ImmutableTable,
     ImmutableTree,
+    parse_visible_raw_path,
     SDKey,
     SDNodeName,
     SDPath,
@@ -140,6 +141,41 @@ def make_filter_choices_from_api_request_paths(
 
     return [
         _make_filter_choice(parse_internal_raw_path(raw_path)) for raw_path in api_request_paths
+    ]
+
+
+NothingOrChoices = Literal["nothing"] | tuple[Literal["choices"], Sequence[str]]
+
+
+class PermittedPath(TypedDict):
+    visible_raw_path: str
+    attributes: NotRequired[NothingOrChoices]
+    columns: NotRequired[NothingOrChoices]
+    nodes: NotRequired[NothingOrChoices]
+
+
+def _transform_attribute[T](
+    f: Callable[[str], T], x: NothingOrChoices | None
+) -> Literal["nothing", "all"] | Sequence[T]:
+    if x is None:
+        return "all"
+    if x == "nothing":
+        return x
+    return [f(y) for y in x[1]]
+
+
+def make_filter_choices_from_permitted_paths(
+    permitted_paths: Sequence[PermittedPath],
+) -> Sequence[SDFilterChoice]:
+    return [
+        SDFilterChoice(
+            path=parse_visible_raw_path(entry["visible_raw_path"]),
+            pairs=_transform_attribute(SDKey, entry.get("attributes")),
+            columns=_transform_attribute(SDKey, entry.get("columns")),
+            nodes=_transform_attribute(SDNodeName, entry.get("nodes")),
+        )
+        for entry in permitted_paths
+        if entry.get("visible_raw_path")
     ]
 
 

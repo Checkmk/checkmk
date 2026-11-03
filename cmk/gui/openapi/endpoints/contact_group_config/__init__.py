@@ -82,8 +82,6 @@ from cmk.gui.watolib.groups import (
 from cmk.gui.watolib.groups_io import (
     InventoryPaths,
     load_contact_group_information,
-    NothingOrChoices,
-    PermittedPath,
 )
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.pending_changes import (
@@ -91,6 +89,7 @@ from cmk.gui.watolib.pending_changes import (
     PendingChanges,
     PendingChangesStore,
 )
+from cmk.inventory.filtering import NothingOrChoices, PermittedPath
 from cmk.livestatus_client import SiteConfigurations
 from cmk.utils import paths
 from cmk.web.utils import permission_verification as permissions

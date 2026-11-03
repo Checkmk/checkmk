@@ -93,7 +93,7 @@ def get_statuses(resource: Resource) -> Iterator[tuple[str, VMStatus]]:
 
         status_name, status_value = code.split("/")[:2]
         parsed_status_value = status_value.lower() if status_value != "-" else "unknown"
-        message = status.get("message")
+        message = " ".join((status.get("message") or "").split())
         parsed_message = f" ({message})" if message else ""
 
         yield status_name, VMStatus(status_name, parsed_status_value, parsed_message)

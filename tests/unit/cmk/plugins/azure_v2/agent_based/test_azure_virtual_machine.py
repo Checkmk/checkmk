@@ -238,7 +238,6 @@ def test_check_azure_virtual_machines(
     )
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4866")
 def test_check_azure_virtual_machine_multi_line_status_message() -> None:
     section = Resource(
         id="/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test1/providers/Microsoft.Compute/virtualMachines/VM-test-1",

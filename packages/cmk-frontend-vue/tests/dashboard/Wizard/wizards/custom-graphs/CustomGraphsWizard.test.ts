@@ -11,6 +11,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
 import CustomGraphsWizard from '@/dashboard/components/Wizard/wizards/custom-graphs/CustomGraphsWizard.vue'
+import { useProvideCustomGraphPermissions } from '@/dashboard/composables/useProvideCustomGraphPermissions'
 import { useProvideDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
@@ -82,6 +83,10 @@ function renderWizard(editWidgetSpec: WidgetSpec | null, mayEditCustomGraph: boo
   const provider = defineComponent({
     setup() {
       useProvideDashboardConstants(CONSTANTS)
+      useProvideCustomGraphPermissions({
+        edit: mayEditCustomGraph,
+        publish: { allUsers: false, contactGroups: false, sites: false }
+      })
       useProvideMissingRuntimeFiltersAction(ref(true), () => {})
       return () =>
         h(
@@ -92,7 +97,6 @@ function renderWizard(editWidgetSpec: WidgetSpec | null, mayEditCustomGraph: boo
             dashboardKey: { name: 'main', owner: '' },
             contextFilters: {},
             editWidgetSpec,
-            mayEditCustomGraph,
             onCloneGraph
           })
         )

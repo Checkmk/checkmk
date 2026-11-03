@@ -19,7 +19,11 @@ const allPermissions: DashboardPermissions = {
   publish_to_contact_groups: true,
   publish_to_foreign_contact_groups: true,
   publish_to_sites: true,
-  edit_custom_graph: true
+  edit_custom_graph: true,
+  publish_custom_graph_to_all: true,
+  publish_custom_graph_to_contact_groups: true,
+  publish_custom_graph_to_foreign_contact_groups: true,
+  publish_custom_graph_to_sites: true
 }
 
 const mockGetContactGroups = vi.hoisted(() =>
@@ -196,7 +200,11 @@ describe('AccessSettings', () => {
         publish_to_contact_groups: false,
         publish_to_foreign_contact_groups: false,
         publish_to_sites: false,
-        edit_custom_graph: false
+        edit_custom_graph: false,
+        publish_custom_graph_to_all: false,
+        publish_custom_graph_to_contact_groups: false,
+        publish_custom_graph_to_foreign_contact_groups: false,
+        publish_custom_graph_to_sites: false
       })
       expect(getToggleButton('Owner (private)')).toBeInTheDocument()
     })

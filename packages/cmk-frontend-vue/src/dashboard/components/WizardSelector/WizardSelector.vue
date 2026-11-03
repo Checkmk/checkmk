@@ -42,7 +42,6 @@ interface AllWizardsProps {
   editWidgetSpec: WidgetSpec | null
   editWidgetId: string | null
   dashboardFeatures: DashboardFeatures
-  mayEditCustomGraph?: boolean
 }
 
 const { _t } = usei18n()
@@ -215,7 +214,6 @@ const handleAddEditWidget = (
         :range="range"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
-        :may-edit-custom-graph="mayEditCustomGraph ?? false"
         @clone-graph="(name) => (linkedGraphToClone = name)"
         @go-back="handleGoBack"
         @close="handleClose"

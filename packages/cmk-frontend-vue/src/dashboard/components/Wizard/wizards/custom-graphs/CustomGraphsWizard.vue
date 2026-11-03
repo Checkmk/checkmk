@@ -40,7 +40,6 @@ interface CustomGraphsWizardProps {
   dashboardKey: DashboardKey
   contextFilters: ContextFilters
   editWidgetSpec: WidgetSpec | null
-  mayEditCustomGraph?: boolean
 }
 
 const props = defineProps<CustomGraphsWizardProps>()
@@ -101,7 +100,6 @@ const contextConfiguredFilters = computed((): ConfiguredFilters => {
           :range="range"
           :filters="contextConfiguredFilters"
           :edit-widget-spec="props.editWidgetSpec || null"
-          :may-edit-custom-graph="props.mayEditCustomGraph ?? false"
           @clone-graph="(name) => emit('cloneGraph', name)"
           @add-widget="
             (content, generalSettings, filterContext) =>

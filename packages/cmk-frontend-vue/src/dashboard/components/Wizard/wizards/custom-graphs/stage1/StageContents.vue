@@ -12,6 +12,7 @@ import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, ref, toValue } from 'vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
+import { useInjectCustomGraphPermissions } from '@/dashboard/composables/useProvideCustomGraphPermissions'
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type {
   WidgetContent,
@@ -34,10 +35,11 @@ interface Stage1Props {
   dashboardKey: DashboardKey
   filters: ConfiguredFilters
   editWidgetSpec: WidgetSpec | null
-  mayEditCustomGraph: boolean
 }
 
 const props = defineProps<Stage1Props>()
+// Injected before the first await, which ends the setup context.
+const { edit: mayEditCustomGraph } = useInjectCustomGraphPermissions()
 
 const handler = await useCustomGraph(props.filters, props.editWidgetSpec || undefined)
 
@@ -65,7 +67,7 @@ const addWidget = async () => {
 }
 
 const isUpdate = computed(() => props.editWidgetSpec !== null)
-const mayClone = isUpdate.value && props.mayEditCustomGraph
+const mayClone = isUpdate.value && mayEditCustomGraph
 
 const cloneableGraph = computed(() => (mayClone ? handler.customGraph.value : null))
 

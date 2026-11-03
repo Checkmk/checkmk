@@ -57,7 +57,11 @@ const defaultProps = {
     publish_to_contact_groups: true,
     publish_to_foreign_contact_groups: true,
     publish_to_sites: true,
-    edit_custom_graph: true
+    edit_custom_graph: true,
+    publish_custom_graph_to_all: true,
+    publish_custom_graph_to_contact_groups: true,
+    publish_custom_graph_to_foreign_contact_groups: true,
+    publish_custom_graph_to_sites: true
   }
 }
 

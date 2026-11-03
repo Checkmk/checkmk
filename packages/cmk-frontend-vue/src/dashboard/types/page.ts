@@ -42,6 +42,17 @@ export interface DashboardPermissions {
   publish_to_foreign_contact_groups: boolean
   publish_to_sites: boolean
   edit_custom_graph: boolean
+  publish_custom_graph_to_all: boolean
+  publish_custom_graph_to_contact_groups: boolean
+  publish_custom_graph_to_foreign_contact_groups: boolean
+  publish_custom_graph_to_sites: boolean
+}
+
+/** Whom the user may publish a custom graph to, from the page's `DashboardPermissions`. */
+export interface CustomGraphPublishPermissions {
+  allUsers: boolean
+  contactGroups: boolean
+  sites: boolean
 }
 
 export interface DashboardPageProperties {

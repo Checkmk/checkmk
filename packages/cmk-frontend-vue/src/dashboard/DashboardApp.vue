@@ -50,6 +50,7 @@ import { useDashboardVisualTitle } from '@/dashboard/composables/useDashboardVis
 import { useDashboardWidgets } from '@/dashboard/composables/useDashboardWidgets.ts'
 import { useDashboardsManager } from '@/dashboard/composables/useDashboardsManager.ts'
 import { useProvideDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
+import { useProvideCustomGraphPermissions } from '@/dashboard/composables/useProvideCustomGraphPermissions'
 import { useProvideDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction.ts'
 import { useProvideVisualInfos } from '@/dashboard/composables/useProvideVisualInfos'
@@ -185,6 +186,16 @@ const widgetTitles = useComputeWidgetTitles(
   dashboardFilters.baseFilters,
   dashboardWidgets.widgetCores
 )
+useProvideCustomGraphPermissions({
+  edit: props.permissions.edit_custom_graph,
+  publish: {
+    allUsers: props.permissions.publish_custom_graph_to_all,
+    contactGroups:
+      props.permissions.publish_custom_graph_to_contact_groups ||
+      props.permissions.publish_custom_graph_to_foreign_contact_groups,
+    sites: props.permissions.publish_custom_graph_to_sites
+  }
+})
 const dashboardWidgetWorkflows = getDashboardWidgetWorkflows({
   ntopActive: props.available_features.ntop_active,
   mayEditCustomGraph: props.permissions.edit_custom_graph
@@ -791,7 +802,6 @@ const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(
           :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit ?? null)"
           :edit-widget-id="widgetToEdit"
           :dashboard-features="available_features.dashboard_features"
-          :may-edit-custom-graph="props.permissions.edit_custom_graph"
           @back-button="handleWizardSelectorGoBack"
           @close-wizard="handleWizardClose"
           @add-widget="addWidget"

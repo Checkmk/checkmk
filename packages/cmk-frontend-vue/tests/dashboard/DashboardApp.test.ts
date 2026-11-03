@@ -162,7 +162,11 @@ const pageProperties: DashboardPageProperties = {
     publish_to_contact_groups: false,
     publish_to_foreign_contact_groups: false,
     publish_to_sites: false,
-    edit_custom_graph: false
+    edit_custom_graph: false,
+    publish_custom_graph_to_all: false,
+    publish_custom_graph_to_contact_groups: false,
+    publish_custom_graph_to_foreign_contact_groups: false,
+    publish_custom_graph_to_sites: false
   },
   logged_in_user: OWNER,
   global_time_picker: {

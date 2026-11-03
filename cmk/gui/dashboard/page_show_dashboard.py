@@ -175,8 +175,16 @@ def _dashboard_permissions() -> dict[str, bool]:
             "general.publish_dashboards_to_foreign_groups"
         ),
         "publish_to_sites": user.may("general.publish_dashboards_to_sites"),
-        # false on community, which does not register the permission
+        # false on community, which does not register the custom graph permissions
         "edit_custom_graph": user.may("general.edit_custom_graph"),
+        "publish_custom_graph_to_all": user.may("general.publish_custom_graph"),
+        "publish_custom_graph_to_contact_groups": user.may(
+            "general.publish_to_groups_custom_graph"
+        ),
+        "publish_custom_graph_to_foreign_contact_groups": user.may(
+            "general.publish_to_foreign_groups_custom_graph"
+        ),
+        "publish_custom_graph_to_sites": user.may("general.publish_to_sites_custom_graph"),
     }
 
 

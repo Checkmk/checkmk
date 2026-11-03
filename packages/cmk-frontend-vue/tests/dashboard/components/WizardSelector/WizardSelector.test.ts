@@ -75,7 +75,6 @@ function renderSelector() {
       editWidgetSpec: LINKED_WIDGET,
       editWidgetId: 'widget-1',
       dashboardFeatures: DashboardFeatures.UNRESTRICTED,
-      mayEditCustomGraph: true,
       'onEdit-widget': onEditWidget
     }
   })

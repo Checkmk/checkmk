@@ -1086,6 +1086,7 @@ allows = [
   "cmk.maps.gui",
   "cmk.maps.rest_api",
   "cmk.otel_collector",
+  "cmk.robotmk.gui.openapi",
   "cmk.telemetry.gui",
 ]
 
@@ -1824,6 +1825,17 @@ allows = [
 # The query client reads the synthetic monitoring database through the data backend.
 [components."cmk.robotmk.telemetry"]
 allows = ["cmk.data_backend"]
+
+[components."cmk.robotmk.gui.openapi"]
+allows = [
+  "@ccc",
+  "@livestatus_client",
+  "cmk.data_backend",
+  "cmk.gui",
+  "cmk.robotmk.telemetry",
+  "cmk.utils",
+  "cmk.web.utils",
+]
 
 [components."cmk.otel_collector"]
 allows = ["@ccc"]

@@ -5189,6 +5189,19 @@ class TelemetryMetricsClient(RestApiClient):
         )
 
 
+class SyntheticMonitoringClient(RestApiClient):
+    domain: DomainType = "synthetic_test_execution"
+    default_version = APIVersion.INTERNAL
+
+    def list_buckets(self, body: Mapping[str, object], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/list_buckets/invoke",
+            body=dict(body),
+            expect_ok=expect_ok,
+        )
+
+
 class CustomServiceClient(RestApiClient):
     domain: DomainType = "custom_service"
     default_version = APIVersion.UNSTABLE
@@ -6033,6 +6046,7 @@ class ClientRegistry:
     MonitorHosts: MonitorHostsClient
     CustomService: CustomServiceClient
     Alert: AlertClient
+    SyntheticMonitoring: SyntheticMonitoringClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -6110,4 +6124,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         MonitorHosts=MonitorHostsClient(request_handler, url_prefix),
         CustomService=CustomServiceClient(request_handler, url_prefix),
         Alert=AlertClient(request_handler, url_prefix),
+        SyntheticMonitoring=SyntheticMonitoringClient(request_handler, url_prefix),
     )

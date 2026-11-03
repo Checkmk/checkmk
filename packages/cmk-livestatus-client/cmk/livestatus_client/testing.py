@@ -1290,6 +1290,37 @@ LIST_OPERATORS: dict[str, OperatorFunc] = {
 }
 """The comparison operators with their own meaning on a list column: contains, lacks."""
 
+_QUOTED_DICT_ENTRY = re.compile(r"'((?:[^']|'')*)' '((?:[^']|'')*)'")
+
+
+def _dict_entry(key_and_value: str) -> tuple[str, str]:
+    """Split the operand of a filter on a dict column into its key and value.
+
+    Examples:
+
+        >>> _dict_entry("'cmk/rmk/type' 'test'")
+        ('cmk/rmk/type', 'test')
+
+        >>> _dict_entry("'it''s' 'a value'")
+        ("it's", 'a value')
+
+        >>> _dict_entry("cmk/site heute")
+        ('cmk/site', 'heute')
+
+    """
+    if (match := _QUOTED_DICT_ENTRY.fullmatch(key_and_value)) is not None:
+        key, value = match.groups()
+        return key.replace("''", "'"), value.replace("''", "'")
+    key, _separator, value = key_and_value.partition(" ")
+    return key, value
+
+
+DICT_OPERATORS: dict[str, OperatorFunc] = {
+    "=": lambda entries, value: _dict_entry(value) in entries.items(),
+    "!=": lambda entries, value: _dict_entry(value) not in entries.items(),
+}
+"""The comparison operators with their own meaning on a dict column: has entry, lacks entry."""
+
 
 def make_filter_func(line: str) -> FilterKeyFunc:
     """Make a filter-function from a LiveStatus-query filter row.
@@ -1372,6 +1403,12 @@ def _comparison_function(field_name: str, op: Operator, value: list[Any]) -> Fil
         ...
         KeyError: 'foo'
 
+        >>> _comparison_function("labels", "=", ["'os' 'linux'"])({'labels': {'os': 'linux'}})
+        True
+
+        >>> _comparison_function("labels", "!=", ["'os' 'linux'"])({'labels': {'os': 'linux'}})
+        False
+
     Args:
         field_name:
             The field, to which the value shall be compared
@@ -1391,6 +1428,8 @@ def _comparison_function(field_name: str, op: Operator, value: list[Any]) -> Fil
         field_value = entry[field_name]
         if isinstance(field_value, list) and op in LIST_OPERATORS:
             return LIST_OPERATORS[op](field_value, *value)
+        if isinstance(field_value, dict) and op in DICT_OPERATORS and value != [""]:
+            return DICT_OPERATORS[op](field_value, *value)
         return OPERATORS[op](field_value, *value)
 
     return _apply_op

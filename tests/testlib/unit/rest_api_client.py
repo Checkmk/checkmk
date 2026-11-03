@@ -5209,6 +5209,25 @@ class SyntheticMonitoringClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def show_execution(
+        self,
+        execution_id: str,
+        site_id: str,
+        host_name: str,
+        service_description: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{execution_id}",
+            query_params={
+                "site_id": site_id,
+                "host_name": host_name,
+                "service_description": service_description,
+            },
+            expect_ok=expect_ok,
+        )
+
 
 class CustomServiceClient(RestApiClient):
     domain: DomainType = "custom_service"

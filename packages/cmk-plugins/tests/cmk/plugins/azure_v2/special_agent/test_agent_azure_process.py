@@ -9,6 +9,7 @@
 import argparse
 import datetime
 import json
+import logging
 import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -376,6 +377,7 @@ def _get_batch_answer(**values: float | None) -> Sequence[Mapping[str, object]]:
 async def test_filter_otel_resources_reporting_metrics(
     answers: Sequence[object],
     expected_names: Sequence[str],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     api_client = AsyncMock(spec=BaseAsyncApiClient)
     api_client.request_async.side_effect = answers
@@ -394,13 +396,23 @@ async def test_filter_otel_resources_reporting_metrics(
         for name, location in [("live", "westeurope"), ("silent", "westeurope"), ("no_region", "")]
     ]
 
-    kept, issues = await filter_otel_resources_reporting_metrics(
-        api_client, resources, "sub", "azure_host", datetime.datetime.now(datetime.UTC), debug=False
-    )
+    with caplog.at_level(logging.INFO):
+        kept = await filter_otel_resources_reporting_metrics(
+            api_client,
+            resources,
+            "sub",
+            "azure_host",
+            datetime.datetime.now(datetime.UTC),
+            debug=False,
+        )
 
+    no_hosts = [message for message in caplog.messages if message.startswith("No host for")]
     assert [resource.name for resource in kept] == expected_names
-    assert len(issues) == len(resources) - len(kept)
-    assert "no_region (t): it has no region" in str(issues.dumpinfo())
+    assert len(no_hosts) == len(resources) - len(kept)
+    assert (
+        "No host for no_region (t): it has no region, so Azure cannot be asked for its metric values"
+        in no_hosts
+    )
 
 
 def _otel_resources(*names: str) -> Sequence[AzureResource]:
@@ -495,7 +507,7 @@ async def test_filter_otel_resources_reporting_metrics_keeps_answers(
     api_client = AsyncMock(spec=BaseAsyncApiClient)
     api_client.request_async.side_effect = answers
 
-    kept, _issues = await filter_otel_resources_reporting_metrics(
+    kept = await filter_otel_resources_reporting_metrics(
         api_client, resources, "sub", "azure_host", now, debug=False
     )
 

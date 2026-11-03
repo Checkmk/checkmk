@@ -2368,10 +2368,11 @@ async def filter_otel_resources_reporting_metrics(
     cache_id: str,
     now: datetime.datetime,
     debug: bool,
-) -> tuple[list[AzureResource], IssueCollector]:
+) -> list[AzureResource]:
     """Drop the resources that reported no metric values in the last 24 hours
 
-    A resource gets no host when the question cannot be answered.
+    A resource gets no host when the question cannot be answered. The reason is only in the log,
+    so that the service details show no such resources.
     """
     to_ask: defaultdict[tuple[str, str], list[str]] = defaultdict(list)
     for resource in resources:
@@ -2391,7 +2392,6 @@ async def filter_otel_resources_reporting_metrics(
         )
     )
     answers = {r: has_values for report in reports for r, has_values in report.items()}
-    issues = IssueCollector()
     kept = []
     for resource in resources:
         resource_id = resource.info["id"].lower()
@@ -2404,12 +2404,11 @@ async def filter_otel_resources_reporting_metrics(
             reason = "it has no region, so Azure cannot be asked for its metric values"
         else:
             reason = "cannot tell if Azure has metric values for it"
-        issues.add(
-            "info",
-            "OpenTelemetry resources",
-            f"No host for {resource.name} ({resource.info['type']}): {reason}",
+        LOGGER.info(
+            "No host for %(name)s (%(type)s): %(reason)s",
+            {"name": resource.name, "type": resource.info["type"], "reason": reason},
         )
-    return kept, issues
+    return kept
 
 
 def write_resource_groups_sections(resource_groups: Mapping[str, AzureResourceGroup]) -> None:
@@ -3076,7 +3075,7 @@ async def process_resources(
     }
     # metrics must be gathered before the actual section writing
     # (which happens in the concurrent tasks below)
-    (otel_resources, otel_issues), _ = await asyncio.gather(
+    otel_resources, _ = await asyncio.gather(
         filter_otel_resources_reporting_metrics(
             mgmt_client,
             get_otel_only_resources(
@@ -3089,10 +3088,6 @@ async def process_resources(
         ),
         process_metrics(mgmt_client, subscription, monitored_resources_by_id, args),
     )
-    if otel_issues:
-        agent_info_section = AzureSection("agent_info")
-        agent_info_section.add(otel_issues.dumpinfo())
-        agent_info_section.write()
     resources_groups = {r.group for r in [*monitored_resources_by_id.values(), *otel_resources]}
     groups_with_monitored_resources = {
         group_name: group

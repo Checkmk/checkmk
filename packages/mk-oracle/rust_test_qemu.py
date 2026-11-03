@@ -2,8 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""mk-oracle-tests-qemu: mk-oracle's Windows component tests, in a Windows
-test VM, against a real database.
+"""mk-oracle-tests-qemu: mk-oracle's Windows test binaries (lib unit tests
+and component tests), in a Windows test VM, against a real database.
 
 Environment: CI_ORA2_DB_TEST (required) and CI_ORA1_DB_TEST (optional, a
 second endpoint with its own credentials, e.g. sys as sysdba). A localhost

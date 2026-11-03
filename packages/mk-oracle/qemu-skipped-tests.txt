@@ -5,3 +5,6 @@
 
 # Needs a local Oracle installation; the image has none.
 test_detection_registry
+
+# Needs CI_ORA_TEST_PASSWORD, which the tier does not pass on.
+test_extract_from_ci_env_var

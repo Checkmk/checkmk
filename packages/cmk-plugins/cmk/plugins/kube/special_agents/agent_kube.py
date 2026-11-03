@@ -88,10 +88,22 @@ AGENT_NAME = "kube"
 
 TOKEN_OPTION = "token"
 
+DEFAULT_EXCLUDED_NODE_ROLES = ["control-plane", "infra"]
+
+_PROFILE_DIR = "tmp/check_mk/debug"
+
+
+def _profile_file(filename: str) -> Path:
+    path = Path(filename).resolve()
+    allowed = (Path.home() / _PROFILE_DIR).resolve()
+    if not path.is_relative_to(allowed):
+        raise argparse.ArgumentTypeError(f"Profiles can only be stored in {allowed}")
+    return path
+
 
 class Profile:
-    def __init__(self, *, profile_file: str) -> None:
-        self._profile_file = Path(profile_file)
+    def __init__(self, *, profile_file: Path) -> None:
+        self._profile_file = profile_file
         self._profile: cProfile.Profile | None = None
 
     def __enter__(self) -> Profile:
@@ -114,7 +126,7 @@ class Profile:
             f.write(
                 "#!/usr/bin/env python3\n"
                 "import pstats\n"
-                f'stats = pstats.Stats("{self._profile_file}")\n'
+                f"stats = pstats.Stats({str(self._profile_file)!r})\n"
                 "stats.sort_stats('cumtime').print_stats()\n"
             )
         script_path.chmod(0o755)
@@ -212,7 +224,9 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
     p.add_argument(
         "--profile",
         metavar="FILE",
-        help="Profile the performance of the agent and write the output to a file",
+        type=_profile_file,
+        help="Profile the performance of the agent and write the output to a file "
+        f"within ~/{_PROFILE_DIR}",
     )
     p.add_argument(
         "--k8s-api-connect-timeout",
@@ -230,10 +244,11 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
     )
     group = p.add_mutually_exclusive_group()
     group.add_argument(
-        "--cluster-aggregation-exclude-node-roles",
-        nargs="+",
-        default=["control-plane", "infra"],
+        "--cluster-aggregation-exclude-node-role",
+        action="append",
+        default=None,
         dest="roles",
+        metavar="ROLE",
         help="You may find that some Nodes don't add resources to the overall "
         "workload your Cluster can handle. This option allows you to remove "
         "Nodes from aggregations on the Cluster host based on their role. A "
@@ -241,7 +256,8 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
         "with name 'node-role.kubernetes.io/{role}'.  This affects the "
         "following services: Memory resources, CPU resources, Pod resources. "
         "Only Services on the Cluster host are affected. By default, Nodes "
-        "with role control-plane and infra are omitted.",
+        "with role control-plane and infra are omitted. This option can be "
+        "given multiple times.",
     )
     group.add_argument(
         "--cluster-aggregation-include-all-nodes",
@@ -315,6 +331,8 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
         "--cluster-collector-endpoint.",
     )
     arguments = p.parse_args(args)
+    if arguments.roles is None:
+        arguments.roles = list(DEFAULT_EXCLUDED_NODE_ROLES)
     return arguments
 
 

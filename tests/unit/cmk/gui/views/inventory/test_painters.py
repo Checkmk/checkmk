@@ -94,6 +94,10 @@ def test_inventory_node_painter_cannot_be_exported_to_csv() -> None:
         painter.export_for_csv({"host_inventory": _tree()}, EmptyCell(), user, context)
 
 
+def test_inventory_node_painter_offers_no_sorter() -> None:
+    assert make_inventory_node_painter(_node_hint()).sorter is None
+
+
 def test_inventory_tree_painter_refuses_a_host_name_found_on_several_sites() -> None:
     painter = make_inventory_tree_painter()
     context = make_painter_context(UserPermissions({}, {}, {}, []))

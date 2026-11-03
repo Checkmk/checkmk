@@ -556,7 +556,6 @@ def make_inventory_node_painter(hint: NodeDisplayHint) -> InternalPainter:
         short_title=hint.short_title,
         tooltip_title=hint.long_inventory_title,
         columns=["host_inventory", "host_structured_status"],
-        sorter=hint.name,
         # Only attributes can be shown in reports. There is currently no way to render trees.
         # The HTML code would simply be stripped by the default rendering mechanism which does
         # not look good for the HW/SW Inventory tree

@@ -126,7 +126,7 @@ def _create_id(curve: Curve, *, inverse: bool, seen: Counter[str]) -> str:
     return base if seen[base] == 1 else f"{base}#{seen[base]}"
 
 
-def _distinct_color(index: int) -> str:
+def distinct_color(index: int) -> str:
     # Golden-ratio hue stepping gives each fanned-out curve a visually distinct colour.
     hue = (index * 0.618033988749895) % 1.0
     red, green, blue = colorsys.hls_to_rgb(hue, 0.5, 0.6)
@@ -150,7 +150,7 @@ def _series_curve_attributes(
     return CurveAttributes(
         title=_resolve_series_title(attributes.title, label_macros, fanned=fanned),
         unit=attributes.unit,
-        color=_distinct_color(index) if fanned else attributes.color,
+        color=distinct_color(index) if fanned else attributes.color,
     )
 
 

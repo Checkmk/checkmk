@@ -82,6 +82,7 @@ from ._metric_data import (
 from ._metric_query import (
     AttributeGroup,
     canonical_mapping_key,
+    consolidation_function_from_wire,
     ConsolidationFunction,
     GaugeAvg,
     GaugeLast,
@@ -172,6 +173,7 @@ __all__ = [
     "context_from_json",
     "compute_graph_ranges_for_width",
     "ConfigVariableGraphTimeranges",
+    "consolidation_function_from_wire",
     "ConsolidationFunction",
     "DEFAULT_INTERACTION",
     "default_time_range_seconds",

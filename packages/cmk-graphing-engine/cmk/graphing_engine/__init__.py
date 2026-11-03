@@ -48,6 +48,7 @@ from ._evaluation._fetch import (
     fetched_time_range,
 )
 from ._evaluation._graph_evaluation import (
+    distinct_color,
     evaluate_graphs,
     EvaluatedCurve,
     EvaluatedGraph,
@@ -288,6 +289,7 @@ __all__ = [
     "VerticalRange",
     "VerticalRangeKind",
     "build_matched_graphs",
+    "distinct_color",
     "evaluate_graphs",
     "drawn_curves",
     "DrawnCurve",

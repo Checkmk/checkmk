@@ -7,9 +7,10 @@
 import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, override
+from typing import assert_never, Literal, override
 
 from cmk.graphing_engine import TimeSeries
+from cmk.shared_typing import consolidation as wire
 
 type AttributeGroup = Literal["resource", "scope", "data_point"]
 
@@ -166,6 +167,87 @@ type ConsolidationFunction = (
     | HistogramPreserveFractionBelow
     | HistogramPreserveFractionBetween
 )
+
+
+def consolidation_function_from_wire(fn: wire.ConsolidationFunction) -> ConsolidationFunction:
+    match fn:
+        case wire.ConsolidationGauge(function=name, lookback_seconds=lookback):
+            match name:
+                case "gauge_last":
+                    return GaugeLast(lookback_seconds=lookback)
+                case "gauge_max":
+                    return GaugeMax(lookback_seconds=lookback)
+                case "gauge_avg":
+                    return GaugeAvg(lookback_seconds=lookback)
+                case "gauge_min":
+                    return GaugeMin(lookback_seconds=lookback)
+                case _:
+                    assert_never(name)
+        case wire.ConsolidationSum(function=name, lookback_seconds=lookback):
+            match name:
+                case "sum_rate":
+                    return SumRate(lookback_seconds=lookback)
+                case "sum_last_raw":
+                    return SumLastRaw(lookback_seconds=lookback)
+                case "sum_delta":
+                    return SumDelta(lookback_seconds=lookback)
+                case _:
+                    assert_never(name)
+        case wire.ConsolidationHistogramScalar(function=name, lookback_seconds=lookback):
+            match name:
+                case "histogram_count_delta":
+                    return HistogramCountDelta(lookback_seconds=lookback)
+                case "histogram_count_rate":
+                    return HistogramCountRate(lookback_seconds=lookback)
+                case "histogram_sum_rate":
+                    return HistogramSumRate(lookback_seconds=lookback)
+                case "histogram_sum_delta":
+                    return HistogramSumDelta(lookback_seconds=lookback)
+                case "histogram_sum_raw":
+                    return HistogramSumRaw(lookback_seconds=lookback)
+                case "histogram_count_raw":
+                    return HistogramCountRaw(lookback_seconds=lookback)
+                case _:
+                    assert_never(name)
+        case wire.ConsolidationHistogramQuantile():
+            return HistogramQuantile(lookback_seconds=fn.lookback_seconds, percentile=fn.percentile)
+        case wire.ConsolidationHistogramFractionBelow():
+            return HistogramFractionBelow(
+                lookback_seconds=fn.lookback_seconds, threshold=fn.threshold
+            )
+        case wire.ConsolidationHistogramFractionBetween():
+            return HistogramFractionBetween(
+                lookback_seconds=fn.lookback_seconds,
+                lower_threshold=fn.lower_threshold,
+                upper_threshold=fn.upper_threshold,
+            )
+        case wire.ConsolidationHistogramPreserveQuantile():
+            return HistogramPreserveQuantile(
+                lookback_seconds=fn.lookback_seconds,
+                percentile=fn.percentile,
+                group_by=_group_by_from_wire(fn.group_by),
+            )
+        case wire.ConsolidationHistogramPreserveFractionBelow():
+            return HistogramPreserveFractionBelow(
+                lookback_seconds=fn.lookback_seconds,
+                threshold=fn.threshold,
+                group_by=_group_by_from_wire(fn.group_by),
+            )
+        case wire.ConsolidationHistogramPreserveFractionBetween():
+            return HistogramPreserveFractionBetween(
+                lookback_seconds=fn.lookback_seconds,
+                lower_threshold=fn.lower_threshold,
+                upper_threshold=fn.upper_threshold,
+                group_by=_group_by_from_wire(fn.group_by),
+            )
+        case _:
+            assert_never(fn)
+
+
+def _group_by_from_wire(
+    group_by: Sequence[wire.ConsolidationGroupByKey],
+) -> tuple[GraphLineGroupByKey, ...]:
+    return tuple(GraphLineGroupByKey(kind=key.kind, key=key.key) for key in group_by)
 
 
 def canonical_mapping_key(mapping: Mapping[str, object] | None) -> str:

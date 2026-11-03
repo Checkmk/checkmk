@@ -191,3 +191,31 @@ def test_check_prism_alerts(  # type: ignore[misc]
         )
         == expected_check_result
     )
+
+
+def test_prism_central_only_keeps_alerts_of_the_prism_central_vm() -> None:
+    section = [
+        {**SECTION[0], "severity": "kCritical"},
+        {**SECTION[1], "vm_type": "Prism Central VM"},
+    ]
+
+    assert list(check_prism_alerts({"prism_central_only": True}, section))[0] == Result(
+        state=State.OK, summary="1 alerts"
+    )
+
+
+def test_alert_about_the_prism_central_vm_counts_as_prism_central() -> None:
+    entity = {
+        "context_types": ["mount_path"],
+        "context_values": ["/home/log/audit"],
+        "affected_entities": [
+            {"entity_type": "prism_central_vm", "entity_name": "Prism Central VM"}
+        ],
+        "created_time_stamp_in_usecs": 1793670952063552,
+        "message": "Disk space usage for {mount_path} has exceeded 75%.",
+        "severity": "kWarning",
+    }
+
+    assert parse_prism_alerts([[json.dumps({"entities": [entity]})]])[0]["vm_type"] == (
+        "Prism Central VM"
+    )

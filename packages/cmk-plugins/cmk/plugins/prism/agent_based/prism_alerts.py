@@ -22,7 +22,7 @@ from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.prism.lib import load_json
 
 Section = Sequence[Mapping[Any, Any]]
-StringMap = Mapping[str, str]
+Params = Mapping[str, object]
 
 
 def parse_prism_alerts(string_table: StringTable) -> Section:
@@ -31,6 +31,11 @@ def parse_prism_alerts(string_table: StringTable) -> Section:
 
     for entity in data.get("entities", {}):
         full_context = dict(zip(entity["context_types"], entity["context_values"]))
+        if any(
+            affected.get("entity_type") == "prism_central_vm"
+            for affected in entity.get("affected_entities") or []
+        ):
+            full_context["vm_type"] = "Prism Central VM"
 
         try:
             message = entity["message"].format(**full_context)
@@ -66,9 +71,9 @@ def to_string(timestamp: str) -> str:
     return render.datetime(int(timestamp) / 1000000.0)
 
 
-def check_prism_alerts(params: StringMap, section: Section) -> CheckResult:
+def check_prism_alerts(params: Params, section: Section) -> CheckResult:
     valid_alerts = (
-        [e for e in section if e.get("context", {}).get("vm_type") == "Prism Central VM"]  #
+        [e for e in section if e.get("vm_type") == "Prism Central VM"]
         if params.get("prism_central_only")
         else section
     )

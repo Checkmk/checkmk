@@ -6,7 +6,6 @@
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.inventory.filters import FilterInvText
-from cmk.gui.views.inventory import _register_sorter
 from cmk.gui.views.inventory._display_hints import (
     _cmp_inv_generic,
     _decorate_sort_function,
@@ -15,13 +14,12 @@ from cmk.gui.views.inventory._display_hints import (
 )
 from cmk.gui.views.inventory._paint_functions import inv_paint_generic
 from cmk.gui.views.inventory._sorter import attribute_sorter_from_hint
-from cmk.gui.views.sorter import sorter_registry
 from cmk.inventory.raw_paths import InventoryPath, TreeSource
 from cmk.inventory.trees import ImmutableTree, SDKey
 from cmk.web.utils.request_cache import RequestCache
 
 
-def test_registered_sorter_cmp() -> None:
+def test_attribute_sorter_ranks_two_missing_values_equal() -> None:
     name = "inv_key"
     long_title = "System ➤ Product"
     hint = AttributeDisplayHint(
@@ -42,10 +40,8 @@ def test_registered_sorter_cmp() -> None:
             is_show_more=True,
         ),
     )
-    _register_sorter(sorter_registry, attribute_sorter_from_hint((), SDKey("key"), hint))
-    sorter = sorter_registry[name]
     assert (
-        sorter.cmp(
+        attribute_sorter_from_hint((), SDKey("key"), hint).cmp(
             {"host_inventory": ImmutableTree()},
             {"host_inventory": ImmutableTree()},
             parameters=None,

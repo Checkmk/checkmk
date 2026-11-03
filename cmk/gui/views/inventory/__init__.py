@@ -22,7 +22,7 @@ from cmk.gui.type_defs import (
     VisualLinkSpec,
 )
 from cmk.gui.valuespec import DictionaryEntry
-from cmk.gui.views.sorter import Sorter, SorterRegistry
+from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.filter.components import FilterComponent
@@ -47,7 +47,7 @@ from ._painters import (
     make_inventory_column_painter,
     make_inventory_node_painter,
 )
-from ._sorter import attribute_sorter_from_hint, column_sorter_from_hint, SorterFromHint
+from ._sorter import attribute_sorter_from_hint, column_sorter_from_hint
 from ._tree_renderer import make_table_view_name_of_host
 from .registry import (
     inv_paint_functions,
@@ -71,18 +71,6 @@ def register_inv_paint_functions(mapping: Mapping[str, object]) -> None:
     for k, v in mapping.items():
         if k.startswith(PAINT_FUNCTION_NAME_PREFIX) and callable(v):
             inv_paint_functions.register(InvPaintFunction(name=k, func=v))
-
-
-def _register_sorter(sorter_registry: SorterRegistry, from_hint: SorterFromHint) -> None:
-    sorter_registry.register(
-        Sorter(
-            ident=from_hint["name"],
-            title=from_hint["title"],
-            columns=from_hint["columns"],
-            sort_function=lambda r1, r2, **_kwargs: from_hint["cmp"](r1, r2),
-            load_inv=from_hint.get("load_inv", False),
-        )
-    )
 
 
 def _icon_of_table(table: TableWithView) -> DynamicIcon:
@@ -308,7 +296,7 @@ def _register_table_view(
     filters = []
     for col_hint in table.columns.values():
         painter_registry.register(make_inventory_column_painter(col_hint))
-        _register_sorter(sorter_registry, column_sorter_from_hint(col_hint))
+        sorter_registry.register(column_sorter_from_hint(col_hint))
         filter_registry.register(col_hint.filter)
 
         painters.append(ColumnSpec(col_hint.name))
@@ -346,10 +334,7 @@ def register_table_views_and_columns(
             painter_registry.register(
                 make_inventory_attribute_painter(node_hint.path, key, attr_hint)
             )
-            _register_sorter(
-                sorter_registry,
-                attribute_sorter_from_hint(node_hint.path, key, attr_hint),
-            )
+            sorter_registry.register(attribute_sorter_from_hint(node_hint.path, key, attr_hint))
             filter_registry.register(attr_hint.filter)
 
         if isinstance(node_hint.table, TableWithView):

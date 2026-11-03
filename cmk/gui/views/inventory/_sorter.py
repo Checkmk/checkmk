@@ -3,43 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Sequence
-from typing import TypedDict
-
-from cmk.gui.type_defs import Row
+from cmk.gui.views.sorter import Sorter
 from cmk.inventory.trees import SDKey, SDPath
 
 from ._display_hints import AttributeDisplayHint, ColumnDisplayHintOfView
 
 
-class SorterFromHint(TypedDict):
-    name: str
-    title: str
-    columns: Sequence[str]
-    load_inv: bool
-    cmp: Callable[[Row, Row], int]
-
-
-def attribute_sorter_from_hint(
-    path: SDPath, key: SDKey, hint: AttributeDisplayHint
-) -> SorterFromHint:
-    return SorterFromHint(
-        name=hint.name,
+def attribute_sorter_from_hint(path: SDPath, key: SDKey, hint: AttributeDisplayHint) -> Sorter:
+    return Sorter(
+        ident=hint.name,
         title=hint.long_inventory_title,
         columns=["host_inventory", "host_structured_status"],
-        load_inv=True,
-        cmp=lambda left, right: hint.sort_function(
-            left["host_inventory"].get_attribute(path, key),
-            right["host_inventory"].get_attribute(path, key),
+        sort_function=lambda r1, r2, **_kwargs: hint.sort_function(
+            r1["host_inventory"].get_attribute(path, key),
+            r2["host_inventory"].get_attribute(path, key),
         ),
+        load_inv=True,
     )
 
 
-def column_sorter_from_hint(hint: ColumnDisplayHintOfView) -> SorterFromHint:
-    return SorterFromHint(
-        name=hint.name,
+def column_sorter_from_hint(hint: ColumnDisplayHintOfView) -> Sorter:
+    return Sorter(
+        ident=hint.name,
         title=hint.long_inventory_title,
         columns=[hint.name],
+        sort_function=lambda r1, r2, **_kwargs: hint.sort_function(
+            r1.get(hint.name), r2.get(hint.name)
+        ),
         load_inv=False,
-        cmp=lambda left, right: hint.sort_function(left.get(hint.name), right.get(hint.name)),
     )

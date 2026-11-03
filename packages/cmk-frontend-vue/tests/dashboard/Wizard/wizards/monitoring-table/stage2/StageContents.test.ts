@@ -57,6 +57,21 @@ describe('monitoring table data configuration', () => {
     expect(content.value.sort).toEqual(['state:asc'])
   })
 
+  it('removes only the sorter whose X is clicked', async () => {
+    const user = userEvent.setup()
+    const { content } = renderStage2({ sort: ['state:asc', 'name:desc'] })
+
+    await user.click(screen.getAllByRole('button', { name: 'Remove element' })[0]!)
+
+    expect(content.value.sort).toEqual(['name:desc'])
+  })
+
+  it('offers a drag handle to reorder each sorter', () => {
+    renderStage2({ sort: ['state:asc', 'name:desc'] })
+
+    expect(screen.getAllByRole('button', { name: 'Drag to reorder' })).toHaveLength(2)
+  })
+
   it('stores the chosen row limit', async () => {
     const user = userEvent.setup()
     const { content } = renderStage2()

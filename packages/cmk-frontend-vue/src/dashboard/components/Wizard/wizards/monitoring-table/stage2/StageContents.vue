@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
-import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
+import CmkList from 'cmk-ui-library/components/CmkList'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
@@ -91,6 +91,18 @@ function replaceSorter(index: number, sorter: Sorter | null) {
   content.value = withSorters(
     content.value,
     sorters.value.flatMap((current, i) => (i !== index ? [current] : sorter ? [sorter] : []))
+  )
+}
+
+function removeSorter(index: number): boolean {
+  replaceSorter(index, null)
+  return true
+}
+
+function reorderSorters(order: number[]) {
+  content.value = withSorters(
+    content.value,
+    order.map((index) => sorters.value[index]!)
   )
 }
 
@@ -249,47 +261,42 @@ function goNext() {
       <TableFormRow>
         <FieldDescription>{{ _t('Sorting') }}</FieldDescription>
         <FieldComponent>
-          <ul class="db-stage-contents__list">
-            <li
-              v-for="(sorter, index) in sorters"
-              :key="sorter.column"
-              class="db-stage-contents__item"
-            >
-              <CmkDropdown
-                :model-value="sorter.column"
-                :label="_t('Sort column')"
-                :options="{ type: 'fixed', suggestions: sorterColumnChoices(sorter) }"
-                @update:model-value="
-                  (value) => value !== null && replaceSorter(index, { ...sorter, column: value })
-                "
-              />
-              <CmkDropdown
-                :model-value="sorter.direction"
-                :label="_t('Sort direction')"
-                :options="{
-                  type: 'fixed',
-                  suggestions: [
-                    { name: 'asc', title: _t('Ascending') },
-                    { name: 'desc', title: _t('Descending') }
-                  ]
-                }"
-                @update:model-value="
-                  (value) =>
-                    replaceSorter(index, {
-                      ...sorter,
-                      direction: value === 'desc' ? 'desc' : 'asc'
-                    })
-                "
-              />
-              <CmkIconButton
-                name="delete"
-                size="small"
-                :title="_t('Remove sorter')"
-                :aria-label="_t('Remove sorter')"
-                @click="replaceSorter(index, null)"
-              />
-            </li>
-          </ul>
+          <CmkList
+            :items-props="{ sorter: sorters }"
+            :try-delete="removeSorter"
+            :drag-callbacks="{ onReorder: reorderSorters }"
+          >
+            <template #item-props="{ index, sorter }">
+              <div class="db-stage-contents__sorter">
+                <CmkDropdown
+                  :model-value="sorter.column"
+                  :label="_t('Sort column')"
+                  :options="{ type: 'fixed', suggestions: sorterColumnChoices(sorter) }"
+                  @update:model-value="
+                    (value) => value !== null && replaceSorter(index, { ...sorter, column: value })
+                  "
+                />
+                <CmkDropdown
+                  :model-value="sorter.direction"
+                  :label="_t('Sort direction')"
+                  :options="{
+                    type: 'fixed',
+                    suggestions: [
+                      { name: 'asc', title: _t('Ascending') },
+                      { name: 'desc', title: _t('Descending') }
+                    ]
+                  }"
+                  @update:model-value="
+                    (value) =>
+                      replaceSorter(index, {
+                        ...sorter,
+                        direction: value === 'desc' ? 'desc' : 'asc'
+                      })
+                  "
+                />
+              </div>
+            </template>
+          </CmkList>
           <CmkButton
             variant="secondary"
             :disabled="unsortedColumns.length === 0"
@@ -311,16 +318,9 @@ function goNext() {
   gap: var(--dimension-4);
 }
 
-.db-stage-contents__list {
-  margin: 0 0 var(--spacing-half);
-  padding: 0;
-  list-style: none;
-}
-
-.db-stage-contents__item {
+.db-stage-contents__sorter {
   display: flex;
   align-items: center;
   gap: var(--spacing-half);
-  padding: 2px 0;
 }
 </style>

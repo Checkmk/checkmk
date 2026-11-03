@@ -1,6 +1,9 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "pkg_mkdirs", "strip_prefix")
 load("@rules_python//python:defs.bzl", "py_binary")
+load("//bazel/rules:crlf_files.bzl", "crlf_files")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:sign_azure.bzl", "sign_file_azure")
 load("//bazel/rules:xcomp/cc.bzl", "cc_binary")
 load("//bazel/rules:xcomp/package_msi.bzl", "package_msi")
@@ -281,6 +284,101 @@ _WATEST_QEMU_TIERS = [
     "simulation",
 ]
 
+# cmd.exe needs CRLF line ends, which a Linux checkout lacks.
+crlf_files(
+    name = "watest_qemu_script",
+    srcs = ["watest/watest-qemu.cmd"],
+    suffixes = [".cmd"],
+)
+
+pkg_files(
+    name = "watest_qemu_bin",
+    testonly = True,
+    srcs = [
+        # The share FileInfoTest.Unc and FileInfoTest.Unicode read.
+        "watest/watest-qemu-share.ps1",
+        ":watest-windows",
+        ":watest_qemu_script",
+    ],
+    renames = {":watest-windows": "watest.exe"},
+)
+
+pkg_files(
+    name = "watest_qemu_checkout",
+    srcs = glob(["install/resources/**"]) + ["//doc:ohm_binaries"],
+    strip_prefix = strip_prefix.from_root(),
+)
+
+# Fixture text files are compared by size or run through cmd.exe.
+crlf_files(
+    name = "watest_qemu_crlf",
+    srcs = glob(["test_files/**"]),
+    suffixes = [
+        ".bat",
+        ".cmd",
+        ".output",
+        ".ps1",
+    ],
+)
+
+pkg_files(
+    name = "watest_qemu_fixtures",
+    srcs = [":watest_qemu_crlf"],
+    strip_prefix = strip_prefix.from_pkg("watest_qemu_crlf"),
+)
+
+pkg_files(
+    name = "watest_qemu_test_root",
+    srcs = ["install/resources/check_mk.yml"] + glob(["test_files/config/*.yml"]),
+    prefix = "test/root",
+)
+
+pkg_files(
+    name = "watest_qemu_test_root_plugins",
+    srcs = ["//agents/windows/plugins:top_level_plugins"],
+    prefix = "test/root/plugins",
+)
+
+pkg_files(
+    name = "watest_qemu_test_data",
+    srcs = glob([
+        "test_files/config/*.cfg",
+        "test_files/config/*.test.ini",
+        "test_files/config/*.yml",
+        "test_files/cap/*.test.cap",
+        "test_files/unit_test/*.dat",
+        "test_files/unit_test/*.ini",
+        "test_files/unit_test/*.state",
+    ]),
+    prefix = "test/data",
+)
+
+pkg_mkdirs(
+    name = "watest_qemu_test_data_bin",
+    dirs = ["test/data/bin"],
+)
+
+# What watest-qemu needs in the guest: the checkout paths the suite reads,
+# and the WNX_TEST_ROOT tree, mirroring run_tests.ps1's Create_UnitTestDir:
+# without it watest falls back to SOLUTION_DIR resolution, and the tests
+# reading the staged root (PluginTest.FilesAndFoldersComponent,
+# PlayerTest.RealLifeInventory_Simulation) skip or fail on the empty
+# plugins dir.
+pkg_tar(
+    name = "watest_qemu_stage",
+    testonly = True,
+    srcs = [
+        ":watest_qemu_bin",
+        ":watest_qemu_checkout",
+        ":watest_qemu_fixtures",
+        ":watest_qemu_test_data",
+        ":watest_qemu_test_data_bin",
+        ":watest_qemu_test_root",
+        ":watest_qemu_test_root_plugins",
+    ],
+    extension = "tar.gz",
+)
+
 # The whole watest suite inside real-Windows QEMU VMs, one test per tier
 # of run_tests.ps1: unit, *Component (component), *ComponentExt (ext) and
 # *_Simulation (simulation), each in its own VM with an auto-logged-on
@@ -293,19 +391,9 @@ _WATEST_QEMU_TIERS = [
         args = [
             tier,
             "$(rootpath watest/qemu-excluded-tests.txt)",
-            "$(rootpath :watest-windows)",
         ],
-        data = [
-            "watest/qemu-excluded-tests.txt",
-            "watest/watest-qemu.cmd",
-            "watest/watest-qemu-share.ps1",
-            ":watest-windows",
-            ":watest_data",
-            "//agents/windows/plugins",
-            # The PowerShell plugins, which :plugins leaves out on this branch.
-            "//agents/windows/plugins:msi_cmk_plugin_files",
-            "//doc:ohm_binaries",
-        ],
+        data = ["watest/qemu-excluded-tests.txt"],
+        stage = ":watest_qemu_stage",
     )
     for tier in _WATEST_QEMU_TIERS
 ]

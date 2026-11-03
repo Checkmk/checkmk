@@ -77,6 +77,12 @@ py_binary(
     visibility = ["//visibility:public"],
 )
 
+# The crlf_files() action.
+py_binary(
+    name = "crlf_files",
+    srcs = ["crlf_files.py"],
+)
+
 py_pytest_main(
     name = "__test__",
     deps = [requirement("pytest")],

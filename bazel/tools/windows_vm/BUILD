@@ -75,19 +75,17 @@ py_binary(
     ],
 )
 
-# What a *-qemu test tier's runner uses (qemu_test): staging its payload,
-# running it in the guest.
+# What a *-qemu test tier's runner uses (qemu_test): copying its stage into
+# the guest, running it there.
 py_library(
     name = "tier",
-    srcs = [
-        "qemu_windows/stage.py",
-        "qemu_windows/tier.py",
-    ],
+    srcs = ["qemu_windows/tier.py"],
     imports = ["."],
     visibility = ["//bazel/rules:__pkg__"],
     deps = [
         ":session",
         ":state",
+        "@rules_python//python/runfiles",
     ],
 )
 

@@ -3,10 +3,10 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_test")
 load("//agents/wnx/test-vm:image.bzl", "TEST_VM_DATA", "WINDOWS_TEST_VM", "test_vm_env")
 
-# Stages a payload and runs it in the guest.
+# Copies a payload's stage into the guest and runs it there.
 _TIER = "//bazel/tools/windows_vm:tier"
 
-def _qemu_test_impl(name, visibility, src, args, data, env_inherit, timeout):
+def _qemu_test_impl(name, visibility, src, args, data, env_inherit, stage, timeout):
     # The runner on its own, compatible and not manual, so that `bazel lint`
     # and the repository's py-file checks see it.
     py_library(
@@ -23,9 +23,10 @@ def _qemu_test_impl(name, visibility, src, args, data, env_inherit, timeout):
         srcs = [src],
         main = src.name,
         args = args,
-        data = data + [Label(label) for label in TEST_VM_DATA],
-        # What qemu_windows/tier.py needs to resume the test VM.
-        env = test_vm_env(),
+        data = data + ([stage] if stage else []) + [Label(label) for label in TEST_VM_DATA],
+        # What qemu_windows/tier.py needs to resume the test VM, and the
+        # archive it copies into the guest.
+        env = test_vm_env() | ({"QEMU_STAGE": "$(rlocationpath %s)" % stage} if stage else {}),
         env_inherit = env_inherit,
         tags = [
             # Needs /dev/kvm and a VM state created on this host.
@@ -48,8 +49,8 @@ def _qemu_test_impl(name, visibility, src, args, data, env_inherit, timeout):
     )
 
 qemu_test = macro(
-    doc = """Runs a Python runner that stages a payload with qemu_windows.stage and
-runs it with qemu_windows.tier, in its own real-Windows QEMU VM, resumed from the
+    doc = """Runs a Python runner that runs a payload with qemu_windows.tier, from
+the stage Bazel built of it, in its own real-Windows QEMU VM, resumed from the
 Server Core test image's saved state; see qemu_windows/tier.py for the guest
 contract.""",
     implementation = _qemu_test_impl,
@@ -60,7 +61,7 @@ targets in data.""",
             configurable = False,
         ),
         "data": attr.label_list(
-            doc = "Runfiles the runner stages into the guest.",
+            doc = "Runfiles of the runner on the host; what the guest needs goes in stage.",
             configurable = False,
         ),
         "env_inherit": attr.string_list(
@@ -71,6 +72,12 @@ targets in data.""",
             doc = "The runner, a Python script.",
             mandatory = True,
             allow_single_file = [".py"],
+            configurable = False,
+        ),
+        "stage": attr.label(
+            doc = """The archive of what the payload needs in the guest (a pkg_tar()),
+extracted into its directory there.""",
+            allow_single_file = True,
             configurable = False,
         ),
         "timeout": attr.string(

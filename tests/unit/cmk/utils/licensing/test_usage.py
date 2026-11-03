@@ -7,7 +7,7 @@
 import logging
 import os
 import time
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
@@ -19,6 +19,7 @@ import time_machine
 
 import livestatus
 
+from cmk.ccc.version import Edition
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.licensing.basics.paths import get_license_usage_report_file_path
 from cmk.licensing.basics.protocol_version import CURRENT_USAGE_HISTORY_VERSION
@@ -28,6 +29,7 @@ from cmk.licensing.export import (
     RawLicenseUsageReport,
 )
 from cmk.licensing.helper import rot47
+from cmk.licensing.internal import LicenseUsageCounterName
 from cmk.licensing.usage import (
     _load_extensions,
     _parse_extensions,
@@ -48,8 +50,9 @@ from cmk.licensing.usage import (
 )
 from cmk.utils import man_pages
 
+_INSTANCE_ID: Final = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
 _SAMPLE: Final = LicenseUsageSample(
-    instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
+    instance_id=_INSTANCE_ID,
     site_hash="site-hash",
     version="2.5.0p1",
     edition="cce",
@@ -74,11 +77,41 @@ _SAMPLE: Final = LicenseUsageSample(
 )
 _OLDER_SAMPLE: Final = replace(_SAMPLE, sample_time=1699920000, num_hosts=14)
 _NOW: Final = Now(dt=datetime(2023, 11, 15, 12, 0), tz="UTC")
+_NOW_AT_MIDNIGHT: Final = Now(dt=datetime(2023, 11, 15), tz="UTC")
+_FEATURE_COUNTERS: Final[Mapping[LicenseUsageCounterName, int]] = {
+    "synthetic_tests": 9,
+    "synthetic_tests_excluded": 10,
+    "synthetic_kpis": 11,
+    "synthetic_kpis_excluded": 12,
+    "active_metric_series": 13,
+}
 
 
 def _sample_at(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSample:
     return replace(
         _SAMPLE, instance_id=instance_id, site_hash=site_hash, sample_time=int(now.dt.timestamp())
+    )
+
+
+def _make_sample(
+    now: Now = _NOW_AT_MIDNIGHT,
+    cmk_edition: str = "ultimate",
+    platform: str = "Ubuntu 24.04",
+    feature_counters: Mapping[LicenseUsageCounterName, int] = _FEATURE_COUNTERS,
+) -> LicenseUsageSample:
+    return make_sample(
+        now,
+        _INSTANCE_ID,
+        "site-hash",
+        version="2.5.0p1",
+        cmk_edition=cmk_edition,
+        platform=platform,
+        is_cma=True,
+        hosts_counter=HostsOrServicesCounter(num=1, num_shadow=3, num_excluded=4),
+        services_counter=HostsOrServicesCounter(num=5, num_shadow=7, num_excluded=8),
+        cloud_counter=HostsOrServicesCloudCounter(hosts=2, services=6),
+        feature_counters=feature_counters,
+        extensions=LicenseUsageExtensions(ntop=True),
     )
 
 
@@ -246,21 +279,50 @@ def test__parse_cloud_hosts_or_services(
     assert hosts_or_services_cloud_counter.services == excepted_services
 
 
+def test_make_sample_fills_each_field_from_its_input() -> None:
+    sample = _make_sample()
+
+    assert sample == replace(_SAMPLE, is_cma=True, sample_time=int(_NOW_AT_MIDNIGHT.dt.timestamp()))
+
+
+def test_make_sample_time_is_the_midnight_before_now() -> None:
+    sample = _make_sample(now=_NOW)
+
+    assert sample.sample_time == int(_NOW_AT_MIDNIGHT.dt.timestamp())
+
+
+@pytest.mark.parametrize(
+    "edition, expected_code",
+    [
+        pytest.param(Edition.COMMUNITY, "cre", id="community"),
+        pytest.param(Edition.PRO, "cee", id="pro"),
+        pytest.param(Edition.ULTIMATE, "cce", id="ultimate"),
+        pytest.param(Edition.ULTIMATEMT, "cme", id="ultimatemt"),
+        pytest.param(Edition.CLOUD, "cse", id="cloud"),
+    ],
+)
+def test_make_sample_gives_the_edition_its_protocol_code(
+    edition: Edition, expected_code: str
+) -> None:
+    sample = _make_sample(cmk_edition=edition.short)
+
+    assert sample.edition == expected_code
+
+
+def test_make_sample_without_feature_counters_has_them_as_0() -> None:
+    sample = _make_sample(feature_counters={})
+
+    assert (
+        sample.num_synthetic_tests,
+        sample.num_synthetic_tests_excluded,
+        sample.num_synthetic_kpis,
+        sample.num_synthetic_kpis_excluded,
+        sample.num_active_metric_series,
+    ) == (0, 0, 0, 0, 0)
+
+
 def test_make_sample_cuts_platform_to_50_characters() -> None:
-    sample = make_sample(
-        _NOW,
-        UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
-        "site-hash",
-        version="2.5.0p1",
-        cmk_edition="ultimate",
-        platform="p" * 60,
-        is_cma=False,
-        hosts_counter=HostsOrServicesCounter(num=0, num_shadow=0, num_excluded=0),
-        services_counter=HostsOrServicesCounter(num=0, num_shadow=0, num_excluded=0),
-        cloud_counter=HostsOrServicesCloudCounter(hosts=0, services=0),
-        feature_counters={},
-        extensions=LicenseUsageExtensions(ntop=False),
-    )
+    sample = _make_sample(platform="p" * 60)
 
     assert sample.platform == "p" * 50
 

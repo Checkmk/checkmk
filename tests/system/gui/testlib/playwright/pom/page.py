@@ -9,7 +9,7 @@ from re import Pattern
 from typing import Literal, override
 from urllib.parse import quote_plus, urljoin
 
-from playwright.sync_api import expect, FrameLocator, Locator, Page, Response
+from playwright.sync_api import expect, Locator, Page, Response
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID, Keys, LocatorHelper
@@ -533,18 +533,7 @@ class MainArea(LocatorHelper):
     ) -> Locator:
         if not selector:
             selector = ":scope"
-
-        # Mixed-version tests drive older remote sites where the page content
-        # still renders inside the main iframe. Current sites render it in the
-        # shared document; popups, dialogs and slide-ins teleport to <body>,
-        # so no narrower container than the document itself covers them all.
-        _base: FrameLocator | Page
-        self.page.wait_for_load_state("load")
-        if self.page.locator("iframe[name='main']").count():
-            _base = self.page.frame_locator("iframe[name='main']")
-        else:
-            _base = self.page
-        _loc = _base.locator(selector)
+        _loc = self._iframe_locator.locator(selector)
         kwargs = self._build_locator_kwargs(
             has_text=has_text,
             has_not_text=has_not_text,

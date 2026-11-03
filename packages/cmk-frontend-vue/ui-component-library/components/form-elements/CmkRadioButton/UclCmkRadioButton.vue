@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkRadioButtonCodeExample.vue?raw'
 
@@ -38,6 +38,8 @@ export const rangeOptions: Options<string>[] = [
   { title: 'Custom', name: 'custom' }
 ]
 
+type RadioGroupOrientation = 'vertical' | 'horizontal'
+
 export const panelConfig = {
   modelValue: {
     type: 'list' as const,
@@ -49,6 +51,15 @@ export const panelConfig = {
     type: 'boolean' as const,
     title: 'Disabled',
     initialState: false
+  },
+  orientation: {
+    type: 'list' as const,
+    title: 'Orientation',
+    options: listOptions<RadioGroupOrientation>({
+      vertical: 'Vertical',
+      horizontal: 'Horizontal'
+    }),
+    initialState: 'vertical' as const
   },
   externalErrors: {
     type: 'string' as const,
@@ -87,6 +98,7 @@ const propState = new PanelStateCreator<typeof CmkRadioGroup, 'label'>().createR
         v-model="propState.modelValue"
         label="Time range"
         :disabled="propState.disabled"
+        :orientation="propState.orientation"
         :external-errors="propState.externalErrors ? [propState.externalErrors] : []"
       >
         <CmkRadioButton

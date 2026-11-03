@@ -77,3 +77,23 @@ test('CmkRadioGroup renders updated validation', async () => {
 
   await screen.findByText('some new validation')
 })
+
+test.each(['vertical', 'horizontal'] as const)(
+  'CmkRadioGroup announces its %s orientation',
+  (orientation) => {
+    render(
+      defineComponent({
+        components: { CmkRadioGroup, CmkRadioButton },
+        data: () => ({ modelValue: 'a', orientation }),
+        template: `
+          <CmkRadioGroup v-model="modelValue" :orientation="orientation">
+            <CmkRadioButton value="a" label="Option A" />
+            <CmkRadioButton value="b" label="Option B" />
+          </CmkRadioGroup>
+        `
+      })
+    )
+
+    expect(screen.getByRole('radiogroup')).toHaveAttribute('aria-orientation', orientation)
+  }
+)

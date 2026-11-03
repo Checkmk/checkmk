@@ -16,9 +16,15 @@ interface CmkRadioGroupProps {
   label?: TranslatedString
   disabled?: boolean
   externalErrors?: string[]
+  orientation?: 'vertical' | 'horizontal'
 }
 
-const { label, disabled = false, externalErrors } = defineProps<CmkRadioGroupProps>()
+const {
+  label,
+  disabled = false,
+  externalErrors,
+  orientation = 'vertical'
+} = defineProps<CmkRadioGroupProps>()
 </script>
 
 <template>
@@ -26,9 +32,10 @@ const { label, disabled = false, externalErrors } = defineProps<CmkRadioGroupPro
     <RadioGroupRoot
       v-model="value"
       v-bind="$attrs"
-      class="cmk-radio-group"
+      :class="['cmk-radio-group', { 'cmk-radio-group--horizontal': orientation === 'horizontal' }]"
       :aria-label="label"
       :disabled="disabled"
+      :orientation="orientation"
     >
       <slot />
     </RadioGroupRoot>
@@ -41,5 +48,10 @@ const { label, disabled = false, externalErrors } = defineProps<CmkRadioGroupPro
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
+}
+
+.cmk-radio-group--horizontal {
+  flex-direction: row;
+  gap: var(--dimension-7);
 }
 </style>

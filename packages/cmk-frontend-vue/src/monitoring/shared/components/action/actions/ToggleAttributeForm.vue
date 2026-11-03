@@ -38,7 +38,7 @@ const choice = computed({
 <template>
   <div class="monitoring-toggle-attribute-form">
     <span class="monitoring-toggle-attribute-form__label">{{ label }}</span>
-    <CmkRadioGroup v-model="choice" :label="label">
+    <CmkRadioGroup v-model="choice" :label="label" orientation="horizontal">
       <CmkRadioButton value="enable" :label="_t('Enable')" />
       <CmkRadioButton value="disable" :label="_t('Disable')" />
     </CmkRadioGroup>
@@ -48,8 +48,8 @@ const choice = computed({
 <style scoped>
 .monitoring-toggle-attribute-form {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing);
+  align-items: center;
+  gap: var(--dimension-7);
   padding: var(--spacing);
   border-radius: var(--border-radius);
   background: var(--ux-theme-3);

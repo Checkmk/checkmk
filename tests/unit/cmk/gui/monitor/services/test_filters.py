@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal
+from collections.abc import Iterator, Mapping, Sequence
+from typing import get_args, get_type_hints, Literal, TypeAliasType
 
 import pytest
 from pydantic import TypeAdapter, ValidationError
@@ -12,8 +13,10 @@ from cmk.ccc.site import SiteId
 from cmk.gui.monitor.services._api._filters import (
     parse_as_livestatus_filter,
     scope_filter_by_site,
+    SERVICE_FILTER_NODE,
     ServiceAndNode,
     ServiceBooleanCondition,
+    ServiceConditionNode,
     ServiceFilterNode,
     ServiceHostNode,
     ServiceHostStateChoiceCondition,
@@ -28,9 +31,11 @@ from cmk.gui.monitor.services._api._filters import (
     ServiceTimestampCondition,
     ServiceTimestampOp,
 )
+from cmk.gui.monitor.services._models import ServiceStateLabel
 from cmk.gui.monitor.shared import (
     BooleanCondition,
     FolderCondition,
+    HostStateLabel,
     LabelChoiceCondition,
     NameChoiceCondition,
     NotNode,
@@ -38,6 +43,7 @@ from cmk.gui.monitor.shared import (
     StateChoiceCondition,
 )
 from cmk.gui.monitor.shared import FilterNode as HostFilterNode
+from cmk.livestatus_client.tables import Services
 from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
@@ -785,3 +791,49 @@ def test_host_node_rejects_conditions_beyond_the_host_columns(host_node: object)
         TypeAdapter(ServiceFilterNode).validate_python(  # astrein: disable=pydantic-type-adapter
             {"type": "host", "child": host_node}
         )
+
+
+def _literal_values(annotation: object) -> tuple[object, ...]:
+    return get_args(annotation.__value__ if isinstance(annotation, TypeAliasType) else annotation)
+
+
+# One value per form the query builder renders for that kind of condition.
+_VALUES_BY_CONDITION: Mapping[type[object], Sequence[object]] = {
+    ServiceStringCondition: ["x"],
+    ServiceStateChoiceCondition: [list(_literal_values(ServiceStateLabel))],
+    ServiceHostStateChoiceCondition: [list(_literal_values(HostStateLabel))],
+    ServiceBooleanCondition: [True, False],
+    ServiceTimestampCondition: [1],
+    ServiceLabelChoiceCondition: [["key:value", "key:val*", "key:*", "ke*"]],
+    ServiceNameChoiceCondition: [["name", "na*"]],
+}
+
+
+def _every_condition() -> Iterator[ServiceFilterNode]:
+    for condition_type, values in _VALUES_BY_CONDITION.items():
+        hints = get_type_hints(condition_type)
+        for field in _literal_values(hints["field"]):
+            for op in _literal_values(hints["op"]):
+                for value in values:
+                    yield SERVICE_FILTER_NODE.validate_python(
+                        {"type": "condition", "field": field, "op": op, "value": value}
+                    )
+
+
+def test_every_kind_of_service_condition_but_the_site_has_values() -> None:
+    # A site condition chooses the sites to query and never becomes a filter line.
+    assert set(_VALUES_BY_CONDITION) == set(_literal_values(ServiceConditionNode)) - {
+        ServiceSiteChoiceCondition
+    }
+
+
+@pytest.mark.usefixtures("request_context")
+def test_every_service_condition_filters_on_columns_the_core_has() -> None:
+    unknown = {
+        line.split()[1]
+        for condition in _every_condition()
+        for line in parse_as_livestatus_filter(condition).splitlines()
+        if line.startswith("Filter: ")
+    } - set(Services.__columns__())
+
+    assert unknown == set()

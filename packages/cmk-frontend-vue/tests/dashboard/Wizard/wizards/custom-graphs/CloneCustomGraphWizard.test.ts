@@ -11,6 +11,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
 import CloneCustomGraphWizard from '@/dashboard/components/Wizard/wizards/custom-graphs/CloneCustomGraphWizard.vue'
+import { useProvideCustomGraphPermissions } from '@/dashboard/composables/useProvideCustomGraphPermissions'
 import { useProvideDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
@@ -158,12 +159,20 @@ const LINKED_WIDGET = {
   }
 } as unknown as WidgetSpec
 
-function renderWizard(editWidgetSpec: WidgetSpec | null = null, linkedGraph: string | null = null) {
+function renderWizard(
+  editWidgetSpec: WidgetSpec | null = null,
+  linkedGraph: string | null = null,
+  mayEditCustomGraph = false
+) {
   const onAddWidget = vi.fn()
   const provider = defineComponent({
     setup() {
       useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
       useProvideDashboardConstants(CONSTANTS)
+      useProvideCustomGraphPermissions({
+        edit: mayEditCustomGraph,
+        publish: { allUsers: false, contactGroups: false, sites: false }
+      })
       useProvideMissingRuntimeFiltersAction(ref(true), () => {})
       return () =>
         h(
@@ -406,6 +415,20 @@ describe('CloneCustomGraphWizard', () => {
         graph_options: GRAPH_OPTIONS
       }
     })
+  })
+
+  test('suggests an ID for the copy of the cloned graph when saving it to the catalog', async () => {
+    renderWizard(null, null, true)
+    await pickGraph('CPU')
+    await screen.findAllByLabelText('Title')
+    await gotoWidgetSettings()
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Save to graph catalog' }))
+
+    const idInput = await screen.findByRole<HTMLInputElement>('textbox', {
+      name: 'Unique ID (required)'
+    })
+    await waitFor(() => expect(idInput.value).toBe('cpu_clone'))
   })
 
   test('saves without writing to the catalog', async () => {

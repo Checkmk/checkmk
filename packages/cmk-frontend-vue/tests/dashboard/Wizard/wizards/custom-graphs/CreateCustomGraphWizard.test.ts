@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
@@ -10,6 +11,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
 import CreateCustomGraphWizard from '@/dashboard/components/Wizard/wizards/custom-graphs/CreateCustomGraphWizard.vue'
+import { useProvideCustomGraphPermissions } from '@/dashboard/composables/useProvideCustomGraphPermissions'
 import { useProvideDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
@@ -30,7 +32,10 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
 
 const CONSTANTS = {
   responsive_grid_breakpoints: {},
-  widgets: { embedded_custom_graph: { filter_context: { restricted_to_single: [] } } }
+  widgets: {
+    embedded_custom_graph: { filter_context: { restricted_to_single: [] } },
+    custom_graph: { filter_context: { restricted_to_single: [] } }
+  }
 } as unknown as DashboardConstants
 
 const DESIGNER_CONFIG_PATH = '/domain-types/custom_graph/actions/designer_config/invoke'
@@ -38,6 +43,7 @@ const FETCH_DATA_PATH = '/domain-types/custom_graph/actions/fetch_data/invoke'
 const DISCOVER_PATH = '/domain-types/graph/actions/discover_custom_graphs/invoke'
 const WIDGET_ATTRIBUTES_PATH = '/domain-types/dashboard/actions/compute-widget-attributes/invoke'
 const WIDGET_TITLES_PATH = '/domain-types/dashboard/actions/compute-widget-titles/invoke'
+const CREATE_PATH = '/domain-types/custom_graph/collections/all'
 
 const DESIGNER_CONFIG = {
   palette: ['#28a2f3', '#ff8400'],
@@ -111,31 +117,41 @@ beforeEach(() => {
     )
   )
   postSpy = vi.spyOn(client, 'POST').mockImplementation(async (path: unknown) =>
-    ok(
-      path === WIDGET_ATTRIBUTES_PATH
-        ? { value: { filter_context: { uses_infos: [] } } }
-        : path === WIDGET_TITLES_PATH
-          ? { extensions: { titles: {} } }
-          : path === DISCOVER_PATH
-            ? { graphs: [] }
-            : {
-                time_range: { start: 0, end: 3600, step: 60 },
-                metrics: [],
-                group_titles: [],
-                horizontal_lines: [],
-                warnings: [],
-                errors: []
-              }
-    )
+    path === CREATE_PATH
+      ? ({
+          data: { id: 'custom_graph_1' },
+          error: undefined,
+          response: new Response(null, { status: 200, headers: { ETag: '"1"' } })
+        } as never)
+      : ok(
+          path === WIDGET_ATTRIBUTES_PATH
+            ? { value: { filter_context: { uses_infos: [] } } }
+            : path === WIDGET_TITLES_PATH
+              ? { extensions: { titles: {} } }
+              : path === DISCOVER_PATH
+                ? { graphs: [] }
+                : {
+                    time_range: { start: 0, end: 3600, step: 60 },
+                    metrics: [],
+                    group_titles: [],
+                    horizontal_lines: [],
+                    warnings: [],
+                    errors: []
+                  }
+        )
   )
 })
 
-function renderWizard(editWidgetSpec: WidgetSpec | null = null) {
+function renderWizard(editWidgetSpec: WidgetSpec | null = null, mayEditCustomGraph = false) {
   const onAddWidget = vi.fn()
   const provider = defineComponent({
     setup() {
       useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
       useProvideDashboardConstants(CONSTANTS)
+      useProvideCustomGraphPermissions({
+        edit: mayEditCustomGraph,
+        publish: { allUsers: false, contactGroups: false, sites: false }
+      })
       useProvideMissingRuntimeFiltersAction(ref(true), () => {})
       return () =>
         h(
@@ -235,6 +251,43 @@ describe('CreateCustomGraphWizard', () => {
       timerange: { type: 'graph', duration: 8 * 3600 }
     })
     expect(onAddWidget.mock.calls[0]![1].title.text).toBe('My graph')
+  })
+
+  test('saves the graph to the catalog and links the widget to it', async () => {
+    const { onAddWidget } = renderWizard(STORED_WIDGET, true)
+    await gotoWidgetSettings()
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Save to graph catalog' }))
+    await userEvent.type(await screen.findByRole('textbox', { name: 'Title (required)' }), 'CPU')
+    await waitFor(() =>
+      expect(
+        screen.getByRole<HTMLInputElement>('textbox', { name: 'Unique ID (required)' }).value
+      ).toBe('custom_graph_1')
+    )
+    await fireEvent.click(screen.getByRole('button', { name: 'Save to catalog & save widget' }))
+
+    await waitFor(() => expect(onAddWidget).toHaveBeenCalled())
+    expect(postBodies<{ content: { data_sources: { id: string }[] } }>(CREATE_PATH)).toEqual([
+      expect.objectContaining({
+        name: 'custom_graph_1',
+        title: 'CPU',
+        content: expect.objectContaining({ data_sources: [expect.objectContaining({ id: 'A' })] })
+      })
+    ])
+    expect(onAddWidget.mock.calls[0]![0]).toEqual({
+      type: 'custom_graph',
+      custom_graph: 'custom_graph_1',
+      timerange: { type: 'graph', duration: 8 * 3600 },
+      graph_render_options: expect.any(Object)
+    })
+    expect(onAddWidget.mock.calls[0]![1].title.text).toBe('My graph')
+  })
+
+  test('offers no saving to the catalog without the permission to edit custom graphs', async () => {
+    renderWizard(STORED_WIDGET)
+    await gotoWidgetSettings()
+
+    expect(screen.queryByRole('button', { name: 'Save to graph catalog' })).not.toBeInTheDocument()
   })
 
   test('opens without a way back to the mode sub-menu when editing', async () => {

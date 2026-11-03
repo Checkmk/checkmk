@@ -8,6 +8,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { type ComputedRef, type Ref, computed, ref } from 'vue'
 
 import { getCustomGraph, listCustomGraphMetadata } from '@/graphing/designer/api'
+import { fromApiDataSource, toApiDataSources } from '@/graphing/designer/drafts'
 
 import type { UseEmbeddedCustomGraph } from '../../create/composables/useEmbeddedCustomGraph'
 
@@ -29,6 +30,7 @@ const catalogKey = (graph: CatalogGraph): string => `${graph.owner}/${graph.name
 
 interface SelectedGraph {
   key: string
+  name: string
   title: string
 }
 
@@ -102,7 +104,7 @@ export function useCustomGraphClone(
       return
     }
     const previousTitle = selected.value?.title ?? null
-    selected.value = { key, title: picked.title }
+    selected.value = { key, name: picked.name, title: picked.title }
     selectionErrors.value = []
     error.value = null
     editedSources = false
@@ -116,7 +118,10 @@ export function useCustomGraphClone(
       if (request !== latestClone) {
         return
       }
-      handler.dataSources.value = graph.extensions.content.data_sources
+      // Throws on a malformed formula, which then fails the clone.
+      handler.dataSources.value = toApiDataSources(
+        graph.extensions.content.data_sources.map(fromApiDataSource)
+      )
       handler.graphOptions.value = graph.extensions.content.graph_options
       clonedOptions = JSON.stringify(graph.extensions.content.graph_options)
 

@@ -34,19 +34,32 @@ const emit = defineEmits<Stage1HeaderEmits>()
 
   <ContentSpacer />
 
-  <ActionBar align-items="left">
-    <ActionButton
-      :label="_t('Previous step')"
-      :icon="{ name: 'continue', side: 'left', rotate: 180 }"
-      :action="() => emit('back')"
-      variant="secondary"
-    />
-    <ActionButton
-      :label="!!edit ? _t('Save widget') : _t('Add & place widget')"
-      :action="() => emit('save')"
-      variant="primary"
-    />
-  </ActionBar>
+  <div class="db-stage2header__actions">
+    <ActionBar align-items="left">
+      <ActionButton
+        :label="_t('Previous step')"
+        :icon="{ name: 'continue', side: 'left', rotate: 180 }"
+        :action="() => emit('back')"
+        variant="secondary"
+      />
+      <ActionButton
+        :label="!!edit ? _t('Save widget') : _t('Add & place widget')"
+        :action="() => emit('save')"
+        variant="primary"
+      />
+    </ActionBar>
+    <ActionBar align-items="right">
+      <slot name="actions" />
+    </ActionBar>
+  </div>
 
   <ContentSpacer :dimension="11" />
 </template>
+
+<style scoped>
+.db-stage2header__actions {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--dimension-4);
+}
+</style>

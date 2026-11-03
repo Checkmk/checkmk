@@ -16,7 +16,7 @@ import {
   type UseWidgetVisualizationProps,
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
-import type { WidgetProps } from '@/dashboard/components/Wizard/types'
+import type { WidgetContentType, WidgetProps } from '@/dashboard/components/Wizard/types'
 import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { computePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
 import type {
@@ -32,7 +32,7 @@ import {
   type UseCustomGraphOptions,
   useCustomGraphOptions
 } from '@/graphing/designer/composables/useCustomGraphOptions'
-import type { ApiDataSourceInput } from '@/graphing/designer/types'
+import type { ApiDataSource } from '@/graphing/designer/types'
 import type { RequestedTimeRange } from '@/graphing/types'
 
 import type { EmbeddedGraphDefinition } from '../../editor/types'
@@ -53,7 +53,7 @@ export interface UseEmbeddedCustomGraph {
   /** The widget's own window for the editor's preview; undefined follows the dashboard's. */
   previewTimeRange: ComputedRef<RequestedTimeRange | undefined>
   /** The graph's sources: a stored widget's until the data selection picks others. */
-  dataSources: Ref<readonly ApiDataSourceInput[]>
+  dataSources: Ref<readonly ApiDataSource[]>
   /** The graph options the editor previews; follows `graphOptionsForm` while it is valid. */
   graphOptions: Ref<CustomGraphOptions>
   graphOptionsForm: UseCustomGraphOptions
@@ -61,8 +61,12 @@ export interface UseEmbeddedCustomGraph {
   /** Whether the widget settings around the graph definition can be saved. */
   validate: () => boolean
   content: () => EmbeddedCustomGraphContent
-  /** The widget as the preview renders and the dashboard stores it, under the given filters. */
-  computeWidgetProps: (filters: ConfiguredFilters) => Promise<WidgetProps>
+  /** The widget as the preview renders and the dashboard stores it, under the given filters;
+   *  `widgetContent` replaces the embedded graph, e.g. by a link to a catalog graph. */
+  computeWidgetProps: (
+    filters: ConfiguredFilters,
+    widgetContent?: WidgetContentType
+  ) => Promise<WidgetProps>
 }
 
 export function useEmbeddedCustomGraph(currentSpec?: WidgetSpec | null): UseEmbeddedCustomGraph {
@@ -115,7 +119,7 @@ export function useEmbeddedCustomGraph(currentSpec?: WidgetSpec | null): UseEmbe
     }
   )
 
-  const dataSources = ref<readonly ApiDataSourceInput[]>(definition?.data_sources ?? [])
+  const dataSources = ref<readonly ApiDataSource[]>(definition?.data_sources ?? [])
 
   const content = (): EmbeddedCustomGraphContent => ({
     type: CONTENT_TYPE,
@@ -124,8 +128,10 @@ export function useEmbeddedCustomGraph(currentSpec?: WidgetSpec | null): UseEmbe
     graph_render_options: renderOptions.graphRenderOptions.value
   })
 
-  const computeWidgetProps = async (filters: ConfiguredFilters): Promise<WidgetProps> => {
-    const widgetContent = content()
+  const computeWidgetProps = async (
+    filters: ConfiguredFilters,
+    widgetContent: WidgetContentType = content()
+  ): Promise<WidgetProps> => {
     const generalSettings = visualization.widgetGeneralSettings.value
     const [effectiveTitle, effectiveFilterContext] = await Promise.all([
       computePreviewWidgetTitle({

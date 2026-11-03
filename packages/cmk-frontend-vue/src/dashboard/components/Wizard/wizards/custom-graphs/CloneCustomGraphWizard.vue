@@ -77,6 +77,9 @@ const filters = computed(() => parseContextConfiguredFilters(contextFilters))
 const handler = useEmbeddedCustomGraph(editWidgetSpec)
 // Kept here, as each stage is unmounted when the other one shows.
 const cloneState = useCustomGraphClone(handler, linkedGraph)
+const catalogNameBase = computed(() =>
+  cloneState.selected.value === null ? undefined : `${cloneState.selected.value.name}_clone`
+)
 </script>
 
 <template>
@@ -117,6 +120,7 @@ const cloneState = useCustomGraphClone(handler, linkedGraph)
         :range="range"
         :filters="filters"
         :edit="editWidgetSpec !== null"
+        :catalog-name-base="catalogNameBase"
         @go-prev="wizardHandler.prev"
         @add-widget="
           (content, generalSettings, filterContext) =>

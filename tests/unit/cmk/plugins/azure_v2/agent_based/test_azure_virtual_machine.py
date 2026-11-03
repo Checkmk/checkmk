@@ -238,6 +238,39 @@ def test_check_azure_virtual_machines(
     )
 
 
+@pytest.mark.xfail(strict=True, raises=ValueError, reason="Crash group 4866")
+def test_check_azure_virtual_machine_multi_line_status_message() -> None:
+    section = Resource(
+        id="/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test1/providers/Microsoft.Compute/virtualMachines/VM-test-1",
+        name="VM-test-1",
+        type="Microsoft.Compute/virtualMachines",
+        group="test1",
+        location="uksouth",
+        tags={},
+        properties={},
+        specific_info={
+            "statuses": [
+                {
+                    "code": "ProvisioningState/failed/AllocationFailed",
+                    "level": "Error",
+                    "displayStatus": "Provisioning failed",
+                    "message": "Allocation failed.\nTry another VM size.\n",
+                },
+            ]
+        },
+        subscription="4db89361-bcd9-4353-8edb-33f49608d4fa",
+    )
+
+    results = list(
+        check_azure_virtual_machine(item="VM-test-1", params=_MAP_STATES, section=section)
+    )
+
+    assert results[0] == Result(
+        state=State.CRIT,
+        summary="Provisioning failed (Allocation failed. Try another VM size.)",
+    )
+
+
 @pytest.mark.parametrize(
     "section, expected_discovery",
     [pytest.param(SECTION, [Service()], id="one resource")],

@@ -9,7 +9,7 @@ import logging
 import random
 import time
 from collections import defaultdict, deque
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import auto, Enum
@@ -51,6 +51,7 @@ from cmk.licensing.internal import (
     CounterCollectionContext,
     LICENSE_LABEL_EXCLUDE,
     LICENSE_LABEL_NAME,
+    LicenseUsageCounterName,
 )
 from cmk.licensing.usage_counters import (
     collect_license_usage_counters,
@@ -158,6 +159,42 @@ def create_sample(
 
     Shadow objects: 0: active, 1: passive, 2: shadow
     """
+    general_infos = cmk_version_info.get_general_version_infos(omd_root)
+    return make_sample(
+        now,
+        instance_id,
+        site_hash,
+        version=cmk_version.omd_version(omd_root),
+        cmk_edition=general_infos["edition"],
+        platform=general_infos["os"],
+        is_cma=cmk_version.is_cma(),
+        hosts_counter=_get_hosts_counter(),
+        services_counter=_get_services_counter(),
+        cloud_counter=_get_cloud_counter(),
+        feature_counters=collect_license_usage_counters(
+            discover_license_usage_counter_plugins(),
+            CounterCollectionContext(omd_root=omd_root, query_livestatus=_get_from_livestatus),
+            logger,
+        ),
+        extensions=_load_extensions(omd_root=omd_root),
+    )
+
+
+def make_sample(
+    now: Now,
+    instance_id: UUID,
+    site_hash: str,
+    *,
+    version: str,
+    cmk_edition: str,
+    platform: str,
+    is_cma: bool,
+    hosts_counter: HostsOrServicesCounter,
+    services_counter: HostsOrServicesCounter,
+    cloud_counter: HostsOrServicesCloudCounter,
+    feature_counters: Mapping[LicenseUsageCounterName, int],
+    extensions: LicenseUsageExtensions,
+) -> LicenseUsageSample:
     sample_time = int(
         now.dt.replace(
             hour=0,
@@ -166,26 +203,13 @@ def create_sample(
             microsecond=0,
         ).timestamp()
     )
-
-    hosts_counter = _get_hosts_counter()
-    services_counter = _get_services_counter()
-    cloud_counter = _get_cloud_counter()
-    feature_counters = collect_license_usage_counters(
-        discover_license_usage_counter_plugins(),
-        CounterCollectionContext(omd_root=omd_root, query_livestatus=_get_from_livestatus),
-        logger,
-    )
-
-    general_infos = cmk_version_info.get_general_version_infos(omd_root)
-    extensions = _load_extensions(omd_root=omd_root)
-
     return LicenseUsageSample(
         instance_id=instance_id,
         site_hash=site_hash,
-        version=cmk_version.omd_version(omd_root),
-        edition=_cmk_edition_to_licensing_edition(general_infos["edition"]),
-        platform=general_infos["os"],
-        is_cma=cmk_version.is_cma(),
+        version=version,
+        edition=_cmk_edition_to_licensing_edition(cmk_edition),
+        platform=platform,
+        is_cma=is_cma,
         num_hosts=hosts_counter.num,
         num_hosts_cloud=cloud_counter.hosts,
         num_hosts_shadow=hosts_counter.num_shadow,

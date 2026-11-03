@@ -5201,6 +5201,14 @@ class SyntheticMonitoringClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def list_executions(self, body: Mapping[str, object], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/list/invoke",
+            body=dict(body),
+            expect_ok=expect_ok,
+        )
+
 
 class CustomServiceClient(RestApiClient):
     domain: DomainType = "custom_service"

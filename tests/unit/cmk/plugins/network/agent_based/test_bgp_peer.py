@@ -468,3 +468,15 @@ def test_bgp_peer_parse_cisco_3_skips_row_without_address() -> None:
     data: StringByteTable = [[[], [], "", [], "", "", "", "", "", ""], *peer]
 
     assert bgp_peer.parse_bgp_peer_cisco_3([data]) == bgp_peer.parse_bgp_peer_cisco_3([peer])
+
+
+def test_bgp_peer_parse_ietf_skips_row_without_address() -> None:
+    peers, local_identifier = DATA_IETF_BGB_PEER_NO_ERROR
+    data: Sequence[StringByteTable] = [
+        [["", "", "", "", "", [], "", ""], *peers],
+        local_identifier,
+    ]
+
+    assert bgp_peer.parse_ietf_bgp_peer(data) == bgp_peer.parse_ietf_bgp_peer(
+        DATA_IETF_BGB_PEER_NO_ERROR
+    )

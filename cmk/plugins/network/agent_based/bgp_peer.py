@@ -441,6 +441,7 @@ def parse_ietf_bgp_peer(string_table: Sequence[StringByteTable]) -> Section:
     return {
         _parse_ietf_remote_addr(str(entry[-1])): _create_item_data(entry)
         for entry in recombined_string_table
+        if entry[-1]
     }
 
 

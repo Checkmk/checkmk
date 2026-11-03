@@ -96,6 +96,47 @@ def _get_delta_tree(row: Row) -> ImmutableDeltaTree:
     )
 
 
+def _render_tree(
+    row: Row,
+    context: PainterContext,
+    tree: ImmutableTree | ImmutableDeltaTree,
+    tree_id: str = "",
+) -> CellSpec:
+    tree_renderer = TreeRenderer(
+        site_id=row["site"],
+        host_name=row["host_name"],
+        hints=inv_display_hints,
+        theme=context.theme,
+        request=context.request,
+        show_internal_tree_paths=context.painter_options.get("show_internal_tree_paths"),
+    )
+    with output_funnel.plugged():
+        tree_renderer.show(time.time(), tree, tree_id)
+        return "invtree", HTML.without_escaping(output_funnel.drain())
+
+
+def _refuse_csv_export(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str | HTML:
+    raise CSVExportError
+
+
+def _report_options() -> Dictionary:
+    return Dictionary(
+        title=_("Report options"),
+        elements=[
+            (
+                "use_short",
+                Checkbox(
+                    title=_("Use short title in reports header"),
+                    default_value=False,
+                ),
+            ),
+        ],
+        required_keys=["use_short"],
+    )
+
+
 class PainterOptionShowInternalTreePaths(PainterOption):
     def __init__(self) -> None:
         super().__init__(
@@ -126,35 +167,10 @@ def _render_inventory_tree(
     if not (tree := _compute_data_inventory_tree(row, acting_user, context)):
         return "", ""
 
-    tree_renderer = TreeRenderer(
-        site_id=row["site"],
-        host_name=row["host_name"],
-        hints=inv_display_hints,
-        theme=context.theme,
-        request=context.request,
-        show_internal_tree_paths=context.painter_options.get("show_internal_tree_paths"),
-    )
-
-    with output_funnel.plugged():
-        tree_renderer.show(time.time(), tree)
-        code = HTML.without_escaping(output_funnel.drain())
-
-    return "invtree", code
+    return _render_tree(row, context, tree)
 
 
-def _export_for_python_inventory_tree(
-    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
-) -> SDRawTree:
-    return serialize_tree(_compute_data_inventory_tree(row, acting_user, context))
-
-
-def _export_for_csv_inventory_tree(
-    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
-) -> str | HTML:
-    raise CSVExportError
-
-
-def _export_for_json_inventory_tree(
+def _export_inventory_tree(
     row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> SDRawTree:
     return serialize_tree(_compute_data_inventory_tree(row, acting_user, context))
@@ -170,9 +186,9 @@ def make_inventory_tree_painter() -> InternalPainter:
         row_extender=add_sites_of_same_named_hosts,
         render=_render_inventory_tree,
         compute_data=_compute_data_inventory_tree,
-        export_for_python=_export_for_python_inventory_tree,
-        export_for_csv=_export_for_csv_inventory_tree,
-        export_for_json=_export_for_json_inventory_tree,
+        export_for_python=_export_inventory_tree,
+        export_for_csv=_refuse_csv_export,
+        export_for_json=_export_inventory_tree,
     )
 
 
@@ -218,35 +234,10 @@ def _render_invhist_delta(
     if not (tree := _compute_data_invhist_delta(row, acting_user, context)):
         return "", ""
 
-    tree_renderer = TreeRenderer(
-        site_id=row["site"],
-        host_name=row["host_name"],
-        hints=inv_display_hints,
-        theme=context.theme,
-        request=context.request,
-        show_internal_tree_paths=context.painter_options.get("show_internal_tree_paths"),
-    )
-
-    with output_funnel.plugged():
-        tree_renderer.show(time.time(), tree, str(row["invhist_time"]))
-        code = HTML.without_escaping(output_funnel.drain())
-
-    return "invtree", code
+    return _render_tree(row, context, tree, str(row["invhist_time"]))
 
 
-def _export_for_python_invhist_delta(
-    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
-) -> SDRawDeltaTree:
-    return serialize_delta_tree(_compute_data_invhist_delta(row, acting_user, context))
-
-
-def _export_for_csv_invhist_delta(
-    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
-) -> str | HTML:
-    raise CSVExportError
-
-
-def _export_for_json_invhist_delta(
+def _export_invhist_delta(
     row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> SDRawDeltaTree:
     return serialize_delta_tree(_compute_data_invhist_delta(row, acting_user, context))
@@ -261,9 +252,9 @@ def make_invhist_delta_painter() -> InternalPainter:
         row_extender=add_sites_of_same_named_hosts,
         render=_render_invhist_delta,
         compute_data=_compute_data_invhist_delta,
-        export_for_python=_export_for_python_invhist_delta,
-        export_for_csv=_export_for_csv_invhist_delta,
-        export_for_json=_export_for_json_invhist_delta,
+        export_for_python=_export_invhist_delta,
+        export_for_csv=_refuse_csv_export,
+        export_for_json=_export_invhist_delta,
     )
 
 
@@ -411,19 +402,7 @@ def make_inventory_attribute_painter(
         painter_options=["show_internal_tree_paths"],
         load_inv=True,
         row_extender=add_sites_of_same_named_hosts,
-        parameters=Dictionary(
-            title=_("Report options"),
-            elements=[
-                (
-                    "use_short",
-                    Checkbox(
-                        title=_("Use short title in reports header"),
-                        default_value=False,
-                    ),
-                ),
-            ],
-            required_keys=["use_short"],
-        ),
+        parameters=_report_options(),
         group_by=partial(_group_by_inventory_attribute, path, key, hint),
         render=partial(_render_inventory_attribute, path, key, hint),
         export_for_python=partial(_export_inventory_attribute, path, key),
@@ -521,32 +500,13 @@ def _render_inventory_node(
     if not (tree := _compute_node_painter_data(row, path)):
         return "", ""
 
-    tree_renderer = TreeRenderer(
-        site_id=row["site"],
-        host_name=row["host_name"],
-        hints=inv_display_hints,
-        theme=context.theme,
-        request=context.request,
-        show_internal_tree_paths=context.painter_options.get("show_internal_tree_paths"),
-    )
-
-    with output_funnel.plugged():
-        tree_renderer.show(time.time(), tree)
-        code = HTML.without_escaping(output_funnel.drain())
-
-    return "invtree", code
+    return _render_tree(row, context, tree)
 
 
 def _export_inventory_node(
     path: SDPath, row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
 ) -> object:
     return serialize_tree(_compute_node_painter_data(row, path))
-
-
-def _export_inventory_node_for_csv(
-    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
-) -> str | HTML:
-    raise CSVExportError
 
 
 def make_inventory_node_painter(hint: NodeDisplayHint) -> InternalPainter:
@@ -563,21 +523,9 @@ def make_inventory_node_painter(hint: NodeDisplayHint) -> InternalPainter:
         painter_options=["show_internal_tree_paths"],
         load_inv=True,
         row_extender=add_sites_of_same_named_hosts,
-        parameters=Dictionary(
-            title=_("Report options"),
-            elements=[
-                (
-                    "use_short",
-                    Checkbox(
-                        title=_("Use short title in reports header"),
-                        default_value=False,
-                    ),
-                ),
-            ],
-            required_keys=["use_short"],
-        ),
+        parameters=_report_options(),
         render=partial(_render_inventory_node, hint.path),
         export_for_python=partial(_export_inventory_node, hint.path),
-        export_for_csv=_export_inventory_node_for_csv,
+        export_for_csv=_refuse_csv_export,
         export_for_json=partial(_export_inventory_node, hint.path),
     )

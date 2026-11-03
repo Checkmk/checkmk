@@ -18,6 +18,7 @@ from cmk.utils.notify_types import (
     ContactName,
     EventRule,
     NotificationContext,
+    NotificationParameterID,
     NotificationRuleID,
     NotifyPluginParamsDict,
 )
@@ -678,3 +679,78 @@ def test_create_notifications_custom_script_with_call_parameters() -> None:
     assert len(notifications) == 1
     _locked, final_params, _bulk = next(iter(notifications.values()))
     assert final_params["params"] == ["param1", "param2"]  # type: ignore[typeddict-item]
+
+
+_PERSONAL_RULE: Final = _make_rule() | {
+    "contact": "alice",
+    "contact_users": ["alice"],
+    "notify_plugin": ("mail", NotificationParameterID("params")),
+}
+
+
+@pytest.mark.parametrize(
+    "rule, contacts_value, matches",
+    [
+        pytest.param(_PERSONAL_RULE, "alice,bob", True, id="owner is a contact of the object"),
+        pytest.param(_PERSONAL_RULE, "bob", False, id="owner is no contact of the object"),
+        pytest.param(_PERSONAL_RULE, "?", False, id="contacts of the object are unknown"),
+        pytest.param(_PERSONAL_RULE, "", False, id="object has no contacts"),
+        pytest.param(_PERSONAL_RULE | {"notify_plugin": ("mail", None)}, "bob", True, id="cancelling rule"),
+        pytest.param(_make_rule(), "bob", True, id="global rule"),
+    ],
+)  # fmt: skip
+def test_personal_rule_only_matches_objects_of_its_owner(
+    rule: EventRule, contacts_value: str, matches: bool
+) -> None:
+    assert (
+        notify.rbn_match_personal_rule_scope(
+            rule, EventContext({"CONTACTS": contacts_value}), False, {}
+        )
+        is None
+    ) == matches
+
+
+@pytest.mark.parametrize(
+    "rule, authorized_sites, expected_sites",
+    [
+        pytest.param(_make_rule(), ["site_a", "site_b"], ["site_a", "site_b"], id="authorized sites become the site condition"),
+        pytest.param(_make_rule() | {"match_site": ["site_b", "site_c"]}, ["site_a", "site_b"], ["site_b"], id="site condition is limited to authorized sites"),
+        pytest.param(_make_rule() | {"match_site": ["site_c"]}, ["site_a", "site_b"], [], id="no authorized site left"),
+        pytest.param(_make_rule() | {"match_site": ["site_c"]}, None, ["site_c"], id="user authorized for all sites"),
+    ],
+)  # fmt: skip
+def test_user_notification_rules_respect_authorized_sites(
+    rule: EventRule, authorized_sites: list[str] | None, expected_sites: list[str]
+) -> None:
+    contacts = {
+        "bob": Contact({"notification_rules": [rule], "authorized_sites": authorized_sites}),
+    }
+
+    (user_rule,) = notify.user_notification_rules(contacts)
+
+    assert user_rule.get("match_site") == expected_sites
+
+
+def test_personal_rule_does_not_match_on_unauthorized_site_it_lists() -> None:
+    contacts = {
+        "alice": Contact(
+            {
+                "notification_rules": [_PERSONAL_RULE | {"match_site": ["site_c"]}],
+                "authorized_sites": ["site_a"],
+            }
+        ),
+    }
+    (user_rule,) = notify.user_notification_rules(contacts)
+
+    why_not = notify._rbn_match_rule(
+        user_rule,
+        EnrichedEventContext(
+            {"WHAT": "HOST", "HOSTNAME": HostName("h"), "OMD_SITE": "site_c", "CONTACTS": "alice"}
+        ),
+        {},
+        define_servicegroups={},
+        analyse=False,
+        timeperiods_active={},
+    )
+
+    assert why_not is not None

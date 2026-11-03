@@ -32,6 +32,22 @@ InotifyBuffer.delay = 0.0
 @contextlib.contextmanager
 def run(config: WatcherConfig, cache: Cache) -> Generator[None]:
     LOGGER.info("[watcher] Initializing")
+    try:
+        observer = _start_observer(config, cache)
+    except Exception:
+        LOGGER.exception("[watcher] Error while starting observer")
+        raise
+    LOGGER.info("[watcher] Operational")
+    try:
+        yield
+    finally:
+        LOGGER.info("[watcher] Shutting down")
+        observer.stop()
+        observer.join()
+        LOGGER.info("[watcher] Shutdown complete")
+
+
+def _start_observer(config: WatcherConfig, cache: Cache) -> InotifyObserver:
     observer = InotifyObserver(generate_full_events=True)
     for schedule in config.schedules:
         handler = _AutomationWatcherHandler(
@@ -46,15 +62,10 @@ def run(config: WatcherConfig, cache: Cache) -> Generator[None]:
         )
     try:
         observer.start()
-        LOGGER.info("[watcher] Operational")
-        yield
-    except Exception:
-        LOGGER.exception("[watcher] Error while starting observer")
-    finally:
-        LOGGER.info("[watcher] Shutting down")
+    except BaseException:
         observer.stop()
-        observer.join()
-        LOGGER.info("[watcher] Shutdown complete")
+        raise
+    return observer
 
 
 class _AutomationWatcherHandler(PatternMatchingEventHandler):

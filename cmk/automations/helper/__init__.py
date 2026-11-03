@@ -11,7 +11,7 @@ its configuration, is up to the caller.
 
 from ._app import make_application
 from ._cache import Cache
-from ._config import config_from_disk_or_default_config
+from ._config import config_from_disk_or_default_config, WatcherConfig
 from ._server import run as run_server
 from ._tracer import configure_tracer
 from ._watcher import run as run_watcher
@@ -23,4 +23,5 @@ __all__ = [
     "make_application",
     "run_server",
     "run_watcher",
+    "WatcherConfig",
 ]

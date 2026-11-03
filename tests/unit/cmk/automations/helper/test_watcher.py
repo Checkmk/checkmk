@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+from pathlib import Path
 from typing import Final
 
 import pytest
@@ -19,7 +20,12 @@ from watchdog.events import (
     FileSystemEvent,
 )
 
-from cmk.automations.helper._cache import Cache
+from cmk.automations.helper import (
+    Cache,
+    config_from_disk_or_default_config,
+    run_watcher,
+    WatcherConfig,
+)
 from cmk.automations.helper._watcher import _AutomationWatcherHandler
 from tests.testlib.common.utils import wait_until
 
@@ -192,6 +198,13 @@ def test_automation_watcher_logging_directories_ignored(
     assert not caplog.text
 
 
+def test_error_while_watching_reaches_the_caller(tmp_path: Path, cache: Cache) -> None:
+    watcher_config = _site_watcher_config(tmp_path)
+
+    with pytest.raises(RuntimeError, match="server failed"), run_watcher(watcher_config, cache):
+        raise RuntimeError("server failed")
+
+
 def _wait_for_last_change_timestamp_to_increment(
     cache: Cache,
     reference_timestamp: float,
@@ -201,3 +214,15 @@ def _wait_for_last_change_timestamp_to_increment(
         timeout=0.5,
         interval=0.05,
     )
+
+
+def _site_watcher_config(omd_root: Path) -> WatcherConfig:
+    """The default watcher configuration of a site in *omd_root*, with the watched directories."""
+    config = config_from_disk_or_default_config(
+        omd_root=omd_root,
+        run_directory=omd_root / "tmp" / "run",
+        log_directory=omd_root / "var" / "log",
+    ).watcher_config
+    for schedule in config.schedules:
+        schedule.path.mkdir(parents=True, exist_ok=True)
+    return config

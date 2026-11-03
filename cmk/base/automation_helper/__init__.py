@@ -85,8 +85,10 @@ def _main() -> int:
             except SystemExit as system_exit:
                 if isinstance(system_exit.code, int):
                     exit_code = system_exit.code
-
-            logger.info("Received termination signal, shutting down")
+                logger.info("Received termination signal, shutting down")
+            except Exception:
+                logger.exception("Error while running the server, shutting down")
+                exit_code = 1
 
     return exit_code
 

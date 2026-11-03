@@ -63,6 +63,11 @@ The component tests need the Oracle Instant Client staged under `runtimes/`; the
 By default it constructs `CI_ORA2_DB_TEST` for the Rocky DB from `CI_ORA_TEST_PASSWORD`, exactly as on Linux.
 The `winagt-test-mk-oracle` job overrides `CI_ORA2_DB_TEST` to the Windows-native Oracle 23ai Free on `oracle-win-ci.lan.checkmk.net`, using its `CI_ORA_WIN_TEST_PASSWORD` credential — so that job exercises the Windows agent against a Windows-hosted DB while the shared build jobs keep using Rocky.
 
+**Windows in a VM** — `bazel test --config=qemu //packages/mk-oracle:mk-oracle-tests-qemu` runs the cross-compiled component and binary tests inside a real-Windows QEMU VM (`agents/wnx/test-vm`), against the database in `CI_ORA2_DB_TEST` (required) and `CI_ORA1_DB_TEST` (optional), taken from the environment.
+A `localhost` endpoint is rewritten to the host as the guest sees it, so the local Docker database works: start `tests/files/docker/run-db.sh -v 23` and export `CI_ORA2_DB_TEST=localhost:sys:oracle:1521:_:sysdba:FREE:FREE:_:`.
+Tests that would pass without testing anything are skipped by name (`qemu-skipped-tests.txt`).
+The tier is `manual` and needs `/dev/kvm`; no CI job runs it yet.
+
 To exercise the host-local code paths on Windows (local `sysdba`/bequeath connections, registry discovery), see [`docs/windows-local-testing.md`](docs/windows-local-testing.md).
 
 ## Maintenance

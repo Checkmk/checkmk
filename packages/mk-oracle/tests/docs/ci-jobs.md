@@ -141,6 +141,10 @@ cover:
 - [`windows-local-testing.md`](windows-local-testing.md) — the run-on-VM model
   (`run.ps1 --remote-host`, also part of `winagt-test-mk-oracle`) plus its
   ad-hoc manual variant for debugging outside CI.
+- `mk-oracle-tests-qemu` ([`../README.md`](../README.md#running-the-tests))
+  — the cross-compiled Windows tests in a real-Windows QEMU VM against
+  `CI_ORA2_DB_TEST` (e.g. the Docker DB); a `manual` Bazel test that needs
+  `/dev/kvm`, no CI job yet.
 - [`../perf/`](../perf) — semi-automated performance comparison (Rust vs
   legacy) against a compose-managed Docker DB.
 

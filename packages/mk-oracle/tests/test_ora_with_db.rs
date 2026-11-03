@@ -228,7 +228,10 @@ authentication:
         assert_ne!(a.password(), Some("$CI_ORA2_DB_TEST"));
     }
 
-    #[cfg(windows)]
+    // The CFLAGS assertion checks the cargo build environment on the legacy
+    // Windows nodes; under Bazel the toolchain owns those flags (and the CRT
+    // linkage is asserted by static_crt_test).
+    #[cfg(all(windows, not(feature = "build_system_bazel")))]
     #[test]
     fn test_environment() {
         // it seems we need this flag to properly link openssl on Windows

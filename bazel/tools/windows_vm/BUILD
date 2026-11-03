@@ -107,7 +107,10 @@ crlf_files(
 pkg_files(
     name = "run_rust_tests",
     srcs = [":run_rust_tests_crlf"],
-    visibility = ["//packages/cmk-agent-ctl:__pkg__"],
+    visibility = [
+        "//packages/cmk-agent-ctl:__pkg__",
+        "//packages/mk-oracle:__pkg__",
+    ],
 )
 
 py_cmk_test(

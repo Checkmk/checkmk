@@ -1,0 +1,7 @@
+# mk-oracle tests skipped in the QEMU tier (mk-oracle-tests-qemu), passed
+# to the test binaries as --skip (substring match). These return without
+# testing anything when their environment is missing, so they would count
+# as passed.
+
+# Needs a local Oracle installation; the image has none.
+test_detection_registry

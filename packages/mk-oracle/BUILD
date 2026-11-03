@@ -1,7 +1,11 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@host_crates//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_library", "rust_test_suite")
+load("//bazel/rules:crlf_files.bzl", "crlf_files")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
+load("//bazel/rules:xcomp/qemu_test.bzl", "qemu_test")
 load("//bazel/rules:xcomp/rust.bzl", "rust_binary", "rust_test")
 load("//bazel/rules:xcomp/rust_wine_test.bzl", "rust_wine_test")
 load("//bazel/testing:static_crt.bzl", "static_crt_test")
@@ -297,6 +301,122 @@ rust_wine_test(
     binaries = [":mk-oracle-lib-test-internal-windows"],
     prepare = "wine-prepare.sh",
     skip_file = "wine-skipped-tests.txt",
+)
+
+# The component and binary tests, cross compiled for Windows and run
+# inside the real-Windows QEMU VM by :mk-oracle-tests-qemu below, which
+# stages mk-oracle.exe next to them.
+[
+    rust_test(
+        name = "test_%s-windows" % t,
+        srcs = ["tests/test_%s.rs" % t],
+        compile_data = [
+            "tests/files/tns/tnsnames.ora",
+            "tests/files/not-ora_sql.yml",
+            "tests/files/not-yaml.yml",
+            "tests/files/test-config.yml",
+            "tests/files/test-mini.yml",
+        ] + glob([
+            "tests/files/orasql_abs/**/*.sql",
+            "tests/files/orasql_runtime/**/*.sql",
+            "tests/files/orasql_config/**/*.sql",
+        ]),
+        crate_features = ["build_system_bazel"],
+        crate_root = "tests/test_%s.rs" % t,
+        platform = "//bazel/platforms:x86_64-windows-msvc",
+        tags = ["manual"],
+        deps = all_crate_deps() + [
+            ":mk-oracle-lib",
+            ":mk-oracle-tests-common",
+            "@host_crates//:assert_cmd",
+            "@host_crates//:tempfile",
+        ],
+    )
+    for t in [
+        "mk_oracle_bin",
+        "ora_discovery",
+        "ora_no_db",
+        "ora_with_db",
+    ]
+]
+
+# cmd.exe needs CRLF line ends, which a Linux checkout lacks.
+crlf_files(
+    name = "qemu_tests_script",
+    srcs = ["rust-test-qemu.cmd"],
+    suffixes = [".cmd"],
+)
+
+pkg_files(
+    name = "qemu_tests_root",
+    testonly = True,
+    srcs = [
+        ":qemu_tests_script",
+        ":test_mk_oracle_bin-windows",
+        ":test_ora_discovery-windows",
+        ":test_ora_no_db-windows",
+        ":test_ora_with_db-windows",
+    ],
+)
+
+# The OCI client below MK_LIBDIR (rust-test-qemu.cmd), where the
+# runtime-detection tests look for it. Staged from the archive rather than
+# from //omd/packages/oci's stamped zip, so the stage stays cacheable.
+pkg_files(
+    name = "qemu_tests_oci",
+    srcs = ["@oci-basic-light-win-x64//:srcs"],
+    prefix = "packages/mk-oracle/runtimes/plugins/libexec/mk-oracle-v2/oic",
+)
+
+pkg_files(
+    name = "qemu_tests_package",
+    srcs = [
+        "references/output-multiple.ps1",
+        "references/output-optional.ps1",
+        ":mk-oracle-windows",
+    ],
+    prefix = "packages/mk-oracle",
+    strip_prefix = strip_prefix.from_pkg(),
+)
+
+pkg_files(
+    name = "qemu_tests_fixtures",
+    srcs = ["tests/files/tns/tnsnames.ora"],
+    strip_prefix = strip_prefix.from_pkg(),
+)
+
+# The guest's directory, the tests' cwd:
+#   *.exe                    the test binaries
+#   packages\mk-oracle\      mk-oracle.exe and the .ps1 reference configs
+#   packages\mk-oracle\runtimes\plugins\libexec\mk-oracle-v2\oic\
+#                            the OCI client
+#   tests\files\tns\         the static TNS fixture
+pkg_tar(
+    name = "qemu_tests_stage",
+    testonly = True,
+    srcs = [
+        ":qemu_tests_fixtures",
+        ":qemu_tests_oci",
+        ":qemu_tests_package",
+        ":qemu_tests_root",
+        "//bazel/tools/windows_vm:run_rust_tests",
+    ],
+    extension = "tar.gz",
+)
+
+# Runs the cross-built component tests inside the real-Windows QEMU VM
+# against the database in CI_ORA2_DB_TEST (and optionally CI_ORA1_DB_TEST),
+# taken from the environment.
+qemu_test(
+    name = "mk-oracle-tests-qemu",
+    src = "rust_test_qemu.py",
+    args = ["$(rootpath qemu-skipped-tests.txt)"],
+    data = ["qemu-skipped-tests.txt"],
+    env_inherit = [
+        "CI_ORA1_DB_TEST",
+        "CI_ORA2_DB_TEST",
+    ],
+    stage = ":qemu_tests_stage",
 )
 
 sh_library(

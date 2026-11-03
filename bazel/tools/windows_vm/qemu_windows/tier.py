@@ -72,7 +72,8 @@ def run(
     script: the stage path of the .cmd or .ps1 to run, with args.
     args: go into qemu-task.cmd as given: quote one with spaces or & | < >,
       and avoid ^, which call doubles even in quotes; % expands, as in env.
-    env: variables to set for it; values can use QEMU_GDIR and QEMU_RID.
+    env: variables to set for it; values can use QEMU_GDIR and QEMU_RID
+      (cmd_literal() keeps one literal).
     collect: files of QEMU_GDIR to copy into the test's undeclared outputs.
     """
     # The payload's output before the verdict that follows it; a Bazel
@@ -88,6 +89,15 @@ def run(
     except VmError as e:
         sys.stderr.write(f"error: {e}\n")
         return 1
+
+
+def cmd_literal(value: str) -> str:
+    """value for run()'s env that cmd.exe keeps literal, a credential, say:
+    with % doubled, which cmd.exe would expand. A double quote would end
+    the quoting: ValueError."""
+    if '"' in value:
+        raise ValueError("a double quote cannot be passed to cmd.exe literally")
+    return value.replace("%", "%%")
 
 
 def payload_timeout(test_timeout: float, elapsed: float) -> float:

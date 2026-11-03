@@ -4,7 +4,8 @@
 
 from pathlib import Path
 
-from qemu_windows.tier import read_list, wrapper
+import pytest
+from qemu_windows.tier import cmd_literal, read_list, wrapper
 
 
 def test_calls_a_cmd_script_with_its_args() -> None:
@@ -54,3 +55,14 @@ def test_comment_only_list_file_is_empty(tmp_path: Path) -> None:
     path.write_text("# nothing excluded\n")
 
     assert not read_list(path)
+
+
+def test_cmd_literal_doubles_the_percent_signs_cmd_exe_would_expand() -> None:
+    task = wrapper("bzl-ora-1-2", "run.cmd", [], {"ENDPOINT": cmd_literal("h:u:p&|<>^%x%")})
+
+    assert 'set "ENDPOINT=h:u:p&|<>^%%x%%"' in task.splitlines()
+
+
+def test_cmd_literal_refuses_a_double_quote() -> None:
+    with pytest.raises(ValueError, match="double quote"):
+        cmd_literal('pass"word')

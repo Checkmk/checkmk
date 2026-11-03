@@ -1065,3 +1065,13 @@ def test_get_information_keeps_cached_dependents_of_unavailable_section(
     _run(redfishobj)
 
     assert f"<<<redfish_drives:sep(0):cached({cached_at},300)>>>" in capsys.readouterr().out
+
+
+@pytest.mark.xfail(strict=True, raises=json.JSONDecodeError, reason="Crash group 4890")
+def test_client_session_loadf_ignores_empty_session_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
+    Storage(agent_redfish.AGENT, "bmc-1").write("session", "")
+
+    assert agent_redfish.ClientSession.loadf("bmc-1") is None

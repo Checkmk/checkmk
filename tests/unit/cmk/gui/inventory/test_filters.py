@@ -7,6 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.inventory.filters import (
     FilterInvBool,
     FilterInvChoice,
@@ -481,6 +482,11 @@ _HOST_WITHOUT_PACKAGES: Row = {"host_inventory": ImmutableTree()}
             id="a-regex-matching-no-name",
         ),
         pytest.param(
+            {"invswpac_host_name": "^(?!package-a)", "invswpac_host_match": "regex"},
+            [_HOST_WITH_PACKAGE_B],
+            id="a-regex-looking-ahead",
+        ),
+        pytest.param(
             {"invswpac_host_name": "package-a", "invswpac_host_negate": "on"},
             [_HOST_WITH_PACKAGE_B, _HOST_WITHOUT_PACKAGES],
             id="negate",
@@ -572,3 +578,11 @@ def test_filter_inv_has_software_package(
         )
         == expected_rows
     )
+
+
+def test_filter_inv_has_software_package_rejects_an_invalid_regex() -> None:
+    with pytest.raises(MKUserError):
+        FilterInvHasSoftwarePackage().filter_table(
+            {"invswpac": {"invswpac_host_name": "(", "invswpac_host_match": "regex"}},
+            [_HOST_WITH_PACKAGE_A],
+        )

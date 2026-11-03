@@ -219,7 +219,9 @@ CLUSTER3: Final[object] = {
     "TagsForCmkLabels": {},
 }
 
-LIMITS = [
+CLUSTER3_HOST = TargetHost("cluster-test3_region")
+
+ACCOUNT_LIMITS = [
     AWSRegionLimit(
         key="clusters",
         title="Clusters",
@@ -227,59 +229,59 @@ LIMITS = [
         amount=1,
         region="region",
     ),
+]
+
+CLUSTER3_LIMITS = [
     AWSRegionLimit(
         key="capacity_providers",
-        title="Capacity providers of cluster-test3",
+        title="Capacity providers",
         limit=10,
         amount=2,
         region="region",
     ),
     AWSRegionLimit(
         key="container_instances",
-        title="Container instances of cluster-test3",
+        title="Container instances",
         limit=20,
         amount=10,
         region="region",
     ),
     AWSRegionLimit(
         key="services",
-        title="Services of cluster-test3",
+        title="Services",
         limit=5000,
         amount=5,
         region="region",
     ),
 ]
 
-LIMITS2 = [
-    AWSRegionLimit(
-        key="clusters",
-        title="Clusters",
-        limit=10000,
-        amount=1,
-        region="region",
-    ),
+CLUSTER3_DEFAULT_LIMITS = [
     AWSRegionLimit(
         key="capacity_providers",
-        title="Capacity providers of cluster-test3",
+        title="Capacity providers",
         limit=10,
         amount=2,
         region="region",
     ),
     AWSRegionLimit(
         key="container_instances",
-        title="Container instances of cluster-test3",
+        title="Container instances",
         limit=5000,
         amount=10,
         region="region",
     ),
     AWSRegionLimit(
         key="services",
-        title="Services of cluster-test3",
+        title="Services",
         limit=5000,
         amount=5,
         region="region",
     ),
 ]
+
+
+def _limits_by_host(results: AWSSectionResults) -> Mapping[TargetHost, object]:
+    return {result.piggyback_hostname: result.content for result in results.results}
 
 
 def test_agent_aws_ecs_limits(
@@ -291,11 +293,10 @@ def test_agent_aws_ecs_limits(
     assert ecs_limits.period == 600
     assert ecs_limits.name == "ecs_limits"
 
-    results = ecs_limits.run()
-    assert len(results.results) == 1
-    result = results.results[0]
-    assert isinstance(result, AWSSectionResult)
-    assert result.content == LIMITS
+    assert _limits_by_host(ecs_limits.run()) == {
+        ACCOUNT_HOST: ACCOUNT_LIMITS,
+        CLUSTER3_HOST: CLUSTER3_LIMITS,
+    }
 
 
 @pytest.mark.usefixtures("get_ecs_sections")
@@ -304,6 +305,8 @@ def test_agent_aws_ecs_limits_without_quota_client() -> None:
     config = AWSConfig(
         "hostname", Args(), ([], []), NamingConvention.ip_region_instance
     ).for_account("123456789012")
+    config.add_single_service_config("ecs_names", None)
+    config.add_service_tags("ecs_tags", (None, None))
     fake_ecs_client = FakeECSClient(CLUSTERS_CLIENT_RESPONSE2)
 
     # TODO: FakeECSClient shoud actually subclass ECSClient, etc.
@@ -313,11 +316,27 @@ def test_agent_aws_ecs_limits_without_quota_client() -> None:
     assert ecs_limits.period == 600
     assert ecs_limits.name == "ecs_limits"
 
-    results = ecs_limits.run()
-    assert len(results.results) == 1
-    result = results.results[0]
-    assert isinstance(result, AWSSectionResult)
-    assert result.content == LIMITS2
+    assert _limits_by_host(ecs_limits.run()) == {
+        ACCOUNT_HOST: ACCOUNT_LIMITS,
+        CLUSTER3_HOST: CLUSTER3_DEFAULT_LIMITS,
+    }
+
+
+@pytest.mark.parametrize(
+    "names, tags",
+    [
+        pytest.param(["cluster-test1"], (None, None), id="other name"),
+        pytest.param(None, (["tag1"], ["true"]), id="other tag"),
+    ],
+)
+def test_agent_aws_ecs_limits_skip_clusters_the_rule_does_not_select(
+    get_ecs_sections: ECSSections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+) -> None:
+    ecs_limits, _ecs_summary, _ecs = get_ecs_sections(names, tags)
+
+    assert _limits_by_host(ecs_limits.run()) == {ACCOUNT_HOST: ACCOUNT_LIMITS}
 
 
 @pytest.mark.parametrize(
@@ -515,14 +534,13 @@ def test_agent_aws_ecs_cluster_hosts_get_the_resource_labels(
     }
 
 
-def test_agent_aws_ecs_summary_and_limits_stay_on_the_account_host(
+def test_agent_aws_ecs_summary_stays_on_the_account_host(
     get_ecs_sections: ECSSections,
 ) -> None:
     ecs_limits, ecs_summary, _ecs = get_ecs_sections(None, (None, None))
+    ecs_limits.run()
 
-    results = [*ecs_limits.run().results, *ecs_summary.run().results]
-
-    assert {result.piggyback_hostname for result in results} == {ACCOUNT_HOST}
+    assert {result.piggyback_hostname for result in ecs_summary.run().results} == {ACCOUNT_HOST}
 
 
 @pytest.mark.parametrize(

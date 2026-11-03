@@ -155,35 +155,39 @@ class ECSLimits(AWSSectionLimits):
             region=self._region,
         )
 
-        for cluster in clusters:
+        for cluster in ClusterSelection.from_config(self._config).select(clusters):
+            cluster_host = hosts.ECSCluster(cluster.clusterName, self._region)
             self._add_limit(
                 AWSLimit(
                     key="capacity_providers",
-                    title=f"Capacity providers of {cluster.clusterName}",
+                    title="Capacity providers",
                     limit=ECSLimits._get_quota_limit(quotas, "Capacity providers per cluster"),
                     amount=len(cluster.capacityProviders),
                 ),
                 region=self._region,
+                resource=cluster_host,
             )
 
             self._add_limit(
                 AWSLimit(
                     key="container_instances",
-                    title=f"Container instances of {cluster.clusterName}",
+                    title="Container instances",
                     limit=ECSLimits._get_quota_limit(quotas, "Container instances per cluster"),
                     amount=cluster.registeredContainerInstancesCount,
                 ),
                 region=self._region,
+                resource=cluster_host,
             )
 
             self._add_limit(
                 AWSLimit(
                     key="services",
-                    title=f"Services of {cluster.clusterName}",
+                    title="Services",
                     limit=ECSLimits._get_quota_limit(quotas, "Services per cluster"),
                     amount=cluster.activeServicesCount,
                 ),
                 region=self._region,
+                resource=cluster_host,
             )
 
         return AWSComputedContent(clusters, raw_content.cache_timestamp)

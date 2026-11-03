@@ -353,15 +353,14 @@ fn make_section<S: Into<String>>(name: S) -> Section {
 async fn validate_all(i: &SqlInstance, c: &mut UniClient, e: &Endpoint) {
     assert_eq!(c.get_edition(), Edition::Normal);
     validate_database_names(i, c).await;
-    assert!(
-        tools::run_get_version(c).await.is_some()
-            && query::obtain_computer_name(c)
-                .await
-                .unwrap()
-                .unwrap()
-                .to_string()
-                .to_lowercase()
-                .starts_with("agentbuild")
+    assert!(tools::run_get_version(c).await.is_some());
+    tools::assert_computer_name(
+        &query::obtain_computer_name(c)
+            .await
+            .unwrap()
+            .unwrap()
+            .to_string(),
+        &tools::get_remote_sql_from_env_var().unwrap().host,
     );
     validate_counters(i, c).await;
     validate_blocked_sessions(i, c).await;
@@ -826,16 +825,17 @@ mssql:
         for i in is {
             let c = i.create_client(&ms_sql.endpoint(), None, None).await;
             match c {
-                Ok(mut c) => assert!(
-                    tools::run_get_version(&mut c).await.is_some()
-                        && query::obtain_computer_name(&mut c)
+                Ok(mut c) => {
+                    assert!(tools::run_get_version(&mut c).await.is_some());
+                    tools::assert_computer_name(
+                        &query::obtain_computer_name(&mut c)
                             .await
                             .unwrap()
                             .unwrap()
-                            .to_string()
-                            .to_lowercase()
-                            .starts_with("agentbuild")
-                ),
+                            .to_string(),
+                        &endpoint.host,
+                    );
+                }
                 Err(e) => {
                     panic!("Unexpected error: `{:?}`", e);
                 }
@@ -853,11 +853,7 @@ async fn test_get_computer_name() {
             .await
             .unwrap();
         let name = query::obtain_computer_name(&mut client).await.unwrap();
-        assert!(name
-            .unwrap()
-            .to_string()
-            .to_lowercase()
-            .starts_with("agentbuild"),);
+        tools::assert_computer_name(&name.unwrap().to_string(), &endpoint.host);
     } else {
         tools::skip_on_lack_of_ms_sql_endpoint();
     }
@@ -1084,11 +1080,7 @@ async fn test_find_no_detect_two_custom_instances_remote() {
         assert!(instances[0].version.to_string().contains('.'));
         assert_eq!(instances[0].port().unwrap(), Port(1433));
         let pc = instances[0].computer_name().as_ref().unwrap().clone();
-        assert!(
-            pc.to_string().to_uppercase().contains("AGENTBUILD"),
-            "{:?}",
-            instances[0].computer_name()
-        );
+        tools::assert_computer_name(&pc.to_string(), &endpoint.host);
     } else {
         tools::skip_on_lack_of_ms_sql_endpoint();
     }
@@ -1275,35 +1267,20 @@ fn validate_stdout(stdout: &str, label: &str) {
     // - details entries: one per engine
     assert_eq!(contains(&lines, "|details|"), 3, "{}\n{}", &label, stdout);
 
-    let rtm_count = contains(&lines, "|RTM|Express Edition");
-    let sp3_count = contains(&lines, "|SP3|Express Edition");
-    let sp2_count = contains(&lines, "|SP2|Express Edition");
-    assert_eq!(
-        rtm_count + std::cmp::max(sp3_count, sp2_count),
-        2,
-        "{}\n{}",
-        &label,
-        stdout
-    );
-
-    let rtm_count = contains(&lines, "|RTM|Express Edition (64-bit)");
-    let sp3_count = contains(&lines, "|SP3|Express Edition (64-bit)");
-    let sp2_count = contains(&lines, "|SP2|Express Edition (64-bit)");
-    assert_eq!(
-        rtm_count + std::cmp::max(sp3_count, sp2_count),
-        1,
-        "{}\n{}",
-        &label,
-        stdout
-    );
-
-    assert_eq!(
-        contains(&lines, "|RTM|Standard Edition"),
-        1,
-        "{}\n{}",
-        &label,
-        stdout
-    );
+    // - each expected instance names its edition in its details entry
+    for name in expected_instances() {
+        let prefix = format!("MSSQL_{name}|details|");
+        let details: Vec<&&str> = lines.iter().filter(|s| s.starts_with(&prefix)).collect();
+        assert_eq!(details.len(), 1, "{}: {}\n{}", &label, &name, stdout);
+        let edition = details[0].rsplit('|').next().unwrap_or_default();
+        assert!(
+            edition.contains("Edition"),
+            "{}: {}\n{}",
+            &label,
+            &name,
+            stdout
+        );
+    }
 }
 
 /// create [local,  remote] or [local]  for Windows
@@ -1406,8 +1383,18 @@ async fn test_check_exclude() {
     let normal_data = normal_config.exec(&Env::default()).await.unwrap();
     assert!(!excluded_data.contains("|tempdb|"));
     assert!(!excluded_data.contains("|model|"));
-    assert_eq!(normal_data.matches("|tempdb|").count() as u32, 9);
-    assert_eq!(normal_data.matches("|model|").count() as u32, 6);
+    // How many rows each database gets depends on the server (e.g. tempdb's
+    // file count follows the CPU count at install time): check that every
+    // instance reports both.
+    for instance in expected_instances() {
+        for database in ["tempdb", "model"] {
+            let row = format!("{instance}|{database}|");
+            assert!(
+                normal_data.lines().any(|l| l.starts_with(&row)),
+                "no {database} row for instance {instance}"
+            );
+        }
+    }
 }
 
 #[tokio::test(flavor = "multi_thread")]

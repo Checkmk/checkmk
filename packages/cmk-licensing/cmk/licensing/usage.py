@@ -353,20 +353,6 @@ class LocalLicenseUsageHistory:
         return [sample.for_report() for sample in self._samples]
 
     @classmethod
-    def update(
-        cls, raw_report: object, *, instance_id: UUID, site_hash: str
-    ) -> LocalLicenseUsageHistory:
-        if not raw_report:
-            return cls([])
-        if not isinstance(raw_report, dict):
-            raise TypeError("Wrong report type: %r" % type(raw_report))
-        protocol_version = parse_usage_history_version(raw_report)
-        return cls(
-            parse_sample(protocol_version, instance_id, site_hash, raw_sample)
-            for raw_sample in raw_report.get("history", [])
-        )
-
-    @classmethod
     def parse(cls, raw_report: object) -> LocalLicenseUsageHistory:
         if not raw_report:
             return cls([])

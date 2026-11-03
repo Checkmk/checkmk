@@ -374,6 +374,11 @@ def test_agent_aws_ecs_summary(
             (["tag1"], ["false"]),
             [CLUSTER2],
         ),
+        (
+            None,
+            (["tag1", "tag2"], ["true", "2"]),
+            [CLUSTER1],
+        ),
     ],
 )
 def test_agent_aws_ecs_summary_without_colleague_content(

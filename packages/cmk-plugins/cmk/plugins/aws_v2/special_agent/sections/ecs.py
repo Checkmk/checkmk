@@ -5,9 +5,10 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from enum import StrEnum
-from typing import override
+from typing import override, Self
 
 from botocore.client import BaseClient
 from pydantic import BaseModel, ConfigDict, Field
@@ -15,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from cmk.plugins.aws_v2.constants import AWS_ECS_QUOTA_DEFAULTS
 
 from .. import hosts
-from ..config import AWSConfig
+from ..config import AWSConfig, Tags
 from ..labels import AwsResource
 from .core import (
     AWSColleagueContents,
@@ -69,6 +70,31 @@ def get_ecs_clusters(ecs_client: BaseClient, cluster_ids: Sequence[str]) -> Iter
     for chunk in chunks(cluster_ids, length=100):
         clusters = ecs_client.describe_clusters(clusters=chunk, include=["TAGS"])  # type: ignore[attr-defined]
         yield from [Cluster(**cluster_data) for cluster_data in clusters["clusters"]]
+
+
+@dataclass(frozen=True)
+class ClusterSelection:
+    """The clusters that the rule selects by name and by tag."""
+
+    names: Sequence[str] | None
+    tags: Tags | None
+
+    @classmethod
+    def from_config(cls, config: AWSConfig) -> Self:
+        return cls(
+            names=config.service_config["ecs_names"],
+            tags=AWSSection.prepare_tags_for_api_response(config.service_config["ecs_tags"]),
+        )
+
+    def select(self, clusters: Iterable[Cluster]) -> Iterator[Cluster]:
+        for cluster in clusters:
+            if self.names is not None and cluster.clusterName not in self.names:
+                continue
+            if self.tags is not None and not any(
+                tag.model_dump() in self.tags for tag in cluster.tags
+            ):
+                continue
+            yield cluster
 
 
 class ECSLimits(AWSSectionLimits):
@@ -172,8 +198,7 @@ class ECSSummary(AWSSection):
         distributor: ResultDistributor | None = None,
     ) -> None:
         super().__init__(client, region, config, distributor=distributor)
-        self._names = self._config.service_config["ecs_names"]
-        self._tags = self.prepare_tags_for_api_response(self._config.service_config["ecs_tags"])
+        self._selection = ClusterSelection.from_config(self._config)
 
     @property
     @override
@@ -198,39 +223,23 @@ class ECSSummary(AWSSection):
         return AWSColleagueContents({}, 0.0)
 
     def _get_cluster_ids(self) -> Iterable[str]:
-        if self._names is not None:
-            yield from self._names
+        if self._selection.names is not None:
+            yield from self._selection.names
             return
 
         yield from get_ecs_cluster_arns(self._client)
 
     def _fetch_clusters(self, clusters: Sequence[Cluster]) -> Iterable[Cluster]:
         if clusters:
-            if self._names is not None:
-                yield from (c for c in clusters if c.clusterName in self._names)
-            else:
-                yield from clusters
+            yield from clusters
         else:
-            cluster_ids = list(self._get_cluster_ids())
-            yield from get_ecs_clusters(self._client, cluster_ids)
-
-    def _filter_clusters_by_tags(
-        self, clusters: Iterable[Cluster]
-    ) -> Iterable[Mapping[str, object]]:
-        for cluster in clusters:
-            for cluster_tag in cluster.tags:
-                if self._tags and cluster_tag.model_dump() in self._tags:
-                    yield cluster.model_dump()
+            yield from get_ecs_clusters(self._client, list(self._get_cluster_ids()))
 
     @override
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
         (colleague_contents,) = args
         clusters = self._fetch_clusters(colleague_contents.content)
-
-        if self._tags is not None:
-            return list(self._filter_clusters_by_tags(clusters))
-
-        return [c.model_dump() for c in clusters]
+        return [c.model_dump() for c in self._selection.select(clusters)]
 
     @override
     def _compute_content(

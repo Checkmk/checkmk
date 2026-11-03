@@ -45,6 +45,7 @@ def check_hivemanager_ng_devices(item, params, parsed):
     device = parsed.get(item)
     if not device:
         yield 2, "No data for device."
+        return
 
     status, connected = 0, device["connected"]
     if connected is not True:

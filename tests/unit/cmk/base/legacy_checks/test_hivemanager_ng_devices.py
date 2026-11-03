@@ -5,15 +5,12 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-import pytest
-
 from cmk.base.legacy_checks.hivemanager_ng_devices import (
     check_hivemanager_ng_devices,
     parse_hivemanager_ng_devices,
 )
 
 
-@pytest.mark.xfail(strict=True, raises=TypeError, reason="Crash group 4989")
 def test_check_hivemanager_ng_devices_vanished_device() -> None:
     parsed = parse_hivemanager_ng_devices(
         [

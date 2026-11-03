@@ -1,4 +1,4 @@
-title: AWS v2 S3: Requests
+title: AWS v2 S3: Latency
 agents: aws_v2
 catalog: cloud/aws
 license: GPLv2
@@ -23,9 +23,6 @@ description:
 
  No default levels are set. Upper levels on the first latency
  are configurable via the rule "AWS v2/S3 Latency".
-
-item:
- Name of the bucket
 
 discovery:
  Each bucket is a piggyback host with the name {<bucket name>}.

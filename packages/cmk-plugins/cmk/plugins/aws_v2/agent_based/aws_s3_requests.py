@@ -25,18 +25,18 @@ from cmk.plugins.aws_v2.lib import (
     aws_get_bytes_rate_human_readable,
     aws_get_counts_rate_human_readable,
     AWSMetric,
-    AWSSectionMetrics,
     check_aws_http_errors,
     check_aws_metrics,
-    discover_aws_generic,
+    discover_aws_generic_single,
     extract_aws_metrics_by_labels,
-    get_data_or_go_stale,
     parse_aws,
 )
 
+Section = Mapping[str, float]
 
-def parse_aws_s3_requests(string_table: StringTable) -> AWSSectionMetrics:
-    return extract_aws_metrics_by_labels(
+
+def parse_aws_s3_requests(string_table: StringTable) -> Section:
+    metrics_by_bucket = extract_aws_metrics_by_labels(
         [
             "AllRequests",
             "GetRequests",
@@ -57,6 +57,14 @@ def parse_aws_s3_requests(string_table: StringTable) -> AWSSectionMetrics:
         ],
         parse_aws(string_table),
     )
+    # The bucket host gets the rows of its own bucket only.
+    return next(iter(metrics_by_bucket.values()), {})
+
+
+def _data_or_go_stale(section: Section) -> Section:
+    if not section:
+        raise IgnoreResultsError("Currently no data from AWS")
+    return section
 
 
 agent_section_aws_v2_s3_requests = AgentSection(
@@ -65,14 +73,12 @@ agent_section_aws_v2_s3_requests = AgentSection(
 )
 
 
-def discover_aws_s3_requests(section: AWSSectionMetrics) -> DiscoveryResult:
-    yield from discover_aws_generic(section, ["AllRequests"])
+def discover_aws_s3_requests(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(section, ["AllRequests"])
 
 
-def check_aws_s3_requests(
-    item: str, params: Mapping[str, Any], section: AWSSectionMetrics
-) -> CheckResult:
-    metrics = get_data_or_go_stale(item, section)
+def check_aws_s3_requests(params: Mapping[str, Any], section: Section) -> CheckResult:
+    metrics = _data_or_go_stale(section)
     all_requests_rate = metrics.get("AllRequests")
     if all_requests_rate is None:
         raise IgnoreResultsError("Currently no data from AWS")
@@ -113,7 +119,7 @@ def check_aws_s3_requests(
 
 check_plugin_aws_v2_s3_requests = CheckPlugin(
     name="aws_v2_s3_requests",
-    service_name="AWS/S3 Requests %s",
+    service_name="AWS/S3 Requests",
     discovery_function=discover_aws_s3_requests,
     check_function=check_aws_s3_requests,
     check_ruleset_name="aws_v2_s3_requests",
@@ -121,14 +127,12 @@ check_plugin_aws_v2_s3_requests = CheckPlugin(
 )
 
 
-def discover_aws_s3_requests_http_errors(section: AWSSectionMetrics) -> DiscoveryResult:
-    yield from discover_aws_generic(section, ["AllRequests", "4xxErrors", "5xxErrors"])
+def discover_aws_s3_requests_http_errors(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(section, ["AllRequests", "4xxErrors", "5xxErrors"])
 
 
-def check_aws_s3_http_errors(
-    item: str, params: Mapping[str, Any], section: AWSSectionMetrics
-) -> CheckResult:
-    metrics = get_data_or_go_stale(item, section)
+def check_aws_s3_http_errors(params: Mapping[str, Any], section: Section) -> CheckResult:
+    metrics = _data_or_go_stale(section)
     yield from check_aws_http_errors(
         params.get("levels_load_balancers", params),
         metrics,
@@ -140,7 +144,7 @@ def check_aws_s3_http_errors(
 
 check_plugin_aws_v2_s3_requests_http_errors = CheckPlugin(
     name="aws_v2_s3_requests_http_errors",
-    service_name="AWS/S3 HTTP Errors %s",
+    service_name="AWS/S3 HTTP Errors",
     sections=["aws_v2_s3_requests"],
     discovery_function=discover_aws_s3_requests_http_errors,
     check_function=check_aws_s3_http_errors,
@@ -149,14 +153,12 @@ check_plugin_aws_v2_s3_requests_http_errors = CheckPlugin(
 )
 
 
-def discover_aws_s3_requests_latency(section: AWSSectionMetrics) -> DiscoveryResult:
-    yield from discover_aws_generic(section, ["TotalRequestLatency"])
+def discover_aws_s3_requests_latency(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(section, ["TotalRequestLatency"])
 
 
-def check_aws_s3_latency(
-    item: str, params: Mapping[str, Any], section: AWSSectionMetrics
-) -> CheckResult:
-    metrics = get_data_or_go_stale(item, section)
+def check_aws_s3_latency(params: Mapping[str, Any], section: Section) -> CheckResult:
+    metrics = _data_or_go_stale(section)
     metrics_to_check = []
     for key, title, perf_key in [
         ("TotalRequestLatency", "Total request latency", "aws_request_latency"),
@@ -190,7 +192,7 @@ def check_aws_s3_latency(
 
 check_plugin_aws_v2_s3_requests_latency = CheckPlugin(
     name="aws_v2_s3_requests_latency",
-    service_name="AWS/S3 Latency %s",
+    service_name="AWS/S3 Latency",
     sections=["aws_v2_s3_requests"],
     discovery_function=discover_aws_s3_requests_latency,
     check_function=check_aws_s3_latency,
@@ -199,12 +201,12 @@ check_plugin_aws_v2_s3_requests_latency = CheckPlugin(
 )
 
 
-def discover_aws_s3_requests_traffic_stats(section: AWSSectionMetrics) -> DiscoveryResult:
-    yield from discover_aws_generic(section, ["BytesDownloaded", "BytesUploaded"])
+def discover_aws_s3_requests_traffic_stats(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(section, ["BytesDownloaded", "BytesUploaded"])
 
 
-def check_aws_s3_traffic_stats(item: str, section: AWSSectionMetrics) -> CheckResult:
-    metrics = get_data_or_go_stale(item, section)
+def check_aws_s3_traffic_stats(section: Section) -> CheckResult:
+    metrics = _data_or_go_stale(section)
     yield from check_aws_metrics(
         [
             AWSMetric(
@@ -224,19 +226,19 @@ def check_aws_s3_traffic_stats(item: str, section: AWSSectionMetrics) -> CheckRe
 
 check_plugin_aws_v2_s3_requests_traffic_stats = CheckPlugin(
     name="aws_v2_s3_requests_traffic_stats",
-    service_name="AWS/S3 Traffic Stats %s",
+    service_name="AWS/S3 Traffic Stats",
     sections=["aws_v2_s3_requests"],
     discovery_function=discover_aws_s3_requests_traffic_stats,
     check_function=check_aws_s3_traffic_stats,
 )
 
 
-def discover_aws_s3_requests_select_object(section: AWSSectionMetrics) -> DiscoveryResult:
-    yield from discover_aws_generic(section, ["SelectBytesScanned", "SelectBytesReturned"])
+def discover_aws_s3_requests_select_object(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(section, ["SelectBytesScanned", "SelectBytesReturned"])
 
 
-def check_aws_s3_select_object(item: str, section: AWSSectionMetrics) -> CheckResult:
-    metrics = get_data_or_go_stale(item, section)
+def check_aws_s3_select_object(section: Section) -> CheckResult:
+    metrics = _data_or_go_stale(section)
     yield from check_aws_metrics(
         [
             AWSMetric(
@@ -256,7 +258,7 @@ def check_aws_s3_select_object(item: str, section: AWSSectionMetrics) -> CheckRe
 
 check_plugin_aws_v2_s3_requests_select_object = CheckPlugin(
     name="aws_v2_s3_requests_select_object",
-    service_name="AWS/S3 SELECT Object %s",
+    service_name="AWS/S3 SELECT Object",
     sections=["aws_v2_s3_requests"],
     discovery_function=discover_aws_s3_requests_select_object,
     check_function=check_aws_s3_select_object,

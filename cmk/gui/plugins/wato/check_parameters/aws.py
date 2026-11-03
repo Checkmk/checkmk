@@ -743,7 +743,7 @@ rule_spec_aws_v2_s3_requests = CheckParameters(
     title=Title("AWS v2/S3 bucket requests"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_s3_requests,
-    condition=HostAndItemCondition(item_title=Title("Bucket name")),
+    condition=HostCondition(),
 )
 
 
@@ -778,7 +778,7 @@ rule_spec_aws_v2_s3_latency = CheckParameters(
     title=Title("AWS v2/S3 latency"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_s3_latency,
-    condition=HostAndItemCondition(item_title=Title("Bucket name")),
+    condition=HostCondition(),
 )
 
 
@@ -837,7 +837,7 @@ rule_spec_aws_v2_s3_http_errors = CheckParameters(
     title=Title("AWS v2/S3 HTTP errors"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_s3_http_errors,
-    condition=HostAndItemCondition(item_title=Title("Bucket name")),
+    condition=HostCondition(),
 )
 
 # .

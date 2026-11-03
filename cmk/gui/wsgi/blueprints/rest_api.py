@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import functools
+from http import HTTPStatus
 from wsgiref.types import WSGIApplication
 
 from flask import Blueprint, current_app, make_response, Response, send_from_directory
@@ -12,6 +13,7 @@ from flask import Blueprint, current_app, make_response, Response, send_from_dir
 from cmk.ccc import store
 from cmk.ccc.site import get_omd_config
 from cmk.gui import hooks, sites
+from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.wsgi.applications import CheckmkRESTAPI
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.gui.wsgi.middleware import OverrideRequestMethod
@@ -61,7 +63,11 @@ def serve_redoc(site: str, file_name: str) -> Response:
 @rest_api.route("/<string:version>/doc/", defaults={"file_name": "index.html"})
 @rest_api.route("/<string:version>/doc/<path:file_name>")
 def serve_versioned_redoc(site: str, version: str, file_name: str) -> Response:
-    return _serve_redoc_file(file_name, spec_url=f"../../{version}/openapi-doc.yaml")
+    try:
+        api_version = APIVersion.V1 if version == "1.0" else APIVersion.from_string(version)
+    except ValueError:
+        return make_response(HTTPStatus.NOT_FOUND.phrase, HTTPStatus.NOT_FOUND)
+    return _serve_redoc_file(file_name, spec_url=f"../../{api_version}/openapi-doc.yaml")
 
 
 def _serve_redoc_file(file_name: str, spec_url: str) -> Response:

@@ -294,7 +294,9 @@ def fetch_containers(context: FetchContext) -> Sequence[Section]:
     ]
 
 
-VMS_PATH = "vmm/v4.0/ahv/config/vms"
+AHV_VMS_PATH = "vmm/v4.0/ahv/config/vms"
+ESXI_VMS_PATH = "vmm/v4.0/esxi/config/vms"
+# The same fields for AHV and ESXi VMs
 VM_SELECT = "extId,name,powerState,description,memorySizeBytes,host/extId,cluster/extId"
 
 
@@ -309,11 +311,23 @@ def _host_names(hosts: Sequence[JsonObject] | PrismV4Error) -> dict[str, str]:
     }
 
 
+def _esxi_vms(context: FetchContext) -> list[JsonObject]:
+    """The AHV VMs are reported even if Prism Central can't list the ESXi VMs"""
+    try:
+        return context.client.list_all(ESXI_VMS_PATH, {"$select": VM_SELECT})
+    except PrismV4Error as e:
+        if e.status == HTTPStatus.NOT_FOUND:
+            context.messages.add_info(f"Could not fetch the ESXi VMs: {e}")
+        else:
+            context.messages.add_warning(f"Could not fetch the ESXi VMs: {e}")
+        return []
+
+
 def fetch_vms(context: FetchContext) -> Sequence[Section]:
     """A VM that doesn't fit the model is left out, the others are reported"""
     vms = _parse_valid(
         Vm,
-        context.client.list_all(VMS_PATH, {"$select": VM_SELECT}),
+        [*context.client.list_all(AHV_VMS_PATH, {"$select": VM_SELECT}), *_esxi_vms(context)],
         "VM",
         "extId",
         context.messages,

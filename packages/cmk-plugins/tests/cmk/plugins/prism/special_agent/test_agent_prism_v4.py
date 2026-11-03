@@ -18,11 +18,13 @@ from responses import matchers
 
 from cmk.plugins.prism.special_agent.agent_prism import agent_prism_main, parse_arguments
 from cmk.plugins.prism.special_agent.agent_prism_v4 import (
+    AHV_VMS_PATH,
     ALERTS_PATH,
     ClusterRouting,
     CLUSTERS_PATH,
     CONTAINER_STATS_PATH,
     CONTAINERS_PATH,
+    ESXI_VMS_PATH,
     fetch_alerts,
     fetch_containers,
     fetch_hosts,
@@ -34,7 +36,6 @@ from cmk.plugins.prism.special_agent.agent_prism_v4 import (
     run_fetchers,
     Section,
     Unroutable,
-    VMS_PATH,
     write_sections,
 )
 from cmk.plugins.prism.special_agent.v4_client import JsonObject, PrismV4Client, PrismV4Error
@@ -125,14 +126,24 @@ def _serve_recorded_containers(
         api.get(v4_url(f"{CONTAINER_STATS_PATH}/{ext_id}"), json=stats)
 
 
-def _serve_recorded_vms(api: responses.RequestsMock) -> None:
-    """The 161 VMs of the lab (anonymised) on two pages"""
+def _serve_recorded_vms(
+    api: responses.RequestsMock, esxi_vms: Sequence[object] | None = None
+) -> None:
+    """The 161 AHV VMs of the lab (anonymised) on two pages. The lab has no ESXi VMs unless
+    given."""
     for page_number in (0, 1):
         api.get(
-            v4_url(VMS_PATH),
+            v4_url(AHV_VMS_PATH),
             json=_recorded(f"vmm_ahv_config_vms_page{page_number}.json"),
             match=[page_matcher(page_number)],
         )
+    api.get(
+        v4_url(ESXI_VMS_PATH),
+        json=_recorded("vmm_esxi_config_vms.json")
+        if esxi_vms is None
+        else page(esxi_vms, has_next=False),
+        match=[page_matcher(0)],
+    )
 
 
 def _recorded_host_list() -> list[JsonObject]:
@@ -563,8 +574,9 @@ def test_v4_agent_queries_only_the_v4_api(api: responses.RequestsMock) -> None:
             CONTAINERS_PATH,
             *(f"{CONTAINER_STATS_PATH}/{ext_id}" for ext_id in RECORDED_CONTAINERS),
             # Two pages
-            VMS_PATH,
-            VMS_PATH,
+            AHV_VMS_PATH,
+            AHV_VMS_PATH,
+            ESXI_VMS_PATH,
         )
     )
 
@@ -750,15 +762,86 @@ def test_vms_are_reported_without_host_names_if_the_host_listing_failed(
     assert (len(vms), [vm["name"] for vm in vms if "hostName" in vm]) == (161, [])
 
 
+# An ESXi VM as the v4 API reference describes it (vmm.v4.esxi.config.Vm), neither lab has one
+ESXI_VM = {
+    "$objectType": "vmm.v4.esxi.config.Vm",
+    "extId": "50293f5e-6c41-4a2b-9d3e-0f8b7c2a1d64",
+    "name": "esxi-vm",
+    "description": "description of esxi-vm",
+    "memorySizeBytes": 8589934592,
+    "host": {
+        "$objectType": "vmm.v4.esxi.config.HostReference",
+        "extId": "247a477f-b32f-4fc1-83a6-c73172169e73",
+    },
+    "cluster": {"$objectType": "vmm.v4.esxi.config.ClusterReference", "extId": CLUSTER_ID},
+    "powerState": "SUSPENDED",
+}
+
+
+def test_esxi_vms_are_reported_with_the_ahv_vms(api: responses.RequestsMock) -> None:
+    _serve_recorded_vms(api, esxi_vms=[ESXI_VM])
+
+    sections = fetch_vms(_context(hosts=_recorded_host_list()))
+
+    assert isinstance(vms := sections[0].payload, list)
+    assert (len(vms), vms[-1]) == (
+        162,
+        {
+            "extId": "50293f5e-6c41-4a2b-9d3e-0f8b7c2a1d64",
+            "name": "esxi-vm",
+            "powerState": "SUSPENDED",
+            "description": "description of esxi-vm",
+            "memorySizeBytes": 8589934592,
+            "hostName": "host-3",
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    ["status", "expected_message"],
+    [
+        pytest.param(
+            HTTPStatus.NOT_FOUND,
+            ("info", f"Could not fetch the ESXi VMs: {ESXI_VMS_PATH}: HTTP 404 Not Found"),
+            id="no ESXi API",
+        ),
+        pytest.param(
+            HTTPStatus.FORBIDDEN,
+            ("warning", f"Could not fetch the ESXi VMs: {ESXI_VMS_PATH}: HTTP 403 Forbidden"),
+            id="any other error",
+        ),
+    ],
+)
+def test_ahv_vms_are_reported_if_the_esxi_vms_cannot_be_listed(
+    api: responses.RequestsMock, status: HTTPStatus, expected_message: tuple[str, str]
+) -> None:
+    for page_number in (0, 1):
+        api.get(
+            v4_url(AHV_VMS_PATH),
+            json=_recorded(f"vmm_ahv_config_vms_page{page_number}.json"),
+            match=[page_matcher(page_number)],
+        )
+    api.get(v4_url(ESXI_VMS_PATH), status=status, json={"message": status.phrase})
+    messages = AgentMessages()
+
+    sections = fetch_vms(_context(messages))
+
+    assert isinstance(vms := sections[0].payload, list)
+    assert (len(vms), list(messages)) == (161, [expected_message])
+
+
 def test_vm_that_does_not_fit_the_model_is_skipped_with_an_info(
     api: responses.RequestsMock,
 ) -> None:
     recorded = _recorded("vmm_ahv_config_vms_page0.json")
     assert isinstance(listed := recorded["data"], list)
     api.get(
-        v4_url(VMS_PATH),
+        v4_url(AHV_VMS_PATH),
         json=page([{"name": "broken", "powerState": "ON"}, listed[0]], has_next=False),
         match=[page_matcher(0)],
+    )
+    api.get(
+        v4_url(ESXI_VMS_PATH), json=_recorded("vmm_esxi_config_vms.json"), match=[page_matcher(0)]
     )
     messages = AgentMessages()
 

@@ -157,7 +157,7 @@ class Reference(V4Model):
 
 
 class Vm(V4Model):
-    """An item of the AHV VM list"""
+    """An item of the AHV or the ESXi VM list, both have these fields"""
 
     ext_id: str = Field(alias="extId")
     name: str

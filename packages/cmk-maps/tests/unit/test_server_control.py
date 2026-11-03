@@ -73,44 +73,6 @@ def test_stop_graceful_sends_sigterm(
     assert sent == [(4242, signal.SIGTERM)]
 
 
-def test_reload_falls_back_to_start_when_down(
-    server: srv.MapsServer, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(srv, "_alive", lambda _pid: False)
-    calls: list[str] = []
-
-    def _fake_start() -> int:
-        calls.append("start")
-        return 0
-
-    monkeypatch.setattr(server, "start", _fake_start)
-    assert server.reload() == 0
-    assert calls == ["start"]
-
-
-def test_reload_sends_sighup(server: srv.MapsServer, monkeypatch: pytest.MonkeyPatch) -> None:
-    _write_pid(server, 4242)
-    monkeypatch.setattr(srv, "_alive", lambda _pid: True)
-    sent: list[tuple[int, signal.Signals]] = []
-    monkeypatch.setattr(srv, "_send", lambda pid, sig: sent.append((pid, sig)))
-    assert server.reload() == 0
-    assert sent == [(4242, signal.SIGHUP)]
-
-
-def test_logrotate_sends_sigusr1(server: srv.MapsServer, monkeypatch: pytest.MonkeyPatch) -> None:
-    _write_pid(server, 4242)
-    monkeypatch.setattr(srv, "_alive", lambda _pid: True)
-    sent: list[tuple[int, signal.Signals]] = []
-    monkeypatch.setattr(srv, "_send", lambda pid, sig: sent.append((pid, sig)))
-    assert server.logrotate() == 0
-    assert sent == [(4242, signal.SIGUSR1)]
-
-
-def test_logrotate_not_running(server: srv.MapsServer, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(srv, "_alive", lambda _pid: False)
-    assert server.logrotate() == 1
-
-
 def test_start_already_running(
     server: srv.MapsServer,
     monkeypatch: pytest.MonkeyPatch,
@@ -148,7 +110,7 @@ def test_start_fails_when_socket_never_binds(
     assert server.start() == 1
 
 
-def test_start_reports_gunicorn_failure(
+def test_start_reports_a_daemon_that_fails_to_start(
     server: srv.MapsServer,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

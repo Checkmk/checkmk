@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Control the Checkmk Maps backend (a gunicorn daemon).
+"""Control the Checkmk Maps backend (a uvicorn daemon).
 
 Invoked by etc/init.d/maps as `cmk-maps-server {start|stop|...}`. Keeping the
 process management in Python (rather than the init script) makes it lintable,
@@ -19,12 +19,13 @@ from collections.abc import Sequence
 from contextlib import suppress
 from pathlib import Path
 
-_APPLICATION = "cmk.maps.backend.main:app"
+# Only the standard library here: omd runs these commands for every status call.
+# The daemon itself lives in cmk.maps.backend.server.daemon.
+_DAEMON = "cmk.maps.backend.server.daemon"
 
 _START_TIMEOUT = 10.0
-# Must exceed gunicorn's graceful_timeout (30s in etc/maps/gunicorn.conf.py) so the
-# master can finish shutting its workers down gracefully before we escalate to
-# SIGKILL.
+# Exceeds the 30 s uvicorn gets for its graceful shutdown (see the daemon), so
+# that it can finish before we escalate to SIGKILL.
 _GRACEFUL_TIMEOUT = 35.0
 _KILL_TIMEOUT = 5.0
 
@@ -62,21 +63,10 @@ def _send(pid: int, sig: signal.Signals) -> None:
         os.kill(pid, sig)
 
 
-def _signal(pid: int | None, sig: signal.Signals) -> int:
-    if pid is None or not _alive(pid):
-        _show("not running.")
-        return 1
-
-    _send(pid, sig)
-    _show("OK")
-    return 0
-
-
 class MapsServer:
     def __init__(self, omd_root: Path) -> None:
-        self.gunicorn = omd_root / "bin" / "gunicorn"
-        self.config = omd_root / "etc" / "maps" / "gunicorn.conf.py"
         self.run_dir = omd_root / "tmp" / "run"
+        self.log_dir = omd_root / "var" / "log" / "maps"
         self.pid_file = self.run_dir / "maps.pid"
         self.socket = self.run_dir / "maps.sock"
 
@@ -97,15 +87,7 @@ class MapsServer:
         self.socket.unlink(missing_ok=True)
 
         result = subprocess.run(
-            [
-                str(self.gunicorn),
-                "-D",
-                "-p",
-                str(self.pid_file),
-                "-c",
-                str(self.config),
-                _APPLICATION,
-            ],
+            [sys.executable, "-m", _DAEMON],
             capture_output=True,
             text=True,
             check=False,
@@ -115,9 +97,9 @@ class MapsServer:
             _show(f"failed\n{result.stderr}")
             return 1
 
-        # gunicorn -D returns as soon as the master has forked. Wait until the
-        # master is alive AND the worker has bound the socket, so callers (and
-        # tests) never race a process that exists but isn't listening yet.
+        # The daemon returns as soon as it has forked. Wait until it is
+        # alive AND listening, so callers (and tests) never race a process that
+        # exists but isn't listening yet.
         deadline = time.monotonic() + _START_TIMEOUT
         iterations = 0
         while time.monotonic() < deadline:
@@ -171,24 +153,6 @@ class MapsServer:
             return 1
         return self.start()
 
-    def reload(self) -> int:
-        # SIGHUP = gunicorn graceful reload: the master stays up and brings new
-        # workers in before draining the old one, so there is no window without a
-        # listening socket and reconnecting SSE clients hit the new worker at once.
-        _show("Reloading maps...", end="")
-        pid = self._pid()
-        if pid is None or not _alive(pid):
-            return self.start()
-        _send(pid, signal.SIGHUP)
-        _show("OK")
-        return 0
-
-    def logrotate(self) -> int:
-        # SIGUSR1 makes gunicorn reopen its log files; invoked by the logrotate
-        # postrotate hook (see etc/logrotate.d/maps).
-        _show("Rotating logs of maps...", end="")
-        return _signal(self._pid(), signal.SIGUSR1)
-
     def status(self) -> int:
         _show("Checking status of maps...", end="")
         pid = self._pid()
@@ -203,7 +167,7 @@ class MapsServer:
         return 0
 
 
-COMMANDS = ("start", "stop", "restart", "reload", "logrotate", "status")
+COMMANDS = ("start", "stop", "restart", "reload", "status")
 
 
 def main(argv: Sequence[str]) -> int:
@@ -220,12 +184,8 @@ def main(argv: Sequence[str]) -> int:
             return server.start()
         case "stop":
             return server.stop()
-        case "restart":
+        case "restart" | "reload":
             return server.restart()
-        case "reload":
-            return server.reload()
-        case "logrotate":
-            return server.logrotate()
         case "status":
             return server.status()
         case _:

@@ -1077,9 +1077,8 @@ Daemon lifecycle
 
 * ``omd config`` hook ``MAPS`` (default ``on`` in every edition). With ``off``,
   ``etc/init.d/maps`` exits without starting anything.
-* ``etc/init.d/maps`` runs ``bin/cmk-maps-server``, which starts **gunicorn**
-  with one **uvicorn worker** on ``tmp/run/maps.sock``
-  (``etc/maps/gunicorn.conf.py``). Exactly one worker by design: SSE
+* ``etc/init.d/maps`` runs ``bin/cmk-maps-server``, which starts one
+  **uvicorn** process on ``tmp/run/maps.sock``. Exactly one process by design: SSE
   subscribers, broadcast loops, caches and rate limiters live in process
   memory. Blocking Livestatus calls run in threads (``asyncio.to_thread``).
   The daemon starts before Apache (``rc.d/84-maps``).
@@ -1089,9 +1088,10 @@ Daemon lifecycle
   Livestatus shows up only in the first queries.
   **Changes to connections or the log level take effect only after**
   ``omd restart maps``; Activate Changes does not restart the daemon.
-* ``SIGHUP`` reloads gracefully, ``SIGUSR1`` reopens the log files (used by
-  logrotate). Stop sends ``SIGTERM``, waits 35 s and then kills the process
-  group.
+* Reload restarts the daemon. The log files are reopened after logrotate on
+  their own. Stop sends ``SIGTERM``, which ends the open map streams; uvicorn
+  waits up to 30 s for the other requests, the stop script 35 s before it kills
+  the process group.
 
 Deployment view
 ===============
@@ -1102,7 +1102,7 @@ Packaging
 The package ships as one wheel (``//packages/cmk-maps:wheel``, containing
 ``backend``, ``gui``, ``rest_api``, ``registration``, the shared layer and the
 built-in icons) plus an OMD package (``omd/packages/cmk-maps``): the skel files
-(init script, gunicorn config, Apache drop-in, logrotate config), the
+(init script, Apache drop-in, logrotate config), the
 ``rc.d/84-maps`` link, ``bin/cmk-maps-server`` and the ``omd config`` hook in
 ``lib/omd/hooks/MAPS``. Both are part of all five editions: community, pro,
 ultimate, ultimatemt and cloud (see ``omd/BUILD``). Unlike NagVis, which is excluded from

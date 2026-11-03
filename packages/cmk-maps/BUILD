@@ -45,6 +45,7 @@ py_library(
     deps = [
         ":shared",
         "//cmk/utils",
+        "//packages/cmk-ccc:daemon",
         "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version",
@@ -54,13 +55,11 @@ py_library(
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-trace",
         requirement("fastapi"),
-        requirement("gunicorn"),
         requirement("httpx"),
         requirement("opentelemetry-instrumentation-fastapi"),
         requirement("pydantic"),
         requirement("starlette"),
         requirement("uvicorn"),
-        requirement("uvicorn-worker"),
     ],
 )
 
@@ -205,13 +204,11 @@ py_wheel(
     distribution = "cmk-maps",
     requires = [
         "fastapi",
-        "gunicorn",
         "httpx",
         "opentelemetry-instrumentation-fastapi",
         "pydantic",
         "starlette",
         "uvicorn",
-        "uvicorn-worker",
     ],
     strip_path_prefixes = ["packages/cmk-maps"],
     # TODO: Duplicated from pyproject.toml
@@ -244,9 +241,6 @@ package_wheel(
 
 py_requirements_test(
     name = "requirements-test",
-    known_unused = [
-        "gunicorn",  # started by the init.d script, not imported
-    ],
     libs = [
         ":backend",
         ":cmk-maps-server",

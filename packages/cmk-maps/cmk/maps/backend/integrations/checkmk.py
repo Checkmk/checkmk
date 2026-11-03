@@ -12,7 +12,7 @@ Checkmk Python integration for the Maps daemon.
 Exposes the bits of Checkmk the daemon needs without a GUI request context:
 the SETUP folder-scope derived from a Principal, the monitoring core,
 and ``.mk`` file reading. The daemon runs under the site interpreter
-(``bin/gunicorn``), so its dependencies resolve through the regular
+(``bin/cmk-maps-server``), so its dependencies resolve through the regular
 site-packages — no ``sys.path`` tinkering.
 
 Authorization is NOT done here: the daemon asks the GUI for every permission

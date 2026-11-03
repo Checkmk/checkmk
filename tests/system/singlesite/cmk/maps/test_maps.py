@@ -111,9 +111,9 @@ def test_maps_health_through_proxy(site: Site, maps_on: None) -> None:
 
 
 def test_maps_daemon_survives_reload(site: Site, maps_on: None) -> None:
-    # `omd reload maps` sends the init script's graceful-reload signal (SIGHUP);
-    # the daemon must stay up and keep serving, not die or orphan its PID. Guards
-    # the init.d reload action, which unit tests can't reach.
+    # `omd reload maps` restarts the daemon; it must come back and keep serving,
+    # not die or orphan its PID. Guards the init.d reload action, which unit tests
+    # can't reach.
     reload_result = site.omd("reload", "maps")
     assert reload_result.returncode == 0, reload_result.stderr
     statuses = site.get_omd_service_names_and_statuses("maps")

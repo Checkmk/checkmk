@@ -14,11 +14,11 @@ if [ "$CONFIG_MAPS" != on ]; then
 fi
 
 case "$1" in
-    start | stop | restart | reload | logrotate | status)
+    start | stop | restart | reload | status)
         exec cmk-maps-server "$1"
         ;;
     *)
-        echo "Usage: $0 {start|stop|restart|reload|logrotate|status}"
+        echo "Usage: $0 {start|stop|restart|reload|status}"
         exit 1
         ;;
 esac

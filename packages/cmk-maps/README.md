@@ -3,7 +3,7 @@
 The Checkmk Maps feature, with its Python vertical kept self-contained in a
 single package (the Vue SPA lives in `cmk-frontend-vue`, see below):
 
-- `cmk.maps.backend` — the FastAPI daemon (served by gunicorn/uvicorn inside the
+- `cmk.maps.backend` — the FastAPI daemon (served by uvicorn inside the
   OMD site behind the site Apache) that resolves maps and streams live host/
   service states. `cmk.maps.shared` is the pure GUI↔daemon domain layer
   (no framework deps) that the GUI is allowed to import.
@@ -50,7 +50,7 @@ listed in `omd/dependency_management/manual_dependency_manifest.yml`.
 
 The package ships as one wheel (`:wheel`, bundling `backend`, `gui`, `rest_api`
 and the shared layer) plus an OMD skel tar (`:omd_skel_tar`, init.d/apache/
-logrotate/gunicorn config) wired into all five editions in `omd/BUILD` —
+logrotate config) wired into all five editions in `omd/BUILD` —
 community, pro, ultimate, ultimatemt and cloud. Unlike NagVis (excluded from
 cloud), Maps ships in the cloud edition too.
 

@@ -13,7 +13,7 @@ from starlette.types import Receive, Scope, Send
 from uvicorn import Config, Server
 
 from cmk.maps.backend.core.sse import manager
-from cmk.maps.backend.server.worker import MapsWorker
+from cmk.maps.backend.server.protocol import StreamClosingProtocol
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
@@ -40,7 +40,7 @@ async def _poll(done: Callable[[], object]) -> None:
 
 async def _stop_a_server_with_an_open_stream() -> None:
     server = Server(
-        Config(app=_stream, lifespan="off", log_config=None, **MapsWorker.CONFIG_KWARGS)
+        Config(app=_stream, lifespan="off", log_config=None, http=StreamClosingProtocol)
     )
     with socket.create_server(("127.0.0.1", 0)) as sock:
         serving = asyncio.create_task(server.serve(sockets=[sock]))

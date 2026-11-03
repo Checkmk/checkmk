@@ -1,0 +1,6 @@
+module(
+    name = "pester",
+    version = "6.0.0.cmk.1",
+    bazel_compatibility = [">=7.2.1"],
+    compatibility_level = 1,
+)

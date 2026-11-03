@@ -6,6 +6,7 @@
 import json
 
 import pytest
+from pydantic import ValidationError
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State
 from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_ha_manager_status import (
@@ -329,3 +330,31 @@ def test_check_proxmox_ve_ha_manager_status(
     expected_result: CheckResult,
 ) -> None:
     assert list(check_proxmox_ve_ha_manager_status(item, params, section)) == expected_result
+
+
+@pytest.mark.xfail(strict=True, raises=ValidationError, reason="Crash group 4778")
+def test_check_proxmox_ve_ha_manager_status_lrm_without_timestamp() -> None:
+    section = parse_proxmox_ve_ha_manager_status(
+        [
+            [
+                json.dumps(
+                    [
+                        {"id": "quorum", "node": "pve-1", "status": "OK", "type": "quorum"},
+                        {
+                            "id": "lrm:pve-1",
+                            "node": "pve-1",
+                            "status": "pve-1 (unable to read lrm status)",
+                            "type": "lrm",
+                        },
+                    ]
+                )
+            ]
+        ]
+    )
+
+    assert list(
+        check_proxmox_ve_ha_manager_status("pve-1", {"differing_service_state": 2}, section)
+    ) == [
+        Result(state=State.OK, summary="Quorum status: OK"),
+        Result(state=State.CRIT, summary='Node "pve-1" status: UNABLE TO READ LRM STATUS'),
+    ]

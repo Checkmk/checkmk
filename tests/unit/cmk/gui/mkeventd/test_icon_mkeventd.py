@@ -45,6 +45,8 @@ class IconRenderResult(NamedTuple):
                 row={
                     "site": "heute",
                     "host_name": "heute",
+                    "host_address": "127.0.0.1",
+                    "host_alias": "my_alias",
                     "service_check_command": "check_mk_active-mkevents!'$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'",
                 },
                 tags=[],
@@ -65,6 +67,8 @@ class IconRenderResult(NamedTuple):
                 row={
                     "site": "heute",
                     "host_name": "heute",
+                    "host_address": "127.0.0.1",
+                    "host_alias": "my_alias",
                     "service_check_command": "check_mk_active-mkevents!'heute'",
                 },
                 tags=[],
@@ -86,6 +90,8 @@ class IconRenderResult(NamedTuple):
                 row={
                     "site": "heute",
                     "host_name": "heute",
+                    "host_address": "127.0.0.1",
+                    "host_alias": "my_alias",
                     "service_check_command": "check_mk_active-mkevents!'heute' '^my_apps*'",
                 },
                 tags=[],
@@ -97,6 +103,67 @@ class IconRenderResult(NamedTuple):
                 url="view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
             id="Specify host explicitly and application by regular expression",
+        ),
+        pytest.param(
+            IconRenderArgs(
+                what="service",
+                row={
+                    "site": "heute",
+                    "host_name": "hostA",
+                    "host_address": "127.0.0.1",
+                    "host_alias": "my_alias",
+                    "service_check_command": "check_mk_active-mkevents!'hostB' 'myapp'",
+                },
+                tags=[],
+                custom_vars={},
+            ),
+            IconRenderResult(
+                name="mkeventd",
+                title='Events of application "myapp" on host hostB',
+                url="view.py?event_application=myapp&event_host=hostB&host=hostB&site=heute&view_name=ec_events_of_host",
+            ),
+            id="Explicit host differs from monitored host",
+        ),
+        pytest.param(
+            IconRenderArgs(
+                what="service",
+                row={
+                    "site": "heute",
+                    "host_name": "heute",
+                    "host_address": "127.0.0.1",
+                    "host_alias": "my_alias",
+                    "service_check_command": "check_mk_active-mkevents!'HEUTE'",
+                },
+                tags=[],
+                custom_vars={},
+            ),
+            IconRenderResult(
+                name="mkeventd",
+                title="Events of host heute",
+                url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
+            ),
+            id="Explicit host differs only in case from monitored host",
+        ),
+        # Macros are resolved when the command line is built
+        pytest.param(
+            IconRenderArgs(
+                what="service",
+                row={
+                    "site": "heute",
+                    "host_name": "hostA",
+                    "host_address": "127.0.0.2",
+                    "host_alias": "Host A",
+                    "service_check_command": "check_mk_active-mkevents!'hostA/127.0.0.2/Host A' 'myapp'",
+                },
+                tags=[],
+                custom_vars={},
+            ),
+            IconRenderResult(
+                name="mkeventd",
+                title='Events of application "myapp" on host hostA',
+                url="view.py?event_application=myapp&host=hostA&site=heute&view_name=ec_events_of_monhost",
+            ),
+            id="Resolved host name, IP address and alias",
         ),
         # Host specification:
         #     Match host with
@@ -110,6 +177,8 @@ class IconRenderResult(NamedTuple):
                 row={
                     "site": "heute",
                     "host_name": "heute",
+                    "host_address": "127.0.0.1",
+                    "host_alias": "my_alias",
                     "service_check_command": "check_mk_active-mkevents!'-a' '$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'",
                 },
                 tags=[],
@@ -133,6 +202,8 @@ class IconRenderResult(NamedTuple):
                 row={
                     "site": "heute",
                     "host_name": "heute",
+                    "host_address": "127.0.0.1",
+                    "host_alias": "my_alias",
                     "service_check_command": "check_mk_active-mkevents!'-a' '$HOSTALIAS$' '^my_apps*'",
                 },
                 tags=[],
@@ -140,7 +211,7 @@ class IconRenderResult(NamedTuple):
             ),
             IconRenderResult(
                 name="mkeventd",
-                title='Events of application "^my_apps*" on host my_alias',
+                title='Events of application "^my_apps*" on host heute',
                 url="view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
             id="Match host with Alias, application by regular expression ignore ack events",
@@ -156,6 +227,7 @@ class IconRenderResult(NamedTuple):
                 row={
                     "site": "heute",
                     "host_name": "heute",
+                    "host_alias": "my_alias",
                     "host_address": "127.0.0.1",
                     "service_check_command": "check_mk_active-mkevents!'-a' '$HOSTADDRESS$' '^my_apps*'",
                 },
@@ -164,7 +236,7 @@ class IconRenderResult(NamedTuple):
             ),
             IconRenderResult(
                 name="mkeventd",
-                title='Events of application "^my_apps*" on host 127.0.0.1',
+                title='Events of application "^my_apps*" on host heute',
                 url="view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
             id="Match host with IP address, application by regular expression ignore ack events",
@@ -176,6 +248,8 @@ class IconRenderResult(NamedTuple):
                 row={
                     "site": "heute",
                     "host_name": "heute",
+                    "host_address": "127.0.0.1",
+                    "host_alias": "my_alias",
                     "service_check_command": "check_mk_active-mkevents!'-L' '$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'",
                 },
                 tags=[],
@@ -195,6 +269,8 @@ class IconRenderResult(NamedTuple):
                 row={
                     "site": "heute",
                     "host_name": "heute",
+                    "host_address": "127.0.0.1",
+                    "host_alias": "my_alias",
                     "service_check_command": "check_mk_active-mkevents!'-a' '-l' '$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'",
                 },
                 tags=[],
@@ -214,6 +290,8 @@ class IconRenderResult(NamedTuple):
                 row={
                     "site": "heute",
                     "host_name": "heute",
+                    "host_address": "127.0.0.1",
+                    "host_alias": "my_alias",
                     "service_check_command": "check_mk_active-mkevents!'-H' '127.0.0.1:12345' '$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'",
                 },
                 tags=[],
@@ -233,6 +311,8 @@ class IconRenderResult(NamedTuple):
                 row={
                     "site": "heute",
                     "host_name": "heute",
+                    "host_address": "127.0.0.1",
+                    "host_alias": "my_alias",
                     "service_check_command": "check_mk_active-mkevents!'-H' '127.0.0.1:12345' '-L' '-a' '$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'",
                 },
                 tags=[],
